@@ -6,6 +6,7 @@ export type ReleaseStage = { key: string; kind: 'batch' | 'manifest' | 'prepare'
 export type StageCheckpoint = {
   protocol: 2; plan: ReleaseStage[]; index: number; serial: number
   changed: TargetId[]; mutationSubmitted: boolean; sourceRecoveryQualified?: boolean
+  sourceDrainReuse?: { stage: string; generation: number; operationKeys: string[] }
   direction: 'forward' | 'source' | 'compatible-recovery'
   requests: Record<string, number>; deadlines: Record<string, number>
   retries?: Record<string, number>
@@ -70,4 +71,17 @@ export function recoveryStages(manifest: Manifest, checkpoint: StageCheckpoint):
     : { key: `recover-${id}`, kind: 'host', targets: [id], phase: source ? 'restore-source' : 'recover', recovery: true })
   if (images.length) plan.push({ key: 'recovery-admit', kind: 'host', targets: images, phase: source ? 'source-undrain' : 'recovery-undrain' })
   return [...plan, ...verificationStages({ ...manifest, targets: Object.fromEntries(checkpoint.changed.map(id => [id, manifest.targets[id]!])) }, true)]
+}
+
+export function qualifyDrainedSourceRecovery(manifest:Manifest,checkpoint:StageCheckpoint,targets:Record<string,unknown>,manifestHash:string,generation:number):boolean {
+ const current=checkpoint.plan[checkpoint.index]
+ if(checkpoint.direction!=='source'||checkpoint.mutationSubmitted||current?.kind!=='host'||current.phase!=='source-drain'||!checkpoint.changed.length)return false
+ return checkpoint.changed.every(id=>{
+  const target=manifest.targets[id]
+  if(!id.startsWith('main-runtime-')||target?.artifact.kind!=='image'||target.hostPlan?.mode!=='maintenance'||!target.hosts.length)return false
+  return target.hosts.every(host=>{
+   const op=targets[`${id}:${host}:drain`] as {key?:string;releaseId?:string;target?:string;phase?:string;generation?:number;manifestHash?:string;status?:string;operationId?:string;result?:{drained?:boolean;mode?:string};steps?:{status:string}[]}|undefined
+   return op?.key===`${manifest.releaseId}:${id}:drain`&&op.releaseId===manifest.releaseId&&op.target===id&&op.phase==='drain'&&op.generation===generation&&op.manifestHash===manifestHash&&op.status==='succeeded'&&!!op.operationId&&op.result?.drained===true&&op.result.mode==='maintenance'&&!!op.steps?.length&&op.steps.every(step=>step.status==='completed')
+  })
+ })
 }
