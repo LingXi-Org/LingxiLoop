@@ -259,3 +259,23 @@ for(const unsafe of ['active','schema','mutation'])test(`unconfirmed backup keep
  const result=await f.executor.reconcile(f.journal.get(backup.key));assert.equal(result.status,'uncertain')
  assert.ok(f.journal.db.prepare('SELECT count(*) AS n FROM reservations WHERE operation_key=?').get(backup.key).n>0)
 })
+
+for(const unsafe of [null,'active','schema','mutation','directory','step'])test(`backup validation refusal ${unsafe??'settles before dispatch and restores source'}`,async t=>{
+ const f=await setup(t);await prepared(f)
+ const backup=f.journal.accept(f.request('backup'),f.adapter.resources('main-runtime-a','backup')).operation
+ const step={name:'database:backup',sideEffect:true,status:'intent'}
+ if(unsafe==='step')step.name='database:migrate'
+ f.journal.patch(backup.key,{status:'uncertain',steps:[step],errors:{forward:{code:'INVALID_RUNTIME_PATCH'},recovery:null,cleanup:[]}})
+ f.adapter.observe=async()=>{throw fault('INVALID_RUNTIME_PATCH','registered plan rejected')}
+ if(unsafe==='active')f.executor.active.add(backup.key)
+ if(unsafe==='schema')f.adapter.state=async()=>({...contract,productSchema:58})
+ if(unsafe==='mutation')f.journal.db.prepare('INSERT INTO operations SELECT ?,?,request_hash,?,?,result,errors,steps,created_at,updated_at FROM operations WHERE key=?').run('forbidden','new-id',JSON.stringify({...backup,phase:'migrate'}),'uncertain',backup.key)
+ if(unsafe==='directory')await import('node:fs/promises').then(fs=>fs.mkdir(join(f.directory,backup.releaseId,'database'),{recursive:true}))
+ const result=await f.executor.reconcile(f.journal.get(backup.key))
+ assert.equal(result.status,unsafe?'uncertain':'failed')
+ if(unsafe){assert.ok(f.journal.db.prepare('SELECT count(*) AS n FROM reservations WHERE operation_key=?').get(backup.key).n>0);return}
+ assert.equal(result.result.backupExecution,'not-attempted');assert.equal(result.errors.forward.code,'INVALID_RUNTIME_PATCH');assert.equal(f.journal.get(backup.key).steps[0].status,'failed-known')
+ assert.equal(f.journal.state('main-runtime-a').backupHash?.[backup.manifestHash],undefined)
+ for(const phase of ['source-drain','restore-source','source-undrain'])assert.equal((await f.run(phase)).status,'succeeded')
+ assert.equal(f.host.data.ingress.enabled,true);assert.equal(f.host.data.containers.web.Image,oldImage.configDigest)
+})

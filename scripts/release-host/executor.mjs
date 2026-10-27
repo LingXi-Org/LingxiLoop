@@ -275,6 +275,15 @@ export class Executor {
       for (const error of result.cleanupErrors ?? []) this.recordCleanupError(op.key,error)
       return this.journal.finish(op.key,'succeeded',{ ...result, observedAfterInterruption: true })
     } catch (error) {
+      if(op.phase==='backup'&&op.status==='uncertain'&&op.errors?.forward?.code==='INVALID_RUNTIME_PATCH'&&op.steps.length===1&&op.steps[0].name==='database:backup'&&op.steps[0].sideEffect===true&&op.steps[0].status==='intent'){
+        try{
+          await this.assertSourceRestoreAllowed(op)
+          // registeredPlan rejects this input before creating the backup directory or dispatching a database tool.
+          try{await lstat(join(this.adapter.policy.stateDirectory,op.releaseId,'database'));throw fault('BACKUP_DISPATCH_UNPROVEN','A backup directory prevents proof of pre-dispatch refusal')}catch(proofError){if(proofError.code!=='ENOENT')throw proofError}
+          this.journal.patch(op.key,{steps:op.steps.map(step=>({...step,status:'failed-known',completedAt:new Date().toISOString()}))})
+          return this.journal.finish(op.key,'failed',{sourceRestorationOnly:true,backupExecution:'not-attempted',observationError:safeError(error)},op.errors)
+        }catch(sourceError){return this.journal.finish(op.key,'uncertain',{needsIntervention:true,observationRequired:true,observationError:safeError(sourceError)})}
+      }
       // An exited archive uploader can leave an unknown remote cache write, but
       // cannot justify keeping an unchanged business source offline indefinitely.
       // This is failure, never backup qualification: migration remains forbidden.
