@@ -1,4 +1,4 @@
-// Fixed product57 maintenance entrypoint. No dotenv, migrations, DDL or product imports.
+// Fixed reviewed product57/58 maintenance entrypoint. No dotenv, migrations, DDL or product imports.
 import {resolve} from 'node:path'
 import {pathToFileURL} from 'node:url'
 import {applyPublishedRuntimePatch,assertRuntimePatchDescriptors,observePublishedRuntimePatch,runtimePatchPlanHash} from './db/runtime-patch.js'
@@ -12,12 +12,12 @@ export function parseRuntimePatchInput(raw:string):{source:RuntimePatchDescripto
  check(value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).sort().join(',')==='source,target')
  for(const [name,d] of Object.entries(value)){
   const keys=['runtime','schema','protocol','schemaHash','productVersion','migrations',...(name==='target'?['integrity','tarball']:[])].sort()
-  check(d&&typeof d==='object'&&Object.keys(d).sort().join(',')===keys.join(',')&&d.productVersion===57&&Array.isArray(d.migrations))
+  check(d&&typeof d==='object'&&Object.keys(d).sort().join(',')===keys.join(',')&&[57,58].includes(d.productVersion)&&Array.isArray(d.migrations))
   for(const m of d.migrations)check(m&&Object.keys(m).sort().join(',')==='checksum,name,version')
  }
  assertRuntimePatchDescriptors(value.source,value.target)
  check(/^sha512-[A-Za-z0-9+/]{86}==$/.test(value.target.integrity)&&
-  /^https:\/\/npm\.pkg\.github\.com\/download\/@lyyzka\/lingxios\/3\.8\.14\/[a-f0-9]{40}$/.test(value.target.tarball))
+  value.target.tarball.startsWith(`https://npm.pkg.github.com/download/@lyyzka/lingxios/${value.target.runtime}/`)&&/^[a-f0-9]{40}$/.test(value.target.tarball.slice(`https://npm.pkg.github.com/download/@lyyzka/lingxios/${value.target.runtime}/`.length)))
  return value
 }
 async function main(){
@@ -30,7 +30,7 @@ async function main(){
  const connection=process.env.DATABASE_URL
  check(connection&&['postgres:','postgresql:'].includes(new URL(connection).protocol))
  const {Pool}=await import('pg')
- const database=new Pool({connectionString:connection,max:1,application_name:'lingxi-release-runtime-patch57',connectionTimeoutMillis:5000,idleTimeoutMillis:1000})
+ const database=new Pool({connectionString:connection,max:1,application_name:'lingxi-release-runtime-patch'+target.productVersion,connectionTimeoutMillis:5000,idleTimeoutMillis:1000})
  let result,failure:unknown,failed=false
  try{
   result=action==='observe'?await observePublishedRuntimePatch(database,source,target):

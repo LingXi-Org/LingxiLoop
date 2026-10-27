@@ -12,8 +12,8 @@ export interface RuntimePatchDescriptor {runtime:string;schema:number;protocol:n
 export type PublishedRuntimePatchDescriptor=RuntimePatchDescriptor&{integrity:string;tarball:string}
 const check=(value:unknown,message:string):void=>{if(!value)throw Error(message)}
 const hash=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex')
-export async function loadRuntimePatchInventory(productVersion:54|57=54):Promise<Migration[]>{
- check(productVersion===54||productVersion===57,'Unreviewed runtime patch product')
+export async function loadRuntimePatchInventory(productVersion:54|57|58=54):Promise<Migration[]>{
+ check(productVersion===54||productVersion===57||productVersion===58,'Unreviewed runtime patch product')
  const root=new URL('./migrations/',import.meta.url),files=(await readdir(root)).sort()
  check(files.length===productVersion,`Runtime patch requires complete product${productVersion} inventory`)
  return Promise.all(files.map(async(file,index)=>{
@@ -25,8 +25,9 @@ export async function loadRuntimePatchInventory(productVersion:54|57=54):Promise
 export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,target:RuntimePatchDescriptor):void{
  check(source.productVersion===target.productVersion,'Runtime patch cannot change product schema')
  const product=target.productVersion
- check(product===54||product===57,'Unreviewed runtime patch product')
+ check(product===54||product===57||product===58,'Unreviewed runtime patch product')
  if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.14','Product57 runtime patch is restricted to exact3.8.12 to3.8.14')
+ if(product===58)check(source.runtime==='3.8.14'&&target.runtime==='3.8.15','Product58 runtime patch is restricted to exact3.8.14 to3.8.15')
  for(const d of [source,target]){
   assertCurrentRuntimeProfile({runtime:d.runtime,schema:d.schema,controlPlane:d.protocol,publicText:currentPublicTextVersion(d.runtime),runTrace:1},d.schemaHash,d.runtime)
   check(d.migrations?.length===product,`Runtime patch requires complete product${product}`)
@@ -58,7 +59,7 @@ export async function readRuntimePatchBarrier(database:Pick<PoolClient,'query'>,
  check(counters.every(k=>Number.isSafeInteger(result[k])&&Number(result[k])>=0),'Runtime patch barrier unavailable')
  if(exclusiveClients){
   check(Number.isSafeInteger(result.otherClients)&&Number(result.otherClients)>=0,'Runtime patch client visibility unavailable')
-  check(result.otherClients===0,'Product57 runtime patch requires no other database clients')
+  check(result.otherClients===0,'Runtime patch requires no other database clients')
  }
  return Object.fromEntries(counters.map(k=>[k,Number(result[k])])) as Record<typeof counters[number],number>
 }
@@ -69,12 +70,12 @@ export function runtimePatchPlanHash(source:RuntimePatchDescriptor,target:Publis
 }
 async function patchResources(source:RuntimePatchDescriptor,target:RuntimePatchDescriptor){
  assertRuntimePatchDescriptors(source,target)
- check(equal(await loadRuntimePatchInventory(target.productVersion as 54|57),target.migrations),'Committed inventory differs from runtime patch')
+ check(equal(await loadRuntimePatchInventory(target.productVersion as 54|57|58),target.migrations),'Committed inventory differs from runtime patch')
  const schema=await readFile(packageResources().schema,'utf8')
  check(hash(schema)===target.schemaHash,'Executing native schema bytes changed')
- if(target.productVersion===57){
-  check(equal(releaseVersions,{runtime:'3.8.14',controlPlane:11,kernel:2,schema:14,assistantMessage:2,publicText:3,runTrace:1}),
-   'Product57 requires the complete formal3.8.14 public protocol tuple')
+ if(target.productVersion>=57){
+  check(equal(releaseVersions,{runtime:target.productVersion===58?'3.8.15':'3.8.14',controlPlane:11,kernel:2,schema:14,assistantMessage:2,publicText:3,runTrace:1}),
+   'Runtime patch requires the exact reviewed complete formal public protocol tuple')
  }
  const tables=[...schema.matchAll(/^CREATE TABLE (lingxios\.[a-z_]+)\s*\(/gm)].map(m=>m[1])
  check(tables.length>0,'Executing native schema has no tables')
@@ -103,7 +104,7 @@ export async function compareAndSwapRuntimeProvenance(database:Pool,source:Runti
    lingxios.agent_memory_capture,lingxios.agent_delivery_outbox,lingxios.agent_run_events,
    lingxios.agent_model_budget_calls,lingxios.agent_terminal_outbox IN SHARE ROW EXCLUSIVE MODE`)
   check(await installedPatchState(client,target,tables)===source.runtime,'Runtime patch source provenance changed; observe instead of replay')
-  const barrier=await readRuntimePatchBarrier(client,target.productVersion===57)
+  const barrier=await readRuntimePatchBarrier(client,target.productVersion>=57)
   check(Object.values(barrier).every(n=>n===0),'Runtime patch requires zero live leases and no incompatible resumable runs')
   writeAttempted=true
   const result=await client.query(`UPDATE public.lingxios_installation SET runtime_version=$1,installed_at=NOW()
@@ -135,7 +136,7 @@ export async function applyPublishedRuntimePatch(database:Pool,source:RuntimePat
  * A matching target proves the requested state, not which process committed it.
  * Source or unknown states never authorize replay of the same CAS intent. */
 export async function observePublishedRuntimePatch(database:Pool,source:RuntimePatchDescriptor,target:PublishedRuntimePatchDescriptor){
- check(source.productVersion===57&&target.productVersion===57,'Observation entrypoint supports only reviewed product57')
+ check([57,58].includes(source.productVersion)&&source.productVersion===target.productVersion,'Observation entrypoint supports only reviewed product57/58')
  await assertPublishedPatch(target)
  const tables=await patchResources(source,target),client=await database.connect()
  try{
@@ -146,7 +147,7 @@ export async function observePublishedRuntimePatch(database:Pool,source:RuntimeP
   const barrier=await readRuntimePatchBarrier(client,true)
   check(Object.values(barrier).every(n=>n===0),'Runtime patch observation requires the complete maintenance barrier')
   await client.query('COMMIT')
-  return {complete:runtime===target.runtime,state:runtime===target.runtime?'target':'source',source:source.runtime,target:target.runtime,schema:14,product:57,
+  return {complete:runtime===target.runtime,state:runtime===target.runtime?'target':'source',source:source.runtime,target:target.runtime,schema:14,product:target.productVersion,
    planHash:runtimePatchPlanHash(source,target),observationOnly:true}
  }catch(error){await client.query('ROLLBACK').catch(()=>{});throw error}finally{client.release()}
 }

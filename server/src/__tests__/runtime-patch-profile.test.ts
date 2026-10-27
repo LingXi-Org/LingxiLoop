@@ -149,3 +149,16 @@ test('product58 upgrade accepts the complete SDK14 product57 predecessor and ref
  for(const count of [0,54,55,56,57,58])assert.doesNotThrow(()=>assertFull54InstallBoundary(count,'3.8.14',58))
  for(const count of [1,49,53,59])assert.throws(()=>assertFull54InstallBoundary(count,'3.8.14',58),/historical package/)
 })
+
+const source58={...source57,runtime:'3.8.14',productVersion:58,migrations:currentMigrations}
+const target58={...source58,runtime:'3.8.15'}
+test('product58 exact14 to15 CAS requires complete unchanged named58 inventory and original protocol',async()=>{
+ assert.deepEqual(await loadRuntimePatchInventory(58),currentMigrations)
+ assert.doesNotThrow(()=>assertRuntimePatchDescriptors(source58,target58))
+ const target={...target58,integrity:'sha512-'+Buffer.alloc(64,1).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.15/'+'a'.repeat(40)}
+ assert.deepEqual(parseRuntimePatchInput(JSON.stringify({source:source58,target})),{source:source58,target})
+ for(const mutate of [(d:typeof target58)=>{d.runtime='3.8.16'},(d:typeof target58)=>{d.productVersion=57},(d:typeof target58)=>{d.protocol=12},(d:typeof target58)=>{d.migrations[0].name='changed'},(d:typeof target58)=>{d.migrations.pop()}]){
+  const bad=structuredClone(target58);mutate(bad);assert.throws(()=>assertRuntimePatchDescriptors(source58,bad))
+ }
+ assert.throws(()=>assertRuntimePatchDescriptors({...source58,runtime:'3.8.13'},target58))
+})

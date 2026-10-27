@@ -35,3 +35,9 @@ Initial c67a4204 CI failed server typechecking because the replay test imported 
 Root/server initially held stale SDK3.5.2. Local verification now uses the formal root-locked dependency tree, matching CI's single-tree resolution; server's exact SDK lock matches the same published artifact. No compiler target or CI dependency scope was broadened.
 
 Production has not been changed by this task. No product PR merge or deployment, browser acceptance, production paint/event measurement or diagnosis of the original screenshot's exact run was performed. The live provider sample did not execute through product Worker/UI or generate an interactive component. #533 stays open for the designated sole production integrator to finish the agreed release/verification boundary.
+
+## Exact production runtime transition
+
+Release preflight exposed the missing product58 SDK14→15 CAS path before any production writes. The fixed host/CLI now admit only exact3.8.14→3.8.15 with unchanged complete58 named migrations, native14/protocol11 and the formal target package. The existing SDK12→14/product57 path is retained. Normal final backup/archive/isolated restore, exclusive-client/checkpoint barriers, fsynced CAS/dispatch intents, fencing and read-only unknown-result reconciliation remain required; no-backup is refused for this SDK transition.
+
+Focused qualification:54 host/candidate/database-tool tests,17 runtime-profile/CLI tests,3 real disposable PostgreSQL16 tests passed (zero skips). Server typecheck passed. The actual accepted4af7c700 source and SDK15 target have exactly the same58 migration names/checksums and native schema hash; both host guard and packaged entrypoint accept that exact input. This qualifies the compatibility repair, not production acceptance.
