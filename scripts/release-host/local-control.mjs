@@ -21,7 +21,7 @@ export function qualifyDatabaseEvidence(actual, database) {
   }
   validateContract(profile.contract)
   if (!Array.isArray(profile.requiredCapabilities) || profile.contract.nativeSchema !== actual.nativeSchema || profile.contract.productSchema !== actual.productSchema) throw fault('DATABASE_PROVENANCE_UNQUALIFIED','Database capability profile has inconsistent schemas')
-  return { ...actual, ...profile.contract, requiredCapabilities:profile.requiredCapabilities, verified:true }
+  return { ...actual, ...profile.contract, migrations:actual.migrations, requiredCapabilities:profile.requiredCapabilities, verified:true }
 }
 export async function databaseEvidence(policy, run = (args,options = {}) => runDocker(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' })) {
   const database = policy.database

@@ -176,6 +176,16 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     let patchProof
     if(patch){
       const context=await migrationContext(),intent=await readOptional(patchIntentFile)
+      if(!intent){
+        requireThat(!await readOptional(migrationIntentFile),'RUNTIME_PATCH_OUTCOME_UNRESOLVED','Migration dispatch without a matching CAS intent remains unknown')
+        const verified=JSON.parse(await readFile(verifiedFile,'utf8')),backup=await readBackup()
+        requireThat(verified.complete===true&&verified.manifestHash===op.manifestHash&&verified.dumpHash===backup.dumpHash,'MIGRATION_BOUNDARY_INVALID','Source-only refusal requires the exact qualified backup')
+        const source=await assertDrained()
+        requireThat(source.runtime===patch.source.runtime&&source.schemaHash===patch.source.schemaHash&&source.protocolVersion===patch.source.protocol&&sameSchemas(source,plan.database.from)&&canonical(source.migrations)===canonical(patch.source.migrations),'RUNTIME_PATCH_OUTCOME_UNRESOLVED','Exact complete named source must remain unchanged')
+        const proof=await patchCall(context,'observe')
+        requireThat(proof.state==='source'&&proof.complete===false,'RUNTIME_PATCH_OUTCOME_UNRESOLVED','Only unchanged source can prove pre-dispatch refusal')
+        return {complete:false,sourceRestorationOnly:true,migrationExecution:'not-attempted',manifestHash:op.manifestHash,generation:op.generation,planHash:runtimePatchPlanHash(patch),runtimePatch:proof}
+      }
       requireThat(intent?.manifestHash===op.manifestHash && intent.generation===op.generation && intent.planHash===runtimePatchPlanHash(patch) && intent.localImageId===context.identity.localImageId,'RUNTIME_PATCH_OUTCOME_UNRESOLVED','Exact runtime patch intent and qualified target image are required')
       patchProof=await patchCall(context,'observe')
       requireThat(patchProof.complete===true,'RUNTIME_PATCH_OUTCOME_UNRESOLVED','Source provenance observation never authorizes replay of a runtime patch intent')

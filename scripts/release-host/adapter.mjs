@@ -460,7 +460,7 @@ export class ComposeAdapter {
     // Observation has no business writes. It can prove completion, never infer that an old daemon action stopped from a TTL.
     if (['backup','restore-verify','migrate'].includes(op.phase)) {
       const evidence = await this.control(this.policy.targets[op.target], `${op.phase === 'restore-verify' ? 'restoreVerify' : op.phase}Observe`,op,'GET')
-      requireValue(evidence?.complete === true, 'DATABASE_RECEIPT_INVALID', 'Database completion is not proven')
+      requireValue(evidence?.complete === true || op.phase==='migrate'&&evidence?.sourceRestorationOnly===true&&evidence.complete===false&&evidence.migrationExecution==='not-attempted', 'DATABASE_RECEIPT_INVALID', 'Database completion is not proven')
       return evidence
     }
     if (['apply','recover','verify','restore-source'].includes(op.phase)) return this.verify(op,plan,op.phase==='restore-source'?'source':op.phase === 'recover' ? 'recovery' : 'forward')

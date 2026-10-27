@@ -1,3 +1,6 @@
+import {lstat} from 'node:fs/promises'
+import {join} from 'node:path'
+import {runtimePatchPlanHash} from './runtime-patch.mjs'
 import {archiveDiagnosticFields} from './archive-diagnostics.mjs'
 import { Journal, fault, hash, identifier, validateRequest } from './journal.mjs'
 import { validateHostPlan,assertCompatible } from './adapter.mjs'
@@ -216,9 +219,17 @@ export class Executor {
     } finally { this.active.delete(key) }
   }
   async assertSourceRestoreAllowed(op) {
-    const forbidden=this.journal.db.prepare("SELECT key FROM operations WHERE json_extract(body,'$.releaseId')=? AND json_extract(body,'$.manifestHash')=? AND json_extract(body,'$.phase') IN ('migrate','apply','recover') LIMIT 1").get(op.releaseId,op.manifestHash)
-    if(forbidden)throw fault('SOURCE_RESTORE_FORBIDDEN','A migration/application/recovery intent exists for this manifest; exact-source restoration is no longer permitted')
-    const plan=validateHostPlan(this.journal.manifest(op.releaseId,op.manifestHash),op.target,this.adapter.policy),source=plan.source??plan.recovery,state=await this.adapter.state(op)
+    const forbidden=this.journal.db.prepare("SELECT key FROM operations WHERE json_extract(body,'$.releaseId')=? AND json_extract(body,'$.manifestHash')=? AND json_extract(body,'$.phase') IN ('migrate','apply','recover')").all(op.releaseId,op.manifestHash)
+    const plan=validateHostPlan(this.journal.manifest(op.releaseId,op.manifestHash),op.target,this.adapter.policy)
+    for(const row of forbidden){
+      const migration=this.journal.get(row.key),proof=migration.result,patch=plan.database?.runtimePatch
+      if(migration.phase!=='migrate'||migration.status!=='failed'||migration.errors?.forward?.code!=='DATABASE_SOURCE_CHANGED'||proof?.sourceRestorationOnly!==true||proof.migrationExecution!=='not-attempted'||proof.manifestHash!==op.manifestHash||proof.generation!==op.generation||!patch||proof.planHash!==runtimePatchPlanHash(patch))throw fault('SOURCE_RESTORE_FORBIDDEN','A migration/application/recovery intent has no qualified no-dispatch proof')
+      for(const name of ['runtime-patch-intent.json','runtime-patch-migration-intent.json']){
+        try{await lstat(join(this.adapter.policy.stateDirectory,op.releaseId,'database',name));throw fault('SOURCE_RESTORE_FORBIDDEN','A runtime CAS or migration dispatch intent exists')}catch(error){if(error.code!=='ENOENT')throw error}
+      }
+    }
+    const source=plan.source??plan.recovery,state=await this.adapter.state(op)
+    if(forbidden.length){const patch=plan.database.runtimePatch;if(state.runtime!==patch.source.runtime||state.schemaHash!==patch.source.schemaHash||state.protocolVersion!==patch.source.protocol||hash(state.migrations)!==hash(patch.source.migrations))throw fault('SOURCE_STATE_CHANGED','Exact named pre-dispatch runtime source changed')}
     assertCompatible(source.contract,state)
     if(state.nativeSchema!==source.contract.nativeSchema||state.productSchema!==source.contract.productSchema||source.contract.lingxios&&state.runtime!==source.contract.lingxios)throw fault('SOURCE_STATE_CHANGED','Installed state no longer exactly matches the original source')
     if(source.contract.migrations&&hash(source.contract.migrations)!==hash((state.migrations??[]).map(({version,checksum})=>({version,checksum}))))throw fault('SOURCE_STATE_CHANGED','Installed migration checksums no longer match the original source')
@@ -242,6 +253,12 @@ export class Executor {
     try {
       const plan = validateHostPlan(this.journal.manifest(op.releaseId,op.manifestHash),op.target,this.adapter.policy)
       const result = await this.adapter.observe(op,plan), state = this.journal.state(op.target)
+      if(result?.sourceRestorationOnly===true){
+        const patch=plan.database?.runtimePatch
+        if(op.phase!=='migrate'||op.status!=='uncertain'||op.errors?.forward?.code!=='DATABASE_SOURCE_CHANGED'||op.steps.length!==1||op.steps[0].name!=='database:migrate'||op.steps[0].status!=='intent'||result.complete!==false||result.migrationExecution!=='not-attempted'||result.manifestHash!==op.manifestHash||result.generation!==op.generation||!patch||result.planHash!==runtimePatchPlanHash(patch))throw fault('OBSERVATION_UNRESOLVED','No qualified pre-dispatch refusal for this operation')
+        this.journal.patch(op.key,{steps:op.steps.map(step=>({...step,status:'failed-known',completedAt:new Date().toISOString()}))})
+        return this.journal.finish(op.key,'failed',{...result,preflightRefusalObserved:true},op.errors)
+      }
       if (op.phase === 'backup') this.journal.setState(op.target,{ ...state,backupHash:{ ...state.backupHash,[op.manifestHash]:true } })
       if (op.phase === 'restore-verify') this.journal.setState(op.target,{ ...state,restoreVerifiedHash:{ ...state.restoreVerifiedHash,[op.manifestHash]:true } })
       if (op.phase === 'prepare') this.journal.setState(op.target,{ ...this.journal.state(op.target), preparedHashes: { ...this.journal.state(op.target).preparedHashes, [op.manifestHash]: true } })
