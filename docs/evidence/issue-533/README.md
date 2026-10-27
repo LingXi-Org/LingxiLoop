@@ -1,37 +1,37 @@
-# Issue #533: visible public tool-round observations
+# Issue #533: public tool rounds
 
-Base: `d544775f2809cb0f80502547ef383b6a40dcca02`. Root and server dependencies were restored from their unchanged locks to formal SDK 3.8.14; both were stale 3.5.2 initially. Old interrupted-task changes were not available and were not migrated.
+Base: `d544775f2809cb0f80502547ef383b6a40dcca02`. Old interrupted-task changes were unavailable and were not migrated. No archived agent was resumed.
 
-## Owning path and change
+## Final behavior
 
-The product Worker selects DeepSeek's native-v1 output contract in `server/src/agent-runtime/runtime.ts:65`; `parallelTools:false` prevents batches. Upstream native-v1 permits public output or one business call. The upstream candidate `LingXi-Org/LingxiOS` commit `640c2e4311293e81cc9c217e0359a53beab3d563` adds explicit native-v2 support without modifying installed packages.
+The latest current, nonempty public commentary is visible outside collapsed RunActivity while running, waiting or interrupted, and is removed from the disclosure's live entries so it appears once. Original IDs, body ownership, pending controls, failure labels and archived process remain in their existing owners. Completed runs return commentary to history. No reasoning, answer revision, stale request or tool name is promoted into a generated summary.
 
-Existing runtime publication persists public operation/delta/end/seal events. `public-events.ts` allowlists their purpose, part/attempt/request/fence and source fields for transport. `RunStreamProjection` and message projection preserve those identities. The product defaults typed commentary to process, and `NativeMessageContent` puts process in collapsed RunActivity.
+The product now pins formally published SDK **3.8.15** in root/server manifests and exact locks. Existing scoped dependency profiles were regenerated from the root lock. Registry version, tarball and integrity match both locks; unrelated npm dev-flag normalization was discarded. Only the qualified SiliconFlow DeepSeek-V4.1-Flash selection enables `publicAnswerTool:native-v2` and `parallelTools:true`; other provider selections retain their existing opt-out. Timeouts, correction budgets, authorization and the shared LLM ledger remain unchanged.
 
-The latest current, nonempty public text in process is now rendered outside that disclosure during running, waiting and interruption. It is excluded from the disclosure's live entries so it appears once. Original IDs, body ownership, pending controls, failure labels and archived process stay with their existing owners. Completed runs return commentary to history. Reasoning, answer revisions, stale request versions and tool names never manufacture the visible text.
+Upstream native-v2 lets one generation stream useful public text and original-schema business calls. The whole batch is validated and public content durably sealed before dispatch. Existing read scheduling can overlap independent calls; writes, approval, idempotency, fencing and cancellation stay in their owning paths. Tool failure observations do not force a rewrite of already useful answer text. No summary model, new review model or fixed extra loop was added.
+
+## Formal SDK provenance
+
+- Upstream PR: https://github.com/LingXi-Org/LingxiOS/pull/71 (merged).
+- Main/tag/registry gitHead: `bb86af911faafed3bb29a18192ceb113d79d6724`, tag `v3.8.15`.
+- Exact main release gate: https://github.com/LingXi-Org/LingxiOS/actions/runs/40438770019 (success; 1223 tests passed, zero failed, formal qualification artifact).
+- Formal publication: https://github.com/LingXi-Org/LingxiOS/actions/runs/40440153370 (success).
+- `published-sdk.json` retains the registry version, immutable tarball, integrity and gitHead. No source-built SDK substitution or installed-package patch was used.
 
 ## Actual verification
 
-- `npm run typecheck` and `npm run server:typecheck`: passed after root and server formal dependencies were restored.
-- Two focused presentation/rendering files: 35 tests passed. Includes real assistant-ui server rendering of current commentary during run/wait/cancel, body text once, replay/remount and existing failure/approval controls.
-- Biome lint of the five changed TS/TSX files: passed.
-- Two new persisted-event/SSE tests plus four existing public-event privacy tests: 6 passed. `server/src/__tests__/public-tool-rounds.test.ts` uses persisted events from an actual upstream Worker/PGlite run pass through formal SDK 3.8.14, product allowlisting and stream projection. It runs native SSE framing, the product encoder and the actual client decoder, and checks useful body before read start, observation/body and latest commentary before the write, final sources once, duplicate replay and reconstruction. The retained `worker-native-v2.json` is generated Worker evidence, not a hand-authored UI mock. This is deterministic source integration, not a browser or live-provider product run.
+- Formal 3.8.15: `public-text-deployment.test.ts`, `public-tool-rounds.test.ts`, `public-events.test.ts`: **9 passed**, zero failed. The real public Worker factory accepts the actual v2 configuration without starting a worker, provider request or production operation. Other provider profiles retain `parallelTools:false`.
+- `npm run typecheck` and `npm run server:typecheck`: passed with formal 3.8.15.
+- Focused runtime/configuration lint and scoped dependency profile consistency: passed.
+- UI change: **35** presentation/real assistant-ui rendering tests passed, including current commentary during run/wait/cancel, body once, remount and existing failure/approval controls.
+- A persisted real upstream Worker/PGlite capture passes through the formal SDK reader, product allowlist, native SSE framing, product encoder and actual client decoder. Tests establish useful body before read start, stage content before the write, final sources once, duplicate replay and reconstruction. `worker-native-v2.json` is generated Worker evidence, not a hand-authored UI mock.
+- Upstream focused checks: **31 driver / 28 Worker-PGlite tests** passed. Synthetic comparison: the same two read observations, one write and final sources use six generations/max one read with native-v1 versus three/max two reads with native-v2, with zero auxiliary calls.
+- A separate controlled real DeepSeek sample completed explanation, two local synthetic reads and an observation-based conclusion in two generations: first body 2058.94ms, tools 5054.88ms, total 9401.76ms, input/output tokens 2455/569. Native-v1 failed protocol in its sole control request; that failed baseline does not prove a general speedup. No provider billing receipt was measured.
 
-Upstream separately verified a controlled real DeepSeek scenario: native-v2 completed in two generations, useful body at 2058.94 ms, two synthetic read tools at 5054.88 ms, total 9401.76 ms; reported input/output totals 2455/569. Native-v1 failed protocol in its sole request, with no tool execution. Billing cost was not measured. See upstream evidence for boundaries.
+## CI correction and boundary
 
-## Pending integration
+Initial c67a4204 CI failed server typechecking because the replay test imported client presentation with browser path aliases and an ES2023 array API. The test was narrowed to server projection/metadata, leaving rendering assertions with the UI owner. Product commit 275345627e29de96ce17b96a2a137e02b0a67329 then passed scoped CI: https://github.com/LingXi-Org/LingxiLoop/actions/runs/40437890368. The final dependency/configuration commit has its own PR CI.
 
-The product remains pinned to formally published SDK 3.8.14 and native-v1. Native-v2 cannot be enabled against that version. After the upstream contract is published, the sole integrator must:
+Root/server initially held stale SDK3.5.2. Local verification now uses the formal root-locked dependency tree, matching CI's single-tree resolution; server's exact SDK lock matches the same published artifact. No compiler target or CI dependency scope was broadened.
 
-1. Upgrade `package.json`, `package-lock.json`, `server/package.json`, `server/package-lock.json` to the exact formal SDK version and verify package integrity.
-2. In the existing qualified DeepSeek selection in `runtimeModelConfiguration`, change the selected publicAnswerTool from `native-v1` to `native-v2`; set `parallelTools` to `nativeDeepSeekTools` (other provider profiles retain their existing opt-out).
-3. Update the owning provider-configuration assertions and run them with the newly published package. Keep all current timeouts, budgets, authorization and the LLM ledger.
-4. Hand rollout to the designated release owner; this task does not merge or deploy.
-
-No source-built SDK substitution, dynamic compatibility adapter or installed-package patch was used in this product. No browser acceptance, production event/paint measurement, original screenshot diagnosis, package publication or production write was performed. #533 remains open until the formal dependency and product activation are integrated and the agreed acceptance boundary is recorded.
-
-## CI follow-up
-
-Initial product CI at c67a4204 failed server typechecking because this server replay test imported a client presentation module with browser-only path aliases and an ES2023 array API. The replay test now stays within formal server projection/metadata; existing UI rendering tests own current-commentary visibility. No compiler target or dependency scope was broadened.
-
-Local server typecheck and both replay/SSE tests passed after the fix. Local root and server trees initially installed different locked Zod minors; verification uses the single root-locked dependency tree, matching CI's single-tree resolution, with formal SDK3.8.14. No tracked manifest/lock was changed by this CI fix.
+Production has not been changed by this task. No product PR merge or deployment, browser acceptance, production paint/event measurement or diagnosis of the original screenshot's exact run was performed. The live provider sample did not execute through product Worker/UI or generate an interactive component. #533 stays open for the designated sole production integrator to finish the agreed release/verification boundary.

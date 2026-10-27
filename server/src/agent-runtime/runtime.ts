@@ -73,12 +73,12 @@ export function runtimeModelConfiguration(model: { id: string; apiKey: string; b
     publicTextContinuation: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3'
       ? 'typed-message-v1' : undefined,
     publicAnswerTool: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3'
-      ? 'native-v1' : undefined,
+      ? 'native-v2' : undefined,
     recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
     maxThinkingTokens: 0, capabilities: {
-      parallelTools: false,
+      parallelTools: nativeDeepSeekTools,
       // This provider/model suppresses native tool calls when JSON mode is
       // combined with tools. Keep the strict public-purpose parser enabled.
       ...(nativeDeepSeekTools ? { jsonObjectWithTools: false } : {}),

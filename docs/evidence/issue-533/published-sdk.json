@@ -1,0 +1,9 @@
+{
+  "version": "3.8.15",
+  "dist": {
+    "integrity": "sha512-fv8XcYkJV7ph1IenIxhFMpzHRY0gKsOW5ua8q91geNeqIlI5/ObuSUc9C7vYTME/uozL/A8q+ldZCVAwqTDPYA==",
+    "shasum": "ff77a1d9222afe254f88a729152826edd8445fed",
+    "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.15/ff77a1d9222afe254f88a729152826edd8445fed"
+  },
+  "gitHead": "bb86af911faafed3bb29a18192ceb113d79d6724"
+}
