@@ -192,8 +192,8 @@ test('GHCR rejects an untrusted blob redirect before sending any request or cred
   await assert.rejects(ghcrConfigBlob('ghcr.io/lingxi-org/runtime',fixture.configHash,{env:{GITHUB_ACTOR:'ci-user',GITHUB_TOKEN:'fixture-password'},read:()=>{throw new Error('missing')},fetcher:async()=>{calls++;if(calls===1)return Response.json({token:'fixture-pull-token'});return new Response(null,{status:307,headers:{location:'https://untrusted.example/config'}})}}),/GHCR_BLOB_REDIRECT_UNTRUSTED/)
   assert.equal(calls,2)
 })
-function runtimePatch57Fixture(product=57){
- const sourceRuntime=product===58?'3.8.14':'3.8.12',targetRuntime=product===58?'3.8.15':'3.8.14'
+function runtimePatch57Fixture(product=57,versions=product===58?['3.8.14','3.8.15']:['3.8.12','3.8.14']){
+ const [sourceRuntime,targetRuntime]=versions
  const f=migrationFixture(),old=f.accepted.components['main-runtime-a'].appSha,recoverySha=f.attestation.targets['main-runtime-a'].hostPlan.recovery.appSha
  const rows=Array.from({length:product},(_,i)=>({version:i+1,name:`migration_${i+1}`,checksum:String(i%10).repeat(64)})),before={...f.contractIdentity(old),lingxios:sourceRuntime,migrations:rows},after={...before,lingxios:targetRuntime,integrity:`sha512-${'A'.repeat(86)}==`,resolved:`https://npm.pkg.github.com/download/@lyyzka/lingxios/${targetRuntime}/${'b'.repeat(40)}`}
  f.publicPackage={...f.publicPackage,lingxios:targetRuntime};f.contractIdentity=commit=>commit===old?before:after
@@ -232,5 +232,13 @@ test('SDK14 to15 product58 attestation binds exact package, complete unchanged l
  assert.equal(buildManifest(runtimePatch57Fixture(58)).targets['main-runtime-a'].hostPlan.database.runtimePatch.target.runtime,'3.8.15')
  for(const change of [o=>{o.hostPlan.database.rpo='test-data-no-backup'},o=>{o.hostPlan.database.runtimePatch.source.runtime='3.8.13'},o=>{o.hostPlan.database.runtimePatch.target.runtime='3.8.16'},o=>{o.hostPlan.database.runtimePatch.target.migrations[57].name='renamed'},o=>{o.hostPlan.database.runtimePatch.target.tarball+='/extra'}]){
   const f=runtimePatch57Fixture(58);for(const o of Object.values(f.attestation.targets))change(o);assert.throws(()=>buildManifest(f))
+ }
+})
+
+test('SDK15 to16 product58 attestation requires exact source, target and formal package proof',()=>{
+ const fixture=()=>runtimePatch57Fixture(58,['3.8.15','3.8.16'])
+ assert.equal(buildManifest(fixture()).targets['main-runtime-a'].hostPlan.database.runtimePatch.target.runtime,'3.8.16')
+ for(const change of [o=>{o.hostPlan.database.rpo='test-data-no-backup'},o=>{o.hostPlan.database.runtimePatch.source.runtime='3.8.14'},o=>{o.hostPlan.database.runtimePatch.target.runtime='3.8.17'},o=>{o.hostPlan.database.runtimePatch.target.migrations[57].name='renamed'},o=>{o.hostPlan.database.runtimePatch.target.tarball+='/extra'}]){
+  const f=fixture();for(const o of Object.values(f.attestation.targets))change(o);assert.throws(()=>buildManifest(f))
  }
 })

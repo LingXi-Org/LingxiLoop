@@ -1,4 +1,4 @@
-// Exact reviewed product57 SDK12->14 and product58 SDK14->15 provenance-only CAS. No executable paths or SQL in this input.
+// Exact reviewed product57 SDK12->14 and product58 SDK14->15->16 provenance-only CAS. No executable paths or SQL in this input.
 import {createHash} from 'node:crypto'
 import {canonical,fault} from './journal.mjs'
 const keys=(value,expected)=>value&&typeof value==='object'&&!Array.isArray(value)&&canonical(Object.keys(value).sort())===canonical([...expected].sort())
@@ -7,9 +7,9 @@ const validDescriptor=(d,runtime,product,extra=[])=>keys(d,[...fields,...extra])
 export function validateRuntimePatch(database){
  const patch=database.runtimePatch
  if(patch===undefined)return undefined
- const rule=[['3.8.12','3.8.14',57],['3.8.14','3.8.15',58]].find(([source,target,product])=>patch?.source?.runtime===source&&patch?.target?.runtime===target&&patch?.source?.productVersion===product)
+ const rule=[['3.8.12','3.8.14',57],['3.8.14','3.8.15',58],['3.8.15','3.8.16',58]].find(([source,target,product])=>patch?.source?.runtime===source&&patch?.target?.runtime===target&&patch?.source?.productVersion===product)
  const prefix=rule?`https://npm.pkg.github.com/download/@lyyzka/lingxios/${rule[1]}/`:''
- if(!rule||!keys(patch,['source','target'])||!validDescriptor(patch.source,rule[0],rule[2])||!validDescriptor(patch.target,rule[1],rule[2],['integrity','tarball'])||patch.source.schemaHash!==patch.target.schemaHash||canonical(patch.source.migrations)!==canonical(patch.target.migrations)||!/^sha512-[A-Za-z0-9+/]{86}==$/.test(patch.target.integrity??'')||typeof patch.target.tarball!=='string'||!patch.target.tarball.startsWith(prefix)||!/^[a-f0-9]{40}$/.test(patch.target.tarball.slice(prefix.length))||[database.from,database.to].some(d=>d?.nativeSchema!==14||d?.productSchema!==rule[2])||canonical(database.migrations)!==canonical(patch.target.migrations)||database.rpo==='test-data-no-backup'||Buffer.byteLength(JSON.stringify(patch))>65536)throw fault('INVALID_RUNTIME_PATCH','Runtime patch requires an exact reviewed SDK12 to14/product57 or SDK14 to15/product58 pair, unchanged complete named ledger and normal backup protection',422)
+ if(!rule||!keys(patch,['source','target'])||!validDescriptor(patch.source,rule[0],rule[2])||!validDescriptor(patch.target,rule[1],rule[2],['integrity','tarball'])||patch.source.schemaHash!==patch.target.schemaHash||canonical(patch.source.migrations)!==canonical(patch.target.migrations)||!/^sha512-[A-Za-z0-9+/]{86}==$/.test(patch.target.integrity??'')||typeof patch.target.tarball!=='string'||!patch.target.tarball.startsWith(prefix)||!/^[a-f0-9]{40}$/.test(patch.target.tarball.slice(prefix.length))||[database.from,database.to].some(d=>d?.nativeSchema!==14||d?.productSchema!==rule[2])||canonical(database.migrations)!==canonical(patch.target.migrations)||database.rpo==='test-data-no-backup'||Buffer.byteLength(JSON.stringify(patch))>65536)throw fault('INVALID_RUNTIME_PATCH','Runtime patch requires an exact reviewed SDK12 to14/product57 or SDK14 to15/SDK15 to16/product58 pair, unchanged complete named ledger and normal backup protection',422)
  return patch
 }
 export function runtimePatchPlanHash(patch){
