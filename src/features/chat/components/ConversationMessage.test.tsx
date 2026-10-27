@@ -486,3 +486,22 @@ test('each message render classifies its parts once and still places exactly one
   assert.equal($('[data-message-footer]').length, 1)
   assert.equal(presentationCalls, 1, 'footer consumers reuse their message owner classification')
 })
+
+
+test('latest streamed public observation is outside collapsed activity exactly once and survives replay', () => {
+  const part = (id: string, text: string, order: number) => ({ type: 'text' as const, text,
+    providerMetadata: { lingxiloop: { activity: { version: 1, id, kind: 'commentary', label: '公开说明', requestVersion: 1, order } } } })
+  for (const status of [{ type: 'running' }, { type: 'requires-action', reason: 'tool-calls' }, { type: 'incomplete', reason: 'cancelled' }]) {
+    const reply = { ...message('1'), status, content: [part('first', '已读取第一项。', 1),
+      { type: 'text', text: 'TCP 提供有序可靠字节流；UDP 发送独立数据报。' }, part('latest', '两项读取均已完成，接下来保存演示。', 5)],
+      metadata: { custom: { ...getLingxiMessageMetadata(message('1')), runId: 'run', activityPresentation: { version: 1 },
+        harness: { ...createRunView('run'), requestVersion: 1, artifacts: [] } } } } as ThreadMessage
+    const render = () => load(renderToStaticMarkup(<Preview messages={[reply]} />))
+    for (const $ of [render(), render()]) {
+      assert.equal($('[data-message-region="commentary"]').text(), '两项读取均已完成，接下来保存演示。')
+      assert.doesNotMatch($('[data-slot="run-activity"]').text(), /两项读取均已完成/)
+      assert.equal($.text().split('两项读取均已完成，接下来保存演示。').length - 1, 1)
+      assert.equal($('[data-message-region="body"]').text(), 'TCP 提供有序可靠字节流；UDP 发送独立数据报。')
+    }
+  }
+})

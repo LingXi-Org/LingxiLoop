@@ -1,0 +1,51 @@
+{
+  "node": "24.19.0",
+  "productBase": "d544775f2809cb0f80502547ef383b6a40dcca02",
+  "formalSdkInstalled": {
+    "root": "3.8.15",
+    "serverImport": "3.8.15 (shared root-locked tree)",
+    "serverLock": "3.8.15"
+  },
+  "sdkProvenance": {
+    "version": "3.8.15",
+    "dist": {
+      "integrity": "sha512-fv8XcYkJV7ph1IenIxhFMpzHRY0gKsOW5ua8q91geNeqIlI5/ObuSUc9C7vYTME/uozL/A8q+ldZCVAwqTDPYA==",
+      "shasum": "ff77a1d9222afe254f88a729152826edd8445fed",
+      "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.15/ff77a1d9222afe254f88a729152826edd8445fed"
+    },
+    "gitHead": "bb86af911faafed3bb29a18192ceb113d79d6724"
+  },
+  "upstreamMergedMain": "bb86af911faafed3bb29a18192ceb113d79d6724",
+  "sdkMainGate": {
+    "run": 40438770019,
+    "conclusion": "success",
+    "testsPassed": 1223,
+    "testsFailed": 0
+  },
+  "sdkPublication": {
+    "run": 40440153370,
+    "conclusion": "success"
+  },
+  "webTypecheck": "passed",
+  "serverTypecheck": "passed",
+  "focusedLint": "passed",
+  "scopedDependencyProfiles": "passed",
+  "presentationAndRenderingTests": {
+    "passed": 35,
+    "failed": 0
+  },
+  "formalConfigReplayPrivacyTests": {
+    "passed": 9,
+    "failed": 0
+  },
+  "priorProductCi": {
+    "sha": "275345627e29de96ce17b96a2a137e02b0a67329",
+    "run": 40437890368,
+    "conclusion": "success"
+  },
+  "activation": "qualified DeepSeek selects native-v2 and parallelTools; other profiles unchanged",
+  "finalProductCi": "check the PR head run; not asserted by this pre-push record",
+  "browser": "not performed",
+  "production": "not accessed",
+  "oldTaskChanges": "not migrated"
+}

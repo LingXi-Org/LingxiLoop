@@ -30,18 +30,22 @@ test('SiliconFlow DeepSeek retains native business schemas and the bounded v3 pu
   const configured=runtimeModelConfiguration({id:'deepseek-ai/DeepSeek-V4.1-Flash',apiKey:'synthetic-key',baseUrl:'https://api.siliconflow.cn/v1'},90000)
   assert.equal(Reflect.get(configured.capabilities,'jsonObjectWithTools'),false)
   assert.equal(Object.hasOwn(configured,'nativeToolPublicOutput'),false)
-  assert.equal(configured.capabilities.parallelTools,false)
+  assert.equal(configured.capabilities.parallelTools,true)
   assert.equal(configured.publicTextProtocol,'purpose-json-v3')
   // Failure model: TYPED-MESSAGE-CONTINUATION-FAILURE-MODEL.md.
   assert.equal(Reflect.get(configured,'publicTextContinuation'),'typed-message-v1')
   // Failure model: NATIVE-ANSWER-TURN-CONTRACT-FAILURE-MODEL.md.
-  assert.equal(Reflect.get(configured,'publicAnswerTool'),'native-v1')
+  assert.equal(Reflect.get(configured,'publicAnswerTool'),'native-v2')
   assert.equal(configured.maxThinkingTokens,0)
   assert.deepEqual(configured.recovery,{maxAttempts:3,totalTimeoutMs:120000})
   assert.equal(configured.requestTimeoutMs,90000)
   assert.equal(configured.firstByteTimeoutMs,30000)
   assert.equal(configured.streamIdleTimeoutMs,30000)
   assert.equal(configured.auxiliaryStreaming,true)
+  const { createWorker }=await import('@lyyzka/lingxios/worker')
+  const worker=createWorker({controlPlane:{url:'http://127.0.0.1:1',serviceToken:'synthetic-public-tool-round-token'},
+    model:configured,worker:{id:'public-round-configuration',healthPort:0}})
+  await worker.stop()
   for(const [id,baseUrl] of [
     ['zai-org/GLM-5.3-Flash','https://api.siliconflow.cn/v1'],
     ['deepseek-ai/DeepSeek-V4.1-Flash','https://other-provider.example/v1'],
@@ -52,5 +56,6 @@ test('SiliconFlow DeepSeek retains native business schemas and the bounded v3 pu
     assert.equal(Object.hasOwn(other,'nativeToolPublicOutput'),false)
     assert.equal(Reflect.get(other,'publicTextContinuation'),undefined)
     assert.equal(Reflect.get(other,'publicAnswerTool'),undefined)
+    assert.equal(other.capabilities.parallelTools,false)
   }
 })

@@ -1,6 +1,6 @@
-# Product57 runtime provenance patch
+# Reviewed product57/58 runtime provenance patches
 
-`hostPlan.database.runtimePatch` is optional. Existing database plans keep their original behavior. The fixed database owner `main-runtime-a` accepts this one patch only:
+`hostPlan.database.runtimePatch` is optional. Existing database plans keep their original behavior. The fixed database owner `main-runtime-a` accepts only the exact SDK12→14/product57 and SDK14→15/product58 pairs. The historical57 shape is:
 
 ```js
 runtimePatch: {
@@ -24,3 +24,9 @@ Before apply, the helper must independently observe the exact source and the hos
 Unknown CAS outcome or a restarted process never replays CAS. `migrateObserve` launches only the fixed read-only observer. Observed source keeps the operation unresolved. If observed target and the independent target profile, runtime, protocol, schema hash, exact 57 names/checksums, all drain barriers and backup/restore evidence agree, and no migration dispatch intent exists, it can prove the equivalent postcondition of this strictly unchanged product57 inventory. Its receipt says `migrationExecution:'not-attempted'` and `equivalentPostcondition:'unchanged-product57-exact-target-provenance'`; it does not claim the command ran. Once dispatch intent exists, only the original retained successful one-off proves completion. No GET observation starts a migration, creates a new operation, clears a lock or retries a write. Helper errors disclose no raw output or connection values.
 
 Boundary tests use a fake Docker/CLI interface with real immutable host journal, backup files and persisted intent files. They cover committed CAS with lost reply, source observation after unknown, lost migration reply, exact target provenance, exit137, archive/restore gates and remote parameter refusal. Formal SDK14 image/package and disposable PostgreSQL validation remain release qualification requirements; this host-only change has not run those live tests and performs no production action.
+
+## Product58 / issue533 qualification
+
+The second exact path is source `3.8.14` to target `3.8.15`, native14, protocol11, publicText3 and runTrace1. Both descriptors and database endpoints are product58 with all58 ordered names/checksums identical; the target URL/SRI must match the formally published15 package and exact image locks. No other version pair is admitted. The same backup, isolated restore, drain, exclusive-client, checkpoint, fsynced intent and read-only reconciliation rules above apply. `test-data-no-backup` is refused for this SDK transition. The equivalent postcondition label binds product58 rather than57.
+
+The owning real PostgreSQL qualification is `runtime-patch58-provenance.test.ts`: actual formal package15/schema bytes and locks, complete58 ledger, exactly one provenance-row update without DDL or business/ledger writes, lost COMMIT observed read-only, no replay, checkpoint/client/name-drift refusal. Host/candidate tests additionally bind normal backup and exact immutable manifest evidence. These tests qualify the path; production acceptance remains a separate controller result.

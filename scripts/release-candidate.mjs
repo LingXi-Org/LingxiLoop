@@ -69,7 +69,7 @@ function checkedRuntimeOverride(id, current, artifact, before, after, { attestat
   if (before.lingxios === after.lingxios) requireProof(profileKeys.source.endsWith(`:${publicPackage.schemaHash}`), 'same package source profile schema hash differs')
   else {
     let patch
-    try { patch = validateRuntimePatch(db) } catch { requireProof(false, 'runtime package transition requires the fixed complete CAS57 plan') }
+    try { patch = validateRuntimePatch(db) } catch { requireProof(false, 'runtime package transition requires the fixed complete reviewed CAS plan') }
     requireProof(patch && patch.source.runtime === before.lingxios && patch.target.runtime === after.lingxios &&
       patch.source.schema === current.contract.nativeSchema && patch.target.schema === contract.nativeSchema &&
       patch.source.schemaHash === profileKeys.source.split(':').at(-1) && patch.target.schemaHash === publicPackage.schemaHash &&

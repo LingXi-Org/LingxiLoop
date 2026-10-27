@@ -5,7 +5,7 @@ import { inputOwner, ownsApproval, messagePresentation } from './message-present
 
 const annotation = (id: string, kind: string, extra = {}) => ({ lingxiloop: { activity: { version: 1, id, kind, label: id, ...extra } } })
 const tool = (id: string, extra = {}) => ({ type: 'tool-call', toolCallId: id, toolName: 'fixture.tool', args: {}, argsText: '', ...extra })
-const message = (content: unknown[], custom = {}, status = { type: 'requires-action', reason: 'interrupt' }): ThreadMessage => ({ id: 'run-r', role: 'assistant', createdAt: new Date(0), content, status,
+const message = (content: unknown[], custom = {}, status: { type: string; reason?: string } = { type: 'requires-action', reason: 'interrupt' }): ThreadMessage => ({ id: 'run-r', role: 'assistant', createdAt: new Date(0), content, status,
   metadata: { custom: { runId: 'r', harnessControl: true, harness: { runId: 'r', requestVersion: 3, lifecycle: 'waiting', goalOutcome: { status: 'awaiting_input' } }, ...custom } } }) as unknown as ThreadMessage
 
 test('only the unique current interrupt owns input; ambiguous interrupts fall back to the run', () => {
@@ -72,4 +72,21 @@ test('unavailable knowledge stays in attention until recovery without promoting 
     const changed = { ...part, toolName, result: { status, sourceStatus: 'unavailable' } }
     assert.equal(messagePresentation(message([changed]))[0]?.region, expected)
   }
+})
+
+test('latest current public commentary stays visible once during work, waits and interruption', async () => {
+  const { currentCommentary } = await import('./message-presentation')
+  const content = [
+    { type: 'text', text: 'Earlier result', providerMetadata: annotation('old', 'commentary', { requestVersion: 3, order: 1 }) },
+    { type: 'text', text: 'New observation', providerMetadata: annotation('latest', 'commentary', { requestVersion: 3, order: 4 }) },
+    tool('read', { providerMetadata: annotation('read', 'tool') }), { type: 'text', text: 'Useful answer', providerMetadata: annotation('body', 'answer', { purpose: 'result' }) },
+    { type: 'text', text: 'Stale', providerMetadata: annotation('stale', 'commentary', { requestVersion: 2, order: 8 }) },
+  ]
+  for (const status of [{ type: 'running' }, { type: 'requires-action', reason: 'interrupt' }, { type: 'incomplete', reason: 'cancelled' }]) {
+    const parts = messagePresentation(message(content, {}, status))
+    assert.equal(currentCommentary(message(content, {}, status), parts)?.annotation?.id, 'latest')
+    assert.equal(parts.filter(item => item.region === 'body').length, 1)
+  }
+  assert.equal(currentCommentary(message(content, {}, { type: 'complete', reason: 'stop' })), undefined)
+  assert.equal(currentCommentary(message([{ type: 'reasoning', text: 'private' }])), undefined)
 })

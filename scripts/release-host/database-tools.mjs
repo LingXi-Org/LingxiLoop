@@ -183,7 +183,7 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
       const verified=JSON.parse(await readFile(verifiedFile,'utf8')),backup=await readBackup()
       requireThat(verified.complete===true && verified.manifestHash===op.manifestHash && verified.dumpHash===backup.dumpHash,'MIGRATION_BOUNDARY_INVALID','Runtime patch observation requires the exact verified backup')
       const migrationIntent=await readOptional(migrationIntentFile)
-      if(!migrationIntent)return {complete:true,nativeSchema:14,productSchema:57,migrationsHash:hash(actual.migrations),runtimePatch:patchProof,migrationExecution:'not-attempted',equivalentPostcondition:'unchanged-product57-exact-target-provenance'}
+      if(!migrationIntent)return {complete:true,nativeSchema:14,productSchema:patch.target.productVersion,migrationsHash:hash(actual.migrations),runtimePatch:patchProof,migrationExecution:'not-attempted',equivalentPostcondition:`unchanged-product${patch.target.productVersion}-exact-target-provenance`}
       requireThat(migrationIntent.manifestHash===op.manifestHash && migrationIntent.generation===op.generation && migrationIntent.planHash===intent.planHash && migrationIntent.localImageId===intent.localImageId,'RUNTIME_PATCH_OUTCOME_UNRESOLVED','Migration intent does not match the exact runtime patch')
     }
     const [container] = JSON.parse(await run(['container','inspect',migrationContainer]))

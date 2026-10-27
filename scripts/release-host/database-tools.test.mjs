@@ -18,9 +18,9 @@ async function setup(t,{patch=false,testData=false}={}) {
   target.hostPlan.source=structuredClone(target.hostPlan.recovery);target.hostPlan.source.contract={...contract,productSchema:1}
   target.contract={...contract,productSchema:2};target.hostPlan.contract=target.contract;target.hostPlan.recovery.contract=target.contract;target.hostPlan.recovery.images=target.hostPlan.images
   target.hostPlan.database={strategy:'maintenance',rpo:'zero-committed-writes',from:{nativeSchema:14,productSchema:1},to:{nativeSchema:14,productSchema:2},migrations:migrations.map(({version,checksum})=>({version,checksum}))}
-  if(patch){target.hostPlan.database={...target.hostPlan.database,...databaseFixture()};migrations=target.hostPlan.database.runtimePatch.source.migrations;for(const descriptor of [target.hostPlan.source,target.hostPlan,target.hostPlan.recovery])descriptor.contract={...contract,productSchema:57};target.contract=target.hostPlan.contract}
+  if(patch){target.hostPlan.database={...target.hostPlan.database,...databaseFixture(patch===58?58:57)};migrations=target.hostPlan.database.runtimePatch.source.migrations;for(const descriptor of [target.hostPlan.source,target.hostPlan,target.hostPlan.recovery])descriptor.contract={...contract,productSchema:patch===58?58:57};target.contract=target.hostPlan.contract}
   local.targets['main-runtime-a'].migration={service:'db-migrate',imageService:'web'}
-  local.archive={baseUrl:'https://archive.fixture.invalid',tokenFile:'/fixed/test-token'};local.database={container:'postgres-fixed',user:'postgres',database:'fixture',migrationHostname:'postgres',profiles:Object.fromEntries((patch?[57]:[1,2]).map(version=>[`14:${version}:${schemaHash}`,{contract:{...contract,productSchema:version},migrationsHash:hash(migrations.slice(0,version)),protocolVersion:11,requiredCapabilities:contract.capabilities}]))}
+  local.archive={baseUrl:'https://archive.fixture.invalid',tokenFile:'/fixed/test-token'};local.database={container:'postgres-fixed',user:'postgres',database:'fixture',migrationHostname:'postgres',profiles:Object.fromEntries((patch?[patch===58?58:57]:[1,2]).map(version=>[`14:${version}:${schemaHash}`,{contract:{...contract,productSchema:version},migrationsHash:hash(migrations.slice(0,version)),protocolVersion:11,requiredCapabilities:contract.capabilities}]))}
   if(testData){
     target.hostPlan.database.rpo='test-data-no-backup';local.allowTestDataNoBackup=true
     for(const descriptor of [target.hostPlan.source,target.hostPlan,target.hostPlan.recovery])descriptor.contract.lingxios='3.8.12'
@@ -30,8 +30,8 @@ async function setup(t,{patch=false,testData=false}={}) {
   t.after(async()=>{journal.close();await rm(directory,{recursive:true,force:true})})
   const output=join(directory,release.releaseId,'database');await mkdir(output,{recursive:true});const dump=Buffer.from('synthetic qualified backup'),dumpHash=`sha256:${createHash('sha256').update(dump).digest('hex')}`
   await writeFile(join(output,'backup.dump'),dump);await writeFile(join(output,'backup.json'),JSON.stringify({complete:true,manifestHash,dumpHash}));await writeFile(join(output,'restore-verified.json'),JSON.stringify({complete:true,manifestHash,dumpHash,cleanupErrors:[]}))
-  let version=patch?57:1,exitCode=0,hostname='postgres',runtime='3.8.12';const calls=[]
-  const run=async args=>{calls.push(args);if(args[0]==='image')return JSON.stringify([{Id:newImage.configDigest,RepoDigests:[newImage.ref],Os:'linux',Architecture:'amd64',RootFS:{Type:'layers',Layers:newImage.diffIds}}]);if(args[0]==='container')return JSON.stringify([{Image:newImage.configDigest,State:{Status:'exited',Running:false,ExitCode:exitCode}}]);if(args.includes('psql'))return JSON.stringify({runtime,nativeSchema:14,installedSchema:14,productSchema:version,migrationCount:version,schemaHash,protocolVersion:11,migrations:migrations.slice(0,version),readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:0});if(args.includes('config'))return JSON.stringify({services:{'db-migrate':{image:newImage.configDigest,pull_policy:'never',restart:'no',command:['npm','run','db:migrate'],environment:{DATABASE_URL:`postgresql://postgres@${hostname}/fixture`}}}});if(args.includes('run')){version=patch?57:2;return ''}throw Error('Unexpected fixed test argv')}
+  let version=patch?(patch===58?58:57):1,exitCode=0,hostname='postgres',runtime=patch===58?'3.8.14':'3.8.12';const calls=[]
+  const run=async args=>{calls.push(args);if(args[0]==='image')return JSON.stringify([{Id:newImage.configDigest,RepoDigests:[newImage.ref],Os:'linux',Architecture:'amd64',RootFS:{Type:'layers',Layers:newImage.diffIds}}]);if(args[0]==='container')return JSON.stringify([{Image:newImage.configDigest,State:{Status:'exited',Running:false,ExitCode:exitCode}}]);if(args.includes('psql'))return JSON.stringify({runtime,nativeSchema:14,installedSchema:14,productSchema:version,migrationCount:version,schemaHash,protocolVersion:11,migrations:migrations.slice(0,version),readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:0});if(args.includes('config'))return JSON.stringify({services:{'db-migrate':{image:newImage.configDigest,pull_policy:'never',restart:'no',command:['npm','run','db:migrate'],environment:{DATABASE_URL:`postgresql://postgres@${hostname}/fixture`}}}});if(args.includes('run')){version=patch?(patch===58?58:57):2;return ''}throw Error('Unexpected fixed test argv')}
   return {local,run,calls,directory,release,journal,executor,patch:target.hostPlan.database.runtimePatch,setRuntime:value=>runtime=value,configurationHash:target.hostPlan.configurationHash,op:{releaseId:release.releaseId,target:'main-runtime-a',phase:'migrate',generation:1,manifestHash,parameters:{}},setExitCode:value=>exitCode=value,setHostname:value=>hostname=value}
 }
 test('fixed offline migration checks exact source prefix and destination, then final container exit and target ledger',async t=>{
@@ -67,8 +67,8 @@ function patchHelper(f,{lost=false,commit=true}={}){
  return {calls,setState:value=>state=value,run:async(argv,body)=>{
   const action=argv.at(-1);calls.push({argv,body:structuredClone(body)})
   assert.deepEqual(body,f.patch);assert.equal(argv[0],'/usr/bin/docker');assert.ok(argv.includes('--no-deps'));assert.equal(argv[argv.indexOf('--pull')+1],'never');assert.ok(argv.includes('--interactive'));assert.ok(argv.includes('--no-TTY'));assert.ok(argv.includes('--rm'));assert.equal(argv[argv.indexOf('--entrypoint')+1],'node');assert.deepEqual(argv.slice(-4),['--import','tsx','server/src/runtime-patch-bin.ts',action]);assert.ok(!argv.some(a=>a.includes('postgresql:')))
-  const base={action,source:'3.8.12',target:'3.8.14',schema:14,product:57,planHash:runtimePatchPlanHash(f.patch)}
-  if(action==='apply'){assert.ok(argv.includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED=true'));if(commit){state='target';f.setRuntime('3.8.14')}if(lost)throw Error('Simulated lost COMMIT response');return {...base,complete:true,updated:1}}
+  const base={action,source:f.patch.source.runtime,target:f.patch.target.runtime,schema:14,product:f.patch.target.productVersion,planHash:runtimePatchPlanHash(f.patch)}
+  if(action==='apply'){assert.ok(argv.includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED=true'));if(commit){state='target';f.setRuntime(f.patch.target.runtime)}if(lost)throw Error('Simulated lost COMMIT response');return {...base,complete:true,updated:1}}
   assert.ok(!argv.includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED=true'));return {...base,complete:state==='target',state,observationOnly:true}
  }}
 }
@@ -284,4 +284,17 @@ test('uncertain test-data migration retains ownership and cannot be replayed or 
   assert.equal(f.calls.filter(a=>a.includes('run')).length,1)
   assert.ok(f.journal.db.prepare('SELECT count(*) AS n FROM reservations WHERE operation_key=?').get(operation.key).n>0)
   await assert.rejects(f.executor.assertSourceRestoreAllowed(f.op),{code:'SOURCE_RESTORE_FORBIDDEN'})
+})
+
+test('product58 lost SDK14 to15 CAS response retains backup guards and observes target without replay',async t=>{
+ const f=await setup(t,{patch:58}),h=patchHelper(f,{lost:true}),opts=patchOptions(f,h)
+ await assert.rejects(databaseTool(f.local,'migrate',f.op,{...opts,archiveObserve:async()=>{throw Object.assign(Error('absent'),{code:'ARCHIVE_NOT_CONFIRMED'})}}),{code:'ARCHIVE_NOT_CONFIRMED'})
+ assert.equal(h.calls.length,0)
+ await assert.rejects(databaseTool(f.local,'migrate',f.op,opts),{code:'RUNTIME_PATCH_OUTCOME_UNRESOLVED',uncertain:true})
+ const result=await databaseTool(f.local,'migrateObserve',f.op,opts)
+ assert.equal(result.complete,true);assert.equal(result.productSchema,58)
+ assert.equal(result.equivalentPostcondition,'unchanged-product58-exact-target-provenance')
+ await databaseTool(f.local,'migrate',f.op,opts)
+ assert.equal(h.calls.filter(c=>c.argv.at(-1)==='apply').length,1)
+ assert.equal(f.calls.some(args=>args.includes('run')),false)
 })
