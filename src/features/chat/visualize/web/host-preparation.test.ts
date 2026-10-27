@@ -9,14 +9,19 @@ let userId = 'student'
 const companyId = 'school'
 const calls: { kind: string; at: number }[] = []
 let resourceDelay = 0
+let publicMiss = false
+let resourceText = 'fixed public runtime'
+const assetRequests: {path:string;init:RequestInit}[]=[]
 mock.module('@/api/core/http', { namedExports: { http: (path: string, init?: RequestInit) => route(path, init) } })
 mock.module('@/lib/workspaceSession', { namedExports: { getWorkspaceSession: () => ({ companyId, projectId: 'course' }) } })
 mock.module('@/stores/auth', { namedExports: { getActiveCompanyId: () => companyId, useAuth: { getState: () => ({ user: { id: userId } }) } } })
 mock.module('@/api/transport', { namedExports: { lingxiApiFetch: async (_path: string, init: RequestInit) => {
+  assetRequests.push({path:_path,init})
+  if (publicMiss && _path.startsWith('/assets/')) return new Response('missing',{status:404})
   calls.push({ kind: 'resource-start', at: performance.now() })
   await delay(resourceDelay, undefined, { signal: init.signal! })
   calls.push({ kind: 'resource-end', at: performance.now() })
-  return new Response('fixed public runtime')
+  return new Response(resourceText)
 } } })
 mock.module('./document', { namedExports: { buildWebShell: (html: string) => html,
   buildWebDocument: async (fragment: string, _state: unknown, resource: (name: string) => Promise<string>) => `${fragment}\n${await resource('gen-ui.js')}` } })
@@ -87,7 +92,7 @@ test('initial state keeps newer peer revisions and later reads still fetch fresh
 })
 
 test('a failed first state read aborts pending resource work and revokes the new page', async () => {
-  calls.length = 0; resourceDelay = 1000
+  calls.length = 0; assetRequests.length=0; resourceDelay = 1000
   let revoked = false
   route = async (path, init) => {
     if (init?.method === 'POST') return { pageId: 'state-failure', initId: 'state-failure-token', html: '<svg/>', state: null, stateRevision: 0 }
@@ -131,7 +136,7 @@ test('resource completion cannot expose a page before its authorized state reque
 })
 
 test('initialization cancellation reaches both resource and fresh state requests and releases the page', async () => {
-  calls.length = 0; resourceDelay = 1000
+  calls.length = 0; assetRequests.length=0; resourceDelay = 1000
   let stateAborted = false, revoked = false
   route = async (path, init) => {
     if (init?.method === 'POST') return { pageId: 'cancel-state', initId: 'cancel-state-token', html: '<svg/>', state: null, stateRevision: 0 }
@@ -172,7 +177,7 @@ test('a scope change after the parallel state read cannot expose the prepared do
 })
 
 test('completed public bytes are reused while each page keeps its own HTML, capability and fresh state read', async () => {
-  calls.length = 0; resourceDelay = 10
+  calls.length = 0; assetRequests.length=0; resourceDelay = 10
   let creates = 0, states = 0
   const resourceHashes = { 'gen-ui.js': createHash('sha256').update('fixed public runtime').digest('hex') }
   route = async (path, init) => {
@@ -194,8 +199,32 @@ test('completed public bytes are reused while each page keeps its own HTML, capa
       assert.equal((handle as typeof handle&{html:string}).html,`scoped document ${page}\nfixed public runtime`)
       assert.deepEqual(await web.service.getState(target),{modelContent:{fresh:page},privateContent:null})
     }
+    assert.match(assetRequests[0].path,/^\/assets\/visualize-[a-f0-9]{64}\.js$/)
+    assert.equal(assetRequests[0].init.credentials,'omit')
+    assert.equal(assetRequests[0].init.cache,'default')
+    assert.equal(assetRequests[0].init.headers,undefined,'public URLs carry no page or tenant capabilities')
     assert.equal(creates,2)
     assert.equal(states,2,'public cache never replaces current authorized personal state')
     assert.equal(calls.filter(call=>call.kind==='resource-start').length,1,'same immutable runtime bytes should not transfer again')
   } finally { for(const handle of handles)await webPlatform.disposeSandbox(handle.sandboxId,handle.initId) }
+})
+
+test('an older hash missing from the first static rollout falls back to the authorized resource route', async () => {
+  assetRequests.length=0; publicMiss=true; resourceDelay=0; resourceText='older fixed runtime'
+  route=async(path,init)=>{
+    if(init?.method==='POST')return {pageId:'old-static-hash',initId:'old-capability',html:'older document',state:null,stateRevision:0,
+      resourceHashes:{'gen-ui.js':createHash('sha256').update(resourceText).digest('hex')}}
+    if(init?.method==='DELETE')return {}
+    assert.ok(path.endsWith('/state'));return {state:null,revision:0}
+  }
+  const web=createWebServices(target)
+  let handle:Awaited<ReturnType<typeof web.service.prepareSandbox>>|undefined
+  try {
+    handle=await web.service.prepareSandbox({...target,html:'',ownerWebContentsId:0})
+    assert.equal(assetRequests.length,2)
+    assert.match(assetRequests[0].path,/^\/assets\//)
+    assert.match(assetRequests[1].path,/\/pages\/old-static-hash\/resources\?name=gen-ui.js$/)
+    assert.equal(assetRequests[1].init.cache,'no-store')
+    assert.equal(new Headers(assetRequests[1].init.headers).get('x-visualize-page-token'),'old-capability')
+  } finally {publicMiss=false;resourceText='fixed public runtime';if(handle)await webPlatform.disposeSandbox(handle.sandboxId,handle.initId)}
 })

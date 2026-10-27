@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { createHash, randomUUID } from 'node:crypto'
 import path from 'node:path'
 import type { Plugin } from 'vite'
+import { VISUALIZE_PUBLIC_RESOURCES, visualizeResourceUrl } from '../../shared/visualize-public-resources'
 import { windowFixture } from './window-fixture'
 
 // Controlled local transport for UI/bridge tests. Real tenant authorization and
@@ -18,15 +19,29 @@ export function visualizeFixtureApi(): Plugin {
   let performanceConfig = { resourceMs: 0, stateMs: 0 }
   const performanceRequests: { stage: string; method: string; name?: string; start: number; end?: number }[] = []
   const stateKey=(page:Pick<Page,'channel'|'path'>)=>JSON.stringify([page.channel,page.path])
-  const resourceFile = (name:string) => name==='gen-ui.js'?path.join(process.env.E2E_VISUALIZE_RUNTIME_ROOT??'server/assets/visualize-runtime','gen-ui.js')
+  const resourceFile = (name:string) => ['gen-ui.js','kit-tooltip.js','kit-carousel.js','capture.js'].includes(name)?path.join(process.env.E2E_VISUALIZE_RUNTIME_ROOT??'server/assets/visualize-runtime',name)
     :path.join(process.env.E2E_VISUALIZE_ASSET_ROOT??'third_party/zcode/skills/visualize/assets',name)
   let publicHashes: Promise<Record<string,string>> | undefined
-  const performanceHashes = () => publicHashes ??= Promise.all(['visualize.css','visualize.html','gen-ui.js','calendar.js','vendor/d3-7.9.0.min.js','vendor/floating-ui-core-1.7.3.min.js','vendor/floating-ui-dom-1.7.4.min.js','vendor/lucide-1.17.0.js']
+  const performanceHashes = () => publicHashes ??= Promise.all(VISUALIZE_PUBLIC_RESOURCES
     .map(async name=>[name,createHash('sha256').update(await readFile(resourceFile(name))).digest('hex')])).then(Object.fromEntries).catch(error=>{publicHashes=undefined;throw error})
   return {name:'issue193-presentation-api',configureServer(server){
     server.middlewares.use(async(req,res,next)=>{
       const url=new URL(req.url??'/', 'http://127.0.0.1:5193')
       const reply=(value:unknown,status=200)=>{res.statusCode=status;res.setHeader('content-type','application/json');res.end(JSON.stringify(value))}
+      if (/^\/assets\/visualize-[a-f0-9]{64}\.(js|css|txt)$/.test(url.pathname)) {
+        const hashes=await performanceHashes()
+        const name=VISUALIZE_PUBLIC_RESOURCES.find(name=>visualizeResourceUrl(name,hashes[name])===url.pathname)
+        if (!name) {reply({},404);return}
+        const timing={stage:'resources',method:req.method??'GET',name,start:performance.now()}
+        performanceRequests.push(timing)
+        res.once('finish',()=>{(timing as typeof performanceRequests[number]).end=performance.now()})
+        if(performanceConfig.resourceMs)await new Promise(resolve=>setTimeout(resolve,performanceConfig.resourceMs))
+        res.setHeader('Cache-Control','public, max-age=31536000, immutable')
+        res.setHeader('Access-Control-Allow-Origin','*')
+        res.setHeader('X-Content-Type-Options','nosniff')
+        res.setHeader('Content-Type',name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/plain')
+        res.end(await readFile(resourceFile(name)));return
+      }
       if(url.pathname==='/__visualize_fixture/performance') {
         if(req.method==='POST') { const body:Buffer[]=[];for await(const chunk of req)body.push(Buffer.from(chunk));const value=JSON.parse(Buffer.concat(body).toString());performanceConfig={resourceMs:Math.max(0,Math.min(2000,Number(value.resourceMs)||0)),stateMs:Math.max(0,Math.min(2000,Number(value.stateMs)||0))} }
         reply({config:performanceConfig,requests:performanceRequests,resourceHashes:publicHashes?await publicHashes:null});return

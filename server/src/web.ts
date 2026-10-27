@@ -108,6 +108,10 @@ export async function startWebProcess(): Promise<ServiceHandle> {
       index: false,
       maxAge: '1h',
       setHeaders: (res, filePath) => {
+        if (/[/\\]assets[/\\]visualize-[a-f0-9]{64}\.(js|css|txt)$/.test(filePath)) {
+          res.setHeader('Access-Control-Allow-Origin', '*')
+          res.setHeader('X-Content-Type-Options', 'nosniff')
+        }
         if (filePath.endsWith('index.html')) {
           res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
         } else if (dirname(filePath) === join(DIST_DIR, 'assets') && /-[\w-]{8,}\.[^.]+$/.test(filePath)) {

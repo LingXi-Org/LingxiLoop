@@ -1,3 +1,4 @@
+import { isVisualizePublicResource } from '../../../shared/visualize-public-resources.js'
 import { createHash, randomUUID } from 'node:crypto'
 import { isDeepStrictEqual } from 'node:util'
 import { projectGenUiReferences } from '../../../src/features/chat/visualize/zcode/gen-ui/domain/references.js'
@@ -14,7 +15,7 @@ import { genUiWidgetStateSchema, type GenUiWidgetState } from '../../../src/feat
 import { createNativeMessage, nativeMessageSchema, type NativeMessage } from './message-types.js'
 import { messageAcceptanceDigest } from './messages-digest.js'
 import { acceptSend, ensureSendAcceptance, getSendAcceptance, SEND_NOT_DISPATCHED } from './messages-repository.js'
-import { readPublicVisualizeResourceHashes } from './visualize-public-resources.js'
+import { readPublicVisualizeResource, readPublicVisualizeResourceHashes } from './visualize-public-resources.js'
 
 export interface VisualizeActor { companyId: string; channelId: string; userId: string }
 export interface VisualizePageActor extends VisualizeActor { pageId: string; token: string }
@@ -261,6 +262,11 @@ export async function submitVisualizeFollowUp(input: VisualizePageActor & { requ
 }
 export async function readVisualizeResource(input: VisualizePageActor & { name: string }) {
   await assertVisualizePage(pool, input)
+  if (isVisualizePublicResource(input.name)) {
+    const resource = await readPublicVisualizeResource(input.name)
+    await assertVisualizePage(pool, input)
+    return resource
+  }
   const root = resolve('third_party/zcode/skills/visualize/assets')
   const runtime = JSON.parse(await readFile(join(root, 'runtime-manifest.json'), 'utf8')) as { files: Record<string, {sha256: string}> }
   const vendor = JSON.parse(await readFile(join(root, 'vendor/manifest.json'), 'utf8')) as unknown

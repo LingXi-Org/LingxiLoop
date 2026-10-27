@@ -1,11 +1,36 @@
 /** Executes as the first classic script, before any generated code. No capabilities are put on window. */
-export function trustedBootstrap() {
+export function trustedBootstrap(capture: {url:string;integrity:string} | null = null) {
   const channel = new MessageChannel()
   const send = channel.port1.postMessage.bind(channel.port1)
   const listen = EventTarget.prototype.addEventListener
+  const nativeClearTimeout = window.clearTimeout.bind(window)
   const nativeSetTimeout = window.setTimeout.bind(window)
-  const toCanvas = (window as unknown as {htmlToImage?: {toCanvas(node: HTMLElement, options: Record<string, unknown>): Promise<HTMLCanvasElement>}}).htmlToImage?.toCanvas
+  const legacyToCanvas = (window as unknown as {htmlToImage?: {toCanvas(node: HTMLElement, options: Record<string, unknown>): Promise<HTMLCanvasElement>}}).htmlToImage?.toCanvas
   delete (window as unknown as {htmlToImage?: unknown}).htmlToImage
+  // Establish the loader and capture its DOM operations before any author code.
+  // Module exports stay lexical; a later window.htmlToImage setter is irrelevant.
+  const createElement = document.createElement.bind(document)
+  const append = document.head.append.bind(document.head)
+  const setAttribute = Element.prototype.setAttribute
+  let failedCaptures = 0
+  let captureModule: Promise<{toCanvas: NonNullable<typeof legacyToCanvas>}> | undefined
+  const loadCapture = () => {
+    if (!capture) return Promise.resolve({toCanvas:legacyToCanvas!})
+    const url = capture.url + (failedCaptures ? `?capture-retry=${failedCaptures}` : '')
+    captureModule ??= new Promise<void>((resolve,reject)=>{
+      // SRI validates the module before import consumes the browser module map.
+      const link = createElement('link')
+      setAttribute.call(link,'rel','modulepreload')
+      setAttribute.call(link,'href',url)
+      setAttribute.call(link,'integrity',capture.integrity)
+      setAttribute.call(link,'crossorigin','anonymous')
+      const timer = nativeSetTimeout(()=>{link.remove();reject(new Error('Image capture resource timed out'))},10000)
+      link.onload=()=>{nativeClearTimeout(timer);link.remove();resolve()}
+      link.onerror=()=>{nativeClearTimeout(timer);link.remove();reject(new Error('Image capture resource failed'))}
+      append(link)
+    }).then(()=>import(/* @vite-ignore */ url)).catch(error=>{failedCaptures++;captureModule=undefined;throw error})
+    return captureModule
+  }
   const gesture = (event: Event) => {
     if (!event.isTrusted || event instanceof KeyboardEvent && (event.repeat || !['Enter', ' '].includes(event.key))) return
     send({type: 'gesture'})
@@ -16,6 +41,7 @@ export function trustedBootstrap() {
     const request = event.data
     if (request?.type !== 'capture' || typeof request.id !== 'string') return
     try {
+      const {toCanvas} = await loadCapture()
       if (!toCanvas) throw new Error('Image capture is unavailable')
       await document.fonts.ready
       const rect = request.rect

@@ -1,0 +1,71 @@
+{
+  "base": "40605b36690e911ef958a082286a0a78acaa2556",
+  "fixturePath": "e2e/visualize/fixtures/performance-static.html",
+  "fixture": "<main data-perf-scene=\"static\">\n  <h2>网络地址分配</h2>\n  <svg role=\"img\" aria-label=\"两个教室连接到路由器的拓扑图\" viewBox=\"0 0 500 140\" style=\"display:block;width:100%;height:140px\">\n    <path d=\"M250 35L100 100M250 35L400 100\" stroke=\"currentColor\" fill=\"none\"/>\n    <text x=\"220\" y=\"25\">路由器</text><text x=\"50\" y=\"125\">教室 A</text><text x=\"350\" y=\"125\">教室 B</text>\n  </svg>\n  <p>阅读两个子网的连接关系，再完成自己的划分方案。</p>\n</main>\n<style>main{box-sizing:border-box;padding:20px;min-height:300px}</style>\n",
+  "measurement": "source bytes, no browser, no compression, no paint/interaction timings",
+  "rows": [
+    {
+      "version": "before",
+      "reads": [
+        {
+          "name": "visualize.css",
+          "bytes": 30609,
+          "sha256": "f75125ca6efcf855d8f354984f603f81a4cfc758b476698be1cc665630c00a41"
+        },
+        {
+          "name": "visualize.html",
+          "bytes": 17507,
+          "sha256": "42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf"
+        },
+        {
+          "name": "vendor/floating-ui-core-1.7.3.min.js",
+          "bytes": 12529,
+          "sha256": "6985ce661153c01d97f6be9babb6a9566f923c716c2b7fbead48fbb09f419ba8"
+        },
+        {
+          "name": "vendor/floating-ui-dom-1.7.4.min.js",
+          "bytes": 10251,
+          "sha256": "b8199f76adccb9b17b3ab57124c42585dc19197127d1a5d19307d1983f80bd89"
+        },
+        {
+          "name": "gen-ui.js",
+          "bytes": 633011,
+          "sha256": "647af698d4339e59e96acb9b86d8a8ae28f9e1b7bac0b3c8742da4e4b6091492"
+        },
+        {
+          "name": "vendor/lucide-1.17.0.js",
+          "bytes": 601680,
+          "sha256": "fde878a4f7aebe548b071eaaf343d898f66d275e93970abe95d8ca5fda290b51"
+        }
+      ],
+      "requiredResourceBytes": 1305587,
+      "documentBytes": 1330337,
+      "inlineScriptBytes": 1297549,
+      "externalScripts": []
+    },
+    {
+      "version": "after",
+      "reads": [
+        {
+          "name": "visualize.html",
+          "bytes": 17507,
+          "sha256": "42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf"
+        },
+        {
+          "name": "visualize.css",
+          "bytes": 30609,
+          "sha256": "f75125ca6efcf855d8f354984f603f81a4cfc758b476698be1cc665630c00a41"
+        },
+        {
+          "name": "gen-ui.js",
+          "bytes": 633011,
+          "sha256": "647af698d4339e59e96acb9b86d8a8ae28f9e1b7bac0b3c8742da4e4b6091492"
+        }
+      ],
+      "requiredResourceBytes": 681127,
+      "documentBytes": 675965,
+      "inlineScriptBytes": 642856,
+      "externalScripts": []
+    }
+  ]
+}
