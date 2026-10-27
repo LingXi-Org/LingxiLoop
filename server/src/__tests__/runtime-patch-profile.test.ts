@@ -152,6 +152,17 @@ test('product58 upgrade accepts the complete SDK14 product57 predecessor and ref
 
 const source58={...source57,runtime:'3.8.14',productVersion:58,migrations:currentMigrations}
 const target58={...source58,runtime:'3.8.15'}
+
+test('product58 exact15 to16 CAS preserves the full named ledger and rejects unreviewed pairs',()=>{
+ const source={...source58,runtime:'3.8.15'},target={...target58,runtime:'3.8.16'}
+ assert.doesNotThrow(()=>assertRuntimePatchDescriptors(source,target))
+ const published={...target,integrity:'sha512-'+Buffer.alloc(64,1).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.16/'+'a'.repeat(40)}
+ assert.deepEqual(parseRuntimePatchInput(JSON.stringify({source,target:published})),{source,target:published})
+ for(const mutate of [(d:typeof target)=>{d.runtime='3.8.17'},(d:typeof target)=>{d.productVersion=57},(d:typeof target)=>{d.protocol=12},(d:typeof target)=>{d.migrations[0].name='changed'},(d:typeof target)=>{d.migrations.pop()}]){
+  const bad=structuredClone(target);mutate(bad);assert.throws(()=>assertRuntimePatchDescriptors(source,bad))
+ }
+ assert.throws(()=>assertRuntimePatchDescriptors({...source,runtime:'3.8.14'},target))
+})
 test('product58 exact14 to15 CAS requires complete unchanged named58 inventory and original protocol',async()=>{
  assert.deepEqual(await loadRuntimePatchInventory(58),currentMigrations)
  assert.doesNotThrow(()=>assertRuntimePatchDescriptors(source58,target58))
