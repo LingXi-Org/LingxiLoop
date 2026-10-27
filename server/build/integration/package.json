@@ -32,7 +32,8 @@
     "@assistant-ui/react": "0.15.31",
     "@tiptap/y-tiptap": "3.0.3",
     "@modelcontextprotocol/ext-apps": "2.0.0",
-    "esbuild": "0.21.5"
+    "esbuild": "0.21.5",
+    "html-to-image": "1.11.13"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.8",

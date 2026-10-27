@@ -28,7 +28,9 @@ it does not change #533 authoring or delivery contracts.
 - Retained iframe identity, scheduling, dual opaque sandboxes, gesture checks,
   MCP/state ordering, D3/calendar order and export fallback remain in their owners.
   CSP adds only exact immutable optional asset URLs; connect-src remains none.
-  Vendored upstream files and all dependency locks are unchanged.
+  Vendored upstream files and root/server dependency locks are unchanged. The
+  derived integration profile includes the already locked html-to-image package
+  because that CI job also builds the capture bundle.
 
 ## Source-byte evidence
 
@@ -51,6 +53,7 @@ No claim is made that loading time or its median fell by 50%.
 ## Checks run
 
 - `npm run build` (includes Web typecheck, pinned upstream verification and runtime build): passed.
+- Scoped dependency generation/consistency checks and existing profile tests: passed.
 - `npm run server:typecheck`, `npm run lint`, `npm run server:lint`: passed;
   Web lint reports existing warnings.
 - 32 focused Node tests: passed. The command and raw output are in

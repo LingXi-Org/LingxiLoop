@@ -77,7 +77,7 @@ export function generateProfiles() {
   profiles['web-ci'] = { ...profiles.web, dependencies: { ...profiles.web.dependencies, ...pick(['dotenv', 'pg', 'ioredis']) } }
   profiles.admin = { ...profiles.web, dependencies: { ...profiles.web.dependencies, ...pick(['@refinedev/core', '@refinedev/react-router', 'react-router', '@openplait/core']) } }
   profiles.control = { dependencies: pick(['hono', 'better-auth', 'drizzle-orm', '@modelcontextprotocol/sdk', 'zod']), devDependencies: pick(['@biomejs/biome', '@cloudflare/vitest-pool-workers', 'typescript', 'vitest', 'wrangler']) }
-  profiles.integration = { ...profiles['server-ci'], dependencies: { ...profiles['server-ci'].dependencies, ...pick(['@modelcontextprotocol/ext-apps', 'esbuild']) } }
+  profiles.integration = { ...profiles['server-ci'], dependencies: { ...profiles['server-ci'].dependencies, ...pick(['@modelcontextprotocol/ext-apps', 'esbuild', 'html-to-image']) } }
   profiles['admin-control'] = { dependencies: { ...profiles.admin.dependencies, ...profiles.control.dependencies }, devDependencies: { ...profiles.admin.devDependencies, ...profiles.control.devDependencies } }
   return Object.entries(profiles).flatMap(([scope, dependencies]) => {
     const manifest = { name: `lingxiloop-${scope}-dependencies`, version: full.version, private: true, ...dependencies }
