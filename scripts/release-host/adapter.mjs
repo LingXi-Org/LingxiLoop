@@ -476,11 +476,16 @@ export class ComposeAdapter {
       return { drained: false, observed: true }
     }
     if (op.phase === 'prepare') {
-      for (const descriptor of [plan,plan.recovery]) for (const image of Object.values(descriptor.images)) requireValue(await this.inspectImage(image,local), 'OBSERVATION_UNRESOLVED', 'Preparation cache is incomplete')
       const source=plan.source??plan.recovery,sourceIds=await this.resolveImages(source.images,local),actual=await this.containers(op)
       requireValue(Object.entries(actual).every(([service,container])=>container.Image===sourceIds[service].localImageId),'SOURCE_IMAGE_CHANGED','Preparation recovery requires the exact original source service images')
       if(local.adapter==='main-runtime')await this.preflight(op,plan,{direction:'source',requireReadiness:true})
       else await this.control(local,'readiness',op,'GET')
+      for (const descriptor of [plan,plan.recovery]) for (const image of Object.values(descriptor.images)) if(!await this.inspectImage(image,local)){
+        requireValue(local.adapter==='main-runtime'&&Object.values(actual).every(container=>container.State.Running&&!container.State.Restarting&&container.State.Health?.Status==='healthy'),'OBSERVATION_UNRESOLVED','Incomplete cache requires the original healthy runtime services')
+        await this.overlay(op,source.images,'source',sourceIds)
+        this.validateConfig(JSON.parse(await this.run([...(await this.composeArgs(op,'source',source)),'config','--format','json'])),local,source,sourceIds)
+        return {cachePreparationIncomplete:true,sourceUnchanged:true}
+      }
       // These deterministic private configuration files are safe to reconstruct after a completed cache load.
       // No download, Docker load, business update or uncertain daemon command is replayed.
       for (const [direction,descriptor] of [['source',source],['forward',plan],['recovery',plan.recovery]]) {const identities=await this.resolveImages(descriptor.images,local);await this.overlay(op,descriptor.images,direction,identities);this.validateConfig(JSON.parse(await this.run([...(await this.composeArgs(op,direction,descriptor)),'config','--format','json'])),local,descriptor,identities)}

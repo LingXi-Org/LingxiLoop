@@ -37,6 +37,33 @@ test('download failure before switch leaves existing services running',async t =
   assert.equal((await f.run('prepare')).status,'failed')
   assert.ok(Object.values(f.host.data.containers).every(row => row.State.Running))
 })
+
+test('an exited cache-only pull failure settles as failed after exact healthy source observation, without replay',async t=>{
+ const f=await setup(t);f.host.data.cache=[oldImage.ref]
+ const op=f.executor.submit(f.request('prepare')).operation
+ f.journal.patch(op.key,{status:'uncertain',errors:{forward:{code:'DOCKER_COMMAND_FAILED'}},steps:[{name:`pull:forward:${newImage.configDigest}`,sideEffect:false,status:'intent',observedErrorCode:'DOCKER_COMMAND_FAILED',errorObservedAt:new Date().toISOString()}]})
+ const result=await f.executor.reconcile(f.journal.get(op.key))
+ assert.equal(result.status,'failed');assert.equal(result.result.cachePreparationIncomplete,true);assert.equal(result.result.sourceUnchanged,true)
+ assert.equal(f.journal.db.prepare('SELECT count(*) AS n FROM reservations').get().n,0)
+ assert.equal(f.host.data.calls.some(args=>args.includes('pull')||args.includes('stop')||args.includes('up')),false)
+ assert.equal(f.journal.state(op.target).preparedHashes?.[op.manifestHash],undefined)
+})
+
+for(const unsafe of ['source-image','source-stopped','side-effect','unknown-command','unobserved-exit','completed-only','other-error'])test(`cache failure retains ownership when ${unsafe} is unproven`,async t=>{
+ const f=await setup(t);f.host.data.cache=[oldImage.ref]
+ const op=f.executor.submit(f.request('prepare')).operation
+ const step={name:`pull:forward:${newImage.configDigest}`,sideEffect:false,status:'intent',observedErrorCode:'DOCKER_COMMAND_FAILED',errorObservedAt:new Date().toISOString()}
+ if(unsafe==='source-image')f.host.data.containers.web.Image=newImage.configDigest
+ if(unsafe==='source-stopped')f.host.data.containers.web.State.Running=false
+ if(unsafe==='side-effect')step.sideEffect=true
+ if(unsafe==='unknown-command')step.name='forward:up:web'
+ if(unsafe==='unobserved-exit')delete step.observedErrorCode
+ if(unsafe==='completed-only')step.status='completed'
+ f.journal.patch(op.key,{status:'uncertain',errors:{forward:{code:unsafe==='other-error'?'EXECUTOR_INTERRUPTED':'DOCKER_COMMAND_FAILED'}},steps:[step]})
+ assert.equal((await f.executor.reconcile(f.journal.get(op.key))).status,'uncertain')
+ assert.ok(f.journal.db.prepare('SELECT count(*) AS n FROM reservations').get().n>0)
+ assert.equal(f.host.data.calls.some(args=>args.includes('pull')||args.includes('stop')||args.includes('up')),false)
+})
 test('HTTP commits intent before 202; lost response is found by operation key and duplicate never dispatches twice',async t => {
   const f = await setup(t), dispatched = [], token = 'a'.repeat(40)
   const server = createExecutorServer({ executor:f.executor,token,dispatch:key => dispatched.push(key) })
