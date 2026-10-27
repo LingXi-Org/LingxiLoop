@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
 import { assertSource, canSupersede, canonical, ReleaseError, requireThat, validateManifest, type Accepted, type Component, type Manifest, type TargetId } from '../../../shared/release/protocol'
-import { forwardStages, recoveryStages, qualifyPreflightSourceRecovery, stageWorkflowId, STAGE_REQUEST_LIMIT, verificationStages } from './stages'
+import { forwardStages, recoveryStages, qualifyPreflightSourceRecovery, qualifyDrainedSourceRecovery, stageWorkflowId, STAGE_REQUEST_LIMIT, verificationStages } from './stages'
 import type { Bootstrap, ReleaseEnv, ReleaseRecord, ReleaseStatus } from './types'
 
 const terminal = new Set(['accepted', 'failed', 'recovered', 'superseded'])
@@ -72,6 +72,12 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
           record.manualInterventions = (record.manualInterventions ?? 0) + 1
           record.dispatch = dispatchWindow()
           if (record.checkpoint) {
+            if(body.recover===true&&qualifyDrainedSourceRecovery(record.manifest,record.checkpoint,record.targets,record.manifestHash,record.generation)){
+              const cp=record.checkpoint
+              // Reuse verified maintenance isolation before any data/application mutation; retain all old budgets and host keys.
+              cp.sourceDrainReuse={stage:cp.plan[cp.index].key,generation:record.generation,operationKeys:cp.changed.flatMap(id=>record.manifest.targets[id]!.hosts.map(()=>`${record.releaseId}:${id}:drain`))}
+              cp.plan.splice(cp.index,1)
+            }
             record.checkpoint.previousWorkflowId = record.workflowId
             record.checkpoint.serial++
             record.workflowId = stageWorkflowId(record.manifestHash, record.checkpoint.serial)

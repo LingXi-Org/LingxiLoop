@@ -51,6 +51,38 @@ async function setup(name: string, withWorker = false) {
 }
 afterEach(() => vi.restoreAllMocks())
 
+it('explicit source recovery reuses the completed original maintenance drain without renewing deadlines',async()=>{
+ const {qualifyDrainedSourceRecovery}=await import('./stages')
+ const state=await setup('reuse-completed-source-drain'),first=await state.get(),owner={releaseId:first.releaseId,workflowId:first.workflowId}
+ await state.call('/initialize',owner);await state.call('/claim',owner)
+ await runInDurableObject(state.stub,async(_instance,storage)=>{
+  const row=storage.storage.sql.exec('SELECT data FROM releases WHERE id=?',first.releaseId).toArray()[0]
+  const r=JSON.parse(row.data as string) as ReleaseRecord,cp=r.checkpoint!
+  r.status='blocked';cp.direction='source';cp.changed=['main-runtime-a','main-runtime-b'];cp.mutationSubmitted=false
+  cp.plan=[{key:'recovery-isolate',kind:'host',targets:cp.changed,phase:'source-drain'},{key:'recover-a',kind:'host',targets:['main-runtime-a'],phase:'restore-source',recovery:true}];cp.index=0
+  cp.deadlines={expired:1};cp.requests={'recovery-isolate':3}
+  for(const id of cp.changed)for(const host of r.manifest.targets[id]!.hosts)r.targets[`${id}:${host}:drain`]={key:`${r.releaseId}:${id}:drain`,releaseId:r.releaseId,target:id,phase:'drain',generation:r.generation,manifestHash:r.manifestHash,status:'succeeded',operationId:'original-'+id,result:{drained:true,mode:'maintenance'},steps:[{name:'stop:worker',status:'completed',sideEffect:true}]}
+  storage.storage.sql.exec('UPDATE releases SET data=? WHERE id=?',JSON.stringify(r),r.releaseId)
+ })
+ const before=await state.get(),cp=before.checkpoint!
+ expect(qualifyDrainedSourceRecovery(before.manifest,cp,before.targets,before.manifestHash,before.generation)).toBe(true)
+ for(const change of ['mutation','direction','missing-peer','unknown','identity','step']){
+  const v=structuredClone(before)
+  if(change==='mutation')v.checkpoint!.mutationSubmitted=true
+  if(change==='direction')v.checkpoint!.direction='compatible-recovery'
+  if(change==='missing-peer')delete v.targets['main-runtime-b:b:drain']
+  const op=v.targets['main-runtime-a:a:drain'] as Record<string,unknown>
+  if(change==='unknown')op.status='uncertain'
+  if(change==='identity')op.generation=before.generation+1
+  if(change==='step')op.steps=[{name:'stop:worker',status:'intent',sideEffect:true}]
+  expect(qualifyDrainedSourceRecovery(v.manifest,v.checkpoint!,v.targets,v.manifestHash,v.generation)).toBe(false)
+ }
+ const after=await state.call('/resume',{releaseId:before.releaseId,expectedWorkflowId:before.workflowId,recover:true})
+ expect(after.checkpoint!.plan[0].phase).toBe('restore-source')
+ expect(after.checkpoint!.deadlines).toEqual(cp.deadlines);expect(after.checkpoint!.requests).toEqual(cp.requests)
+ expect(after.checkpoint!.sourceDrainReuse).toEqual({stage:'recovery-isolate',generation:before.generation,operationKeys:[`${before.releaseId}:main-runtime-a:drain`,`${before.releaseId}:main-runtime-b:drain`]})
+})
+
 function network(mode: 'accepted' | 'recovered' | 'unknown' | 'auth' | 'source' | 'peer-unknown' = 'accepted') {
   const operations = new Map<string, Record<string, unknown>>()
   const writes: string[] = [], reads: string[] = [], workerWrites: string[] = []
