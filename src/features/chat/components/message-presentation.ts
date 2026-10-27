@@ -1,6 +1,6 @@
 import type { ThreadMessage, ToolCallMessagePart } from '@assistant-ui/react'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
-import { activityAnnotation, canonicalToolName } from '@/lib/runActivity'
+import { activityAnnotation, canonicalToolName, isAnswerRevision } from '@/lib/runActivity'
 import { hasQuestionnaireWait } from '../runtime/questionnaire-wait'
 import { knowledgeSourceState } from '../runtime/task-progress'
 
@@ -81,4 +81,16 @@ export function orderActivityEntries<T extends { order?: number }>(entries: read
   const ordered = entries.filter(entry => entry.order !== undefined).sort((left, right) => left.order! - right.order!)
   let index = 0
   return entries.map(entry => entry.order === undefined ? entry : ordered[index++]!)
+}
+
+
+/** Show the latest real public observation while the run is active or interrupted.
+ * Body ownership and persisted identities are unchanged; no tool-derived prose. */
+export function currentCommentary(message: Message, parts = messagePresentation(message)) {
+  if (message.role !== 'assistant' || !['running', 'requires-action', 'incomplete'].includes(message.status?.type ?? '')) return undefined
+  const view = currentView(message)
+  if (view?.runId && view.runId !== message.metadata.custom.runId) return undefined
+  return orderActivityEntries(parts.map(item => ({ ...item, order: item.annotation?.order }))).findLast(item =>
+    item.region === 'process' && item.part.type === 'text' && item.part.text.trim()
+    && !isAnswerRevision(item.part) && currentPart(message, item.part))
 }

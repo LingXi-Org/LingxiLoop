@@ -1,0 +1,24 @@
+{
+  "node": "24.19.0",
+  "productBase": "d544775f2809cb0f80502547ef383b6a40dcca02",
+  "formalSdkInstalled": {
+    "root": "3.8.14",
+    "server": "3.8.14"
+  },
+  "upstreamCandidate": "640c2e4311293e81cc9c217e0359a53beab3d563",
+  "webTypecheck": "passed",
+  "serverTypecheck": "passed",
+  "focusedLint": "passed",
+  "presentationAndRenderingTests": {
+    "passed": 35,
+    "failed": 0
+  },
+  "persistedSseAndPrivacyTests": {
+    "passed": 6,
+    "failed": 0
+  },
+  "activation": "pending formal SDK publication and exact product lock upgrade",
+  "browser": "not performed",
+  "production": "not accessed",
+  "oldTaskChanges": "not migrated"
+}

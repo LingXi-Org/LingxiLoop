@@ -25,7 +25,7 @@ import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { BusinessMessagePart } from './BusinessMessagePart'
 import { MessagePartBoundary } from './MessagePartBoundary'
 import { NativeTool } from './NativeTool'
-import { messagePresentation, orderActivityEntries } from './message-presentation'
+import { messagePresentation, orderActivityEntries, currentCommentary } from './message-presentation'
 
 const ReadOnlyMessage = createContext(false)
 const GroupOwnsFooter = createContext(false)
@@ -148,7 +148,8 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
   const history = useRunActivityHistory({ target, message, enabled: !readOnly && message.role === 'assistant' })
   const tasks = readActivityTasks(custom.activityTasks)?.tasks
   const presentation = useMemo(() => messagePresentation(message), [message])
-  const liveEntries = presentation.flatMap(item => item.region === 'process' && item.annotation ? [{
+  const commentary = currentCommentary(message, presentation)
+  const liveEntries = presentation.flatMap(item => item.region === 'process' && item.index !== commentary?.index && item.annotation ? [{
     id: item.annotation.id, order: item.annotation.order, taskId: item.annotation.taskId, kind: item.part.type === 'tool-call' ? 'tool' as const : 'commentary' as const,
     revision: isAnswerRevision(item.part),
     label: item.part.type === 'text' && !isAnswerRevision(item.part) ? item.part.text.slice(0,500).replace(/\s+/gu,' ').trim().slice(0,160) || item.annotation.label : item.annotation.label,
@@ -192,7 +193,12 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
   const lastBodyIndex = body.findLast(item => item.part.type !== 'data' || item.part.name !== 'citation-claims')?.index ?? -1
   const display = { Text, footer, mediaFooter }
   return <LastBodyIndex.Provider value={lastBodyIndex}><GroupOwnsFooter.Provider value={false}><PartPresentation.Provider value={display}><div className="native-message-content grid min-w-0 gap-2" data-aui-theme="elements">
-    {(entries.length > 0 || trace || tasks?.length || historyControls) && <RunActivity status={status} statusLabel={statusLabel} entries={entries} tasks={tasks} historyControls={historyControls}
+    {commentary && <div data-message-region="commentary" className="min-w-0 text-sm text-muted-foreground">
+      <PartPresentation.Provider value={activityDisplay}><GroupOwnsFooter.Provider value={true}>
+        <MessagePrimitive.PartByIndex key={commentary.key} index={commentary.index} components={indexedComponents} />
+      </GroupOwnsFooter.Provider></PartPresentation.Provider>
+    </div>}
+    {(entries.length > 0 || commentary || trace || tasks?.length || historyControls) && <RunActivity status={status} statusLabel={statusLabel} entries={entries} tasks={tasks} historyControls={historyControls}
       durationLabel={trace?.root.durationMs !== null && trace?.root.durationMs !== undefined ? `${(trace.root.durationMs / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 秒` : undefined}
       onInspectTask={id => setTraceSelection(current => ({ scope: traceScope, id, version: current.version + 1 }))}
       open={activityOpen} onOpenChange={open => { setActivityOpen(open); if (open && history.entries.length === 0 && history.hasMore && !history.isLoading) history.loadMore() }}
