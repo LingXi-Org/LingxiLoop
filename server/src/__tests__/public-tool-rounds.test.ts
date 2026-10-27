@@ -2,11 +2,10 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import type { RunEvent, RunState } from '@lyyzka/lingxios/ui'
-import type { ThreadMessage } from '@assistant-ui/react'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import { RunStreamProjection, assistantRunResponse } from '../agent-runtime/assistant-transport.js'
 import { publicRunEvent } from '../agent-runtime/public-events.js'
-import { currentCommentary, messagePresentation } from '../../../src/features/chat/components/message-presentation.js'
+import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeText } from '../../../src/lib/nativeMessage.js'
 const fixture = JSON.parse(readFileSync(new URL('../../../docs/evidence/issue-533/worker-native-v2.json', import.meta.url),'utf8')) as {
   events: RunEvent[]; finalState: RunState; final: {body:string}; modelCalls:number; maxConcurrentReads:number
@@ -27,8 +26,8 @@ test('persisted mixed Worker events project useful text before tools, stage resu
       if(tools.length===1) {preToolBody=body;assert.match(body,/Gather collects/)}
       if(name==='probe.save') {
         stageBody=body;assert.match(body,/Both independent reads returned/)
-        const latest=currentCommentary(snapshot.message as unknown as ThreadMessage)
-        assert.equal(latest?.part.type==='text'&&latest.part.text,'Both observations were received; I will save the synthetic record.')
+        const latest=snapshot.message.content.filter(part=>part.type==='text'&&activityAnnotation(part)?.kind==='commentary').at(-1)
+        assert.equal(latest?.type==='text'&&latest.text,'Both observations were received; I will save the synthetic record.')
       }
     }
     projection.advance({type:'event',event:publicRunEvent(event)})
@@ -36,7 +35,7 @@ test('persisted mixed Worker events project useful text before tools, stage resu
   assert.equal(tools.length,3);assert.ok(preToolBody.length<stageBody.length)
   projection.advance({type:'state',state:fixture.finalState})
   assert.equal(nativeText(projection.snapshot.message),fixture.final.body)
-  const bodyParts=messagePresentation(projection.snapshot.message as unknown as ThreadMessage).filter(item=>item.region==='body'&&item.part.type==='text')
+  const bodyParts=projection.snapshot.message.content.filter(part=>part.type==='text'&&activityAnnotation(part)?.purpose==='result')
   assert.ok(bodyParts.length>0)
   for(const text of ['Gather collects','Both independent reads returned','The synthetic artifact is saved.'])assert.equal(nativeText(projection.snapshot.message).split(text).length-1,1)
   const stable=projection.snapshot

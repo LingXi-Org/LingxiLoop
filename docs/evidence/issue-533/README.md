@@ -29,3 +29,9 @@ The product remains pinned to formally published SDK 3.8.14 and native-v1. Nativ
 4. Hand rollout to the designated release owner; this task does not merge or deploy.
 
 No source-built SDK substitution, dynamic compatibility adapter or installed-package patch was used in this product. No browser acceptance, production event/paint measurement, original screenshot diagnosis, package publication or production write was performed. #533 remains open until the formal dependency and product activation are integrated and the agreed acceptance boundary is recorded.
+
+## CI follow-up
+
+Initial product CI at c67a4204 failed server typechecking because this server replay test imported a client presentation module with browser-only path aliases and an ES2023 array API. The replay test now stays within formal server projection/metadata; existing UI rendering tests own current-commentary visibility. No compiler target or dependency scope was broadened.
+
+Local server typecheck and both replay/SSE tests passed after the fix. Local root and server trees initially installed different locked Zod minors; verification uses the single root-locked dependency tree, matching CI's single-tree resolution, with formal SDK3.8.14. No tracked manifest/lock was changed by this CI fix.
