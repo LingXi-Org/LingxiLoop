@@ -19,7 +19,7 @@ export function visualizeFixtureApi(): Plugin {
   let performanceConfig = { resourceMs: 0, stateMs: 0 }
   const performanceRequests: { stage: string; method: string; name?: string; start: number; end?: number }[] = []
   const stateKey=(page:Pick<Page,'channel'|'path'>)=>JSON.stringify([page.channel,page.path])
-  const resourceFile = (name:string) => ['gen-ui.js','kit-tooltip.js','kit-carousel.js','capture.js'].includes(name)?path.join(process.env.E2E_VISUALIZE_RUNTIME_ROOT??'server/assets/visualize-runtime',name)
+  const resourceFile = (name:string) => ['gen-ui.js','kit-tooltip.js','kit-carousel.js','kit-tabs.js','kit-icons.js','kit.css','capture.js'].includes(name)?path.join(process.env.E2E_VISUALIZE_RUNTIME_ROOT??'server/assets/visualize-runtime',name)
     :path.join(process.env.E2E_VISUALIZE_ASSET_ROOT??'third_party/zcode/skills/visualize/assets',name)
   let publicHashes: Promise<Record<string,string>> | undefined
   const performanceHashes = () => publicHashes ??= Promise.all(VISUALIZE_PUBLIC_RESOURCES

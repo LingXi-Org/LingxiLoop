@@ -1,7 +1,6 @@
 import { optionalKitBootstrap, type PublicScript } from './optional-kit'
-import { visualizeResourceIntegrity, visualizeResourceUrl } from '../../../../../shared/visualize-public-resources'
+import { visualizeResourceIntegrity, visualizeResourceUrl, VISUALIZE_SMALL_ICONS } from '../../../../../shared/visualize-public-resources'
 import { trustedBootstrap } from './bootstrap'
-import captureLibrary from 'html-to-image/dist/html-to-image.js?raw'
 import type { GenUiWidgetState } from '../zcode/shared/gen-ui'
 const STATIC_DOMAINS = 'https://cdnjs.cloudflare.com https://esm.sh https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://fonts.bunny.net'
 const SANDBOX_CSP = `default-src 'none'; script-src 'unsafe-inline' ${STATIC_DOMAINS}; style-src 'unsafe-inline' ${STATIC_DOMAINS}; img-src data: blob: ${STATIC_DOMAINS}; font-src data: ${STATIC_DOMAINS}; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'`
@@ -18,17 +17,24 @@ const PINNED_KIT_SHA256 = '42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1
 /** Same ordering as ZCode service/protocol; all resources are fetched by the authorized host. */
 export async function buildWebDocument(fragment: string, state: GenUiWidgetState | null, resource: (name: string) => Promise<string>, kitHash?: unknown, hashes: Record<string,string> = {}, publicOrigin = globalThis.location?.origin ?? 'http://localhost') {
   const assets: Record<string,PublicScript> = {}
-  for (const name of ['kit-tooltip.js','kit-carousel.js','capture.js','vendor/lucide-1.17.0.js']) {
+  for (const name of ['kit-tooltip.js','kit-carousel.js','kit-tabs.js','kit-icons.js','capture.js','vendor/lucide-1.17.0.js']) {
     const path = visualizeResourceUrl(name,hashes[name])
     if (path) assets[name] = {url:new URL(path,publicOrigin).href,integrity:visualizeResourceIntegrity(hashes[name])}
   }
-  // Unknown kit versions and explicit author global APIs keep the original
-  // synchronous dependency order. DOM-driven capabilities use the lazy kit.
-  const optimized = kitHash === PINNED_KIT_SHA256 && Object.keys(assets).length === 4 && ![...fragment.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].some(([tag]) => /\b(?:lucide|FloatingUI\w*)\b/.test(tag))
+  // Only the exact known kit can skip its template. Explicit author library
+  // APIs still get the dependency they need in the original execution order.
+  const optimized = kitHash === PINNED_KIT_SHA256 && Object.keys(assets).length === 6 && Boolean(visualizeResourceUrl('kit.css',hashes['kit.css']))
+  const authoredScripts=[...fragment.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(([tag])=>tag).join('\n')
+  const usesLucide=/\blucide\b/.test(authoredScripts)
+  const usesFloating=/\bFloatingUI\w*\b/.test(authoredScripts)
+  const hasTooltip=/\bdata-tooltip\b/.test(fragment)
+  const iconNames=[...fragment.matchAll(/\b(?:data-lucide|icon-name)\s*=\s*['"]([^'"]+)['"]/gi)].map(([,name])=>name.toLowerCase().replace(/[-_\s]/g,''))
+  const smallIcons=iconNames.every(name=>(VISUALIZE_SMALL_ICONS as readonly string[]).includes(name))
   const initialModules = optimized ? [
-    ...(/\bdata-tooltip\b/.test(fragment) ? ['kit-tooltip.js'] : []),
+    ...(/\brole\s*=\s*['"]tablist['"]/i.test(fragment) ? ['kit-tabs.js'] : []),
+    ...(hasTooltip ? ['kit-tooltip.js'] : usesFloating ? ['vendor/floating-ui-core-1.7.3.min.js','vendor/floating-ui-dom-1.7.4.min.js'] : []),
     ...(/\bviz-carousel\b/.test(fragment) ? ['kit-carousel.js'] : []),
-    ...(/\b(?:data-lucide|icon-name|viz-carousel)\b/.test(fragment) ? ['vendor/lucide-1.17.0.js'] : []),
+    ...((usesLucide||/\b(?:data-lucide|icon-name|viz-carousel)\b/.test(fragment)) ? [smallIcons&&!usesLucide ? 'kit-icons.js' : 'vendor/lucide-1.17.0.js'] : []),
   ] : []
   const capture = assets['capture.js']
   const csp = SANDBOX_CSP.replace(`script-src 'unsafe-inline'`, `script-src 'unsafe-inline' ${Object.values(assets).map(asset=>asset.url).join(' ')}`)
@@ -39,10 +45,8 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
     return pending
   }
   const [css, content, runtime, calendar, enhancements] = await Promise.all([
-    read('visualize.css'),read('visualize.html').then(async kit => {
-      const baseKit = optimized ? kit.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi, (tag, attributes: string) =>
-        attributes.includes('zcode-visualization-tabs') ? tag : '') : kit
-      let content = fragment + baseKit.replace('<!--__INLINE_VISUALIZATION_FRAGMENT__-->','')
+    read(optimized ? 'kit.css' : 'visualize.css'),(optimized ? Promise.resolve('') : read('visualize.html')).then(async kit => {
+      let content = fragment + kit.replace('<!--__INLINE_VISUALIZATION_FRAGMENT__-->','')
       // Discover optional/unknown-kit dependencies from the actual HTML as soon
       // as it arrives; pinned dependencies reuse their already-started reads.
       // Keep the whole chain in Promise.all so any failure aborts preparation.
@@ -63,8 +67,10 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
     Promise.all(vendors.filter(([url], index) => fragment.includes(url) || (!optimized && kitHash === PINNED_KIT_SHA256 && index < 3))
       .map(([, name]) => read(name))),
   ])
+  // Only old hosts without the capture-module hash need the UMD fallback.
+  const captureLibrary = capture ? '' : (await import('html-to-image/dist/html-to-image.js?raw')).default
   const initial = JSON.stringify(state).replaceAll('<','\\u003c')
-  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script((capture ? '' : captureLibrary+'\n;')+'('+trustedBootstrap.toString()+')('+JSON.stringify(capture ?? null)+');')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}${enhancements.map(script).join('')}${optimized ? script('('+optionalKitBootstrap.toString()+')('+JSON.stringify(assets)+','+JSON.stringify(initialModules)+');') : ''}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`
+  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script((capture ? '' : captureLibrary+'\n;')+'('+trustedBootstrap.toString()+')('+JSON.stringify(capture ?? null)+');')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}${enhancements.map(script).join('')}${optimized ? script('('+optionalKitBootstrap.toString()+')('+JSON.stringify(assets)+','+JSON.stringify(initialModules)+','+JSON.stringify(VISUALIZE_SMALL_ICONS)+');') : ''}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`
 }
 
 /** A trusted opaque outer shell supplies an ancestor frame policy for the untrusted document. */

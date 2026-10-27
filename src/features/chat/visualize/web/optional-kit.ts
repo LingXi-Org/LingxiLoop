@@ -1,6 +1,6 @@
 export type PublicScript = { url: string; integrity: string }
 /** Capability-free enhancements; no page token or authored content reaches URLs. */
-export function optionalKitBootstrap(assets: Record<string, PublicScript>, loaded: string[] = []) {
+export function optionalKitBootstrap(assets: Record<string, PublicScript>, loaded: string[] = [], smallIcons: string[] = []) {
   const pending = new Map<string, Promise<void>>(loaded.map(name=>[name,Promise.resolve()]))
   const load = (name: string) => {
     let result = pending.get(name)
@@ -18,13 +18,23 @@ export function optionalKitBootstrap(assets: Record<string, PublicScript>, loade
     }
     return result
   }
+  const knownIcons = new Set(smallIcons)
   const roots = new Set<Document | ShadowRoot>()
   const icons = (root: Document | ShadowRoot) => (window as unknown as {lucide?: {createIcons(options: unknown): void}}).lucide?.createIcons({root,attrs:{width:16,height:16}})
   const scan = () => {
     for (const root of roots) {
+      if (root.querySelector('.nav[role="tablist"]')) void load('kit-tabs.js').catch(()=>undefined)
       if (root.querySelector('[data-tooltip]')) void load('kit-tooltip.js').catch(() => undefined)
       if (root.querySelector('.viz-carousel')) void load('kit-carousel.js').catch(() => undefined)
-      if (root.querySelector('[data-lucide]:not(svg),[icon-name]:not(svg)')) void load('vendor/lucide-1.17.0.js').then(()=>icons(root)).catch(() => undefined)
+      const placeholders=[...root.querySelectorAll('[data-lucide]:not(svg),[icon-name]:not(svg)')]
+      if (placeholders.length) {
+        const full='vendor/lucide-1.17.0.js'
+        const needsFull=pending.has(full)||placeholders.some(icon=>!knownIcons.has((icon.getAttribute('data-lucide')??icon.getAttribute('icon-name')??'').toLowerCase().replace(/[-_\s]/g,'')))
+        // If a subset load is in flight, finish it first so it cannot overwrite
+        // the subsequently loaded full compatibility global.
+        const prior=needsFull ? pending.get('kit-icons.js') : undefined
+        void (prior ? prior.catch(()=>undefined).then(()=>load(full)) : load(needsFull?full:'kit-icons.js')).then(()=>icons(root)).catch(()=>undefined)
+      }
     }
   }
   const discover = (root: ParentNode) => {

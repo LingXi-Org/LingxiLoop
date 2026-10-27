@@ -1,0 +1,47 @@
+✔ only exact public asset names and valid fixed hashes leave the server manifest boundary (1.847869ms)
+✔ public byte cache coalesces verified reads, retries failures and respects its memory limit (7.331086ms)
+✔ capture loads only through the private channel and never consumes an author replacement global (15.603747ms)
+(node:3002) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3002) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+✔ known fixed kit dependencies start before the kit completes, once and in original output order (2.305875ms)
+✔ authored D3 starts alongside pinned dependencies before the kit completes (2.509556ms)
+✔ an unknown kit starts authored vendors and calendar while its own dependencies await discovery (0.543793ms)
+✔ fixed dependency failure rejects preparation while the kit remains pending (0.802244ms)
+✔ authored dependency failure rejects preparation while the kit remains pending (0.469623ms)
+✔ static pinned content excludes unused vendors, carousel and capture execution (0.88043ms)
+✔ explicit author global dependencies retain the synchronous legacy kit (0.446299ms)
+✔ optimized kit still waits for authored D3 and calendar, in document execution order (0.394022ms)
+✔ declared first-use tooltip waits only for its own module before mounting (1.457232ms)
+(node:3050) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3050) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+AUTHORIZED_PREPARATION_SAMPLES [{"sample":0,"elapsedMs":140.89653100000004,"overlap":true,"calls":[{"kind":"resource-start","at":1.7118169999999964},{"kind":"state-start","at":18.414602000000002},{"kind":"resource-end","at":121.95807500000001},{"kind":"state-end","at":138.64044}]},{"sample":1,"elapsedMs":121.93420100000003,"overlap":true,"calls":[{"kind":"resource-start","at":0.31332300000002533},{"kind":"state-start","at":0.6402760000000285},{"kind":"resource-end","at":121.22393199999999},{"kind":"state-end","at":121.80285700000002}]},{"sample":2,"elapsedMs":121.74541900000008,"overlap":true,"calls":[{"kind":"resource-start","at":0.2229890000000978},{"kind":"state-start","at":0.5121960000000172},{"kind":"resource-end","at":121.0353510000001},{"kind":"state-end","at":121.596139}]}]
+✔ prepare resources and the first authorized fresh state read in parallel before returning the page (386.779116ms)
+✔ initial state keeps newer peer revisions and later reads still fetch fresh state (12.060604ms)
+✔ a failed first state read aborts pending resource work and revokes the new page (1.609217ms)
+✔ resource completion cannot expose a page before its authorized state request succeeds (20.211035ms)
+✔ initialization cancellation reaches both resource and fresh state requests and releases the page (11.626609ms)
+✔ a scope change after the parallel state read cannot expose the prepared document (41.475065ms)
+✔ completed public bytes are reused while each page keeps its own HTML, capability and fresh state read (15.629471ms)
+✔ an older hash missing from the first static rollout falls back to the authorized resource route (3.455202ms)
+✔ optional kit waits for DOM demand, covers dynamic icons, and retries a failed resource (22.238074ms)
+✔ simultaneous cold pages share one verified public resource load (7.101908ms)
+✔ followers cancel independently and an aborted owner releases them to their own capability (3.531395ms)
+✔ owner failures and mismatched bytes fall back once without poisoning the cache (5.657815ms)
+✔ a follower waits at most five seconds before one own read without cancelling its owner (2.502275ms)
+✔ pending capacity, completed LRU budgets and version/private isolation stay bounded (2.833715ms)
+✔ API, protected files, dynamic visualize and WebSocket routes never become HTML (24.360193ms)
+✔ upstream loop, hop loops and internal endpoints fail closed (0.552056ms)
+✔ only HTML navigation receives SPA; old hashed chunks come from retained R2 (2.597165ms)
+✔ WebSocket 101 response is passed through without reconstructing it (0.493268ms)
+✔ auth service binding keeps the public request origin for password and sign-in flows (0.496473ms)
+✔ fixed visualize assets are anonymous immutable CORS resources, including retained old hashes (0.781294ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1039.119343
