@@ -6,3 +6,4 @@ third_party/studio-admin/upstream/** -text
 src/styles/vendor/shadcn/tailwind.css text eol=lf
 server/fixtures/historical-projection-3.8.2/** -text
 server/src/__integration__/fixtures/homework/*.pdf binary
+*.sh text eol=lf

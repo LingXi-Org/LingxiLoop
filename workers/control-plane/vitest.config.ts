@@ -31,8 +31,6 @@ export default defineWorkersConfig(async () => ({
               sha256: createHash('sha256').update(`diag.${id}.abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG`).digest('hex'),
               expiresAt: id === 'tester' ? '2099-01-01T00:00:00Z' : '2000-01-01T00:00:00Z',
             }))),
-            KOMODO_API_KEY: 'test-komodo-api-key',
-            KOMODO_API_SECRET: 'test-komodo-api-secret',
           },
         },
       },

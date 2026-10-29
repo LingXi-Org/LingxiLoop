@@ -27,9 +27,7 @@ an independent read-only assessment.
    checks, measurement limits and rollback. Resolve findings on the final head.
    Prepare a small draft PR with a clear completion boundary.
 6. **Feed back the result.** Update the candidate record and any reusable lesson.
-   Use [operate-release-controller](../operate-release-controller/SKILL.md) for
-   product releases and [operate-komodo-production](../operate-komodo-production/SKILL.md)
-   for retained shared infrastructure. Close the issue after its
+   Use [deploy](../deploy/SKILL.md) for production releases. Close the issue after its
    required verification and release state are established.
 
 For CI work, distinguish queue, check wall time, summed runner execution and
