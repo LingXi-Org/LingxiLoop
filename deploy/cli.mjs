@@ -135,7 +135,8 @@ function stackEnv(stack, images) {
   const lines = []
   for (const name of composeVars(git('show', `HEAD:deploy/${stack}/compose.yml`))) {
     if (images[name]) continue
-    const value = process.env[name]
+    // Trim like compose's unquoted dotenv values (some Sigillo values end in \r).
+    const value = process.env[name]?.trim()
     if (value === undefined) continue
     if (/['\r\n]/.test(value)) throw new Error(`Sigillo value ${name} must not contain quotes or newlines`)
     lines.push(`${name}='${value}'`)
