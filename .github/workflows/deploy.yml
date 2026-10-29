@@ -37,6 +37,7 @@ jobs:
 
   # Content-addressed tags: an image whose inputs are unchanged is already in GHCR.
   images:
+    name: image ${{ matrix.image.name }}
     needs: plan
     if: inputs.stacks != 'none'
     runs-on: ubuntu-latest
