@@ -148,3 +148,94 @@ for (const scenario of [
     await new Promise<void>(resolve => provider.close(() => resolve()))
   }
 })
+
+// #515/#518: a complete answer must stop, a correction must not retain its
+// failed draft, and a null final answer must reuse the sealed source. Exercise
+// the published native-v2 parser, worker, ledger, IM delivery and replay reader.
+for (const scenario of ['complete', 'correction', 'finalize'] as const) test(`public answer ${scenario}: one effective body after native worker and replay`, { timeout: 30000 }, async () => {
+  const body = 'Flow control protects the receiver.'
+  const draft = 'SYNTHETIC_FAILED_DRAFT_MUST_NOT_REAPPEAR'
+  let calls = 0
+  const provider = createServer(async (request, response) => {
+    let raw = ''; for await (const chunk of request) raw += chunk
+    const input = JSON.parse(raw)
+    assert.equal(input.stream, true)
+    assert.equal(input.enable_thinking, false)
+    assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'))
+    calls++
+    assert.ok(calls <= (scenario === 'complete' ? 1 : 2), 'no unrequested third generation')
+    const value = { operation: { kind: 'append', supersedes: [] }, commentary: '',
+      answer: scenario === 'correction' && calls === 1 ? draft : scenario === 'finalize' && calls === 2 ? null : body,
+      outcome: scenario === 'finalize' && calls === 1 ? null : { status: scenario === 'correction' && calls === 1 ? 'invalid' : 'satisfied', gaps: [] } }
+    const args = JSON.stringify(value)
+    // Deliberately split a JSON null token as well as the public text. This is
+    // the formal3.8.16 regression; packet boundaries have no protocol meaning.
+    const nullAt = args.indexOf('null')
+    const cut = scenario === 'correction' && calls === 1 ? args.indexOf(',"outcome"')
+      : nullAt >= 0 ? nullAt + 2 : Math.floor(args.length / 2)
+    const chunks = [args.slice(0, cut), args.slice(cut)]
+    response.writeHead(200, { 'content-type': 'text/event-stream' })
+    for (const [index, argumentsText] of chunks.entries()) {
+      response.write(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { tool_calls: [{ index: 0,
+        ...(index === 0 ? { id: `synthetic-${scenario}-${calls}`, type: 'function', function: { name: 'public_answer', arguments: argumentsText } }
+          : { function: { arguments: argumentsText } }) }] }, finish_reason: index === chunks.length - 1 ? 'tool_calls' : null }] })}\n\n`)
+    }
+    response.end(`data: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 10, completion_tokens: 12 } })}\n\ndata: [DONE]\n\n`)
+  })
+  await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
+  let worker: ReturnType<typeof createWorker> | undefined
+  try {
+    const { companyId, projectId, agentId } = await seedCompanyWithAgent()
+    const principalId = `public-answer-${scenario}`, room = `public-answer-room-${scenario}`, members = [principalId, agentId]
+    await seedUserMembership(principalId, companyId, { role: 'STUDENT', isAdmin: false })
+    await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'STUDENT')", [projectId, companyId, principalId])
+    await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Synthetic public answer',$4::jsonb)", [room, companyId, projectId, JSON.stringify(members)])
+    await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)', [room, companyId, JSON.stringify({ channelType: 2, members })])
+    const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, room)
+    const address = provider.address(); assert.ok(address && typeof address !== 'string')
+    worker = createWorker({ controlPlane: api, model: {
+      ...runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: 'synthetic-public-answer-key', baseUrl: 'https://api.siliconflow.cn/v1' }, 90_000),
+      baseUrl: `http://127.0.0.1:${address.port}/v1`,
+    }, worker: { id: `public-answer-${scenario}`, concurrency: 1 } })
+    const input = { tenantId: companyId, conversationId: room, policyVersion: policy.version,
+      messageId: 'question', version: 1, author: { id: principalId, kind: 'human' as const }, text: 'Explain flow control briefly.', mentions: [agentId] }
+    const run = (await api.conversations.ingest(input, { mode: 'chat', codeExecution: 'disabled', executionClass: 'conversation' })).runs[0]
+    assert.ok(run)
+    await bindProductRun(pool, run, room)
+    assert.equal(await worker.runNext(), true)
+    assert.equal((await api.readRun(run))?.status, 'succeeded')
+    await until(async () => (await api.readRunState(run))?.delivery === 'delivered')
+    const expectedCalls = scenario === 'complete' ? 1 : 2
+    assert.equal(calls, expectedCalls)
+    await until(async () => (await pool.query('SELECT 1 FROM llm_calls WHERE run_id=$1', [run.runId])).rowCount === expectedCalls)
+    const ledger = (await pool.query('SELECT status,extras FROM llm_calls WHERE run_id=$1 ORDER BY created_at,id', [run.runId])).rows
+    assert.deepEqual(ledger.map(call => call.status), scenario === 'correction' ? ['failed', 'succeeded'] : Array(expectedCalls).fill('succeeded'))
+    if (scenario === 'correction') {
+      assert.equal(ledger[0].extras.failure.category, 'protocol')
+      assert.equal(ledger[1].extras.operation, 'correction')
+      const audit = (await pool.query('SELECT kind,data FROM lingxios.agent_run_events WHERE run_id=$1 ORDER BY seq', [run.runId])).rows
+      assert.ok(audit.some(event => event.kind === 'public.text.delta' && event.data.text === draft), 'the failed candidate remains auditable')
+      assert.equal(audit.find(event => event.kind === 'model.failed')?.data.modelDiagnostics.protocolCode, 'public_text_invalid')
+    }
+    const sent = recording.messages.filter(message => message.channelId === room && message.payload.role === 'assistant')
+    assert.equal(sent.length, 1)
+    assert.equal(nativeText(sent[0].payload), body)
+    const replay = await readRunProjection(api, run, true)
+    assert.equal(nativeText(replay.snapshot.message), body)
+    assert.equal(JSON.stringify(replay.snapshot.message.content).includes(draft), false)
+    assert.equal(JSON.stringify(replay.activityPage(0).message.content).includes(draft), false)
+    const deduplicated = await api.conversations.ingest(input, { mode: 'chat', codeExecution: 'disabled', executionClass: 'conversation' })
+    assert.equal(deduplicated.deduplicated, true)
+    assert.equal(deduplicated.runs[0]?.runId, run.runId)
+    assert.equal(await worker.runNext(), false)
+    assert.equal(calls, expectedCalls)
+    const output = process.env.RUNTIME_ACCEPTANCE_OUTPUT_DIR || `artifacts/runtime-acceptance/${Date.now()}-${process.pid}`
+    await mkdir(output, { recursive: true })
+    await writeFile(`${output}/public-answer-${scenario}.json`, JSON.stringify({ scenario, runtime: releaseVersions.runtime,
+      syntheticProvider: true, calls, ledgerStatuses: ledger.map(call => call.status), deliveredBodies: sent.length,
+      body, failedDraftInDeliveryOrReplay: false, replayExtraCalls: 0 }, null, 2) + '\n', { flag: 'wx' })
+  } finally {
+    await worker?.stop(); provider.closeAllConnections()
+    await new Promise<void>(resolve => provider.close(() => resolve()))
+  }
+})
