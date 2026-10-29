@@ -105,7 +105,7 @@ function sshSession() {
   writeFileSync(key, `${process.env.DEPLOY_SSH_KEY.replace(/\r\n/g, '\n').trim()}\n`, { mode: 0o600 })
   chmodSync(key, 0o600)
   if (process.platform === 'win32') execFileSync('icacls', [key, '/inheritance:r', '/grant:r', `${process.env.USERNAME}:F`], { stdio: 'ignore' })
-  const args = ['-i', key.replaceAll('\\', '/'), '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'UserKnownHostsFile=deploy/known_hosts',
+  const args = ['-i', key.replaceAll('\\', '/'), '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'LogLevel=ERROR', '-o', 'UserKnownHostsFile=deploy/known_hosts',
     '-o', 'StrictHostKeyChecking=yes', '-o', 'ConnectTimeout=20', '-o', 'ServerAliveInterval=20']
   return {
     run: (host, label, script) => new Promise((resolve, reject) => {
