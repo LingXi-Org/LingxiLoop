@@ -1,21 +1,6 @@
-import { useCallback, useEffect, useRef, useState, type ComponentProps, type CSSProperties } from 'react'
+import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { isElectron, isMac, trafficLightInset } from '@/lib/runtime'
-
-// Electron's hidden titlebar (mac) is 44px tall and marked as a drag region.
-// The portal renders on top of it, but the OS still treats those pixels as
-// draggable — anything we put up there is unclickable. Push past the titlebar
-// vertically; on mac also indent past the native traffic-light cluster so the
-// filename chip doesn't crowd them.
-const TOP_OFFSET = isElectron ? 56 : 20
-const LEFT_OFFSET = isElectron && isMac ? trafficLightInset + 12 : 20
-
-// `no-drag` on the modal root makes every pixel inside the viewer receive
-// clicks normally, even where it overlays the titlebar's drag region.
-const noDrag: CSSProperties = isElectron
-  ? ({ WebkitAppRegion: 'no-drag' } as CSSProperties)
-  : {}
 
 interface ImageViewerProps {
   src: string
@@ -142,7 +127,6 @@ export function ImageViewer({ src, name, onClose, onCloseAutoFocus }: ImageViewe
         showCloseButton={false}
         onCloseAutoFocus={onCloseAutoFocus}
         className="fixed inset-0 top-0 left-0 z-[1000] flex h-screen max-h-none w-screen max-w-none translate-x-0 translate-y-0 select-none items-center justify-center overflow-hidden rounded-none bg-foreground/95 p-0 text-background ring-0 backdrop-blur-sm sm:max-w-none"
-        style={noDrag}
         onClick={onClose}
       >
       <DialogTitle className="sr-only">预览 {name}</DialogTitle>
@@ -191,10 +175,9 @@ export function ImageViewer({ src, name, onClose, onCloseAutoFocus }: ImageViewe
         <div
           className="absolute max-w-[min(50vw,520px)] truncate py-1 font-mono text-[12.5px] text-background/90"
           style={{
-            top: TOP_OFFSET,
-            left: LEFT_OFFSET,
+            top: 20,
+            left: 20,
             textShadow: '0 1px 2px rgba(0,0,0,0.6)',
-            ...noDrag,
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -229,7 +212,7 @@ function Toolbar({
   return (
     <div
       className="absolute flex items-center gap-0.5 rounded-full bg-background/90 px-1.5 py-1 text-foreground shadow-lg backdrop-blur-md"
-      style={{ top: TOP_OFFSET, right: 20, ...noDrag }}
+      style={{ top: 20, right: 20 }}
       onClick={(e) => e.stopPropagation()}
     >
       <ToolBtn title="缩小 (−)" onClick={onZoomOut}>

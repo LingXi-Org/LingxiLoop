@@ -20,8 +20,8 @@ function EmptyConversation({ onChooseWorkspace }: { onChooseWorkspace?: () => vo
   const canCreate = useWorkspace((state) => state.list.find((project) => project.id === state.selectedId)?.status === 'ACTIVE')
   const total = conversations.length
   return (
-    <main className="chat-surface omb-titlebar-safe omb-drag grid h-full min-w-0 place-items-center bg-background">
-      <div data-empty-conversation className="omb-no-drag flex max-w-sm flex-col items-center gap-3 px-8 text-center">
+    <main className="chat-surface select-none grid h-full min-w-0 place-items-center bg-background">
+      <div data-empty-conversation className="flex max-w-sm flex-col items-center gap-3 px-8 text-center">
         <img src="/logo.png" alt="" className="size-14 rounded-2xl opacity-90" draggable={false} />
         <h1 className="text-xl font-semibold text-foreground">{total > 0 ? '选择一个会话开始交流' : '开始一段新对话'}</h1>
         <p className="text-sm leading-6 text-muted-foreground">

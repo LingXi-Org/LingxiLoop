@@ -32,12 +32,10 @@ import { CanvasSkeleton } from '@/features/canvas/components/CanvasSkeleton'
 import { PresentationSkeleton } from '@/features/presentations/components/PresentationSkeleton'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { retryWebNavigation } from '@/lib/navigation'
-import { isElectron, platform } from '@/lib/runtime'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import type { Participant } from '@/types'
 import { useSurface } from '@/stores/surface'
-import { useTheme } from '@/stores/theme'
 import { useUiCommands } from '@/stores/uiCommands'
 import { ChatPane } from './ChatPane'
 import { InfoPane } from './InfoPane'
@@ -77,7 +75,6 @@ function persistSidebarWidth(width: number): void {
 /** The desktop shell switches between the resizable IM workspace and the
  * personal dashboard. Compact object details continue to use the shared Drawer. */
 export function DesktopApp() {
-  const { theme } = useTheme()
   const companyId = useAuth((state) => state.activeCompanyId)
   const companyRole = useAuth((state) => state.companies.find(company => company.id === state.activeCompanyId)?.role)
   const isMobile = useIsMobile()
@@ -103,10 +100,6 @@ export function DesktopApp() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
   const pageRef = useEntrance(`${selectedWorkspaceId}:${view}`)
-
-  useEffect(() => {
-    window.lingxiloop?.windowChrome?.setTheme(theme)
-  }, [theme])
 
   useEffect(() => {
     useKnowledgeSources.getState().close()
@@ -213,7 +206,7 @@ export function DesktopApp() {
     : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
   return (
-    <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-electron={isElectron ? 'true' : 'false'} data-platform={platform} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
+    <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
       {!mobileChatOpen && !mobileForumOpen && <WorkspaceRail
           {...learningSpaces}
           onSelect={(space) => void learningSpaces.select(space)}
@@ -223,7 +216,7 @@ export function DesktopApp() {
           onWorkspacePickerOpenChange={setWorkspacePickerOpen}
         />}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)]">
-        {!isMobile && <div className="omb-drag flex h-7 shrink-0 items-center justify-center gap-1.5 px-2 text-accent-foreground" data-workspace-titlebar>
+        {!isMobile && <div className="select-none flex h-7 shrink-0 items-center justify-center gap-1.5 px-2 text-accent-foreground" data-workspace-titlebar>
           {activeWorkspace && <CourseAvatar avatarUrl={activeWorkspace.avatarUrl} courseId={activeWorkspace.courseId ?? activeWorkspace.id} title={activeWorkspace.name} size="sm" className="!size-3 rounded-sm [&_[data-slot=avatar-fallback]]:rounded-sm [&_[data-slot=avatar-image]]:rounded-sm" />}
           <span className="max-w-80 truncate text-xs font-medium leading-none">{activeProjectName}</span>
         </div>}

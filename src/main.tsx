@@ -4,13 +4,11 @@ import '@fontsource-variable/inter'
 import '@fontsource-variable/geist'
 import 'katex/dist/katex.min.css'
 import { AppThemeProvider } from './components/AppThemeProvider'
-import { isElectron } from './lib/runtime'
 import './styles/globals.css'
 
 const root = createRoot(document.getElementById('root')!)
 
 async function boot() {
-  if (isElectron) document.body.classList.add('electron')
   const [{ App }, { GlobalInteractionProvider }] = await Promise.all([
     import('./App'),
     import('./components/GlobalInteractionProvider'),

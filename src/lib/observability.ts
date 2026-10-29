@@ -1,10 +1,9 @@
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider } from 'posthog-js/react'
 import type { PostHogConfig } from 'posthog-js'
-import { isElectron, isWebAppHost } from '@/lib/runtime'
+import { isWebAppHost } from '@/lib/runtime'
 
-export function getAnalyticsSurface(): 'electron' | 'web' | 'notification' | 'browser' {
-  if (isElectron) return 'electron'
+export function getAnalyticsSurface(): 'web' | 'browser' {
   if (isWebAppHost) return 'web'
   return 'browser'
 }

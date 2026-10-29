@@ -11,8 +11,8 @@ tracked review page consumes it. Historical hash receipts remain historical.
 This reduces source maintenance; no production bundle or latency saving is
 claimed.
 
-Replay the evidence at [issue-370/cleanup.md](../../../../docs/evidence/issue-370/cleanup.md),
+Replay the evidence at [issue-370/cleanup.md](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/issue-370/cleanup.md),
 including the consumer queries, retirement commit, owning checks and exact
-restore command. See [the delivery record](../../../../docs/evidence/issue-370/README.md)
+restore command. See [the delivery record](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/issue-370/README.md)
 for current validation and review status. The example is a method to verify
 reachability, not a rule to delete every component lacking an application import.

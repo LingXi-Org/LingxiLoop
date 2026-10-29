@@ -36,7 +36,7 @@ The reviewed Komodo resource source pins `OPENAI_MODEL` for A/B and clears stale
 admission-price overrides so Web/API and Worker derive them from the CN tariff. The embedding template pins `Pro/BAAI/bge-m3`, CNY 0.000070/K input tokens.
 Read back effective model, base URL, exchange rate and price overrides on all four
 services after rollout; Sigillo-only changes do not update running containers.
-See [model switch evidence](evidence/issue-186/README.md) for the exact checks and remaining gates.
+See [model switch evidence](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/issue-186/README.md) for the exact checks and remaining gates.
 Existing knowledge embedding contracts reject a model/base change even when dimensions match. Prepare an independently verified compatible new index before switching an existing deployment; do not rename stored vectors, reset the knowledge plane, or delete the old index to make startup pass. Native memory retains its model/index-version contract.
 
 The production operations MCP additionally requires the five Worker secrets

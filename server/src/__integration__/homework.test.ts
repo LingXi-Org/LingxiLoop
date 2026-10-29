@@ -16,7 +16,7 @@ import { createNativeMessage } from '../im/message-types.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
 
-// Failure inventory, written before implementation: see e2e/homework/acceptance.md.
+// Real material fixtures live beside the owning integration suite.
 // These cases exercise persisted business boundaries, not a browser-only hidden-field check.
 // Assessment retry failures: aliases/order or concurrent calls bill the same evidence twice;
 // a retry supersedes an in-flight/READY judgment or erases the report/shared/manual review;
@@ -1541,7 +1541,7 @@ test('[integration] learner native reads page full requirements and real materia
   const attachments = []
   for (const [name, contentType] of fixtures) {
     const key = `attachments/${companyId}/${name}`
-    await storage.put(key, await readFile(`e2e/homework/${name}`), contentType)
+    await storage.put(key, await readFile(new URL(`./fixtures/homework/${name}`, import.meta.url)), contentType)
     await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
       SELECT $1,$2,$3,period_id FROM company_memberships WHERE company_id=$2 AND user_id=$3 AND ended_at IS NULL`, [key, companyId, teacher.userId])
     attachments.push({ key, name })

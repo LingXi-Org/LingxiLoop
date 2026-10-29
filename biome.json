@@ -13,7 +13,6 @@
       "!**/release",
       "!**/node_modules",
       "!artifacts",
-      "!electron-package",
       "!third_party",
       "!server/src/modules/case-covers/vendor",
       "!worker-configuration.d.ts",

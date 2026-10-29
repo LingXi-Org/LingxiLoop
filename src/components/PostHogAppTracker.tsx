@@ -3,10 +3,8 @@ import { usePostHog } from 'posthog-js/react'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { getAnalyticsSurface, isPostHogConfigured } from '@/lib/observability'
-import { isElectron } from '@/lib/runtime'
 
 function currentUrlForAnalytics(view: string): string {
-  if (isElectron) return `lingxiloop://${view}`
   if (typeof location === 'undefined') return `lingxiloop://${view}`
   return `${location.pathname}${location.search}${location.hash}`
 }

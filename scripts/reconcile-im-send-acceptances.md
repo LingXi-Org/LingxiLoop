@@ -1,3 +1,5 @@
+> Historical verification commands below refer to [the pre-cleanup snapshot](https://github.com/LingXi-Org/LingxiLoop/tree/351e895a315bb46b9061c8628b20d9b9fa5ffa1e). Current recovery tooling and authorization requirements remain in effect.
+
 # Issue #154: receipt reconciliation
 
 The repair command inspects persisted acceptances against authoritative WuKong

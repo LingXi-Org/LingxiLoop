@@ -115,6 +115,6 @@ Their fixed 250 ms post-abort observation proves the backend is absent by that
 check, not its precise exit latency. Read-approval propagation remains code-review
 and upstream-test coverage, rather than an approval-event fixture here.
 
-See [retained evidence](evidence/callback-deadlines/README.md) for exact source,
+See [retained evidence](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/callback-deadlines/README.md) for exact source,
 formal package integrity, earlier red results and the final measurements. Full
 production matrices, live providers and long soak are still unverified.

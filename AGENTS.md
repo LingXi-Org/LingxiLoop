@@ -15,11 +15,11 @@ Before adding complexity for a speculative or vanishingly unlikely race or secur
 3. Follow [Operate Release Controller](.agents/skills/operate-release-controller/SKILL.md) for LingxiLoop product rollout and recovery: immutable manifests, MCP/CLI release operations, durable controller/host receipts and actual HTTPS/business probes. Verify deployed artifact identities, runtime/schema provenance, Web readiness and both Worker healthchecks; a queued request, merge or older green result is insufficient. Use [Operate Komodo Production](.agents/skills/operate-komodo-production/SKILL.md) only for retained shared stacks/Core maintenance or explicitly authorized bootstrap transport, with terminal successful Komodo receipts for those actions.
 4. Diagnose failures, perform authorized reversible recovery, and verify the resulting receipt and health again. Prefer a narrow fix forward; roll back only to a known compatible release, respecting schema/lease rules and preserving durable data. Report the exact failed or pending action and evidence when recovery remains blocked.
 
-Use the current session's authorization and designated integrator. Report completed, failed and unverified work separately. Historical release context is archived in [the maintenance evidence](docs/evidence/issue-370/session-20261019.md).
+Use the current session's authorization and designated integrator. Report completed, failed and unverified work separately. Historical release context is archived in [the maintenance evidence](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/issue-370/session-20261019.md).
 
 ## Product invariants
 
-- Keep Web/API and background workers separate. The browser web app is the supported release surface; Electron is local development only (`electron:dev/start`), with no installer packaging or publishing.
+- Keep Web/API and background workers separate. The browser web app is the supported development and release surface; Electron tooling is retired.
 - PostgreSQL owns product state, WuKongIM durable IM, Redis ephemeral coordination, and vendored Open Notebook/SurrealDB its own schema.
 - The old Agent OS and harness are retired. Use the exact published LingxiOS dependency through its public exports; do not restore vendored runtime code or invent a compatibility adapter. Keep product authorization and the shared LLM ledger intact.
 - At every server trust boundary, enforce tenant and project authorization. Never expose or log credentials, tokens, or prompts; preserve signed callback/webhook checks.
@@ -29,7 +29,7 @@ Use the current session's authorization and designated integrator. Report comple
 
 - `server/src/db/migrations/0001_v1_baseline.sql` is immutable. Add one next-numbered, transactional, forward-compatible migration; runtime code never executes DDL. A non-empty database without `schema_migrations` must be rebuilt by operations, never adopted by the app.
 - Use the smallest owning check: web (`lint`, `typecheck`, `test`, `build`); admin/control (`admin:*`/`control:*`); server (`server:*` and affected integration); Open Notebook (its own affected package). Migration and runtime integration changes also require their owning integration coverage.
-- Browser verification uses `tester-army/e2e` and its official `@e2e-dev/web` engine. Do not import or run Playwright directly.
+- Historical browser/Eval harnesses are retired. Add only focused checks for concrete changed behavior; use the existing CI/product/release checks where applicable.
 - Verify product releases through durable controller/host receipts and actual probes; use Komodo CLI/API update state for retained shared infrastructure. Never copy credentials into files or output.
 
 ## Testing

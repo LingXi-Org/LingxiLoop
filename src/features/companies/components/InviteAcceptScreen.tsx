@@ -8,7 +8,7 @@ import type { ApiInvitationPreview } from '@/features/companies/contracts'
  * InviteAcceptScreen — the "you've been invited to <workspace>" landing
  * page. Renders when the URL carries an invite token via either:
  *   • path:   /invite/<token>           (web)
- *   • hash:   #invite=<token>           (electron deep link)
+ *   • hash:   #invite=<token>           (legacy deep link)
  *
  * Flow:
  *   1. On mount, parse the token from the URL and call previewInvitation —
@@ -33,7 +33,6 @@ import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
 import { userFacingError } from '@/lib/userFacingError'
 import { ProductLogo } from '@/components/ProductLogo'
-import { WindowDragStrip } from '@/components/WindowDragStrip'
 import { writeWebDestination } from '@/lib/webNavigation'
 
 function inviteRoleLabel(role: string): string {
@@ -157,7 +156,6 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
 
   return (
     <div className="fixed inset-0 grid place-items-center p-6" style={{ background: 'var(--paper)' }}>
-      <WindowDragStrip />
       <div
         className="w-full max-w-[420px] rounded-[18px] p-8 flex flex-col items-center gap-6"
         style={{

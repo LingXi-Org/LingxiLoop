@@ -46,7 +46,7 @@ function pdfPruneFixture(t) {
   const inventory = (path) => readdirSync(join(directory, path), { recursive: true, withFileTypes: true })
     .filter(entry => entry.isFile()).map(entry => {
       const full = join(entry.parentPath, entry.name)
-      return [relative(join(directory, path), full), readFileSync(full).toString('base64')]
+      return [relative(join(directory, path), full).replaceAll('\\', '/'), readFileSync(full).toString('base64')]
     }).sort((a, b) => a[0].localeCompare(b[0]))
   return { directory, pdf, office, nested, put, run, inventory }
 }
@@ -96,7 +96,14 @@ test('production stops both old workers before an application can enqueue new ef
 // Failure: development resolves shared imports that the production image never copies.
 test('server image includes the complete shared runtime import graph', () => {
   const root = fileURLToPath(new URL('../', import.meta.url))
-  const copied = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).find(part => /^.* AS runtime\r?\n/.test(part)).split(/\r?\n/)
+  const runtime = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).find(part => /^.* AS runtime\r?\n/.test(part))
+  // Runtime provenance reads both manifests/locks; CI graphs and fixtures stay out.
+  assert.deepEqual(runtime.split(/\r?\n/).filter(line => /^COPY server[ /]/.test(line))
+    .flatMap(line => line.trim().split(/\s+/).slice(1, -1)), [
+      'server/src', 'server/assets', 'server/package.json', 'server/package-lock.json',
+      'server/scripts/check-packaged-startup.mjs',
+    ])
+  const copied = runtime.split(/\r?\n/)
     .filter(line => /^COPY (?:src|shared)[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
   assert.deepEqual(copied.filter(path => path.startsWith('src/features/cases/cover-vm')), [
     'runtime', 'protocol', 'program', 'guest-source', 'svg',
@@ -202,6 +209,14 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
     return resolve(destination, suffix) === resolve(root, path)
   })
+  for (const path of ['server/package.json', 'server/package-lock.json', 'server/build/web/package.json',
+    'server/build/web/package-lock.json', 'server/scripts/check-packaged-startup.mjs']) {
+    assert.ok(inContext(path), `Missing build/runtime input: ${path}`)
+  }
+  for (const path of ['server/build/admin/package-lock.json', 'server/scripts/scoped-dependencies.mjs',
+    'server/fixtures/historical-runtime-3.8.2.json', 'server/src/__tests__/gateway-auth.test.ts']) {
+    assert.equal(inContext(path), false, `Non-runtime server content entered image context: ${path}`)
+  }
   for (const name of ['runtime.ts', 'protocol.ts', 'program.ts', 'guest-source.ts', 'svg.ts', 'session.ts', 'worker.ts', 'CaseCoverPreview.tsx']) {
     assert.ok(inContext(`src/features/cases/cover-vm/${name}`), `Missing cover source in SPA context: ${name}`)
   }
@@ -308,7 +323,7 @@ test('the production image runs only the RAG API and worker', () => {
   )
   assert.match(supervisor, /--import-modules rag_commands/)
   assert.match(read('third_party/open-notebook/pyproject.toml'), /"supervisor==4\.3\.0"/)
-  assert.match(read('third_party/open-notebook/uv.lock'), /name = "supervisor"\nversion = "4\.3\.0"/)
+  assert.match(read('third_party/open-notebook/uv.lock'), /name = "supervisor"\r?\nversion = "4\.3\.0"/)
   assert.equal((supervisor.match(/^autorestart=true$/gm) ?? []).length, 2)
   assert.equal((supervisor.match(/^stdout_logfile=\/dev\/stdout$/gm) ?? []).length, 2)
   assert.equal((supervisor.match(/^stderr_logfile=\/dev\/stderr$/gm) ?? []).length, 2)

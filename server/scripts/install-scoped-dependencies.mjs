@@ -11,7 +11,7 @@ const originals = ['package.json', 'package-lock.json'].map(file => [file, readF
 try {
   for (const [file] of originals) writeFileSync(resolve(root, file), readFileSync(resolve(root, `server/build/${scope}/${file}`)))
   const result = spawnSync('npm', ['ci', '--ignore-scripts', '--prefer-offline', ...process.argv.slice(3)], {
-    cwd: root, stdio: 'inherit', env: { ...process.env, ELECTRON_SKIP_BINARY_DOWNLOAD: '1' },
+    cwd: root, stdio: 'inherit',
   })
   if (result.error) throw result.error
   process.exitCode = result.status ?? 1

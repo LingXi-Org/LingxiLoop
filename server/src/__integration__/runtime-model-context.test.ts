@@ -217,7 +217,7 @@ test('production GLM worker preserves conversation continuity across repeated co
       runtime: releaseVersions.runtime, model: env.OPENAI_MODEL, realProvider: live, results, requests, calls, checkpoints,
       providerNotStarted: [...providerNotStarted], publications: Object.fromEntries(publications), injectedPublicationFailure,
       continuityFactPreserved: true, deliveredOncePerTurn: true, thinkingDisabledRequested: true, transport: 'recording WuKong fixture',
-      reproduce: `node e2e/server/model-context.mjs${live ? ' --live-model-context' : ''}` }, null, 2))
+      reproduce: `${live ? 'LINGXIOS_LIVE_CONTEXT=1 ' : ''}npm run test:integration -- --file runtime-model-context.test.ts` }, null, 2))
   } catch (error) {
     await mkdir('artifacts/reply-generation', { recursive: true })
     await writeFile(`artifacts/reply-generation/${live ? 'live' : 'scripted'}.json`, JSON.stringify({ passed: false,
@@ -226,7 +226,7 @@ test('production GLM worker preserves conversation continuity across repeated co
       error: error instanceof Error ? error.message : String(error),
       replies: im.messages.filter(message => message.channelId === 'model-context-room' && message.payload.role === 'assistant')
         .map(message => nativeText(message.payload)),
-      reproduce: `node e2e/server/model-context.mjs${live ? ' --live-model-context' : ''}` }, null, 2))
+      reproduce: `${live ? 'LINGXIOS_LIVE_CONTEXT=1 ' : ''}npm run test:integration -- --file runtime-model-context.test.ts` }, null, 2))
     throw error
   } finally {
     await worker?.stop(); await teardownAll(); await im.close()

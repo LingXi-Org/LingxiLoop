@@ -1,5 +1,0 @@
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": { "types": ["node", "vite/client"] },
-  "include": ["./fixture.tsx", "./*.e2e.ts", "./vite.config.ts", "../../e2e.chat-layout.config.ts"]
-}
