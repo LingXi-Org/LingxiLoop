@@ -410,7 +410,10 @@ app.post('/api/auth/sign-up/email', async (c) => {
     const result = await response.clone().json<{ code?: string }>().catch(() => null)
     // A concurrent first signup can lose the user(email) race after the library's
     // initial lookup. Return the same public result only for this creation error.
-    if (result?.code !== 'FAILED_TO_CREATE_USER' || !await c.env.DB.prepare(`SELECT id FROM user WHERE email=?`).bind(input.email.toLowerCase()).first()) return response
+    if (result?.code !== 'FAILED_TO_CREATE_USER') return response
+    if (!await c.env.DB.prepare(`SELECT id FROM user WHERE email=?`).bind(input.email.toLowerCase()).first()) {
+      return registrationFailure(c, new RegistrationError('REGISTRATION_UNAVAILABLE', 503, 'identity', true))
+    }
   }
   // Real and synthetic Better Auth users have exactly the same public response.
   return c.json({ ok: true, nextAction: 'verify_email' })

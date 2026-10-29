@@ -168,3 +168,14 @@ it('limits explicit recovery per authenticated identity using the existing rate 
     expect(await response.json()).toMatchObject({ code: 'RATE_LIMITED' })
   } finally { fetchMock.deactivate() }
 })
+
+it('classifies identity database write failures as retryable service failures', async () => {
+  mocks(1, 1)
+  try {
+    await env.DB.exec(`CREATE TRIGGER reject_identity BEFORE INSERT ON user BEGIN SELECT RAISE(FAIL,'synthetic identity failure'); END`)
+    const response = await signup('identity-fault@example.com')
+    expect(response.status).toBe(503)
+    expect(await response.json()).toMatchObject({ code: 'REGISTRATION_UNAVAILABLE', retryable: true })
+    expect((await env.DB.prepare(`SELECT id FROM user`).all()).results).toHaveLength(0)
+  } finally { fetchMock.deactivate() }
+})
