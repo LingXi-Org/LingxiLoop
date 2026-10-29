@@ -5,6 +5,7 @@ import { createServer } from 'node:http'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
+import { fileURLToPath } from 'node:url'
 import { releaseVersions } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl, stopLingxiOSControl } from '../agent-runtime/runtime.js'
@@ -15,7 +16,7 @@ import { WukongClient } from '../im/wukong.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
-// Failure inventory was written first in docs/evidence/issues-153-161-basic/FAILURE-MODEL.md.
+// Failure inventory is preserved in Git history before issue #551.
 test('process crash after native write preserves receipts; disconnected replacement and restarted terminal delivery recover', { timeout: 90000 }, async t => {
   await ensureSchemaOnce(); await resetAllTables()
   const im = await installRecordingWukong()
@@ -49,7 +50,7 @@ test('process crash after native write preserves receipts; disconnected replacem
     }
   }
   const start = async (id: string, write = false) => {
-    const child = spawn(process.execPath, ['scripts/issue-153-161/worker.mjs'], {
+    const child = spawn(process.execPath, [fileURLToPath(new URL('./fixtures/basic-recovery-worker.mjs', import.meta.url))], {
       env: { ...process.env, BASIC_WORKER_ID: id, BASIC_WRITE: write ? '1' : '0', BASIC_CONTROL_URL: `http://127.0.0.1:${address.port}` },
       stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
     })
