@@ -17,7 +17,8 @@ const SOURCE_DETAIL_SELECT = `source.id,source.kind,source.title,source.mime_typ
   source.visibility_scope AS "visibilityScope",source.owner_user_id AS "ownerUserId",
   owner.display_name AS "ownerName",owner.avatar_url AS "ownerAvatarUrl",
   source.created_by_user_id AS "createdByUserId",source.created_by_user_id AS "createdBy",
-  source.created_via AS "createdVia",source.created_at AS "createdAt",source.updated_at AS "updatedAt"`
+  source.created_via AS "createdVia",source.created_at AS "createdAt",source.updated_at AS "updatedAt",
+  source.external_chunk_count AS "chunkCount"`
 
 export interface KnowledgeSourceRow extends Record<string, unknown> {
   id: string
