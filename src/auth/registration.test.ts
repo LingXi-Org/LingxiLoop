@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test, { mock } from 'node:test'
-mock.module('@/api/core/http', { namedExports: { ApiError: class ApiError extends Error { constructor(message: string, public status: number, public code?: string) { super(message) } } } })
+mock.module('@/api/core/http', { namedExports: { ApiError: class ApiError extends Error { constructor(message: string, public status: number, public code?: string, public requestId?: string) { super(message) } } } })
 const { readPendingVerification, registrationResponse, verificationContext, verificationError } = await import('./registration')
 
 test('registration errors retain safe status/correlation without exposing raw response bodies', async () => {
@@ -19,6 +19,8 @@ test('registration errors retain safe status/correlation without exposing raw re
   await assert.rejects(() => registrationResponse(new Response('', { status: 503 })), error => {
     assert.equal((error as { requestId?: string }).requestId, undefined); return true
   })
+  await assert.rejects(() => registrationResponse(new Response('<html>private SQL</html>', { status: 200 })), /服务暂时不可用/)
+  assert.doesNotMatch(verificationError({ code: 'INVALID_OTP', requestId: '<html>private SQL' }).message, /html|SQL/)
   assert.match(verificationError({ code: 'OTP_EXPIRED' }).message, /重新发送/)
   assert.match(verificationError({ code: 'INVALID_OTP' }).message, /不正确/)
   assert.match(verificationError({ status: 429 }).message, /稍后/)

@@ -2,12 +2,16 @@ import { ApiError } from '@/api/core/http'
 import { registrationMessage } from '../../shared/registration'
 
 export class RegistrationApiError extends ApiError {
-  constructor(status: number, code?: string, readonly requestId?: string, readonly retryAfter?: string) {
-    super(registrationMessage(code, status) + (requestId ? ` 请求编号：${requestId}` : ''), status, code)
+  constructor(status: number, code?: string, requestId?: string, readonly retryAfter?: string) {
+    const safeId = requestId && /^[a-zA-Z0-9_-]{1,100}$/.test(requestId) ? requestId : undefined
+    super(registrationMessage(code, status) + (safeId ? ` 请求编号：${safeId}` : ''), status, code, safeId)
   }
 }
 export async function registrationResponse<T>(response: Response): Promise<T> {
-  if (response.ok) return response.json() as Promise<T>
+  if (response.ok) {
+    try { return await response.json() as T }
+    catch { throw new RegistrationApiError(502, 'REGISTRATION_UNAVAILABLE', response.headers.get('x-request-id') ?? response.headers.get('cf-ray') ?? undefined) }
+  }
   const body = await response.json().catch(() => null) as { code?: unknown; requestId?: unknown } | null
   const code = typeof body?.code === 'string' ? body.code : undefined
   const correlation = response.headers.get('x-request-id') ?? response.headers.get('cf-ray')

@@ -6,7 +6,7 @@ test('invitation login falls back only to an authorized existing workspace', asy
   let result: { data: unknown; error: { message: string } | null } = signedIn
   const signIn = mock.fn(async () => result)
   mock.module('better-auth/react', { namedExports: { createAuthClient: () => ({ signIn: { email: signIn } }) } })
-  mock.module('@/api/core/http', { namedExports: { API: '/api', http: () => {}, ApiError: class ApiError extends Error { constructor(message: string, public status: number, public code?: string) { super(message) } } } })
+  mock.module('@/api/core/http', { namedExports: { API: '/api', http: () => {}, ApiError: class ApiError extends Error { constructor(message: string, public status: number, public code?: string, public requestId?: string) { super(message) } } } })
   const previousLocation = Object.getOwnPropertyDescriptor(globalThis, 'location')
   Object.defineProperty(globalThis, 'location', { configurable: true, value: { origin: 'https://example.com' } })
   try {
