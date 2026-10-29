@@ -1,8 +1,0 @@
-(node:1265253) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
-(Use `node --trace-warnings ...` to show where the warning was created)
-
-> lingxiloop@0.1.0-beta server:typecheck
-> tsc -p server/tsconfig.json --noEmit
-
-server/src/__integration__/homework.test.ts(1420,16): error TS18049: 'submitted.answer.editorDocument' is possibly 'null' or 'undefined'.
-server/src/__integration__/homework.test.ts(1421,20): error TS18049: 'submitted.answer.editorDocument' is possibly 'null' or 'undefined'.

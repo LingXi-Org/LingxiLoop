@@ -1,8 +1,0 @@
-{
-  "target": "b47723d8948708cd9b1ab230776e053d4b034c5c",
-  "preparation": "b1eef031e65c3d4477afc7e16d1c93a4d826e72e",
-  "final": "f8723361ea87ef6e051484350ecaea623d091b46",
-  "checks": 4,
-  "passed": true,
-  "productionChanged": false
-}

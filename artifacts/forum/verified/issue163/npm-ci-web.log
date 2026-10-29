@@ -1,5 +1,0 @@
-npm warn deprecated @types/bignumber.js@5.0.4: This is a stub types definition. bignumber.js provides its own type definitions, so you do not need this installed.
-npm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
-npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
-
-added 1458 packages in 32s

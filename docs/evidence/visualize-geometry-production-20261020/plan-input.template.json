@@ -1,8 +1,0 @@
-{
-  "targetAudit": "/workspace/geometry-image-qualification/image-audit/receipt.json",
-  "ci": "/workspace/geometry-image-qualification/ci.json",
-  "ciUrl": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39466348087",
-  "targetComposeCommit": "1c2ef95cb5f1a491236b92076177035d752c681a",
-  "preparationComposeCommit": "54a95e640d068f938a4b52ca1cc622a9290af588",
-  "branch": "release/visualize-geometry-production-20261020"
-}

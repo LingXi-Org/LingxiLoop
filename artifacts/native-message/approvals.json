@@ -1,8 +1,0 @@
-{
-  "passed": true,
-  "checks": [
-    "approved",
-    "denied",
-    "expired"
-  ]
-}

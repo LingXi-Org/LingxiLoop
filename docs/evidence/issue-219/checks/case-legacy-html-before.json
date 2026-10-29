@@ -1,1 +1,0 @@
-{"source":"literal <em>sample</em>","originalCaseRenderer":"<p>literal &lt;em&gt;sample&lt;/em&gt;</p>","initialImporter":"<p>literal sample</p>","correction":"Preserve escaped raw-HTML text for the case GFM dialect; keep forum skipHtml behavior."}

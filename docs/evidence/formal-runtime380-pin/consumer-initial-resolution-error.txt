@@ -1,1 +1,0 @@
-Initial local receipt helper used createRequire.resolve against the ESM-only main export and failed with ERR_PACKAGE_PATH_NOT_EXPORTED before reading package capabilities. This was a verifier resolution mistake, not a package import failure. The helper now uses import.meta.resolve and the official ESM import from the consumer worktree. No product or package file changed.

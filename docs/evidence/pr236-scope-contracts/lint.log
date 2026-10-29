@@ -1,3 +1,0 @@
-Checked 2 files in 10ms. No fixes applied.
-(node:1711728) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
-(Use `node --trace-warnings ...` to show where the warning was created)

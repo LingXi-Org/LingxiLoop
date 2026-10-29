@@ -1,7 +1,0 @@
-{
-  "ref": "integration/215-216-219-final",
-  "inputs": {
-    "scope": "server",
-    "publish_only": true
-  }
-}

@@ -1,6 +1,0 @@
-(node:1274954) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
-(Use `node --trace-warnings ...` to show where the warning was created)
-content boundary fixture ready
-[BABEL] Note: The code generator has deoptimised the styling of /workspace/LingxiLoop-issue219-boundaries/.codex-tmp/content-boundary-vite/deps/chunk-6NKYALLR.js?v=56612f8f as it exceeds the max of 500KB.
-
-A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.

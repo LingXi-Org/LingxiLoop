@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="4" failures="0" errors="0" skipped="0" time="327.760">
-  <testsuite name="e2e/visualize/presentation.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="327.760">
-    <testcase name="upstream: upstream Web presentation (light) [web]" classname="e2e/visualize/presentation.e2e.ts" time="139.970"/>
-    <testcase name="upstream: upstream Web presentation (dark) [web]" classname="e2e/visualize/presentation.e2e.ts" time="85.885"/>
-    <testcase name="product: upstream Web presentation (light) [web]" classname="e2e/visualize/presentation.e2e.ts" time="24.147"/>
-    <testcase name="product: upstream Web presentation (dark) [web]" classname="e2e/visualize/presentation.e2e.ts" time="77.758"/>
-  </testsuite>
-</testsuites>

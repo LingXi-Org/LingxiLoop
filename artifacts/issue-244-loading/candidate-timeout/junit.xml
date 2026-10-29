@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="4" failures="0" errors="0" skipped="0" time="83.202">
-  <testsuite name="e2e/visualize/timeout.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="83.202">
-    <testcase name="initialization deadline covers create and retry survives stalled cleanup [web]" classname="e2e/visualize/timeout.e2e.ts" time="22.033"/>
-    <testcase name="initialization deadline covers resources and retry survives stalled cleanup [web]" classname="e2e/visualize/timeout.e2e.ts" time="20.544"/>
-    <testcase name="initialization deadline covers state and retry survives stalled cleanup [web]" classname="e2e/visualize/timeout.e2e.ts" time="20.191"/>
-    <testcase name="initialization deadline covers handshake and retry survives stalled cleanup [web]" classname="e2e/visualize/timeout.e2e.ts" time="20.434"/>
-  </testsuite>
-</testsuites>

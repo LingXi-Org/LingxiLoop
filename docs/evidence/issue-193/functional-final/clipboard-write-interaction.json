@@ -1,9 +1,0 @@
-{
-  "status": "native-rejected",
-  "calls": 1,
-  "error": "NotAllowedError: Failed to execute 'write' on 'Clipboard': Write permission denied.",
-  "sha256": null,
-  "nativeWrite": false,
-  "nativeReadback": false,
-  "observation": "PNG bytes from the original ClipboardItem, only after the native write promise fulfilled; no OS readback"
-}

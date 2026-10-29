@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="11.500">
-  <testsuite name="e2e/visualize/trigger-history.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="11.500">
-    <testcase name="completed real-provider visualization renders through product history and authorized sandbox [web]" classname="e2e/visualize/trigger-history.e2e.ts" time="11.500"/>
-  </testsuite>
-</testsuites>

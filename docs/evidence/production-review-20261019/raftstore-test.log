@@ -1,4 +1,0 @@
-go: downloading github.com/stretchr/testify v1.11.1
-go: downloading github.com/davecgh/go-spew v1.1.1
-go: downloading github.com/pmezard/go-difflib v1.0.0
-ok  	github.com/WuKongIM/WuKongIM/pkg/controller/raft/raftstore	0.035s

@@ -1,1 +1,0 @@
-server/src/db/migrate.ts(196,30): error TS2367: This comparison appears to be unintentional because the types '"3.7.0"' and '"3.6.0"' have no overlap.

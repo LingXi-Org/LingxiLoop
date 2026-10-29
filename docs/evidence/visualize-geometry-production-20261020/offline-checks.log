@@ -1,9 +1,0 @@
-PASS actual committed formal descriptors: 3.5.8/native13/protocol11/full49 inventory identical; installed published package matches
-PASS actual Docker Compose normalization lingxiloop-app-a: only runtime image/pull policy; gateway/security/env/volumes unchanged
-PASS actual Docker Compose normalization lingxiloop-app-b: only runtime image/pull policy; gateway/security/env/volumes unchanged
-PASS actual recovery acceptance + all4 input hashes +12 recovery native terminals +full49 state; no original36+1 claim
-PASS modified/incomplete source rejected
-PASS absent current source qualification rejected
-PASS make-plan fails before output when real source qualification absent
-PASS actual target audit bytes and successful exact-head CI39466348087
-No reader/registry/production/driver execution; no plan or acceptance generated.

@@ -1,8 +1,0 @@
-upstream_commit=c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47
-raftstore_fix_commit=0194a738d04836899b998de8b4ac392b3aadb979
-platform=linux/amd64
-go version go1.25.11 linux/amd64
-debug_flags=-trimpath
-release_flags=-trimpath -ldflags="-s -w"
-9db5ccd7f437786593e9e90987134e9c0c12e39ee6840b9758ab041c4ceab1db  wukongim
-614abad25180518abad0d6aa1d542f1915dd00db812970b323960c1938d8a7f0  wukongim.debug

@@ -6,7 +6,7 @@
 !open_notebook/config.py
 !open_notebook/exceptions.py
 !open_notebook/artifact_storage.py
-# RAG uses the repository adapter; upstream full-product migrations stay in Git.
+# RAG uses the repository adapter; historical migrations are not image inputs.
 !open_notebook/database/
 open_notebook/database/**
 !open_notebook/database/repository.py

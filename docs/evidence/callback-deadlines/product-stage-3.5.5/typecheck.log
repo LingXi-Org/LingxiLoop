@@ -1,4 +1,0 @@
-
-> lingxiloop@0.1.0-beta server:typecheck
-> tsc -p server/tsconfig.json --noEmit
-

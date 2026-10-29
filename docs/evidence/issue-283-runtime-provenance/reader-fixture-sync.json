@@ -1,8 +1,0 @@
-{
-  "verified": true,
-  "scope": "offline fixture integration assertions only; no PG rerun",
-  "readerHead": "9bbb81b9128422efd94f95e957da883e24994b98",
-  "currentDamagedInventory": 52,
-  "concurrentInventory": 52,
-  "historicalRepairRange": 28
-}

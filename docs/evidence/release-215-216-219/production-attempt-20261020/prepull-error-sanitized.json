@@ -1,6 +1,0 @@
-{
-  "at": "2026-10-20T12:19:11.743Z",
-  "updateId": "6ad75bcbe06d5e1f7983689c",
-  "stage": "Compose Pull",
-  "stderr": " Image accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:d1075e35e16721979b484c2d9e33eeb56468ce9d Pulling \n Image accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:d1075e35e16721979b484c2d9e33eeb56468ce9d Error unknown: failed to resolve reference \"accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:d1075e35e16721979b484c2d9e33eeb56468ce9d\": unexpected status from HEAD request to https://accel.way2api.fun/v2/ghcr.io/lingxi-org/lingxiloop-server/manifests/d1075e35e16721979b484c2d9e33eeb56468ce9d: 522 <none>\nError response from daemon: unknown: failed to resolve reference \"accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:d1075e35e16721979b484c2d9e33eeb56468ce9d\": unexpected status from HEAD request to https://accel.way2api.fun/v2/ghcr.io/lingxi-org/lingxiloop-server/manifests/d1075e35e16721979b484c2d9e33eeb56468ce9d: 522 <none>\n"
-}

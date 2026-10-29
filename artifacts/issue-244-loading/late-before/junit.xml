@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="1" failures="1" errors="0" skipped="0" time="30.003">
-  <testsuite name="e2e/visualize/late-create.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="30.003">
-    <testcase name="a late committed acquisition cannot revoke a successful retry [web]" classname="e2e/visualize/late-create.e2e.ts" time="30.003">
-      <failure message="no frame matches iframe[data-visualize-guest]:visible: frameLocator(&quot;iframe[data-visualize-guest]:visible&quot;) &gt;&gt; frameLocator(&quot;iframe[data-visualize-content]&quot;) &gt;&gt; locator(&quot;#fixture-status&quot;)" type="LOCATOR_NOT_FOUND">LOCATOR_NOT_FOUND (body): no frame matches iframe[data-visualize-guest]:visible: frameLocator(&quot;iframe[data-visualize-guest]:visible&quot;) &gt;&gt; frameLocator(&quot;iframe[data-visualize-content]&quot;) &gt;&gt; locator(&quot;#fixture-status&quot;)</failure>
-    </testcase>
-  </testsuite>
-</testsuites>

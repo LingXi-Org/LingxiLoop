@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="2" failures="0" errors="0" skipped="0" time="41.189">
-  <testsuite name="e2e/visualize/loading.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="41.189">
-    <testcase name="historical loading: 1 cards, sample 3 [web]" classname="e2e/visualize/loading.e2e.ts" time="19.804"/>
-    <testcase name="historical loading: 3 cards, sample 3 [web]" classname="e2e/visualize/loading.e2e.ts" time="21.385"/>
-  </testsuite>
-</testsuites>

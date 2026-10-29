@@ -1,3 +1,0 @@
-Warning: Please use the `legacy` build in Node.js environments.
-pdfjs-dist: getDocument linked
-pdfjs-dist/legacy/build/pdf.mjs: getDocument linked
