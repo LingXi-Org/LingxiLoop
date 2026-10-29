@@ -376,7 +376,7 @@ app.post('/api/auth/ws-ticket', async (c) => {
 app.use('/api/auth/*', async (c, next) => {
   await attachAuth(c)
   await next()
-  if (!c.res.ok && !c.res.headers.has('x-registration-error')) {
+  if (c.res.status >= 400 && !c.res.headers.has('x-registration-error')) {
     const body = await c.res.clone().json<{ code?: string; requestId?: string }>().catch(() => null)
     const code = body?.code ?? (c.res.status === 429 ? 'RATE_LIMITED' : 'REGISTRATION_UNAVAILABLE')
     const headers = new Headers(c.res.headers)

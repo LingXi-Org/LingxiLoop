@@ -7,7 +7,7 @@ export const registrationMessages: Record<string, string> = {
   REGISTRATION_FORBIDDEN: '暂时无法完成加入，请联系管理员。',
   EMAIL_NOT_VERIFIED: '请先继续验证邮箱，再登录。',
   REGISTRATION_INCOMPLETE: '邮箱已验证，加入尚未完成，请继续完成加入。',
-  REGISTRATION_RESULT_UNKNOWN: '尚未确认加入结果，请登录后继续完成加入。',
+  REGISTRATION_RESULT_UNKNOWN: '尚未确认加入结果，请稍后继续完成加入。',
   REGISTRATION_UNAVAILABLE: '服务暂时不可用，请稍后重试。',
   RATE_LIMITED: '操作过于频繁，请稍后再试。',
   TOO_MANY_REQUESTS: '操作过于频繁，请稍后再试。',
