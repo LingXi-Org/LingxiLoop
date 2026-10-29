@@ -1,9 +1,0 @@
-{
-  "runtime": "3.5.6",
-  "finalAnswerCopiesInSnapshot": 1,
-  "latestCommentaryIsFinalAnswer": false,
-  "realLocalPostgres": true,
-  "realWorker": true,
-  "syntheticDriver": true,
-  "productionRequests": 0
-}

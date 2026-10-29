@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="12.427">
-  <testsuite name="e2e/visualize/startup.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="12.427">
-    <testcase name="three short startup traces through the original SDK [web]" classname="e2e/visualize/startup.e2e.ts" time="12.427"/>
-  </testsuite>
-</testsuites>

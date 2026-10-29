@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="8.112">
-  <testsuite name="e2e/web/streaming-tail-window.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="8.112">
-    <testcase name="Whole text-part streaming tail &gt; inline boundaries preserve whitespace without counting it as a word [web]" classname="e2e/web/streaming-tail-window.e2e.ts" time="2.509"/>
-    <testcase name="Whole text-part streaming tail &gt; one word in a new block retains the preceding word across structural boundaries [web]" classname="e2e/web/streaming-tail-window.e2e.ts" time="2.933"/>
-    <testcase name="Whole text-part streaming tail &gt; visualize text slices share the original text-part window [web]" classname="e2e/web/streaming-tail-window.e2e.ts" time="2.670"/>
-  </testsuite>
-</testsuites>

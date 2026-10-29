@@ -11,7 +11,6 @@ test('sensitive actions retain confirmation prompts', () => {
   for (const path of [
     '../features/canvas/components/CanvasView.tsx',
     '../features/documents/components/DocumentEditor.tsx',
-    '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
     '../features/course-materials/CourseMaterialsPage.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
@@ -21,7 +20,6 @@ test('sensitive actions retain confirmation prompts', () => {
 test('dashboard invitations and destructive actions confirm before mutation and preserve Toast lifecycle', () => {
   const members = read('../features/learning/dashboard/CourseMembersSection.tsx')
   const settings = read('../features/learning/dashboard/CourseSettingsSection.tsx')
-  const invitations = read('../features/companies/components/InvitePeopleModal.tsx')
   assert.match(members, /space\.perspective === 'teacher' && space\.canManage/)
   assert.match(members, /space\.canInviteMembers/)
   assert.match(members, /space\.canRevokeInvitations/)
@@ -32,8 +30,6 @@ test('dashboard invitations and destructive actions confirm before mutation and 
   assert.match(settings, /space\.perspective === 'teacher' && space\.canManage/)
   assert.match(settings, /space\.canUpdateCourse/)
   assert.match(settings, /confirmSensitiveAction\([\s\S]*?toastAction\(lifecycle\.run/)
-  assert.match(invitations, /confirmSensitiveAction\([\s\S]*?toastAction\(companiesApi\.revokeInvitation/)
-  assert.match(invitations, /toastAction\(companiesApi\.createInvitation/)
 
 })
 

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="21.009">
-  <testsuite name="e2e/visualize/timeout.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="21.009">
-    <testcase name="initialization deadline covers resources and retry survives stalled cleanup [web]" classname="e2e/visualize/timeout.e2e.ts" time="21.009"/>
-  </testsuite>
-</testsuites>

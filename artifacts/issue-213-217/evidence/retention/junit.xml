@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="28.859">
-  <testsuite name="e2e/visualize/retention-213-217.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="28.859">
-    <testcase name="repeated conversation changes retain usable page dimensions [web]" classname="e2e/visualize/retention-213-217.e2e.ts" time="28.859"/>
-  </testsuite>
-</testsuites>

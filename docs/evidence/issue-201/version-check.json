@@ -1,8 +1,0 @@
-{
-  "command": "npm run version:check",
-  "node": "v22.23.3",
-  "nodeModulesPresent": false,
-  "consistentManifestExitCode": 0,
-  "inconsistentManifestExitCode": 1,
-  "outcome": "passed"
-}

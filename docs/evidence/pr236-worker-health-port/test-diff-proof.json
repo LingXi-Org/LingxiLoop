@@ -1,8 +1,0 @@
-{
-  "base": "2a1d3f286485ebe4642ec56664d16f668731d3cc",
-  "testPath": "server/src/__integration__/runtime-model-context.test.ts",
-  "beforeSha256": "b1a6c5bd638ffa9ab9ac47172ee9efaa11299df92cc4683aa044feb22e66a4f1",
-  "afterSha256": "77707aedc26b62652e46584ec15d1fb9359b4512fc6b0b4c837f4c024bffe0f5",
-  "onlyChange": "52992 to 29092 plus one explanatory comment",
-  "assertionsBudgetsRuntimeProductUnchanged": true
-}

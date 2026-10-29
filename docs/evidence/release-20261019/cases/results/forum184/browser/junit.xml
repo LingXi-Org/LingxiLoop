@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="69.218">
-  <testsuite name="e2e/forum/issue184.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="69.218">
-    <testcase name="issue184 materials, body links, upload states, drafts and publish retry use real forum routes [forum]" classname="e2e/forum/issue184.e2e.ts" time="24.623"/>
-    <testcase name="issue184 responsive focus canvas: compact, editor, closed/open materials, focus mode and both themes [forum]" classname="e2e/forum/issue184.e2e.ts" time="31.477"/>
-    <testcase name="issue184 formal assignment fields survive mode switches and student permission stays enforced [forum]" classname="e2e/forum/issue184.e2e.ts" time="13.118"/>
-  </testsuite>
-</testsuites>

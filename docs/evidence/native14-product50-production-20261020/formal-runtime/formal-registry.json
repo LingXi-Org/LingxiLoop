@@ -1,8 +1,0 @@
-{
-  "version": "3.6.0",
-  "dist": {
-    "integrity": "sha512-JT1wgF11Dtwy1tH5y/J7PQG5PF4/jCyssS8mnrMoqxwvPuKzik5hgwRI+GvXq+Wutv5+fr2H42/NxxCWNLEk/w==",
-    "shasum": "8b546211db98fbc803e95d2e6437b99773708730",
-    "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.6.0/8b546211db98fbc803e95d2e6437b99773708730"
-  }
-}

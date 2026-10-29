@@ -1,7 +1,0 @@
-# Screen at failure
-url: chrome-error://chromewebdata/
-revision: b1
-viewport: 1440x960
-nodes: 1
-
-#root document

@@ -1,8 +1,0 @@
-{
-  "runId": "01a138f1-44a8-7159-8173-8ab8a37e2470",
-  "passed": true,
-  "checks": ["official forum browser journey: 1 passed", "main rail resource entry hidden at desktop and mobile widths", "forum resource filter restored and working on desktop and mobile", "web typecheck", "E2E typecheck", "scoped Biome lint"],
-  "reproduce": "node e2e/server/forum.mjs --browser-only",
-  "localEnvironment": "Existing isolated forum-layout launcher, PostgreSQL port 55433, guarded lingxiloop_forum_test. See ../memos-layout/validation.json for setup.",
-  "limitations": ["Synthetic identities; no production-account writes.", "Account-backed general web suites were updated and typechecked but not run."]
-}

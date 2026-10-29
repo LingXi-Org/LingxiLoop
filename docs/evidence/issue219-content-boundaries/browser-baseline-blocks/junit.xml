@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="18.415">
-  <testsuite name="e2e/content-editor/browser.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="18.415">
-    <testcase name="all 14 default blocks and official free math and diagram blocks remain insertable [native]" classname="e2e/content-editor/browser.e2e.ts" time="18.415"/>
-  </testsuite>
-</testsuites>

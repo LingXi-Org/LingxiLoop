@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="2" failures="0" errors="0" skipped="0" time="57.171">
-  <testsuite name="e2e/cases/browser.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="57.171">
-    <testcase name="organization case publication, cross-course access, isolation and responsive navigation [cases]" classname="e2e/cases/browser.e2e.ts" time="49.423"/>
-    <testcase name="teacher authors and publishes cover and body images through the UI [cases]" classname="e2e/cases/browser.e2e.ts" time="7.748"/>
-  </testsuite>
-</testsuites>

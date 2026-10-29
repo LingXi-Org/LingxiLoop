@@ -1,9 +1,0 @@
-{
-  "src/features/canvas/mcp-app/editor.js": "03f0478eaf32091f241d23e587b684eddf26b76a5e16ccbba81c60ad5ed57bc6",
-  "e2e/canvas-app/serve.mjs": "12e17636b25f2a098780f363da4f730469477f8fed22e91179de384fcde0679e",
-  "e2e/canvas-app/draft-failures.e2e.ts": "f548441ec5ab5cd965906a09d292ecfa5bbdd8002825311eca0ed1a9457eabf5",
-  "e2e/canvas-app/failure-probe.js": "c87181241b693ce8f81e342da648f1a157c17fa631cb8a311fd0813cda0dcdd8",
-  "e2e.canvas-app-races.config.ts": "82c58fab0a163b326234650438b59d7e456c79174c1ace67b58e2266335d62af",
-  "e2e/canvas-app/draft-races.e2e.ts": "571cb4f13fe353c32b2aea3b1621918d8b18e26bb11fb7ecad6f5ca6d3f238fb",
-  "e2e/canvas-app/document.e2e.ts": "8a986a770b7e862a38d7fc05ffca15bb22ad1ab134872ccea30527659747e7e5"
-}

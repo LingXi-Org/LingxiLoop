@@ -1,3 +1,0 @@
-(node:2319) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
-(Use `node --trace-warnings ...` to show where the warning was created)
-Real PostgreSQL stores passed: schema 7→8→9→10→11→12 + repeatable 013, atomic concurrent child admission/closing holds/terminal deduplication, cross-process LISTEN/NOTIFY and reconnect, document CAS/restore races, reflection deduplication, atomic memory forgetting, competing claims, session exclusion, concurrent intent reservation/CAS, separate-process recovery, stale fencing, cancellation, product-table isolation and native input-wait receipt validation.

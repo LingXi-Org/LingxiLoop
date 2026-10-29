@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="4" failures="0" errors="0" skipped="0" time="17.818">
-  <testsuite name="e2e/web/streaming-text.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="17.818">
-    <testcase name="Streaming renderer &gt; bursts reveal continuously and the tail settles (light) [web]" classname="e2e/web/streaming-text.e2e.ts" time="7.099"/>
-    <testcase name="Streaming renderer &gt; bursts reveal continuously and the tail settles (dark) [web]" classname="e2e/web/streaming-text.e2e.ts" time="5.147"/>
-    <testcase name="Streaming renderer &gt; completion drains pending text and cancellation clears decoration [web]" classname="e2e/web/streaming-text.e2e.ts" time="2.805"/>
-    <testcase name="Streaming renderer &gt; reduced motion preference bypasses the reveal queue [web]" classname="e2e/web/streaming-text.e2e.ts" time="2.767"/>
-  </testsuite>
-</testsuites>

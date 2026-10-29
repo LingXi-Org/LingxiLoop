@@ -1,1 +1,0 @@
-{"scenario":"login","run":2,"interactiveMs":145.5999999998603,"workspaceMs":0,"longTaskMs":0,"inputConfirmedMs":206.5999999998603,"requests":19,"apiRequests":1,"requestPaths":["/api/session"],"heapBytes":10000000,"errors":0,"mode":"production web build, local real control/API/PG/Redis/WuKongIM, native CPU/network, cold browser context; synthetic session bypasses captcha only"}

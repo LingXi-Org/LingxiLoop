@@ -1,4 +1,0 @@
-[4103:4103:1024/161127.841644:ERROR:third_party/crashpad/crashpad/util/file/filesystem_posix.cc:63] mkdir : No such file or directory (2)
-chrome_crashpad_handler: --database is required
-[4103:4103:1024/161127.847223:FATAL:sandbox/linux/suid/client/setuid_sandbox_host.cc:172] The SUID sandbox helper binary was found, but is not configured correctly. Rather than run without sandboxing I'm aborting now. You need to make sure that /usr/lib/chromium/chrome-sandbox is owned by root and has mode 4755.
-Try 'chrome_crashpad_handler --help' for more information.

@@ -1,6 +1,0 @@
-{
-  "renderScript": "third_party/zcode/skills/visualize/scripts/render.py",
-  "actualProcess": true,
-  "isolatedFrame": true,
-  "bundledD3": true
-}

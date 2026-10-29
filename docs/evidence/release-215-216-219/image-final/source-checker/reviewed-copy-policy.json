@@ -1,8 +1,0 @@
-{
-  "reviewedAtCommit": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
-  "sha256": {
-    "server/docker/lingxiloop-server.Dockerfile": "7302f3d0556021129efb3ec9ed8cd1ca883d222b53aa0c095f1df71e64c27add",
-    "server/docker/lingxiloop-server.Dockerfile.dockerignore": "078497d27276599c9b5a23ffde9684613fa1e17430459e489a03b76488dcc96b"
-  },
-  "scope": "reviewed final runtime COPY and dockerignore; update requires review"
-}

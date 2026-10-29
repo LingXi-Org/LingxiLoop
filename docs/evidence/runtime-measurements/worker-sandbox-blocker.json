@@ -1,6 +1,0 @@
-{
-  "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:0c295e66c29dcceab609c3d1715348bab6a90c6585d1280095cc0a61c33b3f29",
-  "command": "docker exec lingxiloop-acceptance-candidate bwrap --die-with-parent --unshare-all --new-session --ro-bind / / --proc /proc --dev /dev -- /usr/bin/true",
-  "result": "No permissions to create new namespace, likely because the kernel does not allow non-privileged user namespaces.",
-  "qualification": "Production Worker sandbox preflight blocked. No privileged/unconfined/capability/security-policy bypass."
-}

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="17.100">
-  <testsuite name="e2e/visualize/parity.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="17.100">
-    <testcase name="standalone render.py export runs offline and retains independent widget state [web]" classname="e2e/visualize/parity.e2e.ts" time="17.100"/>
-  </testsuite>
-</testsuites>

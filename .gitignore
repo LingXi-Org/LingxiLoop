@@ -24,15 +24,11 @@ node_modules
 dist
 dist-admin
 dist-ssr
-/artifacts/eval-*.json
+/artifacts/
 /eval/results/
 /.e2e/
 /.agent-os/homes/
 /node_modules-native-recovery/
-/artifacts/.env*
-/artifacts/playwright/.playwright-artifacts-*/
-/artifacts/playwright/*/error-context.md
-/artifacts/playwright/*/trace.zip
 
 # Python bytecode cache
 .venv/
@@ -41,26 +37,6 @@ __pycache__/
 
 # Wrangler local cache (workers/*/.wrangler/) — build artifacts + auth state
 .wrangler/
-
-# Tauri / Capacitor
-src-tauri/target
-android/.gradle
-android/build
-ios/build
-ios/App/build
-ios/App/DerivedData
-ios/App/Pods
-ios/App/App/public
-ios/.swiftpm
-ios/App/App.xcodeproj/xcuserdata
-ios/App/App.xcodeproj/project.xcworkspace/xcuserdata
-ios/App/.symlinks
-.cap-tmp/
-
-# TestFlight archive / IPA outputs from `xcodebuild archive`
-/build/LingxiLoop.xcarchive
-/build/ipa
-/build/sim
 
 # Electron builder output
 /release/
@@ -89,4 +65,3 @@ server/uploads/
 *.tsbuildinfo
 
 docs/HANDOFF.md
-android/app/google-services.json
