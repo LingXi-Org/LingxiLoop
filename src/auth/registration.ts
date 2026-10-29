@@ -7,6 +7,11 @@ export class RegistrationApiError extends ApiError {
     super(registrationMessage(code, status) + (safeId ? ` 请求编号：${safeId}` : ''), status, code, safeId)
   }
 }
+export function publicRegistrationError(error: unknown): RegistrationApiError {
+  return error instanceof ApiError
+    ? new RegistrationApiError(error.status, error.code, error.requestId)
+    : new RegistrationApiError(503, 'REGISTRATION_UNAVAILABLE')
+}
 export async function registrationResponse<T>(response: Response): Promise<T> {
   if (response.ok) {
     try { return await response.json() as T }

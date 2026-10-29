@@ -27,7 +27,7 @@ test('invitation login falls back only to an authorized existing workspace', asy
       assert.equal(await login(), signedIn)
     }
     session.mock.mockImplementation(async () => { throw new Error('active company membership required') })
-    await assert.rejects(login, /active company membership required/)
+    await assert.rejects(login, /服务暂时不可用/)
     session.mock.mockImplementation(async () => ({ ...me, companies: [] }))
     await assert.rejects(login, /邀请无效/)
     session.mock.mockImplementation(async () => me)

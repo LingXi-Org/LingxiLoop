@@ -2,7 +2,7 @@ import { createAuthClient } from 'better-auth/react'
 import { getGlobalBroadcastChannel } from 'better-auth/client'
 import { emailOTPClient } from 'better-auth/client/plugins'
 import { API, http } from '@/api/core/http'
-import { clearPendingVerification, RegistrationApiError, registrationFetch, registrationResponse } from './registration'
+import { clearPendingVerification, publicRegistrationError, RegistrationApiError, registrationFetch, registrationResponse } from './registration'
 import type { AuthMeResponse } from './contracts'
 
 export const authClient = createAuthClient({
@@ -41,7 +41,7 @@ export const authApi = {
       } catch (error) {
         if (!(error instanceof RegistrationApiError) || error.code !== 'INVITATION_REJECTED') throw error
         // An old invitation must not block login to an existing, authorized workspace.
-        const me = await authApi.me()
+        const me = await authApi.me().catch(error => { throw publicRegistrationError(error) })
         if (!me.activeCompanyId || !me.companies.some((company) => company.id === me.activeCompanyId)) throw error
       }
     }

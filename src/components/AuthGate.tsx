@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { publicRegistrationError } from '@/auth/registration'
 import { authApi, authClient } from '@/auth/api'
 import { synchronizeProductSession } from '@/auth/session-sync'
 import { useAuth } from '@/stores/auth'
@@ -34,7 +35,7 @@ export function AuthGate({ children, unauthFallback }: { children: ReactNode; un
       },
       failed: error => {
         if (error instanceof ApiError && error.status === 401) useAuth.getState().clear()
-        setFailure({ key, message: error instanceof ApiError ? error.message : '暂时无法确认登录状态，请重试。', recover: error instanceof ApiError && error.code === 'REGISTRATION_INCOMPLETE' })
+        setFailure({ key, message: publicRegistrationError(error).message, recover: error instanceof ApiError && error.code === 'REGISTRATION_INCOMPLETE' })
       },
     })
   // Observe the official snapshot itself: a fast same-key refresh may settle
@@ -48,7 +49,7 @@ export function AuthGate({ children, unauthFallback }: { children: ReactNode; un
     try {
       if (failure?.recover) await authApi.recoverRegistration()
       await session.refetch()
-    } catch (error) { setFailure({ key, message: error instanceof Error ? error.message : '暂时无法完成加入，请稍后重试。', recover: true }) }
+    } catch (error) { setFailure({ key, message: publicRegistrationError(error).message, recover: failure?.recover }) }
     finally { setRecovering(false) }
   }
 

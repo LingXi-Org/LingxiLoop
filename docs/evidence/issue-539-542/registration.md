@@ -27,6 +27,8 @@ The first test attempt used a real SMTP socket and timed out; it was replaced by
 
 Apply D1 migration `0006_registration_intent.sql` through the existing release entry before the new Worker. It adds one nullable, private column and preserves existing user/claim/link constraints. Old identities without a stored intent need a verified explicit invitation accept; that invitation is validated before a claim is recorded. No anonymous email lookup or password replacement is introduced.
 
+Independent read-only review found that AuthGate could display the generic HTTP client's raw provider message. The corrected candidate maps session and invitation-login fallback errors through the same bounded public registration mapper; the raw-HTML regression covers that mapping. No other concrete review finding was reported.
+
 In existing controlled Worker/business logs, search the exact returned request ID for JSON events `registration.failure` and `registration.business`. Claim errors retain only `{requestId, stage, code, status, outcome}`; `outcome: unknown` means the remote result requires reconciliation, not that no business write occurred. If even the diagnostic D1 update fails, the controlled event still identifies the failed request; the next explicit attempt is recoverable from the original claim/intent.
 
 Real browser/mobile lifecycle acceptance, production delivery, real SMTP delivery and production deployment were **not run**. Page behavior has source/storage/API coverage and remains browser-unverified. No PR merge, approval or issue close is part of this delegated implementation.
