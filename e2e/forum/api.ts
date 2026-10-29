@@ -168,9 +168,9 @@ if (process.env.FORUM_ISSUE219 === '1') {
   })
   // Recorded loopback provider: malformed judgment deliberately exercises the
   // production unverified-report fallback. No live model or mastery claim.
-  const OpenAI=(await import('openai')).default
+  const {createOpenAIClient}=await import('../../server/src/llm-client')
   const {__setLlmClientOverrideForTesting}=await import('../../server/src/llm')
-  __setLlmClientOverrideForTesting(()=>new OpenAI({apiKey:'isolated-native-fixture',baseURL:'http://127.0.0.1:53097/api/fixture-model/v1'}))
+  __setLlmClientOverrideForTesting(()=>createOpenAIClient({apiKey:'isolated-native-fixture',baseURL:'http://127.0.0.1:53097/api/fixture-model/v1'}))
   const modelRequests: unknown[] = []
   app.get('/api/fixture-native-model-inputs',(_req,res)=>res.json(modelRequests))
   app.post('/api/fixture-model/v1/chat/completions',express.json(),(req,res)=>{

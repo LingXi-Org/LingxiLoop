@@ -2,6 +2,8 @@
 
 Browser tests use [tester-army/e2e](https://github.com/tester-army/e2e) 0.17.0 and its official `@e2e-dev/web` 0.12.0 engine. Tests use exact user interactions and assertions; no model subscription or API key is needed. Browser responses are not mocked. Run `npx e2e guide` for the installed framework documentation. Do not import or run Playwright directly.
 
+Run `npm ci` and E2E commands from the repository root. The fixtures share that dependency graph with Web and Server; a second installation under `server/node_modules` can mix incompatible SDK, Zod and Markdown types. `npm run test:e2e:typecheck` checks the fixtures without starting services or requiring Docker.
+
 ## Disposable local environment
 
 Requirements: the repository's Node.js 22 runtime, installed npm dependencies, and Docker. All published container ports bind to loopback. These fixtures never load the developer's `.env.local`. The browser and integration databases are separate; integration tests truncate only the latter. The API uses real PostgreSQL, Redis, WuKongIM, and S3-compatible MinIO storage. The control plane uses its actual Worker and an isolated local D1 database.
