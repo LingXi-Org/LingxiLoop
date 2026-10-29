@@ -31,7 +31,7 @@ function signedHeaders(url: string, init: RequestInit, overrides: Partial<Gatewa
     ...overrides,
   }
   const payload = Buffer.from(JSON.stringify(assertion)).toString('base64url')
-  return { 'content-type': 'application/json', 'x-lingxiloop-gateway': `${payload}.${createHmac('sha256', env.GATEWAY_HMAC_SECRET).update(payload).digest('base64url')}` }
+  return { 'content-type': 'application/json', 'x-registration-request-id': 'synthetic-registration-request', 'x-lingxiloop-gateway': `${payload}.${createHmac('sha256', env.GATEWAY_HMAC_SECRET).update(payload).digest('base64url')}` }
 }
 
 function registrationFetch(url: string, init: RequestInit) {
@@ -89,6 +89,7 @@ test('[integration] invitation validation and provision are transactional and id
   const first = await registrationFetch(`${baseUrl}/api/internal/registration/provision`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })
   const second = await registrationFetch(`${baseUrl}/api/internal/registration/provision`, { method: 'POST', headers: { 'content-type': 'application/json' }, body })
   assert.equal(first.status, 200)
+  assert.equal(first.headers.get('x-registration-request-id'), 'synthetic-registration-request')
   assert.equal(second.status, 200)
   const one = await first.json() as { appUserId: string }
   const two = await second.json() as { appUserId: string }
@@ -124,4 +125,35 @@ test('[integration] project invitation is redeemed during provisioning', async (
     (SELECT COUNT(*)::int FROM project_memberships WHERE project_id='project-registration' AND user_id=$1 AND role='STUDENT' AND status='ACTIVE') AS membership,
     (SELECT use_count FROM project_invitations WHERE token_hash=$2) AS use_count`, [appUserId, hashInvitationToken(projectToken)])
   assert.deepEqual(state.rows[0], { membership: 1, use_count: 1 })
+})
+
+test('[integration] named company invitation recovers its receipt after expiry but rejects another identity', async () => {
+  const provision = (email: string) => registrationFetch(`${baseUrl}/api/internal/registration/provision`, {
+    method: 'POST', body: JSON.stringify({ authUserId: `auth-${email}`, email, name: 'Synthetic Teacher', inviteToken: TOKEN, inviteKind: 'company' }),
+  })
+  const first = await provision('new@example.com')
+  assert.equal(first.status, 200)
+  const original = await first.json()
+  assert.equal((await provision('different@example.com')).status, 403)
+  await pool.query(`UPDATE company_invitations SET revoked_at=NOW(),expires_at=NOW()-INTERVAL '1 second' WHERE token_hash=$1`, [hashInvitationToken(TOKEN)])
+  const recovered = await provision('new@example.com')
+  assert.equal(recovered.status, 200)
+  assert.deepEqual(await recovered.json(), original)
+  assert.equal((await pool.query(`SELECT use_count FROM company_invitations WHERE token_hash=$1`, [hashInvitationToken(TOKEN)])).rows[0].use_count, 1)
+  const denied = await provision('unaccepted@example.com')
+  assert.equal(denied.status, 403)
+  assert.equal((await pool.query(`SELECT 1 FROM users WHERE email='unaccepted@example.com'`)).rowCount, 0)
+})
+
+test('[integration] concurrent business retries commit one user, membership and invitation receipt', async () => {
+  const body = JSON.stringify({ authUserId: 'auth-race', email: 'new@example.com', name: 'Synthetic', inviteToken: TOKEN, inviteKind: 'company' })
+  const results = await Promise.all(Array.from({ length: 3 }, () => registrationFetch(`${baseUrl}/api/internal/registration/provision`, { method: 'POST', body })))
+  assert.deepEqual(results.map(response => response.status), [200, 200, 200])
+  const receipts = await Promise.all(results.map(response => response.json()))
+  assert.deepEqual(receipts[0], receipts[1]); assert.deepEqual(receipts[0], receipts[2])
+  const state = await pool.query(`SELECT
+    (SELECT COUNT(*)::int FROM users WHERE email='new@example.com') AS users,
+    (SELECT COUNT(*)::int FROM company_memberships m JOIN users u ON u.id=m.user_id WHERE u.email='new@example.com') AS memberships,
+    (SELECT use_count FROM company_invitations WHERE token_hash=$1) AS uses`, [hashInvitationToken(TOKEN)])
+  assert.deepEqual(state.rows[0], { users: 1, memberships: 1, uses: 1 })
 })

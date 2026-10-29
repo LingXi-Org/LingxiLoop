@@ -6,6 +6,7 @@ export const user = sqliteTable('user', {
   createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(), updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
   role: text('role').notNull().default('user'), banned: integer('banned', { mode: 'boolean' }).notNull().default(false),
   banReason: text('banReason'), banExpires: integer('banExpires', { mode: 'timestamp' }),
+  registrationIntent: text('registrationIntent'),
 })
 
 export const session = sqliteTable('session', {
