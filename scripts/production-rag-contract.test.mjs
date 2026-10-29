@@ -464,7 +464,10 @@ test('main deploys through the repo CLI with Sigillo as the only secret source',
   assert.doesNotMatch(`${deploy}\n${images}`, /secrets\.LINGXIOS_PACKAGES_TOKEN/, 'deploys read package access from Sigillo')
   assert.match(cli, /'sigillo', 'run', \.\.\.SIGILLO/)
   assert.match(cli, /npm', \['run', 'control:d1:remote'\]/)
-  assert.match(cli, /'workers\/control-plane\/wrangler\.jsonc', 'workers\/web-static\/wrangler\.jsonc'/)
+  // Worker tags hash the files CI's own web/admin/control filters assign them.
+  assert.match(cli, /config: 'workers\/control-plane\/wrangler\.jsonc', build: 'admin:build', tag: tag\(\[\.\.\.files\.sharedFrontendFiles, \.\.\.files\.adminFiles, \.\.\.files\.controlFiles\]\)/)
+  assert.match(cli, /config: 'workers\/web-static\/wrangler\.jsonc', build: 'build', tag: tag\(\[\.\.\.files\.sharedFrontendFiles, \.\.\.files\.webFiles\]\)/)
+  assert.match(cli, /if \(\(await liveTag\(target\.name\)\) === target\.tag\)/)
   assert.match(cli, /VITE_TURNSTILE_SITE_KEY: '0x4AAAAAAEsX5eyOl1nAe5i9'/)
   assert.match(serverImage, /ARG VITE_TURNSTILE_SITE_KEY=""[\s\S]*ENV VITE_TURNSTILE_SITE_KEY=\$\{VITE_TURNSTILE_SITE_KEY\}/)
   assert.doesNotMatch(`${workflow}\n${deploy}\n${images}\n${cli}`, /komodo|RELEASE_API|RELEASE_CONTROLLER/i)

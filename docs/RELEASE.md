@@ -34,9 +34,12 @@ always deploys the committed `HEAD`. On GitHub the same commands are
    `/opt/lingxiloop/<stack>/`, then `docker compose up -d --wait`. core-state,
    ingress, knowledge and uptime converge in parallel, then app-a, then app-b.
    It ends with public readiness probes.
-4. **workers** – builds the SPA and Refine admin, applies D1 migrations and
-   `wrangler deploy`s `lingxiloop-control-plane` and `lingxiloop-web`; runs
-   alongside **servers**.
+4. **workers** – runs alongside **servers**. Each Worker's version tag is the
+   hash of the committed files CI's `web` / `admin` + `control` path filters
+   assign it; a Worker whose live tag already matches is skipped (no install,
+   no build). Otherwise it builds the SPA and/or Refine admin, applies D1
+   migrations for the control plane and `wrangler deploy`s
+   `lingxiloop-control-plane` / `lingxiloop-web`.
 
 In CI, images build and the hosts pre-pull while the checks run; only the final
 `up` waits for them.

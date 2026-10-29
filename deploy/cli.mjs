@@ -11,10 +11,12 @@
 // from Sigillo. Outside `sigillo run` the CLI re-executes itself under it; CI
 // provides only SIGILLO_TOKEN. Deploys always use the committed HEAD.
 import { execFileSync, spawn } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { chmodSync, existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { classifyPaths, workflowFilters } from '../scripts/ci-scope-paths.mjs'
 import { IMAGES, imageTag } from '../scripts/image-tag.mjs'
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)))
@@ -37,13 +39,13 @@ async function main(command, requested) {
       images: () => ensureImages(head, images),
       pull: () => pull(ssh, stacks, images),
       servers: () => servers(ssh, stacks, images),
-      workers: () => workers(head),
+      workers: () => workers(),
       status: () => status(ssh),
       plan: async () => { await pull(ssh, stacks, images); await plan(ssh, stacks, images) },
       up: async () => {
         await ensureImages(head, images)
         await pull(ssh, stacks, images)
-        await Promise.all([servers(ssh, stacks, images), workers(head)])
+        await Promise.all([servers(ssh, stacks, images), workers()])
       },
     }
     if (!steps[command]) throw new Error(`unknown command ${command}; use up|images|pull|plan|servers|workers|status`)
@@ -194,16 +196,42 @@ const run = (label, command, args, env = {}) => new Promise((resolve, reject) =>
   child.on('exit', code => code === 0 ? resolve() : reject(new Error(`${label} exited ${code}`)))
 })
 
-async function workers(head) {
+const VITE = { VITE_TURNSTILE_SITE_KEY: '0x4AAAAAAEsX5eyOl1nAe5i9', VITE_LINGXILIT_URL: 'https://openlit.lingxilearn.cn' }
+
+// A Worker's tag is the hash of the committed files CI's own path filters assign
+// to it, so an unchanged Worker (the live tag matches) is neither built nor deployed.
+function workerTargets() {
+  const blobs = Object.fromEntries(git('ls-tree', '-r', 'HEAD').split('\n').filter(Boolean)
+    .map(line => { const [meta, path] = line.split('\t'); return [path, meta.split(' ')[2]] }))
+  const files = classifyPaths(Object.keys(blobs), workflowFilters(git('show', 'HEAD:.github/workflows/ci.yml')), new Set())
+  const tag = paths => createHash('sha256').update(JSON.stringify([VITE, ...[...new Set(paths)].sort().map(path => [path, blobs[path]])])).digest('hex').slice(0, 24)
+  return [
+    { name: 'lingxiloop-control-plane', config: 'workers/control-plane/wrangler.jsonc', build: 'admin:build', tag: tag([...files.sharedFrontendFiles, ...files.adminFiles, ...files.controlFiles]) },
+    { name: 'lingxiloop-web', config: 'workers/web-static/wrangler.jsonc', build: 'build', tag: tag([...files.sharedFrontendFiles, ...files.webFiles]) },
+  ]
+}
+
+async function liveTag(name) {
+  const api = async path => (await fetch(`https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/workers/scripts/${name}/${path}`,
+    { headers: { authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}` } })).json()
+  const version = (await api('deployments')).result?.deployments?.[0]?.versions?.[0]
+  return version ? (await api(`versions/${version.version_id}`)).result?.annotations?.['workers/tag'] : undefined
+}
+
+async function workers() {
+  const targets = []
+  for (const target of workerTargets()) {
+    if ((await liveTag(target.name)) === target.tag) console.log(`workers: ${target.name} unchanged`)
+    else targets.push(target)
+  }
+  if (!targets.length) return
   if (!existsSync('node_modules/wrangler/package.json') || !existsSync('node_modules/vite/package.json')) {
     await run('install', 'node', ['server/scripts/install-scoped-dependencies.mjs', 'admin-control'], { NODE_AUTH_TOKEN: process.env.LINGXIOS_PACKAGES_TOKEN })
   }
-  const vite = { VITE_TURNSTILE_SITE_KEY: '0x4AAAAAAEsX5eyOl1nAe5i9', VITE_LINGXILIT_URL: 'https://openlit.lingxilearn.cn' }
-  await Promise.all([run('web build', 'npm', ['run', 'build'], vite), run('admin build', 'npm', ['run', 'admin:build'], vite), run('d1', 'npm', ['run', 'control:d1:remote'])])
-  for (const config of ['workers/control-plane/wrangler.jsonc', 'workers/web-static/wrangler.jsonc']) {
-    await run(config.split('/')[1], 'npx', ['--no-install', 'wrangler', 'deploy', '--config', config, '--tag', head])
-  }
-  console.log('workers: deployed')
+  await Promise.all([...targets.map(target => run(`${target.name} build`, 'npm', ['run', target.build], VITE)),
+    ...targets.some(target => target.name === 'lingxiloop-control-plane') ? [run('d1', 'npm', ['run', 'control:d1:remote'])] : []])
+  for (const target of targets) await run(target.name, 'npx', ['--no-install', 'wrangler', 'deploy', '--config', target.config, '--tag', target.tag])
+  console.log(`workers: deployed ${targets.map(target => target.name).join(', ')}`)
 }
 
 async function status(ssh) {
