@@ -135,9 +135,7 @@ services:
     image: ${GATEWAY_IMAGE:?GATEWAY_IMAGE is required}
     pull_policy: never
     restart: unless-stopped
-    depends_on:
-      lingxiloop:
-        condition: service_healthy
+    # No depends_on: the gateway fails over to slot A while slot B restarts.
     ports:
       - "127.0.0.1:8081:8080"
     healthcheck:
