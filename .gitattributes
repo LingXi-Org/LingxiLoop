@@ -1,5 +1,4 @@
 server/src/db/migrations/*.sql text eol=lf
-scripts/*.sql text eol=lf
 # Pinned upstream content must keep its original bytes on every platform.
 third_party/zcode/** -text
 third_party/studio-admin/upstream/** -text
