@@ -2,7 +2,7 @@ import { readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
-import { REACT_DELIVERY_TEXT as text, type ReactDeliveryEvidence, type ReactDeliveryHarness } from './contract'
+import { REACT_DELIVERY_TEXT as text, type ReactDeliveryEvidence, type ReactDeliveryFrame, type ReactDeliveryHarness, type ReactDeliveryScenario } from './contract'
 
 const scenarioNames = ['append', 'replacement-failed', 'replacement-committed', 'cancelled', 'stale-reconnect', 'same-text-distinct-runs'] as const
 const normalize = (value: string) => value.replace(/\s+/gu, ' ').trim()
@@ -28,6 +28,7 @@ for (const width of [1280, 390]) {
         if (performance.now() > deadline) throw new Error('Fixture was not ready')
         await new Promise(resolve => setTimeout(resolve, 5))
       }
+      return null
     })
 
     for (const name of scenarioNames) {
@@ -42,7 +43,7 @@ for (const width of [1280, 390]) {
         expect(indices.every((index, position) => index >= 0 && (position === 0 || index > indices[position - 1]!)),
           'The append scenario must include both projected held-tool states in order').toBe(true)
       }
-      await browser.evaluate(async () => { await window.reactDelivery!.reset() })
+      await browser.evaluate(async () => { await window.reactDelivery!.reset(); return null })
 
       let sawA = false
       let sawB = false
@@ -51,9 +52,10 @@ for (const width of [1280, 390]) {
       let finalBodies: { id: string; text: string }[] = []
       for (const [index, frame] of scenario.frames.entries()) {
         if (name === 'stale-reconnect' && index === 2) {
-          await browser.evaluate(async target => { await window.reactDelivery!.reconnect(target) }, frame.target)
+          await browser.evaluate(async target => { await window.reactDelivery!.reconnect(target); return null }, { ...frame.target })
         }
-        const observed = await browser.evaluate(async ({ frame, a, b, replacement }) => {
+        const observed = await browser.evaluate(async serialized => {
+          const { frame, a, b, replacement } = JSON.parse(serialized) as { frame: ReactDeliveryFrame; a: string; b: string; replacement: string }
           const sample = () => [...document.querySelectorAll<HTMLElement>('[data-react-message]')].map(region => ({
             id: region.dataset.reactMessage!,
             text: [...region.querySelectorAll<HTMLElement>('[data-agent-body]')].map(body => body.textContent ?? '').join('\n'),
@@ -72,7 +74,7 @@ for (const width of [1280, 390]) {
           return { checkpoint: frame.checkpoint, bodies, samples, identity,
             contains: { a: bodies.some(body => body.text.includes(a)), b: bodies.some(body => body.text.includes(b)), replacement: bodies.some(body => body.text.includes(replacement)) },
             browserReplayToObservationMs: performance.now() - start }
-        }, { frame, a: text.a, b: text.b, replacement: text.replacement })
+        }, JSON.stringify({ frame, a: text.a, b: text.b, replacement: text.replacement }))
 
         const replacementCommit = name === 'replacement-committed' && frame.checkpoint === 'replacement-committed'
         if (sawA && !committedReplacement && !replacementCommit) {
@@ -136,7 +138,10 @@ for (const width of [1280, 390]) {
       // Start with an empty client and read the independent canonical history
       // through the normal read client with a synthetic HTTP response, not the
       // final streamed frame. This does not independently prove authorization.
-      await browser.evaluate(async frames => { await window.reactDelivery!.reset(); await window.reactDelivery!.restore(frames) }, scenario.history)
+      await browser.evaluate(async serialized => {
+        const frames = JSON.parse(serialized) as ReactDeliveryScenario['history']
+        await window.reactDelivery!.reset(); await window.reactDelivery!.restore(frames); return null
+      }, JSON.stringify(scenario.history))
       const restored = await browser.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-react-message]')].map(region => ({
         id: region.dataset.reactMessage!, text: [...region.querySelectorAll<HTMLElement>('[data-agent-body]')].map(body => body.textContent ?? '').join('\n'),
       })))
