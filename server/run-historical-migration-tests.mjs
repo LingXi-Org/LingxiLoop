@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {cp,mkdir,mkdtemp,readFile,readdir,rm,symlink,writeFile} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
-import {basename,isAbsolute,join} from 'node:path'
+import {basename,isAbsolute,join,sep} from 'node:path'
 import {execFile,spawn} from 'node:child_process'
 import {promisify} from 'node:util'
 const execute=promisify(execFile)
@@ -27,7 +27,7 @@ async function copyProductFixtureSource(root,fixture,productVersion){
  const directory=join(root,'server/src/db/migrations'),names=(await readdir(directory)).sort()
  assert.ok(names.length>=productVersion&&names.every((name,index)=>new RegExp('^'+String(index+1).padStart(4,'0')+'_[a-z0-9_]+\\.sql$').test(name)),'Product fixture requires a complete contiguous source inventory')
  const prefix=names.slice(0,productVersion),allowed=new Set(prefix)
- await cp(join(root,'server/src'),join(fixture,'server/src'),{recursive:true,filter:path=>!path.startsWith(directory+'/')||allowed.has(basename(path))})
+ await cp(join(root,'server/src'),join(fixture,'server/src'),{recursive:true,filter:path=>!path.startsWith(directory+sep)||allowed.has(basename(path))})
  await cp(join(root,'src'),join(fixture,'src'),{recursive:true})
  for(const path of ['package.json','package-lock.json','server/package.json','server/package-lock.json'])await cp(join(root,path),join(fixture,path))
  assert.deepEqual((await readdir(join(fixture,'server/src/db/migrations'))).sort(),prefix,`Fixture must contain exactly product${productVersion}`)

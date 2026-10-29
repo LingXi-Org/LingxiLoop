@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { WorkspaceSkeleton } from '@/components/WorkspaceSkeleton'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useApp } from '@/stores/app'
-import { isMuted, useConversations } from '@/features/conversations/store'
+import { useConversations } from '@/features/conversations/store'
 import { chatTransport } from '@/features/chat/runtime'
 import { startWebNavigation } from '@/lib/navigation'
 import { usePrefs } from '@/stores/preferences'
@@ -12,9 +12,6 @@ const DesktopApp = lazy(() => import('@/desktop/DesktopApp').then((module) => ({
 export function AuthedApp() {
   const convoId = useApp((s) => s.selectedConversationId)
   const navigationReady = useApp((s) => s.navigationReady)
-  const hasDockUnread = useConversations((s) =>
-    s.list.some((c) => !isMuted(c) && (c.unread ?? 0) > 0),
-  )
   const selectedConvoExists = useConversations((s) =>
     convoId ? s.list.some((c) => c.id === convoId) : false,
   )
@@ -24,14 +21,6 @@ export function AuthedApp() {
     const stopNavigation = startWebNavigation()
     void usePrefs.getState().load()
     return stopNavigation
-  }, [])
-
-  useEffect(() => {
-    window.lingxiloop?.dock?.setUnreadDot(hasDockUnread)
-  }, [hasDockUnread])
-
-  useEffect(() => {
-    return () => window.lingxiloop?.dock?.setUnreadDot(false)
   }, [])
 
   // Lazy-load messages when selected. The visible-range receipt path marks

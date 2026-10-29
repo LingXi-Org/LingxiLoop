@@ -35,7 +35,7 @@ an independent read-only assessment.
 For CI work, distinguish queue, check wall time, summed runner execution and
 image/deployment time. Group historical runs by event, attempt, scope and
 relevant configuration. Existing metadata collection is in
-[`collect-ci.py`](../../../docs/evidence/issue-201/collect-ci.py). Record sample
+[`collect-ci.py`](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/issue-201/collect-ci.py). Record sample
 size and observation window; separate observed savings from projections.
 
 For instruction changes, replay a real historical task from the same snapshot

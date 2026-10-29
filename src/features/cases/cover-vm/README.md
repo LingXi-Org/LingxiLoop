@@ -57,23 +57,6 @@ fetch fallback code; supplied verified wasmBinary avoids that path. These
 facts do not prove absence of engine defects or establish a full hostile-code
 security qualification.
 
-## Verification status
+## Verification
 
-Pure guest/data/session and generator-stub tests: 30 passed. Focused TypeScript
-and browser Worker static bundling passed using the exact already audited
-package files (no package lifecycle scripts). No actual VM was run during these
-checks. `verify-package.mjs`'s five primitive checks were executed once by the
-parent and are not rerun here. `verify-runtime.mjs` is a new, separately reviewed
-qualification action, not an automatically executed test. It exercises the two
-pinned public examples and literal hostile fixtures under a bounded child.
-The parent's first actual runtime attempt exposed the primitive-string length
-API mismatch, now fixed. The next produced a real riffle frame (27,423 SVG bytes,
-23,529 root JSON characters) with changed pointer geometry, then exposed terrain's
-missing VM-local after() operation, now covered by the guest. A later attempt
-hit the 100 ms mount deadline on riffle under contention. Initialization now has
-one shared 500 ms allowance; step, heap, WASM and watchdog ceilings stay fixed.
-The pinned kernel is 27,905 bytes; riffle 7,399 bytes/123 SVG nodes; terrain 4,444
-bytes/258 nodes. Counts derive from the original loops, not a reduced fixture.
-Full fixed-suite success, renderer worker startup, browser interaction, model
-output, packaging and integrated ACL/task fencing still require their own results.
-Resource limits and pure tests alone do not make those claims.
+Use the retained `case-covers.test.ts` integration check with a dedicated test database. Historical package probes and one-off execution records are available in [the pre-cleanup tree](https://github.com/LingXi-Org/LingxiLoop/tree/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/src/features/cases/cover-vm). Resource limits and source inspection alone do not establish full hostile-code qualification.

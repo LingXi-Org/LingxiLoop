@@ -92,7 +92,7 @@ the designated operator's evidence and authority, not automatic quota reset.
 Use `node scripts/release/timing-report.mjs release receipt.json` for retained
 controller records and `... ci run.json attempt-jobs.json` for GitHub metadata.
 Keep execution, queue, unknown approval time and recovered/incomplete outcomes
-separate. See [issue #514 evidence](../../../docs/evidence/issue-514/README.md).
+separate. See [issue #514 evidence](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/issue-514/README.md).
 
 Use the existing administrator `lingxiloop_release_plan/submit/get/watch/resume/recover`
 tools, or `scripts/release/cli.mjs` / `scripts/release/mcp.mjs` with credentials

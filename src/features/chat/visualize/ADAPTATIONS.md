@@ -19,7 +19,7 @@ The Web-specific code is in `web/`, the `useGenUi` hook and narrowly marked page
 - Clipboard writing starts synchronously from the host button with a PNG Promise. The guest rasterizes its current DOM at the actual device pixel ratio, then crops the original gutter. The host checks PNG signature, IHDR dimensions, expected DPR dimensions and byte/pixel bounds before fulfilling the clipboard Promise. DOM rasterization is a browser replacement for Electron native capture; exact canvas/font/filter parity needs the independent screenshot acceptance evidence and must not be assumed from shared component source.
 - Upstream theme declarations are scoped to `.zcode-visualize`, including portaled Dialog content. Scoped upstream radius/font-feature defaults, text/border inheritance, focus rules, control-font `revert-layer` and Textarea reset isolation restore the original utility cascade inside the host. The host's dark/light mode selects the original Web Zai palette; both declaration blocks are byte-identical apart from their scoped selectors. The existing chat page palette/layout and assistant-ui runtime remain intact. Text splitting preserves original citation coordinates and excludes streaming, malformed and code-fenced references.
 
-Executable acceptance fixtures and independent upstream comparison live under `e2e/visualize`; check the evidence report for actually completed coverage. No production deployment or Electron packaging is part of this adaptation.
+Historical acceptance fixtures and upstream comparisons are preserved in Git history before issue #551. Current verification uses the retained integration and release checks.
 
 
 The upstream `components/lib/utils.ts` class merger is also retained verbatim as
@@ -45,7 +45,7 @@ The immutable-asset verifier passed **223 manifest files** (24 skill, 197 archiv
 source, one external runtime, one root license), with the pinned 24-file skill Git
 tree, four runtime entries and four vendor/license pairs unchanged. Seven retained
 license files and the generated runtime's 157 build-input hashes are also recorded
-and verified. See the [port review](../../../../docs/evidence/issue-193/FRONTEND-PORT-REVIEW.md)
+and verified. See the [port review](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/issue-193/FRONTEND-PORT-REVIEW.md)
 for the behavior matrix and remaining browser-specific acceptance boundaries.
 This final requested source snapshot includes the frozen Web theme correction and
 the 4,000-character observation-range prompt (2,000-character retry if truncated).

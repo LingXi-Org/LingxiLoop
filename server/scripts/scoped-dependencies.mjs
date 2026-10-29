@@ -67,11 +67,11 @@ export function generateProfiles() {
     return [name, version]
   }))
   const tools = ['@biomejs/biome', '@types/prismjs', '@types/react', '@types/react-dom', '@vitejs/plugin-react',
-    '@tailwindcss/typography', 'esbuild', 'postcss', 'tailwind-scrollbar-hide', 'tailwindcss', 'typescript', 'vite', 'vitest']
+    '@tailwindcss/typography', 'esbuild', 'postcss', 'tailwind-scrollbar-hide', 'tailwindcss', 'typescript', 'vite']
   const profiles = {
     web: { dependencies: Object.fromEntries(Object.entries(full.dependencies).filter(([name]) => !excludedWeb.has(name))), devDependencies: pick(tools) },
     'server-ci': { dependencies: { ...server.dependencies, ...pick(['@assistant-ui/react', '@tiptap/y-tiptap']) },
-      devDependencies: pick(['@biomejs/biome', 'typescript', 'vitest', '@types/react', '@types/react-dom', '@types/compression', '@types/express', '@types/pg', '@types/ws']) },
+      devDependencies: pick(['@biomejs/biome', 'typescript', '@types/react', '@types/react-dom', '@types/compression', '@types/express', '@types/pg', '@types/ws']) },
     'deploy-contract': { dependencies: pick(['@lyyzka/lingxios', 'pg']), devDependencies: pick(['typescript']) },
   }
   profiles['web-ci'] = { ...profiles.web, dependencies: { ...profiles.web.dependencies, ...pick(['dotenv', 'pg', 'ioredis']) } }

@@ -109,7 +109,7 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
       <DialogTrigger asChild>
-        {trigger ?? <Button type="button" variant="secondary" size={isMobile ? 'icon-lg' : 'icon-sm'} className="omb-no-drag shrink-0 rounded-full bg-sidebar-accent text-muted-foreground hover:bg-[var(--im-conversation-hover)] hover:text-sidebar-foreground" aria-label="新建对话" title="新建对话">
+        {trigger ?? <Button type="button" variant="secondary" size={isMobile ? 'icon-lg' : 'icon-sm'} className="shrink-0 rounded-full bg-sidebar-accent text-muted-foreground hover:bg-[var(--im-conversation-hover)] hover:text-sidebar-foreground" aria-label="新建对话" title="新建对话">
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
         </Button>}
       </DialogTrigger>

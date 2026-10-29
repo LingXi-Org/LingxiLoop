@@ -137,7 +137,7 @@ for (const scenario of [
     assert.equal((await pool.query('SELECT COUNT(*)::int AS n FROM lingxios.agent_work_items WHERE tenant_id=$1', [companyId])).rows[0].n, 2)
     assert.equal(messages().filter(message => message.payload.role === 'system').length, scenario.outcome === 'failed' ? 1 : 0)
     assert.equal(messages().filter(message => message.payload.role === 'assistant').length, scenario.outcome === 'failed' ? 1 : 2)
-    const output = process.env.RUNTIME_ACCEPTANCE_OUTPUT_DIR || `.e2e/runtime-acceptance/${Date.now()}-${process.pid}`
+    const output = process.env.RUNTIME_ACCEPTANCE_OUTPUT_DIR || `artifacts/runtime-acceptance/${Date.now()}-${process.pid}`
     await mkdir(output, { recursive: true })
     await writeFile(`${output}/chat-recovery-${scenario.name}.json`, JSON.stringify({ scenario: scenario.name, runtime: releaseVersions.runtime, model,
       syntheticProvider: true, firstStatus: scenario.outcome, providerFailureCalls: scenario.failures, failureCategory: scenario.category,

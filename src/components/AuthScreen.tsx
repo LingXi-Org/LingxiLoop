@@ -8,7 +8,6 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { WindowDragStrip } from './WindowDragStrip'
 import { safeAuthReturnPath } from '@/lib/webNavigation'
 
 type Mode = 'login' | 'signup' | 'forgot' | 'reset' | 'verify'
@@ -132,7 +131,6 @@ export function AuthScreen() {
 
   return (
     <main className="flex min-h-svh items-center justify-center overflow-y-auto bg-muted p-4 sm:p-6 lg:p-10">
-      <WindowDragStrip />
       <div className="w-full max-w-lg">
         <Card className="ui-enter w-full self-center">
           <CardHeader>

@@ -7,11 +7,11 @@ Part of [LingXi · 灵犀](https://github.com/LingXi-Org). The organization repo
 - [LingxiOS](https://github.com/LingXi-Org/LingxiOS): the independent agent execution runtime consumed through its published package.
 - [LingxiLit](https://github.com/LingXi-Org/LingxiLit): the organization's OpenLIT-based AI observability project.
 
-LingxiLoop uses the published `@lyyzka/lingxios@3.2.4` runtime. The Web process owns authenticated ingress and control operations; the Worker is the only process that claims LingxiOS work.
+LingxiLoop uses the exact published `@lyyzka/lingxios` version in the root/server manifests and lockfiles. The Web process owns authenticated ingress and control operations; the Worker is the only process that claims LingxiOS work.
 
 LingxiLoop is a Web learning-collaboration product with direct messages, Study Rooms, and Labs.
 
-The browser Web app is the only supported release surface. Electron remains available only for local development; it is never published, auto-updated, offered for download, or tested in CI.
+The browser Web app is the supported development and release surface.
 
 ## Architecture
 
@@ -49,7 +49,7 @@ npm run dev:migrate
 npm run dev:preview
 ```
 
-Open `http://localhost:5180`. For direct process development, run `npm run dev:all`. Electron can be run locally with `npm run electron:dev`; every package command is fixed to `--publish never`.
+Open `http://localhost:5180`. For direct process development, run `npm run dev:all`.
 
 PostgreSQL starts from [`0001_v1_baseline.sql`](server/src/db/migrations/0001_v1_baseline.sql) and evolves only through new numbered migrations. `npm run db:migrate` takes an advisory lock and verifies names and checksums. The native runtime cutover is atomic: migration `0010_lingxios_native_runtime.sql` rejects any old runtime data, removes the retired schema, installs the exact package schema, and records its version and SHA-256 manifest. Application startup only checks migration and package readiness; Web and Worker never execute DDL.
 
@@ -65,12 +65,12 @@ Compose runs the one-shot `db-migrate` service before Web and Worker.
 
 ## Verification
 
-Browser flow tests use [tester-army/e2e](https://github.com/tester-army/e2e). See [the E2E setup and coverage guide](e2e/README.md) for the isolated local services, `npm run test:e2e`, and repeatable reports. Run `npm run test:e2e:server` for the isolated API/worker integration suite.
+Run only the commands for the changed surface: Web uses the unprefixed lint/typecheck/test/build commands; Admin, Control, and Server use their matching prefixes; integration accepts owning files through `npm run test:integration -- --file <test-name>`.
 
-Run only the commands for the changed surface: Web uses the unprefixed lint/typecheck/test/build commands; Admin, Control, and Server use their matching prefixes; Agent Eval uses `eval:check`; integration accepts owning files through `--file`.
+The checkout retains CI-selected product regressions, migration checks and release contracts. Historical browser fixtures, independent Eval, performance experiments and Electron tooling were retired; their sources remain in Git history. See [the cleanup record](docs/maintenance-551.md) for scope and measurements.
 
 CI classifies changed paths, runs only their checks, and publishes only affected images to `ghcr.io/<repository-owner-lowercase>/` with immutable commit-SHA tags. CI does not install or run a browser.
 
-Production deployment and migration requirements are in [`docs/RELEASE.md`](docs/RELEASE.md). The current domain model is in [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md), and Agent Eval is documented in [`docs/agent-eval.md`](docs/agent-eval.md).
+Production deployment and migration requirements are in [`docs/RELEASE.md`](docs/RELEASE.md). The current domain model is in [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md).
 
 Licensed under [MIT](LICENSE).

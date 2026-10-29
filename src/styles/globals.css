@@ -922,24 +922,6 @@ body {
 .desktop-openmaus ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: var(--radius-sm); }
 .desktop-openmaus ::-webkit-scrollbar-track { background: transparent; }
 .desktop-openmaus :focus-visible { outline-color: var(--ring); }
-.omb-drag { -webkit-app-region: drag; user-select: none; }
-.omb-no-drag, .omb-no-drag * { -webkit-app-region: no-drag; }
-.desktop-openmaus[data-electron='true'] .omb-titlebar-safe {
-  padding-right: max(20px, calc(100vw - env(titlebar-area-x, 100vw) - env(titlebar-area-width, 0px)));
-}
-
-/* Keep the Windows search toolbar on the shared navigation row grid. */
-.desktop-openmaus[data-electron='true'][data-platform^='win'] .desktop-window-toolbar {
-  background: var(--panel);
-}
-.desktop-openmaus[data-electron='true'][data-platform^='win'] .desktop-chat-toolbar {
-  min-height: 42px;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  gap: 12px;
-  border-bottom: 1px solid var(--hairline);
-  background: color-mix(in srgb, var(--app) 94%, transparent);
-}
 @media (prefers-reduced-motion: reduce) {
   .desktop-openmaus *, .desktop-openmaus *::before, .desktop-openmaus *::after {
     animation-duration: 0.01ms !important;
@@ -948,13 +930,13 @@ body {
   }
 }
 
-/* Browser-mode atmospheric backdrop (skipped in Electron via :has() check) */
+/* Browser atmospheric backdrop. */
 @media (min-width: 768px) {
-  body:not(.electron) {
+  body {
     background: var(--app);
     background-attachment: fixed;
   }
-  body:not(.electron)::before, body:not(.electron)::after {
+  body::before, body::after {
     content: none;
     position: fixed;
     border-radius: 50%;
@@ -963,13 +945,13 @@ body {
     pointer-events: none;
     z-index: 0;
   }
-  body:not(.electron)::before {
+  body::before {
     width: 500px; height: 300px;
     background: radial-gradient(ellipse, color-mix(in srgb, var(--primary-foreground) 90%, transparent), transparent 70%);
     top: 8%; left: 60%;
     animation: drift 40s ease-in-out infinite;
   }
-  body:not(.electron)::after {
+  body::after {
     width: 400px; height: 250px;
     background: radial-gradient(ellipse, color-mix(in srgb, var(--chart-1) 60%, transparent), transparent 70%);
     bottom: 10%; left: 10%;

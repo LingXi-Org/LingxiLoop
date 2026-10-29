@@ -88,22 +88,7 @@ course-objective/activity management. The Memos source/capability matrix is in
 
 ## Repeatable release checks
 
-Use Node 22 and local PostgreSQL/Redis from `e2e/server/compose.yaml`:
-
-```sh
-npm run lint && npm run typecheck && npm test && npm run build
-npm run server:lint && npm run server:typecheck && npm run server:test
-npm run test:e2e:typecheck
-node e2e/server/forum.mjs --browser
-node --import tsx e2e/server/forum-rollout.mjs
-```
-
-The forum runner uses a disposable named database, real HTTP authorization and
-the official `@e2e-dev/web` Chromium engine. IM transport, users and object
-storage are controlled fixtures. The rollout rehearsal uses real PostgreSQL
-backup/restore and a local HTTP fixture for Komodo service updates. Optional
-live-provider/production-runtime tests are reported as skipped when their
-external configuration is absent.
+Use the owning Web/server lint, typecheck and smoke commands. With a dedicated disposable PostgreSQL/Redis environment, use `npm run test:integration -- --file homework.test.ts` for learning behavior. The historical browser and rollout rehearsal are archived in [Git history](https://github.com/LingXi-Org/LingxiLoop/tree/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/e2e/server).
 
 The main release runs `prepare-forum-rollout.mjs` before the normal Komodo
 procedure: inspect schema through `RunStackService`, stop both API writers then

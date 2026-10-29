@@ -59,9 +59,7 @@ ENV VITE_PUBLIC_POSTHOG_KEY=${VITE_PUBLIC_POSTHOG_KEY}
 ENV VITE_PUBLIC_POSTHOG_HOST=${VITE_PUBLIC_POSTHOG_HOST}
 ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
 COPY server/build/web/package.json server/build/web/package-lock.json .npmrc ./
-# The Web build uses optional platform packages and needs no install scripts;
-# skip Electron's binary download in this stage too.
-ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
+# The Web build uses optional platform packages and needs no install scripts.
 RUN --mount=type=secret,id=npm_token \
     --mount=type=cache,id=lingxiloop-web-npm,target=/root/.npm,sharing=locked \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
@@ -112,7 +110,11 @@ WORKDIR /app
 # caching), then the source on top (changes every commit).
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/package-lock.json ./
-COPY server ./server
+# Ship only runtime sources/resources and the exact provenance manifests.
+COPY server/src ./server/src
+COPY server/assets ./server/assets
+COPY server/package.json server/package-lock.json ./server/
+COPY server/scripts/check-packaged-startup.mjs ./server/scripts/
 COPY shared/visualize-public-resources.ts ./shared/
 # Canvas service deliberately shares these dependency-free domain helpers with
 # the React client. They are loaded by tsx at runtime, so include them in the

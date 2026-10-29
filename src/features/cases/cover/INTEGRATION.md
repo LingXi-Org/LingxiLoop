@@ -97,32 +97,6 @@ all browser/protocol channels; production isolated capture remains server-owned.
 Official references: [CSP3 frame-src pre-request checks](https://www.w3.org/TR/CSP3/#directive-frame-src),
 [HTML blob policy containers](https://html.spec.whatwg.org/multipage/browsers.html#policy-containers).
 
-## Checks
+## Verification
 
-```sh
-node --import tsx --experimental-test-module-mocks --test src/features/cases/CaseCover.test.tsx src/features/cases/cover/cover.test.ts
-node node_modules/typescript/bin/tsc --noEmit
-node node_modules/@biomejs/biome/bin/biome lint src/features/cases/CaseCover.tsx src/features/cases/CaseCover.test.tsx src/features/cases/cover
-node --import tsx scripts/case-cover-render-fixture.mjs
-node node_modules/e2e/dist/cli/bin.js run --config e2e.case-cover.config.ts
-```
-
-Use Node22. `case-cover-render-fixture.mjs` reads/hashes the pinned upstream
-kernel/example and calls only the trusted presentation builder; it does not run
-upstream installer/build/validate scripts. In isolated UI worktree set
-`CASE_COVER_SOURCE_ROOT=/tmp/loop-376-render` for that command. Browser output is
-`.e2e/case-cover`; prepare `hairline.html` first. Browser starts one localhost
-fixture at port5189, a small isolated cache under /tmp, no API proxy or credentials.
-For the managed session's existing browser, set `E2E_CASE_COVER_CDP_URL` to the
-integrator-provided local endpoint. `--trace off --video off --output .e2e/case-cover-run`
-keeps evidence within this worktree and separate from prepared fixture inputs. The approved UDP
-characterization listener binds only127.0.0.1:51890; check the port first and
-retain start/stop log plus the final free-port check. `webrtc-characterization.json`
-records local packets separately from HTTP checks; positive UDP means the
-no-network requirement fails, while zero packets prove only this measured case.
-The primary [Firefox implementation tracker](https://bugzilla.mozilla.org/show_bug.cgi?id=1783489)
-is still open, and [CSP3 defines WebRTC separately from fetch](https://www.w3.org/TR/CSP3/#directive-webrtc).
-This wrapper therefore does not claim a universal no-network browser boundary.
-
-The synthetic component fixture is labelled as synthetic and is not evidence of
-three real article/model generations. Use the serialized browser slot.
+The old iframe/browser harness is archived in [Git history](https://github.com/LingXi-Org/LingxiLoop/tree/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/e2e/case-cover). The current QuickJS boundary and its retained integration check are documented in [cover-vm/README.md](../cover-vm/README.md).
