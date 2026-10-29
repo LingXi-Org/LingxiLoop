@@ -13,9 +13,19 @@ Before adding complexity for a speculative or vanishingly unlikely race or secur
 1. Track the issue, work on an isolated branch, and open a draft PR. Parallel contributors preserve other branches and hand off to the parent thread's designated sole integrator; only that integrator merges to `main`.
 2. Run focused short regressions and independent review against the final candidate commit. Rerun affected checks after changes; never report an unrun check as passed.
 3. Merging to `main` deploys production automatically once CI passes; follow [deploy](.agents/skills/deploy/SKILL.md) and [the release doc](docs/RELEASE.md). Any clone with Sigillo access deploys the same way with `npm run deploy`. A deploy is done when CI's `deploy` job or `npm run deploy` succeeds (healthy containers plus public readiness probes); a merge or a queued run is not.
-4. On failure, read the failing job, fix forward and re-run; roll back only by reverting on `main` to a known compatible release, respecting forward-only migrations and preserving durable data. Report the exact failed step and evidence when it remains blocked.
+4. On failure, read the failing job, fix forward and re-run; roll back only by deploying a known compatible commit, respecting forward-only migrations and preserving durable data. Report the exact failed step and evidence when it remains blocked.
 
 Use the current session's authorization and designated integrator. Report completed, failed and unverified work separately.
+
+## Deploy
+
+One entry, identical in CI and in any clone: [`deploy/cli.mjs`](deploy/cli.mjs). It needs only Node 22, git, ssh and read access to the Sigillo project **LingxiLoop Control Plane** (env `prod`): run `npx sigillo@0.14.2 login` once, or set `SIGILLO_TOKEN`. Sigillo supplies every key and each stack's runtime config; nothing else is configured locally.
+
+- `npm run deploy` deploys the committed, pushed `HEAD`: builds missing images on GitHub, pulls them on the hosts, converges every stack, deploys both Workers and probes the public endpoints.
+- `npm run deploy -- plan` and `npm run deploy -- status` are read-only: pending changes, and deployed images with container health.
+- `npm run deploy -- servers [stack ...]` or `npm run deploy -- workers` runs one part. Stacks: `core-state`, `ingress`, `knowledge`, `app-a`, `app-b`, `uptime`.
+- Roll back by checking out a known good commit and running `npm run deploy`; its images are still in GHCR.
+- Change runtime config or secrets in Sigillo, then redeploy the stack. Never edit a host `.env` (it is overwritten), print secrets or commit them.
 
 ## Product invariants
 
