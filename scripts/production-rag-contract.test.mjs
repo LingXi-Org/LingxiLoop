@@ -8,7 +8,7 @@ import test from 'node:test'
 import ts from 'typescript'
 import { computeScope } from './ci-scope.mjs'
 
-const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
+const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8').replaceAll('\r\n', '\n')
 
 function pdfPruneFixture(t) {
   const directory = mkdtempSync(join(tmpdir(), 'pdf-prune-office-'))
