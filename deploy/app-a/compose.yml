@@ -15,7 +15,7 @@ x-runtime: &runtime
     NODE_OPTIONS: --max-old-space-size=320
     LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
     PORT: "5181"
-    INSTANCE_ID: ${INSTANCE_ID:?INSTANCE_ID is required}
+    INSTANCE_ID: app-a
     DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-8}
     DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
     REDIS_URL: ${REDIS_URL:?REDIS_URL is required}

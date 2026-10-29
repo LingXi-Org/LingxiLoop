@@ -71,6 +71,6 @@ The checkout retains CI-selected product regressions, migration checks and relea
 
 CI classifies changed paths, runs only their checks, and publishes only affected images to `ghcr.io/<repository-owner-lowercase>/` with immutable commit-SHA tags. CI does not install or run a browser.
 
-Production deployment and migration requirements are in [`docs/RELEASE.md`](docs/RELEASE.md). The current domain model is in [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md).
+Production deploys on every merge to `main`, or from any clone with Sigillo access via `npm run deploy` (`-- plan` / `-- status` are read-only); see [`docs/RELEASE.md`](docs/RELEASE.md) for the flow, hosts and migration rules. The current domain model is in [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md).
 
 Licensed under [MIT](LICENSE).

@@ -346,7 +346,7 @@ jobs:
         run: |
           node --test scripts/ci-scope.test.mjs scripts/checkout-bytes.test.mjs scripts/production-rag-contract.test.mjs scripts/production-model-contract.test.mjs workers/web-static/src/index.test.mjs
           node --experimental-test-module-mocks --test scripts/knowledge-shadow-pg-*.test.mjs
-          bash -n deploy/deploy.sh
+          node --check deploy/cli.mjs
           node scripts/image-tag.mjs env
       - if: matrix.component == 'release'
         run: npm run version:check
@@ -424,14 +424,41 @@ jobs:
           done
 
 
+  # Production: images build and hosts pre-pull while checks run; only the
+  # rollout waits for them. Every deploy step is deploy/cli.mjs under Sigillo.
+  images:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip deploy]')
+    permissions: { contents: read, packages: write }
+    uses: ./.github/workflows/images.yml
+    secrets: inherit
+
+  prefetch:
+    needs: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env: { SIGILLO_TOKEN: "${{ secrets.SIGILLO_TOKEN }}" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: "22" }
+      - run: node deploy/cli.mjs pull
+
   deploy:
-    needs: [changes, checks, integration]
+    needs: [changes, checks, integration, prefetch]
     if: >-
-      always() && github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-      !contains(github.event.head_commit.message, '[skip deploy]') &&
+      always() && needs.prefetch.result == 'success' &&
       needs.changes.result == 'success' &&
       (needs.checks.result == 'success' || needs.checks.result == 'skipped') &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped')
-    permissions: { contents: read, packages: write }
-    uses: ./.github/workflows/deploy.yml
-    secrets: inherit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency: { group: production-deploy, cancel-in-progress: false }
+    env: { SIGILLO_TOKEN: "${{ secrets.SIGILLO_TOKEN }}" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: server/build/admin-control/package-lock.json
+      - run: node deploy/cli.mjs up

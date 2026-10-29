@@ -11,7 +11,7 @@ const originals = ['package.json', 'package-lock.json'].map(file => [file, readF
 try {
   for (const [file] of originals) writeFileSync(resolve(root, file), readFileSync(resolve(root, `server/build/${scope}/${file}`)))
   const result = spawnSync('npm', ['ci', '--ignore-scripts', '--prefer-offline', ...process.argv.slice(3)], {
-    cwd: root, stdio: 'inherit',
+    cwd: root, stdio: 'inherit', shell: process.platform === 'win32',
   })
   if (result.error) throw result.error
   process.exitCode = result.status ?? 1

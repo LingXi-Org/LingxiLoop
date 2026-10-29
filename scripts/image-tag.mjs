@@ -8,8 +8,13 @@
 //   node scripts/image-tag.mjs env    # SERVER_IMAGE=... lines for deploy/*/compose.yml
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync } from 'node:fs'
 import { posix } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+// Everything is read from the committed HEAD, never the working tree.
+const git = (...args) => execFileSync('git', args, { cwd: fileURLToPath(new URL('..', import.meta.url)), encoding: 'utf8' })
+const committed = path => git('show', `HEAD:${path}`)
+const tracked = path => git('ls-tree', '--name-only', 'HEAD', '--', path).trim() === path
 
 const REGISTRY = 'ghcr.io/lingxi-org'
 // Hosts in mainland China pull through this GHCR accelerator.
@@ -17,7 +22,7 @@ const PULL_REGISTRY = `accel.way2api.fun/${REGISTRY}`
 
 export const IMAGES = [
   { name: 'server', package: 'lingxiloop-server', dockerfile: 'server/docker/lingxiloop-server.Dockerfile', context: '.', target: 'runtime',
-    args: { LINGXILOOP_VERSION: readFileSync('VERSION', 'utf8').trim() } },
+    args: { LINGXILOOP_VERSION: committed('VERSION').trim() } },
   { name: 'gateway', package: 'lingxiloop-gateway', dockerfile: 'deploy/app-b/gateway.Dockerfile', context: '.', target: '', args: {} },
   { name: 'wukongim', package: 'lingxiloop-wukongim', dockerfile: 'server/docker/wukongim.Dockerfile', context: '.', target: 'release',
     args: { WUKONG_COMMIT: 'c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47' } },
@@ -27,7 +32,7 @@ export const IMAGES = [
 // Stages reachable from the target, with the context paths each one COPYs.
 function contextInputs(dockerfile, target) {
   const stages = []
-  for (const raw of readFileSync(dockerfile, 'utf8').replace(/\\\r?\n/g, ' ').split(/\r?\n/)) {
+  for (const raw of committed(dockerfile).replace(/\\\r?\n/g, ' ').split(/\r?\n/)) {
     const line = raw.trim()
     const from = line.match(/^FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?/i)
     if (from) { stages.push({ name: from[2] ?? '', base: from[1], deps: new Set(), copies: [] }); continue }
@@ -53,10 +58,10 @@ function contextInputs(dockerfile, target) {
 
 export function imageTag(image) {
   const prefix = image.context === '.' ? '' : `${image.context}/`
-  const ignore = existsSync(`${image.dockerfile}.dockerignore`) ? `${image.dockerfile}.dockerignore` : `${prefix}.dockerignore`
-  const paths = [image.dockerfile, ...(existsSync(ignore) ? [ignore] : []),
+  const ignore = tracked(`${image.dockerfile}.dockerignore`) ? `${image.dockerfile}.dockerignore` : `${prefix}.dockerignore`
+  const paths = [image.dockerfile, ...(tracked(ignore) ? [ignore] : []),
     ...contextInputs(image.dockerfile, image.target).map(path => posix.normalize(prefix + path.replace(/^\.\//, '')))]
-  const tree = execFileSync('git', ['ls-tree', '-r', 'HEAD', '--', ...new Set(paths)], { encoding: 'utf8' })
+  const tree = git('ls-tree', '-r', 'HEAD', '--', ...new Set(paths))
   return createHash('sha256').update(JSON.stringify([image.target, image.args, tree])).digest('hex').slice(0, 24)
 }
 

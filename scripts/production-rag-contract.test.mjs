@@ -78,13 +78,12 @@ test('PDF.js prune rejects officeparser falling back to the top-level runtime be
 
 // Failures: an application moves before the old Worker stops; an old Worker acknowledges a new effect.
 test('production stops both old workers before an application can enqueue new effect kinds', () => {
-  const script = read('deploy/deploy.sh')
-  const barrier = script.indexOf('docker stop -t 150')
-  assert.ok(barrier > 0)
-  assert.ok(barrier < script.indexOf('docker compose --env-file'), 'Worker barrier precedes every compose up')
-  assert.match(script, /for slot in a b/)
-  assert.match(script, /REQUESTED\+=" app-a app-b "/)
-  assert.match(script, /ORDER=\(core-state ingress knowledge app-a app-b uptime\)/)
+  const cli = read('deploy/cli.mjs')
+  assert.match(cli, /const PHASES = \[\['core-state', 'ingress', 'knowledge', 'uptime'\], \['app-a'\], \['app-b'\]\]/)
+  assert.match(cli, /if \(wanted\.has\('app-a'\) \|\| wanted\.has\('app-b'\)\) \{ wanted\.add\('app-a'\); wanted\.add\('app-b'\) \}/)
+  const servers = cli.slice(cli.indexOf('async function servers('))
+  assert.match(servers, /\['a', 'b'\]\.map\(slot =>[\s\S]*docker stop -t 150/)
+  assert.match(servers, /if \(index === 1\) await barrier/, 'both old Workers stop before slot A moves')
 })
 
 // Failure: development resolves shared imports that the production image never copies.
@@ -270,7 +269,8 @@ test('production Open Notebook receives only the explicit RAG environment', () =
   ]) assert.match(service, new RegExp(`${variable}:`))
   assert.match(service, /OPENAI_API_KEY: \$\{OPEN_NOTEBOOK_PASSWORD:\?/)
   assert.match(service, /OPENAI_BASE_URL: "\$\{LINGXILOOP_PUBLIC_ORIGIN:\?[^}]+}\/internal\/open-notebook\/v1"/)
-  assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{OPENAI_EMBEDDING_MODEL:-Pro\/BAAI\/bge-m3\}/)
+  // The knowledge index contract pins its own embedding model.
+  assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{NOTEBOOK_EMBEDDING_MODEL:-BAAI\/bge-m3\}/)
 
   assert.match(service, /\/app\/\.venv\/bin\/supervisorctl .* status rag-api/)
   assert.match(service, /\/app\/\.venv\/bin\/supervisorctl .* status rag-worker/)
@@ -286,8 +286,8 @@ test('packaged and published stacks select the RAG-only image', () => {
   assert.match(packagedService, /image: .*lingxiloop-open-notebook/)
   assert.doesNotMatch(packagedService, /build:/)
   assert.match(read('scripts/image-tag.mjs'), /'lingxiloop-open-notebook'[\s\S]*'lingxiloop-rag'/)
-  assert.match(workflow, /needs: \[changes, checks, integration\]/)
-  assert.match(read('.github/workflows/deploy.yml'), /platforms: linux\/amd64/)
+  assert.match(workflow, /needs: \[changes, checks, integration, prefetch\]/)
+  assert.match(read('.github/workflows/images.yml'), /platforms: linux\/amd64/)
   assert.match(workflow, /dorny\/paths-filter@v4[\s\S]*predicate-quantifier: some-with-excludes/)
   assert.doesNotMatch(workflow, /- 'third_party\/open-notebook\/\*\*'/)
   assert.doesNotMatch(workflow, /setup-qemu|:mvp/)
@@ -444,19 +444,30 @@ test('ingress keeps management sockets private', () => {
   }
 })
 
-test('main deploys through the single reusable deploy workflow', () => {
+test('main deploys through the repo CLI with Sigillo as the only secret source', () => {
   const workflow = read('.github/workflows/ci.yml')
+  const images = read('.github/workflows/images.yml')
   const deploy = read('.github/workflows/deploy.yml')
+  const cli = read('deploy/cli.mjs')
   const serverImage = read('server/docker/lingxiloop-server.Dockerfile')
 
-  assert.match(workflow, /deploy:\n    needs: \[changes, checks, integration\][\s\S]*\[skip deploy\][\s\S]*uses: \.\/\.github\/workflows\/deploy\.yml\n    secrets: inherit/)
-  assert.match(deploy, /servers:\n    needs: images[\s\S]*run: deploy\/deploy\.sh/)
-  assert.match(deploy, /docker buildx imagetools inspect/)
-  assert.match(deploy, /npm run control:d1:remote[\s\S]*wrangler deploy --config workers\/control-plane\/wrangler\.jsonc[\s\S]*wrangler deploy --config workers\/web-static\/wrangler\.jsonc/)
-  assert.match(deploy, /VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEsX5eyOl1nAe5i9/)
-  assert.match(deploy, /group: production-deploy\n  cancel-in-progress: false/)
+  assert.match(workflow, /\n  images:\n    if: github\.event_name == 'push' && github\.ref == 'refs\/heads\/main' && !contains\(github\.event\.head_commit\.message, '\[skip deploy\]'\)\n[\s\S]*uses: \.\/\.github\/workflows\/images\.yml/)
+  assert.match(workflow, /\n  prefetch:\n    needs: images[\s\S]*run: node deploy\/cli\.mjs pull/)
+  assert.match(workflow, /\n  deploy:\n    needs: \[changes, checks, integration, prefetch\][\s\S]*run: node deploy\/cli\.mjs up/)
+  assert.match(deploy, /run: node deploy\/cli\.mjs \$\{\{ inputs\.command \}\} \$\{\{ inputs\.stacks \}\}/)
+  assert.match(images, /docker buildx imagetools inspect/)
+  assert.match(images, /sigillo secrets get LINGXIOS_PACKAGES_TOKEN/)
+  for (const file of [workflow, images, deploy]) {
+    const secrets = [...file.matchAll(/secrets\.([A-Z_]+)/g)].map(([, name]) => name)
+    assert.ok(secrets.every(name => ['SIGILLO_TOKEN', 'GITHUB_TOKEN', 'LINGXIOS_PACKAGES_TOKEN'].includes(name)), secrets.join())
+  }
+  assert.doesNotMatch(`${deploy}\n${images}`, /secrets\.LINGXIOS_PACKAGES_TOKEN/, 'deploys read package access from Sigillo')
+  assert.match(cli, /'sigillo', 'run', \.\.\.SIGILLO/)
+  assert.match(cli, /npm', \['run', 'control:d1:remote'\]/)
+  assert.match(cli, /'workers\/control-plane\/wrangler\.jsonc', 'workers\/web-static\/wrangler\.jsonc'/)
+  assert.match(cli, /VITE_TURNSTILE_SITE_KEY: '0x4AAAAAAEsX5eyOl1nAe5i9'/)
   assert.match(serverImage, /ARG VITE_TURNSTILE_SITE_KEY=""[\s\S]*ENV VITE_TURNSTILE_SITE_KEY=\$\{VITE_TURNSTILE_SITE_KEY\}/)
-  assert.doesNotMatch(`${workflow}\n${deploy}`, /komodo|RELEASE_API|RELEASE_CONTROLLER/i)
+  assert.doesNotMatch(`${workflow}\n${deploy}\n${images}\n${cli}`, /komodo|RELEASE_API|RELEASE_CONTROLLER/i)
 })
 
 test('all deployable LingxiLoop images use content-addressed tags from image-tag.mjs', () => {
@@ -564,7 +575,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
     ['package-lock.json', 'integration', 'server'],
     ['.github/workflows/ci.yml', 'deploy_contract', ''],
     ['scripts/image-tag.mjs', 'deploy_contract', ''],
-    ['deploy/deploy.sh', 'deploy_contract', ''],
+    ['deploy/cli.mjs', 'deploy_contract', ''],
     ['deploy/app-a/compose.yml', 'deploy_contract', ''],
     ['third_party/open-notebook/tests/test_rag_contract.py', 'open_notebook', ''],
   ]) {
@@ -591,21 +602,24 @@ test('workflow path filters route real changed paths to their owning checks', ()
 
 test('actual workflow conditions block deployment after a failed or cancelled gate', () => {
   const workflow = read('.github/workflows/ci.yml')
-  const expression = workflow.match(/^  deploy:\n    needs: \[changes, checks, integration\]\n    if: >-\n([\s\S]*?)\n    permissions:/m)?.[1]
-  assert.ok(expression)
-  const allows = (results = {}, event = 'push', message = '', ref = 'refs/heads/main') => {
-    const needs = Object.fromEntries(['changes', 'checks', 'integration'].map(name => [name, { result: results[name] ?? 'success' }]))
-    return Function('github', 'needs', 'always', 'contains', `return (${expression})`)(
-      { ref, event_name: event, event: { head_commit: { message } } }, needs, () => true,
-      (value, marker) => String(value ?? '').toLowerCase().includes(marker.toLowerCase()),
-    )
-  }
+  const imagesIf = workflow.match(/^  images:\n    if: (.+)$/m)?.[1]
+  const deployIf = workflow.match(/^  deploy:\n    needs: \[changes, checks, integration, prefetch\]\n    if: >-\n([\s\S]*?)\n    runs-on:/m)?.[1]
+  assert.ok(imagesIf && deployIf)
+  const evaluate = (expression, results, event, message, ref) => Function('github', 'needs', 'always', 'contains', `return (${expression})`)(
+    { ref, event_name: event, event: { head_commit: { message } } },
+    Object.fromEntries(['changes', 'checks', 'integration', 'prefetch'].map(name => [name, { result: results[name] ?? 'success' }])),
+    () => true, (value, marker) => String(value ?? '').toLowerCase().includes(marker.toLowerCase()),
+  )
+  // prefetch needs images, so a skipped images job skips prefetch and therefore deploy.
+  const allows = (results = {}, event = 'push', message = '', ref = 'refs/heads/main') =>
+    evaluate(imagesIf, results, event, message, ref) && evaluate(deployIf, results, event, message, ref)
   assert.equal(allows(), true)
   assert.equal(allows({ checks: 'skipped', integration: 'skipped' }), true, 'docs-only changes still converge production')
   assert.equal(allows({}, 'push', 'chore: tidy [skip deploy]'), false)
   assert.equal(allows({}, 'pull_request'), false)
   assert.equal(allows({}, 'push', '', 'refs/heads/topic'), false)
-  for (const gate of ['changes', 'checks', 'integration']) for (const result of ['failure', 'cancelled']) {
+  for (const gate of ['changes', 'checks', 'integration', 'prefetch']) for (const result of ['failure', 'cancelled', 'skipped']) {
+    if (result === 'skipped' && (gate === 'checks' || gate === 'integration')) continue
     assert.equal(allows({ [gate]: result }), false, `${gate}: ${result}`)
   }
   assert.equal((workflow.match(/if: needs\.changes\.outputs\.deep_integration == 'true'/g) ?? []).length, 2)

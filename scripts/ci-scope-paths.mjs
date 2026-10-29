@@ -4,7 +4,7 @@ import { resolve, relative, dirname } from 'node:path'
 // Reuse the owning filters already reviewed in CI rather than a second drifting
 // mapping. The small reader accepts only the literal map/list subset in ci.yml.
 export function workflowFilters(text = readFileSync('.github/workflows/ci.yml', 'utf8')) {
-  const block = text.split('          filters: |\n')[1]?.split('\n      - id: scope')[0]
+  const block = text.replace(/\r\n/g, '\n').split('          filters: |\n')[1]?.split('\n      - id: scope')[0]
   if (!block) throw new Error('CI owning path filters are missing')
   const filters = {}; let name
   for (const line of block.split('\n')) {
