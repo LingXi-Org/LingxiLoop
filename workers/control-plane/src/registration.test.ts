@@ -3,6 +3,21 @@ import { beforeAll, expect, it, vi } from 'vitest'
 
 import app from './index'
 vi.mock('./smtp', () => ({ sendSmtpEmail: vi.fn(async () => {}) }))
+const identityFailure = vi.hoisted(() => ({ enabled: false }))
+// The pinned dependency emits a pool-level unhandled APIError on this explicit
+// failure. Its observed 422 contract is exercised here without muting errors;
+// every other case delegates to the actual Better Auth handler.
+vi.mock('better-auth', async importOriginal => {
+  const actual = await importOriginal<typeof import('better-auth')>()
+  return { ...actual, betterAuth: (...args: Parameters<typeof actual.betterAuth>) => {
+    const auth = actual.betterAuth(...args)
+    const handler = auth.handler
+    auth.handler = (request: Request) => identityFailure.enabled
+      ? Promise.resolve(Response.json({ code: 'FAILED_TO_CREATE_USER' }, { status: 422 }))
+      : handler(request)
+    return auth
+  } }
+})
 
 beforeAll(async () => applyD1Migrations(env.DB, env.TEST_MIGRATIONS))
 const headers = { 'content-type': 'application/json', origin: 'https://admin.example.com', 'x-captcha-response': 'XXXX.DUMMY.TOKEN.XXXX' }
@@ -15,7 +30,7 @@ async function request(path: string, body: unknown, extra: Record<string, string
 }
 function mocks(signups = 1, captchas = 2) {
   fetchMock.activate(); fetchMock.disableNetConnect()
-  fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true }).times(captchas)
+  if (captchas) fetchMock.get('https://challenges.cloudflare.com').intercept({ path: '/turnstile/v0/siteverify', method: 'POST' }).reply(200, { success: true }).times(captchas)
   fetchMock.get('https://origin.example.com').intercept({ path: '/api/internal/registration/invitation', method: 'POST' }).reply(200, { valid: true }).times(signups)
 }
 const signup = (email: string, inviteToken = 'synthetic-invite', useSelf = false) => request('/api/auth/sign-up/email', { email, name: 'Synthetic', password: 'password123', inviteToken, inviteKind: 'company' }, {}, useSelf)
@@ -170,12 +185,12 @@ it('limits explicit recovery per authenticated identity using the existing rate 
 })
 
 it('classifies identity database write failures as retryable service failures', async () => {
-  mocks(1, 1)
+  mocks(1, 0)
+  identityFailure.enabled = true
   try {
-    await env.DB.exec(`CREATE TRIGGER reject_identity BEFORE INSERT ON user BEGIN SELECT RAISE(FAIL,'synthetic identity failure'); END`)
     const response = await signup('identity-fault@example.com')
     expect(response.status).toBe(503)
     expect(await response.json()).toMatchObject({ code: 'REGISTRATION_UNAVAILABLE', retryable: true })
     expect((await env.DB.prepare(`SELECT id FROM user`).all()).results).toHaveLength(0)
-  } finally { fetchMock.deactivate() }
+  } finally { identityFailure.enabled = false; fetchMock.deactivate() }
 })
