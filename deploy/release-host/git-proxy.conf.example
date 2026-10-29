@@ -1,5 +1,0 @@
-# Include only for the fixed Git/BuildKit preparation identity, not globally for all users.
-# Docker daemon uses docker-proxy.conf.example separately.
-[http]
-    proxy = http://127.0.0.1:17890
-    sslVerify = true

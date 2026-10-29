@@ -21,9 +21,6 @@ type Secrets = {
   MCP_SERVICE_TOKEN: string
   MCP_AUTH_USER_ID: string
   DIAGNOSTIC_KEYS_JSON?: string
-  KOMODO_API_KEY: string
-  KOMODO_API_SECRET: string
-  KOMODO_TARGETS_JSON: string
 }
 type Bindings = Env & Secrets
 type Variables = { auth: ReturnType<typeof createAuth>; session: AuthSession; registrationValidated: boolean }
@@ -535,7 +532,7 @@ app.all('/api/mcp', async (c) => {
       if (!response.ok) throw new Error(`${response.status} ${text.slice(0, 1000)}`)
       return text ? JSON.parse(text) : { ok: true }
     },
-  }, [c.env.MCP_SERVICE_TOKEN, c.env.KOMODO_API_KEY, c.env.KOMODO_API_SECRET,
+  }, [c.env.MCP_SERVICE_TOKEN,
     c.env.BETTER_AUTH_SECRET, c.env.GATEWAY_HMAC_SECRET, c.env.BOOTSTRAP_ADMIN_TOKEN,
     c.env.ALIYUN_OTP_EMAIL_PASSWORD, c.env.TURNSTILE_SECRET_KEY, c.env.SIGILLO_SSO_SECRET])
 })

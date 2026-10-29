@@ -4,13 +4,12 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 // Failure modes: an A/B service retains the prior model; Worker overrides differ
-// from Web; resource sync overrides the reviewed model; stale admission tariffs
+// from Web; stale admission tariffs
 // are required even though the provider tariff can derive them; unrelated models change.
 test('A/B rendered Web and Worker environments share the reviewed chat model', () => {
   const model = 'deepseek-ai/DeepSeek-V4.1-Flash'
-  const resources = readFileSync('deploy/komodo/resources.toml', 'utf8')
   for (const slot of ['a', 'b']) {
-    const path = `deploy/komodo/lingxiloop-app-${slot}/compose.yml`
+    const path = `deploy/app-${slot}/compose.yml`
     const source = readFileSync(path, 'utf8')
     const env = { PATH: process.env.PATH, OPENAI_EMBEDDING_MODEL: 'existing-embedding', OPENAI_IMAGE_MODEL: 'existing-image' }
     for (const [, name] of source.matchAll(/\$\{(\w+):\?/g)) env[name] ??= 'fixture'
@@ -28,11 +27,6 @@ test('A/B rendered Web and Worker environments share the reviewed chat model', (
       assert.equal(runtime.AGENT_OS_INPUT_COST_MICROS_PER_MILLION, '')
       assert.equal(runtime.AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION, '')
     }
-    const stack = resources.split('[[stack]]').find(block => block.includes(`name = "lingxiloop-app-${slot}"`))
-    assert.ok(stack?.includes(`OPENAI_MODEL = ${model}`))
-    assert.ok(stack?.includes('OPENAI_EMBEDDING_MODEL = Pro/BAAI/bge-m3'))
-    assert.ok(!stack.includes('AGENT_OS_INPUT_COST_MICROS_PER_MILLION = [['))
-    assert.ok(!stack.includes('AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION = [['))
   }
 })
 
@@ -43,9 +37,9 @@ test('development, knowledge and production templates share the exact new defaul
     assert.match(source, new RegExp(`^OPENAI_MODEL=${model.replaceAll('.', '\\.')}\\s*$`, 'm'))
     assert.match(source, new RegExp(`^OPENAI_EMBEDDING_MODEL=${embedding}\\s*$`, 'm'))
   }
-  for (const file of ['docker-compose.mvp.yml', 'deploy/komodo/lingxiloop-app-a/compose.yml', 'deploy/komodo/lingxiloop-app-b/compose.yml', 'deploy/komodo/lingxiloop-knowledge-agent/compose.yml']) {
+  for (const file of ['docker-compose.mvp.yml', 'deploy/app-a/compose.yml', 'deploy/app-b/compose.yml', 'deploy/knowledge/compose.yml']) {
     const source = readFileSync(file, 'utf8')
     assert.ok(source.includes(`OPENAI_EMBEDDING_MODEL: \${OPENAI_EMBEDDING_MODEL:-${embedding}}`), file)
-    if (file !== 'deploy/komodo/lingxiloop-knowledge-agent/compose.yml') assert.ok(source.includes(`OPENAI_MODEL: \${OPENAI_MODEL:-${model}}`), file)
+    if (file !== 'deploy/knowledge/compose.yml') assert.ok(source.includes(`OPENAI_MODEL: \${OPENAI_MODEL:-${model}}`), file)
   }
 })

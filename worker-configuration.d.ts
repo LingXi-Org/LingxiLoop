@@ -4,10 +4,8 @@
 interface __BaseEnv_Env {
 	DB: D1Database;
 	ASSETS: Fetcher;
-	ORIGIN_BASE_URL: "https://loop.lingxilearn.cn";
+	ORIGIN_BASE_URL: "https://backend.lingxilearn.cn";
 	UPTIME_BASE_URL: "https://uptime.lingxilearn.cn";
-	KOMODO_BASE_URL: "https://ops.christmas1314.xyz";
-	KOMODO_TARGETS_JSON: "{\"lingxiloop-core-state\":{\"stack\":\"lingxiloop-core-state\"},\"lingxiloop-app-a\":{\"stack\":\"lingxiloop-app-a\"},\"server-b-ingress\":{\"stack\":\"server-b-ingress\"},\"lingxiloop-app-b\":{\"stack\":\"lingxiloop-app-b\"},\"lingxiloop-knowledge-agent\":{\"stack\":\"lingxiloop-knowledge-agent\"},\"uptime\":{\"stack\":\"uptime\"}}";
 	AUTH_ALLOWED_HOSTS: "loop.lingxilearn.cn,admin.lingxilearn.cn";
 	APP_VERSION: "0.1.0-beta";
 }
@@ -22,7 +20,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "ORIGIN_BASE_URL" | "UPTIME_BASE_URL" | "KOMODO_BASE_URL" | "KOMODO_TARGETS_JSON" | "AUTH_ALLOWED_HOSTS" | "APP_VERSION">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "ORIGIN_BASE_URL" | "UPTIME_BASE_URL" | "AUTH_ALLOWED_HOSTS" | "APP_VERSION">> {}
 }
 
 // Begin runtime types

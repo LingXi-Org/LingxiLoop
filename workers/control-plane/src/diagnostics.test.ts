@@ -34,7 +34,7 @@ it('diagnostic MCP denies invalid credentials and never registers or executes ad
     }
     expect((await request('initialize', { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'tester', version: '1' } })).status).toBe(200)
     expect((await request('tools/list')).body.result?.tools?.map(tool => tool.name)).toEqual(['lingxiloop_diagnostics'])
-    for (const name of ['lingxiloop_user_lifecycle', 'lingxiloop_agent_run_cancel', 'lingxiloop_release_submit', 'lingxiloop_release_resume', 'lingxiloop_komodo_stack_action', 'lingxiloop_auth_settings_update', 'lingxiloop_admin_resource_get']) {
+    for (const name of ['lingxiloop_user_lifecycle', 'lingxiloop_agent_run_cancel', 'lingxiloop_auth_settings_update', 'lingxiloop_admin_resource_get']) {
       const { body } = await request('tools/call', { name, arguments: {} })
       expect(body.result?.isError ?? Boolean(body.error)).toBe(true)
     }

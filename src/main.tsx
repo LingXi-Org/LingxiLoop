@@ -8,6 +8,16 @@ import './styles/globals.css'
 
 const root = createRoot(document.getElementById('root')!)
 
+// A deploy replaces the hashed chunks; an open tab reloads onto the new build
+// (at most once a minute, so a genuinely missing chunk cannot loop).
+window.addEventListener('vite:preloadError', (event) => {
+  const last = Number(sessionStorage.getItem('lingxiloop:chunk-reload') ?? 0)
+  if (Date.now() - last < 60_000) return
+  sessionStorage.setItem('lingxiloop:chunk-reload', String(Date.now()))
+  event.preventDefault()
+  window.location.reload()
+})
+
 async function boot() {
   const [{ App }, { GlobalInteractionProvider }] = await Promise.all([
     import('./App'),

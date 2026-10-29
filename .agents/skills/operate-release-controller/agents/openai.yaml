@@ -1,3 +1,0 @@
-interface:
-  display_name: "Operate Release Controller"
-  short_description: "Run LingxiLoop immutable releases and durable recovery"

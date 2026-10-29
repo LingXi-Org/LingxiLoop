@@ -34,7 +34,7 @@ Operators configure `DIAGNOSTIC_KEYS_JSON` as an array of
 as base64url, and form `diag.tester01.<random value>`. Hash the entire token
 using SHA-256. Store plaintext only in the approved secret provider; the Worker
 needs only hashes. Each key expires independently. Removing its entry revokes
-it after the updated configuration is deployed. Use the release controller and
+it after the updated configuration is deployed. Redeploy the Worker and
 verify live rejection before claiming a revocation is effective.
 
 Give each tester one key through a private channel. Keep it in

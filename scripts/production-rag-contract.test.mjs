@@ -7,7 +7,6 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import ts from 'typescript'
 import { computeScope } from './ci-scope.mjs'
-import { updateImageTags } from './update-deployment-images.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
@@ -77,20 +76,15 @@ test('PDF.js prune rejects officeparser falling back to the top-level runtime be
   assert.deepEqual(f.inventory(f.pdf), before)
 })
 
-// Failures: sync deploys an application before the worker stop; an old worker acknowledges a new effect.
+// Failures: an application moves before the old Worker stops; an old Worker acknowledges a new effect.
 test('production stops both old workers before an application can enqueue new effect kinds', () => {
-  const resources = read('deploy/komodo/resources.toml')
-  const stages = [...resources.matchAll(/\[\[procedure\.config\.stage\]\]\s*name = "([^"]+)"([\s\S]*?)(?=\[\[procedure\.config\.stage\]\]|$)/g)]
-  const stopIndex = stages.findIndex(([, name]) => name === 'Stop old workers')
-  assert.ok(stopIndex >= 0)
-  for (const stack of ['lingxiloop-app-a', 'lingxiloop-app-b']) {
-    const definition = resources.match(new RegExp(`\\[\\[stack\\]\\]\\s*name = "${stack}"([\\s\\S]*?)(?=\\[\\[stack\\]\\]|\\[\\[procedure\\]\\]|$)`))?.[1]
-    assert.match(definition ?? '', /^deploy = false$/m, `${stack} must not deploy during RunSync`)
-    assert.match(stages[stopIndex][2], new RegExp(`execution\\.type = "StopStack", execution\\.params\\.stack = "${stack}", execution\\.params\\.services = \\["worker"\\]`))
-  }
-  for (const name of ['Application A', 'Application B']) {
-    assert.ok(stopIndex < stages.findIndex(([, stage]) => stage === name))
-  }
+  const script = read('deploy/deploy.sh')
+  const barrier = script.indexOf('docker stop -t 150')
+  assert.ok(barrier > 0)
+  assert.ok(barrier < script.indexOf('docker compose --env-file'), 'Worker barrier precedes every compose up')
+  assert.match(script, /for slot in a b/)
+  assert.match(script, /REQUESTED\+=" app-a app-b "/)
+  assert.match(script, /ORDER=\(core-state ingress knowledge app-a app-b uptime\)/)
 })
 
 // Failure: development resolves shared imports that the production image never copies.
@@ -259,7 +253,7 @@ test('SPA image includes the transitive source graph and pinned vendor license',
 })
 
 test('production Open Notebook receives only the explicit RAG environment', () => {
-  const compose = read('deploy/komodo/lingxiloop-knowledge-agent/compose.yml')
+  const compose = read('deploy/knowledge/compose.yml')
   const service = compose.slice(compose.indexOf('  open-notebook:'))
 
   assert.doesNotMatch(service, /env_file:/)
@@ -287,17 +281,13 @@ test('production Open Notebook receives only the explicit RAG environment', () =
 test('packaged and published stacks select the RAG-only image', () => {
   const packaged = read('docker-compose.mvp.yml')
   const workflow = read('.github/workflows/ci.yml')
-  const scope = read('scripts/ci-scope.mjs')
 
   const packagedService = packaged.slice(packaged.indexOf('  open-notebook:'), packaged.indexOf('  wukongim:'))
   assert.match(packagedService, /image: .*lingxiloop-open-notebook/)
   assert.doesNotMatch(packagedService, /build:/)
-  assert.match(scope, /'lingxiloop-open-notebook'[\s\S]*'lingxiloop-rag'/)
+  assert.match(read('scripts/image-tag.mjs'), /'lingxiloop-open-notebook'[\s\S]*'lingxiloop-rag'/)
   assert.match(workflow, /needs: \[changes, checks, integration\]/)
-  assert.match(workflow, /GITHUB_REPOSITORY_OWNER,,/)
-  assert.match(workflow, /:\$\{\{ github\.sha \}\}/)
-  assert.match(workflow, /platforms: linux\/amd64/)
-  assert.match(workflow, /update-deployment-images\.mjs/)
+  assert.match(read('.github/workflows/deploy.yml'), /platforms: linux\/amd64/)
   assert.match(workflow, /dorny\/paths-filter@v4[\s\S]*predicate-quantifier: some-with-excludes/)
   assert.doesNotMatch(workflow, /- 'third_party\/open-notebook\/\*\*'/)
   assert.doesNotMatch(workflow, /setup-qemu|:mvp/)
@@ -349,15 +339,15 @@ test('removed Open Notebook capabilities cannot be re-enabled by deployment conf
   const files = [
     '.env.example',
     'docker-compose.mvp.yml',
-    'deploy/komodo/lingxiloop-knowledge-agent/compose.yml',
+    'deploy/knowledge/compose.yml',
   ].map(read).join('\n')
 
   assert.doesNotMatch(files, /OPEN_NOTEBOOK_ENCRYPTION_KEY/)
   assert.doesNotMatch(files, /OPEN_NOTEBOOK_(?:CHAT|STRATEGY|ANSWER|FINAL_ANSWER)_MODEL/)
 })
 
-test('Komodo knowledge services receive writable storage and the control plane URL', () => {
-  const compose = read('deploy/komodo/lingxiloop-knowledge-agent/compose.yml')
+test('knowledge services receive writable storage and the control plane URL', () => {
+  const compose = read('deploy/knowledge/compose.yml')
 
   assert.match(compose, /surrealdb:[\s\S]*?rocksdb:\/home\/nonroot\/open-notebook\.db/)
   assert.match(compose, /SURREAL_PASS: \$\{OPEN_NOTEBOOK_SURREAL_PASSWORD:\?OPEN_NOTEBOOK_SURREAL_PASSWORD is required}/)
@@ -370,9 +360,9 @@ test('Komodo knowledge services receive writable storage and the control plane U
   assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
 })
 
-test('Komodo runs isolated workers on both app nodes with bounded drain and readiness', () => {
-  const appA = read('deploy/komodo/lingxiloop-app-a/compose.yml')
-  const appB = read('deploy/komodo/lingxiloop-app-b/compose.yml')
+test('both app nodes run isolated workers on both app nodes with bounded drain and readiness', () => {
+  const appA = read('deploy/app-a/compose.yml')
+  const appB = read('deploy/app-b/compose.yml')
 
   assert.match(appA, /10\.20\.0\.2:5183:5181/)
   assert.doesNotMatch(appA, /^ {2}gateway:/m)
@@ -392,16 +382,16 @@ test('Komodo runs isolated workers on both app nodes with bounded drain and read
   }
   assert.doesNotMatch(appA, /COMPOSE_PROFILES|profiles:/)
   assert.match(appB, /worker:\r?\n {4}<<: \*runtime/)
-  assert.match(appB, /gateway:\r?\n {4}image: .*lingxiloop-gateway:[0-9a-f]{40}/)
+  assert.match(appB, /gateway:\r?\n {4}image: \$\{GATEWAY_IMAGE:\?/)
   assert.match(appB, /127\.0\.0\.1:8081:8080/)
   assert.doesNotMatch(appB, /COMPOSE_PROFILES|profiles:/)
-  assert.doesNotMatch(read('deploy/komodo/lingxiloop-app-b/gateway.Dockerfile'), /COPY website/)
+  assert.doesNotMatch(read('deploy/app-b/gateway.Dockerfile'), /COPY website/)
   assert.doesNotMatch(`${appA}\n${appB}`, /AGENT_OS_URL/)
 })
 
 test('the gateway uses the备案 ingress and the Worker uses its admin domain', () => {
-  const gateway = read('deploy/komodo/lingxiloop-app-b/gateway.conf')
-  const core = read('deploy/komodo/lingxiloop-core-state/compose.yml')
+  const gateway = read('deploy/app-b/gateway.conf')
+  const core = read('deploy/core-state/compose.yml')
   const worker = read('workers/control-plane/wrangler.jsonc')
 
   assert.match(gateway, /server 10\.20\.0\.2:5183/)
@@ -415,12 +405,12 @@ test('the gateway uses the备案 ingress and the Worker uses its admin domain', 
   assert.doesNotMatch(core, /WUKONG_WS_BIND_IP/)
   assert.match(worker, /"routes": \[\{ "pattern": "admin\.lingxilearn\.cn", "custom_domain": true \}\]/)
   assert.match(worker, /"workers_dev": false/)
-  assert.match(worker, /"ORIGIN_BASE_URL": "https:\/\/loop\.lingxilearn\.cn"/)
+  assert.match(worker, /"ORIGIN_BASE_URL": "https:\/\/backend\.lingxilearn\.cn"/)
   assert.match(worker, /"AUTH_ALLOWED_HOSTS": "loop\.lingxilearn\.cn,admin\.lingxilearn\.cn"/)
 })
 
 test('live chat streams balance independently across both nodes through unbuffered proxy hops', () => {
-  const gateway = read('deploy/komodo/lingxiloop-app-b/gateway.conf')
+  const gateway = read('deploy/app-b/gateway.conf')
   const routing = gateway.match(/map \$uri \$lingxiloop_api_upstream \{([^}]+)\}/)?.[1]
   assert.ok(routing)
   assert.match(routing, /default lingxiloop_web;/)
@@ -434,7 +424,7 @@ test('live chat streams balance independently across both nodes through unbuffer
   assert.match(owner, /keepalive 32;/)
   assert.match(gateway, /proxy_connect_timeout 3s;/)
   assert.doesNotMatch(gateway, /proxy_next_upstream[^;]*non_idempotent/)
-  assert.match(read('deploy/komodo/lingxiloop-app-b/compose.yml'), /LINGXIOS_CONTROL_URL: http:\/\/lingxiloop:5182/)
+  assert.match(read('deploy/app-b/compose.yml'), /LINGXIOS_CONTROL_URL: http:\/\/lingxiloop:5182/)
   for (const location of ['location /api/', 'location @origin_api']) {
     const block = gateway.slice(gateway.indexOf(location), gateway.indexOf('\n    }', gateway.indexOf(location)))
     assert.match(block, /proxy_buffering off;/)
@@ -442,120 +432,77 @@ test('live chat streams balance independently across both nodes through unbuffer
   }
 })
 
-test('Komodo control plane and ingress keep management sockets private', () => {
-  const manager = read('deploy/komodo/core/compose.yml')
-  const controlIngress = read('deploy/komodo/control-ingress/compose.yml')
-  const alyIngress = read('deploy/komodo/aly-ingress/compose.yml')
-  const appIngress = read('deploy/komodo/server-b-ingress/compose.yml')
-  const appRoutes = read('deploy/komodo/server-b-ingress/dynamic.yml')
+test('ingress keeps management sockets private', () => {
+  const alyIngress = read('deploy/aly-ingress/compose.yml')
+  const appIngress = read('deploy/ingress/compose.yml')
+  const appRoutes = read('deploy/ingress/dynamic.yml')
 
-  assert.match(manager, /komodo-core:2\.3\.3/)
-  assert.match(manager, /127\.0\.0\.1:9120:9120/)
-  assert.doesNotMatch(manager, /docker\.sock/)
-  assert.doesNotMatch(`${controlIngress}\n${alyIngress}\n${appIngress}`, /docker\.sock|providers\.docker/)
+  assert.doesNotMatch(`${alyIngress}\n${appIngress}`, /docker\.sock|providers\.docker/)
   assert.match(appIngress, /80:80[\s\S]*443:443/)
-  for (const host of ['lingxilearn.cn', 'www.lingxilearn.cn', 'loop.lingxilearn.cn', 'im.lingxilearn.cn', 'openlit.lingxilearn.cn', 'uptime.lingxilearn.cn']) {
+  for (const host of ['lingxilearn.cn', 'www.lingxilearn.cn', 'loop.lingxilearn.cn', 'im.lingxilearn.cn', 'openlit.lingxilearn.cn', 'uptime.lingxilearn.cn', 'backend.lingxilearn.cn']) {
     assert.match(appRoutes, new RegExp(host.replaceAll('.', '\\.')))
   }
 })
 
-test('main publishes changed images and rolls out a complete immutable release', () => {
+test('main deploys through the single reusable deploy workflow', () => {
   const workflow = read('.github/workflows/ci.yml')
+  const deploy = read('.github/workflows/deploy.yml')
   const serverImage = read('server/docker/lingxiloop-server.Dockerfile')
 
-  assert.match(workflow, /options: \[[^\]]*release, deep-integration\]/)
-  assert.match(workflow, /update-manifests:[\s\S]*needs: \[changes, checks, integration, publish\]/)
-  assert.match(workflow, /needs\.publish\.result == 'success'[\s\S]*needs\.changes\.outputs\.deployment == 'true'/)
-  assert.match(workflow, /deploy:[\s\S]*needs: \[changes, checks(?:, [^\]]+)?\]/)
-  assert.match(workflow, /rollout:[\s\S]*needs: \[changes, update-manifests, deploy\]/)
-  assert.match(workflow, /deploy:[\s\S]*run: npm run admin:build[\s\S]*control:d1:remote[\s\S]*wrangler versions upload[\s\S]*wrangler versions deploy/)
-  assert.match(workflow, /control_migrations == 'true'[\s\S]*control:d1:remote/)
-  assert.match(workflow, /update-deployment-images\.mjs "\$GITHUB_SHA" \$\{\{ needs\.changes\.outputs\.packages \}\}/)
-  assert.match(workflow, /rollout:[\s\S]*trigger-komodo-rollout\.mjs/)
-  assert.match(workflow, /KOMODO_WEBHOOK_SECRET: \$\{\{ secrets\.KOMODO_WEBHOOK_SECRET \}\}/)
-  assert.match(workflow, /VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEsX5eyOl1nAe5i9/)
+  assert.match(workflow, /deploy:\n    needs: \[changes, checks, integration\][\s\S]*\[skip deploy\][\s\S]*uses: \.\/\.github\/workflows\/deploy\.yml\n    secrets: inherit/)
+  assert.match(deploy, /servers:\n    needs: images[\s\S]*run: deploy\/deploy\.sh/)
+  assert.match(deploy, /docker buildx imagetools inspect/)
+  assert.match(deploy, /npm run control:d1:remote[\s\S]*wrangler deploy --config workers\/control-plane\/wrangler\.jsonc[\s\S]*wrangler deploy --config workers\/web-static\/wrangler\.jsonc/)
+  assert.match(deploy, /VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEsX5eyOl1nAe5i9/)
+  assert.match(deploy, /group: production-deploy\n  cancel-in-progress: false/)
   assert.match(serverImage, /ARG VITE_TURNSTILE_SITE_KEY=""[\s\S]*ENV VITE_TURNSTILE_SITE_KEY=\$\{VITE_TURNSTILE_SITE_KEY\}/)
-  assert.doesNotMatch(workflow, /RELEASE_HMAC_SECRET|api\/internal\/releases/)
-  assert.doesNotMatch(workflow, /pages deploy|PRODUCTION_SSH|run: .*deploy-production\.sh/)
+  assert.doesNotMatch(`${workflow}\n${deploy}`, /komodo|RELEASE_API|RELEASE_CONTROLLER/i)
 })
 
-test('all deployable LingxiLoop images use CI-managed unique tags', () => {
-  const manifests = [
-    'deploy/komodo/lingxiloop-app-a/compose.yml',
-    'deploy/komodo/lingxiloop-app-b/compose.yml',
-    'deploy/komodo/lingxiloop-core-state/compose.yml',
-    'deploy/komodo/lingxiloop-knowledge-agent/compose.yml',
-  ].map(read).join('\n')
-  const references = [...manifests.matchAll(/image:\s+\S*lingxiloop-[^:\s]+:([^\s]+)/g)]
-  assert.equal(references.length, 7)
-  assert.ok(references.every((match) => /^[0-9a-f]{40}$/.test(match[1])))
-  assert.equal(
-    updateImageTags(`image: registry/lingxiloop-server:${'a'.repeat(40)}`, 'b'.repeat(40), ['server']),
-    `image: registry/lingxiloop-server:${'b'.repeat(40)}`,
-  )
-  assert.equal(
-    updateImageTags(
-      `image: registry/lingxiloop-server:${'a'.repeat(40)}\nimage: registry/lingxiloop-wukongim:${'a'.repeat(40)}`,
-      'b'.repeat(40),
-      ['server'],
-    ),
-    `image: registry/lingxiloop-server:${'b'.repeat(40)}\nimage: registry/lingxiloop-wukongim:${'a'.repeat(40)}`,
-  )
-  assert.equal(
-    updateImageTags(`image: accel.way2api.fun/ghcr.io/lyyzka/lingxiloop-server:${'a'.repeat(40)}`, 'b'.repeat(40), ['server'], 'LingXi-Org'),
-    `image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:${'b'.repeat(40)}`,
-  )
-  assert.throws(() => updateImageTags('', 'b'.repeat(40), [], '../invalid'), /invalid image owner/)
+test('all deployable LingxiLoop images use content-addressed tags from image-tag.mjs', () => {
+  const manifests = ['app-a', 'app-b', 'core-state', 'knowledge'].map(stack => read(`deploy/${stack}/compose.yml`)).join('\n')
+  assert.doesNotMatch(manifests, /image:\s+\S*lingxiloop-/)
+  const variables = [...manifests.matchAll(/image: \$\{([A-Z]+_IMAGE):\?/g)].map(([, name]) => name)
+  assert.deepEqual([...new Set(variables)].sort(), ['GATEWAY_IMAGE', 'NOTEBOOK_IMAGE', 'SERVER_IMAGE', 'WUKONGIM_IMAGE'])
+  const env = spawnSync(process.execPath, ['scripts/image-tag.mjs', 'env'], { encoding: 'utf8' })
+  assert.equal(env.status, 0, env.stderr)
+  for (const name of variables) assert.match(env.stdout, new RegExp(`^${name}=accel\\.way2api\\.fun/ghcr\\.io/lingxi-org/lingxiloop-[a-z-]+:[0-9a-f]{24}$`, 'm'))
 })
 
-test('CI selects checks and image publishing by component', () => {
+test('CI selects checks by component', () => {
   const web = computeScope({ web: true })
-  assert.deepEqual(web.images.map(({ manifest }) => manifest), ['server'])
   assert.equal(web.web, true)
   assert.equal(web.server, false)
 
   const server = computeScope({ server: true, serverSource: true })
-  assert.deepEqual(server.images.map(({ manifest }) => manifest), ['server'])
   assert.equal(server.integration, true)
 
-  assert.equal(computeScope({ serverDocker: true }).packages, 'server')
-
   const knowledge = computeScope({ openNotebook: true })
-  assert.deepEqual(knowledge.images.map(({ manifest }) => manifest), ['open-notebook'])
   assert.equal(knowledge.deploy_contract, true)
 
   const control = computeScope({ control: true, controlMigrations: true })
-  assert.deepEqual(control.images, [])
   assert.equal(control.control_deploy, true)
   assert.equal(control.control_migrations, true)
 
   const sharedFrontend = computeScope({ sharedFrontend: true })
-  assert.deepEqual(sharedFrontend.images.map(({ manifest }) => manifest), ['server'])
   assert.equal(sharedFrontend.server, true)
   assert.equal(sharedFrontend.integration, true)
 
   const testRunner = computeScope({ testRunner: true })
-  assert.deepEqual(testRunner.images, [])
   assert.equal(testRunner.server, true)
 
   const deployment = computeScope({ deployment: true })
-  assert.deepEqual(deployment.images, [])
   assert.equal(deployment.web, false)
   assert.equal(deployment.deploy_contract, true)
-
-  assert.equal(computeScope({}, 'gateway').packages, 'gateway')
-  assert.deepEqual(computeScope({}, 'release').images.map(({ manifest }) => manifest), ['server', 'wukongim', 'open-notebook', 'gateway'])
-  assert.deepEqual(computeScope({ release: true }).images.map(({ manifest }) => manifest), ['server', 'wukongim', 'open-notebook', 'gateway'])
 })
 
-test('test and CI changes select checks without publishing; heavy experiments require manual scope', () => {
+test('test and CI changes select checks; heavy experiments require manual scope', () => {
   for (const [flag, check] of [
     ['webTests', 'web'], ['adminTests', 'admin'], ['controlTests', 'control'],
     ['serverTests', 'server'], ['openNotebookTests', 'open_notebook'], ['ci', 'deploy_contract'],
   ]) {
     const scope = computeScope({ [flag]: true })
     assert.equal(scope[check], true, flag)
-    assert.equal(scope.publish, false, flag)
     assert.equal(scope.control_deploy, false, flag)
     assert.equal(scope.web_build, false, flag)
     assert.equal(scope.admin_build, false, flag)
@@ -564,7 +511,6 @@ test('test and CI changes select checks without publishing; heavy experiments re
     'server/src/__integration__/migration.test.ts', 'server/src/__integration__/deleted.test.ts',
   ] })
   assert.equal(selected.integration, true)
-  assert.equal(selected.publish, false)
   assert.deepEqual(selected.integration_files, ['migration.test.ts'])
   assert.equal(selected.integration_mode, 'selected')
   assert.equal(computeScope({ integrationRunner: true }).integration_mode, 'smoke')
@@ -574,7 +520,6 @@ test('test and CI changes select checks without publishing; heavy experiments re
   assert.equal(deep.deep_integration, true)
   assert.equal(deep.integration, true)
   assert.deepEqual(deep.integration_files, [])
-  assert.equal(deep.publish, false)
   assert.equal(deep.control_deploy, false)
   assert.equal(deep.deployment, false)
   for (const scope of ['web', 'admin-control', 'server', 'deployment', 'release']) {
@@ -597,7 +542,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
     ]))
     return computeScope({ ...flags, integrationFiles: flags.integrationTests ? [file] : [], serverSourceFiles: flags.serverSource ? [file] : [], integrationRunnerFiles: flags.integrationRunner ? [file] : [] })
   }
-  for (const [file, check, packages] of [
+  for (const [file, check] of [
     ['src/features/chat/runtime/store.test.ts', 'web', ''],
     ['admin/src/management-session.test.ts', 'admin', ''],
     ['workers/control-plane/src/index.test.ts', 'control', ''],
@@ -618,14 +563,13 @@ test('workflow path filters route real changed paths to their owning checks', ()
     ['third_party/react-chat-elements/reply-message/LICENSE', 'web', 'server'],
     ['package-lock.json', 'integration', 'server'],
     ['.github/workflows/ci.yml', 'deploy_contract', ''],
-    ['scripts/release-smoke.mjs', 'deploy_contract', ''],
-    ['scripts/release-smoke.test.mjs', 'deploy_contract', ''],
-    ['deploy/komodo/lingxiloop-app-a/compose.yml', 'deploy_contract', ''],
+    ['scripts/image-tag.mjs', 'deploy_contract', ''],
+    ['deploy/deploy.sh', 'deploy_contract', ''],
+    ['deploy/app-a/compose.yml', 'deploy_contract', ''],
     ['third_party/open-notebook/tests/test_rag_contract.py', 'open_notebook', ''],
   ]) {
     const scope = select(file)
     assert.equal(scope[check], true, file)
-    assert.equal(scope.packages, packages, file)
     assert.equal(scope.deep_integration, false, file)
   }
   assert.equal(select('third_party/open-notebook/frontend/src/app/page.tsx').checks, false)
@@ -645,79 +589,25 @@ test('workflow path filters route real changed paths to their owning checks', ()
   }
 })
 
-test('actual workflow conditions block publishing and deployment after a failed or cancelled gate', () => {
+test('actual workflow conditions block deployment after a failed or cancelled gate', () => {
   const workflow = read('.github/workflows/ci.yml')
-  const allows = (job, scope, results = {}, event = 'push', publishOnly = false, message = '', options = {}) => {
-    const block = workflow.match(new RegExp(`^  ${job}:\\r?\\n([\\s\\S]*?)(?=^  [a-z]|$(?![\\s\\S]))`, 'm'))?.[1]
-    const expression = block?.match(/if: >-\r?\n([\s\S]*?)\r?\n    needs:/)?.[1]
-    assert.ok(expression, job)
-    const needs = { changes: { outputs: Object.fromEntries(Object.entries(scope).map(([key, value]) => [key, String(value)])) } }
-    for (const name of ['checks', 'integration', 'publish', 'update-manifests', 'deploy']) {
-      needs[name] = { result: results[name] ?? 'success' }
-    }
-    return Function('vars', 'github', 'needs', 'always', 'inputs', 'contains', `return (${expression.replaceAll('needs.update-manifests', "needs['update-manifests']")})`)(
-      { RELEASE_CONTROLLER_ENABLED: options.releaseController ? 'true' : '' },
-      { ref: options.ref ?? 'refs/heads/main', event_name: event, event: { head_commit: { message } } }, needs, () => true, { publish_only: publishOnly, scope: options.scope, deploy_admin_control: options.deployAdminControl ?? false }, (value, marker) => String(value ?? '').toLowerCase().includes(marker.toLowerCase()),
+  const expression = workflow.match(/^  deploy:\n    needs: \[changes, checks, integration\]\n    if: >-\n([\s\S]*?)\n    permissions:/m)?.[1]
+  assert.ok(expression)
+  const allows = (results = {}, event = 'push', message = '', ref = 'refs/heads/main') => {
+    const needs = Object.fromEntries(['changes', 'checks', 'integration'].map(name => [name, { result: results[name] ?? 'success' }]))
+    return Function('github', 'needs', 'always', 'contains', `return (${expression})`)(
+      { ref, event_name: event, event: { head_commit: { message } } }, needs, () => true,
+      (value, marker) => String(value ?? '').toLowerCase().includes(marker.toLowerCase()),
     )
   }
-  const release = computeScope({}, 'release')
-  for (const job of ['update-manifests', 'deploy', 'rollout']) {
-    assert.equal(allows(job, { ...release, control_deploy: true }, {}, 'push', false, 'Merge development [skip deploy]'), false, job)
+  assert.equal(allows(), true)
+  assert.equal(allows({ checks: 'skipped', integration: 'skipped' }), true, 'docs-only changes still converge production')
+  assert.equal(allows({}, 'push', 'chore: tidy [skip deploy]'), false)
+  assert.equal(allows({}, 'pull_request'), false)
+  assert.equal(allows({}, 'push', '', 'refs/heads/topic'), false)
+  for (const gate of ['changes', 'checks', 'integration']) for (const result of ['failure', 'cancelled']) {
+    assert.equal(allows({ [gate]: result }), false, `${gate}: ${result}`)
   }
-  assert.equal(allows('publish', release, {}, 'push', false, 'Merge development [skip deploy]'), true, 'immutable publication and checks remain allowed')
-  assert.equal(allows('publish', release), true)
-  for (const job of ['update-manifests', 'deploy', 'rollout']) assert.equal(allows(job, { ...release, control_deploy: true }, {}, 'push', false, '', { releaseController: true }), false, `controller gate owns ${job}`)
-  assert.equal(allows('publish', computeScope({}, 'server'), {}, 'workflow_dispatch', true), true)
-  assert.equal(allows('publish', computeScope({}, 'server'), {}, 'workflow_dispatch', false, '', { releaseController: true, scope: 'server' }), true, 'an explicitly attested manual candidate can publish accumulated backend changes')
-  assert.equal(allows('publish', computeScope({}, 'deep-integration'), {}, 'workflow_dispatch', false, '', { releaseController: true, scope: 'deep-integration' }), false)
-  assert.equal(allows('update-manifests', release, {}, 'workflow_dispatch', true), false)
-  for (const gate of ['checks', 'integration']) {
-    for (const result of ['failure', 'cancelled']) {
-      assert.equal(allows('publish', release, { [gate]: result }), false, `${gate}: ${result}`)
-      assert.equal(allows('update-manifests', release, { [gate]: result }), false)
-      assert.equal(allows('deploy', computeScope({ admin: true }), { [gate]: result }), false)
-    }
-  }
-  assert.equal(allows('publish', computeScope({ web: true }), { integration: 'skipped' }), true)
-  assert.equal(allows('update-manifests', computeScope({ ci: true }), { publish: 'skipped' }), false)
-  assert.equal(allows('update-manifests', computeScope({ deployment: true }), { publish: 'skipped', integration: 'skipped' }), true)
-  for (const job of ['publish', 'update-manifests', 'deploy']) {
-    assert.equal(allows(job, computeScope({}, 'deep-integration'), {}, 'workflow_dispatch'), false, job)
-  }
-  for (const result of ['failure', 'cancelled']) {
-    assert.equal(allows('rollout', release, { 'update-manifests': result }), false)
-    assert.equal(allows('rollout', release, { deploy: result }), false)
-  }
-  // A manual admin release must opt in, build its own production assets and
-  // leave product images, migrations and Komodo rollout outside its scope.
-  const admin = computeScope({ release: true, controlMigrations: true, serverSource: true }, 'admin-control')
-  const manual = { scope: 'admin-control', deployAdminControl: true }
-  assert.deepEqual(admin.check_jobs, [{ component: 'admin' }, { component: 'control' }])
-  for (const flag of ['integration', 'publish', 'deployment', 'release', 'control_migrations']) assert.equal(admin[flag], false, flag)
-  assert.equal(allows('deploy', admin, { integration: 'skipped' }, 'workflow_dispatch', false, '', manual), true)
-  assert.equal(allows('deploy', admin, {}, 'workflow_dispatch'), false, 'verification remains the default')
-  assert.equal(allows('deploy', admin, {}, 'workflow_dispatch', true, '', manual), false, 'publish-only never deploys')
-  assert.equal(allows('deploy', admin, {}, 'workflow_dispatch', false, '', { ...manual, scope: 'server' }), false)
-  assert.equal(allows('deploy', admin, {}, 'workflow_dispatch', false, '', { ...manual, ref: 'refs/heads/topic' }), false)
-  for (const gate of ['checks', 'integration']) for (const result of ['failure', 'cancelled']) {
-    assert.equal(allows('deploy', admin, { [gate]: result }, 'workflow_dispatch', false, '', manual), false)
-  }
-  for (const job of ['publish', 'update-manifests', 'rollout']) {
-    assert.equal(allows(job, admin, {}, 'workflow_dispatch', false, '', manual), false, job)
-  }
-  assert.match(workflow, /deploy_admin_control:\r?\n[\s\S]*?type: boolean\r?\n\s+default: false/)
-  const deploy = workflow.split('\n  deploy:')[1].split('\n  rollout:')[0]
-  const buildIf = deploy.match(/name: Build Refine before production changes\r?\n\s+if: ([^\r\n]+)/)?.[1]
-  const downloadIf = deploy.match(/- if: ([^\r\n]+)\r?\n\s+uses: actions\/download-artifact@v4/)?.[1]
-  assert.ok(buildIf)
-  assert.ok(downloadIf)
-  const stepEnabled = (expression, event) => Function('needs', 'github', `return (${expression})`)(
-    { changes: { outputs: { admin_build: 'true' } } }, { event_name: event },
-  )
-  assert.equal(stepEnabled(buildIf, 'workflow_dispatch'), true, 'manual release builds production assets')
-  assert.equal(stepEnabled(downloadIf, 'workflow_dispatch'), false, 'manual checks did not upload an artifact')
-  assert.equal(stepEnabled(buildIf, 'push'), false, 'push reuses its qualified build')
-  assert.equal(stepEnabled(downloadIf, 'push'), true)
   assert.equal((workflow.match(/if: needs\.changes\.outputs\.deep_integration == 'true'/g) ?? []).length, 2)
 })
 
@@ -768,13 +658,13 @@ test('CI integration modes distinguish core smoke, explicit owners and manual fu
 
 test('workflow carries explicit integration mode and bounded ordinary budgets', () => {
   const workflow = read('.github/workflows/ci.yml')
-  assert.match(workflow, /integration_mode: \$\{\{ steps.cumulative.outputs.integration_mode \|\| steps.scope.outputs.integration_mode \}\}/)
+  assert.match(workflow, /integration_mode: \$\{\{ steps.scope.outputs.integration_mode \}\}/)
   assert.match(workflow, /INTEGRATION_TEST_MODE: \$\{\{ needs.changes.outputs.integration_mode \}\}/)
   assert.match(workflow, /SERVER_SOURCE_FILES: \$\{\{ steps.paths.outputs.server_source_files \}\}/)
   assert.match(workflow, /INTEGRATION_RUNNER_FILES: \$\{\{ steps.paths.outputs.integration_runner_files \}\}/)
   const checks = workflow.match(/^  checks:\r?\n([\s\S]*?)(?=^  integration:)/m)?.[1]
   assert.match(checks, /timeout-minutes: 8/)
-  const integration = workflow.match(/^  integration:\r?\n([\s\S]*?)(?=^  publish:)/m)?.[1]
+  const integration = workflow.match(/^  integration:\r?\n([\s\S]*?)(?=^  deploy:)/m)?.[1]
   assert.match(integration, /timeout-minutes: \$\{\{ needs.changes.outputs.deep_integration == 'true' && 30 \|\| 8 \}\}/)
   assert.match(integration, /- if: always\(\)\r?\n\s+uses: actions\/upload-artifact@v4/)
   assert.match(integration, /path: artifacts\/ci-integration\/timings\.json/)

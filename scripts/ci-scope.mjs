@@ -3,10 +3,6 @@ import { basename } from 'node:path'
 import { SMOKE_FILES } from '../server/integration-suite.mjs'
 import { runtimeSharedPaths } from './ci-scope-paths.mjs'
 
-const image = (packageName, manifest, dockerfile, context = '.', target = '', wukongCommit = '') => ({
-  package: packageName, manifest, dockerfile, context, target, wukong_commit: wukongCommit,
-})
-
 // Core boundaries run for ordinary server changes. Extra owning tests are
 // explicit and local to the changed domain; only manual deep runs expand all.
 const HISTORICAL_FILES = [
@@ -63,7 +59,7 @@ function integrationScope(changed, { serverSource, deepIntegration, deployment }
   return { integration: true, integration_mode: 'selected', integration_files: selected }
 }
 
-export function computeScope(changed = {}, manual = '', { releaseController = false } = {}) {
+export function computeScope(changed = {}, manual = '') {
   if (manual) {
     if (!['web', 'admin-control', 'server', 'open-notebook', 'wukongim', 'gateway', 'deployment', 'release', 'deep-integration'].includes(manual)) {
       throw new Error(`unknown CI scope: ${manual}`)
@@ -107,26 +103,6 @@ export function computeScope(changed = {}, manual = '', { releaseController = fa
   if (deployContract) checkJobs.push({ component: 'deploy-contract' })
   if (release) checkJobs.push({ component: 'release' })
 
-  const images = []
-  if ((!releaseController && webBuild) || serverSource || enabled('serverDocker')) {
-    images.push(image('lingxiloop-server', 'server', 'server/docker/lingxiloop-server.Dockerfile', '.', releaseController ? 'runtime' : ''))
-  }
-  if (enabled('wukongim') || release) {
-    images.push(image(
-      'lingxiloop-wukongim', 'wukongim', 'server/docker/wukongim.Dockerfile', '.', '',
-      'c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47',
-    ))
-  }
-  if (enabled('openNotebook') || release) {
-    images.push(image(
-      'lingxiloop-open-notebook', 'open-notebook', 'third_party/open-notebook/Dockerfile',
-      './third_party/open-notebook', 'lingxiloop-rag',
-    ))
-  }
-  if (enabled('gateway') || release) {
-    images.push(image('lingxiloop-gateway', 'gateway', 'deploy/komodo/lingxiloop-app-b/gateway.Dockerfile'))
-  }
-
   return {
     web, web_build: webBuild,
     admin, admin_build: adminBuild,
@@ -140,9 +116,6 @@ export function computeScope(changed = {}, manual = '', { releaseController = fa
     release,
     checks: [web, admin, control, server, deployContract].some(Boolean),
     check_jobs: checkJobs,
-    publish: images.length > 0,
-    images,
-    packages: images.map(({ manifest }) => manifest).join(' '),
   }
 }
 
@@ -160,9 +133,9 @@ if (process.argv[1]?.endsWith('ci-scope.mjs')) {
   const sharedRuntime = runtimeSharedPaths()
   const webFiles = JSON.parse(process.env.WEB_FILES || '[]').filter(path => sharedRuntime.has(path))
   if (webFiles.length) { changed.serverSource = true; changed.serverSourceFiles.push(...webFiles) }
-  const result = computeScope(changed, process.env.EVENT === 'workflow_dispatch' ? process.env.MANUAL_SCOPE : '', { releaseController: process.env.RELEASE_CONTROLLER_ENABLED === 'true' })
+  const result = computeScope(changed, process.env.EVENT === 'workflow_dispatch' ? process.env.MANUAL_SCOPE : '')
   const lines = Object.entries(result).map(([name, value]) => {
-    if (name === 'images' || name === 'check_jobs') return `${name}=${JSON.stringify({ include: value })}`
+    if (name === 'check_jobs') return `${name}=${JSON.stringify({ include: value })}`
     return `${name}=${Array.isArray(value) ? JSON.stringify(value) : value}`
   })
   appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join('\n')}\n`)

@@ -1,7 +1,0 @@
-# /etc/systemd/system/docker.service.d/lingxi-release-proxy.conf
-# First installation requires one controlled Docker daemon restart in the migration window.
-# Do not restart Docker during ordinary prepare/apply/recover operations.
-[Service]
-Environment="HTTP_PROXY=http://127.0.0.1:17890"
-Environment="HTTPS_PROXY=http://127.0.0.1:17890"
-Environment="NO_PROXY=localhost,127.0.0.1,::1,10.20.0.0/24,postgres,redis,lingxiloop,worker,wukongim,open-notebook"

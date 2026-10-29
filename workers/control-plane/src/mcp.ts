@@ -1,21 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { z } from 'zod'
-import { callRelease, type ReleaseClientEnv, type ReleaseInput, type ReleaseMethod } from './release-client'
-import {
-  komodoTargetNames,
-  type KomodoEnv,
-  type KomodoTargetName,
-  inspectKomodoTarget,
-  listKomodoTargets,
-  listKomodoUpdates,
-  readKomodoLogs,
-  runKomodoStackAction,
-} from './komodo'
 
 type Identity = { authUserId: string; appUserId: string }
 type AuthSettings = { sessionExpiresIn: number; otpExpiresIn: number; rateLimitWindow: number; rateLimitMax: number }
-export type McpEnvironment = KomodoEnv & ReleaseClientEnv & { DB: D1Database; APP_VERSION: string }
+export type McpEnvironment = { DB: D1Database; APP_VERSION: string }
 export type McpOperations = {
   platform(path: string, init?: RequestInit): Promise<Response>
   health(): Promise<unknown>
@@ -26,7 +15,6 @@ export type McpOperations = {
 
 const reason = z.string().trim().min(1).max(280)
 const requestId = z.string().uuid()
-const targetName = z.enum(komodoTargetNames)
 const readOnly = { readOnlyHint: true, destructiveHint: false, idempotentHint: true } as const
 const mutating = { readOnlyHint: false, destructiveHint: true, idempotentHint: true } as const
 const sensitiveKey = /(?:authorization|cookie|password|secret|credential|api.?key|prompt|envContent|composeContent|overrideContent|includeFiles|environment$|token(?:Hash|Value)?$)/i
@@ -117,7 +105,6 @@ function query(parameters: Record<string, string | number | undefined>): string 
 
 export async function handleMcpRequest(request: Request, env: McpEnvironment, identity: Identity,
   operations: McpOperations, secrets: string[]): Promise<Response> {
-  secrets = [...secrets, env.RELEASE_API_TOKEN, env.RELEASE_ADMIN_TOKEN].filter((value): value is string => typeof value === 'string')
   const server = new McpServer({ name: 'lingxiloop-production-operations', version: env.APP_VERSION })
   const safe = <T>(handler: () => Promise<T>) => handler().then((value) => result(value, secrets), (error: unknown) => result({ error: error instanceof Error ? error.message : String(error) }, secrets, true))
 
@@ -235,82 +222,6 @@ export async function handleMcpRequest(request: Request, env: McpEnvironment, id
     description: 'Run the bounded LingxiOS maintenance pass.', inputSchema: { requestId, reason }, annotations: mutating,
   }, (input) => safe(() => command(env, identity, input, 'agent.runtime.maintenance', 'agent-runtime', input,
     () => operations.platform('/api/admin/agent-runtime/maintenance', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(input) }).then(responseJson))))
-
-  server.registerTool('lingxiloop_komodo_targets', {
-    description: 'List the six exact LingxiLoop production targets available to this MCP.', annotations: readOnly,
-  }, () => safe(async () => listKomodoTargets(env)))
-
-  server.registerTool('lingxiloop_komodo_inspect', {
-    description: 'Read Komodo stack, service, and action state for one allowlisted target.',
-    inputSchema: { target: targetName }, annotations: readOnly,
-  }, ({ target }) => safe(() => inspectKomodoTarget(env, target)))
-
-  server.registerTool('lingxiloop_komodo_updates', {
-    description: 'Read recent Komodo updates for an allowlisted stack.',
-    inputSchema: { target: targetName, limit: z.number().int().min(1).max(100).default(30) }, annotations: readOnly,
-  }, ({ target, limit }) => safe(() => listKomodoUpdates(env, target, limit)))
-
-  server.registerTool('lingxiloop_komodo_logs', {
-    description: 'Read a bounded, redacted snapshot of stack logs.',
-    inputSchema: { target: targetName, service: z.string().trim().min(1).max(200).optional(), tail: z.number().int().min(1).max(1000).default(200) }, annotations: readOnly,
-  }, (input) => safe(async () => {
-    await env.DB.prepare(`INSERT INTO control_audit(id,actor_user_id,action,resource,detail,created_at) VALUES(?,?,?,?,?,?)`)
-      .bind(crypto.randomUUID(), identity.authUserId, 'mcp:komodo.logs.read', `komodo:${input.target}`, JSON.stringify({ service: input.service ?? null, tail: input.tail }), Date.now()).run()
-    return readKomodoLogs(env, input.target, input)
-  }))
-
-  server.registerTool('lingxiloop_komodo_stack_action', {
-    description: 'Deploy, start, stop, or restart an allowlisted Komodo stack. Destruction and configuration edits are unavailable.',
-    inputSchema: { requestId, reason, target: targetName, action: z.enum(['deploy', 'start', 'stop', 'restart']) }, annotations: mutating,
-  }, (input) => safe(() => command(env, identity, input, `komodo.stack.${input.action}`, `komodo:${input.target}`, input,
-    () => runKomodoStackAction(env, input.target as KomodoTargetName, input.action))))
-
-
-  // The public MCP route already validates its service token, auth-admin role,
-  // ban state and business link. Product authorization is rechecked for every
-  // release operation rather than turning that auth role into a bypass.
-  const requireReleaseAdmin = async () => {
-    const session = await operations.platform('/api/admin/session')
-    const allowed = session.ok
-    await session.body?.cancel()
-    if (!allowed) throw new Error('PLATFORM_ADMIN_REQUIRED')
-  }
-  const release = async (method: ReleaseMethod, input: ReleaseInput) => { await requireReleaseAdmin(); return callRelease(env, method, input) }
-  const releaseCommand = async (method: 'submit' | 'resume' | 'recover', input: ReleaseInput & { requestId: string; reason: string }) => {
-    await requireReleaseAdmin()
-    const id = method === 'submit' ? (input.manifest as { releaseId: string }).releaseId : input.releaseId
-    return command(env, identity, input, `release.${method}`, `release:${id}`, input.manifest ?? { releaseId: id }, () => callRelease(env, method, input))
-  }
-  const releaseId = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$/)
-  const sha = z.string().regex(/^[a-f0-9]{40}$/)
-  const manifest = z.object({
-    version: z.literal(1), releaseId, appSha: sha, opsSha: sha, sourceReleaseId: releaseId.nullable(),
-    sequence: z.number().int().positive(), createdAt: z.string().datetime(),
-    checks: z.object({ commit: sha, conclusion: z.literal('success'), runId: z.string().regex(/^\d+$/) }),
-    policy: z.object({ drainSeconds: z.number().int().min(1).max(1800), retryLimit: z.number().int().min(0).max(3), batchSeconds: z.number().int().nonnegative().optional() }),
-    // The shared version-1 validator owns target/adapter/contract structure.
-    targets: z.record(z.string(), z.unknown()),
-  }).strict()
-  server.registerTool('lingxiloop_release_plan', {
-    description: 'Validate an exact version-1 release manifest against the accepted source and return the controller plan.',
-    inputSchema: { manifest }, annotations: readOnly,
-  }, (input) => safe(() => release('plan', input)))
-  server.registerTool('lingxiloop_release_submit', {
-    description: 'Register an immutable release with the durable controller. A returned acceptance is a queued request, not production accepted.',
-    inputSchema: { requestId, reason, manifest }, annotations: mutating,
-  }, (input) => safe(() => releaseCommand('submit', input)))
-  server.registerTool('lingxiloop_release_get', {
-    description: 'Read durable release status, actual phase, operation identities and bounded errors from the controller.',
-    inputSchema: { releaseId }, annotations: readOnly,
-  }, (input) => safe(() => release('get', input)))
-  server.registerTool('lingxiloop_release_watch', {
-    description: 'Read one resumable batch of durable release events after a cursor. Continue from the returned cursor.',
-    inputSchema: { releaseId, after: z.number().int().nonnegative().default(0) }, annotations: readOnly,
-  }, (input) => safe(() => release('watch', input)))
-  for (const method of ['resume', 'recover'] as const) server.registerTool(`lingxiloop_release_${method}`, {
-    description: method === 'resume' ? 'Ask the unified controller to reconcile and resume one nonterminal release from its journal.' : 'Ask the unified controller to use the explicit compatible recovery plan; it does not blindly redeploy an old version.',
-    inputSchema: { requestId, reason, releaseId }, annotations: mutating,
-  }, (input) => safe(() => releaseCommand(method, input)))
 
   const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true })
   await server.connect(transport)
