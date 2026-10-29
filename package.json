@@ -14,6 +14,7 @@
     "name": "LingXi-Org"
   },
   "scripts": {
+    "deploy": "node deploy/cli.mjs",
     "dev": "vite --port 5180 --strictPort",
     "dev:all": "concurrently -k -n web,api,worker -c blue,magenta,yellow \"npm:dev\" \"npm:server:dev\" \"npm:worker:dev\"",
     "dev:doctor": "cross-env DOTENV_CONFIG_PATH=.env.local node scripts/local-preview-doctor.mjs",

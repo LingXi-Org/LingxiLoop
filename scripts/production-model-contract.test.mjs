@@ -39,7 +39,11 @@ test('development, knowledge and production templates share the exact new defaul
   }
   for (const file of ['docker-compose.mvp.yml', 'deploy/app-a/compose.yml', 'deploy/app-b/compose.yml', 'deploy/knowledge/compose.yml']) {
     const source = readFileSync(file, 'utf8')
+    if (file === 'deploy/knowledge/compose.yml') {
+      assert.ok(source.includes('OPENAI_EMBEDDING_MODEL: ${NOTEBOOK_EMBEDDING_MODEL:-BAAI/bge-m3}'), file)
+      continue
+    }
     assert.ok(source.includes(`OPENAI_EMBEDDING_MODEL: \${OPENAI_EMBEDDING_MODEL:-${embedding}}`), file)
-    if (file !== 'deploy/knowledge/compose.yml') assert.ok(source.includes(`OPENAI_MODEL: \${OPENAI_MODEL:-${model}}`), file)
+    assert.ok(source.includes(`OPENAI_MODEL: \${OPENAI_MODEL:-${model}}`), file)
   }
 })

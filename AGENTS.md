@@ -12,7 +12,7 @@ Before adding complexity for a speculative or vanishingly unlikely race or secur
 
 1. Track the issue, work on an isolated branch, and open a draft PR. Parallel contributors preserve other branches and hand off to the parent thread's designated sole integrator; only that integrator merges to `main`.
 2. Run focused short regressions and independent review against the final candidate commit. Rerun affected checks after changes; never report an unrun check as passed.
-3. Merging to `main` deploys production automatically once CI passes; follow [deploy](.agents/skills/deploy/SKILL.md) and [the release doc](docs/RELEASE.md). A deploy is done when its `Deploy production` run is green (healthy containers plus public readiness probes); a merge or a queued run is not.
+3. Merging to `main` deploys production automatically once CI passes; follow [deploy](.agents/skills/deploy/SKILL.md) and [the release doc](docs/RELEASE.md). Any clone with Sigillo access deploys the same way with `npm run deploy`. A deploy is done when CI's `deploy` job or `npm run deploy` succeeds (healthy containers plus public readiness probes); a merge or a queued run is not.
 4. On failure, read the failing job, fix forward and re-run; roll back only by reverting on `main` to a known compatible release, respecting forward-only migrations and preserving durable data. Report the exact failed step and evidence when it remains blocked.
 
 Use the current session's authorization and designated integrator. Report completed, failed and unverified work separately.
