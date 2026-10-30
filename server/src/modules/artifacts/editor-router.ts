@@ -60,6 +60,11 @@ const publishError = (response: Response, status: number, code: string, message:
 
 function readBody(request: Request, limit: number): Promise<Buffer> {
   return new Promise((resolveBody, rejectBody) => {
+    // A body parser mounted before this router would leave nothing to read.
+    if (request.readableEnded) {
+      rejectBody(new Error('request body was already consumed'))
+      return
+    }
     const declared = Number(request.headers['content-length'])
     if (Number.isFinite(declared) && declared > limit) {
       rejectBody(new TooLarge())

@@ -16,9 +16,11 @@ before(async () => {
   await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')`, [projectId, companyId, userId])
   await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members)
     VALUES('artifact-room',$1,$2,'group','Design boundary',$3::jsonb)`, [companyId, projectId, JSON.stringify([userId])])
-  const app = await buildApiTestApp(userId)
+  // As in web.ts, the editor routes read their own bodies, so they precede the API's JSON parser.
+  const app = (await import('express')).default()
   app.use('/artifact-editor', artifactEditorRouter)
   app.use('/_blob', artifactBlobRouter)
+  app.use(await buildApiTestApp(userId))
   server = createServer(app)
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
   const address = server.address(); assert.ok(address && typeof address === 'object')
