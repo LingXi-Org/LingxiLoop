@@ -77,8 +77,21 @@ export function useClaudeScrollPinning(dependencies: readonly unknown[]) {
     pinnedRef.current = false;
     setIsPinned(false);
     clearTimeout(cooldownTimer.current);
-    cooldownTimer.current = setTimeout(followGrowth, 151);
-  }, [followGrowth]);
+    const el = containerRef.current;
+    const inputTop = el?.scrollTop;
+    const wasAtBottom = el && el.scrollHeight - el.scrollTop - el.clientHeight <= 40;
+    cooldownTimer.current = setTimeout(() => {
+      // End/wheel-down/touch at the bottom may emit no scroll event. If the
+      // reader hasn't moved, restore following even if tokens grew meanwhile.
+      if (!readingLock.current && wasAtBottom && el.scrollTop === inputTop) {
+        pinnedRef.current = true;
+        setIsPinned(true);
+      } else {
+        handleScroll();
+      }
+      followGrowth();
+    }, 151);
+  }, [followGrowth, handleScroll]);
 
   // Selection, disclosures and explicit navigation stay paused until a scroll
   // gesture or the jump control; a layout/anchor correction must not resume them.

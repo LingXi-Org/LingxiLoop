@@ -77,6 +77,21 @@ test('explicit selection/navigation hold survives resize and scroll; jump restor
   cleanup()
 })
 
+test('a gesture already at the bottom resumes after cooldown without requiring a scroll event', context => {
+  context.mock.timers.enable({ apis: ['setTimeout'] })
+  const { hook, viewport, calls, state, cleanup } = setup()
+  hook.markUserInput()
+  viewport.scrollHeight += 80; onResize()
+  assert.equal(calls.length, 0, 'growth during cooldown waits without losing the bottom intent')
+  now += 151; context.mock.timers.tick(151)
+  assert.equal(state().isPinned, true)
+  calls.length = 0; viewport.scrollHeight += 80; onResize()
+  assert.equal(calls.length, 1)
+  hook.pauseFollowing(); now += 151; context.mock.timers.tick(151)
+  assert.equal(state().isPinned, false, 'explicit reading hold survives the same cooldown')
+  cleanup()
+})
+
 test('original nonlinear 28px fade clears each edge within 2px and updates on content resize', () => {
   slots = []; cursor = 0; effects = []
   const render = () => {
