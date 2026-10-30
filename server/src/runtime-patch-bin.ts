@@ -1,4 +1,4 @@
-// Fixed reviewed product57/58 maintenance entrypoint. No dotenv, migrations, DDL or product imports.
+// Fixed reviewed product57/58/60 maintenance entrypoint. No dotenv, migrations, DDL or product imports.
 import {resolve} from 'node:path'
 import {pathToFileURL} from 'node:url'
 import {applyPublishedRuntimePatch,assertRuntimePatchDescriptors,observePublishedRuntimePatch,preflightPublishedRuntimePatch,runtimePatchPlanHash} from './db/runtime-patch.js'
@@ -12,7 +12,7 @@ export function parseRuntimePatchInput(raw:string):{source:RuntimePatchDescripto
  check(value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).sort().join(',')==='source,target')
  for(const [name,d] of Object.entries(value)){
   const keys=['runtime','schema','protocol','schemaHash','productVersion','migrations',...(name==='target'?['integrity','tarball']:[])].sort()
-  check(d&&typeof d==='object'&&Object.keys(d).sort().join(',')===keys.join(',')&&[57,58].includes(d.productVersion)&&Array.isArray(d.migrations))
+  check(d&&typeof d==='object'&&Object.keys(d).sort().join(',')===keys.join(',')&&[57,58,60].includes(d.productVersion)&&Array.isArray(d.migrations))
   for(const m of d.migrations)check(m&&Object.keys(m).sort().join(',')==='checksum,name,version')
  }
  assertRuntimePatchDescriptors(value.source,value.target)
