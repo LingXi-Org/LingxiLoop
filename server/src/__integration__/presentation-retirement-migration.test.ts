@@ -75,7 +75,7 @@ test('58 to59 removes generated tables and typed outputs while retaining shared 
     assert.equal((await database.query('SELECT COUNT(*) AS count FROM presentations')).rows[0].count, '1')
     assert.deepEqual((await database.query('SELECT message FROM lingxios.agent_results')).rows[0].message, message, 'rewritten mixed content rolls back with DDL')
     await database.query('DROP TABLE public.synthetic_shared_refs')
-    assert.deepEqual(await migrateDatabase(database), ['0059_retire_presentation_generation'])
+    assert.deepEqual(await migrateDatabase(database), ['0059_retire_presentation_generation', '0060_native_artifacts'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     for (const table of ['public.presentations', 'public.presentation_jobs', 'public.presentation_evidence', 'public.presentation_pages', 'public.presentation_versions', 'lingxios.lecture_decks', 'lingxios.lecture_checkpoints']) {
