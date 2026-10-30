@@ -1,0 +1,146 @@
+[
+  {
+    "width": 1280,
+    "stage": "loading",
+    "page": {
+      "client": 1280,
+      "scroll": 1280,
+      "width": 1280
+    },
+    "viewport": {
+      "client": 890,
+      "scroll": 890,
+      "width": 900
+    },
+    "card": {
+      "client": 670,
+      "scroll": 670,
+      "width": 672
+    },
+    "gap": 315.3,
+    "padding": "315px",
+    "offenders": [
+      {
+        "tag": "SPAN",
+        "slot": null,
+        "cls": "grid overflow-x-clip transition-[width] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none sh",
+        "client": 42,
+        "scroll": 56,
+        "width": 42
+      }
+    ],
+    "errors": []
+  },
+  {
+    "width": 1280,
+    "stage": "loaded",
+    "page": {
+      "client": 1280,
+      "scroll": 1280,
+      "width": 1280
+    },
+    "viewport": {
+      "client": 890,
+      "scroll": 987,
+      "width": 900
+    },
+    "card": {
+      "client": 670,
+      "scroll": 670,
+      "width": 672
+    },
+    "gap": 315.3,
+    "padding": "315px",
+    "offenders": [
+      {
+        "tag": "SPAN",
+        "slot": null,
+        "cls": "grid overflow-x-clip transition-[width] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none sh",
+        "client": 42,
+        "scroll": 56,
+        "width": 42
+      },
+      {
+        "tag": "INPUT",
+        "slot": "input",
+        "cls": "h-9 w-full min-w-0 rounded-lg border border-transparent bg-input/50 px-3 py-1 text-base transition-[color,box-shadow,bac",
+        "client": 628,
+        "scroll": 1474,
+        "width": 630
+      }
+    ],
+    "errors": []
+  },
+  {
+    "width": 390,
+    "stage": "loading",
+    "page": {
+      "client": 390,
+      "scroll": 390,
+      "width": 390
+    },
+    "viewport": {
+      "client": 380,
+      "scroll": 380,
+      "width": 390
+    },
+    "card": {
+      "client": 306,
+      "scroll": 306,
+      "width": 308
+    },
+    "gap": 315.3,
+    "padding": "315px",
+    "offenders": [
+      {
+        "tag": "SPAN",
+        "slot": null,
+        "cls": "grid overflow-x-clip transition-[width] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none sh",
+        "client": 42,
+        "scroll": 56,
+        "width": 42
+      }
+    ],
+    "errors": []
+  },
+  {
+    "width": 390,
+    "stage": "loaded",
+    "page": {
+      "client": 390,
+      "scroll": 390,
+      "width": 390
+    },
+    "viewport": {
+      "client": 380,
+      "scroll": 456,
+      "width": 390
+    },
+    "card": {
+      "client": 306,
+      "scroll": 306,
+      "width": 308
+    },
+    "gap": 315.3,
+    "padding": "315px",
+    "offenders": [
+      {
+        "tag": "SPAN",
+        "slot": null,
+        "cls": "grid overflow-x-clip transition-[width] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none sh",
+        "client": 42,
+        "scroll": 56,
+        "width": 42
+      },
+      {
+        "tag": "INPUT",
+        "slot": "input",
+        "cls": "h-9 w-full min-w-0 rounded-lg border border-transparent bg-input/50 px-3 py-1 text-base transition-[color,box-shadow,bac",
+        "client": 264,
+        "scroll": 1474,
+        "width": 266
+      }
+    ],
+    "errors": []
+  }
+]
