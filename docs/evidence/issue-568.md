@@ -35,7 +35,7 @@ overlay is removed so the specified nonlinear mask owns transcript edge fading.
 
 ## Verification
 
-2026-10-30, selected managed cloud environment, Node 22/npm:
+2026-10-30, selected managed cloud environment, Node v24.19.0/npm:
 
 - `node --import tsx --experimental-test-module-mocks --test --test-force-exit src/features/chat/components/ConversationMessage.test.tsx src/features/chat/components/chat-scroll.test.ts`: **32/32 passed** on code candidate `3feaf715` (27 real-message SSR regressions plus 5 deterministic scroll/fade tests).
 - `npm run typecheck`: **passed** on `3feaf715`.
