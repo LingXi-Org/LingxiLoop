@@ -1,7 +1,6 @@
 import { ArrowDownIcon, ArrowUpIcon, ImagePlusIcon, PaperclipIcon } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
@@ -71,7 +70,7 @@ export function ForumContentFields({ body, editorDocument, legacyParagraphs, set
       return url
     }} />
     <div hidden={compact || nativeOnly} className={focusCanvas ? undefined : "space-y-2"}>
-      <Input ref={picker} id={`${id}-files`} aria-label="附件" className="sr-only" type="file" multiple disabled={disabled || attachments.length >= 20} onChange={event => {
+      <input ref={picker} id={`${id}-files`} aria-label="附件" hidden type="file" multiple disabled={disabled || attachments.length >= 20} onChange={event => {
         const files = Array.from(event.target.files ?? []); event.target.value = ''; void upload(files)
       }} />
     {focusCanvas ? <ForumMaterials attachments={attachments} links={links} setLinks={setLinks} disabled={disabled} picker={picker} open={materialsOpen} setOpen={setMaterialsOpen} onMove={move}
