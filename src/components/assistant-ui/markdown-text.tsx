@@ -76,6 +76,9 @@ const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['s
   if (id && target) return <MentionBadge participant={target} id={id} />
   const claim = node?.data?.confidenceClaim
   const marker = claim ? <ConfidenceMarkerInline claim={claim}>{children}</ConfidenceMarkerInline> : children
+  if (String(props.className ?? '').split(' ').includes('katex-display')) {
+    return <span {...props} tabIndex={0} role="region" aria-label="数学公式">{children}</span>
+  }
   return claim && node?.properties['data-citation-start'] === undefined ? marker : <span {...props}>{marker}</span>
 }
 const confidenceComponents = { span: ConfidenceSpan }
