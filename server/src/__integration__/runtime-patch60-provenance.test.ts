@@ -47,6 +47,7 @@ test('product60 admits only18 to19 and refuses an installed formal18 package as 
 test('formal19 exact CAS preserves all60 migration rows and business data; startup performs no product SQL',formal19,async()=>isolated(async db=>{
  const {source,target}=await setup(db),before=(await db.query('SELECT * FROM public.lingxios_installation')).rows
  const ledger=(await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows
+ await assert.rejects(migrateDatabase(db),/installed LingxiOS package\/schema mismatch/,'startup must not stamp the source18 provenance')
  const other=new Pool({connectionString:db.options.connectionString,max:1})
  try{
   await other.query('SELECT 1')
