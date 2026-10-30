@@ -31,7 +31,7 @@ type DocumentCacheEntry = {
   status: "pending" | "resolved" | "rejected";
   document?: PdfDocumentProxy;
   error?: unknown;
-  cancelled: boolean;
+  abort: AbortController;
   task?: PdfLoadingTask;
 };
 
@@ -145,7 +145,7 @@ function getDocumentCacheEntry(
     lastUsedAt: Date.now(),
     retainRejected: Boolean(options.retainRejected),
     status: "pending",
-    cancelled: false,
+    abort: new AbortController(),
   };
   documentEntry.promise = loadPdfjs()
     .then((pdfjs) => getPdfDocument(content, pdfjs, documentEntry))
@@ -184,7 +184,7 @@ export function clearPdfDocumentResource(content: ViewerContentIdentity) {
   if (!documentEntry) return;
   documentCache.delete(content.key);
   if (documentEntry.status === "pending") {
-    documentEntry.cancelled = true;
+    documentEntry.abort.abort();
     destroyPdfTask(documentEntry.task);
     return;
   }
@@ -241,7 +241,7 @@ export function resetPdfDocumentResourceCacheForTests() {
   const destroyedDocuments = new Set<PdfDocumentProxy>();
   for (const documentEntry of documentCache.values()) {
     if (documentEntry.status === "pending") {
-      documentEntry.cancelled = true;
+      documentEntry.abort.abort();
       destroyPdfTask(documentEntry.task);
     }
     if (documentEntry.status === "resolved") {
@@ -364,18 +364,31 @@ async function getPdfDocument(
   entry: DocumentCacheEntry,
 ): Promise<PdfDocumentProxy> {
   try {
-    const source = content.directUrl ?? { data: new Uint8Array(await content.readBytes()) };
-    if (entry.cancelled) throw new DOMException("PDF load cancelled", "AbortError");
+    const source = content.directUrl ?? { data: new Uint8Array(await waitForCancellation(content.readBytes({ signal: entry.abort.signal }), entry.abort.signal)) };
+    if (entry.abort.signal.aborted) throw new DOMException("PDF load cancelled", "AbortError");
     entry.task = pdfjs.getDocument(source);
-    return await entry.task.promise;
+    return await waitForPdfLoadingTask(entry.task, entry.abort.signal);
   } catch (error) {
-    if (entry.cancelled) throw new DOMException("PDF load cancelled", "AbortError");
+    if (entry.abort.signal.aborted) throw new DOMException("PDF load cancelled", "AbortError");
     if (isResourceError(error)) throw error;
     throw toPdfFormatError(error, {
       kind: "parse_failed",
       message: "Failed to parse PDF.",
     });
   }
+}
+
+export function waitForPdfLoadingTask(task: PdfLoadingTask, signal: AbortSignal): Promise<PdfDocumentProxy> {
+  return waitForCancellation(task.promise, signal);
+}
+
+function waitForCancellation<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(new DOMException("PDF load cancelled", "AbortError"));
+    if (signal.aborted) { abort(); return; }
+    signal.addEventListener("abort", abort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
+  });
 }
 
 function toPdfFormatError(

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
-import { clearPdfDocumentResource, getPdfDocumentResource, getPdfPageResource, releasePdfDocumentResource, retainPdfDocumentResource } from './pdf-document-resource'
+import { clearPdfDocumentResource, getPdfDocumentResource, getPdfPageResource, releasePdfDocumentResource, retainPdfDocumentResource, waitForPdfLoadingTask } from './pdf-document-resource'
 
 test('real PDF loading task is disposed after closing and can be reopened', async () => {
   const bytes = await readFile('server/src/__integration__/fixtures/homework/triangle-reference.pdf')
@@ -29,6 +29,14 @@ test('closing before bytes arrive cancels the pending load', async () => {
   const pending = getPdfDocumentResource(content)
   await started
   clearPdfDocumentResource(content)
+  await assert.rejects(pending, { name: 'AbortError' })
   resolveBytes(new ArrayBuffer(0))
+})
+
+test('cancellation settles even if a destroyed loading task never settles', async () => {
+  const controller = new AbortController()
+  const task = { promise: new Promise<never>(() => {}), destroyed: false, destroy: async () => {} }
+  const pending = waitForPdfLoadingTask(task, controller.signal)
+  controller.abort()
   await assert.rejects(pending, { name: 'AbortError' })
 })
