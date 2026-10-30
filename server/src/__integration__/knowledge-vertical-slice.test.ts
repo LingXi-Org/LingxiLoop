@@ -203,6 +203,17 @@ test('[integration] source semantic search maps single-source PDF and Markdown p
   }
 })
 
+test('[integration] ready source detail retains the indexed chunk count used by semantic preview', async () => {
+  const sourceId = await indexedSource(STUDENT_A_ID)
+  const response = await fetch(`${downloadBaseUrl}/projects/${PROJECT_ID}/sources/${sourceId}`, {
+    headers: { 'x-test-user-id': STUDENT_A_ID, 'x-company-id': COMPANY_ID },
+  })
+  assert.equal(response.status, 200)
+  const detail = await response.json() as { status: string; chunkCount: number }
+  assert.equal(detail.status, 'ready')
+  assert.equal(detail.chunkCount, 2)
+})
+
 test('[integration] semantic search never reads private, foreign-course or foreign-tenant index content', async () => {
   const fixture = sourceSearchFixture()
   const sourceId = await indexedSource(STUDENT_A_ID)
