@@ -37,6 +37,14 @@ export function runtimePatchPlan(read, migrationPaths) {
   return { source, target, id: hash(JSON.stringify({ source, target })) }
 }
 
+/** The product59 retirement is staged manually after confirmed cleanup. */
+export function assertRetirementReleaseAllowed(paths, command, approval) {
+  if (paths.includes('server/src/db/migrations/0059_retire_presentation_generation.sql')
+    && ['up','servers','workers'].includes(command) && approval !== 'true') {
+    throw new Error('product59 retirement requires explicit maintenance release approval')
+  }
+}
+
 /** One CAS submission. Failed or uncertain submissions are observed, never retried. */
 export async function convergeRuntimePatch(actions) {
   const state = await actions.preflight()

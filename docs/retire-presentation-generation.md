@@ -82,9 +82,9 @@ existing private product/runtime storage clients without changing config.
 
 ```sh
 # Read-only inventory BEFORE0059; creates a new private local manifest file.
-node scripts/retire-generated-decks.mjs --plan /private/issue583-manifest.json
+node scripts/retire-generated-decks.mjs --plan /tmp/issue583-manifest.json
 # Only after specific approval of that manifest digest and migration0059:
-node scripts/retire-generated-decks.mjs --apply /private/issue583-manifest.json APPROVED_SHA256
+node scripts/retire-generated-decks.mjs --apply /tmp/issue583-manifest.json APPROVED_SHA256
 ```
 
 Deletion scope is limited to:
@@ -115,29 +115,42 @@ runtime workspace bucket namespace are outside the deletion set.
 
 ## Required release order — pending specific approval
 
-1. Before merging, freeze/drain old Web and Workers and all generation writers; prevent old
-   clients from committing new generation work. A rolling deploy that leaves
-   old readers/writers running across the table removal is incompatible.
-2. Generate the inventory on the drained58 database; record exact row counts,
-   object counts/bytes, preserved shared keys and its digest. Explain that absent
-   an existing or deliberately retained backup, removed rows/bytes cannot be
-   recovered. Let the user decide whether to keep a copy; do not require a new
-   large backup system.
-3. Obtain specific confirmation for this irreversible target list/window and
-   the chosen recovery policy.
-   Only the parent thread's designated sole publisher may proceed. Do not merge
-   this draft beforehand: main automatically deploys and runs migrations.
-   Product59 skips the obsolete product58 SDK provenance CAS; db:migrate still
-   requires the installed runtime to be exactly3.8.17 before0059. Old Web must
-   already be stopped: ordinary rolling convergence drains Workers only.
-4. Run0059 using the existing migration entry. Transaction/lock failure leaves
-   the database unmodified; investigate before retrying. Verify a second run is
-   a no-op and start only the schema59 application/Workers.
-5. Verify user PPTX upload/preview/extraction, ordinary chat and source reads.
-   Then apply only the approved object manifest, with writers still drained
-   during reference checks/deletion. Retain deletion receipts.
-6. Reopen service and perform public readiness and browser checks. Close583
-   only after the approved production work and release verification finish.
+The unapproved `up`, `servers`, and `workers` commands stop before any remote
+or deployment action while the retirement guard is present. Production 0059
+also refuses to run without its separate explicit maintenance flag. An ordinary
+merge can enqueue CI, but cannot run a destructive automatic rollout; do not
+merge the draft until the parent has obtained specific approval.
+
+1. Using the configured read-only environment, generate the private `--plan`
+   manifest before migration. It includes existence and row counts for all seven
+   tables, counts of actual JSON field rewrites, exact candidate keys, ETags and
+   sizes. Database bodies and signed URLs are not returned or written. Review the
+   manifest digest, counts, scope, recovery choice and maintenance window with the
+   user. Without a deliberately retained or existing backup, deletion cannot be
+   recovered; a new large backup system is not a prerequisite.
+2. After explicit approval, the designated publisher stops both old Workers
+   gracefully and then both old API containers, using the existing SSH access:
+   on app-a run `docker stop -t 150 lingxiloop-app-a-worker-1` and
+   `docker stop -t 30 lingxiloop-app-a-lingxiloop-1`; on app-b run the same
+   commands with `app-b`. Verify all four are stopped, drain any other writers,
+   and rerun the read-only inventory against the frozen58 state; if the digest
+   changes, obtain approval for the new concrete manifest before proceeding.
+3. With writers still stopped, run the target image's existing `db-migrate`
+   compose service explicitly with `-e LINGXILOOP_RETIREMENT_0059_APPROVED=true`.
+   The migration additionally requires the actual installed formal3.8.17. A
+   failed transaction rolls back; investigate before any retry. Verify 0059 is
+   recorded and the second migration is a no-op.
+4. Keep all writers stopped. Run `node scripts/retire-generated-decks.mjs --apply
+   /tmp/issue583-manifest.json APPROVED_SHA256` against the approved manifest;
+   retain per-object receipts and stop on an uncertain outcome. The apply path
+   rechecks shared references and object ETags/sizes. Do not infer recovery from
+   the manifest: it contains metadata, not object bytes.
+5. Only after migration and approved cleanup, start schema59 via
+   `LINGXILOOP_RETIREMENT_RELEASE_APPROVED=true npm run deploy`, and verify both
+   slots, public readiness, PPTX preview/extraction, ordinary chat and source
+   access. This explicit release flag is not set by CI. Close583 only after the
+   release verification. The guard intentionally requires this explicit flag on
+   subsequent release invocations while it remains in the code.
 
 Before database migration, Git can restore removed code. After migration,
 rollback requires the reviewed database backup and matching application; after

@@ -268,6 +268,11 @@ export async function migrateDatabase(
           || migration.version===59 && migration.name==='retire_presentation_generation') {
           await assertRuntimeCurrent(client,14,releaseVersions.runtime)
         }
+        // Production retirement is an explicit maintenance operation, never an automatic deploy side effect.
+        if (migration.version===59 && migration.name==='retire_presentation_generation'
+          && process.env.NODE_ENV==='production' && process.env.LINGXILOOP_RETIREMENT_0059_APPROVED!=='true') {
+          throw new Error('migration0059 requires explicit retirement approval and stopped application writers')
+        }
         await client.query(migration.sql)
         // Only the atomic empty-database cutover may stamp the current package.
         // Partial existing history was rejected above, before executing SQL.

@@ -53,6 +53,13 @@ test('58 to59 removes generated tables and typed outputs while retaining shared 
     const shared = (await database.query('SELECT * FROM projects')).rows
     const ledger = (await database.query('SELECT * FROM llm_calls')).rows
     const provenance = (await database.query('SELECT * FROM lingxios_installation')).rows
+    const priorNodeEnv = process.env.NODE_ENV
+    try {
+      process.env.NODE_ENV = 'production'
+      delete process.env.LINGXILOOP_RETIREMENT_0059_APPROVED
+      await assert.rejects(migrateDatabase(database), (error: unknown) => error instanceof Error && error.cause instanceof Error && /requires explicit retirement approval/.test(error.cause.message))
+      assert.equal((await database.query('SELECT COUNT(*) AS count FROM presentations')).rows[0].count, '1')
+    } finally { process.env.NODE_ENV = priorNodeEnv }
     await database.query("UPDATE lingxios_installation SET runtime_version='3.8.16'")
     await assert.rejects(migrateDatabase(database), (error: unknown) => error instanceof Error && error.cause instanceof Error && /mismatch/.test(error.cause.message))
     assert.equal((await database.query('SELECT COUNT(*) AS count FROM presentations')).rows[0].count, '1', 'obsolete runtime cannot trigger retirement DDL')

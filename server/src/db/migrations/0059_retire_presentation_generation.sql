@@ -1,5 +1,5 @@
 -- Destructive product retirement. Runner owns BEGIN/COMMIT. Stop old writers
--- and export the reviewed object manifest and backup BEFORE applying this file.
+-- and review the object manifest and chosen recovery policy BEFORE applying this file.
 -- No CASCADE: an unexpected shared consumer must abort the transaction.
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '60s';

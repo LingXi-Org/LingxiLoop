@@ -10,44 +10,54 @@ const prefix = 'presentation-artifacts/'
 const dedicated = new Set(['presentations', 'presentation_jobs', 'presentation_pages', 'presentation_versions', 'presentation_evidence'])
 const hash = value => createHash('sha256').update(value).digest('hex')
 const quoted = value => '"' + value.replaceAll('"', '""') + '"'
-const generated = value => typeof value?.source?.ref === 'string' && value.source.ref.startsWith('presentation:')
 
-// Include committed and staged manifests, receipts and events. Unknown/shared
-// references to the same content hash win over any generation-owned reference.
-export function runtimeObjectCandidates(rows) {
-  const candidates = new Set(), retained = new Set()
-  function visit(value, scope) {
-    if (!value || typeof value !== 'object') return
-    if (!Array.isArray(value) && typeof value.path === 'string' && /^[a-f0-9]{64}$/i.test(value.sha256 ?? '')) {
-      const key = `artifacts/${scope}/${value.sha256.toLowerCase()}`
-      ;(generated(value) ? candidates : retained).add(key)
-    }
-    for (const child of Object.values(value)) visit(child, scope)
-  }
-  for (const row of rows) visit(row.payload, hash(JSON.stringify([row.tenant_id, row.agent_id, row.work_id])))
-  return { candidates: [...candidates].filter(key => !retained.has(key)).sort(), retained: [...retained].sort() }
+export async function runtimeReferences(db, keys = []) {
+  // Only derived keys and source classification leave the database; never
+  // transfer result, event, receipt, or conversation bodies to this process.
+  return (await db.query(`WITH records AS (
+      SELECT w.tenant_id,w.agent_id,w.id AS work_id,r.message AS payload FROM lingxios.agent_results r JOIN lingxios.agent_work_items w ON w.id=r.work_id
+      UNION ALL SELECT w.tenant_id,w.agent_id,w.id,s.artifacts FROM lingxios.agent_steps s JOIN lingxios.agent_work_items w ON w.id=s.work_id
+      UNION ALL SELECT w.tenant_id,w.agent_id,w.id,l.result FROM lingxios.agent_action_ledger l JOIN lingxios.agent_action_intents i USING(idempotency_key) JOIN lingxios.agent_work_items w ON w.id=i.intent->>'workId'
+      UNION ALL SELECT w.tenant_id,w.agent_id,w.id,e.data FROM lingxios.agent_run_events e JOIN lingxios.agent_work_items w ON w.id=e.run_id
+    ), artifacts AS (
+      SELECT 'artifacts/'||encode(sha256(convert_to(array_to_json(ARRAY[tenant_id,agent_id,work_id])::text,'UTF8')),'hex')||'/'||lower(item->>'sha256') AS key,
+        COALESCE(item#>>'{source,ref}' LIKE 'presentation:%',false) AS generated
+      FROM records CROSS JOIN LATERAL jsonb_path_query(payload,'$.** ? (@.type() == "object" && exists(@.path) && exists(@.sha256))') item
+      WHERE item->>'sha256' ~* '^[a-f0-9]{64}$' AND jsonb_typeof(item->'path')='string'
+    ) SELECT key,bool_or(generated) AS generated,bool_or(NOT generated) AS shared FROM artifacts GROUP BY key HAVING bool_or(generated) OR key=ANY($1::text[])`, [keys])).rows
 }
 
-async function runtimeReferences(db) {
-  return (await db.query(`SELECT w.tenant_id,w.agent_id,w.id AS work_id,r.message AS payload
-      FROM lingxios.agent_results r JOIN lingxios.agent_work_items w ON w.id=r.work_id
-    UNION ALL SELECT w.tenant_id,w.agent_id,w.id,s.artifacts FROM lingxios.agent_steps s JOIN lingxios.agent_work_items w ON w.id=s.work_id
-    UNION ALL SELECT w.tenant_id,w.agent_id,w.id,l.result FROM lingxios.agent_action_ledger l
-      JOIN lingxios.agent_action_intents i USING(idempotency_key) JOIN lingxios.agent_work_items w ON w.id=i.intent->>'workId'
-    UNION ALL SELECT w.tenant_id,w.agent_id,w.id,e.data FROM lingxios.agent_run_events e JOIN lingxios.agent_work_items w ON w.id=e.run_id`)).rows
-}
-
-// Conservative retention: any literal product-key reference outside dedicated
-// generation tables preserves that object. Never expose the referencing row.
-async function productReferences(db, keys) {
+export async function productReferences(db, keys) {
   const retained = new Set()
   const tables = (await db.query(`SELECT schemaname,tablename FROM pg_tables WHERE schemaname IN ('public','lingxios')`)).rows
   for (const { schemaname, tablename } of tables) {
     if (schemaname === 'public' && dedicated.has(tablename)) continue
-    const rows = await db.query(`SELECT row_to_json(t)::text AS value FROM ${quoted(schemaname)}.${quoted(tablename)} t WHERE row_to_json(t)::text LIKE '%presentation-artifacts/%'`)
-    for (const row of rows.rows) for (const key of keys) if (row.value.includes(key)) retained.add(key)
+    const rows = await db.query(`SELECT candidate FROM unnest($1::text[]) candidate WHERE EXISTS (SELECT 1 FROM ${quoted(schemaname)}.${quoted(tablename)} t WHERE position(candidate IN row_to_json(t)::text)>0)`, [keys])
+    for (const row of rows.rows) retained.add(row.candidate)
   }
   return retained
+}
+
+export async function databaseInventory(db) {
+  const tables = ['public.presentations','public.presentation_jobs','public.presentation_evidence','public.presentation_pages','public.presentation_versions','lingxios.lecture_decks','lingxios.lecture_checkpoints']
+  const counts = {}
+  for (const name of tables) {
+    const exists = (await db.query('SELECT to_regclass($1) IS NOT NULL AS present', [name])).rows[0].present
+    const [schema, table] = name.split('.')
+    counts[name] = { exists, rows: exists ? (await db.query(`SELECT count(*)::text AS count FROM ${quoted(schema)}.${quoted(table)}`)).rows[0].count : '0' }
+  }
+  // Count only rows whose recursive rewrite changes JSON; source content is
+  // evaluated inside PostgreSQL and is never returned to the client.
+  const changed = (column, guard) => `count(*) FILTER (WHERE (${guard}) AND EXISTS (
+    SELECT 1 FROM jsonb_path_query(${column}, 'strict $.**') AS item
+    WHERE jsonb_typeof(item)='object' AND (item->>'type'='presentation-artifact'
+      OR (item->>'type'='data' AND item->>'name'='presentation-artifact')
+      OR (item ? 'path' AND item ? 'sha256' AND item#>>'{source,ref}' LIKE 'presentation:%')
+      OR (jsonb_typeof(item->'refs')='object' AND item->'refs' ? 'presentationId'))))::text`
+  const im = (await db.query(`SELECT ${changed('payload', "payload::text LIKE '%presentation-artifact%' OR echo::text LIKE '%presentation-artifact%'")} AS payload, ${changed('echo', "payload::text LIKE '%presentation-artifact%' OR echo::text LIKE '%presentation-artifact%'")} AS echo FROM public.im_send_acceptances`)).rows[0]
+  const result = (await db.query(`SELECT ${changed('message', "message::text LIKE '%presentation-artifact%' OR message::text LIKE '%presentation:%'")} AS message FROM lingxios.agent_results`)).rows[0]
+  const steps = (await db.query(`SELECT ${changed('artifacts', "artifacts::text LIKE '%presentation:%'")} AS artifacts FROM lingxios.agent_steps`)).rows[0]
+  return { tables: counts, rewrites: { im_payload: im.payload, im_echo: im.echo, agent_result_message: result.message, agent_step_artifacts: steps.artifacts } }
 }
 
 async function listProductObjects(client, bucket) {
@@ -90,8 +100,10 @@ async function main() {
   try {
     await db.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
     await db.query("SET LOCAL statement_timeout='30s'")
-    const runtimeRefs = runtimeObjectCandidates(await runtimeReferences(db))
     if (mode === '--plan') {
+      const runtimeRows = await runtimeReferences(db)
+      const runtimeRefs = { candidates: runtimeRows.filter(row => row.generated && !row.shared).map(row => row.key), retained: runtimeRows.filter(row => row.shared).map(row => row.key) }
+      const databaseImpact = await databaseInventory(db)
       const objects = await listProductObjects(c.product, c.productBucket)
       const protectedKeys = await productReferences(db, objects.map(item => item.key))
       const candidates = objects.filter(item => !protectedKeys.has(item.key))
@@ -99,8 +111,9 @@ async function main() {
         const object = await head(c.runtime, c.runtimeBucket, key)
         if (object) candidates.push(object)
       }
-      const manifest = { version: 1, issue: 583, generatedAt: new Date().toISOString(), candidates,
-        retained: { product: [...protectedKeys].sort(), runtime: runtimeRefs.retained },
+      candidates.sort((a, b) => a.bucket < b.bucket ? -1 : a.bucket > b.bucket ? 1 : a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
+      const manifest = { version: 2, issue: 583, databaseImpact, candidates,
+        retained: { product: [...protectedKeys].sort(), runtime: runtimeRefs.retained.sort() },
         database: (await db.query('SELECT current_database() AS name')).rows[0].name }
       const bytes = JSON.stringify(manifest, null, 2) + '\n'
       await writeFile(filename, bytes, { flag: 'wx', mode: 0o600 })
@@ -109,10 +122,12 @@ async function main() {
       const bytes = await readFile(filename, 'utf8')
       if (hash(bytes) !== confirmation) throw new Error('manifest does not match the specifically approved digest')
       const manifest = JSON.parse(bytes)
-      if (manifest.version !== 1 || manifest.issue !== 583 || !Array.isArray(manifest.candidates)) throw new Error('unsupported manifest')
+      if (manifest.version !== 2 || manifest.issue !== 583 || !Array.isArray(manifest.candidates)) throw new Error('unsupported manifest')
       if ((await db.query('SELECT current_database() AS name')).rows[0].name !== manifest.database) throw new Error('database differs from the approved inventory')
       const migrated = await db.query("SELECT 1 FROM schema_migrations WHERE version=59 AND name='retire_presentation_generation'")
       if (!migrated.rowCount) throw new Error('apply requires migration0059 and drained old writers')
+      const runtimeRows = await runtimeReferences(db, manifest.candidates.filter(item => item.bucket === c.runtimeBucket).map(item => item.key))
+      const runtimeRefs = { retained: runtimeRows.filter(row => row.shared).map(row => row.key) }
       const protectedKeys = await productReferences(db, manifest.candidates.filter(item => item.bucket === c.productBucket).map(item => item.key))
       const pending = []
       for (const object of manifest.candidates) {

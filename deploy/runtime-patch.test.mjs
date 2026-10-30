@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
+import { assertRetirementReleaseAllowed, convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
 
 const fixture = () => {
   const dependencies = { '@lyyzka/lingxios': '3.8.17' }
@@ -77,4 +77,14 @@ test('unconfirmed observation retains maintenance and never starts either versio
   const { calls, error } = await run(['apply', 'observe'])
   assert.match(error.message, /remain stopped/)
   assert.ok(!calls.includes('restoreSource') && !calls.includes('convergeTarget'))
+})
+
+test('retirement requires explicit release approval before any deployment action', () => {
+ const paths=['server/src/db/migrations/0059_retire_presentation_generation.sql']
+ for (const command of ['up','servers','workers']) {
+  assert.throws(() => assertRetirementReleaseAllowed(paths, command, undefined), /explicit maintenance release approval/)
+  assert.doesNotThrow(() => assertRetirementReleaseAllowed(paths, command, 'true'))
+ }
+ assert.doesNotThrow(() => assertRetirementReleaseAllowed(paths, 'status', undefined))
+ assert.doesNotThrow(() => assertRetirementReleaseAllowed([], 'up', undefined))
 })
