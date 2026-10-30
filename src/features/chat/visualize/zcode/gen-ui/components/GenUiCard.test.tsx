@@ -9,7 +9,8 @@ after(() => {
   else Reflect.deleteProperty(globalThis, 'document')
 })
 
-let state = { page: null, supported: true, online: true, error: undefined as string | undefined }
+const defaultState = { page: null, supported: true, online: true, error: undefined as string | undefined }
+let state = { ...defaultState }
 mock.module('../../hooks/useGenUi.js', { namedExports: { useGenUi: () => state } })
 mock.module('@/stores/auth', { namedExports: { useAuth: (select: (state: unknown) => unknown) => select({ user: null, activeCompanyId: null }) } })
 mock.module('@/features/chat/drafts', { namedExports: { readComposerDraft: () => null, saveComposerDraft: () => {} } })
@@ -24,7 +25,7 @@ test('card acquisition has a skeleton, while offline, unsupported and failed acq
     [{ supported: false }, '此浏览器不支持', false],
     [{ error: 'Synthetic acquisition failure' }, '无法加载交互视图', true],
   ] as const) {
-    state = { page: null, supported: true, online: true, error: undefined, ...patch }
+    state = { ...defaultState, ...patch }
     const html = render()
     assert.doesNotMatch(html, /data-gen-ui-loading|aria-busy="true"/)
     assert.ok(html.includes(label))

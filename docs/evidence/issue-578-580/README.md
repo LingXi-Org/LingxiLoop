@@ -39,16 +39,37 @@ failure through worker/ledger/IM/recovery HTTP. Visualization tests cover loadin
 terminal/incomplete/invalid references and existing card recovery states.
 
 18 focused contract, localization, skeleton and trace-rendering assertions
-passed in an isolated directory with the repository source and public packages
-at the versions resolved by the repository lockfile (including React 19.2.8).
-The managed environment could not install the exact private SDK: the registry
-returned HTTP 401 for 3.8.17. Full type checks, SDK-backed tests and integration
-remain pending; an unrun local check is not a pass. Independent read-only review
-found one incorrect public-text test fixture enum/nullability, now corrected;
-no further blocking finding was reported within this change. The skeleton SSR
-checks cover reference/receipt and acquisition states, not a mounted browser
-loading-to-ready interaction. No browser screenshots or live-model artwork
-delivery are asserted here.
+passed initially in an isolated directory with public dependencies. Full local
+web type checking and the affected skeleton SSR check now also pass against
+the unchanged official lock and exact SDK 3.8.17.
+
+The registry install returned HTTP 401 both initially and on the single later
+retry: this environment did not bind the `NODE_AUTH_TOKEN` read by `.npmrc`.
+No credential was substituted. The authorized GitHub publication artifact
+`published-runtime-v3.8.17` (artifact 12956883660, release run 41007318648) was
+then read. Its tarball SHA-512 matches registry.json, pack.json and the formal
+Loop lock; SHA-1 matches both publication metadata files, and registry gitHead
+is `16e793b39af73f01d10c6fc819b02dce84656236`. Offline installation from that
+verified package and the existing cache succeeded without editing dependencies
+or locks or substituting an SDK built from source.
+
+[CI 41015217534](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41015217534)
+passed server lint/type checking/tests and 11 selected integration files,
+including all seven runtime-chat-recovery cases. The new fail-all fixture
+checks three bounded rejected attempts, no failed candidate body, terminal
+receipt identity, recorded error timings/diagnostics and authorized HTTP replay;
+wrong tenant/version/fence/feedback cannot substitute another trace. Web tests
+also passed. That run found a duplicate-property UI test fixture and missing
+CI ownership for the new shared helper, corrected here. The two affected image
+import-graph/CI-routing checks, UI SSR check and full web type check passed
+locally after correction; final PR CI remains the integration gate.
+
+Independent read-only review found an incorrect public-text test fixture
+enum/nullability, corrected before CI; no other blocking finding was reported
+within that review. CI also caught and corrected the new helper's image COPY
+and an outdated failed-draft expectation. The skeleton SSR checks cover
+reference/receipt and acquisition states, not a mounted browser loading-to-ready
+interaction. No browser screenshots or live-model artwork delivery are asserted.
 
 The historical protocol subreason is still unknown. Formal 3.8.17's prior
 parser fixes and a synthetic failure fixture cannot establish that the original
