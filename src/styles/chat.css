@@ -12,9 +12,9 @@
   --cds-assistant-message-text-stop: clamp(0px, (100% - 384px) * .175, 56px);
 }
 [data-chat-message-column] {
-  /* Keep the reference 35vh buffer without hiding all messages in a short
-   * reply pane. cqh refers to the flex-sized reading area, not the window. */
-  padding-block-end: min(var(--chat-extra-space, 35vh), max(0px, calc(100cqh - 8rem)));
+  /* The composer has its own non-overlapping row. Keep a small reading/focus
+   * gutter, not a window-sized spacer; bound it in very short reply panes. */
+  padding-block-end: min(var(--chat-extra-space, 2rem), max(0px, calc(100cqh - 8rem)));
 }
 [data-message-bubble] {
   background: var(--panel);

@@ -243,7 +243,7 @@ export function ConversationThread({
             markUserInput()
           }}
           className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
-          <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col [--chat-extra-space:35vh]">
+          <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col [--chat-extra-space:2rem]">
             {!threadRootId && (
               <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
                 {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (

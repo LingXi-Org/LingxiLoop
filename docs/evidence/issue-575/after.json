@@ -1,0 +1,278 @@
+[
+  {
+    "width": 1280,
+    "stage": "ordinary",
+    "page": {
+      "client": 1280,
+      "scroll": 1280
+    },
+    "viewport": {
+      "client": 890,
+      "scroll": 890
+    },
+    "card": null,
+    "gap": 32,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 1280,
+    "stage": "code-table-completed",
+    "page": {
+      "client": 1280,
+      "scroll": 1280
+    },
+    "viewport": {
+      "client": 890,
+      "scroll": 890
+    },
+    "card": null,
+    "gap": 31.9,
+    "padding": "32px",
+    "localScrollers": [
+      {
+        "tag": "PRE",
+        "client": 665,
+        "scroll": 6847
+      },
+      {
+        "tag": "DIV",
+        "client": 697,
+        "scroll": 883
+      }
+    ]
+  },
+  {
+    "width": 1280,
+    "stage": "loading",
+    "page": {
+      "client": 1280,
+      "scroll": 1280
+    },
+    "viewport": {
+      "client": 890,
+      "scroll": 890
+    },
+    "card": {
+      "client": 670,
+      "scroll": 670
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 1280,
+    "stage": "loaded",
+    "page": {
+      "client": 1280,
+      "scroll": 1280
+    },
+    "viewport": {
+      "client": 890,
+      "scroll": 890
+    },
+    "card": {
+      "client": 670,
+      "scroll": 670
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 1280,
+    "stage": "edited-save-error",
+    "page": {
+      "client": 1280,
+      "scroll": 1280
+    },
+    "viewport": {
+      "client": 890,
+      "scroll": 890
+    },
+    "card": {
+      "client": 670,
+      "scroll": 670
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 700,
+    "stage": "resized",
+    "page": {
+      "client": 700,
+      "scroll": 700
+    },
+    "viewport": {
+      "client": 690,
+      "scroll": 690
+    },
+    "card": {
+      "client": 607,
+      "scroll": 607
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 1280,
+    "stage": "reloaded",
+    "page": {
+      "client": 1280,
+      "scroll": 1280
+    },
+    "viewport": {
+      "client": 890,
+      "scroll": 890
+    },
+    "card": {
+      "client": 670,
+      "scroll": 670
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 390,
+    "stage": "ordinary",
+    "page": {
+      "client": 390,
+      "scroll": 390
+    },
+    "viewport": {
+      "client": 380,
+      "scroll": 380
+    },
+    "card": null,
+    "gap": 32,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 390,
+    "stage": "code-table-completed",
+    "page": {
+      "client": 390,
+      "scroll": 390
+    },
+    "viewport": {
+      "client": 380,
+      "scroll": 380
+    },
+    "card": null,
+    "gap": 31.9,
+    "padding": "32px",
+    "localScrollers": [
+      {
+        "tag": "PRE",
+        "client": 246,
+        "scroll": 6847
+      },
+      {
+        "tag": "DIV",
+        "client": 278,
+        "scroll": 883
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "stage": "loading",
+    "page": {
+      "client": 390,
+      "scroll": 390
+    },
+    "viewport": {
+      "client": 380,
+      "scroll": 380
+    },
+    "card": {
+      "client": 306,
+      "scroll": 306
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 390,
+    "stage": "loaded",
+    "page": {
+      "client": 390,
+      "scroll": 390
+    },
+    "viewport": {
+      "client": 380,
+      "scroll": 380
+    },
+    "card": {
+      "client": 306,
+      "scroll": 306
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 390,
+    "stage": "edited-save-error",
+    "page": {
+      "client": 390,
+      "scroll": 390
+    },
+    "viewport": {
+      "client": 380,
+      "scroll": 380
+    },
+    "card": {
+      "client": 306,
+      "scroll": 306
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 320,
+    "stage": "resized",
+    "page": {
+      "client": 320,
+      "scroll": 320
+    },
+    "viewport": {
+      "client": 310,
+      "scroll": 310
+    },
+    "card": {
+      "client": 236,
+      "scroll": 236
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  },
+  {
+    "width": 390,
+    "stage": "reloaded",
+    "page": {
+      "client": 390,
+      "scroll": 390
+    },
+    "viewport": {
+      "client": 380,
+      "scroll": 380
+    },
+    "card": {
+      "client": 306,
+      "scroll": 306
+    },
+    "gap": 32.3,
+    "padding": "32px",
+    "localScrollers": []
+  }
+]
