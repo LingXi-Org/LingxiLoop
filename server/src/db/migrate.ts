@@ -202,7 +202,8 @@ export async function migrateDatabase(
   // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
   const full60=migrations.length===60&&migrations[59]?.name==='native_artifacts'
   const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
-  if (full59) assertRetirementRuntimeVersion(releaseVersions.runtime)
+  const runtimeOnly19=full60&&String(releaseVersions.runtime)==='3.8.19'
+  if (full59&&!runtimeOnly19) assertRetirementRuntimeVersion(releaseVersions.runtime)
   const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'
@@ -215,7 +216,9 @@ export async function migrateDatabase(
   const appliedNow: string[] = []
   try {
     await client.query('SELECT pg_advisory_lock($1)', [LOCK_KEY])
-    if (!(await migrationTableExists(client))) {
+    const tracked = await migrationTableExists(client)
+    if (runtimeOnly19&&!tracked) throw new Error('runtime3.8.19 requires already installed product60; it cannot run product migrations')
+    if (!tracked) {
       const existingRelations = await publicRelationCount(client)
       if (existingRelations > 0) {
         throw new Error(
@@ -234,6 +237,13 @@ export async function migrateDatabase(
 
     const applied = await appliedMigrations(client)
     validateApplied(migrations, applied)
+    if(runtimeOnly19){
+      if(applied.length!==60)throw new Error('runtime3.8.19 requires already installed product60; it cannot run product migrations')
+      // The explicit provenance CAS must already have succeeded. Startup may
+      // verify this exact installed state, never adopt it or execute59/60.
+      await assertRuntimeCurrent(client,14,'3.8.19')
+      return appliedNow
+    }
     if(full54)assertFull54InstallBoundary(applied.length,releaseVersions.runtime,full60?60:full59?59:full58?58:full57?57:full56?56:full55?55:54)
     const installsRuntime = migrations.some(migration => migration.version === NATIVE_INSTALL_VERSION && migration.name === 'lingxios_native_runtime')
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
@@ -363,7 +373,8 @@ export async function assertMigrationsCurrent(
   // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
   const full60=migrations.length===60&&migrations[59]?.name==='native_artifacts'
   const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
-  if (full59) assertRetirementRuntimeVersion(releaseVersions.runtime)
+  const runtimeOnly19=full60&&String(releaseVersions.runtime)==='3.8.19'
+  if (full59&&!runtimeOnly19) assertRetirementRuntimeVersion(releaseVersions.runtime)
   const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'

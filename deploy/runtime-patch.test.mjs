@@ -67,6 +67,24 @@ test('native artifacts use the installed runtime only with the exact product60 i
   assert.throws(() => runtimePatchPlan(f.read, [...f.paths, 'server/src/db/migrations/0061_unknown.sql']))
   assert.throws(() => assertRetirementReleaseAllowed(f.paths, 'up'), /explicit maintenance release approval/)
 })
+test('runtime19 is only an18 to19 CAS on already installed product60, never retirement permission', () => {
+  const f = fixture('3.8.19')
+  for (const name of ['0059_retire_presentation_generation', '0060_native_artifacts']) {
+    const path = `server/src/db/migrations/${name}.sql`
+    f.paths.push(path); f.files[path] = '-- unchanged installed inventory'
+  }
+  const plan = runtimePatchPlan(f.read, f.paths)
+  assert.equal(plan.source.runtime, '3.8.18'); assert.equal(plan.target.runtime, '3.8.19')
+  assert.equal(plan.source.productVersion, 60); assert.equal(plan.target.productVersion, 60)
+  assert.deepEqual(plan.source.migrations, plan.target.migrations)
+  assert.doesNotThrow(() => assertRetirementReleaseAllowed(f.paths, 'up', undefined, plan))
+  assert.throws(() => assertRetirementReleaseAllowed(f.paths, 'up'), /explicit maintenance release approval/)
+  assert.throws(() => assertRetirementReleaseAllowed(f.paths, 'workers', undefined, plan), /explicit maintenance release approval/)
+  assert.throws(() => runtimePatchPlan(f.read, f.paths.slice(0, 59)), /product59 requires/)
+  assert.throws(() => runtimePatchPlan(f.read, f.paths.slice(0, 58)), /unreviewed runtime transition/)
+  const wrong = { ...plan, source: { ...plan.source, runtime: '3.8.17' } }
+  assert.throws(() => assertRetirementReleaseAllowed(f.paths, 'up', undefined, wrong), /explicit maintenance release approval/)
+})
 const run = async (fail, observed = { complete: false, state: 'source' }) => {
   const calls = [], actions = {}
   for (const name of ['preflight', 'requireFreshIntent', 'snapshotSource', 'stopIngress', 'stopWorkers', 'markAttempt', 'apply', 'observe', 'restoreSource', 'convergeTarget']) actions[name] = async () => {

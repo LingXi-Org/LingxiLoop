@@ -129,6 +129,23 @@ controller, release lock, additional credential or permission grant is involved.
 
 ## Runtime notes
 
+The reviewed3.8.18→3.8.19 patch instead requires an **already installed
+product60** with identical native14/protocol11 and all60 named migration
+checksums. It never installs product59/60 or authorizes retirement. A missing or
+different ledger fails read-only preflight before any drain. Existing16→17 and
+17→18 product58 plans remain unchanged;19 is not accepted for product58/59.
+
+For this exact runtime-only plan, `up`/`servers` use the same single-CAS path
+without a retirement flag. Standalone `workers` and ordinary retirement remain
+guarded. After the CAS,3.8.19 startup verifies the complete60 ledger and exact
+installed19 provenance, then returns without migration or seed writes. Fresh,
+partial58/59 and unknown provenance are refused even with maintenance flags;
+the migration files themselves and user artifact implementation are unchanged.
+Run the owning product60 provenance tests with the actual official19 package
+and matching locks before deployment. `status` now reads only the deployed
+runtime/schema/ledger digest plus live Worker tag comparisons; it never adopts
+versions or prints configuration secrets.
+
 Ordinary chat always uses deep execution with all authorized capabilities.
 Requests disable provider thinking for both main answers and auxiliary
 validation; providers may still return metered reasoning tokens, and only final

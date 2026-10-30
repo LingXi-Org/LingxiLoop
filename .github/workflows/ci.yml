@@ -397,7 +397,10 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - run: npm run verify:visualize && npm run build:visualize-runtime && node --test scripts/slides-editor.test.mjs
-      - run: npm run db:migrate
+      - run: node --test server/scripts/bootstrap-runtime-patch-test-db.test.mjs && node server/scripts/bootstrap-runtime-patch-test-db.mjs
+        env:
+          NODE_ENV: test
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - if: needs.changes.outputs.server != 'true'
         run: node --test scripts/test-selectors.test.mjs
       - run: npm run test:integration
@@ -424,10 +427,15 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
           LINGXIOS_NATIVE_TEST_REDIS_URL: redis://127.0.0.1:6379
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           for capability in documents artifacts; do
-            createdb "native_${capability}"
-            LINGXIOS_NATIVE_TEST_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/native_${capability}" \
+            createdb "native_${capability}_test"
+            NODE_ENV=test \
+              DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/native_${capability}_test" \
+              INTEGRATION_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/native_${capability}_test" \
+              node server/scripts/bootstrap-runtime-patch-test-db.mjs
+            LINGXIOS_NATIVE_TEST_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/native_${capability}_test" \
               node "scripts/test-native-agent-${capability}.mjs"
           done
 

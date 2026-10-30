@@ -35,8 +35,8 @@ async function main(command, requested) {
   const images = Object.fromEntries(IMAGES.map(image => [`${image.name.toUpperCase()}_IMAGE`, { ...image, tag: imageTag(image) }]))
   const stacks = selectStacks(requested)
   const migrationPaths = git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean)
-  assertRetirementReleaseAllowed(migrationPaths, command, process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED)
   const patch = runtimePatchPlan(path => git('show', `HEAD:${path}`), migrationPaths)
+  assertRetirementReleaseAllowed(migrationPaths, command, process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED, patch)
   const ssh = sshSession()
   const deployServers = () => patch && stacks.includes('app-a') ? runtimePatch(ssh, patch, images, () => servers(ssh, stacks, images)) : servers(ssh, stacks, images)
   try {
@@ -311,11 +311,19 @@ async function workers() {
 async function status(ssh) {
   await Promise.all(Object.keys(HOSTS).map(host => ssh.run(host, host,
     `cat /opt/lingxiloop/*/images.env 2>/dev/null | sort -u; docker ps --format '{{.Names}}\t{{.Status}}' | sort`)))
+  const metadata = git('show', 'HEAD:deploy/runtime-metadata.mjs')
+  await ssh.run('txy2', 'runtime metadata',
+    `docker exec -i lingxiloop-app-a-lingxiloop-1 node --input-type=module <<'RUNTIME_METADATA_JS'\n${metadata}\nRUNTIME_METADATA_JS`)
+  for (const target of workerTargets()) {
+    const actualTag = await liveTag(target.name)
+    console.log(JSON.stringify({ observationOnly: true, worker: target.name, actualTag, expectedTag: target.tag, matches: actualTag === target.tag }))
+  }
 }
 
 // Refuse the automatic rollout before obtaining Sigillo credentials or SSH.
-assertRetirementReleaseAllowed(git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean),
-  process.argv[2] ?? 'up', process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED)
+const committedMigrations = git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean)
+assertRetirementReleaseAllowed(committedMigrations, process.argv[2] ?? 'up', process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED,
+  runtimePatchPlan(path => git('show', `HEAD:${path}`), committedMigrations))
 if (!process.env.DEPLOY_SSH_KEY) {
   const child = spawn('npm', ['exec', '--yes', '--package=sigillo@0.14.2', '--', 'sigillo', 'run', ...SIGILLO, '--', 'node', 'deploy/cli.mjs', ...process.argv.slice(2)], {
     stdio: 'inherit', shell,
