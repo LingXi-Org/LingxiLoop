@@ -16,6 +16,9 @@ export interface OriginalResourceDiagnostic {
   stage: 'detail' | 'metadata' | 'url' | 'file_request' | 'file_response' | 'file_body'
   status?: number
 }
+export function formatOriginalResourceDiagnostic(event: OriginalResourceDiagnostic): string {
+  return `[course-materials] original preview failed ${JSON.stringify({ stage: event.stage, ...(event.status === undefined ? {} : { status: event.status }) })}`
+}
 
 /** Each open fetches its own bytes. No Blob is shared through query caches. */
 export async function loadMaterialOriginal(context: MaterialContext, signal: AbortSignal, transport: OriginalResourceTransport): Promise<OriginalResource> {
