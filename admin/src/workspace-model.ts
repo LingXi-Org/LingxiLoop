@@ -10,7 +10,7 @@ export const WORKSPACES = [
 ] as const
 
 export const LEARNING = ['courses', 'evidence-records', 'trust-snapshots']
-export const CONTENT = ['conversations', 'documents', 'canvases', 'presentations', 'calendar-events']
+export const CONTENT = ['conversations', 'documents', 'canvases', 'calendar-events']
 export const AI = ['participants', 'agent-routines', 'agent-runs', 'agent-deliveries', 'llm-calls']
 export const SYSTEM = ['audit-events', 'webhook-receipts', 'notification-deliveries']
 

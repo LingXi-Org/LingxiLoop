@@ -32,7 +32,6 @@
 | 文件 | `files.list/read/create`；原生下载产物 | 只读当前请求选择且仍授权的附件；文本读取最多 16k 字符/次，创建最多 128k 字符 |
 | Canvas、交接 | `canvas.*`、`handoffs.*`；现有持久协作消息 | 当前成员、祖先授权交集及独立验证角色 |
 | 知识、检索来源 | `knowledge.*`、`research.*`；来源卡 | 知识能力及 web 能力分别授权；来源结果白名单 |
-| 演示文稿 | `presentations.*`、可信 presentation 卡 | 知识能力、实际项目记录、提纲审批及现有任务生命周期 |
 | 定时任务 | `routines.*` | 原有调度、权限和幂等约束 |
 | 目录、记忆 | `directory.*`、LingxiOS 原生记忆工具 | 原有租户、受众、记忆范围约束 |
 

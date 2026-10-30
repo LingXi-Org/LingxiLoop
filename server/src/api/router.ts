@@ -19,7 +19,6 @@ import { notificationsRouter } from '../modules/notifications/router.js'
 import { observabilityRouter } from '../modules/observability/router.js'
 import { platformRouter } from '../modules/platform/router.js'
 import { pollsRouter } from '../modules/polls/router.js'
-import { presentationsRouter } from '../modules/presentations/router.js'
 import { projectsRouter } from '../modules/projects/router.js'
 import { trustRouter } from '../modules/trust/router.js'
 
@@ -49,7 +48,6 @@ api.use(conversationsRouter)
 api.use(contextThreadsRouter)
 api.use(notificationsRouter)
 api.use(pollsRouter)
-api.use(presentationsRouter)
 api.use(observabilityRouter)
 api.use(documentsRouter)
 api.use(errorHandler)

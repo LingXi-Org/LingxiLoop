@@ -29,7 +29,6 @@ import { useEntrance } from '@/hooks/use-entrance'
 import { DashboardSkeleton } from './DashboardSkeleton'
 import { DocumentSkeleton } from '@/features/documents/components/DocumentSkeleton'
 import { CanvasSkeleton } from '@/features/canvas/components/CanvasSkeleton'
-import { PresentationSkeleton } from '@/features/presentations/components/PresentationSkeleton'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { retryWebNavigation } from '@/lib/navigation'
 import { useApp } from '@/stores/app'
@@ -46,7 +45,6 @@ import { useLearningSpaces } from './useLearningSpaces'
 const CasesPage = lazy(() => import('@/features/cases/CasesPage').then((module) => ({ default: module.CasesPage })))
 const CanvasView = lazy(() => import('@/features/canvas/components/CanvasView').then((module) => ({ default: module.CanvasView })))
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
-const PresentationDrawerContent = lazy(() => import('@/features/presentations/components/PresentationDrawerContent').then((module) => ({ default: module.PresentationDrawerContent })))
 const PersonalDashboard = lazy(() => import('./PersonalDashboard').then((module) => ({ default: module.PersonalDashboard })))
 
 const DESKTOP_SIDEBAR_WIDTH_KEY = 'lingxiloop:desktop-layout:sidebar-width:v1'
@@ -90,7 +88,6 @@ export function DesktopApp() {
   const openThread = surface?.kind === 'thread' ? surface : null
   const documentId = surface?.kind === 'document' ? surface.documentId : null
   const canvasId = surface?.kind === 'canvas' ? surface.canvasId : null
-  const presentationId = surface?.kind === 'presentation' ? surface.presentationId : null
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const mobileConversationOpen = useApp((state) => state.mobileConversationOpen)
@@ -170,23 +167,14 @@ export function DesktopApp() {
       }, 450)
     })
   }
-  const closePresentationView = () => {
-    const closingPresentationId = presentationId
-    useSurface.getState().closePresentationPeek()
-    if (!closingPresentationId) return
-    window.requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>(`[data-presentation-open-trigger="${CSS.escape(closingPresentationId)}"]`)?.focus()
-    })
-  }
   const drawerCanvasId = isMobile ? canvasId : null
-  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || presentationId || drawerCanvasId)
+  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || drawerCanvasId)
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
 
   if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> }
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
-  else if (presentationId) { drawerTitle = '演示文稿'; drawerContent = <PresentationDrawerContent presentationId={presentationId} /> }
   else if (drawerCanvasId) { drawerTitle = 'Canvas'; drawerContent = <CanvasView canvasId={drawerCanvasId} onBack={closeCanvasView} /> }
 
   const closeDrawer = () => {
@@ -194,11 +182,10 @@ export function DesktopApp() {
     if (infoParticipantId) surfaces.closeAgentInfo()
     else if (openThread) surfaces.closeThreadView()
     else if (documentId) surfaces.closeDocumentPeek()
-    else if (presentationId) closePresentationView()
     else if (drawerCanvasId) closeCanvasView()
   }
   const drawerOwnsHeader = Boolean(drawerCanvasId)
-  const fullBleedDrawer = Boolean(presentationId || drawerCanvasId)
+  const fullBleedDrawer = Boolean(drawerCanvasId)
   const mobileForumOpen = isMobile && view === 'forum' && Boolean(learningSpaces.activeSpace?.courseId) && !navigationPending
   const mobileChatOpen = !dashboardOpen && !learningSpaces.pending && isMobile && mobileConversationOpen && Boolean(selectedConversation)
   const drawerWidth = isMobile
@@ -287,7 +274,7 @@ export function DesktopApp() {
             </div>
           </DrawerHeader>}
           <div className="min-h-0 flex-1 overflow-hidden">
-            <Suspense fallback={<div className="flex h-full flex-col">{drawerOwnsHeader && <Button type="button" variant="ghost" className="m-2 self-start" onClick={closeDrawer}>关闭</Button>}{documentId ? <DocumentSkeleton /> : presentationId ? <PresentationSkeleton /> : drawerCanvasId ? <CanvasSkeleton /> : <ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} />}</div>}>
+            <Suspense fallback={<div className="flex h-full flex-col">{drawerOwnsHeader && <Button type="button" variant="ghost" className="m-2 self-start" onClick={closeDrawer}>关闭</Button>}{documentId ? <DocumentSkeleton /> : drawerCanvasId ? <CanvasSkeleton /> : <ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} />}</div>}>
               {drawerContent}
             </Suspense>
           </div>

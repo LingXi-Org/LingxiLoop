@@ -28,9 +28,6 @@ filesRouter.get('/files', safe(async (req, res) => {
       WHERE payload->'attachments' @> jsonb_build_array(jsonb_build_object('id',$1::text)) AND status='accepted'
     UNION ALL SELECT 'knowledge_source',id,'knowledge:read' FROM knowledge_sources
       WHERE storage_key=$1 AND deleted_at IS NULL AND status<>'upload_pending'
-    UNION ALL SELECT 'conversation',p.conversation_id,'conversation:read' FROM presentation_versions v
-      JOIN presentations p ON p.id=v.presentation_id WHERE v.storage_key=$1
-        AND (p.visibility_scope='PROJECT' OR p.authorization_user_id=$2)
   `, [key,userId,learningAccess === null])
   let allowed = caseAccess === true || learningAccess === true
   for (const row of rows) {

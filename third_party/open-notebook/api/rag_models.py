@@ -100,33 +100,6 @@ class SourceStatusResponse(StrictModel):
     embedded_chunks: int
 
 
-class PresentationMaterialBlock(StrictModel):
-    chunk_id: str
-    ordinal: int = Field(ge=0)
-    text: str = Field(min_length=1, max_length=4_000)
-    page_number: int | None = Field(default=None, ge=1)
-    section_title: str | None = Field(default=None, max_length=200)
-
-
-class PresentationMaterialAsset(StrictModel):
-    asset_id: str
-    mime_type: Literal["image/png", "image/jpeg", "image/webp", "image/svg+xml"]
-    data_uri: str
-    page_number: int | None = Field(default=None, ge=1)
-    section_title: str | None = Field(default=None, max_length=200)
-    width: int | None = Field(default=None, ge=1)
-    height: int | None = Field(default=None, ge=1)
-
-
-class PresentationMaterialResponse(StrictModel):
-    version: Literal["PresentationMaterialV1"] = "PresentationMaterialV1"
-    source_id: str
-    title: str
-    blocks: list[PresentationMaterialBlock] = Field(max_length=400)
-    assets: list[PresentationMaterialAsset] = Field(default_factory=list, max_length=40)
-    truncated: bool
-
-
 class SearchRequest(StrictModel):
     query: str = Field(min_length=1, max_length=16_000)
     notebook_id: str

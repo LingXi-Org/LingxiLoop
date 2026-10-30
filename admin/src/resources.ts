@@ -28,7 +28,7 @@ const collaboration = [
   ['participants', '参与者与 Agent'], ['agent-runs', 'Agent 运行'],
   ['agent-routines', 'Agent 例程'],
   ['conversations', '会话'],
-  ['documents', '文档'], ['canvases', '画布'], ['presentations', '演示'],
+  ['documents', '文档'], ['canvases', '画布'],
   ['notification-deliveries', '通知投递'],
   ['knowledge-sources', '知识源'], ['knowledge-jobs', '知识任务'],
 ] as const

@@ -12,11 +12,6 @@ import {
 } from '@/components/assistant-ui/elements/elicitation-form'
 import { ApprovalCard } from '@/components/assistant-ui/elements/approval-card'
 import { useParticipants } from '@/features/agents/state'
-import {
-  PresentationArtifactCard,
-  parsePresentationArtifact,
-} from '@/features/presentations'
-import { useSurface } from '@/stores/surface'
 import { HomeworkDraftTool } from '@/features/learning/homework/HomeworkDraftCard'
 
 interface CardProps {
@@ -156,13 +151,6 @@ export function ElicitationFormTool({ args, result, addResult, initialAnswers = 
 export function CanvasProgressTool({ args }: Pick<CardProps, 'args'>) {
   const names = useParticipants(state => state.byId)
   return <ProgressTracker {...canvasProgress(args, names)} />
-}
-
-export function PresentationArtifactTool({ args }: Pick<CardProps, 'args'>) {
-  const openPresentation = useSurface((state) => state.openPresentationPeek)
-  const artifact = parsePresentationArtifact(args)
-  if (!artifact) throw new Error('演示文稿产物协议不完整')
-  return <PresentationArtifactCard artifact={artifact} onOpen={openPresentation} />
 }
 
 export const TOOL_DETAILS = { 'teacher.draft_homework': HomeworkDraftTool }

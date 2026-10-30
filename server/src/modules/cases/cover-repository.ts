@@ -72,7 +72,7 @@ async function lockCurrentCase(db: Queryable, job: Pick<CaseCoverClaim,'case_id'
 const wanted = `EXISTS(SELECT 1 FROM organization_case_cover_targets t JOIN organization_cases c ON c.id=t.case_id
   WHERE t.job_id=j.id AND c.deleted_at IS NULL AND (t.snapshot_kind='draft' OR c.status='published'))`
 
-/** Same PostgreSQL SKIP LOCKED + lease token + heartbeat convention as presentations. */
+/** PostgreSQL SKIP LOCKED with a lease token and heartbeat. */
 export async function claimCaseCover(db: Queryable, workerId: string, concurrency: number, maxAttempts = 3): Promise<CaseCoverClaim | null> {
   // Serialize only the small claim admission section; generation runs outside it.
   if (!(await db.query<{ locked: boolean }>(`SELECT pg_try_advisory_xact_lock(hashtext('case-cover-admission')) AS locked`)).rows[0]?.locked) return null

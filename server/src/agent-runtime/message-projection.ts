@@ -1,3 +1,4 @@
+import { generativeComponentSchemas } from '../../../src/lib/nativeMessage.js'
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { createHash } from 'node:crypto'
 import { publicAnswerSegments, responseSegments, type PublicTextPart, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
@@ -277,8 +278,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
   for (const segment of segments) {
     if (segment.type === 'presentation') {
       const component = segment.component
-      if (component.type === 'presentation-artifact') parts.push({ type: 'data', name: component.type, data: component.fields })
-      else parts.push({ type: 'generative-ui', id: component.hash, spec: { root: { component: component.type, props: component.fields } } })
+      if (Object.hasOwn(generativeComponentSchemas, component.type)) parts.push({ type: 'generative-ui', id: component.hash, spec: { root: { component: component.type, props: component.fields } } })
     }
     else {
       const text = segment.type === 'citation'

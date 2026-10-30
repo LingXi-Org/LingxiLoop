@@ -107,7 +107,6 @@ const RESOURCE_COLUMNS: Record<string, string[]> = {
   conversations: ['kind', 'company_id', 'project_id', 'created_at'],
   documents: ['company_id', 'project_id', 'updated_at'],
   canvases: ['status', 'project_id', 'created_at'],
-  presentations: ['status', 'project_id', 'created_at'],
   'notification-deliveries': ['status', 'recipient_user_id', 'error', 'created_at'],
   'knowledge-sources': ['kind', 'status', 'project_id', 'created_at'],
   'knowledge-jobs': ['source_id', 'status', 'last_error', 'created_at'],

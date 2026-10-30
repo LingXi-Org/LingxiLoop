@@ -30,14 +30,6 @@ export function approvalView(approval: ApprovalSnapshot) {
         : typeof preview.enabled === 'boolean' ? preview.enabled ? '在当前对话中启用资料' : '在当前对话中停用资料' : undefined)
       break
     }
-    case 'presentations.approve_outline': {
-      field('演示文稿', preview.title); version(preview.expectedRevision)
-      const outline = object(preview.outline)
-      field('受众', outline.audience)
-      if (Number.isSafeInteger(outline.targetPageCount)) field('计划页数', `${outline.targetPageCount} 页`)
-      field('具体变化', '批准当前大纲版本并开始生成页面')
-      break
-    }
     case 'routines.create':
     case 'routines.activate': {
       field('定时任务', preview.title); version(preview.version)

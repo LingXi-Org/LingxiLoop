@@ -44,7 +44,6 @@ export const env = {
   APP_VERSION: process.env.LINGXILOOP_VERSION?.trim() || '0.0.0-dev',
   COMMIT_SHA: process.env.LINGXILOOP_COMMIT_SHA?.trim() || 'dev',
   /** Release gate for the deterministic, source-grounded HTML deck pipeline. */
-  PRESENTATION_HTML_ENABLED: process.env.PRESENTATION_HTML_ENABLED?.trim().toLowerCase() === 'true',
   DATABASE_POOL_MAX: integerAtLeast('DATABASE_POOL_MAX', 20, 1),
   WUKONG_USER_TOKEN_SECRET: wukongUserTokenSecret(),
   DATABASE_URL: required('DATABASE_URL'),

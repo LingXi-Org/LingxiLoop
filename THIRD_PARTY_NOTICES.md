@@ -112,30 +112,6 @@ is retained at `third_party/open-notebook/LICENSE`.
 
 MIT License, Copyright (c) 2024 Luis Novo.
 
-## LingXi interactive-lecture-deck
-
-LingxiLoop's deterministic HTML lecture renderer is adapted from the visual,
-camera, spatial and interaction contracts in `interactive-lecture-deck`, pinned
-to commit `ca99f2227c4b35c918d294316ea5d0960c9d0f48`:
-https://github.com/LingXi-Org/LingxiSkills/tree/ca99f2227c4b35c918d294316ea5d0960c9d0f48/skills/interactive-lecture-deck
-
-The immutable upstream runtime snapshot and provenance are retained under
-`third_party/interactive-lecture-deck`. The adapted runtime also preserves the
-co-planarity fix from `a5802b9db011e414c0f616a11225564d59e9991a` and the
-slow-iframe race fix from `2973db3db5f1282cfbebad6da553a0d351c7a1b5`.
-
-MIT License, Copyright (c) 2026 LingXi Team. The complete license text is
-retained at `third_party/interactive-lecture-deck/LICENSE`.
-
-## OpenMAIC architecture reference
-
-The presentation research, planning, checkpoint, critic and targeted-repair
-stages were independently implemented with architectural reference to OpenMAIC
-at commit `dfebbcf33f3a56064129903faeab70a9e4243146`:
-https://github.com/THU-MAIC/OpenMAIC/tree/dfebbcf33f3a56064129903faeab70a9e4243146
-
-No OpenMAIC rendering DSL or rendering source code is included.
-
 ## OpenMausBot
 
 Portions of the desktop conversation UX and visual system are inspired by

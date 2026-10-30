@@ -13,7 +13,7 @@ reused across identical saves and publication. New snapshots wait two seconds so
 rapid edits supersede unclaimed work before model execution. A changed rules version requires
 explicit backfill; the worker cancels queued jobs using an older rules identity.
 
-The dedicated worker follows the presentations PostgreSQL lease convention:
+The dedicated worker uses a PostgreSQL lease:
 bounded admission, case-row locking, unique lease token, heartbeat, generation
 fence and bounded retries. It checks the requesting teacher's current permission
 before claim and commit. Unpublish cancels pending/in-flight jobs; saving again

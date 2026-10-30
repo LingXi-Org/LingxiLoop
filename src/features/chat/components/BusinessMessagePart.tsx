@@ -11,7 +11,7 @@ import { readComposerDraft, saveComposerDraft, type ComposerDraftScope } from '.
 import { getMeId, useAuth } from '@/stores/auth'
 import { chatTransport } from '../runtime/transport'
 import { CanvasArtifactTool, CanvasProgressTool, ElicitationFormTool,
-  PollFormTool, PresentationArtifactTool, RecommendationTool } from './ToolRenderers'
+  PollFormTool, RecommendationTool } from './ToolRenderers'
 
 const record = (value: unknown) => z.record(z.string(), z.unknown()).parse(value)
 const emailSchema = z.object({ from: z.string(), to: z.array(z.string()), cc: z.array(z.string()).default([]),
@@ -178,7 +178,6 @@ function LegacyBusinessMessagePart({ name, data, readOnly }: Pick<DataMessagePar
       <MessageFooterContext.Provider value={null}><CanvasProgressTool args={{ ...value, id: value.canvasId }} /></MessageFooterContext.Provider>
       <CanvasArtifactTool args={{ id: value.canvasId, title: value.title, description: value.goal, href: `lingxiloop://canvas/${encodeURIComponent(String(value.canvasId))}` }} />
     </>; break
-    case 'presentation-artifact': content = <PresentationArtifactTool args={value} />; break
     case 'citation-claims': return null
     case 'document-reference': content = <MessageFooterContents inset={false}><DocumentReference {...documentSchema.parse(value)} activePage={-1} /></MessageFooterContents>; break
     case 'email': {

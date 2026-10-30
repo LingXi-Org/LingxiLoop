@@ -64,7 +64,7 @@ const inputFields: Record<string, readonly [string, string][]> = {
   'files.create': [['name', '文件名称']], 'chat.rename': [['title', '对话名称']], 'chat.search': [['query', '查找内容']],
   'chat.ask': [['question', '需要补充']], 'polls.create': [['question', '投票问题']],
   'canvas.start_workspace': [['title', '协作任务']], 'canvas.create_frame': [['title', '内容名称']],
-  'presentations.create': [['title', '演示文稿名称']], 'routines.create': [['name', '定时任务名称']],
+  'routines.create': [['name', '定时任务名称']],
 }
 
 function publicField(value: unknown): string | undefined {

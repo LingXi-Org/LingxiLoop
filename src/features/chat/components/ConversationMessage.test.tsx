@@ -406,11 +406,9 @@ test('legacy unclassified content stays visible and the answer region is stable 
 test('partial and blocked replies retain delivered results and always expose one recovery status', () => {
   for (const outcome of ['partial', 'blocked'] as const) {
     for (const lifecycle of [outcome, 'succeeded'] as const) {
-      for (const delivered of ['presentation', 'artifact', 'citations', 'process', 'text', 'empty'] as const) {
+      for (const delivered of ['artifact', 'citations', 'process', 'text', 'empty'] as const) {
         const base = message('1')
-        const content = delivered === 'presentation'
-          ? [{ type: 'data', name: 'presentation-artifact', data: { artifactId: 'deck-304', artifactKind: 'lecture_deck_html', title: '已交付的演示稿' } }]
-          : delivered === 'citations' ? [{ type: 'data', name: 'citation-claims', data: { claims: [] } }]
+        const content = delivered === 'citations' ? [{ type: 'data', name: 'citation-claims', data: { claims: [] } }]
           : delivered === 'process' ? [{ type: 'text', text: '公开过程', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-304', kind: 'commentary', label: '公开过程' } } } }]
           : delivered === 'text' ? [{ type: 'text', text: '保留的部分答复。' }] : []
         const harness = { ...createRunView('run'), lifecycle, requestVersion: 1,
@@ -419,7 +417,7 @@ test('partial and blocked replies retain delivered results and always expose one
         const reply = { ...base, content: [...content, ...(delivered === 'empty' ? [] : [{ type: 'text', text: '过程记录', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-status-304', kind: 'commentary', label: '过程记录' } } } }])], status: { type: 'incomplete', reason: 'other' },
           metadata: { ...base.metadata, custom: { ...getLingxiMessageMetadata(base), sequence: null, sourceRef: 'source-question', runId: 'run', harness } } } as ThreadMessage
         const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
-        if (delivered === 'presentation' || delivered === 'artifact') {
+        if (delivered === 'artifact') {
           assert.match($.text(), /已交付/, `${outcome}/${delivered}`)
         }
         if (delivered === 'text') assert.match($('[data-message-region="body"]').text(), /保留的部分答复/)

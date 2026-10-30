@@ -55,7 +55,7 @@ export async function loadRuntimeBinding(work: Pick<Work, 'tenantId' | 'principa
 }
 
 const verifierActions = new Set(['canvas.current','canvas.set_status','canvas.submit_verification','learning.list_assignments','learning.get_assignment','learning.list_submissions',
-  'knowledge.list_sources','knowledge.search','knowledge.read_source','presentations.get','research.search','research.read'])
+  'knowledge.list_sources','knowledge.search','knowledge.read_source','research.search','research.read'])
 
 
 /** Preserve one native memory grant: the runtime control-plane uses the first
@@ -109,7 +109,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
         || TEACHER_KNOWLEDGE_ACTIONS.has(tool.action) && profile.capabilities.includes('knowledge')
           && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal && !!teacherContext
       if (namespace === 'teacher') return false
-      const capability = namespace === 'presentations' ? 'knowledge' : namespace === 'research' ? 'web' : namespace
+      const capability = namespace === 'research' ? 'web' : namespace
       if (!['memory','chat','polls','directory','visualize'].includes(namespace) && !profile.capabilities.includes(capability)) return false
       if (tool.action === 'canvas.submit_report') return canvasRun?.execution_role === 'specialist'
       if (tool.action === 'canvas.submit_verification') return canvasRun?.execution_role === 'verifier'

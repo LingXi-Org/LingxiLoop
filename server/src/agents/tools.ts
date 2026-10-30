@@ -56,7 +56,7 @@ export async function authorizeAgent(context: ActionContext) {
     WHERE p.id=$2 AND p.company_id=$1 AND p.kind='agent' AND p.departed_at IS NULL
       AND b.profile->'members' ? p.id FOR SHARE OF p,b`, [work.tenantId,work.agentId,productConversationId(work)])
   const agent = rows[0], namespace = context.action.action.split('.')[0]
-  const capability = namespace === 'research' ? 'web' : namespace === 'presentations' ? 'knowledge' : namespace
+  const capability = namespace === 'research' ? 'web' : namespace
   if (namespace === 'visualize' && (work.kind !== 'turn' || work.conversation?.internal)) throw new NoEffectError('visualize requires an ordinary conversation turn', 'forbidden')
   const teacherChat = ['chat.send', 'chat.report_progress'].includes(context.action.action) && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
   const teacherVisualize = namespace === 'visualize' && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal

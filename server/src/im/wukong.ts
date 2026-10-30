@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
-import { NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage, nativeMessageSchema } from './message-types.js'
+import { NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage, nativeMessageSchema, decodeNativeMessage } from './message-types.js'
 import type { ImBootstrap, ImChannelProfile, ImMessage } from './types.js'
 import { validSendReceipt } from './messages-repository.js'
 
@@ -299,5 +299,5 @@ export function decodeNativePayload(encoded: string): NativeMessage {
 
 function storedNativePayload(encoded: string): NativeMessage | null {
   const { type, ...payload } = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'))
-  return type === NATIVE_MESSAGE_CONTENT_TYPE ? nativeMessageSchema.parse(payload) : null
+  return type === NATIVE_MESSAGE_CONTENT_TYPE ? decodeNativeMessage(payload).message : null
 }

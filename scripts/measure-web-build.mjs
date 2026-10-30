@@ -42,7 +42,7 @@ async function journey(roots) {
 
 const initialPage = await journey(entries.slice(0, 3))
 const defaultChat = await journey(entries)
-const deferred = ['CanvasView', 'DocumentPeekPane', 'CalendarPeekPane', 'PresentationDrawerContent', 'SettingsDialog', 'PersonalDashboard']
+const deferred = ['CanvasView', 'DocumentPeekPane', 'CalendarPeekPane', 'SettingsDialog', 'PersonalDashboard']
 const report = {
   measurement: 'Production manifest static import closure. Excludes runtime data, font requests and browser timings.',
   initialPage, defaultChat,

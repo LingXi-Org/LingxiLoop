@@ -204,7 +204,6 @@ services:
       OPEN_NOTEBOOK_ENABLED: ${OPEN_NOTEBOOK_ENABLED:-true}
       OPEN_NOTEBOOK_URL: http://open-notebook:5055
       OPEN_NOTEBOOK_PASSWORD: ${OPEN_NOTEBOOK_PASSWORD:-lingxiloop-local-open-notebook-password}
-      PRESENTATION_HTML_ENABLED: ${PRESENTATION_HTML_ENABLED:-false}
     ports:
       # Public by default so the mobile client can reach the API backend.
       - "${LINGXILOOP_BIND_ADDRESS:-0.0.0.0}:${LINGXILOOP_PORT:-5181}:5181"

@@ -43,92 +43,10 @@ def test_route_table_is_exact() -> None:
         ("POST", "/api/sources/json"),
         ("GET", "/api/sources/{source_id}"),
         ("GET", "/api/sources/{source_id}/status"),
-        ("GET", "/api/sources/{source_id}/presentation-material"),
         ("POST", "/api/sources/{source_id}/retry"),
         ("DELETE", "/api/sources/{source_id}"),
         ("POST", "/api/search"),
     }
-
-
-@pytest.mark.asyncio
-async def test_presentation_material_is_bounded_and_keeps_provenance(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from api import rag_router
-
-    source = SimpleNamespace(
-        id="source:test",
-        title="Evidence source",
-        asset=None,
-        get_embedded_chunks=AsyncMock(return_value=2),
-    )
-    monkeypatch.setattr(rag_router.Source, "get", AsyncMock(return_value=source))
-    monkeypatch.setattr(
-        rag_router,
-        "repo_query",
-        AsyncMock(
-            return_value=[
-                {
-                    "id": "source_embedding:first",
-                    "order": 0,
-                    "content": "[[PAGE:7]]\n# Findings\nGrounded result",
-                },
-                {
-                    "id": "source_embedding:second",
-                    "order": 1,
-                    "content": "Supporting detail",
-                },
-            ]
-        ),
-    )
-
-    response = await rag_router.get_presentation_material("source:test")
-
-    assert response.model_dump() == {
-        "version": "PresentationMaterialV1",
-        "source_id": "source:test",
-        "title": "Evidence source",
-        "blocks": [
-            {
-                "chunk_id": "source_embedding:first",
-                "ordinal": 0,
-                "text": "# Findings\nGrounded result",
-                "page_number": 7,
-                "section_title": "Findings",
-            },
-            {
-                "chunk_id": "source_embedding:second",
-                "ordinal": 1,
-                "text": "Supporting detail",
-                "page_number": 7,
-                "section_title": "Findings",
-            },
-        ],
-        "assets": [],
-        "truncated": False,
-    }
-
-
-def test_presentation_asset_is_source_inline_and_bounded() -> None:
-    from api import rag_router
-
-    asset = rag_router._presentation_asset(
-        b"source-image", name="figure.png", page_number=3, width=640, height=360
-    )
-
-    assert asset is not None
-    assert asset.asset_id.startswith("presentation_asset:")
-    assert asset.mime_type == "image/png"
-    assert asset.data_uri.startswith("data:image/png;base64,")
-    assert asset.page_number == 3
-    assert (
-        rag_router._presentation_asset(
-            b"x" * (rag_router.MAX_PRESENTATION_ASSET_BYTES + 1),
-            name="oversized.png",
-            page_number=1,
-        )
-        is None
-    )
 
 
 def test_source_create_rejects_removed_controls() -> None:

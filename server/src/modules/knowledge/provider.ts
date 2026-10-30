@@ -42,33 +42,6 @@ export interface OpenNotebookSource {
   updated?: string
 }
 
-export interface OpenNotebookPresentationMaterialBlock {
-  chunk_id: string
-  ordinal: number
-  text: string
-  page_number?: number | null
-  section_title?: string | null
-}
-
-export interface OpenNotebookPresentationMaterialAsset {
-  asset_id: string
-  mime_type: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/svg+xml'
-  data_uri: string
-  page_number?: number | null
-  section_title?: string | null
-  width?: number | null
-  height?: number | null
-}
-
-export interface OpenNotebookPresentationMaterialV1 {
-  version: 'PresentationMaterialV1'
-  source_id: string
-  title: string
-  blocks: OpenNotebookPresentationMaterialBlock[]
-  assets: OpenNotebookPresentationMaterialAsset[]
-  truncated: boolean
-}
-
 export interface OpenNotebookSearchHit {
   id?: string
   parent_id?: string
@@ -221,10 +194,6 @@ export class OpenNotebookClient {
     return this.json(`/api/sources/${encodeURIComponent(sourceId)}`, {
       signal: signal ? AbortSignal.any([signal, deadline]) : deadline,
     })
-  }
-
-  getPresentationMaterial(sourceId: string): Promise<OpenNotebookPresentationMaterialV1> {
-    return this.json(`/api/sources/${encodeURIComponent(sourceId)}/presentation-material`, {}, 90_000)
   }
 
   getSourceStatus(sourceId: string): Promise<{ status?: string | null; command_id?: string | null; processing_info?: Record<string, unknown> | null }> {
