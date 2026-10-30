@@ -311,6 +311,9 @@ async function workers() {
 async function status(ssh) {
   await Promise.all(Object.keys(HOSTS).map(host => ssh.run(host, host,
     `cat /opt/lingxiloop/*/images.env 2>/dev/null | sort -u; docker ps --format '{{.Names}}\t{{.Status}}' | sort`)))
+  const metadata = git('show', 'HEAD:deploy/runtime-metadata.mjs')
+  await ssh.run('txy2', 'runtime metadata',
+    `docker exec -i lingxiloop-app-a-lingxiloop-1 node --input-type=module <<'RUNTIME_METADATA_JS'\n${metadata}\nRUNTIME_METADATA_JS`)
 }
 
 // Refuse the automatic rollout before obtaining Sigillo credentials or SSH.
