@@ -7,6 +7,7 @@ import {
 import type {
   PdfDocumentProxy,
   PdfjsModule,
+  PdfLoadingTask,
   PdfPageProxy,
 } from "@/components/retab/lib/pdf-document-types";
 import type {
@@ -30,6 +31,8 @@ type DocumentCacheEntry = {
   status: "pending" | "resolved" | "rejected";
   document?: PdfDocumentProxy;
   error?: unknown;
+  abort: AbortController;
+  task?: PdfLoadingTask;
 };
 
 type PageCacheEntry = {
@@ -48,6 +51,7 @@ let pdfjsPromise: Promise<PdfjsModule> | null = null;
 const documentCache = new Map<string, DocumentCacheEntry>();
 const pageCache = new WeakMap<PdfDocumentProxy, Map<number, PageCacheEntry>>();
 const detachedDocumentEntries = new Set<DocumentCacheEntry>();
+const destroyedTasks = new WeakSet<PdfLoadingTask>();
 let pruneTimer = 0;
 
 function loadPdfjs(): Promise<PdfjsModule> {
@@ -141,9 +145,10 @@ function getDocumentCacheEntry(
     lastUsedAt: Date.now(),
     retainRejected: Boolean(options.retainRejected),
     status: "pending",
+    abort: new AbortController(),
   };
   documentEntry.promise = loadPdfjs()
-    .then((pdfjs) => getPdfDocument(content, pdfjs))
+    .then((pdfjs) => getPdfDocument(content, pdfjs, documentEntry))
     .then(
       (document) => {
         documentEntry.status = "resolved";
@@ -156,6 +161,7 @@ function getDocumentCacheEntry(
         return document;
       },
       (error) => {
+        destroyPdfTask(documentEntry.task);
         documentEntry.status = "rejected";
         documentEntry.error = error;
         if (
@@ -177,6 +183,11 @@ export function clearPdfDocumentResource(content: ViewerContentIdentity) {
   const documentEntry = documentCache.get(content.key);
   if (!documentEntry) return;
   documentCache.delete(content.key);
+  if (documentEntry.status === "pending") {
+    documentEntry.abort.abort();
+    destroyPdfTask(documentEntry.task);
+    return;
+  }
   if (documentEntry.status === "resolved") {
     clearPageCache(documentEntry.document);
     if (documentEntry.consumers > 0) {
@@ -229,6 +240,10 @@ export function resetPdfDocumentResourceCacheForTests() {
   }
   const destroyedDocuments = new Set<PdfDocumentProxy>();
   for (const documentEntry of documentCache.values()) {
+    if (documentEntry.status === "pending") {
+      documentEntry.abort.abort();
+      destroyPdfTask(documentEntry.task);
+    }
     if (documentEntry.status === "resolved") {
       destroyPdfDocumentOnce(documentEntry.document, destroyedDocuments);
     }
@@ -346,21 +361,34 @@ function getPageCacheEntry(
 async function getPdfDocument(
   content: PdfDocumentContent,
   pdfjs: PdfjsModule,
+  entry: DocumentCacheEntry,
 ): Promise<PdfDocumentProxy> {
   try {
-    if (content.directUrl) {
-      return await pdfjs.getDocument(content.directUrl).promise;
-    }
-
-    const buffer = await content.readBytes();
-    return await pdfjs.getDocument({ data: new Uint8Array(buffer) }).promise;
+    const source = content.directUrl ?? { data: new Uint8Array(await waitForCancellation(content.readBytes({ signal: entry.abort.signal }), entry.abort.signal)) };
+    if (entry.abort.signal.aborted) throw new DOMException("PDF load cancelled", "AbortError");
+    entry.task = pdfjs.getDocument(source);
+    return await waitForPdfLoadingTask(entry.task, entry.abort.signal);
   } catch (error) {
+    if (entry.abort.signal.aborted) throw new DOMException("PDF load cancelled", "AbortError");
     if (isResourceError(error)) throw error;
     throw toPdfFormatError(error, {
       kind: "parse_failed",
       message: "Failed to parse PDF.",
     });
   }
+}
+
+export function waitForPdfLoadingTask(task: PdfLoadingTask, signal: AbortSignal): Promise<PdfDocumentProxy> {
+  return waitForCancellation(task.promise, signal);
+}
+
+function waitForCancellation<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(new DOMException("PDF load cancelled", "AbortError"));
+    if (signal.aborted) { void promise.catch(() => {}); abort(); return; }
+    signal.addEventListener("abort", abort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
+  });
 }
 
 function toPdfFormatError(
@@ -378,7 +406,13 @@ function toPdfFormatError(
 
 function destroyPdfDocument(document: PdfDocumentProxy | undefined) {
   clearPageCache(document);
-  void document?.destroy().catch(() => {});
+  destroyPdfTask(document?.loadingTask);
+}
+
+function destroyPdfTask(task: PdfLoadingTask | undefined) {
+  if (!task || destroyedTasks.has(task)) return;
+  destroyedTasks.add(task);
+  try { void task.destroy().catch(() => {}); } catch { /* teardown must not break the viewer */ }
 }
 
 function destroyPdfDocumentOnce(
