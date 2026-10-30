@@ -2,9 +2,9 @@
 
 Design and Slides replace the retired Canvas. Both are native ports of
 [baoyu-design](../third_party/baoyu-design/README.md)'s `claude-design` and
-`claude-slides`: the upstream file formats, editor pages, checker and skill text
-run unchanged; LingxiLoop supplies the storage, authorization, realtime and agent
-tools around them.
+`claude-slides`: their formats, checker and editor bundles keep the upstream bytes.
+LingxiLoop supplies storage, authorization, realtime and agent tools. A host download
+capability handles both editors’ exports inside the sandbox.
 
 ## Product surfaces
 
@@ -17,9 +17,12 @@ tools around them.
   one from a conversation (`slides.create`). The editor presents and exports PDF,
   HTML and PowerPoint.
 
-The editor page is served at `/artifact-editor/<kind>/<grant>/` and runs in an
-opaque-origin sandbox, so neither its code nor an artifact's own scripts can reach
-the application session or `/api`. The grant comes from
+Editors use `/artifact-editor/<kind>/<grant>/`. Slides runs in an opaque-origin
+sandbox. Design needs DOM access to its child artboards, so each signed grant gets
+its own `<grant-hash>-artifact.lingxilearn.cn` origin. That ingress accepts only the
+matching Design grant and blob routes, strips credentials/cookies, rejects service
+workers, and never serves the SPA or `/api`. The main-site editor URL retains its
+opaque sandbox. The grant comes from
 `POST /api/artifacts/:id/editor-grant`, is bound to the person, artifact and access
 mode, and every editor request re-checks the person's current `artifact:read` or
 `artifact:write` permission. Uploads are served at `/_blob/<id>`; ids are bound to
@@ -71,3 +74,12 @@ its local-CLI sections replaced by these tools; `design-cooperation` and
   editor routes, save conflicts, grant revocation).
 - Native Worker flow: `scripts/test-native-agent-artifacts.mjs` (builder and
   verifier on a Design canvas, rollback, restart, shared state).
+
+### Editor ingress
+
+The web Worker's `*-artifact.lingxilearn.cn/*` route needs a proxied wildcard DNS
+record under `lingxilearn.cn`; the existing `loop.lingxilearn.cn` custom domain stays
+on the same Worker. `LINGXILOOP_ARTIFACT_EDITOR_BASE` defaults to
+`https://artifact.lingxilearn.cn` in production and `http://artifact.localhost:5180`
+in development. Vite applies the same isolated ingress locally; change the base
+in both API and Vite environments when using a different local port.

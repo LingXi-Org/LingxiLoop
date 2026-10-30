@@ -6,9 +6,8 @@ import { artifactsApi } from '../api'
 import { ARTIFACT_LABELS, type ArtifactKind } from '../contracts'
 
 /**
- * The vendored baoyu-design editor page, unmodified. It runs in an opaque-origin
- * sandbox: its own and the artifact's scripts can reach only the editor routes its
- * signed grant opens, never this application's session or API.
+ * Design needs same-origin child frames, so each grant gets an isolated hostname.
+ * Slides stays opaque; neither editor origin serves this application's session or API.
  */
 export function ArtifactEditorFrame({ artifactId, kind, title }: { artifactId: string; kind: ArtifactKind; title: string }) {
   const [url, setUrl] = useState<string | null>(null)
@@ -38,7 +37,7 @@ export function ArtifactEditorFrame({ artifactId, kind, title }: { artifactId: s
       key={url}
       src={url}
       title={`${label}编辑器：${title}`}
-      sandbox="allow-scripts allow-downloads allow-popups allow-modals"
+      sandbox={kind === 'design' ? 'allow-scripts allow-same-origin allow-downloads allow-popups allow-modals' : 'allow-scripts allow-downloads allow-popups allow-modals'}
       allow="clipboard-read; clipboard-write; fullscreen"
       referrerPolicy="no-referrer"
       onLoad={() => setLoaded(true)}

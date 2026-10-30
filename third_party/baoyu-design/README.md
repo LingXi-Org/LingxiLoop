@@ -4,7 +4,7 @@ Pinned source: [`JimLiu/baoyu-design@c15e76ef5134228d2bb5da35652d30d7d6b8a34d`](
 
 - `upstream/claude-design/` and `upstream/claude-slides/` are the complete, byte-identical `skills/claude-design` and `skills/claude-slides` folders. No host adaptation belongs inside them; `.gitattributes` keeps their bytes on every platform.
 - `manifest.json` lists all 57 files with upstream path, byte count, SHA-256, Git blob SHA-1 and mode; each blob was checked against the pinned Git tree when it was fetched. `server/src/modules/artifacts/artifacts.test.ts` re-verifies every SHA-256.
-- The editor pages (`scripts/editor/`) are upstream's prebuilt bundles; their sources (BaoCut) are not published, so they are served unchanged.
+- The editor pages (`scripts/editor/`) are upstream's prebuilt bundles; their sources (BaoCut) are not published, so their bundles are served unchanged. The Slides HTML response adds a small host download capability before rendering; no vendored bytes change.
 
 ## Native adaptations
 
@@ -14,7 +14,8 @@ All of them live in `server/src/modules/artifacts/` and `src/features/artifacts/
 |---|---|
 | `server.mjs` `Store` on a `project/` folder | `store.ts`: `artifact_files` rows, one transaction per publish (same all-or-nothing `ifMatch` 409, limits and `_files.json` listing); uploads in object storage |
 | Random loopback grant in `/<kind>/<grant>/` | `grants.ts`: signed grant bound to person, artifact and access mode; every request re-checks current access |
-| `sameOrigin` write check | Grant write mode; the page runs in an opaque-origin sandbox (iframe `sandbox` plus a CSP `sandbox` directive on the page) |
+| Embedded Slides download fallback | `editor-downloads.ts`: the existing `slidesHost.downloads.save` capability saves generated blobs in the browser without entering the upstream fallback dialog |
+| `sameOrigin` write check | Grant write mode; Slides uses an opaque sandbox, Design a grant-specific isolated origin for its same-origin child artboards; the main-site page always keeps the opaque CSP sandbox |
 | `fs.watch` + poll → SSE `external-change` | Redis `lingxiloop:artifacts` events → the same SSE stream; an editor's own saves are not echoed |
 | Content id = first 32 hex of SHA-256 | HMAC of artifact and SHA-256, so a root `/_blob/<id>` is an unguessable per-artifact capability |
 | `comments.json` + lock file | `artifact_comments.doc`, locked by row; the comment model functions are ported unchanged |

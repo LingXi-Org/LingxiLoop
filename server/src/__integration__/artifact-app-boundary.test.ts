@@ -2,20 +2,23 @@ import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
 import { createServer, type Server } from 'node:http'
 import { pool } from '../db/pool.js'
+import { CH_ARTIFACTS, sub } from '../redis.js'
+import { publishArtifactEvent } from '../modules/artifacts/events.js'
 import { artifactBlobRouter, artifactEditorRouter } from '../modules/artifacts/index.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 // Full HTTP router + PostgreSQL/Redis for the product API and the vendored editor's
 // grant-authorized routes. Only the session identity is a test fixture.
-let server: Server, origin: string, companyId: string, projectId: string
+let server: Server, origin: string, companyId: string, projectId: string, agentId: string
 const userId = 'artifact-member'
 before(async () => {
   await ensureSchemaOnce(); await resetAllTables()
-  ;({ companyId, projectId } = await seedCompanyWithAgent())
+  await sub.subscribe(CH_ARTIFACTS)
+  ;({ companyId, projectId, agentId } = await seedCompanyWithAgent())
   await seedUserMembership(userId, companyId, { isAdmin: false })
   await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')`, [projectId, companyId, userId])
   await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members)
-    VALUES('artifact-room',$1,$2,'group','Design boundary',$3::jsonb)`, [companyId, projectId, JSON.stringify([userId])])
+    VALUES('artifact-room',$1,$2,'group','Design boundary',$3::jsonb)`, [companyId, projectId, JSON.stringify([userId, agentId])])
   // As in web.ts, the editor routes read their own bodies, so they precede the API's JSON parser.
   const app = (await import('express')).default()
   app.use('/artifact-editor', artifactEditorRouter)
@@ -43,6 +46,8 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   assert.equal((await (await api('/conversations/artifact-room/design', 'POST')).json() as { id: string }).id, design.id)
 
   const grant = await (await api(`/artifacts/${design.id}/editor-grant`, 'POST')).json() as { url: string; write: boolean }
+  assert.match(grant.url, /^http:\/\/[a-f0-9]{32}-artifact\.localhost:5180\//)
+  grant.url = new URL(grant.url).pathname
   assert.equal(grant.write, true)
   assert.match(grant.url, /^\/artifact-editor\/design\/[^/]+\/$/)
   const page = await fetch(origin + grant.url)
@@ -87,4 +92,43 @@ test('project Slides decks are listed, created with their index, renamed and del
   assert.equal((await (await api(`/artifacts/${deck.id}`, 'PATCH', { title: 'Final deck' })).json() as { title: string }).title, 'Final deck')
   assert.equal((await api(`/artifacts/${deck.id}`, 'DELETE')).status, 200)
   assert.equal((await api(`/artifacts/${deck.id}`)).status, 404)
+})
+
+test('open editor streams stop delivering files and comments after membership is revoked', async () => {
+  const deck = await (await api(`/projects/${projectId}/slides`, 'POST', { title: 'Revocation' })).json() as { id: string }
+  const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string }
+  const streams = await Promise.all(['__deck/events', '__comments/events'].map(async route => {
+    const response = await fetch(`${origin}${grant.url}${route}`, { signal: AbortSignal.timeout(5_000) })
+    assert.equal(response.status, 200)
+    const reader = response.body!.getReader()
+    let initial = ''
+    while (!initial.includes(route === '__deck/events' ? 'id:' : 'event: comments')) {
+      const chunk = await reader.read(); assert.equal(chunk.done, false)
+      initial += Buffer.from(chunk.value!).toString()
+    }
+    return reader
+  }))
+  try {
+    await pool.query('DELETE FROM project_memberships WHERE project_id=$1 AND user_id=$2', [projectId, userId])
+    for (const kind of ['files.changed', 'comments.changed'] as const) {
+      await publishArtifactEvent({ companyId, artifactId: deck.id, kind, paths: ['project/slides/private.html'], ver: 'private' })
+    }
+    for (const reader of streams) assert.deepEqual(await reader.read(), { value: undefined, done: true })
+  } finally {
+    await Promise.allSettled(streams.map(reader => reader.cancel()))
+    await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')`, [projectId, companyId, userId])
+  }
+})
+
+
+test('assigning and steering work returns the artifact and persists the requested assignment', async () => {
+  const design = await (await api('/conversations/artifact-room/design', 'POST')).json() as { id: string }
+  const assigned = await api(`/artifacts/${design.id}/assignments`, 'POST', { agentId, assignment: 'Build the board' })
+  assert.equal(assigned.status, 200)
+  assert.equal((await assigned.json() as { id: string }).id, design.id)
+  const steered = await api(`/artifacts/${design.id}/assignments/${agentId}/steer`, 'POST', { text: 'Revise the board' })
+  assert.equal(steered.status, 200)
+  assert.deepEqual(await steered.json(), { ok: true })
+  const rows = await pool.query('SELECT assignment,status FROM artifact_agent_assignments WHERE artifact_id=$1 AND agent_id=$2', [design.id, agentId])
+  assert.deepEqual(rows.rows, [{ assignment: 'Revise the board', status: 'waiting' }])
 })

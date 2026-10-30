@@ -29,6 +29,7 @@ src/features/cases/cover-vm/**
 !shared
 shared/**
 !shared/visualize-public-resources.ts
+!shared/artifact-editor-origin.ts
 !public/**
 !index.html
 !vite.config.ts

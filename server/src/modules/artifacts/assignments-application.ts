@@ -138,7 +138,7 @@ export interface ArtifactAssignmentsApplicationContext {
   execution: ArtifactExecution
   transaction: Transaction
   withArtifactFence<T>(artifactId: string, work: (db: Queryable) => Promise<T>): Promise<T>
-  getArtifactSnapshot(companyId: string, actorId: string, artifactId: string): Promise<ArtifactSnapshot>
+  getArtifactSnapshot(companyId: string, artifactId: string): Promise<ArtifactSnapshot>
   publishArtifact: PublishArtifact
   logActivity: LogActivity
 }
@@ -200,7 +200,7 @@ export function createArtifactAssignmentsApplication(context: ArtifactAssignment
       await touchArtifact(transactionDb, artifact.id)
       await publishArtifactProgress(transactionDb,input.companyId,artifact.id)
     })
-    const snapshot = await getArtifactSnapshot(input.companyId, input.actorId, input.artifactId)
+    const snapshot = await getArtifactSnapshot(input.companyId, input.artifactId)
     await publishAssignments(input.companyId, input.artifactId)
     await logActivity({
       companyId: input.companyId,

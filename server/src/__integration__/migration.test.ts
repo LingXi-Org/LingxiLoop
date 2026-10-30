@@ -12,6 +12,9 @@ import { assertMigrationsCurrent, migrateDatabase } from '../db/migrate.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
 import { TEACHER_PROMPT, TEACHER_PRESET_VERSION } from '../modules/learning/teacher-preset.js'
 
+// Product54 predates the 0060 capability replacement.
+const historicalCapabilities = ['canvas','documents','files','knowledge','learning','routines','web']
+
 const baselineUrl = new URL('../db/migrations/0001_v1_baseline.sql', import.meta.url)
 const legacyCleanupUrl = new URL('../db/migrations/0002_remove_legacy_identity.sql', import.meta.url)
 const affinityUrl = new URL('../db/migrations/0003_agent_os_session_affinity.sql', import.meta.url)
@@ -492,7 +495,7 @@ test('collaboration upgrade preserves managed IDs, custom rooms and leaders whil
       assert.ok(agent.system_prompt.startsWith(`You are ${preset.name},`))
       assert.ok(agent.system_prompt.includes('Publish concrete @id assignments in your native final reply'))
       const {system_prompt: _prompt,...identityAndGrants}=agent
-      assert.deepEqual(identityAndGrants,{ name: preset.name,initial: preset.initial,role: preset.role,capabilities: [...preset.capabilities].sort() })
+      assert.deepEqual(identityAndGrants,{ name: preset.name,initial: preset.initial,role: preset.role,capabilities: historicalCapabilities })
     }
     assert.deepEqual((await database.query("SELECT name,system_prompt FROM participants WHERE id='custom-nova'")).rows,[{ name: 'Nova',system_prompt: 'custom prompt' }])
     assert.deepEqual((await database.query("SELECT name,initial,system_prompt FROM participants WHERE id='old-pulse'")).rows,
@@ -791,7 +794,7 @@ test('capability backfill preserves teacher grants, custom prompts and later rev
     const read = async () => (await database.query('SELECT id,capabilities,system_prompt FROM participants WHERE company_id=$1 ORDER BY id', ['grants'])).rows
     const rows = await read()
     assert.equal(rows[0].system_prompt, 'custom persona')
-    assert.deepEqual(rows[0].capabilities, [...STARTER_TEAM[0].capabilities].sort())
+    assert.deepEqual(rows[0].capabilities, historicalCapabilities)
     assert.deepEqual(rows[1], { id: 'teacher', capabilities: ['teacher_admin','knowledge'], system_prompt: TEACHER_PROMPT })
     await database.query(`UPDATE participants SET capabilities='["documents"]' WHERE id='ordinary'`)
     assert.deepEqual(await migrateDatabase(database), [])

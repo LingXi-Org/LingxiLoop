@@ -23,7 +23,7 @@ import {
   insertActivity,
   type ReportRow,
 } from './repository.js'
-import { listing, publish, readProjectFile, type WireEntry } from './store.js'
+import { listing, publish, readProjectFile, sha256, type WireEntry } from './store.js'
 import { createArtifactWorkspacesApplication } from './workspaces-application.js'
 
 export function createArtifactApplication(infrastructure: ArtifactInfrastructure) {
@@ -135,8 +135,8 @@ export function createArtifactApplication(infrastructure: ArtifactInfrastructure
 
   async function readArtifactFile(companyId: string, artifactId: string, path: string) {
     const artifact = await requireArtifact(companyId, artifactId)
-    const [bytes, files] = await Promise.all([readProjectFile(db, artifactKind(artifact.kind), artifact.id, path), listing(db, artifact.id)])
-    return bytes ? { path, sha256: files.files[path]?.sha256 ?? null, bytes } : null
+    const bytes = await readProjectFile(db, artifactKind(artifact.kind), artifact.id, path)
+    return bytes ? { path, sha256: sha256(bytes), bytes } : null
   }
 
   /** Comments: the upstream service, with the agent hook replaced by a message to the conversation's agents. */

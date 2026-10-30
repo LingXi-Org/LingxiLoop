@@ -14,6 +14,7 @@ import { readGrant, type EditorGrant } from './grants.js'
 import { ARTIFACT_KIND_DEFINITIONS, BAOYU_DESIGN_ROOT, artifactKind, type ArtifactKindDefinition } from './kinds.js'
 import { blobFile, contentTypeOf, isWireEntry, listing, putBlob, readProjectFile, type WireEntry } from './store.js'
 import { availableAgents } from './repository.js'
+import { EDITOR_DOWNLOAD_SCRIPT } from './editor-downloads.js'
 
 // Ported from baoyu-design server.mjs `startServer`/`route`: the same routes under
 // /artifact-editor/<kind>/<grant>/, with the folder replaced by the artifact store,
@@ -148,9 +149,10 @@ async function serveEditor(request: Request, response: Response, definition: Art
   const type = STATIC_TYPES[ext] ?? 'application/octet-stream'
   const bytes = await readFile(file)
   if (ext === '.html') {
+    const html = bytes.toString('utf8').replace('</head>', `<script>${EDITOR_DOWNLOAD_SCRIPT}</script></head>`)
     response.status(200).set({ 'Content-Type': type, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': pageCsp(definition.pageScriptSrc(bytes.toString('utf8'))) })
-    response.end(request.method === 'HEAD' ? undefined : bytes)
+      'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': pageCsp(definition.pageScriptSrc(html)) })
+    response.end(request.method === 'HEAD' ? undefined : html)
     return
   }
   response.status(200).set({ 'Content-Type': type, 'X-Content-Type-Options': 'nosniff',
@@ -177,6 +179,16 @@ async function serveBlob(request: Request, response: Response, id: string, artif
   response.end(request.method === 'HEAD' ? undefined : bytes)
 }
 
+async function canStream(response: Response, { grant }: EditorSession) {
+  if (response.writableEnded) return false
+  if (grant.expiresAt <= Date.now() || !(await permissionService.can({ actorUserId: grant.userId, companyId: grant.companyId,
+    action: 'artifact:read', resource: { type: 'artifact', id: grant.artifactId } })).allowed) {
+    response.end()
+    return false
+  }
+  return !response.writableEnded
+}
+
 function events(request: Request, response: Response, session: EditorSession) {
   response.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', Connection: 'keep-alive',
     'X-Accel-Buffering': 'no', 'Access-Control-Allow-Origin': '*' })
@@ -189,17 +201,21 @@ function events(request: Request, response: Response, session: EditorSession) {
     if (last && Number(last[1]) < seq) {
       // Missed saves while disconnected: the listing names every file the page must reread.
       const current = await listing(pool, artifactId)
+      if (!await canStream(response, session)) return
       response.write(`id: ${seq}\nevent: external-change\ndata: ${JSON.stringify({ type: 'external-change', paths: Object.keys(current.files), ver: current.ver })}\n\n`)
-    } else response.write(`id: ${seq}\n\n`)
+    } else if (await canStream(response, session)) response.write(`id: ${seq}\n\n`)
   })().catch(() => response.end())
   const stop = onArtifactEvent(artifactId, event => {
     if (event.kind === 'artifact.deleted') { response.end(); return }
     if (event.kind !== 'files.changed' || event.origin === session.session) return
-    void pool.query<{ seq: string }>('SELECT seq FROM artifacts WHERE id=$1', [artifactId]).then(({ rows }) => {
+    void pool.query<{ seq: string }>('SELECT seq FROM artifacts WHERE id=$1', [artifactId]).then(async ({ rows }) => {
+      if (!await canStream(response, session)) return
       response.write(`id: ${rows[0]?.seq ?? 0}\nevent: external-change\ndata: ${JSON.stringify({ type: 'external-change', paths: event.paths ?? [], ver: event.ver })}\n\n`)
-    }).catch(() => undefined)
+    }).catch(() => response.end())
   })
-  const keepAlive = setInterval(() => response.write(': ping\n\n'), SSE_KEEPALIVE_MS)
+  const keepAlive = setInterval(() => {
+    void canStream(response, session).then(allowed => { if (allowed) response.write(': ping\n\n') }).catch(() => response.end())
+  }, SSE_KEEPALIVE_MS)
   keepAlive.unref?.()
   const done = () => { clearInterval(keepAlive); stop() }
   request.on('close', done)
@@ -211,15 +227,18 @@ function commentEvents(request: Request, response: Response, session: EditorSess
     'X-Accel-Buffering': 'no', 'Access-Control-Allow-Origin': '*' })
   response.write(': connected\n\n')
   let lastSent = ''
-  const push = () => commentsSnapshot(session).then(snap => {
+  const push = () => commentsSnapshot(session).then(async snap => {
+    if (!await canStream(response, session)) return
     const text = `event: comments\ndata: ${JSON.stringify(snap)}\n\n`
     if (text === lastSent) return
     lastSent = text
     response.write(text)
-  }).catch(() => undefined)
+  }).catch(() => response.end())
   void push()
   const stop = onArtifactEvent(session.grant.artifactId, event => { if (event.kind === 'comments.changed') void push() })
-  const keepAlive = setInterval(() => response.write(': ping\n\n'), SSE_KEEPALIVE_MS)
+  const keepAlive = setInterval(() => {
+    void canStream(response, session).then(allowed => { if (allowed) response.write(': ping\n\n') }).catch(() => response.end())
+  }, SSE_KEEPALIVE_MS)
   keepAlive.unref?.()
   const done = () => { clearInterval(keepAlive); stop() }
   request.on('close', done)

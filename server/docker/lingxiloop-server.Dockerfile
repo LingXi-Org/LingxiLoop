@@ -75,7 +75,7 @@ WORKDIR /app
 # Preserve the existing Web/visualize build entrypoints after the scoped install.
 COPY package.json ./
 COPY src ./src
-COPY shared/visualize-public-resources.ts ./shared/
+COPY shared/visualize-public-resources.ts shared/artifact-editor-origin.ts ./shared/
 COPY public ./public
 COPY index.html ./
 COPY vite.config.ts ./
@@ -112,6 +112,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/package-lock.json ./
 # Ship only runtime sources/resources and the exact provenance manifests.
 COPY server/src ./server/src
+COPY shared/artifact-editor-origin.ts ./shared/
 COPY server/assets ./server/assets
 COPY server/package.json server/package-lock.json ./server/
 COPY server/scripts/check-packaged-startup.mjs ./server/scripts/

@@ -16,7 +16,7 @@ Object.assign(process.env, { DATABASE_URL: url, OPENAI_API_KEY: 'native-check', 
   R2_URL_SIGNING_SECRET: 'native-check-signing-secret', LINGXILOOP_INVITE_BASE_URL: 'https://app.test.invalid' })
 const db = new Pool({ connectionString: url, max: 8 }), loader = register({ namespace: 'native-artifact-check' })
 const root = await mkdtemp(join(tmpdir(), 'lingxios-native-artifact-'))
-let control, worker, activeWork, failure = false, staleReportRejected = false
+let control, worker, activeWork, failure = false, staleReportRejected = false, revoked = false
 const actionPool = { query: (...args) => db.query(...args), async connect() {
   const client = await db.connect()
   return { release: error => client.release(error), async query(sql, params) {
@@ -30,7 +30,17 @@ const im = createServer(async (req, res) => {
   const chunks = []; for await (const chunk of req) chunks.push(chunk)
   const input = JSON.parse(Buffer.concat(chunks).toString() || '{}')
   res.setHeader('content-type', 'application/json')
-  res.end(JSON.stringify(req.url === '/channel/messagesync' ? { messages: input.start_message_seq ? [] : messages } : {}))
+  let result = {}
+  if (req.url === '/channel/messagesync') result = { messages: input.start_message_seq ? [] : messages }
+  if (req.url === '/message/send') {
+    let sent = messages.find(message => message.client_msg_no === input.client_msg_no)
+    if (!sent) {
+      sent = { ...input, message_id: `native-message-${messages.length + 1}`, message_seq: messages.length + 1 }
+      messages.push(sent)
+    }
+    result = { reason: 1, message_id: sent.message_id, message_seq: sent.message_seq }
+  }
+  res.end(JSON.stringify(result))
 })
 await new Promise(resolve => im.listen(0, '127.0.0.1', resolve))
 try {
@@ -66,8 +76,11 @@ try {
   const { createArtifactRuntime } = await loader.import('../server/src/modules/artifacts/runtime.ts', import.meta.url)
   const { createArtifactApplication } = await loader.import('../server/src/modules/artifacts/application.ts', import.meta.url)
   const { createArtifactExecution } = await loader.import('../server/src/modules/artifacts/execution.ts', import.meta.url)
-  const { createRoutineTools, scheduleRoutines } = await loader.import('../server/src/modules/routines/public.ts', import.meta.url)
-  const { createProductContext } = await loader.import('../server/src/agent-runtime/context.ts', import.meta.url)
+  const { createRoutineTools } = await loader.import('../server/src/modules/routines/public.ts', import.meta.url)
+  const { createProductContext, ProductRuntimePolicy } = await loader.import('../server/src/agent-runtime/context.ts', import.meta.url)
+  const { prepareLingxiOSWorkerContext } = await loader.import('../server/src/agent-runtime/runtime.ts', import.meta.url)
+  prepareLingxiOSWorkerContext()
+  const { createProductDelivery } = await loader.import('../server/src/agent-runtime/delivery.ts', import.meta.url)
   const { createProductHarness } = await loader.import('../server/src/agent-runtime/harness.ts', import.meta.url)
   const { syncConversationPolicy } = await loader.import('../server/src/agent-runtime/conversations.ts', import.meta.url)
   await db.query(`INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status,capabilities)
@@ -81,7 +94,7 @@ try {
   const tools = [...createArtifactTools('design', async () => control),...createRoutineTools(async () => control)]
   control = await createLingxiOS({ database: actionPool, harness: createProductHarness(tools), ...createProductContext(tools),
     verifyRun: async context => { const records=await lifecycle.verify(context); if(context.work.agentId==='agent' && records.some(record=>record.status==='failed')) staleReportRejected=true; return records }, homesRoot: root, modelBudget: { maxModelCalls: 24 },
-    delivery: { onEvent: async () => {}, deliverMessage: async (_work,_message,context) => ({ messageId: context.im.messageKey }) } })
+    delivery: createProductDelivery(async () => control) })
   const transaction = async run => { const client=await db.connect(); try { await client.query('BEGIN'); const result=await run(client); await client.query('COMMIT'); return result }
     catch(error) { await client.query('ROLLBACK'); throw error } finally { client.release() } }
   const app = createArtifactApplication({ db, execution: createArtifactExecution(async () => control), transaction,
@@ -93,19 +106,19 @@ try {
   const hops = new Map(), usage = { available: true,inputTokens: 100,outputTokens: 30 }
   const model = { modelId: 'native-artifact-check',contextWindowTokens: 200000,
     async run(request) {
+      assert.equal(revoked, false, 'revoked access must fail before calling the model')
       const hop=(hops.get(activeWork.id) ?? 0)+1; hops.set(activeWork.id,hop)
       assert.ok(hop<12,'bounded artifact fixture must complete')
       const call=(name,args) => ({ output:[{type:'function_call',callId:`${activeWork.id}-${hop}`,name,arguments:JSON.stringify(args)}],text:'',model:'native-artifact-check',usage })
       if(activeWork.agentId==='coordinator') {
         if(hop===1) { failure=true; return call('design__start_workspace',input) }
-        if(hop===2) { assert.equal((await db.query('SELECT 1 FROM artifact_agent_assignments')).rows.length,0); return call('design__start_workspace',input) }
+        if(hop===2) { assert.equal((await db.query('SELECT 1 FROM artifact_agent_assignments')).rows.length,0); return call('design__start_workspace',{...input,title:'Design verification retry'}) }
         if(hop===3) return call('design__edit_file',{path:'project/Main.dc.html',oldString:'Text the builder never wrote',newString:'Must not be written.'})
         if(hop===4) {
           assert.equal((await db.query("SELECT 1 FROM artifact_files WHERE convert_from(body,'UTF8') LIKE '%Must not be written%'")).rows.length,0)
-          assert.equal(JSON.parse(request.items.filter(item=>item.type==='function_call_output').at(-1).output).executionState,'rejected')
-          const reports=(await db.query("SELECT id FROM artifact_assignment_reports WHERE author_agent_id IN ('agent','verifier') AND assignment_id IS NOT NULL")).rows
-          assert.equal(reports.length,2,JSON.stringify(await Promise.all((await db.query('SELECT work_id FROM artifact_agent_runs WHERE assignment_id IS NOT NULL')).rows.map(async row => control.readDiagnostics(await readRunReference(db,'t',row.work_id))))))
-          return call('design__submit_report',{finding:'Builder and independent verifier agree.',confidence:0.9,evidenceRefs:[],consumedReportIds:reports.map(row=>row.id)})
+          assert.equal(JSON.parse(request.items.filter(item=>item.type==='function_call_output').at(-1).output).executionState,'no_effect')
+          const text = '协作交接：@agent Build the artboard and hand it to @verifier when your current report passes.'
+          return {output:[{role:'assistant',content:text}],text,model:'native-artifact-check',usage}
         }
       } else if(activeWork.agentId==='agent') {
         if(hop===1) return call('design__write_files',{files:{'project/Main.dc.html':{content:'<x-dc><p>A stale lease cannot write.</p></x-dc>'}}})
@@ -121,7 +134,7 @@ try {
         if(hop===1) return call('design__submit_verification',{finding:'The builder is supported.',evidenceRefs:[{kind:'file',id:'project/Main.dc.html'}],confidence:0.9,
           verifiesReportId:report.id,disconfirmingChecks:['Checked whether stale epochs could write.'],verdict:'supported'})
       }
-      const text='Persisted and checked Design results.'
+      const text=activeWork.agentId==='agent' && hop===6 ? '协作交接：@verifier Verify the current builder report and artboard.' : 'Persisted and checked Design results.'
       return {output:[{role:'assistant',content:text}],text,model:'native-artifact-check',usage}
     },
     async structured() { return {value:{missing:[]},model:'native-artifact-check',usage} },
@@ -131,44 +144,62 @@ try {
     return createWorker({ controlPlane: { connectWorker(options) {
       const host=control.connectWorker(options)
       return {...host,async claimWork(...args) { const work=await host.claimWork(...args); if(work) activeWork=work; return work } }
-    } },model,kernel:{homesRoot:root},worker:{id} })
+    } },model,policy:new ProductRuntimePolicy(),kernel:{homesRoot:root},worker:{id} })
   }
   const policy=await syncConversationPolicy(control,'t','study')
   const accepted=await control.conversations.ingest({tenantId:'t',conversationId:'study',policyVersion:policy.version,messageId:'source',version:1,
-    author:{id:'learner',kind:'human'},text:'Build and independently verify the Design result.',mentions:['coordinator']},{mode:'execute',executionClass:'operation'})
+    author:{id:'learner',kind:'human'},text:'Build and independently verify the Design result.',mentions:['coordinator']},{mode:'execute',executionClass:'conversation'})
   const parent=accepted.runs[0]
   assert.ok(parent); assert.notEqual(parent.sessionId,'study')
   worker=makeWorker('artifact-first')
   assert.equal(await worker.runNext(),true)
-  assert.equal((await control.readRun(parent)).status,'waiting',JSON.stringify(await control.readDiagnostics(parent)))
+  assert.equal((await control.readRun(parent)).status,'succeeded',JSON.stringify(await control.readDiagnostics(parent)))
   const designId=(await db.query("SELECT id FROM artifacts WHERE kind='design'")).rows[0].id
   const collaboration=await lifecycle.readCollaboration(db,'t','learner',designId)
-  assert.equal(collaboration.graphs.length,1)
-  assert.equal(collaboration.graphs[0].nodes.length,2)
+  assert.equal(collaboration.state,null)
+  assert.deepEqual(collaboration.history.items,[])
+  assert.deepEqual((await db.query('SELECT status FROM artifact_agent_assignments ORDER BY agent_id')).rows,[{status:'waiting'},{status:'waiting'}])
   const change={operationId:'finding',changes:[{field:'finding',expectedVersion:0,value:'Observed'}]}
   assert.equal((await lifecycle.updateSharedState(db,'t','learner',designId,change)).ok,true)
   assert.equal((await lifecycle.updateSharedState(db,'t','learner',designId,change)).deduplicated,true)
   assert.equal((await lifecycle.updateSharedState(db,'t','learner',designId,{...change,operationId:'stale'})).ok,false)
-  // Resume the persisted graph with a different actual Worker; no runtime SQL fixtures.
-  await worker.stop(); worker=makeWorker('artifact-second')
-  const deadline=Date.now()+15000
-  while((await control.readRun(parent)).status!=='succeeded' && Date.now()<deadline) {
-    if(!await worker.runNext()) await new Promise(resolve=>setTimeout(resolve,20))
-    const snapshot=await control.readRun(parent)
-    assert.ok(!['failed','cancelled','blocked'].includes(snapshot.status),JSON.stringify({parent:await control.readDiagnostics(parent),children:await Promise.all((await db.query('SELECT work_id FROM artifact_agent_runs WHERE assignment_id IS NOT NULL')).rows.map(async row=>control.readDiagnostics(await readRunReference(db,'t',row.work_id))))}))
+  async function waitForDelivery(run) {
+    const deadline=Date.now()+15000
+    while(await control.readDelivery(run)!=='delivered' && Date.now()<deadline) await new Promise(resolve=>setTimeout(resolve,20))
+    assert.equal(await control.readDelivery(run),'delivered',JSON.stringify(await control.readDiagnostics(run)))
   }
-  assert.equal((await control.readRun(parent)).status,'succeeded')
-  assert.equal((await db.query('SELECT id FROM artifact_assignment_reports')).rows.length,4)
+  await waitForDelivery(parent)
+  // Resume the durable group handoff with a different actual Worker.
+  await worker.stop(); worker=makeWorker('artifact-second')
+  for(const agentId of ['agent','verifier']) {
+    assert.equal(await worker.runNext(),true)
+    assert.equal(activeWork.agentId,agentId)
+    const run=await readRunReference(db,'t',activeWork.id)
+    assert.equal((await control.readRun(run)).status,'succeeded',JSON.stringify(await control.readDiagnostics(run)))
+    await waitForDelivery(run)
+  }
+  assert.equal((await db.query('SELECT id FROM artifact_assignment_reports')).rows.length,3)
+  assert.equal((await db.query('SELECT id FROM artifact_assignment_reports WHERE assignment_id IS NOT NULL')).rows.length,2)
   assert.equal(staleReportRejected,true)
   await lifecycle.reconcile(db,app.completeArtifactWork,AbortSignal.timeout(10000))
   assert.equal((await app.getArtifactSnapshot('t',designId)).status,'completed')
   assert.ok((await lifecycle.readCollaboration(db,'t','learner',designId)).history.items.length)
+  const beforeRevocation=(await db.query('SELECT path,sha256 FROM artifact_files ORDER BY path')).rows
+  revoked=true
   await db.query("UPDATE project_memberships SET status='SUSPENDED' WHERE user_id='learner'")
   await assert.rejects(lifecycle.readCollaboration(db,'t','learner',designId))
-  console.log('Native Design artifact: real Worker graph, rollback, builder/verifier ordering, restart, parent report, shared state conflict/idempotency, projection and authorization passed.')
+  const denied=await control.conversations.ingest({tenantId:'t',conversationId:'study',policyVersion:policy.version,messageId:'revoked',version:1,
+    author:{id:'learner',kind:'human'},text:'Overwrite the Design result.',mentions:['agent']},{mode:'execute',executionClass:'conversation'})
+  assert.ok(denied.runs[0])
+  assert.equal(await worker.runNext(),true)
+  assert.equal((await control.readRun(denied.runs[0])).status,'failed')
+  assert.deepEqual((await db.query('SELECT path,sha256 FROM artifact_files ORDER BY path')).rows,beforeRevocation)
+  console.log('Native Design artifact: real Worker handoffs, rollback, stale evidence, independent verifier, restart, shared state conflict/idempotency, projection and revoked-write authorization passed.')
 } finally {
   await worker?.stop()
   await control?.stop()
+  const { stopLingxiOSControl } = await loader.import('../server/src/agent-runtime/runtime.ts', import.meta.url)
+  await stopLingxiOSControl()
   const { closeDatabasePools } = await loader.import('../server/src/db/pool.ts', import.meta.url)
   await closeDatabasePools()
   const { redis, sub } = await loader.import('../server/src/redis.ts', import.meta.url)

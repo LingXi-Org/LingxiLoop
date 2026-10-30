@@ -143,6 +143,8 @@ export const env = {
   ),
   /** Public base URL used to build company invitation links. */
   INVITE_BASE_URL: required('LINGXILOOP_INVITE_BASE_URL'),
+  ARTIFACT_EDITOR_BASE: process.env.LINGXILOOP_ARTIFACT_EDITOR_BASE ?? (process.env.NODE_ENV === 'production'
+    ? 'https://artifact.lingxilearn.cn' : 'http://artifact.localhost:5180'),
   /** Transactional organization invitations; never an Agent capability. */
   RESEND_API_KEY: process.env.RESEND_API_KEY ?? '',
   EMAIL_DOMAIN: (process.env.EMAIL_DOMAIN ?? '').toLowerCase().replace(/^\.+|\.+$/g, ''),

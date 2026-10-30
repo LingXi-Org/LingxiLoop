@@ -4,7 +4,7 @@ import type { ArtifactKind } from './kinds.js'
 
 // Upstream serves the editor at /<kind>/<random grant>/ on loopback. Here the grant
 // is a signed, short-lived capability bound to one user, artifact and access mode,
-// because the editor runs in an opaque-origin iframe that carries no session cookie.
+// because the editor uses an isolated iframe without the application session cookie.
 // It outlives an editing session; every request still re-checks current access.
 export const GRANT_TTL_MS = 12 * 60 * 60_000
 

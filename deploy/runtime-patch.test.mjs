@@ -56,6 +56,17 @@ test('next patch accepts only exact17 to18 receipts and remains on product58', (
   const future = fixture('3.8.19')
   assert.throws(() => runtimePatchPlan(future.read, future.paths), /unreviewed runtime transition/)
 })
+test('native artifacts use the installed runtime only with the exact product60 inventory', () => {
+  const f = fixture('3.8.18')
+  for (const name of ['0059_retire_presentation_generation', '0060_native_artifacts']) {
+    const path = `server/src/db/migrations/${name}.sql`
+    f.paths.push(path); f.files[path] = '-- reviewed fixture'
+  }
+  assert.equal(runtimePatchPlan(f.read, f.paths), null)
+  assert.throws(() => runtimePatchPlan(f.read, [...f.paths.slice(0, -1), f.paths.at(-1).replace('native_artifacts', 'unknown')]))
+  assert.throws(() => runtimePatchPlan(f.read, [...f.paths, 'server/src/db/migrations/0061_unknown.sql']))
+  assert.throws(() => assertRetirementReleaseAllowed(f.paths, 'up'), /explicit maintenance release approval/)
+})
 const run = async (fail, observed = { complete: false, state: 'source' }) => {
   const calls = [], actions = {}
   for (const name of ['preflight', 'requireFreshIntent', 'snapshotSource', 'stopIngress', 'stopWorkers', 'markAttempt', 'apply', 'observe', 'restoreSource', 'convergeTarget']) actions[name] = async () => {
