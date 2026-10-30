@@ -83,7 +83,7 @@ function HarnessDetailsContent({ metadata }: { metadata: LingxiMessageMetadata }
         await chatTransport.continueRun(target, answer.trim(), view.requestVersion)
         setSubmitted(view.requestVersion)
       })} /> : owner.type !== 'tool' && outcome?.status !== 'awaiting_input' && outcome?.question && <p className="text-sm text-foreground">{outcome.question}</p>}
-    {view.artifacts.length ? <DeliveryCard artifacts={view.artifacts} busy={busy} onDownload={artifact => void perform(() => harnessApi.download(target,artifact))} /> : null}
+    {view.artifacts.length ? <DeliveryCard artifacts={view.artifacts} busy={busy} onPreview={artifact => harnessApi.readArtifact(target,artifact)} onDownload={artifact => void perform(() => harnessApi.download(target,artifact))} /> : null}
     {metadata.harnessControl && active && outcome?.status === 'awaiting_approval' && !tools.some(tool => tool.approval?.id === outcome.approvalId) && <ApprovalRequestCard
           key={outcome.approvalId} approvalId={outcome.approvalId} sender={metadata.senderName} busy={busy || resolvedApproval === outcome.approvalId}
           onApprove={() => approve(outcome.approvalId, true)}

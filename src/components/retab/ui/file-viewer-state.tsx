@@ -264,7 +264,7 @@ export function FileViewerUnsupportedState({
   fileName,
   icon = <FileQuestion className="size-5" />,
   showDownload = true,
-  title = "Preview unsupported",
+  title = "暂不支持预览",
   ...props
 }: FileViewerUnsupportedStateProps) {
   const resolvedDescription =

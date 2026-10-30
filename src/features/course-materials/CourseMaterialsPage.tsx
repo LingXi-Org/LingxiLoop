@@ -148,7 +148,7 @@ function MaterialsSpace({ context, readOnly, query, fileInput }: { context: Mate
     </div>}
     <div aria-busy={query.isFetching} className="overflow-hidden rounded-xl border">
       {query.isPending ? <div className="p-5"><ResourceSkeleton variant="list" label="正在加载课程资料" /></div>
-        : visible.length ? <FileListView files={visible} publicSpace={space === 'public'} selected={selected} busyIds={busyIds} sort={sort} readOnly={readOnly} onSort={setSort}
+        : visible.length ? <FileListView files={visible} projectId={projectId} publicSpace={space === 'public'} selected={selected} busyIds={busyIds} sort={sort} readOnly={readOnly} onSort={setSort}
           onSelect={(id, checked) => setSelected(previous => { const next = new Set(previous); if (checked) next.add(id); else next.delete(id); return next })}
           onSelectAll={checked => setSelected(checked ? new Set(visible.map(source => source.id)) : new Set())}
           onOpen={setOpened} onRename={setRenaming} onDownload={onDownload} onDelete={source => void remove([source])}
@@ -160,7 +160,7 @@ function MaterialsSpace({ context, readOnly, query, fileInput }: { context: Mate
           </div>}
     </div>
     {!query.isPending && !query.isError && <p role="status" className="text-xs tabular-nums text-muted-foreground">共 {sources.length} 份资料{visible.length !== sources.length ? `，筛选后 ${visible.length} 份` : ''}</p>}
-    {opened && <MaterialPreview key={opened.id} source={opened} context={context} onClose={() => setOpened(null)} onDownload={onDownload} downloadBusy={busyIds.has(opened.id)} />}
+    {opened && <MaterialPreview key={opened.id} source={opened} context={context} onClose={() => setOpened(null)} />}
     {renaming && <RenameMaterial key={renaming.id} source={renaming} onClose={() => setRenaming(null)} onSave={async title => {
       if (!isCurrent() || readOnly || !renaming.capabilities?.canRename) return
       await knowledgeApi.renameProjectSource(projectId, renaming.id, title)

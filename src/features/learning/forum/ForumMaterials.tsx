@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { ForumAttachment } from './contracts'
-import { attachmentKind, forumFileUrl } from './ForumAttachments'
+import { attachmentKind, forumFileUrl, ForumFileOpen } from './ForumAttachments'
 
 // Presentation only: uploads, Markdown insertion and draft persistence stay with the host.
 export function ForumMaterials({ attachments, links, setLinks, disabled, picker, onMove, onRemove, onInsertImage, open, setOpen }: {
@@ -48,7 +48,7 @@ export function ForumMaterials({ attachments, links, setLinks, disabled, picker,
       {count === 0 ? <p className="text-xs text-muted-foreground">还没有材料，可添加文件或参考链接。</p> : <ul className="forum-materials-list">
         {attachments.map((file, index) => <li key={file.key} className="forum-material">
           {attachmentKind(file.name) === 'image' ? <img src={forumFileUrl(file)} alt="" className="forum-material-kind object-cover" /> : <span className="forum-material-kind"><FileIcon /></span>}
-          <a href={forumFileUrl(file)} target="_blank" rel="noopener noreferrer" className="forum-material-name">{file.name}<span className="forum-material-meta">{attachmentKind(file.name) === 'image' ? '图片' : '文件'}</span></a>
+          <ForumFileOpen file={file} className="forum-material-name">{file.name}<span className="forum-material-meta">{attachmentKind(file.name) === 'image' ? '图片' : '文件'}</span></ForumFileOpen>
           <div className="forum-material-actions">
             {attachmentKind(file.name) === 'image' && <Button type="button" variant="ghost" size="icon-sm" disabled={disabled} aria-label={`插入正文：${file.name}`} title="在光标处插入图片" onClick={() => onInsertImage(file)}><ImagePlusIcon /></Button>}
             <Button type="button" variant="ghost" size="icon-sm" disabled={disabled || index === 0} aria-label={`上移附件：${file.name}`} onClick={() => onMove(index, -1)}><ArrowUpIcon /></Button>
