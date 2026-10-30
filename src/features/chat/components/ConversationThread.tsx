@@ -108,7 +108,12 @@ export function ConversationThread({
 
   const loadOlder = useCallback(async () => {
     const viewport = viewportRef.current
-    if (!viewport || loadingOlderRef.current || !snapshot.hasMoreOlder) return true
+    const current = useChatThreadStore.getState().conversations[conversationId]
+    // An intersecting skeleton sentinel is not a reader requesting pagination.
+    // Transport would no-op before initial history is loaded; don't leave a
+    // reading lock behind and prevent that history from following to latest.
+    if (!viewport || snapshot.isLoading || !current?.loaded || current.isLoadingOlder
+      || loadingOlderRef.current || !snapshot.hasMoreOlder) return true
     pauseFollowing()
     loadingOlderRef.current = true
     const before = useChatThreadStore.getState().conversations[conversationId]?.messages
@@ -121,7 +126,7 @@ export function ConversationThread({
     }
     const after = useChatThreadStore.getState().conversations[conversationId]
     return !after?.hasMoreOlder || (after.messages[0] && messageKey(after.messages[0])) !== (before?.[0] && messageKey(before[0]))
-  }, [conversationId, snapshot.hasMoreOlder, pauseFollowing, viewportRef])
+  }, [conversationId, snapshot.isLoading, snapshot.hasMoreOlder, pauseFollowing, viewportRef])
 
   const navigateToQuestion = useCallback((id: string) => {
     const viewport = viewportRef.current
@@ -137,13 +142,13 @@ export function ConversationThread({
   useEffect(() => {
     const viewport = viewportRef.current
     const sentinel = sentinelRef.current
-    if (!viewport || !sentinel || threadRootId) return
+    if (!viewport || !sentinel || threadRootId || snapshot.isLoading) return
     const observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) void loadOlder()
     }, { root: viewport, rootMargin: '240px 0px 0px' })
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [loadOlder, threadRootId])
+  }, [loadOlder, threadRootId, snapshot.isLoading])
 
   useEffect(() => { lastReadSequenceRef.current = 0 }, [conversationId])
 
