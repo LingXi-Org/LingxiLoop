@@ -32,6 +32,19 @@ test('product59 retirement uses the existing SDK, never the historical product58
   f.files['server/package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '3.8.16' } })
   assert.throws(() => runtimePatchPlan(f.read, f.paths), /exact root\/server runtime pin/)
 })
+test('product59 accepts only matching formal 3.8.18 receipts and still rejects unreviewed versions', () => {
+  const f = fixture(), path = 'server/src/db/migrations/0059_retire_presentation_generation.sql'
+  f.paths.push(path); f.files[path] = '-- isolated retirement fixture'
+  for (const name of ['package.json','server/package.json','package-lock.json','server/package-lock.json']) {
+    f.files[name] = f.files[name].replaceAll('3.8.17','3.8.18')
+  }
+  assert.equal(runtimePatchPlan(f.read, f.paths), null)
+  const bad = fixture(); bad.paths.push(path); bad.files[path] = '-- isolated retirement fixture'
+  for (const name of ['package.json','server/package.json','package-lock.json','server/package-lock.json']) bad.files[name] = bad.files[name].replaceAll('3.8.17','3.8.19')
+  assert.throws(() => runtimePatchPlan(bad.read, bad.paths), /product59 requires/)
+  f.files['server/package-lock.json'] = f.files['server/package-lock.json'].replace('sha512-', 'sha256-')
+  assert.throws(() => runtimePatchPlan(f.read, f.paths), /receipts differ/)
+})
 const run = async (fail, observed = { complete: false, state: 'source' }) => {
   const calls = [], actions = {}
   for (const name of ['preflight', 'requireFreshIntent', 'snapshotSource', 'stopIngress', 'stopWorkers', 'markAttempt', 'apply', 'observe', 'restoreSource', 'convergeTarget']) actions[name] = async () => {

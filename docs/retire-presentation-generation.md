@@ -137,7 +137,7 @@ merge the draft until the parent has obtained specific approval.
    changes, obtain approval for the new concrete manifest before proceeding.
 3. With writers still stopped, run the target image's existing `db-migrate`
    compose service explicitly with `-e LINGXILOOP_RETIREMENT_0059_APPROVED=true`.
-   The migration additionally requires the actual installed formal3.8.17. A
+   The migration requires the exact installed formal3.8.17 or3.8.18 package, matching locks, schema14 and protocol capabilities. A
    failed transaction rolls back; investigate before any retry. Verify 0059 is
    recorded and the second migration is a no-op.
 4. Keep all writers stopped. Run `node scripts/retire-generated-decks.mjs --apply
@@ -162,6 +162,14 @@ against schema59 or imply that Git revert restores rows/bytes.
 All executable checks here use isolated synthetic data, never production:
 
 - Formal SDK3.8.17 installation succeeded; no file dependency/source substitute.
+- Formal3.8.18 registry archive SHA-512 matches the official registry receipt
+  `sha512-KrOpucNxgYd8zA4Ymfj4jxomxfIBwtY6Xinh4zKHbfn+qW7OOYUxDREgqDbS4OiOpquOBvpE4ijtDoxDIguc5A==`.
+  Its schema SHA-256 `c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f`
+  matches official tag `v3.8.18` and the existing schema14 baseline. The actual
+  package declares protocol11/publicText3/runTrace1. In an isolated checkout
+  with the verified package and matching synthetic copies of the four formal
+  receipt/manifest files, product58-to59 migration, shared-inventory and release
+  plan tests passed. The branch's actual dependency and locks remain3.8.17.
 - Web/server/admin TypeScript checks; web lint completed with existing warnings.
 - Web smoke:137 passed. Server smoke:135 passed. Admin smoke:8 passed.
 - Owning integration:52 homework and20 knowledge/file-authorization checks passed.

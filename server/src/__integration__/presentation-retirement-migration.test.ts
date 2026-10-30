@@ -15,6 +15,7 @@ after(() => pool.end())
 
 test('58 to59 removes generated tables and typed outputs while retaining shared rows and a second migration is a no-op', async () => {
   for (const version of ['3.8.16','3.8.19','4.0.0-slim.0']) assert.throws(() => assertRetirementRuntimeVersion(version))
+  for (const version of ['3.8.17','3.8.18']) assert.doesNotThrow(() => assertRetirementRuntimeVersion(version))
   assert.doesNotThrow(() => assertRetirementRuntimeVersion(releaseVersions.runtime))
   const source = new URL(process.env.INTEGRATION_DATABASE_URL!)
   assert.ok(['127.0.0.1', 'localhost', '[::1]'].includes(source.hostname))
