@@ -4,7 +4,7 @@ import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId, getMeId } from '@/stores/auth'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 
-import { nativeMessageSchema, NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage } from '../nativeMessage'
+import { decodeNativeMessage, NATIVE_MESSAGE_CONTENT_TYPE, type NativeMessage } from '../nativeMessage'
 export type { NativeMessage } from '../nativeMessage'
 
 export interface ImEnvelope {
@@ -31,7 +31,7 @@ class LingxiContent extends MessageContent {
       throw new Error('消息协议已更新，请刷新页面')
     }
     const { type: _contentType, ...payload } = value
-    this.contentObj = nativeMessageSchema.parse(payload)
+    this.contentObj = decodeNativeMessage(payload).message
   }
   override encodeJSON(): unknown { return this.contentObj }
 }
@@ -48,7 +48,7 @@ function authHeaders(): Record<string, string> {
 
 function fromSdk(message: WKMessage): ImEnvelope {
   if (!(message.content instanceof LingxiContent)) throw new Error('消息协议已更新，请刷新页面')
-  const payload = nativeMessageSchema.parse(message.content.contentObj)
+  const payload = decodeNativeMessage(message.content.contentObj).message
   return {
     messageId: message.messageID,
     messageSeq: message.messageSeq,

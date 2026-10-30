@@ -56,8 +56,8 @@ export const PERMISSION_ACTIONS = [
   'document:delete',
   'calendar:read',
   'calendar:write',
-  'canvas:read',
-  'canvas:write',
+  'artifact:read',
+  'artifact:write',
   'poll:read',
   'poll:create',
   'poll:vote',
@@ -108,8 +108,7 @@ export type PermissionResource =
   | { type: 'knowledge_source'; id: string }
   | { type: 'document'; id: string }
   | { type: 'calendar_event'; id: string }
-  | { type: 'canvas'; id: string }
-  | { type: 'canvas_frame'; id: string }
+  | { type: 'artifact'; id: string }
   | { type: 'agent'; id: string }
   | { type: 'routine'; id: string }
 

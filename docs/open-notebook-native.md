@@ -93,17 +93,6 @@ untrusted data; an answer may cite only a directly supporting span as
 `[claim](#cite-S1)` (or multiple supplied markers), and must say when scoped
 evidence is insufficient or conflicting.
 
-Presentation generation uses the internal
-`GET /api/sources/{source_id}/presentation-material` boundary. Its only valid
-success shape is `PresentationMaterialV1`: bounded structured text blocks with
-chunk, page and section provenance plus source-owned image assets when the
-ingestion pipeline retained them. If page/section metadata is unavailable, the
-response retains the source/chunk relationship and uses nullable layout fields;
-it never invents coordinates or drops provenance. The endpoint is available
-only for fully embedded Sources and never returns an object-store key or a
-LingxiLoop-local Source ID. The control plane maps the external ID back to its
-authorized local Source before any evidence reaches a model, browser or deck.
-
 ## Initialization
 
 Open Notebook startup applies exactly `open_notebook/rag/schema.surrealql` to

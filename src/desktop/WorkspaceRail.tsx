@@ -1,4 +1,4 @@
-import { BookOpen01Icon, BubbleChatIcon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { BookOpen01Icon, BubbleChatIcon, Presentation01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeftRight } from 'lucide-react'
 import { BrandAvatar } from '@/components/BrandAvatar'
@@ -34,6 +34,7 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
   const menu = [
     { view: 'conversations' as const, label: '对话', icon: BubbleChatIcon, management: false },
     { view: 'cases' as const, label: '案例库', icon: BookOpen01Icon, management: false },
+    ...(activeSpace ? [{ view: 'slides' as const, label: '演示文稿', icon: Presentation01Icon, management: false }] : []),
     ...(activeSpace ? getLearningDashboardMenu(activeSpace).map((item) => ({ ...item, view: viewForLearningSection(item.section) })) : []),
   ]
   const renderMenuItem = (item: typeof menu[number]) => {

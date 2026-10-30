@@ -122,8 +122,8 @@ export const PERMISSION_POLICIES = {
   'document:delete': projectWrite('conversation.core', 'creator_or_manager'),
   'calendar:read': projectRead('conversation.core'),
   'calendar:write': projectWrite('conversation.core', 'creator_or_manager'),
-  'canvas:read': projectRead('conversation.core', 'member'),
-  'canvas:write': projectWrite('conversation.core', 'member'),
+  'artifact:read': projectRead('conversation.core', 'member'),
+  'artifact:write': projectWrite('conversation.core', 'member'),
   'poll:read': projectRead('conversation.core', 'member'),
   'poll:create': projectWrite('conversation.core', 'member'),
   'poll:vote': projectWrite('conversation.core', 'member'),
@@ -165,7 +165,7 @@ export const PROJECT_WRITE_ACTIONS = new Set<PermissionAction>([
   'project_invitation:create', 'project_invitation:revoke',
   'learning:manage', 'learning:submit', 'learning:review', 'learning:preference',
   'knowledge:write', 'knowledge:manage', 'conversation:write', 'conversation:manage',
-  'document:write', 'document:delete', 'calendar:write', 'canvas:write',
+  'document:write', 'document:delete', 'calendar:write', 'artifact:write',
   'poll:create', 'poll:vote', 'poll:close', 'email:write', 'attachment:write',
   'agent_autonomy:write', 'agent_memory:write', 'agent_memory:write_company',
   'agent_approval:resolve', 'agent_run:control',
@@ -175,7 +175,7 @@ const READ_ACTIONS = new Set<PermissionAction>([
   'company:list', 'company:read', 'company_member:list', 'company_invitation:list',
   'project:list', 'project:read', 'course:read', 'project_member:list', 'project_invitation:list',
   'cases:read', 'learning:read', 'knowledge:read', 'conversation:read', 'document:read',
-  'calendar:read', 'canvas:read', 'poll:read', 'email:read', 'agent:read',
+  'calendar:read', 'artifact:read', 'poll:read', 'email:read', 'agent:read',
   'agent_autonomy:read', 'agent_memory:read', 'agent_memory:read_company', 'agent_approval:list',
   'trust:read_l2', 'trust:read_l3_company', 'trust:read_l3_project',
 ])
@@ -381,11 +381,6 @@ export function evaluatePolicy(
 
   const accessModeDecision = evaluateResourceAccessMode(request, context)
   if (accessModeDecision !== 'ALLOWED') return accessModeDecision
-  const ownsCanvasFrame = request.resource?.type === 'canvas_frame'
-    && resource?.createdBy === request.actorUserId
-  if (request.action === 'canvas:write' && resource?.status && resource.status !== 'active' && !ownsCanvasFrame) {
-    return 'RESOURCE_STATE_DENIED'
-  }
   if (!resource) return 'ALLOWED'
   if (context.platformAdmin) return 'ALLOWED'
   if (resource.visibilityScope === 'PRIVATE' && resource.ownerUserId !== request.actorUserId) {

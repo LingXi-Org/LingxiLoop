@@ -23,7 +23,7 @@ const OWNERS = [
   [/^server\/src\/modules\/(?:companies|enterprise)\//, ['companies-vertical-slice.test.ts', 'enterprise-governance.test.ts']],
   [/^server\/src\/(?:modules\/(?:knowledge|research|evidence)\/|knowledge)/, ['knowledge-vertical-slice.test.ts']],
   [/^server\/src\/modules\/memory\/|^server\/src\/agent-runtime\/memory-/, ['native-memory.test.ts']],
-  [/^server\/src\/(?:canvas\/|modules\/canvas\/)/, ['canvas-app-boundary.test.ts']],
+  [/^server\/src\/modules\/artifacts\//, ['artifact-app-boundary.test.ts']],
   [/^server\/src\/modules\/(?:documents|content-editor)\//, ['runtime-objects.test.ts']],
   [/^server\/src\/(?:llm-ledger|llm|llm-client)\.ts$|^server\/src\/agent-runtime\/pricing\.ts$/, ['model-pricing.test.ts', 'native-admission.test.ts']],
   [/^server\/src\/agent-runtime\/(?:visualize-|system-skills|skill-context)|^src\/features\/chat\/visualize\/|^shared\/visualize-public-resources\.ts$|^third_party\/zcode\/|^scripts\/(?:verify-zcode-visualize|build-visualize-runtime)\.mjs$/, ['visualize-delivery.test.ts', 'visualize-quality-contract.test.ts']],

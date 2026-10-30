@@ -133,9 +133,6 @@ export async function removeMemberState(db: Queryable, companyId: string, userId
   await db.query(`UPDATE knowledge_source_jobs job SET status='failed',leased_by=NULL,leased_until=NULL,last_error='principal departed',updated_at=NOW()
     FROM knowledge_sources source WHERE source.id=job.source_id AND source.company_id=$1 AND source.owner_user_id=$2
       AND job.status IN ('queued','processing')`, [companyId,userId])
-  await db.query(`UPDATE presentation_jobs job SET status='cancelled',lease_token=NULL,lease_expires_at=NULL,updated_at=NOW()
-    FROM presentations presentation WHERE presentation.id=job.presentation_id AND presentation.company_id=job.company_id
-      AND job.company_id=$1 AND presentation.authorization_user_id=$2 AND job.status IN ('queued','running')`, [companyId,userId])
   await db.query(`UPDATE company_invitations SET revoked_at=NOW() WHERE company_id=$1 AND invited_by=$2 AND revoked_at IS NULL`, [companyId,userId])
   await db.query(`UPDATE project_invitations SET revoked_at=NOW() WHERE company_id=$1 AND invited_by=$2 AND revoked_at IS NULL`, [companyId,userId])
   await db.query(`INSERT INTO company_onboarding_effects(id,company_id,member_id,kind,revoked_at)

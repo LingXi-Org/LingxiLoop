@@ -15,7 +15,8 @@ const testsByScope = {
     'server/src/__tests__/llm-ledger.test.ts',
     'server/src/__tests__/llm-recovery.test.ts',
     'server/src/__tests__/agent-tool-registry.test.ts',
-    'server/src/__tests__/canvas-tool-contracts.test.ts',
+    'server/src/__tests__/artifact-tool-contracts.test.ts',
+    'server/src/modules/artifacts/artifacts.test.ts',
     'server/src/__tests__/assistant-text.test.ts',
     'server/src/__tests__/assistant-transport.test.ts',
     'server/src/__tests__/run-activity-projection.test.ts',
@@ -56,7 +57,6 @@ const testsByScope = {
     'src/api/transport.test.ts',
     'src/api/core/http.test.ts',
     'src/features/knowledge/api.test.ts',
-    'src/features/presentations/presentationFeature.test.ts',
     'src/features/learning/courseAvatar.test.ts',
   ],
 }

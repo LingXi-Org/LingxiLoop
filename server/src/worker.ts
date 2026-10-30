@@ -9,7 +9,6 @@ import { startKnowledgeStorageGc, startKnowledgeWorker } from './modules/knowled
 import { startLearningEffectWorker } from './modules/learning/worker.js'
 import { startNotificationScheduler } from './modules/notifications/public.js'
 import { startPollExpirationSweeper } from './modules/polls/index.js'
-import { startPresentationStorageGc, startPresentationWorker } from './modules/presentations/public.js'
 import { redis, sub } from './redis.js'
 import { Lifecycle, type ServiceHandle, startWorkerTasks, type WorkerTaskDefinition, type WorkerTaskHandle } from './runtime/lifecycle.js'
 import { initializeNativeStorage } from './storage.js'
@@ -35,8 +34,6 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'knowledge-ingestion', concurrency: 'queue-claim', start: () => startKnowledgeWorker() },
   { name: 'knowledge-storage-gc', concurrency: 'idempotent', start: () => startKnowledgeStorageGc() },
   { name: 'case-cover-generation', concurrency: 'queue-claim', start: () => startCaseCoverWorker() },
-  { name: 'presentation-generation', concurrency: 'queue-claim', start: () => startPresentationWorker() },
-  { name: 'presentation-storage-gc', concurrency: 'idempotent', start: () => startPresentationStorageGc() },
   { name: 'poll-expiration', concurrency: 'database-lock', start: () => startPollExpirationSweeper(env.POLL_SWEEP_INTERVAL_MS) },
 ]
 

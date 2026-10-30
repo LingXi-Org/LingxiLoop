@@ -39,9 +39,9 @@ export const CH_GROUP_PULLED = 'lingxiloop:group.pulled'
 export const CH_CONVO_UPDATED = 'lingxiloop:convo.updated'
 export const CH_CONVENE = 'lingxiloop:convene'
 export const CH_DOCS = 'lingxiloop:docs'
-/** Shared Canvas mutations and presence. Frame state stays in Postgres; this
- * channel only carries the small realtime delta to connected workspace peers. */
-export const CH_CANVAS = 'lingxiloop:canvas'
+/** Design and Slides artifact changes. Files and comments stay in Postgres; this
+ *  channel only tells open editors and clients what changed. */
+export const CH_ARTIFACTS = 'lingxiloop:artifacts'
 /* === Collaborative documents (CRDT) ===
  *
  * Yjs binary updates are base64-encoded into the JSON envelope so they
@@ -255,26 +255,22 @@ export interface DocIndexEvent extends TenantTagged {
   workspaceId?: string
 }
 
-export interface CanvasEvent extends TenantTagged {
-  type: 'canvas.changed'
+export interface ArtifactEvent extends TenantTagged {
+  type: 'artifact.changed'
   kind:
-    | 'frame.created' | 'frame.updated' | 'frame.deleted'
-    | 'presence.updated' | 'presence.removed'
-    | 'comment.created' | 'activity.created'
-    | 'workspace.started' | 'workspace.updated'
-    | 'assignment.updated' | 'cursor.moved'
-  canvasId: string
+    | 'artifact.created' | 'artifact.updated' | 'artifact.deleted'
+    | 'files.changed' | 'comments.changed' | 'activity.created'
+    | 'workspace.started' | 'workspace.updated' | 'assignment.updated'
+  artifactId: string
+  artifactKind?: 'design' | 'slides'
   timestamp: string
   conversationId?: string
-  workspaceId?: string
-  revision?: number
-  frameId?: string
-  participantId?: string
-  frame?: unknown
-  presence?: unknown
+  /** files.changed: the committed project paths, the resulting listing version and the editor session that saved. */
+  paths?: string[]
+  ver?: string
+  origin?: string
   assignment?: unknown
   workspace?: unknown
-  comment?: unknown
   activity?: unknown
 }
 
@@ -382,7 +378,7 @@ export interface DocAccessRevokedEvent extends TenantTagged {
 export type BroadcastEvent = MessageNewEvent | TypingEvent
   | StatusEvent | ParticipantAddedEvent | ReactionsEvent
   | GroupPulledEvent | ConversationUpdatedEvent | ConveneEvent
-  | DocIndexEvent | CanvasEvent | DocUpdateEvent | DocAwarenessEvent
+  | DocIndexEvent | ArtifactEvent | DocUpdateEvent | DocAwarenessEvent
   | PollUpdatedEvent
   | DocAccessRevokedEvent
   | AgentActivityEvent

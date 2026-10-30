@@ -1,6 +1,7 @@
 // The auth Worker signs product API requests. It must in turn use the separate
 // backend hostname; neither upstream may resolve back to the public SPA route.
-const dynamic = /^\/(?:api|uploads|runtime|ws|files|visualize|webhooks|readyz|healthz)(?:\/|$)/i
+import { isolatedEditor } from '../../../shared/artifact-editor-origin.ts'
+const dynamic = /^\/(?:api|uploads|runtime|ws|files|visualize|artifact-editor|_blob|webhooks|readyz|healthz)(?:\/|$)/i
 const internal = /^\/(?:internal)(?:\/|$)/i
 const visualizeAsset = /^\/assets\/visualize-[a-f0-9]{64}\.(js|css|txt)$/
 const immutable = /^\/assets\/[\w./-]+-[\w-]{8,}\.[\w.]+$/
@@ -17,6 +18,8 @@ function upstream(value, requestUrl, env) {
   return new URL(requestUrl.pathname + requestUrl.search, origin)
 }
 export async function handleRequest(request, env, fetcher = fetch) {
+  const editor = env.ARTIFACT_EDITOR_BASE && await isolatedEditor(request, env.ARTIFACT_EDITOR_BASE, env.BACKEND_ORIGIN_BASE_URL, fetcher)
+  if (editor) return editor
   const url = new URL(request.url)
   let path
   try { path = decodeURIComponent(url.pathname) } catch { return new Response('Invalid path', { status: 400 }) }

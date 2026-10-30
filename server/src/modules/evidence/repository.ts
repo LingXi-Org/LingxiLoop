@@ -76,9 +76,9 @@ export async function evidenceTargetExists(
     DOMAIN_EVENT: `SELECT 1 FROM domain_events WHERE company_id=$1 AND project_id=$2 AND id=$3`,
     FORUM_SUBMISSION: `SELECT 1 FROM course_forum_submissions WHERE company_id=$1 AND project_id=$2 AND id=$3`,
     FORUM_FEEDBACK: `SELECT 1 FROM course_forum_feedback WHERE company_id=$1 AND project_id=$2 AND id=$3`,
-    CANVAS_REPORT: `SELECT 1 FROM canvas_assignment_reports report
-      JOIN canvases canvas ON canvas.id=report.canvas_id AND canvas.company_id=report.company_id
-      WHERE report.company_id=$1 AND canvas.project_id=$2 AND report.id=$3`,
+    ARTIFACT_REPORT: `SELECT 1 FROM artifact_assignment_reports report
+      JOIN artifacts artifact ON artifact.id=report.artifact_id AND artifact.company_id=report.company_id
+      WHERE report.company_id=$1 AND artifact.project_id=$2 AND report.id=$3`,
     AUDIT_EVENT: `SELECT 1 FROM audit_events
       WHERE company_id=$1 AND detail->>'projectId'=$2 AND id::text=$3`,
     EVIDENCE_RECORD: `SELECT 1 FROM evidence_records WHERE company_id=$1 AND project_id=$2 AND id=$3`,

@@ -15,6 +15,7 @@ import { wukongWebhookRouter } from './im/webhook.js'
 import { wukongClient } from './im/wukong.js'
 import { Lifecycle, type ServiceHandle } from './runtime/lifecycle.js'
 import { openNotebookEmbeddingRouter } from './modules/knowledge/embedding-proxy.js'
+import { artifactBlobRouter, artifactEditorRouter } from './modules/artifacts/index.js'
 import { errorHandler } from './http/errors.js'
 import { lingxiOSControl, listenLingxiOSControl, stopLingxiOSControl } from './agent-runtime/runtime.js'
 
@@ -55,6 +56,10 @@ export async function startWebProcess(): Promise<ServiceHandle> {
   })
   app.use('/webhooks/email', (_req,res) => { res.status(410).json({ error: 'product email receiving is retired' }) })
   app.use('/webhooks/wukong', wukongWebhookRouter)
+  // The Design and Slides editor pages read their own bodies, as upstream's server does,
+  // and authorize every request by its signed grant rather than a session.
+  app.use('/artifact-editor', artifactEditorRouter)
+  app.use('/_blob', artifactBlobRouter)
 
   // Keep legacy JSON payloads bounded independently from the 200 MB upload
   // policy. File uploads PUT directly to R2 and never enter this parser.
@@ -123,7 +128,7 @@ export async function startWebProcess(): Promise<ServiceHandle> {
     // SPA catch-all — any GET that isn't an API / runtime / uploads / ws path
     // returns index.html so client-side routes like /invite/<token> work on
     // first load + on refresh. POST/PUT/DELETE never fall through to here.
-    app.get(/^(?!\/(api|internal|runtime|uploads|ws)(\/|$)).*/, (_req, res) => {
+    app.get(/^(?!\/(api|internal|runtime|uploads|ws|artifact-editor|_blob)(\/|$)).*/, (_req, res) => {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
       res.sendFile(INDEX_HTML)
     })

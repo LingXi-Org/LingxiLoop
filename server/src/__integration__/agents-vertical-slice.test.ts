@@ -108,7 +108,7 @@ test('[integration] lifecycle is tenant scoped and refuses to offboard a group l
   const { companyId } = await fixture()
   const created = await application.create({ companyId, userId: 'test-owner' }, {
     name: 'Team Lead', role: '', bio: '', systemPrompt: 'You coordinate a small evidence-backed team.',
-    capabilities: ['canvas'],
+    capabilities: ['design'],
   })
   await pool.query(
     `INSERT INTO conversations (id,kind,title,members,leader_id,company_id)

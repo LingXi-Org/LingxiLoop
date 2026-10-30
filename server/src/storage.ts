@@ -20,14 +20,14 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { env } from './env.js'
 
 /** Private content is read through the authenticated API; avatars remain public. */
-const PRIVATE_PREFIXES = ['case-images/', 'attachments/', 'email-attachments/', 'knowledge-sources/', 'presentation-artifacts/']
+const PRIVATE_PREFIXES = ['case-images/', 'attachments/', 'email-attachments/', 'knowledge-sources/']
 function needsAuthorization(key: string): boolean {
   return PRIVATE_PREFIXES.some((p) => key.startsWith(p))
 }
 
 const STORAGE_KEY_PREFIXES = [
   'case-images/',
-  'attachments/', 'email-attachments/', 'avatars/', 'knowledge-sources/', 'presentation-artifacts/',
+  'attachments/', 'email-attachments/', 'avatars/', 'knowledge-sources/',
 ]
 function isStorageKey(key: string): boolean {
   return STORAGE_KEY_PREFIXES.some((p) => key.startsWith(p))

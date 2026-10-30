@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 // Failure model: today's projection imports new runtime UI exports which the
-// real historical3.8.2 package cannot expose. Pin only the two display leaves;
+// real historical3.8.2 package cannot expose. Pin the display and IM decoding leaves;
 // preserve current migrations, identity, all historical assertions and helpers.
 // Modified/missing snapshots must fail closed, never patch the old runtime.
 test('historical fixture isolates pinned display leaves while retaining current migration coverage', async () => {
@@ -20,7 +20,7 @@ test('historical fixture isolates pinned display leaves while retaining current 
   const source=join(root,'source'),fixture=join(root,'fixture')
   const retained=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db/migrate.ts','server/src/agent-runtime/identity.ts',
    'server/src/__integration__/run-presentation-contract.test.ts','src/lib/runActivity.ts']
-  const pinned=['server/src/agent-runtime/message-projection.ts','src/lib/nativeMessage.ts']
+  const pinned=['server/src/agent-runtime/message-projection.ts','src/lib/nativeMessage.ts','server/src/im/wukong.ts','server/src/im/message-types.ts']
   for(const path of [...retained,...pinned]){
    await mkdir(join(source,path,'..'),{recursive:true})
    await writeFile(join(source,path),'current source: '+path)
@@ -52,8 +52,9 @@ test('historical migration routing retains every requested file and adds current
  assert.deepEqual(result.historical,historical)
  assert.deepEqual(result.current,['closed-education.test.ts'])
  assert.deepEqual(result.patch54,['runtime-patch-provenance.test.ts'])
- assert.deepEqual(partitionMigrationTests(['runtime-patch57-provenance.test.ts','homework-findings-migration.test.ts']),{current:['homework-findings-migration.test.ts'],patch54:[],patch57:['runtime-patch57-provenance.test.ts'],historical:[]})
- assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:[],patch54:['runtime-patch-provenance.test.ts'],patch57:[],historical:[]})
+ assert.deepEqual(partitionMigrationTests(['runtime-patch57-provenance.test.ts','homework-findings-migration.test.ts']),{current:['homework-findings-migration.test.ts'],patch54:[],patch57:['runtime-patch57-provenance.test.ts'],patch58:[],historical:[]})
+ assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:[],patch54:['runtime-patch-provenance.test.ts'],patch57:[],patch58:[],historical:[]})
+ assert.deepEqual(partitionMigrationTests(['runtime-patch58-provenance.test.ts','presentation-retirement-migration.test.ts']),{current:['presentation-retirement-migration.test.ts'],patch54:[],patch57:[],patch58:['runtime-patch58-provenance.test.ts'],historical:[]})
 })
 test('product54 fixture copies the exact contiguous prefix and four current manifests without mutating55 source',async()=>{
  const root=await mkdtemp(join(tmpdir(),'product54-source-owner-'))

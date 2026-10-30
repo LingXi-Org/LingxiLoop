@@ -1,12 +1,5 @@
 import type { CoworkerActivity } from '@/features/agents/contracts'
-import type {
-  CanvasActivity,
-  CanvasAgentAssignment,
-  CanvasComment,
-  CanvasFrame,
-  CanvasPresence,
-  CanvasSnapshot,
-} from '@/features/canvas/contracts'
+import type { ArtifactKind } from '@/features/artifacts/contracts'
 import type { DocumentChangedEvent } from '@/features/documents/contracts'
 import type { Status } from '@/types'
 
@@ -80,24 +73,17 @@ export type WsEvent =
   | { type: 'doc.error'; documentId?: string; error: string }
   | DocumentChangedEvent
   | {
-      type: 'canvas.changed'
+      type: 'artifact.changed'
       kind:
-        | 'frame.created' | 'frame.updated' | 'frame.deleted'
-        | 'presence.updated' | 'presence.removed'
-        | 'comment.created' | 'activity.created'
-        | 'workspace.started' | 'workspace.updated' | 'assignment.updated' | 'cursor.moved'
-      canvasId: string
+        | 'artifact.created' | 'artifact.updated' | 'artifact.deleted'
+        | 'files.changed' | 'comments.changed' | 'activity.created'
+        | 'workspace.started' | 'workspace.updated' | 'assignment.updated'
+      artifactId: string
+      artifactKind?: ArtifactKind
       timestamp: string
       conversationId?: string
-      revision?: number
-      frameId?: string
-      participantId?: string
-      frame?: CanvasFrame
-      presence?: CanvasPresence
-      assignment?: CanvasAgentAssignment
-      workspace?: Partial<CanvasSnapshot> & { id: string }
-      comment?: CanvasComment
-      activity?: CanvasActivity
+      paths?: string[]
+      ver?: string
     }
   | {
       type: 'poll.updated'

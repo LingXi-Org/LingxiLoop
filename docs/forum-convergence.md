@@ -11,7 +11,7 @@ remain accessible from their forum post or assignment.
 Keep course IDs, project membership, teacher/student authorization and invitation
 admission as the forum's security context. Keep shared knowledge storage and
 authenticated uploaded files for assignment references and Agent assistance.
-Keep private teacher conversation authorization, general IM, documents, Canvas,
+Keep private teacher conversation authorization, general IM, documents, Design and Slides,
 and the shared LLM ledger; these are not parallel learning product models.
 
 Existing forum-visible assignments migrate with their original IDs, author,
@@ -77,7 +77,7 @@ deployment as failed. Repeated release attempts must retain separate verified ba
 | Database retirement | `0040` drops knowledge units/dependencies, activities/links, missions/steps, attempts/evaluations/states/cases/actions, course rooms, attention/briefing tables and exclusive visit-watermark fields. Historical migrations remain immutable. |
 | Forum authoritative model | Existing `course_forum_posts` becomes the assignment/share authority; submissions, feedback and reactions belong to it. Teacher publication, deadlines, closure and feedback use current course grants. |
 | Minimum course context | Course IDs, project memberships/invitations, teacher/student role and lifecycle authorization remain necessary to isolate forum access; they do not restore course-management UI or APIs. |
-| Shared infrastructure | Knowledge storage and authenticated files support assignment references; IM/documents/Canvas, evidence/trust audit, notification transport/preferences and private teacher conversations remain shared services. Retired learning notification producers and pending deliveries are removed/cancelled. |
+| Shared infrastructure | Knowledge storage and authenticated files support assignment references; IM/documents/Design/Slides, evidence/trust audit, notification transport/preferences and private teacher conversations remain shared services. Retired learning notification producers and pending deliveries are removed/cancelled. |
 | Historical records | Exact old records are retained in the restricted `course_forum_retirement_archive`; original attempts/evidence/evaluations are also attached to mapped submission/feedback rows. Unmapped counts are emitted without content, and archived private file keys cannot use uploader fallback. No archive browsing API exists. |
 | Historical message schema | Decoder tags for persisted learning cards remain so old IM messages still deserialize; their retired interactive rendering and write paths are removed. No compatibility business service remains. |
 

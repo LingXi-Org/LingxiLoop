@@ -3,13 +3,14 @@ import { z } from 'zod'
 import { activityAnnotation, toolDisplaySchema } from './runActivity.js'
 import { memoryActivitySchema } from './memoryActivity.js'
 import { answerSegment } from './answerSegment.js'
+import { supportsArtifactSource } from './artifactSources.js'
 
 type Wire<T> = T extends Date ? string : T extends readonly (infer U)[] ? Wire<U>[] : T extends object ? { [K in keyof T]: Wire<T[K]> } : T
 export type NativeMessage = Wire<ThreadMessage>
 export type NativeAttachment = Omit<Wire<CompleteAttachment>, 'file'>
 export const NATIVE_MESSAGE_CONTENT_TYPE = 1001
-export const DATA_NAMES = ['poll', 'questionnaire', 'recommendation', 'handoff', 'canvas', 'learning-mission',
-  'teacher-briefing', 'presentation-artifact', 'email', 'citation-claims', 'document-reference', 'tool-activity'] as const
+export const DATA_NAMES = ['poll', 'questionnaire', 'recommendation', 'handoff', 'artifact', 'learning-mission',
+  'teacher-briefing', 'email', 'citation-claims', 'document-reference', 'tool-activity'] as const
 const id = z.string().min(1).max(2000)
 const json = z.json()
 const object = z.record(z.string(), json)
@@ -133,8 +134,23 @@ export function deserializeMessage(value: unknown): ThreadMessage {
 
 /** Decode external input once, then project that validated clone for display. */
 export function decodeNativeMessage(value: unknown): { message: NativeMessage; display: ThreadMessage } {
-  const message = nativeMessageSchema.parse(value)
+  bounded.parse(value)
+  const message = nativeMessageSchema.parse(withSupportedDataParts(value))
   return { message, display: projectValidatedMessage(message) }
+}
+// Stored IM messages can outlive a registered business card. Drop unsupported
+// data parts on history decode only; writes keep the strict current schema.
+function withSupportedDataParts(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value
+  const record = value as Record<string, unknown>
+  if (!Array.isArray(record.content)) return value
+  const metadata = record.metadata as { custom?: { harness?: { artifacts?: unknown[] } } } | undefined
+  const custom = metadata?.custom, harness = custom?.harness
+  const displayMetadata = harness && Array.isArray(harness.artifacts)
+    ? { ...metadata, custom: { ...custom, harness: { ...harness, artifacts: harness.artifacts.filter(supportsArtifactSource) } } } : metadata
+  return { ...record, ...(metadata ? { metadata: displayMetadata } : {}), content: record.content.filter(part => !part || typeof part !== 'object'
+    || part.type !== 'data' || DATA_NAMES.includes(part.name)).map(part => part?.type === 'tool-call' && Array.isArray(part.messages)
+      ? { ...part, messages: part.messages.map(withSupportedDataParts) } : part) }
 }
 function projectValidatedMessage(parsed: NativeMessage): ThreadMessage {
   // Old IM records and browser caches may still contain private memory projections.

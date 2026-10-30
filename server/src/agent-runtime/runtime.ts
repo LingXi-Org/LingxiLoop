@@ -7,7 +7,7 @@ import { recordLlmCall } from '../llm-ledger.js'
 import { createProductTools } from './tools.js'
 import { createProductContext, ProductRuntimePolicy } from './context.js'
 import { createProductDelivery } from './delivery.js'
-import { createCanvasRuntime, completeCanvasWork } from '../modules/canvas/index.js'
+import { createArtifactRuntime, completeArtifactWork } from '../modules/artifacts/index.js'
 import { memoryEmbeddings } from '../modules/memory/configuration.js'
 import { memoryWritePolicy } from '../modules/memory/policy.js'
 import { resolveMemoryScopes } from '../modules/memory/public.js'
@@ -152,7 +152,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
         reflection: { afterInteractions: 5, idleMs: 600000 },
         evolution: { benchmarkId: nativeEvolutionBenchmark.id, benchmark: nativeEvolutionBenchmark },
         resolveScopes: resolveMemoryScopes, embeddings: memoryEmbeddings(), writePolicy: memoryWritePolicy,
-      }, verifyRun: async context => [...await createCanvasRuntime(lingxiOSControl).verify(context),
+      }, verifyRun: async context => [...await createArtifactRuntime(lingxiOSControl).verify(context),
         ...await verifyVisualizeCandidate(context), ...await verifyVisualizeAuthoringCandidate(context)],
       verifySkillDelivery: verifyVisualizeDelivery,
       homesRoot: process.env.AGENT_OS_HOMES_ROOT?.trim() || '.agent-os/homes' }).catch(error => {
@@ -280,13 +280,13 @@ export async function startLingxiOSWorker() {
   try { await app.start() }
   catch (error) { await app.stop(); throw error }
   worker = app
-  const cancellation = new AbortController(), canvas = createCanvasRuntime(lingxiOSControl)
+  const cancellation = new AbortController(), artifacts = createArtifactRuntime(lingxiOSControl)
   let pending: Promise<unknown> | undefined
   const tick = () => {
     if (pending || cancellation.signal.aborted) return
     pending = Promise.allSettled([
       scheduleRoutines(run => withTransaction(pool, run), lingxiOSControl),
-      canvas.reconcile(pool, completeCanvasWork, cancellation.signal),
+      artifacts.reconcile(pool, completeArtifactWork, cancellation.signal),
     ]).then(results => { for (const result of results) if (result.status === 'rejected') console.error('[lingxios] product scheduling failed', result.reason instanceof Error ? result.reason.name : 'error') })
       .finally(() => { pending = undefined })
   }

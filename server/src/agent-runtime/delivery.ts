@@ -13,7 +13,7 @@ import { getSendAcceptance } from '../im/messages-repository.js'
 import { conversationHandoffMentions } from './conversation-handoff.js'
 import type { MentionTarget } from '../mentions.js'
 import { participantDisplayName } from '../../../src/lib/participantDisplayName.js'
-import { assertCanvasRequestCurrent } from '../modules/canvas/index.js'
+import { assertArtifactRequestCurrent } from '../modules/artifacts/index.js'
 import { terminalFailure, terminalFeedbackText, terminalFeedbackScope, terminalResult } from './terminal-feedback.js'
 import { readDeliveredReference } from './delivery-reference.js'
 
@@ -28,7 +28,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
         if (work.conversation?.internal || !work.principalId) throw new NoEffectError('Terminal audience is unavailable','forbidden')
         const conversationId = productConversationId(work)
         await loadRuntimeBinding({ ...work,conversationId },database)
-        await assertCanvasRequestCurrent(database,work)
+        await assertArtifactRequestCurrent(database,work)
         await assertFrozenAudience(database,work)
         const api = await control(), identity = { tenantId: work.tenantId,agentId: work.agentId,sessionId: work.sessionId,
           runId: work.id,principalId: work.principalId,...(work.threadId ? { threadId: work.threadId } : {}) }
@@ -67,7 +67,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
         context.signal.throwIfAborted()
         // Recheck after receipt/name reads and immediately before crossing the messaging boundary.
         await loadRuntimeBinding({ ...work,conversationId },database)
-        await assertCanvasRequestCurrent(database,work)
+        await assertArtifactRequestCurrent(database,work)
         await assertFrozenAudience(database,work)
         if ((await api.readRun(identity,database))?.requestVersion !== feedback.requestVersion) return
         const result = await sendSystemChannelMessage({ companyId: work.tenantId,actorId: work.agentId,channelId: conversationId,
@@ -84,7 +84,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
         if (work.conversation?.internal) throw new Error('internal delegates cannot publish IM messages')
         const conversationId = productConversationId(work)
         await loadRuntimeBinding({ ...work, conversationId },database)
-        await assertCanvasRequestCurrent(database, work)
+        await assertArtifactRequestCurrent(database, work)
         await assertFrozenAudience(database,work)
         const api = await control()
         const policy = context.im ? await syncConversationPolicy(api,work.tenantId,conversationId,database,scope) : undefined

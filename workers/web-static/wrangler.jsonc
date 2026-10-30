@@ -4,6 +4,10 @@
   "main": "src/index.mjs",
   "compatibility_date": "2026-09-01",
   "workers_dev": false,
+  "routes": [
+    { "pattern": "loop.lingxilearn.cn", "custom_domain": true },
+    { "pattern": "*-artifact.lingxilearn.cn/*", "zone_name": "lingxilearn.cn" }
+  ],
   "assets": {
     "directory": "../../dist",
     "binding": "ASSETS",
@@ -15,6 +19,7 @@
   "observability": { "enabled": true },
   "vars": {
     "PUBLIC_HOSTS": "loop.lingxilearn.cn",
+    "ARTIFACT_EDITOR_BASE": "https://artifact.lingxilearn.cn",
     "AUTH_ORIGIN_BASE_URL": "https://admin.lingxilearn.cn",
     "BACKEND_ORIGIN_BASE_URL": "https://backend.lingxilearn.cn"
   }

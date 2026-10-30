@@ -21,12 +21,12 @@ function receipt(status: string, at: unknown): ToolUIReceipt | undefined {
 }
 
 
-export function canvasProgress(data: Data, names: Names) {
+export function artifactProgress(data: Data, names: Names) {
   const status = text(data.status,'active'), assignments = rows(data.assignments)
   return parseSerializableProgressTracker({ id: text(data.id), steps: [
     ...assignments.map(item => ({ id: text(item.id), label: `${person(names,item.agentId)} · ${text(item.task,'协作任务')} · ${labels[text(item.status)] ?? '等待状态'}`,
       status: stepStatus(text(item.status)), description: item.executionRole === 'verifier' ? '独立证据复核' : '执行并提交报告' })),
-    { id: `${text(data.id)}:report`, label: `${person(names,data.coordinatorAgentId)} · ${text(data.title,'协作画布')} · ${labels[status] ?? '等待状态'}`,
+    { id: `${text(data.id)}:report`, label: `${person(names,data.coordinatorAgentId)} · ${text(data.title,'协作工件')} · ${labels[status] ?? '等待状态'}`,
       description: text(data.goal), status: stepStatus(status === 'active' && assignments.length ? 'waiting' : status) },
   ], ...(receipt(status,data.updatedAt) ? { choice: receipt(status,data.updatedAt) } : {}) })
 }

@@ -10,7 +10,12 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 export function runtimePatchPlan(read, migrationPaths) {
   const json = path => JSON.parse(read(path))
   const manifest = json('package.json')
+  const paths = migrationPaths.toSorted()
+  const retirement = [59, 60].includes(paths.length)
+    && paths[58] === 'server/src/db/migrations/0059_retire_presentation_generation.sql'
+    && (paths.length === 59 || paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql')
   const targetRuntime = manifest.dependencies?.[PACKAGE]
+  if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime), 'product59 requires a verified exact runtime')
   if (targetRuntime === '3.8.16') return null
   assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or reviewed3.8.17/3.8.18 is supported')
   const sourceRuntime = SOURCES[targetRuntime]
@@ -23,16 +28,25 @@ export function runtimePatchPlan(read, migrationPaths) {
   const registryPrefix = `https://npm.pkg.github.com/download/@lyyzka/lingxios/${targetRuntime}/`
   assert.ok(pkg.resolved?.startsWith(registryPrefix), 'formal registry/version URL required')
   assert.match(pkg.resolved.slice(registryPrefix.length), /^[a-f0-9]{40}$/)
-  const paths = migrationPaths.toSorted()
-  assert.equal(paths.length, 58, 'runtime patch requires complete product58')
+  assert.ok(paths.length === 58 || retirement, 'runtime patch requires complete product58 or reviewed product59/60 retirement')
   const migrations = paths.map((path, index) => {
     const match = /\/(\d{4})_([a-z0-9_]+)\.sql$/.exec(path)
     assert.ok(match && Number(match[1]) === index + 1, 'ordered migration inventory required')
     return { version: index + 1, name: match[2], checksum: hash(read(path)) }
   })
+  // Retirement uses the installed SDK; migrations verify its exact provenance.
+  if (retirement) return null
   const source = { runtime: sourceRuntime, schema: 14, protocol: 11, schemaHash: SCHEMA, productVersion: 58, migrations }
   const target = { ...source, runtime: targetRuntime, integrity: pkg.integrity, tarball: pkg.resolved }
   return { source, target, id: hash(JSON.stringify({ source, target })) }
+}
+
+/** The product59 retirement is staged manually after confirmed cleanup. */
+export function assertRetirementReleaseAllowed(paths, command, approval) {
+  if (paths.includes('server/src/db/migrations/0059_retire_presentation_generation.sql')
+    && ['up','servers','workers'].includes(command) && approval !== 'true') {
+    throw new Error('product59 retirement requires explicit maintenance release approval')
+  }
 }
 
 /** One CAS submission. Failed or uncertain submissions are observed, never retried. */

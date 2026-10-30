@@ -15,11 +15,11 @@ const projectReads: Record<string, PermissionAction> = {
 }
 const resourceReads: Record<string, [PermissionAction, PermissionResource['type']]> = {
   conversations: ['conversation:read', 'conversation'], documents: ['document:read', 'document'],
-  canvases: ['canvas:read', 'canvas'],
+  artifacts: ['artifact:read', 'artifact'],
   'knowledge-sources': ['knowledge:read', 'knowledge_source'],
   participants: ['agent:read', 'agent'], 'agent-routines': ['agent_approval:list', 'routine'],
 }
-export const COMPANY_RESOURCES = [...Object.keys(companyReads), ...Object.keys(projectReads), ...Object.keys(resourceReads), 'knowledge-jobs', 'presentations', 'llm-calls', 'agent-runs']
+export const COMPANY_RESOURCES = [...Object.keys(companyReads), ...Object.keys(projectReads), ...Object.keys(resourceReads), 'knowledge-jobs', 'llm-calls', 'agent-runs']
 
 export function companyResourceAllowed(resource: string) {
   if (!COMPANY_RESOURCES.includes(resource)) throw new HttpError(404, 'resource not available')
@@ -41,7 +41,7 @@ export async function canReadCompanyRecord(db: Queryable, admin: CompanyAdmin, r
     action = definition[0]; target = { type: definition[1], id: String(row.id) }
   }
   if (resource === 'knowledge-jobs') { action = 'knowledge:read'; target = { type: 'knowledge_source', id: String(row.source_id) } }
-  if (resource === 'llm-calls' || resource === 'presentations') {
+  if (resource === 'llm-calls') {
     if (typeof row.conversation_id !== 'string') return false
     action = 'conversation:read'; target = { type: 'conversation', id: row.conversation_id }
   }

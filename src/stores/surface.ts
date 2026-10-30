@@ -5,8 +5,7 @@ export type ConversationSurface =
   | { kind: 'member'; participantId: string }
   | { kind: 'thread'; convoId: string; rootId: string }
   | { kind: 'document'; documentId: string }
-  | { kind: 'canvas'; canvasId: string }
-  | { kind: 'presentation'; presentationId: string }
+  | { kind: 'design'; artifactId: string; title: string }
   | null
 
 interface SurfaceState {
@@ -17,10 +16,8 @@ interface SurfaceState {
   closeThreadView: () => void
   openDocumentPeek: (documentId: string) => void
   closeDocumentPeek: () => void
-  openCanvasPeek: (canvasId: string) => void
-  closeCanvasPeek: () => void
-  openPresentationPeek: (presentationId: string) => void
-  closePresentationPeek: () => void
+  openDesign: (artifactId: string, title: string) => void
+  closeDesign: () => void
   closeForConversationChange: () => void
   closeSurface: () => void
 }
@@ -37,10 +34,8 @@ export const useSurface = create<SurfaceState>((set) => ({
   closeThreadView: () => set(closeKind('thread')),
   openDocumentPeek: (documentId) => { showConversation(); set({ surface: { kind: 'document', documentId } }) },
   closeDocumentPeek: () => set(closeKind('document')),
-  openCanvasPeek: (canvasId) => { showConversation(); set({ surface: { kind: 'canvas', canvasId } }) },
-  closeCanvasPeek: () => set(closeKind('canvas')),
-  openPresentationPeek: (presentationId) => { showConversation(); set({ surface: { kind: 'presentation', presentationId } }) },
-  closePresentationPeek: () => set(closeKind('presentation')),
+  openDesign: (artifactId, title) => { showConversation(); set({ surface: { kind: 'design', artifactId, title } }) },
+  closeDesign: () => set(closeKind('design')),
   closeForConversationChange: () => set((state) => state.surface?.kind === 'member' ? {} : { surface: null }),
   closeSurface: () => set({ surface: null }),
 }))

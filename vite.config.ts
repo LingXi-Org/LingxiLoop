@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
+import { Readable } from 'node:stream'
+import { isolatedEditor } from './shared/artifact-editor-origin'
 import { VISUALIZE_PUBLIC_RESOURCES, visualizeResourceFile, visualizeResourceUrl } from './shared/visualize-public-resources'
 
 // Vite proxy target. Default points at the local dev server; set
@@ -13,6 +15,29 @@ const WS_TARGET = process.env.LINGXILOOP_DEV_WS_TARGET || HTTP_TARGET.replace(/^
 
 export default defineConfig({
   plugins: [react(), {
+    name: 'isolated-artifact-editor',
+    configureServer(server) {
+      const base = process.env.LINGXILOOP_ARTIFACT_EDITOR_BASE ?? 'http://artifact.localhost:5180'
+      server.middlewares.use(async (req, res, next) => {
+        const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
+        if (!url.hostname.endsWith(`-${new URL(base).hostname}`)) return next()
+        try {
+          const headers = new Headers()
+          for (const [key, value] of Object.entries(req.headers)) if (value !== undefined) headers.set(key, Array.isArray(value) ? value.join(', ') : value)
+          // Node fetch decompresses upstream bodies but retains their encoding header.
+          headers.set('accept-encoding', 'identity')
+          const response = await isolatedEditor(new Request(url, { method: req.method, headers,
+            ...(!['GET', 'HEAD'].includes(req.method ?? 'GET') ? { body: Readable.toWeb(req) as ReadableStream<Uint8Array>, duplex: 'half' } : {}),
+          }), base, HTTP_TARGET)
+          if (!response) return next()
+          res.statusCode = response.status
+          response.headers.forEach((value, key) => { res.setHeader(key, value) })
+          if (response.body) Readable.fromWeb(response.body as import('node:stream/web').ReadableStream).on('error', next).pipe(res)
+          else res.end()
+        } catch (error) { next(error) }
+      })
+    },
+  }, {
     name: 'visualize-public-assets',
     async generateBundle() {
       // These are the same fixed bytes/hash identities advertised by the API.
@@ -97,6 +122,8 @@ export default defineConfig({
     proxy: {
       '/api':      { target: HTTP_TARGET, changeOrigin: true, secure: false },
       '/uploads':  { target: HTTP_TARGET, changeOrigin: true, secure: false },
+      '/artifact-editor': { target: HTTP_TARGET, changeOrigin: true, secure: false },
+      '/_blob':    { target: HTTP_TARGET, changeOrigin: true, secure: false },
       '/ws':       { target: WS_TARGET,   ws: true,           secure: false },
     },
   },

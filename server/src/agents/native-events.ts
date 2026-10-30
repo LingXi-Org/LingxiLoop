@@ -6,9 +6,9 @@ import type { ConversationUpdatedEvent } from '../modules/conversations/contract
 import type { ReactionChangedEvent } from '../modules/messages/contracts.js'
 import type { ReadReceiptAdvance } from '../im/read-receipts-contracts.js'
 import type { NativeMessage } from '../im/message-types.js'
-import type { CanvasEvent } from '../redis.js'
+import type { ArtifactEvent } from '../redis.js'
 
-export type NativeEvent = DocumentChangedEvent | DocumentUpdateEvent | ConversationUpdatedEvent | ReactionChangedEvent | CanvasEvent
+export type NativeEvent = DocumentChangedEvent | DocumentUpdateEvent | ConversationUpdatedEvent | ReactionChangedEvent | ArtifactEvent
 
   | { type: 'im.channel_sync'; companyId: string; channelId: string }
   | { type: 'im.membership'; companyId: string; conversationId: string; actorId: string; participantId: string; kind: 'joined' | 'left'; clientNonce: string }
@@ -16,7 +16,7 @@ export type NativeEvent = DocumentChangedEvent | DocumentUpdateEvent | Conversat
   | { type: 'im.read_receipt'; advance: ReadReceiptAdvance }
   | { type: 'im.system'; companyId: string; actorId: string; channelId: string; clientNonce: string; payload: NativeMessage }
   | { type: 'im.user'; companyId: string; userId: string; channelId: string; clientNonce: string; payload: NativeMessage;
-      canvasId: string; assignmentId: string; authorization: string }
+      artifactId: string; authorization: string } & ({ assignmentId: string } | { commentId: string })
 
 export async function queueNativeEvents(context: ActionContext, events: NativeEvent[]): Promise<void> {
   await persistNativeEvents(context.database as Queryable, { key: context.action.idempotencyKey, companyId: context.work.tenantId, workId: context.work.id }, events)

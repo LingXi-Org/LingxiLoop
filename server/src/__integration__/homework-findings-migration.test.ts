@@ -38,7 +38,7 @@ test('519 product57 to58 keeps existing draft content, status and runtime proven
         FROM unnest(ARRAY['PENDING','READY','INVALID','ERROR','MATERIAL_ERROR']) AS status`)
     const original = (await database.query('SELECT * FROM homeworks ORDER BY id')).rows
     const provenance = (await database.query('SELECT * FROM lingxios_installation')).rows
-    assert.deepEqual(await migrateDatabase(database), ['0058_homework_validation_findings'])
+    assert.deepEqual(await migrateDatabase(database), ['0058_homework_validation_findings', '0059_retire_presentation_generation', '0060_native_artifacts'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     const after = (await database.query('SELECT * FROM homeworks ORDER BY id')).rows

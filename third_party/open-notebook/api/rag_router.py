@@ -1,27 +1,21 @@
 """Exact production API surface for document ingestion and scoped retrieval."""
 
 import asyncio
-import base64
 import hashlib
 import json
 import re
 import uuid
-import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
-from loguru import logger
 
 from api.rag_models import (
     AssetResponse,
     NotebookCreate,
     NotebookResponse,
     NotebookUpdate,
-    PresentationMaterialAsset,
-    PresentationMaterialBlock,
-    PresentationMaterialResponse,
     SearchRequest,
     SearchResponse,
     SearchResult,
@@ -60,24 +54,11 @@ ALLOWED_UPLOAD_MIME_BY_SUFFIX = {
     ".json": "application/json",
 }
 IDEMPOTENCY_KEY_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,254}$")
-MAX_PRESENTATION_BLOCKS = 400
-MAX_PRESENTATION_BLOCK_BYTES = 4_000
-MAX_PRESENTATION_TEXT_BYTES = 512_000
-MAX_PRESENTATION_ASSETS = 24
-MAX_PRESENTATION_ASSET_BYTES = 1536 * 1024
-MAX_PRESENTATION_ASSET_TOTAL_BYTES = 10 * 1024 * 1024
 _PAGE_MARKER = re.compile(
     r"(?:\[\[PAGE\s*:\s*(\d+)\]\]|(?:^|\n)\s*(?:page|页)\s*(\d+)\s*(?:$|\n))",
     re.IGNORECASE,
 )
 _SECTION_MARKER = re.compile(r"(?:^|\n)\s{0,3}#{1,6}\s+([^\n#]{1,200})")
-_PRESENTATION_IMAGE_MIMES = {
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".webp": "image/webp",
-}
-
 
 def _asset_response(source: Source) -> AssetResponse | None:
     if not source.asset:
@@ -573,7 +554,7 @@ async def get_source_status(source_id: str) -> SourceStatusResponse:
     )
 
 
-def _presentation_location(
+def _source_location(
     text: str, current_page: int | None, current_section: str | None
 ) -> tuple[str, int | None, str | None]:
     page_match = _PAGE_MARKER.search(text)
@@ -584,188 +565,6 @@ def _presentation_location(
         current_section = " ".join(section_match.group(1).split())[:200]
     clean = _PAGE_MARKER.sub("\n", text)
     return clean.strip(), current_page, current_section
-
-
-def _presentation_asset(
-    data: bytes,
-    *,
-    name: str,
-    page_number: int | None,
-    width: int | None = None,
-    height: int | None = None,
-) -> PresentationMaterialAsset | None:
-    suffix = Path(name).suffix.lower()
-    mime_type = _PRESENTATION_IMAGE_MIMES.get(suffix)
-    if not mime_type or not data or len(data) > MAX_PRESENTATION_ASSET_BYTES:
-        return None
-    digest = hashlib.sha256(data).hexdigest()
-    return PresentationMaterialAsset(
-        asset_id=f"presentation_asset:{digest[:24]}",
-        mime_type=mime_type,
-        data_uri=f"data:{mime_type};base64,{base64.b64encode(data).decode('ascii')}",
-        page_number=page_number,
-        section_title=None,
-        width=width if width and width > 0 else None,
-        height=height if height and height > 0 else None,
-    )
-
-
-def _extract_presentation_assets_from_file(
-    path: Path,
-) -> list[PresentationMaterialAsset]:
-    assets: list[PresentationMaterialAsset] = []
-    seen: set[str] = set()
-    total_bytes = 0
-
-    def append(asset: PresentationMaterialAsset | None) -> bool:
-        nonlocal total_bytes
-        if asset is None or asset.asset_id in seen:
-            return True
-        encoded_size = len(asset.data_uri.encode("ascii"))
-        if total_bytes + encoded_size > MAX_PRESENTATION_ASSET_TOTAL_BYTES:
-            return False
-        seen.add(asset.asset_id)
-        assets.append(asset)
-        total_bytes += encoded_size
-        return len(assets) < MAX_PRESENTATION_ASSETS
-
-    if path.suffix.lower() == ".pdf":
-        from pypdf import PdfReader
-
-        reader = PdfReader(path)
-        for page_number, page in enumerate(reader.pages[:100], start=1):
-            for image in page.images:
-                pil_image = getattr(image, "image", None)
-                size = getattr(pil_image, "size", (None, None))
-                if not append(
-                    _presentation_asset(
-                        image.data,
-                        name=image.name,
-                        page_number=page_number,
-                        width=size[0],
-                        height=size[1],
-                    )
-                ):
-                    return assets
-    elif path.suffix.lower() == ".docx":
-        with zipfile.ZipFile(path) as archive:
-            for entry in sorted(archive.infolist(), key=lambda item: item.filename):
-                if not entry.filename.startswith("word/media/"):
-                    continue
-                if (
-                    entry.file_size <= 0
-                    or entry.file_size > MAX_PRESENTATION_ASSET_BYTES
-                ):
-                    continue
-                if not append(
-                    _presentation_asset(
-                        archive.read(entry), name=entry.filename, page_number=None
-                    )
-                ):
-                    return assets
-    return assets
-
-
-async def _presentation_assets(source: Source) -> list[PresentationMaterialAsset]:
-    reference = source.asset.file_path if source.asset else None
-    if not reference:
-        return []
-    store = get_artifact_store()
-    try:
-        materialized = await asyncio.to_thread(
-            store.materialize, reference, "sources", UPLOADS_FOLDER
-        )
-    except (FileNotFoundError, ValueError):
-        return []
-    try:
-        if materialized.path.suffix.lower() not in {".pdf", ".docx"}:
-            return []
-        try:
-            return await asyncio.to_thread(
-                _extract_presentation_assets_from_file, materialized.path
-            )
-        except Exception as exc:
-            logger.warning(
-                "Presentation image extraction unavailable for source {}: {}",
-                source.id,
-                type(exc).__name__,
-            )
-            return []
-    finally:
-        materialized.release()
-
-
-@router.get(
-    "/sources/{source_id}/presentation-material",
-    response_model=PresentationMaterialResponse,
-)
-async def get_presentation_material(source_id: str) -> PresentationMaterialResponse:
-    """Return bounded, citation-ready material for an already embedded Source.
-
-    The production RAG profile persists chunk text and ordering. Optional page
-    markers emitted by extraction and Markdown headings are retained as
-    provenance. Image assets stay empty when the active extractor did not
-    persist structured picture regions; callers must never infer them.
-    """
-    try:
-        source = await Source.get(source_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=404, detail="Source not found") from exc
-    if await source.get_embedded_chunks() <= 0:
-        raise HTTPException(
-            status_code=409, detail="Source is not ready for presentation material"
-        )
-    rows = await repo_query(
-        "SELECT id, order, content FROM source_embedding "
-        "WHERE source = $source_id ORDER BY order ASC LIMIT $limit;",
-        {
-            "source_id": ensure_record_id(source_id),
-            "limit": MAX_PRESENTATION_BLOCKS + 1,
-        },
-    )
-    blocks: list[PresentationMaterialBlock] = []
-    total_bytes = 0
-    truncated = len(rows) > MAX_PRESENTATION_BLOCKS
-    current_page: int | None = None
-    current_section: str | None = None
-    for fallback_ordinal, row in enumerate(rows[:MAX_PRESENTATION_BLOCKS]):
-        raw_text = str(row.get("content") or "").strip()
-        if not raw_text:
-            continue
-        text, current_page, current_section = _presentation_location(
-            raw_text, current_page, current_section
-        )
-        if not text:
-            continue
-        text = text[:MAX_PRESENTATION_BLOCK_BYTES]
-        encoded_bytes = len(text.encode("utf-8"))
-        if total_bytes + encoded_bytes > MAX_PRESENTATION_TEXT_BYTES:
-            truncated = True
-            break
-        total_bytes += encoded_bytes
-        ordinal_value = row.get("order")
-        ordinal = (
-            int(ordinal_value)
-            if isinstance(ordinal_value, int) and ordinal_value >= 0
-            else fallback_ordinal
-        )
-        blocks.append(
-            PresentationMaterialBlock(
-                chunk_id=str(row.get("id") or f"source_embedding:{ordinal}"),
-                ordinal=ordinal,
-                text=text,
-                page_number=current_page,
-                section_title=current_section,
-            )
-        )
-    assets = await _presentation_assets(source)
-    return PresentationMaterialResponse(
-        source_id=source_id,
-        title=(source.title or "Untitled source")[:500],
-        blocks=blocks,
-        assets=assets,
-        truncated=truncated,
-    )
 
 
 @router.post("/sources/{source_id}/retry", response_model=SourceResponse)
@@ -906,7 +705,7 @@ async def search(payload: SearchRequest) -> SearchResponse:
             )
     normalized_results: list[SearchResult] = []
     for row in results:
-        content, page_number, _ = _presentation_location(
+        content, page_number, _ = _source_location(
             str(row.get("content") or ""), None, None
         )
         if not content:

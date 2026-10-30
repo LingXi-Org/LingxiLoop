@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
+import { assertRetirementReleaseAllowed, convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
 
 const fixture = (version = '3.8.17') => {
   const dependencies = { '@lyyzka/lingxios': version }
@@ -21,6 +21,30 @@ test('CAS plan requires exact formal receipts and complete immutable inventory',
   f.files['package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '4.0.0-slim.0' } })
   assert.throws(() => runtimePatchPlan(f.read, f.paths), /unreviewed runtime transition/)
 })
+test('product59 retirement uses the existing SDK, never the historical product58 CAS', () => {
+  const f = fixture(), path = 'server/src/db/migrations/0059_retire_presentation_generation.sql'
+  f.files[path] = '-- isolated retirement fixture'; f.paths.push(path)
+  assert.equal(runtimePatchPlan(f.read, f.paths), null)
+  assert.throws(() => runtimePatchPlan(f.read, [...f.paths.slice(0, -1), path.replace('retire_presentation_generation', 'unknown')]))
+  f.files['package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '3.8.16' } })
+  assert.throws(() => runtimePatchPlan(f.read, f.paths), /product59 requires/)
+  f.files['package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '3.8.17' } })
+  f.files['server/package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '3.8.16' } })
+  assert.throws(() => runtimePatchPlan(f.read, f.paths), /exact root\/server runtime pin/)
+})
+test('product59 accepts only matching formal 3.8.18 receipts and still rejects unreviewed versions', () => {
+  const f = fixture(), path = 'server/src/db/migrations/0059_retire_presentation_generation.sql'
+  f.paths.push(path); f.files[path] = '-- isolated retirement fixture'
+  for (const name of ['package.json','server/package.json','package-lock.json','server/package-lock.json']) {
+    f.files[name] = f.files[name].replaceAll('3.8.17','3.8.18')
+  }
+  assert.equal(runtimePatchPlan(f.read, f.paths), null)
+  const bad = fixture(); bad.paths.push(path); bad.files[path] = '-- isolated retirement fixture'
+  for (const name of ['package.json','server/package.json','package-lock.json','server/package-lock.json']) bad.files[name] = bad.files[name].replaceAll('3.8.17','3.8.19')
+  assert.throws(() => runtimePatchPlan(bad.read, bad.paths), /product59 requires/)
+  f.files['server/package-lock.json'] = f.files['server/package-lock.json'].replace('sha512-', 'sha256-')
+  assert.throws(() => runtimePatchPlan(f.read, f.paths), /receipts differ/)
+})
 test('next patch accepts only exact17 to18 receipts and remains on product58', () => {
   const f = fixture('3.8.18'), plan = runtimePatchPlan(f.read, f.paths)
   assert.equal(plan.source.runtime, '3.8.17'); assert.equal(plan.target.runtime, '3.8.18')
@@ -31,6 +55,17 @@ test('next patch accepts only exact17 to18 receipts and remains on product58', (
   assert.throws(() => runtimePatchPlan(f.read, [...f.paths, 'server/src/db/migrations/0059_retire_presentation_generation.sql']))
   const future = fixture('3.8.19')
   assert.throws(() => runtimePatchPlan(future.read, future.paths), /unreviewed runtime transition/)
+})
+test('native artifacts use the installed runtime only with the exact product60 inventory', () => {
+  const f = fixture('3.8.18')
+  for (const name of ['0059_retire_presentation_generation', '0060_native_artifacts']) {
+    const path = `server/src/db/migrations/${name}.sql`
+    f.paths.push(path); f.files[path] = '-- reviewed fixture'
+  }
+  assert.equal(runtimePatchPlan(f.read, f.paths), null)
+  assert.throws(() => runtimePatchPlan(f.read, [...f.paths.slice(0, -1), f.paths.at(-1).replace('native_artifacts', 'unknown')]))
+  assert.throws(() => runtimePatchPlan(f.read, [...f.paths, 'server/src/db/migrations/0061_unknown.sql']))
+  assert.throws(() => assertRetirementReleaseAllowed(f.paths, 'up'), /explicit maintenance release approval/)
 })
 const run = async (fail, observed = { complete: false, state: 'source' }) => {
   const calls = [], actions = {}
@@ -80,4 +115,14 @@ test('unconfirmed observation retains maintenance and never starts either versio
   const { calls, error } = await run(['apply', 'observe'])
   assert.match(error.message, /remain stopped/)
   assert.ok(!calls.includes('restoreSource') && !calls.includes('convergeTarget'))
+})
+
+test('retirement requires explicit release approval before any deployment action', () => {
+ const paths=['server/src/db/migrations/0059_retire_presentation_generation.sql']
+ for (const command of ['up','servers','workers']) {
+  assert.throws(() => assertRetirementReleaseAllowed(paths, command, undefined), /explicit maintenance release approval/)
+  assert.doesNotThrow(() => assertRetirementReleaseAllowed(paths, command, 'true'))
+ }
+ assert.doesNotThrow(() => assertRetirementReleaseAllowed(paths, 'status', undefined))
+ assert.doesNotThrow(() => assertRetirementReleaseAllowed([], 'up', undefined))
 })

@@ -63,8 +63,8 @@ const inputFields: Record<string, readonly [string, string][]> = {
   'documents.create': [['title', '文档名称']], 'documents.rename': [['title', '新名称']],
   'files.create': [['name', '文件名称']], 'chat.rename': [['title', '对话名称']], 'chat.search': [['query', '查找内容']],
   'chat.ask': [['question', '需要补充']], 'polls.create': [['question', '投票问题']],
-  'canvas.start_workspace': [['title', '协作任务']], 'canvas.create_frame': [['title', '内容名称']],
-  'presentations.create': [['title', '演示文稿名称']], 'routines.create': [['name', '定时任务名称']],
+  'design.start_workspace': [['title', '协作任务']], 'slides.start_workspace': [['title', '协作任务']], 'slides.create': [['title', '演示文稿名称']],
+  'routines.create': [['name', '定时任务名称']],
 }
 
 function publicField(value: unknown): string | undefined {
@@ -111,7 +111,7 @@ export async function finishPublicToolActivity(context: ActionContext, display: 
     else if (action === 'knowledge.search') summary = '检索已完成，可在下方查看资料结果。'
     else if (action === 'chat.report_progress') summary = '公开任务说明已更新。'
     else if (action === 'chat.ask') summary = '已提出补充问题，等待你的回答。'
-    else if (action === 'handoffs.create' || action === 'canvas.assign') summary = '协作任务已提交，后续结果将按实际执行情况更新。'
+    else if (action === 'handoffs.create') summary = '协作任务已提交，后续结果将按实际执行情况更新。'
   }
   await pool.query(`UPDATE agent_public_tool_activity SET display=$4::jsonb,completed_at=clock_timestamp()
     WHERE company_id=$1 AND run_id=$2 AND tool_call_id=$3`,

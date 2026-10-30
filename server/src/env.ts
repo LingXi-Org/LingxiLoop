@@ -44,7 +44,6 @@ export const env = {
   APP_VERSION: process.env.LINGXILOOP_VERSION?.trim() || '0.0.0-dev',
   COMMIT_SHA: process.env.LINGXILOOP_COMMIT_SHA?.trim() || 'dev',
   /** Release gate for the deterministic, source-grounded HTML deck pipeline. */
-  PRESENTATION_HTML_ENABLED: process.env.PRESENTATION_HTML_ENABLED?.trim().toLowerCase() === 'true',
   DATABASE_POOL_MAX: integerAtLeast('DATABASE_POOL_MAX', 20, 1),
   WUKONG_USER_TOKEN_SECRET: wukongUserTokenSecret(),
   DATABASE_URL: required('DATABASE_URL'),
@@ -144,6 +143,8 @@ export const env = {
   ),
   /** Public base URL used to build company invitation links. */
   INVITE_BASE_URL: required('LINGXILOOP_INVITE_BASE_URL'),
+  ARTIFACT_EDITOR_BASE: process.env.LINGXILOOP_ARTIFACT_EDITOR_BASE ?? (process.env.NODE_ENV === 'production'
+    ? 'https://artifact.lingxilearn.cn' : 'http://artifact.localhost:5180'),
   /** Transactional organization invitations; never an Agent capability. */
   RESEND_API_KEY: process.env.RESEND_API_KEY ?? '',
   EMAIL_DOMAIN: (process.env.EMAIL_DOMAIN ?? '').toLowerCase().replace(/^\.+|\.+$/g, ''),

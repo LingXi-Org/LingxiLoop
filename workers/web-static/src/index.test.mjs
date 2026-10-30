@@ -11,8 +11,8 @@ const env = {
   } },
   RETAINED_ASSETS: { get: async () => null },
 }
-test('API, protected files, dynamic visualize and WebSocket routes never become HTML', async () => {
-  for (const path of ['/api', '/api/a', '/uploads/private', '/runtime/visualize/x', '/visualize/x', '/ws', '/files/x', '/webhooks/wukong', '/readyz', '/healthz']) {
+test('API, protected files, dynamic visualize, artifact editor and WebSocket routes never become HTML', async () => {
+  for (const path of ['/api', '/api/a', '/uploads/private', '/runtime/visualize/x', '/visualize/x', '/artifact-editor/design/grant/', '/_blob/0123456789abcdef0123456789abcdef', '/ws', '/files/x', '/webhooks/wukong', '/readyz', '/healthz']) {
     assert.notEqual(route(path), 'asset')
     let called
     const request = new Request(`https://loop.example.com${path}?a=1`, { headers: { cookie: 'session=secret', authorization: 'Bearer user', 'x-lingxiloop-gateway': 'old.signature', 'last-event-id': '42' } })
@@ -65,4 +65,36 @@ test('fixed visualize assets are anonymous immutable CORS resources, including r
     assert.equal(response.headers.get('x-content-type-options'),'nosniff')
     assert.equal(await response.text(),'public renderer')
   }
+})
+import { artifactEditorOrigin } from '../../../shared/artifact-editor-origin.ts'
+
+test('executable Design origins are grant-bound and never proxy authenticated product requests', async () => {
+  const base = 'https://artifact.example.com', token = 'signed.grant'
+  const origin = await artifactEditorOrigin(token, base)
+  const isolated = { ...env, ARTIFACT_EDITOR_BASE: base }
+  let calls = 0
+  const fetcher = async request => {
+    calls++
+    assert.equal(new URL(request.url).origin, env.BACKEND_ORIGIN_BASE_URL)
+    for (const header of ['cookie', 'authorization', 'x-lingxiloop-gateway']) assert.equal(request.headers.get(header), null)
+    return new Response('<html>editor</html>', { headers: { 'set-cookie': 'private=value',
+      'content-security-policy': "sandbox allow-scripts allow-downloads; default-src 'self'" } })
+  }
+  const result = await handleRequest(new Request(`${origin}/artifact-editor/design/${token}/`, { headers: {
+    cookie: 'session=private', authorization: 'Bearer private', 'x-lingxiloop-gateway': 'private',
+  } }), isolated, fetcher)
+  assert.equal(result.status, 200)
+  assert.equal(result.headers.get('set-cookie'), null)
+  assert.match(result.headers.get('content-security-policy'), /^sandbox allow-scripts allow-same-origin /)
+  for (const path of ['/api/auth/session', '/', '/assets/main.js', '/artifact-editor/design/other.grant/', '/artifact-editor/slides/signed.grant/']) {
+    assert.equal((await handleRequest(new Request(origin + path), isolated, fetcher)).status, 404)
+  }
+  assert.equal((await handleRequest(new Request(`${origin}/artifact-editor/design/${token}/project/sw.js`, { headers: { 'service-worker': 'script' } }), isolated, fetcher)).status, 404)
+  assert.equal(calls, 1)
+  const main = await handleRequest(new Request(`https://loop.example.com/artifact-editor/design/${token}/`), isolated,
+    async () => new Response('editor', { headers: { 'content-security-policy': 'sandbox allow-scripts allow-downloads' } }))
+  assert.doesNotMatch(main.headers.get('content-security-policy'), /allow-same-origin/)
+  const data = await handleRequest(new Request(`${origin}/artifact-editor/design/${token}/project/Main.dc.html`), isolated,
+    async () => new Response('data', { headers: { 'content-security-policy': "sandbox; default-src 'none'" } }))
+  assert.equal(data.headers.get('content-security-policy'), "sandbox; default-src 'none'")
 })

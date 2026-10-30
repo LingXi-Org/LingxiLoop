@@ -54,7 +54,7 @@ export async function listProjects(db: Queryable, companyId: string, userId: str
                   OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$2))) AS "sourceCount",
             (SELECT COUNT(*)::int FROM documents WHERE project_id=project.id AND company_id=project.company_id) AS "documentCount",
             (SELECT COUNT(*)::int FROM calendar_events WHERE project_id=project.id AND company_id=project.company_id) AS "calendarEventCount",
-            (SELECT COUNT(*)::int FROM canvases WHERE project_id=project.id AND company_id=project.company_id) AS "canvasCount",
+            (SELECT COUNT(*)::int FROM artifacts WHERE project_id=project.id AND company_id=project.company_id AND kind='slides' AND conversation_id IS NULL) AS "slidesCount",
             (membership.is_admin OR course_member.role = 'TEACHER') AS "canManage",
             course.id AS "courseId",
             CASE WHEN membership.is_admin THEN 'teacher' WHEN course.id IS NULL OR course_member.role IS NULL THEN NULL

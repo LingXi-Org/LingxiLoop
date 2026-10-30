@@ -1,3 +1,4 @@
+import { supportsArtifactSource } from '../../../src/lib/artifactSources.js'
 import { assistantRunResponse, readRunProjection } from '../agent-runtime/assistant-transport.js'
 import { NoEffectError } from '@lyyzka/lingxios'
 import { memoryIdSchema } from '../../../src/lib/memoryActivity.js'
@@ -40,7 +41,6 @@ import { loadRuntimeBinding } from '../agent-runtime/context.js'
 import { requestedProjectId } from '../http/request-context.js'
 import { HttpError } from '../http/errors.js'
 import { requireConversationMember } from '../http/authorization.js'
-import { presentationsApplication } from '../modules/presentations/public.js'
 import {
   isReadReceiptChannelMember,
   listReadReceiptAdvances,
@@ -278,10 +278,9 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId/artifact', safe(async (r
   const run = await productRunIdentity({ companyId, conversationId: sessionId, agentId: String(req.params.agentId), runId: String(req.params.runId), principalId: userId,
     historical: true, ...(threadId ? { threadId } : {}) })
   const api = await lingxiOSControl(), manifest = (await api.readMessage(run))?.envelope.artifacts.find(item => item.path === path)
-  if (!manifest) { res.status(404).json({ error: 'artifact not found' }); return }
+  if (!manifest || !supportsArtifactSource(manifest)) { res.status(404).json({ error: 'artifact not found' }); return }
   if (manifest.source?.ref.startsWith('document:')) await permissionService.assertCan({ actorUserId: userId, companyId,
     action: 'document:read', resource: { type: 'document', id: manifest.source.ref.slice(9) } })
-  if (manifest.source?.ref.startsWith('presentation:')) await presentationsApplication.get(companyId, userId, manifest.source.ref.slice(13))
   const file = await api.readArtifact(run, path)
   if (!file) { res.status(404).json({ error: 'artifact not found' }); return }
   res.set({ 'Content-Type': file.artifact.mime, 'Content-Length': String(file.bytes.length), 'X-Content-Type-Options': 'nosniff',

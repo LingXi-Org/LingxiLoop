@@ -76,21 +76,22 @@ The adapted source is retained in `admin/src/kuma-mieru.tsx` and
 `admin/src/kuma-mieru-chart.tsx` under the Mozilla Public License, Version 2.0.
 The required source-form notice and license URL are preserved in both files.
 
-## Excalidraw Canvas Fonts
+## baoyu-design Design and Slides
 
-LingxiLoop vendors the Assistant, Excalifont, and Xiaolai WOFF2 font assets
-used by its Canvas UI from Excalidraw commit
-`e1bb9ff8f8931e783c11d104abb8967ac6605c9a`:
-https://github.com/excalidraw/excalidraw/tree/e1bb9ff8f8931e783c11d104abb8967ac6605c9a/packages/excalidraw/fonts
+The Design and Slides artifacts vendor `skills/claude-design` and
+`skills/claude-slides` from
+[JimLiu/baoyu-design](https://github.com/JimLiu/baoyu-design/tree/c15e76ef5134228d2bb5da35652d30d7d6b8a34d)
+at commit `c15e76ef5134228d2bb5da35652d30d7d6b8a34d` (v2.1.0), byte for byte,
+under `third_party/baoyu-design/upstream/`. `third_party/baoyu-design/manifest.json`
+records every file's upstream path, size, SHA-256 and Git blob SHA-1.
 
-The font assets are stored under `src/features/canvas/fonts/Assistant`,
-`src/features/canvas/fonts/Excalifont`, and
-`src/features/canvas/fonts/Xiaolai`. Their local `@font-face` declarations
-are in `src/features/canvas/canvas-fonts.css`.
-
-All three font families are distributed under the SIL Open Font License,
-Version 1.1. The complete license text is retained at
-`src/features/canvas/fonts/OFL-1.1.txt`.
+The repository is MIT licensed, Copyright (c) Jim Liu; the license is retained at
+`third_party/baoyu-design/LICENSE`. Per upstream's own provenance notes, the
+prebuilt editor bundles, `artifact.mjs`, `compiler.cjs` and `dc-runtime.js` are
+built from its BaoCut sources, and the `artifact-type/reference/` pages follow the
+claude.ai Design and Slides artifact types. The editors' bundled dependencies
+keep their own licenses in `scripts/editor/third-party-licenses.txt` and
+`scripts/editor/node/third-party-licenses.txt` under each vendored skill.
 
 ## Bible Strong Avatar
 
@@ -111,30 +112,6 @@ includes LingxiLoop workspace scoping and idempotency. Its complete MIT license
 is retained at `third_party/open-notebook/LICENSE`.
 
 MIT License, Copyright (c) 2024 Luis Novo.
-
-## LingXi interactive-lecture-deck
-
-LingxiLoop's deterministic HTML lecture renderer is adapted from the visual,
-camera, spatial and interaction contracts in `interactive-lecture-deck`, pinned
-to commit `ca99f2227c4b35c918d294316ea5d0960c9d0f48`:
-https://github.com/LingXi-Org/LingxiSkills/tree/ca99f2227c4b35c918d294316ea5d0960c9d0f48/skills/interactive-lecture-deck
-
-The immutable upstream runtime snapshot and provenance are retained under
-`third_party/interactive-lecture-deck`. The adapted runtime also preserves the
-co-planarity fix from `a5802b9db011e414c0f616a11225564d59e9991a` and the
-slow-iframe race fix from `2973db3db5f1282cfbebad6da553a0d351c7a1b5`.
-
-MIT License, Copyright (c) 2026 LingXi Team. The complete license text is
-retained at `third_party/interactive-lecture-deck/LICENSE`.
-
-## OpenMAIC architecture reference
-
-The presentation research, planning, checkpoint, critic and targeted-repair
-stages were independently implemented with architectural reference to OpenMAIC
-at commit `dfebbcf33f3a56064129903faeab70a9e4243146`:
-https://github.com/THU-MAIC/OpenMAIC/tree/dfebbcf33f3a56064129903faeab70a9e4243146
-
-No OpenMAIC rendering DSL or rendering source code is included.
 
 ## OpenMausBot
 

@@ -71,6 +71,7 @@ jobs:
               - 'scripts/test-selectors.test.mjs'
             web:
               - 'workers/web-static/**'
+              - 'shared/artifact-editor-origin.ts'
               - 'shared/visualize-public-resources.ts'
               - 'third_party/zcode/**'
               - 'third_party/assistant-ui/streaming-text/**'
@@ -120,8 +121,10 @@ jobs:
               - '!server/src/__integration__/**'
             # Include shared sources loaded by the server runtime and copied by its image.
             server_source:
+              - 'shared/artifact-editor-origin.ts'
               - 'shared/visualize-public-resources.ts'
               - 'third_party/zcode/**'
+              - 'third_party/baoyu-design/**'
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'
               - 'server/.npmrc'
@@ -138,12 +141,11 @@ jobs:
               - 'src/lib/agentToolCards.ts'
               - 'src/lib/researchSources.ts'
               - 'src/lib/agentCapabilities.ts'
-              - 'src/lib/canvasLayout.ts'
-              - 'src/lib/canvasEventKinds.ts'
               - 'src/lib/mentions.ts'
               - 'src/lib/participantDisplayName.ts'
               - 'src/lib/agentRunSnapshot.ts'
               - 'src/lib/nativeMessage.ts'
+              - 'src/lib/artifactSources.ts'
               - 'src/lib/answerSegment.ts'
               - 'src/lib/userFacingError.ts'
               - 'src/lib/runActivity.ts'
@@ -420,7 +422,7 @@ jobs:
           PGPASSWORD: postgres
           LINGXIOS_NATIVE_TEST_REDIS_URL: redis://127.0.0.1:6379
         run: |
-          for capability in documents canvas; do
+          for capability in documents artifacts; do
             createdb "native_${capability}"
             LINGXIOS_NATIVE_TEST_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/native_${capability}" \
               node "scripts/test-native-agent-${capability}.mjs"

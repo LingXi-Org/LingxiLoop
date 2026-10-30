@@ -4,7 +4,7 @@ import type { Pool, PoolClient } from 'pg'
 import { packageResources, releaseVersions } from '@lyyzka/lingxios'
 import { ensureEducationPlan } from '../modules/entitlements/public.js'
 import { pool } from './pool.js'
-import { assertMigrationRuntime, assertCurrentRuntimeProfile, assertFull54InstallBoundary, loadLockedRuntimePackage } from './runtime-profile.js'
+import { assertMigrationRuntime, assertCurrentRuntimeProfile, assertFull54InstallBoundary, assertRetirementRuntimeVersion, loadLockedRuntimePackage } from './runtime-profile.js'
 import { assertDevelopmentQualification, type DevelopmentRuntimeQualification } from './development-runtime-qualification.js'
 
 const MIGRATIONS_URL = new URL('./migrations/', import.meta.url)
@@ -199,8 +199,11 @@ export async function migrateDatabase(
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
-  // Product55/56/57/58 change product state only, on the same formally locked runtime.
-  const full58=migrations.length===58&&migrations[57]?.name==='homework_validation_findings'
+  // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
+  const full60=migrations.length===60&&migrations[59]?.name==='native_artifacts'
+  const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
+  if (full59) assertRetirementRuntimeVersion(releaseVersions.runtime)
+  const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'
   const full55=(migrations.length===55||full56)&&migrations[54]?.name==='case_covers'
@@ -231,7 +234,7 @@ export async function migrateDatabase(
 
     const applied = await appliedMigrations(client)
     validateApplied(migrations, applied)
-    if(full54)assertFull54InstallBoundary(applied.length,releaseVersions.runtime,full58?58:full57?57:full56?56:full55?55:54)
+    if(full54)assertFull54InstallBoundary(applied.length,releaseVersions.runtime,full60?60:full59?59:full58?58:full57?57:full56?56:full55?55:54)
     const installsRuntime = migrations.some(migration => migration.version === NATIVE_INSTALL_VERSION && migration.name === 'lingxios_native_runtime')
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
     const hasContinuityUpgrade = migrations.some(migration=>migration.version===47 && migration.name==='memory_continuity')
@@ -260,11 +263,19 @@ export async function migrateDatabase(
         if (migration.version===54 && migration.name==='run_presentation_contract') {
           await assertRuntimeCurrent(client,14,'3.8.2')
         }
+        if (migration.version===59 && migration.name==='retire_presentation_generation') assertRetirementRuntimeVersion(releaseVersions.runtime)
         if (migration.version===55 && migration.name==='case_covers'
           || migration.version===56 && migration.name==='homework_validation_status'
           || migration.version===57 && migration.name==='case_soft_delete'
-          || migration.version===58 && migration.name==='homework_validation_findings') {
+          || migration.version===58 && migration.name==='homework_validation_findings'
+          || migration.version===59 && migration.name==='retire_presentation_generation'
+          || migration.version===60 && migration.name==='native_artifacts') {
           await assertRuntimeCurrent(client,14,releaseVersions.runtime)
+        }
+        // Production retirement is an explicit maintenance operation, never an automatic deploy side effect.
+        if (migration.version===59 && migration.name==='retire_presentation_generation'
+          && process.env.NODE_ENV==='production' && process.env.LINGXILOOP_RETIREMENT_0059_APPROVED!=='true') {
+          throw new Error('migration0059 requires explicit retirement approval and stopped application writers')
         }
         await client.query(migration.sql)
         // Only the atomic empty-database cutover may stamp the current package.
@@ -349,8 +360,11 @@ export async function assertMigrationsCurrent(
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
-  // Product55/56/57/58 change product state only, on the same formally locked runtime.
-  const full58=migrations.length===58&&migrations[57]?.name==='homework_validation_findings'
+  // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
+  const full60=migrations.length===60&&migrations[59]?.name==='native_artifacts'
+  const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
+  if (full59) assertRetirementRuntimeVersion(releaseVersions.runtime)
+  const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'
   const full55=(migrations.length===55||full56)&&migrations[54]?.name==='case_covers'

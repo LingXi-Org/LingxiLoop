@@ -54,25 +54,25 @@ test('public knowledge sources require course-teacher management even when a stu
   }), { canDownload: true, canRename: false, canDelete: false })
 })
 
-test('users can edit their own Canvas frames after the workspace finishes', () => {
+test('artifact files stay editable by room members whatever their workspace status', () => {
   const resource = {
     companyId: 'company',
     projectId: 'project',
     createdBy: 'owner',
     conversationMembers: ['owner'],
     leaderId: null,
-    status: 'completed',
+    status: null,
   }
   assert.equal(evaluatePolicy(
-    { actorUserId: 'owner', action: 'canvas:write', resource: { type: 'canvas_frame', id: 'frame' } },
+    { actorUserId: 'owner', action: 'artifact:write', resource: { type: 'artifact', id: 'design' } },
     ownerContext,
     resource,
   ), 'ALLOWED')
   assert.equal(evaluatePolicy(
-    { actorUserId: 'other', action: 'canvas:write', resource: { type: 'canvas_frame', id: 'frame' } },
+    { actorUserId: 'other', action: 'artifact:write', resource: { type: 'artifact', id: 'design' } },
     { ...ownerContext, actorUserId: 'other' },
     resource,
-  ), 'RESOURCE_STATE_DENIED')
+  ), 'RESOURCE_MEMBERSHIP_REQUIRED')
 })
 
 test('platform administrators bypass tenant membership but not entitlements or resource state', () => {
@@ -98,11 +98,6 @@ test('platform administrators bypass tenant membership but not entitlements or r
     platformContext,
     privateConversation,
   ), 'ALLOWED')
-  assert.equal(evaluatePolicy(
-    { actorUserId: 'platform-admin', action: 'canvas:write', resource: { type: 'canvas', id: 'finished' } },
-    platformContext,
-    { ...privateConversation, visibilityScope: 'PROJECT', status: 'completed' },
-  ), 'RESOURCE_STATE_DENIED')
   assert.equal(evaluatePolicy(
     { actorUserId: 'platform-admin', action: 'conversation:read', resource: { type: 'conversation', id: 'private' } },
     { ...platformContext, entitlements: { ...platformContext.entitlements, has: () => false } },

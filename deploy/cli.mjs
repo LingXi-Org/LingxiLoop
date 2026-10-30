@@ -18,7 +18,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { classifyPaths, workflowFilters } from '../scripts/ci-scope-paths.mjs'
 import { IMAGES, imageTag } from '../scripts/image-tag.mjs'
-import { convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
+import { assertRetirementReleaseAllowed, convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)))
 const SIGILLO = ['-p', '01M1TZH9C21C1A9PFAR8E41553', '-c', 'prod']
@@ -34,7 +34,9 @@ async function main(command, requested) {
   const head = git('rev-parse', 'HEAD').trim()
   const images = Object.fromEntries(IMAGES.map(image => [`${image.name.toUpperCase()}_IMAGE`, { ...image, tag: imageTag(image) }]))
   const stacks = selectStacks(requested)
-  const patch = runtimePatchPlan(path => git('show', `HEAD:${path}`), git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean))
+  const migrationPaths = git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean)
+  assertRetirementReleaseAllowed(migrationPaths, command, process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED)
+  const patch = runtimePatchPlan(path => git('show', `HEAD:${path}`), migrationPaths)
   const ssh = sshSession()
   const deployServers = () => patch && stacks.includes('app-a') ? runtimePatch(ssh, patch, images, () => servers(ssh, stacks, images)) : servers(ssh, stacks, images)
   try {
@@ -311,6 +313,9 @@ async function status(ssh) {
     `cat /opt/lingxiloop/*/images.env 2>/dev/null | sort -u; docker ps --format '{{.Names}}\t{{.Status}}' | sort`)))
 }
 
+// Refuse the automatic rollout before obtaining Sigillo credentials or SSH.
+assertRetirementReleaseAllowed(git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean),
+  process.argv[2] ?? 'up', process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED)
 if (!process.env.DEPLOY_SSH_KEY) {
   const child = spawn('npm', ['exec', '--yes', '--package=sigillo@0.14.2', '--', 'sigillo', 'run', ...SIGILLO, '--', 'node', 'deploy/cli.mjs', ...process.argv.slice(2)], {
     stdio: 'inherit', shell,

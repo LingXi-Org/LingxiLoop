@@ -29,6 +29,7 @@ src/features/cases/cover-vm/**
 !shared
 shared/**
 !shared/visualize-public-resources.ts
+!shared/artifact-editor-origin.ts
 !public/**
 !index.html
 !vite.config.ts
@@ -37,6 +38,7 @@ shared/**
 !postcss.config.js
 !tailwind.config.ts
 !third_party/zcode/**
+!third_party/baoyu-design/**
 !third_party/assistant-ui/streaming-text/**
 !third_party/assistant-ui-elements/LICENSE
 !third_party/react-chat-elements/reply-message/LICENSE

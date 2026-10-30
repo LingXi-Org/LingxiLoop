@@ -2,9 +2,8 @@ import { RecommendationCard } from '@/components/assistant-ui/elements/recommend
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { useState } from 'react'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
-import { canvasProgress } from '../runtime/task-progress'
+import { artifactProgress } from '../runtime/task-progress'
 import { PollCard } from '@/components/assistant-ui/elements/poll-card'
-import { CanvasArtifactCard } from '@/features/canvas/components/CanvasArtifactCard'
 import {
   type ElicitationField,
   ElicitationForm,
@@ -12,11 +11,6 @@ import {
 } from '@/components/assistant-ui/elements/elicitation-form'
 import { ApprovalCard } from '@/components/assistant-ui/elements/approval-card'
 import { useParticipants } from '@/features/agents/state'
-import {
-  PresentationArtifactCard,
-  parsePresentationArtifact,
-} from '@/features/presentations'
-import { useSurface } from '@/stores/surface'
 import { HomeworkDraftTool } from '@/features/learning/homework/HomeworkDraftCard'
 
 interface CardProps {
@@ -78,17 +72,6 @@ export function PollFormTool({ args, result, addResult }: CardProps) {
     onChange={next => setSelection(raw.selectionMode === 'multi' ? next : next[0] ?? '')}
     onSubmit={() => addResult(selection)}
   />
-}
-
-export function CanvasArtifactTool({ args }: Pick<CardProps, 'args'>) {
-  const value = args as { id?: unknown; href?: unknown; title?: unknown; description?: unknown; domain?: unknown }
-  if (typeof value.id !== 'string' || typeof value.href !== 'string' || typeof value.title !== 'string') {
-    throw new Error('协作画布协议不完整')
-  }
-  const match = /^lingxiloop:\/\/canvas\/([^/?#]+)$/.exec(value.href)
-  if (!match) throw new Error('协作画布链接无效')
-  return <CanvasArtifactCard canvasId={decodeURIComponent(match[1])} title={value.title}
-    description={typeof value.description === 'string' ? value.description : undefined} />
 }
 
 interface ElicitationItem {
@@ -153,16 +136,9 @@ export function ElicitationFormTool({ args, result, addResult, initialAnswers = 
   )
 }
 
-export function CanvasProgressTool({ args }: Pick<CardProps, 'args'>) {
+export function ArtifactProgressTool({ args }: Pick<CardProps, 'args'>) {
   const names = useParticipants(state => state.byId)
-  return <ProgressTracker {...canvasProgress(args, names)} />
-}
-
-export function PresentationArtifactTool({ args }: Pick<CardProps, 'args'>) {
-  const openPresentation = useSurface((state) => state.openPresentationPeek)
-  const artifact = parsePresentationArtifact(args)
-  if (!artifact) throw new Error('演示文稿产物协议不完整')
-  return <PresentationArtifactCard artifact={artifact} onOpen={openPresentation} />
+  return <ProgressTracker {...artifactProgress(args, names)} />
 }
 
 export const TOOL_DETAILS = { 'teacher.draft_homework': HomeworkDraftTool }

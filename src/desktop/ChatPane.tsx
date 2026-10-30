@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useEntrance } from '@/hooks/use-entrance'
-import { CanvasPopover } from '@/features/canvas/components/CanvasPopover'
+import { DesignButton } from '@/features/design/DesignButton'
 import { ConversationSearch } from '@/features/chat/components/ConversationSearch'
 import { ConversationThread } from '@/features/chat/components/ConversationThread'
 import { ConversationRuntimeProvider } from '@/features/chat/runtime'
@@ -63,7 +63,7 @@ export function ChatPane({
           conversationId={conversationId}
           variant={onBackToConversations ? 'mobile' : 'desktop'}
           onBack={onBackToConversations}
-          actions={<CanvasPopover key={conversationId} conversationId={conversationId} />}
+          actions={<DesignButton key={conversationId} conversationId={conversationId} />}
         />
         <div data-chat-auxiliary="true">
           <ConversationSearch conversationId={conversationId} open={searchOpen} onClose={() => setSearchOpen(false)} rootRef={rootRef} />

@@ -42,20 +42,6 @@
 }
 
 .chat-pane { container: chat-pane / inline-size; }
-.chat-pane:has([data-canvas-popover-trigger][data-state='open']) .chat-thread-layout {
-  padding-block-start: 224px;
-}
-@container chat-pane (min-width: 48rem) {
-  .chat-pane:has([data-canvas-popover-trigger][data-state='open']) .chat-thread-layout {
-    padding-block-start: 0;
-  }
-  .chat-pane:has([data-canvas-popover-trigger][data-state='open']) :is([data-chat-message-column], [data-chat-composer-bar]) {
-    padding-inline-end: 384px;
-  }
-  .chat-pane:has([data-canvas-popover-trigger][data-state='open']) [data-chat-scroll-bottom] {
-    inset-inline-end: calc(384px + 1.25rem);
-  }
-}
 
 /* ============== Shared IM shell ============== */
 .desktop-im-grid {
