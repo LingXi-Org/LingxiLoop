@@ -196,10 +196,12 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) 
   const { userId, companyId } = await identity(req)
   const sessionId = String(req.params.id)
   await assertChannelPermission(userId, companyId, sessionId, 'conversation:read')
-  const { threadId, activityOffset, attentionOnly } = requestInput(lingxiOSRunQuerySchema.extend({
+  const { threadId, activityOffset, attentionOnly, terminalFeedbackId, traceRequestVersion, traceFence } = requestInput(lingxiOSRunQuerySchema.extend({
     activityOffset: z.coerce.number().int().nonnegative().safe().optional(), attentionOnly: z.enum(['1']).optional(),
+    terminalFeedbackId: z.string().min(1).max(512).optional(),traceRequestVersion: z.coerce.number().int().positive().safe().optional(),
+    traceFence: z.coerce.number().int().nonnegative().safe().optional(),
   }), req.query)
-  if (activityOffset !== undefined) {
+  if (activityOffset !== undefined || terminalFeedbackId !== undefined) {
     const access = await requireConversationMember(req, sessionId, 'conversation:read')
     const projectId = requestedProjectId(req)
     if (projectId && projectId !== access.projectId) throw new HttpError(403, 'conversation belongs to another workspace')
@@ -211,8 +213,22 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) 
   const app = await lingxiOSControl()
   const state = await app.readRunState(runIdentity)
   if (!state) { res.status(404).json({ error: 'run not found' }); return }
+  if (terminalFeedbackId !== undefined || traceRequestVersion !== undefined || traceFence !== undefined) {
+    const terminal = await app.readTerminal(runIdentity)
+    if (!terminalFeedbackId || !traceRequestVersion || terminal?.feedback.id !== terminalFeedbackId
+      || terminal.feedback.requestVersion !== traceRequestVersion || state.run.requestVersion !== traceRequestVersion
+      || traceFence !== undefined && state.run.fence !== traceFence) throw new HttpError(409, 'Terminal run reference is no longer current')
+  }
+  res.setHeader('Cache-Control','no-store')
   const permission = await permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: sessionId } })
   const projection = await readRunProjection(app,runIdentity,permission.allowed,undefined,undefined,undefined,true)
+  if (terminalFeedbackId) {
+    const view = projection.snapshot.message.metadata.custom.harness as { requestVersion: number; fence: number }
+    const terminal = await app.readTerminal(runIdentity)
+    if (view.requestVersion !== traceRequestVersion || view.fence !== state.run.fence
+      || terminal?.feedback.id !== terminalFeedbackId || terminal.feedback.requestVersion !== traceRequestVersion)
+      throw new HttpError(409, 'Terminal run reference changed while reading')
+  }
   res.json(activityOffset === undefined ? projection.snapshot : projection.activityPage(activityOffset, attentionOnly === '1'))
 }))
 

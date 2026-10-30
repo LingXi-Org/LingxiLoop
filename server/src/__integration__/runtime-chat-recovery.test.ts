@@ -12,7 +12,8 @@ import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { createProductDelivery } from '../agent-runtime/delivery.js'
 import { readRunProjection } from '../agent-runtime/assistant-transport.js'
 import { nativeText } from '../im/message-types.js'
-import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { readRunTrace } from '../../../src/lib/runTrace.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
 // Failure inventory precedes this fixture: docs/evidence/issue-326/recovery-failure-model.md.
@@ -152,7 +153,7 @@ for (const scenario of [
 // #515/#518: a complete answer must stop, a correction must not retain its
 // failed draft, and a null final answer must reuse the sealed source. Exercise
 // the published native-v2 parser, worker, ledger, IM delivery and replay reader.
-for (const scenario of ['complete', 'correction', 'finalize'] as const) test(`public answer ${scenario}: one effective body after native worker and replay`, { timeout: 30000 }, async () => {
+for (const scenario of ['complete', 'correction', 'finalize', 'fail-all'] as const) test(`public answer ${scenario}: one effective body after native worker and replay`, { timeout: 30000 }, async () => {
   const body = 'Flow control protects the receiver.'
   const draft = 'SYNTHETIC_FAILED_DRAFT_MUST_NOT_REAPPEAR'
   let calls = 0
@@ -163,10 +164,10 @@ for (const scenario of ['complete', 'correction', 'finalize'] as const) test(`pu
     assert.equal(input.enable_thinking, false)
     assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'))
     calls++
-    assert.ok(calls <= (scenario === 'complete' ? 1 : 2), 'no unrequested third generation')
+    assert.ok(calls <= (scenario === 'complete' ? 1 : scenario === 'fail-all' ? 3 : 2), 'no unrequested third generation')
     const value = { operation: { kind: 'append', supersedes: [] }, commentary: '',
-      answer: scenario === 'correction' && calls === 1 ? draft : scenario === 'finalize' && calls === 2 ? null : body,
-      outcome: scenario === 'finalize' && calls === 1 ? null : { status: scenario === 'correction' && calls === 1 ? 'invalid' : 'satisfied', gaps: [] } }
+      answer: scenario === 'fail-all' ? `${draft}-${calls}` : scenario === 'correction' && calls === 1 ? draft : scenario === 'finalize' && calls === 2 ? null : body,
+      outcome: scenario === 'finalize' && calls === 1 ? null : { status: scenario === 'fail-all' || scenario === 'correction' && calls === 1 ? 'invalid' : 'satisfied', gaps: [] } }
     const args = JSON.stringify(value)
     // Deliberately split a JSON null token as well as the public text. This is
     // the formal3.8.16 regression; packet boundaries have no protocol meaning.
@@ -203,6 +204,39 @@ for (const scenario of ['complete', 'correction', 'finalize'] as const) test(`pu
     assert.ok(run)
     await bindProductRun(pool, run, room)
     assert.equal(await worker.runNext(), true)
+    if(scenario==='fail-all'){
+      assert.equal(calls,3);assert.equal((await api.readRun(run))?.status,'failed')
+      await until(async()=>(await api.readTerminal(run))?.delivery==='delivered')
+      const notice=recording.messages.find(message=>message.channelId===room&&message.payload.role==='system')!
+      const feedback=(await api.readTerminal(run))!.feedback
+      assert.deepEqual(notice.payload.metadata.custom.runTraceReference,{version:1,runId:run.runId,requestVersion:1,fence:1,feedbackId:feedback.id})
+      await until(async()=>(await pool.query('SELECT count(*)::int AS n FROM llm_calls WHERE run_id=$1',[run.runId])).rows[0].n===3)
+      const replay=(await readRunProjection(api,run,true,undefined,undefined,undefined,true)).snapshot.message
+      assert.doesNotMatch(JSON.stringify(replay.content),new RegExp(draft))
+      const trace=readRunTrace(replay.metadata.custom.runTrace)!
+      const flatten=(span:typeof trace.root):typeof trace.root[]=>[span,...span.children.flatMap(flatten)]
+      const models=flatten(trace.root).filter(span=>span.kind==='llm')
+      assert.equal(models.length,3);assert.ok(models.every(span=>span.status==='error'&&span.durationMs!==null))
+      const failures=(await pool.query("SELECT data->'modelDiagnostics' AS diagnostic FROM lingxios.agent_run_events WHERE run_id=$1 AND kind='model.failed'",[run.runId])).rows
+      assert.equal(failures.length,3);assert.ok(failures.every(row=>row.diagnostic.protocolCode==='public_text_invalid'&&row.diagnostic.protocolDetail==='outcome_invalid'))
+      const httpServer=createServer(await buildApiTestApp(principalId));await new Promise<void>(resolve=>httpServer.listen(0,'127.0.0.1',resolve))
+      try{
+        const address=httpServer.address();assert.ok(address&&typeof address!=='string')
+        const url=`http://127.0.0.1:${address.port}/api/im/channels/${room}/agents/${agentId}/runs/${encodeURIComponent(run.runId)}`
+        const query=new URLSearchParams({terminalFeedbackId:feedback.id,traceRequestVersion:'1',traceFence:'1'})
+        const request=(query:URLSearchParams,company=companyId)=>fetch(`${url}?${query}`,{headers:{'x-company-id':company,'x-project-id':projectId}})
+        const fresh=await request(query);assert.equal(fresh.status,200)
+        const restored=await fresh.json() as {message:typeof replay}
+        assert.deepEqual(restored.message.content,replay.content)
+        assert.equal(readRunTrace(restored.message.metadata.custom.runTrace)?.root.status,'error')
+        query.set('traceFence','2');assert.equal((await request(query)).status,409)
+        query.set('traceFence','1');query.set('traceRequestVersion','2');assert.equal((await request(query)).status,409)
+        query.set('traceRequestVersion','1');assert.notEqual((await request(query,'other-company')).status,200)
+        query.set('terminalFeedbackId','other-feedback');assert.equal((await request(query)).status,409)
+      }finally{httpServer.closeAllConnections();await new Promise<void>(resolve=>httpServer.close(()=>resolve()))}
+      assert.equal(await worker.runNext(),false);assert.equal(calls,3)
+      return
+    }
     assert.equal((await api.readRun(run))?.status, 'succeeded')
     await until(async () => (await api.readRunState(run))?.delivery === 'delivered')
     const expectedCalls = scenario === 'complete' ? 1 : 2

@@ -1,6 +1,7 @@
 import { useContext,useEffect,useId,useMemo,useRef,useState } from 'react'
 import { BotIcon,ChevronRightIcon,Clock3Icon,DatabaseIcon,GitBranchIcon,SparklesIcon,WrenchIcon } from 'lucide-react'
 import type { RunTrace,TraceSpan } from '@/lib/runTrace'
+import { knowledgeSearchLabels } from '@/lib/knowledgeSearch'
 import { workKindLabels } from '@/lib/runTrace'
 import { formatTraceCost as cost,formatTracePricing } from '@/lib/traceCost'
 import { cn } from '@/lib/utils'
@@ -154,6 +155,7 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
     </li>
   }
   return <section ref={surface} aria-labelledby={titleId} aria-label="运行瀑布图" className="bg-background/70 min-w-0 overflow-hidden rounded-lg border border-border/60 text-foreground" data-slot="trace-waterfall">
+    {trace.knowledgeSearch && <p className="px-3 pt-3 text-xs text-muted-foreground" data-slot="knowledge-search-status">{knowledgeSearchLabels[trace.knowledgeSearch]}。来源以实际引用与阅读记录为准。</p>}
     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 px-3 py-2.5">
       <h3 id={titleId} className="flex items-center gap-1.5 text-xs font-medium"><GitBranchIcon className="text-muted-foreground size-3.5" aria-hidden="true" />运行瀑布图</h3>
       <span data-trace-clock className="text-muted-foreground font-mono text-[11px] tabular-nums">{labels[trace.root.status]} · {ms(elapsed ?? trace.root.durationMs)}</span>

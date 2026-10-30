@@ -8,6 +8,7 @@ import { createNativeMessage } from '../im/message-types.js'
 import { archivedPublicText, runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
 import { nativeRunEvents, publicRunEvent } from './public-events.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
+import { knowledgeSearchStatus } from '../../../src/lib/knowledgeSearch.js'
 import { readOptionalTraceActivity } from './tool-activity.js'
 import { buildRunTrace,buildNativeRunTrace,nativeTraceMatchesState,type PublicLlmTrace } from './run-trace.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
@@ -280,6 +281,12 @@ export class RunStreamProjection {
   }
 
   private traceSnapshot() {
+    const trace=this.traceDetails()
+    const tools=this.tools.filter(tool=>!tool.activityIdentity || tool.activityIdentity.requestVersion===this.view.requestVersion && tool.activityIdentity.fence===this.view.fence)
+    return {...trace,knowledgeSearch:knowledgeSearchStatus(tools,['failed','cancelled','succeeded'].includes(this.view.lifecycle ?? ''))}
+  }
+
+  private traceDetails() {
     if (this.nativeTrace === undefined) return buildRunTrace({ runId: this.view.runId,createdAt: this.createdAt!,lifecycle: this.view.lifecycle,tools: this.tools,llm: this.llm,presentationAvailable: this.presentationAvailable })
     if (!this.nativeTrace) return buildRunTrace({ runId: this.view.runId,createdAt: this.createdAt!,lifecycle: this.view.lifecycle,tools: this.tools,llm: this.llm,presentationAvailable: this.presentationAvailable })
     const trace = buildNativeRunTrace(this.nativeTrace,this.tools,this.llm)

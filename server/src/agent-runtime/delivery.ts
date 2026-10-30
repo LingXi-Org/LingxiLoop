@@ -60,6 +60,8 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
             custom: { runId: work.id,requestVersion: feedback.requestVersion,controlPrincipalId: work.principalId,
               terminalFeedbackId: feedback.id,terminalStatus: feedback.status,terminalReason: feedback.reason,suppressAgentWake: true,
               terminalScopeVersion: 1,terminalScope,
+              runTraceReference: { version: 1,runId: work.id,requestVersion: feedback.requestVersion,
+                fence: state.run.fence,feedbackId: feedback.id },
               ...(work.threadId ? { replyToClientMsgNo: work.threadId } : {}) } })
         }
         context.signal.throwIfAborted()

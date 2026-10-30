@@ -59,3 +59,11 @@ test('real work types have separate sections without a collapsible catch-all run
   assert.match(html,/data-trace-start="" data-trace-end="" data-trace-duration-only=""/)
   assert.equal(JSON.stringify(grouped),original,'presentation never mutates trace facts or accounting')
 })
+
+// Search status is separate from model/embedding timing and citation proof.
+test('trace renders recorded course search status without treating embeddings as search evidence',()=>{
+  const html=renderToStaticMarkup(<TraceWaterfall trace={{...trace,knowledgeSearch:'not_run'}} />)
+  assert.match(html,/未调用课程检索工具/);assert.match(html,/BAAI\/bge-m3/)
+  assert.doesNotMatch(html,/课程检索已命中/)
+  assert.match(renderToStaticMarkup(<TraceWaterfall trace={{...trace,knowledgeSearch:'failed'}} />),/课程检索未完成/)
+})

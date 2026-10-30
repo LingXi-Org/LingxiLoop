@@ -180,7 +180,7 @@ test('a run discovered after a sent message owns a separate preview and cannot e
   }
 })
 
-test('a failure retains streamed text and a safe error across snapshot replay', () => {
+test('a durable failed snapshot replaces session-only drafts and matches fresh history', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
   state = applyRunUpdate(state,target,event('完整段落\n\n尚未完成的尾段'),participants.agent)
   state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 8,kind: 'run.failed',stage: 'failed',visibility: 'user',
@@ -194,9 +194,13 @@ test('a failure retains streamed text and a safe error across snapshot replay', 
   state = applyRunUpdate(state,target,{ type: 'state',state: { ...snapshot('run','failed'), run: {
     ...snapshot('run','failed').run, error: 'The operation was aborted due to timeout',
   } } },participants.agent)
-  assert.deepEqual(state.messages[0].content,content)
+  const freshProjection=new RunStreamProjection('run',true)
+  const freshSnapshot=freshProjection.apply({type:'state',state:{...snapshot('run','failed'),run:{...snapshot('run','failed').run,error:'The operation was aborted due to timeout'}}})
+  const fresh=applyRunSnapshot(EMPTY_CONVERSATION_CHAT_STATE,target,freshSnapshot,participants.agent)
+  assert.deepEqual(state.messages[0].content,fresh.messages[0].content)
+  assert.deepEqual(state.messages[0].content,[])
   assert.equal(metadata(state.messages[0]).harnessError,'这次任务未能完成，请稍后重试。')
-  assert.deepEqual(mergeCanonicalMessages(state.messages,state.messages)[0].content,content)
+  assert.deepEqual(mergeCanonicalMessages(state.messages,state.messages)[0].content,[])
   state = applyRunUpdate(state,target,{ type: 'state',state: { ...snapshot('run','leased'), run: {
     ...snapshot('run','leased').run, fence: 2, requestVersion: 2,
   } } },participants.agent)

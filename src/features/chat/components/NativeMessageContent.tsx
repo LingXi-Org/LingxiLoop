@@ -14,6 +14,8 @@ import { HistoryActivityScope } from '../runtime/HistoryActivityScope'
 import { MemoryTool } from './MemoryTool'
 import type { MemoryActivity } from '@/lib/memoryActivity'
 import { RunActivity, type RunActivityStatus } from '@/components/assistant-ui/elements/run-activity'
+import { TerminalRunTrace } from './TerminalRunTrace'
+import { terminalRunTraceReference } from '@/lib/terminalRunTrace'
 import { readRunTrace } from '@/lib/runTrace'
 import { TraceWaterfall } from '@/components/trace-waterfall/trace-waterfall'
 import { MarkdownText, type MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
@@ -146,6 +148,7 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
     ? { conversationId: custom.conversationId, agentId: custom.senderId, runId: custom.runId,
       ...(typeof custom.threadRootId === 'string' ? { threadId: custom.threadRootId } : {}) } : undefined,
   [custom.conversationId, custom.senderId, custom.runId, custom.threadRootId])
+  const terminalTrace = message.role === 'system' ? terminalRunTraceReference(custom) : undefined
   const history = useRunActivityHistory({ target, message, enabled: !readOnly && message.role === 'assistant' })
   const tasks = readActivityTasks(custom.activityTasks)?.tasks
   const presentation = useMemo(() => messagePresentation(message), [message])
@@ -199,6 +202,7 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
         <MessagePrimitive.PartByIndex key={commentary.key} index={commentary.index} components={indexedComponents} />
       </GroupOwnsFooter.Provider></PartPresentation.Provider>
     </div>}
+    {!readOnly && terminalTrace && target && <TerminalRunTrace key={JSON.stringify([target,terminalTrace])} target={target} reference={terminalTrace} />}
     {(entries.length > 0 || commentary || trace || tasks?.length || historyControls) && <RunActivity status={status} statusLabel={statusLabel} entries={entries} tasks={tasks} historyControls={historyControls}
       durationLabel={trace?.root.durationMs !== null && trace?.root.durationMs !== undefined ? `${(trace.root.durationMs / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 秒` : undefined}
       onInspectTask={id => setTraceSelection(current => ({ scope: traceScope, id, version: current.version + 1 }))}

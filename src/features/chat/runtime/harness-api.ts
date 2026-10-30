@@ -4,7 +4,8 @@ import { API, http } from '@/api/core/http'
 import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId } from '@/stores/auth'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
-import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
+import { terminalRunTraceReferenceSchema, type TerminalRunTraceReference } from '@/lib/terminalRunTrace'
+import type { AgentRunSnapshot, RunDisplayState } from '@/lib/agentRunSnapshot'
 import { memoryActivitySchema } from '@/lib/memoryActivity'
 import { z } from 'zod'
 import { parseActivityPage } from './runActivityHistory'
@@ -111,6 +112,21 @@ export const harnessApi = {
     return http(`${path(target)}?${new URLSearchParams(thread(target))}`, {
       signal: AbortSignal.any([AbortSignal.timeout(30_000), ...(signal ? [signal] : [])]),
     })
+  },
+  async readTerminalTrace(target: AgentRunTarget, reference: TerminalRunTraceReference, signal?: AbortSignal): Promise<AgentRunSnapshot> {
+    const ref = terminalRunTraceReferenceSchema.parse(reference)
+    if (ref.runId !== target.runId) throw new Error('运行身份不一致')
+    const query = { ...thread(target),terminalFeedbackId: ref.feedbackId,traceRequestVersion: String(ref.requestVersion),
+      ...(ref.fence === undefined ? {} : {traceFence: String(ref.fence)}) }
+    const value = await http<AgentRunSnapshot>(`${path(target)}?${new URLSearchParams(query)}`, {
+      signal: AbortSignal.any([AbortSignal.timeout(30_000),...(signal ? [signal] : [])]),
+    })
+    const snapshot = decodeRunSnapshot(value,target), custom = snapshot.message.metadata.custom
+    const view = custom.harness as RunDisplayState
+    const terminal = custom.terminalFeedback as { id?: string; requestVersion?: number } | undefined
+    if (view.requestVersion !== ref.requestVersion || ref.fence !== undefined && view.fence !== ref.fence
+      || terminal?.id !== ref.feedbackId || terminal.requestVersion !== ref.requestVersion) throw new Error('运行记录已更新，请刷新后查看。')
+    return snapshot
   },
   cancel: (target: AgentRunTarget) => http<{ cancelled: boolean }>(path(target),{ method: 'DELETE', body: JSON.stringify(thread(target)) }),
   revise: (target: AgentRunTarget, text: string) => http<{ revised: boolean }>(path(target),{ method: 'PATCH', body: JSON.stringify({ text,...thread(target) }) }),
