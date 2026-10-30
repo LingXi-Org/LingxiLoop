@@ -12,6 +12,105 @@ const { confidenceCopyText, MarkdownText } = await import('./markdown-text')
 
 const renderMarkdown = renderToStaticMarkup
 
+const attention = String.raw`\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\left(\frac{QK^{\mathsf T}}{\sqrt{d_k}}\right)V`
+
+test('Agent math uses inline and display KaTeX through the actual text primitive', () => {
+  const text = `转置 $QK^{\\mathsf T}$，维度 $\\sqrt{d_k}$。\n\n$$\n${attention}\n$$`
+  for (const running of [true, false]) {
+    for (const inlineCitations of [true, false]) {
+      const $ = load(renderMarkdown(<Preview text={text} running={running} inlineCitations={inlineCitations} />))
+      assert.equal($('.katex').length, 3)
+      assert.equal($('.katex-display').length, 1)
+      assert.equal($('annotation[encoding="application/x-tex"]').last().text(), attention)
+      assert.equal($('.mfrac').length, 1)
+      assert.equal($('.sqrt').length, 2)
+      assert.equal($('[data-streamdown="code-block"]').length, 0)
+    }
+  }
+})
+
+test('matrix, sum and aligned equations settle identically to reloaded history', () => {
+  const formulas = [attention, String.raw`A=\begin{bmatrix}1&2\\3&4\end{bmatrix}`,
+    String.raw`\sum_{i=1}^{n}x_i`, String.raw`\begin{aligned}a&=b+c\\d&=\frac{e}{f}\end{aligned}`]
+  for (const formula of formulas) {
+    const text = `推导\n\n$$\n${formula}\n$$\n\n结束。`
+    const live = load(renderMarkdown(<Preview text={text} running />))
+    const history = load(renderMarkdown(<Preview text={text} running={false} />))
+    assert.equal(live('.katex-display').length, 1)
+    assert.equal(live('.katex-error').length, 0)
+    assert.equal(live('annotation').text(), formula)
+    assert.equal(live('.katex-display').html(), history('.katex-display').html())
+    assert.match(history.text(), /结束。/)
+    assert.equal(confidenceCopyText(text), text)
+  }
+})
+
+test('math blocks preserve subsequent citation coordinates and source copying', () => {
+  const text = `维度 $d_k$。\n\n$$\n${attention}\n$$\n\n[解释](#cite-S1)`
+  const start = text.indexOf('[解释]')
+  const claim = { id: 'math-citation', text: '解释', confidence: 'grounded' as const, basis: '公式说明', markers: ['S1'], start, end: text.length }
+  const $ = load(renderMarkdown(<Preview text={text} running={false} claims={[claim]} inlineCitations />))
+  assert.equal($('.katex').length, 2)
+  assert.equal($('[data-confidence-id="math-citation"]').length, 1)
+  assert.equal($('[data-citation-start]').attr('data-citation-start'), String(start))
+  assert.equal(confidenceCopyText(text, [claim]), text.slice(0, start) + '解释')
+})
+
+test('partial and invalid math retain the message and finish without a parser crash', () => {
+  const text = `开头 $QK^{\\mathsf T}$。\n\n$$\n${attention}\n$$`
+  for (const end of [5, 9, 12, 20, 25, 30, 70, text.length - 3, text.length]) {
+    for (const running of [true, false]) {
+      const html = renderMarkdown(<Preview text={text.slice(0, end)} running={running} interrupted={!running} />)
+      assert.match(load(html).text(), /开头/)
+    }
+  }
+  for (const formula of [String.raw`\frac{`, String.raw`\unsupportedcommand{x}`]) {
+    const $ = load(renderMarkdown(<Preview text={`之前\n\n$$\n${formula}\n$$\n\n之后`} running={false} />))
+    // KaTeX either keeps a malformed expression verbatim or shows the unknown
+    // command in its output; both preserve a readable source and surrounding text.
+    assert.equal($('.katex-error').text() || $('annotation').text(), formula)
+    assert.match($.text(), /之前.*之后/s)
+  }
+})
+
+test('math never reinterprets code, escaped currency, literal delimiters or unsafe HTML', () => {
+  const text = String.raw`中 English $x_1$。价格 \$5 和 \$10，单价 $20。转义 \* 与 \(x\)。
+
+\`Q @ Kᵀ\` 和 \`$x_i$\`
+
+\`\`\`python
+price = "$5"
+Q @ K.T
+\`\`\`
+
+\`\`\`latex
+\frac{QK^{\mathsf T}}{\sqrt{d_k}}
+\`\`\`
+
+<script>alert(1)</script>
+
+$\href{javascript:alert(1)}{unsafe}$`.replaceAll('\\`', '`')
+  const $ = load(renderMarkdown(<Preview text={text} running={false} />))
+  assert.equal($('.katex').length, 2)
+  assert.match($.text(), /价格 \$5 和 \$10，单价 \$20/)
+  assert.match($.text(), /\(x\)/)
+  assert.equal($('[data-streamdown="code-block"]').length, 2)
+  assert.ok($('code').toArray().some(node => $(node).text() === '$x_i$'))
+  assert.equal($('script, a[href^="javascript:"]').length, 0)
+})
+
+test('mention decoration leaves math structure and TeX copy annotations intact', () => {
+  const formula = String.raw`\text{@all}+x_1`
+  const $ = load(renderMarkdown(<Preview text={`$$\n${formula}\n$$`} running />))
+  assert.equal($('annotation').text(), formula)
+  assert.equal($('.katex [data-streaming-word], .katex [data-mention-id]').length, 0)
+})
+
+test('display math exposes a labelled keyboard scroll target', () => {
+  const $ = load(renderMarkdown(<Preview text={`$$\n${attention}\n$$`} running={false} />))
+  assert.equal($('.katex-display[tabindex="0"][role="region"][aria-label="数学公式"]').length, 1)
+})
+
 function Text() { return <MarkdownText agent /> }
 function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
 function Preview({ text, content, running, claims, inlineCitations, interrupted = false }: { text: string; content?: Extract<ThreadMessage, { role: 'assistant' }>['content']; running: boolean; claims?: MarkdownConfidenceClaim[]; inlineCitations?: boolean; interrupted?: boolean }) {

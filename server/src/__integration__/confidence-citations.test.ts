@@ -57,11 +57,17 @@ test('product correction commits frozen excerpts and preserves them in IM delive
     } }, delivery: createProductDelivery(() => application) })
   const api = await application
   let calls = 0
+  const math = String.raw`\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\left(\frac{QK^{\mathsf T}}{\sqrt{d_k}}\right)V`
   const body = '建议[**分散安排**复习](#cite-S1)，并[隔天回顾](#cite-S1)，[主动回忆](#cite-S2)，[结合练习](#cite-S1,S3)，[调整间隔](#cite-S4)。'
+    + `\n\n示例 $QK^{\\mathsf T}$：\n\n$$\n${math}\n$$`
   const worker = createWorker({ controlPlane: api, policy: new ProductRuntimePolicy(),
     modelBudget: { inputCostMicrosPerMillion: 1, outputCostMicrosPerMillion: 1 },
     model: { modelId: 'citation-fixture', contextWindowTokens: 200000, async run(request) {
       calls++
+      const prompt = request.instructions
+      assert.ok(prompt.includes('for inline math; for display math put $$ on separate lines'))
+      assert.ok(prompt.includes('Do not wrap mathematical explanations or formulas in inline backticks'))
+      assert.ok(prompt.includes('Escape literal currency dollar signs'))
       if (calls === 1) evidence[0].excerpt = '后来更新的内容，不应替换已冻结节选。'
       else if (calls === 2) {
         assert.match(JSON.stringify(request.items), /supported answer wording/)
