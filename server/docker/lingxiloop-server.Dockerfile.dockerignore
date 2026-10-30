@@ -44,6 +44,7 @@ shared/**
 !third_party/react-chat-elements/reply-message/LICENSE
 !scripts/verify-zcode-visualize.mjs
 !scripts/build-visualize-runtime.mjs
+!scripts/build-slides-editor.mjs
 !scripts/prune-pdfjs-server-runtime.mjs
 !scripts/prune-glibc-canvas-runtime.mjs
 # Don't bake source maps / built assets / huge logs into the layer.

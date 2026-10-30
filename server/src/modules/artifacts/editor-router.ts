@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { lstat, readFile, realpath } from 'node:fs/promises'
 import { extname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { Router, type Request, type Response } from 'express'
 import { pool } from '../../db/pool.js'
 import { permissionService } from '../access/public.js'
@@ -21,6 +22,7 @@ import { EDITOR_DOWNLOAD_SCRIPT } from './editor-downloads.js'
 // the loopback grant by a signed grant and fs.watch by artifact events.
 const ROUTES = { listing: '_files.json', publish: '__deck/publish', assets: '__deck/assets', events: '__deck/events', session: '__deck/session' }
 const COMMENTS_ROUTE = '__comments'
+const SLIDES_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/slides-editor/', import.meta.url))
 const BLOB_PATH = /^_blob\/([0-9a-f]{32})$/
 const DATA_CSP = "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:"
 const MAX_PUBLISH_BYTES = 64 * 1024 * 1024
@@ -134,7 +136,7 @@ async function commentsSnapshot(session: EditorSession) {
 }
 
 async function serveEditor(request: Request, response: Response, definition: ArtifactKindDefinition, rest: string) {
-  const editorDir = resolve(BAOYU_DESIGN_ROOT, definition.skillDirectory, 'scripts', 'editor')
+  const editorDir = definition.kind === 'slides' ? SLIDES_EDITOR_ROOT : resolve(BAOYU_DESIGN_ROOT, definition.skillDirectory, 'scripts', 'editor')
   const parts = rest === '' ? ['index.html'] : rest.split('/')
   const invalid = parts.some(p => p === '' || p === '.' || p === '..' || p.startsWith('.') || p.includes('\\')) || parts[0] === 'node'
   const realDist = invalid ? null : await realpath(editorDir).catch(() => null)
@@ -380,6 +382,13 @@ artifactEditorRouter.use((request, response, next) => {
   cors(response)
   if (request.method === 'OPTIONS') { response.status(204).end(); return }
   next()
+})
+
+// Public, content-hashed application assets can be reused across grants/decks.
+// Document files, uploads and editor pages still require their existing grants.
+artifactEditorRouter.get(/^\/slides-assets\/([A-Za-z0-9_-]+\.(?:js|css|woff2))$/, (request, response) => {
+  const name = request.path.slice('/slides-assets/'.length)
+  void guard(response, () => serveEditor(request, response, ARTIFACT_KIND_DEFINITIONS.slides, `assets/${name}`))
 })
 
 artifactEditorRouter.all(/^\/([a-z-]+)\/([^/]+)(\/.*)?$/, (request, response) => {
