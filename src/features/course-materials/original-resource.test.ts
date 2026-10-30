@@ -36,3 +36,19 @@ test('detail service errors cannot expose their response text', async () => {
     return true
   })
 })
+
+test('failed preview reports only a bounded stage and HTTP status, never URLs or error text', async () => {
+  const events: unknown[] = []
+  const secret = 'synthetic-private-url-or-response'
+  await assert.rejects(loadMaterialOriginal(context, new AbortController().signal, {
+    detail: async () => { throw Object.assign(new Error(secret), { status: 304 }) },
+    fetch: async () => assert.fail('unexpected fetch'), isCurrent: () => true, diagnostic: event => events.push(event),
+  }))
+  assert.deepEqual(events, [{ stage: 'detail', status: 304 }])
+  events.length = 0
+  await assert.rejects(loadMaterialOriginal(context, new AbortController().signal, {
+    detail: async () => detail, fetch: async () => { throw new Error(secret) }, isCurrent: () => true, diagnostic: event => events.push(event),
+  }))
+  assert.deepEqual(events, [{ stage: 'file_request' }])
+  assert.doesNotMatch(JSON.stringify(events), /synthetic-private/)
+})
