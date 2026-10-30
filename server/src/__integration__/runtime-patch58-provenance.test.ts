@@ -8,7 +8,7 @@ import {applyPublishedRuntimePatch,assertRuntimePatchDescriptors,loadRuntimePatc
 import {loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH} from '../db/runtime-profile.js'
 
 const actual=String(releaseVersions.runtime)
-const options={skip:['3.8.16','3.8.17'].includes(actual)?false:'requires the actual formal3.8.16 or3.8.17 package and matching locks'}
+const options={skip:['3.8.16','3.8.17','3.8.18'].includes(actual)?false:'requires the actual formal3.8.16,3.8.17 or3.8.18 package and matching locks'}
 async function isolated(run:(db:Pool)=>Promise<void>){
  const url=new URL(process.env.DATABASE_URL??'')
  assert.ok(['127.0.0.1','localhost','postgres'].includes(url.hostname));assert.match(url.pathname,/test/i)
@@ -26,7 +26,7 @@ async function setup(db:Pool){
  CREATE TABLE public.business_fixture(id integer PRIMARY KEY,value text); INSERT INTO public.business_fixture VALUES(1,'preserve');`)
  const migrations=await loadRuntimePatchInventory(58)
  for(const m of migrations)await db.query('INSERT INTO public.schema_migrations VALUES($1,$2,$3)',[m.version,m.name,m.checksum])
- const source={runtime:actual==='3.8.17'?'3.8.16':'3.8.15',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:58,migrations}
+ const source={runtime:actual==='3.8.18'?'3.8.17':actual==='3.8.17'?'3.8.16':'3.8.15',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:58,migrations}
  const target={...source,runtime:actual,integrity:locked.integrity,tarball:locked.tarball}
  await db.query('INSERT INTO public.lingxios_installation(runtime_version,schema_version,protocol_version,schema_sha256) VALUES($1,14,11,$2)',[source.runtime,source.schemaHash])
  return {source,target}
@@ -37,6 +37,10 @@ test('product58 permits only the reviewed exact next patch, not another patch or
  assert.doesNotThrow(()=>assertRuntimePatchDescriptors(from,to))
  for(const runtime of ['3.8.18','4.0.0-slim.0'])assert.throws(()=>assertRuntimePatchDescriptors(from,{...to,runtime}))
  if(actual!=='3.8.17')await assert.rejects(applyPublishedRuntimePatch(db,from,to),/Exact formal runtime/)
+ const nextFrom={...source,runtime:'3.8.17'},nextTo={...target,runtime:'3.8.18'}
+ assert.doesNotThrow(()=>assertRuntimePatchDescriptors(nextFrom,nextTo))
+ for(const runtime of ['3.8.19','4.0.0-slim.0'])assert.throws(()=>assertRuntimePatchDescriptors(nextFrom,{...nextTo,runtime}))
+ if(actual!=='3.8.18')await assert.rejects(applyPublishedRuntimePatch(db,nextFrom,nextTo),/Exact formal runtime/)
 }))
 test('preflight is read-only with source clients; exact CAS preserves all data and target redeploy does not reapply',options,async()=>isolated(async db=>{
  const {source,target}=await setup(db),before=(await db.query('SELECT * FROM public.lingxios_installation')).rows

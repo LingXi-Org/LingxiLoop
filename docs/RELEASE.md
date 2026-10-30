@@ -77,15 +77,21 @@ enqueue effect kinds an old Worker would mishandle, both old Workers stop before
 either slot moves. Migrations must stay forward-compatible with the running
 Web/API while slot B still serves the old image.
 
-### Reviewed 3.8.16 → 3.8.17 runtime patch
+### Reviewed 3.8.16 → 3.8.17 and 3.8.17 → 3.8.18 runtime patches
 
-The normal `npm run deploy` / CI entry recognizes only this exact next runtime
-transition. It requires the formally published package's matching root/server
+The normal `npm run deploy` / CI entry recognizes only these exact runtime
+transitions. The next patch preparation retains the existing3.8.17 plan and
+its intent hash; a3.8.18 plan uses3.8.17 as its sole source. It requires the formally published package's matching root/server
 pins, registry tarball and integrity, the unchanged native14/protocol11 schema,
 and the complete identical product58 migration inventory. No version is adopted
 by ordinary startup. The dependency must remain on3.8; a4.0 distribution is not
 this release path. This infrastructure does not itself publish or pin a package;
 product acceptance remains a prerequisite to the separately authorized upgrade.
+Until3.8.18 is formally published and its registry archive is verified, manifests
+and locks remain on3.8.17. A current3.8.17 test can prove rejection of an
+unpublished3.8.18 descriptor; it cannot qualify the actual17→18 CAS. Rerun the
+owning product58 checks with the exact formal3.8.18 package and matching locks
+before rollout. This runtime-only transition excludes migration0059/schema59.
 
 After images are built and pulled, the target image runs the fixed runtime-patch
 entry in a one-shot container. Its read-only preflight verifies installed source
