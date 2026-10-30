@@ -40,3 +40,9 @@ test('cancellation settles even if a destroyed loading task never settles', asyn
   controller.abort()
   await assert.rejects(pending, { name: 'AbortError' })
 })
+
+test('already cancelled task observes its rejected promise', async () => {
+  const controller = new AbortController(); controller.abort()
+  const task = { promise: Promise.reject(new Error('load failed')), destroyed: false, destroy: async () => {} }
+  await assert.rejects(waitForPdfLoadingTask(task, controller.signal), { name: 'AbortError' })
+})

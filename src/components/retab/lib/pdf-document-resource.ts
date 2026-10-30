@@ -385,7 +385,7 @@ export function waitForPdfLoadingTask(task: PdfLoadingTask, signal: AbortSignal)
 function waitForCancellation<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
   return new Promise((resolve, reject) => {
     const abort = () => reject(new DOMException("PDF load cancelled", "AbortError"));
-    if (signal.aborted) { abort(); return; }
+    if (signal.aborted) { void promise.catch(() => {}); abort(); return; }
     signal.addEventListener("abort", abort, { once: true });
     promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
   });
