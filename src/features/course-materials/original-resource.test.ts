@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { loadMaterialOriginal } from './original-resource'
+import { loadMaterialOriginal, originalResourceErrorMessage } from './original-resource'
 import type { KnowledgeSource } from '../knowledge/contracts'
 
 const context = { userId: 'student', companyId: 'company', projectId: 'course', space: 'public' as const }
@@ -26,4 +26,13 @@ test('authorization retry refreshes detail and returns the actual file bytes', a
   })
   assert.equal(details, 2)
   assert.equal(await result.blob.text(), 'synthetic pdf')
+})
+
+test('detail service errors cannot expose their response text', async () => {
+  await assert.rejects(loadMaterialOriginal(context, new AbortController().signal, {
+    detail: async () => { throw new Error('原文件 internal diagnostic') }, fetch: async () => assert.fail('unexpected fetch'), isCurrent: () => true,
+  }), reason => {
+    assert.equal(originalResourceErrorMessage(reason), '原文件暂时无法加载，请重试或联系资料管理者。')
+    return true
+  })
 })
