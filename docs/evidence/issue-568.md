@@ -35,7 +35,14 @@ overlay is removed so the specified nonlinear mask owns transcript edge fading.
 
 ## Verification
 
-Focused regression commands and final outcomes are recorded after execution.
+2026-10-30, selected managed cloud environment, Node 22/npm:
+
+- `node --import tsx --experimental-test-module-mocks --test --test-force-exit src/features/chat/components/ConversationMessage.test.tsx src/features/chat/components/chat-scroll.test.ts`: **32/32 passed** on code candidate `3feaf715` (27 real-message SSR regressions plus 5 deterministic scroll/fade tests).
+- `npm run typecheck`: **passed** on `3feaf715`.
+- Focused `npx biome lint` for ConversationThread, ConversationMessage, ScrollFadeContainer, useClaudeScrollPinning and chat-scroll tests: **passed**, no warnings; `git diff --check`: **passed**.
+- `npm run build`: **passed** on the initial implementation (before the two small review fixes below); Vite completed in 50.94s, with chunk-size warnings. This ran the visualize source verification/runtime build, web typecheck and production Vite bundle. Post-review code was typechecked and regression-tested again; PR CI owns the final production rebuild.
+- Independent read-only review against `3feaf715`: **no remaining concrete blocker**. Reviewer independently ran 5/5 scroll regressions and whitespace check. The review found and closed (a) a no-op bottom gesture disabling following without a scroll event and (b) the initial skeleton sentinel leaving a reading hold despite transport pagination being a no-op. Case (a) was reproduced red then fixed with a timer regression, including token growth during cooling and retained explicit reading lock. Case (b) was fixed by deferring sentinel observation while loading and checking loaded/pagination state before pausing; this guard was source-reviewed, not exercised in a real browser.
+
 The event/lifecycle tests use mocked React hooks and deterministic viewport
 measurements; the message tests use the actual assistant-ui server-rendered
 components. These checks establish state/DOM behavior, not visual parity.
