@@ -51,6 +51,23 @@ test('stream and asynchronous height growth follow immediately; scroll writes st
   cleanup()
 })
 
+test('layout scroll before resize observation preserves pinned intent during async card growth', () => {
+  const { hook, viewport, state, cleanup } = setup()
+  viewport.scrollHeight += 400
+  viewport.scrollTop += 20 // native anchoring may move, without reaching the new bottom
+  hook.handleScroll()
+  assert.equal(state().isPinned, true, 'layout growth is not a reader scrolling away')
+  onResize()
+  assert.equal(viewport.scrollTop, 1_000)
+  hook.markUserInput(); viewport.scrollTop = 100; hook.handleScroll()
+  assert.equal(state().isPinned, false, 'real input still releases following')
+  viewport.scrollHeight += 100; viewport.scrollTop = 1_100; hook.handleScroll()
+  assert.equal(state().isPinned, true, 'manually returning to the new bottom pins its current height')
+  now += 200; viewport.scrollTop -= 100; hook.handleScroll()
+  assert.equal(state().isPinned, false, 'scrolling away at unchanged height remains possible')
+  cleanup()
+})
+
 test('40px pinning, 120px jump threshold and 150ms cooling remain distinct', () => {
   const { hook, viewport, calls, state, cleanup } = setup()
   hook.markUserInput(); viewport.scrollTop = 479; hook.handleScroll()

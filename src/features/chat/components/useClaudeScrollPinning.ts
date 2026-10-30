@@ -21,9 +21,27 @@ export function useClaudeScrollPinning(dependencies: readonly unknown[]) {
   const lastUserInputAt = useRef(-Infinity);
   // Refs make input/selection intent effective before React's next render.
   const pinnedRef = useRef(true);
+  const pinnedHeight = useRef(0);
   const readingLock = useRef(false);
   const cooldownTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const programmaticScroll = useRef<number | null>(null);
+
+  const scrollToBottom = useCallback((smooth = false) => {
+    const el = containerRef.current;
+    if (!el) return;
+    clearTimeout(cooldownTimer.current);
+    readingLock.current = false;
+    pinnedRef.current = true;
+    pinnedHeight.current = el.scrollHeight;
+    lastUserInputAt.current = -Infinity;
+    programmaticScroll.current = Math.max(0, el.scrollHeight - el.clientHeight);
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: smooth && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto'
+    });
+    setIsPinned(true);
+    setShowJumpControl(false);
+  }, []);
 
   const handleScroll = useCallback(() => {
     const el = containerRef.current;
@@ -34,29 +52,21 @@ export function useClaudeScrollPinning(dependencies: readonly unknown[]) {
       if (Math.abs(el.scrollTop - expected) <= 2) return;
     }
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    // Native scroll anchoring can emit a scroll before ResizeObserver sees an
+    // async card's new height. Growth alone must not become a reader unpinning.
+    if (pinnedRef.current && el.scrollHeight !== pinnedHeight.current
+      && performance.now() - lastUserInputAt.current > 150) {
+      scrollToBottom(false);
+      return;
+    }
     // 40px 底部边缘吸附容差
     const pinned = !readingLock.current && distanceFromBottom <= 40;
     pinnedRef.current = pinned;
+    if (pinned) pinnedHeight.current = el.scrollHeight;
     setIsPinned(pinned);
     // 离开底部超过 120px 时显示“跳至最新”悬浮按钮
     setShowJumpControl(distanceFromBottom > 120);
-  }, []);
-
-  const scrollToBottom = useCallback((smooth = false) => {
-    const el = containerRef.current;
-    if (!el) return;
-    clearTimeout(cooldownTimer.current);
-    readingLock.current = false;
-    pinnedRef.current = true;
-    lastUserInputAt.current = -Infinity;
-    programmaticScroll.current = Math.max(0, el.scrollHeight - el.clientHeight);
-    el.scrollTo({
-      top: el.scrollHeight,
-      behavior: smooth && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto'
-    });
-    setIsPinned(true);
-    setShowJumpControl(false);
-  }, []);
+  }, [scrollToBottom]);
 
   const followGrowth = useCallback(() => {
     // 150ms 冷却保护窗口：用户刚触摸/滚轮时不抢夺视口
