@@ -1116,9 +1116,11 @@ test('[integration] 424 material and service failures remain distinct and same-r
 })
 
 test('[integration] 424 input rejection and malformed model responses do not validate a newer draft', async () => {
-  const draft = await homework.draft(teacher, courseId, { ...visible, criteria: ['Complete 10 conversation turns.'] })
-  modelReplies.push({ valid: false, issues: [{ field: 'criteria', excerpt: 'Complete 10 conversation turns.',
-    reason: '对话次数不能说明学生独立掌握了知识。', suggestion: '改为独立解释三角形与矩形的面积关系，并应用到一个新例子。' }] })
+  const criterion = 'A triangle has the same area as its enclosing rectangle.'
+  const draft = await homework.draft(teacher, courseId, { ...visible, criteria: [criterion] })
+  modelReplies.push({ valid: false, issues: [{ field: 'criteria', excerpt: criterion,
+    severity: 'blocker', blockingReason: 'contradiction', conflictingExcerpt: 'a triangle is half of a rectangle',
+    reason: '正文要求解释面积为一半，但标准要求面积相等。', suggestion: '将标准改为三角形面积是外接矩形的一半。' }] })
   await runLearningEffects()
   let detail = await homework.detail(teacher, courseId, draft.homework.id)
   assert.equal(detail.homework.validation.status, 'INVALID')
@@ -1772,6 +1774,49 @@ test('381 direct draft rejects student, unrelated course and revoked teacher wit
 })
 
 // #519: generated and handwritten standards enter the same saved-draft pipeline.
+test('[integration] 558 legacy grades and unsupported blocker labels preserve teacher decisions through publication', async () => {
+  for (const origin of ['handwritten', 'generated']) {
+    const original = { ...visible, title: `558 ${origin}`, instructions: '比较两种网络方案，说明你的选择及理由。', criteria: ['说明方案的优点和取舍。'] }
+    const draft = (await homework.draft(teacher, courseId, original)).homework
+    modelReplies.push({ valid: false, issues: [
+      { field: 'instructions', excerpt: original.instructions, reason: '建议分点描述，评分标准可更细。', suggestion: '可按比较、选择、理由分点描述。' },
+      { field: 'criteria', excerpt: original.criteria[0], severity: 'blocker', reason: '方案取舍超出 AI 自动判断范围。', suggestion: '由教师结合方案说明判断。' },
+    ] })
+    await runLearningEffects()
+    const ready = (await homework.detail(teacher, courseId, draft.id)).homework
+    assert.equal(ready.validation.status, 'READY')
+    assert.deepEqual(ready.validation.findings.map(item => item.severity), ['suggestion', 'teacher_review'])
+    assert.deepEqual(ready.criteria, original.criteria)
+    assert.equal(ready.instructions, original.instructions)
+    assert.equal(ready.status, 'DRAFT')
+    const input = { expectedRevision: ready.revision, visibleHash: ready.visibleHash, idempotencyKey: `558-review-${origin}` }
+    assert.equal((await call(teacher, path(draft.id, '/publish'), 'POST', input)).status, 409)
+    assert.equal((await call(colleague, path(draft.id, '/publish'), 'POST', { ...input, teacherReviewConfirmed: true })).status, 403)
+    assert.equal((await call(teacher, path(draft.id, '/publish'), 'POST', { ...input, teacherReviewConfirmed: true })).status, 200)
+    assert.deepEqual((await homework.detail(teacher, courseId, draft.id)).homework.criteria, original.criteria)
+  }
+})
+
+test('[integration] 558 confirmed contradictions block until the corrected current revision is checked', async () => {
+  const original = { ...visible, instructions: '/22 子网可分配主机数为 1022，请说明计算过程。', criteria: ['可分配主机数为 1024。'] }
+  const draft = (await homework.draft(teacher, courseId, original)).homework
+  modelReplies.push({ valid: false, issues: [{ field: 'criteria', excerpt: original.criteria[0], severity: 'blocker',
+    blockingReason: 'contradiction', conflictingExcerpt: '可分配主机数为 1022', reason: '正文的 1022 和标准的 1024 矛盾。', suggestion: '将标准中的 1024 改为 1022。' }] })
+  await runLearningEffects()
+  const invalid = (await homework.detail(teacher, courseId, draft.id)).homework
+  assert.equal(invalid.validation.status, 'INVALID')
+  assert.match(invalid.validation.feedback, /依据：「可分配主机数为 1022」/)
+  const input = { expectedRevision: invalid.revision, visibleHash: invalid.visibleHash, idempotencyKey: '558-contradiction', teacherReviewConfirmed: true }
+  assert.equal((await call(teacher, path(draft.id, '/publish'), 'POST', input)).status, 409)
+  const edited = (await homework.updateDraft(teacher, courseId, draft.id, { ...original, criteria: ['可分配主机数为 1022。'], expectedRevision: invalid.revision })).homework
+  assert.equal(edited.validation.status, 'PENDING')
+  assert.equal((await call(teacher, path(draft.id, '/publish'), 'POST', input)).status, 409)
+  modelReplies.push({ valid: true, feedback: '当前题目和标准一致。' })
+  await runLearningEffects()
+  const ready = (await homework.detail(teacher, courseId, draft.id)).homework
+  assert.equal((await call(teacher, path(draft.id, '/publish'), 'POST', { expectedRevision: ready.revision, visibleHash: ready.visibleHash, idempotencyKey: '558-corrected' })).status, 200)
+})
+
 test('[integration] 519 per-criterion alternatives preserve the draft until teacher saves, then publish only the checked revision', async () => {
   for (const source of ['handwritten', 'generated']) {
     const original = { ...visible, title: `519 ${source}`, instructions: '6 个小问共 7 个空，计算 /22 子网可分配主机地址数并说明计算。', criteria: ['请把每个空逐条写出。', '可分配主机数为 1022，即 2^(32-22)-2。'] }

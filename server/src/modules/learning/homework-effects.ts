@@ -236,7 +236,7 @@ export async function runHomeworkEffect(effect:LearningEffect):Promise<void> {
       materials=await readHomeworkMaterials(pool,scope,hw,AbortSignal.timeout(90000))
       stage='model'
       const result=parseHomeworkValidation(await modelJson(scope,null,'homework.validate',homeworkValidationPrompt,
-        {title:hw.title,instructions:hw.instructions,criteria:hw.criteria,materials}),hw)
+        {title:hw.title,instructions:hw.instructions,criteria:hw.criteria,materials}),hw,materials)
       status=result.status;feedback=result.feedback;findings=result.findings ?? []
     } catch(error) {
       status=error instanceof HomeworkMaterialError?error.status:'ERROR'
