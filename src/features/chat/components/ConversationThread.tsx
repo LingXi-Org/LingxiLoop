@@ -218,7 +218,7 @@ export function ConversationThread({
 
   return (
     <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread data-density="comfortable">
-      <div className="relative flex min-h-0 flex-1" data-chat-reading-area>
+      <div className="relative flex min-h-0 flex-1 [container-type:size]" data-chat-reading-area>
         <ConversationQuestionIndex key={scope} viewportRef={viewportRef} hasMoreOlder={!threadRootId && snapshot.hasMoreOlder}
           isLoadingOlder={snapshot.isLoadingOlder} onLoadOlder={async () => { pauseFollowing(); return loadOlder() }} onNavigate={navigateToQuestion} />
         {/* The hook owns bottom following. The primitive only retains history prepend
@@ -243,7 +243,7 @@ export function ConversationThread({
             markUserInput()
           }}
           className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
-          <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col [--chat-extra-space:35vh] pb-[var(--chat-extra-space)]">
+          <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col [--chat-extra-space:35vh]">
             {!threadRootId && (
               <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
                 {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (

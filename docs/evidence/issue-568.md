@@ -32,6 +32,11 @@ retained after completion to avoid shrinking the reading position. The hook's
 upstream comment alone did not implement this layout. Composer, question index
 and jump button stay outside the masked scroll element. The former composer blur
 overlay is removed so the specified nonlinear mask owns transcript edge fading.
+The flex-sized reading area is a size container; actual padding is bounded by
+`max(0px, 100cqh - 8rem)` so a short compact thread never pins to a buffer taller
+than its viewport. Normal reading areas retain 35vh. At a 200px pane height the
+bound permits 72px buffer and leaves 128px for content. This compact layout
+adaptation was independently source-reviewed; physical layout remains unobserved.
 
 ## Verification
 
