@@ -133,15 +133,15 @@ function MessageTextPart() {
     ? 'rounded-[18px]'
     : metadata.isMine
       ? groupPosition === 'start'
-        ? 'rounded-[18px_18px_6px_18px]'
+        ? 'rounded-[18px_18px_4px_18px]'
         : groupPosition === 'end'
-          ? 'rounded-[18px_6px_18px_18px]'
-          : 'rounded-[18px_6px_6px_18px]'
+          ? 'rounded-[18px_4px_18px_18px]'
+          : 'rounded-[18px_4px_4px_18px]'
       : groupPosition === 'start'
-        ? 'rounded-[18px_18px_18px_6px]'
+        ? 'rounded-[18px_18px_18px_4px]'
         : groupPosition === 'end'
-          ? 'rounded-[6px_18px_18px_18px]'
-          : 'rounded-[6px_18px_18px_6px]'
+          ? 'rounded-[4px_18px_18px_18px]'
+          : 'rounded-[4px_18px_18px_4px]'
   const cancelLongPress = () => {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
     longPressTimer.current = null
@@ -163,7 +163,7 @@ function MessageTextPart() {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
   const markdown = <MarkdownText agent={isAgent} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations} mentionTargets={mentionTargets} />
-  return <div className={cn('relative min-w-0', isAgent ? 'w-full max-w-full' : ['w-fit', isMobile ? 'max-w-full' : 'max-w-[85%]'], metadata.isMine && 'ms-auto')}>
+  return <div className={cn('relative min-w-0', isAgent ? 'w-full max-w-full' : 'w-fit max-w-[85%]', metadata.isMine && 'ms-auto')}>
     {!isMobile && !isAgent && <MessageActions isMine={metadata.isMine} getText={getText} />}
     <div
       ref={bodyRef}
@@ -183,8 +183,8 @@ function MessageTextPart() {
       }}
       className={cn(
         'min-w-0 tracking-[-0.01em]',
-        'text-base leading-[1.65]',
-        isHuman && ['px-3.5 py-2', bubbleRadius],
+        isAgent ? 'text-[15px] leading-[1.7]' : 'text-[14.5px] leading-relaxed',
+        isHuman && ['px-4 py-3', bubbleRadius],
         !metadata.isMine && 'text-foreground',
         isHuman && metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
       )}
@@ -228,7 +228,6 @@ function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; m
 export function ConversationMessage() {
   const isMobile = useIsMobile()
   const custom = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
-  const isSpecialCard = custom.presentation === 'special-card'
   const quoteInsideText = useAuiState(state => state.message.content[0]?.type === 'text')
   const running = useAuiState((state) => state.message.status?.type === 'running')
   const messageId = useAuiState((state) => state.message.id)
@@ -272,8 +271,8 @@ export function ConversationMessage() {
         'px-[clamp(1rem,3cqw,2.5rem)]',
         isMobile ? 'gap-x-2' : 'gap-x-2.5',
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
-        custom.continuedFromPrevious ? isSpecialCard ? 'pt-1' : 'pt-px' : 'pt-1.5',
-        custom.continuedToNext ? isSpecialCard ? 'pb-0' : 'pb-px' : 'pb-1.5',
+        custom.continuedFromPrevious ? 'pt-1' : 'pt-3',
+        custom.continuedToNext ? 'pb-0' : 'pb-3',
         custom.isMine ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
     >
@@ -285,7 +284,7 @@ export function ConversationMessage() {
             <span className="font-medium">{participant ? participantDisplayName(participant) : custom.senderName}</span>
           </div>
         )}
-        <div className={cn('row-start-2 grid w-full max-w-[800px] min-w-0 gap-0.5', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>
+        <div data-chat-message-content data-sender-kind={custom.senderKind} className={cn('row-start-2 grid w-full max-w-[800px] min-w-0 gap-0.5', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {custom.quote && (custom.senderKind !== 'human' || !quoteInsideText) && (
             <div className={cn('min-w-0 max-w-md', custom.isMine && 'w-full justify-self-end')}>

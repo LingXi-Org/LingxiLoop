@@ -67,7 +67,11 @@ test('the real conversation thread displays native v2 messages', () => {
     const runtime = useExternalStoreRuntime({ messages: [message('1')], onNew: async () => {} })
     return <AssistantRuntimeProvider runtime={runtime}><TooltipProvider><ConversationThread conversationId="room" readOnly /></TooltipProvider></AssistantRuntimeProvider>
   }
-  assert.match(load(renderToStaticMarkup(<ThreadPreview />)).text(), /正文1/)
+  const $ = load(renderToStaticMarkup(<ThreadPreview />))
+  assert.match($.text(), /正文1/)
+  assert.equal($('[data-chat-viewport]').length, 1)
+  assert.equal($('[data-cds-scroll-fade]')[0], $('[data-chat-viewport]')[0], 'mask shares the actual scroll viewport')
+  assert.equal($('[data-chat-viewport]').attr('tabindex'), '0', 'keyboard users can reach the scroll region')
 })
 
 test('tool terminal and approval states are visible without requiring a result', () => {
@@ -324,7 +328,7 @@ test('sender kind owns bubble chrome and agent avatars align at the top', () => 
     if (sender === 'agent') {
       assert.match($('[data-message-avatar]').attr('class') ?? '', /self-start/)
       assert.doesNotMatch($('[data-agent-body]').attr('class') ?? '', /bg-|rounded-|border-/)
-      assert.match($('[data-agent-body]').attr('class') ?? '', /text-base/)
+      assert.match($('[data-agent-body]').attr('class') ?? '', /text-\[15px\]/)
     }
   }
 })

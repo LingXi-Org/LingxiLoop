@@ -289,3 +289,17 @@ LingxiLoop's runtime.
 Course-material original previews reuse the MIT-licensed Retab UI Registry at
 `321b3eacce133228042265c499d399c960bc7f13` (© 2026 Retab; portions © 2023 shadcn).
 [License, provenance and adaptations](third_party/retab-ui/README.md).
+
+## open-claude-ui conversation presentation
+
+Chat directly adapts `Caho1/open-claude-ui` at
+[`c1f923ae0051a871941b98a0e2e3183a545e6a85`](https://github.com/Caho1/open-claude-ui/tree/c1f923ae0051a871941b98a0e2e3183a545e6a85):
+
+- `code-examples/ScrollFadeContainer.tsx` → `src/features/chat/components/ScrollFadeContainer.tsx` (original nonlinear mask, 28px default, 2px boundaries).
+- `code-examples/useClaudeScrollPinning.ts` → `src/features/chat/components/useClaudeScrollPinning.ts` (pinning, 40px tolerance, 150ms cooldown, 120px jump threshold and immediate streaming scroll).
+- `code-examples/ChatMessageBubbles.tsx` and `code-examples/cds-theme.css` → scoped message metrics in `ConversationMessage.tsx` and `src/styles/chat.css`, mapped to the existing LingxiLoop brand/theme tokens.
+
+MIT License, Copyright (c) 2026 Caho1. The complete upstream license is retained
+in [`public/licenses/open-claude-ui.txt`](public/licenses/open-claude-ui.txt),
+which Vite also ships in the SPA. Necessary integration adaptations and actual
+verification limits are recorded in [issue #568 evidence](docs/evidence/issue-568.md).
