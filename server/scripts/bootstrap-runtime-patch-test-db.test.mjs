@@ -7,6 +7,7 @@ test('source bootstrap rejects production, remote, overridden and untracked targ
  const env={NODE_ENV:'test',DATABASE_URL:url,INTEGRATION_DATABASE_URL:url}
  assert.equal(assertRuntimePatchTestTarget(env),url)
  assert.throws(()=>assertRuntimePatchTestTarget({...env,NODE_ENV:'production'}))
+ assert.throws(()=>assertRuntimePatchTestTarget({...env,PGPORT:'6543',DATABASE_URL:url.replace(':5432',''),INTEGRATION_DATABASE_URL:url.replace(':5432','')}))
  for(const target of [url.replace('127.0.0.1','db.example.test'),url.replace('lingxiloop_test','production_test'),url+'?host=remote',url.replace('5432','18438'),url.replace('lingxiloop_test','lingxiloop')]){
   assert.throws(()=>assertRuntimePatchTestTarget({...env,DATABASE_URL:target,INTEGRATION_DATABASE_URL:target}))
  }

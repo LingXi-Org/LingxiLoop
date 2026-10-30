@@ -15,7 +15,7 @@ export function assertRuntimePatchTestTarget(env){
  assert.equal(env.NODE_ENV,'test','bootstrap requires explicit test mode')
  const url=new URL(env.INTEGRATION_DATABASE_URL??'')
  assert.ok(['postgres:','postgresql:'].includes(url.protocol)&&url.hostname==='127.0.0.1'
-  &&['','5432','15432'].includes(url.port)&&!url.search&&!url.hash,'bootstrap requires the local test service')
+  &&['5432','15432'].includes(url.port)&&!url.search&&!url.hash,'bootstrap requires an explicit local test service port')
  const database=decodeURIComponent(url.pathname.slice(1))
  assert.match(database,/^[A-Za-z0-9_]+$/)
  assert.match(database,/(?:^|_)test(?:_|$)/)
