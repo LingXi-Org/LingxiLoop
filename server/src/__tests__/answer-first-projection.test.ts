@@ -177,3 +177,35 @@ test('committed citation data stays valid on the strict wire and different sourc
   assert.deepEqual(sources[0].providerMetadata?.lingxiloop?.chunkIds, ['chunk-0', 'chunk-2'])
   assert.deepEqual(sources.map(part => part.providerMetadata?.lingxiloop?.sourceVersion), ['v1', 'v2'])
 })
+
+test('failed v3 corrections retain only the latest unsealed draft, preserving sealed text and failure state', () => {
+  const parts = ['已确认前文。', '失败草稿一。', '失败草稿二。', '最后未完成正文。'].map((text, index) => ({
+    version: 3 as const, runId: 'run', requestVersion: 1, fence: 1, attemptId: `attempt-${index}`,
+    partId: `part-${index}`, partIndex: 0, messageId: 'answer:run:v1', segmentId: `part-${index}`,
+    operation: 'append' as const, supersedes: [], purpose: 'answer' as const, text,
+    firstSeq: index * 3 + 1, lastSeq: index * 3 + 3, chunkCount: 1, endedSeq: index * 3 + 3,
+    acceptedResultId: null, status: index === 0 ? 'complete' as const : 'incomplete' as const,
+    reason: index === 0 ? 'completed' as const : 'failed' as const,
+    ...(index === 0 ? { sealedSeq: 3, bodyHash: 'a'.repeat(64) } : {}),
+  }))
+  const view = { ...createRunView('run'), requestVersion: 1, fence: 1, lifecycle: 'failed' as const, lastSeq: 12, publicTextParts: parts }
+  const projected = runMessageParts(view)
+  const body = projected.filter(part => activityAnnotation(part)?.kind === 'answer')
+  assert.deepEqual(body.map(part => part.type === 'text' ? part.text : ''), ['已确认前文。', '最后未完成正文。'])
+  const last = body.at(-1)
+  assert.equal(last?.type === 'text' && last.status?.type, 'incomplete')
+  assert.equal(last?.type === 'text' && last.status?.type === 'incomplete' && last.status.reason, 'error')
+  assert.ok(last?.type === 'text')
+  assert.deepEqual(last.providerMetadata?.lingxiloop?.answerSegment, {
+    version: 3, messageId: 'answer:run:v1', segmentId: 'part-3', partId: 'part-3',
+    start: parts.slice(0, 3).reduce((length, part) => length + part.text.length, 0),
+    end: parts.reduce((length, part) => length + part.text.length, 0),
+  })
+  for (const history of [false, true]) {
+    const output = JSON.stringify(runMessageParts(view, [], { activityHistory: history }))
+    assert.doesNotMatch(output, /失败草稿一|失败草稿二/)
+  }
+  // A new execution cannot suppress an older candidate merely by sharing text.
+  const otherFence = { ...view, publicTextParts: [parts[1], { ...parts[3], fence: 2 }] }
+  assert.match(JSON.stringify(runMessageParts(otherFence)), /失败草稿一/)
+})
