@@ -45,10 +45,10 @@ test('failed preview reports only a bounded stage and HTTP status, never URLs or
     fetch: async () => assert.fail('unexpected fetch'), isCurrent: () => true, diagnostic: event => events.push(event),
   }))
   assert.deepEqual(events, [{ stage: 'detail', status: 304 }])
-  events.length = 0
+  const requestEvents: unknown[] = []
   await assert.rejects(loadMaterialOriginal(context, new AbortController().signal, {
-    detail: async () => detail, fetch: async () => { throw new Error(secret) }, isCurrent: () => true, diagnostic: event => events.push(event),
+    detail: async () => detail, fetch: async () => { throw new Error(secret) }, isCurrent: () => true, diagnostic: event => requestEvents.push(event),
   }))
-  assert.deepEqual(events, [{ stage: 'file_request' }])
-  assert.doesNotMatch(JSON.stringify(events), /synthetic-private/)
+  assert.deepEqual(requestEvents, [{ stage: 'file_request' }])
+  assert.doesNotMatch(JSON.stringify(requestEvents), /synthetic-private/)
 })
