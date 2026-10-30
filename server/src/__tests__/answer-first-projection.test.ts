@@ -196,7 +196,7 @@ test('failed v3 corrections archive all unsealed failed drafts while preserving 
     const output = JSON.stringify(runMessageParts(view, [], { activityHistory: history }))
     assert.doesNotMatch(output, /失败草稿一|失败草稿二|最后未完成正文/)
   }
-  const continuing={...view,lifecycle:'leased' as const,publicTextParts:[parts[0],{...parts[3],reason:undefined,status:'streaming' as const,endedSeq:undefined}]}
+  const continuing={...view,lifecycle:'leased' as const,publicTextParts:[parts[0],{...parts[3],reason:null,status:'running' as const,endedSeq:null}]}
   assert.deepEqual(runMessageParts(continuing).filter(part=>activityAnnotation(part)?.kind==='answer').map(part=>part.type==='text'?part.text:''),['已确认前文。','最后未完成正文。'])
 })
 

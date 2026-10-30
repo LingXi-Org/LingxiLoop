@@ -38,12 +38,17 @@ failed draft projection, fresh-history equivalence, and bounded native protocol
 failure through worker/ledger/IM/recovery HTTP. Visualization tests cover loading,
 terminal/incomplete/invalid references and existing card recovery states.
 
-Two standalone pure-contract tests and seven visualization-copy tests passed
-locally using public zod/tsx only.
+18 focused contract, localization, skeleton and trace-rendering assertions
+passed in an isolated directory with the repository source and public packages
+at the versions resolved by the repository lockfile (including React 19.2.8).
 The managed environment could not install the exact private SDK: the registry
 returned HTTP 401 for 3.8.17. Full type checks, SDK-backed tests and integration
-are therefore pending the official PR CI checks; an unrun local check is not a
-pass. No browser screenshots or live-model artwork delivery are asserted here.
+remain pending; an unrun local check is not a pass. Independent read-only review
+found one incorrect public-text test fixture enum/nullability, now corrected;
+no further blocking finding was reported within this change. The skeleton SSR
+checks cover reference/receipt and acquisition states, not a mounted browser
+loading-to-ready interaction. No browser screenshots or live-model artwork
+delivery are asserted here.
 
 The historical protocol subreason is still unknown. Formal 3.8.17's prior
 parser fixes and a synthetic failure fixture cannot establish that the original
