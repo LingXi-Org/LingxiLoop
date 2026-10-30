@@ -1,5 +1,5 @@
 import { pool } from '../db/pool.js'
-import { CH_DOCS, CH_DOC_UPDATE, CH_CONVO_UPDATED, CH_REACTIONS, CH_CANVAS, publish } from '../redis.js'
+import { CH_DOCS, CH_DOC_UPDATE, CH_CONVO_UPDATED, CH_REACTIONS, CH_ARTIFACTS, publish } from '../redis.js'
 import { flushNativeEvents } from './native-events.js'
 import { channelProfileForCompany } from '../im/messages-repository.js'
 import { syncProductChannel } from '../agent-runtime/conversations.js'
@@ -22,18 +22,27 @@ export function startNativeEventWorker() {
       switch (event.type) {
         case 'im.user': {
           await withTransaction(pool, async db => {
-            // Hold the assignment and authorization until admission so cancellation cannot overtake it.
-            const { rows } = await db.query(`SELECT assignment.id FROM canvas_agent_assignments assignment
-              JOIN canvases canvas ON canvas.id=assignment.canvas_id JOIN users principal ON principal.id=$1
-              WHERE assignment.id=$2 AND canvas.id=$3 AND canvas.company_id=$4 AND canvas.conversation_id=$5
-                AND canvas.status='active' AND assignment.status<>'cancelled' AND assignment.request_client_msg_no=$6
+            // Hold the assignment or comment and authorization until admission so cancellation cannot overtake it.
+            const { rows } = 'assignmentId' in event
+              ? await db.query(`SELECT assignment.id FROM artifact_agent_assignments assignment
+              JOIN artifacts artifact ON artifact.id=assignment.artifact_id JOIN users principal ON principal.id=$1
+              WHERE assignment.id=$2 AND artifact.id=$3 AND artifact.company_id=$4 AND artifact.conversation_id=$5
+                AND artifact.status='active' AND assignment.status<>'cancelled' AND assignment.request_client_msg_no=$6
                 AND principal.departed_at IS NULL AND principal.suspended_at IS NULL AND principal.deleted_at IS NULL
-                AND COALESCE(principal.access_revoked_at::text,'')=$7 FOR SHARE OF assignment,canvas,principal`,
-            [event.userId,event.assignmentId,event.canvasId,event.companyId,event.channelId,event.clientNonce,event.authorization])
+                AND COALESCE(principal.access_revoked_at::text,'')=$7 FOR SHARE OF assignment,artifact,principal`,
+              [event.userId,event.assignmentId,event.artifactId,event.companyId,event.channelId,event.clientNonce,event.authorization])
+              : await db.query(`SELECT artifact.id FROM artifacts artifact JOIN users principal ON principal.id=$1
+              JOIN artifact_comments comments ON comments.artifact_id=artifact.id
+              WHERE artifact.id=$2 AND artifact.company_id=$3 AND artifact.conversation_id=$4
+                AND EXISTS(SELECT 1 FROM jsonb_array_elements(comments.doc->'threads') thread
+                  WHERE thread->>'id'=$5 AND thread->>'status'='open' AND thread->'agent'->>'status'='delivered')
+                AND principal.departed_at IS NULL AND principal.suspended_at IS NULL AND principal.deleted_at IS NULL
+                AND COALESCE(principal.access_revoked_at::text,'')=$6 FOR SHARE OF artifact,principal`,
+              [event.userId,event.artifactId,event.companyId,event.channelId,event.commentId,event.authorization])
             if (!rows.length) return
             const permissions = createPermissionService(db, { lockDependencies: true })
             for (const [action, resource] of [['conversation:write', { type: 'conversation', id: event.channelId }],
-              ['canvas:write', { type: 'canvas', id: event.canvasId }]] as const) {
+              ['artifact:write', { type: 'artifact', id: event.artifactId }]] as const) {
               if (!(await permissions.can({ companyId: event.companyId, actorUserId: event.userId, action, resource })).allowed) return
             }
             const result = await createImMessagesApplication(signal, db).acceptUserMessage(event)
@@ -56,7 +65,7 @@ export function startNativeEventWorker() {
         case 'im.read_receipt': await publishReadReceiptAdvance(event.advance); return
         case 'conversation.updated': await publish(CH_CONVO_UPDATED, event); return
         case 'message.reactions': await publish(CH_REACTIONS, event); return
-        case 'canvas.changed': await publish(CH_CANVAS, event); return
+        case 'artifact.changed': await publish(CH_ARTIFACTS, event); return
         case 'doc.changed': await publish(CH_DOCS, event); return
         case 'doc.update': await publish(CH_DOC_UPDATE, event); return
       }

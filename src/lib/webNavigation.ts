@@ -6,7 +6,7 @@ export interface WebDestination {
   conversationId: string | null
 }
 
-const views: ViewKey['view'][] = ['conversations', 'cases', 'forum', 'course-materials', 'learning', 'courses', 'course-members', 'course-status']
+const views: ViewKey['view'][] = ['conversations', 'cases', 'slides', 'forum', 'course-materials', 'learning', 'courses', 'course-members', 'course-status']
 let navigationEpoch = 0
 
 export const beginWebNavigation = () => ++navigationEpoch
@@ -41,6 +41,7 @@ export function writeWebDestination(destination: WebDestination, mode: 'push' | 
   if (destination.view === 'forum' && current.searchParams.get('project') === destination.projectId && current.searchParams.has('post')) {parameters.set('post',current.searchParams.get('post')!);if(current.searchParams.has('type'))parameters.set('type',current.searchParams.get('type')!)}
   const caseId = /^\/cases\/([^/]+)$/.exec(current.pathname)?.[1] ?? (current.searchParams.has('case') ? encodeURIComponent(current.searchParams.get('case')!) : null)
   if (destination.view === 'cases' && current.searchParams.has('company')) parameters.set('company', current.searchParams.get('company')!)
+  if (destination.view === 'slides' && current.searchParams.get('project') === destination.projectId && current.searchParams.has('deck')) parameters.set('deck', current.searchParams.get('deck')!)
   const path = destination.view === 'cases' ? `/cases${caseId ? `/${caseId}` : ''}?${parameters}` : `/?${parameters}`
   if (`${current.pathname}${current.search}${current.hash}` === path) return
   const state=destination.view==='forum' && current.searchParams.get('view')==='forum' && current.searchParams.get('project')===destination.projectId ? window.history.state : null
@@ -63,6 +64,7 @@ export function safeAuthReturnPath(parameters: URLSearchParams): string {
   if (destination.conversationId) next.set('conversation', destination.conversationId)
   if(destination.view === 'forum' && parameters.has('post')) {next.set('post',parameters.get('post')!);if(parameters.has('type'))next.set('type',parameters.get('type')!)}
   if (destination.view === 'cases' && parameters.has('company')) next.set('company', parameters.get('company')!)
+  if (destination.view === 'slides' && parameters.has('deck')) next.set('deck', parameters.get('deck')!)
   if (destination.view === 'cases') return `${window.location.pathname.startsWith('/cases') ? window.location.pathname : '/cases'}?${next}`
   return `/?${next}`
 }

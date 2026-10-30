@@ -72,7 +72,7 @@ export function convertEnvelope(envelope: ImEnvelope, context: MessageConversion
   const reply = typeof custom.replyToClientMsgNo === 'string' ? custom.replyToClientMsgNo : undefined
   const threadRoot = typeof custom.threadRootClientMsgNo === 'string' ? custom.threadRootClientMsgNo : reply
   const refs = object(custom.refs)
-  const card = message.content.find(part => part.type === 'data' && ['handoff','canvas','learning-mission','poll'].includes(part.name))
+  const card = message.content.find(part => part.type === 'data' && ['handoff','artifact','learning-mission','poll'].includes(part.name))
   const data = card?.type === 'data' ? object(card.data) : {}
   const revision = custom.progressVersion ?? data.revision
   const harness = custom.harness as RunDisplayState | undefined

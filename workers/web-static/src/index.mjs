@@ -1,6 +1,6 @@
 // The auth Worker signs product API requests. It must in turn use the separate
 // backend hostname; neither upstream may resolve back to the public SPA route.
-const dynamic = /^\/(?:api|uploads|runtime|ws|files|visualize|webhooks|readyz|healthz)(?:\/|$)/i
+const dynamic = /^\/(?:api|uploads|runtime|ws|files|visualize|artifact-editor|_blob|webhooks|readyz|healthz)(?:\/|$)/i
 const internal = /^\/(?:internal)(?:\/|$)/i
 const visualizeAsset = /^\/assets\/visualize-[a-f0-9]{64}\.(js|css|txt)$/
 const immutable = /^\/assets\/[\w./-]+-[\w-]{8,}\.[\w.]+$/

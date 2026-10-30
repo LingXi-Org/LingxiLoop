@@ -1,6 +1,7 @@
 import type { SkillDefinition } from '@lyyzka/lingxios'
 import { visualizeSkill } from './visualize-skill.js'
 import { GROUP_COLLABORATION_RULES } from './conversation-style.js'
+import { artifactSkills, cooperationSkill } from '../modules/artifacts/skills.js'
 
 export const productSkills: SkillDefinition[] = [
   visualizeSkill,
@@ -10,8 +11,9 @@ export const productSkills: SkillDefinition[] = [
     actions: ['documents.read','documents.edit'], body: 'Read the current document and revision. Apply the requested minimal edits against that revision. On conflict, reread and preserve peer content. Read back the committed document before reporting completion.' },
   { name: 'research-evidence', version: '2', description: 'Research a question using Chinese web search and readable primary evidence.',
     actions: ['research.search','research.read'], body: 'Use research.search for Chinese web search and prefer relevant domestic primary sources. Read the sources before treating snippets as evidence, and distinguish supported findings from uncertainty. Cite only evidence actually returned by the tools; do not invent source contents. Search sources are displayed as cards: avoid repeating a link list in the answer, but preserve necessary inline citations. Do not comment on a short or empty result list or fill it using foreign search engines. If the search tool fails, state the failure honestly without claiming that no sources exist.' },
-  { name: 'canvas-cooperation', version: '4', description: 'Build a shared deliverable through public specialist contributions and independent review.',
-    actions: ['canvas.current','canvas.start_workspace','canvas.submit_report','canvas.submit_verification'], body: 'Read the current Canvas and actual room roster. Create or reuse the shared workspace, then divide substantial work through explicit Chinese-name 协作交接 handoff lines in the native final reply. Each specialist contributes their part and persists canvas.submit_report with observed evidence. An independent verifier checks the actual artifact and persists canvas.submit_verification with the referenced report, disconfirming checks and verdict. Creation and assignment are not completion; no tool dispatches hidden work or resumes a reporter. ' + GROUP_COLLABORATION_RULES },
+  ...artifactSkills,
+  cooperationSkill('design', GROUP_COLLABORATION_RULES),
+  cooperationSkill('slides', GROUP_COLLABORATION_RULES),
   { name:'forum-assignments',version:'1',description:'Assist with teacher assignments while preserving student authorship.',
     actions:['learning.list_assignments','learning.get_assignment','learning.list_submissions','learning.submit_assignment'],body:'Read the current teacher assignment before helping. Submit only when the original student asks. Preserve the exact committed human text for AGENT_RELAY; label generated work AGENT_GENERATED. Never claim generated work is independent student evidence. Verify submission IDs and keep private history in an authorized audience.' },
   { name: 'course-evidence', version: '2', description: 'Ground course-dependent answers in authorized knowledge and resolve missing or conflicting evidence.',

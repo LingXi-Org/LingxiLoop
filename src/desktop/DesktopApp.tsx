@@ -28,7 +28,6 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { useEntrance } from '@/hooks/use-entrance'
 import { DashboardSkeleton } from './DashboardSkeleton'
 import { DocumentSkeleton } from '@/features/documents/components/DocumentSkeleton'
-import { CanvasSkeleton } from '@/features/canvas/components/CanvasSkeleton'
 import { actionForKeyboardEvent } from '@/lib/commands'
 import { retryWebNavigation } from '@/lib/navigation'
 import { useApp } from '@/stores/app'
@@ -43,7 +42,8 @@ import { WorkspaceRail } from './WorkspaceRail'
 import { useLearningSpaces } from './useLearningSpaces'
 
 const CasesPage = lazy(() => import('@/features/cases/CasesPage').then((module) => ({ default: module.CasesPage })))
-const CanvasView = lazy(() => import('@/features/canvas/components/CanvasView').then((module) => ({ default: module.CanvasView })))
+const SlidesPage = lazy(() => import('@/features/slides/SlidesPage').then((module) => ({ default: module.SlidesPage })))
+const ArtifactView = lazy(() => import('@/features/artifacts/components/ArtifactView').then((module) => ({ default: module.ArtifactView })))
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
 const PersonalDashboard = lazy(() => import('./PersonalDashboard').then((module) => ({ default: module.PersonalDashboard })))
 
@@ -87,7 +87,7 @@ export function DesktopApp() {
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
   const openThread = surface?.kind === 'thread' ? surface : null
   const documentId = surface?.kind === 'document' ? surface.documentId : null
-  const canvasId = surface?.kind === 'canvas' ? surface.canvasId : null
+  const design = surface?.kind === 'design' ? surface : null
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const mobileConversationOpen = useApp((state) => state.mobileConversationOpen)
@@ -150,42 +150,32 @@ export function DesktopApp() {
     setSidebarWidth(clamped)
     persistSidebarWidth(clamped)
   }
-  const closeCanvasView = () => {
-    const closingCanvasId = canvasId
-    const closingActiveElement = document.activeElement
-    useSurface.getState().closeCanvasPeek()
-    if (!closingCanvasId) return
-    const focusTrigger = () => (document.querySelector<HTMLElement>(`[data-canvas-open-trigger="${CSS.escape(closingCanvasId)}"]`)
-      ?? document.querySelector<HTMLElement>('[data-canvas-popover-trigger]'))?.focus({ preventScroll: true })
-    window.requestAnimationFrame(() => {
-      focusTrigger()
-      window.setTimeout(() => {
-        const activeElement = document.activeElement
-        const focusStayedInCanvas = activeElement === closingActiveElement
-          || activeElement instanceof HTMLElement && Boolean(activeElement.closest('[data-canvas-ui="root"]'))
-        if (!activeElement || activeElement === document.body || !activeElement.isConnected || focusStayedInCanvas) focusTrigger()
-      }, 450)
-    })
+  const closeDesignView = () => {
+    const closingId = design?.artifactId
+    useSurface.getState().closeDesign()
+    if (!closingId) return
+    window.requestAnimationFrame(() => (document.querySelector<HTMLElement>(`[data-artifact-open-trigger="${CSS.escape(closingId)}"]`)
+      ?? document.querySelector<HTMLElement>('[data-design-open-trigger]'))?.focus({ preventScroll: true }))
   }
-  const drawerCanvasId = isMobile ? canvasId : null
-  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || drawerCanvasId)
+  const drawerDesign = isMobile ? design : null
+  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || drawerDesign)
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
 
   if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> }
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
-  else if (drawerCanvasId) { drawerTitle = 'Canvas'; drawerContent = <CanvasView canvasId={drawerCanvasId} onBack={closeCanvasView} /> }
+  else if (drawerDesign) { drawerTitle = '设计'; drawerContent = <ArtifactView artifactId={drawerDesign.artifactId} kind="design" title={drawerDesign.title} onClose={closeDesignView} back closeLabel="关闭设计" /> }
 
   const closeDrawer = () => {
     const surfaces = useSurface.getState()
     if (infoParticipantId) surfaces.closeAgentInfo()
     else if (openThread) surfaces.closeThreadView()
     else if (documentId) surfaces.closeDocumentPeek()
-    else if (drawerCanvasId) closeCanvasView()
+    else if (drawerDesign) closeDesignView()
   }
-  const drawerOwnsHeader = Boolean(drawerCanvasId)
-  const fullBleedDrawer = Boolean(drawerCanvasId)
+  const drawerOwnsHeader = Boolean(drawerDesign)
+  const fullBleedDrawer = Boolean(drawerDesign)
   const mobileForumOpen = isMobile && view === 'forum' && Boolean(learningSpaces.activeSpace?.courseId) && !navigationPending
   const mobileChatOpen = !dashboardOpen && !learningSpaces.pending && isMobile && mobileConversationOpen && Boolean(selectedConversation)
   const drawerWidth = isMobile
@@ -209,7 +199,7 @@ export function DesktopApp() {
         </div>}
         {navigationError && <Alert variant="destructive" className="mb-2 me-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
         <div ref={pageRef} data-ui-page={view} aria-busy={navigationPending || undefined} className={`${mobileForumOpen ? '' : 'me-2 mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
-          {navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" /> : view === 'cases' ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载案例库" />}><CasesPage key={companyId} /></Suspense> : !selectedWorkspaceId || dashboardOpen ? (
+          {navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" /> : view === 'cases' ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载案例库" />}><CasesPage key={companyId} /></Suspense> : view === 'slides' && selectedWorkspaceId ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载演示文稿" />}><SlidesPage key={selectedWorkspaceId} projectId={selectedWorkspaceId} /></Suspense> : !selectedWorkspaceId || dashboardOpen ? (
             <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
               <PersonalDashboard
                 view={view}
@@ -274,19 +264,19 @@ export function DesktopApp() {
             </div>
           </DrawerHeader>}
           <div className="min-h-0 flex-1 overflow-hidden">
-            <Suspense fallback={<div className="flex h-full flex-col">{drawerOwnsHeader && <Button type="button" variant="ghost" className="m-2 self-start" onClick={closeDrawer}>关闭</Button>}{documentId ? <DocumentSkeleton /> : drawerCanvasId ? <CanvasSkeleton /> : <ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} />}</div>}>
+            <Suspense fallback={<div className="flex h-full flex-col">{drawerOwnsHeader && <Button type="button" variant="ghost" className="m-2 self-start" onClick={closeDrawer}>关闭</Button>}{documentId ? <DocumentSkeleton /> : drawerDesign ? <ResourceSkeleton variant="media" label="正在打开设计" /> : <ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} />}</div>}>
               {drawerContent}
             </Suspense>
           </div>
         </DrawerContent>
       </Drawer>
 
-      <Dialog open={!isMobile && Boolean(canvasId)} onOpenChange={(open) => { if (!open) closeCanvasView() }}>
+      <Dialog open={!isMobile && Boolean(design)} onOpenChange={(open) => { if (!open) closeDesignView() }}>
         <DialogContent showCloseButton={false} className="h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none gap-0 overflow-hidden rounded-2xl bg-card p-0 sm:max-w-none">
-          <DialogTitle className="sr-only">Canvas</DialogTitle>
-          <DialogDescription className="sr-only">协作画布</DialogDescription>
-          <Suspense fallback={<div className="flex h-full flex-col"><Button type="button" variant="ghost" className="m-2 self-start" onClick={closeCanvasView}>关闭画布</Button><CanvasSkeleton /></div>}>
-            {canvasId && <CanvasView canvasId={canvasId} onBack={closeCanvasView} />}
+          <DialogTitle className="sr-only">设计</DialogTitle>
+          <DialogDescription className="sr-only">当前对话的设计画板</DialogDescription>
+          <Suspense fallback={<div className="flex h-full flex-col"><Button type="button" variant="ghost" className="m-2 self-start" onClick={closeDesignView}>关闭设计</Button><ResourceSkeleton variant="media" label="正在打开设计" /></div>}>
+            {design && <ArtifactView artifactId={design.artifactId} kind="design" title={design.title} onClose={closeDesignView} />}
           </Suspense>
         </DialogContent>
       </Dialog>

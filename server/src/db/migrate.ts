@@ -199,8 +199,9 @@ export async function migrateDatabase(
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
-  // Product55/56/57/58/59 change product state only, on the same formally locked runtime.
-  const full59=migrations.length===59&&migrations[58]?.name==='retire_presentation_generation'
+  // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
+  const full60=migrations.length===60&&migrations[59]?.name==='native_artifacts'
+  const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
   if (full59) assertRetirementRuntimeVersion(releaseVersions.runtime)
   const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
@@ -233,7 +234,7 @@ export async function migrateDatabase(
 
     const applied = await appliedMigrations(client)
     validateApplied(migrations, applied)
-    if(full54)assertFull54InstallBoundary(applied.length,releaseVersions.runtime,full59?59:full58?58:full57?57:full56?56:full55?55:54)
+    if(full54)assertFull54InstallBoundary(applied.length,releaseVersions.runtime,full60?60:full59?59:full58?58:full57?57:full56?56:full55?55:54)
     const installsRuntime = migrations.some(migration => migration.version === NATIVE_INSTALL_VERSION && migration.name === 'lingxios_native_runtime')
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
     const hasContinuityUpgrade = migrations.some(migration=>migration.version===47 && migration.name==='memory_continuity')
@@ -267,7 +268,8 @@ export async function migrateDatabase(
           || migration.version===56 && migration.name==='homework_validation_status'
           || migration.version===57 && migration.name==='case_soft_delete'
           || migration.version===58 && migration.name==='homework_validation_findings'
-          || migration.version===59 && migration.name==='retire_presentation_generation') {
+          || migration.version===59 && migration.name==='retire_presentation_generation'
+          || migration.version===60 && migration.name==='native_artifacts') {
           await assertRuntimeCurrent(client,14,releaseVersions.runtime)
         }
         // Production retirement is an explicit maintenance operation, never an automatic deploy side effect.
@@ -358,8 +360,9 @@ export async function assertMigrationsCurrent(
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
-  // Product55/56/57/58/59 change product state only, on the same formally locked runtime.
-  const full59=migrations.length===59&&migrations[58]?.name==='retire_presentation_generation'
+  // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
+  const full60=migrations.length===60&&migrations[59]?.name==='native_artifacts'
+  const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
   if (full59) assertRetirementRuntimeVersion(releaseVersions.runtime)
   const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'

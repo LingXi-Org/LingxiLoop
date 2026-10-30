@@ -10,8 +10,9 @@ import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { readComposerDraft, saveComposerDraft, type ComposerDraftScope } from '../drafts'
 import { getMeId, useAuth } from '@/stores/auth'
 import { chatTransport } from '../runtime/transport'
-import { CanvasArtifactTool, CanvasProgressTool, ElicitationFormTool,
+import { ArtifactProgressTool, ElicitationFormTool,
   PollFormTool, RecommendationTool } from './ToolRenderers'
+import { ArtifactChatCard } from '@/features/artifacts/components/ArtifactChatCard'
 
 const record = (value: unknown) => z.record(z.string(), z.unknown()).parse(value)
 const emailSchema = z.object({ from: z.string(), to: z.array(z.string()), cc: z.array(z.string()).default([]),
@@ -174,9 +175,9 @@ function LegacyBusinessMessagePart({ name, data, readOnly }: Pick<DataMessagePar
     }
     case 'recommendation': content = <MessageFooterContents inset={false}><RecommendationTool args={value} result={result} addResult={submit} /></MessageFooterContents>; break
     case 'handoff': content = <p className="whitespace-pre-wrap break-words text-sm">{[value.title, value.task, value.context, value.result, value.error].filter((part): part is string => typeof part === 'string' && Boolean(part)).join('\n') || '历史协作记录'}</p>; break
-    case 'canvas': content = <>
-      <MessageFooterContext.Provider value={null}><CanvasProgressTool args={{ ...value, id: value.canvasId }} /></MessageFooterContext.Provider>
-      <CanvasArtifactTool args={{ id: value.canvasId, title: value.title, description: value.goal, href: `lingxiloop://canvas/${encodeURIComponent(String(value.canvasId))}` }} />
+    case 'artifact': content = <>
+      <MessageFooterContext.Provider value={null}><ArtifactProgressTool args={{ ...value, id: value.artifactId }} /></MessageFooterContext.Provider>
+      <ArtifactChatCard artifactId={String(value.artifactId)} kind={value.kind === 'slides' ? 'slides' : 'design'} title={String(value.title ?? '')} description={typeof value.goal === 'string' ? value.goal : undefined} />
     </>; break
     case 'citation-claims': return null
     case 'document-reference': content = <MessageFooterContents inset={false}><DocumentReference {...documentSchema.parse(value)} activePage={-1} /></MessageFooterContents>; break

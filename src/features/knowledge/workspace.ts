@@ -3,7 +3,6 @@ import { bootParticipants, useParticipants } from '@/features/agents/state'
 import { bootConversations, useConversations } from '@/features/conversations/store'
 import { chatTransport } from '@/features/chat/runtime/transport'
 import { useDocuments } from '@/features/documents/state'
-import { useCanvas } from '@/features/canvas/state'
 import { useKnowledgeSources } from './state'
 import { getWorkspaceSession, setWorkspaceSession } from '@/lib/workspaceSession'
 import { userFacingError } from '@/lib/userFacingError'
@@ -90,7 +89,6 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
       canManageWorkspace: Boolean(workspace.courseId && workspace.canManage && useAuth.getState().companies.find((company) => company.id === companyId)?.role === 'teacher') })
     useParticipants.getState().reset()
     useConversations.getState().reset()
-    useCanvas.getState().reset()
     useKnowledgeSources.getState().reset()
     useDocuments.getState().reset()
     // The directory enriches names/avatars; it is not an authorization gate.
@@ -118,7 +116,6 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     useParticipants.getState().reset()
     useConversations.getState().reset()
     useDocuments.getState().reset()
-    useCanvas.getState().reset()
     useKnowledgeSources.getState().reset()
   },
 
@@ -163,7 +160,6 @@ export async function selectLearningSpace(selection: LearningSpaceSelection): Pr
   useParticipants.getState().reset()
   useConversations.getState().reset()
   useDocuments.getState().reset()
-  useCanvas.getState().reset()
   useKnowledgeSources.getState().reset()
   useApp.setState({ selectedConversationId: null })
   useAuth.getState().setActiveCompany(selection.companyId)

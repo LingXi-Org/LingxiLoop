@@ -15,7 +15,7 @@ const projectReads: Record<string, PermissionAction> = {
 }
 const resourceReads: Record<string, [PermissionAction, PermissionResource['type']]> = {
   conversations: ['conversation:read', 'conversation'], documents: ['document:read', 'document'],
-  canvases: ['canvas:read', 'canvas'],
+  artifacts: ['artifact:read', 'artifact'],
   'knowledge-sources': ['knowledge:read', 'knowledge_source'],
   participants: ['agent:read', 'agent'], 'agent-routines': ['agent_approval:list', 'routine'],
 }

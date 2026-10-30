@@ -1,0 +1,463 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/JimLiu/baoyu-design",
+  "commit": "c15e76ef5134228d2bb5da35652d30d7d6b8a34d",
+  "files": [
+    {
+      "upstreamPath": "LICENSE",
+      "path": "LICENSE",
+      "bytes": 1071,
+      "sha256": "50426a43964d21a284c1f248a2b86aa239274d6e7619947ff166e0c8842d5fef",
+      "gitBlobSha1": "e3af54201da9e463acd6875dc9cb19044dd10a31",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/SKILL.md",
+      "path": "upstream/claude-design/SKILL.md",
+      "bytes": 20760,
+      "sha256": "fd0c1bc519512c8fbc0ef808ee4c7f2d488f974a619a209c006d774e97b52c89",
+      "gitBlobSha1": "d744812330b6146e827d36e1a7091c2de2790aac",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/brand-colors.md",
+      "path": "upstream/claude-design/artifact-type/reference/brand-colors.md",
+      "bytes": 2234,
+      "sha256": "f451f1e68b640f2bbe4d15420339ddcb7a84595cb7d12e888caa1a6bd5bd4b3a",
+      "gitBlobSha1": "b48cd9e4af5a05241d319033804fa49d6da3bd36",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/brand-typography.md",
+      "path": "upstream/claude-design/artifact-type/reference/brand-typography.md",
+      "bytes": 1534,
+      "sha256": "d3aa7f635e355d674680a54fe305d4efc66463c25ec04e0a1243f8937a9ece20",
+      "gitBlobSha1": "535c42ed2a2c275482d06f0de40806978e82373d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/craft.md",
+      "path": "upstream/claude-design/artifact-type/reference/craft.md",
+      "bytes": 15996,
+      "sha256": "73b64cfb2ffb7f0bded39bbd0a71c9795fe887764eb9d18edfa913f31f0ba538",
+      "gitBlobSha1": "70c196beae227effdefbe918086b712c4b00eeae",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/design-system-components.md",
+      "path": "upstream/claude-design/artifact-type/reference/design-system-components.md",
+      "bytes": 12348,
+      "sha256": "be6d36c90371cd28dccc509d4e1cf7bd65f1b8253de8cd4d084123303dcebdb7",
+      "gitBlobSha1": "87cbabd9506736ceb46c8da729f8c12f0f3b4ad4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/diagrams.md",
+      "path": "upstream/claude-design/artifact-type/reference/diagrams.md",
+      "bytes": 9638,
+      "sha256": "c5747e7ab8d8bd04e7ac484f10be02728b9f8f2df1c024024d1d218be9bb20a7",
+      "gitBlobSha1": "78efbba79fc13e3bd9309ba59a59e0d79ec61678",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/format.md",
+      "path": "upstream/claude-design/artifact-type/reference/format.md",
+      "bytes": 11295,
+      "sha256": "b509b31cc2db41a7ddc247f67b164c0f6f755e3f07d909ad3baf20a27718b771",
+      "gitBlobSha1": "9881d9ca1ea6bda903a439ff560e8c2e56956112",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/google-fonts-families.json",
+      "path": "upstream/claude-design/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c",
+      "gitBlobSha1": "2aa959ac0a488c31db82389a45a7db90c871d055",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/google-fonts-notices.json",
+      "path": "upstream/claude-design/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64",
+      "gitBlobSha1": "1b75ef5285e2ca2185216eac680b754196b147e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/google-fonts-reserved.json",
+      "path": "upstream/claude-design/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be",
+      "gitBlobSha1": "b93f1b5ef57ced57cc083519ebfa271afbf461df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/make-from-this.md",
+      "path": "upstream/claude-design/artifact-type/reference/make-from-this.md",
+      "bytes": 2014,
+      "sha256": "8089c8f1771fd14a5690f83112174af1fe42fdd2809709b03e4f0579ab94e645",
+      "gitBlobSha1": "b8dea8691051a4351c69a25ab200ba58cb800282",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/print.md",
+      "path": "upstream/claude-design/artifact-type/reference/print.md",
+      "bytes": 5443,
+      "sha256": "ed7b2b2c069c0fb164201afe15041158f2c5427bed2cb6c25a84876d51ac0253",
+      "gitBlobSha1": "e23f56d28c68c91bbb792c14a6005ce6516200eb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/questions.md",
+      "path": "upstream/claude-design/artifact-type/reference/questions.md",
+      "bytes": 4419,
+      "sha256": "34139a6b25e7b6048b8c98afbb7892116c9c3dc7369f22b5cf9c88d06cab108e",
+      "gitBlobSha1": "ce78ec13c24e197819d34d38a4354b4c22b366dc",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/view-state.md",
+      "path": "upstream/claude-design/artifact-type/reference/view-state.md",
+      "bytes": 8779,
+      "sha256": "2b40c2de9bda3130f15d5c4fb5ec8529224d2eea8bf7df6426205dd52bbcb87c",
+      "gitBlobSha1": "2328b53a840dd97aca5af63ce5aca4c9df1797c3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/artifact.mjs",
+      "path": "upstream/claude-design/scripts/artifact.mjs",
+      "bytes": 151877,
+      "sha256": "7f83ca215b6daaccc644dc7aadf06436e6a0cf00e93a4eb2f9667792ffd91a3c",
+      "gitBlobSha1": "9e500e47405f0a2da2f45ee1f64e648af66dfed8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/babel.min.js",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/babel.min.js",
+      "bytes": 3137752,
+      "sha256": "2623a9e22809915ce789b4461154e277ddce520d5a4320c14d44332a5d0dcea0",
+      "gitBlobSha1": "8830ea360e6bc7ec272015f86b113cda88f2765d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/dc-runtime.js",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/dc-runtime.js",
+      "bytes": 1156121,
+      "sha256": "429daefce5f0e0b90e96b99287d877ff610fdb5d744cfc33c350af79b33ce420",
+      "gitBlobSha1": "1bd63d2729beee5c8defdcf7cfd0995e70fafa65",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/fast-edit-worker.js",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/fast-edit-worker.js",
+      "bytes": 2401938,
+      "sha256": "005a173a50191e48252089e36d65c5003d2f2a8f0303f003a8891158e26a64b0",
+      "gitBlobSha1": "3503ab8fbccf0fe3e677b4f924d6bd2b9c447d40",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/reference/google-fonts-families.json",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c",
+      "gitBlobSha1": "2aa959ac0a488c31db82389a45a7db90c871d055",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/reference/google-fonts-notices.json",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64",
+      "gitBlobSha1": "1b75ef5285e2ca2185216eac680b754196b147e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/reference/google-fonts-reserved.json",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be",
+      "gitBlobSha1": "b93f1b5ef57ced57cc083519ebfa271afbf461df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/assets/anthropicons-fizzy-lake-c1fxtHDl.woff2",
+      "path": "upstream/claude-design/scripts/editor/assets/anthropicons-fizzy-lake-c1fxtHDl.woff2",
+      "bytes": 44224,
+      "sha256": "b11ef2e83c6031152aa63078133907be657a57d6f9932836c648874192fcd901",
+      "gitBlobSha1": "f17a18f8dbd43ad0cf0888bd0d75725f6fa3603b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/assets/index-DavTckY0.js",
+      "path": "upstream/claude-design/scripts/editor/assets/index-DavTckY0.js",
+      "bytes": 6303213,
+      "sha256": "f467444746d4a5cce78f3dc622ad7a8e9b1676ac1c860b2edb1e31eb63cb9bba",
+      "gitBlobSha1": "0062d9fdc8b44fac1e8c2d8627ce3b85a407bc79",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/assets/index-oDSQuawR.css",
+      "path": "upstream/claude-design/scripts/editor/assets/index-oDSQuawR.css",
+      "bytes": 535016,
+      "sha256": "7c17e8e83e69537bf2a7d1fb53ec9ed5744276be90c80438d5f663b7bcde2971",
+      "gitBlobSha1": "ad0fc0914276d6ea937d5d2ed9b398c9f9b19f3a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/index.html",
+      "path": "upstream/claude-design/scripts/editor/index.html",
+      "bytes": 2578,
+      "sha256": "6addcff84136152a1d440746e300bf6d0b9abba9b585506d9e307bc451cbb3eb",
+      "gitBlobSha1": "e35fbc30b1fbf00eca39f000b1f0a14f11be4e65",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/third-party-licenses.txt",
+      "path": "upstream/claude-design/scripts/editor/third-party-licenses.txt",
+      "bytes": 48330,
+      "sha256": "08463d65ff3633611f07edf6c54696b852b5eec716a55a812c30d4c79b7759f6",
+      "gitBlobSha1": "59740519d06de0ff6132d0c05cee052c5310ba49",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/server.mjs",
+      "path": "upstream/claude-design/scripts/server.mjs",
+      "bytes": 61469,
+      "sha256": "5370cdf58dec4e4aae052ee9a2bf6dce288b1cd2dc3681f21e294d2d4931b4a6",
+      "gitBlobSha1": "03d772b6ccc7c511c99d34d0343f68406393f7d9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/SKILL.md",
+      "path": "upstream/claude-slides/SKILL.md",
+      "bytes": 19592,
+      "sha256": "05dae466702e3f90b58e729918a029d85208950d18865cf9083bb1cd581abc95",
+      "gitBlobSha1": "b44baa462b73bea1b3192431d1ae25cc624396a7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/craft.md",
+      "path": "upstream/claude-slides/artifact-type/reference/craft.md",
+      "bytes": 11598,
+      "sha256": "49c67a742f35985216586de4cb1fe6c295b2616a1b42ab55ec9332870c715b8b",
+      "gitBlobSha1": "093e4c9fdb16c4aae43f22634321422fda8d5633",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/deck-files.md",
+      "path": "upstream/claude-slides/artifact-type/reference/deck-files.md",
+      "bytes": 16021,
+      "sha256": "b10bccc76c0420f994d8ebd6ce25b0da288825ae40afd63be96f5799220efba5",
+      "gitBlobSha1": "4d12a6d3532a9b62b514755e7a35b4877d737127",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/diagram-recipes.md",
+      "path": "upstream/claude-slides/artifact-type/reference/diagram-recipes.md",
+      "bytes": 14555,
+      "sha256": "9ff69058b0ef21c12cf4f89c1a5c434335cc3208b8742200e663686e425cc3ae",
+      "gitBlobSha1": "0f6b842cf256471a22a5389a3df655f35b12fe1d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/diagrams.md",
+      "path": "upstream/claude-slides/artifact-type/reference/diagrams.md",
+      "bytes": 15934,
+      "sha256": "b9ecc6d915bb76df18e8d57617a99b867225445504b74966632985236d8d5164",
+      "gitBlobSha1": "6e5299a7630421db4a00f42e6d59a65703f01547",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/fonts.md",
+      "path": "upstream/claude-slides/artifact-type/reference/fonts.md",
+      "bytes": 13656,
+      "sha256": "43aebf54206513e64d7bad93ba0ddaec69cb5c6b3fe1a7a53ce255173024ae59",
+      "gitBlobSha1": "89422c1fc02913cad1034eb0e1e5e6900cd5e062",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/format.md",
+      "path": "upstream/claude-slides/artifact-type/reference/format.md",
+      "bytes": 16247,
+      "sha256": "b39026f68e7cdd6cc6e32efa1777d52c26e12ea3fcfd16a9346ac1eca4261ebc",
+      "gitBlobSha1": "427010706a58567cf1b4f23fd1cbb547d13121bd",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/google-fonts-families.json",
+      "path": "upstream/claude-slides/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c",
+      "gitBlobSha1": "2aa959ac0a488c31db82389a45a7db90c871d055",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/google-fonts-notices.json",
+      "path": "upstream/claude-slides/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64",
+      "gitBlobSha1": "1b75ef5285e2ca2185216eac680b754196b147e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/google-fonts-reserved.json",
+      "path": "upstream/claude-slides/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be",
+      "gitBlobSha1": "b93f1b5ef57ced57cc083519ebfa271afbf461df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/images.md",
+      "path": "upstream/claude-slides/artifact-type/reference/images.md",
+      "bytes": 8005,
+      "sha256": "4f97d6a815c98e03629a1cf83d2f44e678a334e38bcf83275430e8fc18c81186",
+      "gitBlobSha1": "0b4c54141b9041b575e08a0f4223663378f0e993",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/layout.md",
+      "path": "upstream/claude-slides/artifact-type/reference/layout.md",
+      "bytes": 11145,
+      "sha256": "744fc7fd7b40db8b5b041358f2f2914741fe500e61808860c4103015a5c0e7ec",
+      "gitBlobSha1": "b74873b4ce67d7c266685294aa27c158726164c6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/photo-library.md",
+      "path": "upstream/claude-slides/artifact-type/reference/photo-library.md",
+      "bytes": 3412,
+      "sha256": "0442116083ca87d517da1ccf41b05c3e16c33169b5983293bc4a4a669cf7fd06",
+      "gitBlobSha1": "0c9880b2a1d113f3c6ba233e95a694ae89b0148d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/questions.md",
+      "path": "upstream/claude-slides/artifact-type/reference/questions.md",
+      "bytes": 4273,
+      "sha256": "70ba904f7bcb4084398cc74d22af1e2bb8cfd931163974f95266992a7a8ce3b7",
+      "gitBlobSha1": "ff71e6081a8d8e125c36db41ec833f724b600f25",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/styles.md",
+      "path": "upstream/claude-slides/artifact-type/reference/styles.md",
+      "bytes": 7994,
+      "sha256": "9bee74605ed03ea28f3c41c3d1fb65c9e959e1a78cc3bedc2773800cc55194c2",
+      "gitBlobSha1": "296e8b329a62e2539d69dbe9a6a0847adb2d270f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/view-state.md",
+      "path": "upstream/claude-slides/artifact-type/reference/view-state.md",
+      "bytes": 9654,
+      "sha256": "b81f6ddd448ca8fb052bafa7c2f646347d7ef5267bca428a18648623db1cac95",
+      "gitBlobSha1": "6be7a10a0bd081272a596ad4e2ad1c55dfe5d2ea",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/artifact.mjs",
+      "path": "upstream/claude-slides/scripts/artifact.mjs",
+      "bytes": 151877,
+      "sha256": "3497fced3773de5668cbd11ebaae0efe22125980a351ffa07accd6afe198014b",
+      "gitBlobSha1": "f7edb91d55cf2633c1d3460c1fac722ef5feef0c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/artifact-type/reference/google-fonts-families.json",
+      "path": "upstream/claude-slides/scripts/editor/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c",
+      "gitBlobSha1": "2aa959ac0a488c31db82389a45a7db90c871d055",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/artifact-type/reference/google-fonts-notices.json",
+      "path": "upstream/claude-slides/scripts/editor/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64",
+      "gitBlobSha1": "1b75ef5285e2ca2185216eac680b754196b147e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/artifact-type/reference/google-fonts-reserved.json",
+      "path": "upstream/claude-slides/scripts/editor/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be",
+      "gitBlobSha1": "b93f1b5ef57ced57cc083519ebfa271afbf461df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/anthropicons-fizzy-lake-yNspLiPZ.woff2",
+      "path": "upstream/claude-slides/scripts/editor/assets/anthropicons-fizzy-lake-yNspLiPZ.woff2",
+      "bytes": 81444,
+      "sha256": "2ca3f2a7ae15cb9c35ab91128fe7bd52b3fb5864058dab78443590eacf3e4923",
+      "gitBlobSha1": "044517971d0379a79576f7678085d93f12f09c87",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/index-BSIksl9u.js",
+      "path": "upstream/claude-slides/scripts/editor/assets/index-BSIksl9u.js",
+      "bytes": 4666628,
+      "sha256": "57b922483d900e57b3abf0287f9b5225c22b7c5a733006cf47047a16a1816a66",
+      "gitBlobSha1": "e392ad56d9d24eef64adf4a6e8603138bec77702",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/index-DooSdFer.css",
+      "path": "upstream/claude-slides/scripts/editor/assets/index-DooSdFer.css",
+      "bytes": 470617,
+      "sha256": "9a5a37d02d8cc037fabd46be0caf43678b55c42929ddbf60792a4d5ce01c8156",
+      "gitBlobSha1": "764ce23f3ba2808568a3dc64274fae317bd6046b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/woff2-decoder-BGQ3SeZf.js",
+      "path": "upstream/claude-slides/scripts/editor/assets/woff2-decoder-BGQ3SeZf.js",
+      "bytes": 305629,
+      "sha256": "29a2a06b3834c69def4677b9ee9e418d0f52246e561cc236f9084820b7cfc41e",
+      "gitBlobSha1": "970e619f22c41a3ffb6722e8a3d21c8e04ff4a14",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/index.html",
+      "path": "upstream/claude-slides/scripts/editor/index.html",
+      "bytes": 3185,
+      "sha256": "082ff43b98e8111fcdfa341e189d6aec2348e69865feabdd8561020115c278cd",
+      "gitBlobSha1": "922a8cb79302b95e5ba4d18f906309dd9141e69f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/node/compiler.cjs",
+      "path": "upstream/claude-slides/scripts/editor/node/compiler.cjs",
+      "bytes": 10264229,
+      "sha256": "bba806b77b93512546799620047c62dc77258c5da4c2fbd318ebe14a4f90e61e",
+      "gitBlobSha1": "e91f034aff35b4646839a854eb1dd1115b132428",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/node/third-party-licenses.txt",
+      "path": "upstream/claude-slides/scripts/editor/node/third-party-licenses.txt",
+      "bytes": 95020,
+      "sha256": "4bd79f56dc6660adf38a69bbffce120b65d2b5d8dc962d3950fb753a1419acef",
+      "gitBlobSha1": "80a910d3ed1907a23546cd8172bc702101862e86",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/third-party-licenses.txt",
+      "path": "upstream/claude-slides/scripts/editor/third-party-licenses.txt",
+      "bytes": 84401,
+      "sha256": "eee4c2d3a61a8b27676277a97585e6bcda0004e5e5071eaea707742348d8f013",
+      "gitBlobSha1": "ce95b355e98869f69239b8ceb1fba31b72530458",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/server.mjs",
+      "path": "upstream/claude-slides/scripts/server.mjs",
+      "bytes": 62317,
+      "sha256": "cb158fee32903e62a60b9a471d199a09a3407e6cb15a43686c495e41d7335902",
+      "gitBlobSha1": "e2ef90c65e8c7e43e57d93a089b939092b140fc7",
+      "gitMode": "100644"
+    }
+  ]
+}

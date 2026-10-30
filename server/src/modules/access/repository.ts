@@ -410,28 +410,17 @@ function resourceQuery(resource: PermissionResource): {
         params: [resource.id],
         lockTarget: 'calendar_events',
       }
-    case 'canvas':
+    case 'artifact':
       return {
-        sql: `SELECT canvas.company_id,canvas.project_id,canvas.created_by,
-                     conversation.members AS conversation_members,conversation.kind AS conversation_kind,conversation.leader_id,canvas.status AS resource_status
-                FROM canvases canvas
-                LEFT JOIN conversations conversation ON conversation.id=canvas.conversation_id
-                 AND conversation.company_id=canvas.company_id AND conversation.project_id=canvas.project_id
-               WHERE canvas.id=$1`,
+        sql: `SELECT artifact.company_id,artifact.project_id,artifact.created_by,
+                     conversation.members AS conversation_members,conversation.kind AS conversation_kind,conversation.leader_id,
+                     NULL::text AS resource_status
+                FROM artifacts artifact
+                LEFT JOIN conversations conversation ON conversation.id=artifact.conversation_id
+                 AND conversation.company_id=artifact.company_id AND conversation.project_id=artifact.project_id
+               WHERE artifact.id=$1`,
         params: [resource.id],
-        lockTarget: 'canvas',
-      }
-    case 'canvas_frame':
-      return {
-        sql: `SELECT canvas.company_id,canvas.project_id,frame.created_by,
-                     conversation.members AS conversation_members,conversation.kind AS conversation_kind,conversation.leader_id,canvas.status AS resource_status
-                FROM canvas_frames frame
-                JOIN canvases canvas ON canvas.id=frame.canvas_id
-                LEFT JOIN conversations conversation ON conversation.id=canvas.conversation_id
-                 AND conversation.company_id=canvas.company_id AND conversation.project_id=canvas.project_id
-               WHERE frame.id=$1`,
-        params: [resource.id],
-        lockTarget: 'frame',
+        lockTarget: 'artifact',
       }
     case 'agent':
       return {

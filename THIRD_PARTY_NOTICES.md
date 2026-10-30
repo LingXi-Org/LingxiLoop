@@ -76,21 +76,22 @@ The adapted source is retained in `admin/src/kuma-mieru.tsx` and
 `admin/src/kuma-mieru-chart.tsx` under the Mozilla Public License, Version 2.0.
 The required source-form notice and license URL are preserved in both files.
 
-## Excalidraw Canvas Fonts
+## baoyu-design Design and Slides
 
-LingxiLoop vendors the Assistant, Excalifont, and Xiaolai WOFF2 font assets
-used by its Canvas UI from Excalidraw commit
-`e1bb9ff8f8931e783c11d104abb8967ac6605c9a`:
-https://github.com/excalidraw/excalidraw/tree/e1bb9ff8f8931e783c11d104abb8967ac6605c9a/packages/excalidraw/fonts
+The Design and Slides artifacts vendor `skills/claude-design` and
+`skills/claude-slides` from
+[JimLiu/baoyu-design](https://github.com/JimLiu/baoyu-design/tree/c15e76ef5134228d2bb5da35652d30d7d6b8a34d)
+at commit `c15e76ef5134228d2bb5da35652d30d7d6b8a34d` (v2.1.0), byte for byte,
+under `third_party/baoyu-design/upstream/`. `third_party/baoyu-design/manifest.json`
+records every file's upstream path, size, SHA-256 and Git blob SHA-1.
 
-The font assets are stored under `src/features/canvas/fonts/Assistant`,
-`src/features/canvas/fonts/Excalifont`, and
-`src/features/canvas/fonts/Xiaolai`. Their local `@font-face` declarations
-are in `src/features/canvas/canvas-fonts.css`.
-
-All three font families are distributed under the SIL Open Font License,
-Version 1.1. The complete license text is retained at
-`src/features/canvas/fonts/OFL-1.1.txt`.
+The repository is MIT licensed, Copyright (c) Jim Liu; the license is retained at
+`third_party/baoyu-design/LICENSE`. Per upstream's own provenance notes, the
+prebuilt editor bundles, `artifact.mjs`, `compiler.cjs` and `dc-runtime.js` are
+built from its BaoCut sources, and the `artifact-type/reference/` pages follow the
+claude.ai Design and Slides artifact types. The editors' bundled dependencies
+keep their own licenses in `scripts/editor/third-party-licenses.txt` and
+`scripts/editor/node/third-party-licenses.txt` under each vendored skill.
 
 ## Bible Strong Avatar
 

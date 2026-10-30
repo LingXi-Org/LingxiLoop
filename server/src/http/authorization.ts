@@ -43,44 +43,29 @@ export async function requireGroupConversation(
   return { ...membership, role: 'member' }
 }
 
-export async function requireCanvasWorkspace(
+export async function requireArtifact(
   req: Request & AuthedRequest,
-  canvasId: string,
+  artifactId: string,
   writable = false,
 ) {
   const userId = requireAuth(req)
   const companyId = requestedCompanyId(req)
-  const context = await permissionService.assertCan({
+  await permissionService.assertCan({
     actorUserId: userId,
-    action: writable ? 'canvas:write' : 'canvas:read',
+    action: writable ? 'artifact:write' : 'artifact:read',
     companyId,
-    resource: { type: 'canvas', id: canvasId },
+    resource: { type: 'artifact', id: artifactId },
   })
-  const { rows } = await pool.query<{ conversation_id: string | null }>(
-    `SELECT conversation_id FROM canvases WHERE id=$1 AND company_id=$2`,
-    [canvasId, companyId],
+  const { rows } = await pool.query<{ kind: 'design' | 'slides'; project_id: string; conversation_id: string | null }>(
+    `SELECT kind,project_id,conversation_id FROM artifacts WHERE id=$1 AND company_id=$2`,
+    [artifactId, companyId],
   )
-  if (!rows[0]) throw new HttpError(404, 'canvas not found')
+  if (!rows[0]) throw new HttpError(404, 'artifact not found')
   return {
     userId,
     companyId,
-    projectId: context.project?.id ?? null,
+    kind: rows[0].kind,
+    projectId: rows[0].project_id,
     conversationId: rows[0].conversation_id,
   }
-}
-
-export async function requireCanvasFrameWorkspace(
-  req: Request & AuthedRequest,
-  frameId: string,
-  writable = false,
-) {
-  const userId = requireAuth(req)
-  const companyId = requestedCompanyId(req)
-  const context = await permissionService.assertCan({
-    actorUserId: userId,
-    action: writable ? 'canvas:write' : 'canvas:read',
-    companyId,
-    resource: { type: 'canvas_frame', id: frameId },
-  })
-  return { userId, companyId, projectId: context.project?.id ?? null }
 }

@@ -26,7 +26,7 @@ export async function loadLockedRuntimePackage(){
     .map(async p=>JSON.parse(await readFile(new URL(p,import.meta.url),'utf8')) as PackageFile))
   return assertLockedRuntimePackage(files)
 }
-export function assertFull54InstallBoundary(appliedCount:number,runtime:string=releaseVersions.runtime,targetProductVersion:54|55|56|57|58|59=54):void{
+export function assertFull54InstallBoundary(appliedCount:number,runtime:string=releaseVersions.runtime,targetProductVersion:54|55|56|57|58|59|60=54):void{
   const completeProduct=appliedCount>=54&&appliedCount<=targetProductVersion
   if(runtime!=='3.8.2'&&appliedCount!==0&&!completeProduct){
     throw new Error('partial product history requires its exact historical package before the separate runtime patch CAS')

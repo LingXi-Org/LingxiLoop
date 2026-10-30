@@ -564,7 +564,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
     ['server/src/__integration__/migration.test.ts', 'integration', ''],
     ['src/features/settings/SettingsDialog.tsx', 'web', 'server'],
     ['server/src/auth.ts', 'integration', 'server'],
-    ['src/lib/canvasLayout.ts', 'integration', 'server'],
+    ['third_party/baoyu-design/upstream/claude-slides/SKILL.md', 'integration', 'server'],
     // Server runtime imports must not silently receive only Web checks.
     ['src/lib/mentions.ts', 'integration', 'server'],
     ['src/lib/memoryActivity.ts', 'integration', 'server'],

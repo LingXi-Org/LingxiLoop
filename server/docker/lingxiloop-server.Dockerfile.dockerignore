@@ -37,6 +37,7 @@ shared/**
 !postcss.config.js
 !tailwind.config.ts
 !third_party/zcode/**
+!third_party/baoyu-design/**
 !third_party/assistant-ui/streaming-text/**
 !third_party/assistant-ui-elements/LICENSE
 !third_party/react-chat-elements/reply-message/LICENSE

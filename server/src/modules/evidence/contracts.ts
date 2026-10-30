@@ -8,7 +8,7 @@ export type EvidenceTargetKind =
   | 'DOMAIN_EVENT'
   | 'FORUM_SUBMISSION'
   | 'FORUM_FEEDBACK'
-  | 'CANVAS_REPORT'
+  | 'ARTIFACT_REPORT'
   | 'AUDIT_EVENT'
   | 'AGENT_RUN'
   | 'EVIDENCE_RECORD'

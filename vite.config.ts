@@ -97,6 +97,8 @@ export default defineConfig({
     proxy: {
       '/api':      { target: HTTP_TARGET, changeOrigin: true, secure: false },
       '/uploads':  { target: HTTP_TARGET, changeOrigin: true, secure: false },
+      '/artifact-editor': { target: HTTP_TARGET, changeOrigin: true, secure: false },
+      '/_blob':    { target: HTTP_TARGET, changeOrigin: true, secure: false },
       '/ws':       { target: WS_TARGET,   ws: true,           secure: false },
     },
   },

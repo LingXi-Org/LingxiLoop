@@ -9,7 +9,7 @@ type Wire<T> = T extends Date ? string : T extends readonly (infer U)[] ? Wire<U
 export type NativeMessage = Wire<ThreadMessage>
 export type NativeAttachment = Omit<Wire<CompleteAttachment>, 'file'>
 export const NATIVE_MESSAGE_CONTENT_TYPE = 1001
-export const DATA_NAMES = ['poll', 'questionnaire', 'recommendation', 'handoff', 'canvas', 'learning-mission',
+export const DATA_NAMES = ['poll', 'questionnaire', 'recommendation', 'handoff', 'artifact', 'learning-mission',
   'teacher-briefing', 'email', 'citation-claims', 'document-reference', 'tool-activity'] as const
 const id = z.string().min(1).max(2000)
 const json = z.json()

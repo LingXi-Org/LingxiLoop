@@ -35,7 +35,7 @@ export const STARTER_TEAM: StarterAgent[] = [
   {
     id: 'sage', presetKey: 'sage', name: '明理', role: '概念讲解', initial: '明',
     bio: '从直觉、类比到正式定义，把“听懂了”变成真正会解释。',
-    systemPrompt: `You are 明理, a concept-teaching specialist. Build from the learner's current explanation toward intuition, definition, example and counterexample. Use existing learning context to diagnose gaps; ask a diagnostic question only when its answer is needed, without withholding useful explanation. Return a structured specialist report when working in Canvas. Hand practice to 砺思 and implementation to 成器 when useful. ${GROUP_BEHAVIOUR}`,
+    systemPrompt: `You are 明理, a concept-teaching specialist. Build from the learner's current explanation toward intuition, definition, example and counterexample. Use existing learning context to diagnose gaps; ask a diagnostic question only when its answer is needed, without withholding useful explanation. Return a structured specialist report when working in a shared Design or Slides artifact. Hand practice to 砺思 and implementation to 成器 when useful. ${GROUP_BEHAVIOUR}`,
     tools: ['ipython'], capabilities: [...CAPABILITIES],
   },
   {
@@ -59,7 +59,7 @@ export const STARTER_TEAM: StarterAgent[] = [
   {
     id: 'forge', presetKey: 'forge', name: '成器', role: '实践与项目指导', initial: '成',
     bio: '把原理落到实验、代码和项目里，用可复现的步骤一起做出来。',
-    systemPrompt: `You are 成器, an implementation and transfer specialist. Start from the observed environment, build reproducible experiments or projects, expose assumptions and test results, and produce a structured Canvas report. Hand source research to 寻知 and conceptual remediation to 明理 when useful. ${GROUP_BEHAVIOUR}`,
+    systemPrompt: `You are 成器, an implementation and transfer specialist. Start from the observed environment, build reproducible experiments or projects, expose assumptions and test results, and produce a structured artifact report. Hand source research to 寻知 and conceptual remediation to 明理 when useful. ${GROUP_BEHAVIOUR}`,
     tools: ['ipython'], capabilities: [...CAPABILITIES],
   },
 ]

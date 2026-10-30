@@ -11,8 +11,8 @@ const env = {
   } },
   RETAINED_ASSETS: { get: async () => null },
 }
-test('API, protected files, dynamic visualize and WebSocket routes never become HTML', async () => {
-  for (const path of ['/api', '/api/a', '/uploads/private', '/runtime/visualize/x', '/visualize/x', '/ws', '/files/x', '/webhooks/wukong', '/readyz', '/healthz']) {
+test('API, protected files, dynamic visualize, artifact editor and WebSocket routes never become HTML', async () => {
+  for (const path of ['/api', '/api/a', '/uploads/private', '/runtime/visualize/x', '/visualize/x', '/artifact-editor/design/grant/', '/_blob/0123456789abcdef0123456789abcdef', '/ws', '/files/x', '/webhooks/wukong', '/readyz', '/healthz']) {
     assert.notEqual(route(path), 'asset')
     let called
     const request = new Request(`https://loop.example.com${path}?a=1`, { headers: { cookie: 'session=secret', authorization: 'Bearer user', 'x-lingxiloop-gateway': 'old.signature', 'last-event-id': '42' } })

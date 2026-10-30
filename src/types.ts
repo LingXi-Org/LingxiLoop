@@ -3,7 +3,7 @@ import type { ConversationRunSummary } from './lib/conversationRunSummary'
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
-export type AgentCapability = 'canvas' | 'web' | 'files' | 'documents' | 'knowledge' | 'learning' | 'teacher_admin' | 'routines'
+export type AgentCapability = 'design' | 'slides' | 'web' | 'files' | 'documents' | 'knowledge' | 'learning' | 'teacher_admin' | 'routines'
 
 export type ProjectKind = 'TEACHING' | 'INSTITUTIONAL_COURSE'
 export type ProjectStatus =
@@ -39,7 +39,7 @@ export interface WorkspaceSummary {
   conversationCount: number
   documentCount: number
   calendarEventCount: number
-  canvasCount: number
+  slidesCount: number
   canManage: boolean
 }
 
@@ -143,5 +143,5 @@ export interface PollTally {
 }
 
 export interface ViewKey {
-  view: 'conversations' | 'cases' | 'forum' | 'course-materials' | 'learning' | 'courses' | 'course-members' | 'course-status'
+  view: 'conversations' | 'cases' | 'slides' | 'forum' | 'course-materials' | 'learning' | 'courses' | 'course-members' | 'course-status'
 }

@@ -116,13 +116,13 @@ COPY server/assets ./server/assets
 COPY server/package.json server/package-lock.json ./server/
 COPY server/scripts/check-packaged-startup.mjs ./server/scripts/
 COPY shared/visualize-public-resources.ts ./shared/
-# Canvas service deliberately shares these dependency-free domain helpers with
+# The server deliberately shares these dependency-free domain helpers with
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into
 # this final stage).
 COPY src/types.ts ./src/types.ts
 COPY src/lib/conversationRunSummary.ts ./src/lib/
-COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
+COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
 COPY src/features/chat/visualize/zcode/shared/gen-ui ./src/features/chat/visualize/zcode/shared/gen-ui
 COPY src/features/chat/visualize/zcode/gen-ui/domain ./src/features/chat/visualize/zcode/gen-ui/domain
 COPY src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts ./src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts
@@ -138,6 +138,8 @@ COPY src/features/cases/cover-vm/svg.ts ./src/features/cases/cover-vm/svg.ts
 COPY third_party/zcode/skills/visualize ./third_party/zcode/skills/visualize
 COPY third_party/zcode/upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js ./third_party/zcode/upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js
 COPY third_party/zcode/LICENSE third_party/zcode/README.md third_party/zcode/manifest.json ./third_party/zcode/
+# Design and Slides serve the vendored editor pages and run the vendored checker unchanged.
+COPY third_party/baoyu-design ./third_party/baoyu-design
 COPY third_party/zcode/upstream/LICENSE ./third_party/zcode/upstream/LICENSE
 COPY --from=visualize-build /app/server/assets/visualize-runtime ./server/assets/visualize-runtime
 

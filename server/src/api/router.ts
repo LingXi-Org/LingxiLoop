@@ -5,8 +5,8 @@ import { authMiddleware } from '../auth.js'
 import { errorHandler } from '../http/errors.js'
 import { imRouter } from '../im/router.js'
 import { agentsRouter } from '../modules/agents/router.js'
+import { artifactsRouter } from '../modules/artifacts/router.js'
 import { adminRouter, companyAdminRouter, managementRouter, platformAdminCommandAuditMiddleware } from '../modules/platform-operations/public.js'
-import { canvasRouter } from '../modules/canvas/router.js'
 import { companiesRouter } from '../modules/companies/router.js'
 import { enterpriseRouter } from '../modules/enterprise/router.js'
 import { conversationsRouter } from '../modules/conversations/router.js'
@@ -39,7 +39,7 @@ api.use(companiesRouter)
 api.use(enterpriseRouter)
 api.use(projectsRouter)
 api.use(trustRouter)
-api.use(canvasRouter)
+api.use(artifactsRouter)
 api.use(learningRouter)
 api.use(knowledgeRouter)
 api.use(casesRouter)

@@ -11,7 +11,7 @@ import { create } from 'zustand'
 import type { Participant } from '@/types'
 import { load } from 'cheerio'
 import { TooltipProvider } from '@/components/ui/tooltip'
-mock.module('../../canvas/components/CanvasArtifactCard', { namedExports: { CanvasArtifactCard: () => null } })
+mock.module('../../artifacts/components/ArtifactChatCard', { namedExports: { ArtifactChatCard: () => null, openArtifact: () => undefined } })
 mock.module('../visualize/VisualizeText', { namedExports: { VisualizeText: ({ Text }: { Text: React.ComponentType }) => <Text /> } })
 mock.module('./ConversationComposer', { namedExports: { ConversationComposer: () => null } })
 mock.module('../runtime/transport', { namedExports: { ChatTransport: class {}, chatTransport: {}, filterThreadMessages: (messages: ThreadMessage[]) => messages } })
