@@ -1,5 +1,5 @@
 import { ApiError } from '@/api/core/http'
-import { registrationMessage } from '../../shared/registration'
+import { registrationMessage } from './contracts'
 
 export class RegistrationApiError extends ApiError {
   constructor(status: number, code?: string, requestId?: string, readonly retryAfter?: string) {

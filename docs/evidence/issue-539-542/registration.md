@@ -32,3 +32,7 @@ Independent read-only review found that AuthGate could display the generic HTTP 
 In existing controlled Worker/business logs, search the exact returned request ID for JSON events `registration.failure` and `registration.business`. Claim errors retain only `{requestId, stage, code, status, outcome}`; `outcome: unknown` means the remote result requires reconciliation, not that no business write occurred. If even the diagnostic D1 update fails, the controlled event still identifies the failed request; the next explicit attempt is recoverable from the original claim/intent.
 
 Real browser/mobile lifecycle acceptance, production delivery, real SMTP delivery and production deployment were **not run**. Page behavior has source/storage/API coverage and remains browser-unverified. No PR merge, approval or issue close is part of this delegated implementation.
+
+## PR CI follow-up
+
+The first PR CI run exposed a missing SPA image input: `shared/registration.ts` was outside the existing image COPY/context allowlist. The unchanged message contract now lives in the existing `src/auth/contracts.ts`, consumed by Web and Worker. The owning CI path filter includes that contract for control-plane checks, with a focused routing regression. No release entry, image configuration or credentials were changed. CI logs hosted on the job's external blob URL returned403; the identical local SPA contract test reproduced the omitted input, and GitHub job metadata independently identified the failing SPA check.

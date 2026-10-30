@@ -1,4 +1,4 @@
-import { registrationMessage } from '../../../shared/registration'
+import { registrationMessage } from '../../../src/auth/contracts'
 import { betterAuth } from 'better-auth'
 import { APIError } from 'better-auth/api'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'

@@ -1,4 +1,4 @@
-import { registrationMessage, registrationMessages } from '../../../shared/registration'
+import { registrationMessage, registrationMessages } from '@/auth/contracts'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { getActiveCompanyId, useAuth } from '@/stores/auth'
 import { lingxiApiFetch, mergeRequestHeaders } from '@/api/transport'
