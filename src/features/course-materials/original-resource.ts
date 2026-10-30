@@ -16,6 +16,7 @@ export interface OriginalResourceDiagnostic {
   stage: 'detail' | 'metadata' | 'url' | 'file_request' | 'file_response' | 'file_body'
   status?: number
 }
+export const fetchMaterialOriginal: OriginalResourceTransport['fetch'] = (url, init) => globalThis.fetch(url, init)
 export function formatOriginalResourceDiagnostic(event: OriginalResourceDiagnostic): string {
   return `[course-materials] original preview failed ${JSON.stringify({ stage: event.stage, ...(event.status === undefined ? {} : { status: event.status }) })}`
 }
