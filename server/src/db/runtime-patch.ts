@@ -27,7 +27,7 @@ export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,targ
  const product=target.productVersion
  check(product===54||product===57||product===58,'Unreviewed runtime patch product')
  if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.14','Product57 runtime patch is restricted to exact3.8.12 to3.8.14')
- if(product===58)check(source.runtime==='3.8.14'&&target.runtime==='3.8.15'||source.runtime==='3.8.15'&&target.runtime==='3.8.16'||source.runtime==='3.8.16'&&target.runtime==='3.8.17','Product58 runtime patch requires a reviewed exact3.8 maintenance pair')
+ if(product===58)check(source.runtime==='3.8.14'&&target.runtime==='3.8.15'||source.runtime==='3.8.15'&&target.runtime==='3.8.16'||source.runtime==='3.8.16'&&target.runtime==='3.8.17'||source.runtime==='3.8.17'&&target.runtime==='3.8.18','Product58 runtime patch requires a reviewed exact3.8 maintenance pair')
  for(const d of [source,target]){
   assertCurrentRuntimeProfile({runtime:d.runtime,schema:d.schema,controlPlane:d.protocol,publicText:currentPublicTextVersion(d.runtime),runTrace:1},d.schemaHash,d.runtime)
   check(d.migrations?.length===product,`Runtime patch requires complete product${product}`)

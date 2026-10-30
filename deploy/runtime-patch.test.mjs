@@ -2,9 +2,9 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assertRetirementReleaseAllowed, convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
 
-const fixture = () => {
-  const dependencies = { '@lyyzka/lingxios': '3.8.17' }
-  const pkg = { version: '3.8.17', integrity: 'sha512-' + 'A'.repeat(86) + '==', resolved: 'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.17/' + 'a'.repeat(40) }
+const fixture = (version = '3.8.17') => {
+  const dependencies = { '@lyyzka/lingxios': version }
+  const pkg = { version, integrity: 'sha512-' + 'A'.repeat(86) + '==', resolved: `https://npm.pkg.github.com/download/@lyyzka/lingxios/${version}/` + 'a'.repeat(40) }
   const lock = { packages: { '': { dependencies }, 'node_modules/@lyyzka/lingxios': pkg } }
   const files = { 'package.json': JSON.stringify({ dependencies }), 'server/package.json': JSON.stringify({ dependencies }), 'package-lock.json': JSON.stringify(lock), 'server/package-lock.json': JSON.stringify(lock) }
   const paths = Array.from({ length: 58 }, (_, i) => `server/src/db/migrations/${String(i + 1).padStart(4, '0')}_fixture.sql`)
@@ -44,6 +44,17 @@ test('product59 accepts only matching formal 3.8.18 receipts and still rejects u
   assert.throws(() => runtimePatchPlan(bad.read, bad.paths), /product59 requires/)
   f.files['server/package-lock.json'] = f.files['server/package-lock.json'].replace('sha512-', 'sha256-')
   assert.throws(() => runtimePatchPlan(f.read, f.paths), /receipts differ/)
+})
+test('next patch accepts only exact17 to18 receipts and remains on product58', () => {
+  const f = fixture('3.8.18'), plan = runtimePatchPlan(f.read, f.paths)
+  assert.equal(plan.source.runtime, '3.8.17'); assert.equal(plan.target.runtime, '3.8.18')
+  assert.equal(plan.target.productVersion, 58)
+  const wrong = fixture('3.8.18')
+  for (const file of ['package-lock.json', 'server/package-lock.json']) wrong.files[file] = wrong.files[file].replace('/3.8.18/', '/3.8.17/')
+  assert.throws(() => runtimePatchPlan(wrong.read, wrong.paths))
+  assert.throws(() => runtimePatchPlan(f.read, [...f.paths, 'server/src/db/migrations/0059_retire_presentation_generation.sql']))
+  const future = fixture('3.8.19')
+  assert.throws(() => runtimePatchPlan(future.read, future.paths), /unreviewed runtime transition/)
 })
 const run = async (fail, observed = { complete: false, state: 'source' }) => {
   const calls = [], actions = {}
