@@ -1,11 +1,17 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { loadMaterialOriginal, originalResourceErrorMessage } from './original-resource'
+import { fetchMaterialOriginal, formatOriginalResourceDiagnostic, loadMaterialOriginal, originalResourceErrorMessage } from './original-resource'
 import type { KnowledgeSource } from '../knowledge/contracts'
 
 const context = { userId: 'student', companyId: 'company', projectId: 'course', space: 'public' as const }
 const detail = { id: 'ready-pdf', title: 'lesson.pdf', mimeType: 'application/pdf', originalFileUrl: '/api/files?key=synthetic', capabilities: { canDownload: true } } as KnowledgeSource
 Object.assign(globalThis, { window: { location: { origin: 'https://app.test' } } })
+
+test('diagnostic log is a single string containing only safe stage and status', () => {
+  const event = { stage: 'file_response' as const, status: 404, url: 'https://private.test/?token=secret', body: 'private text' }
+  assert.equal(formatOriginalResourceDiagnostic(event), '[course-materials] original preview failed {"stage":"file_response","status":404}')
+  assert.equal(formatOriginalResourceDiagnostic({ stage: 'file_request' }), '[course-materials] original preview failed {"stage":"file_request"}')
+})
 
 test('original file reports denied, absent and service failures without exposing response bodies', async () => {
   for (const [status, expected] of [[403, /权限已失效/], [404, /不存在或已不可访问/], [503, /服务暂时不可用/]] as const) {
@@ -26,6 +32,34 @@ test('authorization retry refreshes detail and returns the actual file bytes', a
   })
   assert.equal(details, 2)
   assert.equal(await result.blob.text(), 'synthetic pdf')
+})
+
+test('global fetch keeps its receiver and preserves local and external request isolation', async () => {
+  const originalFetch = globalThis.fetch
+  const calls: RequestInit[] = []
+  const events: unknown[] = []
+  globalThis.fetch = async function (this: unknown, _url, init) {
+    if (this !== globalThis) throw new TypeError('wrong fetch receiver')
+    calls.push(init ?? {})
+    return new Response('synthetic pdf')
+  }
+  try {
+    await assert.rejects(loadMaterialOriginal(context, new AbortController().signal, {
+      detail: async () => detail, fetch: globalThis.fetch, isCurrent: () => true, diagnostic: event => events.push(event),
+    }), /wrong fetch receiver/)
+    assert.deepEqual(events, [{ stage: 'file_request' }])
+    for (const originalFileUrl of ['/api/files?key=synthetic', 'https://files.test/synthetic']) {
+      await loadMaterialOriginal(context, new AbortController().signal, {
+        detail: async () => ({ ...detail, originalFileUrl }), fetch: fetchMaterialOriginal, isCurrent: () => true,
+      })
+    }
+    assert.equal(calls[0].credentials, 'include')
+    assert.deepEqual(calls[0].headers, { 'x-company-id': 'company', 'x-project-id': 'course' })
+    assert.equal(calls[1].credentials, 'omit')
+    assert.equal(calls[1].headers, undefined)
+    assert.equal(calls[0].cache, 'no-store')
+    assert.equal(calls[1].cache, 'no-store')
+  } finally { globalThis.fetch = originalFetch }
 })
 
 test('detail service errors cannot expose their response text', async () => {
