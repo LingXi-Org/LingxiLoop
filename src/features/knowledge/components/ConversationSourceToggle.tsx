@@ -31,7 +31,7 @@ export function ConversationSourceToggle({ projectId, sourceId }: { projectId: s
   }, [conversation?.id, attempt])
 
   if (!conversation) return null
-  if (error) return <div role="alert" className="mt-4 flex items-center gap-3 text-sm text-destructive">{error}<Button variant="outline" size="sm" onClick={() => setAttempt((value) => value + 1)}>重试</Button></div>
+  if (error) return <div role="alert" className="mt-4 flex items-center gap-3 text-sm text-destructive">当前对话的资料设置：{error}<Button variant="outline" size="sm" onClick={() => setAttempt((value) => value + 1)}>重试</Button></div>
   if (!loaded || !source || source.status !== 'ready') return null
 
   const toggle = async (enabled: boolean) => {
