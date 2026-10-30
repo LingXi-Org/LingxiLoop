@@ -22,6 +22,12 @@ export type PdfPageProxy = {
 export type PdfDocumentProxy = {
   numPages: number;
   getPage: (pageNumber: number) => Promise<PdfPageProxy>;
+  loadingTask: PdfLoadingTask;
+};
+
+export type PdfLoadingTask = {
+  promise: Promise<PdfDocumentProxy>;
+  destroyed: boolean;
   destroy: () => Promise<void>;
 };
 
@@ -29,7 +35,5 @@ export type PdfjsModule = {
   GlobalWorkerOptions: {
     workerSrc?: string;
   };
-  getDocument: (source: string | { data: Uint8Array }) => {
-    promise: Promise<PdfDocumentProxy>;
-  };
+  getDocument: (source: string | { data: Uint8Array }) => PdfLoadingTask;
 };
