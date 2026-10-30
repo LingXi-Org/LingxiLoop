@@ -118,7 +118,7 @@ export const harnessApi = {
     method: 'POST', body: JSON.stringify({ clientMsgNo,requestVersion }) }),
   retryDelivery: (target: AgentRunTarget) => http(`${path(target)}/delivery/retry`,{ method: 'POST', body: JSON.stringify(thread(target)) }),
   reconcile: (target: AgentRunTarget, actionKey: string) => http(`${path(target)}/reconcile`,{ method: 'POST', body: JSON.stringify({ actionKey,...thread(target) }) }),
-  async download(target: AgentRunTarget, artifact: ResponseEnvelope['artifacts'][number]) {
+  async readArtifact(target: AgentRunTarget, artifact: ResponseEnvelope['artifacts'][number]) {
     const company = getActiveCompanyId(), workspace = getWorkspaceSession()
     const headers = new Headers()
     if (company) headers.set('x-company-id',company)
@@ -130,7 +130,11 @@ export const harnessApi = {
     const bytes = await response.arrayBuffer()
     const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(value => value.toString(16).padStart(2,'0')).join('')
     if (bytes.byteLength !== artifact.size || hash !== artifact.sha256.toLowerCase()) throw new Error('附件内容与交付清单不一致，请刷新后重试')
-    const url = URL.createObjectURL(new Blob([bytes],{ type: artifact.mime }))
+    return new Blob([bytes],{ type: artifact.mime })
+  },
+  async download(target: AgentRunTarget, artifact: ResponseEnvelope['artifacts'][number]) {
+    const blob = await harnessApi.readArtifact(target, artifact)
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url; link.download = artifact.path.split('/').at(-1) ?? '附件'; link.rel = 'noopener'
     document.body.append(link); link.click(); link.remove()

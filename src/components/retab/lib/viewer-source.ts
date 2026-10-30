@@ -5,6 +5,8 @@ export type FileCategory =
   | "pptx"
   | "csv"
   | "image"
+  | "audio"
+  | "video"
   | "markdown"
   | "html"
   | "email"
@@ -68,6 +70,9 @@ const EXTENSION_CATEGORY: Record<string, FileCategory> = {
   ico: "image",
   tif: "image",
   tiff: "image",
+  mp3: "audio", wav: "audio", ogg: "audio", m4a: "audio", flac: "audio",
+  mp4: "video", webm: "video", mov: "video", m4v: "video",
+  doc: "unsupported", ppt: "unsupported", zip: "unsupported", tar: "unsupported", gz: "unsupported",
   md: "markdown",
   markdown: "markdown",
   mdx: "text",
@@ -178,7 +183,7 @@ function categoryFromMime(mimeType: string): FileCategory | null {
   if (mime === "application/pdf") return "pdf";
   if (mime.includes("wordprocessingml")) return "docx";
   if (mime.includes("spreadsheet") || mime.includes("ms-excel")) return "xlsx";
-  if (mime.includes("presentation") || mime.includes("ms-powerpoint")) {
+  if (mime.includes("presentationml")) {
     return "pptx";
   }
   if (mime === "text/csv" || mime === "text/tab-separated-values") return "csv";
@@ -188,6 +193,8 @@ function categoryFromMime(mimeType: string): FileCategory | null {
     return "email";
   }
   if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("audio/")) return "audio";
+  if (mime.startsWith("video/")) return "video";
   if (mime === "application/json" || mime === "application/xml") return "text";
   if (mime.startsWith("text/")) return "text";
   return null;

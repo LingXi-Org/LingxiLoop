@@ -10,9 +10,10 @@ import { uploadsApi } from '@/features/platform/api'
 import { useAuth } from '@/stores/auth'
 import { userFacingError } from '@/lib/userFacingError'
 import type { ForumAttachment } from './contracts'
-import { attachmentKind, ForumAttachments, forumFileUrl } from './ForumAttachments'
+import { attachmentKind, ForumAttachments, ForumFileOpen, forumFileUrl } from './ForumAttachments'
 import { ContentEditor, type ContentDocument, type ContentEditorHandle } from '@/features/content-editor'
 import { ForumMaterials } from './ForumMaterials'
+import { ProtectedFileLinks } from '@/components/retab/ui/protected-file-links'
 
 
 export function ForumContentFields({ body, editorDocument, legacyParagraphs, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, compact = false, focusCanvas = false, nativeOnly = false, onFocus, editorRef }: {
@@ -84,7 +85,7 @@ export function ForumContentFields({ body, editorDocument, legacyParagraphs, set
     </div>
     {attachments.length > 0 && <ul className="space-y-1">{attachments.map((file, index) => <li key={file.key} className="flex min-w-0 flex-wrap items-center gap-1 rounded-lg border border-border/60 px-2 py-1 text-sm">
       {attachmentKind(file.name) === 'image' && <img src={forumFileUrl(file)} alt="" className="size-8 shrink-0 rounded object-cover" />}
-      <a href={forumFileUrl(file)} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 break-words text-primary underline underline-offset-4">{file.name}</a>
+      <ForumFileOpen file={file} className="min-w-0 flex-1 break-words text-start text-primary underline underline-offset-4">{file.name}</ForumFileOpen>
       {attachmentKind(file.name) === 'image' && <Tooltip><TooltipTrigger asChild><Button type="button" variant="ghost" size="icon-sm" disabled={disabled} aria-label={`插入正文：${file.name}`} onClick={() => editor.current?.insertImage(forumFileUrl(file), file.name)}><ImagePlusIcon /></Button></TooltipTrigger><TooltipContent>在光标处插入图片</TooltipContent></Tooltip>}
       <Button type="button" variant="ghost" size="icon-sm" disabled={disabled || index === 0} aria-label={`上移附件：${file.name}`} onClick={() => move(index, -1)}><ArrowUpIcon /></Button>
       <Button type="button" variant="ghost" size="icon-sm" disabled={disabled || index === attachments.length - 1} aria-label={`下移附件：${file.name}`} onClick={() => move(index, 1)}><ArrowDownIcon /></Button>
@@ -100,7 +101,7 @@ export function ForumContentFields({ body, editorDocument, legacyParagraphs, set
 }
 
 export function ForumFiles({ links, attachments }: { links: string[]; attachments: ForumAttachment[] }) {
-  return <div className="w-full min-w-0 space-y-2">{links.length > 0 && <ul className="space-y-1 text-sm">{links.map(link => <li key={link}><a className="break-all text-primary underline underline-offset-4 focus-visible:outline-2" href={link} target="_blank" rel="noopener noreferrer">{link}</a></li>)}</ul>}
+  return <div className="w-full min-w-0 space-y-2">{links.length > 0 && <ProtectedFileLinks><ul className="space-y-1 text-sm">{links.map(link => <li key={link}><a className="break-all text-primary underline underline-offset-4 focus-visible:outline-2" href={link} target="_blank" rel="noopener noreferrer">{link}</a></li>)}</ul></ProtectedFileLinks>}
     {attachments.length > 0 && <ForumAttachments attachments={attachments} />}
   </div>
 }

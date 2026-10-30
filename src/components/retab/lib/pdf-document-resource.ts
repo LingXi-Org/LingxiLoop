@@ -364,7 +364,7 @@ async function getPdfDocument(
   entry: DocumentCacheEntry,
 ): Promise<PdfDocumentProxy> {
   try {
-    const source = content.directUrl ?? { data: new Uint8Array(await waitForCancellation(content.readBytes({ signal: entry.abort.signal }), entry.abort.signal)) };
+    const source = content.directUrl ? { url: content.directUrl } : { data: new Uint8Array(await waitForCancellation(content.readBytes({ signal: entry.abort.signal }), entry.abort.signal)) };
     if (entry.abort.signal.aborted) throw new DOMException("PDF load cancelled", "AbortError");
     entry.task = pdfjs.getDocument(source);
     return await waitForPdfLoadingTask(entry.task, entry.abort.signal);
