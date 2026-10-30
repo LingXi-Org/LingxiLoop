@@ -222,6 +222,11 @@
   /* Leave room for tall fractions and the visible keyboard focus outline. */
   padding-block: 0.25em;
 }
+.im-markdown .katex-display > .katex {
+  /* Center short formulas; keep the start of an overflowing formula reachable. */
+  inline-size: max-content;
+  min-inline-size: 100%;
+}
 .im-markdown .katex-display:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: -2px;
