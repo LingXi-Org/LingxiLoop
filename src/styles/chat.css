@@ -4,26 +4,33 @@
 .chat-surface { background: var(--im-chat-surface, var(--panel)); color: var(--ink); }
 .chat-composer-shell { background: var(--panel); border-color: var(--hairline); }
 
-/* WhatsApp's classic default bubble palette; keep it separate from button colors.
- * Reference: https://chatmock.net/blog/messaging-app-ui-colour-reference */
+/* Message metrics adapted from open-claude-ui ChatMessageBubbles.tsx and
+ * cds-theme.css at c1f923ae0051a871941b98a0e2e3183a545e6a85 (MIT).
+ * LingxiLoop's semantic brand tokens supply both light and dark surfaces. */
+[data-lingxi-assistant-thread] {
+  --cds-assistant-message-text-inset: 4px;
+  --cds-assistant-message-text-stop: clamp(0px, (100% - 384px) * .175, 56px);
+}
 [data-message-bubble] {
-  --foreground: #111b21;
-  --muted-foreground: #52666b;
-  --color-foreground: var(--foreground);
-  --color-muted-foreground: var(--muted-foreground);
-  background-color: #ffffff;
-  color: var(--foreground);
-  outline: 1px solid rgb(0 0 0 / 6%);
-  outline-offset: -1px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
 }
-[data-message-bubble='user'] { background-color: #d9fdd3; }
-:root[data-theme='dark'] [data-message-bubble] {
-  --foreground: #e9edef;
-  --muted-foreground: #c3d1d7;
-  background-color: #202c33;
-  outline: none;
+[data-message-bubble='user'] {
+  background: color-mix(in srgb, var(--primary) 12%, var(--brand-bubble-surface));
+  color: var(--brand-bubble-ink);
 }
-:root[data-theme='dark'] [data-message-bubble='user'] { background-color: #005c4b; }
+[data-agent-body] {
+  padding-inline-start: var(--cds-assistant-message-text-inset, 4px);
+  padding-inline-end: var(--cds-assistant-message-text-stop, 0px);
+}
+[data-chat-message-content][data-sender-kind='agent'] {
+  row-gap: var(--reading-gap, 0.75rem);
+}
+@container chat (max-width: 24rem) {
+  [data-agent-body] { padding-inline: 0; }
+}
+
 [data-message-bubble] .im-markdown :where(a, [data-streamdown='link']) {
   color: inherit;
   text-decoration-color: currentColor;

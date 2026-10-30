@@ -1,8 +1,7 @@
 import { ThreadPrimitive, useAui, useAuiState } from '@assistant-ui/react'
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@/components/ui/button'
 import { useConversations } from '@/features/conversations/store'
@@ -18,6 +17,8 @@ import { ConversationMessage } from './ConversationMessage'
 import { ConversationQuestionIndex } from './ConversationQuestionIndex'
 import { ConversationStart } from './ConversationStart'
 import { createThreadChromeSelector } from './thread-chrome'
+import { ScrollFadeContainer } from './ScrollFadeContainer'
+import { useClaudeScrollPinning } from './useClaudeScrollPinning'
 
 const MESSAGE_COMPONENTS = { Message: ConversationMessage }
 
@@ -46,10 +47,8 @@ export function ConversationThread({
   const selectChrome = useMemo(() => createThreadChromeSelector(messageKey), [conversationId, threadRootId])
   const chrome = useAuiState(state => selectChrome(state.thread.messages))
   const readReceiptKey = chrome.readReceiptKey
-  const viewportRef = useRef<HTMLDivElement>(null)
-  const [readingHistory, setReadingHistory] = useState(false)
   const scope = `${conversationId}:${threadRootId ?? ''}`
-  useEffect(() => { setReadingHistory(false) }, [scope])
+  const { containerRef: viewportRef, showJumpControl, markUserInput, pauseFollowing, handleScroll, scrollToBottom } = useClaudeScrollPinning([scope])
   const entranceTail = useRef<{ scope: string; id: string | null } | null>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadingOlderRef = useRef(false)
@@ -88,13 +87,13 @@ export function ConversationThread({
     const preserveSelection = () => {
       const selection = window.getSelection()
       if (selection && !selection.isCollapsed && selection.rangeCount
-        && viewport.contains(selection.getRangeAt(0).commonAncestorContainer)) setReadingHistory(true)
+        && viewport.contains(selection.getRangeAt(0).commonAncestorContainer)) pauseFollowing()
     }
     const preserveDisclosure = (event: Event) => {
       if (event instanceof KeyboardEvent && !['Enter', ' '].includes(event.key)) return
       const target = event.target
       if (target instanceof Element && target.closest('[aria-expanded], summary')) {
-        flushSync(() => setReadingHistory(true))
+        pauseFollowing()
       }
     }
     document.addEventListener('selectionchange', preserveSelection)
@@ -105,11 +104,12 @@ export function ConversationThread({
       viewport.removeEventListener('click', preserveDisclosure, true)
       viewport.removeEventListener('keydown', preserveDisclosure, true)
     }
-  }, [scope])
+  }, [scope, pauseFollowing, viewportRef])
 
   const loadOlder = useCallback(async () => {
     const viewport = viewportRef.current
     if (!viewport || loadingOlderRef.current || !snapshot.hasMoreOlder) return true
+    pauseFollowing()
     loadingOlderRef.current = true
     const before = useChatThreadStore.getState().conversations[conversationId]?.messages
     try {
@@ -121,7 +121,7 @@ export function ConversationThread({
     }
     const after = useChatThreadStore.getState().conversations[conversationId]
     return !after?.hasMoreOlder || (after.messages[0] && messageKey(after.messages[0])) !== (before?.[0] && messageKey(before[0]))
-  }, [conversationId, snapshot.hasMoreOlder])
+  }, [conversationId, snapshot.hasMoreOlder, pauseFollowing, viewportRef])
 
   const navigateToQuestion = useCallback((id: string) => {
     const viewport = viewportRef.current
@@ -129,10 +129,10 @@ export function ConversationThread({
     if (!viewport || !element) return
     // Disable following before the first scroll frame, including when the last
     // question is too close to the bottom to move the viewport yet.
-    flushSync(() => setReadingHistory(true))
+    pauseFollowing()
     viewport.scrollTo({ top: viewport.scrollTop + element.getBoundingClientRect().top - viewport.getBoundingClientRect().top - 16,
       behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
-  }, [])
+  }, [pauseFollowing, viewportRef])
 
   useEffect(() => {
     const viewport = viewportRef.current
@@ -204,21 +204,41 @@ export function ConversationThread({
       if (branch) selectReplyBranch(branch.key, branch.ids[branch.clientIds.indexOf(pendingJumpId)], branch.ids.at(-1)!)
       return
     }
-    // Commit the primitive's paused state before moving the reading position.
-    if (!readingHistory) { setReadingHistory(true); return }
+    pauseFollowing()
     element.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
     element.classList.add('quote-jump-flash')
     window.setTimeout(() => element.classList.remove('quote-jump-flash'), 1_100)
     clearPendingJump()
-  }, [clearPendingJump, pendingJumpId, readingHistory, selectReplyBranch, chrome.branchKey, chrome.rows, aui])
+  }, [clearPendingJump, pendingJumpId, pauseFollowing, selectReplyBranch, chrome.branchKey, chrome.rows, aui])
 
   return (
     <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread data-density="comfortable">
       <div className="relative flex min-h-0 flex-1" data-chat-reading-area>
         <ConversationQuestionIndex key={scope} viewportRef={viewportRef} hasMoreOlder={!threadRootId && snapshot.hasMoreOlder}
-          isLoadingOlder={snapshot.isLoadingOlder} onLoadOlder={async () => { flushSync(() => setReadingHistory(true)); return loadOlder() }} onNavigate={navigateToQuestion} />
-        <ThreadPrimitive.Viewport ref={viewportRef} autoScroll={!readingHistory} scrollToBottomOnRunStart={false} data-chat-viewport className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
-          <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col pb-12">
+          isLoadingOlder={snapshot.isLoadingOlder} onLoadOlder={async () => { pauseFollowing(); return loadOlder() }} onNavigate={navigateToQuestion} />
+        {/* The hook owns bottom following. The primitive only retains history prepend
+            anchoring; disable every automatic bottom-scroll trigger. asChild
+            gives the mask and primitive the same scroll element. */}
+        <ThreadPrimitive.Viewport asChild autoScroll={false} scrollToBottomOnRunStart={false} scrollToBottomOnInitialize={false} scrollToBottomOnThreadSwitch={false}>
+        <ScrollFadeContainer ref={viewportRef} data-chat-viewport tabIndex={0} aria-label="对话消息" onScroll={handleScroll}
+          onFocusCapture={event => {
+            pauseFollowing()
+            if (event.target === event.currentTarget) return
+            const bounds = event.target.getBoundingClientRect(), viewport = event.currentTarget
+            const area = viewport.getBoundingClientRect()
+            const delta = bounds.top < area.top + 28 ? bounds.top - area.top - 28
+              : bounds.bottom > area.bottom - 28 ? bounds.bottom - area.bottom + 28 : 0
+            if (delta) viewport.scrollTo({ top: viewport.scrollTop + delta, behavior: 'auto' })
+          }}
+          onWheelCapture={markUserInput} onTouchStartCapture={markUserInput} onTouchMoveCapture={markUserInput}
+          onPointerDownCapture={event => { if (event.target === event.currentTarget) markUserInput() }}
+          onKeyDownCapture={event => {
+            if (!['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) return
+            if ((event.target as Element).closest('input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]')) return
+            markUserInput()
+          }}
+          className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
+          <div data-chat-message-column className="@container/chat flex min-h-full shrink-0 flex-col [--chat-extra-space:35vh] pb-[var(--chat-extra-space)]">
             {!threadRootId && (
               <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
                 {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
@@ -231,37 +251,15 @@ export function ConversationThread({
               onRetry={() => void chatTransport.reloadConversation(conversationId)} />
             <ConversationMessages rows={chrome.rows} />
           </div>
+        </ScrollFadeContainer>
         </ThreadPrimitive.Viewport>
-      {readingHistory ? <Button type="button" variant="outline" size="icon"
+      {showJumpControl && <Button type="button" variant="outline" size="icon"
         className="absolute bottom-3 end-5 z-30 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground md:size-9"
-        aria-label="滚动到底部" data-chat-scroll-bottom onClick={() => {
-          flushSync(() => setReadingHistory(false))
-          viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'instant' })
-          // An already-bottom viewport emits no scroll event; notify the
-          // primitive so its bottom-following intent is restored as well.
-          viewportRef.current?.dispatchEvent(new Event('scroll'))
-        }}><HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} /></Button> : <ThreadPrimitive.ScrollToBottom asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="absolute bottom-3 end-5 z-30 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:invisible md:size-9"
-          aria-label="滚动到底部"
-          data-chat-scroll-bottom
-        >
-          <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
-        </Button>
-      </ThreadPrimitive.ScrollToBottom>}
+        aria-label="滚动到底部" data-chat-scroll-bottom onClick={() => scrollToBottom(false)}>
+        <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
+      </Button>}
       </div>
       {!readOnly && <div className="relative z-20 shrink-0 bg-background pt-2 md:pt-4" data-chat-composer-bar>
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-full h-12 select-none" data-chat-composer-transition>
-          {[1, 2, 4, 8].map((blur, index) => <div key={blur} className="absolute inset-0" style={{
-            backdropFilter: `blur(${blur}px)`, WebkitBackdropFilter: `blur(${blur}px)`,
-            maskImage: `linear-gradient(to bottom, transparent ${index * 20}%, black 100%)`,
-            WebkitMaskImage: `linear-gradient(to bottom, transparent ${index * 20}%, black 100%)`,
-          }} />)}
-          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-        </div>
         <ConversationComposer
           conversationId={conversationId}
           compact={compact}
