@@ -52,3 +52,19 @@ test('failed preview reports only a bounded stage and HTTP status, never URLs or
   assert.deepEqual(requestEvents, [{ stage: 'file_request' }])
   assert.doesNotMatch(JSON.stringify(requestEvents), /synthetic-private/)
 })
+
+test('HTTP failure records status without its body, while cancellation emits no diagnostic', async () => {
+  const events: unknown[] = []
+  await assert.rejects(loadMaterialOriginal(context, new AbortController().signal, {
+    detail: async () => detail, fetch: async () => new Response('private object key', { status: 404 }),
+    isCurrent: () => true, diagnostic: event => events.push(event),
+  }))
+  assert.deepEqual(events, [{ stage: 'file_response', status: 404 }])
+  const aborted = new AbortController(); aborted.abort()
+  const canceled: unknown[] = []
+  await assert.rejects(loadMaterialOriginal(context, aborted.signal, {
+    detail: async () => detail, fetch: async () => assert.fail('unexpected fetch'),
+    isCurrent: () => true, diagnostic: event => canceled.push(event),
+  }))
+  assert.deepEqual(canceled, [])
+})
