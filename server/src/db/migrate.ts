@@ -4,7 +4,7 @@ import type { Pool, PoolClient } from 'pg'
 import { packageResources, releaseVersions } from '@lyyzka/lingxios'
 import { ensureEducationPlan } from '../modules/entitlements/public.js'
 import { pool } from './pool.js'
-import { assertMigrationRuntime, assertCurrentRuntimeProfile, assertFull54InstallBoundary, loadLockedRuntimePackage } from './runtime-profile.js'
+import { assertMigrationRuntime, assertCurrentRuntimeProfile, assertFull54InstallBoundary, assertRetirementRuntimeVersion, loadLockedRuntimePackage } from './runtime-profile.js'
 import { assertDevelopmentQualification, type DevelopmentRuntimeQualification } from './development-runtime-qualification.js'
 
 const MIGRATIONS_URL = new URL('./migrations/', import.meta.url)
@@ -201,6 +201,7 @@ export async function migrateDatabase(
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   // Product55/56/57/58/59 change product state only, on the same formally locked runtime.
   const full59=migrations.length===59&&migrations[58]?.name==='retire_presentation_generation'
+  if (full59) assertRetirementRuntimeVersion(releaseVersions.runtime)
   const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'
@@ -261,6 +262,7 @@ export async function migrateDatabase(
         if (migration.version===54 && migration.name==='run_presentation_contract') {
           await assertRuntimeCurrent(client,14,'3.8.2')
         }
+        if (migration.version===59 && migration.name==='retire_presentation_generation') assertRetirementRuntimeVersion(releaseVersions.runtime)
         if (migration.version===55 && migration.name==='case_covers'
           || migration.version===56 && migration.name==='homework_validation_status'
           || migration.version===57 && migration.name==='case_soft_delete'
@@ -358,6 +360,7 @@ export async function assertMigrationsCurrent(
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   // Product55/56/57/58/59 change product state only, on the same formally locked runtime.
   const full59=migrations.length===59&&migrations[58]?.name==='retire_presentation_generation'
+  if (full59) assertRetirementRuntimeVersion(releaseVersions.runtime)
   const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'

@@ -11,6 +11,9 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 export function runtimePatchPlan(read, migrationPaths) {
   const json = path => JSON.parse(read(path))
   const manifest = json('package.json')
+  const paths = migrationPaths.toSorted()
+  const retirement = paths.length === 59 && paths.at(-1) === 'server/src/db/migrations/0059_retire_presentation_generation.sql'
+  if (retirement) assert.equal(manifest.dependencies?.[PACKAGE], TARGET, 'product59 requires the verified exact runtime')
   if (manifest.dependencies?.[PACKAGE] === SOURCE) return null
   assert.equal(manifest.dependencies?.[PACKAGE], TARGET, 'unreviewed runtime transition; only current3.8.16 or reviewed3.8.17 is supported')
   const server = json('server/package.json'), lock = json('package-lock.json'), serverLock = json('server/package-lock.json')
@@ -20,8 +23,6 @@ export function runtimePatchPlan(read, migrationPaths) {
   for (const key of ['version', 'integrity', 'resolved']) assert.equal(other?.[key], pkg?.[key], 'root/server formal package receipts differ')
   assert.match(pkg.integrity, /^sha512-[A-Za-z0-9+/]{86}==$/)
   assert.match(pkg.resolved, /^https:\/\/npm\.pkg\.github\.com\/download\/@lyyzka\/lingxios\/3\.8\.17\/[a-f0-9]{40}$/)
-  const paths = migrationPaths.toSorted()
-  const retirement = paths.length === 59 && paths.at(-1) === 'server/src/db/migrations/0059_retire_presentation_generation.sql'
   assert.ok(paths.length === 58 || retirement, 'runtime patch requires complete product58 or reviewed product59 retirement')
   const migrations = paths.map((path, index) => {
     const match = /\/(\d{4})_([a-z0-9_]+)\.sql$/.exec(path)

@@ -6,12 +6,16 @@ import { join, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { after, test } from 'node:test'
 import { Pool } from 'pg'
+import { releaseVersions } from '@lyyzka/lingxios'
+import { assertRetirementRuntimeVersion } from '../db/runtime-profile.js'
 import { assertMigrationsCurrent, migrateDatabase } from '../db/migrate.js'
 import { pool } from '../db/pool.js'
 
 after(() => pool.end())
 
 test('58 to59 removes generated tables and typed outputs while retaining shared rows and a second migration is a no-op', async () => {
+  for (const version of ['3.8.16','3.8.19','4.0.0-slim.0']) assert.throws(() => assertRetirementRuntimeVersion(version))
+  assert.doesNotThrow(() => assertRetirementRuntimeVersion(releaseVersions.runtime))
   const source = new URL(process.env.INTEGRATION_DATABASE_URL!)
   assert.ok(['127.0.0.1', 'localhost', '[::1]'].includes(source.hostname))
   assert.match(source.pathname, /(?:^|_)test(?:_|$)/)
@@ -63,7 +67,7 @@ test('58 to59 removes generated tables and typed outputs while retaining shared 
     await database.query("UPDATE lingxios_installation SET runtime_version='3.8.16'")
     await assert.rejects(migrateDatabase(database), (error: unknown) => error instanceof Error && error.cause instanceof Error && /mismatch/.test(error.cause.message))
     assert.equal((await database.query('SELECT COUNT(*) AS count FROM presentations')).rows[0].count, '1', 'obsolete runtime cannot trigger retirement DDL')
-    await database.query("UPDATE lingxios_installation SET runtime_version='3.8.17'")
+    await database.query('UPDATE lingxios_installation SET runtime_version=$1', [releaseVersions.runtime])
     // An unexpected shared FK aborts instead of cascading into another owner.
     await database.query("CREATE TABLE public.synthetic_shared_refs(id text PRIMARY KEY,deck_id text REFERENCES public.presentations(id)); INSERT INTO synthetic_shared_refs VALUES('shared583','deck583')")
     await assert.rejects(migrateDatabase(database), (error: unknown) => error instanceof Error && error.cause instanceof Error && /depend/.test(error.cause.message))

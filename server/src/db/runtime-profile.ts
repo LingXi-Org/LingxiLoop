@@ -33,6 +33,11 @@ export function assertFull54InstallBoundary(appliedCount:number,runtime:string=r
   }
 }
 
+/** Retirement is limited to explicitly reviewed formal runtime versions. */
+export function assertRetirementRuntimeVersion(runtime:string):void {
+  if (runtime !== '3.8.17') throw new Error('product59 requires a verified formal retirement runtime')
+}
+
 /** Full54 current execution uses the exact installed/locked package, not a historical migration version. */
 export function currentPublicTextVersion(runtime:string):2|3 {
   const patch=/^3\.8\.(0|[1-9]\d*)$/.exec(runtime)
