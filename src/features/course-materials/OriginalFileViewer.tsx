@@ -26,6 +26,7 @@ export default function OriginalFileViewer({ source, context }: { source: Knowle
       detail: signal => http<KnowledgeSource>(`/projects/${encodeURIComponent(context.projectId)}/sources/${encodeURIComponent(source.id)}`, {
         signal, headers: { 'x-company-id': context.companyId, 'x-project-id': context.projectId },
       }), fetch, isCurrent: current,
+      diagnostic: event => console.warn('[course-materials] original preview failed', event),
     }).then(setResource).catch(reason => { if (!controller.signal.aborted) setError(originalResourceErrorMessage(reason)) })
     return () => { controller.abort(); unsubscribe() }
   }, [context.companyId, context.userId, context.projectId, context.space, source.id, source.updatedAt, attempt])
