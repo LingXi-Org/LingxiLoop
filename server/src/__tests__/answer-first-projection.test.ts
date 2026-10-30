@@ -195,7 +195,8 @@ test('failed v3 corrections retain only the latest unsealed draft, preserving se
   const last = body.at(-1)
   assert.equal(last?.type === 'text' && last.status?.type, 'incomplete')
   assert.equal(last?.type === 'text' && last.status?.type === 'incomplete' && last.status.reason, 'error')
-  assert.deepEqual(last?.providerMetadata?.lingxiloop?.answerSegment, {
+  assert.ok(last?.type === 'text')
+  assert.deepEqual(last.providerMetadata?.lingxiloop?.answerSegment, {
     version: 3, messageId: 'answer:run:v1', segmentId: 'part-3', partId: 'part-3',
     start: parts.slice(0, 3).reduce((length, part) => length + part.text.length, 0),
     end: parts.reduce((length, part) => length + part.text.length, 0),
