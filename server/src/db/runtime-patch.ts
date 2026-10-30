@@ -27,7 +27,7 @@ export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,targ
  const product=target.productVersion
  check(product===54||product===57||product===58,'Unreviewed runtime patch product')
  if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.14','Product57 runtime patch is restricted to exact3.8.12 to3.8.14')
- if(product===58)check(source.runtime==='3.8.14'&&target.runtime==='3.8.15'||source.runtime==='3.8.15'&&target.runtime==='3.8.16','Product58 runtime patch is restricted to exact3.8.14 to3.8.15 or3.8.15 to3.8.16')
+ if(product===58)check(source.runtime==='3.8.14'&&target.runtime==='3.8.15'||source.runtime==='3.8.15'&&target.runtime==='3.8.16'||source.runtime==='3.8.16'&&target.runtime==='3.8.17','Product58 runtime patch requires a reviewed exact3.8 maintenance pair')
  for(const d of [source,target]){
   assertCurrentRuntimeProfile({runtime:d.runtime,schema:d.schema,controlPlane:d.protocol,publicText:currentPublicTextVersion(d.runtime),runTrace:1},d.schemaHash,d.runtime)
   check(d.migrations?.length===product,`Runtime patch requires complete product${product}`)
@@ -51,9 +51,9 @@ const BARRIER_SQL=`SELECT
  (SELECT count(*)::int FROM lingxios.agent_work_items w WHERE w.status IN ('queued','leased','waiting')
   AND ($1::boolean OR w.kind IN ('turn','resume','routine','teacher_digest')) AND EXISTS(SELECT 1 FROM lingxios.agent_steps s
    WHERE s.work_id=w.id AND s.kind IN ('runtime.binding','runtime.checkpoint'))) AS "incompatibleRuns"`
-export async function readRuntimePatchBarrier(database:Pick<PoolClient,'query'>,exclusiveClients=false){
+export async function readRuntimePatchBarrier(database:Pick<PoolClient,'query'>,exclusiveClients=false,allKinds=exclusiveClients){
  // Product57 also covers bound native job kinds beyond the historical IM list.
- const result=(await database.query(BARRIER_SQL,[exclusiveClients])).rows[0] as Record<string,unknown>
+ const result=(await database.query(BARRIER_SQL,[allKinds])).rows[0] as Record<string,unknown>
  check(result?.visible===true,'Runtime patch lease visibility unavailable')
  const counters=['prepared','liveWork','liveSession','liveAttempts','liveCapture','liveOutbox','incompatibleRuns'] as const
  check(counters.every(k=>Number.isSafeInteger(result[k])&&Number(result[k])>=0),'Runtime patch barrier unavailable')
@@ -131,6 +131,25 @@ async function assertPublishedPatch(target:PublishedRuntimePatchDescriptor){
 export async function applyPublishedRuntimePatch(database:Pool,source:RuntimePatchDescriptor,target:PublishedRuntimePatchDescriptor){
  await assertPublishedPatch(target)
  return compareAndSwapRuntimeProvenance(database,source,target)
+}
+/** Before downtime, prove the exact source and reject retained or active work.
+ * An already installed target needs ordinary convergence, not another CAS. */
+export async function preflightPublishedRuntimePatch(database:Pool,source:RuntimePatchDescriptor,target:PublishedRuntimePatchDescriptor){
+ await assertPublishedPatch(target)
+ const tables=await patchResources(source,target),client=await database.connect()
+ try{
+  await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
+  await client.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='5s'; SET LOCAL idle_in_transaction_session_timeout='15s'")
+  const runtime=await installedPatchState(client,target,tables)
+  check(runtime===source.runtime||runtime===target.runtime,'Runtime patch preflight found unknown provenance')
+  if(runtime===source.runtime){
+   const barrier=await readRuntimePatchBarrier(client,false,true)
+   check(Object.values(barrier).every(n=>n===0),'Runtime patch preflight requires no live or incompatible resumable work')
+  }
+  await client.query('COMMIT')
+  return {complete:runtime===target.runtime,state:runtime===target.runtime?'target':'source',source:source.runtime,target:target.runtime,schema:14,product:target.productVersion,
+   planHash:runtimePatchPlanHash(source,target),observationOnly:true}
+ }catch(error){await client.query('ROLLBACK').catch(()=>{});throw error}finally{client.release()}
 }
 /** The host binds this read-only result to its existing manifest/phase intent.
  * A matching target proves the requested state, not which process committed it.
