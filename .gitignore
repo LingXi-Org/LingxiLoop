@@ -47,6 +47,7 @@ server/uploads/
 
 # Rebuilt from the pinned ZCode source during prebuild.
 /server/assets/visualize-runtime/
+/server/assets/slides-editor/
 
 # Backup files left by one-off scripts (e.g. icon regeneration)
 *.prev.png

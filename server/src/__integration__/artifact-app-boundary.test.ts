@@ -5,6 +5,7 @@ import { pool } from '../db/pool.js'
 import { CH_ARTIFACTS, sub } from '../redis.js'
 import { publishArtifactEvent } from '../modules/artifacts/events.js'
 import { artifactBlobRouter, artifactEditorRouter } from '../modules/artifacts/index.js'
+import { inlineScriptHashes } from '../modules/artifacts/kinds.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 // Full HTTP router + PostgreSQL/Redis for the product API and the vendored editor's
@@ -89,6 +90,23 @@ test('project Slides decks are listed, created with their index, renamed and del
   assert.ok(deck.files['project/deck.json'])
   const listed = await (await api(`/projects/${projectId}/slides`)).json() as { id: string; title: string }[]
   assert.deepEqual(listed.map(item => item.id), [deck.id])
+  const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string }
+  const page = await fetch(origin + new URL(grant.url, origin).pathname)
+  assert.equal(page.status, 200)
+  const html = await page.text()
+  assert.match(html, /lang="zh-CN"/)
+  const csp = page.headers.get('content-security-policy') ?? ''
+  assert.match(csp, /^sandbox allow-scripts allow-downloads allow-popups allow-modals;/)
+  for (const hash of inlineScriptHashes(html)) assert.ok(csp.includes(`'${hash}'`))
+  const assetPath = /src="(\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js)"/.exec(html)?.[1]
+  assert.ok(assetPath)
+  const asset = await fetch(origin + assetPath)
+  assert.equal(asset.status, 200)
+  assert.match(asset.headers.get('cache-control') ?? '', /max-age=31536000, immutable/)
+  assert.equal(asset.headers.get('access-control-allow-origin'), '*')
+  for (const path of ['/artifact-editor/slides-assets/project/deck.json', '/artifact-editor/slides-assets/node/compiler.cjs', '/artifact-editor/slides/invalid/project/deck.json']) {
+    assert.equal((await fetch(origin + path)).status, 404)
+  }
   assert.equal((await (await api(`/artifacts/${deck.id}`, 'PATCH', { title: 'Final deck' })).json() as { title: string }).title, 'Final deck')
   assert.equal((await api(`/artifacts/${deck.id}`, 'DELETE')).status, 200)
   assert.equal((await api(`/artifacts/${deck.id}`)).status, 404)

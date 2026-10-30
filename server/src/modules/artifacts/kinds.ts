@@ -117,10 +117,10 @@ export const ARTIFACT_KIND_DEFINITIONS: Record<ArtifactKind, ArtifactKindDefinit
      */
     pageScriptSrc: html => `script-src 'self' 'unsafe-eval' ${inlineScriptHashes(html).map(hash => `'${hash}'`).join(' ')}`.trim(),
     commentLocation(input, index, exists) {
-      const match = /^(?:Area on slide|Slide) (\d+)(?: #([A-Za-z0-9_.-]+))?/.exec(input.detail ?? input.label)
+      const match = /^(?:(?:Area on slide|Slide|幻灯片) (\d+)|第\s*(\d+)\s*页)(?: #([A-Za-z0-9_.-]+))?/.exec(input.detail ?? input.label)
       if (!match) return { file: 'project/deck.json' }
-      const slide = Number(match[1])
-      let slideId = match[2]
+      const slide = Number(match[1] ?? match[2])
+      let slideId = match[3]
       if (!slideId) {
         const order = record(index)?.order
         if (Array.isArray(order) && typeof order[slide - 1] === 'string') slideId = order[slide - 1] as string

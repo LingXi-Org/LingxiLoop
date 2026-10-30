@@ -101,6 +101,16 @@ test('comment threads follow the upstream agent hand-off lifecycle', () => {
   assert.equal(thread.agent?.status, 'pending')
 })
 
+test('Chinese and existing English slide comments keep the same file location', () => {
+  const index = { order: ['cover', 'plan'] }
+  const exists = (file: string) => file === 'project/slides/plan.html'
+  for (const label of ['Slide 2 #plan', 'Area on slide 2 #plan', '幻灯片 2 #plan', '第 2 页 #plan', '第 2 页']) {
+    assert.deepEqual(ARTIFACT_KIND_DEFINITIONS.slides.commentLocation({ label }, index, exists), {
+      file: 'project/slides/plan.html', slide: 2, slideId: 'plan',
+    })
+  }
+})
+
 test('every vendored upstream file keeps its pinned bytes', () => {
   const root = resolve(BAOYU_DESIGN_ROOT, '..')
   const manifest = JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8')) as { commit: string; files: { path: string; bytes: number; sha256: string }[] }
