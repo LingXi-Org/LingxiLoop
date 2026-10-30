@@ -1,7 +1,7 @@
 // Fixed reviewed product57/58 maintenance entrypoint. No dotenv, migrations, DDL or product imports.
 import {resolve} from 'node:path'
 import {pathToFileURL} from 'node:url'
-import {applyPublishedRuntimePatch,assertRuntimePatchDescriptors,observePublishedRuntimePatch,runtimePatchPlanHash} from './db/runtime-patch.js'
+import {applyPublishedRuntimePatch,assertRuntimePatchDescriptors,observePublishedRuntimePatch,preflightPublishedRuntimePatch,runtimePatchPlanHash} from './db/runtime-patch.js'
 import type {PublishedRuntimePatchDescriptor,RuntimePatchDescriptor} from './db/runtime-patch.js'
 
 const MAX_INPUT=64*1024
@@ -22,7 +22,7 @@ export function parseRuntimePatchInput(raw:string):{source:RuntimePatchDescripto
 }
 async function main(){
  const [action,...extra]=process.argv.slice(2)
- check((action==='apply'||action==='observe')&&extra.length===0)
+ check((action==='apply'||action==='observe'||action==='preflight')&&extra.length===0)
  let raw='',bytes=0
  for await(const chunk of process.stdin){bytes+=Buffer.byteLength(chunk);check(bytes<=MAX_INPUT);raw+=chunk.toString()}
  const {source,target}=parseRuntimePatchInput(raw)
@@ -33,7 +33,7 @@ async function main(){
  const database=new Pool({connectionString:connection,max:1,application_name:'lingxi-release-runtime-patch'+target.productVersion,connectionTimeoutMillis:5000,idleTimeoutMillis:1000})
  let result,failure:unknown,failed=false
  try{
-  result=action==='observe'?await observePublishedRuntimePatch(database,source,target):
+  result=action==='preflight'?await preflightPublishedRuntimePatch(database,source,target):action==='observe'?await observePublishedRuntimePatch(database,source,target):
    {complete:true,...await applyPublishedRuntimePatch(database,source,target),planHash:runtimePatchPlanHash(source,target)}
  }catch(error){failed=true;failure=error}
  try{await database.end()}catch{failed=true;failure=Object.assign(Error('Runtime patch connection close unconfirmed'),{uncertain:action==='apply'})}

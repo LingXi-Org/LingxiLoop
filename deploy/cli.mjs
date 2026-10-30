@@ -18,6 +18,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { classifyPaths, workflowFilters } from '../scripts/ci-scope-paths.mjs'
 import { IMAGES, imageTag } from '../scripts/image-tag.mjs'
+import { convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)))
 const SIGILLO = ['-p', '01M1TZH9C21C1A9PFAR8E41553', '-c', 'prod']
@@ -33,22 +34,33 @@ async function main(command, requested) {
   const head = git('rev-parse', 'HEAD').trim()
   const images = Object.fromEntries(IMAGES.map(image => [`${image.name.toUpperCase()}_IMAGE`, { ...image, tag: imageTag(image) }]))
   const stacks = selectStacks(requested)
+  const patch = runtimePatchPlan(path => git('show', `HEAD:${path}`), git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean))
   const ssh = sshSession()
+  const deployServers = () => patch && stacks.includes('app-a') ? runtimePatch(ssh, patch, images, () => servers(ssh, stacks, images)) : servers(ssh, stacks, images)
   try {
     const steps = {
       images: () => ensureImages(head, images),
       pull: () => pull(ssh, stacks, images),
-      servers: () => servers(ssh, stacks, images),
+      servers: deployServers,
+      'runtime-observe': () => {
+        if (!patch) throw new Error('runtime observation requires the exact reviewed target package')
+        return patchEntry(ssh, patch, images, 'observe').then(result => console.log(JSON.stringify(result)))
+      },
+      'runtime-preflight': () => {
+        if (!patch) throw new Error('runtime preflight requires the exact reviewed target package')
+        return patchEntry(ssh, patch, images, 'preflight').then(result => console.log(JSON.stringify(result)))
+      },
       workers: () => workers(),
       status: () => status(ssh),
       plan: async () => { await pull(ssh, stacks, images); await plan(ssh, stacks, images) },
       up: async () => {
         await ensureImages(head, images)
         await pull(ssh, stacks, images)
-        await Promise.all([servers(ssh, stacks, images), workers()])
+        if (patch) { await deployServers(); await workers() }
+        else await Promise.all([deployServers(), workers()])
       },
     }
-    if (!steps[command]) throw new Error(`unknown command ${command}; use up|images|pull|plan|servers|workers|status`)
+    if (!steps[command]) throw new Error(`unknown command ${command}; use up|images|pull|plan|servers|workers|status|runtime-preflight|runtime-observe`)
     await steps[command]()
   } finally { ssh.close() }
 }
@@ -110,17 +122,77 @@ function sshSession() {
   const args = ['-i', key.replaceAll('\\', '/'), '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'LogLevel=ERROR', '-o', 'UserKnownHostsFile=deploy/known_hosts',
     '-o', 'StrictHostKeyChecking=yes', '-o', 'ConnectTimeout=20', '-o', 'ServerAliveInterval=20']
   return {
-    run: (host, label, script) => new Promise((resolve, reject) => {
+    run: (host, label, script, capture = false) => new Promise((resolve, reject) => {
       const child = spawn('ssh', [...args, HOSTS[host], 'bash -s'], { stdio: ['pipe', 'pipe', 'pipe'] })
       const prefix = data => process.stdout.write(String(data).replace(/^(?=.)/gm, `[${label}] `))
-      child.stdout.on('data', prefix)
+      let output = ''
+      child.stdout.on('data', data => {
+        if (!capture) return prefix(data)
+        output += data
+        if (Buffer.byteLength(output) > 64 * 1024) { child.kill(); reject(new Error(`${label} output exceeded bound`)) }
+      })
       child.stderr.on('data', prefix)
       child.on('error', reject)
-      child.on('exit', code => code === 0 ? resolve() : reject(new Error(`${label} on ${host} exited ${code}`)))
+      child.on('exit', code => code === 0 ? resolve(output) : reject(Object.assign(new Error(`${label} on ${host} exited ${code}`), { uncertain: code === 255 || code === null })))
       child.stdin.end(`set -euo pipefail\n${script}\n`)
     }),
     close: () => rmSync(dir, { recursive: true, force: true }),
   }
+}
+
+// Execute the target image's fixed public-package/provenance entry, without
+// starting its API or migrations. Compose handles quoted Sigillo dotenv values.
+async function patchEntry(ssh, patch, images, action) {
+  const files = [...stackFiles('app-a'), ['.env', Buffer.from(stackEnv('app-a', images))],
+    ['images.env', Buffer.from(`SERVER_IMAGE=${imageRef(images.SERVER_IMAGE)}\n`)],
+    ['plan.json', Buffer.from(JSON.stringify({ source: patch.source, target: patch.target }))]]
+  const script = [`d=/opt/lingxiloop/app-a; umask 077; f=$(mktemp -d); trap 'rm -rf "$f"' EXIT`,
+    ...files.map(([name, bytes]) => `base64 -d > "$f/${name}" <<'B64'\n${bytes.toString('base64')}\nB64`),
+    // Changing database targets is not a runtime patch. Compare privately.
+    `patch_database_url=$( . "$f/.env"; printf '%s' "$DATABASE_URL"); source_database_url=$( . "$d/.env"; printf '%s' "$DATABASE_URL"); test "$source_database_url" = "$patch_database_url"`,
+    `docker compose --project-directory "$d" -f "$f/compose.yml" --env-file "$f/.env" --env-file "$f/images.env" run --rm --no-deps -T -e LINGXIOS_SCHEMA_UPGRADE_DRAINED=${action === 'apply' ? 'true' : 'false'} db-migrate node --import tsx server/src/runtime-patch-bin.ts ${action} < "$f/plan.json"`,
+  ].join('\n')
+  const raw = await ssh.run('txy2', `runtime ${action}`, script, true)
+  const result = JSON.parse(raw.trim().split('\n').at(-1))
+  if (result.error || result.planHash !== `sha256:${patch.id}`) throw new Error(`runtime ${action} did not confirm the exact plan`)
+  return result
+}
+
+async function runtimePatch(ssh, patch, images, convergeTarget) {
+  const marker = `/opt/lingxiloop/runtime-patches/${patch.id}.attempted`
+  const source = new Map()
+  const eachSlot = async run => {
+    const results = await Promise.allSettled(['a', 'b'].map(run))
+    const failures = results.filter(result => result.status === 'rejected')
+    if (failures.length) throw Object.assign(new AggregateError(failures.map(result => result.reason), 'application slot operation failed'),
+      { uncertain: failures.some(result => result.reason?.uncertain) })
+  }
+  const startSource = () => eachSlot(async slot => {
+    const ids = source.get(slot)
+    if (ids) await ssh.run(STACK_HOST[`app-${slot}`], `restore source ${slot}`, ids.map(id =>
+      `docker start ${id} >/dev/null\nfor attempt in $(seq 1 60); do state=$(docker inspect -f '{{.State.Health.Status}}' ${id}); [ "$state" = healthy ] && break; [ "$attempt" -lt 60 ] || exit 1; sleep 2; done`,
+    ).join('\n'))
+  })
+  await convergeRuntimePatch({
+    preflight: () => patchEntry(ssh, patch, images, 'preflight'),
+    requireFreshIntent: () => ssh.run('txy2', 'runtime intent', `test ! -e '${marker}' || { echo 'prior CAS intent requires read-only observation and operator review'; exit 1; }`),
+    snapshotSource: () => eachSlot(async slot => {
+      const names = [`lingxiloop-app-${slot}-lingxiloop-1`, `lingxiloop-app-${slot}-worker-1`]
+      const raw = await ssh.run(STACK_HOST[`app-${slot}`], `source ${slot}`, names.map(name =>
+        `version=$(docker exec ${name} node --input-type=module -e "import {releaseVersions} from '@lyyzka/lingxios'; process.stdout.write(releaseVersions.runtime)"); test "$version" = '${patch.source.runtime}'; docker inspect -f '{{.Id}}' ${name}`,
+      ).join('\n'), true)
+      const ids = raw.trim().split('\n')
+      if (ids.length !== 2 || ids.some(id => !/^[a-f0-9]{64}$/.test(id))) throw new Error('source container identity unavailable')
+      source.set(slot, ids)
+    }),
+    stopIngress: () => eachSlot(slot => ssh.run(STACK_HOST[`app-${slot}`], `stop API ${slot}`, `docker stop -t 30 ${source.get(slot)[0]} >/dev/null`)),
+    stopWorkers: () => eachSlot(slot => ssh.run(STACK_HOST[`app-${slot}`], `drain worker ${slot}`, `docker stop -t 150 ${source.get(slot)[1]} >/dev/null`)),
+    markAttempt: () => ssh.run('txy2', 'runtime intent', `umask 077; mkdir -p /opt/lingxiloop/runtime-patches; set -C; printf '%s\\n' '${patch.id}' > '${marker}'`),
+    apply: () => patchEntry(ssh, patch, images, 'apply'),
+    observe: () => patchEntry(ssh, patch, images, 'observe'),
+    restoreSource: startSource,
+    convergeTarget,
+  })
 }
 
 // ctr pulls from the accelerator directly; Docker's proxied pull measured >10x slower.

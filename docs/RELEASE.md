@@ -77,6 +77,50 @@ enqueue effect kinds an old Worker would mishandle, both old Workers stop before
 either slot moves. Migrations must stay forward-compatible with the running
 Web/API while slot B still serves the old image.
 
+### Reviewed 3.8.16 → 3.8.17 runtime patch
+
+The normal `npm run deploy` / CI entry recognizes only this exact next runtime
+transition. It requires the formally published package's matching root/server
+pins, registry tarball and integrity, the unchanged native14/protocol11 schema,
+and the complete identical product58 migration inventory. No version is adopted
+by ordinary startup. The dependency must remain on3.8; a4.0 distribution is not
+this release path. This infrastructure does not itself publish or pin a package;
+product acceptance remains a prerequisite to the separately authorized upgrade.
+
+After images are built and pulled, the target image runs the fixed runtime-patch
+entry in a one-shot container. Its read-only preflight verifies installed source
+provenance and refuses live work or retained resumable bindings before downtime.
+Existing source API clients are allowed during that preflight; the final CAS
+still requires zero other database clients and the full original lease barrier.
+Already-installed target provenance uses ordinary stack convergence without CAS.
+
+For a new patch, both Workers drain while the source control APIs remain alive;
+then both source API containers stop before CAS. Requests queued after the Workers
+stop remain unclaimed; the final barrier still refuses any retained binding or
+checkpoint. Source container IDs and their runtime version are checked first.
+The target entry uses current Sigillo config and privately proves its database URL
+matches the deployed source. A persisted per-plan attempt marker is written on
+txy2 under `/opt/lingxiloop/runtime-patches/` before the one CAS submission. The
+CAS updates only the exact provenance row; it never executes DDL, rewrites leases,
+cancels work, changes the migration ledger or deletes product data. Only then do
+the ordinary target A/B convergence, health probes and Worker deployment run.
+
+An apply failure triggers one read-only observation, never another apply. A proven
+source result restores the original containers in API/Worker health order and
+fails the deploy. A proven target continues forward. An unconfirmed observation
+or lost drain acknowledgement retains maintenance and fails visibly; inspect the
+actual containers and provenance before recovery. A retained attempt marker
+blocks a later automatic source-state CAS until operator review; do not remove
+it to force a retry. After CAS, fix forward rather than starting a source runtime
+against target provenance.
+
+`npm run deploy -- runtime-preflight` is read-only and can inspect the source
+before downtime. `npm run deploy -- runtime-observe` is read-only and retains the
+exclusive maintenance barrier for confirming an uncertain CAS. The deployed
+target image must already be present for these observations. The corresponding
+`deploy.yml` commands use the same `production-deploy` concurrency group. No old
+controller, release lock, additional credential or permission grant is involved.
+
 ## Runtime notes
 
 Ordinary chat always uses deep execution with all authorized capabilities.

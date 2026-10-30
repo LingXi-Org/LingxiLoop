@@ -348,6 +348,7 @@ jobs:
           node --test scripts/ci-scope.test.mjs scripts/checkout-bytes.test.mjs scripts/production-rag-contract.test.mjs scripts/production-model-contract.test.mjs workers/web-static/src/index.test.mjs
           node --experimental-test-module-mocks --test scripts/knowledge-shadow-pg-*.test.mjs
           node --check deploy/cli.mjs
+          node --test deploy/runtime-patch.test.mjs
           node scripts/image-tag.mjs env
       - if: matrix.component == 'release'
         run: npm run version:check

@@ -9,7 +9,7 @@ on:
       command:
         description: up | servers | workers | pull | plan | status
         type: choice
-        options: [up, servers, workers, pull, plan, status]
+        options: [up, servers, workers, pull, plan, status, runtime-preflight, runtime-observe]
         default: up
       stacks:
         description: Space-separated server stacks (empty = all)
