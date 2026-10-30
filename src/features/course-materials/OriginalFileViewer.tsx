@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import type { KnowledgeSource } from '../knowledge/contracts'
 import type { MaterialContext } from './data'
-import { loadMaterialOriginal, originalResourceErrorMessage, type OriginalResource } from './original-resource'
+import { formatOriginalResourceDiagnostic, loadMaterialOriginal, originalResourceErrorMessage, type OriginalResource } from './original-resource'
 
 export default function OriginalFileViewer({ source, context }: { source: KnowledgeSource; context: MaterialContext }) {
   const [resource, setResource] = useState<OriginalResource | null>(null)
@@ -26,7 +26,7 @@ export default function OriginalFileViewer({ source, context }: { source: Knowle
       detail: signal => http<KnowledgeSource>(`/projects/${encodeURIComponent(context.projectId)}/sources/${encodeURIComponent(source.id)}`, {
         signal, headers: { 'x-company-id': context.companyId, 'x-project-id': context.projectId },
       }), fetch, isCurrent: current,
-      diagnostic: event => console.warn('[course-materials] original preview failed', event),
+      diagnostic: event => console.warn(formatOriginalResourceDiagnostic(event)),
     }).then(setResource).catch(reason => { if (!controller.signal.aborted) setError(originalResourceErrorMessage(reason)) })
     return () => { controller.abort(); unsubscribe() }
   }, [context.companyId, context.userId, context.projectId, context.space, source.id, source.updatedAt, attempt])
