@@ -165,7 +165,21 @@ for (const scenario of ['complete', 'correction', 'finalize', 'fail-all'] as con
     assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'))
     calls++
     assert.ok(calls <= (scenario === 'complete' ? 1 : scenario === 'fail-all' ? 3 : 2), 'no unrequested third generation')
-    const value = { operation: { kind: 'append', supersedes: [] }, commentary: '',
+    let operation = { kind: 'append', supersedes: [] as string[] }
+    if ((scenario === 'correction' || scenario === 'fail-all') && calls > 1) {
+      const corrections = (input.messages as { content?: unknown }[])
+        .map(message => message.content)
+        .filter((content): content is string => typeof content === 'string' && content.startsWith('This generation repairs the explicitly selected candidate sources.'))
+      assert.equal(corrections.length, 1, 'each repair must receive its current explicit candidate target')
+      const selected = /using exactly this operation: (\{.*?\})\. Do not append/.exec(corrections[0])
+      assert.ok(selected, 'the repair request must supply an exact operation')
+      operation = JSON.parse(selected[1])
+      assert.equal(operation.kind, 'replace')
+      assert.equal(operation.supersedes.length, 1)
+      assert.equal(typeof operation.supersedes[0], 'string')
+      assert.ok(operation.supersedes[0].length > 0)
+    }
+    const value = { operation, commentary: '',
       answer: scenario === 'fail-all' ? `${draft}-${calls}` : scenario === 'correction' && calls === 1 ? draft : scenario === 'finalize' && calls === 2 ? null : body,
       outcome: scenario === 'finalize' && calls === 1 ? null : { status: scenario === 'fail-all' || scenario === 'correction' && calls === 1 ? 'invalid' : 'satisfied', gaps: [] } }
     const args = JSON.stringify(value)
