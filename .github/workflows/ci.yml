@@ -103,6 +103,7 @@ jobs:
             admin_tests:
               - 'admin/**/*.test.*'
             control:
+              - 'src/auth/contracts.ts'
               - 'workers/control-plane/**'
               - 'worker-configuration.d.ts'
               - '!workers/control-plane/**/*.test.*'

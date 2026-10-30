@@ -1,3 +1,4 @@
+import { registrationMessage, registrationMessages } from '@/auth/contracts'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { getActiveCompanyId, useAuth } from '@/stores/auth'
 import { lingxiApiFetch, mergeRequestHeaders } from '@/api/transport'
@@ -6,7 +7,7 @@ export const API = '/api'
 export const getServerOrigin = () => ''
 
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number, readonly code?: string) { super(message) }
+  constructor(message: string, readonly status: number, readonly code?: string, readonly requestId?: string) { super(message) }
 }
 
 export async function http<T>(path: string, init?: RequestInit, options?: { sessionRejection: 'caller' }): Promise<T> {
@@ -32,11 +33,12 @@ export async function http<T>(path: string, init?: RequestInit, options?: { sess
         try {
           const json = JSON.parse(text) as { error?: string; message?: string; code?: string }
           if (typeof json.code === 'string') code = json.code
-          detail = json.error ?? json.message ?? text.slice(0, 200)
+          detail = code && registrationMessages[code] ? registrationMessage(code, response.status) : json.error ?? json.message ?? text.slice(0, 200)
         } catch { detail = text.slice(0, 200) }
       }
     } catch { /* Ignore unreadable error bodies. */ }
-    throw new ApiError(detail ? `${detail} (${response.status})` : `${response.status} ${response.statusText}`, response.status, code)
+    const requestId = response.headers.get('x-request-id') ?? undefined
+    throw new ApiError(detail ? `${detail} (${response.status})` : `${response.status} ${response.statusText}`, response.status, code, requestId)
   }
   return response.json() as Promise<T>
 }

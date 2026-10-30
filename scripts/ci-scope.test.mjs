@@ -12,3 +12,9 @@ test('real server imports and shared transitive helper changes check the server'
     assert.equal(computeScope(classifyPaths([path])).server, true, path)
   }
 })
+
+test('the public auth contract checks both its browser and control-plane consumers', () => {
+  const scope = computeScope(classifyPaths(['src/auth/contracts.ts']))
+  assert.equal(scope.web, true)
+  assert.equal(scope.control, true)
+})

@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { publicRegistrationError } from '@/auth/registration'
 import { authApi, authClient } from '@/auth/api'
 import { synchronizeProductSession } from '@/auth/session-sync'
 import { useAuth } from '@/stores/auth'
@@ -13,7 +14,7 @@ export function AuthGate({ children, unauthFallback }: { children: ReactNode; un
   const authenticated = useAuth(state => state.authenticated)
   const acceptedKey = useAuth(state => state.sessionKey)
   const revalidationRequired = useAuth(state => state.sessionRevalidationRequired)
-  const [failure, setFailure] = useState<{ key: string | null; message: string } | null>(null)
+  const [failure, setFailure] = useState<{ key: string | null; message: string; recover?: boolean } | null>(null)
 
   useEffect(() => {
     if (revalidationRequired) void session.refetch()
@@ -34,17 +35,29 @@ export function AuthGate({ children, unauthFallback }: { children: ReactNode; un
       },
       failed: error => {
         if (error instanceof ApiError && error.status === 401) useAuth.getState().clear()
-        setFailure({ key, message: '暂时无法确认登录状态，请重试。' })
+        setFailure({ key, message: publicRegistrationError(error).message, recover: error instanceof ApiError && error.code === 'REGISTRATION_INCOMPLETE' })
       },
     })
   // Observe the official snapshot itself: a fast same-key refresh may settle
   // before React renders its intermediate isRefetching=true state.
   }, [key, session])
 
+  const [recovering, setRecovering] = useState(false)
+  const retry = async () => {
+    if (recovering) return
+    setRecovering(true)
+    try {
+      if (failure?.recover) await authApi.recoverRegistration()
+      await session.refetch()
+    } catch (error) { setFailure({ key, message: publicRegistrationError(error).message, recover: failure?.recover }) }
+    finally { setRecovering(false) }
+  }
+
   if (session.error || failure?.key === key) return (
     <main className="grid min-h-svh place-content-center gap-4 p-6">
       <p role="alert">{failure?.message ?? '暂时无法确认登录状态，请重试。'}</p>
-      <button type="button" className="underline underline-offset-4" disabled={session.isRefetching} onClick={() => void session.refetch()}>重试</button>
+      <button type="button" className="underline underline-offset-4" disabled={session.isRefetching || recovering} onClick={() => void retry()}>{failure?.recover ? '继续完成加入' : '重试'}</button>
+      {key ? <button type="button" className="underline underline-offset-4" disabled={recovering} onClick={() => void authApi.signOut()}>退出登录</button> : null}
     </main>
   )
   if (session.isPending) return <WorkspaceSkeleton />

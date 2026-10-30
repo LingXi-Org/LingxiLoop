@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { clearPendingVerification, readPendingVerification, savePendingVerification, verificationContext, verificationError } from '@/auth/registration'
 import { authApi } from '@/auth/api'
 import { ProductLogo } from '@/components/ProductLogo'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -10,7 +11,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { safeAuthReturnPath } from '@/lib/webNavigation'
 
-type Mode = 'login' | 'signup' | 'forgot' | 'reset' | 'verify'
+type Mode = 'login' | 'signup' | 'forgot' | 'reset' | 'verify' | 'continue'
 
 type TurnstileApi = {
   render: (container: HTMLElement, options: {
@@ -96,25 +97,34 @@ export function AuthScreen() {
   const [email, setEmail] = useState('')
   const [captchaToken, setCaptchaToken] = useState('')
   const [captchaRound, setCaptchaRound] = useState(0)
+  const [context, setContext] = useState('manual')
   useEffect(() => {
-    if (!inviteToken) return
     let cancelled = false
-    void authApi.invitation(inviteToken, inviteKind).then((value) => {
+    void verificationContext(inviteToken, inviteKind).then(async (context) => {
       if (cancelled) return
-      setInvitation(value)
-      if (requestedMode === 'signup') setMode('signup')
-    }).catch((reason) => { if (!cancelled) setError(reason.message) })
+      setContext(context)
+      const pending = requestedMode === 'reset' ? null : readPendingVerification(context)
+      if (pending) { setEmail(pending.email); setMode('verify') }
+      if (!inviteToken) return
+      try {
+        const value = await authApi.invitation(inviteToken, inviteKind)
+        if (cancelled) return
+        setInvitation(value)
+        if (!pending && requestedMode === 'signup') setMode(current => current === 'login' ? 'signup' : current)
+      } catch (reason) { if (!cancelled && !pending) setError(reason instanceof Error ? reason.message : '暂时无法读取邀请，请稍后重试。') }
+    })
     return () => { cancelled = true }
   }, [inviteToken, inviteKind, requestedMode])
 
   const changeMode = (next: Mode) => {
     if (next === 'signup' && !invitation) return
-    if (next === 'forgot') setEmail('')
+    if (next !== 'verify') { clearPendingVerification(); setEmail('') }
     setMode(next); setError(null); setNotice(null); setCaptchaToken(''); setCaptchaRound((round) => round + 1)
   }
   const captchaError = useCallback(() => setError('人机验证失败，请重试。'), [])
   const run = async (work: () => Promise<unknown>, success?: () => void, resetCaptcha = false) => {
-    setBusy(true); setError(null)
+    if (busy) return
+    setBusy(true); setError(null); setNotice(null)
     try { await work(); success?.() } catch (reason) { setError(reason instanceof Error ? reason.message : '请求失败') } finally {
       setBusy(false)
       if (resetCaptcha) { setCaptchaToken(''); setCaptchaRound((round) => round + 1) }
@@ -125,6 +135,7 @@ export function AuthScreen() {
     login: ['欢迎回来', '登录后继续你的学习与协作。'],
     signup: ['接受邀请创建账号', '注册后使用邮箱验证码激活账号。'],
     verify: ['验证邮箱', `输入发送至 ${email || '你的邮箱'} 的 6 位验证码。`],
+    continue: ['继续验证邮箱', '输入注册邮箱，重新获取验证码。'],
     forgot: ['找回密码', '我们会向账号邮箱发送一次性重置链接。'],
     reset: ['设置新密码', '新密码至少需要 8 个字符。'],
   }[mode]
@@ -155,8 +166,15 @@ export function AuthScreen() {
                     void run(async () => {
                       const result = await authApi.signIn(String(data.get('email')), String(data.get('password')), captchaToken,
                         inviteToken ? { token: inviteToken, kind: inviteKind } : undefined)
-                      if (result.error) throw new Error(result.error.message)
-                    }, () => location.assign(returnTo), true)
+                      if (result.error?.code === 'EMAIL_NOT_VERIFIED') {
+                        const pendingEmail = String(data.get('email')).trim().toLowerCase()
+                        setEmail(pendingEmail); savePendingVerification(pendingEmail, context); changeMode('verify')
+                        setNotice('请验证邮箱；需要新的验证码时可重新发送。')
+                        return
+                      }
+                      if (result.error) throw verificationError(result.error)
+                      location.assign(returnTo)
+                    }, undefined, true)
                   }}>
                     <FieldGroup className="gap-5">
                       <Field><FieldLabel htmlFor="login-email">邮箱</FieldLabel><Input id="login-email" name="email" type="email" autoComplete="email" required /></Field>
@@ -168,6 +186,7 @@ export function AuthScreen() {
                       {notice ? <FieldDescription role="status" className="text-primary">{notice}</FieldDescription> : null}
                       {error ? <FieldDescription role="alert" className="text-destructive">{error}</FieldDescription> : null}
                       <Button className="w-full" type="submit" disabled={busy || !captchaToken}>{busy ? <Spinner /> : null}{busy ? '登录中…' : '登录'}</Button>
+                      <Button type="button" variant="link" disabled={busy} onClick={() => changeMode('continue')}>继续验证邮箱</Button>
                     </FieldGroup>
                   </form>
                 </TabsContent>
@@ -184,7 +203,7 @@ export function AuthScreen() {
                       password,
                       inviteToken,
                       inviteKind,
-                    }, captchaToken), () => { setEmail(signupEmail); changeMode('verify') }, true)
+                    }, captchaToken), () => { setEmail(signupEmail); savePendingVerification(signupEmail, context); changeMode('verify') }, true)
                   }}>
                     <FieldGroup className="gap-5">
                       <Alert><AlertTitle>{invitation.companyName} · {invitation.role === 'teacher' ? (invitation.isAdmin ? '教师管理员' : '教师') : '学生'}</AlertTitle><AlertDescription>{invitation.courseName ? `课程：${invitation.courseName}。` : ''}邮箱验证后加入。身份由邀请确定。</AlertDescription></Alert>
@@ -207,19 +226,41 @@ export function AuthScreen() {
                 const otp = String(new FormData(event.currentTarget).get('otp'))
                 void run(async () => {
                   const result = await authApi.verifyEmail(email, otp)
-                  if (result.error) throw new Error(result.error.message)
+                  if (result.error) throw verificationError(result.error)
                 }, () => { changeMode('login'); setNotice('邮箱已验证，请使用刚设置的密码登录。') })
               }}>
                 <FieldGroup className="gap-5">
-                  <Alert><AlertTitle>验证码已发送</AlertTitle><AlertDescription>验证码将在短时间内失效，请检查收件箱。</AlertDescription></Alert>
+                  <Alert><AlertTitle>继续验证邮箱</AlertTitle><AlertDescription>请输入有效验证码；如未收到或已过期，请重新发送。</AlertDescription></Alert>
+                  {notice ? <FieldDescription role="status">{notice}</FieldDescription> : null}
                   <Field><FieldLabel htmlFor="verification-code">邮箱验证码</FieldLabel><Input id="verification-code" name="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required /></Field>
                   {error ? <FieldDescription role="alert" className="text-destructive">{error}</FieldDescription> : null}
                   <Button className="w-full" type="submit" disabled={busy}>{busy ? <Spinner /> : null}验证邮箱</Button>
                   <Button type="button" variant="outline" disabled={busy} onClick={() => void run(async () => {
                     const result = await authApi.sendVerification(email)
-                    if (result.error) throw new Error(result.error.message)
-                  })}>重新发送验证码</Button>
-                  <Button type="button" variant="ghost" onClick={() => changeMode('login')}>返回登录</Button>
+                    if (result.error) throw verificationError(result.error)
+                  }, () => setNotice('若此邮箱需要验证，验证码发送请求已接受，请检查收件箱。'))}>重新发送验证码</Button>
+                  <Button type="button" variant="ghost" disabled={busy} onClick={() => changeMode('login')}>返回登录</Button>
+                </FieldGroup>
+              </form>
+            ) : null}
+
+            {mode === 'continue' ? (
+              <form onSubmit={(event) => {
+                event.preventDefault()
+                const value = String(new FormData(event.currentTarget).get('email')).trim().toLowerCase()
+                void run(async () => {
+                  const result = await authApi.sendVerification(value)
+                  if (result.error) throw verificationError(result.error)
+                }, () => {
+                  setEmail(value); savePendingVerification(value, context); changeMode('verify')
+                  setNotice('若此邮箱需要验证，验证码发送请求已接受，请检查收件箱。')
+                })
+              }}>
+                <FieldGroup className="gap-5">
+                  <Field><FieldLabel htmlFor="continue-email">邮箱</FieldLabel><Input id="continue-email" name="email" type="email" autoComplete="email" required /></Field>
+                  {error ? <FieldDescription role="alert" className="text-destructive">{error}</FieldDescription> : null}
+                  <Button type="submit" disabled={busy}>发送验证码</Button>
+                  <Button type="button" variant="ghost" disabled={busy} onClick={() => changeMode('login')}>返回登录</Button>
                 </FieldGroup>
               </form>
             ) : null}
@@ -230,7 +271,7 @@ export function AuthScreen() {
                 const value = String(new FormData(event.currentTarget).get('email'))
                 void run(async () => {
                   const result = await authApi.requestPasswordReset(value, captchaToken)
-                  if (result.error) throw new Error(result.error.message)
+                  if (result.error) throw verificationError(result.error)
                 }, () => setEmail(value), true)
               }}>
                 <FieldGroup className="gap-5">
@@ -239,7 +280,7 @@ export function AuthScreen() {
                   {email ? <Alert><AlertDescription>若账号存在，重置邮件已发送。</AlertDescription></Alert> : null}
                   {error ? <FieldDescription role="alert" className="text-destructive">{error}</FieldDescription> : null}
                   <Button className="w-full" type="submit" disabled={busy || !captchaToken}>{busy ? <Spinner /> : null}发送重置邮件</Button>
-                  <Button type="button" variant="ghost" onClick={() => changeMode('login')}>返回登录</Button>
+                  <Button type="button" variant="ghost" disabled={busy} onClick={() => changeMode('login')}>返回登录</Button>
                 </FieldGroup>
               </form>
             ) : null}
@@ -250,7 +291,7 @@ export function AuthScreen() {
                 const password = String(new FormData(event.currentTarget).get('password'))
                 void run(async () => {
                   const result = await authApi.resetPassword(password, parameters.get('token') ?? '')
-                  if (result.error) throw new Error(result.error.message)
+                  if (result.error) throw verificationError(result.error)
                 }, () => changeMode('login'))
               }}>
                 <FieldGroup className="gap-5">

@@ -48,6 +48,19 @@ gatewayRegistrationRouter.post(['/session/ws-ticket', '/auth/ws-ticket'], safe(a
   res.json({ ticket: result.ticket, expiresAt: result.expiresAt.toISOString() })
 }))
 
+// Only bounded correlation metadata enters logs. Never record request bodies or
+// provider exception text (which can contain SQL parameters and student details).
+gatewayRegistrationRouter.use('/internal/registration', (req, res, next) => {
+  const value = req.header('x-registration-request-id')
+  const requestId = value && /^[a-zA-Z0-9_-]{1,100}$/.test(value) ? value : undefined
+  if (requestId) res.setHeader('x-registration-request-id', requestId)
+  res.on('finish', () => {
+    if (requestId) console.info(JSON.stringify({ event: 'registration.business', requestId,
+      stage: req.path.endsWith('/provision') ? 'business' : 'invitation', status: res.statusCode }))
+  })
+  next()
+})
+
 gatewayRegistrationRouter.post('/internal/registration/invitation', safe(async (req, res) => {
   requireGateway(req)
   if (req.gatewayService?.capability !== 'registration-invitation') throw new HttpError(403, 'registration service required')
@@ -116,3 +129,10 @@ gatewayRegistrationRouter.post('/internal/bootstrap/platform-user', safe(async (
   })
   res.json({ appUserId })
 }))
+
+// Keep the registration boundary safe even in local diagnostics. The control
+// plane maps these statuses into the shared public error contract.
+gatewayRegistrationRouter.use('/internal/registration', (error: unknown, _req: import('express').Request, res: import('express').Response, _next: import('express').NextFunction) => {
+  const status = error instanceof HttpError ? error.status : 503
+  res.status(status).json({ code: status >= 500 ? 'REGISTRATION_UNAVAILABLE' : 'INVITATION_REJECTED' })
+})

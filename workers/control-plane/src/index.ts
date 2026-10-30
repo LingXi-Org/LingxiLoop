@@ -1,3 +1,4 @@
+import { registrationMessage } from '../../../src/auth/contracts'
 import { betterAuth } from 'better-auth'
 import { APIError } from 'better-auth/api'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
@@ -23,7 +24,7 @@ type Secrets = {
   DIAGNOSTIC_KEYS_JSON?: string
 }
 type Bindings = Env & Secrets
-type Variables = { auth: ReturnType<typeof createAuth>; session: AuthSession; registrationValidated: boolean }
+type Variables = { auth: ReturnType<typeof createAuth>; session: AuthSession; registrationValidated: boolean; registrationIntent: string; requestId: string }
 type AuthSession = { user: { id: string; name: string; email: string; emailVerified: boolean; role?: string }; session: { createdAt: Date | string } }
 type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>
 type AuthSettings = {
@@ -37,6 +38,25 @@ const encoder = new TextEncoder()
 const authSettingsCacheKey = 'https://lingxiloop.invalid/auth-settings'
 const authSettingsCache = () => caches.open('lingxiloop-auth-settings')
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+app.use('*', async (c, next) => {
+  if (!c.req.path.startsWith('/api/auth/') && !c.req.path.startsWith('/api/registration/') && c.req.path !== '/api/session') return next()
+  c.header('cache-control', 'no-store')
+  c.set('requestId', crypto.randomUUID())
+  c.header('x-request-id', c.get('requestId'))
+  if (c.req.path.startsWith('/api/registration/') && c.req.method === 'POST') {
+    const origin = c.req.header('origin')
+    if (origin && origin !== new URL(c.req.url).origin) return c.json({ code: 'REGISTRATION_FORBIDDEN' }, 403)
+  }
+  await next()
+  c.header('x-request-id', c.get('requestId'))
+})
+app.onError((_error, c) => {
+  if (c.req.path.startsWith('/api/registration/') || c.req.path.startsWith('/api/auth/')) {
+    return registrationFailure(c, new RegistrationError('REGISTRATION_UNAVAILABLE', 503, 'control', true))
+  }
+  return c.json({ error: 'internal server error' }, 500)
+})
 
 app.post('/api/internal/issue-dot-email', (c) => handleIssueDotEmail(c.req.raw, c.env, sendSmtpEmail))
 
@@ -161,49 +181,102 @@ async function updateAuthSettings(c: AppContext, values: AuthSettings, actorUser
   return values
 }
 
-async function provision(env: Bindings, authUser: { id: string; email: string; name: string; emailVerified: boolean }): Promise<void> {
-  if (!authUser.emailVerified) throw new Error('verified registration identity required')
-  const claim = await env.DB.prepare(
-    `SELECT invite_token,invite_kind,status FROM registration_claims WHERE auth_user_id=?`,
-  ).bind(authUser.id).first<{ invite_token: string; invite_kind: string; status: string }>()
-  if (!claim) throw new Error('invitation required')
-  if (claim.status === 'provisioned') return
-  if (claim) {
-    await env.DB.prepare(`UPDATE registration_claims SET status='provisioning',updated_at=? WHERE auth_user_id=?`)
-      .bind(Date.now(), authUser.id).run()
-  }
-  const body: { authUserId: string; email: string; name: string; inviteToken?: string; inviteKind?: string } = {
-    authUserId: authUser.id,
-    email: authUser.email,
-    name: authUser.name,
-  }
-  if (claim) {
-    body.inviteToken = await openClaim(env.BETTER_AUTH_SECRET, claim.invite_token)
-    body.inviteKind = claim.invite_kind
-  }
-  const response = await originRequest(env, '/api/internal/registration/provision', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  }, { authUserId: authUser.id }, { capability: 'registration-provision', emailVerified: true })
-  if (!response.ok) {
-    const error = (await response.text()).slice(0, 500)
-    if (claim) {
-      await env.DB.prepare(`UPDATE registration_claims SET status='failed',error=?,updated_at=? WHERE auth_user_id=?`)
-        .bind(error, Date.now(), authUser.id).run()
-    }
-    throw new Error(`business user provision failed (${response.status})`)
-  }
-  const result = await response.json<{ appUserId: string }>()
+type RegistrationIdentity = { id: string; email: string; name: string; emailVerified: boolean }
+class RegistrationError extends Error {
+  constructor(readonly code: string, readonly status: 400 | 401 | 403 | 404 | 409 | 410 | 429 | 502 | 503, readonly stage: string, readonly retryable = false) { super(code) }
+}
+function registrationFailure(c: AppContext, error: RegistrationError): Response {
+  const requestId = c.get('requestId')
+  console.warn(JSON.stringify({ event: 'registration.failure', requestId, stage: error.stage, code: error.code, status: error.status }))
+  c.header('x-registration-error', '1')
+  return c.json({ code: error.code, message: registrationMessage(error.code, error.status), requestId, retryable: error.retryable }, error.status)
+}
+function upstreamFailure(status: number, stage: string): RegistrationError {
+  if (status === 429) return new RegistrationError('RATE_LIMITED', 429, stage, true)
+  if (status >= 500) return new RegistrationError('REGISTRATION_UNAVAILABLE', 503, stage, true)
+  return new RegistrationError('INVITATION_REJECTED', status === 404 ? 404 : status === 410 ? 410 : 403, stage)
+}
+async function saveClaim(env: Bindings, user: { id: string; email: string }, intent: string) {
+  const context = JSON.parse(await openClaim(env.BETTER_AUTH_SECRET, intent)) as { token: string; kind: string }
+  if (!context.token || !['project', 'company'].includes(context.kind)) throw new RegistrationError('INVITATION_REQUIRED', 403, 'claim')
   const now = Date.now()
-  const statements = [
-    env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES(?,?,?) ON CONFLICT(auth_user_id) DO UPDATE SET app_user_id=excluded.app_user_id,provisioned_at=excluded.provisioned_at,suspended_at=NULL`).bind(authUser.id, result.appUserId, now),
-  ]
-  if (claim) statements.push(env.DB.prepare(`UPDATE registration_claims SET status='provisioned',error=NULL,updated_at=? WHERE auth_user_id=?`).bind(now, authUser.id))
-  await env.DB.batch(statements)
+  await env.DB.prepare(`INSERT INTO registration_claims(auth_user_id,token_hash,invite_token,invite_kind,email,status,created_at,updated_at)
+    VALUES(?,?,?,?,?,'pending',?,?) ON CONFLICT(auth_user_id) DO NOTHING`)
+    .bind(user.id, await sha256(context.token), await sealClaim(env.BETTER_AUTH_SECRET, context.token), context.kind, user.email.toLowerCase(), now, now).run()
+}
+async function provision(env: Bindings, authUser: RegistrationIdentity, requestId: string,
+  invitation?: { token: string; kind: 'company' | 'project' }): Promise<void> {
+  let stage = 'claim'
+  let remoteStarted = false
+  try {
+    if (!authUser.emailVerified) throw new RegistrationError('EMAIL_NOT_VERIFIED', 403, stage)
+    let claim = await env.DB.prepare(`SELECT invite_token,invite_kind,status FROM registration_claims WHERE auth_user_id=?`)
+      .bind(authUser.id).first<{ invite_token: string; invite_kind: string; status: string }>()
+    if (!claim) {
+      const identity = await env.DB.prepare(`SELECT registrationIntent FROM user WHERE id=? AND emailVerified=1`)
+        .bind(authUser.id).first<{ registrationIntent: string | null }>()
+      // Only the verified owner can supply an invitation for a historical identity
+      // with no durable intent. An existing claim is never replaced here.
+      if (!identity?.registrationIntent && invitation) {
+        const validation = await originRequest(env, '/api/internal/registration/invitation', {
+          method: 'POST', headers: { 'content-type': 'application/json', 'x-registration-request-id': requestId },
+          body: JSON.stringify({ email: authUser.email, inviteToken: invitation.token, inviteKind: invitation.kind }), signal: AbortSignal.timeout(15_000),
+        }, undefined, { capability: 'registration-invitation' })
+        if (!validation.ok) throw upstreamFailure(validation.status, 'invitation')
+      }
+      const intent = identity?.registrationIntent ?? (invitation && await sealClaim(env.BETTER_AUTH_SECRET, JSON.stringify(invitation)))
+      if (!intent) throw new RegistrationError('INVITATION_REQUIRED', 403, stage)
+      // Stored intents use token/kind; verified explicit accepts use that same shape.
+      await saveClaim(env, authUser, intent)
+      claim = await env.DB.prepare(`SELECT invite_token,invite_kind,status FROM registration_claims WHERE auth_user_id=?`)
+        .bind(authUser.id).first<{ invite_token: string; invite_kind: string; status: string }>()
+    }
+    if (!claim) throw new RegistrationError('REGISTRATION_UNAVAILABLE', 503, stage, true)
+    let token = await openClaim(env.BETTER_AUTH_SECRET, claim.invite_token)
+    let kind = claim.invite_kind
+    const linked = await env.DB.prepare(`SELECT app_user_id,suspended_at FROM app_user_links WHERE auth_user_id=?`).bind(authUser.id)
+      .first<{ app_user_id: string; suspended_at: number | null }>()
+    if (linked?.suspended_at != null) throw new RegistrationError('REGISTRATION_FORBIDDEN', 403, 'link')
+    if (invitation && (invitation.token !== token || invitation.kind !== kind)) {
+      if (claim.status !== 'provisioned' || !linked) throw new RegistrationError('INVITATION_CONFLICT', 409, stage)
+      token = invitation.token; kind = invitation.kind
+    }
+    if (claim.status !== 'provisioned') await env.DB.prepare(`UPDATE registration_claims SET status='provisioning',error=NULL,updated_at=? WHERE auth_user_id=?`).bind(Date.now(), authUser.id).run()
+    stage = 'business'
+    remoteStarted = true
+    const response = await originRequest(env, '/api/internal/registration/provision', {
+      method: 'POST', headers: { 'content-type': 'application/json', 'x-registration-request-id': requestId },
+      body: JSON.stringify({ authUserId: authUser.id, email: authUser.email, name: authUser.name, inviteToken: token, inviteKind: kind }),
+      signal: AbortSignal.timeout(15_000),
+    }, { authUserId: authUser.id }, { capability: 'registration-provision', emailVerified: true })
+    if (!response.ok) { remoteStarted = false; throw upstreamFailure(response.status, stage) }
+    stage = 'receipt'
+    const result = await response.json<{ appUserId?: unknown }>()
+    if (typeof result.appUserId !== 'string' || !result.appUserId) throw new Error('invalid receipt')
+    stage = 'link'
+    const now = Date.now()
+    // Never replace or reactivate another mapping. D1 enforces both identities' uniqueness.
+    await env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES(?,?,?) ON CONFLICT DO NOTHING`)
+      .bind(authUser.id, result.appUserId, now).run()
+    const saved = await env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(authUser.id).first<{ app_user_id: string }>()
+    if (saved?.app_user_id !== result.appUserId) throw new RegistrationError('REGISTRATION_FORBIDDEN', 403, stage)
+    await env.DB.batch([
+      env.DB.prepare(`UPDATE registration_claims SET status='provisioned',error=NULL,updated_at=? WHERE auth_user_id=?`).bind(now, authUser.id),
+      env.DB.prepare(`UPDATE user SET registrationIntent=NULL WHERE id=?`).bind(authUser.id),
+    ])
+  } catch (cause) {
+    const error = cause instanceof RegistrationError ? cause : new RegistrationError(
+      remoteStarted ? 'REGISTRATION_RESULT_UNKNOWN' : 'REGISTRATION_UNAVAILABLE', 503, stage, true)
+    // Safe diagnostic metadata only: no upstream body, token, email or exception text.
+    const detail = JSON.stringify({ requestId, stage: error.stage, code: error.code, status: error.status, outcome: remoteStarted ? 'unknown' : 'failed' })
+    await env.DB.prepare(`UPDATE registration_claims SET status='failed',error=?,updated_at=? WHERE auth_user_id=? AND status<>'provisioned'`)
+      .bind(detail, Date.now(), authUser.id).run().catch(() => {})
+    console.warn(JSON.stringify({ event: 'registration.failure', requestId, stage: error.stage, code: error.code, status: error.status }))
+    throw error
+  }
 }
 
-function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promise<unknown>) => void, settings: AuthSettings, registrationAllowed: () => boolean) {
+function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promise<unknown>) => void, settings: AuthSettings, registrationAllowed: () => boolean, registrationIntent: () => string | undefined, requestId: string) {
   const origin = new URL(request.url).origin
   const allowedHosts = env.AUTH_ALLOWED_HOSTS.split(',').map((host) => host.trim()).filter(Boolean)
   const trustedOrigins = allowedHosts.map((host) => `https://${host}`)
@@ -224,9 +297,21 @@ function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promis
     secret: env.BETTER_AUTH_SECRET,
     trustedOrigins,
     database: drizzleAdapter(drizzle(env.DB), { provider: 'sqlite', schema: authSchema }),
-    databaseHooks: { user: { create: { before: async () => {
-      if (!registrationAllowed()) throw new APIError('FORBIDDEN', { message: 'invitation required' })
-    } } } },
+    user: { additionalFields: { registrationIntent: { type: 'string', required: false, input: false, returned: false } } },
+    databaseHooks: { user: { create: {
+      before: async () => {
+        if (!registrationAllowed()) throw new APIError('FORBIDDEN', { message: 'invitation required' })
+        return { data: { registrationIntent: registrationIntent() } }
+      },
+      after: async (user) => {
+        const intent = registrationIntent()
+        if (intent) await saveClaim(env, user, intent).catch(() => {
+          // Do not interrupt credential creation/OTP: the identity retains its
+          // original encrypted intent, recoverable only after ownership verification.
+          console.warn(JSON.stringify({ event: 'registration.failure', requestId, stage: 'claim', code: 'REGISTRATION_UNAVAILABLE', status: 503 }))
+        })
+      },
+    } } },
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
@@ -235,7 +320,11 @@ function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promis
     },
     emailVerification: {
       autoSignInAfterVerification: false,
-      afterEmailVerification: async (user) => provision(env, user),
+      afterEmailVerification: async (user) => {
+        // Verification is already committed by Better Auth. Business recovery is
+        // explicit after sign-in; never make the user replay a consumed OTP.
+        await provision(env, user, requestId).catch(() => {})
+      },
     },
     session: { expiresIn: settings.sessionExpiresIn, cookieCache: { enabled: false } },
     rateLimit: { enabled: true, storage: 'database', window: settings.rateLimitWindow, max: settings.rateLimitMax },
@@ -265,7 +354,7 @@ function createAuth(env: Bindings, request: Request, waitUntil: (promise: Promis
 }
 
 async function attachAuth(c: AppContext) {
-  const auth = createAuth(c.env, c.req.raw, c.executionCtx.waitUntil.bind(c.executionCtx), await loadAuthSettings(c), () => c.get('registrationValidated') === true)
+  const auth = createAuth(c.env, c.req.raw, c.executionCtx.waitUntil.bind(c.executionCtx), await loadAuthSettings(c), () => c.get('registrationValidated') === true, () => c.get('registrationIntent'), c.get('requestId'))
   c.set('auth', auth)
   return auth
 }
@@ -287,6 +376,14 @@ app.post('/api/auth/ws-ticket', async (c) => {
 app.use('/api/auth/*', async (c, next) => {
   await attachAuth(c)
   await next()
+  if (c.res.status >= 400 && !c.res.headers.has('x-registration-error')) {
+    const body = await c.res.clone().json<{ code?: string; requestId?: string }>().catch(() => null)
+    const code = body?.code ?? (c.res.status === 429 ? 'RATE_LIMITED' : 'REGISTRATION_UNAVAILABLE')
+    const headers = new Headers(c.res.headers)
+    headers.set('content-type', 'application/json')
+    c.res = new Response(JSON.stringify({ code, message: registrationMessage(code, c.res.status), requestId: c.get('requestId') }), { status: c.res.status, headers })
+    console.warn(JSON.stringify({ event: 'registration.failure', requestId: c.get('requestId'), stage: 'authentication', code, status: c.res.status }))
+  }
 })
 
 app.use('/api/control/*', async (c, next) => {
@@ -296,29 +393,30 @@ app.use('/api/control/*', async (c, next) => {
 
 app.post('/api/auth/sign-up/email', async (c) => {
   const input = await c.req.json<{ email?: string; password?: string; name?: string; inviteToken?: string; inviteKind?: string }>()
-  if (!input.email || !input.password || !input.name) return c.json({ error: '邮箱、姓名和密码均为必填项' }, 400)
+  if (!input.email || !input.password || !input.name) return registrationFailure(c, new RegistrationError('INVALID_REGISTRATION', 400, 'input'))
   const inviteKind = input.inviteKind
   const inviteToken = input.inviteToken?.trim() ?? ''
-  if (!inviteToken || (inviteKind !== 'project' && inviteKind !== 'company')) return c.json({ error: '仅限邀请注册' }, 403)
-  if (inviteToken) {
-    const validation = await originRequest(c.env, '/api/internal/registration/invitation', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: input.email, inviteToken, inviteKind }),
-    }, undefined, { capability: 'registration-invitation' })
-    if (!validation.ok) return c.json({ error: '邀请无效、已过期或与邮箱不匹配' }, validation.status === 404 ? 404 : 403)
-  }
+  if (!inviteToken || (inviteKind !== 'project' && inviteKind !== 'company')) return registrationFailure(c, new RegistrationError('INVITATION_REQUIRED', 403, 'invitation'))
+  const validation = await originRequest(c.env, '/api/internal/registration/invitation', {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-registration-request-id': c.get('requestId') },
+    body: JSON.stringify({ email: input.email, inviteToken, inviteKind }), signal: AbortSignal.timeout(15_000),
+  }, undefined, { capability: 'registration-invitation' })
+  if (!validation.ok) return registrationFailure(c, upstreamFailure(validation.status, 'invitation'))
   c.set('registrationValidated', true)
+  c.set('registrationIntent', await sealClaim(c.env.BETTER_AUTH_SECRET, JSON.stringify({ token: inviteToken, kind: inviteKind })))
   const request = new Request(c.req.raw, { body: JSON.stringify({ email: input.email, password: input.password, name: input.name }) })
   const response = await c.get('auth').handler(request)
-  if (response.ok && inviteToken) {
-    const result = await response.clone().json<{ user?: { id?: string } }>().catch(() => null)
-    if (result?.user?.id) {
-      const now = Date.now()
-      await c.env.DB.prepare(`INSERT INTO registration_claims(auth_user_id,token_hash,invite_token,invite_kind,email,status,created_at,updated_at) VALUES(?,?,?,?,?,'pending',?,?)`)
-        .bind(result.user.id, await sha256(inviteToken), await sealClaim(c.env.BETTER_AUTH_SECRET, inviteToken), inviteKind, input.email.toLowerCase(), now, now).run()
+  if (!response.ok) {
+    const result = await response.clone().json<{ code?: string }>().catch(() => null)
+    // A concurrent first signup can lose the user(email) race after the library's
+    // initial lookup. Return the same public result only for this creation error.
+    if (result?.code !== 'FAILED_TO_CREATE_USER') return response
+    if (!await c.env.DB.prepare(`SELECT id FROM user WHERE email=?`).bind(input.email.toLowerCase()).first()) {
+      return registrationFailure(c, new RegistrationError('REGISTRATION_UNAVAILABLE', 503, 'identity', true))
     }
   }
-  return response
+  // Real and synthetic Better Auth users have exactly the same public response.
+  return c.json({ ok: true, nextAction: 'verify_email' })
 })
 
 app.get('/api/auth/sso/sigillo', async (c) => {
@@ -382,9 +480,11 @@ app.get('/api/registration/invitation', async (c) => {
   const token = c.req.query('token')
   const kind = c.req.query('kind') === 'project' ? 'project' : 'company'
   if (!token) return c.json({ error: 'token required' }, 400)
-  return originRequest(c.env, '/api/internal/registration/invitation', {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ inviteToken: token, inviteKind: kind }),
+  const response = await originRequest(c.env, '/api/internal/registration/invitation', {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-registration-request-id': c.get('requestId') }, body: JSON.stringify({ inviteToken: token, inviteKind: kind }),
+    signal: AbortSignal.timeout(15_000),
   }, undefined, { capability: 'registration-invitation' })
+  return response.ok ? response : registrationFailure(c, upstreamFailure(response.status, 'invitation'))
 })
 
 app.get('/api/invitations/:token', (c) => originRequest(c.env,
@@ -392,23 +492,33 @@ app.get('/api/invitations/:token', (c) => originRequest(c.env,
 app.get('/api/project-invitations/:token', (c) => originRequest(c.env,
   `/api/project-invitations/${encodeURIComponent(c.req.param('token'))}`, { method: 'GET' }))
 
-app.post('/api/registration/accept', async (c) => {
+app.post('/api/registration/:action{accept|recover}', async (c) => {
   await attachSession(c, 'database')
   const session = requireSession(c)
   if (session instanceof Response) return session
-  if (!session.user.emailVerified) return c.json({ error: 'verified email required' }, 403)
-  const input = await c.req.json<{ inviteToken?: string; inviteKind?: string }>()
-  if (!input.inviteToken || (input.inviteKind !== 'company' && input.inviteKind !== 'project')) return c.json({ error: 'invitation required' }, 400)
-  const response = await originRequest(c.env, '/api/internal/registration/provision', {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ authUserId: session.user.id, email: session.user.email, name: session.user.name, inviteToken: input.inviteToken, inviteKind: input.inviteKind }),
-  }, { authUserId: session.user.id }, { capability: 'registration-provision', emailVerified: true })
-  if (!response.ok) return response
-  const result = await response.json<{ appUserId: string }>()
-  await c.env.DB.prepare(`INSERT INTO app_user_links(auth_user_id,app_user_id,provisioned_at) VALUES(?,?,?)
-    ON CONFLICT(auth_user_id) DO UPDATE SET app_user_id=excluded.app_user_id,provisioned_at=excluded.provisioned_at,suspended_at=NULL`)
-    .bind(session.user.id, result.appUserId, Date.now()).run()
-  return c.json({ ok: true })
+  const settings = await loadAuthSettings(c)
+  const now = Date.now()
+  const rate = await c.env.DB.prepare(`INSERT INTO rateLimit(id,key,count,lastRequest) VALUES(?,?,1,?)
+    ON CONFLICT(key) DO UPDATE SET
+      count=CASE WHEN rateLimit.lastRequest<=? THEN 1 ELSE rateLimit.count+1 END,
+      lastRequest=CASE WHEN rateLimit.lastRequest<=? THEN excluded.lastRequest ELSE rateLimit.lastRequest END
+    RETURNING count,lastRequest`)
+    .bind(crypto.randomUUID(), `registration:${session.user.id}`, now, now-settings.rateLimitWindow*1000, now-settings.rateLimitWindow*1000)
+    .first<{ count: number; lastRequest: number }>()
+  if (rate && rate.count > settings.rateLimitMax) {
+    c.header('retry-after', String(Math.max(1, Math.ceil((rate.lastRequest+settings.rateLimitWindow*1000-now)/1000))))
+    return registrationFailure(c, new RegistrationError('RATE_LIMITED', 429, 'recovery', true))
+  }
+  const input = await c.req.json<{ inviteToken?: string; inviteKind?: string }>().catch(() => ({} as { inviteToken?: string; inviteKind?: string }))
+  const invitation: { token: string; kind: 'company' | 'project' } | undefined = input.inviteToken && (input.inviteKind === 'company' || input.inviteKind === 'project')
+    ? { token: input.inviteToken, kind: input.inviteKind } : undefined
+  if (c.req.param('action') === 'accept' && !invitation) return registrationFailure(c, new RegistrationError('INVITATION_REQUIRED', 400, 'claim'))
+  try {
+    await provision(c.env, session.user, c.get('requestId'), invitation)
+    return c.json({ ok: true })
+  } catch (error) {
+    return registrationFailure(c, error instanceof RegistrationError ? error : new RegistrationError('REGISTRATION_UNAVAILABLE', 503, 'claim', true))
+  }
 })
 
 app.post('/api/internal/revoke-sessions', async (c) => {
@@ -688,7 +798,7 @@ async function proxyAppRequest(c: AppContext): Promise<Response> {
   const session = requireSession(c)
   if (session instanceof Response) return session
   const link = await c.env.DB.prepare(`SELECT app_user_id FROM app_user_links WHERE auth_user_id=? AND suspended_at IS NULL`).bind(session.user.id).first<{ app_user_id: string }>()
-  if (!link) return c.json({ error: 'business account is not provisioned' }, 409)
+  if (!link) return registrationFailure(c, new RegistrationError('REGISTRATION_INCOMPLETE', 409, 'session', true))
   const path = c.req.path === '/api/session' ? '/api/auth/me' : c.req.path
   return originRequest(c.env, path + new URL(c.req.url).search, { method: c.req.method, headers: c.req.raw.headers, body: ['GET', 'HEAD'].includes(c.req.method) ? null : c.req.raw.body }, { appUserId: link.app_user_id, authUserId: session.user.id, authSessionIssuedAt: new Date(session.session.createdAt).getTime(), platformAdmin: c.req.path.startsWith('/api/control/') && session.user.role === 'admin' })
 }
