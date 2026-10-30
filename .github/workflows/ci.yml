@@ -79,6 +79,7 @@ jobs:
               - 'third_party/react-chat-elements/reply-message/**'
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'
+              - 'scripts/build-slides-editor.mjs'
               - 'src/**'
               - 'public/**'
               - 'index.html'
@@ -127,6 +128,7 @@ jobs:
               - 'third_party/baoyu-design/**'
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'
+              - 'scripts/build-slides-editor.mjs'
               - 'server/.npmrc'
               - 'server/scripts/**'
               - 'server/src/**'
@@ -164,6 +166,7 @@ jobs:
             integration_tests:
               - 'server/src/__integration__/*.test.ts'
             integration_runner:
+              - 'scripts/slides-editor.test.mjs'
               - 'server/run-integration-tests.mjs'
               - 'server/integration-suite.mjs'
               - 'server/run-historical-migration-tests.mjs'
@@ -393,7 +396,7 @@ jobs:
       - run: node server/scripts/scoped-dependencies.mjs && node server/scripts/install-scoped-dependencies.mjs integration
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-      - run: npm run verify:visualize && npm run build:visualize-runtime
+      - run: npm run verify:visualize && npm run build:visualize-runtime && node --test scripts/slides-editor.test.mjs
       - run: node --test server/scripts/bootstrap-runtime-patch-test-db.test.mjs && node server/scripts/bootstrap-runtime-patch-test-db.mjs
         env:
           NODE_ENV: test

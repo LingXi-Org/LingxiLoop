@@ -35,6 +35,7 @@
     "preview": "vite preview --host --port 5180",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
     "server:dev": "tsx watch server/src/bin/web.ts",
+    "preserver:dev": "npm run build:slides-editor",
     "server:start": "tsx server/src/bin/web.ts",
     "worker:dev": "tsx watch server/src/bin/worker.ts",
     "worker:start": "tsx server/src/bin/worker.ts",
@@ -56,6 +57,7 @@
     "icons": "node scripts/generate-icons.mjs",
     "verify:visualize": "node scripts/verify-zcode-visualize.mjs",
     "build:visualize-runtime": "node scripts/build-visualize-runtime.mjs",
+    "build:slides-editor": "node scripts/build-slides-editor.mjs",
     "prebuild": "npm run verify:visualize && npm run build:visualize-runtime",
     "memory:maintain": "tsx server/src/bin/memory-maintenance.ts"
   },
