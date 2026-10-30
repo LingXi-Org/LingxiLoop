@@ -19,6 +19,8 @@ const PROJECTION_SOURCE='7a255c3fe95d832e77fd29c6db9a506d111d3cf2'
 const PROJECTION_FILES=[
  {path:'server/src/agent-runtime/message-projection.ts',sha256:'80f0e203665a6992e9017ff424aca79b361804d8406de7ea5579020afa15aac2'},
  {path:'src/lib/nativeMessage.ts',sha256:'2e845e9763b1a1bccafc345f91a7c172cf25391f86a40d215dfed1c57b836178'},
+ {path:'server/src/im/wukong.ts',sha256:'20854873ddb0fe3b8a05bf0fdee187fb727e84f6a0d269faf1e65cd5007e8e69'},
+ {path:'server/src/im/message-types.ts',sha256:'d7acb44eac11489ed3e45bec7b61cb9a3e5b660f46e9c968909767ae2061443b'},
 ]
 // Freeze only the test fixture's real product54/57/58 prefix. Current production
 // migrations, package manifests/locks and the strict CAS inventory stay intact.
