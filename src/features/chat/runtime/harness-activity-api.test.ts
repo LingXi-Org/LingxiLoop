@@ -94,3 +94,20 @@ test('caller cancellation still aborts activity reads independently of their dea
     assert.equal(deadline.signal.aborted,false)
   } finally { timeout.mock.restore() }
 })
+
+test('terminal trace reads pin feedback/request/fence and cannot substitute another attempt',async()=>{
+  const { harnessApi }=await import('./harness-api')
+  const target={conversationId:'room',agentId:'agent',runId:'run',threadId:'thread'}
+  const reference={version:1 as const,runId:'run',requestVersion:2,fence:3,feedbackId:'feedback'}
+  let wrong=false
+  httpRequest=async(path,init)=>{
+    const query=new URLSearchParams(path.split('?')[1]);assert.equal(query.get('threadId'),'thread')
+    assert.equal(query.get('terminalFeedbackId'),'feedback');assert.equal(query.get('traceRequestVersion'),'2');assert.equal(query.get('traceFence'),'3');assert.ok(init.signal)
+    return {message:createNativeMessage({id:'run-run',role:'assistant',content:[],custom:{runId:'run',
+      harness:{...createRunView('run'),requestVersion:wrong?3:2,fence:3,artifacts:[]},
+      terminalFeedback:{id:'feedback',requestVersion:2}}})}
+  }
+  await harnessApi.readTerminalTrace(target,reference)
+  wrong=true;await assert.rejects(harnessApi.readTerminalTrace(target,reference),/运行记录已更新/)
+  await assert.rejects(harnessApi.readTerminalTrace({...target,runId:'other'},reference),/运行身份不一致/)
+})

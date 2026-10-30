@@ -178,7 +178,7 @@ test('committed citation data stays valid on the strict wire and different sourc
   assert.deepEqual(sources.map(part => part.providerMetadata?.lingxiloop?.sourceVersion), ['v1', 'v2'])
 })
 
-test('failed v3 corrections retain only the latest unsealed draft, preserving sealed text and failure state', () => {
+test('failed v3 corrections archive all unsealed failed drafts while preserving sealed text and normal continuation', () => {
   const parts = ['已确认前文。', '失败草稿一。', '失败草稿二。', '最后未完成正文。'].map((text, index) => ({
     version: 3 as const, runId: 'run', requestVersion: 1, fence: 1, attemptId: `attempt-${index}`,
     partId: `part-${index}`, partIndex: 0, messageId: 'answer:run:v1', segmentId: `part-${index}`,
@@ -191,21 +191,24 @@ test('failed v3 corrections retain only the latest unsealed draft, preserving se
   const view = { ...createRunView('run'), requestVersion: 1, fence: 1, lifecycle: 'failed' as const, lastSeq: 12, publicTextParts: parts }
   const projected = runMessageParts(view)
   const body = projected.filter(part => activityAnnotation(part)?.kind === 'answer')
-  assert.deepEqual(body.map(part => part.type === 'text' ? part.text : ''), ['已确认前文。', '最后未完成正文。'])
-  const last = body.at(-1)
-  assert.equal(last?.type === 'text' && last.status?.type, 'incomplete')
-  assert.equal(last?.type === 'text' && last.status?.type === 'incomplete' && last.status.reason, 'error')
-  assert.ok(last?.type === 'text')
-  assert.deepEqual(last.providerMetadata?.lingxiloop?.answerSegment, {
-    version: 3, messageId: 'answer:run:v1', segmentId: 'part-3', partId: 'part-3',
-    start: parts.slice(0, 3).reduce((length, part) => length + part.text.length, 0),
-    end: parts.reduce((length, part) => length + part.text.length, 0),
-  })
+  assert.deepEqual(body.map(part => part.type === 'text' ? part.text : ''), ['已确认前文。'])
   for (const history of [false, true]) {
     const output = JSON.stringify(runMessageParts(view, [], { activityHistory: history }))
-    assert.doesNotMatch(output, /失败草稿一|失败草稿二/)
+    assert.doesNotMatch(output, /失败草稿一|失败草稿二|最后未完成正文/)
   }
-  // A new execution cannot suppress an older candidate merely by sharing text.
-  const otherFence = { ...view, publicTextParts: [parts[1], { ...parts[3], fence: 2 }] }
-  assert.match(JSON.stringify(runMessageParts(otherFence)), /失败草稿一/)
+  const continuing={...view,lifecycle:'leased' as const,publicTextParts:[parts[0],{...parts[3],reason:null,status:'running' as const,endedSeq:null}]}
+  assert.deepEqual(runMessageParts(continuing).filter(part=>activityAnnotation(part)?.kind==='answer').map(part=>part.type==='text'?part.text:''),['已确认前文。','最后未完成正文。'])
+})
+
+test('all three failed append candidates stay out of the body on both live and recovered projection',()=>{
+  const parts=Array.from({length:3},(_,index)=>({version:3 as const,runId:'run',requestVersion:1,fence:1,attemptId:`attempt-${index}`,
+    partId:`failed-${index}`,partIndex:0,messageId:'answer:run:v1',segmentId:`failed-${index}`,operation:'append' as const,supersedes:[],purpose:'answer' as const,
+    text:`Different complete explanation ${index}`,firstSeq:index*3+1,lastSeq:index*3+3,chunkCount:1,endedSeq:index*3+3,
+    acceptedResultId:null,status:'incomplete' as const,reason:'failed' as const}))
+  const view={...createRunView('run'),requestVersion:1,fence:1,lifecycle:'failed' as const,lastSeq:10,publicTextParts:parts}
+  for(const projected of [runMessageParts(view),runMessageParts(structuredClone(view))]){
+    assert.equal(projected.filter(part=>activityAnnotation(part)?.kind==='answer').length,0)
+    assert.equal(projected.filter(part=>activityAnnotation(part)?.kind==='commentary').length,3)
+    assert.doesNotMatch(JSON.stringify(projected),/Different complete explanation/)
+  }
 })

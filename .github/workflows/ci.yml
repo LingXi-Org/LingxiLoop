@@ -148,6 +148,7 @@ jobs:
               - 'src/lib/userFacingError.ts'
               - 'src/lib/runActivity.ts'
               - 'src/lib/runTrace.ts'
+              - 'src/lib/knowledgeSearch.ts'
               - 'src/lib/traceCost.ts'
               - 'src/lib/memoryActivity.ts'
               - 'src/features/cases/cover-vm/runtime.ts'

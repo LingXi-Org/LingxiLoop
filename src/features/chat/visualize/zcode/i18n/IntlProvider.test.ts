@@ -37,3 +37,14 @@ test('without browser globals the default remains Chinese and missing messages r
   assert.equal(intl.formatMessage({ id: 'genUi.title' }), '交互视图')
   assert.equal(intl.formatMessage({ id: 'missing.message' }), 'missing.message')
 })
+
+test('loading labels describe generation, delivery and document loading in both locales', async (t) => {
+  for (const [language, expected] of [
+    ['zh-CN', ['正在生成交互视图…', '正在等待交互视图交付…', '正在加载交互视图…']],
+    ['en-US', ['Generating interactive view…', 'Waiting for interactive view delivery…', 'Loading interactive view…']],
+  ] as const) await t.test(language, (t) => {
+    setLanguages(t, language, 'en-US')
+    const { intl } = useZCodeIntl()
+    assert.deepEqual(['genUi.waiting', 'genUi.awaitingDelivery', 'genUi.loading'].map(id => intl.formatMessage({ id })), expected)
+  })
+})

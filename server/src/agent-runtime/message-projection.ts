@@ -101,15 +101,12 @@ function publicTextPurpose(part: PublicTextPart, view: RunView, tools: readonly 
   return 'answer'
 }
 
-/** Failed, unsealed candidates are diagnostics once a later attempt has text.
- * Keep the last partial answer readable; never demote sealed or accepted sources
- * or infer success from visible text. Native source identities remain intact. */
-function failedDraftsBeforeCorrection(view: RunView): Set<string> {
-  const parts = (view.publicTextParts ?? []).filter(part => part.version === 3 && part.purpose === 'answer')
-  return new Set(parts.filter(part => part.reason === 'failed' && !part.sealedSeq && !part.acceptedResultId
-    && parts.some(next => next.requestVersion === part.requestVersion && next.fence === part.fence
-      && next.attemptId !== part.attemptId && next.firstSeq > part.lastSeq && next.text.trim()))
-    .map(part => part.partId))
+/** Failed, unsealed candidates are diagnostics, including the final attempt.
+ * Sealed/accepted text remains substantive; an unfinished protocol candidate
+ * must not become a different answer merely because the page was not refreshed. */
+function failedUnsealedDrafts(view: RunView): Set<string> {
+  return new Set((view.publicTextParts ?? []).filter(part=>part.version===3 && part.purpose==='answer'
+    && part.reason==='failed' && !part.sealedSeq && !part.acceptedResultId).map(part=>part.partId))
 }
 
 function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean, history: boolean): ThreadAssistantMessagePart[] {
@@ -153,7 +150,7 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
         purpose: kind === 'answer' ? 'result' : 'process' }),part.lastSeq,part.requestVersion)
     }
   }
-  const failedDrafts = failedDraftsBeforeCorrection(view)
+  const failedDrafts = failedUnsealedDrafts(view)
   for (const segment of publicAnswerSegments(view)) {
     if (segment.status !== 'pending-replacement' && segment.status !== 'replaced' && !failedDrafts.has(segment.partId)) continue
     const source = view.publicTextParts?.find(part=>part.partId===segment.partId)
@@ -224,10 +221,10 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
   }
   return [...parts.values()].sort((a,b) => a.seq-b.seq).map(value => value.part)
 }
-/** Display native ordered sources and summarize failed unsealed drafts from
- * prior attempts. Append, replacement, acceptance and source offsets stay native. */
+/** Display native ordered sources and summarize failed unsealed candidates.
+ * Append, replacement, acceptance and source offsets stay native. */
 function segmentedAnswerParts(view: RunView): ThreadAssistantMessagePart[] {
-  const failedDrafts = failedDraftsBeforeCorrection(view)
+  const failedDrafts = failedUnsealedDrafts(view)
   return publicAnswerSegments(view).flatMap(segment=>{
     if (!segment.text || segment.status === 'pending-replacement' || segment.status === 'replaced'
       || segment.status !== 'accepted' && failedDrafts.has(segment.partId)) return []

@@ -3,8 +3,6 @@ import { create } from 'zustand'
 import { getLingxiMessageMetadata, mergeProgressMessage, preserveMessageTime, resolveMessagePresentation, type LingxiMessageMetadata } from './model'
 import { projectMessageGroups } from './converter'
 import { isRunMessage, isOlderRun } from './harness'
-import { nativeText } from '@/lib/nativeMessage'
-import { activityAnnotation } from '@/lib/runActivity'
 import { appendedContent, sameValue } from './text-update'
 
 export const CHAT_HISTORY_PAGE_SIZE = 80
@@ -111,12 +109,9 @@ export function mergeCanonicalMessages(
       const sameResult = Boolean(next.resultId && old.resultId === next.resultId && old.requestVersion === next.requestVersion
         && old.fence === next.fence && old.messageFence === next.messageFence)
       const receipt = after.sequence !== null || !sameResult ? after : before
-      // Failed runs keep visible prose; cancellation, supersession and new attempts still retract it.
-      // shortcut: drafts survive only in this session; add durable recovery when they must survive a page reload.
-      const content = next.lifecycle === 'failed' && !next.resultId
-        && old.requestVersion === next.requestVersion && old.fence === next.fence && old.messageFence === next.messageFence
-        && !nativeText(message)
-        ? [...previous.content.filter(part => part.type === 'text' && activityAnnotation(part)?.kind !== 'commentary'), ...message.content] : message.content
+      // The durable projection owns failed candidates too; local drafts must not
+      // reappear after rejection or differ from a fresh history read.
+      const content = message.content
       byId.set(key,{ ...message, content, metadata: { ...message.metadata, custom: { ...after,
         presentation: resolveMessagePresentation(content),
         sequence: receipt.sequence, clientMessageId: receipt.clientMessageId, imMessageId: receipt.imMessageId,

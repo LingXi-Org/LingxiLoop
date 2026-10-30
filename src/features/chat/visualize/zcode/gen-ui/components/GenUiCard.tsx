@@ -6,7 +6,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Copy, Loader2, Maximize2, MessageCircle, SlidersHorizontal, X } from "lucide-react";
+import { Copy, Maximize2, MessageCircle, SlidersHorizontal, X } from "lucide-react";
 import type { GenUiReference } from "@/features/chat/visualize/zcode/shared/gen-ui";
 import { Button } from "@/features/chat/visualize/zcode/components/ui/button.js";
 import {
@@ -23,6 +23,7 @@ import { useZCodeIntl } from "@/features/chat/visualize/zcode/i18n/IntlProvider.
 import { useGenUi } from "@/features/chat/visualize/zcode/hooks/useGenUi.js";
 import { EMPTY_GEN_UI_SNAPSHOT, type GenUiCardTarget, type GenUiPage } from "../contract.js";
 import { TweakPanel } from "./TweakPanel.js";
+import { GenUiLoadingSkeleton } from "./GenUiLoadingSkeleton.js";
 import { useAuth } from "@/stores/auth";
 import { readComposerDraft, saveComposerDraft } from "@/features/chat/drafts";
 import { artifactQuestionScope } from "../../../artifact-question-draft";
@@ -219,10 +220,11 @@ export function GenUiCard({
   return (
     <section className="zcode-visualize my-3 w-full" data-testid="gen-ui-card" data-gen-ui-phase={snapshot.phase}>
       <div className="group relative flow-root overflow-clip rounded-xl">
-        {(snapshot.phase !== "ready" || !page) && (
+        {(snapshot.phase !== "ready" || !page) && (loading ? (
+          <GenUiLoadingSkeleton label={status} className={page ? "absolute inset-0 z-10" : undefined} />
+        ) : (
           <div className="space-y-2 py-3 text-ui-base text-foreground-subtle" role="status">
             <p className="flex items-center gap-2">
-              {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
               {status}
             </p>
             {(snapshot.error || acquisitionError) && (
@@ -234,7 +236,7 @@ export function GenUiCard({
               </Button>
             )}
           </div>
-        )}
+        ))}
         {page && <PageAnchor page={page} height={snapshot.height} />}
         {snapshot.phase === "ready" && controls()}
       </div>

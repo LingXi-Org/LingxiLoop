@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { knowledgeSearchStatusSchema } from './knowledgeSearch.js'
 import { publicText,canonicalToolName } from './runActivity.js'
 
 const metric = z.number().finite().nonnegative().nullable()
@@ -55,7 +56,7 @@ const span: z.ZodType<TraceSpan> = z.lazy(() => z.object({
   costPricing: tracePricingSchema.optional(),
   children: z.array(span).max(100),
 }).strict())
-export const runTraceSchema = z.object({ version: z.literal(1),startedAt: metric,root: span,
+export const runTraceSchema = z.object({ knowledgeSearch: knowledgeSearchStatusSchema.optional(),version: z.literal(1),startedAt: metric,root: span,
   timingBasis: z.enum(['creation','execution']).optional(),queuedAt: metric.optional(),revision: z.string().max(160).optional(),
   truncated: z.boolean(),limitations: z.array(z.enum(['llm-offsets','terminal-time','child-discovery','presentation-unavailable'])).max(4),
 }).strict()

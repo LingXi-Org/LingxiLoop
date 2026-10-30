@@ -3,6 +3,7 @@ import { MessageResponse, type MessageResponseProps } from "@/features/chat/visu
 import { useZCodeIntl } from "@/features/chat/visualize/zcode/i18n/IntlProvider.js";
 import { projectGenUiReferences } from "../domain/references.js";
 import { GenUiCard } from "./GenUiCard.js";
+import { GenUiLoadingSkeleton } from "./GenUiLoadingSkeleton.js";
 export const GenUiMessageResponse = memo(function GenUiMessageResponse({
   completed,
   messageKey,
@@ -60,6 +61,11 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
         reference={part.reference}
         target={targets[index]!}
       />
+    ) : (part.kind === "pending" && props.streaming && !completed)
+      || (part.kind === "ui" && completed && awaitingDelivery) ? (
+      <GenUiLoadingSkeleton key={`status:${index}`} label={intl.formatMessage({
+        id: part.kind === "ui" ? "genUi.awaitingDelivery" : "genUi.waiting",
+      })} className="my-3" />
     ) : (
       <div
         key={`status:${index}`}
