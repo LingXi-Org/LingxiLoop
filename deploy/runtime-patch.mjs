@@ -21,12 +21,17 @@ export function runtimePatchPlan(read, migrationPaths) {
   assert.match(pkg.integrity, /^sha512-[A-Za-z0-9+/]{86}==$/)
   assert.match(pkg.resolved, /^https:\/\/npm\.pkg\.github\.com\/download\/@lyyzka\/lingxios\/3\.8\.17\/[a-f0-9]{40}$/)
   const paths = migrationPaths.toSorted()
-  assert.equal(paths.length, 58, 'runtime patch requires complete product58')
+  const retirement = paths.length === 59 && paths.at(-1) === 'server/src/db/migrations/0059_retire_presentation_generation.sql'
+  assert.ok(paths.length === 58 || retirement, 'runtime patch requires complete product58 or reviewed product59 retirement')
   const migrations = paths.map((path, index) => {
     const match = /\/(\d{4})_([a-z0-9_]+)\.sql$/.exec(path)
     assert.ok(match && Number(match[1]) === index + 1, 'ordered migration inventory required')
     return { version: index + 1, name: match[2], checksum: hash(read(path)) }
   })
+  // Product59 uses the already installed formal3.8.17 package. Its migration
+  // runner independently checks installed3.8.17 before any retirement DDL.
+  // Never submit the historical product58 SDK provenance CAS for this release.
+  if (retirement) return null
   const source = { runtime: SOURCE, schema: 14, protocol: 11, schemaHash: SCHEMA, productVersion: 58, migrations }
   const target = { ...source, runtime: TARGET, integrity: pkg.integrity, tarball: pkg.resolved }
   return { source, target, id: hash(JSON.stringify({ source, target })) }

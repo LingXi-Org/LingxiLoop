@@ -9,6 +9,7 @@ import {promisify} from 'node:util'
 const execute=promisify(execFile)
 const PATCH54=new Set(['runtime-patch-provenance.test.ts'])
 const PATCH57=new Set(['runtime-patch57-provenance.test.ts'])
+const PATCH58=new Set(['runtime-patch58-provenance.test.ts'])
 const HISTORICAL=new Set(['migration.test.ts','conversation-repair-provenance-migration.test.ts',
  'public-purpose-reader-migration.test.ts','run-trace-provenance-migration.test.ts','run-presentation-contract.test.ts'])
 // Historical presentation coverage needs the pre-v3 display leaves, not today's
@@ -19,10 +20,11 @@ const PROJECTION_FILES=[
  {path:'server/src/agent-runtime/message-projection.ts',sha256:'80f0e203665a6992e9017ff424aca79b361804d8406de7ea5579020afa15aac2'},
  {path:'src/lib/nativeMessage.ts',sha256:'2e845e9763b1a1bccafc345f91a7c172cf25391f86a40d215dfed1c57b836178'},
 ]
-// Freeze only the test fixture's real product54/57 prefix. Current production
+// Freeze only the test fixture's real product54/57/58 prefix. Current production
 // migrations, package manifests/locks and the strict CAS inventory stay intact.
 export const copyProduct54FixtureSource=(root,fixture)=>copyProductFixtureSource(root,fixture,54)
 export const copyProduct57FixtureSource=(root,fixture)=>copyProductFixtureSource(root,fixture,57)
+export const copyProduct58FixtureSource=(root,fixture)=>copyProductFixtureSource(root,fixture,58)
 async function copyProductFixtureSource(root,fixture,productVersion){
  const directory=join(root,'server/src/db/migrations'),names=(await readdir(directory)).sort()
  assert.ok(names.length>=productVersion&&names.every((name,index)=>new RegExp('^'+String(index+1).padStart(4,'0')+'_[a-z0-9_]+\\.sql$').test(name)),'Product fixture requires a complete contiguous source inventory')
@@ -48,9 +50,9 @@ export async function copyHistoricalFixtureSource(root,fixture){
  return {sourceCommit:PROJECTION_SOURCE,files:PROJECTION_FILES.map(row=>({...row})),product54}
 }
 export function partitionMigrationTests(files){
- const historical=files.filter(f=>HISTORICAL.has(f)),patch54=files.filter(f=>PATCH54.has(f)),patch57=files.filter(f=>PATCH57.has(f)),current=files.filter(f=>!HISTORICAL.has(f)&&!PATCH54.has(f)&&!PATCH57.has(f))
+ const historical=files.filter(f=>HISTORICAL.has(f)),patch54=files.filter(f=>PATCH54.has(f)),patch57=files.filter(f=>PATCH57.has(f)),patch58=files.filter(f=>PATCH58.has(f)),current=files.filter(f=>!HISTORICAL.has(f)&&!PATCH54.has(f)&&!PATCH57.has(f)&&!PATCH58.has(f))
  if(historical.length&&!patch54.length)patch54.push('runtime-patch-provenance.test.ts')
- return {current,patch54,patch57,historical}
+ return {current,patch54,patch57,patch58,historical}
 }
 function assertFixtureTarget(files,env,allowed){
  let url;try{url=new URL(env.INTEGRATION_DATABASE_URL)}catch{throw Error('Historical fixtures require a dedicated local test database')}
@@ -79,8 +81,9 @@ export function runTestChild(args,{cwd,env=process.env,timeout=600_000}={}){
 }
 export const runProduct54MigrationTests=(root,files,env=process.env)=>runProductMigrationTests(root,files,env,54)
 export const runProduct57MigrationTests=(root,files,env=process.env)=>runProductMigrationTests(root,files,env,57)
+export const runProduct58MigrationTests=(root,files,env=process.env)=>runProductMigrationTests(root,files,env,58)
 async function runProductMigrationTests(root,files,env,productVersion){
- assertFixtureTarget(files,env,productVersion===54?PATCH54:PATCH57)
+ assertFixtureTarget(files,env,productVersion===54?PATCH54:productVersion===57?PATCH57:PATCH58)
  const fixture=await mkdtemp(join(tmpdir(),`lingxiloop-current-product${productVersion}-`))
  try{
   env={...env,DATABASE_URL:env.INTEGRATION_DATABASE_URL,DOTENV_CONFIG_PATH:join(fixture,'.no-fixture-env')}

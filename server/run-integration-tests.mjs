@@ -3,7 +3,7 @@
  * Requires a dedicated real Postgres test database and explicit Redis URL.
  * These tests TRUNCATE their database and remain serialized.
  */
-import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runTestChild } from './run-historical-migration-tests.mjs'
+import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runProduct58MigrationTests, runTestChild } from './run-historical-migration-tests.mjs'
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs'
 import { parseIntegrationArgs, selectIntegrationFiles } from './integration-suite.mjs'
 import { fileURLToPath } from 'node:url'
@@ -116,6 +116,13 @@ if (!code && groups.patch57.length) {
   try { code = await runProduct57MigrationTests(join(here, '..'), groups.patch57) }
   catch (error) { console.error('[integration product57] '+String(error.message).split('\n')[0].slice(0,240)); code = 1 }
   records.push({ files: groups.patch57, runtime: 'current', productFixture: 57, durationMs: Math.round(performance.now() - begin), exitCode: code })
+}
+if (!code && groups.patch58.length) {
+  const begin = performance.now()
+  console.log(`[integration product58] ${groups.patch58.length} file(s) using the actual current formal package and frozen58 prefix`)
+  try { code = await runProduct58MigrationTests(join(here, '..'), groups.patch58) }
+  catch (error) { console.error('[integration product58] '+String(error.message).split('\n')[0].slice(0,240)); code = 1 }
+  records.push({ files: groups.patch58, runtime: 'current', productFixture: 58, durationMs: Math.round(performance.now() - begin), exitCode: code })
 }
 if (!code && groups.historical.length) {
   const begin = performance.now()

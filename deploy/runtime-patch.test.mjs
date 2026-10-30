@@ -21,6 +21,14 @@ test('CAS plan requires exact formal receipts and complete immutable inventory',
   f.files['package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '4.0.0-slim.0' } })
   assert.throws(() => runtimePatchPlan(f.read, f.paths), /unreviewed runtime transition/)
 })
+test('product59 retirement uses the existing SDK, never the historical product58 CAS', () => {
+  const f = fixture(), path = 'server/src/db/migrations/0059_retire_presentation_generation.sql'
+  f.files[path] = '-- isolated retirement fixture'; f.paths.push(path)
+  assert.equal(runtimePatchPlan(f.read, f.paths), null)
+  assert.throws(() => runtimePatchPlan(f.read, [...f.paths.slice(0, -1), path.replace('retire_presentation_generation', 'unknown')]))
+  f.files['server/package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '3.8.16' } })
+  assert.throws(() => runtimePatchPlan(f.read, f.paths), /exact root\/server runtime pin/)
+})
 const run = async (fail, observed = { complete: false, state: 'source' }) => {
   const calls = [], actions = {}
   for (const name of ['preflight', 'requireFreshIntent', 'snapshotSource', 'stopIngress', 'stopWorkers', 'markAttempt', 'apply', 'observe', 'restoreSource', 'convergeTarget']) actions[name] = async () => {

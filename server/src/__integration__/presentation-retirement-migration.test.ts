@@ -53,6 +53,10 @@ test('58 to59 removes generated tables and typed outputs while retaining shared 
     const shared = (await database.query('SELECT * FROM projects')).rows
     const ledger = (await database.query('SELECT * FROM llm_calls')).rows
     const provenance = (await database.query('SELECT * FROM lingxios_installation')).rows
+    await database.query("UPDATE lingxios_installation SET runtime_version='3.8.16'")
+    await assert.rejects(migrateDatabase(database), (error: unknown) => error instanceof Error && error.cause instanceof Error && /mismatch/.test(error.cause.message))
+    assert.equal((await database.query('SELECT COUNT(*) AS count FROM presentations')).rows[0].count, '1', 'obsolete runtime cannot trigger retirement DDL')
+    await database.query("UPDATE lingxios_installation SET runtime_version='3.8.17'")
     // An unexpected shared FK aborts instead of cascading into another owner.
     await database.query("CREATE TABLE public.synthetic_shared_refs(id text PRIMARY KEY,deck_id text REFERENCES public.presentations(id)); INSERT INTO synthetic_shared_refs VALUES('shared583','deck583')")
     await assert.rejects(migrateDatabase(database), (error: unknown) => error instanceof Error && error.cause instanceof Error && /depend/.test(error.cause.message))

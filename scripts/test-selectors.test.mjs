@@ -52,8 +52,9 @@ test('historical migration routing retains every requested file and adds current
  assert.deepEqual(result.historical,historical)
  assert.deepEqual(result.current,['closed-education.test.ts'])
  assert.deepEqual(result.patch54,['runtime-patch-provenance.test.ts'])
- assert.deepEqual(partitionMigrationTests(['runtime-patch57-provenance.test.ts','homework-findings-migration.test.ts']),{current:['homework-findings-migration.test.ts'],patch54:[],patch57:['runtime-patch57-provenance.test.ts'],historical:[]})
- assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:[],patch54:['runtime-patch-provenance.test.ts'],patch57:[],historical:[]})
+ assert.deepEqual(partitionMigrationTests(['runtime-patch57-provenance.test.ts','homework-findings-migration.test.ts']),{current:['homework-findings-migration.test.ts'],patch54:[],patch57:['runtime-patch57-provenance.test.ts'],patch58:[],historical:[]})
+ assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:[],patch54:['runtime-patch-provenance.test.ts'],patch57:[],patch58:[],historical:[]})
+ assert.deepEqual(partitionMigrationTests(['runtime-patch58-provenance.test.ts','presentation-retirement-migration.test.ts']),{current:['presentation-retirement-migration.test.ts'],patch54:[],patch57:[],patch58:['runtime-patch58-provenance.test.ts'],historical:[]})
 })
 test('product54 fixture copies the exact contiguous prefix and four current manifests without mutating55 source',async()=>{
  const root=await mkdtemp(join(tmpdir(),'product54-source-owner-'))

@@ -69,7 +69,7 @@ unsupported data cards are omitted at its history decode boundary.
 
 No production counts have been queried. Before production approval, the sole
 publisher must obtain exact table/rewritten-row counts and the object manifest
-below, plus backup identifiers and the intended execution window. A synthetic
+below, the intended execution window and acknowledgement that deletion is irreversible without an available backup. A new backup system is not a prerequisite; the user decides whether to keep a recoverable copy. A synthetic
 upgrade with one deck/job, mixed IM content, generated/shared manifests and a
 nonempty LLM billing row verifies this boundary; it does not estimate production
 impact.
@@ -115,15 +115,21 @@ runtime workspace bucket namespace are outside the deletion set.
 
 ## Required release order — pending specific approval
 
-1. Freeze/drain old Web and Workers and all generation writers; prevent old
+1. Before merging, freeze/drain old Web and Workers and all generation writers; prevent old
    clients from committing new generation work. A rolling deploy that leaves
    old readers/writers running across the table removal is incompatible.
-2. Take restorable database and both object-store backups; record exact row
-   counts, object counts/bytes, preserved shared keys and backup IDs. Generate
-   the inventory on the drained58 database and review its digest and scope.
-3. Obtain specific confirmation for this irreversible target list/window.
+2. Generate the inventory on the drained58 database; record exact row counts,
+   object counts/bytes, preserved shared keys and its digest. Explain that absent
+   an existing or deliberately retained backup, removed rows/bytes cannot be
+   recovered. Let the user decide whether to keep a copy; do not require a new
+   large backup system.
+3. Obtain specific confirmation for this irreversible target list/window and
+   the chosen recovery policy.
    Only the parent thread's designated sole publisher may proceed. Do not merge
    this draft beforehand: main automatically deploys and runs migrations.
+   Product59 skips the obsolete product58 SDK provenance CAS; db:migrate still
+   requires the installed runtime to be exactly3.8.17 before0059. Old Web must
+   already be stopped: ordinary rolling convergence drains Workers only.
 4. Run0059 using the existing migration entry. Transaction/lock failure leaves
    the database unmodified; investigate before retrying. Verify a second run is
    a no-op and start only the schema59 application/Workers.
