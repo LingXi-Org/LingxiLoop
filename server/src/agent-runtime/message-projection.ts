@@ -101,6 +101,17 @@ function publicTextPurpose(part: PublicTextPart, view: RunView, tools: readonly 
   return 'answer'
 }
 
+/** Failed, unsealed candidates are diagnostics once a later attempt has text.
+ * Keep the last partial answer readable; never demote sealed or accepted sources
+ * or infer success from visible text. Native source identities remain intact. */
+function failedDraftsBeforeCorrection(view: RunView): Set<string> {
+  const parts = (view.publicTextParts ?? []).filter(part => part.version === 3 && part.purpose === 'answer')
+  return new Set(parts.filter(part => part.reason === 'failed' && !part.sealedSeq && !part.acceptedResultId
+    && parts.some(next => next.requestVersion === part.requestVersion && next.fence === part.fence
+      && next.attemptId !== part.attemptId && next.firstSeq > part.lastSeq && next.text.trim()))
+    .map(part => part.partId))
+}
+
 function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean, history: boolean): ThreadAssistantMessagePart[] {
   const parts = new Map<string, { seq: number; part: ThreadAssistantMessagePart }>()
   const attempts = [
@@ -142,8 +153,9 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
         purpose: kind === 'answer' ? 'result' : 'process' }),part.lastSeq,part.requestVersion)
     }
   }
+  const failedDrafts = failedDraftsBeforeCorrection(view)
   for (const segment of publicAnswerSegments(view)) {
-    if (segment.status !== 'pending-replacement' && segment.status !== 'replaced') continue
+    if (segment.status !== 'pending-replacement' && segment.status !== 'replaced' && !failedDrafts.has(segment.partId)) continue
     const source = view.publicTextParts?.find(part=>part.partId===segment.partId)
     const id = stableId('public-text',[view.runId,segment.requestVersion,segment.partId])
     const label = source?.reason === 'failed' ? answerRevisionLabels.failed
@@ -212,11 +224,13 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
   }
   return [...parts.values()].sort((a,b) => a.seq-b.seq).map(value => value.part)
 }
-/** Display the native reader's ordered sources. No product-side reducer or
- * attempt/text comparison is involved in append, replacement or acceptance. */
+/** Display native ordered sources and summarize failed unsealed drafts from
+ * prior attempts. Append, replacement, acceptance and source offsets stay native. */
 function segmentedAnswerParts(view: RunView): ThreadAssistantMessagePart[] {
+  const failedDrafts = failedDraftsBeforeCorrection(view)
   return publicAnswerSegments(view).flatMap(segment=>{
-    if (!segment.text || segment.status === 'pending-replacement' || segment.status === 'replaced') return []
+    if (!segment.text || segment.status === 'pending-replacement' || segment.status === 'replaced'
+      || segment.status !== 'accepted' && failedDrafts.has(segment.partId)) return []
     const id = stableId('public-text',[view.runId,segment.requestVersion,segment.segmentId])
     const status = segment.status === 'streaming' ? {type:'running' as const}
       : segment.status === 'incomplete' ? {type:'incomplete' as const,reason:view.lifecycle==='cancelled'?'cancelled' as const:view.lifecycle==='failed'?'error' as const:'other' as const}
