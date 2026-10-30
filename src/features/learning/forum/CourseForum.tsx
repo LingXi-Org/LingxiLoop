@@ -1,3 +1,4 @@
+import { ProtectedFileLinks } from '@/components/retab/ui/protected-file-links'
 import './forum-layout.css'
 import { markdownText, withTaskState } from '@/features/content-editor/document'
 import { createMemoNavigationState, resolveMemoDetailOrigin } from './memos/navigation'
@@ -234,7 +235,7 @@ function ScopedCourseForum({ space }: { space: LearningSpace }) {
           {editing?.id === item.id && !detailId ? <ForumComposer key={`edit:${item.id}`} space={space} item={item} onCreated={() => { setEditing(null); void load() }} onCancel={() => setEditing(null)} /> : <>
           <h3 className="forum-item-title"><a href={`/?${new URLSearchParams({project:space.projectId,view:'forum',post:item.id,type:item.targetType})}`} onClick={event=>{if(!event.metaKey&&!event.ctrlKey&&!event.shiftKey&&event.button===0){event.preventDefault();openDetail(item)}}} className="rounded-sm focus-visible:outline-2 focus-visible:outline-ring">{item.title}</a></h3>
           <div hidden={display.compact || display.columns!=='1'} data-slot="memo-body" className={`relative w-full min-w-0 flex flex-col items-start gap-2 ${display.compact || display.columns!=='1' ? 'max-h-72 overflow-hidden [mask-image:linear-gradient(black_80%,transparent)]' : ''}`}>
-            {item.body && <MemoContent content={item.body} onTaskToggle={item.targetType === 'post' && item.authorId === userId && canWrite && !busy && !item.archived ? line=>void mutate(()=>forumApi.update(courseId,item,{...item,body:toggleTaskAtLine(item.body,line),editorDocument:withTaskState(item.editorDocument,toggleTaskAtLine(item.body,line))})) : undefined} />}
+            {item.body && <ProtectedFileLinks><MemoContent content={item.body} onTaskToggle={item.targetType === 'post' && item.authorId === userId && canWrite && !busy && !item.archived ? line=>void mutate(()=>forumApi.update(courseId,item,{...item,body:toggleTaskAtLine(item.body,line),editorDocument:withTaskState(item.editorDocument,toggleTaskAtLine(item.body,line))})) : undefined} /></ProtectedFileLinks>}
             <ForumFiles links={item.links} attachments={item.attachments} />
           </div>
           {(display.compact || display.columns!=='1') && <p className="forum-item-summary">{markdownText(item.body)}</p>}

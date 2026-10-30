@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { createServer } from 'node:http'
 import { test } from 'node:test'
 import { clearPdfDocumentResource, getPdfDocumentResource, getPdfPageResource, releasePdfDocumentResource, retainPdfDocumentResource, waitForPdfLoadingTask } from './pdf-document-resource'
 
@@ -45,4 +46,18 @@ test('already cancelled task observes its rejected promise', async () => {
   const controller = new AbortController(); controller.abort()
   const task = { promise: Promise.reject(new Error('load failed')), destroyed: false, destroy: async () => {} }
   await assert.rejects(waitForPdfLoadingTask(task, controller.signal), { name: 'AbortError' })
+})
+
+test('PDF.js loads a URL source through its supported URL options', async () => {
+  const bytes = await readFile('server/src/__integration__/fixtures/homework/triangle-reference.pdf')
+  const server = createServer((_request, response) => { response.writeHead(200, { 'content-type': 'application/pdf' }); response.end(bytes) })
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
+  const address = server.address()
+  assert.ok(address && typeof address !== 'string')
+  const content = { key: 'url-pdf', sourceKind: 'url' as const, directUrl: `http://127.0.0.1:${address.port}/fixture.pdf`, readBytes: async () => assert.fail('unexpected read') }
+  try {
+    const document = await getPdfDocumentResource(content)
+    assert.ok(document.numPages > 0)
+    clearPdfDocumentResource(content)
+  } finally { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())) }
 })

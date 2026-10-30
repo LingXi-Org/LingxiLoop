@@ -51,9 +51,9 @@ export function UnsupportedCard({
         className,
       )}
       description={
-        message ?? `No preview is available for ${resource.fileName}.`
+        message ?? `暂不支持内嵌预览 ${resource.fileName}（${resource.mimeType || "未知类型"}），可下载后打开。`
       }
-      download={resource.originalDownload}
+      download={{ ...resource.originalDownload, label: "下载" }}
       fileName={resource.fileName}
       showDownload={showDownload}
     />

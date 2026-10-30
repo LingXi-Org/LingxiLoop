@@ -17,6 +17,7 @@ import { RunActivity, type RunActivityStatus } from '@/components/assistant-ui/e
 import { readRunTrace } from '@/lib/runTrace'
 import { TraceWaterfall } from '@/components/trace-waterfall/trace-waterfall'
 import { MarkdownText, type MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
+import { ProtectedFileLinks } from '@/components/retab/ui/protected-file-links'
 import { MessageFooterContext, MessageFooterContents } from '@/components/assistant-ui/message-footer'
 import { styledGenerativeUILibrary } from '@/components/assistant-ui/elements/generative-ui'
 import { Citation } from '@/components/tool-ui/citation'
@@ -90,8 +91,8 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: {
   const requestVersion = useAuiState(state => (state.message.metadata.custom.harness as RunDisplayState | undefined)?.requestVersion)
   let content: ReactNode
   switch (part.type) {
-    case 'text': content = <VisualizeText part={part} Text={Text} readOnly={readOnly} />; break
-    case 'reasoning': content = <Reasoning streaming={part.status.type === 'running'}><MarkdownText agent /></Reasoning>; break
+    case 'text': content = <ProtectedFileLinks><VisualizeText part={part} Text={Text} readOnly={readOnly} /></ProtectedFileLinks>; break
+    case 'reasoning': content = <ProtectedFileLinks><Reasoning streaming={part.status.type === 'running'}><MarkdownText agent /></Reasoning></ProtectedFileLinks>; break
     case 'source': content = <SourcePart {...part} />; break
     case 'image': content = <AttachmentCard filename={part.filename ?? '图片'} data={part.image} mimeType="image/*" sourceType="url" variant={userMessage ? 'thumbnail' : 'card'} />; break
     case 'file': content = <AttachmentCard filename={part.filename ?? '附件'} data={part.data} mimeType={part.mimeType} sourceType={part.sourceType} variant={userMessage ? 'thumbnail' : 'card'} />; break

@@ -7,6 +7,11 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
+import { getWorkspaceSession } from '@/lib/workspaceSession'
+import { useAuth } from '@/stores/auth'
+import { useApp } from '@/stores/app'
+import OriginalFileViewer from '@/features/course-materials/OriginalFileViewer'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 
 const statusLabel: Record<string, string> = {
   upload_pending: '等待上传', queued: '等待处理', processing: '处理中', parsing: '处理中',
@@ -23,6 +28,9 @@ export function SourceDetailOverlay() {
   const detailLoading = useKnowledgeSources((state) => state.detailLoading)
   const close = useKnowledgeSources((state) => state.close)
   const remove = useKnowledgeSources((state) => state.remove)
+  const companyId = useAuth(state => state.activeCompanyId), userId = useAuth(state => state.user?.id)
+  const conversationId = useApp(state => state.selectedConversationId)
+  const workspace = getWorkspaceSession()
   const sourceText = selectedSource?.extractedText ?? ''
   const removeSelectedSource = async () => {
     if (!selectedSource) return
@@ -41,6 +49,12 @@ export function SourceDetailOverlay() {
     close()
     if (isMobile) window.requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-workspace-view="conversations"]')?.focus({ preventScroll: true }))
   }
+  if (selectedSource?.kind === 'file' && companyId && userId && conversationId && workspace?.companyId === companyId) return <Dialog open onOpenChange={value => { if (!value) closeDetail() }}>
+    <DialogContent className="h-[85dvh] max-h-[85dvh] gap-0 overflow-hidden p-0 sm:max-w-6xl [&_[data-slot=viewer-controls]]:pe-14" aria-describedby={undefined}>
+      <DialogTitle className="sr-only">{selectedSource.title}</DialogTitle>
+      <OriginalFileViewer source={selectedSource} conversationId={conversationId} context={{ companyId, userId, projectId: workspace.projectId, space: selectedSource.visibilityScope === 'PROJECT' ? 'public' : 'private' }} />
+    </DialogContent>
+  </Dialog>
   return <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) closeDetail() }} direction="right">
     <DrawerContent
       className={isMobile ? 'data-[vaul-drawer-direction=right]:w-screen data-[vaul-drawer-direction=right]:max-w-none' : 'w-[min(92vw,48rem)] sm:[--drawer-content-width:min(92vw,48rem)]'}

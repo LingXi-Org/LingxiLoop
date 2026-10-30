@@ -35,5 +35,5 @@ export type PdfjsModule = {
   GlobalWorkerOptions: {
     workerSrc?: string;
   };
-  getDocument: (source: string | { data: Uint8Array }) => PdfLoadingTask;
+  getDocument: (source: { url: string } | { data: Uint8Array }) => PdfLoadingTask;
 };

@@ -21,6 +21,7 @@ import {
 } from "./file-viewer-core";
 import { UnsupportedCard } from "./file-viewer-fallback";
 import { FileViewerHtmlContent } from "./file-viewer-html-viewer";
+import { FileViewerMedia } from "./file-viewer-media";
 import {
   getFileViewerPrewarmTarget,
   scheduleFileViewerRendererPrewarm,
@@ -147,6 +148,8 @@ const TEXT_SOURCE_CATEGORIES = new Set<FileCategory>([
 const RENDERERS: Partial<
   Record<FileCategory, (ctx: RenderContext) => React.ReactNode>
 > = {
+  audio: ({ resource }) => <FileViewerMedia resource={resource} kind="audio" />,
+  video: ({ resource }) => <FileViewerMedia resource={resource} kind="video" />,
   pdf: ({ resource, className, bare, controls }) => (
     <PdfResourceContent
       resource={resource}
