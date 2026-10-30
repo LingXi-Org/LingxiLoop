@@ -183,12 +183,11 @@ test('a run discovered after a sent message owns a separate preview and cannot e
 test('a durable failed snapshot replaces session-only drafts and matches fresh history', () => {
   let state = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE,target,{ type: 'state',state: snapshot('run','leased') },participants.agent)
   state = applyRunUpdate(state,target,event('完整段落\n\n尚未完成的尾段'),participants.agent)
+  assert.match(JSON.stringify(state.messages[0].content),/完整段落/)
   state = applyRunUpdate(state,target,{ type: 'event',event: { runId: 'run',seq: 8,kind: 'run.failed',stage: 'failed',visibility: 'user',
     data: { error: 'The operation was aborted due to timeout' } } },participants.agent)
   assert.deepEqual(state.activeRuns,{})
-  const content = [{ type: 'text', text: '完整段落\n\n尚未完成的尾段',
-    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }]
-  assert.deepEqual(state.messages[0].content,content)
+  assert.deepEqual(state.messages[0].content,[])
   assert.deepEqual(state.messages[0].status,{ type: 'incomplete',reason: 'error' })
   assert.equal(metadata(state.messages[0]).harnessError,'这次任务未能完成，请稍后重试。')
   state = applyRunUpdate(state,target,{ type: 'state',state: { ...snapshot('run','failed'), run: {
