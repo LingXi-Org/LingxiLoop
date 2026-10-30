@@ -2,8 +2,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 
 const PACKAGE = '@lyyzka/lingxios'
-const SOURCE = '3.8.16'
-const TARGET = '3.8.17'
+const SOURCES = Object.freeze({ '3.8.17': '3.8.16', '3.8.18': '3.8.17' })
 const SCHEMA = 'c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f'
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 
@@ -11,15 +10,19 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 export function runtimePatchPlan(read, migrationPaths) {
   const json = path => JSON.parse(read(path))
   const manifest = json('package.json')
-  if (manifest.dependencies?.[PACKAGE] === SOURCE) return null
-  assert.equal(manifest.dependencies?.[PACKAGE], TARGET, 'unreviewed runtime transition; only current3.8.16 or reviewed3.8.17 is supported')
+  const targetRuntime = manifest.dependencies?.[PACKAGE]
+  if (targetRuntime === '3.8.16') return null
+  assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or reviewed3.8.17/3.8.18 is supported')
+  const sourceRuntime = SOURCES[targetRuntime]
   const server = json('server/package.json'), lock = json('package-lock.json'), serverLock = json('server/package-lock.json')
   const pkg = lock.packages?.[`node_modules/${PACKAGE}`], other = serverLock.packages?.[`node_modules/${PACKAGE}`]
-  for (const value of [manifest, server, lock.packages?.[''], serverLock.packages?.['']]) assert.equal(value?.dependencies?.[PACKAGE], TARGET, 'exact root/server runtime pin required')
-  assert.equal(pkg?.version, TARGET)
+  for (const value of [manifest, server, lock.packages?.[''], serverLock.packages?.['']]) assert.equal(value?.dependencies?.[PACKAGE], targetRuntime, 'exact root/server runtime pin required')
+  assert.equal(pkg?.version, targetRuntime)
   for (const key of ['version', 'integrity', 'resolved']) assert.equal(other?.[key], pkg?.[key], 'root/server formal package receipts differ')
   assert.match(pkg.integrity, /^sha512-[A-Za-z0-9+/]{86}==$/)
-  assert.match(pkg.resolved, /^https:\/\/npm\.pkg\.github\.com\/download\/@lyyzka\/lingxios\/3\.8\.17\/[a-f0-9]{40}$/)
+  const registryPrefix = `https://npm.pkg.github.com/download/@lyyzka/lingxios/${targetRuntime}/`
+  assert.ok(pkg.resolved?.startsWith(registryPrefix), 'formal registry/version URL required')
+  assert.match(pkg.resolved.slice(registryPrefix.length), /^[a-f0-9]{40}$/)
   const paths = migrationPaths.toSorted()
   assert.equal(paths.length, 58, 'runtime patch requires complete product58')
   const migrations = paths.map((path, index) => {
@@ -27,8 +30,8 @@ export function runtimePatchPlan(read, migrationPaths) {
     assert.ok(match && Number(match[1]) === index + 1, 'ordered migration inventory required')
     return { version: index + 1, name: match[2], checksum: hash(read(path)) }
   })
-  const source = { runtime: SOURCE, schema: 14, protocol: 11, schemaHash: SCHEMA, productVersion: 58, migrations }
-  const target = { ...source, runtime: TARGET, integrity: pkg.integrity, tarball: pkg.resolved }
+  const source = { runtime: sourceRuntime, schema: 14, protocol: 11, schemaHash: SCHEMA, productVersion: 58, migrations }
+  const target = { ...source, runtime: targetRuntime, integrity: pkg.integrity, tarball: pkg.resolved }
   return { source, target, id: hash(JSON.stringify({ source, target })) }
 }
 
