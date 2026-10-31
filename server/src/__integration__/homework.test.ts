@@ -1278,7 +1278,7 @@ test('[integration] homework draft is teacher-owned and absent from learner feed
 })
 
 test('[integration] 597 chat history reload reads the same frozen published homework without creating another record or message', async () => {
-  const { homework: task } = await published({ links: ['https://example.test/triangle'], dueAt: '2030-01-01T00:00:00.000Z' })
+  const { homework: task } = await published({ dueAt: '2030-01-01T00:00:00.000Z' })
   const messageCount = im.messages.length
   for (const scope of [teacher, colleague]) {
     const response = await call(scope, path(task.id))
