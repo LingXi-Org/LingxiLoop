@@ -1,0 +1,11 @@
+{
+  "qualification": "actual-formal-registry-archive",
+  "version": "3.8.21",
+  "gitHead": "5a80dceb8a9fc28e559e76a9829ee7db157196f8",
+  "integrity": "sha512-8/AZ1PWiPMF7b0dx6RQ7JHHNnJqDrGAonl4QAXPV6XJZK0ctj85nKG11gcDQHPSjs0wu3BFwxjO43Nv2JuS14w==",
+  "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.21/ab003543a507bdf1272db261981628a0376d698c",
+  "nativeSchemaSha256": "c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f",
+  "publicContractUnchanged": true,
+  "publishRun": 41191389106,
+  "releaseGateRun": 41190238298
+}

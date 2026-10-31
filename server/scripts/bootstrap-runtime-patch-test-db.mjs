@@ -9,7 +9,7 @@ import {fileURLToPath} from 'node:url'
 import {promisify} from 'node:util'
 import {Client} from 'pg'
 import {releaseVersions} from '@lyyzka/lingxios'
-import {withFormal19TestFixture} from './formal19-test-fixture.mjs'
+import {withFormal19TestFixture,withFormal20TestFixture} from './formal19-test-fixture.mjs'
 
 const execute=promisify(execFile),root=fileURLToPath(new URL('../../',import.meta.url))
 export function assertRuntimePatchTestTarget(env){
@@ -30,6 +30,19 @@ async function main(){
  const run=(code,cwd=root)=>{
   const result=spawnSync(process.execPath,['--import','tsx','--input-type=module'],{cwd,env,input:code,stdio:['pipe','inherit','inherit'],timeout:120000})
   assert.equal(result.status,0,'local test bootstrap child failed')
+ }
+ if(String(releaseVersions.runtime)==='3.8.21'){
+  const db=new Client({connectionString:connection,connectionTimeoutMillis:5000})
+  let installed
+  try{await db.connect();if((await db.query("SELECT to_regclass('public.lingxios_installation') AS name")).rows[0].name)installed=(await db.query('SELECT runtime_version FROM public.lingxios_installation WHERE singleton')).rows[0]?.runtime_version}finally{await db.end()}
+  if(installed!=='3.8.21'){
+   await withFormal20TestFixture(root,env,async(fixture,sourceEnv)=>{
+    await execute(process.execPath,['server/scripts/bootstrap-runtime-patch-test-db.mjs'],{cwd:fixture,env:sourceEnv,timeout:240000,maxBuffer:2*1024*1024})
+   })
+   run("import assert from'node:assert/strict';import{Pool}from'pg';import{loadRuntimePatchInventory,applyPublishedRuntimePatch}from'./server/src/db/runtime-patch.ts';import{loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH}from'./server/src/db/runtime-profile.ts';const db=new Pool({connectionString:process.env.DATABASE_URL,max:1});try{const locked=await loadLockedRuntimePackage();assert.equal(locked.runtime,'3.8.21');const migrations=await loadRuntimePatchInventory(61),source={runtime:'3.8.20',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:61,migrations},target={...source,runtime:'3.8.21',integrity:locked.integrity,tarball:locked.tarball};assert.equal((await applyPublishedRuntimePatch(db,source,target)).updated,1)}finally{await db.end()}")
+  }
+  run("import assert from'node:assert/strict';import{migrateDatabase}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{assert.deepEqual(await migrateDatabase(),[]);console.log('[integration bootstrap] actual formal20/product61 source and formal21 CAS; no target migrations')}finally{await pool.end()}")
+  return
  }
  if(String(releaseVersions.runtime)==='3.8.20'){
   const db=new Client({connectionString:connection,connectionTimeoutMillis:5000})

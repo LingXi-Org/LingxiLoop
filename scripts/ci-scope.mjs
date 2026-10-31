@@ -11,7 +11,7 @@ const HISTORICAL_FILES = [
   'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts',
 ]
 const OWNERS = [
-  [/^server\/src\/(?:db\/runtime-patch\.ts|runtime-patch-bin\.ts)$/, ['runtime-patch58-provenance.test.ts', 'runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts']],
+  [/^server\/src\/(?:db\/runtime-patch\.ts|runtime-patch-bin\.ts)$/, ['runtime-patch58-provenance.test.ts', 'runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts']],
   [/^server\/src\/modules\/(?:cases|case-covers)\/|^src\/features\/cases\/cover-vm\/(?:runtime|protocol|program|guest-source|svg)\.ts$/, ['case-covers.test.ts']],
   [/^server\/(?:src\/db\/|src\/migrate-bin\.ts$|package(?:-lock)?\.json$|fixtures\/|run-historical-migration-tests\.mjs$)/, HISTORICAL_FILES],
   [/^server\/src\/(?:auth\.ts|tenant\.ts|http\/|domain\/(?:access|entitlement|identity|tenancy)\/|modules\/(?:access|identity|entitlements|trust)\/)/, ['trust-bff.test.ts']],
@@ -47,7 +47,7 @@ function integrationScope(changed, { serverSource, deepIntegration, deployment }
   for (const [pattern, files] of OWNERS) if ([...sourcePaths, ...runnerPaths].some(path => pattern.test(path))) {
     for (const file of files) owners.add(file)
   }
-  if (deployment) { owners.add('runtime-patch-provenance.test.ts'); owners.add('runtime-patch58-provenance.test.ts'); owners.add('runtime-patch60-provenance.test.ts'); owners.add('runtime-patch60-20-provenance.test.ts') }
+  if (deployment) { owners.add('runtime-patch-provenance.test.ts'); owners.add('runtime-patch58-provenance.test.ts'); owners.add('runtime-patch60-provenance.test.ts'); owners.add('runtime-patch60-20-provenance.test.ts'); owners.add('runtime-patch61-21-provenance.test.ts') }
   const changedTests = requested.filter(existsSync).map(file => basename(file))
   // A pure test edit runs its surviving files. Deleted-only edits still verify
   // the core, rather than interpreting [] as a full-suite request.

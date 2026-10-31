@@ -22,6 +22,6 @@ test('runtime patch and deployment changes retain both product60 patch qualifica
   for (const path of ['server/src/db/runtime-patch.ts', 'deploy/runtime-patch.mjs']) {
     const scope = computeScope(classifyPaths([path]))
     assert.equal(scope.integration_mode, 'selected')
-    for (const file of ['runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts']) assert.ok(scope.integration_files.includes(file), path + ':' + file)
+    for (const file of ['runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts']) assert.ok(scope.integration_files.includes(file), path + ':' + file)
   }
 })

@@ -192,3 +192,36 @@ never rename stored vectors or delete the old index to make startup pass.
 Worker secrets are managed with `wrangler secret put`. After
 `/api/internal/bootstrap-admin` creates the first verified administrator, delete
 `BOOTSTRAP_ADMIN_TOKEN`.
+
+
+## Product61 runtime20 to21 maintenance patch
+
+This exact plan requires already installed formal3.8.20, the complete61 named
+migration checksums and unchanged native14/protocol11/publicText3/runTrace1.
+Only3.8.20 to the actual formal3.8.21 package is accepted. The target image,
+root/server manifests, locks, archive integrity and native schema must agree.
+It cannot install61, adopt unknown provenance, skip an earlier product state or
+perform retirement. Historical product58/60 plan identities remain unchanged.
+
+The existing standard CLI owns read-only preflight, all-kind retained-work
+barriers, Worker drain, both source APIs stopping, one persisted-intent CAS and
+ordered target convergence. Live work, retained Slides jobs/checkpoints,
+unobservable leases or other final database clients stop the transition. Do
+not delete bindings, tasks, attempt markers or business data to force progress.
+An uncertain commit requires the existing exclusive read-only observation;
+proven source restores its source containers, proven target continues forward.
+
+Target21 startup requires the complete already installed61 ledger and exact21
+provenance, then returns without DDL, migration or seed writes. Fresh and
+partial58/59/60 databases are refused. Test bootstrap alone uses separately
+verified actual19/20 archives to retain the original source qualifications,
+install the test-only20/product61 source and perform the exact20 to21 CAS.
+No development tarball or source checkout substitutes for a product dependency.
+
+The product suspension regression narrows only preview publication and uses a
+synthetic provider with the real Worker/PostgreSQL boundary. It reproduces
+formal20's interrupted-before-seal defect, preserves an overlapping first-ACK
+success control, and verifies injected product-host seal refusal stays failed
+with no result. The specific in-flight-second-ACK race remains covered by the
+SDK's independent regression. These deterministic checks establish neither
+live-provider generation quality nor browser/teaching-content acceptance.

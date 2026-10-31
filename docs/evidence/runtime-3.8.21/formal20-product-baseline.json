@@ -1,0 +1,50 @@
+{
+  "scope": "real product PostgreSQL/Worker; synthetic provider and narrowed preview; actual formal20 baseline and controls, not formal21 acceptance",
+  "reports": [
+    {
+      "qualification": "formal20-product-baseline-reproduction",
+      "runtime": "3.8.20",
+      "delayedAck": false,
+      "rejectSeal": false,
+      "calls": 1,
+      "status": "failed",
+      "seals": 0,
+      "reasons": [
+        "interrupted"
+      ],
+      "realPostgres": true,
+      "provider": "synthetic",
+      "browserValidated": false
+    },
+    {
+      "qualification": "formal20-product-ack-control",
+      "runtime": "3.8.20",
+      "delayedAck": true,
+      "rejectSeal": false,
+      "calls": 1,
+      "status": "succeeded",
+      "seals": 1,
+      "reasons": [
+        "completed"
+      ],
+      "realPostgres": true,
+      "provider": "synthetic",
+      "browserValidated": false
+    },
+    {
+      "qualification": "product-host-seal-rejection-control",
+      "runtime": "3.8.20",
+      "delayedAck": true,
+      "rejectSeal": true,
+      "calls": 1,
+      "status": "failed",
+      "seals": 0,
+      "reasons": [
+        "completed"
+      ],
+      "realPostgres": true,
+      "provider": "synthetic",
+      "browserValidated": false
+    }
+  ]
+}
