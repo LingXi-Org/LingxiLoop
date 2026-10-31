@@ -9,6 +9,7 @@ import {fileURLToPath} from 'node:url'
 import {promisify} from 'node:util'
 import {Client} from 'pg'
 import {releaseVersions} from '@lyyzka/lingxios'
+import {withFormal19TestFixture} from './formal19-test-fixture.mjs'
 
 const execute=promisify(execFile),root=fileURLToPath(new URL('../../',import.meta.url))
 export function assertRuntimePatchTestTarget(env){
@@ -29,6 +30,22 @@ async function main(){
  const run=(code,cwd=root)=>{
   const result=spawnSync(process.execPath,['--import','tsx','--input-type=module'],{cwd,env,input:code,stdio:['pipe','inherit','inherit'],timeout:120000})
   assert.equal(result.status,0,'local test bootstrap child failed')
+ }
+ if(String(releaseVersions.runtime)==='3.8.20'){
+  const db=new Client({connectionString:connection,connectionTimeoutMillis:5000})
+  let installed
+  try{
+   await db.connect()
+   if((await db.query("SELECT to_regclass('public.lingxios_installation') AS name")).rows[0].name)installed=(await db.query('SELECT runtime_version FROM public.lingxios_installation WHERE singleton')).rows[0]?.runtime_version
+  }finally{await db.end()}
+  if(installed!=='3.8.20'){
+   await withFormal19TestFixture(root,env,async(fixture,sourceEnv)=>{
+    await execute(process.execPath,['server/scripts/bootstrap-runtime-patch-test-db.mjs'],{cwd:fixture,env:sourceEnv,timeout:180000,maxBuffer:2*1024*1024})
+   })
+   run("import assert from'node:assert/strict';import{Pool}from'pg';import{loadRuntimePatchInventory,applyPublishedRuntimePatch}from'./server/src/db/runtime-patch.ts';import{loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH}from'./server/src/db/runtime-profile.ts';const db=new Pool({connectionString:process.env.DATABASE_URL,max:1});try{const locked=await loadLockedRuntimePackage();assert.equal(locked.runtime,'3.8.20');const migrations=await loadRuntimePatchInventory(60),source={runtime:'3.8.19',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:60,migrations},target={...source,runtime:'3.8.20',integrity:locked.integrity,tarball:locked.tarball};assert.equal((await applyPublishedRuntimePatch(db,source,target)).updated,1)}finally{await db.end()}")
+  }
+  run("import assert from'node:assert/strict';import{migrateDatabase}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{assert.deepEqual(await migrateDatabase(),[]);console.log('[integration bootstrap] actual formal19 source and formal20 CAS; current60; no target migrations')}finally{await pool.end()}")
+  return
  }
  if(String(releaseVersions.runtime)!=='3.8.19'){
   run("import{migrateDatabase}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{await migrateDatabase()}finally{await pool.end()}")
@@ -58,7 +75,7 @@ async function main(){
    let archive=env.LINGXILOOP_RUNTIME_PATCH_SOURCE_ARCHIVE
    if(archive)assert.ok(isAbsolute(archive),'explicit source archive must be absolute')
    else{
-    const packed=await execute('npm',['pack',record.resolved,'--ignore-scripts','--json','--pack-destination',fixture,'--userconfig',join(root,'.npmrc'),'--loglevel','error','--fetch-retries=0','--fetch-timeout=60000'],{cwd:root,env,timeout:90000,maxBuffer:2*1024*1024})
+    const packed=await execute('npm',['pack',record.resolved,'--ignore-scripts','--json','--pack-destination',fixture,'--userconfig',env.LINGXILOOP_TEST_PACKAGE_USERCONFIG??join(root,'.npmrc'),'--loglevel','error','--fetch-retries=0','--fetch-timeout=60000'],{cwd:root,env,timeout:90000,maxBuffer:2*1024*1024})
     const [entry]=JSON.parse(packed.stdout);assert.equal(basename(entry.filename),entry.filename);archive=join(fixture,entry.filename)
    }
    assert.equal('sha512-'+createHash('sha512').update(await readFile(archive)).digest('base64'),record.integrity,'formal18 source archive integrity changed')

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 
 const PACKAGE = '@lyyzka/lingxios'
-const SOURCES = Object.freeze({ '3.8.17': '3.8.16', '3.8.18': '3.8.17', '3.8.19': '3.8.18' })
+const SOURCES = Object.freeze({ '3.8.17': '3.8.16', '3.8.18': '3.8.17', '3.8.19': '3.8.18', '3.8.20': '3.8.19' })
 const SCHEMA = 'c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f'
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 
@@ -15,11 +15,11 @@ export function runtimePatchPlan(read, migrationPaths) {
     && paths[58] === 'server/src/db/migrations/0059_retire_presentation_generation.sql'
     && (paths.length === 59 || paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql')
   const targetRuntime = manifest.dependencies?.[PACKAGE]
-  const runtimeOnly19 = retirement && paths.length === 60 && targetRuntime === '3.8.19'
-  if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly19, 'product59 requires a verified exact runtime')
-  if (targetRuntime === '3.8.19') assert.ok(runtimeOnly19, 'unreviewed runtime transition;3.8.19 requires installed product60')
+  const runtimeOnly60 = retirement && paths.length === 60 && ['3.8.19','3.8.20'].includes(targetRuntime)
+  if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly60, 'product59 requires a verified exact runtime')
+  if (['3.8.19','3.8.20'].includes(targetRuntime)) assert.ok(runtimeOnly60, 'unreviewed runtime transition; runtime patch requires installed product60')
   if (targetRuntime === '3.8.16') return null
-  assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or reviewed3.8.17/3.8.18 is supported')
+  assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or exact reviewed3.8.17/3.8.18/3.8.19/3.8.20 is supported')
   const sourceRuntime = SOURCES[targetRuntime]
   const server = json('server/package.json'), lock = json('package-lock.json'), serverLock = json('server/package-lock.json')
   const pkg = lock.packages?.[`node_modules/${PACKAGE}`], other = serverLock.packages?.[`node_modules/${PACKAGE}`]
@@ -37,23 +37,23 @@ export function runtimePatchPlan(read, migrationPaths) {
     return { version: index + 1, name: match[2], checksum: hash(read(path)) }
   })
   // Retirement uses the installed SDK; migrations verify its exact provenance.
-  if (retirement && !runtimeOnly19) return null
+  if (retirement && !runtimeOnly60) return null
   // This plan cannot install59/60: the preflight/CAS requires their exact ledger
   // already present, and changes only the runtime provenance row.
-  const source = { runtime: sourceRuntime, schema: 14, protocol: 11, schemaHash: SCHEMA, productVersion: runtimeOnly19 ? 60 : 58, migrations }
+  const source = { runtime: sourceRuntime, schema: 14, protocol: 11, schemaHash: SCHEMA, productVersion: runtimeOnly60 ? 60 : 58, migrations }
   const target = { ...source, runtime: targetRuntime, integrity: pkg.integrity, tarball: pkg.resolved }
   return { source, target, id: hash(JSON.stringify({ source, target })) }
 }
 
 /** The product59 retirement is staged manually after confirmed cleanup. */
 export function assertRetirementReleaseAllowed(paths, command, approval, patch) {
-  const runtimeOnly19 = ['up', 'servers'].includes(command) && paths.length === 60
-    && patch?.source.runtime === '3.8.18' && patch?.target.runtime === '3.8.19'
+  const runtimeOnly60 = ['up', 'servers'].includes(command) && paths.length === 60
+    && ['3.8.19','3.8.20'].includes(patch?.target.runtime) && patch?.source.runtime === SOURCES[patch?.target.runtime]
     && [patch.source, patch.target].every(d => d.productVersion === 60 && d.schema === 14
       && d.protocol === 11 && d.schemaHash === SCHEMA && d.migrations.length === 60)
     && JSON.stringify(patch.source.migrations) === JSON.stringify(patch.target.migrations)
   if (paths.includes('server/src/db/migrations/0059_retire_presentation_generation.sql')
-    && ['up','servers','workers'].includes(command) && approval !== 'true' && !runtimeOnly19) {
+    && ['up','servers','workers'].includes(command) && approval !== 'true' && !runtimeOnly60) {
     throw new Error('product59 retirement requires explicit maintenance release approval')
   }
 }

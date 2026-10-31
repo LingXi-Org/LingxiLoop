@@ -152,8 +152,9 @@ for (const scenario of [
 
 // #515/#518: a complete answer must stop, a correction must not retain its
 // failed draft, and a null final answer must reuse the sealed source. Exercise
-// the published native-v2 parser, worker, ledger, IM delivery and replay reader.
-for (const scenario of ['complete', 'correction', 'finalize', 'fail-all'] as const) test(`public answer ${scenario}: one effective body after native worker and replay`, { timeout: 30000 }, async () => {
+// all published bindings: production native-v3 plus native-v1/v2
+// compatibility, with the real worker, ledger, IM delivery and replay reader.
+for (const binding of ['native-v1', 'native-v2', 'native-v3'] as const) for (const scenario of ['complete', 'correction', 'finalize', 'fail-all'] as const) test(`public answer ${binding} ${scenario}: one effective body after native worker and replay`, { timeout: 30000 }, async () => {
   const body = 'Flow control protects the receiver.'
   const draft = 'SYNTHETIC_FAILED_DRAFT_MUST_NOT_REAPPEAR'
   let calls = 0
@@ -201,7 +202,7 @@ for (const scenario of ['complete', 'correction', 'finalize', 'fail-all'] as con
   let worker: ReturnType<typeof createWorker> | undefined
   try {
     const { companyId, projectId, agentId } = await seedCompanyWithAgent()
-    const principalId = `public-answer-${scenario}`, room = `public-answer-room-${scenario}`, members = [principalId, agentId]
+    const principalId = `public-answer-${binding}-${scenario}`, room = `public-answer-room-${binding}-${scenario}`, members = [principalId, agentId]
     await seedUserMembership(principalId, companyId, { role: 'STUDENT', isAdmin: false })
     await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'STUDENT')", [projectId, companyId, principalId])
     await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Synthetic public answer',$4::jsonb)", [room, companyId, projectId, JSON.stringify(members)])
@@ -210,8 +211,9 @@ for (const scenario of ['complete', 'correction', 'finalize', 'fail-all'] as con
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
     worker = createWorker({ controlPlane: api, model: {
       ...runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: 'synthetic-public-answer-key', baseUrl: 'https://api.siliconflow.cn/v1' }, 90_000),
+      publicAnswerTool: binding, capabilities: { parallelTools: binding !== 'native-v1', jsonObjectWithTools: false },
       baseUrl: `http://127.0.0.1:${address.port}/v1`,
-    }, worker: { id: `public-answer-${scenario}`, concurrency: 1 } })
+    }, worker: { id: `public-answer-${binding}-${scenario}`, concurrency: 1 } })
     const input = { tenantId: companyId, conversationId: room, policyVersion: policy.version,
       messageId: 'question', version: 1, author: { id: principalId, kind: 'human' as const }, text: 'Explain flow control briefly.', mentions: [agentId] }
     const run = (await api.conversations.ingest(input, { mode: 'chat', codeExecution: 'disabled', executionClass: 'conversation' })).runs[0]

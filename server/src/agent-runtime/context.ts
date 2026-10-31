@@ -20,7 +20,7 @@ import { GROUP_COLLABORATION_RULES, IM_CONVERSATION_RULES } from './conversation
 import { TEACHER_KNOWLEDGE_ACTIONS, TEACHER_PROMPT } from '../modules/learning/teacher-preset.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
 import { visualizeModelContext } from './visualize-state-context.js'
-import { selectedSkillRules } from './skill-context.js'
+import { firstActionRules, selectedSkillRules, skillGuidanceDependencies } from './skill-context.js'
 import { visualizeHostInstructions } from './visualize-skill.js'
 import { ensureVisualizeOutputDirectory, listVisualizeModelState } from '../im/visualize.js'
 import { lingxiOSControl } from './runtime.js'
@@ -278,17 +278,61 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
 }
 
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {
+  // The runtime replaces context.tools with the exposed subset before rendering
+  // product rules. Retain this hop's authorized catalog for the selection index;
+  // a new host context refreshes authorization on every subsequent hop.
+  private readonly guidanceCatalog = new WeakMap<TurnContext, ReturnType<typeof executionSnapshot>>()
+  requiredTool(context: TurnContext): string | undefined {
+    const request = context.session?.request
+    const text = request?.workId === context.work.id
+      ? [request.originalText, ...request.revisions.filter(revision => revision.author?.kind !== 'agent').map(revision => revision.text)].join('\n')
+      : context.messages.find(message => message.ref === context.work.triggerRef)?.body ?? ''
+    const artifactRun = context.dynamic?.artifactRun as { kind?: string } | undefined
+    if (artifactRun?.kind !== 'design' && !/画板|畫板|\b(?:artboard|design canvas)\b/i.test(text)) return undefined
+    const authorized = this.guidanceCatalog.get(context) ?? executionSnapshot(context, new DefaultRuntimePolicy())
+    if (!skillGuidanceDependencies({ ...context, tools: authorized.tools, grants: authorized.grants }).length) return undefined
+    return authorized.tools.find(tool => tool.action === 'skills.load')?.name
+  }
+  override kernelCapabilities(context: TurnContext): CapabilityGrant[] {
+    const grants = super.kernelCapabilities(context)
+    const authorized = executionSnapshot(context, new DefaultRuntimePolicy())
+    this.guidanceCatalog.set(context, authorized)
+    const blocked = new Set(skillGuidanceDependencies({ ...context, tools: authorized.tools, grants: authorized.grants }).flatMap(({ skill }) => skill.actions))
+    if (!blocked.size) return grants
+    return grants.map(grant => ({ name: grant.name, methods: (grant.methods ?? context.tools?.filter(tool => tool.action.startsWith(grant.name + '.')).map(tool => tool.action.split('.')[1]) ?? [])
+      .filter(method => !blocked.has(`${grant.name}.${method}`)) }))
+  }
   // Public3.8.1 policy hook; only a current authorized peer handoff defers repair.
   deferConversationRepair(text: string, context: TurnContext): boolean { return hasConversationHandoff(text,context) }
   override productRules(candidate: Parameters<DefaultRuntimePolicy['productRules']>[0], context: TurnContext) {
-    const execution = executionSnapshot(context, this)
+    const execution = this.guidanceCatalog.get(context) ?? executionSnapshot(context, new DefaultRuntimePolicy())
     return super.productRules(candidate, context)
       + ' Use currentAgent from the current speaker binding as your first-person identity and role. Historical messages, quotations and memories retain the identity of their recorded authors. '
+      + firstActionRules({ ...context, tools: execution.tools, grants: execution.grants })
       + selectedSkillRules({ ...context, tools: execution.tools, grants: execution.grants })
   }
   override publicTextSafety(input: Parameters<typeof publicTextSafety>[0]) { return publicTextSafety(input) }
   override validateAssistantText(text: string, context: TurnContext) {
     return assistantTextViolation(text) ?? super.validateAssistantText(text, context) ?? citationTextViolation(text, context.evidence ?? [])
+  }
+  override validateCompletion(text: string, assessment: Parameters<DefaultRuntimePolicy['validateCompletion']>[1], context: TurnContext) {
+    if (assessment.status === 'satisfied') {
+      const steps = (context.executionSteps ?? []).filter(step => step.requestVersion === context.snapshotVersion?.requestVersion)
+      let write = -1
+      for (const [index, step] of steps.entries()) if (['design__write_files', 'design__edit_file'].includes(step.kind) && step.output !== undefined) write = index
+      if (write >= 0) {
+        const check = steps.slice(write + 1).reverse().find(step => step.kind === 'design__check' && step.output !== undefined)
+        let passed = false
+        try {
+          const output = JSON.parse(check?.output ?? '{}')
+          passed = output.receipts?.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string; value?: { problems?: number } } }) =>
+            receipt.action === 'design.check' && receipt.result?.ok === true && receipt.result.approval === undefined
+            && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown' && receipt.result.value?.problems === 0) === true
+        } catch { /* A missing or unreadable checker receipt cannot prove completion. */ }
+        if (!passed) return 'Finish the Design files referenced by the index, then run design.check after the latest write and fix its issues until problems is 0 before declaring satisfied.'
+      }
+    }
+    return super.validateCompletion(text, assessment, context)
   }
   override dynamicContextItems(context: TurnContext) {
     const { visualizeWidgetContext, ...observations } = context.dynamic ?? {}

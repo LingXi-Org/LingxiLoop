@@ -6,6 +6,7 @@ import {tmpdir} from 'node:os'
 import {basename,isAbsolute,join,sep} from 'node:path'
 import {execFile,spawn} from 'node:child_process'
 import {promisify} from 'node:util'
+import {withFormal19TestFixture} from './scripts/formal19-test-fixture.mjs'
 const execute=promisify(execFile)
 const PATCH54=new Set(['runtime-patch-provenance.test.ts'])
 const PATCH57=new Set(['runtime-patch57-provenance.test.ts'])
@@ -79,6 +80,14 @@ export function runTestChild(args,{cwd,env=process.env,timeout=600_000}={}){
  return new Promise(resolve=>{
   const child=spawn(process.execPath,args,{cwd,env,stdio:'inherit',timeout,killSignal:'SIGKILL'})
   child.once('error',()=>resolve(1));child.once('exit',code=>resolve(code??1))
+ })
+}
+export async function runFormal19Product60Tests(root,files,env=process.env){
+ assertFixtureTarget(files,env,new Set(['runtime-patch60-provenance.test.ts']))
+ return withFormal19TestFixture(root,env,async(fixture,sourceEnv)=>{
+  const proof="import assert from'node:assert/strict';import{releaseVersions}from'@lyyzka/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';assert.equal(releaseVersions.runtime,'3.8.19');assert.equal((await loadLockedRuntimePackage()).runtime,'3.8.19');console.log('[integration product60 source] actual formal19; original18 to19 owning coverage retained')"
+  if(await runTestChild(['--import','tsx','--input-type=module','-e',proof],{cwd:fixture,env:sourceEnv,timeout:30000}))return 1
+  return runTestChild(['--import','tsx','--experimental-test-module-mocks','--test','--test-reporter=tap','--test-concurrency=1','--test-force-exit',...files.map(file=>join(fixture,'server/src/__integration__',file))],{cwd:fixture,env:sourceEnv})
  })
 }
 export const runProduct54MigrationTests=(root,files,env=process.env)=>runProductMigrationTests(root,files,env,54)

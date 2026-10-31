@@ -1,0 +1,63 @@
+{
+  "qualification": "real-provider-native-product",
+  "runtime": "3.8.19",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "runId": "im:b39eaf64ff086da1b3e35e68badff4357c9ce19b2d333d4bf6edc6ba68421bb0",
+  "elapsedMs": 18051,
+  "decisions": [
+    {
+      "call": 1,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false
+    },
+    {
+      "call": 2,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false
+    },
+    {
+      "call": 3,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false
+    }
+  ],
+  "actions": [],
+  "contractFailures": [],
+  "protocolFailures": 0,
+  "files": [
+    {
+      "path": "project/canvas.json",
+      "sha256": "3358b8c9c9ea0bda436f336c5bd1dd42a7d0468797ea6994f41cae3a0b509240"
+    }
+  ],
+  "checkProblems": 0,
+  "status": "failed",
+  "delivery": null,
+  "browserValidated": false,
+  "accepted": false,
+  "measurementNote": "Initial collector only counted step protocol errors; model failure was unclassified, with no provider status and no business action. This is not a passed live acceptance."
+}

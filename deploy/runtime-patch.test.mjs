@@ -85,6 +85,22 @@ test('runtime19 is only an18 to19 CAS on already installed product60, never reti
   const wrong = { ...plan, source: { ...plan.source, runtime: '3.8.17' } }
   assert.throws(() => assertRetirementReleaseAllowed(f.paths, 'up', undefined, wrong), /explicit maintenance release approval/)
 })
+test('runtime20 requires exact19 source and installed product60 while retaining all maintenance barriers', () => {
+  const f = fixture('3.8.20')
+  for (const name of ['0059_retire_presentation_generation', '0060_native_artifacts']) {
+    const path = `server/src/db/migrations/${name}.sql`
+    f.paths.push(path); f.files[path] = '-- unchanged installed inventory'
+  }
+  const plan = runtimePatchPlan(f.read, f.paths)
+  assert.equal(plan.source.runtime, '3.8.19'); assert.equal(plan.target.runtime, '3.8.20')
+  assert.equal(plan.source.productVersion, 60); assert.deepEqual(plan.source.migrations, plan.target.migrations)
+  assert.doesNotThrow(() => assertRetirementReleaseAllowed(f.paths, 'up', undefined, plan))
+  assert.throws(() => assertRetirementReleaseAllowed(f.paths, 'workers', undefined, plan), /explicit maintenance release approval/)
+  assert.throws(() => assertRetirementReleaseAllowed(f.paths, 'up', undefined, { ...plan, source: { ...plan.source, runtime: '3.8.18' } }), /explicit maintenance release approval/)
+  for (const count of [58, 59]) assert.throws(() => runtimePatchPlan(f.read, f.paths.slice(0, count)))
+  f.files['server/package-lock.json'] = f.files['server/package-lock.json'].replaceAll('3.8.20', '3.8.19')
+  assert.throws(() => runtimePatchPlan(f.read, f.paths))
+})
 const run = async (fail, observed = { complete: false, state: 'source' }) => {
   const calls = [], actions = {}
   for (const name of ['preflight', 'requireFreshIntent', 'snapshotSource', 'stopIngress', 'stopWorkers', 'markAttempt', 'apply', 'observe', 'restoreSource', 'convergeTarget']) actions[name] = async () => {

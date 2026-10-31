@@ -1,0 +1,187 @@
+# #593: first-decision contracts and Design guidance
+
+Scope: isolated Loop change on published `@lyyzka/lingxios@3.8.19`, based on
+`5014f87a`. No SDK source, package pins, product migrations, Slides editor or
+Canvas view layout changes. No production writes, deployment, merge or issue closure.
+
+The initial unit regression failed on the old implementation: no registry-derived
+selection directory, guidance-dependent tools already callable, reference schema
+missing the actual page set. The candidate uses the existing authorized tool
+catalog, registered skill index and deployed reference files. It supplies the
+load/activate distinction and exact withheld schemas before selection. Design
+operations become callable on the next model decision only after a successful,
+current-version/hash `skills.load` receipt; the complete registered skill remains
+in every selected prompt. `format.md` is advertised before the first reference
+read and valid pages are enforced by the same Zod schema used for admission.
+Business reads must use the current authorized file listing. SDK execution and
+product authorization, original request binding and explanation validation remain.
+
+Only Design exposure is gated in this change; Slides tooling and the separate
+#594 view-layout work are outside the implementation scope. The common skill
+routing guidance also correctly describes other registered no-delivery skills.
+
+Reproduction uses a **dedicated local test database** and Redis. The existing
+`server/scripts/bootstrap-runtime-patch-test-db.mjs` proves the real formal18
+product60 source, formal19 provenance CAS and migration-free current startup.
+Ordinary formal19 migration correctly refused an empty database first; no
+provenance checks were bypassed. The bootstrap was run with saved package auth.
+An initial npm-exec invocation selected Node27; subsequent owning tests used the
+session's Node24, and repository CI uses Node22.
+
+Commands:
+
+- `npm run server:test` (includes `first-action-contracts.test.ts`).
+- `npm run server:typecheck` and `npm run server:lint`.
+- `npm run test:integration -- --file runtime-first-action-contracts.test.ts --file runtime-issue560-delivery.test.ts --file artifact-app-boundary.test.ts --file visualize-delivery.test.ts`
+- With the existing authorized SiliconFlow profile, explicit proxy support and
+  the same isolated test target: `LINGXIOS_LIVE_ARTIFACTS=1 ISSUE593_EVIDENCE_PATH=docs/evidence/issue-593 npm run test:integration -- --file runtime-first-action-contracts.test.ts`.
+  The fixture records sanitized call contracts/receipts and generated public
+  artifact files, never provider credentials, prompts or private reasoning.
+
+The deterministic fixture uses the exact production request
+“为我在画板中讲解flashattention”, the real native Worker, product authorization,
+PostgreSQL, Redis, upstream checker and recording IM HTTP adapter. It loads the
+skill, reads `format.md` and the current file list, reads the existing canvas,
+writes a real Design Component plus index using `ifMatch`, calls `design.check`
+and delivers. The HTML fixture is authored test content, not model evidence.
+The three native activation variants retain the existing explanation correction
+and bounded-call failure cases and add authoring-only activation without an
+explanation declaration. No failed or unique coverage was deleted.
+
+Real-provider history is retained separately. The initial run failed before any
+business action (unclassified model/transport failure with no observed provider
+status); the initial collector did not yet count model-failure diagnostics.
+The next run first loaded the correct skill, read the real format and existing
+file successfully, but three `public_answer_first_required` protocol failures
+left an empty canvas and a partial delivered message. Its zero checker problems
+on an empty canvas did **not** establish delivery. A final candidate adds guidance
+that skill examples never replace the trusted driver's mandatory output binding;
+its actual result is recorded separately below. A retry's final success cannot
+stand in for the strict zero-failure acceptance.
+
+Browser rendering, interaction and teaching quality are separate from a successful
+format check. No browser validation has been performed. No production acceptance
+or delivery to the production conversation is claimed by these local fixtures.
+
+Final local real-provider observation (`real-provider.json`): 12 observed model
+requests, 102776ms; `skills.load`, `design.current`, `format.md`, existing canvas
+read and two writes all succeeded, with **zero failed business receipts**. This
+is **not accepted**: two `public_answer_first_required` failures, one additional
+unclassified/provider model failure, no `design.check` receipt, and only the
+Main board was written. Independent format checking found two missing files
+(`Method.dc.html`, `Limits.dc.html`) referenced by its index; the run ended
+`partial`, delivery `delivered`. That delivery is the partial message, not proof
+of complete artboard delivery. Generated files are retained unchanged; no missing
+board entries were deleted to manufacture a green check. Follow-up requires
+qualifying the published SDK's native output protocol with the real provider
+before the full issue acceptance can be claimed. Browser absence is an additional
+unverified boundary, not the cause of this failure.
+
+Candidate validation: server unit **151/151**, server typecheck and lint passed;
+test-selector regressions **9/9**. The final deterministic native fixture passed
+**1/1**, with `accepted:true`, all seven business/inspection receipts successful,
+zero protocol/model failures, a persisted FlashAttention artboard and checker
+`problems:0` (`synthetic.json`). Additional selected integration: activation
+variants **3/3**, artifact HTTP boundary **4/4**, visualize delivery **6/6**, native
+authorization faults **3/3**, chat recovery **7/7** (24 total including the new
+native fixture). Artifact HTTP initially failed on an absent local Slides static
+build; running the unchanged existing `npm run build:slides-editor` prerequisite
+restored the asset and that entire file passed. No Slides source was modified.
+
+CI and independent review against the draft's final SHA remain required. This
+change is a reviewable root-cause repair for skill selection, schema discovery
+and guidance ordering. It is not a claim that #593's complete real-model
+acceptance is closed; the native output protocol and incomplete generated boards
+remain explicit follow-up gates for the parent integrator. No SDK publish,
+merge, deployment, security/configuration widening or production data action was
+performed.
+
+## Follow-up candidate and formal SDK dependency
+
+The current Loop branch has merged main `6f10048f` (Canvas #595) without
+conflicts. It retains the published 3.8.19 dependency and its native-v2 producer.
+A write/check completion gate now rejects satisfaction unless the latest
+successful `design.check` after the latest write reports zero problems. The
+ineffective per-tool output-first prose experiment was excluded after its real
+provider failure; the formally installed native-v2 binding remains unchanged.
+The original native-v2 cases remain; native-v1 compatibility and explanation
+stage reopening are additionally tested. Updated local results: unit153,
+typecheck/lint, and 21 selected integration checks (new Design1, activation5,
+recovery11, artifact HTTP4) all pass. These do not imply real model acceptance.
+
+`native-v1/real-provider.json` preserves the unsuccessful single-call
+configuration experiment: 3 streaming `public_text_invalid` failures and no
+artboard; that producer switch was excluded from the implementation.
+`business-contract/real-provider.json` preserves a subsequent native-v2 failure
+with metadata-only wire evidence. The first model decision bundled an unavailable
+future tool with the skill load; later decisions returned valid business calls
+without the separately mandatory public_answer. No argument values, prompts or
+private response text are recorded in `wire`.
+
+A compatible SDK patch is being prepared against the actual `release/3.8`
+source v3.8.19, not the distribution-changing main/4.0 branch. It keeps native-v2
+strict, introduces an explicit native-v3 contract accepting original-schema
+business-only batches (public output must still be first when present), and a
+trusted `requiredTool` selection constrained to the existing authorized catalog.
+The latter allows guidance loading to be selected before later business tools,
+without relying only on prose. All original schemas, activation source binding,
+authorization and sealed-public-output checks remain. SDK source qualification
+is separate from Loop's formal package acceptance. The child does not publish
+SDKs: a formally published compatible package and subsequent Loop qualification
+are required before using these new public capabilities in the product.
+
+The Design-only host guidance now asks for a complete self-contained explanation
+board first, saving its actual file and index together before check. Its host
+revision is 2; Slides keeps its existing host revision and source. Final local
+unit153, typecheck/lint and the affected Design/artifact HTTP integration5 pass.
+
+The compatible SDK source probe subsequently succeeded using the actual provider,
+its new native-v3 binding and required authorized skill selection: 11 successful
+actions, zero recorded protocol/model failures, real FlashAttention file and
+index, and zero checker problems. Independent file readback passed; semantic
+verification remains inconclusive and browser validation was not performed.
+This isolated SDK/PGlite probe is not Loop product acceptance. Loop still uses
+formal3.8.19; a formally published compatible SDK and new product qualification
+are required before this issue can be considered delivered.
+
+## Formal20 product qualification
+
+The compatible SDK PR81 was merged and the exact maintenance source `bc594a2`
+passed full release gates41162101071. Tag v3.8.20 publication41162963470
+succeeded. `formal20/published-package.json` records the actual registry archive,
+gitHead and integrity; its dependencies, exports, package files and engines were
+compared with actual formal19, and the native14 schema bytes remain identical.
+Loop root/server manifests and locks now pin that exact published20 package.
+No development SDK, private import or compatibility adapter is used.
+
+The default qualified DeepSeek producer now explicitly selects native-v3 and
+uses16K output tokens, keeping the existing total work/cost budgets. Native tool
+arguments retain their original strict schemas. The Design write description
+shows JSON.stringify-generated encoding for literal quotes, backslashes and
+newlines; decoded content must remain the original file text. Slides keeps its
+existing description, schema and skill body. Required guidance selection is
+limited to the current Design request and the existing authorized catalog.
+
+Zero-failure qualification reads every attempt from the native model budget
+ledger, including retries recovered inside a logical call. It also records safe
+wire structure, syntax categories and schema issue pointers, with no prompts,
+reasoning or argument values. An intentionally truncated synthetic response
+recovers to actual delivery but remains `accepted:false`; the negative regression
+prevents successful retries from hiding failure. The live runner allows the
+existing240s model budget to finish before its300s test deadline.
+
+The real formal20 product run on source `ff28551d` completed in96918ms with
+**six first-attempt model calls**, zero failed attempts, zero business/protocol
+failures, and no wire contract failures. It loaded the current claude-design
+contract, read format.md and the existing canvas, wrote the actual Main component
+and index, ran design.check with problems0, and delivered through the isolated
+test's recording IM adapter. The PostgreSQL, Redis, product authorization, native
+Worker, file writer and upstream checker were real. The saved report and generated
+files are retained unchanged in `formal20/`.
+
+This is isolated real-provider product qualification, not a claim that the
+original production conversation was replayed. The run's semantic verification
+is `inconclusive`; generated teaching content, visual rendering, keyboard behavior
+and browser interaction have not received independent acceptance. The fixture
+artboard is evidence of actual writing/checking, not approved teaching material.
+Production deployment is tracked separately from this record.

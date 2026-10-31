@@ -1,0 +1,277 @@
+{
+  "qualification": "synthetic-provider-native-product",
+  "measurementComplete": true,
+  "runtime": "3.8.20",
+  "binding": "native-v3",
+  "maxOutputTokens": 16384,
+  "model": "scripted",
+  "runId": "im:fd4ec206adfee26691cba82da668a1d48b37dfd3a73d49c83fd839a3684d0c09",
+  "accepted": true,
+  "elapsedMs": 3987,
+  "decisions": [
+    {
+      "call": 1,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": "skills__load"
+    },
+    {
+      "call": 2,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": null
+    },
+    {
+      "call": 3,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": null
+    },
+    {
+      "call": 4,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": null
+    },
+    {
+      "call": 5,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": null
+    },
+    {
+      "call": 6,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": null
+    },
+    {
+      "call": 7,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": null
+    }
+  ],
+  "wire": [],
+  "actions": [
+    {
+      "action": "skills.load",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.read_reference",
+      "ok": true,
+      "code": null,
+      "page": "format.md"
+    },
+    {
+      "action": "design.current",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.read_file",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.write_files",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.check",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "task.inspect",
+      "ok": true,
+      "code": null
+    }
+  ],
+  "contractFailures": [],
+  "protocolFailures": 0,
+  "providerFailures": 0,
+  "budgetFailures": [],
+  "modelAttempts": [
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    }
+  ],
+  "failedModelAttempts": [],
+  "wireContractFailures": [],
+  "protocolCodes": [],
+  "files": [
+    {
+      "path": "project/canvas.json",
+      "sha256": "b80e08ccf577361c08ed4f4096c989ce94f459ff2a4a9b2c26076cd0a60c8b88"
+    },
+    {
+      "path": "project/FlashAttention.dc.html",
+      "sha256": "26593a4fb5d4ff89d8e0a420b71b472a44198beaf9e434a54a3d5e2d39a7c8b8"
+    }
+  ],
+  "checkProblems": 0,
+  "status": "succeeded",
+  "verification": "inconclusive",
+  "delivery": "delivered",
+  "deliveryTarget": "isolated-test-recording-im",
+  "browserValidated": false
+}

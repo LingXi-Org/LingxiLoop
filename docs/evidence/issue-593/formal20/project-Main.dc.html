@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>FlashAttention：分块流式 Softmax</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#FAF9F5;color:#141413;font-family:system-ui,-apple-system,"PingFang SC","Noto Sans SC",sans-serif}
+a{color:#B4492C}a:hover{color:#8C3620}
+</style>
+</helmet>
+<div style="width:1200px;box-sizing:border-box;padding:72px 80px;display:flex;flex-direction:column;gap:40px;background:#FAF9F5">
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<p style="margin:0;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:#5C5B55">概念讲解 · Transformer 注意力</p>
+<h1 style="margin:0;font-size:56px;line-height:1.1;font-weight:600">FlashAttention：用分块与在线 Softmax，把注意力搬进 SRAM</h1>
+<p style="margin:0;font-size:20px;line-height:1.6;color:#3B3A35;max-width:980px">FlashAttention 不近似、不改写注意力的数学结果。它改变的是<strong>计算顺序和读写内存的方式</strong>：把 Q、K、V 切成能装进片上 SRAM 的小块，边算边归一化，结果块直接写回输出，因此不必把 $n\times n$ 的注意力矩阵 $S$ 写进 HBM 再读回来。</p>
+</div>
+
+<div style="display:flex;gap:20px;align-items:stretch">
+<div style="flex:1 1 0;background:#141413;color:#FAF9F5;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:13px;letter-spacing:0.1em;color:#C9A392">GPU 内存层级</span>
+<p style="margin:0;font-size:22px;line-height:1.5">SRAM（约 20 MB 级，每 SM 约 100–200 KB）：带宽最高、容量极小</p>
+</div>
+<div style="flex:1 1 0;background:#F1EEE7;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:13px;letter-spacing:0.1em;color:#5C5B55">GPU 内存层级</span>
+<p style="margin:0;font-size:22px;line-height:1.5">HBM 显存：数十 GB，但读写的单位代价高得多</p>
+</div>
+<div style="flex:1 1 0;border:1px solid #D8D3C8;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:13px;letter-spacing:0.1em;color:#5C5B55">关键矛盾</span>
+<p style="margin:0;font-size:22px;line-height:1.5">标准注意力是“内存受限”算子：算得不算多，搬运太多</p>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<h2 style="margin:0;font-size:32px;font-weight:600">一、标准注意力卡在哪</h2>
+<p style="margin:0;font-size:19px;line-height:1.7;color:#3B3A35;max-width:1020px">对所有 i：$S_i=Q_iK^{\mathsf T}/\sqrt{d}$，$P_i=\operatorname{softmax}(S_i)$，$O_i=P_iV$。要得到整行 softmax，就得先拿到整行 $S$ 的最大值与求和项，于是 $S$ 和 $P$ 被写入 HBM，再从 HBM 读回来做归一化和乘 V。$
+</p>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px">
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:6px">
+<span style="font-size:14px;color:#5C5B55">HBM 访问量</span>
+<span style="font-size:34px;font-weight:600">$\Theta(n^2d)$</span>
+<span style="font-size:15px;line-height:1.5;color:#5C5B55">矩阵元素规模，随序列长度平方增长</span>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:6px">
+<span style="font-size:14px;color:#5C5B55">SRAM 访问量下限</span>
+<span style="font-size:34px;font-weight:600">$\Omega(nd^2)$</span>
+<span style="font-size:15px;line-height:1.5;color:#5C5B55">Q、K、V 与 O 至少各被碰到一次</span>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:6px">
+<span style="font-size:14px;color:#5C5B55">决定因素</span>
+<span style="font-size:16px;line-height:1.6;color:#3B3A35">SRAM 与 HBM 的带宽之比，通常约两个数量级；$d$ 是固定通道数时 $n$ 越长，差距越大</span>
+</div>
+</div>
+<p style="margin:0;font-size:17px;line-height:1.6;color:#5C5B55">直观算一笔：$n=2048$、$d=64$，$S$ 约 400 万个元素；在 FP32 下是 16 MB，两倍写入加两倍读取就是 64 MB 级流量，而 $Q,K,V,O$ 合计只有约 2 MB。瓶颈在搬运，不在乘法。</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<h2 style="margin:0;font-size:32px;font-weight:600">二、核心机制：在线 Softmax（online softmax）</h2>
+<p style="margin:0;font-size:19px;line-height:1.7;color:#3B3A35;max-width:1020px">若只看一个块内的 softmax 分子 $e^{s-m}$，它只依赖本块最大值；换块后最大值变了，旧的累加值需要“校正”即可，而不必回头重算。令 $m$ 为当前已见最大得分，$\ell$ 为对应的归一化分母（指数和），每读入一个块：</p>
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:14px;padding:28px;display:flex;flex-direction:column;gap:18px">
+<p style="margin:0;font-size:22px;line-height:1.6">$m^\text{new}=\max\left(m,\ \tilde m\right)\qquad \tilde m=\max_j s_j$（本块内）</p>
+<p style="margin:0;font-size:22px;line-height:1.6">$\ell^\text{new}=e^{m-m^\text{new}}\,\ell+e^{\tilde m-m^\text{new}}\,\tilde\ell$</p>
+<p style="margin:0;font-size:22px;line-height:1.6">$O^\text{new}=\operatorname{diag}\left(e^{m-m^\text{new}}\right)O+\operatorname{diag}\left(e^{\tilde m-m^\text{new}}\right)\tilde P\tilde V$</p>
+<p style="margin:0;font-size:16px;line-height:1.6;color:#5C5B55">全部块处理完后，$O=O/\ell$ 即为精确结果。校正因子 $e^{m-m^\text{new}}\le 1$，数值上永远是缩放已有累加，不会溢出。</p>
+</div>
+<p style="margin:0;font-size:19px;line-height:1.7;color:#3B3A35;max-width:1020px">这就是分块流式算法成立的原因：softmax 的“减最大值”只是为了防止 $e^s$ 溢出，它对最终结果没有影响——而正是这个可有可无的平移量，让累加可以边走边修正。</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<h2 style="margin:0;font-size:32px;font-weight:600">三、分块后的一个计算块（tile）</h2>
+<p style="margin:0;font-size:19px;line-height:1.7;color:#3B3A35;max-width:1020px">把 $Q_i$（$B_r\times d$）留在寄存器/SRAM，沿 K 方向逐个遍历 $K_j$、$V_j$（$B_c\times d$）：</p>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px">
+<div style="background:#F1EEE7;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:14px;color:#5C5B55">1 · 算分</span>
+<p style="margin:0;font-size:19px;line-height:1.55;color:#3B3A35">$S_{ij}=Q_iK_j^{\mathsf T}/\sqrt d$，只存在于 SRAM</p>
+</div>
+<div style="background:#F1EEE7;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:14px;color:#5C5B55">2 · 局部统计</span>
+<p style="margin:0;font-size:19px;line-height:1.55;color:#3B3A35">$\tilde m_{ij}$、$\tilde P_{ij}$、$\tilde\ell_{ij}$，用同一块数据当场求</p>
+</div>
+<div style="background:#F1EEE7;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:14px;color:#5C5B55">3 · 更新输出</span>
+<p style="margin:0;font-size:19px;line-height:1.55;color:#3B3A35">$O_i$ 和 $\ell_i$、$m_i$ 按上节公式就地更新</p>
+</div>
+<div style="background:#F1EEE7;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:14px;color:#5C5B55">4 · 丢弃 S 块</span>
+<p style="margin:0;font-size:19px;line-height:1.55;color:#3B3A35">$S_{ij}$ 用完即弃，从不落盘到 HBM</p>
+</div>
+</div>
+<p style="margin:0;font-size:17px;line-height:1.6;color:#5C5B55">由于外层循环按 i 走，每个 $K_j,V_j$ 块会被所有 i 块读到——因此反向传播时不存中间矩阵，而是用同样的“分块 + 重算”方式在显存允许时再算一遍，存储从 $O(n^2)$ 降到 $O(n)$。</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<h2 style="margin:0;font-size:32px;font-weight:600">四、一个迷你数值例子（在线 softmax 的分块累加）</h2>
+<table style="width:100%;border-collapse:collapse;font-size:17px">
+<thead>
+<tr style="text-align:left;color:#5C5B55;font-size:14px;letter-spacing:0.08em">
+<th style="padding:12px 8px;border-bottom:1px solid #D8D3C8">块</th>
+<th style="padding:12px 8px;border-bottom:1px solid #D8D3C8">得分 $s$</th>
+<th style="padding:12px 8px;border-bottom:1px solid #D8D3C8">块内最大值</th>
+<th style="padding:12px 8px;border-bottom:1px solid #D8D3C8">块内指数和</th>
+<th style="padding:12px 8px;border-bottom:1px solid #D8D3C8">$m$ 更新后</th>
+<th style="padding:12px 8px;border-bottom:1px solid #D8D3C8">$\ell$ 更新后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">第 1 块</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">[1, 2]</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">2</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">$e^{-1}+e^{0}=1.368$</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">2</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">1.368</td>
+</tr>
+<tr>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">第 2 块</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">[4, 3]</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">4</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">$e^{0}+e^{-1}=1.368$</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">4</td>
+<td style="padding:12px 8px;border-bottom:1px solid #EDE9E0">$0.184+1.368=1.552$</td>
+</tr>
+</tbody>
+</table>
+<p style="margin:0;font-size:17px;line-height:1.65;color:#3B3A35;max-width:1020px">核对：$e^{2-4}=0.135$，$1.368\times0.135=0.184$。完整 softmax 的分母是 $e^{1-4}+e^{2-4}+e^{4-4}+e^{3-4}=0.050+0.135+1+0.368=1.552$，与分块累加一致。</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<h2 style="margin:0;font-size:32px;font-weight:600">五、边界与代价（必须知道的限制）</h2>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px">
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:15px;color:#B4492C;font-weight:600">只加速“内存受限”的情形</span>
+<p style="margin:0;font-size:17px;line-height:1.6;color:#3B3A35">序列较短或 $d$ 很大时，算子更多受算力限制，HBM 流量不是瓶颈，收益会明显变小。</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:15px;color:#B4492C;font-weight:600">重算换显存，不是免费的</span>
+<p style="margin:0;font-size:17px;line-height:1.6;color:#3B3A35">反向传播要重算前向内容，多消耗 FLOPs；训练通常净赚，纯推理时更依赖具体场景。</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:15px;color:#B4492C;font-weight:600">分块尺寸是调参</span>
+<p style="margin:0;font-size:17px;line-height:1.6;color:#3B3A35">$B_r$、$B_c$ 受 SRAM 容量、head 维度与 kernel 实现限制，取值不当会因寄存器溢出而变慢。</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:15px;color:#B4492C;font-weight:600">数值精度问题仍在</span>
+<p style="margin:0;font-size:17px;line-height:1.6;color:#3B3A35">与标准 softmax 一样，减最大值只保证不溢出；BF16/FP16 下仍可能因低精度累积产生误差，需要混合精度与合理缩放。</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:15px;color:#B4492C;font-weight:600">复杂度仍是 $O(n^2)$</span>
+<p style="margin:0;font-size:17px;line-height:1.6;color:#3B3A35">它降低的是内存访问与显存占用，不是注意力两两交互的计算量级；超长序列还要靠稀疏/线性注意力等路线。</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E2DDD2;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:15px;color:#B4492C;font-weight:600">因果掩码与稀疏是额外工作</span>
+<p style="margin:0;font-size:17px;line-height:1.6;color:#3B3A35">只算下三角块、处理对角块掩码、块级稀疏，都需要专门的 kernel 逻辑。</p>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px;border-top:1px solid #D8D3C8;padding-top:24px">
+<h2 style="margin:0;font-size:26px;font-weight:600">一句话自测</h2>
+<p style="margin:0;font-size:18px;line-height:1.7;color:#3B3A35;max-width:1020px">如果我把 $\ell$ 改成“只累计本块指数和、最后再统一求和”，会与 FlashAttention 的结果一致吗？为什么必须保留 $m$ 与 $\ell$ 的在线更新？想清楚这一点，你就抓住了分块流式算法的关键。</p>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":1620}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
