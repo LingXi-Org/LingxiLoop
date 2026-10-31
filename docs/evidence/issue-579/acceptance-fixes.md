@@ -7,23 +7,18 @@ check was #603 (Slides editor); this branch does not change its files or target.
 
 ## Production observations (read-only, 2026-10-31 UTC)
 
-The connected task interface cannot open Lenovo task
-`01a19107-2dd7-7715-ae5e-8b07eb8320ed`. The existing administrator MCP reader
-independently located its dedicated `E2E测试-20261031-Lenovo` conversation:
-`conversation-d94da1deef37b5fd59cc36758be8e4ae016bece381fea24afaea4ea1a6f92028`.
-No new model turn, reconciliation, retry or production mutation was performed.
-
-Run `im:8f2028076c0ae879040429591eb3dba3e001f806872c4bd230df3cbc0e90ff21`:
+The existing authorized administrator reader inspected the dedicated acceptance
+conversation. No new model turn, reconciliation, retry or production mutation
+was performed. Internal conversation, run and source identifiers are omitted.
 
 - Two search receipts return `status: completed`, `value.status: unavailable`.
   Both IM process summaries incorrectly say retrieval has completed. Native
   invocation completion and the actual retrieval result are different facts.
-- The source was then listed and read twice. Operations seq33 and seq41 contain
+- The source was then listed and read twice. The two read receipts contain
   the earlier range (including `[[PAGE:2]]` and the introduction) and later range
   (including `[[PAGE:15]]`) respectively.
-- Delivered IM message seq8 already binds the introduction link to S2, chunk
-  `ks-34c5355c665ad0e7:6797:19204`, version
-  `sha256:d11deba021c222c9bb4df181b09a7498f1aa3900da57fc9e691877bd56141464`.
+- The delivered IM message already binds the introduction link to the later
+  range, rather than the earlier range containing the introduction.
   Its frozen excerpt begins near page15. The other links also use S2. This is
   evidence of an incorrect citation range in the delivered answer; it does not
   establish that refresh remapped a previously correct citation. The original
