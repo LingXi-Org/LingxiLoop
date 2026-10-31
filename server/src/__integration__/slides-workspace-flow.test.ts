@@ -2,13 +2,18 @@ import assert from 'node:assert/strict'
 import { createHmac, randomUUID } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import { after, before, test } from 'node:test'
+import { setTimeout as delay } from 'node:timers/promises'
 import express from 'express'
-import type { ActionContext, WorkItem, RunVerificationContext } from '@lyyzka/lingxios'
+import { skillIndex, type ActionContext, type WorkItem, type RunVerificationContext } from '@lyyzka/lingxios'
+import { createWorker } from '@lyyzka/lingxios/worker'
 import { api } from '../api/router.js'
 import { env } from '../env.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
-import { lingxiOSControl } from '../agent-runtime/runtime.js'
+import { lingxiOSControl, runtimeModelConfiguration } from '../agent-runtime/runtime.js'
+import { receiveAgentRequest } from '../agent-runtime/receive.js'
+import { createNativeMessage, nativeText } from '../im/message-types.js'
+import { artifactSkills } from '../modules/artifacts/skills.js'
 import { createArtifactTools, createArtifactRuntime, loadArtifactRunContext, completeArtifactWork, createSlides } from '../modules/artifacts/index.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
@@ -138,4 +143,80 @@ test('opening a legacy active deck does not move its work, and unrelated rooms c
     VALUES('slides-unrelated',$1,$2,'group','Unrelated',$3::jsonb)`, [companyId, projectId, JSON.stringify([userId, builderId])])
   await assert.rejects(pool.query("UPDATE artifacts SET execution_conversation_id='slides-unrelated' WHERE id=$1", [deck.id]),
     (error: unknown) => (error as { code: string }).code === '23514')
+})
+
+test('authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
+  const created = await request(`/projects/${projectId}/slides`, 'POST', { title: 'Model flow' })
+  assert.equal(created.status, 201)
+  const deck = await created.json() as { id: string }
+  const workspace = await (await request(`/artifacts/${deck.id}/slides-workspace`, 'POST')).json() as { conversationId: string; agentId: string }
+  const path = 'project/slides/selected.html', original = '<section id="selected"><h1>Original title</h1></section>'
+  const revised = original.replace('Original title', 'Saved by the native Slides tool')
+  await invoke(work(workspace.agentId, workspace.conversationId), 'write_files', { artifactId: deck.id, files: { [path]: { content: original, ifMatch: null } } })
+  const hash = (await pool.query('SELECT sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [deck.id, path])).rows[0].sha256 as string
+  const context = await request(`/artifacts/${deck.id}/editor-context`, 'PUT', { slideId: 'selected', selectedElementIds: ['heading'],
+    selectedText: 'Original title', selection: [{ id: 'heading', kind: 'text', label: 'Original title' }], mode: 'edit', dirty: false, version: null })
+  assert.equal(context.status, 200)
+  const { name, version, hash: skillHash } = skillIndex(artifactSkills.find(skill => skill.name === 'claude-slides')!)
+  const calls = [
+    { name: 'skills__load', args: { name, version, hash: skillHash } },
+    { name: 'slides__read_file', args: { artifactId: deck.id, path } },
+    { name: 'slides__write_files', args: { artifactId: deck.id, files: { [path]: { content: revised, ifMatch: hash } } } },
+    { name: 'slides__read_file', args: { artifactId: deck.id, path } },
+    { name: 'public_answer', args: { operation: { kind: 'append', supersedes: [] }, commentary: '',
+      answer: '已保存并重新读取选中页面的标题。', outcome: { status: 'satisfied', gaps: [] } } },
+  ]
+  let issued = 0
+  const providerErrors: string[] = []
+  const provider = createServer(async (req, res) => {
+    try {
+      let raw = ''; for await (const chunk of req) raw += chunk
+      const input = JSON.parse(raw), step = calls[issued++]
+      assert.ok(step, 'worker must stop after the verified public answer')
+      assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === step.name), `missing tool ${step.name}`)
+      const prompt = JSON.stringify(input.messages)
+      assert.ok(prompt.includes('Original title'), 'persisted editor selection/source must reach the actual model request')
+      if (issued === 3) assert.ok(prompt.includes(hash), 'the model must receive the preceding read receipt')
+      if (issued === 5) assert.ok(prompt.includes('Saved by the native Slides tool'), 'read-back must reach the model before completion')
+      const call = { id: `slides-model-${issued}`, type: 'function', function: { name: step.name, arguments: JSON.stringify(step.args) } }
+      const usage = { prompt_tokens: 10, completion_tokens: 12 }
+      res.writeHead(200, { 'content-type': input.stream ? 'text/event-stream' : 'application/json' })
+      res.end(input.stream ? `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', tool_calls: [{ index: 0, ...call }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`
+        : JSON.stringify({ choices: [{ message: { role: 'assistant', tool_calls: [call] }, finish_reason: 'tool_calls' }], usage }))
+    } catch (error) { providerErrors.push(error instanceof Error ? error.message : 'provider fixture failed'); res.writeHead(500); res.end('{}') }
+  })
+  await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
+  let worker: ReturnType<typeof createWorker> | undefined
+  try {
+    const clientNonce = randomUUID(), payload = createNativeMessage({ id: clientNonce, role: 'user', content: [{ type: 'text', text: '请修改当前选中页的标题，保存后重新读取确认。' }] })
+    const accepted = await request(`/im/channels/${workspace.conversationId}/messages/accept`, 'POST', { clientNonce, payload })
+    assert.equal(accepted.status, 202, await accepted.clone().text())
+    assert.ok(im.messages.some(message => message.clientMsgNo === clientNonce && message.fromUid === userId))
+    const received = await receiveAgentRequest({ companyId, agentId: workspace.agentId, channelId: workspace.conversationId, clientMsgNo: clientNonce, authenticatedUserId: userId })
+    assert.ok('runs' in received && received.runs.length === 1)
+    const run = received.runs[0], control = await lingxiOSControl(), address = provider.address()
+    assert.ok(address && typeof address !== 'string')
+    worker = createWorker({ controlPlane: control, model: {
+      ...runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: 'isolated-slides-fixture', baseUrl: 'https://api.siliconflow.cn/v1' }, 90_000),
+      baseUrl: `http://127.0.0.1:${address.port}/v1`,
+    }, worker: { id: 'slides-product-flow', concurrency: 1 } })
+    assert.equal(await worker.runNext(), true)
+    assert.deepEqual(providerErrors, [])
+    assert.equal((await control.readRun(run))?.status, 'succeeded')
+    assert.equal(issued, calls.length)
+    const deadline = AbortSignal.timeout(5000)
+    while ((await control.readRunState(run))?.delivery !== 'delivered') { deadline.throwIfAborted(); await delay(20) }
+    const saved = (await pool.query('SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [deck.id, path])).rows[0]
+    assert.equal(saved.body.toString('utf8'), revised); assert.notEqual(saved.sha256, hash)
+    assert.ok(im.messages.some(message => message.channelId === workspace.conversationId && message.fromUid === workspace.agentId && nativeText(message.payload).includes('已保存')))
+    const replay = await request(`/im/channels/${workspace.conversationId}/agents/${workspace.agentId}/runs/${run.runId}`)
+    assert.equal(replay.status, 200, await replay.clone().text())
+    assert.match(await replay.text(), /已保存/)
+    const ledger = await pool.query('SELECT count(*)::int AS n FROM llm_calls WHERE run_id=$1', [run.runId])
+    assert.equal(ledger.rows[0].n, calls.length)
+    const duplicate = await receiveAgentRequest({ companyId, agentId: workspace.agentId, channelId: workspace.conversationId, clientMsgNo: clientNonce, authenticatedUserId: userId })
+    assert.equal(duplicate.deduplicated, true)
+    assert.equal(await worker.runNext(), false)
+    assert.equal(issued, calls.length)
+  } finally { await worker?.stop(); provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve())) }
 })

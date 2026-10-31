@@ -24,6 +24,8 @@ before(async () => {
   await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')`, [projectId, companyId, userId])
   await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members)
     VALUES('artifact-room',$1,$2,'group','Design boundary',$3::jsonb)`, [companyId, projectId, JSON.stringify([userId, agentId])])
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES('artifact-room',$1,$2::jsonb)`,
+    [companyId, JSON.stringify({ channelType: 2, members: [userId, agentId] })])
   // As in web.ts, the editor routes read their own bodies, so they precede the API's JSON parser.
   const app = (await import('express')).default()
   app.use('/artifact-editor', artifactEditorRouter)
