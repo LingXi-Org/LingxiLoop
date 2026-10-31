@@ -208,13 +208,20 @@ try {
           listeners.add(done)
         })
         await cdp('Tracing.end'); await complete; listeners.delete(traceListener)
+        const frameEvents = traceEvents.filter(event => ['FrameCommittedInBrowser', 'TracingStartedInBrowser'].includes(event.name))
+        const frames = frameEvents.flatMap(event => event.args?.data?.frames ?? [event.args?.data]).filter(Boolean)
+        const pageProcesses = traceEvents.filter(event =>
+          (event.name === 'ParseHTML' && (event.args?.beginData?.url ?? event.args?.data?.beginData?.url)?.startsWith(origin + base))
+          || (event.name === 'EvaluateScript' && event.args?.data?.url?.startsWith(origin + base))).map(event => event.pid)
+        const editorProcesses = [...new Set([...frames.filter(frame => frame.url?.startsWith(origin + base)).map(frame => frame.processId), ...pageProcesses].filter(Number.isFinite))]
         const groups = new Map()
-        for (const event of traceEvents) if (event.ph === 'X' && /parse|compil/i.test(event.name) && event.dur >= 0) {
+        for (const event of traceEvents) if (event.ph === 'X' && /parse|compil/i.test(event.name) && event.dur >= 0
+          && (!editorProcesses.length || editorProcesses.includes(event.pid))) {
           const key = `${event.pid}:${event.tid}:${event.name}`
           const entry = groups.get(key) ?? { name: event.name, process: event.pid, thread: event.tid, count: 0, durationMs: 0 }
           entry.count++; entry.durationMs += event.dur / 1000; groups.set(key, entry)
         }
-        parsingTraces.push({ run: run + 1, phase, events: [...groups.values()] })
+        parsingTraces.push({ run: run + 1, phase, editorProcesses, scope: editorProcesses.length ? 'editor renderer processes' : 'browser-wide; renderer association unavailable', events: [...groups.values()] })
       }
       if (args.regression && phase === 'reopen') {
         const key = async value => { await cdp('Input.dispatchKeyEvent',{type:'keyDown',key:value},editorSession); await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:value},editorSession) }
@@ -304,7 +311,7 @@ try {
     ...Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === 'retained').map(s => s.readyMs), p)])),
   }
   if (args.trace) report.jsParseTime = { status: 'trace-recorded',
-    definition: 'V8 parse/compile complete events from before navigation to verified editing, grouped by process, thread and exact event name. Includes browser-injected measurement scripts; different names may nest and must not be summed. This trace run has instrumentation overhead and is excluded from comparable performance P95.',
+    definition: 'V8 parse/compile complete events from before navigation to verified editing, grouped by process, thread and exact event name. Renderer association comes from frame-commit or document parsing/script URL trace metadata when available. Includes browser-injected measurement scripts; different names may nest, and streaming parse spans contain network waits, so they must not be summed as CPU or wall-clock parse time. This trace run has instrumentation overhead and is excluded from comparable performance P95.',
     samples: parsingTraces }
   await mkdir(resolve(out, '..'), { recursive: true }); await writeFile(out, JSON.stringify(report, null, 2) + '\n')
 } finally {

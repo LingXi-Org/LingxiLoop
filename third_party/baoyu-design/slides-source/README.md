@@ -24,6 +24,8 @@ Use the repository's exact published SDK dependency and normal package credentia
 - `node/compiler.js` uses the same named application modules and the Node dependency bindings. `check.ts` selects its generated compiler via `BAOCUT_SLIDES_EDITOR_DIST`.
 - `index.html`, `editor.css` and the icon font are source inputs. Generated output is under ignored `server/assets/slides-editor/`. The build deletes obsolete generated chunks before writing its output.
 
+The browser build prunes statically unread private runtime getters (including consumers in lazy exports and the workspace bridge). It retains every initializer and the Node compiler namespace; computed runtime reads stop the build for explicit handling. This only enables normal dead-code elimination, not removal of editing features.
+
 The browser output uses hashed shared assets; exports, PPTX and WOFF2 are lazy chunks. Browser and Node bundles can be rebuilt entirely from this directory. `scripts/slides-editor.test.mjs` checks that all browser inputs come from this directory, verifies complete archived file hashes and compares old-format compilation with the pinned implementation (including passive legacy media fields).
 
 ## Native differences
