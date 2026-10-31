@@ -11,7 +11,8 @@ import { permissionService } from '../modules/access/public.js'
 import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 // Full HTTP router + PostgreSQL/Redis for the product API and the vendored editor's
-// grant-authorized routes. Only the session identity is a test fixture.
+// grant-authorized routes. Session identity and WuKong transport are fixtures;
+// authorization, persistence and the installed published SDK are real.
 let server: Server, origin: string, companyId: string, projectId: string, agentId: string
 const userId = 'artifact-member'
 before(async () => {
@@ -74,9 +75,13 @@ test('old Slides gain independent durable native chats without rewriting source 
 test('Slides selection context, dirty protection, alternating CAS writes and nondestructive restore', async () => {
   const deck = await (await api(`/projects/${projectId}/slides`, 'POST', { title: 'Versioned' })).json() as { id: string }
   const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string }
+  const video = await fetch(`${origin}${grant.url}__deck/assets`, { method: 'POST', headers: { 'content-type': 'video/mp4' }, body: Buffer.from('retired-video') })
+  assert.equal(video.status, 415)
+  assert.equal((await pool.query('SELECT id FROM artifact_blobs WHERE artifact_id=$1', [deck.id])).rowCount, 0)
   const path = 'project/slides/one.html', original = '<section id="one"><h1>Original</h1><aside>Keep notes</aside></section>'
   assert.equal((await save(grant.url, { [path]: entry(original, null) })).status, 200)
   const before = await (await api(`/artifacts/${deck.id}/revisions`)).json() as { current: string; revisions: { seq: string }[] }
+  assert.ok(before.revisions.every(revision => Number(revision.seq) > 0), 'never offer the pre-creation empty file set as a restorable deck')
   const sha = (await pool.query('SELECT sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [deck.id, path])).rows[0].sha256
   const context = { slideId: 'one', selectedElementIds: ['title'], selectedText: 'Original', mode: 'edit', dirty: true, version: before.current }
   assert.equal((await api(`/artifacts/${deck.id}/editor-context`, 'PUT', context)).status, 200)

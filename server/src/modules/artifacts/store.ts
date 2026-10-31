@@ -132,7 +132,7 @@ export async function publish(db: Queryable, definition: ArtifactKindDefinition,
   }
   const shas: Record<string, string> = {}
   const changed: string[] = []
-  if (definition.kind === 'slides') await checkpoint(db, artifactId, locked.rows[0].seq, before, null)
+  if (definition.kind === 'slides' && Object.keys(before.files).length) await checkpoint(db, artifactId, locked.rows[0].seq, before, null)
   for (const [p, entry] of Object.entries(batch)) {
     if (!isWriteEntry(entry)) {
       const removed = await db.query('DELETE FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifactId, p])
