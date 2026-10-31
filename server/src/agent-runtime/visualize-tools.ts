@@ -211,5 +211,6 @@ export async function verifyVisualizeCandidate(context: RunVerificationContext):
     try { await readAuthorizedVisualizeDocument({ ...scope(context), path: reference.path }, context.database as Queryable) }
     catch { return [{ checker, status: 'failed', evidence: { hint: 'The visualization path is unavailable in this conversation. Save and read back the fragment with visualize.save and visualize.read; reference only the returned path.' } }] }
   }
-  return [{ checker, status: 'passed', evidence: { references: visualizeReferences(context.candidate.body).length } }]
+  return [{ checker, status: 'passed', evidence: { references: visualizeReferences(context.candidate.body).length,
+    storageReadback: true, semanticValidation: false, browserValidation: false } }]
 }

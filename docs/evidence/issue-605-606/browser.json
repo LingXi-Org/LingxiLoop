@@ -1,0 +1,86 @@
+{
+  "browser": "cloud Chromium",
+  "scope": "real product host/retention/opaque frames/pinned SDK; synthetic local API; no production replay",
+  "reports": [
+    {
+      "scenario": "stalled-public-route-authorized-recovery",
+      "counts": {
+        "publicRuntime": 1,
+        "authorizedRuntime": 1,
+        "abortedPublic": 1,
+        "acquisitions": 1,
+        "writes": 0
+      },
+      "state": null,
+      "phase": "ready"
+    },
+    {
+      "scenario": "conversation-reopen-narrow-retains-guest-and-state",
+      "counts": {
+        "publicRuntime": 1,
+        "authorizedRuntime": 1,
+        "abortedPublic": 1,
+        "acquisitions": 1,
+        "writes": 1
+      },
+      "state": {
+        "modelContent": {
+          "count": 6
+        },
+        "privateContent": null
+      },
+      "phase": "ready"
+    },
+    {
+      "scenario": "refresh-restores-state-after-authorized-recovery",
+      "counts": {
+        "publicRuntime": 1,
+        "authorizedRuntime": 1,
+        "abortedPublic": 1,
+        "acquisitions": 1,
+        "writes": 0
+      },
+      "state": {
+        "modelContent": {
+          "count": 6
+        },
+        "privateContent": null
+      },
+      "phase": "ready"
+    },
+    {
+      "scenario": "public-403-is-not-bypassed",
+      "counts": {
+        "publicRuntime": 1,
+        "authorizedRuntime": 0,
+        "abortedPublic": 0,
+        "acquisitions": 1,
+        "writes": 0
+      },
+      "state": {
+        "modelContent": {
+          "count": 6
+        },
+        "privateContent": null
+      },
+      "phase": "error"
+    },
+    {
+      "scenario": "explicit-retry-acquires-new-capability",
+      "counts": {
+        "publicRuntime": 2,
+        "authorizedRuntime": 0,
+        "abortedPublic": 0,
+        "acquisitions": 2,
+        "writes": 0
+      },
+      "state": {
+        "modelContent": {
+          "count": 6
+        },
+        "privateContent": null
+      },
+      "phase": "ready"
+    }
+  ]
+}

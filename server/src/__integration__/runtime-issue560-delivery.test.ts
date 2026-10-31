@@ -49,10 +49,15 @@ for (const { budgetProbe, explanationWorkflow, binding } of [
   const text=explanationWorkflow?'请解释并创建交互图。Q 与 K 计算得分。softmax 把得分变成权重。权重对 V 加权求和。':'创建一个展示注意力流程的交互图。'
   const explanation='Q 与 K 计算得分，softmax 得到权重，再对 V 加权求和。'
   const html='<div><label>查询位置 <input id="query" type="range" min="1" max="3" value="1"></label><output id="selected">1</output><p>Q × K → softmax → 加权 V</p></div><script>document.getElementById("query").addEventListener("input", e => { document.getElementById("selected").textContent = e.target.value; });</script>'
-  let calls=0,runId='',handlerError:unknown
+  let calls=0,reviews=0,runId='',handlerError:unknown
   const provider=createServer(async(request,response)=>{try{
     let raw='';for await(const chunk of request)raw+=chunk
-    const input=JSON.parse(raw);calls++;assert.ok(calls<=(budgetProbe?6:binding==='native-v1'?(explanationWorkflow?6:5):4));const phase=binding==='native-v1'?calls-1:calls,refreshStage=binding==='native-v1'&&explanationWorkflow,authoringPhase=refreshStage?4:3,terminalPhase=refreshStage?5:4
+    const input=JSON.parse(raw)
+    if(!input.tools?.length){
+      reviews++;assert.equal(reviews,1);assert.ok(raw.includes('visualize-content-consistency-v1'))
+      response.writeHead(200,{'content-type':'text/event-stream'});response.end(`data: ${JSON.stringify({choices:[{delta:{content:JSON.stringify({missing:[],limitations:[]})},finish_reason:'stop'}],usage:{prompt_tokens:10,completion_tokens:20}})}\n\ndata: [DONE]\n\n`);return
+    }
+    calls++;assert.ok(calls<=(budgetProbe?6:binding==='native-v1'?(explanationWorkflow?6:5):4));const phase=binding==='native-v1'?calls-1:calls,refreshStage=binding==='native-v1'&&explanationWorkflow,authoringPhase=refreshStage?4:3,terminalPhase=refreshStage?5:4
     const exposed=input.tools.map((tool:{function:{name:string}})=>tool.function.name)
     const steps=(await pool.query("SELECT input->>'partId' AS id FROM lingxios.agent_steps WHERE work_id=$1 AND kind='runtime.answer_segment' ORDER BY step_seq",[runId])).rows
     const operation=phase===2?{kind:'replace',supersedes:[steps[0].id]}:{kind:'append',supersedes:[]}
@@ -83,6 +88,7 @@ for (const { budgetProbe, explanationWorkflow, binding } of [
     const protocolRejected=failures.some(row=>row.diagnostics?.kind==='protocol')
     const budgetLimit=failures.find(row=>row.budget)?.budget
     if(budgetProbe){
+      assert.equal(reviews,0)
       assert.equal(calls,6);assert.equal(state?.run.status,'failed')
       assert.equal(protocolRejected,false);assert.deepEqual(budgetLimit,{code:'budget_limit',dimension:'calls'})
       assert.equal((await pool.query('SELECT count(*)::int AS n FROM im_visualize_documents WHERE run_id=$1',[runId])).rows[0].n,0)
@@ -95,6 +101,7 @@ for (const { budgetProbe, explanationWorkflow, binding } of [
       return
     }
     assert.equal(state?.run.status,'succeeded');assert.equal(state?.delivery,'delivered');assert.equal(calls,binding==='native-v1'?(explanationWorkflow?6:5):4)
+    assert.equal(reviews,1,'one bounded content review supplements storage/activation checks')
     const docs=(await pool.query('SELECT path FROM im_visualize_documents WHERE run_id=$1',[runId])).rows;assert.equal(docs.length,1)
     const saved=await readAuthorizedVisualizeSnapshot({companyId,channelId,userId,path:docs[0].path})
     assert.equal(saved.html,html);assert.equal(saved.version,1);assert.equal(saved.run_id,runId)
