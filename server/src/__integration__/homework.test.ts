@@ -1277,6 +1277,33 @@ test('[integration] homework draft is teacher-owned and absent from learner feed
   assert.deepEqual(counts.rows, [{ activities: null, missions: null }])
 })
 
+test('[integration] 597 chat history reload reads the same frozen published homework without creating another record or message', async () => {
+  const { homework: task } = await published({ links: ['https://example.test/triangle'], dueAt: '2030-01-01T00:00:00.000Z' })
+  const messageCount = im.messages.length
+  for (const scope of [teacher, colleague]) {
+    const response = await call(scope, path(task.id))
+    assert.equal(response.status, 200)
+    const { homework: reloaded } = await response.json() as { homework: typeof task }
+    assert.deepEqual(reloaded, task, 'history reads the committed server content and permissions, not the original draft tool payload')
+    assert.equal(reloaded.status, 'PUBLISHED')
+    assert.equal(reloaded.canEditDraft, false)
+    assert.equal(reloaded.canPublish, false)
+  }
+  const feed = await (await call(student, `/courses/${courseId}/forum`)).json() as { items: { id: string }[] }
+  assert.equal(feed.items.filter(item => item.id === task.id).length, 1)
+  assert.equal(im.messages.length, messageCount, 'viewing the published card adds no conversation message')
+  assert.equal((await call(outsider, path(task.id))).status, 404)
+  assert.equal((await call(teacher, path(task.id, '/draft'), 'PATCH', {
+    ...visible, expectedRevision: task.revision, title: 'Edit a published card',
+  })).status, 409)
+  await homework.close(teacher, courseId, task.id, { expectedRevision: task.revision })
+  const closed = await homework.detail(teacher, courseId, task.id)
+  assert.equal(closed.homework.id, task.id)
+  assert.equal(closed.homework.status, 'CLOSED')
+  assert.equal(closed.homework.canEditDraft, false)
+  assert.equal(closed.homework.canPublish, false)
+})
+
 test('[integration] card edits reject stale revisions, foreign course scope and forbidden client authority fields', async () => {
   const draft = await homework.draft(teacher, courseId, visible)
   const id = draft.homework.id
