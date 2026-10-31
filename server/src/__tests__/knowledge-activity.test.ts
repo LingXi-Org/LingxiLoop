@@ -3,6 +3,8 @@ import { mock, test } from 'node:test'
 import type { ActionContext, ActionResult, RunIdentity } from '@lyyzka/lingxios'
 import { knowledgeSearchLabels } from '../../../src/lib/knowledgeSearch.js'
 import { toolDisplay } from '../../../src/lib/runActivity.js'
+import { buildNativeRunTrace, buildRunTrace } from '../agent-runtime/run-trace.js'
+import type { RunTraceSnapshot } from '@lyyzka/lingxios'
 
 // A completed tool invocation can still return an unavailable search/read.
 // Exercise the saved display and its authorized replay, not a copy-only helper.
@@ -40,4 +42,23 @@ test('knowledge activity saves observed source outcomes and restores the same su
     await check('knowledge.search', { ok: false, error: 'private', executionState: 'unknown' }, '操作结果尚未确认，请先核对结果，避免重复执行。')
     assert.doesNotMatch(JSON.stringify(saved), /private/)
   } finally { mock.restoreAll() }
+})
+
+test('all trace readers use actual search receipts instead of obsolete or generic summaries', () => {
+  const root = { spanId: 'root', parentSpanId: null, runId: 'run', requestVersion: 1, fence: 1, attemptId: null,
+    kind: 'agent' as const, state: 'complete' as const, startedAt: 1, completedAt: 3, timingBasis: 'run-execution' as const, seq: 2, revision: 'r' }
+  const snapshot: RunTraceSnapshot = { version: 1, seq: 2, revision: 'r', runId: 'run', requestVersion: 1, fence: 1,
+    rootSpanId: 'root', queuedAt: 1, origin: 1, spans: [root], truncated: false }
+  for (const sourceStatus of ['unavailable', 'matched', 'no_matches'] as const) {
+    const tool = { type: 'tool-call' as const, toolCallId: 'host:search', toolName: 'knowledge.search', args: {}, argsText: '{}', eventSeq: 2,
+      activityIdentity: { requestVersion: 1, fence: 1, attemptId: 'attempt' },
+      result: { status: 'completed', sourceStatus }, display: { title: '检索课程资料', purpose: '查找依据。', summary: '检索已完成，可在下方查看资料结果。' } }
+    const expected = knowledgeSearchLabels[sourceStatus === 'unavailable' ? 'failed' : sourceStatus]
+    const creationTrace = buildRunTrace({ runId: 'run', createdAt: new Date(1).toISOString(), lifecycle: 'succeeded', tools: [tool], llm: [] })
+    assert.equal(creationTrace.root.children[0].output, expected)
+    assert.equal(buildNativeRunTrace(snapshot, [tool]).root.children[0].output, expected)
+    const native = { ...snapshot, spans: [root, { ...root, spanId: 'search', parentSpanId: 'root', kind: 'tool' as const,
+      timingBasis: 'host-action' as const, toolCallId: tool.toolCallId, name: tool.toolName }] }
+    assert.equal(buildNativeRunTrace(native, [tool]).root.children[0].output, expected)
+  }
 })

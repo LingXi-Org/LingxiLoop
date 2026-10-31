@@ -62,7 +62,8 @@ export function buildRunTrace(input: { runId: string; createdAt: string; lifecyc
       : rootStatus === 'complete' || rootStatus === 'partial' || rootStatus === 'blocked' ? 'unknown' : rootStatus
     const display = toolDisplaySchema.safeParse(tool.display)
     const label = toolDisplay(tool.toolName,raw)
-    const info = resolveToolDisplay(tool.toolName,raw,display.success ? display.data : undefined)
+    const info = resolveToolDisplay(tool.toolName,raw,display.success ? display.data : undefined,
+      tool.result && typeof tool.result === 'object' ? Reflect.get(tool.result,'sourceStatus') : undefined)
     const start = relative(tool.timing?.startedAt),endValue = relative(tool.timing?.completedAt)
     const end = start !== null && endValue !== null && endValue >= start ? endValue : null
     const durationMs = tool.timing?.completedAt !== undefined ? number(tool.timing.completedAt-tool.timing.startedAt) : null
@@ -96,7 +97,8 @@ export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTrac
   for (const item of snapshot.spans) {
     const tool = item.runId === snapshot.runId ? tools.find(tool => tool.toolCallId === item.toolCallId && tool.eventSeq === item.seq) : undefined
     const parsed = toolDisplaySchema.safeParse(tool?.display)
-    const display = resolveToolDisplay(tool?.toolName ?? item.name ?? '',item.state === 'complete' ? 'completed' : item.state,parsed.success ? parsed.data : undefined)
+    const display = resolveToolDisplay(tool?.toolName ?? item.name ?? '',item.state === 'complete' ? 'completed' : item.state,parsed.success ? parsed.data : undefined,
+      tool?.result && typeof tool.result === 'object' ? Reflect.get(tool.result,'sourceStatus') : undefined)
     const recorded = item.callId ? ledger.get(item.callId) : undefined
     const operation = readModelOperation(Reflect.get(item,'operation')) ?? readModelOperation(recorded?.operation)
     const embedding = item.kind === 'llm' && (operation === 'embedding' || recorded?.apiKind === 'embedding' || isEmbeddingTraceModel(item.model))
@@ -149,7 +151,8 @@ export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTrac
       : raw === 'cancelled' ? 'cancelled' : raw === 'unknown' ? 'unknown' : tool.approval || tool.interrupt ? 'waiting'
       : root.status === 'running' ? 'running' : 'unknown'
     const parsed = toolDisplaySchema.safeParse(tool.display)
-    const display = resolveToolDisplay(tool.toolName,raw,parsed.success ? parsed.data : undefined)
+    const display = resolveToolDisplay(tool.toolName,raw,parsed.success ? parsed.data : undefined,
+      tool.result && typeof tool.result === 'object' ? Reflect.get(tool.result,'sourceStatus') : undefined)
     const start = relative(tool.timing?.startedAt ?? null),endValue = relative(tool.timing?.completedAt ?? null)
     const end = endValue !== null && (start === null || endValue >= start) ? endValue : null
     const durationMs = tool.timing?.completedAt !== undefined ? number(tool.timing.completedAt-tool.timing.startedAt) : null

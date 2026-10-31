@@ -31,8 +31,8 @@ Run `im:8f2028076c0ae879040429591eb3dba3e001f806872c4bd230df3cbc0e90ff21`:
 
 ## Changes and limits
 
-New activity summaries use actual retrieval/read outcomes. Live projection and
-the browser also derive search copy from the saved source-status receipt, so an
+New activity summaries use actual retrieval/read outcomes. Live projection,
+all three run-trace projection paths, and the browser derive search copy from the saved source-status receipt, so an
 old success summary no longer overrides an unavailable/no-match result. Raw
 receipts, execution state and stored history remain intact; no database rewrite
 or invented search/source evidence is involved.
@@ -54,7 +54,8 @@ Lenovo acceptance is recorded.
   retains exact page2/page15/page2 markers and excerpt bytes through projection,
   JSON/native-message persistence, a fresh run projection and IM replay.
 - `CI_TEST_FILES='["server/src/__tests__/knowledge-activity.test.ts"]' npm run server:test`:
-  159 passed, zero failures/skips, including old recorded search-summary recovery.
+  160 passed, zero failures/skips, including old recorded search-summary recovery
+  and matched/unavailable/no-match receipts across all run-trace readers.
 - Web and server type checking passed; affected TypeScript lint passed.
 - `node scripts/check-knowledge-citations.mjs`: real headless Chromium, production
   NativeTool/ConfidenceMarker and official assistant-ui runtime. Four search
@@ -69,5 +70,6 @@ Lenovo acceptance is recorded.
 Formal3.8.20 was obtained with the environment's existing package helper; the
 official archive matched the committed SHA512 and registry SHA1. No credentials
 or dependency locks were changed. Local integration database tests were not run;
-the PR's owning CI integration result and independent final-commit review remain
+the PR's owning CI integration result (including the existing native citation
+delivery test with page2/page15 excerpts) and independent final-commit review remain
 release gates. No Approve review, merge or production deployment was submitted.
