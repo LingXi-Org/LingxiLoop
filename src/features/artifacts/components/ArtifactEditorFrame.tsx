@@ -42,11 +42,23 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
     const receive = (event: MessageEvent) => {
       if (event.source !== frame.current?.contentWindow || event.data?.nonce !== nonce || event.data?.type !== 'slides:context') return
       const parsed = slideEditorContextSchema.safeParse(event.data.context)
-      if (parsed.success) contextCallback.current?.(parsed.data)
+      if (parsed.success) {
+        // A mounted editor can report its view before subresources finish.
+        // iframe load alone neither proves application readiness nor lets a
+        // usable Slides editor escape a hung font/image request.
+        setLoaded(true)
+        contextCallback.current?.(parsed.data)
+      }
     }
     window.addEventListener('message', receive)
     return () => window.removeEventListener('message', receive)
   }, [kind, nonce])
+
+  useEffect(() => {
+    if (kind !== 'slides' || !url || loaded) return
+    const timer = setTimeout(() => setError(`${label}编辑器尚未打开，请重试。`), 30_000)
+    return () => clearTimeout(timer)
+  }, [kind, url, loaded, label])
 
   useEffect(() => {
     frame.current?.contentWindow?.postMessage({ type: 'slides:agent-activity', nonce, working: agentWorking }, '*')
@@ -69,7 +81,7 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
       sandbox={kind === 'design' ? 'allow-scripts allow-same-origin allow-downloads allow-popups allow-modals' : 'allow-scripts allow-downloads allow-popups allow-modals'}
       allow="clipboard-read; clipboard-write; fullscreen"
       referrerPolicy="no-referrer"
-      onLoad={() => setLoaded(true)}
+      onLoad={() => { if (kind !== 'slides') setLoaded(true) }}
       className="h-full w-full border-0 bg-background focus-visible:outline-2 focus-visible:outline-ring"
     />}
   </div>
