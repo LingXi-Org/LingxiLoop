@@ -12,8 +12,8 @@ export interface RuntimePatchDescriptor {runtime:string;schema:number;protocol:n
 export type PublishedRuntimePatchDescriptor=RuntimePatchDescriptor&{integrity:string;tarball:string}
 const check=(value:unknown,message:string):void=>{if(!value)throw Error(message)}
 const hash=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex')
-export async function loadRuntimePatchInventory(productVersion:54|57|58|60=54):Promise<Migration[]>{
- check(productVersion===54||productVersion===57||productVersion===58||productVersion===60,'Unreviewed runtime patch product')
+export async function loadRuntimePatchInventory(productVersion:54|57|58|60|61=54):Promise<Migration[]>{
+ check(productVersion===54||productVersion===57||productVersion===58||productVersion===60||productVersion===61,'Unreviewed runtime patch product')
  const root=new URL('./migrations/',import.meta.url),allFiles=(await readdir(root)).sort()
  // A recorded product60 transition still names exactly its original inventory.
  // The CAS separately rejects any applied ledger other than that exact prefix.
@@ -28,7 +28,8 @@ export async function loadRuntimePatchInventory(productVersion:54|57|58|60=54):P
 export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,target:RuntimePatchDescriptor):void{
  check(source.productVersion===target.productVersion,'Runtime patch cannot change product schema')
  const product=target.productVersion
- check(product===54||product===57||product===58||product===60,'Unreviewed runtime patch product')
+ check(product===54||product===57||product===58||product===60||product===61,'Unreviewed runtime patch product')
+ if(product===61)check(source.runtime==='3.8.20'&&target.runtime==='3.8.21','Product61 runtime patch requires exact3.8.20 to3.8.21')
  if(product===60)check(source.runtime==='3.8.18'&&target.runtime==='3.8.19'||source.runtime==='3.8.19'&&target.runtime==='3.8.20','Product60 runtime patch requires exact3.8.18 to3.8.19 or3.8.19 to3.8.20')
  if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.14','Product57 runtime patch is restricted to exact3.8.12 to3.8.14')
  if(product===58)check(source.runtime==='3.8.14'&&target.runtime==='3.8.15'||source.runtime==='3.8.15'&&target.runtime==='3.8.16'||source.runtime==='3.8.16'&&target.runtime==='3.8.17'||source.runtime==='3.8.17'&&target.runtime==='3.8.18','Product58 runtime patch requires a reviewed exact3.8 maintenance pair')
@@ -74,7 +75,7 @@ export function runtimePatchPlanHash(source:RuntimePatchDescriptor,target:Publis
 }
 async function patchResources(source:RuntimePatchDescriptor,target:RuntimePatchDescriptor){
  assertRuntimePatchDescriptors(source,target)
- check(equal(await loadRuntimePatchInventory(target.productVersion as 54|57|58|60),target.migrations),'Committed inventory differs from runtime patch')
+ check(equal(await loadRuntimePatchInventory(target.productVersion as 54|57|58|60|61),target.migrations),'Committed inventory differs from runtime patch')
  const schema=await readFile(packageResources().schema,'utf8')
  check(hash(schema)===target.schemaHash,'Executing native schema bytes changed')
  if(target.productVersion>=57){
@@ -159,7 +160,7 @@ export async function preflightPublishedRuntimePatch(database:Pool,source:Runtim
  * A matching target proves the requested state, not which process committed it.
  * Source or unknown states never authorize replay of the same CAS intent. */
 export async function observePublishedRuntimePatch(database:Pool,source:RuntimePatchDescriptor,target:PublishedRuntimePatchDescriptor){
- check([57,58,60].includes(source.productVersion)&&source.productVersion===target.productVersion,'Observation entrypoint supports only reviewed product57/58/60')
+ check([57,58,60,61].includes(source.productVersion)&&source.productVersion===target.productVersion,'Observation entrypoint supports only reviewed product57/58/60/61')
  await assertPublishedPatch(target)
  const tables=await patchResources(source,target),client=await database.connect()
  try{
