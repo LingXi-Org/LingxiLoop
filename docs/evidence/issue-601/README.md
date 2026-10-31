@@ -1,14 +1,17 @@
 # Slides workspace evidence (#601)
 
-Draft delivery: [PR #602](https://github.com/LingXi-Org/LingxiLoop/pull/602).
+Delivery: [PR #602](https://github.com/LingXi-Org/LingxiLoop/pull/602).
 The branch includes production main `5b42a266dbc3f9cec205c8cd5fa3854c24bbce37`
 (published SDK 3.8.20, native schema 14, product schema 60), and adds product
-migration 61. No merge, production migration, SDK publication, deployment or
-issue closure was performed by this task.
+migration 61. This document records pre-release qualification. The production
+rollout and post-migration observations are recorded separately in PR #602 and
+its deployment run; these isolated measurements do not prove production acceptance.
 
-**This is not complete acceptance of #601.** Cold and fresh-iframe reopen P95
-still fail the requested thresholds. Retained-frame reopen is separately measured
-at 204.7 ms P95 against an authorization HTTP fixture. Real isolated credential login, model editing,
+**The original cold/fresh-iframe performance thresholds are not met.** The user
+explicitly accepted the final measured performance for merge and production
+release on 2026-10-31 at 06:43 UTC and requested no further optimization rounds.
+Cold P95 is 2,872.4 ms; fresh-frame reopen is 2,587.2 ms. Retained-frame reopen
+is separately measured at 182.7 ms against an authorization HTTP fixture. Real isolated credential login, model editing,
 comment reply and dedicated-room cooperation are now exercised. Production IM/storage
 and the individual variants identified below remain unverified.
 
@@ -35,7 +38,7 @@ names and dependency internals remain minified.
 
 `scripts/build-slides-editor.mjs` builds the browser and Node compiler from
 `slides-source/`. No upstream executable editor bundle is a build input.
-The [final generated manifest](editor-final-build-manifest.json) lists every input/output hash. Exports, PPTX and WOFF2
+The [release generated manifest](editor-release-build-manifest.json) lists every input/output hash. Exports, PPTX and WOFF2
 are lazy chunks. Generated assets are ignored and rebuilt in CI.
 
 ```sh
@@ -111,106 +114,120 @@ their exact 60-migration prefix. SDK ledger CAS checks stay strict; product 61
 is an ordinary forward migration after runtime 20 is installed. Unknown
 inventories/mismatched SDKs are refused. After migration, an old product60-only
 binary is not a supported rollback target; use a compatible product61 build and
-fix forward without removing durable data. Production has not run migration 61 here.
+fix forward without removing durable data. The read-only
+[pre-migration production observation](production-before.json) confirms runtime20,
+native14/product60, two artifacts/four files, 60 conversations and 978 native
+work items. Post-release inventory comparison belongs to the production record.
 
-## Real browser measurements
+## Real browser measurements — final round
 
-Raw final comparable results: [baseline repeat](editor-baseline-repeat.json),
-[candidate `99369639`](editor-final-performance.json). Earlier [baseline](editor-baseline.json)
-and [candidate `0cb377ea`](editor-candidate.json) remain as historical evidence.
-Every sample and browser error is retained. [Initial baseline](editor-baseline-initial.json)
-had concurrent local build contention and is excluded. Final comparable runs
-were sequential without concurrent local builds/tests.
+Application commit `ffb1d53c` (release-observation commit `8a34a64d`) is the final
+performance candidate. Raw 10-run results: [immediately preceding build](editor-release-baseline.json),
+[release candidate](editor-release-performance.json), [separate retained-frame group](editor-release-retained.json).
+Earlier [original upstream-layout baseline](editor-baseline-repeat.json) and
+[getter-pruned candidate](editor-final-performance.json) remain historical evidence.
+Runs were sequential without concurrent local builds/tests. No prewarming or
+threshold change was used; no further performance optimization is planned in this release.
 
-Chromium 154, Linux, AMD EPYC 9V74 (5 available logical CPUs), 1440×1000 at scale
-1, no CPU throttling; 20 ms latency, 4 Mbps down, 3 Mbps up, gzip. Throttling
-applies to parent and out-of-process iframe sessions. The opaque sandbox has no
-`allow-same-origin`. The fixed sample has 20 pages, each with text, notes and the
-same 640×360 SVG image. File/image hashes are recorded. These are not 20 distinct
-photographic images.
+Chromium 154, Linux, AMD EPYC 9V74 (5 logical CPUs), 1440×1000 at scale 1,
+no CPU throttling; 20 ms latency, 4 Mbps down, 3 Mbps up. Both parent and
+out-of-process iframe sessions are throttled. The opaque sandbox has no
+`allow-same-origin`. The fixed deck has 20 pages, each with text, notes and the
+same 640×360 SVG image; hashes are recorded. These are not 20 distinct photos.
+The baseline uses gzip; the candidate uses its actual build-time Brotli-11 JS/CSS
+representations. Changing the transmitted encoding is the implementation being
+measured; bandwidth, sample and editable-readiness conditions remain identical.
 
-Cold creates a fresh browser context; reopen navigates the host in the same
-context and mounts a new sandboxed editor. Timing begins at iframe navigation
-and ends after a visible loaded image and a real double-click entering text
-editing. Product authentication/workspace API/chat startup/model waiting are
-excluded. Asset cache headers are enabled, but most assets still transfer on
-opaque-frame reopen; this is not reported as a warm-cache hit. Editing measures
-trusted `beforeinput` through two animation frames, checking the changed text.
+Cold creates a fresh browser context. Fresh reopen navigates the host and mounts
+a new iframe in the same context. Timing begins at iframe navigation and ends
+only after a loaded visible image and a real double-click enters text editing.
+Authentication, workspace API/chat startup and model waiting are excluded.
+Editing measures trusted `beforeinput` through two animation frames and verifies
+changed text. Most assets transfer again on opaque-frame fresh reopen.
 
-| Metric | Baseline P50 / P75 / P95 | Candidate `99369639` P50 / P75 / P95 | Target |
+| Metric | Before this round P50 / P75 / P95 | Final candidate P50 / P75 / P95 | Original target |
 | --- | --- | --- | --- |
-| Cold to editable (ms) | 3,758.9 / 3,781.6 / 3,803.7 | 3,354.8 / 3,382.8 / 3,396.6 | P95 ≤2,000: FAIL |
-| Fresh-iframe reopen to editable (ms) | 3,431.8 / 3,442.7 / 3,535.3 | 3,040.6 / 3,067.0 / 3,102.7 | P95 ≤1,000: FAIL |
-| Text edit feedback P95 (ms) | 53.5 | 78.1 | ≤100: PASS (fixture) |
-| Cold transferred bytes | 1,503,666.00 / 1,503,666.00 / 1,503,666.00 | 1,321,427.00 / 1,321,427.00 / 1,321,427.00 | Diagnostic |
-| Cold JS execution (ms) | 497.74 / 521.19 / 524.33 | 451.22 / 482.91 / 489.25 | Diagnostic |
-| Cold JS heap (MiB) | 20.39 / 20.42 / 20.44 | 17.64 / 17.69 / 17.80 | Diagnostic |
-| Reopen transferred bytes | 1,443,486.00 / 1,443,486.00 / 1,443,486.00 | 1,261,247.00 / 1,261,247.00 / 1,261,247.00 | Diagnostic |
-| Reopen JS execution (ms) | 248.30 / 255.28 / 311.56 | 226.39 / 249.45 / 278.09 | Diagnostic |
-| Reopen JS heap (MiB) | 33.27 / 33.28 / 33.29 | 30.54 / 30.54 / 30.55 | Diagnostic |
+| Cold to editable (ms) | 3,353.9 / 3,445.8 / 3,490.4 | 2,774.4 / 2,798.7 / 2,872.4 | P95 ≤2,000: FAIL, accepted exception |
+| Fresh-frame reopen (ms) | 3,066.7 / 3,076.1 / 3,082.8 | 2,513.0 / 2,561.3 / 2,587.2 | P95 ≤1,000: FAIL, accepted exception |
+| Text edit feedback P95 (ms) | 50.9 | 55.0 | ≤100: PASS (fixture) |
+| Cold JS execution P95 (ms) | 561.7 | 492.7 | Diagnostic |
+| Cold JS heap P95 (MiB) | 17.78 | 17.97 | Diagnostic |
 
-Requested P95: cold ≤2,000 ms; reopen ≤1,000 ms; editing ≤100 ms. Cold/fresh-iframe reopen
-are not accepted. Payload reduction and lazy exports are implemented. The latest build also omits
-4,374 unconsumed browser runtime getters (all initializers and Node exports are
-retained). The product now keeps at most one workspace mounted while showing
-the deck list, reauthorizes before revealing it, and releases it on deck/project
-switch, removal or access denial. A separate same-frame metric is reported below;
-it does not replace this fresh-navigation comparison. Further cold-loading work
-remains. Only user-requested video capabilities were removed.
+The final retained-frame group is P50/P75/P95 **169.9 / 176.0 / 182.7 ms**.
+The host hides the same frame, then starts timing before a throttled authorization
+HTTP fixture, reveals it and verifies actual editing. Actual product authorization
+cost remains excluded. The earlier 204.7 ms group had the same limitation.
+[React lifecycle regression](workspace-retention.json) separately checks reuse,
+permission recheck before visibility, revocation and deck/project cleanup.
+This is not a claim that full authenticated production reopen is ≤1 second.
+The retained group inserts another step; its cold/edit numbers are supplemental
+and are not substituted into the two-phase main comparison.
 
-The candidate's separate [retained-frame group](editor-retained-performance.json)
-result is P50/P75/P95
-180.9/187.0/204.7 ms. The host moves focus out and hides the existing iframe,
-then measures a new authorization HTTP request under the same network throttle,
-revealing the frame and entering real text editing. This is the product's new
-recent-deck cache behavior, not a new navigation; actual product authorization
-latency is excluded. [Lifecycle regression](workspace-retention.json) separately
-checks the real React page's reuse and revocation behavior. It is not a claim
-that every authenticated/production reopen is ≤1 second. This group inserts a
-retention step between cold and fresh navigation, so its cold/reopen/edit numbers
-are supplemental. The main comparison above uses the identical two-phase
-sequence for baseline and candidate, with no intermediate cache interaction.
+### Critical path and quantitative limit
 
-`ScriptDuration` measures execution. A separate [V8 trace](editor-final-parse-trace.json)
-now records parse/compile events for the editor renderer identified from its
-actual document URL. Cold main-thread `V8.ParseProgram` spans total 54.738 ms;
-`V8.ParseFunction` spans total 96.312 ms. These are event-specific diagnostics,
-not additive phases or P95s. Streaming parse spans also contain network waits,
-so they must not be summed as CPU parsing time. The instrumented one-run trace
-is excluded from the 10-run comparison. Fully isolated all-script parse wall
-time remains unmeasured. JS heap is not total browser RSS. The earlier
-[CDP engine probe](editor-runtime-metrics.json) remains supplemental.
-At this fixed bandwidth the current 1,321,427-byte cold transfer alone has a
-2.64-second throughput lower bound before processing/latency. Meeting 2 seconds
-therefore still needs a substantial reduction in the critical loading path;
-minifier/static-linking experiments were not shipped as unverified replacements.
-Full authenticated product/production P95 are unmeasured. With 10 observations,
-nearest-rank P95 is the maximum; this small sample is not a confidence bound.
+The [before profile](editor-critical-path-before.json) and [after profile](editor-release-trace.json)
+are separate one-run diagnostics, excluded from P95. Cumulative milestones:
+
+| Milestone from iframe navigation | Before (ms) | Final (ms) |
+| --- | --- | --- |
+| Largest JS response finished | 2,614.3 | 2,002.1 |
+| Application runtime starts / finishes | 2,661.0 / 2,780.3 | 2,042.0 / 2,158.5 |
+| Write-access / files-port ready | 2,787.2 / 2,787.8 | 2,164.0 / 2,164.3 |
+| React render requested | 2,792.7 | 2,168.6 |
+| Early first-slide paint | 3,073.4 | 2,475.3 |
+| Complete document ready | 3,243.0 | 2,645.6 |
+| Visible loaded image / verified text editing | 3,259.0 / 3,432.9 | 2,658.3 / 2,830.7 |
+
+The largest resource shrank from **869,518 gzip bytes to 688,890 Brotli bytes**;
+shared support from 241,242 to 200,495; the helper chunk from 11,431 to 9,995.
+CSS changed from 119,928 gzip bytes to 44,719 Brotli bytes after extracting the
+complete 60,180-byte fallback font unchanged. That font is actually used in this
+sample and fetched later (2,250.9–2,500.5 ms in the final profile); it is not
+claimed as removed or never loaded. Hash-named CSS/font assets and precompressed
+sidecars retain identity/gzip fallback, `Vary`, content type and HEAD semantics.
+All editor/initializers/export capabilities remain present.
+
+Initial JS + CSS total **944,250 encoded bytes**. With the needed fallback font,
+these assets alone total **1,004,430 bytes**, a **2.009-second** throughput lower
+bound at 4 Mbps, before document requests, latency and CPU. The final profile
+spends 116.5 ms in runtime setup; render request to the visible-image checkpoint
+is 489.7 ms. These stages overlap with file/font transfer and must not be added
+as independent CPU times. V8 `ParseProgram` complete-event durations total
+58.767 ms and `ParseFunction` 97.781 ms in that one trace; names may nest and
+streaming spans include network waits. Browser decompression CPU and isolated
+all-script parse wall time are **unmeasured**, not inferred from Node compression.
+
+Byte-accounting audit: older `transferredBytes` counters summed all CDP
+`loadingFinished` events, including inline `data:` font/image decoding. Those
+raw historical counters are **not exact HTTP wire totals** and must not be used
+for throughput lower bounds. The harness now filters HTTP(S) request IDs and
+records excluded encoded bytes separately. [Before audit](editor-network-before.json)
+and [after audit](editor-network-after.json), on the same builds, report
+**1,260,050 → 1,022,565 HTTP bytes**. The 10-run timing results are unchanged by
+this diagnostic counter correction. No timing samples are replaced by audit runs.
+
+Full authenticated product/production P95 remains unmeasured. Nearest-rank P95
+with ten observations is the maximum, not a confidence bound. The user accepted
+these remaining performance gaps for this release, without redefining the targets.
 
 ```sh
-node scripts/slides-workspace-benchmark.mjs --runs=10 --label=candidate --out=/tmp/slides-candidate.json
-node scripts/slides-workspace-benchmark.mjs --runs=10 --retained=true --label=retained --out=/tmp/slides-retained.json
-node scripts/slides-workspace-benchmark.mjs --runs=1 --trace=true --label=profile --out=/tmp/slides-parse.json
-node scripts/check-slides-retention.mjs
-node scripts/slides-workspace-benchmark.mjs --runs=1 --regression=true --legacy=true --exports-dir=/tmp/slides-exports --out=/tmp/slides-legacy.json
+node scripts/slides-workspace-benchmark.mjs --runs=10 --compression=precompressed --label=release --out=/tmp/slides-release.json
+node scripts/slides-workspace-benchmark.mjs --runs=10 --compression=precompressed --retained=true --out=/tmp/slides-retained.json
+node scripts/slides-workspace-benchmark.mjs --runs=1 --compression=precompressed --trace=true --out=/tmp/slides-profile.json
+node scripts/slides-workspace-benchmark.mjs --runs=1 --compression=precompressed --regression=true --legacy=true --exports-dir=/tmp/slides-exports --out=/tmp/slides-legacy.json
 ```
 
-For baseline, build `build:slides-editor` in a separate checkout of
-`6dccecaac52e0f281263ee24ee1789151c5ed962`, and point this harness's `--editor`
-at that checkout's `server/assets/slides-editor`. Use the same harness/browser
-and settings. `--chrome=/path/to/chromium` overrides `/usr/bin/chromium`.
+For this round's baseline, build commit `756d5f3f` separately and pass its output
+with `--editor=/path/to/assets-root`, omitting `--compression=precompressed`.
+Use the same harness/browser and sample. `--chrome` overrides the Chromium path.
 
-[Final legacy regression](editor-final-regression.json) records save, undo/redo,
-saved reopen, presentation exit, three download hashes and absent video requests.
-The [final download inspection](export-final-validation.json) checks those same hashes:
-PDF has 20 pages (pypdf), HTML has 20 slide containers and no video elements
-(Python HTMLParser), and PPTX has 20 slide XML entries with valid ZIP CRCs and
-no video payloads/relationships (Python zipfile).
-Its transfer counts include exports/reload and are excluded from performance
-comparison. [Earlier regular regression](editor-regression.json) predates the
-final video-helper cleanup and is supplemental, not final-candidate evidence.
-The earlier [legacy regression](editor-legacy-regression.json) and [download inspection](export-validation.json)
-also remain available; the final regression exercises the build after getter pruning.
+The [release legacy regression](editor-release-regression.json) verifies save,
+undo/redo, saved reopen, presentation exit and absence of video controls/requests.
+[Downloaded-file inspection](export-release-validation.json) verifies a real
+20-page PDF, HTML with 20 slides/no video, and a valid PPTX ZIP with 20 slide XML
+files/no video payload or relationships. Transfer counts in that regression
+include exports/reload and are excluded from performance results. Older regression
+and inspection JSON files remain historical evidence.
 
 ## Isolated authenticated and real-model flow
 
@@ -276,20 +293,23 @@ browser sign-in, or production deployment.
 
 ## Checks and remaining gates
 
-- Source build, translation, archive integrity and compiler parity: 5/5.
+- Source build, translation, archive integrity, full-font/sidecar integrity and compiler parity: 5/5.
+- Precompressed asset negotiation, q-values, HEAD, identity and no double compression: 1/1.
+- Final browser legacy exports/save/undo/redo/presentation regression passed.
 - Split/presentation surface checks: 2/2.
 - Migration/deployment-plan and packaging owning checks: 40/40 locally.
 - Local web/server lint passed; web retains existing warnings.
 - Code-candidate CI [41175839535](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41175839535)
   at `99369639` passed Web, Server, 22 selected integration files and deploy-contract.
   The four Slides flow cases all passed. Subsequent evidence-only commits have
-  their own check result linked in the PR; deployment remains skipped.
+  their own check and deployment results linked in the PR.
 - Local web/server typechecks and the four dedicated-room integration cases pass
   with the official published runtime. The deterministic provider fixture checks
   five chat ledger receipts; optional memory embeddings have separate receipts.
 - Chromium retention regression verifies one mounted workspace, permission check
   before visibility, access-revocation cleanup and deck/project-switch cleanup.
-- Remaining acceptance: cold/fresh-frame performance, the untested matrix
-  variants, actual IM restart/history durability and production acceptance.
+- The final cold/fresh-frame performance gap is explicitly accepted for release;
+  original targets remain failed. Untested matrix variants, actual IM restart/history
+  durability and full authenticated production P95 remain unverified.
   There is no remaining local npm/SDK authentication blocker. No separate review
   tree was created, as instructed by the parent coordinator.

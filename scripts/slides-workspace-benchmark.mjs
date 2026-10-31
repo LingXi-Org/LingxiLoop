@@ -120,7 +120,8 @@ try {
     const contexts = new Map()
     const sessions = new Set([sessionId])
     const setupErrors = []
-    let transferred = 0
+    let transferred = 0, nonNetworkEncodedBytes = 0
+    const requestUrls = new Map()
     const configure = async child => {
       for (const method of ['Page.enable', 'Runtime.enable', 'Network.enable', 'Performance.enable']) await cdp(method, {}, child)
       await cdp('Network.emulateNetworkConditions', { offline: false, latency: 20, downloadThroughput: 4_000_000 / 8, uploadThroughput: 3_000_000 / 8 }, child)
@@ -135,8 +136,15 @@ try {
       }
       if (event.method === 'Runtime.executionContextCreated') contexts.set(`${event.sessionId}:${event.params.context.id}`, { session: event.sessionId, contextId: event.params.context.id })
       if (event.method === 'Runtime.executionContextsCleared') for (const [key, value] of contexts) if (value.session === event.sessionId) contexts.delete(key)
-      if (event.method === 'Network.requestWillBeSent') networkRequests.add(event.params.request.url)
-      if (event.method === 'Network.loadingFinished') transferred += event.params.encodedDataLength
+      if (event.method === 'Network.requestWillBeSent') {
+        networkRequests.add(event.params.request.url)
+        requestUrls.set(`${event.sessionId}:${event.params.requestId}`, event.params.request.url)
+      }
+      if (event.method === 'Network.loadingFinished') {
+        const url = requestUrls.get(`${event.sessionId}:${event.params.requestId}`)
+        if (url?.startsWith('http:') || url?.startsWith('https:')) transferred += event.params.encodedDataLength
+        else nonNetworkEncodedBytes += event.params.encodedDataLength
+      }
       if (event.method === 'Runtime.exceptionThrown') errors.push(event.params.exceptionDetails.exception?.description ?? event.params.exceptionDetails.text)
     }
     listeners.add(listener)
@@ -145,6 +153,7 @@ try {
     await cdp('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false }, sessionId)
     for (const phase of args.retained ? ['cold', 'retained', 'reopen'] : ['cold', 'reopen']) {
       transferred = 0
+      nonNetworkEncodedBytes = 0
       const traceEvents = []
       const traceListener = event => { if (event.method === 'Tracing.dataCollected') traceEvents.push(...event.params.value) }
       if (args.trace) {
@@ -301,7 +310,7 @@ try {
           return false
         },'saved reopen'))
       }
-      samples.push({ run: run + 1, phase, ...measurement, transferredBytes: transferred, jsHeapUsedBytes: metrics.JSHeapUsedSize, scriptDurationSeconds: metrics.ScriptDuration, taskDurationSeconds: metrics.TaskDuration,
+      samples.push({ run: run + 1, phase, ...measurement, transferredBytes: transferred, nonNetworkEncodedBytes, jsHeapUsedBytes: metrics.JSHeapUsedSize, scriptDurationSeconds: metrics.ScriptDuration, taskDurationSeconds: metrics.TaskDuration,
         ...(args.metrics ? { engineMetrics: metrics } : {}) })
       console.log(JSON.stringify({ run: run + 1, phase, readyMs: measurement.readyMs, transferredBytes: transferred }))
     }
