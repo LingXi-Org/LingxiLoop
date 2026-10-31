@@ -42,7 +42,7 @@ const save = (editor: string, files: Record<string, unknown>) => fetch(`${origin
 const entry = (text: string, ifMatch?: string | null) => ({ base64: Buffer.from(text).toString('base64'), contentType: 'text/html', ...(ifMatch !== undefined ? { ifMatch } : {}) })
 
 test('old Slides gain independent durable native chats without rewriting source or bytes; source revocation still denies access', async () => {
-  const old = await createSlides({ companyId, projectId, conversationId: 'artifact-room', title: 'Legacy', actorId: userId, origin: 'conversation' })
+  const old = await createSlides({ companyId, projectId, conversationId: 'artifact-room', title: 'Legacy', actorId: userId, origin: 'user' })
   const original = (await pool.query('SELECT path,sha256,body FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [old.id])).rows
   const opens = await Promise.all([1, 2].map(() => api(`/artifacts/${old.id}/slides-workspace`, 'POST')))
   assert.deepEqual(opens.map(result => result.status), [200, 200])

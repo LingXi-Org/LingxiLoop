@@ -124,7 +124,8 @@ function installDeliveryPdfOptions(runtime2) {
                 }),
                 PdfOptionsJsx.jsx(runtime2.Button, {
                   ref,
-                  type: "submit",
+                  type: "button",
+                  onClick: () => resolvePdfExportOptions(p, value),
                   variant: "primary",
                   "data-initial-focus": "",
                   onKeyDown: preventRepeatedExportDialogActivation,

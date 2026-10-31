@@ -72,6 +72,7 @@ jobs:
             web:
               - 'workers/web-static/**'
               - 'shared/artifact-editor-origin.ts'
+              - 'shared/slides-editor-context.ts'
               - 'shared/visualize-public-resources.ts'
               - 'third_party/zcode/**'
               - 'third_party/assistant-ui/streaming-text/**'
@@ -123,6 +124,7 @@ jobs:
             # Include shared sources loaded by the server runtime and copied by its image.
             server_source:
               - 'shared/artifact-editor-origin.ts'
+              - 'shared/slides-editor-context.ts'
               - 'shared/visualize-public-resources.ts'
               - 'third_party/zcode/**'
               - 'third_party/baoyu-design/**'

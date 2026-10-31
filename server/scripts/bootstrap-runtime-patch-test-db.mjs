@@ -44,7 +44,7 @@ async function main(){
    })
    run("import assert from'node:assert/strict';import{Pool}from'pg';import{loadRuntimePatchInventory,applyPublishedRuntimePatch}from'./server/src/db/runtime-patch.ts';import{loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH}from'./server/src/db/runtime-profile.ts';const db=new Pool({connectionString:process.env.DATABASE_URL,max:1});try{const locked=await loadLockedRuntimePackage();assert.equal(locked.runtime,'3.8.20');const migrations=await loadRuntimePatchInventory(60),source={runtime:'3.8.19',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:60,migrations},target={...source,runtime:'3.8.20',integrity:locked.integrity,tarball:locked.tarball};assert.equal((await applyPublishedRuntimePatch(db,source,target)).updated,1)}finally{await db.end()}")
   }
-  run("import assert from'node:assert/strict';import{migrateDatabase}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{assert.deepEqual(await migrateDatabase(),[]);console.log('[integration bootstrap] actual formal19 source and formal20 CAS; current60; no target migrations')}finally{await pool.end()}")
+  run("import assert from'node:assert/strict';import{migrateDatabase}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{const applied=await migrateDatabase();assert.ok(applied.length===0||applied.length===1&&applied[0]==='0061_slides_workspaces');console.log('[integration bootstrap] actual formal19 source and formal20 CAS; additive product migrations',applied)}finally{await pool.end()}")
   return
  }
  if(String(releaseVersions.runtime)!=='3.8.19'){

@@ -14,7 +14,10 @@ const check=(value:unknown,message:string):void=>{if(!value)throw Error(message)
 const hash=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex')
 export async function loadRuntimePatchInventory(productVersion:54|57|58|60=54):Promise<Migration[]>{
  check(productVersion===54||productVersion===57||productVersion===58||productVersion===60,'Unreviewed runtime patch product')
- const root=new URL('./migrations/',import.meta.url),files=(await readdir(root)).sort()
+ const root=new URL('./migrations/',import.meta.url),allFiles=(await readdir(root)).sort()
+ // A recorded product60 transition still names exactly its original inventory.
+ // The CAS separately rejects any applied ledger other than that exact prefix.
+ const files=productVersion===60&&allFiles.length===61&&allFiles[60]==='0061_slides_workspaces.sql'?allFiles.slice(0,60):allFiles
  check(files.length===productVersion,`Runtime patch requires complete product${productVersion} inventory`)
  return Promise.all(files.map(async(file,index)=>{
   const match=/^(\d{4})_([a-z0-9_]+)\.sql$/.exec(file)
