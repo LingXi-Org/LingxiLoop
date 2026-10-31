@@ -280,3 +280,9 @@ MIT License, Copyright (c) 2026 Caho1. The complete upstream license is retained
 in [`public/licenses/open-claude-ui.txt`](public/licenses/open-claude-ui.txt),
 which Vite also ships in the SPA. Necessary integration adaptations and actual
 verification limits are recorded in [issue #568 evidence](docs/evidence/issue-568.md).
+
+## Grilling skill
+
+The grilling skill in `.agents/skills/grilling` is from
+[mattpocock/skills](https://github.com/mattpocock/skills/tree/a496f5513d4a4cf889bc48e189e579f4b0bdf6aa/skills/productivity/grilling).
+Its MIT license is retained alongside the skill.
