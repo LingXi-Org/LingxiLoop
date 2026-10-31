@@ -78,7 +78,9 @@ test('code-only own-save references request repair; exports, fallbacks and examp
     assert.equal(records[0]?.status, 'failed', 'a code-only delivery of this saved chart must request repair')
     assert.match(String(records[0]?.evidence.hint), /code/i)
   }
-  assert.equal((await verifyVisualizeCandidate(context(reference)))[0]?.status, 'passed')
+  const checked = (await verifyVisualizeCandidate(context(reference)))[0]
+  assert.equal(checked?.status, 'passed')
+  assert.deepEqual(checked.evidence, { references: 1, storageReadback: true, semanticValidation: false, browserValidation: false })
   for (const body of [
     'I could not complete the chart; here is the calculation in text.',
     '[Download the standalone chart](artifact:visualize/numerical-check.html)',

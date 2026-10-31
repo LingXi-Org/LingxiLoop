@@ -48,8 +48,9 @@ async function readAttempt(read: (signal: AbortSignal) => Promise<Response>, sig
   }
 }
 
-/** At most two safe GETs, within the same scoped capability and total deadline. */
-export function readWebResource(name: string, read: (signal: AbortSignal) => Promise<Response>, signal: AbortSignal): Promise<string> {
+/** At most two read attempts, within the same scoped capability and total deadline. */
+export function readWebResource(name: string, read: (signal: AbortSignal) => Promise<Response>, signal: AbortSignal,
+  recover: (signal: AbortSignal) => Promise<Response> = read): Promise<string> {
   return new Promise((resolve, reject) => {
     signal.throwIfAborted()
     const group = new AbortController()
@@ -75,7 +76,7 @@ export function readWebResource(name: string, read: (signal: AbortSignal) => Pro
       // runs. A valid late response can still win; we never discard a slow
       // first-byte response just because five seconds elapsed. Abort the loser
       // once complete bytes arrive. Progressing bodies do not trigger recovery.
-      void readAttempt(read, combined, attempts === 1 ? retry : undefined).then(text => {
+      void readAttempt(attempts === 1 ? read : recover, combined, attempts === 1 ? retry : undefined).then(text => {
         if (!settled) { cleanup(); resolve(text) }
       }, error => {
         if (settled) return
