@@ -1,0 +1,242 @@
+{
+  "qualification": "real-provider-native-product",
+  "runtime": "3.8.19",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "runId": "im:bde2c2a27f6b65fad6278b3598a27bb2fc3d733066562e4beacd24d9777da377",
+  "elapsedMs": 82294,
+  "decisions": [
+    {
+      "call": 1,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false
+    },
+    {
+      "call": 2,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 3,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 4,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 5,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 6,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 7,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 8,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 9,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    }
+  ],
+  "actions": [
+    {
+      "action": "skills.load",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.current",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.read_reference",
+      "ok": true,
+      "code": null,
+      "page": "format.md"
+    },
+    {
+      "action": "design.read_file",
+      "ok": true,
+      "code": null
+    }
+  ],
+  "contractFailures": [],
+  "protocolFailures": 3,
+  "providerFailures": 0,
+  "files": [
+    {
+      "path": "project/canvas.json",
+      "sha256": "0b3f16a8ae608771fc81547ff53b02757aa29ce94acdccba61f3a4a348a9d7b7"
+    }
+  ],
+  "checkProblems": 0,
+  "status": "partial",
+  "delivery": "delivered",
+  "browserValidated": false
+}

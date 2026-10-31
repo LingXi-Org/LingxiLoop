@@ -1,0 +1,194 @@
+{
+  "qualification": "synthetic-provider-native-product",
+  "runtime": "3.8.19",
+  "model": "scripted",
+  "runId": "im:cc65995b7eaa78b17a2a032a9abe81200a0241676fb96b3e6b1dc4d5a326b81c",
+  "accepted": true,
+  "elapsedMs": 2714,
+  "decisions": [
+    {
+      "call": 1,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false
+    },
+    {
+      "call": 2,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 3,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 4,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 5,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    },
+    {
+      "call": 6,
+      "names": [
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load",
+        "skills__activate"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true
+    }
+  ],
+  "actions": [
+    {
+      "action": "skills.load",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.current",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.read_reference",
+      "ok": true,
+      "code": null,
+      "page": "format.md"
+    },
+    {
+      "action": "design.read_file",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.write_files",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.check",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "task.inspect",
+      "ok": true,
+      "code": null
+    }
+  ],
+  "contractFailures": [],
+  "protocolFailures": 0,
+  "providerFailures": 0,
+  "protocolCodes": [],
+  "files": [
+    {
+      "path": "project/canvas.json",
+      "sha256": "85430e6c3d7eef1c738faf988ce7b3c40b239a89b99ef92939d5dccecaa89434"
+    },
+    {
+      "path": "project/FlashAttention.dc.html",
+      "sha256": "26593a4fb5d4ff89d8e0a420b71b472a44198beaf9e434a54a3d5e2d39a7c8b8"
+    }
+  ],
+  "checkProblems": 0,
+  "status": "succeeded",
+  "delivery": "delivered",
+  "browserValidated": false
+}

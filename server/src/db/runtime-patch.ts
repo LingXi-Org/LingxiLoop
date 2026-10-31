@@ -26,7 +26,7 @@ export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,targ
  check(source.productVersion===target.productVersion,'Runtime patch cannot change product schema')
  const product=target.productVersion
  check(product===54||product===57||product===58||product===60,'Unreviewed runtime patch product')
- if(product===60)check(source.runtime==='3.8.18'&&target.runtime==='3.8.19','Product60 runtime patch is restricted to exact3.8.18 to3.8.19')
+ if(product===60)check(source.runtime==='3.8.18'&&target.runtime==='3.8.19'||source.runtime==='3.8.19'&&target.runtime==='3.8.20','Product60 runtime patch requires exact3.8.18 to3.8.19 or3.8.19 to3.8.20')
  if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.14','Product57 runtime patch is restricted to exact3.8.12 to3.8.14')
  if(product===58)check(source.runtime==='3.8.14'&&target.runtime==='3.8.15'||source.runtime==='3.8.15'&&target.runtime==='3.8.16'||source.runtime==='3.8.16'&&target.runtime==='3.8.17'||source.runtime==='3.8.17'&&target.runtime==='3.8.18','Product58 runtime patch requires a reviewed exact3.8 maintenance pair')
  for(const d of [source,target]){
