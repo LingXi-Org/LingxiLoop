@@ -30,11 +30,11 @@ export async function ensureSlideWorkspace(db: Queryable, companyId: string, art
   const conversationId = existing?.conversation_id ?? `slides-chat-${randomUUID()}`
   const prior = existing ? (await db.query<{ members: string[] }>(
     'SELECT members FROM conversations WHERE id=$1 AND company_id=$2 FOR UPDATE', [conversationId, companyId])).rows[0]?.members ?? [] : []
-  const humans = artifact.conversation_id
+  const inherited = artifact.conversation_id
     ? (await db.query<{ id: string }>(`SELECT p.id FROM participants p JOIN conversations c ON c.company_id=p.company_id AND c.members ? p.id
-      WHERE c.id=$1 AND c.company_id=$2 AND p.kind='human' AND p.departed_at IS NULL`, [artifact.conversation_id, companyId])).rows.map(row => row.id)
+      WHERE c.id=$1 AND c.company_id=$2 AND p.departed_at IS NULL`, [artifact.conversation_id, companyId])).rows.map(row => row.id)
     : [...prior.filter(id => id !== agentId), userId]
-  const members = [...new Set([...humans, agentId])]
+  const members = [...new Set([...inherited, agentId])]
   const profile: ImChannelProfile = { channelId: conversationId, channelType: 2, kind: 'group',
     title: artifact.title, members, leaderAgentId: agentId, presetKey: 'slides-workspace', pinned: false }
   if (!existing) {
@@ -69,7 +69,7 @@ export async function synchronizeSlideWorkspaceMembers(db: Queryable, sourceConv
       WHERE source.id=$1`, [sourceConversationId])
   const profiles: ImChannelProfile[] = []
   for (const row of rows) {
-    const people = (await db.query<{ id: string }>(`SELECT id FROM participants WHERE company_id=$1 AND id=ANY($2::text[]) AND kind='human' AND departed_at IS NULL`,
+    const people = (await db.query<{ id: string }>(`SELECT id FROM participants WHERE company_id=$1 AND id=ANY($2::text[]) AND departed_at IS NULL`,
       [row.company_id, row.members])).rows.map(person => person.id)
     const profile = { ...row.profile, members: [...people, row.agent_id] }
     await db.query('UPDATE conversations SET members=$3::jsonb WHERE id=$1 AND company_id=$2', [row.conversation_id, row.company_id, JSON.stringify(profile.members)])

@@ -61,6 +61,7 @@ test('old Slides gain independent durable native chats without rewriting source 
   assert.equal(binding.leader_agent_id, first.agentId)
   assert.ok(binding.profile.members.includes(userId))
   assert.ok(binding.profile.members.includes(first.agentId))
+  assert.ok(binding.profile.members.includes(agentId), 'the dedicated room retains existing source-room agents')
   const scope = { actorUserId: userId, companyId, action: 'conversation:read' as const, resource: { type: 'conversation' as const, id: first.conversationId } }
   assert.equal((await permissionService.can(scope)).allowed, true)
   await pool.query("UPDATE conversations SET members=members-$1 WHERE id='artifact-room'", [userId])

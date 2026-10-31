@@ -3,6 +3,8 @@ import type { Queryable } from '../../db/queryable.js'
 import type { ArtifactRow } from './repository-types.js'
 
 type Control = Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readRun' | 'readMessage' | 'cancel' | 'sharedState' | 'conversations'>
+export const artifactExecutionConversation = (artifact: Pick<ArtifactRow, 'execution_conversation_id' | 'conversation_id'>) =>
+  artifact.execution_conversation_id ?? artifact.conversation_id
 export interface ArtifactRunRow {
   work_id: string; company_id: string; artifact_id: string; assignment_id: string | null
   agent_id: string; principal_id: string; session_id: string; thread_id: string | null; request_version: number

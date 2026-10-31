@@ -5,7 +5,7 @@ import type { ActivityRow, ArtifactRow, AssignmentRow, ReportRow } from './repos
 
 export async function artifactEventScope(db: Queryable, companyId: string, artifactId: string) {
   const { rows } = await db.query<{ conversation_id: string | null; project_id: string; kind: ArtifactKind }>(
-    `SELECT conversation_id,project_id,kind FROM artifacts WHERE id=$1 AND company_id=$2`,
+    `SELECT COALESCE(execution_conversation_id,conversation_id) AS conversation_id,project_id,kind FROM artifacts WHERE id=$1 AND company_id=$2`,
     [artifactId, companyId],
   )
   return rows[0] ?? null
