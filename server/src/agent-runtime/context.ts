@@ -282,6 +282,17 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
   // product rules. Retain this hop's authorized catalog for the selection index;
   // a new host context refreshes authorization on every subsequent hop.
   private readonly guidanceCatalog = new WeakMap<TurnContext, ReturnType<typeof executionSnapshot>>()
+  requiredTool(context: TurnContext): string | undefined {
+    const request = context.session?.request
+    const text = request?.workId === context.work.id
+      ? [request.originalText, ...request.revisions.filter(revision => revision.author?.kind !== 'agent').map(revision => revision.text)].join('\n')
+      : context.messages.find(message => message.ref === context.work.triggerRef)?.body ?? ''
+    const artifactRun = context.dynamic?.artifactRun as { kind?: string } | undefined
+    if (artifactRun?.kind !== 'design' && !/画板|畫板|\b(?:artboard|design canvas)\b/i.test(text)) return undefined
+    const authorized = this.guidanceCatalog.get(context) ?? executionSnapshot(context, new DefaultRuntimePolicy())
+    if (!skillGuidanceDependencies({ ...context, tools: authorized.tools, grants: authorized.grants }).length) return undefined
+    return authorized.tools.find(tool => tool.action === 'skills.load')?.name
+  }
   override kernelCapabilities(context: TurnContext): CapabilityGrant[] {
     const grants = super.kernelCapabilities(context)
     const authorized = executionSnapshot(context, new DefaultRuntimePolicy())

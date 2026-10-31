@@ -70,6 +70,20 @@ test('reference admission and first description use the actual deployed director
   await assert.rejects(readArtifactReference('design', 'canvas.md'), /pages:.*format.md/)
 })
 
+test('Design requests require authorized guidance selection while ordinary chat retains its tool choice', () => {
+  const ctx = context()
+  ctx.work.triggerRef = 'request'
+  ctx.messages = [{ ref: 'request', authorId: 'human', authorName: 'Human', authorKind: 'human', body: '为我在画板中讲解flashattention', createdAt: '2026-10-31T00:00:00Z' }]
+  assert.equal(policy.requiredTool(ctx), 'skills__load')
+  selected(ctx, false); assert.equal(policy.requiredTool(ctx), 'skills__load')
+  selected(ctx, true); assert.equal(policy.requiredTool(ctx), undefined)
+  ctx.executionSteps = []; ctx.messages[0].body = '你好，解释一下注意力机制'
+  assert.equal(policy.requiredTool(ctx), undefined)
+  ctx.messages[0].body = '为我在画板中讲解flashattention'
+  ctx.grants = ctx.grants!.filter(grant => grant.name !== 'design')
+  assert.equal(policy.requiredTool(ctx), undefined)
+})
+
 test('DeepSeek retains its formally installed public output binding pending SDK qualification', () => {
   const model = runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', baseUrl: 'https://api.siliconflow.cn/v1', apiKey: 'unit-only' }, 90_000)
   assert.equal(model.publicAnswerTool, 'native-v2')
