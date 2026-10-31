@@ -30,7 +30,7 @@ async function withFormalRuntimeTestFixture(root,env,version,run){
    const packed=await execute('npm',['pack',record.resolved,'--ignore-scripts','--json','--pack-destination',fixture,'--userconfig',userconfig,'--loglevel','error','--fetch-retries=0','--fetch-timeout=60000'],{cwd:root,env,timeout:90000,maxBuffer:2*1024*1024})
    const [entry]=JSON.parse(packed.stdout);assert.equal(basename(entry.filename),entry.filename);archive=join(fixture,entry.filename)
   }
-  assert.equal('sha512-'+createHash('sha512').update(await readFile(archive)).digest('base64'),record.integrity,'formal19 source archive integrity changed')
+  assert.equal('sha512-'+createHash('sha512').update(await readFile(archive)).digest('base64'),record.integrity,`formal${version} source archive integrity changed`)
   for(const path of ['server/src','src','shared','server/scripts','server/fixtures'])await cp(join(root,path),join(fixture,path),{recursive:true})
   // Historical formal19 fixtures contain the exact product60 source inventory.
   if(version==='3.8.19')await rm(join(fixture,'server/src/db/migrations/0061_slides_workspaces.sql'),{force:true})

@@ -3,7 +3,7 @@
   "version": "0.1.0-beta",
   "private": true,
   "dependencies": {
-    "@lyyzka/lingxios": "3.8.20",
+    "@lyyzka/lingxios": "3.8.21",
     "pg": "^8.20.0"
   },
   "devDependencies": {
