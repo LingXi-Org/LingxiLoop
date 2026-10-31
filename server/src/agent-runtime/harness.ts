@@ -14,7 +14,6 @@ export function createProductHarness(productTools: ToolDefinition[], memoryContr
   if (productTools.some(tool => tool.action === 'memory.summary') && !memoryControl) throw new Error('memory-summary requires its authorized reader')
   const implementations: ToolDefinition[] = [...productTools, activityTool]
   const tools: ToolDefinition[] = implementations.map(tool => ({ ...tool,
-    description: tool.description + ' This is a business operation. When the exposed public_answer binding requires output-first batches, call public_answer at index 0 and this tool after it in the SAME generation with outcome:null. A business-only batch does not satisfy that binding. Use the original business arguments below.',
     async execute(context, input) {
       const display = await beginPublicToolActivity(context, input).catch(() => { console.warn('[activity] execution details unavailable'); return undefined })
       try {

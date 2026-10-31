@@ -70,13 +70,12 @@ test('reference admission and first description use the actual deployed director
   await assert.rejects(readArtifactReference('design', 'canvas.md'), /pages:.*format.md/)
 })
 
-test('DeepSeek output-first binding is explicit in each business tool contract', () => {
+test('DeepSeek retains its formally installed public output binding pending SDK qualification', () => {
   const model = runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', baseUrl: 'https://api.siliconflow.cn/v1', apiKey: 'unit-only' }, 90_000)
   assert.equal(model.publicAnswerTool, 'native-v2')
   assert.equal(model.capabilities.parallelTools, true)
   assert.equal(model.publicTextProtocol, 'purpose-json-v3')
   assert.equal(model.publicTextContinuation, 'typed-message-v1')
-  for (const tool of harness.tools) assert.match(tool.description, /public_answer at index 0.*SAME generation/)
 })
 
 test('a Design write cannot declare satisfaction without a subsequent successful zero-problem check', () => {

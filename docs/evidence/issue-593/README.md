@@ -101,8 +101,9 @@ performed.
 The current Loop branch has merged main `6f10048f` (Canvas #595) without
 conflicts. It retains the published 3.8.19 dependency and its native-v2 producer.
 A write/check completion gate now rejects satisfaction unless the latest
-successful `design.check` after the latest write reports zero problems. Per-tool
-business descriptions explicitly state the active driver's output prerequisite.
+successful `design.check` after the latest write reports zero problems. The
+ineffective per-tool output-first prose experiment was excluded after its real
+provider failure; the formally installed native-v2 binding remains unchanged.
 The original native-v2 cases remain; native-v1 compatibility and explanation
 stage reopening are additionally tested. Updated local results: unit153,
 typecheck/lint, and 21 selected integration checks (new Design1, activation5,
@@ -128,3 +129,17 @@ authorization and sealed-public-output checks remain. SDK source qualification
 is separate from Loop's formal package acceptance. The child does not publish
 SDKs: a formally published compatible package and subsequent Loop qualification
 are required before using these new public capabilities in the product.
+
+The Design-only host guidance now asks for a complete self-contained explanation
+board first, saving its actual file and index together before check. Its host
+revision is 2; Slides keeps its existing host revision and source. Final local
+unit153, typecheck/lint and the affected Design/artifact HTTP integration5 pass.
+
+The compatible SDK source probe subsequently succeeded using the actual provider,
+its new native-v3 binding and required authorized skill selection: 11 successful
+actions, zero recorded protocol/model failures, real FlashAttention file and
+index, and zero checker problems. Independent file readback passed; semantic
+verification remains inconclusive and browser validation was not performed.
+This isolated SDK/PGlite probe is not Loop product acceptance. Loop still uses
+formal3.8.19; a formally published compatible SDK and new product qualification
+are required before this issue can be considered delivered.
