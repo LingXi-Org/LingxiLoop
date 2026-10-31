@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { createRequire } from 'node:module'
 import { createHash } from 'node:crypto'
+import { brotliDecompressSync, gunzipSync } from 'node:zlib'
 import test from 'node:test'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
@@ -57,6 +58,18 @@ test('native build keeps export libraries lazy and reduces initial JavaScript', 
   assert.match(html, /lang="zh-CN"/)
   assert.match(html, /\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js/)
   assert.doesNotMatch(html, /index-BSIksl9u/)
+  assert.ok(html.includes(report.styles.file))
+  const css = await readFile(resolve('server/assets/slides-editor/assets', report.styles.file), 'utf8')
+  assert.ok(css.includes(report.styles.fallbackFont))
+  assert.doesNotMatch(css, /data:font\/woff2;base64/)
+  const originalCss = await readFile(resolve('third_party/baoyu-design/slides-source/editor.css'), 'utf8')
+  const originalFont = Buffer.from(/data:font\/woff2;base64,([A-Za-z0-9+/=]+)/.exec(originalCss)[1], 'base64')
+  assert.deepEqual(await readFile(resolve('server/assets/slides-editor/assets', report.styles.fallbackFont)), originalFont)
+  for (const name of Object.keys(report.compressed)) {
+    const path = resolve('server/assets/slides-editor/assets', name), bytes = await readFile(path)
+    assert.deepEqual(brotliDecompressSync(await readFile(`${path}.br`)), bytes, name)
+    assert.deepEqual(gunzipSync(await readFile(`${path}.gz`)), bytes, name)
+  }
 })
 
 test('complete upstream distributions retain every pinned byte and license', async () => {

@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, readdir, writeFile, copyFile, rm } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { gzipSync } from 'node:zlib'
+import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 import ts from 'typescript'
 
@@ -88,6 +88,17 @@ export async function buildSlidesEditor() {
   await rm(output, { recursive: true, force: true })
   await mkdir(resolve(output, 'assets'), { recursive: true })
   for (const file of result.outputFiles) await writeFile(file.path, file.contents)
+  // Keep the full fallback font, but let the browser request it only when a
+  // glyph actually uses that face. The default editor uses FizzyLake icons.
+  const sourceCss = await readFile(resolve(sourceRoot, 'editor.css'), 'utf8')
+  const fontUrl = /data:font\/woff2;base64,([A-Za-z0-9+/=]+)/.exec(sourceCss)
+  assert.ok(fontUrl, 'Expected pinned fallback icon font')
+  const font = Buffer.from(fontUrl[1], 'base64')
+  const fontName = `anthropicons-variable-${hash(font).slice(0,16)}.woff2`
+  await writeFile(resolve(output, 'assets', fontName), font)
+  const css = sourceCss.replace(fontUrl[0], `./${fontName}`)
+  const cssName = `editor-${hash(css).slice(0,16)}.css`
+  await writeFile(resolve(output, 'assets', cssName), css)
   const entry = Object.entries(result.metafile.outputs).find(([, meta]) => meta.entryPoint?.endsWith('/main.js'))
   assert.ok(entry)
   const entryFile = result.outputFiles.find(file => resolve(file.path) === resolve(root, entry[0]))
@@ -101,19 +112,31 @@ export async function buildSlidesEditor() {
   addInitial(entry[0])
   const html = (await readFile(resolve(sourceRoot, 'index.html'), 'utf8'))
     .replace('__EDITOR_ENTRY__', `/artifact-editor/slides-assets/${entryName}`)
+    .replace('__EDITOR_STYLES__', `/artifact-editor/slides-assets/${cssName}`)
     .replace('</head>', [...initial].filter(name => name !== entry[0]).map(name =>
       `<link rel="modulepreload" crossorigin href="/artifact-editor/slides-assets/${name.split('/').at(-1)}">`).join('') + '</head>')
   await writeFile(resolve(output, 'index.html'), html)
-  for (const name of ['editor.css', 'anthropicons-fizzy-lake-yNspLiPZ.woff2']) {
+  for (const name of ['anthropicons-fizzy-lake-yNspLiPZ.woff2']) {
     await copyFile(resolve(sourceRoot, name), resolve(output, 'assets', name))
   }
   await copyFile(resolve(sourceRoot, 'third-party-licenses.txt'), resolve(output, 'third-party-licenses.txt'))
   await build({ entryPoints: [resolve(sourceRoot, 'node/compiler.js')], outfile: resolve(output, 'node/compiler.cjs'),
     bundle: true, format: 'cjs', platform: 'node', target: ['node22'], legalComments: 'inline' })
+  const compressed = {}
+  for (const name of await readdir(resolve(output, 'assets'))) {
+    if (!/\.(js|css)$/.test(name)) continue
+    const bytes = await readFile(resolve(output, 'assets', name))
+    const br = brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } })
+    const gzip = gzipSync(bytes, { level: 9 })
+    await writeFile(resolve(output, 'assets', `${name}.br`), br)
+    await writeFile(resolve(output, 'assets', `${name}.gz`), gzip)
+    compressed[name] = { bytes: bytes.length, br: br.length, gzip: gzip.length }
+  }
   const initialFiles = result.outputFiles.filter(file => initial.has(Object.keys(result.metafile.outputs).find(name => resolve(root, name) === file.path)))
   const report = { upstreamCommit: recovered.upstreamCommit, source: 'third_party/baoyu-design/slides-source',
     modules: recovered.modules.length, removedModules: recovered.removedModules, messageCount: recovered.translatedMessages,
     unusedBrowserBindings: browserBindings.removed,
+    compressed, styles: { file: cssName, fallbackFont: fontName, fallbackFontBytes: font.length },
     original: { bytes: 4666628, gzip: 1508796 },
     entry: { file: entryName, bytes: entryFile.contents.length, gzip: gzipSync(entryFile.contents).length },
     initial: { bytes: initialFiles.reduce((sum, file) => sum + file.contents.length, 0), gzip: initialFiles.reduce((sum, file) => sum + gzipSync(file.contents).length, 0) },

@@ -37,7 +37,7 @@ const server = createServer(async (req, res) => {
     const pathname = new URL(req.url, 'http://localhost').pathname
     requestedPaths.add(pathname)
     const path = pathname.startsWith('/artifact-editor/slides-assets/') ? `assets/${pathname.split('/').at(-1)}` : pathname.slice(base.length)
-    const headers = { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' }
+    const headers = { 'Access-Control-Allow-Origin': '*', 'Timing-Allow-Origin': '*', 'Cache-Control': 'no-store' }
     let bytes, type = 'application/json'
     if (req.method === 'OPTIONS') { res.writeHead(204, { ...headers, 'Access-Control-Allow-Headers': 'content-type' }); res.end(); return }
     if (pathname === '/host') {
@@ -70,8 +70,12 @@ const server = createServer(async (req, res) => {
       type = { '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2' }[extname(path)] ?? 'text/html'
       if (path.startsWith('assets/')) headers['Cache-Control'] = 'public,max-age=31536000,immutable'
     }
-    const compressed = gzipSync(bytes)
-    res.writeHead(200, { ...headers, 'Content-Type': type, 'Content-Encoding': 'gzip', 'Content-Length': compressed.length })
+    let compressed = gzipSync(bytes), encoding = 'gzip'
+    if (args.compression === 'precompressed' && path.startsWith('assets/') && /\.(js|css)$/.test(path)) {
+      if (!req.headers['accept-encoding']?.includes('br')) throw Error('Chromium did not negotiate Brotli')
+      compressed = await readFile(resolve(editor, `${path}.br`)); encoding = 'br'
+    }
+    res.writeHead(200, { ...headers, 'Content-Type': type, 'Content-Encoding': encoding, 'Content-Length': compressed.length })
     res.end(compressed)
   } catch { res.writeHead(404); res.end() }
 })
@@ -167,7 +171,7 @@ try {
       while (!measurement && Date.now() < deadline) {
         for (const [key, { contextId, session }] of contexts) {
           try {
-            const response = await cdp('Runtime.evaluate', { expression: `window.__slidesReady ? ({ readyMs: window.__slidesReady, timeOrigin: performance.timeOrigin, resources: performance.getEntriesByType('resource').map(r => ({name:new URL(r.name).pathname,transferSize:r.transferSize,duration:r.duration})), body: document.body.innerText.slice(0,500) }) : null`, contextId, returnByValue: true }, session)
+            const response = await cdp('Runtime.evaluate', { expression: `window.__slidesReady ? ({ readyMs: window.__slidesReady, timeOrigin: performance.timeOrigin, resources: performance.getEntriesByType('resource').map(r => ({name:new URL(r.name).pathname,initiatorType:r.initiatorType,startTime:r.startTime,requestStart:r.requestStart,responseStart:r.responseStart,responseEnd:r.responseEnd,transferSize:r.transferSize,encodedBodySize:r.encodedBodySize,decodedBodySize:r.decodedBodySize,duration:r.duration})), marks:performance.getEntriesByType('mark').filter(m=>m.name.startsWith('slides:')).map(m=>({name:m.name,startTime:m.startTime})), body: document.body.innerText.slice(0,500) }) : null`, contextId, returnByValue: true }, session)
             if (response.result.value) { measurement = response.result.value; editorSession = session; editorContext = contextId; break }
           } catch { contexts.delete(key) }
         }
@@ -305,7 +309,7 @@ try {
     await cdp('Target.disposeBrowserContext', { browserContextId })
   }
   const percentile = (values, p) => [...values].sort((a, b) => a - b)[Math.ceil(values.length * p) - 1]
-  const report = { scope: 'Real Chromium, isolated sandboxed editor, deterministic local HTTP API fixture; not full product or production acceptance', source: args.label ?? 'baseline', measuredAt: new Date().toISOString(), browser: version, device: { platform: platform(), cpu: cpus()[0]?.model, logicalCpus: cpus().length, totalMemoryBytes: totalmem(), viewport: '1440x1000@1', cpuThrottling: 1 }, network: { latencyMs: 20, downloadMbps: 4, uploadMbps: 3, compression: 'gzip', allRequests: true }, fixture: { variant: args.legacy ? 'legacy-compatibility' : 'fixed-performance', slides: 20, images: 20, imageSha256: sha(image), filesSha256: fixtureFilesSha256 }, runs, samples, regression, summary: Object.fromEntries(['cold', 'reopen'].map(phase => [phase, Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === phase).map(s => s.readyMs), p)]))])), editFeedback: { status: 'measured', definition: 'Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text', samples: edits, p95Ms: percentile(edits.map(edit=>edit.durationMs),.95) }, jsParseTime: {status:'unmeasured', note:'ScriptDuration measures execution, not a separate V8 parse trace'}, errors }
+  const report = { scope: 'Real Chromium, isolated sandboxed editor, deterministic local HTTP API fixture; not full product or production acceptance', source: args.label ?? 'baseline', measuredAt: new Date().toISOString(), browser: version, device: { platform: platform(), cpu: cpus()[0]?.model, logicalCpus: cpus().length, totalMemoryBytes: totalmem(), viewport: '1440x1000@1', cpuThrottling: 1 }, network: { latencyMs: 20, downloadMbps: 4, uploadMbps: 3, compression: args.compression === 'precompressed' ? 'build-time Brotli quality 11 for JS/CSS, gzip for fixture responses' : 'gzip', allRequests: true }, fixture: { variant: args.legacy ? 'legacy-compatibility' : 'fixed-performance', slides: 20, images: 20, imageSha256: sha(image), filesSha256: fixtureFilesSha256 }, runs, samples, regression, summary: Object.fromEntries(['cold', 'reopen'].map(phase => [phase, Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === phase).map(s => s.readyMs), p)]))])), editFeedback: { status: 'measured', definition: 'Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text', samples: edits, p95Ms: percentile(edits.map(edit=>edit.durationMs),.95) }, jsParseTime: {status:'unmeasured', note:'ScriptDuration measures execution, not a separate V8 parse trace'}, errors }
   if (args.retained) report.retainedReopen = {
     definition: 'Additional same-frame reopen: hide 100ms, start before a throttled authorization HTTP fixture, show the original iframe, verify loaded image and real double-click text editing. Excludes real product authorization cost; not a fresh navigation or cold measurement.',
     ...Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === 'retained').map(s => s.readyMs), p)])),

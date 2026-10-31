@@ -157,7 +157,10 @@ function installBootstrap(runtime2) {
           landing: (input) => (0, runtime2.initialCurrentSlideId)(input, (0, runtime2.resolvePagePlaceLink)(), !0),
           parse: (0, runtime2.createSlidesArtifactDocumentOptions)().parseContent,
           allowed: bootAllowsExternalUpdates,
-          painted: runtime2.waitForEarlySlidePaint
+          painted: async (...args) => {
+            await runtime2.waitForEarlySlidePaint(...args);
+            performance.mark("slides:first-slide-painted");
+          }
         },
         onNotice: (input) => {
           slidesBootDebugger?.event("notice", {
@@ -178,6 +181,7 @@ function installBootstrap(runtime2) {
         files: () => value2.debugFiles(),
         queue: () => value2.debugQueue()
       }), value2.ready().then(() => {
+        performance.mark("slides:document-ready");
         slidesBootDebugger?.phase("deck on screen"), slidesBootDebugger !== void 0 && slidesBootDebugger.reloadReason.startsWith("hot restart") && slidesBootDebugger.visible(port.version().version, "restarted");
       });
       let value3 = (0, runtime2.createFilesHotUpdateController)({
@@ -271,6 +275,7 @@ function installBootstrap(runtime2) {
     }
   }
   async function bootSlidesFilesMode() {
+    performance.mark("slides:files-boot-start");
     runtime2.hotReloadBridge.armReady();
     let value = initializeSlidesBootDebugger(await createSlidesBootFilesPort()), value2 = value.canWrite ? await Promise.race([
       (0, runtime2.createPersistentUnsavedSlideStash)({
@@ -280,6 +285,7 @@ function installBootstrap(runtime2) {
       new Promise((input) => setTimeout(() => input(void 0), SLIDES_BOOT_LOADING_NOTICE_DELAY_MS))
     ]) : void 0;
     configureFilesDocumentFactory(value, value2);
+    performance.mark("slides:files-boot-ready");
   }
   return bindRuntimeValue(runtime2, "BootstrapJsx", () => BootstrapJsx, (value) => {
     BootstrapJsx = value;
@@ -335,10 +341,13 @@ function installBootstrap(runtime2) {
       }),
       onRead: (input, options, context, value) => slidesBootDebugger?.read(input, options, context, value),
       onPublishError: (input) => slidesBootDebugger?.event("publish-raw-error", input)
-    }, createSlidesBootFilesPort = async () => (0, runtime2.createBrowserFilesPort)({
-      canWrite: (await getSlidesWriteAccess()).canWrite,
-      ...filesBootPortOptions
-    }), bootAllowsExternalUpdates = () => !(0, runtime2.wasCreationSequenceFlagRequested)() || !(0, runtime2.getFeatureFlag)(runtime2.CREATION_SEQUENCE_FLAG, !1) || runtime2.agentActivityStore.get() === "idle", SLIDES_BOOT_LOADING_NOTICE_DELAY_MS = 3e3, revealPlaceholderWhenShown(window);
+    }, createSlidesBootFilesPort = async () => {
+      const access = await getSlidesWriteAccess();
+      performance.mark("slides:write-access-ready");
+      const port = await (0, runtime2.createBrowserFilesPort)({ canWrite: access.canWrite, ...filesBootPortOptions });
+      performance.mark("slides:files-port-ready");
+      return port;
+    }, bootAllowsExternalUpdates = () => !(0, runtime2.wasCreationSequenceFlagRequested)() || !(0, runtime2.getFeatureFlag)(runtime2.CREATION_SEQUENCE_FLAG, !1) || runtime2.agentActivityStore.get() === "idle", SLIDES_BOOT_LOADING_NOTICE_DELAY_MS = 3e3, revealPlaceholderWhenShown(window);
     try {
       (0, runtime2.detectCompiledPageStorageMode)(document) === "db" && !(0, runtime2.isFrameCaptureMode)() && !runtime2.isEmbeddedArtifact && ((0, runtime2.requestCreationSequenceFlag)(), runtime2.agentActivityStore.subscribe(() => {
       }));
@@ -349,6 +358,7 @@ function installBootstrap(runtime2) {
       if (!value)
         throw Error("missing #root");
       runtime2.reactDOMClientOT0.createRoot(value).render(BootstrapJsx.jsx(SlidesRootApp, {}));
+      performance.mark("slides:react-render-requested");
     }).catch((error) => {
       throw document.querySelector("#root > [data-placeholder]")?.remove(), error;
     });

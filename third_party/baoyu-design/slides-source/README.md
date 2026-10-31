@@ -26,6 +26,15 @@ Use the repository's exact published SDK dependency and normal package credentia
 
 The browser build prunes statically unread private runtime getters (including consumers in lazy exports and the workspace bridge). It retains every initializer and the Node compiler namespace; computed runtime reads stop the build for explicit handling. This only enables normal dead-code elimination, not removal of editing features.
 
+The build writes Brotli quality-11 and gzip level-9 sidecars for JavaScript/CSS.
+The asset endpoint negotiates these stored representations, with `Vary:
+Accept-Encoding` and an identity fallback. Compression is paid at build time.
+The full embedded fallback icon font is extracted unchanged to a hashed WOFF2
+asset; CSS is hashed too. Browsers load that face only when a glyph needs it.
+Constant `slides:*` performance marks expose runtime initialization, access and
+file boot, render request, first-slide paint and complete-document readiness.
+They contain no document data and do not change the editable-readiness metric.
+
 The browser output uses hashed shared assets; exports, PPTX and WOFF2 are lazy chunks. Browser and Node bundles can be rebuilt entirely from this directory. `scripts/slides-editor.test.mjs` checks that all browser inputs come from this directory, verifies complete archived file hashes and compares old-format compilation with the pinned implementation (including passive legacy media fields).
 
 ## Native differences
