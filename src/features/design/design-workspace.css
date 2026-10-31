@@ -1,0 +1,28 @@
+[data-design-workspace] {
+  container-type: inline-size;
+}
+
+/* Fold the surface without unmounting its live editor or touching the run. */
+[data-design-open="false"] [data-design-pane],
+[data-design-open="false"] [data-design-resize-handle],
+.desktop-im-grid > [data-shell-panel-hidden="true"] {
+  display: none !important;
+}
+
+/* The conversation's own available width decides when a split stops fitting.
+   Keep the same editor DOM and use a right-side nonmodal panel on narrow panes. */
+@container (max-width: 719px) {
+  [data-design-pane] {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 10;
+    width: 100%;
+    max-width: 100%;
+    border-inline-start: 1px solid var(--border);
+  }
+
+  [data-design-resize-handle] {
+    display: none;
+  }
+}

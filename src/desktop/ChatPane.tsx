@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useEntrance } from '@/hooks/use-entrance'
 import { DesignButton } from '@/features/design/DesignButton'
+import { DesignWorkspace } from '@/features/design/DesignWorkspace'
 import { ConversationSearch } from '@/features/chat/components/ConversationSearch'
 import { ConversationThread } from '@/features/chat/components/ConversationThread'
 import { ConversationRuntimeProvider } from '@/features/chat/runtime'
 import { useConversations } from '@/features/conversations/store'
 import { ConversationHeader } from '@/im/ConversationHeader'
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useUiCommand } from '@/stores/uiCommands'
 import { useAuth } from '@/stores/auth'
 import { useWorkspace } from '@/features/knowledge/workspace'
@@ -43,6 +45,10 @@ export function ChatPane({
   onChooseWorkspace?: () => void
 } = {}) {
   const conversationId = useApp((state) => state.selectedConversationId)
+  const userId = useAuth(state => state.user?.id)
+  const companyId = useAuth(state => state.activeCompanyId)
+  const projectId = useWorkspace(state => state.selectedId)
+  const design = useSurface(state => state.surface?.kind === 'design' ? state.surface : null)
   const conversation = useConversations((state) => (
     conversationId ? state.list.find((item) => item.id === conversationId) : undefined
   ))
@@ -57,6 +63,7 @@ export function ChatPane({
 
   if (!conversationId || !conversation) return <EmptyConversation onChooseWorkspace={onChooseWorkspace} />
   return (
+    <DesignWorkspace key={JSON.stringify([userId, companyId, projectId, conversationId])} design={design} onClose={() => useSurface.getState().closeDesign()}>
     <ConversationRuntimeProvider key={conversationId} conversationId={conversationId}>
       <main ref={rootRef} className="chat-surface chat-pane grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden bg-background">
         <ConversationHeader
@@ -73,5 +80,6 @@ export function ChatPane({
         </div>
       </main>
     </ConversationRuntimeProvider>
+    </DesignWorkspace>
   )
 }

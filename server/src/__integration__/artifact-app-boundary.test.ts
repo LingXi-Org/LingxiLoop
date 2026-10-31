@@ -67,6 +67,11 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   assert.deepEqual(Object.keys(listing.files).sort(), ['project/Main.dc.html', 'project/canvas.json'])
   const file = await fetch(`${origin}${grant.url}project/Main.dc.html`)
   assert.match(file.headers.get('content-security-policy') ?? '', /^sandbox;/)
+  const savedBody = await file.text()
+  const reopened = await (await api('/conversations/artifact-room/design', 'POST')).json() as { id: string }
+  assert.equal(reopened.id, design.id, 'reopening the panel reuses the conversation board')
+  const reopenedGrant = await (await api(`/artifacts/${reopened.id}/editor-grant`, 'POST')).json() as { url: string }
+  assert.equal(await (await fetch(`${origin}${new URL(reopenedGrant.url).pathname}project/Main.dc.html`)).text(), savedBody)
 
   const [, , kind, token] = grant.url.split('/')
   assert.equal(kind, 'design')
@@ -149,4 +154,8 @@ test('assigning and steering work returns the artifact and persists the requeste
   assert.deepEqual(await steered.json(), { ok: true })
   const rows = await pool.query('SELECT assignment,status FROM artifact_agent_assignments WHERE artifact_id=$1 AND agent_id=$2', [design.id, agentId])
   assert.deepEqual(rows.rows, [{ assignment: 'Revise the board', status: 'waiting' }])
+  const reopened = await (await api('/conversations/artifact-room/design', 'POST')).json() as { id: string }
+  assert.equal(reopened.id, design.id)
+  assert.deepEqual((await pool.query('SELECT assignment,status FROM artifact_agent_assignments WHERE artifact_id=$1 AND agent_id=$2', [design.id, agentId])).rows, rows.rows,
+    'reopening does not replace or cancel the existing creative assignment')
 })
