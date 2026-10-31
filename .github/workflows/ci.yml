@@ -403,6 +403,16 @@ jobs:
         env:
           NODE_ENV: test
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - if: github.event_name == 'pull_request'
+        run: node server/scripts/export-empty-integration-db.mjs
+        env: { NODE_ENV: test }
+      - if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-empty-database-${{ github.sha }}
+          path: artifacts/integration-empty-database/
+          retention-days: 3
+          if-no-files-found: error
       - if: needs.changes.outputs.server != 'true'
         run: node --test scripts/test-selectors.test.mjs
       - run: npm run test:integration
