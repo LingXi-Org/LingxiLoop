@@ -1,0 +1,18 @@
+{
+  "root": "/tmp/issue-593-generated",
+  "title": "FlashAttention",
+  "boardCount": 3,
+  "problems": 2,
+  "issues": [
+    {
+      "file": "canvas.json",
+      "message": "boards[\"Method.dc.html\"]: the file Method.dc.html does not exist; write it or remove the entry"
+    },
+    {
+      "file": "canvas.json",
+      "message": "boards[\"Limits.dc.html\"]: the file Limits.dc.html does not exist; write it or remove the entry"
+    }
+  ],
+  "notChecked": "Whether the artboard scripts run, and how the layout looks, is not checked (nothing is rendered).",
+  "next": "Fix the files per issues (file is a path under project/; \".\" is the whole folder), then run check again until problems is 0."
+}

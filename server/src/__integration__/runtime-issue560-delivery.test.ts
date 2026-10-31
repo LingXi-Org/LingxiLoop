@@ -23,9 +23,14 @@ import { installRecordingWukong } from './_recording-wukong.js'
 after(async()=>{await teardownAll()})
 
 // Synthetic model only; real native Worker, product authorization, storage and IM outbox.
-for (const budgetProbe of [false, true]) test(budgetProbe
+for (const { budgetProbe, explanationWorkflow } of [
+  { budgetProbe: false, explanationWorkflow: true },
+  { budgetProbe: true, explanationWorkflow: true },
+  { budgetProbe: false, explanationWorkflow: false },
+]) test(budgetProbe
   ? 'six valid intermediate generations hit the probe call limit without a protocol rejection or artifact delivery'
-  : 'corrected explanation completes actual visualize save, authorized readback and delivery', {timeout:30000}, async()=>{
+  : explanationWorkflow ? 'corrected explanation completes actual visualize save, authorized readback and delivery'
+    : 'authoring-only delivery activates without an explanation declaration and still verifies the saved result', {timeout:30000}, async()=>{
   await ensureSchemaOnce();await resetAllTables()
   const im=await installRecordingWukong()
   const {companyId,projectId,agentId}=await seedCompanyWithAgent()
@@ -35,7 +40,7 @@ for (const budgetProbe of [false, true]) test(budgetProbe
   await pool.query('UPDATE participants SET capabilities=$1 WHERE company_id=$2 AND id=$3',[JSON.stringify(DEFAULT_AGENT_CAPABILITIES),companyId,agentId])
   await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Synthetic workflow',$4::jsonb)",[channelId,companyId,projectId,JSON.stringify(members)])
   await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',[channelId,companyId,JSON.stringify({channelType:2,members})])
-  const text='请解释并创建交互图。Q 与 K 计算得分。softmax 把得分变成权重。权重对 V 加权求和。'
+  const text=explanationWorkflow?'请解释并创建交互图。Q 与 K 计算得分。softmax 把得分变成权重。权重对 V 加权求和。':'创建一个展示注意力流程的交互图。'
   const explanation='Q 与 K 计算得分，softmax 得到权重，再对 V 加权求和。'
   const html='<div><label>查询位置 <input id="query" type="range" min="1" max="3" value="1"></label><output id="selected">1</output><p>Q × K → softmax → 加权 V</p></div><script>document.getElementById("query").addEventListener("input", e => { document.getElementById("selected").textContent = e.target.value; });</script>'
   let calls=0,runId='',handlerError:unknown
@@ -47,8 +52,8 @@ for (const budgetProbe of [false, true]) test(budgetProbe
     const operation=calls===2?{kind:'replace',supersedes:[steps[0].id]}:{kind:'append',supersedes:[]}
     let answer=calls===1?'待修正的说明。':calls===2?explanation:'\n用查询位置滑块查看这三个步骤。',outcome:unknown=null
     const business:Array<{name:string;args:unknown}>=[]
-    if(calls===1){const {name,version,hash}=skillIndex(visualizeSkill);business.push({name:'skills__activate',args:{name,version,hash,explanation:{explanationQuote:'请解释',authoringQuote:'创建交互图',factQuotes:['Q 与 K 计算得分。','softmax 把得分变成权重。','权重对 V 加权求和。']}}})}
-    if(calls===2)assert.equal(exposed.includes('visualize__save'),false)
+    if(calls===1){const {name,version,hash}=skillIndex(visualizeSkill);business.push({name:'skills__activate',args:{name,version,hash,...(explanationWorkflow?{explanation:{explanationQuote:'请解释',authoringQuote:'创建交互图',factQuotes:['Q 与 K 计算得分。','softmax 把得分变成权重。','权重对 V 加权求和。']}}:{})}})}
+    if(calls===2)assert.equal(exposed.includes('visualize__save'),!explanationWorkflow)
     if(calls>=3)assert.ok(exposed.includes('visualize__save'))
     if(calls===3&&!budgetProbe){business.push({name:'visualize__save',args:{name:'attention-flow',html}})}
     if(calls===4&&!budgetProbe){const saved=(await pool.query('SELECT path FROM im_visualize_documents WHERE run_id=$1',[runId])).rows;assert.equal(saved.length,1);answer='\n::visualize'+JSON.stringify({path:saved[0].path});outcome={status:'satisfied',gaps:[]}}

@@ -1,5 +1,6 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
 import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
+import { z } from 'zod'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, compareResource } from '../../agents/tools.js'
 import { queueNativeEvents, type NativeEvent } from '../../agents/native-events.js'
@@ -17,7 +18,7 @@ import { createArtifactExecution, type ArtifactRunRow } from './execution.js'
 import { artifactKind, type ArtifactKind } from './kinds.js'
 import { publishArtifactProgress } from './progress.js'
 import { artifactById, conversationDesignId, conversationSlidesId, lockReportWork, type ArtifactRow } from './repository.js'
-import { readArtifactReference } from './skills.js'
+import { artifactReferencePages, readArtifactReference } from './skills.js'
 import { listing, putBlob, sha256, type WireEntry } from './store.js'
 
 type Control = Parameters<typeof createArtifactExecution>[0]
@@ -221,7 +222,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         const artifact = await required(context, input)
         return { ok: true, value: await checkArtifact(context.database as Queryable, artifact, context.signal) }
       } }),
-    nativeTool(`${kind}.read_reference`, agentArtifactSchemas.read_reference, { description: `Read a ${label} format reference page (artifact-type/reference/<page>).`, effect: 'read', approval: false, authorize,
+    nativeTool(`${kind}.read_reference`, kind === 'design' ? agentArtifactSchemas.read_reference.extend({ page: z.enum(artifactReferencePages(kind) as [string, ...string[]]) }) : agentArtifactSchemas.read_reference, { description: kind === 'design' ? `Read a ${label} reference page. Start with format.md for the authoring format, after loading the registered skill. Valid pages from this deployment: ${artifactReferencePages(kind).join(', ')}. Use the skill's reference links for each page's purpose; never guess filenames.` : `Read a ${label} format reference page (artifact-type/reference/<page>).`, effect: 'read', approval: false, authorize,
       async execute(_context, input) {
         try { return { ok: true, value: { page: input.page, text: await readArtifactReference(kind, input.page) } } }
         catch (error) { throw new NoEffectError((error as Error).message, 'not_found') }

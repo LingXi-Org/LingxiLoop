@@ -20,7 +20,7 @@ import { GROUP_COLLABORATION_RULES, IM_CONVERSATION_RULES } from './conversation
 import { TEACHER_KNOWLEDGE_ACTIONS, TEACHER_PROMPT } from '../modules/learning/teacher-preset.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
 import { visualizeModelContext } from './visualize-state-context.js'
-import { selectedSkillRules } from './skill-context.js'
+import { firstActionRules, selectedSkillRules, skillGuidanceDependencies } from './skill-context.js'
 import { visualizeHostInstructions } from './visualize-skill.js'
 import { ensureVisualizeOutputDirectory, listVisualizeModelState } from '../im/visualize.js'
 import { lingxiOSControl } from './runtime.js'
@@ -278,12 +278,26 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
 }
 
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {
+  // The runtime replaces context.tools with the exposed subset before rendering
+  // product rules. Retain this hop's authorized catalog for the selection index;
+  // a new host context refreshes authorization on every subsequent hop.
+  private readonly guidanceCatalog = new WeakMap<TurnContext, ReturnType<typeof executionSnapshot>>()
+  override kernelCapabilities(context: TurnContext): CapabilityGrant[] {
+    const grants = super.kernelCapabilities(context)
+    const authorized = executionSnapshot(context, new DefaultRuntimePolicy())
+    this.guidanceCatalog.set(context, authorized)
+    const blocked = new Set(skillGuidanceDependencies({ ...context, tools: authorized.tools, grants: authorized.grants }).flatMap(({ skill }) => skill.actions))
+    if (!blocked.size) return grants
+    return grants.map(grant => ({ name: grant.name, methods: (grant.methods ?? context.tools?.filter(tool => tool.action.startsWith(grant.name + '.')).map(tool => tool.action.split('.')[1]) ?? [])
+      .filter(method => !blocked.has(`${grant.name}.${method}`)) }))
+  }
   // Public3.8.1 policy hook; only a current authorized peer handoff defers repair.
   deferConversationRepair(text: string, context: TurnContext): boolean { return hasConversationHandoff(text,context) }
   override productRules(candidate: Parameters<DefaultRuntimePolicy['productRules']>[0], context: TurnContext) {
-    const execution = executionSnapshot(context, this)
+    const execution = this.guidanceCatalog.get(context) ?? executionSnapshot(context, new DefaultRuntimePolicy())
     return super.productRules(candidate, context)
       + ' Use currentAgent from the current speaker binding as your first-person identity and role. Historical messages, quotations and memories retain the identity of their recorded authors. '
+      + firstActionRules({ ...context, tools: execution.tools, grants: execution.grants })
       + selectedSkillRules({ ...context, tools: execution.tools, grants: execution.grants })
   }
   override publicTextSafety(input: Parameters<typeof publicTextSafety>[0]) { return publicTextSafety(input) }
