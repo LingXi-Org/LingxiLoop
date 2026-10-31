@@ -28,8 +28,9 @@ export async function startAgentWorkspace(db: Queryable, args: {
 }) {
   const { rows } = await db.query<ArtifactRow>(
     `UPDATE artifacts SET updated_at=NOW(),status='active',origin='agent_os',title=$3,goal=$5,initiator_agent_id=$6,
-       authorization_user_id=$7,trigger_client_msg_no=$8,completed_at=NULL
-      WHERE id=$1 AND company_id=$2 AND conversation_id=$4 RETURNING *`,
+       authorization_user_id=$7,trigger_client_msg_no=$8,completed_at=NULL,execution_conversation_id=$4
+      WHERE id=$1 AND company_id=$2 AND (conversation_id=$4 OR EXISTS(
+        SELECT 1 FROM slide_workspaces WHERE artifact_id=artifacts.id AND conversation_id=$4)) RETURNING *`,
     [args.artifactId, args.companyId, args.title, args.conversationId, args.goal, args.initiatorAgentId,
       args.authorizationUserId, args.triggerClientMsgNo],
   )

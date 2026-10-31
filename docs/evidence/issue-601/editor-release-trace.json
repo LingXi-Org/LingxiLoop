@@ -1,0 +1,1495 @@
+{
+  "scope": "Real Chromium, isolated sandboxed editor, deterministic local HTTP API fixture; not full product or production acceptance",
+  "source": "601-final-round-diagnostic",
+  "measuredAt": "2026-10-31T06:51:49.516Z",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/154.0.8037.57",
+    "revision": "@73c14f6228d7cd537c855007e8f88678969cc0eb",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "jsVersion": "15.4.80.11"
+  },
+  "device": {
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logicalCpus": 5,
+    "totalMemoryBytes": 18882662400,
+    "viewport": "1440x1000@1",
+    "cpuThrottling": 1
+  },
+  "network": {
+    "latencyMs": 20,
+    "downloadMbps": 4,
+    "uploadMbps": 3,
+    "compression": "build-time Brotli quality 11 for JS/CSS, gzip for fixture responses",
+    "allRequests": true
+  },
+  "fixture": {
+    "variant": "fixed-performance",
+    "slides": 20,
+    "images": 20,
+    "imageSha256": "6927614c2041fa104c1a54709c255608e27787340712bc55d99a32f591b8596b",
+    "filesSha256": "8a3abe4f8a477eba8252a334422d79973ae46f2e3fd5a787ce9972d840b12162"
+  },
+  "runs": 1,
+  "samples": [
+    {
+      "run": 1,
+      "phase": "cold",
+      "readyMs": 2830.699999999255,
+      "timeOrigin": 1793429503150.2,
+      "resources": [
+        {
+          "name": "/artifact-editor/slides-assets/editor-DJGLNEUM.js",
+          "initiatorType": "script",
+          "startTime": 57.09999999962747,
+          "requestStart": 60.29999999888241,
+          "responseStart": 177.59999999962747,
+          "responseEnd": 2002.0999999996275,
+          "transferSize": 689190,
+          "encodedBodySize": 688890,
+          "decodedBodySize": 2595978,
+          "duration": 1945
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+          "initiatorType": "other",
+          "startTime": 57.40000000037253,
+          "requestStart": 60.5,
+          "responseStart": 105.69999999925494,
+          "responseEnd": 147.69999999925494,
+          "transferSize": 10295,
+          "encodedBodySize": 9995,
+          "decodedBodySize": 27174,
+          "duration": 90.29999999888241
+        },
+        {
+          "name": "/artifact-editor/slides-assets/editor-5e382117a00b4eb2.css",
+          "initiatorType": "link",
+          "startTime": 57.40000000037253,
+          "requestStart": 60.09999999962747,
+          "responseStart": 105.29999999888241,
+          "responseEnd": 304,
+          "transferSize": 45019,
+          "encodedBodySize": 44719,
+          "decodedBodySize": 390400,
+          "duration": 246.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-DSVHES4B.js",
+          "initiatorType": "other",
+          "startTime": 57.40000000037253,
+          "requestStart": 60.40000000037253,
+          "responseStart": 176,
+          "responseEnd": 1021.6999999992549,
+          "transferSize": 200795,
+          "encodedBodySize": 200495,
+          "decodedBodySize": 821188,
+          "duration": 964.2999999988824
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+          "initiatorType": "other",
+          "startTime": 57.5,
+          "requestStart": 60.5,
+          "responseStart": 108.29999999888241,
+          "responseEnd": 115.19999999925494,
+          "transferSize": 451,
+          "encodedBodySize": 151,
+          "decodedBodySize": 265,
+          "duration": 57.69999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/__deck/session",
+          "initiatorType": "fetch",
+          "startTime": 2041.7999999988824,
+          "requestStart": 2044.5999999996275,
+          "responseStart": 2045.4000000003725,
+          "responseEnd": 2068,
+          "transferSize": 336,
+          "encodedBodySize": 36,
+          "decodedBodySize": 16,
+          "duration": 26.200000001117587
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "initiatorType": "fetch",
+          "startTime": 2183.699999999255,
+          "requestStart": 2184.0999999996275,
+          "responseStart": 2184.9000000003725,
+          "responseEnd": 2207,
+          "transferSize": 1321,
+          "encodedBodySize": 1021,
+          "decodedBodySize": 3137,
+          "duration": 23.300000000745058
+        },
+        {
+          "name": "/artifact-editor/slides-assets/anthropicons-variable-eb0835bf3000d3b0.woff2",
+          "initiatorType": "css",
+          "startTime": 2250.9000000003725,
+          "requestStart": 2289.9000000003725,
+          "responseStart": 2291.9000000003725,
+          "responseEnd": 2500.5,
+          "transferSize": 60480,
+          "encodedBodySize": 60180,
+          "decodedBodySize": 60180,
+          "duration": 249.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/deck.json",
+          "initiatorType": "fetch",
+          "startTime": 2317.0999999996275,
+          "requestStart": 2321.9000000003725,
+          "responseStart": 2323,
+          "responseEnd": 2347.699999999255,
+          "transferSize": 477,
+          "encodedBodySize": 177,
+          "decodedBodySize": 318,
+          "duration": 30.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-1.html",
+          "initiatorType": "fetch",
+          "startTime": 2317.4000000003725,
+          "requestStart": 2322.2999999988824,
+          "responseStart": 2323.2999999988824,
+          "responseEnd": 2349.7999999988824,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 32.399999998509884
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-10.html",
+          "initiatorType": "fetch",
+          "startTime": 2317.5999999996275,
+          "requestStart": 2322.699999999255,
+          "responseStart": 2323.5,
+          "responseEnd": 2353.5,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 35.90000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-11.html",
+          "initiatorType": "fetch",
+          "startTime": 2317.699999999255,
+          "requestStart": 2323.5,
+          "responseStart": 2326.4000000003725,
+          "responseEnd": 2356.4000000003725,
+          "transferSize": 619,
+          "encodedBodySize": 319,
+          "decodedBodySize": 345,
+          "duration": 38.70000000111759
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-12.html",
+          "initiatorType": "fetch",
+          "startTime": 2317.9000000003725,
+          "requestStart": 2347.7999999988824,
+          "responseStart": 2348.4000000003725,
+          "responseEnd": 2374.5999999996275,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 56.69999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-13.html",
+          "initiatorType": "fetch",
+          "startTime": 2318.0999999996275,
+          "requestStart": 2350,
+          "responseStart": 2350.199999999255,
+          "responseEnd": 2377.5999999996275,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 59.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-14.html",
+          "initiatorType": "fetch",
+          "startTime": 2318.2999999988824,
+          "requestStart": 2353.699999999255,
+          "responseStart": 2354,
+          "responseEnd": 2383.5999999996275,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 65.30000000074506
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-15.html",
+          "initiatorType": "fetch",
+          "startTime": 2318.5,
+          "requestStart": 2356.5,
+          "responseStart": 2356.7999999988824,
+          "responseEnd": 2387.699999999255,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 69.19999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-16.html",
+          "initiatorType": "fetch",
+          "startTime": 2318.5999999996275,
+          "requestStart": 2374.9000000003725,
+          "responseStart": 2376.4000000003725,
+          "responseEnd": 2397.7999999988824,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 79.19999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-17.html",
+          "initiatorType": "fetch",
+          "startTime": 2318.7999999988824,
+          "requestStart": 2377.7999999988824,
+          "responseStart": 2378,
+          "responseEnd": 2404.0999999996275,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 85.30000000074506
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-18.html",
+          "initiatorType": "fetch",
+          "startTime": 2319,
+          "requestStart": 2383.7999999988824,
+          "responseStart": 2384.2999999988824,
+          "responseEnd": 2410.5999999996275,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 91.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-19.html",
+          "initiatorType": "fetch",
+          "startTime": 2319.0999999996275,
+          "requestStart": 2388,
+          "responseStart": 2389.9000000003725,
+          "responseEnd": 2416.699999999255,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 97.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-2.html",
+          "initiatorType": "fetch",
+          "startTime": 2319.2999999988824,
+          "requestStart": 2398,
+          "responseStart": 2398.4000000003725,
+          "responseEnd": 2422.199999999255,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 102.90000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-20.html",
+          "initiatorType": "fetch",
+          "startTime": 2319.4000000003725,
+          "requestStart": 2404.4000000003725,
+          "responseStart": 2404.7999999988824,
+          "responseEnd": 2428.4000000003725,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 109
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-3.html",
+          "initiatorType": "fetch",
+          "startTime": 2319.699999999255,
+          "requestStart": 2410.699999999255,
+          "responseStart": 2411.0999999996275,
+          "responseEnd": 2436.9000000003725,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 117.20000000111759
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-4.html",
+          "initiatorType": "fetch",
+          "startTime": 2319.7999999988824,
+          "requestStart": 2416.9000000003725,
+          "responseStart": 2417.699999999255,
+          "responseEnd": 2443.5,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 123.70000000111759
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-5.html",
+          "initiatorType": "fetch",
+          "startTime": 2319.9000000003725,
+          "requestStart": 2422.2999999988824,
+          "responseStart": 2422.7999999988824,
+          "responseEnd": 2449.5999999996275,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 129.69999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-6.html",
+          "initiatorType": "fetch",
+          "startTime": 2320.199999999255,
+          "requestStart": 2428.5999999996275,
+          "responseStart": 2429.2999999988824,
+          "responseEnd": 2454.7999999988824,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 134.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-7.html",
+          "initiatorType": "fetch",
+          "startTime": 2320.2999999988824,
+          "requestStart": 2437.0999999996275,
+          "responseStart": 2437.5,
+          "responseEnd": 2461.5,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 141.2000000011176
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-8.html",
+          "initiatorType": "fetch",
+          "startTime": 2320.5,
+          "requestStart": 2443.699999999255,
+          "responseStart": 2444.0999999996275,
+          "responseEnd": 2467.199999999255,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 146.69999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-9.html",
+          "initiatorType": "fetch",
+          "startTime": 2320.699999999255,
+          "requestStart": 2449.699999999255,
+          "responseStart": 2450.0999999996275,
+          "responseEnd": 2472.9000000003725,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 152.2000000011176
+        },
+        {
+          "name": "/_blob/1234567890abcdef1234567890abcdef",
+          "initiatorType": "img",
+          "startTime": 2403.199999999255,
+          "requestStart": 2404.7999999988824,
+          "responseStart": 2405.199999999255,
+          "responseEnd": 2431.5999999996275,
+          "transferSize": 470,
+          "encodedBodySize": 170,
+          "decodedBodySize": 218,
+          "duration": 28.40000000037253
+        }
+      ],
+      "marks": [
+        {
+          "name": "slides:runtime-start",
+          "startTime": 2042
+        },
+        {
+          "name": "slides:files-boot-start",
+          "startTime": 2157.9000000003725
+        },
+        {
+          "name": "slides:runtime-ready",
+          "startTime": 2158.5
+        },
+        {
+          "name": "slides:write-access-ready",
+          "startTime": 2164
+        },
+        {
+          "name": "slides:files-port-ready",
+          "startTime": 2164.2999999988824
+        },
+        {
+          "name": "slides:files-boot-ready",
+          "startTime": 2167.4000000003725
+        },
+        {
+          "name": "slides:react-render-requested",
+          "startTime": 2168.5999999996275
+        },
+        {
+          "name": "slides:first-slide-painted",
+          "startTime": 2475.2999999988824
+        },
+        {
+          "name": "slides:document-ready",
+          "startTime": 2645.5999999996275
+        }
+      ],
+      "body": "\n\n\n\n\n\n\n\n71%\n\n幻灯片 1 / 20: 幻灯片 1\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n\n\n\n\n\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n1\n幻灯片 2\n固定图片样稿，用于测量加载与编辑反馈。\n2\n幻灯片 3\n固定图片样稿，用于测量加载与编辑反馈。\n3\n幻灯片 4\n固定图片样稿，用于测量加载与编辑反馈。\n4\n幻灯片 5\n固定图片样稿，用于测量加载与编辑反馈。\n5\n幻灯片 6\n固定图片样稿，用于测量加载与编辑反馈。\n6\n幻灯片 7\n固定图片样稿，用于测量加载与编辑反馈。\n7\n幻灯片 8\n固定图片样稿，用于测量加载与编辑反馈。\n8\n幻灯片 9\n固定图片样稿，用于测量加载与编辑反馈。\n9\n幻灯片 10\n固定图片样稿，用于测量加载与编辑反馈。\n10\n幻灯片 11\n固定图片样稿，用于测量加载与编辑反馈。\n11\n幻灯片 12\n固定图片样稿，用于测量加载与编辑反馈。\n12\n幻灯片 13\n固定图片样稿，用于测量加载与编辑反馈。\n13\n幻灯片 14\n固定图片样稿，用于测量加载与编辑反馈。\n14\n幻灯片 15\n固定图片样稿，用于测量加载与编",
+      "renderedMs": 2658.2999999988824,
+      "editableVerified": true,
+      "transferredBytes": 1024545,
+      "jsHeapUsedBytes": 18827112,
+      "scriptDurationSeconds": 0.484434,
+      "taskDurationSeconds": 0.814403,
+      "engineMetrics": {
+        "Timestamp": 11395.417957,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "Documents": 4,
+        "Frames": 4,
+        "JSEventListeners": 1705,
+        "LayoutObjects": 801,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "Nodes": 1209,
+        "Resources": 32,
+        "ContextLifecycleStateObservers": 14,
+        "V8PerContextDatas": 1,
+        "WorkerGlobalScopes": 0,
+        "UACSSResources": 0,
+        "RTCPeerConnections": 0,
+        "ResourceFetchers": 4,
+        "AdSubframes": 0,
+        "DetachedScriptStates": 0,
+        "ArrayBufferContents": 22,
+        "LayoutCount": 275,
+        "RecalcStyleCount": 512,
+        "LayoutDuration": 0.077117,
+        "RecalcStyleDuration": 0.10367,
+        "DevToolsCommandDuration": 0.005428,
+        "ScriptDuration": 0.484434,
+        "V8CompileDuration": 0.000508,
+        "TaskDuration": 0.814403,
+        "TaskOtherDuration": 0.143246,
+        "ThreadTime": 0.749257,
+        "ProcessTime": 1.23,
+        "JSHeapUsedSize": 18827112,
+        "JSHeapTotalSize": 29577216,
+        "FirstMeaningfulPaint": 0,
+        "DomContentLoaded": 11394.745753,
+        "NavigationStart": 11392.586915
+      }
+    },
+    {
+      "run": 1,
+      "phase": "reopen",
+      "readyMs": 2534.300000000745,
+      "timeOrigin": 1793429506738.9,
+      "resources": [
+        {
+          "name": "/artifact-editor/slides-assets/editor-DJGLNEUM.js",
+          "initiatorType": "script",
+          "startTime": 42.30000000074506,
+          "requestStart": 42.90000000037253,
+          "responseStart": 126.80000000074506,
+          "responseEnd": 1958.7000000011176,
+          "transferSize": 689190,
+          "encodedBodySize": 688890,
+          "decodedBodySize": 2595978,
+          "duration": 1916.4000000003725
+        },
+        {
+          "name": "/artifact-editor/slides-assets/editor-5e382117a00b4eb2.css",
+          "initiatorType": "link",
+          "startTime": 42.59999999962747,
+          "requestStart": 43.90000000037253,
+          "responseStart": 52.5,
+          "responseEnd": 225,
+          "transferSize": 45019,
+          "encodedBodySize": 44719,
+          "decodedBodySize": 390400,
+          "duration": 182.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-DSVHES4B.js",
+          "initiatorType": "other",
+          "startTime": 42.59999999962747,
+          "requestStart": 44.09999999962747,
+          "responseStart": 126.40000000037253,
+          "responseEnd": 977.7000000011176,
+          "transferSize": 200795,
+          "encodedBodySize": 200495,
+          "decodedBodySize": 821188,
+          "duration": 935.1000000014901
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+          "initiatorType": "other",
+          "startTime": 42.70000000111759,
+          "requestStart": 44.5,
+          "responseStart": 125.59999999962747,
+          "responseEnd": 129.09999999962747,
+          "transferSize": 451,
+          "encodedBodySize": 151,
+          "decodedBodySize": 265,
+          "duration": 86.39999999850988
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+          "initiatorType": "other",
+          "startTime": 42.70000000111759,
+          "requestStart": 44.40000000037253,
+          "responseStart": 126,
+          "responseEnd": 206.40000000037253,
+          "transferSize": 10295,
+          "encodedBodySize": 9995,
+          "decodedBodySize": 27174,
+          "duration": 163.69999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/__deck/session",
+          "initiatorType": "fetch",
+          "startTime": 1972.4000000003725,
+          "requestStart": 1973.300000000745,
+          "responseStart": 1973.9000000003725,
+          "responseEnd": 1995.7000000011176,
+          "transferSize": 336,
+          "encodedBodySize": 36,
+          "decodedBodySize": 16,
+          "duration": 23.300000000745058
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "initiatorType": "fetch",
+          "startTime": 1998.9000000003725,
+          "requestStart": 1999.5,
+          "responseStart": 2000.0999999996275,
+          "responseEnd": 2021.7000000011176,
+          "transferSize": 1321,
+          "encodedBodySize": 1021,
+          "decodedBodySize": 3137,
+          "duration": 22.800000000745058
+        },
+        {
+          "name": "/artifact-editor/slides-assets/anthropicons-variable-eb0835bf3000d3b0.woff2",
+          "initiatorType": "css",
+          "startTime": 2029.300000000745,
+          "requestStart": 2053,
+          "responseStart": 2056.7000000011176,
+          "responseEnd": 2261.4000000003725,
+          "transferSize": 60480,
+          "encodedBodySize": 60180,
+          "decodedBodySize": 60180,
+          "duration": 232.09999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/deck.json",
+          "initiatorType": "fetch",
+          "startTime": 2070.7000000011176,
+          "requestStart": 2071.300000000745,
+          "responseStart": 2073,
+          "responseEnd": 2097.0999999996275,
+          "transferSize": 477,
+          "encodedBodySize": 177,
+          "decodedBodySize": 318,
+          "duration": 26.399999998509884
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-1.html",
+          "initiatorType": "fetch",
+          "startTime": 2070.800000000745,
+          "requestStart": 2072.300000000745,
+          "responseStart": 2073.5999999996275,
+          "responseEnd": 2100.2000000011176,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 29.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-10.html",
+          "initiatorType": "fetch",
+          "startTime": 2071,
+          "requestStart": 2073.0999999996275,
+          "responseStart": 2074.2000000011176,
+          "responseEnd": 2102.300000000745,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 31.300000000745058
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-11.html",
+          "initiatorType": "fetch",
+          "startTime": 2071,
+          "requestStart": 2074.300000000745,
+          "responseStart": 2075.800000000745,
+          "responseEnd": 2109,
+          "transferSize": 619,
+          "encodedBodySize": 319,
+          "decodedBodySize": 345,
+          "duration": 38
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-12.html",
+          "initiatorType": "fetch",
+          "startTime": 2071.2000000011176,
+          "requestStart": 2097.300000000745,
+          "responseStart": 2097.800000000745,
+          "responseEnd": 2124.2000000011176,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 53
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-13.html",
+          "initiatorType": "fetch",
+          "startTime": 2071.300000000745,
+          "requestStart": 2100.4000000003725,
+          "responseStart": 2101,
+          "responseEnd": 2127.2000000011176,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 55.90000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-14.html",
+          "initiatorType": "fetch",
+          "startTime": 2071.4000000003725,
+          "requestStart": 2102.5,
+          "responseStart": 2103.300000000745,
+          "responseEnd": 2133.0999999996275,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 61.69999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-15.html",
+          "initiatorType": "fetch",
+          "startTime": 2071.5,
+          "requestStart": 2109.300000000745,
+          "responseStart": 2109.800000000745,
+          "responseEnd": 2135.9000000003725,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 64.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-16.html",
+          "initiatorType": "fetch",
+          "startTime": 2071.7000000011176,
+          "requestStart": 2124.300000000745,
+          "responseStart": 2124.9000000003725,
+          "responseEnd": 2148,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 76.29999999888241
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-17.html",
+          "initiatorType": "fetch",
+          "startTime": 2071.9000000003725,
+          "requestStart": 2127.4000000003725,
+          "responseStart": 2127.7000000011176,
+          "responseEnd": 2153.300000000745,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 81.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-18.html",
+          "initiatorType": "fetch",
+          "startTime": 2071.9000000003725,
+          "requestStart": 2133.300000000745,
+          "responseStart": 2133.5999999996275,
+          "responseEnd": 2160.2000000011176,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 88.30000000074506
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-19.html",
+          "initiatorType": "fetch",
+          "startTime": 2072,
+          "requestStart": 2136,
+          "responseStart": 2136.7000000011176,
+          "responseEnd": 2162.300000000745,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 90.30000000074506
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-2.html",
+          "initiatorType": "fetch",
+          "startTime": 2072.300000000745,
+          "requestStart": 2148.300000000745,
+          "responseStart": 2148.800000000745,
+          "responseEnd": 2175.2000000011176,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 102.90000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-20.html",
+          "initiatorType": "fetch",
+          "startTime": 2072.5999999996275,
+          "requestStart": 2153.4000000003725,
+          "responseStart": 2153.800000000745,
+          "responseEnd": 2180.2000000011176,
+          "transferSize": 620,
+          "encodedBodySize": 320,
+          "decodedBodySize": 345,
+          "duration": 107.60000000149012
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-3.html",
+          "initiatorType": "fetch",
+          "startTime": 2072.800000000745,
+          "requestStart": 2160.4000000003725,
+          "responseStart": 2160.9000000003725,
+          "responseEnd": 2186.5,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 113.69999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-4.html",
+          "initiatorType": "fetch",
+          "startTime": 2072.800000000745,
+          "requestStart": 2162.5,
+          "responseStart": 2162.9000000003725,
+          "responseEnd": 2189.4000000003725,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 116.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-5.html",
+          "initiatorType": "fetch",
+          "startTime": 2073,
+          "requestStart": 2175.300000000745,
+          "responseStart": 2175.800000000745,
+          "responseEnd": 2202,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 129
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-6.html",
+          "initiatorType": "fetch",
+          "startTime": 2073.0999999996275,
+          "requestStart": 2180.4000000003725,
+          "responseStart": 2180.800000000745,
+          "responseEnd": 2207.4000000003725,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 134.30000000074506
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-7.html",
+          "initiatorType": "fetch",
+          "startTime": 2073.2000000011176,
+          "requestStart": 2186.7000000011176,
+          "responseStart": 2187,
+          "responseEnd": 2214.2000000011176,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 141
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-8.html",
+          "initiatorType": "fetch",
+          "startTime": 2073.300000000745,
+          "requestStart": 2189.5999999996275,
+          "responseStart": 2189.9000000003725,
+          "responseEnd": 2216.5999999996275,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 143.2999999988824
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-9.html",
+          "initiatorType": "fetch",
+          "startTime": 2073.4000000003725,
+          "requestStart": 2202.0999999996275,
+          "responseStart": 2202.9000000003725,
+          "responseEnd": 2225.5,
+          "transferSize": 617,
+          "encodedBodySize": 317,
+          "decodedBodySize": 342,
+          "duration": 152.09999999962747
+        },
+        {
+          "name": "/_blob/1234567890abcdef1234567890abcdef",
+          "initiatorType": "img",
+          "startTime": 2110.4000000003725,
+          "requestStart": 2113.300000000745,
+          "responseStart": 2113.800000000745,
+          "responseEnd": 2142.300000000745,
+          "transferSize": 470,
+          "encodedBodySize": 170,
+          "decodedBodySize": 218,
+          "duration": 31.90000000037253
+        }
+      ],
+      "marks": [
+        {
+          "name": "slides:runtime-start",
+          "startTime": 1972.5
+        },
+        {
+          "name": "slides:files-boot-start",
+          "startTime": 1985
+        },
+        {
+          "name": "slides:runtime-ready",
+          "startTime": 1985.0999999996275
+        },
+        {
+          "name": "slides:write-access-ready",
+          "startTime": 1996.5
+        },
+        {
+          "name": "slides:files-port-ready",
+          "startTime": 1996.5999999996275
+        },
+        {
+          "name": "slides:files-boot-ready",
+          "startTime": 1996.9000000003725
+        },
+        {
+          "name": "slides:react-render-requested",
+          "startTime": 1997.9000000003725
+        },
+        {
+          "name": "slides:first-slide-painted",
+          "startTime": 2237
+        },
+        {
+          "name": "slides:document-ready",
+          "startTime": 2358.7000000011176
+        }
+      ],
+      "body": "\n\n\n\n\n\n\n\n71%\n\n幻灯片 1 / 20: 幻灯片 1\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n\n\n\n\n\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n1\n幻灯片 2\n固定图片样稿，用于测量加载与编辑反馈。\n2\n幻灯片 3\n固定图片样稿，用于测量加载与编辑反馈。\n3\n幻灯片 4\n固定图片样稿，用于测量加载与编辑反馈。\n4\n幻灯片 5\n固定图片样稿，用于测量加载与编辑反馈。\n5\n幻灯片 6\n固定图片样稿，用于测量加载与编辑反馈。\n6\n幻灯片 7\n固定图片样稿，用于测量加载与编辑反馈。\n7\n幻灯片 8\n固定图片样稿，用于测量加载与编辑反馈。\n8\n幻灯片 9\n固定图片样稿，用于测量加载与编辑反馈。\n9\n幻灯片 10\n固定图片样稿，用于测量加载与编辑反馈。\n10\n幻灯片 11\n固定图片样稿，用于测量加载与编辑反馈。\n11\n幻灯片 12\n固定图片样稿，用于测量加载与编辑反馈。\n12\n幻灯片 13\n固定图片样稿，用于测量加载与编辑反馈。\n13\n幻灯片 14\n固定图片样稿，用于测量加载与编辑反馈。\n14\n幻灯片 15\n固定图片样稿，用于测量加载与编",
+      "renderedMs": 2372.9000000003725,
+      "editableVerified": true,
+      "transferredBytes": 1024545,
+      "jsHeapUsedBytes": 32027708,
+      "scriptDurationSeconds": 0.254692,
+      "taskDurationSeconds": 0.53465,
+      "engineMetrics": {
+        "Timestamp": 11398.755245,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "Documents": 4,
+        "Frames": 6,
+        "JSEventListeners": 1535,
+        "LayoutObjects": 701,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "Nodes": 2112,
+        "Resources": 12,
+        "ContextLifecycleStateObservers": 23,
+        "V8PerContextDatas": 1,
+        "WorkerGlobalScopes": 0,
+        "UACSSResources": 0,
+        "RTCPeerConnections": 0,
+        "ResourceFetchers": 4,
+        "AdSubframes": 0,
+        "DetachedScriptStates": 1,
+        "ArrayBufferContents": 2,
+        "LayoutCount": 279,
+        "RecalcStyleCount": 520,
+        "LayoutDuration": 0.022246,
+        "RecalcStyleDuration": 0.109526,
+        "DevToolsCommandDuration": 0.0063,
+        "ScriptDuration": 0.254692,
+        "V8CompileDuration": 0.000052,
+        "TaskDuration": 0.53465,
+        "TaskOtherDuration": 0.141834,
+        "ThreadTime": 0.51507,
+        "ProcessTime": 2.29,
+        "JSHeapUsedSize": 32027708,
+        "JSHeapTotalSize": 42270720,
+        "FirstMeaningfulPaint": 0,
+        "DomContentLoaded": 11398.160827,
+        "NavigationStart": 11396.17561
+      }
+    }
+  ],
+  "regression": {},
+  "summary": {
+    "cold": {
+      "p50Ms": 2830.699999999255,
+      "p75Ms": 2830.699999999255,
+      "p95Ms": 2830.699999999255
+    },
+    "reopen": {
+      "p50Ms": 2534.300000000745,
+      "p75Ms": 2534.300000000745,
+      "p95Ms": 2534.300000000745
+    }
+  },
+  "editFeedback": {
+    "status": "measured",
+    "definition": "Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text",
+    "samples": [
+      {
+        "run": 1,
+        "durationMs": 35.40000000037253,
+        "text": "测试"
+      }
+    ],
+    "p95Ms": 35.40000000037253
+  },
+  "jsParseTime": {
+    "status": "trace-recorded",
+    "definition": "V8 parse/compile complete events from before navigation to verified editing, grouped by process, thread and exact event name. Renderer association comes from frame-commit or document parsing/script URL trace metadata when available. Includes browser-injected measurement scripts; different names may nest, and streaming parse spans contain network waits, so they must not be summed as CPU or wall-clock parse time. This trace run has instrumentation overhead and is excluded from comparable performance P95.",
+    "samples": [
+      {
+        "run": 1,
+        "phase": "cold",
+        "editorProcesses": [
+          34221
+        ],
+        "scope": "editor renderer processes",
+        "events": [
+          {
+            "name": "ParseHTML",
+            "process": 34221,
+            "thread": 34221,
+            "count": 6,
+            "durationMs": 4.2170000000000005
+          },
+          {
+            "name": "V8.CompileCode",
+            "process": 34221,
+            "thread": 34221,
+            "count": 4871,
+            "durationMs": 157.46100000000013
+          },
+          {
+            "name": "V8.ParseProgram",
+            "process": 34221,
+            "thread": 34221,
+            "count": 10,
+            "durationMs": 58.767
+          },
+          {
+            "name": "V8.Compile",
+            "process": 34221,
+            "thread": 34221,
+            "count": 8,
+            "durationMs": 0.338
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 34221,
+            "thread": 34221,
+            "count": 4570,
+            "durationMs": 37.23600000000032
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 34221,
+            "thread": 34221,
+            "count": 3607,
+            "durationMs": 8.404000000000233
+          },
+          {
+            "name": "HTMLDocumentParser::MaybeFetchQueuedPreloads",
+            "process": 34221,
+            "thread": 34221,
+            "count": 1,
+            "durationMs": 3.654
+          },
+          {
+            "name": "v8.compile",
+            "process": 34221,
+            "thread": 34221,
+            "count": 3,
+            "durationMs": 0.505
+          },
+          {
+            "name": "V8.CompileScript",
+            "process": 34221,
+            "thread": 34221,
+            "count": 3,
+            "durationMs": 0.42300000000000004
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 34221,
+            "thread": 34221,
+            "count": 1929,
+            "durationMs": 57.32899999999995
+          },
+          {
+            "name": "V8.ParseFunction",
+            "process": 34221,
+            "thread": 34221,
+            "count": 4974,
+            "durationMs": 97.78100000000069
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 34221,
+            "thread": 34236,
+            "count": 2,
+            "durationMs": 1775.195
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 34221,
+            "thread": 34236,
+            "count": 458,
+            "durationMs": 1842.6940000000002
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 34221,
+            "thread": 34236,
+            "count": 2,
+            "durationMs": 1775.069
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 34221,
+            "thread": 34236,
+            "count": 285,
+            "durationMs": 12.930000000000001
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 34221,
+            "thread": 34236,
+            "count": 2,
+            "durationMs": 0.356
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 34221,
+            "thread": 34236,
+            "count": 3,
+            "durationMs": 0.087
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 34221,
+            "thread": 34236,
+            "count": 3,
+            "durationMs": 0.17300000000000001
+          },
+          {
+            "name": "v8.compileModule",
+            "process": 34221,
+            "thread": 34221,
+            "count": 4,
+            "durationMs": 0.161
+          },
+          {
+            "name": "V8.CompileStreamedModule",
+            "process": 34221,
+            "thread": 34221,
+            "count": 4,
+            "durationMs": 0.11199999999999999
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 34221,
+            "thread": 34228,
+            "count": 2,
+            "durationMs": 852.453
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 34221,
+            "thread": 34228,
+            "count": 140,
+            "durationMs": 1467.2479999999996
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 34221,
+            "thread": 34228,
+            "count": 2,
+            "durationMs": 18.517
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 34221,
+            "thread": 34228,
+            "count": 925,
+            "durationMs": 7.587999999999962
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 34221,
+            "thread": 34228,
+            "count": 138,
+            "durationMs": 820.4650000000001
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 34221,
+            "thread": 34228,
+            "count": 2,
+            "durationMs": 1.436
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 34221,
+            "thread": 34228,
+            "count": 20,
+            "durationMs": 0.6280000000000001
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 34221,
+            "thread": 34228,
+            "count": 17,
+            "durationMs": 0.49900000000000005
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 34221,
+            "thread": 34236,
+            "count": 456,
+            "durationMs": 1690.6689999999987
+          },
+          {
+            "name": "ParseAuthorStyleSheet",
+            "process": 34221,
+            "thread": 34221,
+            "count": 1,
+            "durationMs": 4.248
+          },
+          {
+            "name": "V8.FinalizeBaselineConcurrentCompilation",
+            "process": 34221,
+            "thread": 34221,
+            "count": 191,
+            "durationMs": 0.5770000000000004
+          },
+          {
+            "name": "V8.FinalizeMaglevConcurrentCompilation",
+            "process": 34221,
+            "thread": 34221,
+            "count": 258,
+            "durationMs": 6.445999999999999
+          }
+        ]
+      },
+      {
+        "run": 1,
+        "phase": "reopen",
+        "editorProcesses": [
+          34221
+        ],
+        "scope": "editor renderer processes",
+        "events": [
+          {
+            "name": "V8.CompileCode",
+            "process": 34221,
+            "thread": 34221,
+            "count": 108,
+            "durationMs": 3.5449999999999977
+          },
+          {
+            "name": "V8.ParseFunction",
+            "process": 34221,
+            "thread": 34221,
+            "count": 128,
+            "durationMs": 2.2549999999999963
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 34221,
+            "thread": 34221,
+            "count": 125,
+            "durationMs": 1.522999999999999
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 34221,
+            "thread": 34221,
+            "count": 94,
+            "durationMs": 0.1720000000000001
+          },
+          {
+            "name": "ParseHTML",
+            "process": 34221,
+            "thread": 34221,
+            "count": 5,
+            "durationMs": 0.882
+          },
+          {
+            "name": "HTMLDocumentParser::MaybeFetchQueuedPreloads",
+            "process": 34221,
+            "thread": 34221,
+            "count": 1,
+            "durationMs": 0.581
+          },
+          {
+            "name": "v8.compile",
+            "process": 34221,
+            "thread": 34221,
+            "count": 3,
+            "durationMs": 0.053000000000000005
+          },
+          {
+            "name": "V8.CompileScript",
+            "process": 34221,
+            "thread": 34221,
+            "count": 3,
+            "durationMs": 0.016
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 34221,
+            "thread": 34228,
+            "count": 2,
+            "durationMs": 60.008
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 34221,
+            "thread": 34228,
+            "count": 8,
+            "durationMs": 60.552
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 34221,
+            "thread": 34228,
+            "count": 2,
+            "durationMs": 0.287
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 34221,
+            "thread": 34228,
+            "count": 4,
+            "durationMs": 0.041999999999999996
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 34221,
+            "thread": 34228,
+            "count": 2,
+            "durationMs": 0.11199999999999999
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 34221,
+            "thread": 34228,
+            "count": 3,
+            "durationMs": 0.048999999999999995
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 34221,
+            "thread": 34228,
+            "count": 3,
+            "durationMs": 0.027000000000000003
+          },
+          {
+            "name": "v8.compileModule",
+            "process": 34221,
+            "thread": 34221,
+            "count": 4,
+            "durationMs": 0.08099999999999999
+          },
+          {
+            "name": "V8.CompileStreamedModule",
+            "process": 34221,
+            "thread": 34221,
+            "count": 4,
+            "durationMs": 0.054
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 34221,
+            "thread": 34228,
+            "count": 6,
+            "durationMs": 59.113
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 34221,
+            "thread": 34236,
+            "count": 1,
+            "durationMs": 819.094
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 34221,
+            "thread": 34236,
+            "count": 133,
+            "durationMs": 1424.7099999999996
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 34221,
+            "thread": 34236,
+            "count": 1,
+            "durationMs": 24.419
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 34221,
+            "thread": 34236,
+            "count": 929,
+            "durationMs": 7.453999999999969
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 34221,
+            "thread": 34236,
+            "count": 132,
+            "durationMs": 790.1859999999999
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 34221,
+            "thread": 34260,
+            "count": 1,
+            "durationMs": 1760.251
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 34221,
+            "thread": 34260,
+            "count": 454,
+            "durationMs": 2638.0649999999996
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 34221,
+            "thread": 34260,
+            "count": 1,
+            "durationMs": 939.567
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 34221,
+            "thread": 34260,
+            "count": 284,
+            "durationMs": 13.02299999999999
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 34221,
+            "thread": 34260,
+            "count": 453,
+            "durationMs": 1679.203
+          },
+          {
+            "name": "ParseAuthorStyleSheet",
+            "process": 34221,
+            "thread": 34221,
+            "count": 1,
+            "durationMs": 3.765
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 34221,
+            "thread": 34236,
+            "count": 1,
+            "durationMs": 1.106
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 34221,
+            "thread": 34236,
+            "count": 19,
+            "durationMs": 0.6130000000000001
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 34221,
+            "thread": 34236,
+            "count": 17,
+            "durationMs": 0.361
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 34221,
+            "thread": 34260,
+            "count": 1,
+            "durationMs": 0.317
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 34221,
+            "thread": 34260,
+            "count": 1,
+            "durationMs": 0.085
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 34221,
+            "thread": 34260,
+            "count": 1,
+            "durationMs": 0.165
+          },
+          {
+            "name": "V8.FinalizeMaglevConcurrentCompilation",
+            "process": 34221,
+            "thread": 34221,
+            "count": 266,
+            "durationMs": 7.605999999999996
+          },
+          {
+            "name": "V8.FinalizeBaselineConcurrentCompilation",
+            "process": 34221,
+            "thread": 34221,
+            "count": 17,
+            "durationMs": 0.12400000000000003
+          },
+          {
+            "name": "V8.ParseProgram",
+            "process": 34221,
+            "thread": 34221,
+            "count": 2,
+            "durationMs": 0.048999999999999995
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 34221,
+            "thread": 34221,
+            "count": 2,
+            "durationMs": 0.12
+          },
+          {
+            "name": "V8.Compile",
+            "process": 34221,
+            "thread": 34221,
+            "count": 2,
+            "durationMs": 0.041
+          }
+        ]
+      }
+    ]
+  },
+  "errors": []
+}

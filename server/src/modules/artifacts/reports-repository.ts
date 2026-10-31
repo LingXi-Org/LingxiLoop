@@ -16,7 +16,7 @@ export async function missingEvidenceRefs(db: Queryable, args: {
        UNION ALL SELECT 'document',document.id FROM documents document
          JOIN artifacts artifact ON artifact.company_id=document.company_id
          WHERE artifact.id=$1 AND artifact.company_id=$2 AND document.project_id=artifact.project_id
-           AND (document.conversation_id IS NULL OR document.conversation_id=artifact.conversation_id)
+           AND (document.conversation_id IS NULL OR document.conversation_id=COALESCE(artifact.execution_conversation_id,artifact.conversation_id))
        UNION ALL SELECT 'source',source.id FROM knowledge_sources source
          JOIN artifacts artifact ON artifact.project_id=source.project_id
          WHERE artifact.id=$1 AND source.company_id=$2 AND source.deleted_at IS NULL
@@ -43,7 +43,7 @@ export async function lockReportWork(db: Queryable, args: {
     principal_id: string; session_id: string; conversation_id: string; request_version: number
   }>(
     `SELECT work.assignment_id AS artifact_assignment_id,work.execution_role,artifact.project_id,
-       work.principal_id,work.session_id,artifact.conversation_id,work.request_version
+       work.principal_id,work.session_id,COALESCE(artifact.execution_conversation_id,artifact.conversation_id) AS conversation_id,work.request_version
        FROM artifact_agent_runs work JOIN artifacts artifact ON artifact.id=work.artifact_id AND artifact.company_id=work.company_id
        JOIN artifact_agent_assignments assignment ON assignment.id=work.assignment_id
       WHERE work.work_id=$1 AND work.company_id=$2 AND work.agent_id=$3 AND work.artifact_id=$4
@@ -127,7 +127,7 @@ export async function completeArtifactWorkState(db: Queryable, input: {
             JOIN artifact_agent_runs source_run ON source_run.work_id=source.work_id AND source_run.artifact_id=artifact.id AND source_run.request_version=source.request_version
             WHERE source.assignment_id=builder.id AND source.work_id=builder.work_id
               AND verifier.verifies_assignment_id=builder.id AND review.author_agent_id<>source.author_agent_id))
-      RETURNING status,conversation_id,title,goal`, [run.artifact_id])
+      RETURNING status,COALESCE(execution_conversation_id,conversation_id) AS conversation_id,title,goal`, [run.artifact_id])
   return { artifactId: run.artifact_id, workspace: workspace[0] ?? null, completion: completed[0]
     ? { agentId: run.agent_id, path: completed[0].active_path, status: input.status as ArtifactAssignmentStatus } : null }
 }

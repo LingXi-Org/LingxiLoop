@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/assistant-ui/assistant-ui",
+  "commit": "ff654d8156680b839774296ef644b57ab1078425",
+  "files": [
+    {
+      "upstreamPath": "LICENSE",
+      "path": "LICENSE",
+      "bytes": 1073,
+      "sha256": "eafb05991a572efa34097474b31fef45b14a8879ed1d1a8fd77de62e6fa7d275",
+      "gitBlobSha1": "ce2aca011368ed3c3af6ffd8e1d333b5bef08589",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/.env.example",
+      "path": "upstream/.env.example",
+      "bytes": 16,
+      "sha256": "a6fa3fba3845bda1b64b03eb365c97d2b87b402303e01aa912f93a71e2475126",
+      "gitBlobSha1": "e570b8b55999053e360c4e80f83f14881b17966f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/app/api/chat/route.ts",
+      "path": "upstream/app/api/chat/route.ts",
+      "bytes": 1446,
+      "sha256": "889649ed42364a12dff62ed83a3fe1ce6fe2c86761f80c2875681d072ecfba18",
+      "gitBlobSha1": "5efebb3b58bb978d1ba59b60a101c2ece07ab3fe",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/app/artifact-state.ts",
+      "path": "upstream/app/artifact-state.ts",
+      "bytes": 627,
+      "sha256": "c77692c20ced9bad435e18f31292bf853215db208c9232184ca58b33eef3fb6d",
+      "gitBlobSha1": "91d645aeb2ce08bb3f58986a78502294371af79c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/app/artifact-surface.tsx",
+      "path": "upstream/app/artifact-surface.tsx",
+      "bytes": 12752,
+      "sha256": "026c1b1bb262cb0eb355f4c79fe79587ba2ebc990135cd565771501fdc8604da",
+      "gitBlobSha1": "a6a6d5b0b53b80e65f5821a103ace298d308c5b5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/app/globals.css",
+      "path": "upstream/app/globals.css",
+      "bytes": 4434,
+      "sha256": "e71f22defdfb7cabcaef9ca1046a6ee9eed58cb2ff344f692adff2c873269b2f",
+      "gitBlobSha1": "e0c5d6881926f61c7253ae423d34dc4e0b1bde0b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/app/layout.tsx",
+      "path": "upstream/app/layout.tsx",
+      "bytes": 417,
+      "sha256": "5d3ab5f2e7c8c5113086579e31bf6a6cdb1e485e6f8d59ba0f96922b68365f52",
+      "gitBlobSha1": "9d21f765a3b875b0185c41f7e61e16833f5c5a26",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/app/page.tsx",
+      "path": "upstream/app/page.tsx",
+      "bytes": 2017,
+      "sha256": "aa998911afac153937bffb16a41719f84e73f26d5c143c28ada7ee72c6b63c6c",
+      "gitBlobSha1": "e6ddff564e47eec71f22e449127cf44195ed176e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/app/toolkit.tsx",
+      "path": "upstream/app/toolkit.tsx",
+      "bytes": 433,
+      "sha256": "11aa71f5e777fea14e85c4623c8fa39687ec56108409c2a3056b4cd1670be76d",
+      "gitBlobSha1": "762c49805fa2ed14157a5d576b185b734d47d670",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/components.json",
+      "path": "upstream/components.json",
+      "bytes": 509,
+      "sha256": "e7814266a623d34ec90a8d77e264fbb40eed8b1738a0a0cb676d161fc54ce3eb",
+      "gitBlobSha1": "474f2a89dd466c9ab66f55591a6e4a748d01a26b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/next.config.js",
+      "path": "upstream/next.config.js",
+      "bytes": 267,
+      "sha256": "b118681b7efb850839caf9bfaef320746fff0c9d595764aaa07d01523ddfa6d4",
+      "gitBlobSha1": "8d6782e35390a39d4c72f9b736e6ef807330ce9c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/package.json",
+      "path": "upstream/package.json",
+      "bytes": 998,
+      "sha256": "cd44d357ed59b0a07f60dda9c32504d8369ac2ea4c2830eb39be75baa96e0c0c",
+      "gitBlobSha1": "1f4c00e9d9766e8fb8be2c515f5b39da8ecb0122",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/postcss.config.mjs",
+      "path": "upstream/postcss.config.mjs",
+      "bytes": 93,
+      "sha256": "97ab34f7517584bbb828c26113103bfedf1329754cc4ecdf12cd9be105630070",
+      "gitBlobSha1": "7059fe95adc36c465aed2b0e65920c34060c06a0",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "examples/with-artifacts/tsconfig.json",
+      "path": "upstream/tsconfig.json",
+      "bytes": 759,
+      "sha256": "1a63a8e1dcd9bb2f05663ccaf222efde53c740ce165ab37472f21dd12cd22340",
+      "gitBlobSha1": "864074266a1b658fb2c4df64f24f5deaf334b3c7",
+      "gitMode": "100644"
+    }
+  ]
+}

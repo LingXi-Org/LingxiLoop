@@ -4,13 +4,14 @@ import { productConversationId } from '../../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../../agent-runtime/conversations.js'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
-import { bindArtifactRun, artifactRunIdentity, type ArtifactRunRow, type createArtifactExecution } from './execution.js'
+import { bindArtifactRun, artifactRunIdentity, artifactExecutionConversation, type ArtifactRunRow, type createArtifactExecution } from './execution.js'
 import { observeArtifactEvidence } from './evidence.js'
 import { artifactById } from './repository.js'
 import type { ArtifactEvidenceRef } from './contracts.js'
 import type { ArtifactKind } from './kinds.js'
 import { NoEffectError, type WorkItem } from '@lyyzka/lingxios'
 import { publishArtifactProgress } from './progress.js'
+import { slideWorkspaceConversation } from './slides-workspace.js'
 
 export async function assertArtifactRequestCurrent(db: Queryable, work: Pick<WorkItem, 'id' | 'tenantId'>) {
   const { rows } = await db.query<{ current: boolean }>(`SELECT
@@ -28,14 +29,14 @@ export async function assertArtifactRequestCurrent(db: Queryable, work: Pick<Wor
 export async function loadArtifactRunContext(db: Queryable, work: Omit<WorkItem, 'leaseToken'>) {
   await assertArtifactRequestCurrent(db, work)
   const pending = work.kind === 'turn' && !work.conversation?.internal && (await db.query(`SELECT 1 FROM artifact_agent_assignments assignment
-    JOIN artifacts artifact ON artifact.id=assignment.artifact_id WHERE artifact.company_id=$1 AND artifact.conversation_id=$2
+    JOIN artifacts artifact ON artifact.id=assignment.artifact_id WHERE artifact.company_id=$1 AND COALESCE(artifact.execution_conversation_id,artifact.conversation_id)=$2
       AND artifact.status='active' AND assignment.agent_id=$3 AND assignment.status<>'cancelled' LIMIT 1`, [work.tenantId,productConversationId(work),work.agentId])).rows.length
   if (pending) {
     await createPermissionService(db).assertCan({ companyId: work.tenantId, actorUserId: work.principalId!,
       action: 'artifact:write', resource: { type: 'conversation', id: productConversationId(work) } })
     const assigned = await db.query<{ id: string; artifact_id: string; execution_role: 'specialist' | 'verifier' }>(`UPDATE artifact_agent_assignments assignment
       SET work_id=$1,status='working',completed_at=NULL,updated_at=NOW()
-      FROM artifacts artifact WHERE artifact.id=assignment.artifact_id AND artifact.company_id=$2 AND artifact.conversation_id=$3
+      FROM artifacts artifact WHERE artifact.id=assignment.artifact_id AND artifact.company_id=$2 AND COALESCE(artifact.execution_conversation_id,artifact.conversation_id)=$3
         AND artifact.status='active' AND assignment.agent_id=$4 AND assignment.status<>'cancelled'
         AND (assignment.work_id IS NULL OR assignment.work_id=$1 OR assignment.status IN ('completed','failed','cancelled'))
       RETURNING assignment.id,assignment.artifact_id,assignment.execution_role`, [work.id,work.tenantId,productConversationId(work),work.agentId])
@@ -58,10 +59,12 @@ export function createArtifactRuntime(control: Control) {
   async function collaborationScope(db: Queryable, companyId: string, userId: string, artifactId: string, write = false) {
     await createPermissionService(db).assertCan({ companyId,actorUserId: userId,action: write ? 'artifact:write' : 'artifact:read',resource: { type: 'artifact',id: artifactId } })
     const artifact = await artifactById(db,companyId,artifactId)
-    if (!artifact?.conversation_id) throw new NoEffectError('artifact not found','not_found')
+    if (!artifact) throw new NoEffectError('artifact not found','not_found')
+    const conversationId = artifactExecutionConversation(artifact) ?? (artifact.kind === 'slides' ? await slideWorkspaceConversation(db, artifact.id, null) : null)
+    if (!conversationId) throw new NoEffectError('artifact has no execution conversation','not_found')
     const runtime = await control()
-    await syncConversationPolicy(runtime,companyId,artifact.conversation_id)
-    return { runtime,scope: { tenantId: companyId,conversationId: artifact.conversation_id,principalId: userId,stateId: artifact.id,
+    await syncConversationPolicy(runtime,companyId,conversationId)
+    return { runtime,scope: { tenantId: companyId,conversationId,principalId: userId,stateId: artifact.id,
       ...(artifact.shared_state_thread_key ? { threadId: artifact.shared_state_thread_key } : {}) } }
   }
   async function readCollaboration(db: Queryable, companyId: string, userId: string, artifactId: string, afterSeq = 0) {
@@ -81,9 +84,10 @@ export function createArtifactRuntime(control: Control) {
     const records: VerificationRecord[] = []
     for (const binding of rows) {
       const artifact = await artifactById(db, work.tenantId, binding.artifact_id)
-      if (!artifact?.project_id || !artifact.conversation_id) throw new Error('Artifact scope no longer exists')
+      const conversationId = artifact && artifactExecutionConversation(artifact)
+      if (!artifact?.project_id || !conversationId) throw new Error('Artifact scope no longer exists')
       await createPermissionService(db).assertCan({ companyId: work.tenantId, actorUserId: work.principalId!,
-        action: 'conversation:read', resource: { type: 'conversation', id: artifact.conversation_id } })
+        action: 'conversation:read', resource: { type: 'conversation', id: conversationId } })
       const gaps: string[] = []
       const report = (await db.query<{ id: string; source_evidence_ids: string[]; consumed_report_ids: string[] }>(
         'SELECT id,source_evidence_ids,consumed_report_ids FROM artifact_assignment_reports WHERE work_id=$1 AND request_version=$2 AND artifact_id=$3 ORDER BY created_at DESC,id DESC LIMIT 1',
@@ -96,7 +100,7 @@ export function createArtifactRuntime(control: Control) {
         if (sources.rows.length !== new Set(report.source_evidence_ids).size) gaps.push('Report source evidence is missing')
         for (const source of sources.rows) {
           const observed = await observeArtifactEvidence(db, { companyId: work.tenantId, projectId: artifact.project_id, artifactId: artifact.id,
-            conversationId: artifact.conversation_id, principalId: work.principalId!, signal: context.signal }, { kind: source.data.sourceKind, id: source.data.sourceId })
+            conversationId, principalId: work.principalId!, signal: context.signal }, { kind: source.data.sourceKind, id: source.data.sourceId })
           if (!isDeepStrictEqual(observed, JSON.parse(source.data.observation) as unknown)) gaps.push(`Evidence changed: ${source.data.sourceKind}:${source.data.sourceId}`)
         }
       }

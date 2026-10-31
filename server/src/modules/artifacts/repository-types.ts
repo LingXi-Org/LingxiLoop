@@ -3,6 +3,7 @@ import type { ArtifactKind } from './kinds.js'
 
 export interface ArtifactRow {
   shared_state_thread_key?: string | null
+  execution_conversation_id?: string | null
   id: string; company_id: string; project_id: string; kind: ArtifactKind; title: string; conversation_id: string | null
   seq: string | number; trigger_client_msg_no: string | null; goal: string; initiator_agent_id: string | null
   status: ArtifactWorkspaceStatus; origin: string; summary: string | null

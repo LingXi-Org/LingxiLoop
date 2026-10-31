@@ -5,7 +5,7 @@ import { createNativeMessage } from '../../im/message-types.js'
 import { artifactAgentColor } from './orchestration.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { ArtifactEvent } from '../../redis.js'
-import type { ArtifactExecution } from './execution.js'
+import { artifactExecutionConversation, type ArtifactExecution } from './execution.js'
 import { parseArtifactActivityKind, type ArtifactActivityKind } from './contracts.js'
 import type {
   ArtifactActivity,
@@ -68,15 +68,17 @@ export function toAssignment(row: AssignmentRow, dependencies: string[] = []): A
 
 async function assertMembersAvailable(
   db: Queryable,
-  artifact: Pick<ArtifactRow, 'company_id' | 'kind'>,
+  artifact: Pick<ArtifactRow, 'company_id' | 'kind' | 'conversation_id' | 'execution_conversation_id'>,
   members: ArtifactMemberInput[],
 ): Promise<void> {
   if (members.length === 0) throw new Error('at least one artifact member is required')
   const ids = members.map((member) => member.agentId)
   if (new Set(ids).size !== ids.length) throw new Error('artifact members must be unique')
-  const availableIds = await availableArtifactMemberIds(db, artifact.company_id, ids, artifact.kind)
+  const conversationId = artifactExecutionConversation(artifact)
+  if (!conversationId) throw new Error('Artifact assignments require an execution conversation')
+  const availableIds = await availableArtifactMemberIds(db, artifact.company_id, ids, artifact.kind, conversationId)
   if (availableIds.length !== ids.length) {
-    throw new Error(`every selected agent must be active and have the ${artifact.kind} capability`)
+    throw new Error(`every selected agent must be in the execution conversation, active and have the ${artifact.kind} capability`)
   }
   for (const member of members) {
     const role = member.executionRole ?? 'specialist'
@@ -177,7 +179,8 @@ export function createArtifactAssignmentsApplication(context: ArtifactAssignment
       await assertMembersAvailable(transactionDb, artifact, [{ agentId: input.agentId, assignment }])
       const existing = await lockAssignment(transactionDb, artifact.id, input.agentId)
       if (input.actorKind !== 'user') throw new Error('Agent assignments must be ordinary group mentions')
-      if (!artifact.conversation_id) throw new Error('Artifact assignment requires a conversation')
+      const conversationId = artifactExecutionConversation(artifact)
+      if (!conversationId) throw new Error('Artifact assignment requires a conversation')
       if (!existing) {
         const all = await listAssignments(transactionDb, artifact.id)
         await insertArtifactMembers(transactionDb, { artifact, members: [{ agentId: input.agentId, assignment }], existing: all })
@@ -193,7 +196,7 @@ export function createArtifactAssignmentsApplication(context: ArtifactAssignment
       const { rows: requests } = await transactionDb.query<{ id: string }>(`UPDATE artifact_agent_assignments SET request_client_msg_no=$3
         WHERE artifact_id=$1 AND agent_id=$2 RETURNING id`, [artifact.id, input.agentId, id])
       await persistNativeEvents(transactionDb, { key: id, companyId: input.companyId, workId: id }, [{ type: 'im.user',
-        companyId: input.companyId, userId: input.actorId, channelId: artifact.conversation_id, clientNonce: id,
+        companyId: input.companyId, userId: input.actorId, channelId: conversationId, clientNonce: id,
         artifactId: artifact.id, assignmentId: requests[0].id, authorization: authorizations[0].authorization,
         payload: createNativeMessage({ id, role: 'user', content: [{ type: 'text', text: '@' + input.agentId + ' 请在' + (artifact.kind === 'slides' ? '演示文稿' : '设计') + '「' + artifact.title + '」中完成：' + assignment }],
           custom: { mentionedIds: [input.agentId] } }) }])
@@ -237,7 +240,7 @@ export function createArtifactAssignmentsApplication(context: ArtifactAssignment
       await publishArtifact(input.companyId, {
         kind: 'workspace.updated',
         artifactId: input.artifactId,
-        conversationId: artifact.conversation_id ?? undefined,
+        conversationId: artifactExecutionConversation(artifact) ?? undefined,
         workspace: {
           id: input.artifactId,
           status: artifact.status,

@@ -1,0 +1,2559 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/JimLiu/baoyu-design",
+  "commit": "c15e76ef5134228d2bb5da35652d30d7d6b8a34d",
+  "files": [
+    {
+      "upstreamPath": ".claude/skills/release-skills/SKILL.md",
+      "path": "distribution/.claude/skills/release-skills/SKILL.md",
+      "bytes": 20165,
+      "sha256": "f320492bbc9ced7d00d07c55c4adf5b20e34214a42bf037b68ccaa4a6c62e377",
+      "gitBlobSha1": "dc5659df47a565d7c50657a35ade77516e56823c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": ".github/workflows/tests.yml",
+      "path": "distribution/.github/workflows/tests.yml",
+      "bytes": 560,
+      "sha256": "2af7f9fb6086c138c7001eb9c664391dfbbce444854c4fed084280de45ec0372",
+      "gitBlobSha1": "3f807f3defaa8639e322087bed82286cdc89481b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": ".gitignore",
+      "path": "distribution/.gitignore",
+      "bytes": 2233,
+      "sha256": "84e38c09acdd52d65fa2c6f7f935be95f692047330574cf30ca90642bb0ddf34",
+      "gitBlobSha1": "a69dc36c219cce824af84dfec131eaf950c310c1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "CHANGELOG.md",
+      "path": "distribution/CHANGELOG.md",
+      "bytes": 19255,
+      "sha256": "97024c1b12481b936ab66f4ac360e51d7e5d0c9b522f6b97aedaaeab0143def9",
+      "gitBlobSha1": "5819006256092a6a3932f1e5866e80047d25c24d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "CHANGELOG.zh.md",
+      "path": "distribution/CHANGELOG.zh.md",
+      "bytes": 18461,
+      "sha256": "39f4af447d5c4a817f65df7566975bde2b513ca9730af723c9851703f3a0f723",
+      "gitBlobSha1": "57890c34e072c83d1d5157924eb75ea0df8dc651",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "LICENSE",
+      "path": "LICENSE",
+      "bytes": 1071,
+      "sha256": "50426a43964d21a284c1f248a2b86aa239274d6e7619947ff166e0c8842d5fef",
+      "gitBlobSha1": "e3af54201da9e463acd6875dc9cb19044dd10a31",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "README.md",
+      "path": "distribution/README.md",
+      "bytes": 27383,
+      "sha256": "8e9c500e2cfd792ee10d8284a09f3bdacb6718d1ecc826a597b3acbcbe3d860f",
+      "gitBlobSha1": "5661b1bcfd0d91ddc90487c9023a942722ab7957",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "README.zh-CN.md",
+      "path": "distribution/README.zh-CN.md",
+      "bytes": 28323,
+      "sha256": "374361580e983f8a0295d76276402f09e7c0c829b149fe939f659a5003d429ee",
+      "gitBlobSha1": "296b92d36b49f04c3faff5e669a5fe05d4ea0b00",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "assets/gen-pptx-pipeline-zh.svg",
+      "path": "distribution/assets/gen-pptx-pipeline-zh.svg",
+      "bytes": 6019,
+      "sha256": "1c7ed141769878207e03530229d91e2b1a0b29ff78b05acc518591548732676c",
+      "gitBlobSha1": "06772c600d5ca06f43cc8aff60f207c00d194bd6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "assets/gen-pptx-pipeline.svg",
+      "path": "distribution/assets/gen-pptx-pipeline.svg",
+      "bytes": 5346,
+      "sha256": "b9a60d7a5b78d851634f204074d13d9132d6db4a49d2eaa25264d309242a1d6a",
+      "gitBlobSha1": "f50ad647f5e19f13d7851279388d3b1674396662",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "assets/screenshots/claude-dashboard.webp",
+      "path": "distribution/assets/screenshots/claude-dashboard.webp",
+      "bytes": 61478,
+      "sha256": "7baab8399fab9730dde0bbc04ebb986b3f8f6cf63c3b2c46a1bd61ebcedb3be5",
+      "gitBlobSha1": "2f78652d10ed6e1c2a66e802cee2b7487457af0d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "assets/screenshots/claude-design-canvas.webp",
+      "path": "distribution/assets/screenshots/claude-design-canvas.webp",
+      "bytes": 86344,
+      "sha256": "fad06045bd590cbd185fa08948a89644d7d7bfa83b079ff1702011cd221b673f",
+      "gitBlobSha1": "0f63b4607884fd03e412b187831818943a8abd97",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "assets/screenshots/claude-design-system-editor.webp",
+      "path": "distribution/assets/screenshots/claude-design-system-editor.webp",
+      "bytes": 47496,
+      "sha256": "b66cdcb4235dd9870aaae97e06c1c80d2f9367d240e5dc2c5f9dad90ef7c4eb0",
+      "gitBlobSha1": "c98080d25a3dfc7a79d913e8f7fb2e48e78f0561",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "assets/screenshots/claude-slides-editor.webp",
+      "path": "distribution/assets/screenshots/claude-slides-editor.webp",
+      "bytes": 51012,
+      "sha256": "50ce14c8d36d433cabbea957ed55a7abd92cf259b1997d9af094189aef1bc8ee",
+      "gitBlobSha1": "f40b316109f3a28d3aa82a691d4ed2a1899cf504",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "assets/screenshots/figma-import-chakra-preview.webp",
+      "path": "distribution/assets/screenshots/figma-import-chakra-preview.webp",
+      "bytes": 93050,
+      "sha256": "8a5c082f3115c88e67877da384b55b777730ac7e7090a7317445970f086aba93",
+      "gitBlobSha1": "f9a01f8aaaba31cf078bcc8c896207d3c917f771",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "package.json",
+      "path": "distribution/package.json",
+      "bytes": 162,
+      "sha256": "1a8dff6048a798c35d346f9ccae7ddf580919af28b63007ea55015cd4080ad89",
+      "gitBlobSha1": "0393847eb6b1784ffbbb9b4418876a384de48f73",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/SKILL.md",
+      "path": "distribution/skills/baoyu-design/SKILL.md",
+      "bytes": 10769,
+      "sha256": "7fa705998b528da1eedd0dc2a437dc5b507a5cdaeaf2e23940b2ba0b4f4e5b16",
+      "gitBlobSha1": "999e3d347a4d4dafee62fe03e621fac69f79c52e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/assets/vision-probe.png",
+      "path": "distribution/skills/baoyu-design/agents/assets/vision-probe.png",
+      "bytes": 263,
+      "sha256": "5e565a8d6a1479f98c190fd3c56ec06470ae43b614287dd449c1077624c3cf1e",
+      "gitBlobSha1": "aabbb7397411287dbabce6376a2995c5143ad593",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/build-preview.mjs",
+      "path": "distribution/skills/baoyu-design/agents/build-preview.mjs",
+      "bytes": 68031,
+      "sha256": "29f0d2ef706b9a5e580f27771324902af424797616c95a0375b1f54163408d5b",
+      "gitBlobSha1": "a542386a16602693f4e6ce012e90e8e73f7568d4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/check-design-system.mjs",
+      "path": "distribution/skills/baoyu-design/agents/check-design-system.mjs",
+      "bytes": 4352,
+      "sha256": "d1b2c2ecb2ba7f896053ea3f6166b88f2837b05f55d74b586473f68c57b06419",
+      "gitBlobSha1": "4820b7f755c8fe21d4a2afc429a905d95d7d09c5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/compile-design-system.mjs",
+      "path": "distribution/skills/baoyu-design/agents/compile-design-system.mjs",
+      "bytes": 14851,
+      "sha256": "8cacbbf68625a44c7bfe7c17ee0723d64a8e082fc9f689b073e624c92c16231d",
+      "gitBlobSha1": "7193e7ac9802feed3daa382a2c8456ac40398df7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/design-system-checker.md",
+      "path": "distribution/skills/baoyu-design/agents/design-system-checker.md",
+      "bytes": 1961,
+      "sha256": "38b7cf7749f602576ece5605f87687999332bf6219ace1a4af6d7518371c82a5",
+      "gitBlobSha1": "7fd557841ab1d7f2d8891d85c3b5252853812daf",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/fork-verifier-agent.md",
+      "path": "distribution/skills/baoyu-design/agents/fork-verifier-agent.md",
+      "bytes": 3981,
+      "sha256": "14f2d6284e91b52393787667f84b5fe6cb24c660162d627495e5c6c56696ed25",
+      "gitBlobSha1": "4729fe7003590a3e629fa9665d19c767b1c18b42",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/.gitignore",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/.gitignore",
+      "bytes": 20,
+      "sha256": "295aa1f18923880afebb2e08aa70a8c4f285cc52baea238b8d2864d10e45d825",
+      "gitBlobSha1": "552f22184f212d5dc7566f5dcaf6ac9ccb2a98d5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/package-lock.json",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/package-lock.json",
+      "bytes": 21053,
+      "sha256": "c73f3e0b74b10b50b47f7c998e97ab154398c3be3d8f02920999d7ddc8cd7419",
+      "gitBlobSha1": "4ebfa2dde1c2df5a0a0e766084419d073eb8533b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/package.json",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/package.json",
+      "bytes": 1229,
+      "sha256": "25d511ae2e0241086af8fa368864f013d15b05cf9f66c90da408e8ce7ed22249",
+      "gitBlobSha1": "8753875d5a1718ff76205acc11634b63f51b844a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/browser/capture-editable.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/browser/capture-editable.ts",
+      "bytes": 14350,
+      "sha256": "761dd7c3265b8339f580a778a27826bf8d6e7c96feca11cce015bcb91f034caa",
+      "gitBlobSha1": "5c850ff2ba5c26245ae756573ff5e74243c5fdee",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/browser/capture-screenshot.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/browser/capture-screenshot.ts",
+      "bytes": 780,
+      "sha256": "da397a860a11cd6653c2f00fdc6130eccb81cd588b105682cc477835354b292c",
+      "gitBlobSha1": "31f72d7deee25917386d91fe43ca98accebb558e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/browser/dom-style.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/browser/dom-style.ts",
+      "bytes": 4893,
+      "sha256": "9c20d400c0dbbb1aec99b19e4a1447a7b9c5051987c62d5e18c5c403238b3b23",
+      "gitBlobSha1": "10778f0dc65adaf0fe26426b75d37f7ef51cf455",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/browser/entry.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/browser/entry.ts",
+      "bytes": 1137,
+      "sha256": "3c2e67cc604b17ff07cf346cd15b9993c6ac58b4a0f0d036f0900e6d9e4eaafa",
+      "gitBlobSha1": "26668006eb810d316407ac2782d751380bed57be",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/browser/gradient.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/browser/gradient.ts",
+      "bytes": 9207,
+      "sha256": "9cea6a592331207955d81b489336387dc369ddb8d4b2f1fe483f83c82846964b",
+      "gitBlobSha1": "d7c2811cba6e555d6cecddca529bed1c93dc745a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/browser/media-browser.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/browser/media-browser.ts",
+      "bytes": 6727,
+      "sha256": "da0eed68fb91d87e3368812f8da3812a838f067831dc0d9593bdf6cc8e15c67b",
+      "gitBlobSha1": "c516ee7b076f2cf58cbbe7d9f83d0ff9edb50c35",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/browser/setup.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/browser/setup.ts",
+      "bytes": 9646,
+      "sha256": "ea43d371c7d8517fb02529ced51ffe0b2c88d3059bb4d21f8d50aad95d70aafc",
+      "gitBlobSha1": "9a86424b94f1de128b2eb091b5d59560eb93caa0",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/cli.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/cli.ts",
+      "bytes": 4249,
+      "sha256": "a31a852360a352ae40d04561c0d18384057348e0c3dbec4a21ad859bf7ac0672",
+      "gitBlobSha1": "9e78a96cce2f61256eae923d439945bae9aff7ea",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/core/anim.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/core/anim.ts",
+      "bytes": 14030,
+      "sha256": "5fb27df51f934130abd77e2d88caa4922024c1e7ec5edbd418b1c5ac136a9f94",
+      "gitBlobSha1": "6ed634cef23f217a69efaba121642e0582508f16",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/core/color.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/core/color.ts",
+      "bytes": 2248,
+      "sha256": "2d539402f4b97b8a8f8c03f573e0345c0e9563def7f028a2ac789e045274cce6",
+      "gitBlobSha1": "5f2139520f6f8aab83b897ccae78c7931507149a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/core/css.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/core/css.ts",
+      "bytes": 7127,
+      "sha256": "6bf0066bc2796d03846d54461e882ee40de93d173b1414cae5dce9c2f760fc4f",
+      "gitBlobSha1": "a093f901e0667ae08a947aed39bf0f67d7c3edb1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/core/filename.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/core/filename.ts",
+      "bytes": 519,
+      "sha256": "6bcd2fb2256d4f8ec05e94f65a1b349404544a5fcdfcd8c6db5925e036bca87b",
+      "gitBlobSha1": "cd5bdc345cb5a213b45802e73748fdd5b211ba11",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/core/fonts.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/core/fonts.ts",
+      "bytes": 1235,
+      "sha256": "7657306c2c90e9f89333824dc8809e805504a9277f8649cb0f350849fd658cb2",
+      "gitBlobSha1": "5e321be72aec0a4cc5f3b879f8966c069830213b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/core/sanitize.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/core/sanitize.ts",
+      "bytes": 511,
+      "sha256": "7a4c1c072bef1f53c9b20c1a09c15dd177cf4f702f1359f73df0f7eb00ce6b4e",
+      "gitBlobSha1": "7ac0ba8514ef3740a06eb29dc83496959bebc40a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/core/units.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/core/units.ts",
+      "bytes": 581,
+      "sha256": "55a149665c554182e113ea9daa6b868cea270dc54fd25fe9f18ded3f35a5a4d5",
+      "gitBlobSha1": "18fe087e97f604cfb3a61935aa77356c11228951",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/index.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/index.ts",
+      "bytes": 385,
+      "sha256": "2034bff0c39926f56182e93d33441b2882a5c1896157ec6ffc084d9c9b0550f4",
+      "gitBlobSha1": "3ac6fcaccf9e711e288246e779f189608f98a04d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/orchestrator/driver.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/orchestrator/driver.ts",
+      "bytes": 2230,
+      "sha256": "10adbe5e9670c0ae7acb8fe74a2693ee557f192eccf4da8da5cf44fb70c8dc2b",
+      "gitBlobSha1": "372175725df427346f1274a254751bd43bb7b5c1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/orchestrator/errors.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/orchestrator/errors.ts",
+      "bytes": 1069,
+      "sha256": "802306275ef5aaae3f3e14a6ef192ba8bb818c75193edd3ab79902cabb24f3bc",
+      "gitBlobSha1": "4c22db0fe10ca58f9b49f88cc77b3d4c461b7929",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/orchestrator/inject.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/orchestrator/inject.ts",
+      "bytes": 3309,
+      "sha256": "247fd28f3e82c35805b1598d1595924430783e1a7c31acb3bd54fb45ca3afaa4",
+      "gitBlobSha1": "f467e06fe2b84979b5ceb7fbd83572336e23570f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/orchestrator/output.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/orchestrator/output.ts",
+      "bytes": 652,
+      "sha256": "80157507c2f52d8c5644fba66c3d94756d627cddb232745c6add065df526286a",
+      "gitBlobSha1": "954bcc9d080b0b773f425a85b251415525979972",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/orchestrator/run.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/orchestrator/run.ts",
+      "bytes": 6271,
+      "sha256": "0a237440286055af86573182830121703ec3f12c990018a1dd67a3d4a9f7134f",
+      "gitBlobSha1": "eb721c758cf2dea967eb8fcd8befc35c76b60a26",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/render/build-editable.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/render/build-editable.ts",
+      "bytes": 3876,
+      "sha256": "916ec1d925b89d4c42a78c1f30c50672a2f2f09bca77028605679ad1845cdb76",
+      "gitBlobSha1": "0745af6f0149920196b9ab1f26d582d0b37d8015",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/render/build-screenshot.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/render/build-screenshot.ts",
+      "bytes": 1472,
+      "sha256": "62e72534b2535a2a6be3448f5cc20d2bc7ce652704c0097f477a5a67b0155592",
+      "gitBlobSha1": "f75f2028e38c7e3e66d8512ea407c39d7a24e70c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/render/context.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/render/context.ts",
+      "bytes": 2961,
+      "sha256": "d69bbda19fdbdc5ddb0df257fd041dd5fec8ad8f485547291d3b585f630928dc",
+      "gitBlobSha1": "cd425af4b375ad316063bed5b95e4b336c7f0c42",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/render/list.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/render/list.ts",
+      "bytes": 2482,
+      "sha256": "1217ed06143227133c6d99dd4244cadb73ad6680b14049c5ff7dfa8bf4c67370",
+      "gitBlobSha1": "65bb01f7532bb3505a74eeebe6a1e6aaba809d27",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/render/media-cache.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/render/media-cache.ts",
+      "bytes": 3008,
+      "sha256": "50c43676071fec2640105d8132e5ccd27a33a37a8e834af5bbb09d26b4f1e5f9",
+      "gitBlobSha1": "302fc1f114f2532b23f411d7ff628234db367305",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/render/render-node.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/render/render-node.ts",
+      "bytes": 21353,
+      "sha256": "1516bfa7360d67b6ccc42cfa8e6ad769a38c0e997dd6bfc608c16057c274d39b",
+      "gitBlobSha1": "82ebc7e27eeb9e2956ca9b8fe7f7fb0377dc4787",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/render/text-runs.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/render/text-runs.ts",
+      "bytes": 10207,
+      "sha256": "2dd7e42c5426fbc754d5fb4adf34cb212c8e19f24b02e85f0d71a6c1cdb4c39b",
+      "gitBlobSha1": "e7d0d857b45549e0cadb2a62d82f965cec112448",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/render/timing.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/render/timing.ts",
+      "bytes": 26672,
+      "sha256": "cd9e83d90f3f93679094212abc7a4307691c4f8ce7e467729b8575e8b1ca1503",
+      "gitBlobSha1": "8f2b59a25310ab52075e0fbc7ce7c60e61d3d91d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/types.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/types.ts",
+      "bytes": 5764,
+      "sha256": "ecfdaac0ecbfcbc8d9355c587f6527d9e20e6fb160b62acdd946d6b768c6146e",
+      "gitBlobSha1": "8d30841458ac429969a55b7b27a43039f7df7986",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/src/validate/validate.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/src/validate/validate.ts",
+      "bytes": 5885,
+      "sha256": "099c7395e99364abe83ed6abebf3b0b51fe6607ba106210e7ea181f56e18ef12",
+      "gitBlobSha1": "32526e60a8fc1fd040a3f11560e02ebe3508c030",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/test/anim-render.test.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/test/anim-render.test.ts",
+      "bytes": 2951,
+      "sha256": "34d5e175a8bfef6cba1335e4116479035aa141d8453d060917412cd9cc7619cf",
+      "gitBlobSha1": "8f5af44f79aa529cae3da39d07ec0ea869acca41",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/test/anim.test.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/test/anim.test.ts",
+      "bytes": 13149,
+      "sha256": "3322bd9e0ce2f9b2a409e5358f52305fc541a27eeb07eb9770c0715a9c656037",
+      "gitBlobSha1": "1d2ee3bc965dfd55c5e9963eee65a890b5fb5a4f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/test/core.test.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/test/core.test.ts",
+      "bytes": 8532,
+      "sha256": "81f15921aac755da6b0bf3e2892f9f91eb8d02c890d46c719c521a57d5b03c21",
+      "gitBlobSha1": "1159520cace809ef1c01334dadd87252a7ab5173",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/test/gradient.test.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/test/gradient.test.ts",
+      "bytes": 2974,
+      "sha256": "0a2ee790f1af4b0fa171b597599108b2a659e3b96739550206b449e630ce011a",
+      "gitBlobSha1": "3cdf52141c89e18fd88b89dffad813afd8985a5b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/test/timing.test.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/test/timing.test.ts",
+      "bytes": 26367,
+      "sha256": "7ce4ef229c90ac2ee6c4cc663071b970eecb3763feb1dc0f870d53c7123537ff",
+      "gitBlobSha1": "112ad26ef042cc8ad33c78bd98d614384d5712e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/test/vendor.test.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/test/vendor.test.ts",
+      "bytes": 5525,
+      "sha256": "c5411d1e35bf3a6b98a1062be35a6d914d08678d6446b074ffd7b13d07a7839d",
+      "gitBlobSha1": "eb34fc7f02a3cabc22bfd5a84b8e5dcab80321f6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/tsconfig.json",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/tsconfig.json",
+      "bytes": 495,
+      "sha256": "958d9f215fb8ee8c6c737afc49630f5c5cdb709beb60a7b73b57cdebb1f691f5",
+      "gitBlobSha1": "e59dbf400c4c25230dafb30fe4ddbb42dbb99cfb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/LICENSE",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/LICENSE",
+      "bytes": 1081,
+      "sha256": "7a2bfe96150786ed1908b8e63f98ebab88875c1e79e28faff6649e0f11f77e52",
+      "gitBlobSha1": "0b21750ad94fcfc08e723c81d337fd66e5b35964",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/VENDOR.md",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/VENDOR.md",
+      "bytes": 4012,
+      "sha256": "68367242e8e7d1fac200edd91df17a848bcb70b7e12b5f343d882c340ddf48e7",
+      "gitBlobSha1": "718fa12be1bcd5ef0637febf5d819513188772fc",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/libs/jszip.min.js",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/libs/jszip.min.js",
+      "bytes": 97630,
+      "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e",
+      "gitBlobSha1": "ff4cfd5e8fdc49176c2d1d409afa897f40be01f4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/libs/polyfill.min.js",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/libs/polyfill.min.js",
+      "bytes": 99298,
+      "sha256": "f519c4ad7abc29d35dbd9ef8ef57bf9a7264c211f016f47b38f27031d0f813d7",
+      "gitBlobSha1": "1b822b0eabed09d264bcbacd976bd8b538104c34",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/package.json",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/package.json",
+      "bytes": 279,
+      "sha256": "11bd62ca7ec90e2934c6e776450cd24030e0e88bfa33f07b0e2ca0bd2874be67",
+      "gitBlobSha1": "296b7d2d2efd407966fb23e432f22794a2a80945",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/core-enums.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/core-enums.ts",
+      "bytes": 98898,
+      "sha256": "8b3fa17122b3aaac8c0474ce8b731d5d5c2a39e0f26b9acc69ddaa99766a9ea9",
+      "gitBlobSha1": "72029ec6c15af20c1c068c6cb83c0dadfa5b2810",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/core-interfaces.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/core-interfaces.ts",
+      "bytes": 47462,
+      "sha256": "925426edac9cce2a3754fbdb58f8bee82185cc5b7d27ad475757b71f9bb2f648",
+      "gitBlobSha1": "59c840e6e3a190a91590d3c3c7d604d019803d54",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-charts.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-charts.ts",
+      "bytes": 101770,
+      "sha256": "1ce3c80edad2186c418c996ce56d53b523badaf9512834ffffdeaf005907e249",
+      "gitBlobSha1": "37f27396b84ba1359504eace89186f8b9da23814",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-media.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-media.ts",
+      "bytes": 7699,
+      "sha256": "a1495bcba262650dd12ca4e3aeb59116f0456e8d7ce0359de21b86aa579194cf",
+      "gitBlobSha1": "abcae4cbf7a632b25336ea806769923872f1e6be",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-objects.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-objects.ts",
+      "bytes": 55817,
+      "sha256": "65349d5f5b5c978983d1dc8e4f4d40ae75e63e83d23119ac7c35038bb365f3b3",
+      "gitBlobSha1": "fd567695bc5e7d90691f012f4758e98248c6fcdf",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-tables.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-tables.ts",
+      "bytes": 37095,
+      "sha256": "44d1228938a79190df444bf75c90e89b45961f358d9fdf01f1ef4fffdea207b3",
+      "gitBlobSha1": "e6581dc3884194fd0bb01d9ab0dda869c78573f8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-utils.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-utils.ts",
+      "bytes": 10060,
+      "sha256": "e18b575dee5ba8763aea0d88dfcd65fd369c8fc00df3f08f53c1525849e15da7",
+      "gitBlobSha1": "16e9f68329996b1d782db498321c8e5113dd4bbc",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-xml.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/gen-xml.ts",
+      "bytes": 117774,
+      "sha256": "7b3ca945bd0fe5e0cd6aaa589296e57cc3023a427ea8b41d201992b4ae700c06",
+      "gitBlobSha1": "819a9370b17c49b1e13249da7a74adf362e3a083",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/pptxgen.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/pptxgen.ts",
+      "bytes": 26750,
+      "sha256": "8dfdac28610484acd024b3f2e5a06d75ef4967fb527dd7a2f26af280197ce9e7",
+      "gitBlobSha1": "e852159f14c1d4d8a2fa0b6f2aa2024ca3fb9583",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/slide.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/src/slide.ts",
+      "bytes": 7293,
+      "sha256": "39d73b88fb590231cc69968e71792e6ee184d7717f2c0c2fcd48bcd52de7585a",
+      "gitBlobSha1": "bafeca1d85ebf8b091c4dd54c341f1167dac6e1b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/types/index.d.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/types/index.d.ts",
+      "bytes": 73192,
+      "sha256": "bd1a55f00a1b02ccb356a8e88a49cad80c0100a2bbc44690de276b1383f0e69f",
+      "gitBlobSha1": "0043264279cb7f5abcdaeba93050ff721c9890a1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/.gitignore",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/.gitignore",
+      "bytes": 20,
+      "sha256": "295aa1f18923880afebb2e08aa70a8c4f285cc52baea238b8d2864d10e45d825",
+      "gitBlobSha1": "552f22184f212d5dc7566f5dcaf6ac9ccb2a98d5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/package-lock.json",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/package-lock.json",
+      "bytes": 16668,
+      "sha256": "5ae5379a66cfc45ab45e4731b5edded1d9e08710529b0fef9b9179c6269c603b",
+      "gitBlobSha1": "c51c932e54535eac2cd8d185e18e4eda2bf2763d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/package.json",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/package.json",
+      "bytes": 778,
+      "sha256": "3b548ce41602d3cfe313bfa7b1df367276d62d99256280fd6068132af9f8f2c5",
+      "gitBlobSha1": "1c26b217939c0dc2af79a72b39d5a28493ff8460",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/src/cli.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/src/cli.ts",
+      "bytes": 5146,
+      "sha256": "b89062228eb0bba568e3c83349f38bb891f0d1c3e839e7523f66703752fa0334",
+      "gitBlobSha1": "6203f9b63611e4971788f8c5975a2292ef7026a3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/src/orchestrator/driver.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/src/orchestrator/driver.ts",
+      "bytes": 2603,
+      "sha256": "0455c312decbc7b8f709ed82a9629501a0c08a28bcdca0ccb63900efaf874666",
+      "gitBlobSha1": "b0a014c561737a9ab1a3209dead9362806b3d740",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/src/orchestrator/encode.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/src/orchestrator/encode.ts",
+      "bytes": 3011,
+      "sha256": "fd35bb5020c2084b058df168c1f74fe325bc0a3a5e49a77f1b644fc069bb3265",
+      "gitBlobSha1": "7a1f64b87308858cdad4f93eda6024afbdc69c55",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/src/orchestrator/errors.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/src/orchestrator/errors.ts",
+      "bytes": 948,
+      "sha256": "f6bd41263841190ee45ce8542d81e68fd6d2e6d252708d37bd4f2c6c29623708",
+      "gitBlobSha1": "aa7906bd9e0da0cab0061ff9041b9eb92fce833a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/src/orchestrator/filename.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/src/orchestrator/filename.ts",
+      "bytes": 519,
+      "sha256": "6bcd2fb2256d4f8ec05e94f65a1b349404544a5fcdfcd8c6db5925e036bca87b",
+      "gitBlobSha1": "cd5bdc345cb5a213b45802e73748fdd5b211ba11",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/src/orchestrator/output.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/src/orchestrator/output.ts",
+      "bytes": 762,
+      "sha256": "9ddbda6868e1ed9443f66d35bf9737a48473c31b4dc38ea6002d7c5cb5020465",
+      "gitBlobSha1": "29d0a338c60b341185c7f8f811cd66595160cf77",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/src/orchestrator/run.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/src/orchestrator/run.ts",
+      "bytes": 7474,
+      "sha256": "a00250f3558cf61649002c03237c473a936f2605d2eb787d18b47374ff7a5877",
+      "gitBlobSha1": "5e0c0e3d40059a9190cc20ee4648dd420421c529",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/src/types.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/src/types.ts",
+      "bytes": 1855,
+      "sha256": "bc2e558823cbf175f0233980d595ab5bc51705c3d639f79bba68b331ac05324f",
+      "gitBlobSha1": "8f7f40a1f702a3485c4a14c5db55214123de8efb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/src/validate/validate.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/src/validate/validate.ts",
+      "bytes": 2217,
+      "sha256": "ee1ecef8c56bb089ec8bcbc0998633463a9d40dd60b8cac5fd6bd0f44919c5d2",
+      "gitBlobSha1": "e8f87de2eb6ad3b31c898f2c719636ecd3d36439",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/test/core.test.ts",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/test/core.test.ts",
+      "bytes": 4146,
+      "sha256": "ed98973ebaaa3371000113e813fbafe21e2c619aa3f708c0e0645361f2b876db",
+      "gitBlobSha1": "6b134bcde8eb1081d6e95a33c49d51a7d5833d1a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/gen-video/tsconfig.json",
+      "path": "distribution/skills/baoyu-design/agents/gen-video/tsconfig.json",
+      "bytes": 414,
+      "sha256": "643ea702c2befee7a0a3fcb6802b953b62016f949d77261fa08e3a86abaf8aa2",
+      "gitBlobSha1": "29bd400246f2bcaf87fef8e03b396c44effb7a84",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/import-design-system.mjs",
+      "path": "distribution/skills/baoyu-design/agents/import-design-system.mjs",
+      "bytes": 11259,
+      "sha256": "5a965e6ea99cf2741855acec91eaa7193fbff578a5b9650e73da3f8bd11fe23e",
+      "gitBlobSha1": "c87b90027e40f8f25fb1f0eca9880e0797f5c0e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/import-figma.mjs",
+      "path": "distribution/skills/baoyu-design/agents/import-figma.mjs",
+      "bytes": 32505,
+      "sha256": "cfb63275aa4509ef142a95e9fc7ce52302913f89a72d7168cea7732285258997",
+      "gitBlobSha1": "6b03f0b790371886c53da576d7b4af3c75dd1f2d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/lib/asset-store.mjs",
+      "path": "distribution/skills/baoyu-design/agents/lib/asset-store.mjs",
+      "bytes": 6885,
+      "sha256": "893b9464d7eb33014b598220b8b819ff84f490cc43673ee98b4b797289249edf",
+      "gitBlobSha1": "36f644d5d095687029679f41069fd238c740947d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/lib/ds-core.mjs",
+      "path": "distribution/skills/baoyu-design/agents/lib/ds-core.mjs",
+      "bytes": 29775,
+      "sha256": "44e0e38c6af2a606bbe75b63226fb3ae8ee2b1d7e61a9e59948006e085b28ff0",
+      "gitBlobSha1": "85b8bc15789c32852439856f9cc2d50d45450305",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/lib/ds-prompt.mjs",
+      "path": "distribution/skills/baoyu-design/agents/lib/ds-prompt.mjs",
+      "bytes": 12813,
+      "sha256": "7cc807b35cc2d41fb2c442b00f045a5e106adca7a908960de556c9d00a968a52",
+      "gitBlobSha1": "1e7b79f30e049bdb4a6bb745442d4e15c3cbda4a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/record-asset.mjs",
+      "path": "distribution/skills/baoyu-design/agents/record-asset.mjs",
+      "bytes": 7576,
+      "sha256": "ff11ca6f36c8c45b9fdb547c740952ae455b8bc96441716de641435ab9a19c6d",
+      "gitBlobSha1": "a8b8e2fb366a34d3de547095c73c42d71e5a851f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/asset-store.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/asset-store.test.mjs",
+      "bytes": 5099,
+      "sha256": "7355f3077b92138ae75d31586a3771306c324236eaaa4b90231bfbd8f6fe491b",
+      "gitBlobSha1": "73eb694e1e66b25811e591a7e1f14d4b337048f7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/build-preview.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/build-preview.test.mjs",
+      "bytes": 1530,
+      "sha256": "d73534f2b4a4cbdf6772e5530de25f5ced23e1a09daf5f2c3452f91bf70e2cf1",
+      "gitBlobSha1": "21f49eb5caa227a8632d61a77647325deb05d54a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/check-design-system.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/check-design-system.test.mjs",
+      "bytes": 2415,
+      "sha256": "5431c6a613b7fa3d7e6e4a1fe8bbc355804a037e7248648095dbac02d1e48d84",
+      "gitBlobSha1": "a44595717f8ef361e09281713e84ae2eb4793c63",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/compile-design-system.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/compile-design-system.test.mjs",
+      "bytes": 4127,
+      "sha256": "3e8accee9c09bc33a2f043712976bfdd96b43aabac0641bd8de7ed3ced01cbeb",
+      "gitBlobSha1": "b02870ee46090a0c85ca95bcb244b170e52ef5ac",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/ds-core.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/ds-core.test.mjs",
+      "bytes": 14365,
+      "sha256": "8b045582cbf8cce99bc2e248e6afd21ef7375bd6f89dd09735a977a4a56d0cd6",
+      "gitBlobSha1": "4546519942526c7c9c41215315c1129934dbb5e5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/ds-prompt.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/ds-prompt.test.mjs",
+      "bytes": 5121,
+      "sha256": "98fee1005a87f7bb0d22f50e664159720b520b8fecca69b77888d3aa6ff87562",
+      "gitBlobSha1": "82e73bc1487aa6c9af984f96fd1bd680648e3827",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/fixtures/minimal.fig",
+      "path": "distribution/skills/baoyu-design/agents/tests/fixtures/minimal.fig",
+      "bytes": 528,
+      "sha256": "a5e4e181fb984392afd32b0eabe4bfc7305a57df5408d2ea1c3bd02235a768a5",
+      "gitBlobSha1": "46b12b64c9bf1f03906a90160128e03dc982aa85",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/helpers.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/helpers.mjs",
+      "bytes": 4463,
+      "sha256": "af11388a9bd05da84616cda11e5f7cb9766cca5da4dbca946c4869877f2700fe",
+      "gitBlobSha1": "f2de872626db30428285f190334d9281cd9bcaf3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/import-design-system.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/import-design-system.test.mjs",
+      "bytes": 7141,
+      "sha256": "233e7025ab757f66c1fbee36db338cb376b137ba66a9f28d534852c35626708b",
+      "gitBlobSha1": "a0e1ac88b55d25b914c933caddec17023f95aaac",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/import-figma.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/import-figma.test.mjs",
+      "bytes": 3915,
+      "sha256": "232c6c988e2ff1c2d4745ee301248784840e3980530d2321329f1422704f46b9",
+      "gitBlobSha1": "7238fed150e66e4ad1a4dc070393798daa6f08a1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/project-types.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/project-types.test.mjs",
+      "bytes": 6110,
+      "sha256": "f757e91f840923ff05300fbed5c422c69e0eee93b9b248023b8837e7b2125e52",
+      "gitBlobSha1": "0b5703965404c20b9e23a5a8bc49e14459e6df1e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/record-asset.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/record-asset.test.mjs",
+      "bytes": 3723,
+      "sha256": "beded641a592bc1667c36c76897d565b83f12c73e9b76bd3adea9002787c3e57",
+      "gitBlobSha1": "122ad9257a74c931474d893606f4d417d7235dcb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/tests/vision-probe-docs.test.mjs",
+      "path": "distribution/skills/baoyu-design/agents/tests/vision-probe-docs.test.mjs",
+      "bytes": 2844,
+      "sha256": "5354061c9b27c54d082a455d1f220d215a7bc07c10253a28cef34b186dc7b615",
+      "gitBlobSha1": "64c80fdb2869d0f81a702d0a12592207dc6b5a47",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/vendor/babel.min.js",
+      "path": "distribution/skills/baoyu-design/agents/vendor/babel.min.js",
+      "bytes": 3137752,
+      "sha256": "2623a9e22809915ce789b4461154e277ddce520d5a4320c14d44332a5d0dcea0",
+      "gitBlobSha1": "8830ea360e6bc7ec272015f86b113cda88f2765d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/vendor/fflate.mjs",
+      "path": "distribution/skills/baoyu-design/agents/vendor/fflate.mjs",
+      "bytes": 32126,
+      "sha256": "f4e42b11b236ee6ec52c38e469901bd78c060bf642319e95d05390b08a02fd4c",
+      "gitBlobSha1": "d8fa8487e05ac9d6c77c491d0ca45f89d3867606",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/vendor/fig-materialize.mjs",
+      "path": "distribution/skills/baoyu-design/agents/vendor/fig-materialize.mjs",
+      "bytes": 319218,
+      "sha256": "0f1eb4f6539f7170b538557eb2fa89d747cec88590e184f6ff1ac6aac9f297c3",
+      "gitBlobSha1": "13256b8e7caabb5401df40caa9cc75fb90de1f7b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/vendor/react-18.3.1.production.min.js",
+      "path": "distribution/skills/baoyu-design/agents/vendor/react-18.3.1.production.min.js",
+      "bytes": 10751,
+      "sha256": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+      "gitBlobSha1": "9f467cace439d574903ae9d7aa6ef1068552c2f6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/vendor/react-dom-18.3.1.production.min.js",
+      "path": "distribution/skills/baoyu-design/agents/vendor/react-dom-18.3.1.production.min.js",
+      "bytes": 131835,
+      "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+      "gitBlobSha1": "fb4e099c05623afac0779278631c0712676e2b65",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/agents/vision-probe-agent.md",
+      "path": "distribution/skills/baoyu-design/agents/vision-probe-agent.md",
+      "bytes": 1310,
+      "sha256": "7837d30c1eca7ccb2471b6387ad8f0d2e452dfd5b13e73f98e21643250a5a1db",
+      "gitBlobSha1": "b171c65d5b7fdb97ccc8c429896cc234c2d046e7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/3d-object.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/3d-object.md",
+      "bytes": 4282,
+      "sha256": "12953200adda97bd6c41d74d57fd3395832b440e9b70520676e3d59cfccb7d43",
+      "gitBlobSha1": "c2c3a5438314ddd6e7bcacabb5f86d78d28784b5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/animated-video.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/animated-video.md",
+      "bytes": 13383,
+      "sha256": "dbcd3fb0fb48cc55dc375a03d02dc4f4036ec4cef2ac79548b036c1dff9c123a",
+      "gitBlobSha1": "384f778343f9554e8e72cb0be4f23f1821d25a63",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/ask-the-user.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/ask-the-user.md",
+      "bytes": 16983,
+      "sha256": "eed013f87585b98d9427ee77e5130828bb4ef8dcbcf94be23ee5ad56e5b47e84",
+      "gitBlobSha1": "a594d925f67e96540be4d97ee54c76ca12cc6c17",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/claude-api-in-prototypes.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/claude-api-in-prototypes.md",
+      "bytes": 1101,
+      "sha256": "7b1f790460e33058b718e3072f33330f80e82f3c39ddeb7e43e4927b2fe58ed9",
+      "gitBlobSha1": "7680154121a585a40d34f3a1cbbe43572b617801",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/create-design-system.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/create-design-system.md",
+      "bytes": 19020,
+      "sha256": "c51e3939eaf5f413704c0688c022cbb16de6f8b70ce661fdc3a2869382990088",
+      "gitBlobSha1": "93d41a8a81a7e2161c07440fb64b7c3cf35f24a3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/data-science.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/data-science.md",
+      "bytes": 22110,
+      "sha256": "c29492570fdf569642c754278b84e5a9c52403a175cbfde498773df83bb78970",
+      "gitBlobSha1": "0f024b636c84a2232eb3d58e0de724f16810bffb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/data-visualization.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/data-visualization.md",
+      "bytes": 9720,
+      "sha256": "58ff647cb0e46c8f61cf84dad895612ead3437a1bc06ea0729835f7f6de2dc66",
+      "gitBlobSha1": "d35de1e985732c2280bf994f02663ae1cfb8560f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/design-components.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/design-components.md",
+      "bytes": 3397,
+      "sha256": "c01ea7e682b4eaed0a34ff07e05608149b63e696b2ae74354db94ebb7b1d900c",
+      "gitBlobSha1": "2e4e7f47fb667c408f3ed23a91924a22b5d4a349",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/design-feedback.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/design-feedback.md",
+      "bytes": 6255,
+      "sha256": "2eebf12b5f2924d1306878324335610c96b69c38b189160df639c5959e22595d",
+      "gitBlobSha1": "3027fff6e65dadebbd0154d5e132c03bdcd65bdb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/design-system-authoring-guide.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/design-system-authoring-guide.md",
+      "bytes": 22344,
+      "sha256": "04a2fd1bf2c12ab4b2e5101bca082ede76c973cb62bfecb8dcac1be14215e91d",
+      "gitBlobSha1": "edb33c5e11678f44fa0f3d17934ced0f6c9f6160",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/design-system-preview.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/design-system-preview.md",
+      "bytes": 5970,
+      "sha256": "7459de34a36e8ce38fdd4e7a9c59b5f183a9a4a22c6c624ce687d2abf220891f",
+      "gitBlobSha1": "c495c8831b28849e5cbe5fff501111b9e5db4ae2",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/experiment-workflow.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/experiment-workflow.md",
+      "bytes": 11623,
+      "sha256": "bb16d966bbef6d922ea0f5d66f12509a1d98d723b84cc1ee68f95633202adfd1",
+      "gitBlobSha1": "15f587e0df3af4d45ad153745ed8bc4ea09f8264",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/export-as-pptx-editable.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/export-as-pptx-editable.md",
+      "bytes": 9999,
+      "sha256": "0d6bf6a7585415caa927c8c9d3feaebed7b0df2612445f46635fd8b183ec51c6",
+      "gitBlobSha1": "943142c6403d2a90416cb5db0d67452c9116a901",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/export-as-pptx-screenshots.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/export-as-pptx-screenshots.md",
+      "bytes": 3015,
+      "sha256": "e0d40453ca742bc533ed693d2fdd3d88281a6cadf1a9e553d6d56f9b15147cf3",
+      "gitBlobSha1": "cd000943f9398a37539eb47a4400c733aab23236",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/export-as-video.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/export-as-video.md",
+      "bytes": 6050,
+      "sha256": "7df8820c33a37e5e770f37b0fe13bcf30da9082cd98348bc27c69795fd9cbdf6",
+      "gitBlobSha1": "ea13c0d11a5621d7006749515a2cf279394d604b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/export-pptx-editable.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/export-pptx-editable.md",
+      "bytes": 6107,
+      "sha256": "50678ad813da288f6b04465631f89b3b3c99343809019e9674d9a4cc915374df",
+      "gitBlobSha1": "fc9782a5e53904346c2bd51630ea38cc34ba1912",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/export-pptx-screenshots.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/export-pptx-screenshots.md",
+      "bytes": 1884,
+      "sha256": "13f3a714b95e6f004726e5a75a299e84d3722c7fc06f736def31a49c9c87a57e",
+      "gitBlobSha1": "b539d83cc3436f089f19ce061eaeb30ac97da10e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/exportable-video.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/exportable-video.md",
+      "bytes": 2360,
+      "sha256": "9b8427a4329d094ed1f069dde26ca1179d997ec6e0f45e654de2f462de958b7b",
+      "gitBlobSha1": "b99c1100089ef2012e675f9fa726032357267a16",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/flier.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/flier.md",
+      "bytes": 2113,
+      "sha256": "8a53212fc1511d04fab1c5f80617b84b77037d426c89c3318fb6e1cc86b89d8d",
+      "gitBlobSha1": "676eb8bf7682d6c55f85bc05210a68084f8eff0c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/frontend-design.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/frontend-design.md",
+      "bytes": 2729,
+      "sha256": "68bab3311d450436260e308a2b46083b0550790cf2cd4c024ed39db7586244fb",
+      "gitBlobSha1": "bccd8842d551e7da69ff711b18a5c61840831a50",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/gemini-image.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/gemini-image.md",
+      "bytes": 604,
+      "sha256": "20a5c7b6b004b600e064c497d15268053aa39fa5d108f4c831105590c652e1f8",
+      "gitBlobSha1": "adb716ced191f1c6b0e051de00957f35e41edf62",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/generate-images.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/generate-images.md",
+      "bytes": 6588,
+      "sha256": "acbbbad683996f4b86e431e65a8fa5e693686b02499f4f5ed8d2aa03a84a77b9",
+      "gitBlobSha1": "eacd6108f3a61ae17316032325a45753a8f24113",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/google-slides-safe.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/google-slides-safe.md",
+      "bytes": 821,
+      "sha256": "7187fcf47bd7e991cf3869c1899fd961a74d8f526928dc0aad90c5c2341d5f01",
+      "gitBlobSha1": "490fca7e6fd517ed4a3709996971987e831a19a8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/handoff-to-claude-code.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/handoff-to-claude-code.md",
+      "bytes": 4103,
+      "sha256": "95f48a3fab9c0983f79d66cc8ba77a1d25f9c2ce985d2e90acb6b9c1764bc1a3",
+      "gitBlobSha1": "c162f7a2715bdeb578768925f3a38a1bf939b644",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/hi-fi-design.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/hi-fi-design.md",
+      "bytes": 3360,
+      "sha256": "a6d4d78ba4dc1567a4aa31269dca9b15be888ddba0f09c594814cc8dad425baa",
+      "gitBlobSha1": "51fa6158c891b5af4055eb129b6ca1bdc3b4510b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/html-email.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/html-email.md",
+      "bytes": 2606,
+      "sha256": "95152b23307cd49616acb4047c1c686542da5e28045808c6d1b4afc2922d0ee2",
+      "gitBlobSha1": "8cb8a147884e50e87ce174bbee0e832e71df40be",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/import-from-figma.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/import-from-figma.md",
+      "bytes": 10837,
+      "sha256": "7fe33ccadd0b6db66a45447ea2ae9c6b3f589f3aa3429ffe476bd1f6fd3cacf8",
+      "gitBlobSha1": "b0ff74673c80d2a5201d00bd7b51fc0d267b6831",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/import-from-github.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/import-from-github.md",
+      "bytes": 2480,
+      "sha256": "09a366d16ad0f8a26fa55e9972e2d4b97187bc495ed01c781fe67ee0dbe7ff88",
+      "gitBlobSha1": "96dbf6bda081d310d8e78c0fb718b2293a426905",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/import-from-html.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/import-from-html.md",
+      "bytes": 2121,
+      "sha256": "b0a94e7c1b10f2bb34d37d6b08c1ac27ba2885ea66db7bde4be63fc314ce27f2",
+      "gitBlobSha1": "96e42748c87428f92d164d36bca0fa1563709f7e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/interactive-prototype.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/interactive-prototype.md",
+      "bytes": 423,
+      "sha256": "69f1bdb5d1d43005e06b6e84abe2ec112bf205e28a2c88b304127affea6543ec",
+      "gitBlobSha1": "e25c488d5389dde6a3696eda8a32d73d92acccf6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/low-level-tweaks-api.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/low-level-tweaks-api.md",
+      "bytes": 2032,
+      "sha256": "9a36407fa0aa111ce51b4d4c984be0265868e887db87f845c6ffdde708ae73d2",
+      "gitBlobSha1": "a3423ac614bfad1d6f433e7c76eaf8dabf920ef3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/make-a-deck.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/make-a-deck.md",
+      "bytes": 22907,
+      "sha256": "84d37725d5026959a1cc774e175ddfae4c4df559b8ad05e085aeca2981b7cd24",
+      "gitBlobSha1": "190420a287d92a7f64fc33b7d4c0a58b2dcbd2e3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/make-a-doc.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/make-a-doc.md",
+      "bytes": 2635,
+      "sha256": "822b7846038f6c2390bbb4817d716e33808d0b1c634a5140da7707c2cf56fc76",
+      "gitBlobSha1": "34a5872b9fffa240baaab6bdb072253da6543082",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/make-tweakable.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/make-tweakable.md",
+      "bytes": 369,
+      "sha256": "5447f8ec64309d1e1a15ce19dc288d04fdc57c4926f882d2917f2542dc698c55",
+      "gitBlobSha1": "3c947a13ec1180d01e1afe63efacf1363f5bb5fe",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/maps-geography.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/maps-geography.md",
+      "bytes": 2870,
+      "sha256": "6caceaeddd48fdd4cf6ff76168d82a0155fb083cad4b084e64324a230c089ca1",
+      "gitBlobSha1": "a18d378f426e9aaeab743f4e0011472ba8cbb5dc",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/mobile-prototype.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/mobile-prototype.md",
+      "bytes": 3382,
+      "sha256": "1b9e43553980b289d69e494a13c63c7eafb380b690a5c5a70b9191a6782e1d6b",
+      "gitBlobSha1": "ce41440656c88001689cd9e917a2c42053876fce",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/options-stack.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/options-stack.md",
+      "bytes": 1170,
+      "sha256": "35876fb848948dcaaac27dc2bc99b5206c0fb9d05bb9ffb60421e9e819772350",
+      "gitBlobSha1": "0e649513d0f9c9070ba2e32ecb116732b1b93bd1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/read-pdf.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/read-pdf.md",
+      "bytes": 857,
+      "sha256": "6ae244b3ca7ba9be494e95df75cabfae0040c0f370b941d644c7074e5dbf60a0",
+      "gitBlobSha1": "f4d1ef25a97776b90984221a4aa4c5b817085b83",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/save-as-pdf.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/save-as-pdf.md",
+      "bytes": 5513,
+      "sha256": "36bd1bfcbb7534537e679064ede988f6780016dbfdaaf19078a4618736f6a989",
+      "gitBlobSha1": "860dc9294b5ac4134a2bb690905d3c58543dfcc9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/save-as-standalone-html.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/save-as-standalone-html.md",
+      "bytes": 5841,
+      "sha256": "e59d1c68cc0dd7d3cbedcfa816590a6457a4b4f8bcf082983a8d9d12838a6138",
+      "gitBlobSha1": "563f37b7f74aaf1e5289bf53bd0a388adbfe99ba",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/send-to-canva.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/send-to-canva.md",
+      "bytes": 3630,
+      "sha256": "10d9802fcb300f6f34a07801e4caacdab91acd5bd58d631d22c1e4921859bc08",
+      "gitBlobSha1": "fd7e76c506879073b00e2f41ad29b7a1a1d30525",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/send-to-figma.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/send-to-figma.md",
+      "bytes": 1866,
+      "sha256": "366a669f72f2dd5c7c56315c2fab98ca52e595d7b58661d1a771517a4ee48bb1",
+      "gitBlobSha1": "762bb2009b2df3ddd04263eb8e22a61af04e2750",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/social-media-content.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/social-media-content.md",
+      "bytes": 11074,
+      "sha256": "47f6a6c4a6b3d949795eb2ddb9732c7b642cb2aab9f1a30c3d7e9a311dce189b",
+      "gitBlobSha1": "0c35a22df890c06561b899926fbbb97a30a31bb4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/something-cool.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/something-cool.md",
+      "bytes": 999,
+      "sha256": "800d405db1b66f4c4175cf4b8dafa197516d8c7e63cfbfe730506d7f1ffcc4f2",
+      "gitBlobSha1": "2e8d59fe3ec14ce345e08604f7ebf68bac213218",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/sound-effects.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/sound-effects.md",
+      "bytes": 599,
+      "sha256": "1aafe4de90b1850bddd62759f4a8d6fa7c58671430ca8d4a647e3a16922fc171",
+      "gitBlobSha1": "717cd91160cdd07939262bf79d42e20c3fdb549b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/speaker-notes.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/speaker-notes.md",
+      "bytes": 1499,
+      "sha256": "204ff098d5769df113bc10c11391c8ea8e4b85dd9e86250695d71e3e4bbecaf1",
+      "gitBlobSha1": "9538f2fe69f35a8a1fbc1262702de0e95f7e54bc",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/trifold-brochure.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/trifold-brochure.md",
+      "bytes": 2696,
+      "sha256": "4ae5f456feabcd7c8d62081cf433f5098d5df44e3630ddae7c18cdac879489c9",
+      "gitBlobSha1": "aed3560a960aec64593f2e1ad108832d31d72a5d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/tweaks-protocol.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/tweaks-protocol.md",
+      "bytes": 2200,
+      "sha256": "fa486d5bc340256b23ae136fedc28052844572d2832904257d78dc0d0b0ce935",
+      "gitBlobSha1": "1a5968c8f5ccaad43a57291bf60d9411b0b51781",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/use-design-system.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/use-design-system.md",
+      "bytes": 18668,
+      "sha256": "3e15c3ab2d6d4e0fccc8bd1eb679d7f6896c0449a2fce35a85be6fa1e82493d5",
+      "gitBlobSha1": "3339ec05b3252f7d979481c8c5ae67e5d9e1094f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/watercolor-illustration.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/watercolor-illustration.md",
+      "bytes": 12482,
+      "sha256": "63f7874c490257b796ed037e716b60b4a473ba89476d062d184b143e4d62851f",
+      "gitBlobSha1": "815c50f0452ff4b4797b57310843cfdd1253769d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/web-research.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/web-research.md",
+      "bytes": 2000,
+      "sha256": "175e38a902b4dddaac3d2bfcac8a291686c84184b54e8d8831b40ee0edbbbda0",
+      "gitBlobSha1": "cdff5de48a695cbf69424e06bff2343b2905175b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/website-landing-page.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/website-landing-page.md",
+      "bytes": 4119,
+      "sha256": "e5b4bd8a06ad5bd3ca54c906b33da415d3ec6004ddb749faa539222fd7165337",
+      "gitBlobSha1": "ad073eb70551d72dfdf7be59048a1b4f1d728934",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/built-in-skills/wireframe.md",
+      "path": "distribution/skills/baoyu-design/built-in-skills/wireframe.md",
+      "bytes": 847,
+      "sha256": "c98e5d3e4822be61f484335c6b4386811a517a151498ee4a89a251dddaf3f008",
+      "gitBlobSha1": "3510699151d886bfcaf639ff068e3d86888a4d0d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/project-types.json",
+      "path": "distribution/skills/baoyu-design/project-types.json",
+      "bytes": 2104,
+      "sha256": "b7034ece1422e073147cae8ae7d8fbc74f1ba424d73d008b42401a43622ee5e2",
+      "gitBlobSha1": "77f0c34a3417a63fd9368ebf433c96f858a44d93",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/references/claude.md",
+      "path": "distribution/skills/baoyu-design/references/claude.md",
+      "bytes": 17095,
+      "sha256": "e77d4fd32878506f25a46598a81803217e9e5ae6b83677c43d8df8d0e97b599d",
+      "gitBlobSha1": "09d07479ef1e3cef9fc7fd89cf7f4c217cc4957f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/references/codex.md",
+      "path": "distribution/skills/baoyu-design/references/codex.md",
+      "bytes": 7305,
+      "sha256": "d80e49abaa3599f52bd74de2ce2b3136d09b5241f6f0bc4c0a55fc6307c41fcf",
+      "gitBlobSha1": "000f95cc9e8879d528ea42df70adcb65da1567d9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/references/cursor.md",
+      "path": "distribution/skills/baoyu-design/references/cursor.md",
+      "bytes": 10911,
+      "sha256": "68dcd2b73a7c49f834d139f6310284c279b107015a251aa48ae51ce4445c4d52",
+      "gitBlobSha1": "a7f5df21f3c09cd7ed3316888c9259f7d500044b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/references/upstream-sync/apply-report.json",
+      "path": "distribution/skills/baoyu-design/references/upstream-sync/apply-report.json",
+      "bytes": 21720,
+      "sha256": "e177aa9bb979d4da206e6efc67af6d78a0500d9143f2ea7a1b76ea1833deb8fa",
+      "gitBlobSha1": "58aac4c664d21c06fe06549b9234fd39d8f6568b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/references/upstream-sync/built-in-skills.json",
+      "path": "distribution/skills/baoyu-design/references/upstream-sync/built-in-skills.json",
+      "bytes": 229769,
+      "sha256": "dc0292dcfc6ec1c1486bb0101801b897ae0580de6898b9089aa4e8269767e722",
+      "gitBlobSha1": "587a5cac12e2b46711ec394025c3263635b2fea9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/references/upstream-sync/provenance.json",
+      "path": "distribution/skills/baoyu-design/references/upstream-sync/provenance.json",
+      "bytes": 3661,
+      "sha256": "a093cd29cadbf3f4683380dbc4da93bc8d32ded9f74f8e1217d5288a8f93e6b6",
+      "gitBlobSha1": "cefc8330cd8107b29b68ca5ffca66032309531e3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/references/upstream-sync/starter-components.json",
+      "path": "distribution/skills/baoyu-design/references/upstream-sync/starter-components.json",
+      "bytes": 16181,
+      "sha256": "07f3873b8f2ec31c7e4a8c0c4fc1d725c316d6a5c5720380451c0ab4f34d458d",
+      "gitBlobSha1": "d30be7f9ccf8d5a30eda3293af41af6f4b669da4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/references/upstream-system-prompt.md",
+      "path": "distribution/skills/baoyu-design/references/upstream-system-prompt.md",
+      "bytes": 32765,
+      "sha256": "29ab217be7e1a58ad879c0e68d6bf8e9c1f3c098554462c7d06a103d925afb09",
+      "gitBlobSha1": "873f7b8f7cca8c1ad23993af65eb0cf8ba8aa229",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/android-frame.jsx",
+      "path": "distribution/skills/baoyu-design/starter-components/android-frame.jsx",
+      "bytes": 10079,
+      "sha256": "733d28bdf32764674eac272e89dd97eebd00c8a4abbc625639d5e92aee13acd7",
+      "gitBlobSha1": "d4d4dc05582635c4f76bcd2ee15b79ee76cdc47d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/anim-demo.html",
+      "path": "distribution/skills/baoyu-design/starter-components/anim-demo.html",
+      "bytes": 8051,
+      "sha256": "eec6a0e4f21c00cbd2702247891dcf34e29e8e6512b8c712e80c02edc7f996ae",
+      "gitBlobSha1": "8f061a2ec8e5f6908d1d28fab8f1d5f2307ad816",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/animations-v2.jsx",
+      "path": "distribution/skills/baoyu-design/starter-components/animations-v2.jsx",
+      "bytes": 60879,
+      "sha256": "f419e8c899d4a48a08c031383f84408d312863f233bf20be871ebe723ef430fc",
+      "gitBlobSha1": "417ffad2c89476bc90038f693de8823baf69679a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/animations-v3.jsx",
+      "path": "distribution/skills/baoyu-design/starter-components/animations-v3.jsx",
+      "bytes": 55237,
+      "sha256": "a0c120527166afb8cce133e8abec2d12a7a6627ce76fbf828549f94e93f9fe82",
+      "gitBlobSha1": "fb9e388c5431ef1e3d6bf11ae3ccffb7f9b30471",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/animations.jsx",
+      "path": "distribution/skills/baoyu-design/starter-components/animations.jsx",
+      "bytes": 24615,
+      "sha256": "2fbc301613f6fe83db7c3b60caa7d189268d94d865e87a909a74d80cbd66ba10",
+      "gitBlobSha1": "1a9ed2a42e1438eb02bcf8cb80010a1b67b944b5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/browser-window.jsx",
+      "path": "distribution/skills/baoyu-design/starter-components/browser-window.jsx",
+      "bytes": 4497,
+      "sha256": "c75c07447e0859b5f2edc420d5d757420b9a7e96336b84758a5d8da753f1a6a8",
+      "gitBlobSha1": "399c200f85c7fe7366b2a4cb3fc0faca15355c9d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/chart-stage.js",
+      "path": "distribution/skills/baoyu-design/starter-components/chart-stage.js",
+      "bytes": 22716,
+      "sha256": "8b44746ffd45ce4bb3e4a0f03e86279f6dccc8faf1d9564aa698cda6a85428a2",
+      "gitBlobSha1": "4f51b1793be1f84a722347c2241d2926bcba6945",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/chrome-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/chrome-shell.js",
+      "bytes": 10179,
+      "sha256": "00f6cdd94a28722e21afe63e8f3a0c6bf435d3391e05f38b3fc2bbb544d2a8b3",
+      "gitBlobSha1": "625f2d4346a7604e6b623b4cb315a10a42c6949a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/data-overlay.js",
+      "path": "distribution/skills/baoyu-design/starter-components/data-overlay.js",
+      "bytes": 96714,
+      "sha256": "90a2e4fd231d49af778f06053623a4cc3519ead057b148908cf544332b8a8a74",
+      "gitBlobSha1": "2b0059f5d104b0e8344409ebc0701eea9b31ed0b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/deck-stage-patch.md",
+      "path": "distribution/skills/baoyu-design/starter-components/deck-stage-patch.md",
+      "bytes": 62492,
+      "sha256": "de3628af0141c512c7226ea35c5578840d2856d6e61a97da18ab5f2cd8a68cc1",
+      "gitBlobSha1": "ee4f29711dafb5b49e193f7d0ddbd1439fd9d956",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/deck-stage.js",
+      "path": "distribution/skills/baoyu-design/starter-components/deck-stage.js",
+      "bytes": 178469,
+      "sha256": "b4c21872cf72707307ac75b79577c1ef492b72109aa09bd048be143ed66c4da2",
+      "gitBlobSha1": "af6de5255630cbe2acaf997de08e83fa29cd2621",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/design-canvas-patch.md",
+      "path": "distribution/skills/baoyu-design/starter-components/design-canvas-patch.md",
+      "bytes": 6208,
+      "sha256": "db112014899440d276ea638508b5dd6a6ef8453eabd650265e7eead2c41ea093",
+      "gitBlobSha1": "ec0f4cbd93193559205f5f1c0934ab7cd963eb12",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/design-canvas.jsx",
+      "path": "distribution/skills/baoyu-design/starter-components/design-canvas.jsx",
+      "bytes": 54560,
+      "sha256": "e6670e1c472093a74227ff5cf6c957336c83dc36ca3cd0d8a1122960e40b28a8",
+      "gitBlobSha1": "06aed2aea97f09ce64966c5c0e59c340baa5cc19",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/doc-page.js",
+      "path": "distribution/skills/baoyu-design/starter-components/doc-page.js",
+      "bytes": 38342,
+      "sha256": "dc919c3025694a648f4d44775151b8beceb203bd084c4c06d1d5941e7db41fd3",
+      "gitBlobSha1": "fd09b50084f3deb22656033c419de40fa9711df3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/facebook-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/facebook-shell.js",
+      "bytes": 15574,
+      "sha256": "8d4f74a6f49732828803f444e5caa526b7def4fb3f08f3d0ed7afedbb33947d3",
+      "gitBlobSha1": "0209a2b7d78aa2fb8371ee0354817d4217acb4a3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/file-window.js",
+      "path": "distribution/skills/baoyu-design/starter-components/file-window.js",
+      "bytes": 37744,
+      "sha256": "8519e04500062b63a683db9e926ec828474805a8a3b41bdc135f5c0147e00666",
+      "gitBlobSha1": "2cfda0dcd772c87ebd17bc6404cde98b5d55fa5a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/image-slot.js",
+      "path": "distribution/skills/baoyu-design/starter-components/image-slot.js",
+      "bytes": 65113,
+      "sha256": "3181fc087a0ca62c260b329d249a758cadfc640d8835de28dadf919a6f96a40b",
+      "gitBlobSha1": "534a08ec16c42606b191952911ea9fcd0f4fa6b7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/instagram-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/instagram-shell.js",
+      "bytes": 16039,
+      "sha256": "fb2215159f4bfbf9ba77f18589efb2dca75066126ee5d503d5dfb0c2e202db04",
+      "gitBlobSha1": "4f06bc170e13813046c068f4179c78136e2bd241",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/instagram-story.js",
+      "path": "distribution/skills/baoyu-design/starter-components/instagram-story.js",
+      "bytes": 14236,
+      "sha256": "c2621480f91cafbff0eed2cce8d330e38893a101ab560254f182f24cae7d9d28",
+      "gitBlobSha1": "9907e8cd29edef2dd4b3bfb32b87126f32e1b802",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/ios-frame.jsx",
+      "path": "distribution/skills/baoyu-design/starter-components/ios-frame.jsx",
+      "bytes": 16270,
+      "sha256": "cbc4ebb0f41d44aa33f67d0892e8e78c3adb8ec10371b242fe15ce82a1d1e954",
+      "gitBlobSha1": "4de60d178e88118278d3843fcfaa63c866c86e3b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/ios-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/ios-shell.js",
+      "bytes": 12715,
+      "sha256": "395b0a73e5b1df54c21a7f410c8c2338456fba5a5e02a770771ef9ed7ad3f702",
+      "gitBlobSha1": "05d862172ee577ab745912a0a929a862e7b0a9a4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/linkedin-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/linkedin-shell.js",
+      "bytes": 14307,
+      "sha256": "e04751cf90fbb4df5c9e8bd9c691fe33124e9735f765e7ec79b3befa1104aa9c",
+      "gitBlobSha1": "7e5525cbfea499535e1ad3f2bc3492718ba3f7b6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/macos-window.jsx",
+      "path": "distribution/skills/baoyu-design/starter-components/macos-window.jsx",
+      "bytes": 8574,
+      "sha256": "de298ba07831d406c976e4f9f908e17d4a1fb65f68d2ec7541fabe0a3ab348cc",
+      "gitBlobSha1": "f696961b4c981c334fbb1e05f380bd66cbca35f6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/pinterest-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/pinterest-shell.js",
+      "bytes": 12242,
+      "sha256": "665f624aa7b3dcf8fbf9c469e2ed3fe6c15d0b798419f6e54ab0da9a232f2ef6",
+      "gitBlobSha1": "1102d31d0af2d84501189de2d7cc07fb17b57ea9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/post-card.js",
+      "path": "distribution/skills/baoyu-design/starter-components/post-card.js",
+      "bytes": 9507,
+      "sha256": "8dae48d4f9e53cdc0da81fbcd68a3bedbe828f43bb62111c5ba47d2f63f7a555",
+      "gitBlobSha1": "569684d637f6aab4675285b180f2cf473e29718f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/reddit-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/reddit-shell.js",
+      "bytes": 13213,
+      "sha256": "3129596be6b9ad1fb67444ed92a8060c4d03a42859c659cfc9f621ec34863df3",
+      "gitBlobSha1": "cd3142acf7b5f1dae4b4136712be6ea092827cc6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/social-frames.js",
+      "path": "distribution/skills/baoyu-design/starter-components/social-frames.js",
+      "bytes": 10052,
+      "sha256": "41b97bc73f570e328cde04f88c50f6fce5fba9b4955f4686ded505acb10d8897",
+      "gitBlobSha1": "f90902baeaee0711abdaa0cccb082ff7d5057905",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/three-d-stage.js",
+      "path": "distribution/skills/baoyu-design/starter-components/three-d-stage.js",
+      "bytes": 16375,
+      "sha256": "7acd5ee825fa3d4733db4c157f456e8b386dc582d36ad48badf2717701895bd2",
+      "gitBlobSha1": "02d60f4332d41a819d19f26ef3e43cea74473305",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/tiktok-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/tiktok-shell.js",
+      "bytes": 19197,
+      "sha256": "1ac1594385e66338f75cea3e1de5ab2d312521e964a0cfc846e8a97e13e131da",
+      "gitBlobSha1": "bf765d7493dcc2b20191b65c7cb55988314d11b2",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/tweaks-panel.jsx",
+      "path": "distribution/skills/baoyu-design/starter-components/tweaks-panel.jsx",
+      "bytes": 36258,
+      "sha256": "893b45dfa616cbeac1a6e00f3983fae416a44622eb5976674a37e36dd9d6a36b",
+      "gitBlobSha1": "562d32136dd74e8e4684747f105103948cd233a6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/watercolor-kit.js",
+      "path": "distribution/skills/baoyu-design/starter-components/watercolor-kit.js",
+      "bytes": 49249,
+      "sha256": "fc520796c3015908d58fde34077bc51af51253f978b82c730a9d412d59303959",
+      "gitBlobSha1": "9ce2ff590264120f1a3e06241f2d88a3289af449",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/x-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/x-shell.js",
+      "bytes": 13970,
+      "sha256": "ce5cc188d8d843bca3e4c88cd3b499738feae9b32aaf6dadd6ba8a2ce47c9c6a",
+      "gitBlobSha1": "69b8c00d6083b7c7f28d101ee170efd7b6b6f7fc",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/starter-components/youtube-shell.js",
+      "path": "distribution/skills/baoyu-design/starter-components/youtube-shell.js",
+      "bytes": 13514,
+      "sha256": "6b4f7f015f0d7a0b66bbbac5ae1d1aadbf3aaa545d0e330d4224d994ae69c4cf",
+      "gitBlobSha1": "b2b383bec19e26461113652b0c083d23c7d45705",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/baoyu-design/system-prompt.md",
+      "path": "distribution/skills/baoyu-design/system-prompt.md",
+      "bytes": 47230,
+      "sha256": "824503e1db292e62bb696549d91e20d5e83730975b753f5995831c99c9778aa1",
+      "gitBlobSha1": "c44b03a036b66855fe81c94bf5a09dc4265b92c9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/SKILL.md",
+      "path": "distribution/skills/claude-dashboard/SKILL.md",
+      "bytes": 21191,
+      "sha256": "731f3110b95d9408ce9b7c4ea4d60321d84991874c35e3e33d2d60edf0abe63d",
+      "gitBlobSha1": "448b98f5e1392b3cca58f32da73c55cc0df0c85b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/admin-setup.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/admin-setup.md",
+      "bytes": 7116,
+      "sha256": "ca4966c83115555b475640a3d9ec4f0156043d64bc64205c26a5443406e3eafc",
+      "gitBlobSha1": "cab1fe0cbcd3542104e661984923ee856e84949b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/design-defaults.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/design-defaults.md",
+      "bytes": 16017,
+      "sha256": "7962034b9695661c28b7455805921f0892eb739cb16a874ba4b4601386c4d4b4",
+      "gitBlobSha1": "3a1c188268e26729b1b2a5b3a29d00f11d8329d1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/design-system.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/design-system.md",
+      "bytes": 7384,
+      "sha256": "87d1bfe00f37efe2ef8cb603ea835adbb008c8f3217ce0feb3dc939eaa601129",
+      "gitBlobSha1": "2aefbe18fdb920617c22f822489a6726f4fc9616",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/exporting.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/exporting.md",
+      "bytes": 3246,
+      "sha256": "5e815d915fd14d1b50615c814146ea3a8c7e20ec5d28289b227e99f8ac6198e6",
+      "gitBlobSha1": "97b4ab0546e36b5fd36dbfde51a5ddbcb90f4ac0",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/features.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/features.md",
+      "bytes": 16009,
+      "sha256": "083cc336bf92a1b0a8be59c93a33ead686703327d29590a7a6f4cb553d9d0fcb",
+      "gitBlobSha1": "9ec771de7ec8d90dd20c8be18f61cc3ad71e0346",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/one-writer.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/one-writer.md",
+      "bytes": 5066,
+      "sha256": "d95da9905cffa235eb422fb950fe5ead4983bbc8a93428139cd3ef8575b3f548",
+      "gitBlobSha1": "f3b9216362f18d9cc07c65de7d0a1d8d612d26f0",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/read-aloud.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/read-aloud.md",
+      "bytes": 5241,
+      "sha256": "0177770975746234b636eba33d527077797c483df0095ea87a325b4f88a8d0e2",
+      "gitBlobSha1": "cf518a425ef83c382130f7f27387ffecbd485cd3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/remix.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/remix.md",
+      "bytes": 5126,
+      "sha256": "766822b7f47d0f5141d7ec2913a7fd2c2b03aa6b5f69179b2aa0d4dbd7748f71",
+      "gitBlobSha1": "39ff7f785a996e0c4d9daa17bc0e810af6cbd095",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/shared-loader-calls.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/shared-loader-calls.md",
+      "bytes": 602,
+      "sha256": "14302d91d877f5080a0f23e0f09adeb6142f83b94cbbaa33a8adaf595793775e",
+      "gitBlobSha1": "f384ea6c2caf16ab71942919347379a72015080d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/sources.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/sources.md",
+      "bytes": 15993,
+      "sha256": "f6e50bf090977ecd835c8d8db8a7b13b7a82612b9a26d70b62e711ceb90e054b",
+      "gitBlobSha1": "26c27ffb2113bc6cf9a97766b7ca3651ed7e5fa5",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/visual-short-script.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/visual-short-script.md",
+      "bytes": 13271,
+      "sha256": "60cdece45896edf7d62ec2035dc081160a5c5216f0ec016c64c705b989901406",
+      "gitBlobSha1": "23159f1f1f7810e26f2026d024872e3d294111fb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/visual-short-skeleton.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/visual-short-skeleton.md",
+      "bytes": 11276,
+      "sha256": "815fe696fed91cefe603f4f764e38066e3dce6b02f750bd6a72e536bfce6e721",
+      "gitBlobSha1": "8b5fbaa4e59d623c651cf16940a4be3207a1519f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/artifact-type/reference/visual-short.md",
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/visual-short.md",
+      "bytes": 15838,
+      "sha256": "75fb1ab218c45c3460873f7750487856d3ad7c58aef3cc81c4564f12857c539b",
+      "gitBlobSha1": "4c4cc12e5b541eb377cc3c65a2c9afba8b494962",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/scripts/artifact.mjs",
+      "path": "distribution/skills/claude-dashboard/scripts/artifact.mjs",
+      "bytes": 82259,
+      "sha256": "ccfcd0299aaa46061c21566f8e0028d66d320514bc786d829f8a2faf0e58eee0",
+      "gitBlobSha1": "b771e1521a53649923e13e19e4d715e5c37b9e59",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/scripts/editor/assets/anthropicons-fizzy-lake-AsAz-1yR.woff2",
+      "path": "distribution/skills/claude-dashboard/scripts/editor/assets/anthropicons-fizzy-lake-AsAz-1yR.woff2",
+      "bytes": 31392,
+      "sha256": "53f73f8422850d9877615dd9f3baf4b46cd9bc3be81a66a54e922b41771c955d",
+      "gitBlobSha1": "96398615b3f28001b8d612225fea0dccf244bea3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/scripts/editor/assets/index-DH3NN6Vs.js",
+      "path": "distribution/skills/claude-dashboard/scripts/editor/assets/index-DH3NN6Vs.js",
+      "bytes": 1651706,
+      "sha256": "c9459ba0dd1c6391109cfaffb4e30989e453839931bbc9edeaf843e888fd0af6",
+      "gitBlobSha1": "f144dafb521c735392ec4bb9c6be5331b450ab94",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/scripts/editor/assets/index-DXp7_xcB.css",
+      "path": "distribution/skills/claude-dashboard/scripts/editor/assets/index-DXp7_xcB.css",
+      "bytes": 539443,
+      "sha256": "06a307174ad8c315a0e93fd02cb9831cc17b02f53406c1a3373082f93b3cf764",
+      "gitBlobSha1": "eac5c9e1631512db6473cd0ddc16744c4faa6808",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/scripts/editor/index.html",
+      "path": "distribution/skills/claude-dashboard/scripts/editor/index.html",
+      "bytes": 2091,
+      "sha256": "3e2015effa3e21077bb864923373e6afcbe29c2345623496e88f3bbfad3f9d29",
+      "gitBlobSha1": "b89ffdf3b25b58ac21d9ea904de4eec98be7dc54",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-dashboard/scripts/editor/local-host.js",
+      "path": "distribution/skills/claude-dashboard/scripts/editor/local-host.js",
+      "bytes": 6776,
+      "sha256": "d829cc0d61cd8046981cb1c112afc8fc00eb6c6262b0750d745b3a4fc33131c4",
+      "gitBlobSha1": "1efe02492b5901ff6f3e3c7357d4ab310734e7f7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/SKILL.md",
+      "path": "distribution/skills/claude-design-system/SKILL.md",
+      "bytes": 22661,
+      "sha256": "85d5b552388251f7f317b85045362867acec4827be9538c3614c997c952405b1",
+      "gitBlobSha1": "d1359ce3dc2fd4391b8659762d443a26f67eff1f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/artifact-type/demo.json",
+      "path": "distribution/skills/claude-design-system/artifact-type/demo.json",
+      "bytes": 164928,
+      "sha256": "ba5c9dc5778930275d1acb91048fed12d18acbf1e85f4d54292b3a9deadc2843",
+      "gitBlobSha1": "0d47f7b5b4e39bc9d7e602b88063de1f9110b8ad",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/artifact-type/reference/cover.md",
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/cover.md",
+      "bytes": 6698,
+      "sha256": "d5957e8a4c430a87d8d3c5f28526d0f966dfc28f539039f25252becb32528e3d",
+      "gitBlobSha1": "b25dafd4014413a10de7707ee9345da752af5e6c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/artifact-type/reference/craft.md",
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/craft.md",
+      "bytes": 8580,
+      "sha256": "9c4902b343ec5829626a65cc507249c1124ce6c4219f6ea5a1a34007506fa6ca",
+      "gitBlobSha1": "91dbd094e080ecafba26f91a63a87590c61c6ec4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/artifact-type/reference/format.md",
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/format.md",
+      "bytes": 16206,
+      "sha256": "fc2a291c26517dbbfe81e18a8efefa40f56f6e570f2f7629cd7006ac41fd1b2e",
+      "gitBlobSha1": "1f4cb219888f0e5e5ba5e8dc6dffe89944577ea7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/artifact-type/reference/from-code.md",
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/from-code.md",
+      "bytes": 13328,
+      "sha256": "bac86e3ae10362835e48470b07c3f9e462440e569d3824baf0c341c1fb22eb8a",
+      "gitBlobSha1": "ecb138c75e88764b409e45b54387a4c9e1a35e84",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/artifact-type/reference/from-design-tool.md",
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/from-design-tool.md",
+      "bytes": 16116,
+      "sha256": "8033bfe399da68c8aee6ff6df05df41d494723216abce16e39642e491503fcd0",
+      "gitBlobSha1": "ca74f416c30020ba0afc3c6039fd9e01b1adea81",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json",
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json",
+      "bytes": 11291,
+      "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6",
+      "gitBlobSha1": "d8dd7ad168b8b44ddbf65bbb7735598e0168ec67",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/artifact.mjs",
+      "path": "distribution/skills/claude-design-system/scripts/artifact.mjs",
+      "bytes": 151898,
+      "sha256": "d9d09df9cffeff07eac358abd770255af24a6d069d46b77bcbb244528f1181e2",
+      "gitBlobSha1": "ce18d44ab727f486654ae22579aa1e975c8a154b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/editor/artifact-type/run.html",
+      "path": "distribution/skills/claude-design-system/scripts/editor/artifact-type/run.html",
+      "bytes": 2676,
+      "sha256": "ceffa563946ece66350de2425f5a6559839e89adf82ea24de7d4d86982455abb",
+      "gitBlobSha1": "bd1bd9f1911983622907ca525de2365f5ebb8cce",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/editor/artifact-type/vendor/react-dom.production.min.js",
+      "path": "distribution/skills/claude-design-system/scripts/editor/artifact-type/vendor/react-dom.production.min.js",
+      "bytes": 131835,
+      "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+      "gitBlobSha1": "fb4e099c05623afac0779278631c0712676e2b65",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/editor/artifact-type/vendor/react.production.min.js",
+      "path": "distribution/skills/claude-design-system/scripts/editor/artifact-type/vendor/react.production.min.js",
+      "bytes": 10751,
+      "sha256": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+      "gitBlobSha1": "9f467cace439d574903ae9d7aa6ef1068552c2f6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/editor/assets/anthropicons-fizzy-lake-taBimrpG.woff2",
+      "path": "distribution/skills/claude-design-system/scripts/editor/assets/anthropicons-fizzy-lake-taBimrpG.woff2",
+      "bytes": 34092,
+      "sha256": "eca97a511bd2caa68f22804e46f9c35dbcb2d47669d62ed879e2671e5b16c9f9",
+      "gitBlobSha1": "5a3ce3028d856e4f9ce2269611356ee882cb61c0",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/editor/assets/index-D96pui0C.js",
+      "path": "distribution/skills/claude-design-system/scripts/editor/assets/index-D96pui0C.js",
+      "bytes": 2549239,
+      "sha256": "6c0932fd8a184b2eb7f80c1ec1b9cea7ddcde58bfa214c911dffbca1c463bc6b",
+      "gitBlobSha1": "fe6dc23dea442eea5ed7cc1a3520dca7f8d3dc25",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/editor/assets/index-iALF7K4N.css",
+      "path": "distribution/skills/claude-design-system/scripts/editor/assets/index-iALF7K4N.css",
+      "bytes": 478438,
+      "sha256": "62825f87ea4b683a13f87e0e77f60b2690145bb1351e9458b656cd8c7aa19bab",
+      "gitBlobSha1": "5219f078ca8d5a55ebee180dc478433d736f68e8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/editor/index.html",
+      "path": "distribution/skills/claude-design-system/scripts/editor/index.html",
+      "bytes": 1815,
+      "sha256": "d83cbe9aea417ce18f19bc7faa09362cb0dcff76480c9ecb38315d3ba985a113",
+      "gitBlobSha1": "8f2f71bdfaac7886ffbe4764474ca75ddcaf99eb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/editor/third-party-licenses.txt",
+      "path": "distribution/skills/claude-design-system/scripts/editor/third-party-licenses.txt",
+      "bytes": 28584,
+      "sha256": "151ac5babff82b9a523e5ef95af86ea4fc2c0df71c18a69a31b294782d815d07",
+      "gitBlobSha1": "9dbce3c8022c31744ffda07fc035f81e3f89439a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design-system/scripts/server.mjs",
+      "path": "distribution/skills/claude-design-system/scripts/server.mjs",
+      "bytes": 65542,
+      "sha256": "c989ed08b1bd2f1910e99aec52a3a784a1ec2239229a2588804755f5fb362902",
+      "gitBlobSha1": "25ccd839451fd33b6459403dc4e1e4609015342c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/SKILL.md",
+      "path": "upstream/claude-design/SKILL.md",
+      "bytes": 20760,
+      "sha256": "fd0c1bc519512c8fbc0ef808ee4c7f2d488f974a619a209c006d774e97b52c89",
+      "gitBlobSha1": "d744812330b6146e827d36e1a7091c2de2790aac",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/brand-colors.md",
+      "path": "upstream/claude-design/artifact-type/reference/brand-colors.md",
+      "bytes": 2234,
+      "sha256": "f451f1e68b640f2bbe4d15420339ddcb7a84595cb7d12e888caa1a6bd5bd4b3a",
+      "gitBlobSha1": "b48cd9e4af5a05241d319033804fa49d6da3bd36",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/brand-typography.md",
+      "path": "upstream/claude-design/artifact-type/reference/brand-typography.md",
+      "bytes": 1534,
+      "sha256": "d3aa7f635e355d674680a54fe305d4efc66463c25ec04e0a1243f8937a9ece20",
+      "gitBlobSha1": "535c42ed2a2c275482d06f0de40806978e82373d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/craft.md",
+      "path": "upstream/claude-design/artifact-type/reference/craft.md",
+      "bytes": 15996,
+      "sha256": "73b64cfb2ffb7f0bded39bbd0a71c9795fe887764eb9d18edfa913f31f0ba538",
+      "gitBlobSha1": "70c196beae227effdefbe918086b712c4b00eeae",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/design-system-components.md",
+      "path": "upstream/claude-design/artifact-type/reference/design-system-components.md",
+      "bytes": 12348,
+      "sha256": "be6d36c90371cd28dccc509d4e1cf7bd65f1b8253de8cd4d084123303dcebdb7",
+      "gitBlobSha1": "87cbabd9506736ceb46c8da729f8c12f0f3b4ad4",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/diagrams.md",
+      "path": "upstream/claude-design/artifact-type/reference/diagrams.md",
+      "bytes": 9638,
+      "sha256": "c5747e7ab8d8bd04e7ac484f10be02728b9f8f2df1c024024d1d218be9bb20a7",
+      "gitBlobSha1": "78efbba79fc13e3bd9309ba59a59e0d79ec61678",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/format.md",
+      "path": "upstream/claude-design/artifact-type/reference/format.md",
+      "bytes": 11295,
+      "sha256": "b509b31cc2db41a7ddc247f67b164c0f6f755e3f07d909ad3baf20a27718b771",
+      "gitBlobSha1": "9881d9ca1ea6bda903a439ff560e8c2e56956112",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/google-fonts-families.json",
+      "path": "upstream/claude-design/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c",
+      "gitBlobSha1": "2aa959ac0a488c31db82389a45a7db90c871d055",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/google-fonts-notices.json",
+      "path": "upstream/claude-design/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64",
+      "gitBlobSha1": "1b75ef5285e2ca2185216eac680b754196b147e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/google-fonts-reserved.json",
+      "path": "upstream/claude-design/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be",
+      "gitBlobSha1": "b93f1b5ef57ced57cc083519ebfa271afbf461df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/make-from-this.md",
+      "path": "upstream/claude-design/artifact-type/reference/make-from-this.md",
+      "bytes": 2014,
+      "sha256": "8089c8f1771fd14a5690f83112174af1fe42fdd2809709b03e4f0579ab94e645",
+      "gitBlobSha1": "b8dea8691051a4351c69a25ab200ba58cb800282",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/print.md",
+      "path": "upstream/claude-design/artifact-type/reference/print.md",
+      "bytes": 5443,
+      "sha256": "ed7b2b2c069c0fb164201afe15041158f2c5427bed2cb6c25a84876d51ac0253",
+      "gitBlobSha1": "e23f56d28c68c91bbb792c14a6005ce6516200eb",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/questions.md",
+      "path": "upstream/claude-design/artifact-type/reference/questions.md",
+      "bytes": 4419,
+      "sha256": "34139a6b25e7b6048b8c98afbb7892116c9c3dc7369f22b5cf9c88d06cab108e",
+      "gitBlobSha1": "ce78ec13c24e197819d34d38a4354b4c22b366dc",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/artifact-type/reference/view-state.md",
+      "path": "upstream/claude-design/artifact-type/reference/view-state.md",
+      "bytes": 8779,
+      "sha256": "2b40c2de9bda3130f15d5c4fb5ec8529224d2eea8bf7df6426205dd52bbcb87c",
+      "gitBlobSha1": "2328b53a840dd97aca5af63ce5aca4c9df1797c3",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/artifact.mjs",
+      "path": "upstream/claude-design/scripts/artifact.mjs",
+      "bytes": 151877,
+      "sha256": "7f83ca215b6daaccc644dc7aadf06436e6a0cf00e93a4eb2f9667792ffd91a3c",
+      "gitBlobSha1": "9e500e47405f0a2da2f45ee1f64e648af66dfed8",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/babel.min.js",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/babel.min.js",
+      "bytes": 3137752,
+      "sha256": "2623a9e22809915ce789b4461154e277ddce520d5a4320c14d44332a5d0dcea0",
+      "gitBlobSha1": "8830ea360e6bc7ec272015f86b113cda88f2765d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/dc-runtime.js",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/dc-runtime.js",
+      "bytes": 1156121,
+      "sha256": "429daefce5f0e0b90e96b99287d877ff610fdb5d744cfc33c350af79b33ce420",
+      "gitBlobSha1": "1bd63d2729beee5c8defdcf7cfd0995e70fafa65",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/fast-edit-worker.js",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/fast-edit-worker.js",
+      "bytes": 2401938,
+      "sha256": "005a173a50191e48252089e36d65c5003d2f2a8f0303f003a8891158e26a64b0",
+      "gitBlobSha1": "3503ab8fbccf0fe3e677b4f924d6bd2b9c447d40",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/reference/google-fonts-families.json",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c",
+      "gitBlobSha1": "2aa959ac0a488c31db82389a45a7db90c871d055",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/reference/google-fonts-notices.json",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64",
+      "gitBlobSha1": "1b75ef5285e2ca2185216eac680b754196b147e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/artifact-type/reference/google-fonts-reserved.json",
+      "path": "upstream/claude-design/scripts/editor/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be",
+      "gitBlobSha1": "b93f1b5ef57ced57cc083519ebfa271afbf461df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/assets/anthropicons-fizzy-lake-c1fxtHDl.woff2",
+      "path": "upstream/claude-design/scripts/editor/assets/anthropicons-fizzy-lake-c1fxtHDl.woff2",
+      "bytes": 44224,
+      "sha256": "b11ef2e83c6031152aa63078133907be657a57d6f9932836c648874192fcd901",
+      "gitBlobSha1": "f17a18f8dbd43ad0cf0888bd0d75725f6fa3603b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/assets/index-DavTckY0.js",
+      "path": "upstream/claude-design/scripts/editor/assets/index-DavTckY0.js",
+      "bytes": 6303213,
+      "sha256": "f467444746d4a5cce78f3dc622ad7a8e9b1676ac1c860b2edb1e31eb63cb9bba",
+      "gitBlobSha1": "0062d9fdc8b44fac1e8c2d8627ce3b85a407bc79",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/assets/index-oDSQuawR.css",
+      "path": "upstream/claude-design/scripts/editor/assets/index-oDSQuawR.css",
+      "bytes": 535016,
+      "sha256": "7c17e8e83e69537bf2a7d1fb53ec9ed5744276be90c80438d5f663b7bcde2971",
+      "gitBlobSha1": "ad0fc0914276d6ea937d5d2ed9b398c9f9b19f3a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/index.html",
+      "path": "upstream/claude-design/scripts/editor/index.html",
+      "bytes": 2578,
+      "sha256": "6addcff84136152a1d440746e300bf6d0b9abba9b585506d9e307bc451cbb3eb",
+      "gitBlobSha1": "e35fbc30b1fbf00eca39f000b1f0a14f11be4e65",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/third-party-licenses.txt",
+      "path": "upstream/claude-design/scripts/editor/third-party-licenses.txt",
+      "bytes": 48330,
+      "sha256": "08463d65ff3633611f07edf6c54696b852b5eec716a55a812c30d4c79b7759f6",
+      "gitBlobSha1": "59740519d06de0ff6132d0c05cee052c5310ba49",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/server.mjs",
+      "path": "upstream/claude-design/scripts/server.mjs",
+      "bytes": 61469,
+      "sha256": "5370cdf58dec4e4aae052ee9a2bf6dce288b1cd2dc3681f21e294d2d4931b4a6",
+      "gitBlobSha1": "03d772b6ccc7c511c99d34d0343f68406393f7d9",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/SKILL.md",
+      "path": "upstream/claude-slides/SKILL.md",
+      "bytes": 19592,
+      "sha256": "05dae466702e3f90b58e729918a029d85208950d18865cf9083bb1cd581abc95",
+      "gitBlobSha1": "b44baa462b73bea1b3192431d1ae25cc624396a7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/craft.md",
+      "path": "upstream/claude-slides/artifact-type/reference/craft.md",
+      "bytes": 11598,
+      "sha256": "49c67a742f35985216586de4cb1fe6c295b2616a1b42ab55ec9332870c715b8b",
+      "gitBlobSha1": "093e4c9fdb16c4aae43f22634321422fda8d5633",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/deck-files.md",
+      "path": "upstream/claude-slides/artifact-type/reference/deck-files.md",
+      "bytes": 16021,
+      "sha256": "b10bccc76c0420f994d8ebd6ce25b0da288825ae40afd63be96f5799220efba5",
+      "gitBlobSha1": "4d12a6d3532a9b62b514755e7a35b4877d737127",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/diagram-recipes.md",
+      "path": "upstream/claude-slides/artifact-type/reference/diagram-recipes.md",
+      "bytes": 14555,
+      "sha256": "9ff69058b0ef21c12cf4f89c1a5c434335cc3208b8742200e663686e425cc3ae",
+      "gitBlobSha1": "0f6b842cf256471a22a5389a3df655f35b12fe1d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/diagrams.md",
+      "path": "upstream/claude-slides/artifact-type/reference/diagrams.md",
+      "bytes": 15934,
+      "sha256": "b9ecc6d915bb76df18e8d57617a99b867225445504b74966632985236d8d5164",
+      "gitBlobSha1": "6e5299a7630421db4a00f42e6d59a65703f01547",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/fonts.md",
+      "path": "upstream/claude-slides/artifact-type/reference/fonts.md",
+      "bytes": 13656,
+      "sha256": "43aebf54206513e64d7bad93ba0ddaec69cb5c6b3fe1a7a53ce255173024ae59",
+      "gitBlobSha1": "89422c1fc02913cad1034eb0e1e5e6900cd5e062",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/format.md",
+      "path": "upstream/claude-slides/artifact-type/reference/format.md",
+      "bytes": 16247,
+      "sha256": "b39026f68e7cdd6cc6e32efa1777d52c26e12ea3fcfd16a9346ac1eca4261ebc",
+      "gitBlobSha1": "427010706a58567cf1b4f23fd1cbb547d13121bd",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/google-fonts-families.json",
+      "path": "upstream/claude-slides/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c",
+      "gitBlobSha1": "2aa959ac0a488c31db82389a45a7db90c871d055",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/google-fonts-notices.json",
+      "path": "upstream/claude-slides/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64",
+      "gitBlobSha1": "1b75ef5285e2ca2185216eac680b754196b147e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/google-fonts-reserved.json",
+      "path": "upstream/claude-slides/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be",
+      "gitBlobSha1": "b93f1b5ef57ced57cc083519ebfa271afbf461df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/images.md",
+      "path": "upstream/claude-slides/artifact-type/reference/images.md",
+      "bytes": 8005,
+      "sha256": "4f97d6a815c98e03629a1cf83d2f44e678a334e38bcf83275430e8fc18c81186",
+      "gitBlobSha1": "0b4c54141b9041b575e08a0f4223663378f0e993",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/layout.md",
+      "path": "upstream/claude-slides/artifact-type/reference/layout.md",
+      "bytes": 11145,
+      "sha256": "744fc7fd7b40db8b5b041358f2f2914741fe500e61808860c4103015a5c0e7ec",
+      "gitBlobSha1": "b74873b4ce67d7c266685294aa27c158726164c6",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/photo-library.md",
+      "path": "upstream/claude-slides/artifact-type/reference/photo-library.md",
+      "bytes": 3412,
+      "sha256": "0442116083ca87d517da1ccf41b05c3e16c33169b5983293bc4a4a669cf7fd06",
+      "gitBlobSha1": "0c9880b2a1d113f3c6ba233e95a694ae89b0148d",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/questions.md",
+      "path": "upstream/claude-slides/artifact-type/reference/questions.md",
+      "bytes": 4273,
+      "sha256": "70ba904f7bcb4084398cc74d22af1e2bb8cfd931163974f95266992a7a8ce3b7",
+      "gitBlobSha1": "ff71e6081a8d8e125c36db41ec833f724b600f25",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/styles.md",
+      "path": "upstream/claude-slides/artifact-type/reference/styles.md",
+      "bytes": 7994,
+      "sha256": "9bee74605ed03ea28f3c41c3d1fb65c9e959e1a78cc3bedc2773800cc55194c2",
+      "gitBlobSha1": "296e8b329a62e2539d69dbe9a6a0847adb2d270f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/artifact-type/reference/view-state.md",
+      "path": "upstream/claude-slides/artifact-type/reference/view-state.md",
+      "bytes": 9654,
+      "sha256": "b81f6ddd448ca8fb052bafa7c2f646347d7ef5267bca428a18648623db1cac95",
+      "gitBlobSha1": "6be7a10a0bd081272a596ad4e2ad1c55dfe5d2ea",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/artifact.mjs",
+      "path": "upstream/claude-slides/scripts/artifact.mjs",
+      "bytes": 151877,
+      "sha256": "3497fced3773de5668cbd11ebaae0efe22125980a351ffa07accd6afe198014b",
+      "gitBlobSha1": "f7edb91d55cf2633c1d3460c1fac722ef5feef0c",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/artifact-type/reference/google-fonts-families.json",
+      "path": "upstream/claude-slides/scripts/editor/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c",
+      "gitBlobSha1": "2aa959ac0a488c31db82389a45a7db90c871d055",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/artifact-type/reference/google-fonts-notices.json",
+      "path": "upstream/claude-slides/scripts/editor/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64",
+      "gitBlobSha1": "1b75ef5285e2ca2185216eac680b754196b147e1",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/artifact-type/reference/google-fonts-reserved.json",
+      "path": "upstream/claude-slides/scripts/editor/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be",
+      "gitBlobSha1": "b93f1b5ef57ced57cc083519ebfa271afbf461df",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/anthropicons-fizzy-lake-yNspLiPZ.woff2",
+      "path": "upstream/claude-slides/scripts/editor/assets/anthropicons-fizzy-lake-yNspLiPZ.woff2",
+      "bytes": 81444,
+      "sha256": "2ca3f2a7ae15cb9c35ab91128fe7bd52b3fb5864058dab78443590eacf3e4923",
+      "gitBlobSha1": "044517971d0379a79576f7678085d93f12f09c87",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/index-BSIksl9u.js",
+      "path": "upstream/claude-slides/scripts/editor/assets/index-BSIksl9u.js",
+      "bytes": 4666628,
+      "sha256": "57b922483d900e57b3abf0287f9b5225c22b7c5a733006cf47047a16a1816a66",
+      "gitBlobSha1": "e392ad56d9d24eef64adf4a6e8603138bec77702",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/index-DooSdFer.css",
+      "path": "upstream/claude-slides/scripts/editor/assets/index-DooSdFer.css",
+      "bytes": 470617,
+      "sha256": "9a5a37d02d8cc037fabd46be0caf43678b55c42929ddbf60792a4d5ce01c8156",
+      "gitBlobSha1": "764ce23f3ba2808568a3dc64274fae317bd6046b",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/woff2-decoder-BGQ3SeZf.js",
+      "path": "upstream/claude-slides/scripts/editor/assets/woff2-decoder-BGQ3SeZf.js",
+      "bytes": 305629,
+      "sha256": "29a2a06b3834c69def4677b9ee9e418d0f52246e561cc236f9084820b7cfc41e",
+      "gitBlobSha1": "970e619f22c41a3ffb6722e8a3d21c8e04ff4a14",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/index.html",
+      "path": "upstream/claude-slides/scripts/editor/index.html",
+      "bytes": 3185,
+      "sha256": "082ff43b98e8111fcdfa341e189d6aec2348e69865feabdd8561020115c278cd",
+      "gitBlobSha1": "922a8cb79302b95e5ba4d18f906309dd9141e69f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/node/compiler.cjs",
+      "path": "upstream/claude-slides/scripts/editor/node/compiler.cjs",
+      "bytes": 10264229,
+      "sha256": "bba806b77b93512546799620047c62dc77258c5da4c2fbd318ebe14a4f90e61e",
+      "gitBlobSha1": "e91f034aff35b4646839a854eb1dd1115b132428",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/node/third-party-licenses.txt",
+      "path": "upstream/claude-slides/scripts/editor/node/third-party-licenses.txt",
+      "bytes": 95020,
+      "sha256": "4bd79f56dc6660adf38a69bbffce120b65d2b5d8dc962d3950fb753a1419acef",
+      "gitBlobSha1": "80a910d3ed1907a23546cd8172bc702101862e86",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/third-party-licenses.txt",
+      "path": "upstream/claude-slides/scripts/editor/third-party-licenses.txt",
+      "bytes": 84401,
+      "sha256": "eee4c2d3a61a8b27676277a97585e6bcda0004e5e5071eaea707742348d8f013",
+      "gitBlobSha1": "ce95b355e98869f69239b8ceb1fba31b72530458",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/server.mjs",
+      "path": "upstream/claude-slides/scripts/server.mjs",
+      "bytes": 62317,
+      "sha256": "cb158fee32903e62a60b9a471d199a09a3407e6cb15a43686c495e41d7335902",
+      "gitBlobSha1": "e2ef90c65e8c7e43e57d93a089b939092b140fc7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/SKILL.md",
+      "path": "distribution/skills/dataviz/SKILL.md",
+      "bytes": 7429,
+      "sha256": "417eaa2a4c87cb1825662c6aab3bfa8e648fec30450bcd88c70e5fe98d02abd9",
+      "gitBlobSha1": "a701f1b3b949096fd9defbdaa6387799b42c5e94",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/references/anti-patterns.md",
+      "path": "distribution/skills/dataviz/references/anti-patterns.md",
+      "bytes": 6152,
+      "sha256": "8526a6c662c62dcd5cae2ef5402f83583cde06e495cf44f8d77ec8508ed6d967",
+      "gitBlobSha1": "6e9fc759548628919a37d6b0ffb46072854956cd",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/references/choosing-a-form.md",
+      "path": "distribution/skills/dataviz/references/choosing-a-form.md",
+      "bytes": 3086,
+      "sha256": "fbd8d8fb385670569c16cdcfe3d0e05281d0a33f892ef09a54b5c5780dc548e2",
+      "gitBlobSha1": "819ceb6df534d924ce015bfa2c106acb1b83fc8f",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/references/color-formula.md",
+      "path": "distribution/skills/dataviz/references/color-formula.md",
+      "bytes": 8509,
+      "sha256": "6924caad41a9a19c14764a95e97430a30a9891abac13c6a1a5dd5a01727b5187",
+      "gitBlobSha1": "0e4fa9746f8d71d4c5b7b828d7243992f10874b7",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/references/components.md",
+      "path": "distribution/skills/dataviz/references/components.md",
+      "bytes": 2108,
+      "sha256": "ce463ae52c62e499cc6cc52100ffe47fa4e1851a1725e5bd76892b0f6f31185d",
+      "gitBlobSha1": "22f80b72703ee6372872a2e501896c11d08200c0",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/references/interaction.md",
+      "path": "distribution/skills/dataviz/references/interaction.md",
+      "bytes": 3741,
+      "sha256": "2050b65e1a0d919627db870215f423956e17f82c1285eb336537b732cb0c7893",
+      "gitBlobSha1": "0a4ce5fa2da40cf8af82a43c53ed36e7a9656756",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/references/marks-and-anatomy.md",
+      "path": "distribution/skills/dataviz/references/marks-and-anatomy.md",
+      "bytes": 6103,
+      "sha256": "0659e4a8fc65ddc3f56bf369dbdbfa60b0f94bb385f22ba88dc5daddd7c68845",
+      "gitBlobSha1": "1b67eaaf7d8a5ef116c6468a2ae4743cf75cfe1e",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/references/palette.md",
+      "path": "distribution/skills/dataviz/references/palette.md",
+      "bytes": 9523,
+      "sha256": "b0eb3882e9cf8467a2979c4f63a69f2f83510318e7ebeb7a07e0ebd89189bba1",
+      "gitBlobSha1": "1eb45f1beffde7fa087d36b0a9d88f1c83af80cf",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/scripts/validate_palette.js",
+      "path": "distribution/skills/dataviz/scripts/validate_palette.js",
+      "bytes": 19958,
+      "sha256": "25df43beb77674dad34348b9fe338d5a47f568e08bcf51b38780e51386cf866e",
+      "gitBlobSha1": "0529c4f9c3bdb689bfe8ee30327b78e99c94976a",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/dataviz/scripts/validate_palette.py",
+      "path": "distribution/skills/dataviz/scripts/validate_palette.py",
+      "bytes": 17684,
+      "sha256": "949f8c86dc1c98c589f1455bb2d7cd8967ffecf85d77eed2789dce62ce6c2cf4",
+      "gitBlobSha1": "c5cd012f445f8b7a8c26106dcafded4326958abe",
+      "gitMode": "100644"
+    }
+  ]
+}

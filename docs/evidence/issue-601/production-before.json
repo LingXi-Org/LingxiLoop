@@ -1,0 +1,56 @@
+{
+  "scope": "Read-only production status before product60 to product61 migration",
+  "workflow": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/41178316880",
+  "observerCommit": "8a34a64d825ae8c7705f2a5aa219473aee1169cb",
+  "observationOnly": true,
+  "runtime": {
+    "runtime": "3.8.20",
+    "controlPlane": 11,
+    "kernel": 2,
+    "schema": 14,
+    "assistantMessage": 2,
+    "publicText": 3,
+    "runTrace": 1
+  },
+  "installed": [
+    {
+      "runtime_version": "3.8.20",
+      "schema_version": 14,
+      "protocol_version": 11,
+      "schema_sha256": "c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f"
+    }
+  ],
+  "native": [
+    {
+      "version": 14
+    }
+  ],
+  "observedAt": "2026-10-31T06:52:37.460Z",
+  "preserved": {
+    "artifacts": {
+      "count": 2,
+      "sha256": "581ac8821ad56d5fa795811e9f0ffaba4363a46ac19c24e4ca00febc37841070"
+    },
+    "artifactFiles": {
+      "count": 4,
+      "sha256": "4fb38769baa1bd8fd846122c5805731e1b3485675956fc838e9b61590d473501"
+    },
+    "assignments": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "conversations": {
+      "count": 60,
+      "sha256": "f8cd69f87e63fd9b5edf4e64c8e373c0145fd79f1f8a5b4d5aefab10be4b881e"
+    },
+    "nativeWork": {
+      "count": 978,
+      "sha256": "555c99305260e0f8d93f454f63739e68f8c5b9ffef906129dadbfd19ba26ba4a"
+    }
+  },
+  "product": {
+    "count": 60,
+    "version": 60,
+    "inventoryHash": "ae3ac1f600f23ee29e0147140f5f457adb88f7c51bb5ee65cf49ad710d8edef6"
+  }
+}

@@ -26,6 +26,8 @@ export async function withFormal19TestFixture(root,env,run){
   }
   assert.equal('sha512-'+createHash('sha512').update(await readFile(archive)).digest('base64'),record.integrity,'formal19 source archive integrity changed')
   for(const path of ['server/src','src','shared','server/scripts','server/fixtures'])await cp(join(root,path),join(fixture,path),{recursive:true})
+  // Historical formal19 fixtures contain the exact product60 source inventory.
+  await rm(join(fixture,'server/src/db/migrations/0061_slides_workspaces.sql'),{force:true})
   const modules=join(fixture,'node_modules'),sdk=join(modules,'@lyyzka/lingxios');await mkdir(sdk,{recursive:true})
   await execute('tar',['-xzf',archive,'--strip-components=1','-C',sdk],{timeout:30000})
   assert.equal(JSON.parse(await readFile(join(sdk,'package.json'),'utf8')).version,record.version)

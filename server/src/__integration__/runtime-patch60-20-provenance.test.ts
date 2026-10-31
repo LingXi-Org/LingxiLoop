@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
-import {readFile} from 'node:fs/promises'
-import test from 'node:test'
+import {readFile,readdir,mkdtemp,copyFile,rm} from 'node:fs/promises'
+import {tmpdir} from 'node:os'
+import {join} from 'node:path'
+import {pathToFileURL} from 'node:url'
+import test,{before,after} from 'node:test'
 import {Pool} from 'pg'
 import {packageResources,releaseVersions} from '@lyyzka/lingxios'
 import {assertMigrationsCurrent,migrateDatabase} from '../db/migrate.js'
@@ -9,6 +12,15 @@ import {applyPublishedRuntimePatch,assertRuntimePatchDescriptors,loadRuntimePatc
 import {loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH} from '../db/runtime-profile.js'
 import {parseRuntimePatchInput} from '../runtime-patch-bin.js'
 
+// This suite qualifies the historical product60 CAS, not later product migrations.
+let product60Directory:string,product60Migrations:URL
+before(async()=>{
+ product60Directory=await mkdtemp(join(tmpdir(),'product60-cas-test-'))
+ const source=new URL('../db/migrations/',import.meta.url)
+ for(const name of (await readdir(source)).sort().slice(0,60))await copyFile(new URL(name,source),join(product60Directory,name))
+ product60Migrations=pathToFileURL(product60Directory+'/')
+})
+after(async()=>{if(product60Directory)await rm(product60Directory,{recursive:true,force:true})})
 const actual=String(releaseVersions.runtime)
 const formal20={skip:actual==='3.8.20'?false:'requires the actual formal3.8.20 archive and matching locks'}
 async function isolated(run:(db:Pool)=>Promise<void>){
@@ -47,7 +59,7 @@ test('product60 admits only19 to20 and refuses an installed formal19 package as 
 test('formal20 exact CAS preserves all60 migration rows and business data; startup performs no product SQL',formal20,async()=>isolated(async db=>{
  const {source,target}=await setup(db),before=(await db.query('SELECT * FROM public.lingxios_installation')).rows
  const ledger=(await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows
- await assert.rejects(migrateDatabase(db),/installed LingxiOS package\/schema mismatch/,'startup must not stamp the source19 provenance')
+ await assert.rejects(migrateDatabase(db,product60Migrations),/installed LingxiOS package\/schema mismatch/,'startup must not stamp the source19 provenance')
  const other=new Pool({connectionString:db.options.connectionString,max:1})
  try{
   await other.query('SELECT 1')
@@ -63,8 +75,8 @@ test('formal20 exact CAS preserves all60 migration rows and business data; start
  const installed=(await db.query('SELECT * FROM public.lingxios_installation')).rows
  // This fixture has no product plan tables: attempting migrations or ordinary
  // seed writes would fail, as would any DDL under the trigger above.
- assert.deepEqual(await migrateDatabase(db),[])
- await assertMigrationsCurrent(db)
+ assert.deepEqual(await migrateDatabase(db,product60Migrations),[])
+ await assertMigrationsCurrent(db,product60Migrations)
  assert.deepEqual((await db.query('SELECT * FROM public.lingxios_installation')).rows,installed)
  assert.deepEqual((await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows,ledger)
  assert.deepEqual((await db.query('SELECT * FROM public.business_fixture')).rows,[{id:1,value:'preserve'}])
@@ -73,15 +85,15 @@ test('formal20 exact CAS preserves all60 migration rows and business data; start
 }))
 test('formal20 refuses fresh,58 or59 product history before any migration or adoption',formal20,async()=>{
  await isolated(async db=>{
-  await assert.rejects(migrateDatabase(db),/requires already installed product60/)
+  await assert.rejects(migrateDatabase(db,product60Migrations),/requires already installed product60/)
   assert.equal((await db.query("SELECT to_regclass('public.schema_migrations') AS name")).rows[0].name,null)
  })
  for(const count of [58,59])await isolated(async db=>{
   await setup(db)
   await db.query('DELETE FROM public.schema_migrations WHERE version>$1',[count])
   const ledger=(await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows
-  await assert.rejects(migrateDatabase(db),/requires already installed product60/)
-  await assert.rejects(assertMigrationsCurrent(db),/migration\(s\)/)
+  await assert.rejects(migrateDatabase(db,product60Migrations),/requires already installed product60/)
+  await assert.rejects(assertMigrationsCurrent(db,product60Migrations),/migration\(s\)/)
   assert.deepEqual((await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows,ledger)
   assert.deepEqual((await db.query('SELECT * FROM public.business_fixture')).rows,[{id:1,value:'preserve'}])
   assert.equal((await db.query('SELECT runtime_version FROM public.lingxios_installation')).rows[0].runtime_version,'3.8.19')

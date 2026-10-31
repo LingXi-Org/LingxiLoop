@@ -11,13 +11,15 @@ export function runtimePatchPlan(read, migrationPaths) {
   const json = path => JSON.parse(read(path))
   const manifest = json('package.json')
   const paths = migrationPaths.toSorted()
-  const retirement = [59, 60].includes(paths.length)
+  const slides61 = paths.length === 61 && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql'
+  const retirement = [59, 60, 61].includes(paths.length)
     && paths[58] === 'server/src/db/migrations/0059_retire_presentation_generation.sql'
     && (paths.length === 59 || paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql')
   const targetRuntime = manifest.dependencies?.[PACKAGE]
   const runtimeOnly60 = retirement && paths.length === 60 && ['3.8.19','3.8.20'].includes(targetRuntime)
-  if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly60, 'product59 requires a verified exact runtime')
-  if (['3.8.19','3.8.20'].includes(targetRuntime)) assert.ok(runtimeOnly60, 'unreviewed runtime transition; runtime patch requires installed product60')
+  if (slides61) assert.equal(targetRuntime, '3.8.20', 'product61 requires exact installed formal3.8.20')
+  if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly60 || slides61, 'product59 requires a verified exact runtime')
+  if (['3.8.19','3.8.20'].includes(targetRuntime)) assert.ok(runtimeOnly60 || slides61, 'unreviewed runtime transition; runtime patch requires installed product60')
   if (targetRuntime === '3.8.16') return null
   assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or exact reviewed3.8.17/3.8.18/3.8.19/3.8.20 is supported')
   const sourceRuntime = SOURCES[targetRuntime]
@@ -36,6 +38,8 @@ export function runtimePatchPlan(read, migrationPaths) {
     assert.ok(match && Number(match[1]) === index + 1, 'ordered migration inventory required')
     return { version: index + 1, name: match[2], checksum: hash(read(path)) }
   })
+  // Product61 changes only product state; migrate.ts requires installed formal20/product60.
+  if (slides61) return null
   // Retirement uses the installed SDK; migrations verify its exact provenance.
   if (retirement && !runtimeOnly60) return null
   // This plan cannot install59/60: the preflight/CAS requires their exact ledger
@@ -47,13 +51,16 @@ export function runtimePatchPlan(read, migrationPaths) {
 
 /** The product59 retirement is staged manually after confirmed cleanup. */
 export function assertRetirementReleaseAllowed(paths, command, approval, patch) {
+  const slides61 = patch === null && paths.length === 61
+    && paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql'
+    && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql'
   const runtimeOnly60 = ['up', 'servers'].includes(command) && paths.length === 60
     && ['3.8.19','3.8.20'].includes(patch?.target.runtime) && patch?.source.runtime === SOURCES[patch?.target.runtime]
     && [patch.source, patch.target].every(d => d.productVersion === 60 && d.schema === 14
       && d.protocol === 11 && d.schemaHash === SCHEMA && d.migrations.length === 60)
     && JSON.stringify(patch.source.migrations) === JSON.stringify(patch.target.migrations)
   if (paths.includes('server/src/db/migrations/0059_retire_presentation_generation.sql')
-    && ['up','servers','workers'].includes(command) && approval !== 'true' && !runtimeOnly60) {
+    && ['up','servers','workers'].includes(command) && approval !== 'true' && !runtimeOnly60 && !slides61) {
     throw new Error('product59 retirement requires explicit maintenance release approval')
   }
 }

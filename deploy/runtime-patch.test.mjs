@@ -160,3 +160,16 @@ test('retirement requires explicit release approval before any deployment action
  assert.doesNotThrow(() => assertRetirementReleaseAllowed(paths, 'status', undefined))
  assert.doesNotThrow(() => assertRetirementReleaseAllowed([], 'up', undefined))
 })
+
+test('Slides product61 is additive only on exact formal20 and never an SDK CAS', () => {
+  const f=fixture('3.8.20')
+  for(const name of ['0059_retire_presentation_generation','0060_native_artifacts','0061_slides_workspaces']) {
+    const path=`server/src/db/migrations/${name}.sql`; f.paths.push(path); f.files[path]='-- reviewed additive fixture'
+  }
+  assert.equal(runtimePatchPlan(f.read,f.paths),null)
+  assert.doesNotThrow(()=>assertRetirementReleaseAllowed(f.paths,'up',undefined,null))
+  assert.throws(()=>runtimePatchPlan(f.read,[...f.paths.slice(0,-1),'server/src/db/migrations/0061_unknown.sql']))
+  assert.throws(()=>runtimePatchPlan(f.read,[...f.paths,'server/src/db/migrations/0062_unknown.sql']))
+  f.files['package.json']=f.files['package.json'].replace('3.8.20','3.8.19')
+  assert.throws(()=>runtimePatchPlan(f.read,f.paths),/product61 requires/)
+})

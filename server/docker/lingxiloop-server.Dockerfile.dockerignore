@@ -30,6 +30,7 @@ src/features/cases/cover-vm/**
 shared/**
 !shared/visualize-public-resources.ts
 !shared/artifact-editor-origin.ts
+!shared/slides-editor-context.ts
 !public/**
 !index.html
 !vite.config.ts
@@ -41,6 +42,7 @@ shared/**
 !third_party/baoyu-design/**
 !third_party/assistant-ui/streaming-text/**
 !third_party/assistant-ui-elements/LICENSE
+!third_party/assistant-ui-with-artifacts/LICENSE
 !third_party/react-chat-elements/reply-message/LICENSE
 !scripts/verify-zcode-visualize.mjs
 !scripts/build-visualize-runtime.mjs

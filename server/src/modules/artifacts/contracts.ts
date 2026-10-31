@@ -144,6 +144,13 @@ export const agentArtifactSchemas = {
   import_asset: z.object({ ...target, attachmentId: z.string().min(1).max(2000) }).strict(),
   check: z.object({ ...target }).strict(),
   read_reference: z.object({ page: z.string().regex(/^[a-z0-9-]+\.(md|json)$/) }).strict(),
+  design_systems: z.object({ ...target }).strict(),
+  install_design_system: z.object({ ...target, namespace: z.string().regex(/^[a-z][a-z0-9-]{0,63}$/), title: titleSchema,
+    source: z.string().min(1).max(1000), version: z.string().max(100).optional(),
+    files: z.record(z.string().regex(/^(?!.*(?:^|\/)\.\.?\/)[a-zA-Z0-9_./-]+\.(?:json|css|html|md)$/), z.string().max(2 * 1024 * 1024))
+      .refine(files => Object.keys(files).length > 0 && Object.keys(files).length <= 30, 'install 1 to 30 text files'),
+    ifMatch: z.string().regex(/^[0-9a-f]{64}$/),
+  }).strict(),
   comments: z.object({ ...target, all: z.boolean().optional() }).strict(),
   comment_reply: z.object({ ...target, commentId: z.string().min(1).max(64), text: z.string().trim().min(1).max(10_000), resolve: z.boolean().optional() }).strict(),
   comment_resolve: z.object({ ...target, commentId: z.string().min(1).max(64), reopen: z.boolean().optional() }).strict(),

@@ -1,0 +1,21 @@
+{
+  "pdf": {
+    "bytes": 1635679,
+    "sha256": "006b421b1a8c7eb2e0d1c2addf1979509d5577c85b35d7554e272ff168491e30",
+    "pages": 20
+  },
+  "html": {
+    "bytes": 484276,
+    "sha256": "9645757ab4f71afd419d2e5d4041ebb1b0c1a12dae49d107d3f8b98130a8ee2a",
+    "slides": 20,
+    "videos": 0
+  },
+  "pptx": {
+    "bytes": 700020,
+    "sha256": "388513e75dbff21ef4cd510782be9ec6d62edf2d250b2032308c8bfad0665f0b",
+    "badZipMember": null,
+    "slides": 20,
+    "videoFiles": [],
+    "videoRelationships": []
+  }
+}
