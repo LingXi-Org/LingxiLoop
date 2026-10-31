@@ -26,7 +26,7 @@ export async function ensureSlideWorkspace(db: Queryable, companyId: string, art
   const agentId = existing?.agent_id ?? `slides-agent-${createHash('sha256').update(`${companyId}:${artifact.project_id}`).digest('hex').slice(0, 24)}`
   await db.query(`INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status,bio,tools,capabilities,system_prompt)
     VALUES($1,$2,'agent','演示文稿助手','演示文稿','演','transparent','avail','制作、修改和检查演示文稿','["ipython"]'::jsonb,$3::jsonb,$4)
-    ON CONFLICT(id) DO NOTHING`, [agentId, companyId, JSON.stringify(DEFAULT_AGENT_CAPABILITIES), slidesPrompt])
+    ON CONFLICT(id,company_id) DO NOTHING`, [agentId, companyId, JSON.stringify(DEFAULT_AGENT_CAPABILITIES), slidesPrompt])
   const conversationId = existing?.conversation_id ?? `slides-chat-${randomUUID()}`
   const prior = existing ? (await db.query<{ members: string[] }>(
     'SELECT members FROM conversations WHERE id=$1 AND company_id=$2 FOR UPDATE', [conversationId, companyId])).rows[0]?.members ?? [] : []

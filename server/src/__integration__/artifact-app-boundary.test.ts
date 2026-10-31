@@ -8,7 +8,7 @@ import { artifactBlobRouter, artifactEditorRouter } from '../modules/artifacts/i
 import { inlineScriptHashes } from '../modules/artifacts/kinds.js'
 import { createSlides, publishArtifactFiles } from '../modules/artifacts/facade.js'
 import { permissionService } from '../modules/access/public.js'
-import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 // Full HTTP router + PostgreSQL/Redis for the product API and the vendored editor's
 // grant-authorized routes. Only the session identity is a test fixture.
@@ -16,6 +16,7 @@ let server: Server, origin: string, companyId: string, projectId: string, agentI
 const userId = 'artifact-member'
 before(async () => {
   await ensureSchemaOnce(); await resetAllTables()
+  installFakeWukong()
   await sub.subscribe(CH_ARTIFACTS)
   ;({ companyId, projectId, agentId } = await seedCompanyWithAgent())
   await seedUserMembership(userId, companyId, { isAdmin: false })
