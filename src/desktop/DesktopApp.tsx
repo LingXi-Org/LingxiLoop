@@ -6,7 +6,7 @@ import { CommandPalette } from '@/components/CommandPalette'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import '@/features/design/design-workspace.css'
 import {
   Drawer,
   DrawerClose,
@@ -43,7 +43,6 @@ import { useLearningSpaces } from './useLearningSpaces'
 
 const CasesPage = lazy(() => import('@/features/cases/CasesPage').then((module) => ({ default: module.CasesPage })))
 const SlidesPage = lazy(() => import('@/features/slides/SlidesPage').then((module) => ({ default: module.SlidesPage })))
-const ArtifactView = lazy(() => import('@/features/artifacts/components/ArtifactView').then((module) => ({ default: module.ArtifactView })))
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
 const PersonalDashboard = lazy(() => import('./PersonalDashboard').then((module) => ({ default: module.PersonalDashboard })))
 
@@ -87,7 +86,6 @@ export function DesktopApp() {
   const infoParticipantId = surface?.kind === 'member' ? surface.participantId : null
   const openThread = surface?.kind === 'thread' ? surface : null
   const documentId = surface?.kind === 'document' ? surface.documentId : null
-  const design = surface?.kind === 'design' ? surface : null
   const selectedConversationId = useApp((state) => state.selectedConversationId)
   const selectedConversation = useConversations((state) => state.list.find((item) => item.id === selectedConversationId) ?? null)
   const mobileConversationOpen = useApp((state) => state.mobileConversationOpen)
@@ -150,32 +148,20 @@ export function DesktopApp() {
     setSidebarWidth(clamped)
     persistSidebarWidth(clamped)
   }
-  const closeDesignView = () => {
-    const closingId = design?.artifactId
-    useSurface.getState().closeDesign()
-    if (!closingId) return
-    window.requestAnimationFrame(() => (document.querySelector<HTMLElement>(`[data-artifact-open-trigger="${CSS.escape(closingId)}"]`)
-      ?? document.querySelector<HTMLElement>('[data-design-open-trigger]'))?.focus({ preventScroll: true }))
-  }
-  const drawerDesign = isMobile ? design : null
-  const drawerOpen = Boolean(infoParticipantId || openThread || documentId || drawerDesign)
+  const drawerOpen = Boolean(infoParticipantId || openThread || documentId)
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
 
   if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> }
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
-  else if (drawerDesign) { drawerTitle = '设计'; drawerContent = <ArtifactView artifactId={drawerDesign.artifactId} kind="design" title={drawerDesign.title} onClose={closeDesignView} back closeLabel="关闭设计" /> }
 
   const closeDrawer = () => {
     const surfaces = useSurface.getState()
     if (infoParticipantId) surfaces.closeAgentInfo()
     else if (openThread) surfaces.closeThreadView()
     else if (documentId) surfaces.closeDocumentPeek()
-    else if (drawerDesign) closeDesignView()
   }
-  const drawerOwnsHeader = Boolean(drawerDesign)
-  const fullBleedDrawer = Boolean(drawerDesign)
   const mobileForumOpen = isMobile && view === 'forum' && Boolean(learningSpaces.activeSpace?.courseId) && !navigationPending
   const mobileChatOpen = !dashboardOpen && !learningSpaces.pending && isMobile && mobileConversationOpen && Boolean(selectedConversation)
   const drawerWidth = isMobile
@@ -212,45 +198,31 @@ export function DesktopApp() {
                 onChooseWorkspace={chooseWorkspace}
               />
             </Suspense>
-          ) : isMobile ? (
-            <div className="h-full min-h-0 min-w-0" data-mobile-conversation-page={mobileChatOpen ? 'chat' : 'list'}>
-              <Activity mode={mobileChatOpen ? 'visible' : 'hidden'}>
-                <ChatPane
-                  onChooseWorkspace={chooseWorkspace}
-                  onBackToConversations={() => useApp.getState().showConversationList()}
-                />
-              </Activity>
-              {!mobileChatOpen && (
-                <div className="flex h-full min-h-0 flex-col bg-card">
-                  <ConversationsPane />
-                </div>
-              )}
-            </div>
           ) : <ResizablePanelGroup
             id="desktop-conversation-layout"
             orientation="horizontal"
             className="desktop-im-grid min-h-0 min-w-0"
+            data-mobile-conversation-page={isMobile ? mobileChatOpen ? 'chat' : 'list' : undefined}
             onLayoutChanged={handleSidebarLayoutChanged}
           >
-            <ResizablePanel id="conversations" defaultSize={sidebarWidth} minSize={LEFT_COLUMN_MIN} maxSize={LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
+            <ResizablePanel id="conversations" data-shell-panel-hidden={isMobile && mobileChatOpen} defaultSize={sidebarWidth} minSize={isMobile ? 0 : LEFT_COLUMN_MIN} maxSize={isMobile ? '100%' : LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
               <div className="flex h-full min-h-0 flex-col bg-card">
                 <ConversationsPane />
               </div>
             </ResizablePanel>
-            <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整会话列表宽度" title="拖动调整会话列表宽度，双击恢复默认" />
-            <ResizablePanel id="conversation-workspace" minSize={MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
-              <ChatPane onChooseWorkspace={chooseWorkspace} />
+            <ResizableHandle data-shell-panel-hidden={isMobile} withHandle className="desktop-panel-resize-handle" aria-label="调整会话列表宽度" title="拖动调整会话列表宽度，双击恢复默认" />
+            <ResizablePanel id="conversation-workspace" data-shell-panel-hidden={isMobile && !mobileChatOpen} minSize={isMobile ? 0 : MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
+              <Activity mode={isMobile && !mobileChatOpen ? 'hidden' : 'visible'}>
+                <ChatPane onChooseWorkspace={chooseWorkspace} onBackToConversations={isMobile ? () => useApp.getState().showConversationList() : undefined} />
+              </Activity>
             </ResizablePanel>
           </ResizablePanelGroup>}
         </div>
       </div>
 
       <Drawer open={drawerOpen} onOpenChange={(open) => { if (!open) closeDrawer() }} direction="right">
-        <DrawerContent className={`${drawerWidth}${fullBleedDrawer ? ' max-w-none overflow-hidden p-0 before:inset-0 before:rounded-none before:border-0 sm:max-w-none' : ''}`} style={isMobile ? { top: 'env(safe-area-inset-top)', bottom: 'env(safe-area-inset-bottom)' } : undefined}>
-          {drawerOwnsHeader ? <>
-            <DrawerTitle className="sr-only">{drawerTitle}</DrawerTitle>
-            <DrawerDescription className="sr-only">{drawerTitle}</DrawerDescription>
-          </> : <DrawerHeader className="border-b border-hairline p-4">
+        <DrawerContent className={drawerWidth} style={isMobile ? { top: 'env(safe-area-inset-top)', bottom: 'env(safe-area-inset-bottom)' } : undefined}>
+          <DrawerHeader className="border-b border-hairline p-4">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <DrawerTitle className="truncate">{drawerTitle}</DrawerTitle>
@@ -262,24 +234,14 @@ export function DesktopApp() {
                 </Button>
               </DrawerClose>
             </div>
-          </DrawerHeader>}
+          </DrawerHeader>
           <div className="min-h-0 flex-1 overflow-hidden">
-            <Suspense fallback={<div className="flex h-full flex-col">{drawerOwnsHeader && <Button type="button" variant="ghost" className="m-2 self-start" onClick={closeDrawer}>关闭</Button>}{documentId ? <DocumentSkeleton /> : drawerDesign ? <ResourceSkeleton variant="media" label="正在打开设计" /> : <ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} />}</div>}>
+            <Suspense fallback={<div className="flex h-full flex-col">{documentId ? <DocumentSkeleton /> : <ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} />}</div>}>
               {drawerContent}
             </Suspense>
           </div>
         </DrawerContent>
       </Drawer>
-
-      <Dialog open={!isMobile && Boolean(design)} onOpenChange={(open) => { if (!open) closeDesignView() }}>
-        <DialogContent showCloseButton={false} className="h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-none gap-0 overflow-hidden rounded-2xl bg-card p-0 sm:max-w-none">
-          <DialogTitle className="sr-only">设计</DialogTitle>
-          <DialogDescription className="sr-only">当前对话的设计画板</DialogDescription>
-          <Suspense fallback={<div className="flex h-full flex-col"><Button type="button" variant="ghost" className="m-2 self-start" onClick={closeDesignView}>关闭设计</Button><ResourceSkeleton variant="media" label="正在打开设计" /></div>}>
-            {design && <ArtifactView artifactId={design.artifactId} kind="design" title={design.title} onClose={closeDesignView} />}
-          </Suspense>
-        </DialogContent>
-      </Dialog>
 
       <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
       {settingsOpen && <SettingsDialog />}
