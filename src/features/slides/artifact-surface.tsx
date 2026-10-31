@@ -25,12 +25,12 @@ export function ArtifactSurfaceProvider({ children, initial, onClose }: {
 }) {
   const [active, setActive] = useState<ArtifactSurfaceTarget | null>(initial)
   const value = useMemo<ArtifactSurfaceContextValue>(() => ({
-    active, open: setActive,
-    close: () => { setActive(null); onClose() },
+    active: active?.id === initial.id ? { ...active, title: initial.title } : active, open: setActive,
+    close: onClose,
     returnToOrigin: () => {
       if (active?.sourceConversationId) useApp.getState().selectConversation(active.sourceConversationId)
     },
-  }), [active, onClose])
+  }), [active, initial.id, initial.title, onClose])
   return <ArtifactSurfaceContext.Provider value={value}>{children}</ArtifactSurfaceContext.Provider>
 }
 

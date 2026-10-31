@@ -13,8 +13,10 @@ import { withTransaction } from '../db/transaction.js'
 import { lingxiOSControl, runtimeModelConfiguration } from '../agent-runtime/runtime.js'
 import { receiveAgentRequest } from '../agent-runtime/receive.js'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
+import { startNativeEventWorker } from '../agents/native-event-worker.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
 import { artifactSkills } from '../modules/artifacts/skills.js'
+import { artifactEditorRouter } from '../modules/artifacts/editor-router.js'
 import { createArtifactTools, createArtifactRuntime, loadArtifactRunContext, completeArtifactWork, createSlides } from '../modules/artifacts/index.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
@@ -41,7 +43,7 @@ before(async () => {
     VALUES('slides-flow-source',$1,$2,'group','Source',$3::jsonb)`, [companyId, projectId, JSON.stringify(members)])
   await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES('slides-flow-source',$1,$2::jsonb)`,
     [companyId, JSON.stringify({ channelType: 2, members })])
-  const app = express(); app.use(express.json()); app.use('/api', api)
+  const app = express(); app.use('/artifact-editor', artifactEditorRouter); app.use(express.json()); app.use('/api', api)
   server = createServer(app)
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
   const address = server.address(); assert.ok(address && typeof address !== 'string')
@@ -58,6 +60,20 @@ function signedHeaders(path: string, method: string) {
 const request = (path: string, method = 'GET', body?: unknown) => fetch(`${origin}/api${path}`, {
   method, headers: signedHeaders(path, method), ...(body === undefined ? {} : { body: JSON.stringify(body) }),
 })
+async function deliverUserEvents(events: { clientNonce: string; channelId: string }[]) {
+  const delivery = startNativeEventWorker()
+  try {
+    const deadline = AbortSignal.timeout(10_000)
+    while (true) {
+      const pending = await pool.query(`SELECT id FROM agent_native_event_outbox
+        WHERE event->>'clientNonce'=ANY($1::text[]) AND delivered_at IS NULL AND failed_at IS NULL`, [events.map(event => event.clientNonce)])
+      if (!pending.rows.length) break
+      deadline.throwIfAborted(); await delay(20)
+    }
+    for (const event of events) assert.ok(im.messages.some(message => message.clientMsgNo === event.clientNonce
+      && message.channelId === event.channelId && message.fromUid === userId), 'queued user event must actually reach its execution room')
+  } finally { await delivery.stop() }
+}
 function work(agentId: string, conversationId: string, id = randomUUID()): Omit<WorkItem, 'leaseToken'> {
   return { id, tenantId: companyId, agentId, principalId: userId, sessionId: `session-${id}`, kind: 'turn', lane: 'interactive',
     triggerRef: `message-${id}`, fence: 1, homeEpoch: 1, createdAt: new Date().toISOString(), meta: { conversationId } } as unknown as Omit<WorkItem, 'leaseToken'>
@@ -105,6 +121,7 @@ test('authenticated Slides cooperation keeps source provenance and completes in 
   const requests = (await pool.query("SELECT event FROM agent_native_event_outbox WHERE company_id=$1 AND event->>'artifactId'=$2 AND event->>'type'='im.user'", [companyId, deck.id])).rows
   assert.ok(requests.length > 0)
   assert.ok(requests.every(row => row.event.channelId === workspace.conversationId))
+  await deliverUserEvents(requests.map(row => row.event))
 
   const builder = work(builderId, workspace.conversationId), verifier = work(verifierId, workspace.conversationId)
   assert.equal((await loadArtifactRunContext(pool, builder))?.artifact_id, deck.id)
@@ -135,15 +152,36 @@ test('opening a legacy active deck does not move its work, and unrelated rooms c
     members: [{ agentId: builderId, assignment: 'Continue the existing assignment' }] })
   // Models the pre-upgrade row: new nullable column has no backfill.
   await pool.query('UPDATE artifacts SET execution_conversation_id=NULL WHERE id=$1', [deck.id])
+  const assignment = await request(`/artifacts/${deck.id}/assignments`, 'POST', { agentId: builderId, assignment: 'Continue the source-room work' })
+  assert.equal(assignment.status, 200)
   const workspace = await (await request(`/artifacts/${deck.id}/slides-workspace`, 'POST')).json() as { conversationId: string }
   assert.deepEqual((await pool.query('SELECT conversation_id,execution_conversation_id FROM artifacts WHERE id=$1', [deck.id])).rows,
     [{ conversation_id: 'slides-flow-source', execution_conversation_id: null }])
   assert.equal(await loadArtifactRunContext(pool, work(builderId, workspace.conversationId)), null)
   assert.equal((await loadArtifactRunContext(pool, work(builderId, 'slides-flow-source')))?.artifact_id, deck.id)
+  const requests = (await pool.query("SELECT event FROM agent_native_event_outbox WHERE event->>'artifactId'=$1 AND event->>'type'='im.user'", [deck.id])).rows
+  assert.ok(requests.length > 0 && requests.every(row => row.event.channelId === 'slides-flow-source'))
+  await deliverUserEvents(requests.map(row => row.event))
   await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members)
     VALUES('slides-unrelated',$1,$2,'group','Unrelated',$3::jsonb)`, [companyId, projectId, JSON.stringify([userId, builderId])])
   await assert.rejects(pool.query("UPDATE artifacts SET execution_conversation_id='slides-unrelated' WHERE id=$1", [deck.id]),
     (error: unknown) => (error as { code: string }).code === '23514')
+})
+
+test('a sent editor comment is delivered to the dedicated room through the real native event worker', async () => {
+  const created = await request(`/projects/${projectId}/slides`, 'POST', { title: 'Comment delivery' })
+  const deck = await created.json() as { id: string }
+  const workspace = await (await request(`/artifacts/${deck.id}/slides-workspace`, 'POST')).json() as { conversationId: string }
+  const grant = await (await request(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string }
+  const response = await fetch(origin + grant.url + '__comments', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ anchor: 'slide:one', label: '第一页', text: '请修改选中标题。', send: true }) })
+  assert.equal(response.status, 201)
+  const requests = (await pool.query("SELECT event FROM agent_native_event_outbox WHERE event->>'artifactId'=$1 AND event->>'type'='im.user'", [deck.id])).rows
+  assert.equal(requests.length, 1)
+  assert.equal(requests[0].event.channelId, workspace.conversationId)
+  await deliverUserEvents(requests.map(row => row.event))
+  const snapshot = await (await fetch(origin + grant.url + '__comments')).json() as { threads: { agent?: { status: string } }[] }
+  assert.equal(snapshot.threads[0]?.agent?.status, 'delivered')
 })
 
 test('authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
@@ -213,7 +251,9 @@ test('authenticated message reaches the formal worker, loads the Slides skill, e
     const replay = await request(`/im/channels/${workspace.conversationId}/agents/${workspace.agentId}/runs/${run.runId}`)
     assert.equal(replay.status, 200, await replay.clone().text())
     assert.match(await replay.text(), /已保存/)
-    const ledger = await pool.query('SELECT count(*)::int AS n FROM llm_calls WHERE run_id=$1', [run.runId])
+    // Memory retrieval can independently add an embedding receipt in a live
+    // configured environment. Count the five actual worker chat requests.
+    const ledger = await pool.query("SELECT count(*)::int AS n FROM llm_calls WHERE run_id=$1 AND purpose='lingxios.agent-turn'", [run.runId])
     assert.equal(ledger.rows[0].n, calls.length)
     const duplicate = await receiveAgentRequest({ companyId, agentId: workspace.agentId, channelId: workspace.conversationId, clientMsgNo: clientNonce, authenticatedUserId: userId })
     assert.equal(duplicate.deduplicated, true)

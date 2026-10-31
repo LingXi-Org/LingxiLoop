@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { mkdir, readFile, writeFile, copyFile, rm } from 'node:fs/promises'
+import { mkdir, readFile, readdir, writeFile, copyFile, rm } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { gzipSync } from 'node:zlib'
@@ -71,11 +71,18 @@ export function translateSlides(source, catalog) {
 export async function buildSlidesEditor() {
   const sourceRoot = resolve(root, 'third_party/baoyu-design/slides-source')
   const recovered = JSON.parse(await readFile(resolve(sourceRoot, 'source-map.json'), 'utf8'))
+  const browserBindings = await pruneBrowserBindings(sourceRoot)
   const result = await build({
     absWorkingDir: root, entryPoints: [{ in: resolve(sourceRoot, 'main.js'), out: 'editor' }],
     outdir: resolve(output, 'assets'), entryNames: 'editor-[hash]', chunkNames: '[name]-[hash]',
     bundle: true, splitting: true, format: 'esm', platform: 'browser', target: ['chrome120', 'firefox120', 'safari17'],
     minify: true, legalComments: 'inline', metafile: true, write: false, external: ['fs', 'https'],
+    plugins: [{ name: 'private-runtime-exports', setup(builder) {
+      builder.onLoad({ filter: /slides-source\/modules\/.*\.js$/ }, args => {
+        const contents = browserBindings.sources.get(args.path)
+        return contents === undefined ? null : { contents, loader: 'js' }
+      })
+    } }],
   })
   // Remove obsolete generated chunks, including retired video workers.
   await rm(output, { recursive: true, force: true })
@@ -106,6 +113,7 @@ export async function buildSlidesEditor() {
   const initialFiles = result.outputFiles.filter(file => initial.has(Object.keys(result.metafile.outputs).find(name => resolve(root, name) === file.path)))
   const report = { upstreamCommit: recovered.upstreamCommit, source: 'third_party/baoyu-design/slides-source',
     modules: recovered.modules.length, removedModules: recovered.removedModules, messageCount: recovered.translatedMessages,
+    unusedBrowserBindings: browserBindings.removed,
     original: { bytes: 4666628, gzip: 1508796 },
     entry: { file: entryName, bytes: entryFile.contents.length, gzip: gzipSync(entryFile.contents).length },
     initial: { bytes: initialFiles.reduce((sum, file) => sum + file.contents.length, 0), gzip: initialFiles.reduce((sum, file) => sum + gzipSync(file.contents).length, 0) },
@@ -113,6 +121,50 @@ export async function buildSlidesEditor() {
     files: Object.fromEntries(result.outputFiles.map(file => [file.path.split(/[\\/]/).at(-1), { bytes: file.contents.length, sha256: hash(file.contents) }])) }
   await writeFile(resolve(output, 'manifest.json'), JSON.stringify(report, null, 2) + '\n')
   return report
+}
+
+// The browser runtime is private to main.js. The recovered distribution also
+// exports thousands of locals solely for its Node compiler/debug namespace.
+// Removing unread browser getters lets esbuild discard their unreachable code;
+// it does not skip initializers or change the Node compiler's public namespace.
+// Include lazy exports and the host bridge when collecting consumers. A new
+// computed runtime access must be reviewed explicitly instead of pruned blindly.
+async function pruneBrowserBindings(sourceRoot) {
+  const names = (await readdir(resolve(sourceRoot, 'modules'))).filter(name => name.endsWith('.js')).map(name => `modules/${name}`)
+  names.push('runtime.js', 'exports.js', 'workspace-bridge.js')
+  const files = await Promise.all(names.map(async name => {
+    const path = resolve(sourceRoot, name), source = await readFile(path, 'utf8')
+    return { path, source, tree: ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS) }
+  }))
+  const reads = new Set()
+  for (const { tree } of files) {
+    const visit = node => {
+      const runtime = node.expression && ts.isIdentifier(node.expression) && ['runtime', 'runtime2'].includes(node.expression.text)
+      if (runtime && ts.isElementAccessExpression(node)) throw new Error(`Computed private runtime access requires review: ${tree.fileName}`)
+      if (runtime && ts.isPropertyAccessExpression(node)) reads.add(node.name.text)
+      ts.forEachChild(node, visit)
+    }
+    visit(tree)
+  }
+  const sources = new Map()
+  let removed = 0
+  for (const { path, source, tree } of files) {
+    const edits = []
+    const visit = node => {
+      if (ts.isCallExpression(node) && node.expression.getText(tree) === 'bindRuntimeValue') {
+        // Factory-local export helpers can compute their key; retain them.
+        if (ts.isStringLiteral(node.arguments[1]) && !reads.has(node.arguments[1].text)) {
+          edits.push([node.getStart(tree), node.end]); removed++
+        }
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(tree)
+    let compiled = source
+    for (const [start, end] of edits.reverse()) compiled = compiled.slice(0, start) + 'void 0' + compiled.slice(end)
+    sources.set(path, compiled)
+  }
+  return { sources, removed }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

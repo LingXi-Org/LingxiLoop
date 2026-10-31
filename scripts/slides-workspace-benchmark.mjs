@@ -43,7 +43,8 @@ const server = createServer(async (req, res) => {
     if (pathname === '/host') {
       bytes = Buffer.from(`<script>window.editorContexts=[];window.addEventListener("message",e=>{if(e.data?.type==="slides:context")window.editorContexts.push(e.data.context)})</script><iframe title="演示文稿编辑器" sandbox="allow-scripts allow-downloads allow-popups allow-modals" allow="fullscreen" src="${base}#workspace=benchmark" style="position:fixed;inset:0;width:100%;height:100%;border:0"></iframe>`)
       type = 'text/html'
-    } else if (pathname === `/_blob/${imageId}`) { bytes = image; type = 'image/svg+xml' }
+    } else if (pathname === '/workspace-recheck') bytes = Buffer.from('{"authorized":true}')
+    else if (pathname === `/_blob/${imageId}`) { bytes = image; type = 'image/svg+xml' }
     else if (path === '_files.json') bytes = Buffer.from(JSON.stringify({ ver: sha(Buffer.concat([...files.values()])), files: Object.fromEntries([...files].map(([name, data]) => [name, { sha256: sha(data), size: data.length, contentType: name.endsWith('.html') ? 'text/html' : 'application/json' }])) }))
     else if (path === '__deck/session') bytes = Buffer.from('{"canEdit":true}')
     else if (path === '__comments') bytes = Buffer.from('{"threads":[],"agent":{"available":false},"me":{"name":"基准测试"}}')
@@ -99,6 +100,7 @@ function cdp(method, params = {}, sessionId) {
 const delay = ms => new Promise(r => setTimeout(r, ms))
 const readyScript = `(() => { if (!location.pathname.startsWith('${base}')) return; const poll = () => { const stage = document.querySelector('[data-slides-editor]'); const add = [...document.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === '添加幻灯片' || b.textContent === '添加幻灯片'); if(stage && stage.getBoundingClientRect().width > 0 && add && !add.disabled && document.body.textContent.includes('幻灯片 1') && [...document.querySelectorAll('img')].some(img=>img.getBoundingClientRect().width>300 && img.complete && img.naturalWidth>0)) { requestAnimationFrame(() => { window.__slidesReady = performance.now(); }); } else requestAnimationFrame(poll); }; requestAnimationFrame(poll); })()`
 const samples = [], edits = [], regression = {}
+const parsingTraces = []
 const networkRequests = new Set()
 try {
   const version = await cdp('Browser.getVersion')
@@ -137,9 +139,29 @@ try {
     await configure(sessionId)
     await cdp('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: true, flatten: true }, sessionId)
     await cdp('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false }, sessionId)
-    for (const phase of ['cold', 'reopen']) {
+    for (const phase of args.retained ? ['cold', 'retained', 'reopen'] : ['cold', 'reopen']) {
       transferred = 0
-      await cdp('Page.navigate', { url: `${origin}/host` }, sessionId)
+      const traceEvents = []
+      const traceListener = event => { if (event.method === 'Tracing.dataCollected') traceEvents.push(...event.params.value) }
+      if (args.trace) {
+        listeners.add(traceListener)
+        await cdp('Tracing.start', { categories: 'v8,disabled-by-default-v8.compile,devtools.timeline', transferMode: 'ReportEvents' })
+      }
+      let retainedStartedAt
+      if (phase === 'retained') {
+        // Additional metric only. Keep the original fresh-frame reopen above
+        // for comparison; do not call it a warm hit. The actual React retention
+        // and revocation lifecycle is checked by check-slides-retention.mjs.
+        // Closing via the product's host button moves focus out of the frame.
+        await cdp('Runtime.evaluate', { expression: `document.body.tabIndex=-1;document.body.focus();document.querySelector('iframe').hidden=true` }, sessionId)
+        await delay(100)
+        for (const { contextId, session } of contexts.values()) {
+          await cdp('Runtime.evaluate', { expression: `window.__slidesReady=0;${readyScript}`, contextId }, session).catch(() => {})
+        }
+        const start = await cdp('Runtime.evaluate', { expression: `(async()=>{const started=performance.timeOrigin+performance.now();const response=await fetch('/workspace-recheck');if(!response.ok)throw Error('authorization failed');document.querySelector('iframe').hidden=false;return started})()`, returnByValue: true, awaitPromise: true }, sessionId)
+        retainedStartedAt = start.result.value
+        if (!Number.isFinite(retainedStartedAt)) throw Error('Retained reopen did not start')
+      } else await cdp('Page.navigate', { url: `${origin}/host` }, sessionId)
       const deadline = Date.now() + Number(args.timeout ?? 45000)
       let measurement, editorSession, editorContext
       while (!measurement && Date.now() < deadline) {
@@ -164,9 +186,13 @@ try {
       for (const type of ['mousePressed', 'mouseReleased']) await cdp('Input.dispatchMouseEvent', { type, x:rect.x+50, y:rect.y+20, button:'left', clickCount:2 }, editorSession)
       let editable = false
       for (let n=0;n<40 && !editable;n++) { editable = await evaluate(`Boolean(document.activeElement?.isContentEditable)`); if(!editable) await delay(25) }
-      if (!editable) throw Error('Title did not enter text editing')
+      if (!editable) {
+        console.error({phase,active:await evaluate('document.activeElement?.outerHTML.slice(0,1500)'),rect,errors})
+        throw Error('Title did not enter text editing')
+      }
       const interactiveAt = await evaluate('performance.now()')
-      measurement = { ...measurement, renderedMs: measurement.readyMs, readyMs: interactiveAt, editableVerified: true }
+      const offset = phase === 'retained' ? measurement.timeOrigin - retainedStartedAt : 0
+      measurement = { ...measurement, renderedMs: measurement.readyMs + offset, readyMs: interactiveAt + offset, editableVerified: true }
       if (phase === 'reopen') {
         await evaluate(`window.__editFeedback=null;document.addEventListener('beforeinput',()=>{const start=performance.now();requestAnimationFrame(()=>requestAnimationFrame(()=>{window.__editFeedback={durationMs:performance.now()-start,text:document.activeElement?.textContent}}))},{once:true,capture:true});true`)
         await cdp('Input.insertText',{text:'测试'},editorSession)
@@ -176,6 +202,20 @@ try {
         edits.push({run:run+1,...feedback})
       }
       const metrics = Object.fromEntries((await cdp('Performance.getMetrics', {}, editorSession)).metrics.map(m => [m.name, m.value]))
+      if (args.trace) {
+        const complete = new Promise(resolve => {
+          const done = event => { if (event.method === 'Tracing.tracingComplete') { listeners.delete(done); resolve() } }
+          listeners.add(done)
+        })
+        await cdp('Tracing.end'); await complete; listeners.delete(traceListener)
+        const groups = new Map()
+        for (const event of traceEvents) if (event.ph === 'X' && /parse|compil/i.test(event.name) && event.dur >= 0) {
+          const key = `${event.pid}:${event.tid}:${event.name}`
+          const entry = groups.get(key) ?? { name: event.name, process: event.pid, thread: event.tid, count: 0, durationMs: 0 }
+          entry.count++; entry.durationMs += event.dur / 1000; groups.set(key, entry)
+        }
+        parsingTraces.push({ run: run + 1, phase, events: [...groups.values()] })
+      }
       if (args.regression && phase === 'reopen') {
         const key = async value => { await cdp('Input.dispatchKeyEvent',{type:'keyDown',key:value},editorSession); await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:value},editorSession) }
         await key('Escape')
@@ -259,6 +299,13 @@ try {
   }
   const percentile = (values, p) => [...values].sort((a, b) => a - b)[Math.ceil(values.length * p) - 1]
   const report = { scope: 'Real Chromium, isolated sandboxed editor, deterministic local HTTP API fixture; not full product or production acceptance', source: args.label ?? 'baseline', measuredAt: new Date().toISOString(), browser: version, device: { platform: platform(), cpu: cpus()[0]?.model, logicalCpus: cpus().length, totalMemoryBytes: totalmem(), viewport: '1440x1000@1', cpuThrottling: 1 }, network: { latencyMs: 20, downloadMbps: 4, uploadMbps: 3, compression: 'gzip', allRequests: true }, fixture: { variant: args.legacy ? 'legacy-compatibility' : 'fixed-performance', slides: 20, images: 20, imageSha256: sha(image), filesSha256: fixtureFilesSha256 }, runs, samples, regression, summary: Object.fromEntries(['cold', 'reopen'].map(phase => [phase, Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === phase).map(s => s.readyMs), p)]))])), editFeedback: { status: 'measured', definition: 'Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text', samples: edits, p95Ms: percentile(edits.map(edit=>edit.durationMs),.95) }, jsParseTime: {status:'unmeasured', note:'ScriptDuration measures execution, not a separate V8 parse trace'}, errors }
+  if (args.retained) report.retainedReopen = {
+    definition: 'Additional same-frame reopen: hide 100ms, start before a throttled authorization HTTP fixture, show the original iframe, verify loaded image and real double-click text editing. Excludes real product authorization cost; not a fresh navigation or cold measurement.',
+    ...Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === 'retained').map(s => s.readyMs), p)])),
+  }
+  if (args.trace) report.jsParseTime = { status: 'trace-recorded',
+    definition: 'V8 parse/compile complete events from before navigation to verified editing, grouped by process, thread and exact event name. Includes browser-injected measurement scripts; different names may nest and must not be summed. This trace run has instrumentation overhead and is excluded from comparable performance P95.',
+    samples: parsingTraces }
   await mkdir(resolve(out, '..'), { recursive: true }); await writeFile(out, JSON.stringify(report, null, 2) + '\n')
 } finally {
   await cdp('Browser.close').catch(() => {}); browser.kill(); server.closeAllConnections(); server.close(); await rm(profile, { recursive: true, force: true, maxRetries: 3 }).catch(() => {})
