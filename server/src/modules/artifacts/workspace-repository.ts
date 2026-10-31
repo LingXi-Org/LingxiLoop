@@ -91,8 +91,9 @@ export async function conversationDesignId(db: Queryable, companyId: string, con
 /** The deck a Slides tool means: the one named in this conversation, else its most recently changed one. */
 export async function conversationSlidesId(db: Queryable, companyId: string, conversationId: string, artifactId?: string) {
   const { rows } = await db.query<{ id: string }>(
-    `SELECT id FROM artifacts WHERE company_id=$1 AND conversation_id=$2 AND kind='slides' AND ($3::text IS NULL OR id=$3)
-      ORDER BY updated_at DESC LIMIT 1`,
+    `SELECT a.id FROM artifacts a LEFT JOIN slide_workspaces w ON w.artifact_id=a.id
+      WHERE a.company_id=$1 AND (a.conversation_id=$2 OR w.conversation_id=$2) AND a.kind='slides' AND ($3::text IS NULL OR a.id=$3)
+      ORDER BY a.updated_at DESC LIMIT 1`,
     [companyId, conversationId, artifactId ?? null],
   )
   return rows[0]?.id ?? null

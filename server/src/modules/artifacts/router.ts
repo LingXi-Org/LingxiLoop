@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { z } from 'zod'
 import { artifactEditorOrigin } from '../../../../shared/artifact-editor-origin.js'
 import { env } from '../../env.js'
 import {
@@ -13,6 +14,8 @@ import {
   renameArtifact,
   stopArtifactAssignment,
   stopArtifactWorkspace,
+  openSlideWorkspace,
+  restoreSlides,
 } from './facade.js'
 import { safe } from '../../http/async-handler.js'
 import { requireArtifact, requireConversationMember } from '../../http/authorization.js'
@@ -21,6 +24,7 @@ import { permissionService } from '../access/public.js'
 import { pool } from '../../db/pool.js'
 import { conversationDesignId } from './repository.js'
 import { issueGrant } from './grants.js'
+import { saveSlideEditorContext, slideRevisions } from './slides-workspace.js'
 import {
   artifactAssignmentRequestSchema,
   artifactCollaborationQuerySchema,
@@ -59,6 +63,33 @@ api.post('/projects/:id/slides', safe(async (req, res) => {
   await permissionService.assertCan({ actorUserId: userId, companyId, projectId, action: 'artifact:write' })
   const { title } = artifactCreateRequestSchema.parse(req.body)
   res.status(201).json(await createSlides({ companyId, projectId, conversationId: null, title, actorId: userId, origin: 'user' }))
+}))
+
+api.post('/artifacts/:id/slides-workspace', safe(async (req, res) => {
+  const { companyId, userId, kind } = await requireArtifact(req, String(req.params.id))
+  if (kind !== 'slides') { res.sendStatus(404); return }
+  res.json(await openSlideWorkspace(companyId, String(req.params.id), userId))
+}))
+
+api.put('/artifacts/:id/editor-context', safe(async (req, res) => {
+  const { userId, kind } = await requireArtifact(req, String(req.params.id))
+  if (kind !== 'slides') { res.sendStatus(404); return }
+  res.json(await saveSlideEditorContext(pool, String(req.params.id), userId, req.body))
+}))
+
+api.get('/artifacts/:id/revisions', safe(async (req, res) => {
+  const { kind } = await requireArtifact(req, String(req.params.id))
+  if (kind !== 'slides') { res.sendStatus(404); return }
+  res.json(await slideRevisions(pool, String(req.params.id)))
+}))
+
+api.post('/artifacts/:id/revisions/:seq/restore', safe(async (req, res) => {
+  const { companyId, userId, kind } = await requireArtifact(req, String(req.params.id), true)
+  if (kind !== 'slides') { res.sendStatus(404); return }
+  const seq = z.string().regex(/^\d{1,18}$/).parse(req.params.seq)
+  const { version } = z.object({ version: z.string().min(1).max(200) }).parse(req.body)
+  const outcome = await restoreSlides(companyId, String(req.params.id), seq, version, userId)
+  res.status(outcome.status).json(outcome.body)
 }))
 
 /* ============== Any artifact ============== */

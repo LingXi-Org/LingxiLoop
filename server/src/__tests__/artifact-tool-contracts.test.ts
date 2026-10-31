@@ -6,11 +6,21 @@ const control = async () => { throw new Error('schema tests must not access runt
 const design = createArtifactTools('design', control), slides = createArtifactTools('slides', control)
 const report = { finding: 'Observed finding', evidenceRefs: [{ kind: 'file', id: 'project/Main.dc.html' }], confidence: 0.8 }
 
-test('Design and Slides expose the same native tools; only Slides creates artifacts', () => {
+test('Slides retains common native tools and adds deck creation and real design-system tools', () => {
   const methods = (tools: typeof design) => tools.map(tool => tool.action.split('.')[1])
-  assert.deepEqual(methods(slides).filter(method => method !== 'create'), methods(design))
+  assert.deepEqual(methods(slides).filter(method => !['create', 'design_systems', 'install_design_system'].includes(method)), methods(design))
   assert.ok(methods(slides).includes('create'))
   for (const tool of [...design, ...slides]) assert.equal((tool.parameters as { additionalProperties: boolean }).additionalProperties, false)
+})
+
+test('design-system installation rejects traversal, missing preconditions and unbounded batches', () => {
+  const install = slides.find(tool => tool.action === 'slides.install_design_system')!
+  const input = { namespace: 'studio', title: 'Studio', source: 'user-provided', ifMatch: 'a'.repeat(64), files: { 'tokens.json': '{}' } }
+  assert.deepEqual(install.parse(input), input)
+  assert.throws(() => install.parse({ ...input, namespace: '../escape' }))
+  assert.throws(() => install.parse({ ...input, ifMatch: undefined }))
+  assert.throws(() => install.parse({ ...input, files: { '../escape.json': '{}' } }))
+  assert.throws(() => install.parse({ ...input, files: {} }))
 })
 
 test('ordinary artifact reports reject verifier fields at native parse admission', () => {

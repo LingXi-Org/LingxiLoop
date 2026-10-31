@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { createRequire } from 'node:module'
+import { createHash } from 'node:crypto'
 import test from 'node:test'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
@@ -40,13 +42,50 @@ test('every translated ICU message parses and formats using the bundled formatte
 
 test('native build keeps export libraries lazy and reduces initial JavaScript', async () => {
   const report = await buildSlidesEditor()
-  assert.equal(report.messageCount, 475)
+  assert.equal(report.messageCount, 499)
+  assert.equal(report.modules + report.removedModules.length, 321)
+  assert.ok(report.inputs.every(path => path.startsWith('third_party/baoyu-design/slides-source/')))
+  assert.ok(report.inputs.some(path => path.endsWith('/modules/editor-app.js')))
+  assert.ok(report.inputs.some(path => path.endsWith('/modules/compiler-html.js')))
   assert.ok(report.initial.bytes < report.original.bytes * 0.9)
   assert.ok(report.initial.gzip < report.original.gzip * 0.9)
   assert.ok(Object.keys(report.files).some(name => name.startsWith('pptx-library-')))
-  assert.ok(Object.keys(report.files).some(name => name.startsWith('video-worker-source-')))
+  assert.ok(Object.keys(report.files).some(name => name.startsWith('exports-')))
+  assert.ok(!Object.keys(report.files).some(name => name.includes('video')))
+  assert.ok(!report.inputs.some(path => /video-(?:worker|encoder|playback|providers)/.test(path)))
   const html = await readFile(resolve('server/assets/slides-editor/index.html'), 'utf8')
   assert.match(html, /lang="zh-CN"/)
   assert.match(html, /\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js/)
   assert.doesNotMatch(html, /index-BSIksl9u/)
+})
+
+test('complete upstream distributions retain every pinned byte and license', async () => {
+  for (const folder of ['baoyu-design', 'assistant-ui-with-artifacts']) {
+    const directory = resolve('third_party', folder)
+    const manifest = JSON.parse(await readFile(resolve(directory, 'complete-manifest.json'), 'utf8'))
+    assert.ok(manifest.files.some(file => file.path === 'LICENSE'))
+    assert.equal(manifest.files.length, folder === 'baoyu-design' ? 319 : 14)
+    for (const file of manifest.files) {
+      const bytes = await readFile(resolve(directory, file.path))
+      assert.equal(bytes.length, file.bytes, file.upstreamPath)
+      assert.equal(createHash('sha256').update(bytes).digest('hex'), file.sha256, file.upstreamPath)
+    }
+  }
+})
+
+test('rebuilt compiler preserves pinned format behavior, ids, notes, tables, images and design-system includes', async () => {
+  const require = createRequire(import.meta.url)
+  const rebuilt = require('../server/assets/slides-editor/node/compiler.cjs').runtime
+  const pinned = require('../third_party/baoyu-design/upstream/claude-slides/scripts/editor/node/compiler.cjs').runtime
+  const examples = [
+    '<section id="old-slide"><h1>Mixed case 原稿</h1><p>Keep my text</p><aside>Speaker notes 保留</aside></section>',
+    '<section id="data"><table><tr><td>A</td><td>B</td></tr></table><svg width="50" height="50"><rect width="40" height="40"/></svg></section>',
+    '<style>h1{color:#246;font-family:Arial}</style><section id="image"><h1>Image</h1><img src="/_blob/1234567890abcdef1234567890abcdef" width="640" height="360"/></section>',
+    '<link rel="stylesheet" href="ds/example/styles.css"><section id="theme"><h1>Theme</h1></section>',
+    '<section id="legacy"><video src="/_blob/1234567890abcdef1234567890abcdef" aria-label="Legacy media"></video><img data-video-youtube="abcdefghijk" alt="Old link"/></section>',
+  ]
+  for (const html of examples) assert.deepEqual(rebuilt.compileSlideHtml(html), pinned.compileSlideHtml(html))
+  for (const retired of ['VideoElement', 'videoEmbedUrl', 'videoWatchUrl', 'withVideoStill', 'videoStillNeedsRefresh']) {
+    assert.equal(Object.hasOwn(rebuilt, retired), false, retired)
+  }
 })

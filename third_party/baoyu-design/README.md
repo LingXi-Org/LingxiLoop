@@ -4,15 +4,16 @@ Pinned source: [`JimLiu/baoyu-design@c15e76ef5134228d2bb5da35652d30d7d6b8a34d`](
 
 - `upstream/claude-design/` and `upstream/claude-slides/` are the complete, byte-identical `skills/claude-design` and `skills/claude-slides` folders. No host adaptation belongs inside them; `.gitattributes` keeps their bytes on every platform.
 - `manifest.json` lists all 57 files with upstream path, byte count, SHA-256, Git blob SHA-1 and mode; each blob was checked against the pinned Git tree when it was fetched. `server/src/modules/artifacts/artifacts.test.ts` re-verifies every SHA-256.
-- The editor pages (`scripts/editor/`) are upstream's prebuilt bundles; their sources (BaoCut) are not published. Design serves that bundle unchanged. Slides uses the reproducible native build below; the original pinned inputs remain available for comparison and rollback.
+- `distribution/` contains every remaining published file, including the design-system skill, templates and references. `complete-manifest.json` inventories the entire 319-file repository; existing snapshot paths and bytes are unchanged.
+- Design retains its original bundled editor. Slides is rebuilt from [recovered named source](slides-source/README.md), including model, compiler, editing and export implementations, with the user's subsequent video removal applied to executable code.
 
 ## Native Slides build
 
-`npm run build:slides-editor` builds `server/assets/slides-editor/` from the pinned bundle and `host/slides-zh-CN.json`. It translates editor copy (including accessibility labels and starter layouts), initializes the dialog's sheet-measurement dependency before its first hook call, and splits the PowerPoint library and video encoder into on-demand modules. Source-hash and patch assertions stop the build if the upstream contracts change. Run this command before starting the server directly; `npm run server:dev` and the runtime Docker image build it automatically.
+`npm run build:slides-editor` compiles `slides-source/main.js` and `slides-source/node/compiler.js` into the ignored `server/assets/slides-editor/` directory. It does not wrap or patch the original editor bundle. Export implementations and PPTX/WOFF2 dependencies load on demand. Run before starting the API directly; the standard server development and runtime image paths already invoke it.
 
-Generated, hashed assets are served at `/artifact-editor/slides-assets/` so reopening a deck with a new grant can reuse the browser cache. These routes contain application code only; pages, document files, uploads, writes and events keep their existing authorization. The server still injects the download capability and hashes all inline scripts for the original sandbox/CSP policy. No document contents or enum values are translated.
+Hashed application-only assets are served at `/artifact-editor/slides-assets/`. Document files, uploads, writes and events retain their existing grant checks. Slides remains an opaque iframe with the original CSP isolation. The build retains inline license notices and the dependency license inventory.
 
-Focused checks: `node --test scripts/slides-editor.test.mjs`, then `python scripts/check-slides-editor.py` (Python Playwright and Chrome). The browser check uses HTTP fixtures with the real editor inside the product's opaque iframe sandbox; it covers creation, optimistic saves, reload, Chinese menus and lazy PPTX export on desktop, plus the narrow-screen creation flow. `--upstream` reproduces the original crash. Database/ACL coverage belongs to `artifact-app-boundary.test.ts`.
+Run `node --test scripts/slides-editor.test.mjs` for source-build, pinned archive and compiler parity checks. `scripts/slides-workspace-benchmark.mjs` uses raw Chromium CDP with a fixed 20-page image fixture; it reports its environment and distinguishes real editor timings from full product acceptance. See `docs/evidence/issue-601/README.md`. No Playwright acceptance is claimed.
 
 ## Native adaptations
 
@@ -30,4 +31,4 @@ Host routes live in `server/src/modules/artifacts/` and `src/features/artifacts/
 | `--agent-hook` / `comments --wait` | A sent comment becomes a conversation message to the room's agent |
 | `artifact.mjs check <root>` | `check.ts` runs the vendored `artifact.mjs check` unchanged on a temporary copy |
 | `SKILL.md` and `artifact-type/reference/` | `skills.ts` registers the SKILL.md text with only "The calls" and "Comments" replaced by native tools; references via `<kind>.read_reference` |
-| Local `<root>` folder, `open`, `list`, `cp` | One Design per conversation, Slides per project; no design-system folders in this host |
+| Local `<root>` folder, `open`, `list`, `cp` | One Design per conversation, Slides per project; Slides design systems stored under project/ds/<namespace> through native tools |

@@ -82,9 +82,17 @@ export interface PublishOutcome {
   changed: string[]
 }
 
+async function checkpoint(db: Queryable, artifactId: string, seq: string, files: Listing, actorId: string | null) {
+  await db.query(`INSERT INTO artifact_file_versions(artifact_id,sha256,body)
+    SELECT artifact_id,sha256,body FROM artifact_files WHERE artifact_id=$1
+    ON CONFLICT(artifact_id,sha256) DO NOTHING`, [artifactId])
+  await db.query(`INSERT INTO artifact_revisions(artifact_id,seq,version,files,actor_id) VALUES($1,$2,$3,$4::jsonb,$5)
+    ON CONFLICT(artifact_id,seq) DO NOTHING`, [artifactId, seq, files.ver, JSON.stringify(files.files), actorId])
+}
+
 /** A save: all entries or none (ifMatch is checked for all before anything is written). Runs inside the caller's transaction. */
 export async function publish(db: Queryable, definition: ArtifactKindDefinition, artifactId: string,
-  batch: Record<string, WireEntry>, actorId: string): Promise<PublishOutcome> {
+  batch: Record<string, WireEntry>, actorId: string, requireMatch = false): Promise<PublishOutcome> {
   const { layout } = definition
   let total = 0
   for (const [p, entry] of Object.entries(batch)) {
@@ -102,6 +110,13 @@ export async function publish(db: Queryable, definition: ArtifactKindDefinition,
   const locked = await db.query<{ seq: string }>('SELECT seq FROM artifacts WHERE id=$1 FOR UPDATE', [artifactId])
   if (!locked.rows[0]) return { status: 404, body: { code: 'not_found', message: 'artifact not found' }, changed: [] }
   const before = await listing(db, artifactId)
+  if (requireMatch) {
+    const missing = Object.entries(batch).filter(([path, entry]) => before.files[path] && entry?.ifMatch === undefined).map(([path]) => path)
+    if (missing.length) return { status: 409, body: { code: 'if_match_required', message: 'Read the current file and supply its sha256 as ifMatch before replacing or deleting it.', paths: missing }, changed: [] }
+    const dirty = await db.query(`SELECT 1 FROM slide_editor_contexts WHERE artifact_id=$1 AND context->>'dirty'='true'
+      AND updated_at>now()-interval '60 seconds' LIMIT 1`, [artifactId])
+    if (dirty.rows.length) return { status: 409, body: { code: 'editor_busy', message: 'An editor has unsaved changes. Wait for its save, then read the latest version.' }, changed: [] }
+  }
   const conflicts: { path: string; actual: string | null; expected: string | null }[] = []
   for (const [p, entry] of Object.entries(batch)) {
     const expected = entry?.ifMatch
@@ -117,6 +132,7 @@ export async function publish(db: Queryable, definition: ArtifactKindDefinition,
   }
   const shas: Record<string, string> = {}
   const changed: string[] = []
+  if (definition.kind === 'slides') await checkpoint(db, artifactId, locked.rows[0].seq, before, null)
   for (const [p, entry] of Object.entries(batch)) {
     if (!isWriteEntry(entry)) {
       const removed = await db.query('DELETE FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifactId, p])
@@ -135,6 +151,7 @@ export async function publish(db: Queryable, definition: ArtifactKindDefinition,
   }
   const { rows } = await db.query<{ seq: string }>('UPDATE artifacts SET seq=seq+1,updated_at=NOW() WHERE id=$1 RETURNING seq', [artifactId])
   const after = await listing(db, artifactId)
+  if (definition.kind === 'slides' && changed.length) await checkpoint(db, artifactId, rows[0].seq, after, actorId)
   return { status: 200, body: { version: after.ver, seq: Number(rows[0].seq), shas }, changed }
 }
 

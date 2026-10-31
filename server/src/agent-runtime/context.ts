@@ -232,7 +232,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
           WHERE agent.company_id=$1 AND agent.kind='agent' AND agent.departed_at IS NULL AND channel.profile->'members' ? agent.id`,
         [work.tenantId, productConversationId(work)]),
       !homeworkContext && learningAudienceSafe && capabilities.includes('learning') ? loadLearningTurnContext(nativeContext({ work }), work.principalId!) : undefined,
-      capabilities.some(name => ARTIFACT_NAMESPACES.has(name)) ? artifactTurnContext(work.tenantId, productConversationId(work), capabilities.filter(name => ARTIFACT_NAMESPACES.has(name)) as Array<'design' | 'slides'>) : undefined,
+      capabilities.some(name => ARTIFACT_NAMESPACES.has(name)) ? artifactTurnContext(work.tenantId, productConversationId(work), capabilities.filter(name => ARTIFACT_NAMESPACES.has(name)) as Array<'design' | 'slides'>, work.principalId) : undefined,
       // Empty native snapshots contain no scope identifiers for the model's first write.
       lingxiOSControl().then(control => control.memory!.scopes({ tenantId: work.tenantId,principalId: work.principalId!,agentId: work.agentId,
         sessionId: work.sessionId,workId: work.id,...(work.threadId ? { threadId: work.threadId } : {}) }))

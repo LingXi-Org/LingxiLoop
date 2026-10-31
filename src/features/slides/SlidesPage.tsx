@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { artifactsApi } from '@/features/artifacts/api'
-import { ArtifactView } from '@/features/artifacts/components/ArtifactView'
+import { SlidesWorkspace } from './SlidesWorkspace'
 import type { ArtifactSummary } from '@/features/artifacts/contracts'
 import { confirmSensitiveAction, promptSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
@@ -79,7 +79,7 @@ export function SlidesPage({ projectId }: { projectId: string }) {
 
   const current = openId ? decks?.find((deck) => deck.id === openId) : undefined
   if (openId && (current || !decks)) {
-    return <ArtifactView artifactId={openId} kind="slides" title={current?.title ?? '演示文稿'} onClose={() => open(null)} back closeLabel="返回演示文稿列表" />
+    return <SlidesWorkspace key={openId} artifactId={openId} title={current?.title ?? '演示文稿'} onClose={() => open(null)} />
   }
 
   return <div className="flex h-full min-h-0 flex-col" data-slides-page>
