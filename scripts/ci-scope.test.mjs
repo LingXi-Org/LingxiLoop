@@ -18,3 +18,10 @@ test('the public auth contract checks both its browser and control-plane consume
   assert.equal(scope.web, true)
   assert.equal(scope.control, true)
 })
+test('runtime patch and deployment changes retain both product60 patch qualifications', () => {
+  for (const path of ['server/src/db/runtime-patch.ts', 'deploy/runtime-patch.mjs']) {
+    const scope = computeScope(classifyPaths([path]))
+    assert.equal(scope.integration_mode, 'selected')
+    for (const file of ['runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts']) assert.ok(scope.integration_files.includes(file), path + ':' + file)
+  }
+})

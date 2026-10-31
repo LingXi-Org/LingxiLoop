@@ -147,6 +147,28 @@ runtime/schema/ledger digest plus live Worker tag comparisons; it never adopts
 versions or prints configuration secrets.
 
 Ordinary chat always uses deep execution with all authorized capabilities.
+
+The reviewed3.8.19→3.8.20 plan uses the same runtime-only product60 path, with
+3.8.19 as its sole source. Root/server manifests and locks must identify the
+same actual formal3.8.20 registry archive and integrity. The native14/protocol11
+schema and complete60 migration inventory remain identical. The source19 plan
+and its existing intent hash remain unchanged. Fresh, partial58/59, skipped
+source18→20 and unknown provenance are refused; target20 startup only verifies
+the already installed exact60 state, without migrations or seed writes.
+
+Test bootstrap retains the actual formal18→19 source path using a separately
+verified published19 archive, then performs the exact19→20 CAS. The original
+18→19 tests run against that genuine19 fixture; current20 runs its separate
+CAS, read-only startup, retained-job and uncertain-commit checks. This isolation
+does not replace the product dependency or weaken production provenance.
+
+For the qualified SiliconFlow DeepSeek native producer,20 enables the explicit
+native-v3 binding: original-schema business-only batches are valid, while actual
+public output still uses its sealed native binding. A current Design request
+must first select its authorized skill load before dependent Design tools are
+exposed. The required selection comes from the granted catalog; it grants no
+capability, supplies no guessed arguments and never skips a format/check receipt.
+
 Requests disable provider thinking for both main answers and auxiliary
 validation; providers may still return metered reasoning tokens, and only final
 content enters user previews. The default DeepSeek per-attempt timeout is 90

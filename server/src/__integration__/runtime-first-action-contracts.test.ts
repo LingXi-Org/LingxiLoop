@@ -3,7 +3,7 @@ import { after, test } from 'node:test'
 import { createServer } from 'node:http'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
-import { skillIndex } from '@lyyzka/lingxios'
+import { releaseVersions, skillIndex } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
@@ -34,19 +34,21 @@ test(live ? 'real provider creates and checks the FlashAttention canvas with zer
   const fixture = await readFile(new URL('./fixtures/design/flashattention.dc.html', import.meta.url), 'utf8')
   const index = skillIndex(artifactSkills.find(skill => skill.name === 'claude-design')!)
   let calls = 0, handlerError: unknown
-  const decisions: Array<{ call: number; names: string[]; fullGuidance: boolean; referenceSchema: boolean }> = []
-  const observe = (input: { messages: Array<{ role: string; content?: string }>; tools: Array<{ function: { name: string; parameters: { properties?: { page?: { enum?: string[] } } } } }> }) => {
+  const decisions: Array<{ call: number; names: string[]; fullGuidance: boolean; referenceSchema: boolean; requiredTool: string | null }> = []
+  const observe = (input: { messages: Array<{ role: string; content?: string }>; tools: Array<{ function: { name: string; parameters: { properties?: { page?: { enum?: string[] } } } } }>; tool_choice?: { function?: { name?: string } } | string }) => {
     calls++
     const instructions = input.messages.filter(message => message.role === 'system').map(message => message.content ?? '').join('\n')
     const names = input.tools.map(tool => tool.function.name)
     const reference = input.tools.find(tool => tool.function.name === 'design__read_reference')
     const fullGuidance = instructions.includes('Complete registered system skill') && instructions.includes('One artboard: the skeleton')
     const referenceSchema = reference?.function.parameters.properties?.page?.enum?.includes('format.md') === true
-    decisions.push({ call: calls, names: names.filter(name => name.startsWith('design__') || name.startsWith('skills__')), fullGuidance, referenceSchema })
+    const requiredTool = typeof input.tool_choice === 'object' ? input.tool_choice.function?.name ?? null : null
+    decisions.push({ call: calls, names: names.filter(name => name.startsWith('design__') || name.startsWith('skills__')), fullGuidance, referenceSchema, requiredTool })
     if (calls === 1) {
       assert.equal(names.some(name => name.startsWith('design__') && index.actions.some(action => action.replace('.', '__') === name)), false)
       assert.ok(instructions.includes(index.hash)); assert.ok(instructions.includes('format.md'))
       assert.ok(instructions.includes('skills.load')); assert.ok(instructions.includes('no delivery'))
+      assert.equal(requiredTool, 'skills__load')
     }
   }
   const provider = createServer(async (request, response) => {
@@ -70,7 +72,7 @@ test(live ? 'real provider creates and checks the FlashAttention canvas with zer
       }
       if (calls === 6) business.push({ name: 'design__check', args: {} })
       const output = { index: 0, id: `answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: calls === 7 ? 'FlashAttention 讲解已写入画板，格式检查通过。' : ['FlashAttention 保持精确注意力并减少数据搬运。','\n计算按块处理 Q、K、V。','\n在线 softmax 重标定累积量。','\n避免写回完整 N×N 矩阵。','\nIO 优化减少显存读写。','\n计算量仍保持二次量级。'][calls - 1], commentary: '', outcome: calls === 7 ? { status: 'satisfied', gaps: [] } : null }) } }
-      const toolCalls = [output, ...business.map((item, index) => ({ index: index + 1, id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
+      const toolCalls = [...(calls === 1 ? [] : [output]), ...business.map((item, index) => ({ index: index + (calls === 1 ? 0 : 1), id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
       for (const call of toolCalls) assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === call.function.name), call.function.name)
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: toolCalls }, finish_reason: 'tool_calls' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
@@ -153,20 +155,20 @@ test(live ? 'real provider creates and checks the FlashAttention canvas with zer
       .length + modelFailures.filter(row => row.diagnostics?.kind === 'protocol').length
     const files = (await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows
     const checked = await checkArtifact(pool, { id: canvas.id, kind: 'design' }) as { problems: number }
-    const evidence = { qualification: live ? 'real-provider-native-product' : 'synthetic-provider-native-product', runtime: '3.8.19', binding: 'native-v2', model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
-      accepted: failures.length === 0 && protocolFailures === 0 && checked.problems === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
+    const evidence = { qualification: live ? 'real-provider-native-product' : 'synthetic-provider-native-product', runtime: releaseVersions.runtime, binding: model.publicAnswerTool, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
+      accepted: failures.length === 0 && modelFailures.length === 0 && protocolFailures === 0 && checked.problems === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
         && receipts.some(row => row.action === 'design.check') && files.some(row => row.path.endsWith('.dc.html')),
       elapsedMs: Date.now() - started, decisions, wire, actions: receipts.map(row => ({ action: row.action, ok: row.result.ok, code: row.result.code ?? null, ...(row.action === 'design.read_reference' ? { page: row.args.page } : {}) })),
       contractFailures: failures.map(row => ({ action: row.action, code: row.result.code })), protocolFailures, providerFailures: modelFailures.filter(row => row.diagnostics?.kind !== 'protocol').length,
       protocolCodes: modelFailures.filter(row => row.diagnostics?.kind === 'protocol').map(row => row.diagnostics.protocolCode),
-      files: files.map(row => ({ path: row.path, sha256: row.sha256 })), checkProblems: checked.problems, status: state?.run.status, delivery: state?.delivery, browserValidated: false }
+      files: files.map(row => ({ path: row.path, sha256: row.sha256 })), checkProblems: checked.problems, status: state?.run.status, verification: state?.run.goalOutcome?.verification, delivery: state?.delivery, deliveryTarget: 'isolated-test-recording-im', browserValidated: false }
     console.info(JSON.stringify(evidence))
     if (process.env.ISSUE593_EVIDENCE_PATH) {
       const directory = process.env.ISSUE593_EVIDENCE_PATH; await mkdir(directory, { recursive: true })
       await writeFile(`${directory}/${live ? 'real-provider' : 'synthetic'}.json`, JSON.stringify(evidence, null, 2) + '\n')
       if (live) for (const file of files) await writeFile(`${directory}/${file.path.replaceAll('/', '-')}`, file.body)
     }
-    assert.equal(failures.length, 0); assert.equal(protocolFailures, 0)
+    assert.equal(failures.length, 0); assert.equal(protocolFailures, 0); assert.equal(modelFailures.length, 0)
     assert.ok(receipts.some(row => row.action === 'skills.load' && row.args.name === 'claude-design'))
     assert.equal(receipts.some(row => row.action === 'skills.activate' && row.args.name === 'claude-design'), false)
     assert.ok(receipts.some(row => row.action === 'design.read_reference' && row.args.page === 'format.md'))

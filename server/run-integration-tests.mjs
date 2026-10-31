@@ -3,7 +3,8 @@
  * Requires a dedicated real Postgres test database and explicit Redis URL.
  * These tests TRUNCATE their database and remain serialized.
  */
-import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runProduct58MigrationTests, runTestChild } from './run-historical-migration-tests.mjs'
+import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runProduct58MigrationTests, runFormal19Product60Tests, runTestChild } from './run-historical-migration-tests.mjs'
+import { releaseVersions } from '@lyyzka/lingxios'
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs'
 import { parseIntegrationArgs, selectIntegrationFiles } from './integration-suite.mjs'
 import { fileURLToPath } from 'node:url'
@@ -94,12 +95,13 @@ for (const name of groups.current) {
   const remaining = budgetMs - (performance.now() - started)
   if (remaining <= 0) { console.error(`[integration] ${mode} time budget exhausted before ${name}`); code = 1; break }
   const begin = performance.now()
-  const exitCode = await runTestChild([
+  const formal19Source = name === 'runtime-patch60-provenance.test.ts' && String(releaseVersions.runtime) === '3.8.20'
+  const exitCode = formal19Source ? await runFormal19Product60Tests(join(here, '..'), [name]) : await runTestChild([
     '--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-reporter=tap',
     '--test-concurrency=1', '--test-force-exit', join(integrationDir, name),
   ], { timeout: Math.max(1, Math.floor(Math.min(remaining, mode === 'full' ? 600_000 : 180_000))) })
   const durationMs = Math.round(performance.now() - begin)
-  records.push({ files: [name], runtime: 'current', durationMs, exitCode })
+  records.push({ files: [name], runtime: formal19Source ? '3.8.19' : 'current', durationMs, exitCode })
   console.log(`[integration file] ${name} duration_ms=${durationMs} exit=${exitCode}`)
   if (exitCode !== 0) { code = exitCode; break }
 }
