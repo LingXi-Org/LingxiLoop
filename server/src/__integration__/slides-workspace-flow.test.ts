@@ -12,6 +12,7 @@ import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { lingxiOSControl, runtimeModelConfiguration } from '../agent-runtime/runtime.js'
 import { receiveAgentRequest } from '../agent-runtime/receive.js'
+import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
 import { artifactSkills } from '../modules/artifacts/skills.js'
 import { createArtifactTools, createArtifactRuntime, loadArtifactRunContext, completeArtifactWork, createSlides } from '../modules/artifacts/index.js'
@@ -196,7 +197,7 @@ test('authenticated message reaches the formal worker, loads the Slides skill, e
     assert.ok('runs' in received && received.runs.length === 1)
     const run = received.runs[0], control = await lingxiOSControl(), address = provider.address()
     assert.ok(address && typeof address !== 'string')
-    worker = createWorker({ controlPlane: control, model: {
+    worker = createWorker({ controlPlane: control, policy: new ProductRuntimePolicy(), model: {
       ...runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: 'isolated-slides-fixture', baseUrl: 'https://api.siliconflow.cn/v1' }, 90_000),
       baseUrl: `http://127.0.0.1:${address.port}/v1`,
     }, worker: { id: 'slides-product-flow', concurrency: 1 } })
