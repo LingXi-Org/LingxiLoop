@@ -152,9 +152,9 @@ for (const scenario of [
 
 // #515/#518: a complete answer must stop, a correction must not retain its
 // failed draft, and a null final answer must reuse the sealed source. Exercise
-// both published bindings: production native-v2 plus native-v1
+// all published bindings: production native-v3 plus native-v1/v2
 // compatibility, with the real worker, ledger, IM delivery and replay reader.
-for (const binding of ['native-v1', 'native-v2'] as const) for (const scenario of ['complete', 'correction', 'finalize', 'fail-all'] as const) test(`public answer ${binding} ${scenario}: one effective body after native worker and replay`, { timeout: 30000 }, async () => {
+for (const binding of ['native-v1', 'native-v2', 'native-v3'] as const) for (const scenario of ['complete', 'correction', 'finalize', 'fail-all'] as const) test(`public answer ${binding} ${scenario}: one effective body after native worker and replay`, { timeout: 30000 }, async () => {
   const body = 'Flow control protects the receiver.'
   const draft = 'SYNTHETIC_FAILED_DRAFT_MUST_NOT_REAPPEAR'
   let calls = 0
@@ -211,7 +211,7 @@ for (const binding of ['native-v1', 'native-v2'] as const) for (const scenario o
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
     worker = createWorker({ controlPlane: api, model: {
       ...runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: 'synthetic-public-answer-key', baseUrl: 'https://api.siliconflow.cn/v1' }, 90_000),
-      publicAnswerTool: binding, capabilities: { parallelTools: binding === 'native-v2', jsonObjectWithTools: false },
+      publicAnswerTool: binding, capabilities: { parallelTools: binding !== 'native-v1', jsonObjectWithTools: false },
       baseUrl: `http://127.0.0.1:${address.port}/v1`,
     }, worker: { id: `public-answer-${binding}-${scenario}`, concurrency: 1 } })
     const input = { tenantId: companyId, conversationId: room, policyVersion: policy.version,

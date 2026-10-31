@@ -22,15 +22,18 @@ import { installRecordingWukong } from './_recording-wukong.js'
 
 after(async()=>{await teardownAll()})
 
-// Real Worker, authorization, storage and IM outbox for both published bindings.
-// Retain all native-v2 cases and qualify production native-v1 staging separately.
+// Real Worker, authorization, storage and IM outbox for all published bindings.
+// Keep native-v1/v2 coverage while qualifying the opt-in native-v3 producer.
 for (const { budgetProbe, explanationWorkflow, binding } of [
   { budgetProbe: false, explanationWorkflow: true, binding: 'native-v2' as const },
   { budgetProbe: true, explanationWorkflow: true, binding: 'native-v2' as const },
   { budgetProbe: false, explanationWorkflow: false, binding: 'native-v2' as const },
   { budgetProbe: false, explanationWorkflow: true, binding: 'native-v1' as const },
   { budgetProbe: false, explanationWorkflow: false, binding: 'native-v1' as const },
-]) test(binding==='native-v1' ? `native-v1 compatibility ${explanationWorkflow?'explanation-before-authoring':'authoring-only'} preserves activation and delivery` : budgetProbe
+  { budgetProbe: false, explanationWorkflow: true, binding: 'native-v3' as const },
+  { budgetProbe: true, explanationWorkflow: true, binding: 'native-v3' as const },
+  { budgetProbe: false, explanationWorkflow: false, binding: 'native-v3' as const },
+]) test(binding==='native-v3' ? `native-v3 ${budgetProbe?'bounded-call failure':explanationWorkflow?'explanation-before-authoring':'authoring-only'} preserves activation and delivery` : binding==='native-v1' ? `native-v1 compatibility ${explanationWorkflow?'explanation-before-authoring':'authoring-only'} preserves activation and delivery` : budgetProbe
   ? 'six valid intermediate generations hit the probe call limit without a protocol rejection or artifact delivery'
   : explanationWorkflow ? 'corrected explanation completes actual visualize save, authorized readback and delivery'
     : 'authoring-only delivery activates without an explanation declaration and still verifies the saved result', {timeout:30000}, async()=>{
@@ -63,7 +66,7 @@ for (const { budgetProbe, explanationWorkflow, binding } of [
     if(phase===authoringPhase&&!budgetProbe){business.push({name:'visualize__save',args:{name:'attention-flow',html}})}
     if(phase===terminalPhase&&!budgetProbe){const saved=(await pool.query('SELECT path FROM im_visualize_documents WHERE run_id=$1',[runId])).rows;assert.equal(saved.length,1);answer='\n::visualize'+JSON.stringify({path:saved[0].path});outcome={status:'satisfied',gaps:[]}}
     const mixedCalls=[{index:0,id:`answer-${calls}`,type:'function',function:{name:'public_answer',arguments:JSON.stringify({operation,answer,commentary:'',outcome})}},...business.map((item,index)=>({index:index+1,id:`business-${calls}-${index}`,type:'function',function:{name:item.name,arguments:JSON.stringify(item.args)}}))]
-    const toolCalls=binding==='native-v2'?mixedCalls:business.length?mixedCalls.slice(1).map((call,index)=>({...call,index})):mixedCalls.slice(0,1)
+    const toolCalls=binding!=='native-v1'?mixedCalls:business.length?mixedCalls.slice(1).map((call,index)=>({...call,index})):mixedCalls.slice(0,1)
     response.writeHead(200,{'content-type':'text/event-stream'});response.end(`data: ${JSON.stringify({choices:[{delta:{tool_calls:toolCalls},finish_reason:'tool_calls'}],usage:{prompt_tokens:10,completion_tokens:20}})}\n\ndata: [DONE]\n\n`)
   }catch(error){handlerError??=error;response.writeHead(500);response.end('{}')}})
   await new Promise<void>(resolve=>provider.listen(0,'127.0.0.1',resolve))
@@ -71,7 +74,7 @@ for (const { budgetProbe, explanationWorkflow, binding } of [
   try{
     const api=await lingxiOSControl(),policy=await syncConversationPolicy(api,companyId,channelId)
     const address=provider.address();assert.ok(address&&typeof address!=='string')
-    worker=createWorker({modelBudget:{maxModelCalls:binding==='native-v1'?7:6},controlPlane:api,policy:new ProductRuntimePolicy(),model:{...runtimeModelConfiguration({id:'deepseek-ai/DeepSeek-V4.1-Flash',apiKey:'synthetic-only',baseUrl:'https://api.siliconflow.cn/v1'},90000),baseUrl:`http://127.0.0.1:${address.port}/v1`,publicAnswerTool:binding,capabilities:{parallelTools:binding==='native-v2',jsonObjectWithTools:false}},worker:{id:'issue560-delivery',concurrency:1}})
+    worker=createWorker({modelBudget:{maxModelCalls:binding==='native-v1'?7:6},controlPlane:api,policy:new ProductRuntimePolicy(),model:{...runtimeModelConfiguration({id:'deepseek-ai/DeepSeek-V4.1-Flash',apiKey:'synthetic-only',baseUrl:'https://api.siliconflow.cn/v1'},90000),baseUrl:`http://127.0.0.1:${address.port}/v1`,publicAnswerTool:binding,capabilities:{parallelTools:binding!=='native-v1',jsonObjectWithTools:false}},worker:{id:'issue560-delivery',concurrency:1}})
     const run=(await api.conversations.ingest({tenantId:companyId,conversationId:channelId,policyVersion:policy.version,messageId:'question',version:1,author:{id:userId,kind:'human'},text,mentions:[agentId]},{mode:'execute',codeExecution:'disabled',deliveryMode:'auto',executionClass:'conversation'})).runs[0];assert.ok(run);runId=run.runId
     await bindProductRun(pool,run,channelId);await worker.runNext();assert.equal(handlerError,undefined)
     const deadline=AbortSignal.timeout(5000);let state=await api.readRunState(run)
