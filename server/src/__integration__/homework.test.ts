@@ -1284,7 +1284,7 @@ test('[integration] 597 chat history reload reads the same frozen published home
     const response = await call(scope, path(task.id))
     assert.equal(response.status, 200)
     const { homework: reloaded } = await response.json() as { homework: typeof task }
-    assert.deepEqual(reloaded, task, 'history reads the committed server content and permissions, not the original draft tool payload')
+    assert.deepEqual(reloaded, { ...task, dueAt: '2030-01-01T00:00:00.000Z' }, 'history reads the committed server content and permissions with the HTTP timestamp representation')
     assert.equal(reloaded.status, 'PUBLISHED')
     assert.equal(reloaded.canEditDraft, false)
     assert.equal(reloaded.canPublish, false)
