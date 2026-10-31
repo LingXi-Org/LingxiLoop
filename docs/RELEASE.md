@@ -168,6 +168,12 @@ public output still uses its sealed native binding. A current Design request
 must first select its authorized skill load before dependent Design tools are
 exposed. The required selection comes from the granted catalog; it grants no
 capability, supplies no guessed arguments and never skips a format/check receipt.
+Its per-response output allowance is16K to accommodate complete native file
+arguments; total work and cost budgets remain bounded. `content` stays an exact
+JSON string, with explicit encoding guidance rather than repair or coercion.
+The provider's [max_tokens contract](https://api-docs.siliconflow.cn/docs/api/chat-completions-post)
+controls that output allowance. Qualification counts all model attempts and
+rejects recovered truncation as zero-failure evidence.
 
 Requests disable provider thinking for both main answers and auxiliary
 validation; providers may still return metered reasoning tokens, and only final

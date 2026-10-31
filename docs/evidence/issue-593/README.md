@@ -143,3 +143,45 @@ verification remains inconclusive and browser validation was not performed.
 This isolated SDK/PGlite probe is not Loop product acceptance. Loop still uses
 formal3.8.19; a formally published compatible SDK and new product qualification
 are required before this issue can be considered delivered.
+
+## Formal20 product qualification
+
+The compatible SDK PR81 was merged and the exact maintenance source `bc594a2`
+passed full release gates41162101071. Tag v3.8.20 publication41162963470
+succeeded. `formal20/published-package.json` records the actual registry archive,
+gitHead and integrity; its dependencies, exports, package files and engines were
+compared with actual formal19, and the native14 schema bytes remain identical.
+Loop root/server manifests and locks now pin that exact published20 package.
+No development SDK, private import or compatibility adapter is used.
+
+The default qualified DeepSeek producer now explicitly selects native-v3 and
+uses16K output tokens, keeping the existing total work/cost budgets. Native tool
+arguments retain their original strict schemas. The Design write description
+shows JSON.stringify-generated encoding for literal quotes, backslashes and
+newlines; decoded content must remain the original file text. Slides keeps its
+existing description, schema and skill body. Required guidance selection is
+limited to the current Design request and the existing authorized catalog.
+
+Zero-failure qualification reads every attempt from the native model budget
+ledger, including retries recovered inside a logical call. It also records safe
+wire structure, syntax categories and schema issue pointers, with no prompts,
+reasoning or argument values. An intentionally truncated synthetic response
+recovers to actual delivery but remains `accepted:false`; the negative regression
+prevents successful retries from hiding failure. The live runner allows the
+existing240s model budget to finish before its300s test deadline.
+
+The real formal20 product run on source `ff28551d` completed in96918ms with
+**six first-attempt model calls**, zero failed attempts, zero business/protocol
+failures, and no wire contract failures. It loaded the current claude-design
+contract, read format.md and the existing canvas, wrote the actual Main component
+and index, ran design.check with problems0, and delivered through the isolated
+test's recording IM adapter. The PostgreSQL, Redis, product authorization, native
+Worker, file writer and upstream checker were real. The saved report and generated
+files are retained unchanged in `formal20/`.
+
+This is isolated real-provider product qualification, not a claim that the
+original production conversation was replayed. The run's semantic verification
+is `inconclusive`; generated teaching content, visual rendering, keyboard behavior
+and browser interaction have not received independent acceptance. The fixture
+artboard is evidence of actual writing/checking, not approved teaching material.
+Production deployment is tracked separately from this record.

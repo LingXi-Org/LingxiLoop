@@ -19,7 +19,7 @@ export function runtimePatchPlan(read, migrationPaths) {
   if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly60, 'product59 requires a verified exact runtime')
   if (['3.8.19','3.8.20'].includes(targetRuntime)) assert.ok(runtimeOnly60, 'unreviewed runtime transition; runtime patch requires installed product60')
   if (targetRuntime === '3.8.16') return null
-  assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or reviewed3.8.17/3.8.18 is supported')
+  assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or exact reviewed3.8.17/3.8.18/3.8.19/3.8.20 is supported')
   const sourceRuntime = SOURCES[targetRuntime]
   const server = json('server/package.json'), lock = json('package-lock.json'), serverLock = json('server/package-lock.json')
   const pkg = lock.packages?.[`node_modules/${PACKAGE}`], other = serverLock.packages?.[`node_modules/${PACKAGE}`]
