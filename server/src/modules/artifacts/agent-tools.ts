@@ -26,6 +26,9 @@ const reportMethods = { submit_report: 'specialist', submit_verification: 'verif
 /** Tools that read, or only change the files and comments any member may edit. */
 const READ_METHODS = new Set(['current', 'available_agents', 'read_file', 'check', 'read_reference', 'comments'])
 const WORKSPACE_METHODS = new Set(['stop_workspace', 'stop_assignment', 'submit_report', 'submit_verification'])
+const DESIGN_FILE_JSON = ' Native arguments are JSON. Encode content as a JSON string: double quotes, backslashes and line breaks must be escaped so JSON decoding recovers the exact file text. Field-encoding example only: '
+  + JSON.stringify({ content: '<div title="QK" data-demo="a\\b">\nQK\n</div>' })
+  + '. Do not paste raw multiline markup into a quoted JSON string or JSON-encode the file twice. Single-quoted HTML attributes reduce escaping; keep the complete component concise.'
 
 export function createArtifactTools(kind: ArtifactKind, control: Control): ToolDefinition[] {
   const definition = artifactKind(kind)
@@ -177,7 +180,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         if (!file) throw new NoEffectError(`${input.path} does not exist`, 'not_found')
         return { ok: true, value: { path: file.path, sha256: file.sha256, text: file.bytes.toString('utf8') } }
       } }),
-    nativeTool(`${kind}.write_files`, agentArtifactSchemas.write_files, { description: `Save whole project files of the ${label} in one all-or-nothing publish; {"delete": true} removes a file. ifMatch is the sha256 you read (null: the file must not exist).`, effect: 'transaction', approval: false, authorize, verify,
+    nativeTool(`${kind}.write_files`, agentArtifactSchemas.write_files, { description: `Save whole project files of the ${label} in one all-or-nothing publish; {"delete": true} removes a file. ifMatch is the sha256 you read (null: the file must not exist).` + (kind === 'design' ? DESIGN_FILE_JSON : ''), effect: 'transaction', approval: false, authorize, verify,
       async execute(context, input) {
         const artifact = await required(context, input)
         const files: Record<string, WireEntry> = {}

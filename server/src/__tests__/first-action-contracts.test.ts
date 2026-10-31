@@ -69,6 +69,16 @@ test('reference admission and first description use the actual deployed director
   for (const page of ['canvas.md', 'artboard.md', 'design-component.md', 'index.md']) assert.throws(() => reference.parse({ page }))
   await assert.rejects(readArtifactReference('design', 'canvas.md'), /pages:.*format.md/)
 })
+test('Design file encoding guidance round-trips literal quotes, backslashes and newlines without changing Slides', () => {
+  const content = '<div title="QK" data-demo="a\\b">\nQK\n</div>'
+  const design = tools.find(tool => tool.action === 'design.write_files')!
+  const slides = tools.find(tool => tool.action === 'slides.write_files')!
+  const encoded = JSON.stringify({ content })
+  assert.ok(design.description.includes(encoded))
+  assert.equal(slides.description.includes(encoded), false)
+  const input = JSON.parse(JSON.stringify({ files: { 'project/Example.dc.html': { content, ifMatch: null } } }))
+  assert.deepEqual(design.parse(input), input)
+})
 
 test('Design requests require authorized guidance selection while ordinary chat retains its tool choice', () => {
   const ctx = context()
@@ -84,9 +94,10 @@ test('Design requests require authorized guidance selection while ordinary chat 
   assert.equal(policy.requiredTool(ctx), undefined)
 })
 
-test('DeepSeek retains its formally installed public output binding pending SDK qualification', () => {
+test('DeepSeek uses the explicitly qualified formal20 native-v3 binding', () => {
   const model = runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', baseUrl: 'https://api.siliconflow.cn/v1', apiKey: 'unit-only' }, 90_000)
-  assert.equal(model.publicAnswerTool, 'native-v2')
+  assert.equal(model.publicAnswerTool, 'native-v3')
+  assert.equal(model.maxOutputTokens, 16_384)
   assert.equal(model.capabilities.parallelTools, true)
   assert.equal(model.publicTextProtocol, 'purpose-json-v3')
   assert.equal(model.publicTextContinuation, 'typed-message-v1')
