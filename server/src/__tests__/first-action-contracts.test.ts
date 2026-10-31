@@ -6,6 +6,7 @@ import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { productSkills } from '../agent-runtime/system-skills.js'
 import { createProductTools } from '../agent-runtime/tools.js'
 import { artifactReferencePages, readArtifactReference } from '../modules/artifacts/skills.js'
+import { runtimeModelConfiguration } from '../agent-runtime/runtime.js'
 
 const tools = createProductTools(() => { throw new Error('not used') }).filter(tool => tool.action !== 'memory.summary')
 const harness = assembleHarness(createProductHarness(tools))
@@ -67,4 +68,26 @@ test('reference admission and first description use the actual deployed director
   assert.match(await readArtifactReference('design', String(reference.parse({ page: 'format.md' }).page)), /authoring format/)
   for (const page of ['canvas.md', 'artboard.md', 'design-component.md', 'index.md']) assert.throws(() => reference.parse({ page }))
   await assert.rejects(readArtifactReference('design', 'canvas.md'), /pages:.*format.md/)
+})
+
+test('DeepSeek output-first binding is explicit in each business tool contract', () => {
+  const model = runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', baseUrl: 'https://api.siliconflow.cn/v1', apiKey: 'unit-only' }, 90_000)
+  assert.equal(model.publicAnswerTool, 'native-v2')
+  assert.equal(model.capabilities.parallelTools, true)
+  assert.equal(model.publicTextProtocol, 'purpose-json-v3')
+  assert.equal(model.publicTextContinuation, 'typed-message-v1')
+  for (const tool of harness.tools) assert.match(tool.description, /public_answer at index 0.*SAME generation/)
+})
+
+test('a Design write cannot declare satisfaction without a subsequent successful zero-problem check', () => {
+  const ctx = context(), assessment = { status: 'satisfied' as const, checks: [], gaps: [] }
+  ctx.executionSteps = [{ id: 'write', kind: 'design__write_files', artifacts: [], requestVersion: 1, input: {}, output: '{}' }]
+  assert.ok(policy.validateCompletion('', assessment, ctx))
+  ctx.executionSteps.push({ id: 'check', kind: 'design__check', artifacts: [], requestVersion: 1, input: {}, output: JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 2 } } }] }) })
+  assert.ok(policy.validateCompletion('', assessment, ctx))
+  ctx.executionSteps[1].output = JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 0 } } }] })
+  assert.equal(policy.validateCompletion('', assessment, ctx), null)
+  ctx.executionSteps.push({ ...ctx.executionSteps[0], id: 'new-write' })
+  assert.ok(policy.validateCompletion('', assessment, ctx), 'a check before the newest write is stale')
+  assert.equal(policy.validateCompletion('', { ...assessment, status: 'partial' }, ctx), null)
 })

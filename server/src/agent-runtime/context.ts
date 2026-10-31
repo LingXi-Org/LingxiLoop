@@ -304,6 +304,25 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
   override validateAssistantText(text: string, context: TurnContext) {
     return assistantTextViolation(text) ?? super.validateAssistantText(text, context) ?? citationTextViolation(text, context.evidence ?? [])
   }
+  override validateCompletion(text: string, assessment: Parameters<DefaultRuntimePolicy['validateCompletion']>[1], context: TurnContext) {
+    if (assessment.status === 'satisfied') {
+      const steps = (context.executionSteps ?? []).filter(step => step.requestVersion === context.snapshotVersion?.requestVersion)
+      let write = -1
+      for (const [index, step] of steps.entries()) if (['design__write_files', 'design__edit_file'].includes(step.kind) && step.output !== undefined) write = index
+      if (write >= 0) {
+        const check = steps.slice(write + 1).reverse().find(step => step.kind === 'design__check' && step.output !== undefined)
+        let passed = false
+        try {
+          const output = JSON.parse(check?.output ?? '{}')
+          passed = output.receipts?.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string; value?: { problems?: number } } }) =>
+            receipt.action === 'design.check' && receipt.result?.ok === true && receipt.result.approval === undefined
+            && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown' && receipt.result.value?.problems === 0) === true
+        } catch { /* A missing or unreadable checker receipt cannot prove completion. */ }
+        if (!passed) return 'Finish the Design files referenced by the index, then run design.check after the latest write and fix its issues until problems is 0 before declaring satisfied.'
+      }
+    }
+    return super.validateCompletion(text, assessment, context)
+  }
   override dynamicContextItems(context: TurnContext) {
     const { visualizeWidgetContext, ...observations } = context.dynamic ?? {}
     // Identity is refreshed from the authorized work/profile, separately from

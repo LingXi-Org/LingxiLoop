@@ -22,12 +22,15 @@ import { installRecordingWukong } from './_recording-wukong.js'
 
 after(async()=>{await teardownAll()})
 
-// Synthetic model only; real native Worker, product authorization, storage and IM outbox.
-for (const { budgetProbe, explanationWorkflow } of [
-  { budgetProbe: false, explanationWorkflow: true },
-  { budgetProbe: true, explanationWorkflow: true },
-  { budgetProbe: false, explanationWorkflow: false },
-]) test(budgetProbe
+// Real Worker, authorization, storage and IM outbox for both published bindings.
+// Retain all native-v2 cases and qualify production native-v1 staging separately.
+for (const { budgetProbe, explanationWorkflow, binding } of [
+  { budgetProbe: false, explanationWorkflow: true, binding: 'native-v2' as const },
+  { budgetProbe: true, explanationWorkflow: true, binding: 'native-v2' as const },
+  { budgetProbe: false, explanationWorkflow: false, binding: 'native-v2' as const },
+  { budgetProbe: false, explanationWorkflow: true, binding: 'native-v1' as const },
+  { budgetProbe: false, explanationWorkflow: false, binding: 'native-v1' as const },
+]) test(binding==='native-v1' ? `native-v1 compatibility ${explanationWorkflow?'explanation-before-authoring':'authoring-only'} preserves activation and delivery` : budgetProbe
   ? 'six valid intermediate generations hit the probe call limit without a protocol rejection or artifact delivery'
   : explanationWorkflow ? 'corrected explanation completes actual visualize save, authorized readback and delivery'
     : 'authoring-only delivery activates without an explanation declaration and still verifies the saved result', {timeout:30000}, async()=>{
@@ -46,26 +49,29 @@ for (const { budgetProbe, explanationWorkflow } of [
   let calls=0,runId='',handlerError:unknown
   const provider=createServer(async(request,response)=>{try{
     let raw='';for await(const chunk of request)raw+=chunk
-    const input=JSON.parse(raw);calls++;assert.ok(calls<=(budgetProbe?6:4))
+    const input=JSON.parse(raw);calls++;assert.ok(calls<=(budgetProbe?6:binding==='native-v1'?(explanationWorkflow?6:5):4));const phase=binding==='native-v1'?calls-1:calls,refreshStage=binding==='native-v1'&&explanationWorkflow,authoringPhase=refreshStage?4:3,terminalPhase=refreshStage?5:4
     const exposed=input.tools.map((tool:{function:{name:string}})=>tool.function.name)
     const steps=(await pool.query("SELECT input->>'partId' AS id FROM lingxios.agent_steps WHERE work_id=$1 AND kind='runtime.answer_segment' ORDER BY step_seq",[runId])).rows
-    const operation=calls===2?{kind:'replace',supersedes:[steps[0].id]}:{kind:'append',supersedes:[]}
-    let answer=calls===1?'待修正的说明。':calls===2?explanation:'\n用查询位置滑块查看这三个步骤。',outcome:unknown=null
+    const operation=phase===2?{kind:'replace',supersedes:[steps[0].id]}:{kind:'append',supersedes:[]}
+    let answer=phase===1?'待修正的说明。':phase===2?explanation:'\n用查询位置滑块查看这三个步骤。',outcome:unknown=null
     const business:Array<{name:string;args:unknown}>=[]
-    if(calls===1){const {name,version,hash}=skillIndex(visualizeSkill);business.push({name:'skills__activate',args:{name,version,hash,...(explanationWorkflow?{explanation:{explanationQuote:'请解释',authoringQuote:'创建交互图',factQuotes:['Q 与 K 计算得分。','softmax 把得分变成权重。','权重对 V 加权求和。']}}:{})}})}
-    if(calls===2)assert.equal(exposed.includes('visualize__save'),!explanationWorkflow)
-    if(calls>=3)assert.ok(exposed.includes('visualize__save'))
-    if(calls===3&&!budgetProbe){business.push({name:'visualize__save',args:{name:'attention-flow',html}})}
-    if(calls===4&&!budgetProbe){const saved=(await pool.query('SELECT path FROM im_visualize_documents WHERE run_id=$1',[runId])).rows;assert.equal(saved.length,1);answer='\n::visualize'+JSON.stringify({path:saved[0].path});outcome={status:'satisfied',gaps:[]}}
-    const toolCalls=[{index:0,id:`answer-${calls}`,type:'function',function:{name:'public_answer',arguments:JSON.stringify({operation,answer,commentary:'',outcome})}},...business.map((item,index)=>({index:index+1,id:`business-${calls}-${index}`,type:'function',function:{name:item.name,arguments:JSON.stringify(item.args)}}))]
+    if(phase===(binding==='native-v1'?0:1)){const {name,version,hash}=skillIndex(visualizeSkill);business.push({name:'skills__activate',args:{name,version,hash,...(explanationWorkflow?{explanation:{explanationQuote:'请解释',authoringQuote:'创建交互图',factQuotes:['Q 与 K 计算得分。','softmax 把得分变成权重。','权重对 V 加权求和。']}}:{})}})}
+    if(binding==='native-v1'&&phase===1)assert.equal(exposed.includes('visualize__save'),!explanationWorkflow,'activation with explanation keeps authoring hidden until public explanation publication')
+    if(phase===2)assert.equal(exposed.includes('visualize__save'),!explanationWorkflow||binding==='native-v1')
+    if(refreshStage&&phase===3){assert.equal(exposed.includes('visualize__save'),false,'replacing the prior explanation reopens its stage until a new current explanation is published');answer=explanation}
+    if(phase>=authoringPhase)assert.ok(exposed.includes('visualize__save'))
+    if(phase===authoringPhase&&!budgetProbe){business.push({name:'visualize__save',args:{name:'attention-flow',html}})}
+    if(phase===terminalPhase&&!budgetProbe){const saved=(await pool.query('SELECT path FROM im_visualize_documents WHERE run_id=$1',[runId])).rows;assert.equal(saved.length,1);answer='\n::visualize'+JSON.stringify({path:saved[0].path});outcome={status:'satisfied',gaps:[]}}
+    const mixedCalls=[{index:0,id:`answer-${calls}`,type:'function',function:{name:'public_answer',arguments:JSON.stringify({operation,answer,commentary:'',outcome})}},...business.map((item,index)=>({index:index+1,id:`business-${calls}-${index}`,type:'function',function:{name:item.name,arguments:JSON.stringify(item.args)}}))]
+    const toolCalls=binding==='native-v2'?mixedCalls:business.length?mixedCalls.slice(1).map((call,index)=>({...call,index})):mixedCalls.slice(0,1)
     response.writeHead(200,{'content-type':'text/event-stream'});response.end(`data: ${JSON.stringify({choices:[{delta:{tool_calls:toolCalls},finish_reason:'tool_calls'}],usage:{prompt_tokens:10,completion_tokens:20}})}\n\ndata: [DONE]\n\n`)
-  }catch(error){handlerError=error;response.writeHead(500);response.end('{}')}})
+  }catch(error){handlerError??=error;response.writeHead(500);response.end('{}')}})
   await new Promise<void>(resolve=>provider.listen(0,'127.0.0.1',resolve))
   let worker:ReturnType<typeof createWorker>|undefined
   try{
     const api=await lingxiOSControl(),policy=await syncConversationPolicy(api,companyId,channelId)
     const address=provider.address();assert.ok(address&&typeof address!=='string')
-    worker=createWorker({modelBudget:{maxModelCalls:6},controlPlane:api,policy:new ProductRuntimePolicy(),model:{...runtimeModelConfiguration({id:'deepseek-ai/DeepSeek-V4.1-Flash',apiKey:'synthetic-only',baseUrl:'https://api.siliconflow.cn/v1'},90000),baseUrl:`http://127.0.0.1:${address.port}/v1`},worker:{id:'issue560-delivery',concurrency:1}})
+    worker=createWorker({modelBudget:{maxModelCalls:binding==='native-v1'?7:6},controlPlane:api,policy:new ProductRuntimePolicy(),model:{...runtimeModelConfiguration({id:'deepseek-ai/DeepSeek-V4.1-Flash',apiKey:'synthetic-only',baseUrl:'https://api.siliconflow.cn/v1'},90000),baseUrl:`http://127.0.0.1:${address.port}/v1`,publicAnswerTool:binding,capabilities:{parallelTools:binding==='native-v2',jsonObjectWithTools:false}},worker:{id:'issue560-delivery',concurrency:1}})
     const run=(await api.conversations.ingest({tenantId:companyId,conversationId:channelId,policyVersion:policy.version,messageId:'question',version:1,author:{id:userId,kind:'human'},text,mentions:[agentId]},{mode:'execute',codeExecution:'disabled',deliveryMode:'auto',executionClass:'conversation'})).runs[0];assert.ok(run);runId=run.runId
     await bindProductRun(pool,run,channelId);await worker.runNext();assert.equal(handlerError,undefined)
     const deadline=AbortSignal.timeout(5000);let state=await api.readRunState(run)
@@ -85,7 +91,7 @@ for (const { budgetProbe, explanationWorkflow } of [
       console.info(JSON.stringify({qualification:'synthetic-model-probe-classification',verdict,calls,protocolRejected,budgetLimit,saved:0,artifactDelivered:false}))
       return
     }
-    assert.equal(state?.run.status,'succeeded');assert.equal(state?.delivery,'delivered');assert.equal(calls,4)
+    assert.equal(state?.run.status,'succeeded');assert.equal(state?.delivery,'delivered');assert.equal(calls,binding==='native-v1'?(explanationWorkflow?6:5):4)
     const docs=(await pool.query('SELECT path FROM im_visualize_documents WHERE run_id=$1',[runId])).rows;assert.equal(docs.length,1)
     const saved=await readAuthorizedVisualizeSnapshot({companyId,channelId,userId,path:docs[0].path})
     assert.equal(saved.html,html);assert.equal(saved.version,1);assert.equal(saved.run_id,runId)

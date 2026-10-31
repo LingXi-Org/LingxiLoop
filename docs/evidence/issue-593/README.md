@@ -95,3 +95,36 @@ acceptance is closed; the native output protocol and incomplete generated boards
 remain explicit follow-up gates for the parent integrator. No SDK publish,
 merge, deployment, security/configuration widening or production data action was
 performed.
+
+## Follow-up candidate and formal SDK dependency
+
+The current Loop branch has merged main `6f10048f` (Canvas #595) without
+conflicts. It retains the published 3.8.19 dependency and its native-v2 producer.
+A write/check completion gate now rejects satisfaction unless the latest
+successful `design.check` after the latest write reports zero problems. Per-tool
+business descriptions explicitly state the active driver's output prerequisite.
+The original native-v2 cases remain; native-v1 compatibility and explanation
+stage reopening are additionally tested. Updated local results: unit153,
+typecheck/lint, and 21 selected integration checks (new Design1, activation5,
+recovery11, artifact HTTP4) all pass. These do not imply real model acceptance.
+
+`native-v1/real-provider.json` preserves the unsuccessful single-call
+configuration experiment: 3 streaming `public_text_invalid` failures and no
+artboard; that producer switch was excluded from the implementation.
+`business-contract/real-provider.json` preserves a subsequent native-v2 failure
+with metadata-only wire evidence. The first model decision bundled an unavailable
+future tool with the skill load; later decisions returned valid business calls
+without the separately mandatory public_answer. No argument values, prompts or
+private response text are recorded in `wire`.
+
+A compatible SDK patch is being prepared against the actual `release/3.8`
+source v3.8.19, not the distribution-changing main/4.0 branch. It keeps native-v2
+strict, introduces an explicit native-v3 contract accepting original-schema
+business-only batches (public output must still be first when present), and a
+trusted `requiredTool` selection constrained to the existing authorized catalog.
+The latter allows guidance loading to be selected before later business tools,
+without relying only on prose. All original schemas, activation source binding,
+authorization and sealed-public-output checks remain. SDK source qualification
+is separate from Loop's formal package acceptance. The child does not publish
+SDKs: a formally published compatible package and subsequent Loop qualification
+are required before using these new public capabilities in the product.

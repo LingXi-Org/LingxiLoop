@@ -52,24 +52,25 @@ test(live ? 'real provider creates and checks the FlashAttention canvas with zer
   const provider = createServer(async (request, response) => {
     try {
       let raw = ''; for await (const chunk of request) raw += chunk
-      const input = JSON.parse(raw); observe(input); assert.ok(calls <= 6)
+      const input = JSON.parse(raw); observe(input); assert.ok(calls <= 7)
       const business: Array<{ name: string; args: unknown }> = []
       if (calls === 1) business.push({ name: 'skills__load', args: { name: index.name, version: index.version, hash: index.hash } })
       if (calls === 2) {
         assert.equal(decisions.at(-1)!.fullGuidance, true); assert.equal(decisions.at(-1)!.referenceSchema, true)
-        business.push({ name: 'design__read_reference', args: { page: 'format.md' } }, { name: 'design__current', args: {} })
+        business.push({ name: 'design__read_reference', args: { page: 'format.md' } })
       }
-      if (calls === 3) business.push({ name: 'design__read_file', args: { path: 'project/canvas.json' } })
-      if (calls === 4) {
+      if (calls === 3) business.push({ name: 'design__current', args: {} })
+      if (calls === 4) business.push({ name: 'design__read_file', args: { path: 'project/canvas.json' } })
+      if (calls === 5) {
         const file = (await pool.query("SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path='project/canvas.json'", [canvas.id])).rows[0]
         const content = JSON.parse(file.body.toString('utf8'))
         content.boards['FlashAttention.dc.html'] = { x: 0, y: 0, w: 1200, h: 820, title: 'FlashAttention' }
         content.order = ['FlashAttention.dc.html']
         business.push({ name: 'design__write_files', args: { files: { 'project/canvas.json': { content: JSON.stringify(content), ifMatch: file.sha256 }, 'project/FlashAttention.dc.html': { content: fixture, ifMatch: null } } } })
       }
-      if (calls === 5) business.push({ name: 'design__check', args: {} })
-      const toolCalls = [{ index: 0, id: `answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: ['FlashAttention 在保持精确注意力的同时减少显存读写。','\n其关键是分块与在线 softmax。','\n在线归一化会重标定旧累积量。','\n不会保存完整 N×N 中间矩阵。','\n计算量仍是二次量级，优化的是数据搬运。','\nFlashAttention 讲解已写入画板，格式检查通过。'][calls - 1], commentary: '', outcome: calls === 6 ? { status: 'satisfied', gaps: [] } : null }) } },
-        ...business.map((item, number) => ({ index: number + 1, id: `business-${calls}-${number}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
+      if (calls === 6) business.push({ name: 'design__check', args: {} })
+      const output = { index: 0, id: `answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: calls === 7 ? 'FlashAttention 讲解已写入画板，格式检查通过。' : ['FlashAttention 保持精确注意力并减少数据搬运。','\n计算按块处理 Q、K、V。','\n在线 softmax 重标定累积量。','\n避免写回完整 N×N 矩阵。','\nIO 优化减少显存读写。','\n计算量仍保持二次量级。'][calls - 1], commentary: '', outcome: calls === 7 ? { status: 'satisfied', gaps: [] } : null }) } }
+      const toolCalls = [output, ...business.map((item, index) => ({ index: index + 1, id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
       for (const call of toolCalls) assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === call.function.name), call.function.name)
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: toolCalls }, finish_reason: 'tool_calls' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
@@ -77,13 +78,60 @@ test(live ? 'real provider creates and checks the FlashAttention canvas with zer
   })
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
   const originalFetch = globalThis.fetch
+  const wire: Array<{ call: number; status: number; tools: Array<{ index: number; name: string; fields: string[] }>; finish: string[]; closed: string }> = []
   if (live) globalThis.fetch = async (input, init) => {
     const url = input instanceof Request ? input.url : String(input)
+    let schema: Map<string, Set<string>> | undefined
     if (url.startsWith(env.OPENAI_BASE_URL) && url.endsWith('/chat/completions') && init?.body) {
       const request = JSON.parse(String(init.body))
-      if (request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer')) observe(request)
+      if (request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer')) {
+        observe(request)
+        schema = new Map(request.tools.map((tool: { function: { name: string; parameters: { properties: object } } }) =>
+          [tool.function.name, new Set(Object.keys(tool.function.parameters.properties))]))
+      }
     }
-    return originalFetch(input, init)
+    const response = await originalFetch(input, init)
+    if (!schema || !response.ok || !response.body) return response
+    const record = { call: calls, status: response.status, tools: [] as Array<{ index: number; name: string; fields: string[] }>, finish: [] as string[], closed: 'reading' }
+    wire.push(record)
+    const reader = response.body.getReader(), decoder = new TextDecoder(), argumentsByIndex = new Map<number, { name: string; args: string }>()
+    let buffer = '', finalized = false
+    const collect = (bytes: Uint8Array) => {
+      buffer += decoder.decode(bytes, { stream: true })
+      let end: number
+      while ((end = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, end).trim(); buffer = buffer.slice(end + 1)
+        if (!line.startsWith('data:') || line === 'data: [DONE]') continue
+        try {
+          const choice = JSON.parse(line.slice(5)).choices?.[0]
+          if (choice?.finish_reason) record.finish.push(['stop', 'tool_calls', 'length'].includes(choice.finish_reason) ? choice.finish_reason : 'other')
+          for (const part of choice?.delta?.tool_calls ?? []) {
+            const value = argumentsByIndex.get(part.index) ?? { name: '', args: '' }
+            value.name += typeof part.function?.name === 'string' ? part.function.name : ''
+            value.args += typeof part.function?.arguments === 'string' ? part.function.arguments : ''
+            argumentsByIndex.set(part.index, value)
+          }
+        } catch { /* Metadata only; the real driver still owns stream validation. */ }
+      }
+    }
+    const finish = (closed: string) => {
+      if (finalized) return; finalized = true; record.closed = closed
+      record.tools = [...argumentsByIndex].map(([index, value]) => {
+        let fields: string[] = []
+        try { fields = Object.keys(JSON.parse(value.args)).map(key => schema!.get(value.name)?.has(key) ? key : '[unrecognized]') } catch { /* incomplete arguments */ }
+        return { index, name: schema!.has(value.name) ? value.name : '[unknown]', fields }
+      })
+      argumentsByIndex.clear(); buffer = ''
+    }
+    // Pass through original bytes and cancellation. Persist only catalog names,
+    // indices and schema field names; never bodies, prompts or argument values.
+    return new Response(new ReadableStream({ async pull(controller) {
+      try {
+        const chunk = await reader.read()
+        if (chunk.done) { finish('complete'); controller.close() }
+        else { collect(chunk.value); controller.enqueue(chunk.value) }
+      } catch (error) { finish('failed'); controller.error(error) }
+    }, cancel(reason) { finish('cancelled'); return reader.cancel(reason) } }), { status: response.status, headers: response.headers })
   }
   let worker: ReturnType<typeof createWorker> | undefined
   const started = Date.now()
@@ -91,7 +139,7 @@ test(live ? 'real provider creates and checks the FlashAttention canvas with zer
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, channelId)
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
     const model = runtimeModelConfiguration({ id: live ? env.OPENAI_MODEL : 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: live ? env.OPENAI_API_KEY : 'synthetic-only', baseUrl: live ? env.OPENAI_BASE_URL : 'https://api.siliconflow.cn/v1' }, 90_000)
-    worker = createWorker({ modelBudget: { maxModelCalls: live ? 24 : 6, wallClockMs: live ? 240_000 : 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
+    worker = createWorker({ modelBudget: { maxModelCalls: live ? 24 : 7, wallClockMs: live ? 240_000 : 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
       model: live ? model : { ...model, baseUrl: `http://127.0.0.1:${address.port}/v1` }, worker: { id: 'issue593-artboard', concurrency: 1 } })
     const run = (await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version, messageId: 'question', version: 1, author: { id: userId, kind: 'human' }, text: '为我在画板中讲解flashattention', mentions: [agentId] }, { mode: 'execute', codeExecution: 'disabled', deliveryMode: 'auto', executionClass: 'conversation' })).runs[0]
     assert.ok(run); await bindProductRun(pool, run, channelId); await worker.runNext(); assert.equal(handlerError, undefined)
@@ -105,10 +153,10 @@ test(live ? 'real provider creates and checks the FlashAttention canvas with zer
       .length + modelFailures.filter(row => row.diagnostics?.kind === 'protocol').length
     const files = (await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows
     const checked = await checkArtifact(pool, { id: canvas.id, kind: 'design' }) as { problems: number }
-    const evidence = { qualification: live ? 'real-provider-native-product' : 'synthetic-provider-native-product', runtime: '3.8.19', model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
+    const evidence = { qualification: live ? 'real-provider-native-product' : 'synthetic-provider-native-product', runtime: '3.8.19', binding: 'native-v2', model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
       accepted: failures.length === 0 && protocolFailures === 0 && checked.problems === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
         && receipts.some(row => row.action === 'design.check') && files.some(row => row.path.endsWith('.dc.html')),
-      elapsedMs: Date.now() - started, decisions, actions: receipts.map(row => ({ action: row.action, ok: row.result.ok, code: row.result.code ?? null, ...(row.action === 'design.read_reference' ? { page: row.args.page } : {}) })),
+      elapsedMs: Date.now() - started, decisions, wire, actions: receipts.map(row => ({ action: row.action, ok: row.result.ok, code: row.result.code ?? null, ...(row.action === 'design.read_reference' ? { page: row.args.page } : {}) })),
       contractFailures: failures.map(row => ({ action: row.action, code: row.result.code })), protocolFailures, providerFailures: modelFailures.filter(row => row.diagnostics?.kind !== 'protocol').length,
       protocolCodes: modelFailures.filter(row => row.diagnostics?.kind === 'protocol').map(row => row.diagnostics.protocolCode),
       files: files.map(row => ({ path: row.path, sha256: row.sha256 })), checkProblems: checked.problems, status: state?.run.status, delivery: state?.delivery, browserValidated: false }

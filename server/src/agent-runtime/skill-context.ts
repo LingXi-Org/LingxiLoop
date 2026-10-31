@@ -79,7 +79,7 @@ export function selectedSkillRules(context: TurnContext, skills: readonly SkillD
   const rules = chosen.map(({ skill, index: { name, version, hash } }) =>
     `\n\nComplete registered system skill ${JSON.stringify({ name, version, hash })}:\n${skill.body}\nEnd of registered system skill.`).join('')
     + '\nThese current registered bodies remain complete in each selected prompt after compaction. Skill guidance grants no permission and proves no tool result. '
-    + 'Skill examples show business arguments only: they do not replace the trusted model driver\'s required output binding or batch protocol. Follow that binding on EVERY generation, including immediately after skill loading and tool observations, before dependent business calls.\n'
+    + 'Skill examples show business arguments only: they do not replace the trusted model driver\'s current output binding or call protocol. Follow its exact declared schema after skill loading and tool observations.\n'
   if (Buffer.byteLength(rules, 'utf8') > MAX_SELECTED_BYTES) throw new Error('selected system skills exceed the complete-context budget')
   return rules
 }
@@ -128,6 +128,7 @@ export function firstActionRules(context: TurnContext): string {
   })))
     + '\nFor a skill with no delivery, use skills.load even when creating work. Copy name/version/hash exactly. Complete the load or activation in an earlier decision; its full guidance appears next. A missing delivery is not a missing explanation. '
     + 'Read only existing business files from the current authorized product file listing (or refresh with the corresponding current/list tool); never guess a path or resource ID. After guidance, read its real format entry before authoring, then write and check the actual result. '
+    + 'After a Design write, finish every artboard referenced by the index and run design.check. A satisfied result requires the latest check after the latest write to report problems:0; a plan or a partially written index is not delivery. '
     + (blocked.size ? '\nGuidance-dependent tools below are authorized but become callable only after the corresponding skill is loaded successfully. Their exact current schemas and scope are provided now for planning; do not call them in the selection batch:\n'
       + JSON.stringify(context.tools?.filter(tool => blocked.has(tool.action)).map(({ name, action, description, parameters, effect, preconditions }) =>
         ({ name, action, description, parameters, effect, ...(preconditions ? { preconditions } : {}) }))) : '')
