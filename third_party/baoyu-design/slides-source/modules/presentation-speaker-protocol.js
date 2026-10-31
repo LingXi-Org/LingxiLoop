@@ -91,7 +91,7 @@ function installPresentationSpeakerProtocol(runtime2) {
   }), bindRuntimeValue(runtime2, "parseBoundedInteger", () => parseBoundedInteger), bindRuntimeValue(runtime2, "parseSpeakerSlideMessage", () => parseSpeakerSlideMessage), bindRuntimeValue(runtime2, "parseSpeakerExitMessage", () => parseSpeakerExitMessage), bindRuntimeValue(runtime2, "parseSpeakerJumpMessage", () => parseSpeakerJumpMessage), bindRuntimeValue(runtime2, "SPEAKER_NOTES_ID_PATTERN", () => SPEAKER_NOTES_ID_PATTERN, (value) => {
     SPEAKER_NOTES_ID_PATTERN = value;
   }), bindRuntimeValue(runtime2, "parseSpeakerNotesMessage", () => parseSpeakerNotesMessage), bindRuntimeValue(runtime2, "parseSpeakerNotesEndMessage", () => parseSpeakerNotesEndMessage), bindRuntimeValue(runtime2, "parseSpeakerNavigateMessage", () => parseSpeakerNavigateMessage), () => {
-    (0, runtime2.initializeBuildEffects)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeEmbeddedPlayerSupport)(), (0, runtime2.initializeBuildEffects)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeSlideRenderer)(), SPEAKER_NOTES_POPOUT_KEY = "speaker-notes", SPEAKER_MESSAGE_TITLE_MAX_CHARS = 120, SPEAKER_NOTES_ID_PATTERN = /^[\w-]{1,64}$/;
+    (0, runtime2.initializeBuildEffects)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeBuildEffects)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeSlideRenderer)(), SPEAKER_NOTES_POPOUT_KEY = "speaker-notes", SPEAKER_MESSAGE_TITLE_MAX_CHARS = 120, SPEAKER_NOTES_ID_PATTERN = /^[\w-]{1,64}$/;
   };
 }
 export {

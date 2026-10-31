@@ -223,6 +223,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         const file = message && nativeAttachments(message.payload).find(item => item.id === ref.attachmentId)
         if (!file) throw new NoEffectError('attachment is unavailable', 'not_found')
         const data = await attachmentMetadata(file, context.work.tenantId)
+        if (kind === 'slides' && /^video\//i.test(data.mime.trim())) throw new NoEffectError('Video assets are no longer supported in Slides.', 'invalid_input')
         if (data.size > definition.layout.maxBlobBytes) throw new NoEffectError('attachment is larger than 20 MB', 'too_large')
         const bytes = await storage.readObjectBounded(data.key, definition.layout.maxBlobBytes, context.signal)
         const stored = await putBlob(db, definition, artifact.id, bytes, data.mime)

@@ -3815,19 +3815,6 @@
       "upstreamLine": 145362
     },
     {
-      "file": "modules/media-playback-turn.js",
-      "install": "installMediaPlaybackTurn",
-      "exports": [
-        "usePlaybackTurn",
-        "PlaybackTurnReact",
-        "PlaybackTurnReactDom",
-        "PlaybackTurnJsx",
-        "PlaybackTurnContext",
-        "initializePlaybackTurn"
-      ],
-      "upstreamLine": 145539
-    },
-    {
       "file": "modules/rendering-artifact-link-card-views.js",
       "install": "installRenderingArtifactLinkCardViews",
       "exports": [
@@ -5753,20 +5740,6 @@
         "useRemoteChangeAnnouncer"
       ],
       "upstreamLine": 186666
-    },
-    {
-      "file": "modules/media-embedded-player-support.js",
-      "install": "installMediaEmbeddedPlayerSupport",
-      "exports": [
-        "embeddedPlayerSupportCache",
-        "pageAllowsEmbed",
-        "serverTimingAllows",
-        "pageCspAllows",
-        "cspAllows",
-        "canEmbedAnyVideoProvider",
-        "initializeEmbeddedPlayerSupport"
-      ],
-      "upstreamLine": 187925
     },
     {
       "file": "modules/editor-command-history.js",
@@ -9050,6 +9023,35 @@
       ],
       "upstreamLine": 145714,
       "reason": "User requested removal of video playback infrastructure"
+    },
+    {
+      "file": "modules/media-playback-turn.js",
+      "install": "installMediaPlaybackTurn",
+      "exports": [
+        "usePlaybackTurn",
+        "PlaybackTurnReact",
+        "PlaybackTurnReactDom",
+        "PlaybackTurnJsx",
+        "PlaybackTurnContext",
+        "initializePlaybackTurn"
+      ],
+      "upstreamLine": 145539,
+      "reason": "Unused video player coordination and embed capability probing removed with video features"
+    },
+    {
+      "file": "modules/media-embedded-player-support.js",
+      "install": "installMediaEmbeddedPlayerSupport",
+      "exports": [
+        "embeddedPlayerSupportCache",
+        "pageAllowsEmbed",
+        "serverTimingAllows",
+        "pageCspAllows",
+        "cspAllows",
+        "canEmbedAnyVideoProvider",
+        "initializeEmbeddedPlayerSupport"
+      ],
+      "upstreamLine": 187925,
+      "reason": "Unused video player coordination and embed capability probing removed with video features"
     }
   ]
 }

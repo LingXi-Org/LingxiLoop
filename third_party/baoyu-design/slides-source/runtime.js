@@ -81,7 +81,6 @@ import { installEmbedsDocument } from './modules/embeds-document.js'
 import { installEmbedsFrameHost } from './modules/embeds-frame-host.js'
 import { installEmbedsReactFrame } from './modules/embeds-react-frame.js'
 import { installRenderingIconFont } from './modules/rendering-icon-font.js'
-import { installMediaPlaybackTurn } from './modules/media-playback-turn.js'
 import { installRenderingArtifactLinkCardViews } from './modules/rendering-artifact-link-card-views.js'
 import { installRenderingSlideSnapshots } from './modules/rendering-slide-snapshots.js'
 import { installRenderingSlides } from './modules/rendering-slides.js'
@@ -138,7 +137,6 @@ import { installHostArtifactPresence } from './modules/host-artifact-presence.js
 import { installHostUserApi } from './modules/host-user-api.js'
 import { installUiPeerCursors } from './modules/ui-peer-cursors.js'
 import { installUiRemoteChangeAnnouncer } from './modules/ui-remote-change-announcer.js'
-import { installMediaEmbeddedPlayerSupport } from './modules/media-embedded-player-support.js'
 import { installEditorCommandHistory } from './modules/editor-command-history.js'
 import { installModelDeckMetadata } from './modules/model-deck-metadata.js'
 import { installEditorDeckCommandHistory } from './modules/editor-deck-command-history.js'
@@ -345,7 +343,6 @@ export function createSlidesRuntime(options = {}) {
     installEnvironmentEmulator(runtime2),
     installMediaAssets(runtime2),
     installMediaVideoLinks(runtime2),
-    installMediaEmbeddedPlayerSupport(runtime2),
     installModelSections(runtime2),
     installModelTypeScales(runtime2),
     installModelStyleSchema(runtime2),
@@ -373,7 +370,6 @@ export function createSlidesRuntime(options = {}) {
     installEmbedsFrameHost(runtime2),
     installEmbedsReactFrame(runtime2),
     installRenderingIconFont(runtime2),
-    installMediaPlaybackTurn(runtime2),
     installRenderingArtifactLinkCardViews(runtime2),
     installRenderingSlideSnapshots(runtime2),
     installRenderingSlides(runtime2),

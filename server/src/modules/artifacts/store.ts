@@ -167,6 +167,9 @@ export async function putBlob(db: Queryable, definition: ArtifactKindDefinition,
   if (bytes.length === 0) throw Object.assign(new Error('empty upload'), { status: 400, code: 'invalid_content' })
   if (bytes.length > definition.layout.maxBlobBytes) throw Object.assign(new Error('upload is too large'), { status: 413, code: 'too_large' })
   const type = (contentType.split(';')[0] ?? '').trim().toLowerCase() || 'application/octet-stream'
+  if (definition.kind === 'slides' && type.startsWith('video/')) {
+    throw Object.assign(new Error('video uploads are not supported'), { status: 415, code: 'invalid_content' })
+  }
   const sha = sha256(bytes), id = blobIdOf(artifactId, sha)
   const existing = await db.query('SELECT 1 FROM artifact_blobs WHERE artifact_id=$1 AND id=$2', [artifactId, id])
   if (!existing.rows[0]) {
