@@ -130,7 +130,11 @@ test('publish waits for the server, then collapses the same homework with read-o
   assert.equal(trigger.props['aria-expanded'], false)
   assert.equal(trigger.props['aria-controls'], matching(summary, 'CollapsibleContent')[0].props.id)
   const focus: unknown[] = []
-  trigger.props.render.props.ref({ focus: (options: unknown) => focus.push(options) })
+  trigger.props.render.props.ref({
+    closest: () => ({ getBoundingClientRect: () => ({ top: 0, bottom: 600 }) }),
+    getBoundingClientRect: () => ({ top: 50, bottom: 90 }),
+    focus: (options: unknown) => focus.push(options),
+  })
   assert.deepEqual(focus, [{ preventScroll: true }])
   matching(summary, 'CollapsibleRoot')[0].props.onOpenChange(true)
   const expanded = render()
@@ -145,6 +149,20 @@ test('publish waits for the server, then collapses the same homework with read-o
   assert.equal(matching(render(), 'CollapsibleRoot')[0].props.open, false)
   assert.equal(publishInputs.length, 1, 'expanding/closing/viewing does not publish again')
   assert.equal((publishInputs[0] as { visibleHash: string }).visibleHash, 'reviewed-hash')
+})
+
+test('publication does not focus an offscreen summary and trigger the chat viewport focus scroll', async () => {
+  const { render, document } = await setup()
+  const publishButton = {}
+  document.activeElement = publishButton
+  await button(render(), '确认发布').props.onClick({ currentTarget: publishButton })
+  const focus: unknown[] = []
+  matching(render(), 'CollapsibleTrigger')[0].props.render.props.ref({
+    closest: () => ({ getBoundingClientRect: () => ({ top: 0, bottom: 600 }) }),
+    getBoundingClientRect: () => ({ top: -400, bottom: -360 }),
+    focus: (options: unknown) => focus.push(options),
+  })
+  assert.deepEqual(focus, [])
 })
 
 test('failure keeps recovery and draft content; retry keeps the idempotency key and does not steal moved focus', async () => {

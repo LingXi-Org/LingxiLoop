@@ -80,7 +80,16 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2">
           <CollapsibleTrigger aria-expanded={publishedExpanded} aria-controls={`${id}-published`} render={<Button type="button" variant="outline" className="h-auto max-w-full whitespace-normal py-2" ref={node => {
-            if (node && focusPublished.current) { focusPublished.current = false; node.focus({ preventScroll: true }) }
+            if (!node || !focusPublished.current) return
+            focusPublished.current = false
+            // The chat viewport also scrolls focused controls into view. Hand off
+            // only within its visible focus area so collapse cannot move a reader.
+            const viewport = node.closest('[data-chat-viewport]')
+            if (viewport) {
+              const area = viewport.getBoundingClientRect(), bounds = node.getBoundingClientRect()
+              if (bounds.top < area.top + 28 || bounds.bottom > area.bottom - 28) return
+            }
+            node.focus({ preventScroll: true })
           }} />}>{publishedExpanded ? '收起已发布作业' : '展开已发布作业'}</CollapsibleTrigger>
           <Button type="button" variant="outline" className="h-auto max-w-full whitespace-normal py-2" onClick={() => onViewForum ? onViewForum() : useApp.getState().setView('forum')}>在论坛查看作业</Button>
         </div>
