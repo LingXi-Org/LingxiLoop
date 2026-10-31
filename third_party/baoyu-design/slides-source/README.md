@@ -28,6 +28,6 @@ The browser output uses hashed shared assets; exports, PPTX and WOFF2 are lazy c
 
 ## Native differences
 
-Chinese interface copy (the pinned translation catalog is the translation evidence); dialog sheet dependency initialization; native selection/context heartbeat and presentation-exit bridge; `__frame_claude_activity` for the existing comment agent presence; extra PDF/HTML/PPTX download formats enabled; export modules loaded on demand; video removal described above. Document content, keys and enum values are not translated.
+Chinese interface copy (the pinned translation catalog is the translation evidence); dialog sheet dependency initialization; native selection/context heartbeat and presentation-exit bridge; `__frame_claude_activity` for the existing comment agent presence; extra PDF/HTML/PPTX download formats enabled; export modules loaded on demand; video removal described above. PDF confirmation uses an explicit button callback because the product sandbox does not permit form submission. Document content, keys and enum values are not translated.
 
 The runtime `value`, `value2`, etc. locals come from recovered emitted source. Functional names and module boundaries make changes reviewable; recovering original variable names or original TypeScript types is not claimed. See `docs/evidence/issue-601/README.md` for the capability matrix and the real-browser verification limits.

@@ -1,0 +1,35 @@
+{
+  "source": "0cb377ea",
+  "checkedAt": "2026-10-31T05:02:23.823011+00:00",
+  "scope": "Downloaded bytes from actual Chromium legacy fixture; no PowerPoint visual acceptance",
+  "pdf": {
+    "pages": 20
+  },
+  "html": {
+    "slides": 20,
+    "videoElements": 0
+  },
+  "pptx": {
+    "slideCount": 20,
+    "badZipEntry": null,
+    "videoPayloads": [],
+    "videoRelationships": []
+  },
+  "files": [
+    {
+      "name": "slides.html",
+      "bytes": 484254,
+      "sha256": "b55518ae1c93186ae01f5e445ae7e4c3346bf33d7a75eafe016d9b1cadf011df"
+    },
+    {
+      "name": "slides.pdf",
+      "bytes": 1635679,
+      "sha256": "006b421b1a8c7eb2e0d1c2addf1979509d5577c85b35d7554e272ff168491e30"
+    },
+    {
+      "name": "slides.pptx",
+      "bytes": 700020,
+      "sha256": "aee50ab34638a4c8c4144e5bc440d91438bfebcae04531e9daf042cc58b43bcd"
+    }
+  ]
+}

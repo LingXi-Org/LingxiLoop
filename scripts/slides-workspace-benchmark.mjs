@@ -26,6 +26,11 @@ function fixture() {
 }
 const downloadAdapter = (await readFile(resolve(root, 'server/src/modules/artifacts/editor-downloads.ts'),'utf8')).split('`')[1]
 let files = fixture()
+function addLegacyMedia(files) {
+  files.set('project/slides/slide-1.html', Buffer.from(files.get('project/slides/slide-1.html').toString().replace('</section>', '<video src="/_blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" aria-label="旧媒体"></video><img data-video-youtube="abcdefghijk" alt="旧链接"></section>')))
+  return files
+}
+const fixtureFilesSha256 = sha(Buffer.concat([...(args.legacy ? addLegacyMedia(fixture()) : fixture()).values()]))
 const requestedPaths = new Set()
 const server = createServer(async (req, res) => {
   try {
@@ -94,12 +99,14 @@ function cdp(method, params = {}, sessionId) {
 const delay = ms => new Promise(r => setTimeout(r, ms))
 const readyScript = `(() => { if (!location.pathname.startsWith('${base}')) return; const poll = () => { const stage = document.querySelector('[data-slides-editor]'); const add = [...document.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === '添加幻灯片' || b.textContent === '添加幻灯片'); if(stage && stage.getBoundingClientRect().width > 0 && add && !add.disabled && document.body.textContent.includes('幻灯片 1') && [...document.querySelectorAll('img')].some(img=>img.getBoundingClientRect().width>300 && img.complete && img.naturalWidth>0)) { requestAnimationFrame(() => { window.__slidesReady = performance.now(); }); } else requestAnimationFrame(poll); }; requestAnimationFrame(poll); })()`
 const samples = [], edits = [], regression = {}
+const networkRequests = new Set()
 try {
   const version = await cdp('Browser.getVersion')
   const downloads = resolve(profile, 'downloads'); await mkdir(downloads)
   await cdp('Browser.setDownloadBehavior', {behavior:'allow',downloadPath:downloads,eventsEnabled:true})
   for (let run = 0; run < runs; run++) {
     files = fixture()
+    if(args.legacy) addLegacyMedia(files)
     const { browserContextId } = await cdp('Target.createBrowserContext')
     await cdp('Browser.setDownloadBehavior', {behavior:'allow',downloadPath:downloads,eventsEnabled:true,browserContextId})
     const { targetId } = await cdp('Target.createTarget', { url: 'about:blank', browserContextId })
@@ -122,6 +129,7 @@ try {
       }
       if (event.method === 'Runtime.executionContextCreated') contexts.set(`${event.sessionId}:${event.params.context.id}`, { session: event.sessionId, contextId: event.params.context.id })
       if (event.method === 'Runtime.executionContextsCleared') for (const [key, value] of contexts) if (value.session === event.sessionId) contexts.delete(key)
+      if (event.method === 'Network.requestWillBeSent') networkRequests.add(event.params.request.url)
       if (event.method === 'Network.loadingFinished') transferred += event.params.encodedDataLength
       if (event.method === 'Runtime.exceptionThrown') errors.push(event.params.exceptionDetails.exception?.description ?? event.params.exceptionDetails.text)
     }
@@ -167,6 +175,7 @@ try {
         if (!feedback?.text?.includes('测试')) throw Error('Text editing feedback was not observed')
         edits.push({run:run+1,...feedback})
       }
+      const metrics = Object.fromEntries((await cdp('Performance.getMetrics', {}, editorSession)).metrics.map(m => [m.name, m.value]))
       if (args.regression && phase === 'reopen') {
         const key = async value => { await cdp('Input.dispatchKeyEvent',{type:'keyDown',key:value},editorSession); await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:value},editorSession) }
         await key('Escape')
@@ -179,6 +188,7 @@ try {
         const options=await evaluate(`([...document.querySelectorAll('[role="menuitem"]')].map(e=>({text:e.textContent,aria:e.getAttribute('aria-label')})))`)
         console.log(JSON.stringify({exportMenu:options}))
         regression.exportMenu=options
+        regression.editContext=(await cdp('Runtime.evaluate',{expression:'window.editorContexts?.at(-1)',returnByValue:true},sessionId)).result.value
         const waitFor = async (check, label, milliseconds=30000) => {
           const end=Date.now()+milliseconds
           while(Date.now()<end){const result=await check();if(result)return result;await delay(100)}
@@ -189,14 +199,24 @@ try {
         for(const [label,extension,signature] of [['PDF（.pdf）','.pdf','%PDF'],['网页（.html）','.html',null],['PowerPoint，使用通用字体','.pptx','PK']]) {
           if(regression.exports.length) await click('button','下载')
           await click('menuitem',label)
+          const confirm=await evaluate(`([...document.querySelectorAll('button')].filter(e=>e.textContent.includes('下载') && e.getBoundingClientRect().width>0).at(-1)?.getBoundingClientRect().toJSON())`)
+          if(confirm) for(const type of ['mousePressed','mouseReleased']) await cdp('Input.dispatchMouseEvent',{type,x:confirm.x+confirm.width/2,y:confirm.y+confirm.height/2,button:'left',clickCount:1},editorSession)
           const name=await waitFor(async()=> (await readdir(downloads)).find(name=>name.endsWith(extension)),label,60000)
           const bytes=await readFile(resolve(downloads,name))
           if(signature && !bytes.subarray(0,8).toString().startsWith(signature))throw Error('Invalid '+extension+' bytes')
-          if(extension==='.html' && !bytes.toString().includes('deck-slide'))throw Error('Missing exported slides')
+          if(extension==='.html') {
+            if(!bytes.toString().includes('deck-slide'))throw Error('Missing exported slides')
+            if(/<video\b|(?:youtube|vimeo)\.com\/embed\b/i.test(bytes.toString()))throw Error('Exported HTML contains active video')
+          }
+          if(args['exports-dir']) {
+            await mkdir(resolve(args['exports-dir']), {recursive:true})
+            await writeFile(resolve(args['exports-dir'], `slides${extension}`), bytes)
+          }
           regression.exports.push({format:extension,bytes:bytes.length,sha256:sha(bytes)})
         }
         regression.saved=Boolean(await waitFor(async()=>files.get('project/slides/slide-1.html')?.toString().includes('测试'),'saved edit'))
         await click('button','放映')
+        await click('menuitem','放映')
         const mode=await evaluate(`document.body.innerText.slice(0,300)`)
         const hostContext = async () => {
           const r=await cdp('Runtime.evaluate',{expression:'window.editorContexts?.at(-1)',returnByValue:true},sessionId)
@@ -209,16 +229,36 @@ try {
         regression.selectionContext=await hostContext()
         regression.noVideoControls=await evaluate(`!document.querySelector('video,input[accept*="video"],[data-video-watch]')`)
         if(!regression.noVideoControls)throw Error('Video control is still mounted')
+        if(args.legacy){
+          regression.legacyPlaceholders=await evaluate(`document.querySelectorAll('[data-unsupported-media]').length`)
+          regression.legacyMetadataPreserved=files.get('project/slides/slide-1.html').toString().includes('data-video-youtube="abcdefghijk"')
+          regression.videoRequests=[...networkRequests].filter(url=>/youtube|vimeo|loom\.com|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/.test(url))
+          if(!regression.legacyPlaceholders||!regression.legacyMetadataPreserved||regression.videoRequests.length)throw Error('Legacy media was lost or activated')
+        }
+        const undo = async redo => {
+          for(const type of ['keyDown','keyUp']) await cdp('Input.dispatchKeyEvent',{type,key:'z',code:'KeyZ',windowsVirtualKeyCode:90,modifiers:redo?10:2},editorSession)
+        }
+        await undo(false)
+        regression.undo=Boolean(await waitFor(async()=>files.get('project/slides/slide-1.html')?.toString().includes('幻灯片 1'),'undo saved edit'))
+        await undo(true)
+        regression.redo=Boolean(await waitFor(async()=>files.get('project/slides/slide-1.html')?.toString().includes('测试'),'redo saved edit'))
+        await cdp('Page.navigate',{url:`${origin}/host`},sessionId)
+        regression.savedReopen=Boolean(await waitFor(async()=>{
+          for(const {contextId,session} of contexts.values()){
+            try {const r=await cdp('Runtime.evaluate',{contextId,expression:`location.pathname.startsWith('${base}') && Boolean([...document.querySelectorAll('[data-text-path]')].find(e=>e.textContent==='测试' && e.getBoundingClientRect().width>300))`,returnByValue:true},session);if(r.result.value)return true}catch{}
+          }
+          return false
+        },'saved reopen'))
       }
-      const metrics = Object.fromEntries((await cdp('Performance.getMetrics', {}, editorSession)).metrics.map(m => [m.name, m.value]))
-      samples.push({ run: run + 1, phase, ...measurement, transferredBytes: transferred, jsHeapUsedBytes: metrics.JSHeapUsedSize, scriptDurationSeconds: metrics.ScriptDuration, taskDurationSeconds: metrics.TaskDuration })
+      samples.push({ run: run + 1, phase, ...measurement, transferredBytes: transferred, jsHeapUsedBytes: metrics.JSHeapUsedSize, scriptDurationSeconds: metrics.ScriptDuration, taskDurationSeconds: metrics.TaskDuration,
+        ...(args.metrics ? { engineMetrics: metrics } : {}) })
       console.log(JSON.stringify({ run: run + 1, phase, readyMs: measurement.readyMs, transferredBytes: transferred }))
     }
     listeners.delete(listener)
     await cdp('Target.disposeBrowserContext', { browserContextId })
   }
   const percentile = (values, p) => [...values].sort((a, b) => a - b)[Math.ceil(values.length * p) - 1]
-  const report = { scope: 'Real Chromium, isolated sandboxed editor, deterministic local HTTP API fixture; not full product or production acceptance', source: args.label ?? 'baseline', measuredAt: new Date().toISOString(), browser: version, device: { platform: platform(), cpu: cpus()[0]?.model, logicalCpus: cpus().length, totalMemoryBytes: totalmem(), viewport: '1440x1000@1', cpuThrottling: 1 }, network: { latencyMs: 20, downloadMbps: 4, uploadMbps: 3, compression: 'gzip', allRequests: true }, fixture: { slides: 20, images: 20, imageSha256: sha(image), filesSha256: sha(Buffer.concat([...fixture().values()])) }, runs, samples, regression, summary: Object.fromEntries(['cold', 'reopen'].map(phase => [phase, Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === phase).map(s => s.readyMs), p)]))])), editFeedback: { status: 'measured', definition: 'Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text', samples: edits, p95Ms: percentile(edits.map(edit=>edit.durationMs),.95) }, jsParseTime: {status:'unmeasured', note:'ScriptDuration measures execution, not a separate V8 parse trace'}, errors }
+  const report = { scope: 'Real Chromium, isolated sandboxed editor, deterministic local HTTP API fixture; not full product or production acceptance', source: args.label ?? 'baseline', measuredAt: new Date().toISOString(), browser: version, device: { platform: platform(), cpu: cpus()[0]?.model, logicalCpus: cpus().length, totalMemoryBytes: totalmem(), viewport: '1440x1000@1', cpuThrottling: 1 }, network: { latencyMs: 20, downloadMbps: 4, uploadMbps: 3, compression: 'gzip', allRequests: true }, fixture: { variant: args.legacy ? 'legacy-compatibility' : 'fixed-performance', slides: 20, images: 20, imageSha256: sha(image), filesSha256: fixtureFilesSha256 }, runs, samples, regression, summary: Object.fromEntries(['cold', 'reopen'].map(phase => [phase, Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === phase).map(s => s.readyMs), p)]))])), editFeedback: { status: 'measured', definition: 'Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text', samples: edits, p95Ms: percentile(edits.map(edit=>edit.durationMs),.95) }, jsParseTime: {status:'unmeasured', note:'ScriptDuration measures execution, not a separate V8 parse trace'}, errors }
   await mkdir(resolve(out, '..'), { recursive: true }); await writeFile(out, JSON.stringify(report, null, 2) + '\n')
 } finally {
   await cdp('Browser.close').catch(() => {}); browser.kill(); server.closeAllConnections(); server.close(); await rm(profile, { recursive: true, force: true, maxRetries: 3 }).catch(() => {})
