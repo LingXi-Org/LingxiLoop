@@ -1280,11 +1280,11 @@ test('[integration] homework draft is teacher-owned and absent from learner feed
 })
 
 test('[integration] homework overview keeps course, tenant and publication scope without scanning learning history', async () => {
+  const { homework: task } = await published()
   const draft = await homework.draft(teacher, courseId, visible)
   const id = draft.homework.id
   for (const scope of [student, outsider]) assert.equal((await call(scope, path(id, '/overview'))).status, 404)
   assert.deepEqual(await (await call(teacher, path(id, '/overview'))).json(), { student: null })
-  const { homework: task } = await published()
   const url = path(task.id, '/overview')
   for (const scope of [outsider, { ...student, companyId: 'another-tenant' }]) {
     assert.equal((await call(scope, url)).status, 404)
