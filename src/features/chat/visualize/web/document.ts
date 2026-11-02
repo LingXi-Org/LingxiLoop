@@ -6,14 +6,15 @@ const STATIC_DOMAINS = 'https://cdnjs.cloudflare.com https://esm.sh https://cdn.
 const SANDBOX_CSP = `default-src 'none'; script-src 'unsafe-inline' ${STATIC_DOMAINS}; style-src 'unsafe-inline' ${STATIC_DOMAINS}; img-src data: blob: ${STATIC_DOMAINS}; font-src data: ${STATIC_DOMAINS}; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'`
 const script = (source: string) => `<script>${source.replaceAll('</script','<\\/script')}</script>`
 /** Leave time for SDK readiness inside the host's existing 15-second deadline. */
-async function optionalMath(read: (name: string) => Promise<string>) {
+async function optionalMath(read: (name: string, signal?: AbortSignal) => Promise<string>) {
+  const controller = new AbortController()
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
-    return await Promise.race([read('math.js'), new Promise<string>(resolve => {
-      timer = setTimeout(() => resolve(''), 8000)
+    return await Promise.race([read('math.js', controller.signal), new Promise<string>(resolve => {
+      timer = setTimeout(() => { controller.abort(); resolve('') }, 8000)
     })])
   } catch { return '' }
-  finally { if (timer !== undefined) clearTimeout(timer) }
+  finally { clearTimeout(timer); controller.abort() }
 }
 const vendors = [
   ['https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js','vendor/floating-ui-core-1.7.3.min.js'],
@@ -25,7 +26,7 @@ const vendors = [
 // their actual HTML; only this exact kit can skip the extra dependency round.
 const PINNED_KIT_SHA256 = '42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf'
 /** Same ordering as ZCode service/protocol; all resources are fetched by the authorized host. */
-export async function buildWebDocument(fragment: string, state: GenUiWidgetState | null, resource: (name: string) => Promise<string>, kitHash?: unknown, hashes: Record<string,string> = {}, publicOrigin = globalThis.location?.origin ?? 'http://localhost') {
+export async function buildWebDocument(fragment: string, state: GenUiWidgetState | null, resource: (name: string, signal?: AbortSignal) => Promise<string>, kitHash?: unknown, hashes: Record<string,string> = {}, publicOrigin = globalThis.location?.origin ?? 'http://localhost') {
   const assets: Record<string,PublicScript> = {}
   for (const name of ['kit-tooltip.js','kit-carousel.js','kit-tabs.js','kit-icons.js','capture.js','vendor/lucide-1.17.0.js']) {
     const path = visualizeResourceUrl(name,hashes[name])
@@ -72,7 +73,7 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
     /\bviz-calendar\b/i.test(fragment) ? read('calendar.js') : Promise.resolve(''),
     Promise.all(initialModules.map(read)),
     // Math is an enhancement: keep source readable if its renderer is unavailable.
-    optionalMath(read),
+    optionalMath(resource),
     // Start authored dependencies alongside known kit dependencies, retaining
     // this page's capability, cancellation and shared failure boundary.
     // The later HTML discovery/substitution reuses each already-started read.

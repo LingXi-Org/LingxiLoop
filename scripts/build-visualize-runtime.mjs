@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build, transform } from 'esbuild'
-import { buildArtifactMath } from './build-artifact-math.mjs'
+import { buildDesignEditor } from './build-design-editor.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const upstream = resolve(root, 'third_party/zcode/upstream')
@@ -38,7 +38,7 @@ export async function buildGuestRuntime({ slim = true, write = true } = {}) {
 }
 
 export async function buildVisualizeRuntime() {
-  await buildArtifactMath()
+  await buildDesignEditor()
   await mkdir(output, { recursive: true })
   const result = await buildGuestRuntime()
   const hash = bytes => createHash('sha256').update(bytes).digest('hex')

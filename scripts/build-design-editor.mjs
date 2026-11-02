@@ -4,14 +4,23 @@ import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, resolve, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
+import { adaptDesignMath, buildArtifactMath } from './build-artifact-math.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const source = resolve(root, 'third_party/baoyu-design/upstream/claude-design/scripts/editor')
 const output = resolve(root, 'server/assets/design-editor')
 const sha = bytes => createHash('sha256').update(bytes).digest('hex')
 
-/** Package the pinned editor without changing its JavaScript or canvas model. */
+/** The pinned getter discarded the origin of its trusted runtime metadata. */
+export function adaptDesignRuntimeUrl(source) {
+  const needle = `let T=document.querySelector('meta[name="'+d+'"]')?.getAttribute("content");if(T)try{return new URL(T,document.baseURI).pathname}`
+  assert.equal(source.split(needle).length, 2, 'pinned Design runtime URL hook changed')
+  return source.replace(needle, needle.replace('.pathname}', '.href}'))
+}
+
+/** Package the pinned editor with the shared math enhancement and unchanged canvas model. */
 export async function buildDesignEditor() {
+  const { math } = await buildArtifactMath()
   const originalHtml = await readFile(resolve(source, 'index.html'), 'utf8')
   const cssPath = /href="\.\/(assets\/[^"/]+\.css)"/.exec(originalHtml)?.[1]
   assert.ok(cssPath, 'Expected the pinned Design stylesheet')
@@ -28,12 +37,13 @@ export async function buildDesignEditor() {
   const cssName = `design-${sha(css)}.css`
   const scriptPath = /src="\.\/(assets\/[^"/]+\.js)"/.exec(originalHtml)?.[1]
   assert.ok(scriptPath, 'Expected the pinned editor entry')
-  const script = await readFile(resolve(source, scriptPath))
+  const script = Buffer.from(adaptDesignRuntimeUrl(adaptDesignMath(await readFile(resolve(source, scriptPath), 'utf8'), math)))
   const scriptName = `design-${sha(script)}.js`
   const publicBase = '__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/'
   const runtimePath = 'artifact-type/dc-runtime.js'
-  const runtime = await readFile(resolve(source, runtimePath))
-  const runtimeFile = `artifact-type/dc-runtime-${sha(runtime)}.js`
+  const runtime = Buffer.from(await readFile(resolve(source, runtimePath), 'utf8') + '\n;' + math)
+  const runtimeName = `design-${sha(runtime)}.js`
+  const runtimeFile = `assets/${runtimeName}`
   // Only generated build output is replaced; the complete upstream archive stays intact.
   await rm(output, { recursive: true, force: true })
   await mkdir(output, { recursive: true })
@@ -51,8 +61,8 @@ export async function buildDesignEditor() {
   const html = originalHtml.replace(`./${cssPath}`, `${publicBase}${cssName}`).replace(`./${scriptPath}`, `${publicBase}${scriptName}`)
     .replace(`src="${publicBase}${scriptName}"`, `src="${publicBase}${scriptName}" integrity="${integrity(script)}"`)
     .replace(`href="${publicBase}${cssName}"`, `href="${publicBase}${cssName}" integrity="${integrity(css)}"`)
-    .replace(runtimePath, runtimeFile)
-    .replace('</head>', `<link rel="preload" as="script" href="./${runtimeFile}">\n</head>`)
+    .replace(runtimePath, `${publicBase}${runtimeName}`)
+    .replace('</head>', `<link rel="preload" as="script" href="${publicBase}${runtimeName}">\n</head>`)
   await writeFile(resolve(output, 'index.html'), html)
   const compressed = {}
   const files = {}
@@ -71,6 +81,7 @@ export async function buildDesignEditor() {
   }
   await visit(output)
   const manifest = { source: relative(root, source), upstreamCommit: 'c15e76ef5134228d2bb5da35652d30d7d6b8a34d',
+    math: { sha256: sha(math), bytes: Buffer.byteLength(math) },
     entry: { file: `assets/${scriptName}`, original: scriptPath },
     runtime: { file: runtimeFile, original: runtimePath },
     styles: { file: `assets/${cssName}`, fallbackFont: `assets/${fontName}`, icons: `assets/${iconName}`, originalIcons: iconPath, originalBytes: Buffer.byteLength(originalCss), bytes: Buffer.byteLength(css) }, files, compressed }

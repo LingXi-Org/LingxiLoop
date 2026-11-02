@@ -26,7 +26,6 @@ import { slideWorkspaceConversation } from './slides-workspace.js'
 // the loopback grant by a signed grant and fs.watch by artifact events.
 const ROUTES = { listing: '_files.json', publish: '__deck/publish', assets: '__deck/assets', events: '__deck/events', session: '__deck/session' }
 const COMMENTS_ROUTE = '__comments'
-const DESIGN_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/design-editor/', import.meta.url))
 const SLIDES_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/slides-editor/', import.meta.url))
 const DESIGN_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/design-editor/', import.meta.url))
 const BLOB_PATH = /^_blob\/([0-9a-f]{32})$/

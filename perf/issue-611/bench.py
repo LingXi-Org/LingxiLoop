@@ -1,5 +1,5 @@
 """Actual Chromium/UI benchmark. python3 perf/issue-611/bench.py --help."""
-import argparse, json, math, platform, time, urllib.request
+import argparse, json, math, platform, time, urllib.request, urllib.parse, ssl, subprocess, base64, hashlib
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -84,7 +84,7 @@ def guest(page, kind):
             if f.locator('h1').count() and f.locator('h1').inner_text(timeout=50).startswith('Fixed '):return f
         except Exception: pass
     return None
-def usable(page, kind, start, trace):
+def usable(page, kind, start, trace, scope="a"):
     if kind=='visualize':
         # Chromium state-preserving moveBefore retains the guest but can leave
         # Playwright's Frame map stale. Inspect the real OOPIF execution context.
@@ -92,13 +92,13 @@ def usable(page, kind, start, trace):
         while time.monotonic()<deadline:
             for (route,context),value in list(trace.contexts.items()):
                 if not value.get('auxData',{}).get('isDefault'):continue
-                result=trace.evaluate(route,context,"(()=>{const h=document.querySelector('h1'),b=document.querySelector('#increment');return h&&b&&h.getBoundingClientRect().height?{rect:b.getBoundingClientRect().toJSON(),count:Number(document.querySelector('#count').textContent)}:null})()")
+                result=trace.evaluate(route,context,"(()=>{const h=document.querySelector('h1'),b=document.querySelector('#increment');return h&&b&&h.dataset.fixtureChannel==='perf-"+scope+"'&&h.getBoundingClientRect().height?{rect:b.getBoundingClientRect().toJSON(),count:Number(document.querySelector('#count').textContent)}:null})()")
                 if result:break
             else:page.wait_for_timeout(20);continue
             break
         else:raise RuntimeError('No visible GenUI context: '+repr(trace.contexts))
         visible=(time.monotonic()-start)*1000
-        box=page.locator('[data-visualize-guest]').bounding_box();r=result['rect']
+        box=page.locator('[data-visualize-guest]:visible').bounding_box();r=result['rect']
         page.mouse.click(box['x']+r['x']+r['width']/2,box['y']+r['y']+r['height']/2)
         deadline=time.monotonic()+8
         while time.monotonic()<deadline:
@@ -128,54 +128,59 @@ def usable(page, kind, start, trace):
         f.wait_for_function('(n)=>Number(document.querySelector("#count").textContent)===n',arg=old+1)
     return f, {'visibleMs':visible,'usableMs':(time.monotonic()-start)*1000}
 
-report={'browser':None,'host':{'system':platform.platform(),'cpu':Path('/proc/cpuinfo').read_text().split('model name')[1].split('\n')[0].lstrip(':\t ')},'profile':{'latencyMs':20,'downloadMbps':4,'uploadMbps':3,'cpu':a.cpu,'width':a.width,'height':1000,'oopifThrottled':True},'scope':'Production UI/isolated gateway/editor/SDK, synthetic local API; excludes production authorization/database/IM/model latency','samples':[]}
-with sync_playwright() as pw:
-    browser=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
-    report['browser']=browser.version
-    for n in range(a.runs):
-        for url in a.urls:
-            for kind in a.kinds:
-                urllib.request.urlopen(urllib.request.Request(url+'__fixture/reset',data=b'{}',headers={'Content-Type':'application/json'})).close()
-                ctx=browser.new_context(viewport={'width':a.width,'height':1000},device_scale_factor=1)
-                ctx.add_init_script(INIT)
-                page=ctx.new_page();page.set_default_timeout(12000)
-                errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-                trace=Trace(ctx,page)
-                for scenario in ['cold','reopen','warm','refresh']:
-                    if scenario in ['cold','refresh']:
-                        page.goto(url+'?kind='+kind,wait_until='domcontentloaded')
-                        page.locator('#open').wait_for()
-                    elif scenario=='warm':
-                        page.locator('#switch').click()
-                    else:
-                        page.locator('#close').click()
-                        page.wait_for_timeout(50)
-                    before=set(trace.requests);metrics=trace.metrics(); start=time.monotonic()
-                    page.locator('#open').click()
-                    f,timing=usable(page,kind,start,trace)
-                    end=trace.metrics()
-                    requests=[v for k,v in trace.requests.items() if k not in before and v['url'].startswith('http')]
-                    # Remove ephemeral capability values from recorded URLs.
-                    import re
-                    for item in requests:
-                        item['url']=re.sub(r'/design/[^/]+/','/design/<grant>/',item['url'])
-                        item['url']=re.sub(r'http://[a-f0-9]{32}-artifact','http://<grant-origin>-artifact',item['url'])
-                        item['url']=re.sub(r'/pages/page-[^/]+','/pages/<page>',item['url'])
-                    frames=[]
-                    for frame in page.frames:
-                        try:frames.append(frame.evaluate('()=>({url:location.href.startsWith("about:")?location.href:"host/editor",resources:performance.getEntriesByType("resource").map(x=>({name:x.name.split("/").at(-1),start:x.startTime,end:x.responseEnd,transfer:x.transferSize,encoded:x.encodedBodySize,decoded:x.decodedBodySize})),longTasks:window.__longTasks??[]})'))
-                        except Exception:pass
-                    row={'run':n,'url':url,'kind':kind,'scenario':scenario,**timing,'bytes':sum(x.get('bytes',0)for x in requests),'requests':requests,'frames':frames,'targets':list(trace.targets.values()),'metricsDelta':{k:end[k]-metrics.get(k,0)for k in ['ScriptDuration','TaskDuration','JSHeapUsedSize']},'errors':errors[:]}
-                    report['samples'].append(row)
-                    print(json.dumps({k:row[k]for k in ['run','url','kind','scenario','visibleMs','usableMs','bytes']}),flush=True)
-                    if n==0:page.screenshot(path=str(Path(a.out).with_suffix(''))+'-'+kind+'-'+str(a.urls.index(url))+'-'+scenario+'.png')
-                    if kind=='design':page.keyboard.press('Escape')
-                    Path(a.out).write_text(json.dumps(report,indent=2))
-                ctx.close()
-    browser.close()
-groups={}
-for row in report['samples']:
-    key='|'.join([row['url'],row['kind'],row['scenario']]);groups.setdefault(key,[]).append(row)
-report['summary']={key:{metric:{'p'+str(p):sorted(x[metric]for x in rows)[max(0,math.ceil(len(rows)*p/100)-1)] for p in [50,75,95]} for metric in ['visibleMs','usableMs','bytes']}for key,rows in groups.items()}
-Path(a.out).write_text(json.dumps(report,indent=2))
-print(json.dumps(report['summary'],indent=2))
+if __name__ == '__main__':
+    report={'browser':None,'host':{'system':platform.platform(),'cpu':Path('/proc/cpuinfo').read_text().split('model name')[1].split('\n')[0].lstrip(':\t ')},'profile':{'latencyMs':20,'downloadMbps':4,'uploadMbps':3,'cpu':a.cpu,'width':a.width,'height':1000,'oopifThrottled':True},'scope':'Production UI/isolated gateway/editor/SDK, synthetic local API; excludes production authorization/database/IM/model latency','samples':[]}
+    public_key = subprocess.check_output(['openssl','x509','-pubkey','-noout','-in','/tmp/611-fixture-cert.pem'])
+    der = subprocess.check_output(['openssl','pkey','-pubin','-outform','der'],input=public_key)
+    spki = base64.b64encode(hashlib.sha256(der).digest()).decode()
+    with sync_playwright() as pw:
+        browser=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--no-proxy-server','--ignore-certificate-errors-spki-list='+spki,'--host-resolver-rules=MAP *.loop.test 127.0.0.1,MAP loop.test 127.0.0.1'])
+        report['browser']=browser.version
+        for n in range(a.runs):
+            for url in a.urls:
+                for kind in a.kinds:
+                    reset_url=url.replace('app.loop.test','127.0.0.1')+'__fixture/reset'
+                    urllib.request.urlopen(urllib.request.Request(reset_url,data=b'{}',headers={'Content-Type':'application/json'}),context=ssl._create_unverified_context()).close()
+                    ctx=browser.new_context(viewport={'width':a.width,'height':1000},device_scale_factor=1)
+                    ctx.add_init_script(INIT)
+                    page=ctx.new_page();page.set_default_timeout(12000)
+                    errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+                    trace=Trace(ctx,page)
+                    for scenario in ['cold','reopen','warm','refresh']:
+                        if scenario in ['cold','refresh']:
+                            page.goto(url+'?kind='+kind,wait_until='domcontentloaded')
+                            page.locator('#open').wait_for()
+                        elif scenario=='warm':
+                            page.locator('#switch').click()
+                        else:
+                            page.locator('#close').click()
+                            page.wait_for_timeout(50)
+                        before=set(trace.requests);metrics=trace.metrics(); start=time.monotonic()
+                        page.locator('#open').click()
+                        f,timing=usable(page,kind,start,trace,'b' if scenario=='warm' else 'a')
+                        end=trace.metrics()
+                        requests=[v for k,v in trace.requests.items() if k not in before and v['url'].startswith('http')]
+                        # Remove ephemeral capability values from recorded URLs.
+                        import re
+                        for item in requests:
+                            item['url']=re.sub(r'/design/[^/]+/','/design/<grant>/',item['url'])
+                            item['url']=re.sub(r'(?<=://)[a-f0-9]{32}-artifact','<grant-origin>-artifact',item['url'])
+                            item['url']=re.sub(r'/pages/page-[^/]+','/pages/<page>',item['url'])
+                        frames=[]
+                        for frame in page.frames:
+                            try:frames.append(frame.evaluate('()=>({url:location.href.startsWith("about:")?location.href:"host/editor",resources:performance.getEntriesByType("resource").map(x=>({name:x.name.split("/").at(-1),start:x.startTime,end:x.responseEnd,transfer:x.transferSize,encoded:x.encodedBodySize,decoded:x.decodedBodySize})),longTasks:window.__longTasks??[]})'))
+                            except Exception:pass
+                        row={'run':n,'url':url,'kind':kind,'scenario':scenario,**timing,'bytes':sum(x.get('bytes',0)for x in requests),'requests':requests,'frames':frames,'targets':list(trace.targets.values()),'metricsDelta':{k:end[k]-metrics.get(k,0)for k in ['ScriptDuration','TaskDuration','JSHeapUsedSize']},'errors':errors[:]}
+                        report['samples'].append(row)
+                        print(json.dumps({k:row[k]for k in ['run','url','kind','scenario','visibleMs','usableMs','bytes']}),flush=True)
+                        if n==0:page.screenshot(path=str(Path(a.out).with_suffix(''))+'-'+kind+'-'+str(a.urls.index(url))+'-'+scenario+'.png')
+                        if kind=='design':page.keyboard.press('Escape')
+                        Path(a.out).write_text(json.dumps(report,indent=2))
+                    ctx.close()
+        browser.close()
+    groups={}
+    for row in report['samples']:
+        key='|'.join([row['url'],row['kind'],row['scenario']]);groups.setdefault(key,[]).append(row)
+    report['summary']={key:{metric:{'p'+str(p):sorted(x[metric]for x in rows)[max(0,math.ceil(len(rows)*p/100)-1)] for p in [50,75,95]} for metric in ['visibleMs','usableMs','bytes']}for key,rows in groups.items()}
+    Path(a.out).write_text(json.dumps(report,indent=2))
+    print(json.dumps(report['summary'],indent=2))

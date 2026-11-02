@@ -125,7 +125,7 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   assert.equal(page.status, 200)
   assert.match(page.headers.get('content-security-policy') ?? '', /^sandbox allow-scripts/)
   const html = await page.text()
-  const sharedEntry = /src="(https?:\/\/[^\"]+\/artifact-editor\/design-assets\/design-[a-f0-9]{64}\.js)"/.exec(html)?.[1]
+  const sharedEntry = /src="(https?:\/\/[^"]+\/artifact-editor\/design-assets\/design-[a-f0-9]{64}\.js)"/.exec(html)?.[1]
   assert.ok(sharedEntry, 'the fixed renderer can be cached across unique grant origins')
   const shared = await fetch(origin + new URL(sharedEntry).pathname)
   assert.equal(shared.status, 200)

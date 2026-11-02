@@ -8,10 +8,15 @@ import { resolve, extname } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { Readable } from 'node:stream'
 import { request as httpRequest } from 'node:http'
+import { request as httpsRequest, createServer } from 'node:https'
 import { canvas, board, visualization } from './fixtures.mjs'
 const root = resolve(process.argv[2] ?? '.')
 const web = resolve(process.argv[3] ?? '/tmp/issue-611-a')
 const port = Number(process.argv[4] ?? 4191)
+const tls = process.env.PERF_TLS === '1'
+const appOrigin = tls ? `https://app.loop.test:${port}` : `http://127.0.0.1:${port}`
+const editorBase = tls ? `https://artifact.loop.test:${port}` : `http://artifact.localhost:${port}`
+const localOrigin = `${tls ? 'https' : 'http'}://127.0.0.1:${port}`
 const { artifactEditorOrigin, isolatedEditor } = await import(pathToFileURL(resolve(root, 'shared/artifact-editor-origin.ts')).href)
 const { VISUALIZE_PUBLIC_RESOURCES, visualizeResourceFile, visualizeResourceUrl } = await import(pathToFileURL(resolve(root, 'shared/visualize-public-resources.ts')).href)
 const { sendEditorAsset } = await import(pathToFileURL(resolve(root, 'server/src/modules/artifacts/editor-static.ts')).href)
@@ -21,10 +26,12 @@ const hashes = Object.fromEntries(Object.entries(resources).map(([name, bytes]) 
 const editor = process.env.PERF_DESIGN_DIST ? resolve(process.env.PERF_DESIGN_DIST) : resolve(root, 'third_party/baoyu-design/upstream/claude-design/scripts/editor')
 const files = new Map<string, string>([['project/canvas.json', JSON.stringify(canvas)], ['project/Main.dc.html', board]])
 const states = new Map<string, { state: unknown; revision: number }>()
-const grants = new Set<string>()
+const grants = new Map<string, string>()
+const documents = new Map<string, Map<string, string>>()
+let vizSource = visualization
 const rawFetch = async (input: Request) => new Promise<Response>((resolveResponse,reject) => {
   const headers=Object.fromEntries(input.headers)
-  const request=httpRequest(input.url,{method:input.method,headers},incoming=>{
+  const request=(tls ? httpsRequest : httpRequest)(input.url,{method:input.method,headers,...(tls ? {rejectUnauthorized:false} : {})},incoming=>{
     const output=new Headers()
     for(const [key,value] of Object.entries(incoming.headers))if(value)output.set(key,Array.isArray(value)?value.join(', '):value)
     resolveResponse(new Response(input.method==='HEAD'?null:Readable.toWeb(incoming) as ReadableStream<Uint8Array>,{status:incoming.statusCode,headers:output}))
@@ -35,10 +42,10 @@ const rawFetch = async (input: Request) => new Promise<Response>((resolveRespons
 })
 const app = express()
 app.use((req, res, next) => {
-  if (!(req.headers.host ?? '').includes('-artifact.localhost')) return next()
+  if (!(req.headers.host ?? '').includes(tls ? '-artifact.loop.test' : '-artifact.localhost')) return next()
   void (async () => {
-    const reply = await isolatedEditor(new Request(`http://${req.headers.host}${req.originalUrl}`, { method: req.method, headers: req.headers as Record<string,string>,
-      ...(!['GET','HEAD'].includes(req.method) ? { body: Readable.toWeb(req), duplex:'half' } : {}) }), `http://artifact.localhost:${port}`, `http://127.0.0.1:${port}`, rawFetch)
+    const reply = await isolatedEditor(new Request(`${tls ? 'https' : 'http'}://${req.headers.host}${req.originalUrl}`, { method: req.method, headers: req.headers as Record<string,string>,
+      ...(!['GET','HEAD'].includes(req.method) ? { body: Readable.toWeb(req), duplex:'half' } : {}) }), editorBase, localOrigin, rawFetch)
     if (!reply) return next()
     res.status(reply.status)
     reply.headers.forEach((v: string,k: string) => { res.setHeader(k,v) })
@@ -48,11 +55,13 @@ app.use((req, res, next) => {
 })
 app.use(compression({ filter: (req,res) => !String(res.getHeader('Content-Type')).includes('event-stream') && compression.filter(req,res) }))
 app.use(express.json({limit:'16mb'}))
-app.post('/__fixture/reset', (_req,res)=>{states.clear();files.set('project/canvas.json',JSON.stringify(canvas));files.set('project/Main.dc.html',board);res.json({ok:true})})
+app.post('/__fixture/reset', (_req,res)=>{states.clear();grants.clear();documents.clear();vizSource=visualization;files.set('project/canvas.json',JSON.stringify(canvas));files.set('project/Main.dc.html',board);res.json({ok:true})})
+app.post('/__fixture/content', (req,res)=>{ if(req.body.canvas)files.set('project/canvas.json',JSON.stringify(req.body.canvas));if(typeof req.body.board==='string')files.set('project/Main.dc.html',req.body.board);if(typeof req.body.visualization==='string')vizSource=req.body.visualization;res.json({ok:true}) })
 app.use((req,res,next)=>{res.set({'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*'});if(req.method==='OPTIONS')res.sendStatus(204);else next()})
-app.post('/api/artifacts/:id/editor-grant', async (_req,res)=>{
-  const grant = randomUUID(); grants.add(grant)
-  res.json({url: `${await artifactEditorOrigin(grant, `http://artifact.localhost:${port}`)}/artifact-editor/design/${grant}/`, write:true})
+app.post('/api/artifacts/:id/editor-grant', async (req,res)=>{
+  const grant = randomUUID(); grants.set(grant,req.params.id)
+  if(!documents.has(req.params.id))documents.set(req.params.id,new Map(files))
+  res.json({url: `${await artifactEditorOrigin(grant, editorBase)}/artifact-editor/design/${grant}/`, write:true})
 })
 app.get(/^\/artifact-editor\/design-assets\/(design-[a-f0-9]{64}\.(?:js|css|woff2))$/, async (req,res,next)=>{
   try {
@@ -64,6 +73,7 @@ app.get(/^\/artifact-editor\/design-assets\/(design-[a-f0-9]{64}\.(?:js|css|woff
 })
 app.use('/artifact-editor/design/:grant', (req,res,next)=>{
   if (!grants.has(req.params.grant)) {res.sendStatus(404);return}
+  const files = documents.get(grants.get(req.params.grant)!)!
   const path = decodeURIComponent(req.path.slice(1))
   res.set('Cache-Control','no-store')
   if (path === '__deck/session') {res.json({canEdit:true});return}
@@ -86,7 +96,7 @@ app.use('/artifact-editor/design/:grant', (req,res,next)=>{
       let html=await readFile(file,'utf8'), assetSource=''
       if(html.includes('__LINGXI_DESIGN_ASSET_ORIGIN__')) {
         const {designPageAssets}=await import(pathToFileURL(resolve(root,'server/src/modules/artifacts/design-page.ts')).href)
-        const page=designPageAssets(html,`http://127.0.0.1:${port}`);html=page.html;assetSource=page.source
+        const page=designPageAssets(html,appOrigin);html=page.html;assetSource=page.source
       }
       res.set({'Content-Security-Policy':`sandbox allow-scripts allow-downloads allow-popups allow-modals; default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ${assetSource}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${assetSource}; font-src 'self' data: https://fonts.gstatic.com ${assetSource}; img-src 'self' data: blob:; connect-src 'self' data: blob: https://fonts.googleapis.com https://fonts.gstatic.com; frame-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'none'`,'Cache-Control':'no-cache'})
       res.type('html').send(html);return
@@ -98,7 +108,7 @@ app.use('/artifact-editor/design/:grant', (req,res,next)=>{
 })
 app.use('/api/im/channels/:channel/visualize', (req,res)=>{
   const state=states.get(req.params.channel)??{state:null,revision:0}
-  if (req.path==='/pages'&&req.method==='POST') {res.json({pageId:'page-'+randomUUID(),initId:'fixture-capability',html:visualization,state:state.state,stateRevision:state.revision,path:'/workspace/perf.html',resourceHashes:hashes});return}
+  if (req.path==='/pages'&&req.method==='POST') {res.json({pageId:'page-'+randomUUID(),initId:'fixture-capability',html:vizSource.replace('<h1',`<h1 data-fixture-channel="${req.params.channel}"`),state:state.state,stateRevision:state.revision,path:'/workspace/perf.html',resourceHashes:hashes});return}
   if (req.path.endsWith('/state')) {
     if(req.method==='PUT'){state.state=req.body.state;state.revision++;states.set(req.params.channel,state)}res.json(state);return
   }
@@ -112,4 +122,5 @@ app.use((req,res,next)=>{
 app.use(express.static(web))
 app.get('/', (_req,res)=>res.sendFile(resolve(web,'perf/issue-611/index.html')))
 app.use((error: Error,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{console.error(error.message);res.status(500).send(error.name)})
-app.listen(port,'0.0.0.0',()=>console.log(JSON.stringify({port,root,editor,fixtureHashes:{canvas:sha(JSON.stringify(canvas)),board:sha(board),visualization:sha(visualization)}})))
+const server = tls ? createServer({key:await readFile('/tmp/611-fixture-key.pem'),cert:await readFile('/tmp/611-fixture-cert.pem')},app) : app
+server.listen(port,'0.0.0.0',()=>console.log(JSON.stringify({port,root,editor,fixtureHashes:{canvas:sha(JSON.stringify(canvas)),board:sha(board),visualization:sha(visualization)}})))
