@@ -9,7 +9,9 @@ export function installArtifactMath(css: string) {
   style.textContent = css + `
     .katex-display{max-inline-size:100%;overflow-x:auto;overflow-y:hidden;padding-block:.3em}
     .katex-display>.katex{white-space:nowrap}
-    .katex:not(.katex-display>.katex){display:inline-block;max-inline-size:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle;padding-block:.2em}
+    /* KaTeX offsets its 2px vlist-s with a negative margin. Reserve that
+       layout spacer inside the scrollport; it is not real formula overflow. */
+    .katex:not(.katex-display>.katex){display:inline-block;box-sizing:border-box;max-inline-size:100%;padding-inline-end:2px;overflow-x:auto;overflow-y:hidden;vertical-align:middle;padding-block:.2em}
     .katex-display:focus-visible{outline:2px solid currentColor;outline-offset:2px}
   `
   document.head.append(style)
