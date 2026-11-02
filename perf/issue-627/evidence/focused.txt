@@ -1,0 +1,30 @@
+✔ historical knowledge receipts override an obsolete success summary without rewriting stored events (4.250827ms)
+✔ public activity is explicit and replayable while the answer keeps its native part index (16.755282ms)
+✔ incremental public explanations update one original position; arbitrary results cannot impersonate them (0.993014ms)
+✔ every user-visible call survives a history longer than 256 calls, with stable outcome and identity (27.978759ms)
+✔ wire pages preserve more than 512 calls, attention and final answer without raising protocol limits (1405.032883ms)
+✔ server projection removes diagnostics and private outcome gaps before transport (2.069303ms)
+✔ one plan updates across model calls and recovered fences at its original position (2.320774ms)
+✔ plans separate explicit task/request identities without text matching (0.540028ms)
+✔ plan versions use committed sequence and fence, not iteration order or maximum progress (1.430416ms)
+✔ live snapshots and history expose one plan through updates, cancellation and replay (10.483706ms)
+✔ a failed report cannot overwrite the accepted plan or hide its failure (0.662273ms)
+✔ #627 partial tool failures retain process identity and original order across stream, replay and later batches (1.02307ms)
+✔ #627 native model part indices preserve call order when parallel admission completes out of order (0.53476ms)
+✔ only the unique current interrupt owns input; ambiguous interrupts fall back to the run (6.059115ms)
+✔ one current matching approval owns controls and resolved/old requests cannot submit (0.345313ms)
+✔ explicit process is exclusive and legacy structured results are visible (0.70015ms)
+✔ failed tools stay in process while unknown effects retain attention (0.438274ms)
+✔ stable trusted answer identity survives index movement but resets on new request (0.568932ms)
+✔ known event order stays ordered while unknown legacy entries retain their server slots (1.934389ms)
+✔ unavailable knowledge stays in process without promoting cancelled or unrelated calls (0.613579ms)
+✔ latest current public commentary stays visible once during work, waits and interruption (1.349754ms)
+✔ #627 tool failures stay in the same process position through later calls, retry and partial completion (0.415839ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3118.793545

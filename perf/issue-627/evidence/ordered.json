@@ -1,0 +1,383 @@
+{
+  "runtime": "3.8.21",
+  "scenario": "ordered",
+  "intervals": [
+    {
+      "key": "host:[\"im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80\",\"step:081c0ef8-c933-4207-b640-86d78e19b331\",0]",
+      "startedAt": 9855.446704,
+      "callId": "tool-1-0",
+      "completedAt": 9895.468551,
+      "aborted": false
+    },
+    {
+      "key": "host:[\"im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80\",\"step:a6c0ca1e-668f-4bef-8578-5598317bb038\",0]",
+      "startedAt": 10176.619436,
+      "callId": "tool-1-2",
+      "completedAt": 10215.67602,
+      "aborted": false
+    }
+  ],
+  "snapshots": [
+    {
+      "stage": "ordered",
+      "message": {
+        "id": "run-im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80",
+        "createdAt": "2026-11-02T08:54:54.868Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "我会检查本次请求的附件。",
+            "status": {
+              "type": "complete"
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "public-text:1193b9eb30bef9879e452ebb0573c375c11211c5205a2146d7e2064ed8a24251",
+                  "kind": "answer",
+                  "label": "答复",
+                  "purpose": "result",
+                  "requestVersion": 1
+                },
+                "answerSegment": {
+                  "version": 3,
+                  "messageId": "answer:im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80:v1",
+                  "segmentId": "public:9418fe1099ba0c59a5a5093125358a8dc4564afe2c378404917fe57d297b8907:answer",
+                  "partId": "public:9418fe1099ba0c59a5a5093125358a8dc4564afe2c378404917fe57d297b8907:answer",
+                  "start": 0,
+                  "end": 12
+                }
+              }
+            }
+          },
+          {
+            "type": "text",
+            "text": "\n附件和对话检查已完成。",
+            "status": {
+              "type": "complete"
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "public-text:e9ad216395643871c6fb49d92fae1474715406eec005b2462a285951f2f03bff",
+                  "kind": "answer",
+                  "label": "答复",
+                  "purpose": "result",
+                  "requestVersion": 1
+                },
+                "answerSegment": {
+                  "version": 3,
+                  "messageId": "answer:im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80:v1",
+                  "segmentId": "public:6c4486a5134905ce91ef719ae523b360439cb42a95da5e9f0936b96d6278e276:answer",
+                  "partId": "public:6c4486a5134905ce91ef719ae523b360439cb42a95da5e9f0936b96d6278e276:answer",
+                  "start": 12,
+                  "end": 24
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80\",\"step:081c0ef8-c933-4207-b640-86d78e19b331\",0]",
+            "toolName": "files.list",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "completed",
+              "display": {
+                "title": "查看附件",
+                "purpose": "检查本次请求已选择的附件。",
+                "summary": "已检查本次请求的附件，共 0 个。"
+              }
+            },
+            "isError": false,
+            "timing": {
+              "startedAt": 1793609695440,
+              "completedAt": 1793609695563
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80\",\"step:081c0ef8-c933-4207-b640-86d78e19b331\",0]",
+                  "kind": "tool",
+                  "label": "查看附件",
+                  "purpose": "process",
+                  "order": 12,
+                  "revision": 31,
+                  "requestVersion": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80\",\"step:fe3afb4f-f7d0-4457-b163-97bf000cb116\",0]",
+            "toolName": "chat.history",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "completed",
+              "display": {
+                "title": "阅读对话历史",
+                "purpose": "读取当前对话中有权查看的历史消息。",
+                "summary": "这一步已完成。"
+              }
+            },
+            "isError": false,
+            "timing": {
+              "startedAt": 1793609695581,
+              "completedAt": 1793609695674
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80\",\"step:fe3afb4f-f7d0-4457-b163-97bf000cb116\",0]",
+                  "kind": "tool",
+                  "label": "阅读对话历史",
+                  "purpose": "process",
+                  "order": 16,
+                  "revision": 31,
+                  "requestVersion": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80\",\"step:a6c0ca1e-668f-4bef-8578-5598317bb038\",0]",
+            "toolName": "files.list",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "completed",
+              "display": {
+                "title": "查看附件",
+                "purpose": "检查本次请求已选择的附件。",
+                "summary": "已检查本次请求的附件，共 0 个。"
+              }
+            },
+            "isError": false,
+            "timing": {
+              "startedAt": 1793609695701,
+              "completedAt": 1793609695890
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80\",\"step:a6c0ca1e-668f-4bef-8578-5598317bb038\",0]",
+                  "kind": "tool",
+                  "label": "查看附件",
+                  "purpose": "process",
+                  "order": 20,
+                  "revision": 31,
+                  "requestVersion": 1
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "complete",
+          "reason": "stop"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80",
+            "harness": {
+              "runId": "im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80",
+              "lastSeq": 31,
+              "goalOutcome": {
+                "status": "satisfied",
+                "verification": "inconclusive",
+                "requestVersion": 1
+              },
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 1,
+              "resultId": "result:24c3205a53161e671b35316b7188a7d876c09dc12c285891568b350531e67dfe",
+              "lifecycle": "succeeded",
+              "delivery": "delivered",
+              "previewClosedFence": 1,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "runTrace": {
+              "version": 1,
+              "startedAt": 1793609694868,
+              "timingBasis": "creation",
+              "queuedAt": 1793609694868,
+              "truncated": false,
+              "limitations": [
+                "llm-offsets",
+                "terminal-time",
+                "child-discovery"
+              ],
+              "root": {
+                "id": "run-51d2baa0107f1733fc77afa9",
+                "name": "运行",
+                "kind": "agent",
+                "status": "complete",
+                "start": null,
+                "end": null,
+                "durationMs": null,
+                "tokensIn": 100,
+                "tokensOut": 100,
+                "cost": 0.00014286,
+                "knownCost": 0.00014286,
+                "costBreakdown": [
+                  {
+                    "currency": "CNY",
+                    "amount": 0.001,
+                    "estimated": true
+                  }
+                ],
+                "costIncomplete": false,
+                "costEstimated": true,
+                "children": [
+                  {
+                    "id": "tool-b3b380e1025d683608d85a48",
+                    "name": "查看附件",
+                    "kind": "tool",
+                    "status": "complete",
+                    "start": 572,
+                    "end": 695,
+                    "durationMs": 123,
+                    "detail": "检查本次请求已选择的附件。",
+                    "workKind": "tool",
+                    "output": "已检查本次请求的附件，共 0 个。",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "tool-2841d4a6a9fdb43f913d548a",
+                    "name": "阅读对话历史",
+                    "kind": "tool",
+                    "status": "complete",
+                    "start": 713,
+                    "end": 806,
+                    "durationMs": 93,
+                    "detail": "读取当前对话中有权查看的历史消息。",
+                    "workKind": "tool",
+                    "output": "这一步已完成。",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "tool-fd11d815d7a9e99819b28f9b",
+                    "name": "查看附件",
+                    "kind": "tool",
+                    "status": "complete",
+                    "start": 833,
+                    "end": 1022,
+                    "durationMs": 189,
+                    "detail": "检查本次请求已选择的附件。",
+                    "workKind": "tool",
+                    "output": "已检查本次请求的附件，共 0 个。",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "llm-a6c81348cc4a55279db2ff18",
+                    "name": "生成回复",
+                    "kind": "llm",
+                    "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+                    "status": "complete",
+                    "start": null,
+                    "end": 472,
+                    "durationMs": 80,
+                    "tokensIn": 50,
+                    "tokensOut": 50,
+                    "cost": 0.00007143,
+                    "costEstimated": true,
+                    "costBreakdown": [
+                      {
+                        "currency": "CNY",
+                        "amount": 0.0005,
+                        "estimated": true
+                      }
+                    ],
+                    "costPricing": {
+                      "currency": "CNY",
+                      "inputPerMillion": 2,
+                      "cachedInputPerMillion": 0.04,
+                      "outputPerMillion": 8,
+                      "version": "siliconflow-cn-2026-10-22"
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "llm-d01b2df58030d3e2c0bdbe3a",
+                    "name": "生成回复",
+                    "kind": "llm",
+                    "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+                    "status": "complete",
+                    "start": null,
+                    "end": 1325,
+                    "durationMs": 72,
+                    "tokensIn": 50,
+                    "tokensOut": 50,
+                    "cost": 0.00007143,
+                    "costEstimated": true,
+                    "costBreakdown": [
+                      {
+                        "currency": "CNY",
+                        "amount": 0.0005,
+                        "estimated": true
+                      }
+                    ],
+                    "costPricing": {
+                      "currency": "CNY",
+                      "inputPerMillion": 2,
+                      "cachedInputPerMillion": 0.04,
+                      "outputPerMillion": 8,
+                      "version": "siliconflow-cn-2026-10-22"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              "knowledgeSearch": "not_run"
+            },
+            "refs": {
+              "runId": "im:5622fa72bd8f3b9c084d1cbf6f127b87b4e86b1d4bf4d3590308461edafa9d80",
+              "agentId": "a-91e3108e"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "batch-request",
+            "sourceMessageId": "im-message:58be05b51668d6c35f0589763917bf04fede6a96bcd4bf789f2c40d774bafe8f",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    }
+  ],
+  "passed": true
+}

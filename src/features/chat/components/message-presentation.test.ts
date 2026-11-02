@@ -37,9 +37,9 @@ test('explicit process is exclusive and legacy structured results are visible', 
   assert.deepEqual(messagePresentation(message(parts)).map(item => item.region), ['process', 'process', 'body', 'body', 'body'])
 })
 
-test('recovered errors join process while unresolved current failures remain visible', () => {
+test('failed tools stay in process while unknown effects retain attention', () => {
   const part = tool('failed', { isError: true, result: { status: 'failed' }, providerMetadata: annotation('failed', 'attention') })
-  assert.equal(messagePresentation(message([part]))[0]?.region, 'attention')
+  assert.equal(messagePresentation(message([part]))[0]?.region, 'process')
   const recovered = message([part], { harness: { lifecycle: 'succeeded', requestVersion: 3, goalOutcome: { status: 'satisfied' } } }, { type: 'complete', reason: 'stop' })
   assert.equal(messagePresentation(recovered)[0]?.region, 'process')
   const unknown = { ...recovered, content: [tool('uncertain', { result: { status: 'unknown' }, providerMetadata: annotation('uncertain', 'attention') })] } as unknown as ThreadMessage
@@ -63,9 +63,9 @@ test('known event order stays ordered while unknown legacy entries retain their 
 })
 
 // #353: knowledge source availability is meaningful even when the tool receipt succeeded.
-test('unavailable knowledge stays in attention until recovery without promoting cancelled or unrelated calls', () => {
+test('unavailable knowledge stays in process without promoting cancelled or unrelated calls', () => {
   const part = tool('reading', { toolName: 'knowledge__read_source', result: { status: 'completed', sourceStatus: 'unavailable' }, providerMetadata: annotation('reading', 'tool') })
-  assert.equal(messagePresentation(message([part]))[0]?.region, 'attention')
+  assert.equal(messagePresentation(message([part]))[0]?.region, 'process')
   const recovered = message([part], { harness: { lifecycle: 'succeeded', goalOutcome: { status: 'satisfied' } } }, { type: 'complete', reason: 'stop' })
   assert.equal(messagePresentation(recovered)[0]?.region, 'process')
   for (const [toolName, status, expected] of [['knowledge.read_source', 'cancelled', 'process'], ['knowledge.read_source', 'unknown', 'attention'], ['fixture.tool', 'completed', 'process']]) {
@@ -89,4 +89,17 @@ test('latest current public commentary stays visible once during work, waits and
   }
   assert.equal(currentCommentary(message(content, {}, { type: 'complete', reason: 'stop' })), undefined)
   assert.equal(currentCommentary(message([{ type: 'reasoning', text: 'private' }])), undefined)
+})
+
+test('#627 tool failures stay in the same process position through later calls, retry and partial completion', () => {
+  const failed = tool('first', { isError: true, result: { status: 'failed' }, providerMetadata: annotation('first', 'attention', { order: 1 }) })
+  const peer = tool('peer', { result: { status: 'completed' }, providerMetadata: annotation('peer', 'tool', { order: 2 }) })
+  const retry = tool('retry', { result: { status: 'completed' }, providerMetadata: annotation('retry', 'tool', { order: 3 }) })
+  const answer = { type: 'text', text: '一项未完成，其余已完成。', providerMetadata: annotation('answer', 'answer') }
+  for (const status of [{ type: 'running' }, { type: 'incomplete', reason: 'other' }, { type: 'complete', reason: 'stop' }]) {
+    const parts = messagePresentation(message([failed, peer, retry, answer], {}, status))
+    assert.deepEqual(parts.map(part => part.region), ['process', 'process', 'process', 'body'])
+    assert.deepEqual(parts.slice(0, 3).map(part => part.annotation?.id), ['first', 'peer', 'retry'])
+  }
+  assert.equal(messagePresentation(message([tool('legacy', { isError: true })]))[0]?.region, 'attention')
 })

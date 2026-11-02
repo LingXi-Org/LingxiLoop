@@ -120,11 +120,12 @@ test('native run parts have one process disclosure while answers and current dec
   assert.equal($('[data-slot="run-activity"]').length, 1)
   assert.equal($('[data-slot="tool-group-root"]').length, 0)
   assert.equal($.text().split('公开答复').length - 1, 1)
-  for (const label of ['等待有权限的成员审批。', '这一步未完成，请重试。']) assert.ok($.text().includes(label), label)
+  assert.ok($.text().includes('等待有权限的成员审批。'))
+  assert.doesNotMatch($('[data-message-region="attention"]').text(), /这一步未完成/)
   assert.doesNotMatch($('[data-slot="run-activity"]').text(), /公开答复|等待有权限的成员审批|这一步未完成/)
-  assert.equal($('[data-native-part="tool-call"]').length, 2, 'ordinary tools are inside the initially collapsed process')
+  assert.equal($('[data-native-part="tool-call"]').length, 1, 'ordinary and failed tools stay in the initially collapsed process')
   assert.equal($('[data-message-region="body"]').text(), '公开答复')
-  assert.equal($('[data-message-region="attention"] [data-native-part="tool-call"]').length, 2)
+  assert.equal($('[data-message-region="attention"] [data-native-part="tool-call"]').length, 1)
 })
 
 test('run activity retains cancelled, error and incomplete outcomes', () => {
