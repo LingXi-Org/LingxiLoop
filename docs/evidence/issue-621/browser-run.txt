@@ -1,0 +1,11 @@
+START True
+ADD True 0
+ADD True 1
+START custom
+START False
+ADD False 0
+ADD False 1
+ADD False 3
+ADD False 5
+ADD False 3
+PASS: baseline, historical preservation, default style, edited inheritance, reload and three actual exports

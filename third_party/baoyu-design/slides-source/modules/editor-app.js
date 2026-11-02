@@ -620,13 +620,17 @@ function installEditorApp(runtime2) {
       current: currentSlide,
       slides,
       typeStyles: deckTypeStyles,
-      theme: snapshot.meta.theme
+      theme: snapshot.meta.theme,
+      style: snapshot.style,
+      faces: snapshot.faces
     }) : void 0, [
       templatePickerOpen,
       currentSlide,
       slides,
       deckTypeStyles,
-      snapshot.meta.theme
+      snapshot.meta.theme,
+      snapshot.style,
+      snapshot.faces
     ]), slideHtmlError = currentSlide !== void 0 ? slideHtmlHold2(currentSlide.id) : void 0, slideErrorMessage = slideHtmlError !== void 0 ? (0, runtime2.truncateUtf16Safely)(slideHtmlError, 160) + (slideHtmlError.length > 160 ? "…" : "") : void 0, currentSlideReadOnly = readOnly || slideErrorMessage !== void 0, canShowEmptyCreation = !currentSlide && !readOnly && (documentStore.bootReport.htmlErrors ?? 0) === 0 && !hidingMovedDeck(), creationController = (0, runtime2.useSlideCreation)({
       doc: documentStore.doc,
       codec: codecState,
@@ -1292,7 +1296,9 @@ function installEditorApp(runtime2) {
         current: currentSlide,
         slides,
         typeStyles: deckTypeStyles,
-        theme: snapshot.meta.theme
+        theme: snapshot.meta.theme,
+        style: snapshot.style,
+        faces: snapshot.faces
       }))(input), value3 = currentSlideIndex >= 0 ? currentSlideIndex + 1 : slides.length, value4 = documentStore.sectionsSnapshot();
       undoHistory.exec({
         label: "添加幻灯片",

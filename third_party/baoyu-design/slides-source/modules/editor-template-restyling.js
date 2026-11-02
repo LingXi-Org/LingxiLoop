@@ -70,8 +70,50 @@ function installEditorTemplateRestyling(runtime2) {
   }
   function createTemplateRestyler(options) {
     let { current, slides, typeStyles, theme } = options;
+    // Files-mode is neutral. Persisted look memory supplies the full source
+    // ladder even before there is any text to infer (or after a blank page).
+    // Existing decks without memory keep their original template behavior.
+    const remembered = (0, runtime2.parseRestyleMemory)(options.style)?.[0];
+    const declared = new Set((options.faces ?? []).map((face) => face.family.toLowerCase()));
+    const rememberedStyles = Object.entries(remembered?.text ?? {}).filter(([role]) => runtime2.textRoles.includes(role)).map(([role, look]) => ({
+      ...look, role, fontFamily: look.family !== void 0 ? (0, runtime2.restyleFaceFontFamily)(look.family, declared) : void 0,
+      id: role, source: "deck", count: 1
+    }));
+    if (rememberedStyles.length > 0) {
+      // HTML tags normalize display/lead/caption roles on save. Match the
+      // actual typography back to its remembered slot before adding fallbacks.
+      const observed = typeStyles.filter((style) => style.count > 0).map((style) => {
+        const match = rememberedStyles.find((saved) => saved.fontWeight === style.fontWeight
+          && (0, runtime2.typographyComboKey)(saved, theme) === (0, runtime2.typographyComboKey)(style, theme));
+        return match ? { ...style, id: match.id, role: match.role } : style;
+      });
+      typeStyles = [...observed, ...rememberedStyles.filter((saved) => !observed.some((style) => style.id === saved.id))];
+    }
+    const rememberedColor = (node, background) => {
+      const slot = node.color === "text-secondary" ? "muted" : node.color === "text-tertiary" ? "muted-2" : "text";
+      const color = remembered?.colors[slot] ?? remembered?.colors.text;
+      return color !== void 0 && restyleColorContrast(color, (0, runtime2.slideBackgroundColor)(background)) >= MIN_RESTYLE_TEXT_CONTRAST
+        ? color : (0, runtime2.slideTextColor)(background);
+    };
+    const restore = (input) => {
+      if (remembered === void 0) return input;
+      const bg = current?.bg ?? remembered.colors.background ?? input.bg;
+      return { ...input, bg, frames: input.frames.map((frame) => ({ ...frame,
+        node: recursivelyRestyleNode(frame.node, (node) => {
+          const style = rememberedStyles.find((style) => style.id === node.role);
+          if (node.kind === "table") {
+            const body = rememberedStyles.find((style) => style.id === "body");
+            if (body) return { ...node, style: { ...node.style, fontFamily: body.fontFamily,
+              fontSize: body.fontSize, fontWeight: body.fontWeight, lineHeight: body.lineHeight,
+              color: rememberedColor(node, bg) } };
+          }
+          return node.kind === "text" && style !== void 0
+            ? { ...(0, runtime2.applyTypographyStyle)(node, style, theme), color: rememberedColor(node, bg) } : node;
+        })
+      })) };
+    };
     if (current === void 0)
-      return (input) => input;
+      return restore;
     let value = (0, runtime2.isGradientBackgroundSlide)(current) ? current.frames[0] : void 0, callback = (input, options2) => ({
       ...input,
       bg: current.bg,
@@ -86,7 +128,7 @@ function installEditorTemplateRestyling(runtime2) {
       ]
     }), value2 = (0, runtime2.defaultBodyTypographyStyle)(typeStyles);
     if (value2 === null)
-      return (input) => input.frames.length === 0 ? callback(input, []) : input;
+      return (input) => callback(input, input.frames);
     let value3 = typeStyles.filter((input) => input.count > 0), callback2 = (input) => value3.find((input2) => input2.id === input), callback3 = (input) => {
       let value7 = callback2(input) ?? (input === "display" ? callback2("h1") : void 0);
       if (value7 !== void 0)
@@ -173,7 +215,7 @@ function installEditorTemplateRestyling(runtime2) {
           ...source.style,
           fontWeight: value7.fontWeight
         }
-      }, value7, theme), value10 = callback10(value8, source.role);
+      }, value7, theme), value10 = callback10(value8, source.role) ?? (remembered !== void 0 ? rememberedColor(source, current.bg) : void 0);
       return value10 !== void 0 ? {
         ...value9,
         color: value10

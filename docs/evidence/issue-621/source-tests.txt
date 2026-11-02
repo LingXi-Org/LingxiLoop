@@ -1,0 +1,17 @@
+✔ native copy translation preserves icon names, enums, shortcuts and document values (35.655659ms)
+✔ every translated ICU message parses and formats using the bundled formatter (1993.219527ms)
+✔ native build keeps export libraries lazy and reduces initial JavaScript (17563.681342ms)
+✔ complete upstream distributions retain every pinned byte and license (376.246902ms)
+✔ rebuilt compiler preserves pinned format behavior, ids, notes, tables, images and design-system includes (988.851434ms)
+✔ new deck templates use persisted source-derived style, including after a blank page (17.793616ms)
+✔ built-in color and type data match the pinned Slides implementation (2.440694ms)
+✔ new pages inherit edited look memory and observed typography after a file roundtrip (20.750775ms)
+✔ legacy decks have no automatic default and saved HTML retains authored styles (3.042859ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21480.528159

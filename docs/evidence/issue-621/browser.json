@@ -1,0 +1,145 @@
+{
+  "browser": "154.0.8037.57",
+  "baseline": {
+    "legacy": {
+      "background": "rgb(255, 255, 255)",
+      "text": [
+        {
+          "text": "演示文稿标题",
+          "font": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+          "size": "128px",
+          "weight": "600",
+          "color": "rgb(20, 20, 19)"
+        },
+        {
+          "text": "用一句话介绍这份演示文稿。",
+          "font": "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+          "size": "40px",
+          "weight": "400",
+          "color": "rgb(61, 61, 58)"
+        }
+      ]
+    },
+    "errors": []
+  },
+  "historical": {
+    "unchanged": true,
+    "publishes": 0,
+    "errors": []
+  },
+  "styled": {
+    "edited": {
+      "background": "rgb(227, 218, 204)",
+      "fonts": [
+        "Helvetica, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "ui-sans-serif, system-ui, sans-serif"
+      ]
+    },
+    "title": {
+      "background": "rgb(245, 244, 237)",
+      "text": [
+        {
+          "text": "演示文稿标题",
+          "font": "Georgia, ui-serif, Georgia, serif",
+          "size": "128px",
+          "weight": "300",
+          "color": "rgb(20, 20, 19)"
+        },
+        {
+          "text": "用一句话介绍这份演示文稿。",
+          "font": "ui-sans-serif, system-ui, sans-serif",
+          "size": "44px",
+          "weight": "400",
+          "color": "rgb(61, 61, 58)"
+        }
+      ]
+    },
+    "files": [
+      "project/deck.json",
+      "project/ds/slides-builtin/tokens.json",
+      "project/slides/9c30fb50.html",
+      "project/slides/68876c10.html",
+      "project/slides/f7c99f24.html",
+      "project/slides/7fbb5db8.html",
+      "project/slides/c27e7a44.html"
+    ],
+    "publishes": 6,
+    "errors": [],
+    "requests": [
+      "/host",
+      "/artifact-editor/slides/test-grant/",
+      "/artifact-editor/slides-assets/editor-E2BCZX2A.js",
+      "/artifact-editor/slides-assets/editor-5e382117a00b4eb2.css",
+      "/artifact-editor/slides-assets/chunk-DSVHES4B.js",
+      "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+      "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+      "/artifact-editor/slides/test-grant/__deck/session",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/_files.json",
+      "/artifact-editor/slides-assets/anthropicons-variable-eb0835bf3000d3b0.woff2",
+      "/artifact-editor/slides/test-grant/project/deck.json",
+      "/artifact-editor/slides/test-grant/_files.json",
+      "/artifact-editor/slides/test-grant/project/ds/slides-builtin/tokens.json",
+      "/artifact-editor/slides/test-grant/__deck/publish",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/publish",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/publish",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/publish",
+      "/host",
+      "/artifact-editor/slides/test-grant/",
+      "/artifact-editor/slides-assets/editor-E2BCZX2A.js",
+      "/artifact-editor/slides-assets/editor-5e382117a00b4eb2.css",
+      "/artifact-editor/slides-assets/chunk-DSVHES4B.js",
+      "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+      "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+      "/artifact-editor/slides/test-grant/__deck/session",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/_files.json",
+      "/artifact-editor/slides-assets/anthropicons-variable-eb0835bf3000d3b0.woff2",
+      "/artifact-editor/slides/test-grant/project/deck.json",
+      "/artifact-editor/slides/test-grant/project/slides/68876c10.html",
+      "/artifact-editor/slides/test-grant/project/slides/7fbb5db8.html",
+      "/artifact-editor/slides/test-grant/project/slides/9c30fb50.html",
+      "/artifact-editor/slides/test-grant/project/slides/f7c99f24.html",
+      "/artifact-editor/slides/test-grant/_files.json",
+      "/artifact-editor/slides/test-grant/project/ds/slides-builtin/tokens.json",
+      "/artifact-editor/slides-assets/exports-AZB534AS.js",
+      "/artifact-editor/slides-assets/pptx-library-DCIU4VHJ.js",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/publish",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/__deck/publish",
+      "/host",
+      "/artifact-editor/slides/test-grant/",
+      "/artifact-editor/slides-assets/editor-E2BCZX2A.js",
+      "/artifact-editor/slides-assets/editor-5e382117a00b4eb2.css",
+      "/artifact-editor/slides-assets/chunk-DSVHES4B.js",
+      "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+      "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+      "/artifact-editor/slides/test-grant/__deck/session",
+      "/artifact-editor/slides/test-grant/__deck/events",
+      "/artifact-editor/slides/test-grant/_files.json",
+      "/artifact-editor/slides-assets/anthropicons-variable-eb0835bf3000d3b0.woff2",
+      "/artifact-editor/slides/test-grant/project/deck.json",
+      "/artifact-editor/slides/test-grant/project/slides/68876c10.html",
+      "/artifact-editor/slides/test-grant/project/slides/7fbb5db8.html",
+      "/artifact-editor/slides/test-grant/project/slides/9c30fb50.html",
+      "/artifact-editor/slides/test-grant/project/slides/c27e7a44.html",
+      "/artifact-editor/slides/test-grant/project/slides/f7c99f24.html",
+      "/artifact-editor/slides/test-grant/_files.json",
+      "/artifact-editor/slides/test-grant/project/ds/slides-builtin/tokens.json"
+    ]
+  }
+}

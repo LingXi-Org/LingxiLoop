@@ -1,0 +1,128 @@
+{
+  "namespace": "slides-builtin",
+  "title": "Slides 内置风格",
+  "source": "https://github.com/JimLiu/baoyu-design/tree/c15e76ef5134228d2bb5da35652d30d7d6b8a34d/skills/claude-slides",
+  "version": "c15e76ef5134228d2bb5da35652d30d7d6b8a34d",
+  "style": [
+    {
+      "look": "slides-builtin/light",
+      "colors": "background:#f5f4ed surface:#faf9f5 text:#141413 muted:#3d3d3a muted-2:#73726c accent:#d97757 border:#e3dacc inverse:#141413 on-inverse:#faf9f5",
+      "fonts": "Georgia/serif,/sans",
+      "text": "display:128,300,1.15,0 h1:112,300,1.2,0 h2:96,300,1.2,0 h3:72,300,1.2,0 lead:44,430,1.4,1 eyebrow:36,500,1.2,1 body:32,430,1.4,1 caption:24,430,1.4,1"
+    }
+  ],
+  "tokens": {
+    "name": "Slides 内置风格",
+    "color": {
+      "themes": [
+        {
+          "id": "light",
+          "name": "浅色"
+        }
+      ],
+      "tokens": [
+        {
+          "name": "slate",
+          "value": "#141413"
+        },
+        {
+          "name": "ivory",
+          "value": "#FAF9F5"
+        },
+        {
+          "name": "ivory-warm",
+          "value": "#F5F4ED"
+        },
+        {
+          "name": "clay",
+          "value": "#D97757"
+        },
+        {
+          "name": "oat",
+          "value": "#E3DACC"
+        },
+        {
+          "name": "white",
+          "value": "#FFFFFF"
+        },
+        {
+          "name": "text-secondary",
+          "value": "#3D3D3A"
+        },
+        {
+          "name": "text-tertiary",
+          "value": "#73726C"
+        }
+      ]
+    },
+    "type": {
+      "families": {
+        "serif": "Georgia, serif",
+        "sans": "system-ui, sans-serif"
+      },
+      "groups": [
+        {
+          "name": "Slides",
+          "styles": [
+            {
+              "name": "display",
+              "family": "serif",
+              "fontSize": 128,
+              "fontWeight": 300,
+              "lineHeight": 1.15
+            },
+            {
+              "name": "h1",
+              "family": "serif",
+              "fontSize": 112,
+              "fontWeight": 300,
+              "lineHeight": 1.2
+            },
+            {
+              "name": "h2",
+              "family": "serif",
+              "fontSize": 96,
+              "fontWeight": 300,
+              "lineHeight": 1.2
+            },
+            {
+              "name": "h3",
+              "family": "serif",
+              "fontSize": 72,
+              "fontWeight": 300,
+              "lineHeight": 1.2
+            },
+            {
+              "name": "lead",
+              "family": "sans",
+              "fontSize": 44,
+              "fontWeight": 430,
+              "lineHeight": 1.4
+            },
+            {
+              "name": "eyebrow",
+              "family": "sans",
+              "fontSize": 36,
+              "fontWeight": 500,
+              "lineHeight": 1.2
+            },
+            {
+              "name": "body",
+              "family": "sans",
+              "fontSize": 32,
+              "fontWeight": 430,
+              "lineHeight": 1.4
+            },
+            {
+              "name": "caption",
+              "family": "sans",
+              "fontSize": 24,
+              "fontWeight": 430,
+              "lineHeight": 1.4
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

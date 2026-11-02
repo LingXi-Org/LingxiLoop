@@ -102,3 +102,87 @@ test('rebuilt compiler preserves pinned format behavior, ids, notes, tables, ima
     assert.equal(Object.hasOwn(rebuilt, retired), false, retired)
   }
 })
+
+test('new deck templates use persisted source-derived style, including after a blank page', async () => {
+  const require = createRequire(import.meta.url)
+  const runtime = require('../server/assets/slides-editor/node/compiler.cjs').runtime
+  const builtin = JSON.parse(await readFile('third_party/baoyu-design/slides-source/builtin-style.json', 'utf8'))
+  const memory = runtime.parseRestyleMemory(builtin.style)[0]
+  for (const template of runtime.SLIDE_TEMPLATES) {
+    const original = template.make()
+    const styled = runtime.createTemplateRestyler({ slides: [], typeStyles: [], theme: 'neutral', style: builtin.style })(original)
+    assert.equal(styled.bg, '#f5f4ed', template.id)
+    for (const node of runtime.iterateDeckTextNodes([styled])) {
+      const expected = memory.text[node.role]
+      assert.ok(expected, node.role)
+      const combo = runtime.nodeTypographyCombo(node, 'neutral')
+      assert.equal(combo.fontSize, expected.fontSize, node.role)
+      assert.equal(combo.fontWeight, expected.fontWeight, node.role)
+      assert.equal(combo.lineHeight, expected.lineHeight, node.role)
+      assert.notEqual(combo.fontFamily, 'helvetica', node.role)
+    }
+    const blank = { v: 1, id: 'blank', bg: '#123456', frames: [] }
+    const afterBlank = runtime.createTemplateRestyler({ current: blank, slides: [blank],
+      typeStyles: runtime.inferDeckTypographyStyles([blank], 'neutral'), theme: 'neutral', style: builtin.style })(original)
+    assert.equal(afterBlank.bg, '#123456')
+    for (const node of runtime.iterateDeckTextNodes([afterBlank])) {
+      assert.equal(runtime.nodeTypographyCombo(node, 'neutral').fontSize, memory.text[node.role].fontSize)
+    }
+  }
+})
+
+test('built-in color and type data match the pinned Slides implementation', async () => {
+  const require = createRequire(import.meta.url)
+  const pinned = require('../third_party/baoyu-design/upstream/claude-slides/scripts/editor/node/compiler.cjs').runtime
+  const builtin = JSON.parse(await readFile('third_party/baoyu-design/slides-source/builtin-style.json', 'utf8'))
+  assert.deepEqual(Object.fromEntries(builtin.tokens.color.tokens.map(({ name, value }) => [name, value])), pinned.namedSlideColors)
+  const memory = pinned.parseRestyleMemory(builtin.style)[0]
+  for (const style of builtin.tokens.type.groups[0].styles) {
+    const expected = pinned.anthropicTypeScale[style.name]
+    assert.equal(style.fontSize, expected.fontSize)
+    assert.equal(style.fontWeight, expected.fontWeight)
+    assert.equal(style.lineHeight, expected.lineHeight)
+    assert.equal(memory.text[style.name].fontSize, expected.fontSize)
+    assert.equal(memory.text[style.name].family.generic, expected.serifDisplay ? 'serif' : 'sans')
+  }
+})
+
+test('new pages inherit edited look memory and observed typography after a file roundtrip', async () => {
+  const require = createRequire(import.meta.url)
+  const runtime = require('../server/assets/slides-editor/node/compiler.cjs').runtime
+  const builtin = JSON.parse(await readFile('third_party/baoyu-design/slides-source/builtin-style.json', 'utf8'))
+  const memory = runtime.parseRestyleMemory(builtin.style)
+  memory[0].colors.background = '#223344'
+  memory[0].colors.text = '#faf9f5'
+  memory[0].text.h2 = { ...memory[0].text.h2, fontSize: 84, family: { name: 'Arial', generic: 'sans' } }
+  const style = runtime.serializeRestyleMemory(memory)
+  const original = runtime.SLIDE_TEMPLATES.find(t => t.id === 'two-col').make()
+  const first = runtime.createTemplateRestyler({ slides: [], typeStyles: [], theme: 'neutral', style })(original)
+  const deck = { theme: 'neutral', slides: { [first.id]: first }, order: [first.id], assets: {} }
+  const reopened = runtime.compileSlideHtml(runtime.serializeDeckHtml(deck, 'Edited')).content
+  const slides = Object.values(reopened.slides)
+  const restyle = runtime.createTemplateRestyler({ current: slides[0], slides,
+    typeStyles: runtime.inferDeckTypographyStyles(slides, 'neutral'), theme: 'neutral', style })
+  const next = restyle(runtime.SLIDE_TEMPLATES.find(t => t.id === 'title-body').make())
+  assert.equal(next.bg, '#223344')
+  const heading = [...runtime.iterateDeckTextNodes([next])].find(n => n.role === 'h2')
+  assert.equal(runtime.nodeTypographyCombo(heading, 'neutral').fontSize, 84)
+  assert.equal(runtime.nodeTypographyCombo(heading, 'neutral').fontFamily.family, 'Arial')
+  assert.equal(heading.color, '#faf9f5')
+})
+
+test('legacy decks have no automatic default and saved HTML retains authored styles', async () => {
+  const require = createRequire(import.meta.url)
+  const runtime = require('../server/assets/slides-editor/node/compiler.cjs').runtime
+  const original = runtime.SLIDE_TEMPLATES[1].make()
+  assert.equal(runtime.createTemplateRestyler({ slides: [], typeStyles: [], theme: 'neutral' })(original), original)
+  const blank = { v: 1, id: 'old-blank', bg: '#123456', frames: [] }
+  const added = runtime.createTemplateRestyler({ current: blank, slides: [blank],
+    typeStyles: runtime.inferDeckTypographyStyles([blank], 'neutral'), theme: 'neutral' })(original)
+  assert.equal(added.bg, '#123456')
+  assert.deepEqual(added.frames, original.frames)
+  const html = '<section id="custom" style="background:#123456"><h1 style="font-family:Georgia;font-size:72px;color:#fedcba">Original</h1></section>'
+  const content = runtime.compileSlideHtml(html).content
+  const reopened = runtime.compileSlideHtml(runtime.serializeDeckHtml(content, 'History')).content
+  assert.deepEqual(reopened.slides, content.slides)
+})

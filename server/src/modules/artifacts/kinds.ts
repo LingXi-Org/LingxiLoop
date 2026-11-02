@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
+import slidesBuiltin from '../../../../third_party/baoyu-design/slides-source/builtin-style.json' with { type: 'json' }
 
 // Ported from JimLiu/baoyu-design@c15e76e skills/claude-{design,slides}/scripts/server.mjs:
 // each kind's LAYOUT, comment location and editor page script policy. Limits that
@@ -28,6 +29,7 @@ export interface ArtifactKindDefinition {
   pageScriptSrc(html: string): string
   commentLocation(input: { label: string; detail?: string }, index: unknown, exists: (file: string) => boolean): Record<string, unknown>
   initialIndex(title: string, at: string): Record<string, unknown>
+  initialResources?: Record<string, unknown>
 }
 
 export function projectFile(rel: string | undefined) {
@@ -129,7 +131,11 @@ export const ARTIFACT_KIND_DEFINITIONS: Record<ArtifactKind, ArtifactKindDefinit
       return slideId && file && exists(file) ? { file, slide, slideId } : { file: 'project/deck.json', slide }
     },
     initialIndex: (title, at) => ({ v: 4, createdOnFiles: { v: 1, at }, lists: 'css', title, order: [],
-      sections: {}, faces: {}, designSystems: [] }),
+      sections: {}, faces: {}, style: structuredClone(slidesBuiltin.style), designSystems: [{
+        namespace: slidesBuiltin.namespace, title: slidesBuiltin.title, artifact: slidesBuiltin.source,
+        version: slidesBuiltin.version, copiedAt: at,
+      }] }),
+    initialResources: { 'project/ds/slides-builtin/tokens.json': slidesBuiltin.tokens },
   },
 }
 
