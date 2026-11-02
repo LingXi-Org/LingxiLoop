@@ -10,7 +10,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 export function adaptDesignMath(source, math) {
   const needle = 'supportJs:e.dcSupportSource}'
   assert.equal(source.split(needle).length,2,'pinned Design inline runtime hook changed')
-  return source.replace(needle,`supportJs:e.dcSupportSource+${JSON.stringify('\n;'+math)}}`)
+  // KaTeX includes "$&" (including minified `$&&` identifiers). A replacement
+  // string would expand those sequences and corrupt the fallback program.
+  return source.replace(needle,()=>`supportJs:e.dcSupportSource+${JSON.stringify('\n;'+math)}}`)
 }
 
 export async function buildArtifactMath() {

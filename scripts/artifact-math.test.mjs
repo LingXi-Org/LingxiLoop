@@ -10,3 +10,9 @@ test('Design preview math covers both external and inline runtime without changi
   assert.ok(adapted.includes('/* math regression marker */'))
   assert.throws(() => adaptDesignMath('unknown upstream', 'math'), /pinned Design/)
 })
+
+test('math injection preserves replacement tokens and minified dollar identifiers literally', () => {
+  const math = 'class $ {}; const a = new $; if (a instanceof $&&true) { "x".replace(/x/, "$&"); } // $$ $` $\''
+  const output = adaptDesignMath('supportJs:e.dcSupportSource}', math)
+  assert.equal(JSON.parse(output.slice('supportJs:e.dcSupportSource+'.length, -1)), '\n;' + math)
+})
