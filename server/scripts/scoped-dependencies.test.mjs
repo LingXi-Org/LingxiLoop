@@ -27,3 +27,11 @@ test('Web profile cannot gain unrelated tool families through a transitive graph
     assert.ok(!Object.keys(packages).some(key => key.endsWith(`node_modules/${name}`)), `${name} entered Web graph`)
   }
 })
+
+test('integration visualization builds retain the locked KaTeX renderer and stylesheet package', () => {
+  const files = new Map(generateProfiles())
+  const manifest = JSON.parse(files.get('server/build/integration/package.json'))
+  const lock = JSON.parse(files.get('server/build/integration/package-lock.json'))
+  assert.equal(manifest.dependencies.katex, '0.16.47')
+  assert.equal(lock.packages['node_modules/katex'].version, manifest.dependencies.katex)
+})

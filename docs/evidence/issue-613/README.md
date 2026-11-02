@@ -30,7 +30,8 @@ The built math resource contains its CSS and installed WOFF2 faces as data URLs;
 it does not load a math CDN. `trust:false`, bounded expansion/size, and the existing
 CSP/sandbox stay in effect. Parse errors retain the readable source and surrounding
 content. Failure to fetch the optional GenUI math resource keeps the original
-content and SDK. Updates are observed, already rendered math is skipped, and
+content and SDK. A stalled math read falls back after eight seconds, leaving room
+inside the existing 15-second whole-view deadline. Updates are observed, already rendered math is skipped, and
 wide display formulas scroll with keyboard focus.
 
 `lingxi:math-ready` is dispatched **on the content iframe window**, after rendering
@@ -78,7 +79,7 @@ claiming production-entry acceptance. This task does not merge or deploy.
 
 ## Check results and environment failure record
 
-- PASS: 8 focused document/resource regressions, 1 Design injection regression,
+- PASS: 9 focused document/resource regressions, 1 Design injection regression,
   4 CI-scope regressions; immutable visualization verification (223 files).
 - PASS: explicit TypeScript check of `shared/artifact-math.ts`; web lint (46
   pre-existing warnings, no errors), initial web typecheck. Relevant changed-file
@@ -93,7 +94,16 @@ claiming production-entry acceptance. This task does not merge or deploy.
   leaving the full local dependency tree unavailable. Full server/web build and
   integration acceptance require the correctly authenticated locked environment.
 - A later test-selector run during that partial install failed due unavailable
-  dependencies; it is not counted as a regression pass. Only public esbuild,
-  KaTeX, tsx, TypeScript and KaTeX types were installed into a temporary tools
-  prefix to rerun the isolated checks; repository manifests/locks are unchanged.
+  dependencies; it is not counted as a regression pass. Public build tools and the locked public Web dependencies were installed in
+  temporary prefixes (excluding the unavailable SDK) to rerun isolated checks
+  and both complete browser fixtures successfully. Repository manifests/locks
+  are unchanged. A stale dev-server run during partial restoration failed at
+  inline refresh; after restarting with restored public modules the complete
+  fixture passed again.
 - Independent review of the final PR/SHA remains the parent integrator's gate.
+
+First PR CI run `41383576074` passed web/server/admin/control/deploy-contract,
+but integration stopped before tests because its scoped dependency profile
+lacked `katex/dist/katex.min.css`. The integration profile now includes the
+existing locked KaTeX package; generated profiles and their regression passed.
+No new version was resolved. Final CI result is tracked on PR #615.

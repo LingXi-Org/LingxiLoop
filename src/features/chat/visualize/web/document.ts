@@ -5,6 +5,16 @@ import type { GenUiWidgetState } from '../zcode/shared/gen-ui'
 const STATIC_DOMAINS = 'https://cdnjs.cloudflare.com https://esm.sh https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://fonts.bunny.net'
 const SANDBOX_CSP = `default-src 'none'; script-src 'unsafe-inline' ${STATIC_DOMAINS}; style-src 'unsafe-inline' ${STATIC_DOMAINS}; img-src data: blob: ${STATIC_DOMAINS}; font-src data: ${STATIC_DOMAINS}; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'`
 const script = (source: string) => `<script>${source.replaceAll('</script','<\\/script')}</script>`
+/** Leave time for SDK readiness inside the host's existing 15-second deadline. */
+async function optionalMath(read: (name: string) => Promise<string>) {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([read('math.js'), new Promise<string>(resolve => {
+      timer = setTimeout(() => resolve(''), 8000)
+    })])
+  } catch { return '' }
+  finally { if (timer !== undefined) clearTimeout(timer) }
+}
 const vendors = [
   ['https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js','vendor/floating-ui-core-1.7.3.min.js'],
   ['https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js','vendor/floating-ui-dom-1.7.4.min.js'],
@@ -62,7 +72,7 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
     /\bviz-calendar\b/i.test(fragment) ? read('calendar.js') : Promise.resolve(''),
     Promise.all(initialModules.map(read)),
     // Math is an enhancement: keep source readable if its renderer is unavailable.
-    read('math.js').catch(() => ''),
+    optionalMath(read),
     // Start authored dependencies alongside known kit dependencies, retaining
     // this page's capability, cancellation and shared failure boundary.
     // The later HTML discovery/substitution reuses each already-started read.

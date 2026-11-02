@@ -24,3 +24,17 @@ test('unavailable math enhancement keeps the authored source and the SDK usable'
   assert.ok(doc.includes('<p>\\(x^2\\)</p>'))
   assert.ok(doc.includes('fixtureSdkLoaded'))
 })
+
+
+test('a stalled optional math resource cannot exhaust whole-view initialization', async t => {
+  t.mock.timers.enable({apis:['setTimeout']})
+  const pending = buildWebDocument('<p>\\(x^2\\)</p>',null,async name => {
+    if(name==='math.js') return new Promise<string>(() => {})
+    return resource(name)
+  },undefined,hashes)
+  for(let i=0;i<20;i++) await Promise.resolve()
+  t.mock.timers.tick(8000)
+  const doc = await pending
+  assert.ok(doc.includes('<p>\\(x^2\\)</p>'))
+  assert.ok(doc.includes('fixtureSdkLoaded'))
+})
