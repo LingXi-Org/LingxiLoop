@@ -74,8 +74,8 @@ export async function buildDesignEditor() {
   await rm(resolve(output, runtimePath))
   const integrity = bytes => `sha256-${createHash('sha256').update(bytes).digest('base64')}`
   const html = originalHtml.replace(`./${cssPath}`, `${publicBase}${cssName}`).replace(`./${scriptPath}`, `${publicBase}${scriptName}`)
-    .replace(`src="${publicBase}${scriptName}"`, `src="${publicBase}${scriptName}" integrity="${integrity(script)}"`)
-    .replace(`href="${publicBase}${cssName}"`, `href="${publicBase}${cssName}" integrity="${integrity(css)}"`)
+    .replace(`src="${publicBase}${scriptName}"`, `data-lingxi-design-critical src="${publicBase}${scriptName}" integrity="${integrity(script)}"`)
+    .replace(`href="${publicBase}${cssName}"`, `data-lingxi-design-critical href="${publicBase}${cssName}" integrity="${integrity(css)}"`)
     .replace(runtimePath, `${publicBase}${runtimeName}`)
     .replace('</head>', `<link rel="preload" as="script" href="${publicBase}${runtimeName}">\n</head>`)
   await writeFile(resolve(output, 'index.html'), html)

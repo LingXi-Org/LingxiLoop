@@ -1,0 +1,11 @@
+✔ optional injected scripts cannot fail the editor; only marked blocking assets report failure (4.492911ms)
+✔ shared Design resources use only the configured public origin and fixed asset namespace (1.233088ms)
+✔ only the current visible editor receives the pinned reveal handshake; folding and teardown retain ownership (3.121714ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 433.616243

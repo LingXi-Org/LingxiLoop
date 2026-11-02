@@ -1,0 +1,10 @@
+✔ only an acknowledged visible host skips the pinned presentation waits (142.153849ms)
+✔ Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources (46874.74011ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 47190.445779

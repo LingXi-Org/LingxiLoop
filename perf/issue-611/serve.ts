@@ -107,6 +107,7 @@ app.use('/artifact-editor/design/:grant', (req,res,next)=>{
         const page=designPageAssets(html,appOrigin);html=page.html;assetSource=page.source
       }
       res.set({'Content-Security-Policy':`sandbox allow-scripts allow-downloads allow-popups allow-modals; default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ${assetSource}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${assetSource}; font-src 'self' data: https://fonts.gstatic.com ${assetSource}; img-src 'self' data: blob:; connect-src 'self' data: blob: https://fonts.googleapis.com https://fonts.gstatic.com; frame-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'none'`,'Cache-Control':'no-cache'})
+      if (process.env.PERF624_OPTIONAL_BEACON === '1') html = html.replace('</head>', '<script>setTimeout(function(){var s=document.createElement("script");s.src="https://static.cloudflareinsights.com/beacon.min.js";document.head.appendChild(s)},1000)</script></head>')
       res.type('html').send(html);return
     }
     const type = ({'.js':'text/javascript','.css':'text/css','.woff2':'font/woff2'} as Record<string,string>)[extname(file)]??'application/octet-stream'

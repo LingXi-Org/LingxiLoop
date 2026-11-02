@@ -51,6 +51,7 @@ test('Design package preserves the agreed math runtime and optional executable b
     .replace(`./${manifest.styles.icons.split('/').at(-1)}`, `./${manifest.styles.originalIcons}`), originalCss)
   assert.ok(manifest.styles.bytes < manifest.styles.originalBytes)
   const html = await readFile(resolve(output, 'index.html'), 'utf8')
+  assert.equal(html.split('data-lingxi-design-critical').length - 1, 2, 'only entry and blocking stylesheet own shell failure')
   assert.ok(html.includes(`rel="preload" as="script" href="__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/${manifest.runtime.file.split('/').at(-1)}"`))
   assert.throws(() => adaptDesignRuntimeUrl('unknown pinned source'), /runtime URL hook/)
   assert.match(html, /data-placeholder[^>]*>Loading…/)
