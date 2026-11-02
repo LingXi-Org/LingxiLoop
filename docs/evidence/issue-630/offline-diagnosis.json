@@ -1,0 +1,48 @@
+{
+  "qualification": "offline-diagnosis-of-existing-public-synthetic-responses",
+  "providerCalls": 0,
+  "records": [
+    {
+      "id": "A-2-turn-1",
+      "gates": {
+        "fullTableBoundary": true,
+        "learnerAddressed": true,
+        "explicitHostBitClaimsConsistent": false
+      },
+      "arithmetic": [
+        {
+          "hostBits": 3,
+          "statedPrefix": 27,
+          "expectedPrefix": 29,
+          "consistent": false
+        }
+      ],
+      "semanticAcceptance": "manual-review-required"
+    },
+    {
+      "id": "A-2-turn-2",
+      "gates": {
+        "fullTableBoundary": true,
+        "learnerAddressed": true,
+        "explicitHostBitClaimsConsistent": true
+      },
+      "arithmetic": [],
+      "semanticAcceptance": "manual-review-required"
+    },
+    {
+      "id": "B-2-turn-1",
+      "gates": {
+        "fullTableBoundary": true,
+        "learnerAddressed": true,
+        "explicitHostBitClaimsConsistent": true,
+        "sampleMentioned": true,
+        "testingMentioned": true,
+        "predictionMentioned": true,
+        "diagnosisMentioned": false,
+        "learnerAskedForTest": false
+      },
+      "arithmetic": [],
+      "semanticAcceptance": "manual-review-required"
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import test from 'node:test'
 import { buildPromptContext, type TurnContext } from '@lyyzka/lingxios'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { homeworkTeachingRules } from '../modules/learning/homework-teaching.js'
+import { homeworkHelpRules } from '../modules/learning/homework-help.js'
 
 // Failure: authoritative task boundaries are mixed into a truncated, untrusted
 // observation dump; a second turn or another task can lose/change the policy.
@@ -40,6 +41,12 @@ test('authorized homework requirements survive the general observation budget an
 
 test('ordinary chat has no invented homework teaching context', () => {
   assert.ok(!JSON.stringify(policy.dynamicContextItems(context())).includes('Current authorized homework teaching context'))
+})
+
+test('an unknown assessment does not invent an actual learner attempt or override the teacher objective', () => {
+  assert.equal(homeworkHelpRules({ defaultDepth: 'brief_clue', basis: 'unknown', criterionIndex: null, observedAssessments: 0 }), '')
+  assert.match(homeworkHelpRules({ defaultDepth: 'brief_clue', basis: 'assessed_gap', criterionIndex: 0, observedAssessments: 1 }), /one brief clue/)
+  assert.match(homeworkHelpRules({ defaultDepth: 'explanation', basis: 'repeated_assessed_gap', criterionIndex: 0, observedAssessments: 2 }), /explanation of the recurring open criterion/)
 })
 
 test('only the authorized teacher policy fields enter product instructions, independently of persona and student pressure', () => {

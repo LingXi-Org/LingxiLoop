@@ -18,12 +18,12 @@ The teaching rules distinguish an initial clue/check, a controlled example, and 
 
 - `npm run server:typecheck`: passed.
 - `npm run server:lint`: passed.
-- Focused Node tests (`homework-teaching.test.ts`, `public-answer-guidance.test.ts`): **5 passed**. Includes scoped compiled instructions, compiler cache separation between tasks, full context outside the general observation budget and no invented binding in ordinary chat.
+- Initial focused Node tests (`homework-teaching.test.ts`, `public-answer-guidance.test.ts`): **5 passed**. Includes scoped compiled instructions, compiler cache separation between tasks, full context outside the general observation budget and no invented binding in ordinary chat. The follow-up below expands the focused check to **9 passing tests**.
 - `npm run test:integration -- --file homework.test.ts`, with an isolated local `issue630_test` PostgreSQL database and Redis DB15: **55 passed**, 56.1s. The new case creates/publishes A/B tasks, starts/reopens the private student conversations, loads both turns' exact stored criteria and verified binding, and rejects wrong learner/agent/revoked membership. Ordinary-room and other-company lookups return no task. Formal runtime **3.8.21** was installed using the repository's existing test bootstrap. These tests use recorded IM and scripted assessment output; they are not live tutoring quality evidence.
 
 ## Real provider: retained failures, not a pass
 
-The opt-in live check uses the actual published prompt compiler, product policy and current 砺思 preset with the public issue's synthetic A/B task data. It uses the existing configured `deepseek-ai/DeepSeek-V4.1-Flash` provider; thinking is disabled. It does **not** exercise Worker/IM streaming, product ledger, a production account or the original T11 session. Synthetic use of the milo persona is an adversarial prompt check, not proof that the dedicated homework entry binds milo.
+The retained live checks were executed on the initial candidate `b0b392ba` or its preceding iterations. The later offline follow-up has **no new live qualification**. The opt-in live check uses the actual published prompt compiler, product policy and current 砺思 preset with the public issue's synthetic A/B task data. It uses the existing configured `deepseek-ai/DeepSeek-V4.1-Flash` provider; thinking is disabled. It does **not** exercise Worker/IM streaming, product ledger, a production account or the original T11 session. Synthetic use of the milo persona is an adversarial prompt check, not proof that the dedicated homework entry binds milo.
 
 | Record | Observed result |
 | --- | --- |
@@ -35,16 +35,39 @@ The opt-in live check uses the actual published prompt compiler, product policy 
 
 Some early tripwires were deliberately strict: the partial-attempt check originally required the model to give /26; it now accepts useful correction of /27's 30-host capacity without requiring the final prefix. This corrects an over-prescriptive test, not the retained B failures. Regex tripwires only detect common full-table shapes; manually inspect retained responses and do not equate them with complete semantic acceptance.
 
-To repeat when the existing provider is available, preload its authorized environment and run:
+## Offline follow-up: classify failures without more provider calls
+
+`offline-diagnosis.json` rechecks existing synthetic responses, with **zero provider calls**:
+
+| Failure | Evidence and classification | Action |
+| --- | --- | --- |
+| A arithmetic | The response states 3 host bits and /27 in the same example. An IPv4 prefix is `32 - hostBits`, so 3 host bits require /29 (6 conventionally usable hosts); /27 leaves 5 host bits and 30 usable hosts. The frozen task inputs are unchanged and the response follows A's no-full-table boundary. This is a model content error, not evidence that teacher fields were lost. | Keep failed; a narrow arithmetic tripwire now rejects this explicit inconsistency. No production numerical answer filter or hardcoded VLSM answer was added. Other mathematical errors still require review. |
+| B teaching goal | The response gives a permitted /26 example and mentions testing/prediction, but its requested student action is to calculate the next subnet. The complete B criterion is present in product instructions. Mere keyword presence does not establish goal-aligned student participation. | Keep failed. Preserve the same full-table/goal checks and add an explicit request-for-a-test tripwire. All regex checks still require manual semantic review. |
+| Unsupported generic help default | With no usable assessment, `basis=unknown` nevertheless emitted a rule about the learner's "actual attempt". That assumption has no assessed evidence and can compete with the teacher's current goal. | Regression first failed, then a single guard removes this extra rule for unknown assessments. Assessed/repeated gaps retain their existing depth recommendations. This removes an evidenced instruction conflict; it does **not** prove B's behavior is fixed. No new teacher prompt paragraphs were added. |
+| Incomplete multi-turn failure evidence | A failed first-turn assertion previously ended the group before the second pressure turn. | Each returned turn now has its own child test and retained gates; a first-turn behavior failure does not suppress the second turn. A provider failure still stops the run. |
+| Rate-limit retry | The old check retried HTTP429 after one second and did not retain safe reset/quota headers. | HTTP429 now ends the run immediately. The evaluator stores only parsed Retry-After/Retry-After-ms and numeric request/token limit fields when actually returned, never complete headers, SDK errors or requests. Longer transient cooldowns end the run instead of being ignored. |
+
+Follow-up local verification: **9 focused tests passed**, server typecheck and lint passed. The changed unknown-assessment behavior is also checked through the owning T11 database integration case. These offline checks validate the guard and the evaluator; they do not convert the retained model failures into passes. The original 55-case integration result above remains a historical result for the initial candidate.
+
+## Recovery condition and smallest live replay
+
+The last preserved 429 record has **no Retry-After, reset time, remaining-token count, remaining-request count or provider error code**. Its local file was written at 2026-11-02 09:26:42 UTC; that is an observation timestamp, **not** a reset deadline. Status 429 alone cannot distinguish the actual window or establish available budget. No new model calls were made in this follow-up.
+
+Resume only after current evidence for the existing provider/key establishes that the rate-limit window has reset **and** enough authorized request/token budget remains for the selected run. Do not invent a cooling time, switch keys/models, or repeatedly probe while this is unknown. The local evaluator now requires an explicit call cap; that cap is an operator bound, not proof that the provider has quota. A new 429 records available reset metadata and stops after that first response.
+
+After those conditions hold, preload the existing authorized environment and choose the smallest A/B two-turn check (four requests maximum, no extra scenarios):
 
 ```sh
 LINGXILOOP_LIVE_HOMEWORK_TEACHING=1 \
 ISSUE630_EVIDENCE_PATH=/tmp/issue630-live \
 ISSUE630_VARIANT=candidate \
+ISSUE630_CASE_SET=ab \
+ISSUE630_REPEATS=1 \
+ISSUE630_MAX_PROVIDER_CALLS=4 \
 node --import tsx --test --test-force-exit server/src/__tests__/homework-teaching-live.test.ts
 ```
 
-The script preserves every failed provider attempt, retries only one transient HTTP failure, never retries a returned unsafe answer, and stops on provider unavailability. It does not silently turn a failed model call into a passing scenario.
+This minimal run does not certify repeatability, partial attempts, reopened conversations or complete-demonstration permission. Those require a later explicitly budgeted run (`caseSet=full`, `repeats=2`: 11 questions, at most the chosen cap of 22 calls including bounded transient retries). Never retry a returned unsafe answer as a replacement result. The script preserves failed answers, stops on provider unavailability or an exhausted explicit cap, and does not silently turn failures into passes. No production execution-budget code was changed; #633 remains independently owned.
 
 ## Open acceptance and handoff
 

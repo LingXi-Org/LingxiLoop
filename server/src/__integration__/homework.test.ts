@@ -247,6 +247,7 @@ test('[integration] each homework learner resumes one private thread and renewed
 test('[integration] T11 teacher criteria persist and reload only for the authorized homework on every turn', async () => {
   const { t11Instructions, t11Criteria } = await import('../__tests__/fixtures/homework-teaching.js')
   const { loadHomeworkTurnContext } = await import('../modules/learning/homework-tools.js')
+  const { homeworkHelpRules } = await import('../modules/learning/homework-help.js')
   const { ProductRuntimePolicy } = await import('../agent-runtime/context.js')
   const tasks = []
   for (const group of ['A', 'B'] as const) {
@@ -260,6 +261,8 @@ test('[integration] T11 teacher criteria persist and reload only for the authori
     for (let turn = 1; turn <= 2; turn++) {
       const context = await loadHomeworkTurnContext(work, pool, true)
       assert.ok(context)
+      assert.equal(context.help?.basis, 'unknown')
+      assert.equal(homeworkHelpRules(context.help), '', 'an unassessed task has no invented attempt-specific help override')
       assert.deepEqual(context.homework.criteria, task.criteria)
       assert.equal(context.homework.instructions, t11Instructions)
       assert.deepEqual(context.binding, { companyId, projectId, courseId, homeworkId: task.id, learnerId: student.userId,
