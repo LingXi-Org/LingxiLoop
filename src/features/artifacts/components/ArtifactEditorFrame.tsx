@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { userFacingError } from '@/lib/userFacingError'
 import { artifactsApi } from '../api'
 import { ARTIFACT_LABELS, type ArtifactKind } from '../contracts'
+import { subscribeDesignFrameReveal } from './design-frame-lifecycle'
 
 /**
  * Design needs same-origin child frames, so each grant gets an isolated hostname.
@@ -25,6 +26,10 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   const label = ARTIFACT_LABELS[kind]
+
+  useEffect(() => {
+    if (kind === 'design' && url && frame.current) return subscribeDesignFrameReveal(frame.current, url)
+  }, [kind, url])
 
   useEffect(() => {
     const controller = new AbortController()
