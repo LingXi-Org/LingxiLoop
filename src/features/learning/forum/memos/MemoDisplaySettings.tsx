@@ -16,7 +16,7 @@ export function useForumDisplay(){
 }
 export function MemoDisplaySettings({value,onChange}:{value:ForumDisplay;onChange(value:ForumDisplay):void}){
   const compactLocked=value.columns!=='1'
-  return <Popover><PopoverTrigger asChild><Button variant="ghost" size="sm" aria-label="内容流显示设置"><PanelsTopLeftIcon className="size-4"/>显示设置</Button></PopoverTrigger><PopoverContent className="w-72 space-y-4" aria-label="内容流显示设置">
+  return <Popover><PopoverTrigger asChild><Button variant="outline" aria-label="内容流显示设置"><PanelsTopLeftIcon className="size-4"/>显示设置</Button></PopoverTrigger><PopoverContent className="w-72 space-y-4" aria-label="内容流显示设置">
     <div className="grid grid-cols-4 gap-1" role="group" aria-label="内容流布局">{[['1','单列'],['2','双列'],['3','三列'],['0','自动']].map(([columns,label])=><Button key={columns} size="sm" variant={columns===value.columns?'secondary':'ghost'} aria-pressed={columns===value.columns} onClick={()=>onChange({...value,columns:columns as ForumDisplay['columns']})}>{label}</Button>)}</div>
     <label className="flex items-center justify-between gap-3 text-sm">紧凑显示<Switch aria-label="紧凑显示" checked={compactLocked||value.compact} disabled={compactLocked} onCheckedChange={compact=>onChange({...value,compact})}/></label>
   </PopoverContent></Popover>

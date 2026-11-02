@@ -4,24 +4,33 @@
 .forum-page .forum-tools input[type=search] { padding-inline-start: 36px; }
 .forum-tools > div > svg { z-index: 1; }
 .forum-feed .forum-list { overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
-.forum-feed .forum-list > [data-memo-card] { margin: 0; padding: 16px 20px; border: 0; border-radius: 0; box-shadow: none; gap: 8px; background: transparent; }
+.forum-feed .forum-list > [data-memo-card] { margin: 0; padding: 14px 20px; border: 0; border-radius: 0; box-shadow: none; gap: 6px; background: transparent; transition: background-color 120ms ease; }
+.forum-feed .forum-list > [data-memo-card]:hover { background: color-mix(in srgb, var(--muted) 40%, transparent); }
 .forum-feed .forum-list > [data-memo-card] + [data-memo-card] { border-top: 1px solid var(--border); }
 .forum-feed .forum-list [data-slot=memo-header-meta] { font-size: 13px; gap: 8px; }
-.forum-item-title { font-size: 15px; font-weight: 600; line-height: 1.5; }
+.forum-item-title { font-size: 15px; font-weight: 600; line-height: 1.45; }
+.forum-item-meta { display: flex; width: 100%; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding-top: 2px; color: var(--muted-foreground); font-size: 12px; line-height: 1.5; }
 .forum-item-title a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.forum-item-summary { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; color: var(--muted-foreground); font-size: 14px; line-height: 1.6; }
+.forum-item-summary { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; color: var(--muted-foreground); font-size: 13px; line-height: 1.6; }
 .forum-deadline { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 13px; line-height: 1.6; color: var(--muted-foreground); }
 .forum-end { grid-column: 1 / -1; width: 100%; padding: 16px; border-top: 1px solid var(--border); text-align: center; color: var(--muted-foreground); font-size: 13px; }
 .forum-detail-toolbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 56px; padding: 8px 0; border-bottom: 1px solid var(--im-divider-weak); background: var(--background); }
-.forum-document { max-width: 800px; margin-inline: auto; padding-block: 24px 48px; }
+.forum-document { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; max-width: 1080px; margin-inline: auto; padding-block: 24px 48px; }
+.forum-document-aside { align-self: start; border: 1px solid var(--border); border-radius: 12px; background: var(--card); padding: 8px 16px 16px; }
+.forum-section-title { margin-bottom: 12px; font-size: 14px; font-weight: 600; }
+@container learning-grid (min-width: 880px) {
+  .forum-document { grid-template-columns: minmax(0, 1fr) 260px; }
+  .forum-document-aside { position: sticky; top: 72px; }
+}
 .forum-document-title { font-family: var(--font-heading); font-size: 24px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; overflow-wrap: anywhere; margin-bottom: 12px; }
-.forum-document-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 16px; color: var(--muted-foreground); font-size: 13px; }
+.forum-document-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; color: var(--muted-foreground); font-size: 13px; }
+.forum-document-meta [data-slot=avatar] { margin-top: 0; }
 .forum-document-body { margin-top: 20px; font-size: 16px; line-height: 1.75; }
 .forum-document-body [data-memo-content], .forum-document-body .bn-editor { font-size: inherit; line-height: inherit; }
 .forum-document-body h2 { font-size: 20px; line-height: 1.4; margin-top: 24px; margin-bottom: 8px; }
 .forum-document-body h3 { font-size: 17px; line-height: 1.4; }
 .forum-document-body pre { max-width: 100%; overflow-x: auto; }
-.forum-workflow, .forum-document-discussion { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); scroll-margin-top: 84px; }
+.forum-workflow, .forum-document-discussion { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); scroll-margin-top: 84px; }
 .forum-mobile-header { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); padding: 4px 12px; }
 @container learning-grid (max-width: 640px) {
   .forum-tools > div:first-child { flex-basis: 100%; max-width: none; }

@@ -86,16 +86,25 @@ export function SecondaryItem({ label, icon, selected = false, onSelect, meta, d
         aria-current={selected ? 'page' : undefined}
         onClick={onSelect}
         className={cn(
-          'flex w-full min-w-0 items-center gap-2.5 rounded-lg px-3 text-start text-sm text-sidebar-foreground outline-none transition-colors duration-100 hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
-          isMobile ? 'min-h-11' : 'h-9',
-          depth === 1 && 'ps-9 text-[13px]',
+          'relative flex w-full min-w-0 items-center gap-2.5 rounded-lg px-3 text-start text-sm text-sidebar-foreground outline-none transition-colors duration-100 hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+          isMobile ? 'min-h-11' : depth === 1 ? 'h-8' : 'h-9',
+          depth === 1 && 'px-2.5 text-[13px] text-muted-foreground hover:text-foreground',
           selected && 'bg-muted font-medium text-foreground hover:bg-muted',
+          selected && depth === 1 && 'bg-transparent text-foreground hover:bg-muted/60',
         )}
       >
+        {depth === 1 && selected ? <span aria-hidden="true" className="absolute -start-[9.5px] top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-sidebar-primary" /> : null}
         {icon ? <HugeiconsIcon icon={icon} strokeWidth={1.8} className={cn('size-4 shrink-0', selected ? 'text-sidebar-primary' : 'text-muted-foreground')} /> : null}
         <span className="min-w-0 flex-1 truncate">{label}</span>
         {meta ? <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{meta}</span> : null}
       </button>
     </li>
   )
+}
+
+/** Nested rows under a SecondaryItem (shadcn SidebarMenuSub): a guide line, 32px rows. */
+export function SecondarySub({ label, children }: { label: string; children: ReactNode }) {
+  return <li>
+    <ul aria-label={label} className="ms-5 flex flex-col gap-0.5 border-s border-[var(--im-divider)] py-0.5 ps-2">{children}</ul>
+  </li>
 }

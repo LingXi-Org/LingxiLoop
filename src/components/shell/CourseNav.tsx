@@ -15,7 +15,7 @@ import { forumSections } from '@/features/learning/forum/ForumSidebar'
 import { useForumSection } from '@/features/learning/forum/forumSection'
 import { useApp } from '@/stores/app'
 import type { ViewKey } from '@/types'
-import { SecondaryGroup, SecondaryItem, SecondaryPane, SecondaryTitle } from './SecondaryPane'
+import { SecondaryGroup, SecondaryItem, SecondaryPane, SecondarySub, SecondaryTitle } from './SecondaryPane'
 
 /** Nested sidebar for the course module: overview, forum, materials, cases and,
  * for course managers, the settings pages. */
@@ -39,10 +39,12 @@ export function CourseNav({ space, onNavigate }: { space?: LearningSpace; onNavi
       <SecondaryGroup label="课程">
         {space ? <SecondaryItem label="概览" icon={ChartHistogramIcon} selected={view === 'learning'} onSelect={() => go('learning')} /> : null}
         {can('forum') ? <SecondaryItem label="论坛" icon={MessageMultiple01Icon} selected={view === 'forum'} onSelect={() => go('forum')} /> : null}
-        {view === 'forum' && can('forum') ? forumSections.map((section) => (
-          <SecondaryItem key={section.kind} depth={1} label={section.label} selected={forumKind === section.kind}
-            onSelect={() => { useForumSection.getState().setKind(section.kind); onNavigate?.() }} />
-        )) : null}
+        {view === 'forum' && can('forum') ? <SecondarySub label="论坛版块">
+          {forumSections.map((section) => (
+            <SecondaryItem key={section.kind} depth={1} label={section.label} selected={forumKind === section.kind}
+              onSelect={() => { useForumSection.getState().setKind(section.kind); onNavigate?.() }} />
+          ))}
+        </SecondarySub> : null}
         {can('materials') ? <SecondaryItem label="课程资料" icon={FolderLibraryIcon} selected={view === 'course-materials'} onSelect={() => go('course-materials')} /> : null}
         <SecondaryItem label="案例库" icon={BookOpen01Icon} selected={view === 'cases'} onSelect={() => go('cases')} />
       </SecondaryGroup>
