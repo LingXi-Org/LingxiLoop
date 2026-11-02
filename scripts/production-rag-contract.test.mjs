@@ -268,9 +268,10 @@ test('production Open Notebook receives only the explicit RAG environment', () =
     'OPENAI_EMBEDDING_MODEL',
   ]) assert.match(service, new RegExp(`${variable}:`))
   assert.match(service, /OPENAI_API_KEY: \$\{OPEN_NOTEBOOK_PASSWORD:\?/)
-  assert.match(service, /OPENAI_BASE_URL: "\$\{LINGXILOOP_PUBLIC_ORIGIN:\?[^}]+}\/internal\/open-notebook\/v1"/)
-  // The knowledge index contract pins its own embedding model.
-  assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{NOTEBOOK_EMBEDDING_MODEL:-BAAI\/bge-m3\}/)
+  assert.match(service, /OPENAI_BASE_URL: \$\{NOTEBOOK_EMBEDDING_BASE_URL:-https:\/\/backend\.lingxilearn\.cn\/internal\/open-notebook\/v1}/)
+  // Model configuration is shared; the deployment preflight protects the retained index contract.
+  assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{OPENAI_EMBEDDING_MODEL:-Pro\/BAAI\/bge-m3\}/)
+  assert.doesNotMatch(service, /LINGXILOOP_PUBLIC_ORIGIN|NOTEBOOK_EMBEDDING_MODEL/)
 
   assert.match(service, /\/app\/\.venv\/bin\/supervisorctl .* status rag-api/)
   assert.match(service, /\/app\/\.venv\/bin\/supervisorctl .* status rag-worker/)
@@ -346,7 +347,7 @@ test('removed Open Notebook capabilities cannot be re-enabled by deployment conf
   assert.doesNotMatch(files, /OPEN_NOTEBOOK_(?:CHAT|STRATEGY|ANSWER|FINAL_ANSWER)_MODEL/)
 })
 
-test('knowledge services receive writable storage and the control plane URL', () => {
+test('knowledge services receive writable storage and the existing backend embedding URL', () => {
   const compose = read('deploy/knowledge/compose.yml')
 
   assert.match(compose, /surrealdb:[\s\S]*?rocksdb:\/home\/nonroot\/open-notebook\.db/)
@@ -355,7 +356,8 @@ test('knowledge services receive writable storage and the control plane URL', ()
   assert.match(compose, /10\.20\.0\.3:5056:5055/)
   assert.match(compose, /\/app\/\.venv\/bin\/supervisorctl -s unix:\/\/\/tmp\/supervisor\.sock status rag-api/)
   assert.match(compose, /OPEN_NOTEBOOK_WORKER_MAX_TASKS: "1"/)
-  assert.equal((compose.match(/\$\{LINGXILOOP_PUBLIC_ORIGIN:\?/g) ?? []).length, 1)
+  assert.equal((compose.match(/\$\{LINGXILOOP_PUBLIC_ORIGIN:\?/g) ?? []).length, 0)
+  assert.match(compose, /NOTEBOOK_EMBEDDING_BASE_URL:-https:\/\/backend\.lingxilearn\.cn\/internal\/open-notebook\/v1/)
   assert.doesNotMatch(compose, /^ {2}agent-os:/m)
   assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
 })

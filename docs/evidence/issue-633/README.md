@@ -59,7 +59,7 @@ npm run test:integration -- --file runtime-artifact-budget.test.ts --file knowle
 
 The integration target was a newly created isolated local `lingxiloop_issue633_test` database, bootstrapped through the existing verified formal runtime chain, with a dedicated local Redis; production database and original deck were not used.
 
-Failures retained: the old `Promise.all` regression lost text on vector 404; old deployment defaults failed the new budget contract check. First local runs had incomplete test environment, then stale installed SDK typings, both corrected. The stronger real-worker test also exposed loss of a structured failure reason during terminal snapshot replay; the identity-bound reason now survives final state reads. Initial image graph checking caught the new shared helper missing from Docker COPY; it is now included. These failures are not reported as passed runs.
+Failures retained: the old `Promise.all` regression lost text on vector 404; old deployment defaults failed the new budget contract check. First local runs had incomplete test environment, then stale installed SDK typings, both corrected. The stronger real-worker test also exposed loss of a structured failure reason during terminal snapshot replay; the identity-bound reason now survives final state reads. Initial image graph checking caught the new shared helper missing from Docker COPY; it is now included. The first CI deployment-contract job also found two legacy assertions still requiring the broken frontend embedding origin; the assertions were updated to the corrected backend/shared-model contract. These failures are not reported as passed runs.
 
 ## Remaining production / upstream boundaries
 
