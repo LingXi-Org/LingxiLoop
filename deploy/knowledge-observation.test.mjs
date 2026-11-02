@@ -121,3 +121,21 @@ test('existing Actions diagnostics reuse identity and permissions while passing 
     assert.deepEqual(JSON.parse(readFileSync(record, 'utf8')), ['deploy/cli.mjs', 'knowledge-observe', literal])
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
+
+
+test('the fixed run reader satisfies the real MCP transport negotiation without network access', async () => {
+  const { McpServer } = await import('@modelcontextprotocol/sdk/server/mcp.js')
+  const { WebStandardStreamableHTTPServerTransport } = await import('@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js')
+  const server = new McpServer({ name: 'offline-observer-contract', version: '1' })
+  server.registerTool('lingxiloop_agent_run_operations', {}, async () => ({ content: [{ type: 'text', text: JSON.stringify(payload) }] }))
+  const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true })
+  await server.connect(transport)
+  try {
+    const observed = await observePublicRunBudget(runId, { token: PRIVATE,
+      fetchImpl: async (url, request) => transport.handleRequest(new Request(url, request)),
+    })
+    assert.equal(observed.status, 'observed')
+    assert.equal(observed.usage.calls, 12)
+    assert.doesNotMatch(JSON.stringify(observed), new RegExp(PRIVATE))
+  } finally { await server.close() }
+})

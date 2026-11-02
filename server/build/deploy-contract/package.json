@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@lyyzka/lingxios": "3.8.21",
+    "@modelcontextprotocol/sdk": "1.30.0",
     "pg": "^8.20.0"
   },
   "devDependencies": {

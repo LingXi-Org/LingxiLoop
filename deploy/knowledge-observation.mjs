@@ -50,7 +50,7 @@ export async function observePublicRunBudget(runId, { token, fetchImpl = fetch, 
     // The maximum cursor excludes tool payloads/public text. Only the existing
     // metadata/usage reader is called; no generic MCP dispatch is exposed.
     const response = await fetchImpl(MCP_URL, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(timeoutMs),
-      headers: { authorization: `Bearer ${token.trim()}`, 'content-type': 'application/json', accept: 'application/json', 'MCP-Protocol-Version': '2025-03-26' },
+      headers: { authorization: `Bearer ${token.trim()}`, 'content-type': 'application/json', accept: 'application/json, text/event-stream', 'MCP-Protocol-Version': '2025-03-26' },
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: MCP_READ_TOOL,
         arguments: { runId, afterSeq: Number.MAX_SAFE_INTEGER } } }),
     })
