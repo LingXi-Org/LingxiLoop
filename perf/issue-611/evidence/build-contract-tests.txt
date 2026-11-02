@@ -1,0 +1,16 @@
+✔ Design preview math covers both external and inline runtime without changing archived bytes (84.917336ms)
+✔ pure CSS changes check and build only the web (115.457506ms)
+✔ real server imports and shared transitive helper changes check the server (100.211399ms)
+✔ the public auth contract checks both its browser and control-plane consumers (33.272334ms)
+✔ runtime patch and deployment changes retain both product60 patch qualifications (58.755783ms)
+✔ closure resolves nested dependencies, peers and platform optionals without unrelated packages (3.247422ms)
+✔ Web profile cannot gain unrelated tool families through a transitive graph (133.314556ms)
+✔ integration visualization builds retain the locked KaTeX renderer and stylesheet package (135.671462ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 651.684945

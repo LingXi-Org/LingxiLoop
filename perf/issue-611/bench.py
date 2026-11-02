@@ -137,7 +137,7 @@ if __name__ == '__main__':
         browser=pw.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--no-proxy-server','--ignore-certificate-errors-spki-list='+spki,'--host-resolver-rules=MAP *.loop.test 127.0.0.1,MAP loop.test 127.0.0.1'])
         report['browser']=browser.version
         for n in range(a.runs):
-            for url in a.urls:
+            for url in (a.urls if n % 2 == 0 else a.urls[::-1]):
                 for kind in a.kinds:
                     reset_url=url.replace('app.loop.test','127.0.0.1')+'__fixture/reset'
                     urllib.request.urlopen(urllib.request.Request(reset_url,data=b'{}',headers={'Content-Type':'application/json'}),context=ssl._create_unverified_context()).close()

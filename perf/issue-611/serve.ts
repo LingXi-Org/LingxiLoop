@@ -29,6 +29,12 @@ const states = new Map<string, { state: unknown; revision: number }>()
 const grants = new Map<string, string>()
 const documents = new Map<string, Map<string, string>>()
 let vizSource = visualization
+let stallMath = false, mathStarted = 0
+const mathPending = new Set<express.Response>()
+const stalledMath = (res: express.Response) => {
+  mathStarted++; mathPending.add(res)
+  res.on('close', () => mathPending.delete(res))
+}
 const rawFetch = async (input: Request) => new Promise<Response>((resolveResponse,reject) => {
   const headers=Object.fromEntries(input.headers)
   const request=(tls ? httpsRequest : httpRequest)(input.url,{method:input.method,headers,...(tls ? {rejectUnauthorized:false} : {})},incoming=>{
@@ -55,7 +61,9 @@ app.use((req, res, next) => {
 })
 app.use(compression({ filter: (req,res) => !String(res.getHeader('Content-Type')).includes('event-stream') && compression.filter(req,res) }))
 app.use(express.json({limit:'16mb'}))
-app.post('/__fixture/reset', (_req,res)=>{states.clear();grants.clear();documents.clear();vizSource=visualization;files.set('project/canvas.json',JSON.stringify(canvas));files.set('project/Main.dc.html',board);res.json({ok:true})})
+app.post('/__fixture/reset', (_req,res)=>{states.clear();grants.clear();documents.clear();vizSource=visualization;stallMath=false;mathStarted=0;files.set('project/canvas.json',JSON.stringify(canvas));files.set('project/Main.dc.html',board);res.json({ok:true})})
+app.post('/__fixture/stall-math', (req,res)=>{stallMath=req.body.enabled===true;res.json({ok:true})})
+app.get('/__fixture/readers', (_req,res)=>res.json({pending:mathPending.size,started:mathStarted}))
 app.post('/__fixture/content', (req,res)=>{ if(req.body.canvas)files.set('project/canvas.json',JSON.stringify(req.body.canvas));if(typeof req.body.board==='string')files.set('project/Main.dc.html',req.body.board);if(typeof req.body.visualization==='string')vizSource=req.body.visualization;res.json({ok:true}) })
 app.use((req,res,next)=>{res.set({'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*'});if(req.method==='OPTIONS')res.sendStatus(204);else next()})
 app.post('/api/artifacts/:id/editor-grant', async (req,res)=>{
@@ -112,11 +120,11 @@ app.use('/api/im/channels/:channel/visualize', (req,res)=>{
   if (req.path.endsWith('/state')) {
     if(req.method==='PUT'){state.state=req.body.state;state.revision++;states.set(req.params.channel,state)}res.json(state);return
   }
-  if(req.path.endsWith('/resources')){const name=String(req.query.name);res.type(name.endsWith('.css')?'css':'js').send(resources[name]);return}
+  if(req.path.endsWith('/resources')){const name=String(req.query.name);if(stallMath&&name==='math.js'){stalledMath(res);return}res.type(name.endsWith('.css')?'css':'js').send(resources[name]);return}
   res.json({})
 })
 app.use((req,res,next)=>{
-  for(const name of VISUALIZE_PUBLIC_RESOURCES)if(req.path===visualizeResourceUrl(name,hashes[name])){res.set('Cache-Control','public,max-age=31536000,immutable').type(name.endsWith('.css')?'css':'js').send(resources[name]);return}
+  for(const name of VISUALIZE_PUBLIC_RESOURCES)if(req.path===visualizeResourceUrl(name,hashes[name])){if(stallMath&&name==='math.js'){stalledMath(res);return}res.set('Cache-Control','public,max-age=31536000,immutable').type(name.endsWith('.css')?'css':'js').send(resources[name]);return}
   next()
 })
 app.use(express.static(web))

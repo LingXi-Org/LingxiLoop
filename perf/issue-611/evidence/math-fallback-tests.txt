@@ -1,0 +1,10 @@
+✔ Design preview math covers both external and inline runtime without changing archived bytes (120.659707ms)
+✔ math injection preserves replacement tokens and minified dollar identifiers literally (0.383605ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 244.463526

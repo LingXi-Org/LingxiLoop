@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "browser": "154.0.8037.57",
+  "stalledPublicAndAuthorizedRead": {
+    "pending": 0,
+    "started": 2
+  },
+  "fallbackReadyAndUsable": {
+    "visibleMs": 8442.566279999483,
+    "usableMs": 8593.35658100008
+  },
+  "nextOwner": {
+    "visibleMs": 1239.67615499987,
+    "usableMs": 1415.6238429995938
+  },
+  "errors": []
+}

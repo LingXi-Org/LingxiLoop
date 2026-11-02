@@ -1,0 +1,96 @@
+{
+  "source": "third_party/baoyu-design/upstream/claude-design/scripts/editor",
+  "upstreamCommit": "c15e76ef5134228d2bb5da35652d30d7d6b8a34d",
+  "math": {
+    "sha256": "112da856cde909717da3c006c7bdc2e77d895988888c941e91db89c2eac173d3",
+    "bytes": 639387
+  },
+  "entry": {
+    "file": "assets/design-787544fd4d8ce9c9f1a8c2ebbcd699b6fbbd7be31f1c7f9407461bddeb03c2d8.js",
+    "original": "assets/index-DavTckY0.js"
+  },
+  "runtime": {
+    "file": "assets/design-c4626e5c01ff00aa5ade98c8a7141e17b110d44d51252bc52057bf24633e63b9.js",
+    "original": "artifact-type/dc-runtime.js"
+  },
+  "styles": {
+    "file": "assets/design-429d49ff99ca9c45b7fc447554955e61a0590aa6d2925a37a4fb3ff14e060de3.css",
+    "fallbackFont": "assets/design-72caa7e5fd04db487298679dc298679f020e1d36b0034e8a52826188aa01ed33.woff2",
+    "icons": "assets/design-b11ef2e83c6031152aa63078133907be657a57d6f9932836c648874192fcd901.woff2",
+    "originalIcons": "anthropicons-fizzy-lake-c1fxtHDl.woff2",
+    "originalBytes": 535016,
+    "bytes": 398367
+  },
+  "files": {
+    "artifact-type/babel.min.js": {
+      "bytes": 3137752,
+      "sha256": "2623a9e22809915ce789b4461154e277ddce520d5a4320c14d44332a5d0dcea0"
+    },
+    "artifact-type/fast-edit-worker.js": {
+      "bytes": 2401938,
+      "sha256": "005a173a50191e48252089e36d65c5003d2f2a8f0303f003a8891158e26a64b0"
+    },
+    "artifact-type/reference/google-fonts-families.json": {
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c"
+    },
+    "artifact-type/reference/google-fonts-notices.json": {
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64"
+    },
+    "artifact-type/reference/google-fonts-reserved.json": {
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be"
+    },
+    "assets/design-429d49ff99ca9c45b7fc447554955e61a0590aa6d2925a37a4fb3ff14e060de3.css": {
+      "bytes": 398367,
+      "sha256": "429d49ff99ca9c45b7fc447554955e61a0590aa6d2925a37a4fb3ff14e060de3"
+    },
+    "assets/design-72caa7e5fd04db487298679dc298679f020e1d36b0034e8a52826188aa01ed33.woff2": {
+      "bytes": 102556,
+      "sha256": "72caa7e5fd04db487298679dc298679f020e1d36b0034e8a52826188aa01ed33"
+    },
+    "assets/design-787544fd4d8ce9c9f1a8c2ebbcd699b6fbbd7be31f1c7f9407461bddeb03c2d8.js": {
+      "bytes": 6961959,
+      "sha256": "787544fd4d8ce9c9f1a8c2ebbcd699b6fbbd7be31f1c7f9407461bddeb03c2d8"
+    },
+    "assets/design-b11ef2e83c6031152aa63078133907be657a57d6f9932836c648874192fcd901.woff2": {
+      "bytes": 44224,
+      "sha256": "b11ef2e83c6031152aa63078133907be657a57d6f9932836c648874192fcd901"
+    },
+    "assets/design-c4626e5c01ff00aa5ade98c8a7141e17b110d44d51252bc52057bf24633e63b9.js": {
+      "bytes": 1795510,
+      "sha256": "c4626e5c01ff00aa5ade98c8a7141e17b110d44d51252bc52057bf24633e63b9"
+    },
+    "index.html": {
+      "bytes": 3208,
+      "sha256": "c91f5bacbe1b7fac6380eb64379c7813585dcbcbecd6104dfbc234f531d2730f"
+    },
+    "third-party-licenses.txt": {
+      "bytes": 48330,
+      "sha256": "08463d65ff3633611f07edf6c54696b852b5eec716a55a812c30d4c79b7759f6"
+    }
+  },
+  "compressed": {
+    "artifact-type/babel.min.js": {
+      "br": 418989,
+      "gzip": 655353
+    },
+    "artifact-type/fast-edit-worker.js": {
+      "br": 289830,
+      "gzip": 395749
+    },
+    "assets/design-429d49ff99ca9c45b7fc447554955e61a0590aa6d2925a37a4fb3ff14e060de3.css": {
+      "br": 46152,
+      "gzip": 59680
+    },
+    "assets/design-787544fd4d8ce9c9f1a8c2ebbcd699b6fbbd7be31f1c7f9407461bddeb03c2d8.js": {
+      "br": 1817892,
+      "gzip": 2247792
+    },
+    "assets/design-c4626e5c01ff00aa5ade98c8a7141e17b110d44d51252bc52057bf24633e63b9.js": {
+      "br": 468227,
+      "gzip": 526992
+    }
+  }
+}

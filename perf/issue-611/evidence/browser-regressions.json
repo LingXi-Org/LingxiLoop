@@ -1,0 +1,29 @@
+[
+  {
+    "case": "isolated gateway, retained edit, persisted refresh, scope switch, bounded 12 reopens",
+    "passed": true,
+    "errors": []
+  },
+  {
+    "case": "failed fixed script shows retry; new grant recovers editable content",
+    "passed": true
+  },
+  {
+    "case": "formulas through real DesignWorkspace and grant-isolated outer frame, dynamic update and reopen",
+    "passed": true,
+    "formulas": 6,
+    "display": 3,
+    "fonts": [
+      "KaTeX_Main",
+      "KaTeX_Math",
+      "KaTeX_SansSerif",
+      "KaTeX_Size1",
+      "KaTeX_Size3"
+    ],
+    "invalid": "非法公式仍可读：\\(\\unknowncommand{x}\\)"
+  },
+  {
+    "case": "blocked shared runtime retains original blob fallback and all six formulas",
+    "passed": true
+  }
+]

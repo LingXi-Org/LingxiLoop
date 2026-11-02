@@ -91,8 +91,20 @@ with sync_playwright() as pw:
     context=browser.new_context(viewport={'width':1440,'height':1000});page=context.new_page();page.set_default_timeout(15000)
     runtime=json.loads(Path('server/assets/design-editor/manifest.json').read_text())['runtime']['file'].split('/')[-1]
     context.route('**/'+runtime,lambda route:route.abort('failed'))
-    page.goto(ORIGIN+'?kind=design');trace=Trace(context,page);page.locator('#open').click();f,_=usable(page,'design',time.monotonic(),trace)
-    f.wait_for_function('document.querySelectorAll(".katex").length===6')
+    page.goto(ORIGIN+'?kind=design');page.locator('#open').click()
+    deadline=time.monotonic()+35
+    while time.monotonic()<deadline:
+        f=guest(page,'design')
+        try:
+            if f and f.locator('.katex').count()==6:
+                f.locator('h1').dblclick(timeout=1500)
+                f.locator('h1[contenteditable="true"]').wait_for(timeout=1500)
+                break
+        except Exception:pass
+        page.wait_for_timeout(100)
+    else:
+        page.screenshot(path=str(OUT/'runtime-fallback-failed.png'))
+        raise AssertionError('runtime fallback did not become editable')
     reports.append({'case':'blocked shared runtime retains original blob fallback and all six formulas','passed':True})
     context.close()
     browser.close()
