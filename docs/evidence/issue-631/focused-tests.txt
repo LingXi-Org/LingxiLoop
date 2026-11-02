@@ -1,0 +1,24 @@
+✔ Slides renders delimited inline, display, matrix and aligned math with the installed KaTeX (26.776006ms)
+✔ math keeps original text and rich marks across a formula, including line breaks (1.159706ms)
+✔ amounts, escaped delimiters, code and unmarked TeX stay literal (1.099515ms)
+✔ an amount before explicit math cannot consume its delimiters (0.761102ms)
+✔ invalid math and untrusted commands stay readable without executing HTML (1.998276ms)
+✔ existing monospace model values stay code and tables participate in formula export (0.48214ms)
+✔ native copy translation preserves icon names, enums, shortcuts and document values (19.743517ms)
+✔ every translated ICU message parses and formats using the bundled formatter (1572.713801ms)
+✔ native build keeps export libraries lazy and reduces initial JavaScript (12548.736523ms)
+✔ complete upstream distributions retain every pinned byte and license (101.003038ms)
+✔ rebuilt compiler preserves pinned format behavior, ids, notes, tables, images and design-system includes (522.168301ms)
+✔ Slides formula sources and monospace semantics survive existing-format save/reopen (5.972585ms)
+✔ new deck templates use persisted source-derived style, including after a blank page (9.302696ms)
+✔ built-in color and type data match the pinned Slides implementation (1.613944ms)
+✔ new pages inherit edited look memory and observed typography after a file roundtrip (6.690571ms)
+✔ legacy decks have no automatic default and saved HTML retains authored styles (1.30128ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15208.35067

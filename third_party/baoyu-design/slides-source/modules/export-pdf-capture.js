@@ -467,7 +467,7 @@ function installExportPdfCapture(runtime2) {
         continue;
       }
       let parentElement = value5.parentElement;
-      if (parentElement === null || ignoredTextCaptureElementNames.has(parentElement.tagName))
+      if (parentElement === null || ignoredTextCaptureElementNames.has(parentElement.tagName) || parentElement.closest(".katex-mathml"))
         continue;
       if (warnings !== void 0 && warnings.size > 0) {
         let entry2 = entries6.get(parentElement);
@@ -833,7 +833,7 @@ function installExportPdfCapture(runtime2) {
           scale: 1,
           quality: 0.8
         }
-      ], localFontSourcePattern = new RegExp(`url\\((["']?)([^"')\\s]*?(_blob/[0-9a-f]{32}|` + runtime2.designSystemFontPathSource + "))\\1\\)", "g"), pdfMaximumTextCoordinate = 4 * pdfMaximumTextRunFontSize, ignoredTextCaptureElementNames = /* @__PURE__ */ new Set([
+      ], localFontSourcePattern = new RegExp(`url\\((["']?)([^"')\\s]*?(_blob/[0-9a-f]{32}|` + runtime2.designSystemFontPathSource + "|/artifact-editor/slides-assets/KaTeX_[A-Za-z0-9_-]+\\.woff2))\\1\\)", "g"), pdfMaximumTextCoordinate = 4 * pdfMaximumTextRunFontSize, ignoredTextCaptureElementNames = /* @__PURE__ */ new Set([
         "SCRIPT",
         "STYLE",
         "NOSCRIPT",

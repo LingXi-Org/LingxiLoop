@@ -8,7 +8,7 @@ import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
 import { assertVisualizeCitationSpans, projectVisualizeText } from './visualize-projection.js'
 import { publicActivitySchema, answerRevisionLabels, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
-export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; display?: ToolDisplay;
+export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; partIndex?: number; display?: ToolDisplay;
   purpose?: 'process' | 'result'; taskId?: string; activityIdentity?: { requestVersion: number; fence: number; attemptId: string } }
 export interface MarkdownConfidenceClaim {
   id: string
@@ -40,6 +40,7 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
         ? { requestVersion,fence,attemptId } : undefined
       calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: canonicalToolName(event.data.name),args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq,
         ...(at !== undefined && activityIdentity ? { timing: { startedAt: at } } : {}),
+        ...(activityIdentity && Number.isSafeInteger(event.data.partIndex) && Number(event.data.partIndex) >= 0 ? { partIndex: Number(event.data.partIndex) } : {}),
         ...(event.data.presentation && typeof event.data.presentation === 'object' && Reflect.get(event.data.presentation,'purpose') === 'process' ? { purpose: 'process' as const } : {}),
         ...(activityIdentity ? { activityIdentity } : {}) })
     }
@@ -110,6 +111,26 @@ function failedUnsealedDrafts(view: RunView): Set<string> {
     && part.reason==='failed' && !part.sealedSeq && !part.acceptedResultId).map(part=>part.partId))
 }
 
+/** Native part indices are reserved in model-call order before concurrent
+ * admission. Use the batch's existing start slots; retain execution seq/timing.
+ * Legacy calls without a complete identity keep their recorded event order. */
+function toolActivityOrder(tools: readonly HarnessToolPart[]): Map<string, number> {
+  const order = new Map(tools.map(tool => [tool.toolCallId, tool.startedSeq ?? tool.eventSeq ?? 0]))
+  const batches = new Map<string, HarnessToolPart[]>()
+  for (const tool of tools) {
+    if (!tool.activityIdentity || tool.partIndex === undefined) continue
+    const key = JSON.stringify(tool.activityIdentity)
+    const batch = batches.get(key) ?? []
+    batch.push(tool); batches.set(key, batch)
+  }
+  for (const batch of batches.values()) {
+    if (new Set(batch.map(tool => tool.partIndex)).size !== batch.length) continue
+    const slots = batch.map(tool => order.get(tool.toolCallId)!).sort((a, b) => a - b)
+    batch.sort((a, b) => a.partIndex! - b.partIndex!).forEach((tool, index) => { order.set(tool.toolCallId, slots[index]) })
+  }
+  return order
+}
+
 function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean, history: boolean): ThreadAssistantMessagePart[] {
   const parts = new Map<string, { seq: number; part: ThreadAssistantMessagePart }>()
   const attempts = [
@@ -168,9 +189,10 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
   const planVersions = new Map<string, { fence: number; revision: number }>()
   // Completion order may differ from start order; retain the original public
   // position while selecting a plan's latest recorded version below.
-  const orderedTools = [...tools].sort((a,b) => (a.startedSeq ?? a.eventSeq ?? 0) - (b.startedSeq ?? b.eventSeq ?? 0))
-  for (const { eventSeq, startedSeq, activityIdentity, taskId, purpose, display: recordedDisplay, ...tool } of orderedTools) {
-    const seq = startedSeq ?? eventSeq ?? 0
+  const toolOrder = toolActivityOrder(tools)
+  const orderedTools = [...tools].sort((a,b) => toolOrder.get(a.toolCallId)! - toolOrder.get(b.toolCallId)!)
+  for (const { eventSeq, startedSeq, partIndex: _partIndex, activityIdentity, taskId, purpose, display: recordedDisplay, ...tool } of orderedTools) {
+    const seq = toolOrder.get(tool.toolCallId)!
     const result = tool.result && typeof tool.result === 'object' ? tool.result : undefined
     const explanation = publicActivitySchema.safeParse(result && Reflect.get(result, 'activity'))
     if (tool.toolName === 'chat.report_progress' && explanation.success && result && Reflect.get(result,'status') === 'completed' && !tool.isError) {
@@ -210,9 +232,8 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
     if (status !== 'completed') display.summary = toolDisplay(tool.toolName, status).summary
     const current = !activityIdentity || activityIdentity.requestVersion === view.requestVersion && activityIdentity.fence === view.fence
     const unresolvedApproval = !!tool.approval && tool.approval.approved === undefined && !tool.approval.resolution
-    const resolvedApproval = !!tool.approval && !unresolvedApproval
     const attention = current && (unresolvedApproval || !!tool.interrupt && view.goalOutcome?.status === 'awaiting_input'
-      || status === 'unknown' || !resolvedApproval && view.goalOutcome?.status !== 'satisfied' && (projected.isError || ['failed', 'cancelled'].includes(String(status))))
+      || status === 'unknown')
     const delivered = status === 'completed' && (purpose === 'result' || !!toolCardResult(tool.toolName,result && Reflect.get(result,'value')))
     put(tool.toolCallId,seq, annotated({ ...projected, args: { fields: display.input ?? [] }, argsText: '',
       ...(projected.result !== undefined ? { result: { ...(projected.result as object), display } } : {}),

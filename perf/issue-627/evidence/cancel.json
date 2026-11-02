@@ -1,0 +1,284 @@
+{
+  "runtime": "3.8.21",
+  "scenario": "cancel",
+  "intervals": [
+    {
+      "key": "host:[\"im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f\",\"step:76423d28-d848-4ccd-883e-f3b583d143f1\",0]",
+      "startedAt": 12134.045808,
+      "callId": "tool-1-0",
+      "completedAt": 12138.891059,
+      "aborted": false
+    },
+    {
+      "key": "host:[\"im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f\",\"step:abe75e4d-4031-40c9-bc11-f32cc35457d2\",0]",
+      "startedAt": 12136.445326,
+      "callId": "tool-1-1",
+      "completedAt": 16659.894614,
+      "aborted": true
+    }
+  ],
+  "snapshots": [
+    {
+      "stage": "cancel",
+      "message": {
+        "id": "run-im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f",
+        "createdAt": "2026-11-02T08:54:57.303Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "我会检查本次请求的附件。",
+            "status": {
+              "type": "complete"
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "public-text:69bd2a5cdd3e4c5cbbd990396edc05680b448d743335eb954614716f62292648",
+                  "kind": "answer",
+                  "label": "答复",
+                  "purpose": "result",
+                  "requestVersion": 1
+                },
+                "answerSegment": {
+                  "version": 3,
+                  "messageId": "answer:im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f:v1",
+                  "segmentId": "public:8f76e9e1f773eee24bf198bb6e0b2edae4d5a2df618800eb39f1869d41d23dac:answer",
+                  "partId": "public:8f76e9e1f773eee24bf198bb6e0b2edae4d5a2df618800eb39f1869d41d23dac:answer",
+                  "start": 0,
+                  "end": 12
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f\",\"step:76423d28-d848-4ccd-883e-f3b583d143f1\",0]",
+            "toolName": "files.list",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "completed",
+              "display": {
+                "title": "查看附件",
+                "purpose": "检查本次请求已选择的附件。",
+                "summary": "已检查本次请求的附件，共 0 个。"
+              }
+            },
+            "isError": false,
+            "timing": {
+              "startedAt": 1793609697719,
+              "completedAt": 1793609697806
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f\",\"step:76423d28-d848-4ccd-883e-f3b583d143f1\",0]",
+                  "kind": "tool",
+                  "label": "查看附件",
+                  "purpose": "process",
+                  "order": 13,
+                  "revision": 17,
+                  "requestVersion": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f\",\"step:abe75e4d-4031-40c9-bc11-f32cc35457d2\",0]",
+            "toolName": "files.list",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "cancelled",
+              "display": {
+                "title": "查看附件",
+                "purpose": "检查本次请求已选择的附件。",
+                "summary": "这一步已停止。"
+              }
+            },
+            "isError": false,
+            "timing": {
+              "startedAt": 1793609697723,
+              "completedAt": 1793609702323
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f\",\"step:abe75e4d-4031-40c9-bc11-f32cc35457d2\",0]",
+                  "kind": "tool",
+                  "label": "查看附件",
+                  "purpose": "process",
+                  "order": 14,
+                  "revision": 17,
+                  "requestVersion": 1
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "incomplete",
+          "reason": "cancelled"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f",
+            "harness": {
+              "runId": "im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f",
+              "lastSeq": 17,
+              "goalOutcome": {
+                "status": "blocked",
+                "verification": "inconclusive",
+                "requestVersion": 1
+              },
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "cancelled",
+              "delivery": null,
+              "previewClosedFence": 1,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "runTrace": {
+              "version": 1,
+              "startedAt": 1793609697303,
+              "timingBasis": "creation",
+              "queuedAt": 1793609697303,
+              "truncated": false,
+              "limitations": [
+                "llm-offsets",
+                "terminal-time",
+                "child-discovery"
+              ],
+              "root": {
+                "id": "run-de76410fb1c28577b22141a3",
+                "name": "运行",
+                "kind": "agent",
+                "status": "cancelled",
+                "start": null,
+                "end": null,
+                "durationMs": null,
+                "tokensIn": 50,
+                "tokensOut": 50,
+                "cost": 0.00007143,
+                "knownCost": 0.00007143,
+                "costBreakdown": [
+                  {
+                    "currency": "CNY",
+                    "amount": 0.0005,
+                    "estimated": true
+                  }
+                ],
+                "costIncomplete": false,
+                "costEstimated": true,
+                "children": [
+                  {
+                    "id": "tool-dcf9a56cb1d302b059ccdc1e",
+                    "name": "查看附件",
+                    "kind": "tool",
+                    "status": "complete",
+                    "start": 416,
+                    "end": 503,
+                    "durationMs": 87,
+                    "detail": "检查本次请求已选择的附件。",
+                    "workKind": "tool",
+                    "output": "已检查本次请求的附件，共 0 个。",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "tool-c512a414dfc599ecf406619e",
+                    "name": "查看附件",
+                    "kind": "tool",
+                    "status": "cancelled",
+                    "start": 420,
+                    "end": 5020,
+                    "durationMs": 4600,
+                    "detail": "检查本次请求已选择的附件。",
+                    "workKind": "tool",
+                    "output": "这一步未完成，请重试。",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "llm-bc125324a4ef3e3722c4c59e",
+                    "name": "生成回复",
+                    "kind": "llm",
+                    "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+                    "status": "complete",
+                    "start": null,
+                    "end": 304,
+                    "durationMs": 72,
+                    "tokensIn": 50,
+                    "tokensOut": 50,
+                    "cost": 0.00007143,
+                    "costEstimated": true,
+                    "costBreakdown": [
+                      {
+                        "currency": "CNY",
+                        "amount": 0.0005,
+                        "estimated": true
+                      }
+                    ],
+                    "costPricing": {
+                      "currency": "CNY",
+                      "inputPerMillion": 2,
+                      "cachedInputPerMillion": 0.04,
+                      "outputPerMillion": 8,
+                      "version": "siliconflow-cn-2026-10-22"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              "knowledgeSearch": "not_run"
+            },
+            "refs": {
+              "runId": "im:d5ecaf66cae96d79508a251a8e2b33b7dc93b1865e051316b4694f74f443b83f",
+              "agentId": "a-52e04fd6"
+            },
+            "controlPrincipalId": "test-owner",
+            "harnessError": "这次任务未能完成，请稍后重试。",
+            "terminalFeedback": {
+              "id": "c162501a-7faf-4d81-8905-eccf651b1d00",
+              "requestVersion": 1,
+              "reason": "cancelled",
+              "status": "cancelled",
+              "delivery": "pending",
+              "scopeVersion": 1,
+              "scope": "response",
+              "text": "执行已取消。 本轮有 1 项执行已取消。 已完成的操作会保留，你可以发送新消息继续。"
+            },
+            "sourceRef": "batch-request",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    }
+  ],
+  "passed": true
+}

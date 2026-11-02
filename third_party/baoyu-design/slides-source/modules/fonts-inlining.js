@@ -100,7 +100,10 @@ function installFontsInlining(runtime2) {
     return googleFontUrlFamilies(href).map((input) => input.toLowerCase());
   }
   function fontUsageHints(css, extra) {
-    return (extra + (css.match(/--deck-[\w-]+:[^;}]*/g) ?? []).join(" ")).toLowerCase();
+    // KaTeX selects its fonts through classes rather than inline style. Keep
+    // these local faces when exporting derived math HTML, then inline them.
+    const mathFamilies = extra.includes("data-slide-math") ? [...css.matchAll(/font-family:\s*["']?(KaTeX_[\w]+)/gi)].map(match => match[1]).join(" ") : "";
+    return (extra + mathFamilies + (css.match(/--deck-[\w-]+:[^;}]*/g) ?? []).join(" ")).toLowerCase();
   }
   function removeUnusedFontFaces(css, usedFamilies) {
     return css.replace(fontInliningFacePattern, (input) => {

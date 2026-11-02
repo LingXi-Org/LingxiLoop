@@ -22,6 +22,8 @@ test('the Canvas main view shares a nonmodal workspace with an editable conversa
   assert.equal($('[role="dialog"], [aria-modal="true"], [data-slot="dialog-overlay"], [data-slot="drawer-overlay"]').length, 0)
   assert.equal($('textarea[disabled], main[inert], main[aria-hidden="true"]').length, 0)
   assert.equal($('[data-editor="board"]').length, 1)
+  assert.equal($('[data-slot=sidebar][data-side=right]').attr('data-state'), 'expanded')
+  assert.equal($('[data-slot=sidebar-gap]').length, 1)
   assert.equal($('[data-design-resize-handle]').attr('aria-label'), '调整对话与画板宽度')
   assert.ok($.text().includes('对话正文'))
 })
@@ -33,4 +35,11 @@ test('a closed workspace exposes the chat and no focusable Canvas surface', asyn
   assert.equal($('[data-design-pane][inert]').length, 1)
   assert.equal($('iframe').length, 0)
   assert.equal($('textarea').length, 1)
+})
+
+test('a closed Canvas uses the native offcanvas state and gap', async () => {
+  const $ = await render(<DesignWorkspace design={null} onClose={() => {}}><textarea aria-label="消息" /></DesignWorkspace>)
+  assert.equal($('[data-slot=sidebar][data-side=right]').attr('data-state'), 'collapsed')
+  assert.equal($('[data-slot=sidebar][data-side=right]').attr('data-collapsible'), 'offcanvas')
+  assert.equal($('[data-slot=sidebar-gap]').length, 1)
 })

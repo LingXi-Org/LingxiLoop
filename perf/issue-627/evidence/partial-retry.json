@@ -1,0 +1,679 @@
+{
+  "runtime": "3.8.21",
+  "scenario": "partial-retry",
+  "intervals": [
+    {
+      "key": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:5f95c7a9-aa2c-4c1b-84f7-e14e2e1c306b\",0]",
+      "startedAt": 5626.630129,
+      "callId": "tool-1-0",
+      "completedAt": 5627.986502,
+      "aborted": false
+    },
+    {
+      "key": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:91511c2b-7728-4e62-841a-d9468ac39c5b\",0]",
+      "startedAt": 5626.767677,
+      "callId": "tool-1-1",
+      "completedAt": 5761.549151,
+      "aborted": false
+    },
+    {
+      "key": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:e270a0cd-a9be-4884-b6d1-ea283b7cdf1b\",0]",
+      "startedAt": 6384.224156,
+      "callId": "tool-2-0",
+      "completedAt": 6387.125978,
+      "aborted": false
+    }
+  ],
+  "snapshots": [
+    {
+      "stage": "partial-running",
+      "message": {
+        "id": "run-im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80",
+        "createdAt": "2026-11-02T08:54:50.395Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "我会检查本次请求的附件。",
+            "status": {
+              "type": "complete"
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "public-text:5fab5375fc2b1aff27492b2d536b6d31df6920fbadb29f5cb9a2b144532459d1",
+                  "kind": "answer",
+                  "label": "答复",
+                  "purpose": "result",
+                  "requestVersion": 1
+                },
+                "answerSegment": {
+                  "version": 3,
+                  "messageId": "answer:im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80:v1",
+                  "segmentId": "public:4f1b5350f37856725b96e8776d7430f532f1277b46c4d7d2ac510a025c303b2e:answer",
+                  "partId": "public:4f1b5350f37856725b96e8776d7430f532f1277b46c4d7d2ac510a025c303b2e:answer",
+                  "start": 0,
+                  "end": 12
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:5f95c7a9-aa2c-4c1b-84f7-e14e2e1c306b\",0]",
+            "toolName": "files.list",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "failed",
+              "display": {
+                "title": "查看附件",
+                "purpose": "检查本次请求已选择的附件。",
+                "summary": "这一步未完成，请检查相关信息后重试。"
+              }
+            },
+            "isError": true,
+            "timing": {
+              "startedAt": 1793609691185,
+              "completedAt": 1793609691310
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:5f95c7a9-aa2c-4c1b-84f7-e14e2e1c306b\",0]",
+                  "kind": "tool",
+                  "label": "查看附件",
+                  "purpose": "process",
+                  "order": 13,
+                  "revision": 15,
+                  "requestVersion": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:91511c2b-7728-4e62-841a-d9468ac39c5b\",0]",
+            "toolName": "files.list",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "timing": {
+              "startedAt": 1793609691188
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:91511c2b-7728-4e62-841a-d9468ac39c5b\",0]",
+                  "kind": "tool",
+                  "label": "查看附件",
+                  "purpose": "process",
+                  "order": 14,
+                  "revision": 15,
+                  "requestVersion": 1
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "running"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80",
+            "harness": {
+              "runId": "im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80",
+              "lastSeq": 15,
+              "goalOutcome": null,
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "leased",
+              "delivery": null,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "runTrace": {
+              "version": 1,
+              "startedAt": 1793609690395,
+              "timingBasis": "creation",
+              "queuedAt": 1793609690395,
+              "truncated": false,
+              "limitations": [
+                "llm-offsets",
+                "terminal-time",
+                "child-discovery"
+              ],
+              "root": {
+                "id": "run-a5815bb4c78215be1ace8dcd",
+                "name": "运行",
+                "kind": "agent",
+                "status": "running",
+                "start": null,
+                "end": null,
+                "durationMs": null,
+                "tokensIn": 50,
+                "tokensOut": 50,
+                "cost": 0.00007143,
+                "knownCost": 0.00007143,
+                "costBreakdown": [
+                  {
+                    "currency": "CNY",
+                    "amount": 0.0005,
+                    "estimated": true
+                  }
+                ],
+                "costIncomplete": false,
+                "costEstimated": true,
+                "children": [
+                  {
+                    "id": "tool-00b278d3a96006ac1c312731",
+                    "name": "查看附件",
+                    "kind": "tool",
+                    "status": "error",
+                    "start": 790,
+                    "end": 915,
+                    "durationMs": 125,
+                    "detail": "检查本次请求已选择的附件。",
+                    "workKind": "tool",
+                    "output": "这一步未完成，请检查相关信息后重试。",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "tool-9e1beb6a3f7968731ab3bf39",
+                    "name": "查看附件",
+                    "kind": "tool",
+                    "status": "running",
+                    "start": 793,
+                    "end": null,
+                    "durationMs": null,
+                    "detail": "检查本次请求已选择的附件。",
+                    "workKind": "tool",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "llm-7013712efa99173895d346c7",
+                    "name": "生成回复",
+                    "kind": "llm",
+                    "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+                    "status": "complete",
+                    "start": null,
+                    "end": 669,
+                    "durationMs": 126,
+                    "tokensIn": 50,
+                    "tokensOut": 50,
+                    "cost": 0.00007143,
+                    "costEstimated": true,
+                    "costBreakdown": [
+                      {
+                        "currency": "CNY",
+                        "amount": 0.0005,
+                        "estimated": true
+                      }
+                    ],
+                    "costPricing": {
+                      "currency": "CNY",
+                      "inputPerMillion": 2,
+                      "cachedInputPerMillion": 0.04,
+                      "outputPerMillion": 8,
+                      "version": "siliconflow-cn-2026-10-22"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              "knowledgeSearch": "not_run"
+            },
+            "refs": {
+              "runId": "im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80",
+              "agentId": "a-36273719"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "batch-request",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "stage": "partial-retry",
+      "message": {
+        "id": "run-im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80",
+        "createdAt": "2026-11-02T08:54:50.395Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "我会检查本次请求的附件。",
+            "status": {
+              "type": "complete"
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "public-text:5fab5375fc2b1aff27492b2d536b6d31df6920fbadb29f5cb9a2b144532459d1",
+                  "kind": "answer",
+                  "label": "答复",
+                  "purpose": "result",
+                  "requestVersion": 1
+                },
+                "answerSegment": {
+                  "version": 3,
+                  "messageId": "answer:im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80:v1",
+                  "segmentId": "public:4f1b5350f37856725b96e8776d7430f532f1277b46c4d7d2ac510a025c303b2e:answer",
+                  "partId": "public:4f1b5350f37856725b96e8776d7430f532f1277b46c4d7d2ac510a025c303b2e:answer",
+                  "start": 0,
+                  "end": 12
+                }
+              }
+            }
+          },
+          {
+            "type": "text",
+            "text": "\n首次一项检查未完成，另一项已完成；现在重试未完成项。",
+            "status": {
+              "type": "complete"
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "public-text:a150c48af3dd4f0497719e08994be758a5531d9b98d4692e0b5fb45bee324372",
+                  "kind": "answer",
+                  "label": "答复",
+                  "purpose": "result",
+                  "requestVersion": 1
+                },
+                "answerSegment": {
+                  "version": 3,
+                  "messageId": "answer:im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80:v1",
+                  "segmentId": "public:f4d8e8672c95e9a63eb0df93f483ff6a7fbe366329904451f37fbf93c5da3332:answer",
+                  "partId": "public:f4d8e8672c95e9a63eb0df93f483ff6a7fbe366329904451f37fbf93c5da3332:answer",
+                  "start": 12,
+                  "end": 39
+                }
+              }
+            }
+          },
+          {
+            "type": "text",
+            "text": "\n后续检查已完成，未发现附件。首次失败记录保留。",
+            "status": {
+              "type": "complete"
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "public-text:163d29481ab0fed4c1f5fd6d639df0a5daf5aeba9a2fd7a2185f846d672aa91f",
+                  "kind": "answer",
+                  "label": "答复",
+                  "purpose": "result",
+                  "requestVersion": 1
+                },
+                "answerSegment": {
+                  "version": 3,
+                  "messageId": "answer:im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80:v1",
+                  "segmentId": "public:3b3e3019b4663832a3c2c731689c0847d730f2d7a9885b25bc84ed02ca82aa97:answer",
+                  "partId": "public:3b3e3019b4663832a3c2c731689c0847d730f2d7a9885b25bc84ed02ca82aa97:answer",
+                  "start": 39,
+                  "end": 63
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:5f95c7a9-aa2c-4c1b-84f7-e14e2e1c306b\",0]",
+            "toolName": "files.list",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "failed",
+              "display": {
+                "title": "查看附件",
+                "purpose": "检查本次请求已选择的附件。",
+                "summary": "这一步未完成，请检查相关信息后重试。"
+              }
+            },
+            "isError": true,
+            "timing": {
+              "startedAt": 1793609691185,
+              "completedAt": 1793609691310
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:5f95c7a9-aa2c-4c1b-84f7-e14e2e1c306b\",0]",
+                  "kind": "tool",
+                  "label": "查看附件",
+                  "purpose": "process",
+                  "order": 13,
+                  "revision": 39,
+                  "requestVersion": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:91511c2b-7728-4e62-841a-d9468ac39c5b\",0]",
+            "toolName": "files.list",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "completed",
+              "display": {
+                "title": "查看附件",
+                "purpose": "检查本次请求已选择的附件。",
+                "summary": "已检查本次请求的附件，共 0 个。"
+              }
+            },
+            "isError": false,
+            "timing": {
+              "startedAt": 1793609691188,
+              "completedAt": 1793609691428
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:91511c2b-7728-4e62-841a-d9468ac39c5b\",0]",
+                  "kind": "tool",
+                  "label": "查看附件",
+                  "purpose": "process",
+                  "order": 14,
+                  "revision": 39,
+                  "requestVersion": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:e270a0cd-a9be-4884-b6d1-ea283b7cdf1b\",0]",
+            "toolName": "files.list",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "completed",
+              "display": {
+                "title": "查看附件",
+                "purpose": "检查本次请求已选择的附件。",
+                "summary": "已检查本次请求的附件，共 0 个。"
+              }
+            },
+            "isError": false,
+            "timing": {
+              "startedAt": 1793609691946,
+              "completedAt": 1793609692055
+            },
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:e270a0cd-a9be-4884-b6d1-ea283b7cdf1b\",0]",
+                  "kind": "tool",
+                  "label": "查看附件",
+                  "purpose": "process",
+                  "order": 28,
+                  "revision": 39,
+                  "requestVersion": 1
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "complete",
+          "reason": "stop"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80",
+            "harness": {
+              "runId": "im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80",
+              "lastSeq": 39,
+              "goalOutcome": {
+                "status": "satisfied",
+                "verification": "not_run",
+                "requestVersion": 1
+              },
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 1,
+              "resultId": "result:45e993611fd7695e2528de6e3522db5be52b299db2aa416f8ae18ab306e8376a",
+              "lifecycle": "succeeded",
+              "delivery": "delivered",
+              "previewClosedFence": 1,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "runTrace": {
+              "version": 1,
+              "startedAt": 1793609690395,
+              "timingBasis": "creation",
+              "queuedAt": 1793609690395,
+              "truncated": false,
+              "limitations": [
+                "llm-offsets",
+                "terminal-time",
+                "child-discovery"
+              ],
+              "root": {
+                "id": "run-a5815bb4c78215be1ace8dcd",
+                "name": "运行",
+                "kind": "agent",
+                "status": "complete",
+                "start": null,
+                "end": null,
+                "durationMs": null,
+                "tokensIn": 150,
+                "tokensOut": 150,
+                "cost": 0.00021429,
+                "knownCost": 0.00021429,
+                "costBreakdown": [
+                  {
+                    "currency": "CNY",
+                    "amount": 0.0015,
+                    "estimated": true
+                  }
+                ],
+                "costIncomplete": false,
+                "costEstimated": true,
+                "children": [
+                  {
+                    "id": "tool-00b278d3a96006ac1c312731",
+                    "name": "查看附件",
+                    "kind": "tool",
+                    "status": "error",
+                    "start": 790,
+                    "end": 915,
+                    "durationMs": 125,
+                    "detail": "检查本次请求已选择的附件。",
+                    "workKind": "tool",
+                    "output": "这一步未完成，请检查相关信息后重试。",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "tool-9e1beb6a3f7968731ab3bf39",
+                    "name": "查看附件",
+                    "kind": "tool",
+                    "status": "complete",
+                    "start": 793,
+                    "end": 1033,
+                    "durationMs": 240,
+                    "detail": "检查本次请求已选择的附件。",
+                    "workKind": "tool",
+                    "output": "已检查本次请求的附件，共 0 个。",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "tool-04ce09432565933812302b49",
+                    "name": "查看附件",
+                    "kind": "tool",
+                    "status": "complete",
+                    "start": 1551,
+                    "end": 1660,
+                    "durationMs": 109,
+                    "detail": "检查本次请求已选择的附件。",
+                    "workKind": "tool",
+                    "output": "已检查本次请求的附件，共 0 个。",
+                    "tokensIn": null,
+                    "tokensOut": null,
+                    "cost": null,
+                    "costEstimated": false,
+                    "children": []
+                  },
+                  {
+                    "id": "llm-7013712efa99173895d346c7",
+                    "name": "生成回复",
+                    "kind": "llm",
+                    "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+                    "status": "complete",
+                    "start": null,
+                    "end": 669,
+                    "durationMs": 126,
+                    "tokensIn": 50,
+                    "tokensOut": 50,
+                    "cost": 0.00007143,
+                    "costEstimated": true,
+                    "costBreakdown": [
+                      {
+                        "currency": "CNY",
+                        "amount": 0.0005,
+                        "estimated": true
+                      }
+                    ],
+                    "costPricing": {
+                      "currency": "CNY",
+                      "inputPerMillion": 2,
+                      "cachedInputPerMillion": 0.04,
+                      "outputPerMillion": 8,
+                      "version": "siliconflow-cn-2026-10-22"
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "llm-13b2437ad31353660078f31c",
+                    "name": "生成回复",
+                    "kind": "llm",
+                    "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+                    "status": "complete",
+                    "start": null,
+                    "end": 1345,
+                    "durationMs": 100,
+                    "tokensIn": 50,
+                    "tokensOut": 50,
+                    "cost": 0.00007143,
+                    "costEstimated": true,
+                    "costBreakdown": [
+                      {
+                        "currency": "CNY",
+                        "amount": 0.0005,
+                        "estimated": true
+                      }
+                    ],
+                    "costPricing": {
+                      "currency": "CNY",
+                      "inputPerMillion": 2,
+                      "cachedInputPerMillion": 0.04,
+                      "outputPerMillion": 8,
+                      "version": "siliconflow-cn-2026-10-22"
+                    },
+                    "children": []
+                  },
+                  {
+                    "id": "llm-f449e566f2c294538ed3c24c",
+                    "name": "生成回复",
+                    "kind": "llm",
+                    "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+                    "status": "complete",
+                    "start": null,
+                    "end": 1960,
+                    "durationMs": 104,
+                    "tokensIn": 50,
+                    "tokensOut": 50,
+                    "cost": 0.00007143,
+                    "costEstimated": true,
+                    "costBreakdown": [
+                      {
+                        "currency": "CNY",
+                        "amount": 0.0005,
+                        "estimated": true
+                      }
+                    ],
+                    "costPricing": {
+                      "currency": "CNY",
+                      "inputPerMillion": 2,
+                      "cachedInputPerMillion": 0.04,
+                      "outputPerMillion": 8,
+                      "version": "siliconflow-cn-2026-10-22"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              "knowledgeSearch": "not_run"
+            },
+            "refs": {
+              "runId": "im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80",
+              "agentId": "a-36273719"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "batch-request",
+            "sourceMessageId": "im-message:0dc725aa82a237073d44c83e28ce8a0658469a856ea3a5ce731f5a653bfdc346",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    }
+  ],
+  "passed": true
+}

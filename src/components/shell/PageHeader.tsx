@@ -3,7 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Fragment, type ReactNode, type Ref } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useShellNav } from './ShellNav'
+import { useShellNav, useShellNavTrigger } from './ShellNav'
 
 export interface PageHeaderCrumb {
   label: string
@@ -22,6 +22,7 @@ export function PageHeader({ title, crumbs, leading, actions, className, titleRe
   children?: ReactNode
 }) {
   const openNav = useShellNav()
+  const navTrigger = useShellNavTrigger()
   return (
     <header
       data-page-header
@@ -30,7 +31,7 @@ export function PageHeader({ title, crumbs, leading, actions, className, titleRe
         className,
       )}
     >
-      {leading ?? (openNav ? <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0 text-muted-foreground" aria-label="打开导航" onClick={openNav}>
+      {leading ?? navTrigger ?? (openNav ? <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0 text-muted-foreground" aria-label="打开导航" onClick={openNav}>
         <HugeiconsIcon icon={SidebarLeftIcon} strokeWidth={2} className="size-5" />
       </Button> : null)}
       <div className="flex min-w-0 flex-1 items-center gap-1.5">

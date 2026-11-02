@@ -8,6 +8,7 @@ import test from 'node:test'
 import { runInNewContext } from 'node:vm'
 import ts from 'typescript'
 import { buildSlidesEditor, translateSlides } from './build-slides-editor.mjs'
+import './slides-math.test.mjs'
 
 test('native copy translation preserves icon names, enums, shortcuts and document values', () => {
   const source = 'const ui={label:busy?other:"Download",title:label(kind==="Text"?"Text":"Body"),icon:{name:"Text"},onKeyDown:event=>event.key==="Delete",value:"auto",children:"Text"};'
@@ -45,7 +46,8 @@ test('native build keeps export libraries lazy and reduces initial JavaScript', 
   const report = await buildSlidesEditor()
   assert.equal(report.messageCount, 499)
   assert.equal(report.modules + report.removedModules.length, 321)
-  assert.ok(report.inputs.every(path => path.startsWith('third_party/baoyu-design/slides-source/')))
+  assert.ok(report.inputs.every(path => path.startsWith('third_party/baoyu-design/slides-source/') ||
+    ['node_modules/katex/dist/katex.mjs', 'node_modules/katex/contrib/auto-render/splitAtDelimiters.ts'].includes(path)))
   assert.ok(report.inputs.some(path => path.endsWith('/modules/editor-app.js')))
   assert.ok(report.inputs.some(path => path.endsWith('/modules/compiler-html.js')))
   assert.ok(report.initial.bytes < report.original.bytes * 0.9)
@@ -62,6 +64,8 @@ test('native build keeps export libraries lazy and reduces initial JavaScript', 
   assert.doesNotMatch(html, /index-BSIksl9u/)
   assert.ok(html.includes(report.styles.file))
   const css = await readFile(resolve('server/assets/slides-editor/assets', report.styles.file), 'utf8')
+  assert.equal((css.match(/@font-face\{[^}]*font-family:["']?KaTeX_/g) ?? []).length, 20)
+  assert.match(css, /\.katex\{font:normal 1\.21em KaTeX_Main/)
   assert.ok(css.includes(report.styles.fallbackFont))
   assert.doesNotMatch(css, /data:font\/woff2;base64/)
   const originalCss = await readFile(resolve('third_party/baoyu-design/slides-source/editor.css'), 'utf8')
@@ -103,6 +107,19 @@ test('rebuilt compiler preserves pinned format behavior, ids, notes, tables, ima
   for (const retired of ['VideoElement', 'videoEmbedUrl', 'videoWatchUrl', 'withVideoStill', 'videoStillNeedsRefresh']) {
     assert.equal(Object.hasOwn(rebuilt, retired), false, retired)
   }
+})
+
+test('Slides formula sources and monospace semantics survive existing-format save/reopen', () => {
+  const require = createRequire(import.meta.url)
+  const runtime = require('../server/assets/slides-editor/node/compiler.cjs').runtime
+  const source = String.raw`<section id="formula"><p>\[\begin{aligned}a&amp;=b\\c&amp;=d\end{aligned}\]</p><p style="font-family:monospace">\(x_i^2\)</p><table><tr><td>\(\frac{1}{2}\)</td></tr></table></section>`
+  const compiled = runtime.compileSlideHtml(source)
+  assert.deepEqual(compiled.errors, [])
+  const nodes = [...runtime.iterateDeckTextNodes(Object.values(compiled.content.slides))]
+  assert.ok(nodes.some(node => node.style?.fontFamily === 'mono' && node.text === String.raw`\(x_i^2\)`))
+  const saved = runtime.serializeDeckHtml(compiled.content, 'Math')
+  assert.doesNotMatch(saved, /class="katex/)
+  assert.deepEqual(runtime.compileSlideHtml(saved).content, compiled.content)
 })
 
 test('new deck templates use persisted source-derived style, including after a blank page', async () => {

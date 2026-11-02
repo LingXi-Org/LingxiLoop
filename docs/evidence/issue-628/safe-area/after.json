@@ -1,0 +1,98 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "insets": {
+      "top": 44,
+      "bottom": 34
+    },
+    "left": {
+      "paddingTop": 44,
+      "paddingBottom": 34,
+      "closeTop": 53.5,
+      "closeBottom": 97.5,
+      "closeHeight": 44,
+      "viewportHeight": 844,
+      "pageOverflow": 0
+    },
+    "right": {
+      "paddingTop": 44,
+      "paddingBottom": 34,
+      "closeTop": 53.5,
+      "closeBottom": 97.5,
+      "closeHeight": 44,
+      "viewportHeight": 844,
+      "pageOverflow": 0
+    },
+    "focusRestored": true,
+    "retainedCanvas": true,
+    "reducedMotion": true,
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 780
+    },
+    "insets": {
+      "top": 44,
+      "bottom": 34
+    },
+    "left": {
+      "paddingTop": 44,
+      "paddingBottom": 34,
+      "closeTop": 53.5,
+      "closeBottom": 97.5,
+      "closeHeight": 44,
+      "viewportHeight": 780,
+      "pageOverflow": 0
+    },
+    "right": {
+      "paddingTop": 44,
+      "paddingBottom": 34,
+      "closeTop": 53.5,
+      "closeBottom": 97.5,
+      "closeHeight": 44,
+      "viewportHeight": 780,
+      "pageOverflow": 0
+    },
+    "focusRestored": true,
+    "retainedCanvas": true,
+    "reducedMotion": true,
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 1400,
+      "height": 900
+    },
+    "insets": {
+      "top": 44,
+      "bottom": 34
+    },
+    "left": {
+      "paddingTop": 0,
+      "paddingBottom": 0,
+      "closeTop": 46.5,
+      "closeBottom": 90.5,
+      "closeHeight": 44,
+      "viewportHeight": 900,
+      "pageOverflow": 0
+    },
+    "right": {
+      "paddingTop": 0,
+      "paddingBottom": 0,
+      "closeTop": 50.5,
+      "closeBottom": 86.5,
+      "closeHeight": 36,
+      "viewportHeight": 900,
+      "pageOverflow": 0
+    },
+    "focusRestored": true,
+    "retainedCanvas": true,
+    "reducedMotion": true,
+    "errors": []
+  }
+]

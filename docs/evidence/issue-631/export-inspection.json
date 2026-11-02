@@ -1,0 +1,33 @@
+{
+  "formats": {
+    "sample.html": {
+      "bytes": 891044,
+      "sha256": "158c8b9be2857154e6a2e5b0c2a3770606724e5316ddb200c7b2d725fb86a227"
+    },
+    "sample.pdf": {
+      "bytes": 420460,
+      "sha256": "a0b450e6526a130a8cc08eaffcdf0c26c7d4eb6bf162d886ab5f9588a30f0a9b"
+    },
+    "sample.pptx": {
+      "bytes": 540988,
+      "sha256": "ebe97f744f0f57f1a3e4f49427739798946cc51353bff3a82cc3d946b7029101"
+    }
+  },
+  "html": {
+    "offline": true,
+    "networkRequests": 0,
+    "mathCount": 10
+  },
+  "pptx": {
+    "firstExport": true,
+    "formulaPagePicture": true,
+    "plainPageNativeText": true,
+    "speakerNotesPreserved": true,
+    "openedBy": "LibreOffice Impress headless",
+    "rendered": "pptx-libreoffice-page1.png"
+  },
+  "pdf": {
+    "rasterized": "pdf-page1.png"
+  },
+  "fixture": "synthetic; not original affected deck"
+}

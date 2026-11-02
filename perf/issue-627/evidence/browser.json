@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "browser": "154.0.8037.57",
+  "first": [
+    "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:5f95c7a9-aa2c-4c1b-84f7-e14e2e1c306b\",0]",
+    "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:91511c2b-7728-4e62-841a-d9468ac39c5b\",0]"
+  ],
+  "final": [
+    "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:5f95c7a9-aa2c-4c1b-84f7-e14e2e1c306b\",0]",
+    "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:91511c2b-7728-4e62-841a-d9468ac39c5b\",0]",
+    "host:[\"im:6791326a5f8879d2ee871a8af9238cee2e0e16ad945d3d5c97e2038ababe3f80\",\"step:e270a0cd-a9be-4884-b6d1-ea283b7cdf1b\",0]"
+  ],
+  "checks": [
+    "actual NativeMessageContent with real local Worker snapshots",
+    "failure plus live peer in same disclosure",
+    "later batch and answer retain first failed identity",
+    "retry is a separate original receipt",
+    "refresh retains call order",
+    "390px no overflow",
+    "cancelled call stays in process"
+  ],
+  "productionRequests": 0,
+  "pageErrors": []
+}
