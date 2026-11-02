@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>大模型知识全景 · 路线图</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+body{margin:0}
+a{color:#1f5f8b}a:hover{color:#123f5c}
+</style>
+</helmet>
+<div style="width: 1280px; min-height: 1180px; box-sizing: border-box; padding: 56px 64px 48px; background: #faf8f4; font-family: 'Noto Sans SC', system-ui, sans-serif; color: #1d1c1a; display: flex; flex-direction: column; gap: 28px">
+
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <div style="font-size: 13px; letter-spacing: 0.18em; color: #7a7368; font-weight: 500">STUDY ROOM · 大模型知识全景</div>
+    <h1 style="margin: 0; font-family: 'Noto Serif SC', serif; font-size: 44px; font-weight: 700; line-height: 1.25; letter-spacing: 0.01em">从 n-gram 到 Transformer：大模型是怎么长成今天这样的</h1>
+    <p style="margin: 0; max-width: 900px; font-size: 15px; line-height: 1.75; color: #4a453d">这条线按「怎么让模型记住上文」这一条根本问题往上爬：每一代方案解决上一个方案的什么代价，又留下什么新问题。下方七段是完整课程的主线，右侧标注由谁主讲、谁复核。板上的内容会随着成员讲解逐步补齐。</p>
+  </div>
+
+  <div style="height: 1px; background: #ddd6c8"></div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px">
+    <sc-for list="{{stages}}" as="s">
+      <div style="display: grid; grid-template-columns: 52px 190px minmax(0, 1fr) 250px; gap: 20px; align-items: start; padding: 18px 20px; background: #ffffff; border: 1px solid #e6e0d3; border-radius: 10px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <div style="font-family: 'Noto Serif SC', serif; font-size: 30px; font-weight: 700; color: #b8ad97; line-height: 1">{{s.no}}</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 16px; font-weight: 700; line-height: 1.4">{{s.title}}</div>
+          <div style="font-size: 12px; color: #857d6f; line-height: 1.5">{{s.era}}</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="font-size: 13.5px; line-height: 1.7; color: #3d3830">{{s.body}}</div>
+          <div style="font-size: 12.5px; line-height: 1.65; color: #6d6559; padding-left: 10px; border-left: 2px solid #d8d0bf">{{s.check}}</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start">
+          <div style="font-size: 11px; letter-spacing: 0.08em; color: #8b8375">主讲</div>
+          <div style="font-size: 13px; font-weight: 500; line-height: 1.5">{{s.lead}}</div>
+          <div style="font-size: 11px; letter-spacing: 0.08em; color: #8b8375; margin-top: 2px">复核</div>
+          <div style="font-size: 12.5px; color: #4f493f; line-height: 1.5">{{s.review}}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 20px; align-items: start">
+    <div style="padding: 20px 22px; background: #f2eee4; border-radius: 10px; display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: #5b5346">全线的根本线索</div>
+      <div style="font-size: 13.5px; line-height: 1.8; color: #3d3830">一代解决一代的代价，而不是一代推翻一代：词表统计记不住远距离依赖 → 循环网络能记但只能顺序算、长距离易衰减 → 注意力能一次看到全部但代价是 O(n²) 的成对交互 → 于是有了稀疏／局部注意力、长上下文工程与 KV 缓存管理。</div>
+    </div>
+    <div style="padding: 20px 22px; background: #ffffff; border: 1px solid #e6e0d3; border-radius: 10px; display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: #5b5346">与作业的衔接</div>
+      <div style="font-size: 13px; line-height: 1.8; color: #3d3830">第 2 段与房间里的两份作业直接重合（《attention 的核心：Q、K、V 与注意力计算》《Q、K、V 的区别：从注意力公式到缓存复用》），课程里提到的《理解注意力》《理解 KV 缓存》两份手册覆盖了这一段。学完第 2 段即可开始写作业的一、二部分。</div>
+    </div>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 24px; font-size: 11.5px; color: #8b8375; border-top: 1px solid #e6e0d3; padding-top: 14px">
+    <div>课程边界说明：本板为路线骨架，各段细节由对应成员补充；历史年份与论文归属以成员核对后的出处为准。</div>
+    <div>司南 · 学习房间</div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1180}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+stages: [
+{ no: '01', title: '起点：用统计记住上文', era: 'n-gram · 词向量', body: '最初的语言模型靠数语料里的共现次数：给前 n-1 个词，看下一个词出现过几次。词向量（word2vec 一类）第一次把「词」变成可计算的稠密向量，近义词在空间里靠近。但它只记住固定窗口内的统计，窗口外的信息一概没有。', check: '自查：为什么 n-gram 的「参数」随 n 指数增长，而不是线性增长？', lead: '寻知 · 阅读与资料研究', review: '溯源 · 证据复核' },
+{ no: '02', title: '循环网络：把状态带下去', era: 'RNN · LSTM · GRU', body: 'RNN 用一个隐藏状态 $h_t = f(h_{t-1}, x_t)$ 把历史压进向量，理论上能记住任意远的历史。代价是必须一个 token 一个 token 顺序算，无法并行；长序列上梯度容易消失，真正的远距离依赖很难学到。', check: '自查：顺序依赖带来的是训练慢，还是推理也慢？两者各自慢在哪？', lead: '明理 · 概念讲解', review: '砺思 · 解题陪练' },
+{ no: '03', title: '注意力：一次看到全部', era: '2014 起 · 2017 Transformer', body: '注意力让每个位置直接「查询」所有位置：$\\operatorname{Attention}(Q,K,V)=\\operatorname{softmax}\\left(\\frac{QK^{\\mathsf T}}{\\sqrt{d_k}}\\right)V$。路径长度从 O(n) 降到 O(1)，也能并行。代价是每一对位置都要算一次，成对交互数是 O(n²)。这一段与房间里的作业直接重合。', check: '自查：把 softmax 按列做会怎样？为什么必须逐行对每个查询归一化？', lead: '明理 · 概念讲解', review: '砺思 · 解题陪练' },
+{ no: '04', title: '预训练：两条分叉的路', era: '2018 BERT / GPT', body: '同一个 Transformer，训练目标不同就走出了两条路：BERT 式双向、遮住词让模型填（适合理解类任务）；GPT 式因果语言建模、只预测下一个词（适合生成）。此后「预训练 + 指令微调 + 人类反馈对齐」成为通行配方；规模定律说明，参数、数据、算力同步放大时损失会规律下降。', check: '自查：为什么单向因果建模天然适合做逐 token 生成？', lead: '明理 · 概念讲解', review: '溯源 · 证据复核' },
+{ no: '05', title: '推理工程：缓存与显存', era: 'prefill / decode · MQA / GQA', body: '生成是逐 token 自回归的：prefill 一次处理整段提示，decode 每次只多一个 token。因此 K、V 必须缓存下来反复复用，而 Q 每步都是新的、不必缓存。KV 缓存随长度线性增长，于是有了 MQA／GQA 减少 KV 头数。FlashAttention 省的是显存读写与中间矩阵落地，PagedAttention 管的是缓存按页分配——两者解决的不是同一个问题。', check: '自查：MQA 减少的是 Q 的头数还是 K/V 的头数？缓存体积按什么比例降？', lead: '成器 · 实践与项目指导', review: '溯源 · 证据复核' },
+{ no: '06', title: '用起来：模型到产品', era: '提示 · 上下文 · RAG · 工具 / 智能体', body: '提示工程决定怎么问；上下文窗口决定一次能塞进多少材料；检索增强把外部知识按需喂进来，避免全靠参数记忆；工具调用与智能体把模型接到真实动作上；量化与推理加速决定它能不能便宜地跑起来。这一段最容易被当成「技巧」，其实每一条都有明确的能力边界。', check: '自查：检索增强解决的是知识过时问题，还是推理能力问题？', lead: '寻知 · 阅读与资料研究', review: '成器 · 实践与项目指导' },
+{ no: '07', title: '边界与延伸', era: '幻觉 · 评测 · 对齐 · 多模态 · MoE', body: '幻觉来自模型在生成「看起来最像」的续写，而不是在查证事实。评测基准能测窄任务上的表现，测不出开放场景的可靠性。对齐让输出更符合人类意图，但不等于模型理解了意图。再往前是多模态、混合专家（MoE）按需激活部分参数、长上下文的稀疏与局部注意力。', check: '自查：「注意力权重高」能否当作「模型是因为这个位置才做此预测」的证据？', lead: '成器 · 实践与项目指导', review: '溯源 · 证据复核' }
+]
+};
+}
+}
+</script>
+</body>
+</html>
