@@ -1,0 +1,65 @@
+[
+  {
+    "viewportWidth": 1400,
+    "initialCollapsed": true,
+    "manualToggleSurvivesUpdates": true,
+    "nativeTransitions": true,
+    "slidesAndCanvasRetained": true,
+    "crossBreakpointCanvasRetained": true,
+    "keyboardAndFocus": true,
+    "noPageOverflow": true,
+    "reducedMotion": {
+      "duration": "1e-05s",
+      "animation": "none"
+    },
+    "errors": []
+  },
+  {
+    "viewportWidth": 768,
+    "initialCollapsed": true,
+    "manualToggleSurvivesUpdates": true,
+    "nativeTransitions": true,
+    "slidesAndCanvasRetained": true,
+    "crossBreakpointCanvasRetained": true,
+    "keyboardAndFocus": true,
+    "noPageOverflow": true,
+    "reducedMotion": {
+      "duration": "1e-05s",
+      "animation": "none"
+    },
+    "errors": []
+  },
+  {
+    "viewportWidth": 390,
+    "initialCollapsed": true,
+    "manualToggleSurvivesUpdates": true,
+    "nativeTransitions": true,
+    "slidesAndCanvasRetained": true,
+    "crossBreakpointCanvasRetained": true,
+    "keyboardAndFocus": true,
+    "noPageOverflow": true,
+    "reducedMotion": {
+      "duration": "1e-05s",
+      "animation": "none"
+    },
+    "errors": []
+  },
+  {
+    "viewportWidth": 320,
+    "initialCollapsed": true,
+    "manualToggleSurvivesUpdates": true,
+    "nativeTransitions": true,
+    "slidesAndCanvasRetained": true,
+    "crossBreakpointCanvasRetained": true,
+    "keyboardAndFocus": true,
+    "noPageOverflow": true,
+    "reducedMotion": {
+      "duration": "1e-05s",
+      "animation": "none"
+    },
+    "errors": []
+  },
+  {
+    "directDeckAndRefreshCollapsed": true
+  }
+]

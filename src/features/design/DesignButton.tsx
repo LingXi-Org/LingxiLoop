@@ -13,6 +13,7 @@ export function DesignButton({ conversationId }: { conversationId: string }) {
   const expanded = useSurface(state => state.surface?.kind === 'design')
   const open = async (opener: HTMLButtonElement) => {
     if (pending) return
+    if (expanded) { useSurface.getState().closeDesign(); return }
     setPending(true)
     try {
       await openConversationDesign(conversationId, opener)
