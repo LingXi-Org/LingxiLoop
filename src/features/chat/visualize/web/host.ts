@@ -240,6 +240,10 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
         const [html] = await Promise.all([buildWebDocument(result.html,result.state,async name => {
           pending.add(name);progress()
           try {
+            const authorizedRead = (attemptSignal: AbortSignal) => {
+              assertScope()
+              return lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',cache:'no-store',headers:headers(page),signal:attemptSignal})
+            }
             return await publicResources.read(name, result.resourceHashes?.[name], () => readWebResource(name, async attemptSignal => {
               assertScope()
               const publicUrl = visualizeResourceUrl(name,result.resourceHashes?.[name])
@@ -251,8 +255,11 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
                 assertScope()
               }
               // Old servers without hash metadata retain the page-authorized path.
-              return lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',cache:'no-store',headers:headers(page),signal:attemptSignal})
-            }, resourceSignal), resourceSignal)
+              return authorizedRead(attemptSignal)
+            // A stalled public edge must not consume both recovery GETs on
+            // the same route. The existing page capability and digest remain
+            // required; authorization/rate-limit errors are never retried.
+            }, resourceSignal, authorizedRead), resourceSignal)
           } finally { pending.delete(name);progress() }
         }, result.resourceHashes?.['visualize.html'], result.resourceHashes), refreshState(page,false,resourceSignal)])
         assertScope()

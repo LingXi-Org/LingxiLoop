@@ -11,9 +11,9 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { SelectField } from '@/components/ui/select-field'
 import { ToggleGroupLite } from '@/components/shell/ToggleGroupLite'
-import { ArtifactView } from '@/features/artifacts/components/ArtifactView'
 import type { ArtifactSummary } from '@/features/artifacts/contracts'
 import { useWorkspace } from '@/features/knowledge/workspace'
+import { SlidesWorkspace } from './SlidesWorkspace'
 import { formatDeckUpdated, useSlides } from './store'
 
 type Layout = 'grid' | 'list'
@@ -42,6 +42,8 @@ export function SlidesPage({ projectId }: { projectId: string }) {
   const decks = useSlides((state) => state.decks)
   const error = useSlides((state) => state.error)
   const openId = useSlides((state) => state.openId)
+  const retainedId = useSlides((state) => state.retainedId)
+  const reopening = useSlides((state) => state.reopening)
   const workspaceName = useWorkspace((state) => state.list.find((item) => item.id === projectId)?.name)
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<Sort>('updated')
@@ -65,21 +67,24 @@ export function SlidesPage({ projectId }: { projectId: string }) {
   }, [decks, query, sort])
 
   const changeLayout = (next: Layout) => { setLayout(next); try { window.localStorage.setItem(LAYOUT_KEY, next) } catch { /* storage may be unavailable */ } }
-  const open = (id: string | null) => useSlides.getState().open(id)
+  const open = (id: string | null) => { void useSlides.getState().open(id) }
   const create = () => void useSlides.getState().create()
 
-  const current = openId ? decks?.find((deck) => deck.id === openId) : undefined
-  if (openId && (current || !decks)) {
-    return <ArtifactView artifactId={openId} kind="slides" title={current?.title ?? '演示文稿'} onClose={() => open(null)} back closeLabel="返回全部演示文稿"
-      crumbs={[{ label: '演示文稿', onSelect: () => open(null) }]} />
-  }
+  const cachedId = retainedId && (!decks || decks.some((deck) => deck.id === retainedId)) ? retainedId : null
+  const current = cachedId ? decks?.find((deck) => deck.id === cachedId) : undefined
+  const showingWorkspace = Boolean(openId && openId === cachedId)
 
-  return <PageLayout
+  return <>
+  {cachedId && <div hidden={!showingWorkspace} inert={!showingWorkspace} className={showingWorkspace ? 'h-full min-h-0' : 'hidden'}>
+    <SlidesWorkspace key={`${projectId}:${cachedId}`} artifactId={cachedId} title={current?.title ?? '演示文稿'} onClose={() => open(null)} />
+  </div>}
+  {!showingWorkspace && <PageLayout
     header={<PageHeader title="全部演示文稿" crumbs={workspaceName ? [{ label: workspaceName }] : undefined}
       actions={<Button onClick={create} className="max-md:size-11 max-md:p-0"><HugeiconsIcon icon={Add01Icon} strokeWidth={2} data-icon="inline-start" /><span className="max-md:sr-only">新建演示文稿</span></Button>} />}
   >
     <PageBody>
       <div data-slides-page>
+        {reopening && <p role="status" className="mb-3 text-sm text-muted-foreground">正在重新打开演示文稿…</p>}
         {error ? <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button variant="outline" size="sm" onClick={() => void useSlides.getState().load(projectId)}>重试</Button></AlertDescription></Alert>
           : !decks ? <ResourceSkeleton variant="list" label="正在加载演示文稿" />
           : !decks.length ? <Empty className="border border-dashed">
@@ -103,7 +108,7 @@ export function SlidesPage({ projectId }: { projectId: string }) {
             {visible.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">没有找到匹配的演示文稿</p>
               : layout === 'grid' ? <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-4" aria-label="演示文稿">
                 {visible.map((deck) => <li key={deck.id} className="group/deck flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-foreground/20">
-                  <button type="button" onClick={() => open(deck.id)} data-artifact-open-trigger={deck.id} aria-label={`打开「${deck.title}」`}
+                  <button type="button" disabled={reopening} onClick={() => open(deck.id)} data-artifact-open-trigger={deck.id} aria-label={`打开「${deck.title}」`}
                     className="relative flex aspect-video w-full items-end border-b border-border bg-muted/40 p-4 text-start focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
                     <span aria-hidden="true" className="absolute start-4 top-4 h-1 w-8 rounded-full bg-primary/70" />
                     <span aria-hidden="true" className="line-clamp-2 font-heading text-lg font-semibold leading-snug text-foreground/80">{deck.title}</span>
@@ -120,7 +125,7 @@ export function SlidesPage({ projectId }: { projectId: string }) {
               : <div className="overflow-hidden rounded-xl border border-border">
                 <ul aria-label="演示文稿" className="divide-y divide-border">
                   {visible.map((deck) => <li key={deck.id} className="flex min-w-0 items-center gap-3 bg-card pe-2 hover:bg-muted/40">
-                    <button type="button" onClick={() => open(deck.id)} data-artifact-open-trigger={deck.id}
+                    <button type="button" disabled={reopening} onClick={() => open(deck.id)} data-artifact-open-trigger={deck.id}
                       className="flex min-h-14 min-w-0 flex-1 items-center gap-3 ps-4 text-start focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
                       <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-muted/40 text-muted-foreground"><HugeiconsIcon icon={Presentation01Icon} strokeWidth={1.8} className="size-4" /></span>
                       <span className="min-w-0 flex-1 truncate text-sm font-medium">{deck.title}</span>
@@ -133,5 +138,6 @@ export function SlidesPage({ projectId }: { projectId: string }) {
           </>}
       </div>
     </PageBody>
-  </PageLayout>
+  </PageLayout>}
+  </>
 }

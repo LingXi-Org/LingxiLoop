@@ -73,7 +73,10 @@ export function runtimeModelConfiguration(model: { id: string; apiKey: string; b
     publicTextContinuation: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3'
       ? 'typed-message-v1' : undefined,
     publicAnswerTool: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3'
-      ? 'native-v2' : undefined,
+      ? 'native-v3' : undefined,
+    // A normal artboard can exceed the SDK's generic8K default. Keep its
+    // original JSON arguments complete rather than relying on length recovery.
+    ...(nativeDeepSeekTools ? { maxOutputTokens: 16_384 } : {}),
     recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,

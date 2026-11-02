@@ -1,0 +1,458 @@
+{
+  "scope": "Real Chromium, isolated sandboxed editor, deterministic local HTTP API fixture; not full product or production acceptance",
+  "source": "source-regression",
+  "measuredAt": "2026-10-31T04:44:18.371Z",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/154.0.8037.57",
+    "revision": "@73c14f6228d7cd537c855007e8f88678969cc0eb",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "jsVersion": "15.4.80.11"
+  },
+  "device": {
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logicalCpus": 5,
+    "totalMemoryBytes": 18882662400,
+    "viewport": "1440x1000@1",
+    "cpuThrottling": 1
+  },
+  "network": {
+    "latencyMs": 20,
+    "downloadMbps": 4,
+    "uploadMbps": 3,
+    "compression": "gzip",
+    "allRequests": true
+  },
+  "fixture": {
+    "slides": 20,
+    "images": 20,
+    "imageSha256": "6927614c2041fa104c1a54709c255608e27787340712bc55d99a32f591b8596b",
+    "filesSha256": "8a3abe4f8a477eba8252a334422d79973ae46f2e3fd5a787ce9972d840b12162"
+  },
+  "runs": 1,
+  "samples": [
+    {
+      "run": 1,
+      "phase": "cold",
+      "readyMs": 3579.5999999996275,
+      "timeOrigin": 1793421844229.1,
+      "resources": [
+        {
+          "name": "/artifact-editor/slides-assets/editor-Z4RVPUVI.js",
+          "transferSize": 0,
+          "duration": 2631.100000000093
+        },
+        {
+          "name": "/artifact-editor/slides-assets/editor.css",
+          "transferSize": 0,
+          "duration": 723.2000000001863
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-DSVHES4B.js",
+          "transferSize": 0,
+          "duration": 1230.1999999997206
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+          "transferSize": 0,
+          "duration": 33.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+          "transferSize": 0,
+          "duration": 86.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/__deck/session",
+          "transferSize": 0,
+          "duration": 23.299999999813735
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "transferSize": 0,
+          "duration": 22.600000000093132
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/deck.json",
+          "transferSize": 0,
+          "duration": 25.09999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-1.html",
+          "transferSize": 0,
+          "duration": 27.800000000279397
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-10.html",
+          "transferSize": 0,
+          "duration": 30.699999999720603
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-11.html",
+          "transferSize": 0,
+          "duration": 33.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-12.html",
+          "transferSize": 0,
+          "duration": 36.3000000002794
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-13.html",
+          "transferSize": 0,
+          "duration": 49
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-14.html",
+          "transferSize": 0,
+          "duration": 51.799999999813735
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-15.html",
+          "transferSize": 0,
+          "duration": 54.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-16.html",
+          "transferSize": 0,
+          "duration": 57.09999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-17.html",
+          "transferSize": 0,
+          "duration": 60
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-18.html",
+          "transferSize": 0,
+          "duration": 72.10000000009313
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-19.html",
+          "transferSize": 0,
+          "duration": 74.89999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-2.html",
+          "transferSize": 0,
+          "duration": 77.70000000018626
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-20.html",
+          "transferSize": 0,
+          "duration": 83
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-3.html",
+          "transferSize": 0,
+          "duration": 87.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-4.html",
+          "transferSize": 0,
+          "duration": 95.8000000002794
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-5.html",
+          "transferSize": 0,
+          "duration": 98.8000000002794
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-6.html",
+          "transferSize": 0,
+          "duration": 102.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-7.html",
+          "transferSize": 0,
+          "duration": 111
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-8.html",
+          "transferSize": 0,
+          "duration": 116.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-9.html",
+          "transferSize": 0,
+          "duration": 120.10000000009313
+        },
+        {
+          "name": "/_blob/1234567890abcdef1234567890abcdef",
+          "transferSize": 0,
+          "duration": 32.8000000002794
+        }
+      ],
+      "body": "\n\n\n\n\n\n\n\n71%\n\n幻灯片 1 / 20: 幻灯片 1\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n\n\n\n\n\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n1\n幻灯片 2\n固定图片样稿，用于测量加载与编辑反馈。\n2\n幻灯片 3\n固定图片样稿，用于测量加载与编辑反馈。\n3\n幻灯片 4\n固定图片样稿，用于测量加载与编辑反馈。\n4\n幻灯片 5\n固定图片样稿，用于测量加载与编辑反馈。\n5\n幻灯片 6\n固定图片样稿，用于测量加载与编辑反馈。\n6\n幻灯片 7\n固定图片样稿，用于测量加载与编辑反馈。\n7\n幻灯片 8\n固定图片样稿，用于测量加载与编辑反馈。\n8\n幻灯片 9\n固定图片样稿，用于测量加载与编辑反馈。\n9\n幻灯片 10\n固定图片样稿，用于测量加载与编辑反馈。\n10\n幻灯片 11\n固定图片样稿，用于测量加载与编辑反馈。\n11\n幻灯片 12\n固定图片样稿，用于测量加载与编辑反馈。\n12\n幻灯片 13\n固定图片样稿，用于测量加载与编辑反馈。\n13\n幻灯片 14\n固定图片样稿，用于测量加载与编辑反馈。\n14\n幻灯片 15\n固定图片样稿，用于测量加载与编",
+      "renderedMs": 3369.899999999907,
+      "editableVerified": true,
+      "transferredBytes": 1375310,
+      "jsHeapUsedBytes": 20012796,
+      "scriptDurationSeconds": 0.535623,
+      "taskDurationSeconds": 0.870215
+    },
+    {
+      "run": 1,
+      "phase": "reopen",
+      "readyMs": 3181.100000000093,
+      "timeOrigin": 1793421847856.1,
+      "resources": [
+        {
+          "name": "/artifact-editor/slides-assets/editor-Z4RVPUVI.js",
+          "transferSize": 0,
+          "duration": 2627
+        },
+        {
+          "name": "/artifact-editor/slides-assets/editor.css",
+          "transferSize": 0,
+          "duration": 744.9000000003725
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-DSVHES4B.js",
+          "transferSize": 0,
+          "duration": 1240.5
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+          "transferSize": 0,
+          "duration": 91.60000000009313
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+          "transferSize": 0,
+          "duration": 31.600000000093132
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/__deck/session",
+          "transferSize": 0,
+          "duration": 24.699999999720603
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "transferSize": 0,
+          "duration": 23.90000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/deck.json",
+          "transferSize": 0,
+          "duration": 23.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-1.html",
+          "transferSize": 0,
+          "duration": 26.299999999813735
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-10.html",
+          "transferSize": 0,
+          "duration": 29.199999999720603
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-11.html",
+          "transferSize": 0,
+          "duration": 32.6999999997206
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-12.html",
+          "transferSize": 0,
+          "duration": 35.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-13.html",
+          "transferSize": 0,
+          "duration": 47.10000000009313
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-14.html",
+          "transferSize": 0,
+          "duration": 50.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-15.html",
+          "transferSize": 0,
+          "duration": 52.90000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-16.html",
+          "transferSize": 0,
+          "duration": 56.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-17.html",
+          "transferSize": 0,
+          "duration": 58.10000000009313
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-18.html",
+          "transferSize": 0,
+          "duration": 70
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-19.html",
+          "transferSize": 0,
+          "duration": 73.60000000009313
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-2.html",
+          "transferSize": 0,
+          "duration": 76.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-20.html",
+          "transferSize": 0,
+          "duration": 79
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-3.html",
+          "transferSize": 0,
+          "duration": 81.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-4.html",
+          "transferSize": 0,
+          "duration": 93.29999999981374
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-5.html",
+          "transferSize": 0,
+          "duration": 96
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-6.html",
+          "transferSize": 0,
+          "duration": 99.29999999981374
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-7.html",
+          "transferSize": 0,
+          "duration": 102.70000000018626
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-8.html",
+          "transferSize": 0,
+          "duration": 106.29999999981374
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-9.html",
+          "transferSize": 0,
+          "duration": 116.70000000018626
+        },
+        {
+          "name": "/_blob/1234567890abcdef1234567890abcdef",
+          "transferSize": 0,
+          "duration": 27.300000000279397
+        }
+      ],
+      "body": "\n\n\n\n\n\n\n\n71%\n\n幻灯片 1 / 20: 幻灯片 1\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n\n\n\n\n\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n1\n幻灯片 2\n固定图片样稿，用于测量加载与编辑反馈。\n2\n幻灯片 3\n固定图片样稿，用于测量加载与编辑反馈。\n3\n幻灯片 4\n固定图片样稿，用于测量加载与编辑反馈。\n4\n幻灯片 5\n固定图片样稿，用于测量加载与编辑反馈。\n5\n幻灯片 6\n固定图片样稿，用于测量加载与编辑反馈。\n6\n幻灯片 7\n固定图片样稿，用于测量加载与编辑反馈。\n7\n幻灯片 8\n固定图片样稿，用于测量加载与编辑反馈。\n8\n幻灯片 9\n固定图片样稿，用于测量加载与编辑反馈。\n9\n幻灯片 10\n固定图片样稿，用于测量加载与编辑反馈。\n10\n幻灯片 11\n固定图片样稿，用于测量加载与编辑反馈。\n11\n幻灯片 12\n固定图片样稿，用于测量加载与编辑反馈。\n12\n幻灯片 13\n固定图片样稿，用于测量加载与编辑反馈。\n13\n幻灯片 14\n固定图片样稿，用于测量加载与编辑反馈。\n14\n幻灯片 15\n固定图片样稿，用于测量加载与编",
+      "renderedMs": 3047.8000000002794,
+      "editableVerified": true,
+      "transferredBytes": 1540190,
+      "jsHeapUsedBytes": 20966492,
+      "scriptDurationSeconds": 2.185108,
+      "taskDurationSeconds": 6.423176
+    }
+  ],
+  "regression": {
+    "exportMenu": [
+      {
+        "text": "PDF（.pdf）",
+        "aria": null
+      },
+      {
+        "text": "网页（.html）",
+        "aria": null
+      },
+      {
+        "text": "当前页图片（.png）",
+        "aria": null
+      },
+      {
+        "text": "PowerPoint，保留当前字体（.pptx）",
+        "aria": null
+      },
+      {
+        "text": "PowerPoint，使用通用字体（.pptx）",
+        "aria": null
+      }
+    ],
+    "exports": [
+      {
+        "format": ".pdf",
+        "bytes": 1624263,
+        "sha256": "ef71d69ae60fa8a5df666efea491ab149ddd677dc5205e5e35b166bfb6d4ada5"
+      },
+      {
+        "format": ".html",
+        "bytes": 483562,
+        "sha256": "dd14569bce30a815bd30db952344debf34f14d952b47397e8e6b29b36fcf1ef6"
+      },
+      {
+        "format": ".pptx",
+        "bytes": 700020,
+        "sha256": "08afbbac20a52a79aae9df57104936035c0a23b14676e4d638f4308ce451ed07"
+      }
+    ],
+    "saved": true,
+    "presentation": {
+      "mode": "\n\n\n\n\n\n\n\n71%\n\n幻灯片 1 / 20: 测试\n测试\n固定图片样稿，用于测量加载与编辑反馈。\n\n\n\n\n\n测试\n固定图片样稿，用于测量加载与编辑反馈。\n1\n幻灯片 2\n固定图片样稿，用于测量加载与编辑反馈。\n2\n幻灯片 3\n固定图片样稿，用于测量加载与编辑反馈。\n3\n幻灯片 4\n固定图片样稿，用于测量加载与编辑反馈。\n4\n幻灯片 5\n固定图片样稿，用于测量加载与编辑反馈。\n5\n幻灯片 6\n固定图片样稿，用于测量加载与编辑反馈。\n6\n幻灯片 7\n固定图片样稿，用于测量加载与编辑反馈。\n7\n幻灯片 8\n固定图片样稿，用于测量加载与编辑反馈。\n8\n幻灯片 9\n固定图",
+      "context": {
+        "slideId": "slide-1",
+        "selectedElementIds": [],
+        "selection": [],
+        "selectedSlides": [],
+        "selectedText": "",
+        "slideTitle": "测试",
+        "slideIndex": 1,
+        "slideCount": 20,
+        "mode": "present",
+        "dirty": false,
+        "version": null
+      }
+    },
+    "exitPresentation": true,
+    "selectionContext": {
+      "slideId": "slide-1",
+      "selectedElementIds": [],
+      "selection": [],
+      "selectedSlides": [],
+      "selectedText": "",
+      "slideTitle": "测试",
+      "slideIndex": 1,
+      "slideCount": 20,
+      "mode": "edit",
+      "dirty": false,
+      "version": null
+    },
+    "noVideoControls": true
+  },
+  "summary": {
+    "cold": {
+      "p50Ms": 3579.5999999996275,
+      "p75Ms": 3579.5999999996275,
+      "p95Ms": 3579.5999999996275
+    },
+    "reopen": {
+      "p50Ms": 3181.100000000093,
+      "p75Ms": 3181.100000000093,
+      "p95Ms": 3181.100000000093
+    }
+  },
+  "editFeedback": {
+    "status": "measured",
+    "definition": "Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text",
+    "samples": [
+      {
+        "run": 1,
+        "durationMs": 34.6999999997206,
+        "text": "测试"
+      }
+    ],
+    "p95Ms": 34.6999999997206
+  },
+  "jsParseTime": {
+    "status": "unmeasured",
+    "note": "ScriptDuration measures execution, not a separate V8 parse trace"
+  },
+  "errors": []
+}

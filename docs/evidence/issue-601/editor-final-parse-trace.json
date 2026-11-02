@@ -1,0 +1,913 @@
+{
+  "scope": "Real Chromium, isolated sandboxed editor, deterministic local HTTP API fixture; not full product or production acceptance",
+  "source": "99369639-parse-profile",
+  "measuredAt": "2026-10-31T06:23:08.029Z",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/154.0.8037.57",
+    "revision": "@73c14f6228d7cd537c855007e8f88678969cc0eb",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "jsVersion": "15.4.80.11"
+  },
+  "device": {
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logicalCpus": 5,
+    "totalMemoryBytes": 18882662400,
+    "viewport": "1440x1000@1",
+    "cpuThrottling": 1
+  },
+  "network": {
+    "latencyMs": 20,
+    "downloadMbps": 4,
+    "uploadMbps": 3,
+    "compression": "gzip",
+    "allRequests": true
+  },
+  "fixture": {
+    "variant": "fixed-performance",
+    "slides": 20,
+    "images": 20,
+    "imageSha256": "6927614c2041fa104c1a54709c255608e27787340712bc55d99a32f591b8596b",
+    "filesSha256": "8a3abe4f8a477eba8252a334422d79973ae46f2e3fd5a787ce9972d840b12162"
+  },
+  "runs": 1,
+  "samples": [
+    {
+      "run": 1,
+      "phase": "cold",
+      "readyMs": 3382,
+      "timeOrigin": 1793427775670.1,
+      "resources": [
+        {
+          "name": "/artifact-editor/slides-assets/editor-FAJY6LHW.js",
+          "transferSize": 0,
+          "duration": 2521.199999999255
+        },
+        {
+          "name": "/artifact-editor/slides-assets/editor.css",
+          "transferSize": 0,
+          "duration": 709.0999999996275
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-DSVHES4B.js",
+          "transferSize": 0,
+          "duration": 1243
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+          "transferSize": 0,
+          "duration": 61.90000000037253
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+          "transferSize": 0,
+          "duration": 127.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/__deck/session",
+          "transferSize": 0,
+          "duration": 23.800000000745058
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "transferSize": 0,
+          "duration": 23.700000001117587
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/deck.json",
+          "transferSize": 0,
+          "duration": 25.09999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-1.html",
+          "transferSize": 0,
+          "duration": 27.700000001117587
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-10.html",
+          "transferSize": 0,
+          "duration": 30.300000000745058
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-11.html",
+          "transferSize": 0,
+          "duration": 33.399999998509884
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-12.html",
+          "transferSize": 0,
+          "duration": 35.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-13.html",
+          "transferSize": 0,
+          "duration": 47.70000000111759
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-14.html",
+          "transferSize": 0,
+          "duration": 50.79999999888241
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-15.html",
+          "transferSize": 0,
+          "duration": 53
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-16.html",
+          "transferSize": 0,
+          "duration": 55.69999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-17.html",
+          "transferSize": 0,
+          "duration": 58
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-18.html",
+          "transferSize": 0,
+          "duration": 69.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-19.html",
+          "transferSize": 0,
+          "duration": 72
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-2.html",
+          "transferSize": 0,
+          "duration": 74.60000000149012
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-20.html",
+          "transferSize": 0,
+          "duration": 77.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-3.html",
+          "transferSize": 0,
+          "duration": 80.89999999850988
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-4.html",
+          "transferSize": 0,
+          "duration": 91.90000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-5.html",
+          "transferSize": 0,
+          "duration": 94.90000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-6.html",
+          "transferSize": 0,
+          "duration": 98.20000000111759
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-7.html",
+          "transferSize": 0,
+          "duration": 100.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-8.html",
+          "transferSize": 0,
+          "duration": 106.20000000111759
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-9.html",
+          "transferSize": 0,
+          "duration": 114.69999999925494
+        },
+        {
+          "name": "/_blob/1234567890abcdef1234567890abcdef",
+          "transferSize": 0,
+          "duration": 28.09999999962747
+        }
+      ],
+      "body": "\n\n\n\n\n\n\n\n71%\n\n幻灯片 1 / 20: 幻灯片 1\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n\n\n\n\n\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n1\n幻灯片 2\n固定图片样稿，用于测量加载与编辑反馈。\n2\n幻灯片 3\n固定图片样稿，用于测量加载与编辑反馈。\n3\n幻灯片 4\n固定图片样稿，用于测量加载与编辑反馈。\n4\n幻灯片 5\n固定图片样稿，用于测量加载与编辑反馈。\n5\n幻灯片 6\n固定图片样稿，用于测量加载与编辑反馈。\n6\n幻灯片 7\n固定图片样稿，用于测量加载与编辑反馈。\n7\n幻灯片 8\n固定图片样稿，用于测量加载与编辑反馈。\n8\n幻灯片 9\n固定图片样稿，用于测量加载与编辑反馈。\n9\n幻灯片 10\n固定图片样稿，用于测量加载与编辑反馈。\n10\n幻灯片 11\n固定图片样稿，用于测量加载与编辑反馈。\n11\n幻灯片 12\n固定图片样稿，用于测量加载与编辑反馈。\n12\n幻灯片 13\n固定图片样稿，用于测量加载与编辑反馈。\n13\n幻灯片 14\n固定图片样稿，用于测量加载与编辑反馈。\n14\n幻灯片 15\n固定图片样稿，用于测量加载与编",
+      "renderedMs": 3213.4000000003725,
+      "editableVerified": true,
+      "transferredBytes": 1321427,
+      "jsHeapUsedBytes": 18468976,
+      "scriptDurationSeconds": 0.466524,
+      "taskDurationSeconds": 0.784249
+    },
+    {
+      "run": 1,
+      "phase": "reopen",
+      "readyMs": 3044.5,
+      "timeOrigin": 1793427784740.6,
+      "resources": [
+        {
+          "name": "/artifact-editor/slides-assets/editor-FAJY6LHW.js",
+          "transferSize": 0,
+          "duration": 2518.699999999255
+        },
+        {
+          "name": "/artifact-editor/slides-assets/editor.css",
+          "transferSize": 0,
+          "duration": 748.8000000007451
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-DSVHES4B.js",
+          "transferSize": 0,
+          "duration": 1243.4000000003725
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+          "transferSize": 0,
+          "duration": 32.19999999925494
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+          "transferSize": 0,
+          "duration": 97.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/__deck/session",
+          "transferSize": 0,
+          "duration": 24.899999998509884
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "transferSize": 0,
+          "duration": 24.600000001490116
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/deck.json",
+          "transferSize": 0,
+          "duration": 24.700000001117587
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-1.html",
+          "transferSize": 0,
+          "duration": 26.699999999254942
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-10.html",
+          "transferSize": 0,
+          "duration": 29.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-11.html",
+          "transferSize": 0,
+          "duration": 33.30000000074506
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-12.html",
+          "transferSize": 0,
+          "duration": 36.19999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-13.html",
+          "transferSize": 0,
+          "duration": 47.29999999888241
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-14.html",
+          "transferSize": 0,
+          "duration": 50.09999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-15.html",
+          "transferSize": 0,
+          "duration": 53.19999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-16.html",
+          "transferSize": 0,
+          "duration": 56.09999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-17.html",
+          "transferSize": 0,
+          "duration": 59.30000000074506
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-18.html",
+          "transferSize": 0,
+          "duration": 71
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-19.html",
+          "transferSize": 0,
+          "duration": 74
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-2.html",
+          "transferSize": 0,
+          "duration": 76.40000000037253
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-20.html",
+          "transferSize": 0,
+          "duration": 80.09999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-3.html",
+          "transferSize": 0,
+          "duration": 82.79999999888241
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-4.html",
+          "transferSize": 0,
+          "duration": 94.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-5.html",
+          "transferSize": 0,
+          "duration": 97.70000000111759
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-6.html",
+          "transferSize": 0,
+          "duration": 100
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-7.html",
+          "transferSize": 0,
+          "duration": 103.19999999925494
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-8.html",
+          "transferSize": 0,
+          "duration": 106.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/slide-9.html",
+          "transferSize": 0,
+          "duration": 117.90000000037253
+        },
+        {
+          "name": "/_blob/1234567890abcdef1234567890abcdef",
+          "transferSize": 0,
+          "duration": 26.899999998509884
+        }
+      ],
+      "body": "\n\n\n\n\n\n\n\n71%\n\n幻灯片 1 / 20: 幻灯片 1\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n\n\n\n\n\n幻灯片 1\n固定图片样稿，用于测量加载与编辑反馈。\n1\n幻灯片 2\n固定图片样稿，用于测量加载与编辑反馈。\n2\n幻灯片 3\n固定图片样稿，用于测量加载与编辑反馈。\n3\n幻灯片 4\n固定图片样稿，用于测量加载与编辑反馈。\n4\n幻灯片 5\n固定图片样稿，用于测量加载与编辑反馈。\n5\n幻灯片 6\n固定图片样稿，用于测量加载与编辑反馈。\n6\n幻灯片 7\n固定图片样稿，用于测量加载与编辑反馈。\n7\n幻灯片 8\n固定图片样稿，用于测量加载与编辑反馈。\n8\n幻灯片 9\n固定图片样稿，用于测量加载与编辑反馈。\n9\n幻灯片 10\n固定图片样稿，用于测量加载与编辑反馈。\n10\n幻灯片 11\n固定图片样稿，用于测量加载与编辑反馈。\n11\n幻灯片 12\n固定图片样稿，用于测量加载与编辑反馈。\n12\n幻灯片 13\n固定图片样稿，用于测量加载与编辑反馈。\n13\n幻灯片 14\n固定图片样稿，用于测量加载与编辑反馈。\n14\n幻灯片 15\n固定图片样稿，用于测量加载与编",
+      "renderedMs": 2918.5999999996275,
+      "editableVerified": true,
+      "transferredBytes": 1261247,
+      "jsHeapUsedBytes": 32024716,
+      "scriptDurationSeconds": 0.22909,
+      "taskDurationSeconds": 0.462227
+    }
+  ],
+  "regression": {},
+  "summary": {
+    "cold": {
+      "p50Ms": 3382,
+      "p75Ms": 3382,
+      "p95Ms": 3382
+    },
+    "reopen": {
+      "p50Ms": 3044.5,
+      "p75Ms": 3044.5,
+      "p95Ms": 3044.5
+    }
+  },
+  "editFeedback": {
+    "status": "measured",
+    "definition": "Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text",
+    "samples": [
+      {
+        "run": 1,
+        "durationMs": 38.100000001490116,
+        "text": "测试"
+      }
+    ],
+    "p95Ms": 38.100000001490116
+  },
+  "jsParseTime": {
+    "status": "trace-recorded",
+    "definition": "V8 parse/compile complete events from before navigation to verified editing, grouped by process, thread and exact event name. Renderer association comes from frame-commit or document parsing/script URL trace metadata when available. Includes browser-injected measurement scripts; different names may nest, and streaming parse spans contain network waits, so they must not be summed as CPU or wall-clock parse time. This trace run has instrumentation overhead and is excluded from comparable performance P95.",
+    "samples": [
+      {
+        "run": 1,
+        "phase": "cold",
+        "editorProcesses": [
+          27458
+        ],
+        "scope": "editor renderer processes",
+        "events": [
+          {
+            "name": "ParseHTML",
+            "process": 27458,
+            "thread": 27458,
+            "count": 6,
+            "durationMs": 5.626999999999999
+          },
+          {
+            "name": "V8.CompileCode",
+            "process": 27458,
+            "thread": 27458,
+            "count": 4866,
+            "durationMs": 151.55900000000042
+          },
+          {
+            "name": "V8.ParseProgram",
+            "process": 27458,
+            "thread": 27458,
+            "count": 10,
+            "durationMs": 54.738
+          },
+          {
+            "name": "V8.Compile",
+            "process": 27458,
+            "thread": 27458,
+            "count": 8,
+            "durationMs": 0.34500000000000003
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 27458,
+            "thread": 27458,
+            "count": 4553,
+            "durationMs": 35.90900000000042
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 27458,
+            "thread": 27458,
+            "count": 3594,
+            "durationMs": 7.761000000000232
+          },
+          {
+            "name": "HTMLDocumentParser::MaybeFetchQueuedPreloads",
+            "process": 27458,
+            "thread": 27458,
+            "count": 1,
+            "durationMs": 3.694
+          },
+          {
+            "name": "v8.compile",
+            "process": 27458,
+            "thread": 27458,
+            "count": 3,
+            "durationMs": 0.6990000000000001
+          },
+          {
+            "name": "V8.CompileScript",
+            "process": 27458,
+            "thread": 27458,
+            "count": 3,
+            "durationMs": 0.635
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 27458,
+            "thread": 27458,
+            "count": 1933,
+            "durationMs": 53.89700000000003
+          },
+          {
+            "name": "V8.ParseFunction",
+            "process": 27458,
+            "thread": 27458,
+            "count": 4959,
+            "durationMs": 96.31200000000071
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 27458,
+            "thread": 27471,
+            "count": 3,
+            "durationMs": 2443.068
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 27458,
+            "thread": 27471,
+            "count": 589,
+            "durationMs": 2525.9589999999957
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 27458,
+            "thread": 27471,
+            "count": 3,
+            "durationMs": 2384.611
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 27458,
+            "thread": 27471,
+            "count": 288,
+            "durationMs": 10.614999999999995
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 27458,
+            "thread": 27471,
+            "count": 3,
+            "durationMs": 0.379
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 27458,
+            "thread": 27471,
+            "count": 4,
+            "durationMs": 0.09
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 27458,
+            "thread": 27471,
+            "count": 4,
+            "durationMs": 0.181
+          },
+          {
+            "name": "v8.compileModule",
+            "process": 27458,
+            "thread": 27458,
+            "count": 4,
+            "durationMs": 0.162
+          },
+          {
+            "name": "V8.CompileStreamedModule",
+            "process": 27458,
+            "thread": 27458,
+            "count": 4,
+            "durationMs": 0.105
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 27458,
+            "thread": 27467,
+            "count": 1,
+            "durationMs": 1182.004
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 27458,
+            "thread": 27467,
+            "count": 162,
+            "durationMs": 1702.886
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 27458,
+            "thread": 27467,
+            "count": 1,
+            "durationMs": 426.201
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 27458,
+            "thread": 27467,
+            "count": 929,
+            "durationMs": 7.634999999999966
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 27458,
+            "thread": 27467,
+            "count": 161,
+            "durationMs": 1145.861
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 27458,
+            "thread": 27471,
+            "count": 586,
+            "durationMs": 2346.362
+          },
+          {
+            "name": "ParseAuthorStyleSheet",
+            "process": 27458,
+            "thread": 27458,
+            "count": 1,
+            "durationMs": 4.24
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 27458,
+            "thread": 27467,
+            "count": 1,
+            "durationMs": 1.221
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 27458,
+            "thread": 27467,
+            "count": 18,
+            "durationMs": 0.756
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 27458,
+            "thread": 27467,
+            "count": 17,
+            "durationMs": 0.321
+          },
+          {
+            "name": "V8.FinalizeBaselineConcurrentCompilation",
+            "process": 27458,
+            "thread": 27458,
+            "count": 191,
+            "durationMs": 0.5860000000000004
+          },
+          {
+            "name": "V8.FinalizeMaglevConcurrentCompilation",
+            "process": 27458,
+            "thread": 27458,
+            "count": 257,
+            "durationMs": 9.117999999999988
+          }
+        ]
+      },
+      {
+        "run": 1,
+        "phase": "reopen",
+        "editorProcesses": [
+          27458
+        ],
+        "scope": "editor renderer processes",
+        "events": [
+          {
+            "name": "V8.CompileCode",
+            "process": 27458,
+            "thread": 27458,
+            "count": 108,
+            "durationMs": 3.071999999999997
+          },
+          {
+            "name": "V8.ParseFunction",
+            "process": 27458,
+            "thread": 27458,
+            "count": 128,
+            "durationMs": 2.3339999999999965
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 27458,
+            "thread": 27458,
+            "count": 125,
+            "durationMs": 1.4099999999999986
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 27458,
+            "thread": 27458,
+            "count": 97,
+            "durationMs": 0.1770000000000001
+          },
+          {
+            "name": "ParseHTML",
+            "process": 27458,
+            "thread": 27458,
+            "count": 5,
+            "durationMs": 0.9
+          },
+          {
+            "name": "HTMLDocumentParser::MaybeFetchQueuedPreloads",
+            "process": 27458,
+            "thread": 27458,
+            "count": 1,
+            "durationMs": 0.756
+          },
+          {
+            "name": "v8.compile",
+            "process": 27458,
+            "thread": 27458,
+            "count": 3,
+            "durationMs": 0.05
+          },
+          {
+            "name": "V8.CompileScript",
+            "process": 27458,
+            "thread": 27458,
+            "count": 3,
+            "durationMs": 0.012
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 27458,
+            "thread": 27467,
+            "count": 2,
+            "durationMs": 57.909
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 27458,
+            "thread": 27467,
+            "count": 9,
+            "durationMs": 58.477000000000004
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 27458,
+            "thread": 27467,
+            "count": 2,
+            "durationMs": 0.16999999999999998
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 27458,
+            "thread": 27467,
+            "count": 4,
+            "durationMs": 0.04
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 27458,
+            "thread": 27467,
+            "count": 7,
+            "durationMs": 57.101000000000006
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 27458,
+            "thread": 27467,
+            "count": 2,
+            "durationMs": 0.11199999999999999
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 27458,
+            "thread": 27467,
+            "count": 3,
+            "durationMs": 0.045
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 27458,
+            "thread": 27467,
+            "count": 3,
+            "durationMs": 0.028999999999999998
+          },
+          {
+            "name": "v8.compileModule",
+            "process": 27458,
+            "thread": 27458,
+            "count": 4,
+            "durationMs": 0.075
+          },
+          {
+            "name": "V8.CompileStreamedModule",
+            "process": 27458,
+            "thread": 27458,
+            "count": 4,
+            "durationMs": 0.05
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 27458,
+            "thread": 27471,
+            "count": 1,
+            "durationMs": 1201.394
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 27458,
+            "thread": 27471,
+            "count": 161,
+            "durationMs": 1741.211
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 27458,
+            "thread": 27471,
+            "count": 1,
+            "durationMs": 426.091
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 27458,
+            "thread": 27471,
+            "count": 922,
+            "durationMs": 7.652999999999967
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 27458,
+            "thread": 27471,
+            "count": 160,
+            "durationMs": 1165.67
+          },
+          {
+            "name": "v8.parseOnBackground",
+            "process": 27458,
+            "thread": 27496,
+            "count": 1,
+            "durationMs": 2413.385
+          },
+          {
+            "name": "v8.parseOnBackgroundParsing",
+            "process": 27458,
+            "thread": 27496,
+            "count": 580,
+            "durationMs": 2492.4830000000075
+          },
+          {
+            "name": "BackgroundCompileTask::Run",
+            "process": 27458,
+            "thread": 27496,
+            "count": 1,
+            "durationMs": 2413.354
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 27458,
+            "thread": 27496,
+            "count": 284,
+            "durationMs": 10.761999999999993
+          },
+          {
+            "name": "v8.parseOnBackgroundWaiting",
+            "process": 27458,
+            "thread": 27496,
+            "count": 579,
+            "durationMs": 2319.0940000000014
+          },
+          {
+            "name": "ParseAuthorStyleSheet",
+            "process": 27458,
+            "thread": 27458,
+            "count": 1,
+            "durationMs": 4.119
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 27458,
+            "thread": 27471,
+            "count": 1,
+            "durationMs": 1.77
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 27458,
+            "thread": 27471,
+            "count": 19,
+            "durationMs": 0.99
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 27458,
+            "thread": 27471,
+            "count": 16,
+            "durationMs": 0.541
+          },
+          {
+            "name": "V8.CompileCodeBackground",
+            "process": 27458,
+            "thread": 27496,
+            "count": 1,
+            "durationMs": 0.319
+          },
+          {
+            "name": "V8.CompileIgnition",
+            "process": 27458,
+            "thread": 27496,
+            "count": 1,
+            "durationMs": 0.065
+          },
+          {
+            "name": "V8.CompileIgnitionFinalization",
+            "process": 27458,
+            "thread": 27496,
+            "count": 1,
+            "durationMs": 0.176
+          },
+          {
+            "name": "V8.FinalizeMaglevConcurrentCompilation",
+            "process": 27458,
+            "thread": 27458,
+            "count": 285,
+            "durationMs": 6.09799999999999
+          },
+          {
+            "name": "V8.FinalizeBaselineConcurrentCompilation",
+            "process": 27458,
+            "thread": 27458,
+            "count": 17,
+            "durationMs": 0.065
+          },
+          {
+            "name": "V8.ParseProgram",
+            "process": 27458,
+            "thread": 27458,
+            "count": 2,
+            "durationMs": 0.049
+          },
+          {
+            "name": "V8.PreParse",
+            "process": 27458,
+            "thread": 27458,
+            "count": 2,
+            "durationMs": 0.094
+          },
+          {
+            "name": "V8.Compile",
+            "process": 27458,
+            "thread": 27458,
+            "count": 2,
+            "durationMs": 0.045
+          }
+        ]
+      }
+    ]
+  },
+  "errors": []
+}

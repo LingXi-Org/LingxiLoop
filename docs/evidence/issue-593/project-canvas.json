@@ -1,0 +1,22 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-31T01:29:53.672Z"
+  },
+  "title": "FlashAttention",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 960, "h": 640, "title": "1 为什么慢" },
+    "Method.dc.html": { "x": 1040, "y": 0, "w": 960, "h": 640, "title": "2 分块与在线 softmax" },
+    "Limits.dc.html": { "x": 2080, "y": 0, "w": 960, "h": 640, "title": "3 得到什么 / 牺牲什么" }
+  },
+  "order": ["Main.dc.html", "Method.dc.html", "Limits.dc.html"],
+  "notes": {
+    "flow": { "x": 0, "y": -300, "text": "FlashAttention：把注意力从显存搬到片上", "kind": "title1", "maxW": 3040 }
+  },
+  "designSystems": []
+}

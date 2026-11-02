@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>FlashAttention：让注意力少搬数据</title><script src="./support.js"></script></head><body>
+<x-dc><helmet><style>body{margin:0;font-family:system-ui,sans-serif}</style></helmet>
+<div style="width:1200px;height:820px;box-sizing:border-box;padding:56px;background:#f5f7fa;color:#172238;display:flex;flex-direction:column;gap:28px">
+<h1 style="font-size:42px;margin:0">FlashAttention：相同注意力，更少数据搬运</h1>
+<p style="font-size:25px;margin:0">Attention(Q,K,V) = softmax(QKᵀ / √d) V</p>
+<div style="display:flex;gap:24px"><section style="flex:1"><h2>标准注意力</h2><p>生成 N×N 得分和概率矩阵，反复在 GPU 高带宽显存与片上 SRAM 之间读写。</p></section><section style="flex:1"><h2>分块计算</h2><p>将 Q、K、V 分块放入 SRAM；计算一个块，在线更新 softmax 的最大值、归一化因子和输出。</p></section></div>
+<section><h2>在线 softmax 保持精确</h2><p>新的最大值 m′ = max(m, max(s))。旧累积量乘 exp(m−m′)，再加入新块 exp(s−m′)，最后将加权 V 的累积量除以归一化因子。</p></section>
+<section><h2>优化的是 IO</h2><p>避免把完整 N×N 注意力矩阵写回显存。保持标准精确注意力的数学定义，浮点舍入可能有差异；计算量仍为 O(N²d)，不是稀疏近似。</p></section>
+<p style="font-size:22px;margin:0">检查理解：为什么显存读写减少后，即使乘法数量相近，运行也可能更快？</p>
+</div></x-dc><script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":820}}'>class Component extends DCLogic { renderVals(){return {}} }</script></body></html>

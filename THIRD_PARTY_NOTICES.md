@@ -32,6 +32,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+## assistant-ui with-artifacts
+
+The Slides workspace adapts `examples/with-artifacts/app/page.tsx` and
+`app/artifact-surface.tsx` from assistant-ui/assistant-ui commit
+`ff654d8156680b839774296ef644b57ab1078425` (MIT, AgentbaseAI Inc.).
+The complete example, root license, file manifest and adaptation map are in
+`third_party/assistant-ui-with-artifacts/`.
+
 ## assistant-ui Elements
 
 The RunActivity and TaskCard components adapt the official assistant-ui registry
@@ -92,6 +100,13 @@ built from its BaoCut sources, and the `artifact-type/reference/` pages follow t
 claude.ai Design and Slides artifact types. The editors' bundled dependencies
 keep their own licenses in `scripts/editor/third-party-licenses.txt` and
 `scripts/editor/node/third-party-licenses.txt` under each vendored skill.
+
+The complete 319-file baoyu-design distribution is retained and inventoried in
+`third_party/baoyu-design/complete-manifest.json`; remaining files are under
+`distribution/`. The Slides editor is rebuilt from recovered named application
+modules in `slides-source/`, with the original MIT and dependency licenses.
+The executable reconstruction removes video features at the user's request;
+byte-identical upstream archives are unchanged.
 
 ## Bible Strong Avatar
 

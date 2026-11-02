@@ -191,7 +191,7 @@ YAML 中 `light-*` 和 `dark-*` 是对应主题的明确色值，映射到 `src/
 
 ### 右侧面板
 
-组件在 `src/components/shell/RightPanel.tsx`。画板（`DesignWorkspace`）、成员资料、回复串和文档预览使用同一规格；演示文稿编辑器（vendored claude-slides iframe）内的助手面板也以此为目标规格，在其源码恢复后按此重写：头部 64px，与左侧 PageHeader 对齐；可选 12px 眉题加 14px/600 标题；末端为唯一的关闭按钮 `PanelCloseButton`（ghost、36px、移动端 44px、`Cancel01Icon`，返回场景用 `ArrowLeft01Icon`）。与主内容之间使用 `desktop-panel-resize-handle` 分隔线（悬停时显示绿色握把）。画板默认 50%，可在 35–65% 之间拖动；容器窄于 720px 时改为覆盖在右侧的非模态面板。
+组件在 `src/components/shell/RightPanel.tsx`。画板（`DesignWorkspace`）、成员资料、回复串、文档预览，以及演示文稿工作区（`SlidesWorkspace`：左侧「演示文稿助手」对话用 PageHeader，右侧编辑器用 RightPanelHeader，与对话 + 画板完全同构）使用同一规格：头部 64px，与左侧 PageHeader 对齐；可选 12px 眉题加 14px/600 标题；末端为唯一的关闭按钮 `PanelCloseButton`（ghost、36px、移动端 44px、`Cancel01Icon`，返回场景用 `ArrowLeft01Icon`）。与主内容之间使用 `desktop-panel-resize-handle` 分隔线（悬停时显示绿色握把）。画板默认 50%，可在 35–65% 之间拖动；演示文稿工作区中对话默认 40%、编辑器默认 60%（编辑器至少 35%）；容器窄于 720px 时改为覆盖在右侧的非模态面板。
 
 ### 内容宽度与移动端
 

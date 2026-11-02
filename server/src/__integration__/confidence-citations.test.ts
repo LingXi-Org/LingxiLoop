@@ -35,7 +35,7 @@ test('product correction commits frozen excerpts and preserves them in IM delive
     [conversationId, companyId, JSON.stringify({ channelType: 2, members }), agentId])
   await pool.query(`INSERT INTO knowledge_sources(id,company_id,project_id,conversation_id,title,kind,status,visibility_scope,owner_user_id,created_by_user_id,created_via)
     VALUES('source',$1,$2,$3,'学习指南','text','ready','PRIVATE','test-owner','test-owner','USER')`, [companyId, projectId, conversationId])
-  const evidence: CitationEvidence[] = ['将复习分散到不同日期，有助于长期记忆。', '通过 `retrieval` 主动回忆。', '结合间隔复习与主动回忆。']
+  const evidence: CitationEvidence[] = ['[[PAGE:2]]\n将复习分散到不同日期，有助于长期记忆。', '[[PAGE:15]]\n通过 `retrieval` 主动回忆。', '结合间隔复习与主动回忆。']
     .map((excerpt, index) => ({ marker: `S${index + 1}`, sourceId: 'source', sourceVersion: 'v1', chunkId: `chunk-${index + 1}`,
       title: '学习指南', excerpt, truncated: true }))
   const frozen = structuredClone(evidence)

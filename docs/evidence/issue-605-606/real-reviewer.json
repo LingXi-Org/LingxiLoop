@@ -1,0 +1,21 @@
+{
+  "reports": [
+    {
+      "qualification": "real-reviewer-synthetic-generation-real-worker-consistency",
+      "scenario": "contradictory",
+      "generations": 5,
+      "reviews": 1,
+      "status": "partial",
+      "goal": {
+        "gaps": [
+          "Numerical consistency remains unresolved.",
+          "Previously unresolved workflow scope visualize-content-consistency-v1: a prior scope review does not verify this candidate; complete the native workflow or retain its limitation"
+        ],
+        "status": "partial",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "browserValidation": false
+    }
+  ]
+}

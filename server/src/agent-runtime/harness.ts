@@ -26,8 +26,8 @@ export function createProductHarness(productTools: ToolDefinition[], memoryContr
       }
     },
   }))
-  return { id: 'lingxiloop', version: '3.8.11-conditional-explanation-3', mode: 'execute',
-    rules: 'Select an applicable skill by its current name/version/hash: skills.load for reference, skills.activate for authoring under its delivery contract. The complete registered body is supplied in subsequent prompts. Selection grants no permissions; activation or authoring creates the delivery obligation. '
+  return { id: 'lingxiloop', version: '3.8.19-first-action-contracts-1', mode: 'execute',
+    rules: 'Select an applicable skill by its current name/version/hash. A skill with no delivery uses skills.load for both guidance and authoring; only a skill with delivery can use skills.activate. The complete registered body is supplied in the next prompt. Finish selection and read that guidance before calling dependent tools; never batch a selection with tools that need its instructions. Selection grants no permissions. Only a real delivery contract creates an activation obligation. explanation is optional and applies only to a registered explanationBeforeAuthoring workflow requested by the human; never add it to a skill without that workflow. '
       + publicAnswerGuidance
       + `\nTrusted selected-workflow review policy ${visualizeWorkflowReviewPolicy.id}: ${visualizeWorkflowReviewPolicy.rubric}`,
     // Full trusted rubric bytes participate in the immutable harness identity.

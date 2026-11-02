@@ -1,0 +1,55 @@
+{
+  "measuredAt": "2026-10-31T06:21:29.372Z",
+  "scope": "Real local Better Auth/D1 credential sign-in, gateway, product API, PostgreSQL, formal SDK and metered provider; recording HTTP IM and isolated in-memory blob provider; no production deployment or data",
+  "sdk": "3.8.20",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "durationMs": 24350,
+  "status": "succeeded",
+  "actions": [
+    "skills.load",
+    "slides.read_file",
+    "slides.read_file",
+    "slides.edit_file",
+    "slides.read_file"
+  ],
+  "ledger": {
+    "lingxios.agent-turn": 5,
+    "lingxios.embedding": 1
+  },
+  "checks": {
+    "login": true,
+    "formalRuntime": true,
+    "accepted": true,
+    "title": true,
+    "body": true,
+    "notes": true,
+    "replay": true,
+    "delivered": true
+  },
+  "savedSha256": "77d349ed99e09e27a1f63c88677d1a7e19a53a5d33b18080857dc4ee30d5972d",
+  "comment": {
+    "durationMs": 15664,
+    "status": "succeeded",
+    "actions": [
+      "skills.load",
+      "slides.read_file",
+      "slides.comments",
+      "slides.comment_reply"
+    ],
+    "ledger": {
+      "lingxios.agent-turn": 4,
+      "lingxios.embedding": 1
+    },
+    "checks": {
+      "deliveredToDedicatedRoom": true,
+      "succeeded": true,
+      "replied": true,
+      "resolved": true,
+      "replay": true,
+      "answerDelivered": true,
+      "visibleReply": true,
+      "fileUnchanged": true
+    }
+  },
+  "sourceCommit": "993696398aeba26912734f25428291f748aa2e37"
+}

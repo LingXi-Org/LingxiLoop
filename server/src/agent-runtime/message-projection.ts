@@ -206,7 +206,7 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
     const stopped = tool.result === undefined && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed')
     const projected = stopped ? { ...tool, result: { status: view.lifecycle }, isError: view.lifecycle === 'failed' } : tool
     const status = projected.result && typeof projected.result === 'object' ? Reflect.get(projected.result, 'status') : undefined
-    const display = resolveToolDisplay(tool.toolName, status, recordedDisplay)
+    const display = resolveToolDisplay(tool.toolName, status, recordedDisplay, result && Reflect.get(result, 'sourceStatus'))
     if (status !== 'completed') display.summary = toolDisplay(tool.toolName, status).summary
     const current = !activityIdentity || activityIdentity.requestVersion === view.requestVersion && activityIdentity.fence === view.fence
     const unresolvedApproval = !!tool.approval && tool.approval.approved === undefined && !tool.approval.resolution

@@ -20,3 +20,8 @@ export function knowledgeSearchStatus(tools: readonly { toolName: string; result
   return ['matched','no_matches','no_sources','processing','not_applicable'].includes(String(result.sourceStatus))
     ? result.sourceStatus as KnowledgeSearchStatus : 'unknown'
 }
+
+/** Completion of the invocation does not imply that retrieval was available. */
+export function knowledgeSearchSummary(sourceStatus: unknown): string {
+  return knowledgeSearchLabels[knowledgeSearchStatus([{ toolName: 'knowledge.search', result: { status: 'completed', sourceStatus } }])]
+}

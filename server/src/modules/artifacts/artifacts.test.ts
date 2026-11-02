@@ -12,7 +12,7 @@ import { addMessage, addThread, agentViews, canSendToAgent, editMessage, emptyDo
 import { issueGrant, readGrant } from './grants.js'
 import { ARTIFACT_KIND_DEFINITIONS, BAOYU_DESIGN_ROOT } from './kinds.js'
 import { artifactSkills } from './skills.js'
-import { blobIdOf, fileOf, isWireEntry, sha256 } from './store.js'
+import { blobIdOf, fileOf, isWireEntry, putBlob, sha256 } from './store.js'
 
 const grant = { artifactId: 'design-1', companyId: 'company', userId: 'user', kind: 'design' as const, write: true }
 
@@ -68,6 +68,14 @@ test('upload ids are bound to their artifact', () => {
   const sha = 'a'.repeat(64)
   assert.match(blobIdOf('design-1', sha), /^[0-9a-f]{32}$/)
   assert.notEqual(blobIdOf('design-1', sha), blobIdOf('design-2', sha))
+})
+
+test('Slides asset storage refuses video before any storage or database mutation', async () => {
+  const db = { query: () => { throw new Error('video must not reach persistence') } } as unknown as Queryable
+  for (const type of ['video/mp4', ' Video/WebM; codecs=vp9']) {
+    await assert.rejects(putBlob(db, ARTIFACT_KIND_DEFINITIONS.slides, 'slides-1', Buffer.from('video'), type),
+      { code: 'invalid_content', status: 415 })
+  }
 })
 
 test('each kind keeps the upstream writable paths', () => {

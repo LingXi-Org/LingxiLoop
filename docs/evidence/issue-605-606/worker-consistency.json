@@ -1,0 +1,50 @@
+{
+  "reports": [
+    {
+      "qualification": "synthetic-model-real-worker-consistency",
+      "scenario": "consistent",
+      "generations": 4,
+      "reviews": 1,
+      "status": "succeeded",
+      "goal": {
+        "status": "satisfied",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "browserValidation": false
+    },
+    {
+      "qualification": "synthetic-model-real-worker-consistency",
+      "scenario": "contradictory",
+      "generations": 5,
+      "reviews": 1,
+      "status": "partial",
+      "goal": {
+        "gaps": [
+          "Numerical consistency remains unresolved.",
+          "Previously unresolved workflow scope visualize-content-consistency-v1: a prior scope review does not verify this candidate; complete the native workflow or retain its limitation"
+        ],
+        "status": "partial",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "browserValidation": false
+    },
+    {
+      "qualification": "synthetic-model-real-worker-consistency",
+      "scenario": "unavailable-review",
+      "generations": 4,
+      "reviews": 3,
+      "status": "partial",
+      "goal": {
+        "gaps": [
+          "Content check was unavailable or returned invalid findings"
+        ],
+        "status": "partial",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "browserValidation": false
+    }
+  ]
+}

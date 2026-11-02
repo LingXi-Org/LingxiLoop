@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { knowledgeSearchSummary } from './knowledgeSearch.js'
 
 export const publicText = z.string().trim().min(1).max(8000).refine(value =>
   !/<\/?(?:think|analysis|system|scratchpad)>|<\|(?:im_start|im_end|channel|analysis)|\b(?:sk-[a-zA-Z0-9]{16,}|Bearer\s+[a-zA-Z0-9._-]{16,})/i.test(value),
@@ -254,11 +255,14 @@ export function toolDisplay(action: string, status?: unknown): ToolDisplay {
 }
 
 /** Refresh old generic titles without losing authorized inputs or recorded results. */
-export function resolveToolDisplay(action: string, status: unknown, recorded?: unknown): ToolDisplay {
+export function resolveToolDisplay(action: string, status: unknown, recorded?: unknown, sourceStatus?: unknown): ToolDisplay {
   const base = toolDisplay(action, status), parsed = toolDisplaySchema.safeParse(recorded)
-  if (!parsed.success) return base
+  // The public receipt remains authoritative on live reads and old IM replay.
+  const search = canonicalToolName(action) === 'knowledge.search' && status === 'completed'
+    ? { summary: knowledgeSearchSummary(sourceStatus) } : {}
+  if (!parsed.success) return { ...base, ...search }
   const generic = parsed.data.title === '处理任务' || Object.values(groups).some(([title]) => title === parsed.data.title)
   return { ...base, ...parsed.data, ...(generic && base.title !== '处理任务' ? { title: base.title, purpose: base.purpose } : {}),
     ...(base.summary && (typeof status === 'string' && status !== 'completed'
-      || parsed.data.summary === '可视化内容已保存；展示引用是否交付会在答复中确认。') ? { summary: base.summary } : {}) }
+      || parsed.data.summary === '可视化内容已保存；展示引用是否交付会在答复中确认。') ? { summary: base.summary } : {}), ...search }
 }

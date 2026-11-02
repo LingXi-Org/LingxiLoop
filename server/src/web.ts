@@ -26,7 +26,7 @@ export async function startWebProcess(): Promise<ServiceHandle> {
   wukongClient()
   await lingxiOSControl()
   const app = express()
-  // gzip responses ≥1kb to keep control-plane and asset traffic compact. SSE
+  // Compress responses ≥1kb to keep control-plane and asset traffic compact. SSE
   // must stay uncompressed: compression buffers event-stream chunks, which
   // would stall wake-streams until the buffer flushes.
   app.use(compression({

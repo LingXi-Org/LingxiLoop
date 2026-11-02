@@ -1,0 +1,50 @@
+{
+  "scope": "actual formal3.8.21; real PostgreSQL/Redis/product Worker; synthetic provider; final targeted union49 passed with no skips",
+  "reports": [
+    {
+      "qualification": "formal21-product-suspension-qualification",
+      "runtime": "3.8.21",
+      "delayedAck": false,
+      "rejectSeal": false,
+      "calls": 1,
+      "status": "succeeded",
+      "seals": 1,
+      "reasons": [
+        "completed"
+      ],
+      "realPostgres": true,
+      "provider": "synthetic",
+      "browserValidated": false
+    },
+    {
+      "qualification": "formal21-product-suspension-qualification",
+      "runtime": "3.8.21",
+      "delayedAck": true,
+      "rejectSeal": false,
+      "calls": 1,
+      "status": "succeeded",
+      "seals": 1,
+      "reasons": [
+        "completed"
+      ],
+      "realPostgres": true,
+      "provider": "synthetic",
+      "browserValidated": false
+    },
+    {
+      "qualification": "product-host-seal-rejection-control",
+      "runtime": "3.8.21",
+      "delayedAck": true,
+      "rejectSeal": true,
+      "calls": 1,
+      "status": "failed",
+      "seals": 0,
+      "reasons": [
+        "completed"
+      ],
+      "realPostgres": true,
+      "provider": "synthetic",
+      "browserValidated": false
+    }
+  ]
+}

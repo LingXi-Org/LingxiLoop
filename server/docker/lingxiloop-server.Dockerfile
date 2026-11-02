@@ -80,7 +80,7 @@ WORKDIR /app
 # Preserve the existing Web/visualize build entrypoints after the scoped install.
 COPY package.json ./
 COPY src ./src
-COPY shared/visualize-public-resources.ts shared/artifact-editor-origin.ts ./shared/
+COPY shared/visualize-public-resources.ts shared/artifact-editor-origin.ts shared/slides-editor-context.ts ./shared/
 COPY public ./public
 COPY index.html ./
 COPY vite.config.ts ./
@@ -117,7 +117,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/package-lock.json ./
 # Ship only runtime sources/resources and the exact provenance manifests.
 COPY server/src ./server/src
-COPY shared/artifact-editor-origin.ts ./shared/
+COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts ./shared/
 COPY server/assets ./server/assets
 COPY server/package.json server/package-lock.json ./server/
 COPY server/scripts/check-packaged-startup.mjs ./server/scripts/
@@ -175,4 +175,5 @@ FROM runtime AS legacy-web
 COPY --from=spa-build /app/dist ./dist
 COPY third_party/assistant-ui/streaming-text/LICENSE ./dist/licenses/assistant-ui-streaming-text.txt
 COPY third_party/assistant-ui-elements/LICENSE ./dist/licenses/assistant-ui-elements.txt
+COPY third_party/assistant-ui-with-artifacts/LICENSE ./dist/licenses/assistant-ui-with-artifacts.txt
 COPY third_party/react-chat-elements/reply-message/LICENSE ./dist/licenses/react-chat-elements-reply-message.txt

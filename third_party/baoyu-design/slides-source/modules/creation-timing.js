@@ -1,0 +1,71 @@
+// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+import { bindRuntimeValue } from "../module-helpers.js";
+function installCreationTiming(runtime2) {
+  var ReactGridMemo, ReactGrid, CREATION_TIP_INITIAL_DELAY_MS, CREATION_TIP_ROTATION_MS, CREATION_TIP_FADE_OUT_MS, CREATION_TIP_FADE_IN_MS, CREATION_OUTLINE_HOLD_MS, CREATION_CELL_STAGGER_MS, CREATION_REVEAL_HOLD_MS, CREATION_CURSOR_CORNER_GLIDE_MS, CREATION_INITIAL_GLIDE_MS, CREATION_TITLE_FADE_IN_MS, CREATION_TITLE_FADE_OUT_MS, CREATION_SHEET_GROUND_MS, CREATION_SHEET_LIFT_MS, CREATION_CURSOR_SHOW_DELAY_MS, CREATION_POST_PAINT_DELAY_MS, CREATION_FIRST_SLIDE_HOLD_MS, CREATION_CURSOR_GLIDE_MS, CREATION_EMPTY_DECK_HOLD_MS, CREATION_SLIDE_ARRIVAL_MS, CREATION_IDLE_PAUSE_MS, CREATION_SESSION_MAX_AGE_MS, CREATION_STALE_TIMEOUT_MS, CREATION_COMPLETION_SETTLE_MS, CREATION_CURSOR_FADE_MS, CREATION_OUTLINE_WAIT_MS, CREATION_OUTLINE_RETRY_MS, CREATION_CURSOR_DEPART_MS, CREATION_EMPTY_DECK_FADE_MS;
+  return bindRuntimeValue(runtime2, "ReactGridMemo", () => ReactGridMemo, (value) => {
+    ReactGridMemo = value;
+  }), bindRuntimeValue(runtime2, "ReactGrid", () => ReactGrid, (value) => {
+    ReactGrid = value;
+  }), bindRuntimeValue(runtime2, "CREATION_TIP_INITIAL_DELAY_MS", () => CREATION_TIP_INITIAL_DELAY_MS, (value) => {
+    CREATION_TIP_INITIAL_DELAY_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_TIP_ROTATION_MS", () => CREATION_TIP_ROTATION_MS, (value) => {
+    CREATION_TIP_ROTATION_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_TIP_FADE_OUT_MS", () => CREATION_TIP_FADE_OUT_MS, (value) => {
+    CREATION_TIP_FADE_OUT_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_TIP_FADE_IN_MS", () => CREATION_TIP_FADE_IN_MS, (value) => {
+    CREATION_TIP_FADE_IN_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_OUTLINE_HOLD_MS", () => CREATION_OUTLINE_HOLD_MS, (value) => {
+    CREATION_OUTLINE_HOLD_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_CELL_STAGGER_MS", () => CREATION_CELL_STAGGER_MS, (value) => {
+    CREATION_CELL_STAGGER_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_REVEAL_HOLD_MS", () => CREATION_REVEAL_HOLD_MS, (value) => {
+    CREATION_REVEAL_HOLD_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_CURSOR_CORNER_GLIDE_MS", () => CREATION_CURSOR_CORNER_GLIDE_MS, (value) => {
+    CREATION_CURSOR_CORNER_GLIDE_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_INITIAL_GLIDE_MS", () => CREATION_INITIAL_GLIDE_MS, (value) => {
+    CREATION_INITIAL_GLIDE_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_TITLE_FADE_IN_MS", () => CREATION_TITLE_FADE_IN_MS, (value) => {
+    CREATION_TITLE_FADE_IN_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_TITLE_FADE_OUT_MS", () => CREATION_TITLE_FADE_OUT_MS, (value) => {
+    CREATION_TITLE_FADE_OUT_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_SHEET_GROUND_MS", () => CREATION_SHEET_GROUND_MS, (value) => {
+    CREATION_SHEET_GROUND_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_SHEET_LIFT_MS", () => CREATION_SHEET_LIFT_MS, (value) => {
+    CREATION_SHEET_LIFT_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_CURSOR_SHOW_DELAY_MS", () => CREATION_CURSOR_SHOW_DELAY_MS, (value) => {
+    CREATION_CURSOR_SHOW_DELAY_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_POST_PAINT_DELAY_MS", () => CREATION_POST_PAINT_DELAY_MS, (value) => {
+    CREATION_POST_PAINT_DELAY_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_FIRST_SLIDE_HOLD_MS", () => CREATION_FIRST_SLIDE_HOLD_MS, (value) => {
+    CREATION_FIRST_SLIDE_HOLD_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_CURSOR_GLIDE_MS", () => CREATION_CURSOR_GLIDE_MS, (value) => {
+    CREATION_CURSOR_GLIDE_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_EMPTY_DECK_HOLD_MS", () => CREATION_EMPTY_DECK_HOLD_MS, (value) => {
+    CREATION_EMPTY_DECK_HOLD_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_SLIDE_ARRIVAL_MS", () => CREATION_SLIDE_ARRIVAL_MS, (value) => {
+    CREATION_SLIDE_ARRIVAL_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_IDLE_PAUSE_MS", () => CREATION_IDLE_PAUSE_MS, (value) => {
+    CREATION_IDLE_PAUSE_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_SESSION_MAX_AGE_MS", () => CREATION_SESSION_MAX_AGE_MS, (value) => {
+    CREATION_SESSION_MAX_AGE_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_STALE_TIMEOUT_MS", () => CREATION_STALE_TIMEOUT_MS, (value) => {
+    CREATION_STALE_TIMEOUT_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_COMPLETION_SETTLE_MS", () => CREATION_COMPLETION_SETTLE_MS, (value) => {
+    CREATION_COMPLETION_SETTLE_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_CURSOR_FADE_MS", () => CREATION_CURSOR_FADE_MS, (value) => {
+    CREATION_CURSOR_FADE_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_OUTLINE_WAIT_MS", () => CREATION_OUTLINE_WAIT_MS, (value) => {
+    CREATION_OUTLINE_WAIT_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_OUTLINE_RETRY_MS", () => CREATION_OUTLINE_RETRY_MS, (value) => {
+    CREATION_OUTLINE_RETRY_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_CURSOR_DEPART_MS", () => CREATION_CURSOR_DEPART_MS, (value) => {
+    CREATION_CURSOR_DEPART_MS = value;
+  }), bindRuntimeValue(runtime2, "CREATION_EMPTY_DECK_FADE_MS", () => CREATION_EMPTY_DECK_FADE_MS, (value) => {
+    CREATION_EMPTY_DECK_FADE_MS = value;
+  }), () => {
+    (0, runtime2.initializeUiInputs210)(), ReactGridMemo = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), (0, runtime2.initializeUiInputs210)(), ReactGrid = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), CREATION_TIP_INITIAL_DELAY_MS = 3e3, CREATION_TIP_ROTATION_MS = 5e3, CREATION_TIP_FADE_OUT_MS = 80, CREATION_TIP_FADE_IN_MS = 120, CREATION_OUTLINE_HOLD_MS = 450, CREATION_CELL_STAGGER_MS = 25, CREATION_REVEAL_HOLD_MS = 200, CREATION_CURSOR_CORNER_GLIDE_MS = 450, CREATION_INITIAL_GLIDE_MS = 400, CREATION_TITLE_FADE_IN_MS = 200, CREATION_TITLE_FADE_OUT_MS = 150, CREATION_SHEET_GROUND_MS = 360, CREATION_SHEET_LIFT_MS = 300, CREATION_CURSOR_SHOW_DELAY_MS = 150, CREATION_POST_PAINT_DELAY_MS = 34, CREATION_FIRST_SLIDE_HOLD_MS = 500, CREATION_CURSOR_GLIDE_MS = 300, CREATION_EMPTY_DECK_HOLD_MS = 600, CREATION_SLIDE_ARRIVAL_MS = 375, CREATION_IDLE_PAUSE_MS = 3e3, CREATION_SESSION_MAX_AGE_MS = 6e5, CREATION_STALE_TIMEOUT_MS = 9e4, CREATION_COMPLETION_SETTLE_MS = 2e3, CREATION_CURSOR_FADE_MS = 200, CREATION_OUTLINE_WAIT_MS = 5e3, CREATION_OUTLINE_RETRY_MS = 400, CREATION_CURSOR_DEPART_MS = 1500, CREATION_EMPTY_DECK_FADE_MS = 260;
+  };
+}
+export {
+  installCreationTiming
+};

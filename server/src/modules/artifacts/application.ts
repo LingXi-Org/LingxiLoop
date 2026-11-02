@@ -25,6 +25,7 @@ import {
 } from './repository.js'
 import { listing, publish, readProjectFile, sha256, type WireEntry } from './store.js'
 import { createArtifactWorkspacesApplication } from './workspaces-application.js'
+import { slideWorkspaceConversation } from './slides-workspace.js'
 
 export function createArtifactApplication(infrastructure: ArtifactInfrastructure) {
   const { db, transaction, withArtifactFence, missingChannelMessageIds, publishEvent, deliverComment } = infrastructure
@@ -121,7 +122,7 @@ export function createArtifactApplication(infrastructure: ArtifactInfrastructure
     files: Record<string, WireEntry>; origin?: string
   }) {
     const artifact = await requireArtifact(input.companyId, input.artifactId)
-    const outcome = await transaction(run => publish(run, artifactKind(artifact.kind), artifact.id, input.files, input.actorId))
+    const outcome = await transaction(run => publish(run, artifactKind(artifact.kind), artifact.id, input.files, input.actorId, artifact.kind === 'slides' && input.actorKind === 'agent'))
     if (outcome.status === 200 && outcome.changed.length) {
       await publishArtifact(input.companyId, { kind: 'files.changed', artifactId: artifact.id, paths: outcome.changed,
         ver: outcome.body.version, ...(input.origin ? { origin: input.origin } : {}) })
@@ -148,7 +149,7 @@ export function createArtifactApplication(infrastructure: ArtifactInfrastructure
   }
 
   async function deliverPending(companyId: string, artifact: ArtifactRow, author: { id: string; name: string }) {
-    if (!artifact.conversation_id) return
+    if (!await slideWorkspaceConversation(db, artifact.id, artifact.conversation_id)) return
     const delivered = await transaction(run => updateComments(run, artifact.id, async doc => {
       const pending = pendingForAgent(doc)
       if (!pending.length) return []
@@ -275,6 +276,7 @@ export function createArtifactApplication(infrastructure: ArtifactInfrastructure
     await transaction(async run => {
       const { rows } = await run.query<{ work_id: string }>('SELECT work_id FROM artifact_agent_runs WHERE artifact_id=$1', [artifact.id])
       for (const row of rows) await infrastructure.execution.cancel(run, artifact, row.work_id)
+      await run.query('DELETE FROM conversations WHERE id IN (SELECT conversation_id FROM slide_workspaces WHERE artifact_id=$1)', [artifact.id])
       await run.query('DELETE FROM artifacts WHERE id=$1 AND company_id=$2', [artifact.id, companyId])
     })
   }

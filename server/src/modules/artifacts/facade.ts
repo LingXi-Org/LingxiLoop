@@ -10,6 +10,8 @@ import { acquireArtifactSharedFence, availableAgents, releaseArtifactSharedFence
 import { createArtifactExecution } from './execution.js'
 import { createArtifactRuntime } from './runtime.js'
 import type { SharedStateUpdate } from '@lyyzka/lingxios'
+import { ensureSlideWorkspace, slideEditingContext, slideWorkspaceConversation, restoreSlideRevision } from './slides-workspace.js'
+import { syncProductChannel } from '../../agent-runtime/conversations.js'
 
 const collaboration = createArtifactRuntime(async () => (await import('../../agent-runtime/runtime.js')).lingxiOSControl())
 export const readArtifactCollaboration = (companyId: string,userId: string,artifactId: string,afterSeq = 0) => collaboration.readCollaboration(pool,companyId,userId,artifactId,afterSeq)
@@ -38,9 +40,10 @@ const artifactApplication = createArtifactApplication({
   publishEvent: (event) => publish(CH_ARTIFACTS, event),
   /** The thread goes to the agent that last worked on the artifact, else its coordinator, else the room's first capable agent. */
   async deliverComment({ companyId, artifact, authorId, view }) {
-    if (!artifact.conversation_id) return
+    const conversationId = await slideWorkspaceConversation(pool, artifact.id, artifact.conversation_id)
+    if (!conversationId) return
     await withTransaction(pool, async db => {
-      const agents = await availableAgents(db, companyId, artifact.conversation_id!, artifact.kind)
+      const agents = await availableAgents(db, companyId, conversationId, artifact.kind)
       if (!agents.length) return
       const { rows: recent } = await db.query<{ actor_id: string }>(`SELECT actor_id FROM artifact_activity
         WHERE artifact_id=$1 AND actor_kind='agent' ORDER BY created_at DESC LIMIT 20`, [artifact.id])
@@ -55,7 +58,7 @@ const artifactApplication = createArtifactApplication({
       const noun = artifact.kind === 'slides' ? '演示文稿' : '设计'
       const text = `@${agentId} 请处理${noun}「${artifact.title}」中的评论 ${view.id}（${view.where}${view.file ? `，${view.file}` : ''}）：${last}`
       await persistNativeEvents(db, { key: id, companyId, workId: id }, [{ type: 'im.user', companyId, userId: authorId,
-        channelId: artifact.conversation_id!, clientNonce: id, artifactId: artifact.id, commentId: view.id,
+        channelId: conversationId, clientNonce: id, artifactId: artifact.id, commentId: view.id,
         authorization: authorizations[0].authorization,
         payload: createNativeMessage({ id, role: 'user', content: [{ type: 'text', text }], custom: { mentionedIds: [agentId] } }) }])
     })
@@ -88,14 +91,33 @@ export const {
 } = artifactApplication
 
 /** What a turn knows up front: the conversation's canvas and decks by title and file paths, never their content. */
-export async function artifactTurnContext(companyId: string, conversationId: string, kinds: Array<'design' | 'slides'>) {
+export async function artifactTurnContext(companyId: string, conversationId: string, kinds: Array<'design' | 'slides'>, userId?: string) {
   const { rows } = await pool.query<{ id: string; kind: 'design' | 'slides'; title: string; status: string; paths: string[] }>(
     `SELECT artifact.id,artifact.kind,artifact.title,artifact.status,
        COALESCE((SELECT array_agg(file.path ORDER BY file.path) FROM artifact_files file WHERE file.artifact_id=artifact.id),'{}') AS paths
-       FROM artifacts artifact WHERE artifact.company_id=$1 AND artifact.conversation_id=$2 AND artifact.kind=ANY($3::text[])
+       FROM artifacts artifact LEFT JOIN slide_workspaces workspace ON workspace.artifact_id=artifact.id
+       WHERE artifact.company_id=$1 AND (artifact.conversation_id=$2 OR workspace.conversation_id=$2) AND artifact.kind=ANY($3::text[])
       ORDER BY artifact.updated_at DESC LIMIT 20`, [companyId, conversationId, kinds])
   return {
     ...(kinds.includes('design') ? { design: rows.find(row => row.kind === 'design') ?? null } : {}),
-    ...(kinds.includes('slides') ? { slides: rows.filter(row => row.kind === 'slides') } : {}),
+    ...(kinds.includes('slides') ? { slides: await Promise.all(rows.filter(row => row.kind === 'slides').map(async row => ({ ...row,
+      editor: await slideEditingContext(pool, row.id, userId), comments: (await artifactApplication.listComments(companyId, row.id)).views }))) } : {}),
   }
+}
+
+export async function openSlideWorkspace(companyId: string, artifactId: string, userId: string) {
+  const { profile, ...workspace } = await withTransaction(pool, db => ensureSlideWorkspace(db, companyId, artifactId, userId))
+  await syncProductChannel(profile).catch(() => {
+    throw Object.assign(new Error('演示文稿对话连接暂时不可用，请重试。稿件与已有对话已保留。'), { status: 503 })
+  })
+  return workspace
+}
+
+export async function restoreSlides(companyId: string, artifactId: string, seq: string, version: string, userId: string) {
+  const outcome = await withTransaction(pool, db => restoreSlideRevision(db, artifactId, seq, version, userId))
+  if (outcome.status === 200 && outcome.changed.length) {
+    await publish(CH_ARTIFACTS, { type: 'artifact.changed', companyId, artifactId, artifactKind: 'slides', kind: 'files.changed',
+      paths: outcome.changed, ver: outcome.body.version, timestamp: new Date().toISOString() })
+  }
+  return outcome
 }

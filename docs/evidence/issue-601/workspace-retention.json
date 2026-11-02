@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "checks": [
+    "same iframe on re-open",
+    "authorization before visibility",
+    "revocation removes retained content",
+    "one retained deck",
+    "project switch releases workspace"
+  ],
+  "mounts": 3,
+  "unmounts": 3,
+  "rechecks": 2,
+  "sourceCommit": "993696398aeba26912734f25428291f748aa2e37",
+  "scope": "Actual React SlidesPage lifecycle in Chromium, mocked workspace child/API; not a performance or backend test"
+}

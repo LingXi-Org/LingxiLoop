@@ -40,7 +40,7 @@ export async function checkArtifact(db: Queryable, artifact: { id: string; kind:
     await writeFile(join(assets, 'index.json'), `${JSON.stringify(index, null, 2)}\n`)
     const stdout = await new Promise<string>((resolveRun, rejectRun) => {
       execFile(process.execPath, [script, 'check', root], {
-        cwd: tmpdir(), env: { PATH: process.env.PATH ?? '' }, timeout: CHECK_TIMEOUT_MS, maxBuffer: 8 * 1024 * 1024,
+        cwd: tmpdir(), env: { PATH: process.env.PATH ?? '', BAOCUT_SLIDES_EDITOR_DIST: resolve('server/assets/slides-editor') }, timeout: CHECK_TIMEOUT_MS, maxBuffer: 8 * 1024 * 1024,
         ...(signal ? { signal } : {}),
       }, (error, out) => {
         // The checker exits 1 while problems remain; its JSON report is the result either way.

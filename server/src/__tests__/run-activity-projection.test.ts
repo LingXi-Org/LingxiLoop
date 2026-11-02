@@ -7,6 +7,17 @@ import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
 import { createNativeMessage, deserializeMessage, nativeText, nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 
+test('historical knowledge receipts override an obsolete success summary without rewriting stored events', () => {
+  const [tool] = harnessToolParts('run', [start('search', 1, 'knowledge.search'), finish('search', 2)])
+  const tools = [{ ...tool, result: { status: 'completed', sourceStatus: 'unavailable' },
+    display: { title: '检索课程资料', purpose: '查找依据。', summary: '检索已完成，可在下方查看资料结果。' } }]
+  const before = JSON.stringify(tools)
+  const [part] = runMessageParts({ ...createRunView('run'), lifecycle: 'succeeded' }, tools)
+  assert.ok(part.type === 'tool-call')
+  assert.equal((part.result as { display: { summary: string } }).display.summary, '课程检索未完成')
+  assert.equal(JSON.stringify(tools), before)
+})
+
 // Failure inventory: docs/run-activity-contract.md (written before product edits).
 const start = (id: string, seq: number, name = 'documents.read'): RunEvent => ({
   runId: 'run', seq, kind: 'tool.started', stage: 'started', visibility: 'user', data: { toolCallId: `host:${id}`, name },

@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { publishArtifactProgress } from './progress.js'
+import { artifactExecutionConversation } from './execution.js'
 import type { AgentExecutionRole } from '../../agents/contracts.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { ArtifactEvent } from '../../redis.js'
@@ -67,13 +68,14 @@ async function validateMessageEvidenceRefs(input: {
   const messageIds = input.refs.filter((ref) => ref.kind === 'message').map((ref) => ref.id)
   if (messageIds.length === 0) return
   const artifact = await artifactById(db, input.companyId, input.artifactId)
-  if (!artifact?.conversation_id) {
+  const conversationId = artifact && artifactExecutionConversation(artifact)
+  if (!conversationId) {
     throw new Error(`evidence reference is outside the current Artifact scope: message:${messageIds[0]}`)
   }
   const missing = await missingChannelMessageIds({
     companyId: input.companyId,
     actorId: input.agentId,
-    channelId: artifact.conversation_id,
+    channelId: conversationId,
     messageIds,
   })
   if (missing[0]) throw new Error(`evidence reference is outside the current Artifact scope: message:${missing[0]}`)
@@ -211,7 +213,7 @@ async function completeArtifactWork(input: {
     await publishArtifact(input.companyId, {
       kind: 'workspace.updated',
       artifactId: state.artifactId,
-      conversationId: artifact.conversation_id ?? undefined,
+      conversationId: artifactExecutionConversation(artifact) ?? undefined,
       workspace: { id: state.artifactId, status: artifact.status, title: artifact.title, goal: artifact.goal },
     })
   }

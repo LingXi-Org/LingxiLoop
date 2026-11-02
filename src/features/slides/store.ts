@@ -18,13 +18,18 @@ interface SlidesState {
   decks: ArtifactSummary[] | null
   error: string
   openId: string | null
+  /** One retained workspace avoids rebuilding its opaque iframe on a quick return to the library. */
+  retainedId: string | null
+  reopening: boolean
   load(projectId: string, signal?: AbortSignal): Promise<void>
   reset(projectId: string): void
-  open(deckId: string | null): void
+  open(deckId: string | null): Promise<void>
   create(): Promise<void>
   rename(deck: ArtifactSummary): Promise<void>
   remove(deck: ArtifactSummary): Promise<void>
 }
+
+let reopenRequest: AbortController | null = null
 
 /** The project's Slides decks, shared by the nested sidebar and the Slides page. */
 export const useSlides = create<SlidesState>((set, get) => ({
@@ -32,8 +37,13 @@ export const useSlides = create<SlidesState>((set, get) => ({
   decks: null,
   error: '',
   openId: readDeck(),
+  retainedId: readDeck(),
+  reopening: false,
   reset: (projectId) => {
-    if (get().projectId !== projectId) set({ projectId, decks: null, error: '', openId: readDeck() })
+    if (get().projectId === projectId) return
+    reopenRequest?.abort()
+    const deck = readDeck()
+    set({ projectId, decks: null, error: '', openId: deck, retainedId: deck, reopening: false })
   },
   load: async (projectId, signal) => {
     try {
@@ -43,7 +53,30 @@ export const useSlides = create<SlidesState>((set, get) => ({
       if (!signal?.aborted && get().projectId === projectId) set({ error: userFacingError(reason, '演示文稿列表暂时无法加载，请重试。') })
     }
   },
-  open: (deckId) => { writeDeck(deckId); set({ openId: deckId }) },
+  open: async (deckId) => {
+    reopenRequest?.abort()
+    set({ reopening: false })
+    const projectId = get().projectId
+    if (deckId && get().retainedId === deckId && !get().openId) {
+      // Recheck current membership before exposing a retained document.
+      const controller = new AbortController()
+      reopenRequest = controller
+      set({ reopening: true })
+      try { await artifactsApi.slideWorkspace(deckId, controller.signal) }
+      catch (reason) {
+        if (!controller.signal.aborted) {
+          set({ retainedId: null, reopening: false })
+          toast.error(userFacingError(reason, '演示文稿暂时无法重新打开，请重试。'))
+          if (projectId) void get().load(projectId)
+        }
+        return
+      }
+      if (controller.signal.aborted || get().projectId !== projectId) return
+      set({ reopening: false })
+    }
+    writeDeck(deckId)
+    set(deckId ? { openId: deckId, retainedId: deckId } : { openId: null })
+  },
   create: async () => {
     const projectId = get().projectId
     if (!projectId) return
@@ -53,7 +86,7 @@ export const useSlides = create<SlidesState>((set, get) => ({
     try {
       const deck = await artifactsApi.createSlides(projectId, title)
       await get().load(projectId)
-      get().open(deck.id)
+      await get().open(deck.id)
     } catch (reason) { toast.error(userFacingError(reason, '演示文稿没有创建成功，请重试。')) }
   },
   rename: async (deck) => {
@@ -71,7 +104,7 @@ export const useSlides = create<SlidesState>((set, get) => ({
     if (!confirmed || !projectId) return
     try {
       await artifactsApi.remove(deck.id)
-      if (get().openId === deck.id) get().open(null)
+      if (get().openId === deck.id) await get().open(null)
       await get().load(projectId)
     } catch (reason) { toast.error(userFacingError(reason, '演示文稿没有删除，请重试。')) }
   },

@@ -1,0 +1,69 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Isolated visualization recovery regression</title></head>
+<body><button id="close">Close conversation</button><button id="open">Reopen conversation</button><button id="retry">Retry</button><p id="status">loading</p><main id="container"></main>
+<script type="module">
+import { createWebServices, webPlatform, watchWebTaskRemoved } from '/src/features/chat/visualize/web/host.ts'
+import { acquireGenUiPage } from '/src/features/chat/visualize/zcode/gen-ui/host.ts'
+import { useAuth } from '/src/stores/auth.ts'
+import { setWorkspaceSession } from '/src/lib/workspaceSession.ts'
+
+// Real host, retained page, opaque frames and pinned guest SDK; synthetic API only.
+const raw = import.meta.glob(['/server/assets/visualize-runtime/*.{js,css}', '/third_party/zcode/skills/visualize/assets/**/*.{js,css,html}'], { eager: true, query: '?raw', import: 'default' })
+const sources = Object.fromEntries(Object.entries(raw).map(([path, text]) => [path.includes('/vendor/') ? 'vendor/' + path.split('/').at(-1) : path.split('/').at(-1), text]))
+const hashes = Object.fromEntries(await Promise.all(Object.entries(sources).map(async ([name, text]) => [name, [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))].map(x => x.toString(16).padStart(2, '0')).join('')])))
+useAuth.setState({ user: { id: 'fixture-user' }, activeCompanyId: 'fixture-company', authenticated: true, ready: true })
+setWorkspaceSession({ companyId: 'fixture-company', projectId: 'fixture-project' })
+const target = { workspaceIdentity: 'fixture-company', workspacePath: 'fixture-project', sessionId: 'fixture-room', path: '/fixture/output/view.html', instanceKey: 'fixture-instance', sourceMessageId: 'fixture-source' }
+const pages = new Map(), counts = { publicRuntime: 0, authorizedRuntime: 0, abortedPublic: 0, acquisitions: 0, writes: 0 }
+let mode = new URLSearchParams(location.search).get('mode') ?? 'stall'
+let state = JSON.parse(sessionStorage.getItem('visualize605-state') ?? 'null'), revision = state ? 1 : 0
+const json = value => new Response(JSON.stringify(value), { headers: { 'content-type': 'application/json' } })
+const originalFetch = window.fetch
+window.fetch = async (input, init) => {
+  const req = new Request(input instanceof Request ? input : new URL(input, location.href), init), url = new URL(req.url)
+  if (url.pathname.startsWith('/assets/visualize-')) {
+    const name = Object.keys(hashes).find(name => url.pathname.includes(hashes[name]))
+    if (!name) return new Response('', { status: 404 })
+    if (name === 'gen-ui.js') {
+      counts.publicRuntime++
+      if (req.credentials !== 'omit') throw new Error('Public resource must omit credentials')
+      if (mode === 'denied') return new Response('', { status: 403 })
+      if (mode === 'stall') return new Promise((_resolve, reject) => req.signal.addEventListener('abort', () => { counts.abortedPublic++; reject(req.signal.reason) }, { once: true }))
+    }
+    return new Response(sources[name])
+  }
+  if (!url.pathname.startsWith('/api/im/channels/fixture-room/visualize/pages')) return originalFetch(input, init)
+  if (req.headers.get('x-company-id') !== 'fixture-company' || req.headers.get('x-project-id') !== 'fixture-project') return new Response('', { status: 403 })
+  if (req.method === 'POST' && url.pathname.endsWith('/pages')) {
+    const id = 'page-' + ++counts.acquisitions, token = crypto.randomUUID(); pages.set(id, token)
+    return json({ pageId: id, initId: token, path: target.path, html: `<label>Value <input id="count" type="range" min="1" max="20" value="5"></label><output id="value">5</output><script>
+      const input=document.getElementById('count'),output=document.getElementById('value');function restore(){input.value=window.zcode.widgetState?.modelContent?.count??5;output.textContent=input.value;}
+      restore();window.addEventListener('zcode:set_globals',restore);input.oninput=()=>output.textContent=input.value;input.onchange=()=>window.zcode.setWidgetState({modelContent:{count:Number(input.value)},privateContent:null});
+    <\/script>`, state, stateRevision: revision, resourceHashes: hashes })
+  }
+  const id = url.pathname.split('/pages/')[1]?.split('/')[0]
+  if (pages.get(id) !== req.headers.get('x-visualize-page-token')) return new Response('', { status: 403 })
+  if (req.method === 'DELETE') { pages.delete(id); return json({}) }
+  if (url.pathname.endsWith('/resources')) {
+    const name = url.searchParams.get('name')
+    if (name === 'gen-ui.js') counts.authorizedRuntime++
+    return sources[name] ? new Response(sources[name]) : new Response('', { status: 404 })
+  }
+  if (url.pathname.endsWith('/state')) {
+    if (req.method === 'PUT') { state = (await req.json()).state; revision++; counts.writes++; sessionStorage.setItem('visualize605-state', JSON.stringify(state)) }
+    return json({ state, revision })
+  }
+  if (url.pathname.endsWith('/validate')) return json({})
+  return new Response('', { status: 404 })
+}
+const services = createWebServices(target)
+const owner = await acquireGenUiPage({ target, files: services.service, state: services.service, platform: webPlatform, openExternal: services.openExternal, watchTaskRemoved: callback => watchWebTaskRemoved(target, callback) })
+owner.subscribe(() => document.getElementById('status').textContent = owner.getSnapshot().phase)
+let off, anchor
+function open() { if (anchor) return; anchor = document.createElement('div'); anchor.style.cssText = 'width:100%;height:400px'; document.getElementById('container').append(anchor); off = owner.bind(anchor) }
+function close() { off?.(); anchor?.remove(); anchor = undefined }
+document.getElementById('open').onclick = open
+document.getElementById('close').onclick = close
+document.getElementById('retry').onclick = () => { mode = 'normal'; owner.retry() }
+window.fixture = { counts, snapshot: () => owner.getSnapshot(), state: () => state }
+open()
+</script></body></html>

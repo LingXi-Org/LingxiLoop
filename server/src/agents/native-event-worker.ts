@@ -26,14 +26,16 @@ export function startNativeEventWorker() {
             const { rows } = 'assignmentId' in event
               ? await db.query(`SELECT assignment.id FROM artifact_agent_assignments assignment
               JOIN artifacts artifact ON artifact.id=assignment.artifact_id JOIN users principal ON principal.id=$1
-              WHERE assignment.id=$2 AND artifact.id=$3 AND artifact.company_id=$4 AND artifact.conversation_id=$5
+              WHERE assignment.id=$2 AND artifact.id=$3 AND artifact.company_id=$4
+                AND COALESCE(artifact.execution_conversation_id,artifact.conversation_id)=$5
                 AND artifact.status='active' AND assignment.status<>'cancelled' AND assignment.request_client_msg_no=$6
                 AND principal.departed_at IS NULL AND principal.suspended_at IS NULL AND principal.deleted_at IS NULL
                 AND COALESCE(principal.access_revoked_at::text,'')=$7 FOR SHARE OF assignment,artifact,principal`,
               [event.userId,event.assignmentId,event.artifactId,event.companyId,event.channelId,event.clientNonce,event.authorization])
               : await db.query(`SELECT artifact.id FROM artifacts artifact JOIN users principal ON principal.id=$1
               JOIN artifact_comments comments ON comments.artifact_id=artifact.id
-              WHERE artifact.id=$2 AND artifact.company_id=$3 AND artifact.conversation_id=$4
+              WHERE artifact.id=$2 AND artifact.company_id=$3
+                AND COALESCE((SELECT conversation_id FROM slide_workspaces WHERE artifact_id=artifact.id),artifact.conversation_id)=$4
                 AND EXISTS(SELECT 1 FROM jsonb_array_elements(comments.doc->'threads') thread
                   WHERE thread->>'id'=$5 AND thread->>'status'='open' AND thread->'agent'->>'status'='delivered')
                 AND principal.departed_at IS NULL AND principal.suspended_at IS NULL AND principal.deleted_at IS NULL

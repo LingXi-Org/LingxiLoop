@@ -3,6 +3,7 @@ server/src/db/migrations/*.sql text eol=lf
 third_party/zcode/** -text
 third_party/studio-admin/upstream/** -text
 third_party/baoyu-design/** -text
+third_party/assistant-ui-with-artifacts/** -text
 src/styles/vendor/shadcn/tailwind.css text eol=lf
 server/fixtures/historical-projection-3.8.2/** -text
 server/src/__integration__/fixtures/homework/*.pdf binary

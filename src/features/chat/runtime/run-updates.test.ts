@@ -1,4 +1,4 @@
-import { createNativeMessage } from '../../../lib/nativeMessage'
+import { createNativeMessage, deserializeMessage, serializeMessage } from '../../../lib/nativeMessage'
 import assert from 'node:assert/strict'
 import { beforeEach, mock, test } from 'node:test'
 import type { ThreadMessage } from '@assistant-ui/react'
@@ -356,6 +356,33 @@ test('citation projections agree across snapshots and IM replay and disappear be
   state = applyRunUpdate(state, target, { type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 2,
     requestVersion: 2, attemptId: 'next', seq: 1, draft: '新的草稿' } }, participants.agent)
   assert.deepEqual(state.messages[0].content, [])
+})
+
+test('different PDF ranges retain their exact markers and page text through refresh and IM persistence', () => {
+  const completed = snapshot()
+  const body = '[导读介绍 Q、K、V](#cite-S1)，[交叉注意力允许不同序列](#cite-S2)，[再次查看导读](#cite-S1)。'
+  const evidence = [
+    { marker: 'S1', sourceId: 'pdf', sourceVersion: 'v1', chunkId: 'pdf:0:6797', title: '注意力手册', excerpt: '[[PAGE:2]]\n导读：介绍 Q、K、V。', truncated: true },
+    { marker: 'S2', sourceId: 'pdf', sourceVersion: 'v1', chunkId: 'pdf:6797:19204', title: '注意力手册', excerpt: '[[PAGE:15]]\n交叉注意力：Q、K、V 可以来自不同序列。', truncated: true },
+  ]
+  completed.message!.body = body
+  completed.message!.envelope = { ...completed.message!.envelope, body, citationEvidence: evidence,
+    citations: [...body.matchAll(/\[([^\]]+)\]\(#cite-(S\d+)\)/g)].map(match => ({
+      start: match.index, end: match.index + match[0].length, text: match[1], markers: [match[2]], support: 'not_assessed' as const,
+      sources: [{ sourceId: 'pdf', sourceVersion: 'v1', chunkIds: evidence.filter(item => item.marker === match[2]).map(item => item.chunkId), truncated: true as const }],
+    })) }
+  const live = applyRunUpdate(EMPTY_CONVERSATION_CHAT_STATE, target, { type: 'state', state: completed }, participants.agent)
+  const persisted = JSON.parse(JSON.stringify(serializeMessage(live.messages[0])))
+  const restored = deserializeMessage(persisted)
+  assert.deepEqual(restored.content, live.messages[0].content)
+  const refreshed = new RunStreamProjection('run', true).apply({ type: 'state', state: JSON.parse(JSON.stringify(completed)) })
+  assert.deepEqual(refreshed.message.content, restored.content)
+  const replay = convertEnvelope({ channelId: 'room', channelType: 2, fromUid: 'agent', messageId: 'committed', clientMsgNo: 'committed',
+    messageSeq: 1, timestamp: epoch, payload: persisted }, { participants, meId: 'human' })
+  assert.deepEqual(replay.content, restored.content)
+  const claims = restored.content.find(part => part.type === 'data' && part.name === 'citation-claims')
+  assert.ok(claims?.type === 'data')
+  assert.deepEqual((claims.data as { claims: { evidence: unknown[] }[] }).claims.map(claim => claim.evidence), [[evidence[0]], [evidence[1]], [evidence[0]]])
 })
 
 test('paragraph deltas display immediately, deduplicate, and cancellation clears uncommitted drafts', () => {

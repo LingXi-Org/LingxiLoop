@@ -15,11 +15,14 @@ export async function availableAgents(db: Queryable, companyId: string, conversa
   return rows
 }
 
-export async function availableArtifactMemberIds(db: Queryable, companyId: string, ids: string[], kind: ArtifactKind) {
+export async function availableArtifactMemberIds(db: Queryable, companyId: string, ids: string[], kind: ArtifactKind, conversationId: string) {
   const { rows } = await db.query<{ id: string }>(
-    `SELECT id FROM participants WHERE company_id=$1 AND id=ANY($2::text[]) AND kind='agent'
-       AND departed_at IS NULL AND capabilities ? $3`,
-    [companyId, ids, kind],
+    `SELECT agent.id FROM participants agent JOIN conversations room ON room.company_id=agent.company_id AND room.id=$4
+      JOIN im_channel_bindings binding ON binding.company_id=room.company_id AND binding.channel_id=room.id
+      WHERE agent.company_id=$1 AND agent.id=ANY($2::text[]) AND agent.kind='agent'
+       AND agent.departed_at IS NULL AND agent.capabilities ? $3 AND room.members ? agent.id AND binding.profile->'members' ? agent.id
+       AND NOT EXISTS(SELECT 1 FROM learning_project_teacher_agents teacher WHERE teacher.company_id=agent.company_id AND teacher.agent_id=agent.id)`,
+    [companyId, ids, kind, conversationId],
   )
   return rows.map((row) => row.id)
 }

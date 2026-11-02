@@ -3,6 +3,7 @@ import type { ContentDocument, ContentEditorHandle } from '@/features/content-ed
 import { type ToolCallMessagePartProps, useAuiState } from '@assistant-ui/react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { z } from 'zod'
+import { CollapsibleRoot, CollapsibleTrigger, CollapsibleContent } from '@/components/assistant-ui/elements/collapsible-root'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,12 +28,14 @@ export function HomeworkDraftTool({ result, status, isError, readOnly = false }:
   })
   const parsed = resultSchema.safeParse(result)
   if (!parsed.success) return <p role="status" className="text-sm text-muted-foreground">{isError || status.type === 'incomplete' ? '作业草稿未能准备好，请让助手重试。' : status.type === 'running' ? '正在整理作业草稿…' : '作业草稿暂时无法查看。'}</p>
-  return <HomeworkDraftCard key={parsed.data.value.result.homeworkId} {...parsed.data.value.result} readOnly={readOnly} preparing={preparing} />
+  return <HomeworkDraftCard key={parsed.data.value.result.homeworkId} {...parsed.data.value.result} readOnly={readOnly} preparing={preparing} collapsePublished />
 }
 
-export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, onViewForum }: { courseId: string; homeworkId: string; readOnly: boolean; preparing: boolean; onViewForum?(): void }) {
+export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, onViewForum, collapsePublished = false }: { courseId: string; homeworkId: string; readOnly: boolean; preparing: boolean; onViewForum?(): void; collapsePublished?: boolean }) {
   const id = useId()
   const criteriaEditor = useRef<ContentEditorHandle>(null)
+  const focusPublished = useRef(false)
+  const [publishedExpanded, setPublishedExpanded] = useState(false)
   const [teacherReviewConfirmed, setTeacherReviewConfirmed] = useState(false)
   const [editorDocument,setEditorDocument]=useState<ContentDocument | null>(null)
   const [criteriaItems,setCriteriaItems]=useState<string[]>([])
@@ -46,6 +49,7 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
   const epoch = useRef(0), dirtyRef = useRef(false)
   const install = useCallback((next: Homework) => {
     epoch.current++; dirtyRef.current = false; setTeacherReviewConfirmed(false)
+    setPublishedExpanded(false)
     setHomework(next); setTitle(next.title); setInstructions(next.instructions); setEditorDocument(next.editorDocument ?? null); setCriteria(criteriaSource(next.criteria,next.criteriaDocument)); setCriteriaItems(next.criteria); setCriteriaDocument(next.criteriaDocument ?? null); setDueAt(localDeadline(next.dueAt))
     setLinks(next.links.join('\n')); setAttachments(next.attachments); setDirty(false)
   }, [])
@@ -63,9 +67,39 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
     const timer = setInterval(() => { void load() }, 3000)
     return () => clearInterval(timer)
   }, [dirty, busy, homework?.validation.status, load])
-  const disabled = busy || uploading || preparing || readOnly || !homework?.canEditDraft
+  const editingDisabled = uploading || preparing || readOnly || !homework?.canEditDraft
+  const disabled = busy || editingDisabled
   const edited = (change: () => void) => { epoch.current++; dirtyRef.current = true; setTeacherReviewConfirmed(false); change(); setDirty(true) }
-  return <Card aria-label="作业草稿" data-homework-id={homeworkId} className="w-full min-w-0 max-w-2xl [overflow-wrap:anywhere]">
+  const publishedSummary = collapsePublished && homework?.status !== 'DRAFT' ? homework : null
+  return <Card aria-label={publishedSummary ? '已发布作业' : '作业草稿'} data-homework-id={homeworkId} size={publishedSummary ? 'sm' : 'default'} className="w-full min-w-0 max-w-2xl [overflow-wrap:anywhere]">
+    {publishedSummary ? <CollapsibleRoot open={publishedExpanded} onOpenChange={setPublishedExpanded} className="min-w-0 space-y-4">
+      <CardHeader className="min-w-0">
+        <Badge variant="secondary">{publishedSummary.status === 'CLOSED' ? '已关闭' : '已发布'}</Badge>
+        <CardTitle className="min-w-0">{publishedSummary.title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          <CollapsibleTrigger aria-expanded={publishedExpanded} aria-controls={`${id}-published`} render={<Button type="button" variant="outline" className="h-auto max-w-full whitespace-normal py-2" ref={node => {
+            if (!node || !focusPublished.current) return
+            focusPublished.current = false
+            // The chat viewport also scrolls focused controls into view. Hand off
+            // only within its visible focus area so collapse cannot move a reader.
+            const viewport = node.closest('[data-chat-viewport]')
+            if (viewport) {
+              const area = viewport.getBoundingClientRect(), bounds = node.getBoundingClientRect()
+              if (bounds.top < area.top + 28 || bounds.bottom > area.bottom - 28) return
+            }
+            node.focus({ preventScroll: true })
+          }} />}>{publishedExpanded ? '收起已发布作业' : '展开已发布作业'}</CollapsibleTrigger>
+          <Button type="button" variant="outline" className="h-auto max-w-full whitespace-normal py-2" onClick={() => onViewForum ? onViewForum() : useApp.getState().setView('forum')}>在论坛查看作业</Button>
+        </div>
+        <CollapsibleContent id={`${id}-published`} className="min-w-0 space-y-4">
+          <section className="space-y-2"><h4 className="text-sm font-medium">作业要求</h4><ForumBody content={publishedSummary.instructions} document={publishedSummary.editorDocument} /></section>
+          <section className="space-y-2"><h4 className="text-sm font-medium">验收标准</h4>{publishedSummary.criteriaDocument ? <ForumBody content={criteriaSource(publishedSummary.criteria, publishedSummary.criteriaDocument)} document={publishedSummary.criteriaDocument} /> : <ul className="list-disc space-y-1 ps-5 text-sm">{publishedSummary.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul>}</section>
+          <ForumFiles links={publishedSummary.links} attachments={publishedSummary.attachments} />
+        </CollapsibleContent>
+      </CardContent>
+    </CollapsibleRoot> : <>
     <CardHeader><CardTitle>作业草稿</CardTitle><CardDescription>确认下面的内容后，作业才会发布到课程论坛。</CardDescription></CardHeader>
     <CardContent className="space-y-4">
       {!homework && !error && <p role="status">正在加载草稿…</p>}
@@ -109,16 +143,22 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
         {!homework.canEditDraft && <p className="text-sm text-muted-foreground">请由发起这份作业的教师确认发布。</p>}
         <div className="flex flex-wrap gap-2">
           <Button type="submit" variant="outline" disabled={disabled || !dirty || !title.trim() || !instructions.trim() || !criteria.trim()}>保存修改</Button>
-          <Button type="button" disabled={disabled || !canPublishHomeworkDraft(homework, dirty) || Boolean(homework.validation.findings?.some(item => item.severity === 'teacher_review') && !teacherReviewConfirmed)} onClick={async () => {
+          <Button type="button" aria-disabled={busy || undefined} className="aria-disabled:opacity-50" disabled={(collapsePublished ? editingDisabled : disabled) || !canPublishHomeworkDraft(homework, dirty) || Boolean(homework.validation.findings?.some(item => item.severity === 'teacher_review') && !teacherReviewConfirmed)} onClick={async event => {
             if (disabled || !canPublishHomeworkDraft(homework, dirtyRef.current) || homework.validation.findings?.some(item => item.severity === 'teacher_review') && !teacherReviewConfirmed) return
             if (pending.current?.revision !== homework.revision) pending.current = { revision: homework.revision, key: crypto.randomUUID() }
+            const publishButton = event.currentTarget
             epoch.current++; setBusy(true); setError('')
-            try { install((await homeworkApi.publish(courseId, homeworkId, { expectedRevision: homework.revision, visibleHash: homework.visibleHash, idempotencyKey: pending.current.key, teacherReviewConfirmed })).homework) }
+            try {
+              const next = (await homeworkApi.publish(courseId, homeworkId, { expectedRevision: homework.revision, visibleHash: homework.visibleHash, idempotencyKey: pending.current.key, teacherReviewConfirmed })).homework
+              focusPublished.current = collapsePublished && next.status !== 'DRAFT' && document.activeElement === publishButton
+              install(next)
+            }
             catch (reason) { setError(userFacingError(reason, '作业未能发布，请核对最新草稿后重试。')) }
             finally { setBusy(false) }
           }}>{busy ? '处理中…' : '确认发布'}</Button>
         </div>
       </form>}
     </CardContent>
+    </>}
   </Card>
 }

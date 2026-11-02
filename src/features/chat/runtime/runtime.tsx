@@ -94,13 +94,15 @@ export function useConversationPresence(conversationId: string) {
 export function useConversationThreadRuntime(
   conversationId: string,
   threadRootId: string | null = null,
+  beforeSend?: () => Promise<void>,
 ) {
   const snapshot = useConversationThreadSnapshot(conversationId, threadRootId)
   const onNew = useCallback(
-    (message: Parameters<ExternalStoreAdapter<ThreadMessage>['onNew']>[0]) => (
-      chatTransport.sendAppend(conversationId, message, threadRootId)
-    ),
-    [conversationId, threadRootId],
+    async (message: Parameters<ExternalStoreAdapter<ThreadMessage>['onNew']>[0]) => {
+      await beforeSend?.()
+      return chatTransport.sendAppend(conversationId, message, threadRootId)
+    },
+    [beforeSend, conversationId, threadRootId],
   )
   const concurrentQueue = useMemo<NonNullable<ExternalStoreAdapter<ThreadMessage>['queue']>>(() => ({
     items: [],
@@ -133,10 +135,12 @@ export function useConversationThreadRuntime(
 export function ConversationRuntimeProvider({
   conversationId,
   threadRootId = null,
+  beforeSend,
   children,
 }: {
   conversationId: string
   threadRootId?: string | null
+  beforeSend?: () => Promise<void>
   children: ReactNode
 }) {
   const companyId = useAuth(state => state.activeCompanyId)
@@ -145,12 +149,12 @@ export function ConversationRuntimeProvider({
   const scope = useMemo(() => ({ companyId, userId, projectId, conversationId, threadRootId }), [companyId, userId, projectId, conversationId, threadRootId])
   // Remount the composer on every scope change: pending uploads and input cannot
   // migrate into another account, course, conversation or thread.
-  return <ScopedConversationRuntimeProvider key={JSON.stringify(scope)} scope={scope}>{children}</ScopedConversationRuntimeProvider>
+  return <ScopedConversationRuntimeProvider key={JSON.stringify(scope)} scope={scope} beforeSend={beforeSend}>{children}</ScopedConversationRuntimeProvider>
 }
 
-function ScopedConversationRuntimeProvider({ scope, children }: { scope: ComposerDraftScope; children: ReactNode }) {
+function ScopedConversationRuntimeProvider({ scope, children, beforeSend }: { scope: ComposerDraftScope; children: ReactNode; beforeSend?: () => Promise<void> }) {
   const { conversationId, threadRootId } = scope
-  const runtime = useConversationThreadRuntime(conversationId, threadRootId)
+  const runtime = useConversationThreadRuntime(conversationId, threadRootId, beforeSend)
   const [restored, setRestored] = useState(false)
   useEffect(() => {
     const composer = runtime.thread.composer

@@ -1,22 +1,15 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, writeFile, copyFile, rm } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { gzipSync } from 'node:zlib'
+import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
 import { build } from 'esbuild'
 import ts from 'typescript'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const upstream = resolve(root, 'third_party/baoyu-design/upstream/claude-slides/scripts/editor')
 const output = resolve(root, 'server/assets/slides-editor')
-const sourceName = 'index-BSIksl9u.js'
 const hash = value => createHash('sha256').update(value).digest('hex')
-
-function replaceOnce(source, before, after) {
-  assert.equal(source.split(before).length, 2, `Pinned Slides patch changed: ${before}`)
-  return source.replace(before, () => after)
-}
 
 const textProperties = new Set(['defaultMessage', 'label', 'title', 'placeholder', 'tooltip', 'tip', 'children', 'aria-label', 'description', 'defaultValue'])
 
@@ -74,73 +67,41 @@ export function translateSlides(source, catalog) {
   return { source, messageCount: messages.size }
 }
 
+/** Compile maintained editor modules. Published bundles are archival evidence only. */
 export async function buildSlidesEditor() {
-  const original = await readFile(resolve(upstream, 'assets', sourceName), 'utf8')
-  const manifest = JSON.parse(await readFile(resolve(upstream, '../../../..', 'manifest.json'), 'utf8'))
-  const pinned = manifest.files.find(file => file.path.endsWith(`/claude-slides/scripts/editor/assets/${sourceName}`))
-  assert.equal(hash(original), pinned.sha256, 'Slides source must match the pinned upstream before applying native adaptations')
-  const catalog = JSON.parse(await readFile(resolve(root, 'third_party/baoyu-design/host/slides-zh-CN.json'), 'utf8'))
-  let { source, messageCount } = translateSlides(original, catalog)
-
-  // Desktop dialogs use this hook without mounting a sheet. Initialize its React
-  // namespace and contexts before the hook is first called, on either layout.
-  source = replaceOnce(source, 'function ar(it){let lr=D.useContext', 'function ar(it){O();let lr=D.useContext')
-  source = replaceOnce(source, 'children:this.state.error', 'children:"当前编辑内容未能渲染。"')
-  source = replaceOnce(source, 'c=new Map,s="en-US",h=M({locale:s,messages:{}})', 'c=new Map,s="zh-CN",h=M({locale:s,messages:{}})')
-  source = replaceOnce(source, 'uH(dH(t.location.search))', 'uH(dH(t.location.search)??"zh-Hans")')
-
-  // The pinned PPTX vendor is self-contained apart from this CommonJS helper.
-  const libraryStart = source.indexOf('function X0(')
-  const libraryEnd = source.indexOf('function E4(')
-  assert.ok(libraryStart > 0 && libraryEnd > libraryStart)
-  const pptx = 'function kv(e){return e&&e.__esModule&&Object.prototype.hasOwnProperty.call(e,"default")?e.default:e}'
-    + source.slice(libraryStart, libraryEnd) + '\nexport default pm;'
-  source = source.slice(0, libraryStart) + source.slice(libraryEnd)
-  source = replaceOnce(source, 'e.PptxPresentation=pm,', 'e.loadPptx=async()=>{e.PptxPresentation??=(await import("./pptx-library.js")).default},')
-  source = replaceOnce(source, 'async function Ve(Ce,De){let{pptx:ct,warnings:Oe}=ua(Ce,De)', 'async function Ve(Ce,De){await e.loadPptx();let{pptx:ct,warnings:Oe}=ua(Ce,De)')
-  source = replaceOnce(source, 'let n=(0,e.createPptxPresentation)(s)', 'await e.loadPptx();let n=(0,e.createPptxPresentation)(s)')
-
-  const tree = ts.createSourceFile('slides.js', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
-  const workerFunction = tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'UB')
-  assert.ok(workerFunction)
-  let worker
-  function findWorker(node) {
-    if (ts.isNoSubstitutionTemplateLiteral(node) && node.text.length > 300_000) {
-      assert.equal(worker, undefined)
-      worker = node
-    }
-    ts.forEachChild(node, findWorker)
-  }
-  findWorker(workerFunction)
-  assert.ok(worker)
-  source = source.slice(0, worker.getStart(tree)) + '""' + source.slice(worker.end)
-  source = replaceOnce(source, 'function UB(e){var t,r,l;async function i(){return t}', 'function UB(e){var t,r,l;async function i(){return t||(t=(await import("./video-worker-source.js")).default)}')
-
-  const virtual = { 'slides.js': source, 'pptx-library.js': pptx, 'video-worker-source.js': `export default ${JSON.stringify(worker.text)};` }
-  const originalTree = ts.createSourceFile('original.js', original, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
-  const interop = originalTree.statements.filter(node => ts.isFunctionDeclaration(node) && ['kv', 'aV'].includes(node.name?.text))
-    .map(node => node.getText(originalTree)).join('\n') + '\nexport {kv as a,aV as g};'
-  virtual['interop.js'] = interop
-  virtual['slides.js'] = replaceOnce(source, 'export{kv as a,aV as g};', '')
-  virtual['woff2-decoder.js'] = (await readFile(resolve(upstream, 'assets/woff2-decoder-BGQ3SeZf.js'), 'utf8'))
-    .replace('./index-BSIksl9u.js', './interop.js')
+  const sourceRoot = resolve(root, 'third_party/baoyu-design/slides-source')
+  const recovered = JSON.parse(await readFile(resolve(sourceRoot, 'source-map.json'), 'utf8'))
+  const browserBindings = await pruneBrowserBindings(sourceRoot)
   const result = await build({
-    absWorkingDir: root, entryPoints: [{ in: './slides.js', out: 'editor' }],
+    absWorkingDir: root, entryPoints: [{ in: resolve(sourceRoot, 'main.js'), out: 'editor' }],
     outdir: resolve(output, 'assets'), entryNames: 'editor-[hash]', chunkNames: '[name]-[hash]',
     bundle: true, splitting: true, format: 'esm', platform: 'browser', target: ['chrome120', 'firefox120', 'safari17'],
     minify: true, legalComments: 'inline', metafile: true, write: false, external: ['fs', 'https'],
-    plugins: [{ name: 'native-slides', setup(builder) {
-      builder.onResolve({ filter: /^\.\/(slides|pptx-library|video-worker-source|interop)\.js$/ }, ({ path }) => ({ path: path.slice(2), namespace: 'native-slides' }))
-      builder.onResolve({ filter: /\/woff2-decoder-BGQ3SeZf\.js$/ }, () => ({ path: 'woff2-decoder.js', namespace: 'native-slides' }))
-      builder.onLoad({ filter: /.*/, namespace: 'native-slides' }, ({ path }) => ({ contents: virtual[path], resolveDir: resolve(upstream, 'assets'), loader: 'js' }))
+    plugins: [{ name: 'private-runtime-exports', setup(builder) {
+      builder.onLoad({ filter: /slides-source\/modules\/.*\.js$/ }, args => {
+        const contents = browserBindings.sources.get(args.path)
+        return contents === undefined ? null : { contents, loader: 'js' }
+      })
     } }],
   })
+  // Remove obsolete generated chunks, including retired video workers.
+  await rm(output, { recursive: true, force: true })
   await mkdir(resolve(output, 'assets'), { recursive: true })
   for (const file of result.outputFiles) await writeFile(file.path, file.contents)
-  const entry = Object.entries(result.metafile.outputs).find(([name]) => /\/editor-[A-Z0-9]+\.js$/.test(name))
+  // Keep the full fallback font, but let the browser request it only when a
+  // glyph actually uses that face. The default editor uses FizzyLake icons.
+  const sourceCss = await readFile(resolve(sourceRoot, 'editor.css'), 'utf8')
+  const fontUrl = /data:font\/woff2;base64,([A-Za-z0-9+/=]+)/.exec(sourceCss)
+  assert.ok(fontUrl, 'Expected pinned fallback icon font')
+  const font = Buffer.from(fontUrl[1], 'base64')
+  const fontName = `anthropicons-variable-${hash(font).slice(0,16)}.woff2`
+  await writeFile(resolve(output, 'assets', fontName), font)
+  const css = sourceCss.replace(fontUrl[0], `./${fontName}`)
+  const cssName = `editor-${hash(css).slice(0,16)}.css`
+  await writeFile(resolve(output, 'assets', cssName), css)
+  const entry = Object.entries(result.metafile.outputs).find(([, meta]) => meta.entryPoint?.endsWith('/main.js'))
   assert.ok(entry)
   const entryFile = result.outputFiles.find(file => resolve(file.path) === resolve(root, entry[0]))
-  assert.ok(entryFile)
   const entryName = entryFile.path.split(/[\\/]/).at(-1)
   const initial = new Set()
   function addInitial(name) {
@@ -149,24 +110,84 @@ export async function buildSlidesEditor() {
     for (const item of result.metafile.outputs[name].imports) if (item.kind !== 'dynamic-import' && !item.external) addInitial(item.path)
   }
   addInitial(entry[0])
-  let html = await readFile(resolve(upstream, 'index.html'), 'utf8')
-  html = html.replace('lang="en"', 'lang="zh-CN"').replace('<title>Slides</title>', '<title>演示文稿</title>')
-    .replace(`./assets/${sourceName}`, `/artifact-editor/slides-assets/${entryName}`)
-    .replace('./assets/index-DooSdFer.css', '/artifact-editor/slides-assets/index-DooSdFer.css')
-  html = html.replace('</head>', [...initial].filter(name => name !== entry[0])
-    .map(name => `<link rel="modulepreload" crossorigin href="/artifact-editor/slides-assets/${name.split('/').at(-1)}">`).join('') + '</head>')
+  const html = (await readFile(resolve(sourceRoot, 'index.html'), 'utf8'))
+    .replace('__EDITOR_ENTRY__', `/artifact-editor/slides-assets/${entryName}`)
+    .replace('__EDITOR_STYLES__', `/artifact-editor/slides-assets/${cssName}`)
+    .replace('</head>', [...initial].filter(name => name !== entry[0]).map(name =>
+      `<link rel="modulepreload" crossorigin href="/artifact-editor/slides-assets/${name.split('/').at(-1)}">`).join('') + '</head>')
   await writeFile(resolve(output, 'index.html'), html)
-  for (const name of ['index-DooSdFer.css', 'anthropicons-fizzy-lake-yNspLiPZ.woff2']) {
-    await copyFile(resolve(upstream, 'assets', name), resolve(output, 'assets', name))
+  for (const name of ['anthropicons-fizzy-lake-yNspLiPZ.woff2']) {
+    await copyFile(resolve(sourceRoot, name), resolve(output, 'assets', name))
   }
-  await copyFile(resolve(upstream, 'third-party-licenses.txt'), resolve(output, 'third-party-licenses.txt'))
+  await copyFile(resolve(sourceRoot, 'third-party-licenses.txt'), resolve(output, 'third-party-licenses.txt'))
+  await build({ entryPoints: [resolve(sourceRoot, 'node/compiler.js')], outfile: resolve(output, 'node/compiler.cjs'),
+    bundle: true, format: 'cjs', platform: 'node', target: ['node22'], legalComments: 'inline' })
+  const compressed = {}
+  for (const name of await readdir(resolve(output, 'assets'))) {
+    if (!/\.(js|css)$/.test(name)) continue
+    const bytes = await readFile(resolve(output, 'assets', name))
+    const br = brotliCompressSync(bytes, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } })
+    const gzip = gzipSync(bytes, { level: 9 })
+    await writeFile(resolve(output, 'assets', `${name}.br`), br)
+    await writeFile(resolve(output, 'assets', `${name}.gz`), gzip)
+    compressed[name] = { bytes: bytes.length, br: br.length, gzip: gzip.length }
+  }
   const initialFiles = result.outputFiles.filter(file => initial.has(Object.keys(result.metafile.outputs).find(name => resolve(root, name) === file.path)))
-  const report = { upstreamSha256: hash(original), messageCount, original: { bytes: Buffer.byteLength(original), gzip: gzipSync(original).length },
+  const report = { upstreamCommit: recovered.upstreamCommit, source: 'third_party/baoyu-design/slides-source',
+    modules: recovered.modules.length, removedModules: recovered.removedModules, messageCount: recovered.translatedMessages,
+    unusedBrowserBindings: browserBindings.removed,
+    compressed, styles: { file: cssName, fallbackFont: fontName, fallbackFontBytes: font.length },
+    original: { bytes: 4666628, gzip: 1508796 },
     entry: { file: entryName, bytes: entryFile.contents.length, gzip: gzipSync(entryFile.contents).length },
     initial: { bytes: initialFiles.reduce((sum, file) => sum + file.contents.length, 0), gzip: initialFiles.reduce((sum, file) => sum + gzipSync(file.contents).length, 0) },
+    inputs: Object.keys(result.metafile.inputs),
     files: Object.fromEntries(result.outputFiles.map(file => [file.path.split(/[\\/]/).at(-1), { bytes: file.contents.length, sha256: hash(file.contents) }])) }
   await writeFile(resolve(output, 'manifest.json'), JSON.stringify(report, null, 2) + '\n')
   return report
+}
+
+// The browser runtime is private to main.js. The recovered distribution also
+// exports thousands of locals solely for its Node compiler/debug namespace.
+// Removing unread browser getters lets esbuild discard their unreachable code;
+// it does not skip initializers or change the Node compiler's public namespace.
+// Include lazy exports and the host bridge when collecting consumers. A new
+// computed runtime access must be reviewed explicitly instead of pruned blindly.
+async function pruneBrowserBindings(sourceRoot) {
+  const names = (await readdir(resolve(sourceRoot, 'modules'))).filter(name => name.endsWith('.js')).map(name => `modules/${name}`)
+  names.push('runtime.js', 'exports.js', 'workspace-bridge.js')
+  const files = await Promise.all(names.map(async name => {
+    const path = resolve(sourceRoot, name), source = await readFile(path, 'utf8')
+    return { path, source, tree: ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS) }
+  }))
+  const reads = new Set()
+  for (const { tree } of files) {
+    const visit = node => {
+      const runtime = node.expression && ts.isIdentifier(node.expression) && ['runtime', 'runtime2'].includes(node.expression.text)
+      if (runtime && ts.isElementAccessExpression(node)) throw new Error(`Computed private runtime access requires review: ${tree.fileName}`)
+      if (runtime && ts.isPropertyAccessExpression(node)) reads.add(node.name.text)
+      ts.forEachChild(node, visit)
+    }
+    visit(tree)
+  }
+  const sources = new Map()
+  let removed = 0
+  for (const { path, source, tree } of files) {
+    const edits = []
+    const visit = node => {
+      if (ts.isCallExpression(node) && node.expression.getText(tree) === 'bindRuntimeValue') {
+        // Factory-local export helpers can compute their key; retain them.
+        if (ts.isStringLiteral(node.arguments[1]) && !reads.has(node.arguments[1].text)) {
+          edits.push([node.getStart(tree), node.end]); removed++
+        }
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(tree)
+    let compiled = source
+    for (const [start, end] of edits.reverse()) compiled = compiled.slice(0, start) + 'void 0' + compiled.slice(end)
+    sources.set(path, compiled)
+  }
+  return { sources, removed }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

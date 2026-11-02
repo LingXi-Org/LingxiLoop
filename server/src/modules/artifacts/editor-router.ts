@@ -16,6 +16,8 @@ import { ARTIFACT_KIND_DEFINITIONS, BAOYU_DESIGN_ROOT, artifactKind, type Artifa
 import { blobFile, contentTypeOf, isWireEntry, listing, putBlob, readProjectFile, type WireEntry } from './store.js'
 import { availableAgents } from './repository.js'
 import { EDITOR_DOWNLOAD_SCRIPT } from './editor-downloads.js'
+import { sendEditorAsset } from './editor-static.js'
+import { slideWorkspaceConversation } from './slides-workspace.js'
 
 // Ported from baoyu-design server.mjs `startServer`/`route`: the same routes under
 // /artifact-editor/<kind>/<grant>/, with the folder replaced by the artifact store,
@@ -125,7 +127,7 @@ async function authorizeGrant(token: string, kind: string, writing: boolean): Pr
 
 async function agentPresence(session: EditorSession) {
   const { rows } = await pool.query<{ conversation_id: string | null; kind: 'design' | 'slides' }>('SELECT conversation_id,kind FROM artifacts WHERE id=$1', [session.grant.artifactId])
-  const conversationId = rows[0]?.conversation_id
+  const conversationId = rows[0] ? await slideWorkspaceConversation(pool, session.grant.artifactId, rows[0].conversation_id) : null
   const available = Boolean(conversationId && (await availableAgents(pool, session.grant.companyId, conversationId, rows[0].kind)).length)
   return { available, listening: false, busy: false, hook: available }
 }
@@ -149,18 +151,22 @@ async function serveEditor(request: Request, response: Response, definition: Art
   }
   const ext = extname(file).toLowerCase()
   const type = STATIC_TYPES[ext] ?? 'application/octet-stream'
-  const bytes = await readFile(file)
   if (ext === '.html') {
+    const bytes = await readFile(file)
     const html = bytes.toString('utf8').replace('</head>', `<script>${EDITOR_DOWNLOAD_SCRIPT}</script></head>`)
     response.status(200).set({ 'Content-Type': type, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': pageCsp(definition.pageScriptSrc(html)) })
     response.end(request.method === 'HEAD' ? undefined : html)
     return
   }
+  // Precompressed sidecars avoid spending request CPU on immutable assets.
+  if (definition.kind === 'slides' && parts[0] === 'assets' && ['.js', '.css'].includes(ext)) {
+    await sendEditorAsset(request, response, file, type, true)
+    return
+  }
   response.status(200).set({ 'Content-Type': type, 'X-Content-Type-Options': 'nosniff',
-    // The page's build names its assets by content hash.
     'Cache-Control': parts[0] === 'assets' ? 'private, max-age=31536000, immutable' : 'no-cache' })
-  response.end(request.method === 'HEAD' ? undefined : bytes)
+  response.end(request.method === 'HEAD' ? undefined : await readFile(file))
 }
 
 async function serveBlob(request: Request, response: Response, id: string, artifactId?: string) {
@@ -334,6 +340,9 @@ async function route(request: Request, response: Response, session: EditorSessio
       return sendJson(response, outcome.status, outcome.body)
     }
     const contentType = request.headers['content-type'] ?? 'application/octet-stream'
+    if (session.definition.kind === 'slides' && /^video\//i.test(contentType)) {
+      return publishError(response, 415, 'invalid_content', 'video uploads are not supported')
+    }
     const bytes = await readBody(request, session.definition.layout.maxBlobBytes)
     if (bytes.length === 0) return publishError(response, 400, 'invalid_content', 'empty upload')
     return sendJson(response, 200, await putBlob(pool, session.definition, artifactId, bytes, contentType))

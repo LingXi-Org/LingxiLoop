@@ -147,6 +147,34 @@ runtime/schema/ledger digest plus live Worker tag comparisons; it never adopts
 versions or prints configuration secrets.
 
 Ordinary chat always uses deep execution with all authorized capabilities.
+
+The reviewed3.8.19→3.8.20 plan uses the same runtime-only product60 path, with
+3.8.19 as its sole source. Root/server manifests and locks must identify the
+same actual formal3.8.20 registry archive and integrity. The native14/protocol11
+schema and complete60 migration inventory remain identical. The source19 plan
+and its existing intent hash remain unchanged. Fresh, partial58/59, skipped
+source18→20 and unknown provenance are refused; target20 startup only verifies
+the already installed exact60 state, without migrations or seed writes.
+
+Test bootstrap retains the actual formal18→19 source path using a separately
+verified published19 archive, then performs the exact19→20 CAS. The original
+18→19 tests run against that genuine19 fixture; current20 runs its separate
+CAS, read-only startup, retained-job and uncertain-commit checks. This isolation
+does not replace the product dependency or weaken production provenance.
+
+For the qualified SiliconFlow DeepSeek native producer,20 enables the explicit
+native-v3 binding: original-schema business-only batches are valid, while actual
+public output still uses its sealed native binding. A current Design request
+must first select its authorized skill load before dependent Design tools are
+exposed. The required selection comes from the granted catalog; it grants no
+capability, supplies no guessed arguments and never skips a format/check receipt.
+Its per-response output allowance is16K to accommodate complete native file
+arguments; total work and cost budgets remain bounded. `content` stays an exact
+JSON string, with explicit encoding guidance rather than repair or coercion.
+The provider's [max_tokens contract](https://api-docs.siliconflow.cn/docs/api/chat-completions-post)
+controls that output allowance. Qualification counts all model attempts and
+rejects recovered truncation as zero-failure evidence.
+
 Requests disable provider thinking for both main answers and auxiliary
 validation; providers may still return metered reasoning tokens, and only final
 content enters user previews. The default DeepSeek per-attempt timeout is 90
@@ -164,3 +192,36 @@ never rename stored vectors or delete the old index to make startup pass.
 Worker secrets are managed with `wrangler secret put`. After
 `/api/internal/bootstrap-admin` creates the first verified administrator, delete
 `BOOTSTRAP_ADMIN_TOKEN`.
+
+
+## Product61 runtime20 to21 maintenance patch
+
+This exact plan requires already installed formal3.8.20, the complete61 named
+migration checksums and unchanged native14/protocol11/publicText3/runTrace1.
+Only3.8.20 to the actual formal3.8.21 package is accepted. The target image,
+root/server manifests, locks, archive integrity and native schema must agree.
+It cannot install61, adopt unknown provenance, skip an earlier product state or
+perform retirement. Historical product58/60 plan identities remain unchanged.
+
+The existing standard CLI owns read-only preflight, all-kind retained-work
+barriers, Worker drain, both source APIs stopping, one persisted-intent CAS and
+ordered target convergence. Live work, retained Slides jobs/checkpoints,
+unobservable leases or other final database clients stop the transition. Do
+not delete bindings, tasks, attempt markers or business data to force progress.
+An uncertain commit requires the existing exclusive read-only observation;
+proven source restores its source containers, proven target continues forward.
+
+Target21 startup requires the complete already installed61 ledger and exact21
+provenance, then returns without DDL, migration or seed writes. Fresh and
+partial58/59/60 databases are refused. Test bootstrap alone uses separately
+verified actual19/20 archives to retain the original source qualifications,
+install the test-only20/product61 source and perform the exact20 to21 CAS.
+No development tarball or source checkout substitutes for a product dependency.
+
+The product suspension regression narrows only preview publication and uses a
+synthetic provider with the real Worker/PostgreSQL boundary. It reproduces
+formal20's interrupted-before-seal defect, preserves an overlapping first-ACK
+success control, and verifies injected product-host seal refusal stays failed
+with no result. The specific in-flight-second-ACK race remains covered by the
+SDK's independent regression. These deterministic checks establish neither
+live-provider generation quality nor browser/teaching-content acceptance.

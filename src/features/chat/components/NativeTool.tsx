@@ -37,7 +37,8 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
   const [error, setError] = useState<string | null>(null)
   const inFlight = useRef(false)
   const resultStatus = result && typeof result === 'object' && 'status' in result ? result.status : undefined
-  const display = resolveToolDisplay(toolName, resultStatus, result && typeof result === 'object' ? Reflect.get(result, 'display') : undefined)
+  const display = resolveToolDisplay(toolName, resultStatus, result && typeof result === 'object' ? Reflect.get(result, 'display') : undefined,
+    result && typeof result === 'object' ? Reflect.get(result, 'sourceStatus') : undefined)
   const memory = memoryActivitySchema.safeParse(result && typeof result === 'object' ? Reflect.get(result, 'memory') : undefined)
   const ended = message.status?.type === 'complete' || message.status?.type === 'incomplete'
   const pending = approval && approval.approved === undefined && !approval.resolution && !ended

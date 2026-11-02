@@ -353,7 +353,14 @@ function resourceQuery(resource: PermissionResource): {
       }
     case 'conversation':
       return {
-        sql: `SELECT company_id,project_id,NULL::text AS created_by,members AS conversation_members,kind AS conversation_kind,
+        sql: `SELECT company_id,project_id,NULL::text AS created_by,
+                     CASE WHEN EXISTS(SELECT 1 FROM slide_workspaces w JOIN artifacts a ON a.id=w.artifact_id
+                       WHERE w.conversation_id=conversations.id AND a.conversation_id IS NOT NULL)
+                     THEN (SELECT COALESCE(jsonb_agg(member),'[]'::jsonb) FROM jsonb_array_elements_text(conversations.members) member
+                       WHERE EXISTS(SELECT 1 FROM slide_workspaces w JOIN artifacts a ON a.id=w.artifact_id
+                         JOIN conversations source ON source.id=a.conversation_id AND source.company_id=a.company_id
+                         WHERE w.conversation_id=conversations.id AND (source.members ? member OR member=w.agent_id)))
+                     ELSE members END AS conversation_members,kind AS conversation_kind,
                      leader_id,NULL::text AS resource_status FROM conversations WHERE id=$1`,
         params: [resource.id],
         lockTarget: 'conversations',

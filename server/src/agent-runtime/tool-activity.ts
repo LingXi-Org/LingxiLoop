@@ -3,6 +3,7 @@ import { pool, presentationPool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
 import { toolDisplay, toolDisplaySchema, type ToolDisplay } from '../../../src/lib/runActivity.js'
 import { readPublicLlmTrace } from './trace-activity.js'
+import { knowledgeSearchSummary } from '../../../src/lib/knowledgeSearch.js'
 
 export interface PublicToolActivity {
   toolCallId: string
@@ -107,8 +108,16 @@ export async function finishPublicToolActivity(context: ActionContext, display: 
     else if (action.startsWith('documents.')) summary = ({ read: '已阅读文档内容。', create: '文档已创建，可在答复附件中查看。', edit: '文档修改已保存，可在答复附件中查看。', rename: '文档名称已更新。', delete: '文档已删除。', list: '已查看当前有权访问的文档。', recent: '已查看最近创建的文档。' } as Record<string, string>)[action.split('.')[1]] ?? summary
     else if (action === 'research.read') summary = '已阅读网页内容，引用依据会在答复中注明。'
     else if (action === 'research.search') summary = '查找已完成，可在下方查看来源。'
-    else if (action === 'knowledge.read_source') summary = '已阅读课程原文，引用依据会在答复中注明。'
-    else if (action === 'knowledge.search') summary = '检索已完成，可在下方查看资料结果。'
+    else if (action === 'knowledge.read_source') {
+      const status = value && typeof value === 'object' ? Reflect.get(value, 'status') : undefined
+      const text = value && typeof value === 'object' ? Reflect.get(value, 'text') : undefined
+      summary = status === 'ready' && typeof text === 'string' && text.trim()
+        ? '已阅读课程原文，引用依据会在答复中注明。'
+        : status === 'processing' ? '课程资料仍在处理，尚未读取原文。'
+        : status === 'empty' || status === 'ready' && text === '' ? '课程资料没有可读取的原文。'
+        : '课程原文暂时不可用，未完成读取。'
+    }
+    else if (action === 'knowledge.search') summary = knowledgeSearchSummary(value && typeof value === 'object' ? Reflect.get(value, 'status') : undefined)
     else if (action === 'chat.report_progress') summary = '公开任务说明已更新。'
     else if (action === 'chat.ask') summary = '已提出补充问题，等待你的回答。'
     else if (action === 'handoffs.create') summary = '协作任务已提交，后续结果将按实际执行情况更新。'

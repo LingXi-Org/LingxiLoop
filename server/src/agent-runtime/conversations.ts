@@ -14,8 +14,16 @@ export async function syncProductChannel(profile: ImChannelProfile, signal?: Abo
   const bindings = (await pool.query<{ company_id: string }>('SELECT company_id FROM im_channel_bindings WHERE channel_id=$1', [profile.channelId])).rows
   if (bindings.length !== 1) throw new Error('channel binding is unavailable or ambiguous')
   const { lingxiOSControl } = await import('./runtime.js')
-  await syncConversationPolicy(await lingxiOSControl(),bindings[0].company_id,profile.channelId)
-  await wukongClient(signal).upsertChannel(profile)
+  const policy = await syncConversationPolicy(await lingxiOSControl(),bindings[0].company_id,profile.channelId)
+  // A Slides editing room inherits its source room's current ACL. Do not leave a
+  // revoked person subscribed to IM even while a stored profile is reconciling.
+  const subscribers = profile.presetKey === 'slides-workspace'
+    ? { ...profile, members: policy.participants.filter(member => member.capabilities.includes('read')).map(member => member.id) }
+    : profile
+  await wukongClient(signal).upsertChannel(subscribers)
+  const { synchronizeSlideWorkspaceMembers } = await import('../modules/artifacts/slides-workspace.js')
+  const derived = await withTransaction(pool, db => synchronizeSlideWorkspaceMembers(db, profile.channelId))
+  for (const room of derived) await syncProductChannel(room, signal)
 }
 
 /** Resolve the native policy from current product membership and ACLs, never message text. */
