@@ -39,11 +39,19 @@ function tokens(text: string) {
   return result;
 }
 
-/** Collapsed view: start one sentence before the supporting sentence so it is visible without expanding. */
+const BLOCK_START = /^\s*(?:[-*+>#|]|\d+[.)]\s|```|~~~)/;
+// Hard-wrapped PDF lines stay within one sentence; a newline only ends one before a Markdown block.
+const NEW_BLOCK = String.raw`\n(?=\s*(?:[-*+>#|]|\d+[.)]\s|` + "```|~~~))|\n{2,}";
+const SENTENCE_END = new RegExp(String.raw`[。！？；!?;]+|\.(?=\s)|` + NEW_BLOCK, "g");
+// Colons split too, so a highlight never swallows the clause that follows it.
+const CLAUSE_END = new RegExp(String.raw`[。！？；：!?;:]+|\.(?=\s)|` + NEW_BLOCK);
+
+/** Collapsed view: start one sentence before the supporting sentence so it is visible without expanding.
+ *  Excerpts with Markdown blocks are never cut, since a slice could open mid-list, mid-table or mid-fence. */
 export function focusExcerpt(text: string, sentence: string | null) {
   const at = sentence ? text.indexOf(sentence) : -1;
-  if (at <= 0) return text;
-  const boundaries = [...text.slice(0, at).matchAll(/[。！？；!?;\n]+/g)];
+  if (at <= 0 || text.split("\n").some((line) => BLOCK_START.test(line))) return text;
+  const boundaries = [...text.slice(0, at).matchAll(SENTENCE_END)];
   const start = boundaries.length > 1 ? boundaries[boundaries.length - 2] : undefined;
   if (!start) return text;
   const rest = text.slice(start.index + start[0].length).trimStart();
@@ -55,9 +63,9 @@ export function matchSentence(claim: string, text: string) {
   const wanted = tokens(claim);
   if (wanted.size < 2) return null;
   let best: { sentence: string; score: number } | null = null;
-  // Colons split too, so a highlight never swallows the clause that follows it.
-  for (const raw of text.split(/[。！？；：!?;:\n]+/)) {
-    const sentence = raw.replace(/^[…\s]+|[…\s]+$/g, "");
+  for (const raw of text.split(CLAUSE_END)) {
+    // Block markers never reach the rendered text nodes, so they cannot be part of the highlight.
+    const sentence = raw.replace(/^[…\s]+|[…\s]+$/g, "").replace(/^(?:[-*+>|]|#{1,6}|\d+[.)])\s+/, "");
     const found = tokens(sentence);
     let shared = 0;
     for (const token of wanted) if (found.has(token)) shared++;

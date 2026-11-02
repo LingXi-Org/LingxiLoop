@@ -39,4 +39,13 @@ test('collapsed excerpts open one sentence before the supporting sentence', () =
   assert.equal(focusExcerpt(text, '支持的句子'), '…第三句。支持的句子。后文。')
   assert.equal(focusExcerpt(text, '第二句'), text)
   assert.equal(focusExcerpt(text, null), text)
+  for (const structured of ['导言。\n\n- 第一项。\n- 支持的句子。', '导言。\n\n## 标题\n\n第二句。支持的句子。', '导言。\n\n| 列 |\n| --- |\n| 支持的句子 |', '导言。\n\n```\n代码。\n支持的句子\n```'])
+    assert.equal(focusExcerpt(structured, '支持的句子'), structured)
+})
+
+test('matched sentences survive Markdown markers, hard wraps and English full stops', () => {
+  assert.equal(matchSentence('查询来自解码器一侧', '前文。\n\n- 查询来自解码器一侧\n- 其他'), '查询来自解码器一侧')
+  assert.equal(matchSentence('查询来自解码器一侧', '## 查询来自解码器一侧\n\n正文'), '查询来自解码器一侧')
+  assert.equal(matchSentence('查询来自解码器，键和值来自编码器输出', '前文。查询来自解码器一侧，\n键和值来自编码器输出。后文。'), '查询来自解码器一侧，\n键和值来自编码器输出')
+  assert.equal(matchSentence('queries come from the decoder side', 'Attention is general. In cross attention, queries come from the decoder side. Keys use 0.5 scale.'), 'In cross attention, queries come from the decoder side')
 })

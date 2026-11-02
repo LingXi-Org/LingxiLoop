@@ -136,12 +136,12 @@ export function ConfidenceMarker({
   const [expanded, setExpanded] = useState<readonly string[]>([]);
   useEffect(() => () => clearTimeout(closeTimer.current), []);
   const basis = hovered && (hovered.evidence?.length ? <div className="divide-y divide-border">
-    {hovered.evidence.map((item) => {
+    {hovered.evidence.map((item, index) => {
       const key = `${hovered.id}:${item.marker}:${item.chunkId}`;
       const source = readableTitle(item.title), excerpt = cleanExcerpt(item.excerpt, item.truncated);
       const page = pageLabel(excerpt.pages), collapsible = excerpt.text.length > COLLAPSE_AFTER;
       const open = !collapsible || expanded.includes(key), sentence = matchSentence(hovered.text, excerpt.text);
-      return <section key={key} className="min-w-0 space-y-2.5 px-4 py-3.5 [overflow-wrap:anywhere]">
+      return <section key={key} className={cn("min-w-0 space-y-2.5 [overflow-wrap:anywhere]", floatingBasis && "px-4 py-3.5")}>
       <div className="flex items-start gap-2.5">
         <FileTextIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
@@ -150,7 +150,7 @@ export function ConfidenceMarker({
         </div>
         {page && <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs whitespace-nowrap text-muted-foreground">{page}</span>}
       </div>
-      <div className={cn("border-s-2 border-emerald-500/60 ps-3 text-[13.5px] leading-[1.75] text-foreground/90 [&>:first-child]:mt-0 [&>:last-child]:mb-0 [&_mark]:rounded [&_mark]:bg-amber-200/60 [&_mark]:px-0.5 [&_mark]:text-inherit dark:[&_mark]:bg-amber-400/25",
+      <div id={`${basisId}-excerpt-${index}`} className={cn("border-s-2 border-emerald-500/60 ps-3 text-[13.5px] leading-[1.75] text-foreground/90 [&>:first-child]:mt-0 [&>:last-child]:mb-0 [&_mark]:rounded [&_mark]:bg-amber-200/60 [&_mark]:px-0.5 [&_mark]:text-inherit dark:[&_mark]:bg-amber-400/25",
         !open && "max-h-36 overflow-hidden [mask-image:linear-gradient(to_bottom,black_65%,transparent)]",
         "[&_p]:my-2 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_blockquote]:border-s-2 [&_blockquote]:border-border [&_blockquote]:ps-3 [&_blockquote]:text-muted-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:font-mono [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-2 [&_pre_code]:p-0 [&_th]:border-b [&_th]:border-border [&_th]:px-2 [&_th]:py-1 [&_td]:px-2 [&_td]:py-1 [&_a]:underline [&_a]:underline-offset-2 [&_a]:focus-visible:outline [&_a]:focus-visible:outline-ring [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold")}>
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[highlightSentence(sentence)]} skipHtml components={{
@@ -160,7 +160,7 @@ export function ConfidenceMarker({
       </div>
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span>{item.truncated ? "原文节选" : "原文"}</span>
-        {collapsible && <button type="button" aria-expanded={open}
+        {collapsible && <button type="button" aria-expanded={open} aria-controls={`${basisId}-excerpt-${index}`}
           onClick={() => setExpanded((keys) => open ? keys.filter((other) => other !== key) : [...keys, key])}
           className="inline-flex items-center gap-1 rounded px-1 text-foreground/80 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
           {open ? "收起" : "展开更多"}
@@ -172,6 +172,8 @@ export function ConfidenceMarker({
   </div> : <span className={cn("block whitespace-pre-wrap break-words [overflow-wrap:anywhere]", floatingBasis && "p-3")}>
     {LABEL[hovered.confidence]} · {hovered.basis}
   </span>);
+  // Evidence cards are read through aria-describedby; a live region would re-announce them on every expand.
+  const liveBasis = hovered?.evidence?.length ? {} : { role: "status", "aria-live": "polite" as const };
   return (
     <ConfidenceContext.Provider value={{ hoveredId, basisId, leave, show: (id, element, point) => {
       cancelClose();
@@ -216,7 +218,7 @@ export function ConfidenceMarker({
               if (target instanceof Element && root.current?.contains(target) && target.closest('[data-confidence-id]')) event.preventDefault();
             }}
             onPointerEnter={cancelClose} onPointerLeave={leave}>
-            <div id={basisId} role="status" aria-live="polite">{basis}</div>
+            <div id={basisId} {...liveBasis}>{basis}</div>
           </PopoverContent>
         </Popover> : claims.length > 0 && <div
           data-slot="confidence-basis"
@@ -226,7 +228,7 @@ export function ConfidenceMarker({
           role="region"
           aria-label="引用依据"
         >
-          <div id={basisId} role="status" aria-live="polite">
+          <div id={basisId} {...liveBasis}>
             {hovered && <div className={cn(floating, mono,
               "text-foreground/70 inline-flex max-w-full items-start gap-1.5 rounded-2xl px-2.5 py-1.5",
             )}>
