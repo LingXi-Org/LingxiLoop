@@ -1,9 +1,22 @@
-import { memo, useMemo } from "react";
+import { lazy, memo, Suspense, useEffect, useMemo } from "react";
 import { MessageResponse, type MessageResponseProps } from "@/features/chat/visualize/zcode/components/ai-elements/message.js";
 import { useZCodeIntl } from "@/features/chat/visualize/zcode/i18n/IntlProvider.js";
 import { projectGenUiReferences } from "../domain/references.js";
-import { GenUiCard } from "./GenUiCard.js";
 import { GenUiLoadingSkeleton } from "./GenUiLoadingSkeleton.js";
+
+// LingxiLoop: prose-only answers do not need the card, its MCP App bridge or page
+// host on the thread's critical path. They load once a rendered thread is idle,
+// or immediately when an answer references a view.
+const loadGenUiCard = () => import("./GenUiCard.js");
+const GenUiCard = lazy(() => loadGenUiCard().then((module) => ({ default: module.GenUiCard })));
+let cardPrefetched = false;
+function prefetchGenUiCard() {
+  if (cardPrefetched) return;
+  cardPrefetched = true;
+  const prefetch = () => { void loadGenUiCard().catch(() => { cardPrefetched = false; }); };
+  if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(prefetch, { timeout: 5000 });
+  else setTimeout(prefetch, 2000);
+}
 export const GenUiMessageResponse = memo(function GenUiMessageResponse({
   completed,
   messageKey,
@@ -11,6 +24,7 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
   ...props
 }: MessageResponseProps & { completed: boolean; messageKey: string; awaitingDelivery?: boolean }) {
   const { intl } = useZCodeIntl();
+  useEffect(prefetchGenUiCard, []);
   const parts = useMemo(
     () =>
       projectGenUiReferences(typeof props.children === "string" ? props.children : "", completed),
@@ -56,11 +70,9 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
         {part.text}
       </MessageResponse>
     ) : part.kind === "ui" && targets[index] ? (
-      <GenUiCard
-        key={`${messageKey}:${(props.textOffset ?? 0) + part.offset}`}
-        reference={part.reference}
-        target={targets[index]!}
-      />
+      <Suspense key={`${messageKey}:${(props.textOffset ?? 0) + part.offset}`} fallback={<GenUiLoadingSkeleton label={intl.formatMessage({ id: "genUi.waiting" })} className="my-3" />}>
+        <GenUiCard reference={part.reference} target={targets[index]!} />
+      </Suspense>
     ) : (part.kind === "pending" && props.streaming && !completed)
       || (part.kind === "ui" && completed && awaitingDelivery) ? (
       <GenUiLoadingSkeleton key={`status:${index}`} label={intl.formatMessage({

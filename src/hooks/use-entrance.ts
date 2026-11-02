@@ -1,12 +1,17 @@
 import { useLayoutEffect, useRef } from 'react'
 import { EASE_OUT, ENTRANCE_SECONDS } from '@/lib/motion'
 
-/** Replay a surface entrance without remounting its editor, form or runtime. */
+/** Replay a surface entrance without remounting its editor, form or runtime.
+ * The first identity is the page arriving, not a change: fading it in from
+ * transparent would only flash the whole surface on load. */
 export function useEntrance<T extends HTMLElement = HTMLDivElement>(identity: string | number | boolean | null) {
   const ref = useRef<T>(null)
+  const mounted = useRef(false)
   useLayoutEffect(() => {
     const element = ref.current
-    if (identity === null || !element?.animate) return
+    const initial = !mounted.current
+    mounted.current = true
+    if (initial || identity === null || !element?.animate) return
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)')
     if (preference.matches) return
     const animation = element.animate(

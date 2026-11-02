@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { FilePreviewDialog } from '@/components/retab/ui/file-preview-dialog'
+import { FilePreviewDialog } from '@/components/retab/ui/lazy-file-preview-dialog'
 import type { ViewerSource } from '@/components/retab/lib/viewer-source'
 import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'

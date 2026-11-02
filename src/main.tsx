@@ -4,6 +4,7 @@ import '@fontsource-variable/inter'
 import '@fontsource-variable/geist'
 import 'katex/dist/katex.min.css'
 import { AppThemeProvider } from './components/AppThemeProvider'
+import { BootShellRelease } from './components/WorkspaceSkeleton'
 import './styles/globals.css'
 
 const root = createRoot(document.getElementById('root')!)
@@ -18,6 +19,12 @@ window.addEventListener('vite:preloadError', (event) => {
   window.location.reload()
 })
 
+// A link to a conversation renders its messages as soon as the workspace opens:
+// fetch that renderer alongside the shell instead of after it.
+if (/[?&]conversation=[^&]/.test(window.location.search) && !/[?&]view=(?!conversations)/.test(window.location.search)) {
+  void import('./features/chat/components/ConversationThread').catch(() => {})
+}
+
 async function boot() {
   const [{ App }, { GlobalInteractionProvider }] = await Promise.all([
     import('./App'),
@@ -25,9 +32,11 @@ async function boot() {
   ])
   root.render(
     <StrictMode>
-      <AppThemeProvider>
-        <GlobalInteractionProvider><App /></GlobalInteractionProvider>
-      </AppThemeProvider>
+      <BootShellRelease>
+        <AppThemeProvider>
+          <GlobalInteractionProvider><App /></GlobalInteractionProvider>
+        </AppThemeProvider>
+      </BootShellRelease>
     </StrictMode>,
   )
 

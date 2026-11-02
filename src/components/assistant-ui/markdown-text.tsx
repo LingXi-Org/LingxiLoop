@@ -4,11 +4,11 @@ import { TextOffsetContext } from '@/features/chat/visualize/TextOffsetContext'
 
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
 import { code } from '@streamdown/code'
-import { createMathPlugin } from '@streamdown/math'
+import type { MathPlugin } from 'streamdown'
 import { mermaid } from './markdown-mermaid'
 import { Block, type BlockProps, StreamdownContext, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'
-import { createContext, memo, useContext, useMemo, useState, useSyncExternalStore } from 'react'
+import { createContext, memo, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import type { Root, ElementContent } from 'hast'
 import { SKIP, visit } from 'unist-util-visit'
 import {
@@ -28,7 +28,32 @@ import { MentionBadge } from '@/components/MentionBadge'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 export type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 
-const plugins = { code, math: createMathPlugin({ singleDollarTextMath: true }), mermaid }
+// KaTeX is the largest renderer in the thread; prose never downloads it. A part
+// with math syntax requests it, renders as text for that moment, then re-renders.
+const MATH_SYNTAX = /\$|\\[([]|\\begin\s*\{/
+let mathPlugin: MathPlugin | undefined
+let mathRequest: Promise<MathPlugin> | undefined
+const mathListeners = new Set<() => void>()
+export function loadMathPlugin(): Promise<MathPlugin> {
+  mathRequest ??= import('@streamdown/math').then(({ createMathPlugin }) => {
+    mathPlugin = createMathPlugin({ singleDollarTextMath: true })
+    for (const listener of mathListeners) listener()
+    return mathPlugin
+  }).catch((error) => { mathRequest = undefined; throw error })
+  return mathRequest
+}
+const subscribeMath = (listener: () => void) => { mathListeners.add(listener); return () => { mathListeners.delete(listener) } }
+const readMath = () => mathPlugin
+const proseOnly = { code, mermaid }
+let withMath: { code: typeof code; mermaid: typeof mermaid; math: MathPlugin } | undefined
+function useMarkdownPlugins(text: string) {
+  const math = useSyncExternalStore(subscribeMath, readMath, readMath)
+  const needsMath = MATH_SYNTAX.test(text)
+  useEffect(() => { if (needsMath && !math) void loadMathPlugin().catch(() => {}) }, [needsMath, math])
+  if (!math) return proseOnly
+  withMath ??= { code, mermaid, math }
+  return withMath
+}
 const smooth = { minCommitMs: 32 }
 const motionQuery = '(prefers-reduced-motion: reduce)'
 const readReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.(motionQuery).matches
@@ -211,6 +236,7 @@ const MarkdownTextImpl = ({
   const [hoveredId, setHoveredId] = useState('')
   const part = useMessagePartText()
   const { text } = part
+  const plugins = useMarkdownPlugins(text)
   // Assistant-ui may reuse a message slot across thread switches. Give its
   // smooth queue and our Markdown leaf lifetime the actual text-part identity.
   const partKey = useAuiState(state => JSON.stringify([state.message.id,

@@ -220,6 +220,40 @@ export function isMuted(c: Pick<Conversation, 'muted' | 'mutedUntil'>): boolean 
   return new Date(c.mutedUntil).getTime() > Date.now()
 }
 
+let reloading: Promise<void> | null = null
+let reloadAgain = false
+
+async function reloadOnce(): Promise<void> {
+  const workspace = getWorkspaceSession()
+  if (!workspace) { useConversations.getState().reset(); return }
+  const userId = useAuth.getState().user?.id
+  const projectId = workspace?.projectId ?? null
+  const epoch = ++requestEpoch
+  useConversations.setState({ loading: true, error: null })
+  try {
+    const list = await conversationsApi.getConversations()
+    const activeWorkspace = getWorkspaceSession()
+    if (epoch !== requestEpoch
+      || useAuth.getState().user?.id !== userId
+      || activeWorkspace?.companyId !== workspace?.companyId
+      || activeWorkspace?.projectId !== projectId) return
+    const conversations = list.map(fromApi)
+    chatTransport.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
+    useConversations.setState({ list: conversations, projectId, loaded: true, loading: false, error: null })
+    reconcileConversationSelection(conversations)
+    refreshActiveMessagesIfSidebarMoved(conversations)
+  } catch (error) {
+    const activeWorkspace = getWorkspaceSession()
+    if (epoch !== requestEpoch
+      || useAuth.getState().user?.id !== userId
+      || activeWorkspace?.companyId !== workspace?.companyId
+      || activeWorkspace?.projectId !== projectId) return
+    // A refresh failure keeps the last safe projection visible, but is
+    // explicit so the shell can render a retry affordance.
+    useConversations.setState({ loading: false, error: userFacingError(error, '暂时无法刷新对话，请稍后重试。') })
+  }
+}
+
 export const useConversations = create<ConversationsState>((set) => ({
   list: [],
   projectId: null,
@@ -258,35 +292,15 @@ export const useConversations = create<ConversationsState>((set) => ({
       set({ loading: false, error: userFacingError(error, '暂时无法加载对话，请稍后重试。') })
     }
   },
-  async reload() {
-    const workspace = getWorkspaceSession()
-    if (!workspace) { useConversations.getState().reset(); return }
-    const userId = useAuth.getState().user?.id
-    const projectId = workspace?.projectId ?? null
-    const epoch = ++requestEpoch
-    set({ loading: true, error: null })
-    try {
-      const list = await conversationsApi.getConversations()
-      const activeWorkspace = getWorkspaceSession()
-      if (epoch !== requestEpoch
-        || useAuth.getState().user?.id !== userId
-        || activeWorkspace?.companyId !== workspace?.companyId
-        || activeWorkspace?.projectId !== projectId) return
-      const conversations = list.map(fromApi)
-      chatTransport.setWorkspaceChannels(conversations.map((conversation) => conversation.id))
-      set({ list: conversations, projectId, loaded: true, loading: false, error: null })
-      reconcileConversationSelection(conversations)
-      refreshActiveMessagesIfSidebarMoved(conversations)
-    } catch (error) {
-      const activeWorkspace = getWorkspaceSession()
-      if (epoch !== requestEpoch
-        || useAuth.getState().user?.id !== userId
-        || activeWorkspace?.companyId !== workspace?.companyId
-        || activeWorkspace?.projectId !== projectId) return
-      // A refresh failure keeps the last safe projection visible, but is
-      // explicit so the shell can render a retry affordance.
-      set({ loading: false, error: userFacingError(error, '暂时无法刷新对话，请稍后重试。') })
-    }
+  reload() {
+    // Message, run and reconnect events arrive in bursts while agents stream.
+    // One list read is in flight at a time; a burst coalesces into one trailing
+    // read that starts after (and so observes) every event that requested it.
+    if (reloading) { reloadAgain = true; return reloading }
+    reloading = (async () => {
+      do { reloadAgain = false; await reloadOnce() } while (reloadAgain)
+    })().finally(() => { reloading = null })
+    return reloading
   },
   reset() {
     scopeEpoch += 1

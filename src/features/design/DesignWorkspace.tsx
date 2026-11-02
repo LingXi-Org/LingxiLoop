@@ -3,16 +3,21 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { RightPanelHeader } from '@/components/shell/RightPanel'
 import { Sidebar, SidebarProvider } from '@/components/ui/sidebar'
 import { SidebarResizeHandle } from '@/components/ui/sidebar-resize-handle'
+import { PENDING_DESIGN_ID } from './pending'
 
-const ArtifactView = lazy(() => import('@/features/artifacts/components/ArtifactView').then(module => ({ default: module.ArtifactView })))
+export const loadArtifactView = () => import('@/features/artifacts/components/ArtifactView')
+const ArtifactView = lazy(() => loadArtifactView().then(module => ({ default: module.ArtifactView })))
 type Design = { artifactId: string; title: string }
 
 /** The caller keys this workspace by account, workspace and conversation.
  * Keep the editor alive when folded, including its unsaved edits and live updates. */
 export function DesignWorkspace({ children, design, onClose }: { children: ReactNode; design: Design | null; onClose(): void }) {
   const [retained, setRetained] = useState(design)
-  if (design && design !== retained) setRetained(design)
-  const current = design ?? retained
+  const pending = design?.artifactId === PENDING_DESIGN_ID
+  if (design && !pending && design !== retained) setRetained(design)
+  // Reopening this conversation's one canvas must retain its live draft while
+  // the ensure request checks the existing board again.
+  const current = pending && retained?.artifactId ? retained : design ?? retained
   const open = Boolean(design)
   const panel = useRef<HTMLElement>(null)
   const opener = useRef<HTMLElement | null>(null)
@@ -33,6 +38,8 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
     })
   }
 
+  const placeholder = <div className="flex h-full min-h-0 flex-col"><RightPanelHeader eyebrow="设计" title={current?.title ?? '设计'} onClose={close} closeLabel="关闭设计" /><ResourceSkeleton variant="media" label="正在打开设计" /></div>
+
   return <div data-design-workspace data-design-open={open} className="relative h-full min-h-0 min-w-0 overflow-hidden">
     <SidebarProvider open={open} openMobile={open} onOpenChange={value => { if (!value) close() }} onOpenMobileChange={value => { if (!value) close() }} keyboardShortcut={open}
       className="relative h-full min-h-0 overflow-hidden" style={{ '--sidebar-width': width === null ? '50cqw' : `clamp(35cqw, ${width}px, 65cqw)` } as React.CSSProperties}>
@@ -44,9 +51,9 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
           onKeyDown={event => {
             if (event.key === 'Escape' && !event.defaultPrevented) { event.stopPropagation(); close() }
           }}>
-          {current && <Suspense fallback={<div className="flex h-full min-h-0 flex-col"><RightPanelHeader eyebrow="设计" title={current.title} onClose={close} closeLabel="关闭设计" /><ResourceSkeleton variant="media" label="正在打开设计" /></div>}>
+          {current && (current.artifactId === PENDING_DESIGN_ID ? placeholder : <Suspense fallback={placeholder}>
             <ArtifactView key={current.artifactId} artifactId={current.artifactId} kind="design" title={current.title} onClose={close} />
-          </Suspense>}
+          </Suspense>)}
         </aside>
         <SidebarResizeHandle data-design-resize-handle side="right" label="调整对话与画板宽度" min="35%" max="65%" onResize={setWidth} />
       </Sidebar>

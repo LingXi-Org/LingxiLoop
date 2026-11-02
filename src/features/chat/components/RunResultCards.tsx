@@ -5,7 +5,7 @@ import { CardSurface, conversationCardSize } from '@/components/assistant-ui/ele
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useEffect, useRef, useState } from 'react'
-import { FilePreviewDialog } from '@/components/retab/ui/file-preview-dialog'
+import { FilePreviewDialog } from '@/components/retab/ui/lazy-file-preview-dialog'
 import type { ViewerSource } from '@/components/retab/lib/viewer-source'
 import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
