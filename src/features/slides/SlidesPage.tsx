@@ -18,7 +18,11 @@ import type { ArtifactSummary } from '@/features/artifacts/contracts'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { formatDeckUpdated, useSlides } from './store'
 
-const SlidesWorkspace = lazy(() => import('./SlidesWorkspace').then(module => ({ default: module.SlidesWorkspace })))
+const loadSlidesWorkspace = () => import('./SlidesWorkspace')
+const SlidesWorkspace = lazy(() => loadSlidesWorkspace().then(module => ({ default: module.SlidesWorkspace })))
+// The library stays light; pointing at or focusing a deck starts its workspace
+// and assistant code, so the click itself only waits for that deck's data.
+const prefetchDeckCode = () => { void loadSlidesWorkspace().then(module => module.preloadSlidesAssistant?.()).catch(() => {}) }
 
 type Layout = 'grid' | 'list'
 type Sort = 'updated' | 'created' | 'title'
@@ -88,7 +92,8 @@ export function SlidesPage({ projectId }: { projectId: string }) {
       actions={<Button onClick={create} className="max-md:size-11 max-md:p-0"><HugeiconsIcon icon={Add01Icon} strokeWidth={2} data-icon="inline-start" /><span className="max-md:sr-only">新建演示文稿</span></Button>} />}
   >
     <PageBody>
-      <div data-slides-page className="space-y-8">
+      <div data-slides-page className="space-y-8" onPointerOver={event => { if ((event.target as Element).closest?.('[data-artifact-open-trigger]')) prefetchDeckCode() }}
+        onFocus={event => { if ((event.target as Element).closest?.('[data-artifact-open-trigger]')) prefetchDeckCode() }}>
         {reopening && <p role="status" className="text-sm text-muted-foreground">正在重新打开演示文稿…</p>}
         <section aria-labelledby="slides-start" className="space-y-3">
           <h2 id="slides-start" className="text-sm font-medium">开始</h2>

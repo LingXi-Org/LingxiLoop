@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
 export function SkeletonRegion({ label, className, children, ...props }: ComponentProps<'div'> & { label: string }) {
-  return <div role="status" aria-label={label} data-skeleton-region="" className={cn('ui-enter min-w-0', className)} {...props}>
+  return <div role="status" aria-label={label} data-skeleton-region="" className={cn('min-w-0', className)} {...props}>
     <span className="sr-only">{label}</span><div aria-hidden="true" className="contents">{children}</div>
   </div>
 }
@@ -51,7 +51,7 @@ function SkeletonTable({ count, columns }: { count: number; columns: number }) {
 export function ResourceSkeleton({ variant = 'list', count = 3, columns = 4, compact = false, label = '正在加载资源', className, ...props }: ResourceSkeletonProps) {
   const safeCount = Number.isFinite(count) ? Math.max(1, Math.min(Math.trunc(count), 8)) : 3
   const safeColumns = Number.isFinite(columns) ? Math.max(1, Math.min(Math.trunc(columns), 16)) : 4
-  return <div data-resource-skeleton="" data-resource-skeleton-variant={variant} role="status" aria-label={label} className={cn('ui-enter pointer-events-none w-full min-w-0', className)} {...props}>
+  return <div data-resource-skeleton="" data-resource-skeleton-variant={variant} role="status" aria-label={label} className={cn('pointer-events-none w-full min-w-0', className)} {...props}>
     <span className="sr-only">{label}</span>
     {variant === 'list' && Array.from({ length: safeCount }, (_, index) => <SkeletonRow key={index} compact={compact} />)}
     {variant === 'cards' && <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: safeCount }, (_, index) => <SkeletonCard key={index} />)}</div>}

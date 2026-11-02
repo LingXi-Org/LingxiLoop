@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, normalizePath } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { readFile } from 'node:fs/promises'
@@ -6,6 +6,12 @@ import { createHash } from 'node:crypto'
 import { Readable } from 'node:stream'
 import { isolatedEditor } from './shared/artifact-editor-origin'
 import { VISUALIZE_PUBLIC_RESOURCES, visualizeResourceFile, visualizeResourceUrl } from './shared/visualize-public-resources'
+
+// Every signed-in start renders these route modules, but each is discovered only
+// after its parent executes. Preloading them from the document turns that serial
+// chain of round trips into one parallel fetch that overlaps the session check.
+// Low priority: on a narrow link they must not delay the stylesheet or entry.
+const BOOT_ROUTE_MODULES = ['src/App.tsx', 'src/components/GlobalInteractionProvider.tsx', 'src/AuthedApp.tsx', 'src/desktop/DesktopApp.tsx', 'src/desktop/ChatPane.tsx']
 
 // Vite proxy target. Default points at the local dev server; set
 // LINGXILOOP_DEV_API_TARGET=https://loop.example.com (no trailing slash) to
@@ -15,6 +21,32 @@ const WS_TARGET = process.env.LINGXILOOP_DEV_WS_TARGET || HTTP_TARGET.replace(/^
 
 export default defineConfig({
   plugins: [react(), {
+    name: 'boot-route-preload',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, { bundle }) {
+        if (!bundle) return html
+        const chunks = Object.values(bundle).filter((output) => output.type === 'chunk')
+        const entry = chunks.find((chunk) => chunk.isEntry)
+        const skip = new Set([entry?.fileName, ...(entry?.imports ?? [])])
+        const files = new Set<string>()
+        const visit = (fileName: string) => {
+          if (skip.has(fileName) || files.has(fileName)) return
+          files.add(fileName)
+          const chunk = bundle[fileName]
+          if (chunk?.type === 'chunk') chunk.imports.forEach(visit)
+        }
+        for (const module of BOOT_ROUTE_MODULES) {
+          const id = normalizePath(path.resolve(__dirname, module)).toLowerCase()
+          const chunk = chunks.find((candidate) => candidate.moduleIds.some((moduleId) => normalizePath(moduleId).toLowerCase() === id))
+          if (!chunk) throw new Error(`boot route ${module} has no chunk`)
+          visit(chunk.fileName)
+        }
+        return { html, tags: Array.from(files, (file) => ({ tag: 'link', attrs: { rel: 'modulepreload', crossorigin: '', fetchpriority: 'low', href: `/${file}` }, injectTo: 'head' as const })) }
+      },
+    },
+  }, {
     name: 'isolated-artifact-editor',
     configureServer(server) {
       const base = process.env.LINGXILOOP_ARTIFACT_EDITOR_BASE ?? 'http://artifact.localhost:5180'

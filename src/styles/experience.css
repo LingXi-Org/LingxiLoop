@@ -11,6 +11,11 @@
 .ui-stagger > :nth-child(4) { animation-delay: 90ms; }
 .ui-stagger > :nth-child(n+5) { animation-delay: 120ms; }
 
+/* Placeholders never fade in or replay. A short reveal delay means content that
+   arrives quickly replaces nothing, instead of flashing a skeleton first. */
+@keyframes skeleton-reveal { from { visibility: hidden; } }
+[data-resource-skeleton], [data-skeleton-region] { animation: skeleton-reveal 0s 120ms backwards; }
+
 [data-slot="tabs-content"][data-state="active"] { animation: ui-enter 160ms cubic-bezier(.23, 1, .32, 1); }
 [data-slot="empty"], [data-slot="alert"] { animation: ui-enter 160ms cubic-bezier(.23, 1, .32, 1); }
 [data-slot="dialog-title"], [data-slot="dialog-description"], [data-slot="empty-title"], [data-slot="empty-description"] { overflow-wrap: anywhere; }

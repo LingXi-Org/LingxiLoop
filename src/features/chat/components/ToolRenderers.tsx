@@ -1,6 +1,7 @@
 import { RecommendationCard } from '@/components/assistant-ui/elements/recommendation-card'
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
 import { artifactProgress } from '../runtime/task-progress'
 import { PollCard } from '@/components/assistant-ui/elements/poll-card'
@@ -11,7 +12,6 @@ import {
 } from '@/components/assistant-ui/elements/elicitation-form'
 import { ApprovalCard } from '@/components/assistant-ui/elements/approval-card'
 import { useParticipants } from '@/features/agents/state'
-import { HomeworkDraftTool } from '@/features/learning/homework/HomeworkDraftCard'
 
 interface CardProps {
   args: Record<string, unknown>
@@ -139,6 +139,12 @@ export function ElicitationFormTool({ args, result, addResult, initialAnswers = 
 export function ArtifactProgressTool({ args }: Pick<CardProps, 'args'>) {
   const names = useParticipants(state => state.byId)
   return <ProgressTracker {...artifactProgress(args, names)} />
+}
+
+// The homework editor brings the forum/content pipeline; only its own tool call loads it.
+const HomeworkDraftCard = lazy(() => import('@/features/learning/homework/HomeworkDraftCard').then(module => ({ default: module.HomeworkDraftTool })))
+function HomeworkDraftTool(props: ToolCallMessagePartProps & { readOnly?: boolean }) {
+  return <Suspense fallback={<ResourceSkeleton variant="list" count={2} compact label="正在打开作业草稿" />}><HomeworkDraftCard {...props} /></Suspense>
 }
 
 export const TOOL_DETAILS = { 'teacher.draft_homework': HomeworkDraftTool }

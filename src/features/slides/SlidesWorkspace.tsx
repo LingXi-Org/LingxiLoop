@@ -15,7 +15,9 @@ import { userFacingError } from '@/lib/userFacingError'
 import { ArtifactSurface, ArtifactSurfaceProvider } from './artifact-surface'
 import type { SlideEditorContext } from '../../../shared/slides-editor-context'
 
-const SlidesConversation = lazy(() => import('./SlidesConversation').then(module => ({ default: module.SlidesConversation })))
+const loadSlidesConversation = () => import('./SlidesConversation')
+const SlidesConversation = lazy(() => loadSlidesConversation().then(module => ({ default: module.SlidesConversation })))
+export const preloadSlidesAssistant = () => loadSlidesConversation()
 
 function ArtifactExperience({ agentWorking, children, context, syncContext, syncError, onClose }: {
   agentWorking: boolean; children: ReactNode; context: SlideEditorContext | null; syncContext(context: SlideEditorContext): void; syncError: string; onClose(): void
@@ -62,7 +64,10 @@ export function SlidesWorkspace({ artifactId, title, onClose }: { artifactId: st
     setError('')
     artifactsApi.slideWorkspace(artifactId, controller.signal).then(async result => {
       void useParticipants.getState().refresh()
-      await useConversations.getState().reload()
+      // A channel already in this workspace's authorized list is usable now; the
+      // refresh only has to finish first for a newly created assistant channel.
+      const refreshed = useConversations.getState().reload()
+      if (!useConversations.getState().list.some(item => item.id === result.conversationId)) await refreshed
       if (!controller.signal.aborted) setWorkspace(result)
     }).catch(reason => { if (!controller.signal.aborted) setError(userFacingError(reason, '演示文稿助手暂时无法打开。')) })
     return () => controller.abort()

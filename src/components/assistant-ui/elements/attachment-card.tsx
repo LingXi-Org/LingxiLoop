@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { FilePreviewDialog } from '@/components/retab/ui/file-preview-dialog'
+import { FilePreviewDialog } from '@/components/retab/ui/lazy-file-preview-dialog'
 import { cn } from '@/lib/utils'
 import { File, getFileDataKind } from './file'
 import { CardSurface, conversationCardSize } from './surfaces'

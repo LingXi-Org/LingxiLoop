@@ -2,8 +2,10 @@ import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } fro
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { RightPanelHeader } from '@/components/shell/RightPanel'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import { PENDING_DESIGN_ID } from './pending'
 
-const ArtifactView = lazy(() => import('@/features/artifacts/components/ArtifactView').then(module => ({ default: module.ArtifactView })))
+export const loadArtifactView = () => import('@/features/artifacts/components/ArtifactView')
+const ArtifactView = lazy(() => loadArtifactView().then(module => ({ default: module.ArtifactView })))
 type Design = { artifactId: string; title: string }
 
 /** The caller keys this workspace by account, workspace and conversation.
@@ -18,7 +20,9 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
 
   useLayoutEffect(() => {
     if (!open) return
-    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    // The placeholder already took focus; keep the original opener for the board that replaces it.
+    const active = document.activeElement
+    if (active instanceof HTMLElement && !panel.current?.contains(active)) opener.current = active
     panel.current?.focus({ preventScroll: true })
   }, [open, design?.artifactId])
 
@@ -30,6 +34,8 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
       else document.querySelector<HTMLElement>('[data-design-open-trigger]')?.focus({ preventScroll: true })
     })
   }
+
+  const placeholder = <div className="flex h-full min-h-0 flex-col"><RightPanelHeader eyebrow="设计" title={current?.title ?? '设计'} onClose={close} closeLabel="关闭设计" /><ResourceSkeleton variant="media" label="正在打开设计" /></div>
 
   return <div data-design-workspace data-design-open={open} className="relative h-full min-h-0 min-w-0 overflow-hidden">
     <ResizablePanelGroup orientation="horizontal">
@@ -44,9 +50,9 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
           onKeyDown={event => {
             if (event.key === 'Escape' && !event.defaultPrevented) { event.stopPropagation(); close() }
           }}>
-          {current && <Suspense fallback={<div className="flex h-full min-h-0 flex-col"><RightPanelHeader eyebrow="设计" title={current.title} onClose={close} closeLabel="关闭设计" /><ResourceSkeleton variant="media" label="正在打开设计" /></div>}>
+          {current && (current.artifactId === PENDING_DESIGN_ID ? placeholder : <Suspense fallback={placeholder}>
             <ArtifactView key={current.artifactId} artifactId={current.artifactId} kind="design" title={current.title} onClose={close} />
-          </Suspense>}
+          </Suspense>)}
         </aside>
       </ResizablePanel>
     </ResizablePanelGroup>
