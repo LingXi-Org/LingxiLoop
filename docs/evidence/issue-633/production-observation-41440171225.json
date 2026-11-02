@@ -1,0 +1,114 @@
+{
+  "format": "knowledge-readonly-observation/v1",
+  "observationOnly": true,
+  "status": "observed",
+  "observedAt": "2026-11-02T11:52:42.241Z",
+  "runId": "im:88655fc9ed2c99c17d6a980c071367d5867952b20a41e5a2a9f9c0d97cf765e5",
+  "notebook": {
+    "format": "notebook-readonly-observation/v1",
+    "observationOnly": true,
+    "status": "observed",
+    "configurationScope": "container_environment_not_resolved_process_environment",
+    "configured": {
+      "model": "BAAI/bge-m3",
+      "base_url": "https://loop.lingxilearn.cn/internal/open-notebook/v1"
+    },
+    "control": {
+      "database": "open_notebook",
+      "schemaVersion": 1,
+      "contract": {
+        "model": "BAAI/bge-m3",
+        "model_id": "BAAI/bge-m3",
+        "base_url": "https://loop.lingxilearn.cn/internal/open-notebook/v1",
+        "dimensions": 1024
+      },
+      "chunks": 35,
+      "invalidDimensions": 0,
+      "expectedDimensions": 1024,
+      "sampledDimensions": 1024,
+      "generation": null
+    },
+    "active": {
+      "database": "open_notebook_pro_bge_m3_v1",
+      "schemaVersion": 1,
+      "contract": {
+        "model": "Pro/BAAI/bge-m3",
+        "model_id": "Pro/BAAI/bge-m3",
+        "base_url": "https://loop.lingxilearn.cn/internal/open-notebook/v1/shadow",
+        "dimensions": 1024
+      },
+      "chunks": 37,
+      "invalidDimensions": 0,
+      "expectedDimensions": 1024,
+      "sampledDimensions": 1024,
+      "generation": {
+        "phase": "active",
+        "plan_sha256": "b167445204ed94250e9804fb1ae137d12e768ea46d78cf888720365c8ab15344",
+        "verification_sha256": "f678a654c65d161e6a974380dda7225ceee96567122119f14b6948b6fef228da",
+        "product_gate_sha256": null
+      }
+    },
+    "pointer": {
+      "phase": "active",
+      "plan_sha256": "b167445204ed94250e9804fb1ae137d12e768ea46d78cf888720365c8ab15344",
+      "verification_sha256": "f678a654c65d161e6a974380dda7225ceee96567122119f14b6948b6fef228da",
+      "product_gate_sha256": "585521f6fb1e86090164383fe4ba61cfa86ac864bfcddf6e77c1568b2abaa2eb",
+      "active_database": "open_notebook_pro_bge_m3_v1",
+      "revision": 1,
+      "model": "Pro/BAAI/bge-m3",
+      "base_url": "https://loop.lingxilearn.cn/internal/open-notebook/v1/shadow"
+    },
+    "pointerStable": true,
+    "consistency": "independent_metadata_reads_not_a_migration_or_compatibility_receipt"
+  },
+  "workerA": {
+    "status": "observed",
+    "observationOnly": true,
+    "runtime": "3.8.21",
+    "configuration": {
+      "AGENT_OS_MAX_MODEL_CALLS": 128,
+      "AGENT_OS_MAX_MODEL_TOKENS": 1000000,
+      "AGENT_OS_MAX_MODEL_COST_MICROS": 10000000,
+      "AGENT_OS_MAX_WORK_MS": 1800000
+    },
+    "scope": "current_worker_environment_only",
+    "frozenRootLimits": "unknown"
+  },
+  "workerB": {
+    "status": "observed",
+    "observationOnly": true,
+    "runtime": "3.8.21",
+    "configuration": {
+      "AGENT_OS_MAX_MODEL_CALLS": 128,
+      "AGENT_OS_MAX_MODEL_TOKENS": 1000000,
+      "AGENT_OS_MAX_MODEL_COST_MICROS": 10000000,
+      "AGENT_OS_MAX_WORK_MS": 1800000
+    },
+    "scope": "current_worker_environment_only",
+    "frozenRootLimits": "unknown"
+  },
+  "runBudget": {
+    "status": "observed",
+    "runId": "im:88655fc9ed2c99c17d6a980c071367d5867952b20a41e5a2a9f9c0d97cf765e5",
+    "requestVersion": 1,
+    "fence": 1,
+    "lifecycle": "partial",
+    "budgetExhaustionReported": true,
+    "usage": {
+      "calls": 12,
+      "pendingCalls": 0,
+      "estimatedCalls": 1,
+      "inputTokens": 723741,
+      "outputTokens": 25027,
+      "costMicros": 235380
+    },
+    "trigger": {
+      "status": "unknown",
+      "reason": "published_api_has_no_root_rejection_reader"
+    },
+    "frozenRootLimits": {
+      "status": "unknown",
+      "reason": "published_api_has_no_root_budget_reader"
+    }
+  }
+}

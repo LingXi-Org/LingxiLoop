@@ -279,17 +279,28 @@ The developer task has not dispatched or executed this production observation.
 
 ## Notebook embedding and extended artifact execution (#633)
 
-The Notebook target uses `NOTEBOOK_EMBEDDING_BASE_URL` (default the existing
-backend HTTPS `/internal/open-notebook/v1` route) and the same
-`OPENAI_EMBEDDING_MODEL` as both app slots. The frontend still denies `/internal`.
-Backend deployment now observes the retained model/index/generation contract
-before Worker drain or Notebook restart and refuses a mismatch. Preserve the old
-index and originals; prepare/verify a separate generation through the existing
-shadow workflow before switching. Do not rename stored vectors or contracts.
+**Draft release gates remain closed.** The integrator's read-only observation
+41440171225 found a sealed active `Pro/BAAI/bge-m3` generation with 1024 dimensions,
+37 chunks and an exact frontend `/internal/open-notebook/v1/shadow` endpoint;
+the retained legacy database has 35 chunks. Both have zero invalid dimensions.
+The candidate now preserves Notebook's existing configured model/origin defaults.
+An explicit `NOTEBOOK_EMBEDDING_BASE_URL` override is only configuration, not an
+endpoint migration or compatibility receipt.
 
-New roots default to 512 model attempts, 8M total tokens, $50 and two hours of
-cumulative execution. Admission still reserves the next call and settles actual
-usage through the shared ledger. Existing roots retain their original frozen
-limits. Explicit Sigillo overrides win; verify both running slots after rollout.
-See [the candidate evidence and remaining gates](evidence/issue-633/README.md).
+Preflight refuses the known-denied frontend route and refuses a backend override
+against the retained frontend-sealed pointer. Do not relax that check, expose
+frontend `/internal`, silently route an alias, relabel contracts or rebuild an
+index to pass it. The existing coordinator has no endpoint-only operation.
+[The endpoint-only binding proposal](evidence/issue-633/README.md#endpoint-only-migration-proposal--decision-required-not-implemented)
+specifies required qualification, exact CAS/fence/receipt stages and rollback
+limits for parent decision; it is not implemented or authorized to execute.
 
+The proposed new-root limits of 512 calls / 8M tokens / $50 / two hours still
+require explicit numerical user approval. They are not a global spending cap.
+Both running workers currently report 128 / 1M / $10 / 30min, which does not
+establish the original root's frozen limits. After #642, all four observation views succeeded: original run version 1 /
+fence 1 remains partial and publicly reports budget exhaustion. Its frozen
+root limits and exact trigger are still explicitly unknown; settled usage
+cannot determine them. The earlier failed read retained no HTTP status and is
+not retrospectively classified as 406. No follow-up model calls or
+production writes were made by this developer task.
