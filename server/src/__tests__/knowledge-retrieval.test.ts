@@ -40,6 +40,20 @@ test('retrieval numbers distinct chunks of one PDF and preserves Markdown after 
     assert.equal(partial.citations[0].excerpt, excerpts[0])
     assert.deepEqual(partial.searchFailures, [{ type: 'vector', code: 'embedding_endpoint', status: 502 }])
     assert.doesNotMatch(JSON.stringify(partial), /private upstream|PRIVATE/)
+    mock.method(openNotebookClient, 'search', async (input: Parameters<typeof openNotebookClient.search>[0]) => {
+      if (input.type === 'text') throw new OpenNotebookError('private text failure', 503)
+      return [{ parent_id: 'external-pdf', id: 'vector-chunk', content: excerpts[1] }]
+    })
+    const vectorOnly = await retrieveKnowledgeState({ companyId: 'company', conversationId: 'room', authorizationUserId: 'human', query: 'attention' })
+    assert.equal(vectorOnly.status, 'degraded')
+    assert.equal(vectorOnly.citations[0].excerpt, excerpts[1])
+    assert.equal(vectorOnly.searchFailures?.[0].type, 'text')
+    assert.doesNotMatch(JSON.stringify(vectorOnly), /private text failure/)
+    let accessChecks = 0
+    assertCan.mock.mockImplementation(async () => { if (++accessChecks === 2) throw new Error('reader revoked during search') })
+    await assert.rejects(retrieveKnowledgeState({ companyId: 'company', conversationId: 'room', authorizationUserId: 'human', query: 'attention' }), /reader revoked/)
+    assert.equal(accessChecks, 2, 'degraded results still require the post-search authorization check')
+    assertCan.mock.mockImplementation(async () => {})
     mock.method(openNotebookClient, 'search', async () => { throw new OpenNotebookError('secret provider detail', 503) })
     const unavailable = await retrieveKnowledgeState({ companyId: 'company', conversationId: 'room', authorizationUserId: 'human', query: 'attention' })
     assert.equal(unavailable.status, 'unavailable')

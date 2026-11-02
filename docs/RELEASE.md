@@ -244,8 +244,9 @@ PR. The existing push workflow would otherwise invoke `up` on every main merge.
 Do not use `up`, `servers`, `plan` or a runtime patch command to observe.
 The observer was extracted from draft #637 into #641, with transport negotiation
 fixed in #642; #637 now inherits both as one implementation. The user approved
-#637's numerical new-root limits at 11:58 UTC on 2026-11-02. Its independent
-endpoint/index compatibility gate still blocks release.
+#637's numerical new-root limits at 11:58 UTC on 2026-11-02. Budget/retrieval
+changes now ship independently; the separate embedding route exception remains
+pending specific approval and is not included in #637.
 
 The Actions observation skips image builds and selects a separate, fixed CLI
 step. The run ID is passed via an environment variable as one quoted argument,
@@ -278,31 +279,32 @@ Each view runs once. A failed view preserves the others, reports top-level
 `status=partial` and exits nonzero. Inspect each view's status in the Actions log.
 The developer task has not dispatched or executed this production observation.
 
-## Notebook embedding and extended artifact execution (#633)
+## Approved root budgets and retrieval degradation (#633 / #637)
 
-**The endpoint/index release gate remains closed.** The integrator's read-only observation
-41440171225 found a sealed active `Pro/BAAI/bge-m3` generation with 1024 dimensions,
-37 chunks and an exact frontend `/internal/open-notebook/v1/shadow` endpoint;
-the retained legacy database has 35 chunks. Both have zero invalid dimensions.
-The candidate now preserves Notebook's existing configured model/origin defaults.
-An explicit `NOTEBOOK_EMBEDDING_BASE_URL` override is only configuration, not an
-endpoint migration or compatibility receipt.
+This release independently applies the user's approved new-root limits of
+512 model calls / 8M tokens / $50 / two hours (approved 2026-11-02 11:58 UTC).
+These are finite per-root limits, not a global spending cap. The public SDK
+retains old roots' frozen limits and native reservation/settlement accounting;
+this release neither migrates nor modifies old roots.
 
-Preflight refuses the known-denied frontend route and refuses a backend override
-against the retained frontend-sealed pointer. Do not relax that check, expose
-frontend `/internal`, silently route an alias, relabel contracts or rebuild an
-index to pass it. The existing coordinator has no endpoint-only operation.
-[The endpoint-only binding proposal](evidence/issue-633/README.md#endpoint-only-migration-proposal--decision-required-not-implemented)
-specifies required qualification, exact CAS/fence/receipt stages and rollback
-limits for parent decision; it is not implemented or authorized to execute.
+Hybrid search settles text/vector requests independently, preserves successful
+results with a safe degraded status, honors cancellation and rechecks current
+reader/source authorization before returning citations. Saved artifacts survive
+partial budget completion and remain available for human continuation.
 
-The user explicitly approved the new-root limits of 512 calls / 8M tokens /
-$50 / two hours on 2026-11-02 at 11:58 UTC. They are not a global spending cap
-and do not change old roots. The independent endpoint/index gate remains closed.
-Both running workers currently report 128 / 1M / $10 / 30min, which does not
-establish the original root's frozen limits. After #642, all four observation views succeeded: original run version 1 /
-fence 1 remains partial and publicly reports budget exhaustion. Its frozen
-root limits and exact trigger are still explicitly unknown; settled usage
-cannot determine them. The earlier failed read retained no HTTP status and is
-not retrospectively classified as 406. No follow-up model calls or
-production writes were made by this developer task.
+Notebook compose, embedding endpoint, frontend access boundaries and deployment
+preflight are unchanged from main. The global Notebook preflight and endpoint
+configuration overrides have been removed from #637; there is no bypass flag.
+The existing #641/#642 read-only observation remains unchanged. The separate
+embedding failure does not block releasing these approved, independent fixes.
+
+Embedding remains unresolved: the active Pro/1024 generation's exact sealed
+endpoint is the frontend `/internal/open-notebook/v1/shadow`, which is denied.
+The proposed follow-up is only an exact main-site POST passthrough of
+`/internal/open-notebook/v1/shadow/embeddings` to the existing backend path,
+keeping all other internal paths and artifact origins denied and preserving
+backend authentication, company/model/input checks and ledger accounting.
+That changes the frontend access boundary and requires specific user approval.
+This release contains only its analysis/test plan, with no route exception,
+new token, endpoint relabelling or index migration. See
+[the evidence and separate route qualification plan](evidence/issue-633/README.md).

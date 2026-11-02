@@ -268,8 +268,8 @@ test('production Open Notebook receives only the explicit RAG environment', () =
     'OPENAI_EMBEDDING_MODEL',
   ]) assert.match(service, new RegExp(`${variable}:`))
   assert.match(service, /OPENAI_API_KEY: \$\{OPEN_NOTEBOOK_PASSWORD:\?/)
-  assert.ok(service.includes('OPENAI_BASE_URL: "${NOTEBOOK_EMBEDDING_BASE_URL:-${LINGXILOOP_PUBLIC_ORIGIN:?LINGXILOOP_PUBLIC_ORIGIN is required}/internal/open-notebook/v1}"'))
-  // Preserve configured legacy identity; the sealed active-generation resolver selects Pro.
+  assert.match(service, /OPENAI_BASE_URL: "\$\{LINGXILOOP_PUBLIC_ORIGIN:\?[^}]+}\/internal\/open-notebook\/v1"/)
+  // The knowledge index contract pins its own embedding model.
   assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{NOTEBOOK_EMBEDDING_MODEL:-BAAI\/bge-m3\}/)
 
   assert.match(service, /\/app\/\.venv\/bin\/supervisorctl .* status rag-api/)
@@ -346,7 +346,7 @@ test('removed Open Notebook capabilities cannot be re-enabled by deployment conf
   assert.doesNotMatch(files, /OPEN_NOTEBOOK_(?:CHAT|STRATEGY|ANSWER|FINAL_ANSWER)_MODEL/)
 })
 
-test('knowledge services preserve the configured origin until endpoint relocation is approved', () => {
+test('knowledge services receive writable storage and the control plane URL', () => {
   const compose = read('deploy/knowledge/compose.yml')
 
   assert.match(compose, /surrealdb:[\s\S]*?rocksdb:\/home\/nonroot\/open-notebook\.db/)
@@ -356,7 +356,6 @@ test('knowledge services preserve the configured origin until endpoint relocatio
   assert.match(compose, /\/app\/\.venv\/bin\/supervisorctl -s unix:\/\/\/tmp\/supervisor\.sock status rag-api/)
   assert.match(compose, /OPEN_NOTEBOOK_WORKER_MAX_TASKS: "1"/)
   assert.equal((compose.match(/\$\{LINGXILOOP_PUBLIC_ORIGIN:\?/g) ?? []).length, 1)
-  assert.match(compose, /NOTEBOOK_EMBEDDING_BASE_URL:-/)
   assert.doesNotMatch(compose, /^ {2}agent-os:/m)
   assert.doesNotMatch(compose, /LINGXILOOP_INTERNAL_ORIGIN/)
 })
