@@ -30,7 +30,7 @@ test('the public Roadmap RNN and independent Attention samples are recognized as
 test('currency does not consume a subsequent formula delimiter', () => {
   assert.deepEqual(sources('Budget $5 and $10; RNN $h_t=f(x_t)$'), ['h_t=f(x_t)'])
   assert.deepEqual(sources('Budget $5; math $x^2$; $10.00'), ['x^2'])
-  for (const text of ['Budget $5 and $10', '$20.50', '$5$', '$100 USD$', '$5 (USD)$', '$ prices $', '$hello world$', '$x']) assert.deepEqual(sources(text), [], text)
+  for (const text of ['Budget $5 and $10', '$20.50', '$5$', '$100 USD$', '$5 (USD)$', '$-5$', '$-10.00$', '$ prices $', '$hello world$', '$x']) assert.deepEqual(sources(text), [], text)
   assert.deepEqual(sources('$2^n$ and $x$/$y$'), ['2^n', 'x', 'y'])
 })
 

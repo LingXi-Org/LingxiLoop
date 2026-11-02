@@ -46,7 +46,7 @@ CSP and iframe permissions remain unchanged. Formula source is never saved back
 to an artifact model. Single-dollar long formulas are keyboard focusable.
 
 Supported additions include `$x$`, `$x^2$`, `$2^n$`, RNN and the delimited
-Attention example. Numeric dollars without math notation, whitespace-bounded
+Attention example. Numeric dollars (including negative amounts) without math notation, whitespace-bounded
 or ordinary multiword dollar text remain literal; use existing `\(...\)` or
 `\[...\]` for ambiguous expressions. Bare un-delimited commands are not guessed.
 Formulas must remain within one HTML text run, as in the existing renderer.

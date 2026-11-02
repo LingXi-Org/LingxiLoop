@@ -26,7 +26,7 @@ export function inlineDollarRanges(text: string) {
     const source = text.slice(start+1,end-1)
     const notation = /[\\^_={}+*<>]/.test(source)
     const literal = /^\s|\s$|\n|^[;,:.!?]/.test(source)
-      || /^\d/.test(source) && !notation
+      || /^-?\d/.test(source) && !notation
       || /\s/.test(source) && !notation
     if(source && source.length<=16000 && !literal) {
       ranges.push({start,end,source})
