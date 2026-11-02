@@ -9,7 +9,7 @@ import { SelectField } from '@/components/ui/select-field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ForumReference } from './ForumReference'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowDownUpIcon, ArrowRightIcon, CalendarIcon, ChevronDownIcon, MoreHorizontalIcon, SearchIcon, SlidersHorizontalIcon } from 'lucide-react'
+import { ArrowDownUpIcon, ArrowRightIcon, CalendarIcon, ChevronDownIcon, MessageSquareIcon, MoreHorizontalIcon, SearchIcon, SlidersHorizontalIcon, SmilePlusIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -210,7 +210,7 @@ function ScopedCourseForum({ space }: { space: LearningSpace }) {
   const feedContent = <div ref={feed} hidden={Boolean(detailId)} className="forum-feed">
       <PageToolbar className="forum-tools">
         <div className="relative min-w-0 flex-1"><SearchIcon aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" aria-label="搜索学习论坛" placeholder="搜索标题与内容" value={search} onChange={event=>setSearch(event.target.value)} maxLength={200}/></div>
-        <Popover><PopoverTrigger asChild><Button variant="ghost" aria-label="筛选"><SlidersHorizontalIcon className="size-4"/>筛选{(date || property!=='all' || archived || tag) && <span className="size-1.5 rounded-full bg-primary"/>}</Button></PopoverTrigger><PopoverContent className="w-80 space-y-4" align="end">
+        <Popover><PopoverTrigger asChild><Button variant="outline" aria-label="筛选"><SlidersHorizontalIcon className="size-4"/>筛选{(date || property!=='all' || archived || tag) && <span className="size-1.5 rounded-full bg-primary"/>}</Button></PopoverTrigger><PopoverContent className="w-80 space-y-4" align="end">
           <SelectField ariaLabel="内容筛选" value={property} onValueChange={setProperty} options={[
             {value:'all',label:'全部类型'},{value:'pinned',label:'已置顶'},{value:'attachments',label:'含附件'},
             {value:'links',label:'含链接'},{value:'tasks',label:'含任务清单'},{value:'code',label:'含代码'}]}/>
@@ -220,7 +220,7 @@ function ScopedCourseForum({ space }: { space: LearningSpace }) {
           <Button variant="ghost" size="sm" aria-pressed={archived} onClick={()=>setArchived(value=>!value)}>{archived?'返回内容流':'已归档'}</Button>
           {tag && <Button variant="ghost" size="sm" onClick={()=>setTag('')}>#{tag} · 清除标签筛选</Button>}
         </PopoverContent></Popover>
-        <Popover><PopoverTrigger asChild><Button variant="ghost" aria-label="按日期排序"><ArrowDownUpIcon className="size-4"/>按日期排序<ChevronDownIcon className="size-4"/></Button></PopoverTrigger><PopoverContent className="w-64 space-y-4" align="end">
+        <Popover><PopoverTrigger asChild><Button variant="outline" aria-label="按日期排序"><ArrowDownUpIcon className="size-4"/>按日期排序<ChevronDownIcon className="size-4"/></Button></PopoverTrigger><PopoverContent className="w-64 space-y-4" align="end">
           <SelectField ariaLabel="排序时间" value={display.timeBasis} onValueChange={timeBasis=>setDisplay({...display,timeBasis:timeBasis as typeof display.timeBasis})} options={[{value:'created',label:'发布时间'},{value:'updated',label:'更新时间'}]}/>
           <SelectField ariaLabel="时间顺序" value={display.order} onValueChange={order=>setDisplay({...display,order:order as typeof display.order})} options={[{value:'desc',label:'最新在前'},{value:'asc',label:'最早在前'}]}/>
         </PopoverContent></Popover>
@@ -235,23 +235,23 @@ function ScopedCourseForum({ space }: { space: LearningSpace }) {
         {loading && items.length === 0 && <div role="status" className="space-y-3"><span className="sr-only">正在加载学习论坛…</span>{[0, 1, 2].map(value => <Skeleton key={value} className="h-36 w-full rounded-lg motion-reduce:animate-none" />)}</div>}
         {!loading && !error && items.length === 0 && <p className="py-6 text-sm text-muted-foreground">没有符合条件的内容。</p>}
         {items.map(item => <MemoCard key={`${item.targetType}:${item.id}`} label={item.title} author={item.authorName} authorId={item.authorId} authorAvatarUrl={item.authorAvatarUrl} createdAt={display.timeBasis==='updated'?item.updatedAt:item.createdAt} pinned={item.pinned} search={search}
-          actions={<><Badge variant="secondary">{kindLabels[item.kind]}</Badge>{itemActions(item)}</>}>
+          kind={kindLabels[item.kind]} actions={itemActions(item)}>
           {editing?.id === item.id && !detailId ? <ForumComposer key={`edit:${item.id}`} space={space} item={item} onCreated={() => { setEditing(null); void load() }} onCancel={() => setEditing(null)} /> : <>
           <h3 className="forum-item-title"><a href={`/?${new URLSearchParams({project:space.projectId,view:'forum',post:item.id,type:item.targetType})}`} onClick={event=>{if(!event.metaKey&&!event.ctrlKey&&!event.shiftKey&&event.button===0){event.preventDefault();openDetail(item)}}} className="rounded-sm focus-visible:outline-2 focus-visible:outline-ring">{item.title}</a></h3>
           <div hidden={display.compact || display.columns!=='1'} data-slot="memo-body" className={`relative w-full min-w-0 flex flex-col items-start gap-2 ${display.compact || display.columns!=='1' ? 'max-h-72 overflow-hidden [mask-image:linear-gradient(black_80%,transparent)]' : ''}`}>
             {item.body && <ProtectedFileLinks><MemoContent content={item.body} onTaskToggle={item.targetType === 'post' && item.authorId === userId && canWrite && !busy && !item.archived ? line=>void mutate(()=>forumApi.update(courseId,item,{...item,body:toggleTaskAtLine(item.body,line),editorDocument:withTaskState(item.editorDocument,toggleTaskAtLine(item.body,line))})) : undefined} /></ProtectedFileLinks>}
             <ForumFiles links={item.links} attachments={item.attachments} />
           </div>
-          {(display.compact || display.columns!=='1') && <p className="forum-item-summary">{markdownText(item.body)}</p>}
-          {item.tags.length > 0 && <div className="flex flex-wrap gap-1">{item.tags.map(value => <Button key={value} variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground" onClick={() => setTag(value)}>#{value}</Button>)}</div>}
-          {item.sourceId && <Button variant="link" size="sm" onClick={() => setReference(item.sourceId)}>查看引用资料</Button>}
-          {item.dueAt && <p className="forum-deadline"><CalendarIcon aria-hidden="true" className="size-4"/>截止 {new Date(item.dueAt).toLocaleString()}</p>}
-          {item.status === 'CLOSED' && <Badge variant="outline">已关闭</Badge>}
-          <div className="flex w-full flex-wrap items-center gap-1 pt-1 text-[13px]">
-            {(item.reactions ?? []).map(reaction => <button key={reaction.emoji} type="button" className="inline-flex h-7 items-center gap-1.5 rounded-full bg-muted/40 px-2.5 text-[13px] text-muted-foreground hover:bg-muted/70 aria-pressed:bg-accent aria-pressed:text-accent-foreground focus-visible:outline-2" aria-label={`回应 ${reaction.emoji}`} aria-pressed={reaction.userIds.includes(userId ?? '')} disabled={!canWrite || item.archived || busy} onClick={() => void mutate(() => forumApi.react(courseId,item,reaction.emoji,!reaction.userIds.includes(userId ?? '')))}>{reaction.emoji} {reaction.userIds.length}</button>)}
-            {item.targetType === 'post' && canWrite && !item.archived && <Popover><PopoverTrigger asChild><Button variant="ghost" size="sm" aria-label={`添加回应：${item.title}`}>☺</Button></PopoverTrigger><PopoverContent className="w-auto flex gap-1">{['👍','❤️','🎉','🤔','👀','✅'].map(emoji => <Button key={emoji} variant="ghost" size="icon-sm" aria-label={`回应 ${emoji}`} disabled={busy} onClick={() => void mutate(() => forumApi.react(courseId,item,emoji,!(item.reactions ?? []).some(r => r.emoji===emoji && r.userIds.includes(userId ?? ''))))}>{emoji}</Button>)}</PopoverContent></Popover>}
-            <Button variant="ghost" size="sm" onClick={() => openDetail(item)}>评论{item.commentCount > 0 ? `（${item.commentCount}）` : ''}</Button>
-            {item.kind === 'assignment' && <Button variant="ghost" className="ms-auto font-semibold" onClick={() => openDetail(item)}>{item.targetType === 'homework' ? space.canReview ? '查看进度与验收' : '查看作业' : space.canReview ? '查看提交' : item.status === 'CLOSED' ? '查看提交记录' : '提交作业'}<ArrowRightIcon aria-hidden="true" className="size-4"/></Button>}
+          {(display.compact || display.columns!=='1') && item.body.trim() && <p className="forum-item-summary">{markdownText(item.body)}</p>}
+          <div className="forum-item-meta">
+            {item.dueAt && <span className={item.status === 'CLOSED' ? 'inline-flex items-center gap-1' : 'inline-flex items-center gap-1 text-foreground'}><CalendarIcon aria-hidden="true" className="size-3.5"/>截止 <time dateTime={item.dueAt} className="tabular-nums">{new Date(item.dueAt).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})}</time></span>}
+            {item.status === 'CLOSED' && <Badge variant="outline" className="font-normal">已关闭</Badge>}
+            {item.tags.map(value => <button key={value} type="button" className="rounded-sm hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring" onClick={() => setTag(value)}>#{value}</button>)}
+            {item.sourceId && <button type="button" className="rounded-sm hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring" onClick={() => setReference(item.sourceId)}>引用资料</button>}
+            {(item.reactions ?? []).map(reaction => <button key={reaction.emoji} type="button" className="inline-flex h-6 items-center gap-1 rounded-full border border-border px-2 text-xs text-muted-foreground hover:bg-muted aria-pressed:border-primary/40 aria-pressed:bg-primary/10 aria-pressed:text-foreground focus-visible:outline-2" aria-label={`回应 ${reaction.emoji}`} aria-pressed={reaction.userIds.includes(userId ?? '')} disabled={!canWrite || item.archived || busy} onClick={() => void mutate(() => forumApi.react(courseId,item,reaction.emoji,!reaction.userIds.includes(userId ?? '')))}>{reaction.emoji} <span className="tabular-nums">{reaction.userIds.length}</span></button>)}
+            {item.targetType === 'post' && canWrite && !item.archived && <Popover><PopoverTrigger asChild><Button variant="ghost" size="icon-xs" className="text-muted-foreground" aria-label={`添加回应：${item.title}`}><SmilePlusIcon /></Button></PopoverTrigger><PopoverContent className="w-auto flex gap-1">{['👍','❤️','🎉','🤔','👀','✅'].map(emoji => <Button key={emoji} variant="ghost" size="icon-sm" aria-label={`回应 ${emoji}`} disabled={busy} onClick={() => void mutate(() => forumApi.react(courseId,item,emoji,!(item.reactions ?? []).some(r => r.emoji===emoji && r.userIds.includes(userId ?? ''))))}>{emoji}</Button>)}</PopoverContent></Popover>}
+            <button type="button" className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring" aria-label={`评论：${item.title}${item.commentCount ? `，${item.commentCount} 条` : ''}`} onClick={() => openDetail(item)}><MessageSquareIcon aria-hidden="true" className="size-3.5"/><span className="tabular-nums">{item.commentCount}</span></button>
+            {item.kind === 'assignment' && <Button variant="outline" size="sm" className="ms-auto" onClick={() => openDetail(item)}>{item.targetType === 'homework' ? space.canReview ? '查看进度与验收' : '查看作业' : space.canReview ? '查看提交' : item.status === 'CLOSED' ? '查看提交记录' : '提交作业'}<ArrowRightIcon aria-hidden="true" className="size-4"/></Button>}
           </div>
           </>}
         </MemoCard>)}

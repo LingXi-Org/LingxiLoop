@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import './cases.css'
 import { CaseCodeBlock } from './CaseCodeBlock'
 import { ImagePlus, LockKeyhole, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -279,18 +280,17 @@ export function CasesPage() {
         <label><span className="sr-only">标题</span><Textarea required maxLength={200} disabled={busy} className="case-title-input" placeholder="案例标题" rows={1} value={input.title} onChange={event => editInput(value => ({...value, title: event.target.value}))}/></label>
         <div className="case-summary case-inline-editor"><span className="case-editor-label" aria-hidden="true">摘要</span><ContentEditor legacyFormat="markdown" label="摘要" compact value={input.summary} document={input.summaryDocument} maxLength={2000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(summary, summaryDocument) => editInput(value => ({...value, summary, summaryDocument}))}/></div>
       </div>}
-      {(!editing || preview) && <div><h2 className="case-title">{content.title}</h2><div className="case-summary">{usableDocument(content.summaryDocument, content.summary) ? <ContentDocumentView document={content.summaryDocument}/> : <p>{content.summary}</p>}</div></div>}
+      {(!editing || preview) && <div><p className="case-eyebrow">{content.category || '未分类'}</p><h2 className="case-title">{content.title}</h2><div className="case-summary">{usableDocument(content.summaryDocument, content.summary) ? <ContentDocumentView document={content.summaryDocument}/> : <p>{content.summary}</p>}</div></div>}
       {editing && !preview ? <div className="case-edit-metadata">
         <label className="flex items-center gap-2 text-sm"><span>分类</span><Input list="case-categories" aria-label="分类" maxLength={80} className="w-28" value={input.category} onChange={event => editInput(value => ({...value, category: event.target.value}))}/></label>
         <datalist id="case-categories">{list.categories.map(value => <option key={value} value={value}/>)}</datalist>
         <label className="flex min-w-0 flex-1 items-center gap-2 text-sm"><span className="shrink-0">标签</span><Input aria-label="标签（逗号分隔）" placeholder="用逗号分隔" value={input.tags.join(',')} onChange={event => editInput(value => ({...value, tags: event.target.value.split(/[,，]/)}))}/></label>
         <span className="flex items-center gap-2 text-sm text-muted-foreground"><LockKeyhole aria-hidden="true" className="size-4"/>{article?.status === 'published' ? '未发布修改仅案例管理者可见' : '草稿仅案例管理者可见'}</span>
       </div> : <div className="case-metadata">
-        {article && <time dateTime={article.publishedAt ?? article.createdAt ?? article.updatedAt}>{date(article)}</time>}
-        <span>{content.category || '未分类'}</span>
-        {content.tags.map(tag => <span key={tag}>{tag}</span>)}
         {article?.authorName && <span className="case-author"><Avatar size="sm"><AvatarImage src={article.authorAvatarUrl ?? undefined} alt=""/><AvatarFallback>{article.authorName.slice(0, 1)}</AvatarFallback></Avatar>{article.authorName}</span>}
-        <span className="case-status">{editing && preview ? '草稿预览' : statusLabels[article?.status ?? 'draft']}</span>
+        {article && <time dateTime={article.publishedAt ?? article.createdAt ?? article.updatedAt} className="tabular-nums">{date(article)}</time>}
+        {(managing || editing) && <Badge variant="outline" className="font-normal">{editing && preview ? '草稿预览' : statusLabels[article?.status ?? 'draft']}</Badge>}
+        {content.tags.length > 0 && <span className="case-tags">{content.tags.map(tag => <Badge key={tag} variant="secondary" className="font-normal">{tag}</Badge>)}</span>}
       </div>}
     </div>
   </div>
