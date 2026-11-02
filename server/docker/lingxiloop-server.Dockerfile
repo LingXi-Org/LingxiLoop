@@ -77,6 +77,11 @@ COPY third_party/baoyu-design ./third_party/baoyu-design
 COPY scripts/build-slides-editor.mjs ./scripts/
 RUN node scripts/build-slides-editor.mjs
 
+FROM web-deps AS design-build
+COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
+COPY scripts/build-design-editor.mjs ./scripts/
+RUN node scripts/build-design-editor.mjs
+
 FROM web-deps AS spa-build
 WORKDIR /app
 # Preserve the existing Web/visualize build entrypoints after the scoped install.
@@ -154,6 +159,7 @@ COPY third_party/zcode/upstream/LICENSE ./third_party/zcode/upstream/LICENSE
 COPY --from=visualize-build /app/server/assets/visualize-runtime ./server/assets/visualize-runtime
 COPY --from=visualize-build /app/server/assets/design-editor ./server/assets/design-editor
 COPY --from=slides-build /app/server/assets/slides-editor ./server/assets/slides-editor
+COPY --from=design-build /app/server/assets/design-editor ./server/assets/design-editor
 
 ENV NODE_ENV=production \
     LINGXILOOP_VERSION=${LINGXILOOP_VERSION} \

@@ -1,0 +1,5334 @@
+{
+  "browser": "154.0.8037.57",
+  "host": {
+    "system": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
+  },
+  "profile": {
+    "latencyMs": 20,
+    "downloadMbps": 4,
+    "uploadMbps": 3,
+    "cpu": 1,
+    "width": 1440,
+    "height": 1000,
+    "oopifThrottled": true
+  },
+  "scope": "Production UI/isolated gateway/editor/SDK, synthetic local API; excludes production authorization/database/IM/model latency",
+  "samples": [
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "design",
+      "scenario": "cold",
+      "visibleMs": 11631.77535500006,
+      "usableMs": 11810.128425000017,
+      "bytes": 2208381,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/assets/ArtifactView-DHlBLLn0.js",
+          "start": 992.515618,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03384700000003704,
+          "end": 992.54859,
+          "bytes": 3365
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/artifacts/board-a/editor-grant",
+          "start": 992.814843,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025876000000039312,
+          "end": 992.840401,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/",
+          "start": 992.854944,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.027773999999908483
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 992.908209,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "1FA553DA32AF45B49E976E26417FB468",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 4.088621999999987,
+          "end": 996.97578,
+          "bytes": 1857727
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/assets/index-oDSQuawR.css",
+          "start": 992.909093,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "1FA553DA32AF45B49E976E26417FB468",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03048599999999624,
+          "end": 993.396171,
+          "bytes": 161721
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/__deck/session",
+          "start": 997.211272,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "1FA553DA32AF45B49E976E26417FB468",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.18580999999994674,
+          "end": 997.248411,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/_files.json",
+          "start": 997.386518,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "1FA553DA32AF45B49E976E26417FB468",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025947999999971216,
+          "end": 997.411602,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/__deck/events",
+          "start": 997.39686,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "1FA553DA32AF45B49E976E26417FB468",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02655200000003788
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 997.414135,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "1FA553DA32AF45B49E976E26417FB468",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.023304000000052838,
+          "end": 997.436857,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 997.457059,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "1FA553DA32AF45B49E976E26417FB468",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02279800000007981,
+          "end": 997.479857,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 997.457309,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "1FA553DA32AF45B49E976E26417FB468",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025738000000046668,
+          "end": 997.483072,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1003.491371,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "1FA553DA32AF45B49E976E26417FB468",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.41224099999999453,
+          "end": 1003.899791,
+          "bytes": 181742
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 45.79999999993015,
+              "end": 587.2999999999302,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 46.79999999993015,
+              "end": 315,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 748.3999999999069,
+              "end": 774.2999999999302,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-DHlBLLn0.js",
+              "start": 824.2999999999302,
+              "end": 855.7999999999302,
+              "transfer": 3213,
+              "encoded": 2913,
+              "decoded": 6585
+            },
+            {
+              "name": "editor-grant",
+              "start": 1122.1999999999534,
+              "end": 1147.5999999999767,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1150.5,
+              "end": 5716.399999999907,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 605.6999999999534,
+              "duration": 92
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 59.20000000006985,
+              "end": 4126.70000000007,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 60,
+              "end": 547.0999999999767,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4375.300000000047,
+              "end": 4399.300000000047,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4537.5,
+              "end": 4562.5,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4565.099999999977,
+              "end": 4587.800000000047,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4608,
+              "end": 4630.800000000047,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4608.900000000023,
+              "end": 4633.900000000023,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4181.400000000023,
+              "duration": 364
+            },
+            {
+              "start": 4860.5,
+              "duration": 300
+            },
+            {
+              "start": 11304.70000000007,
+              "duration": 73
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 25.20000000006985,
+              "end": 433.60000000009313,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 687.6000000000931,
+              "duration": 73
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.032918,
+        "TaskDuration": 0.30569099999999993,
+        "JSHeapUsedSize": 993100
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "design",
+      "scenario": "reopen",
+      "visibleMs": 124.24273700003141,
+      "usableMs": 156.77747199993064,
+      "bytes": 0,
+      "requests": [],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 45.79999999993015,
+              "end": 587.2999999999302,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 46.79999999993015,
+              "end": 315,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 748.3999999999069,
+              "end": 774.2999999999302,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-DHlBLLn0.js",
+              "start": 824.2999999999302,
+              "end": 855.7999999999302,
+              "transfer": 3213,
+              "encoded": 2913,
+              "decoded": 6585
+            },
+            {
+              "name": "editor-grant",
+              "start": 1122.1999999999534,
+              "end": 1147.5999999999767,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1150.5,
+              "end": 5716.399999999907,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 605.6999999999534,
+              "duration": 92
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 59.20000000006985,
+              "end": 4126.70000000007,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 60,
+              "end": 547.0999999999767,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4375.300000000047,
+              "end": 4399.300000000047,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4537.5,
+              "end": 4562.5,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4565.099999999977,
+              "end": 4587.800000000047,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4608,
+              "end": 4630.800000000047,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4608.900000000023,
+              "end": 4633.900000000023,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4181.400000000023,
+              "duration": 364
+            },
+            {
+              "start": 4860.5,
+              "duration": 300
+            },
+            {
+              "start": 11304.70000000007,
+              "duration": 73
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 25.20000000006985,
+              "end": 433.60000000009313,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 687.6000000000931,
+              "duration": 73
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.002843000000000012,
+        "TaskDuration": 0.01769899999999991,
+        "JSHeapUsedSize": 138316
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "design",
+      "scenario": "refresh",
+      "visibleMs": 11878.149217999977,
+      "usableMs": 12053.210602000036,
+      "bytes": 2205347,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/assets/ArtifactView-DHlBLLn0.js",
+          "start": 1004.959116,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 304,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.027369000000021515,
+          "end": 1004.986066,
+          "bytes": 331
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/artifacts/board-a/editor-grant",
+          "start": 1005.255316,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025289000000043416,
+          "end": 1005.280375,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/",
+          "start": 1005.290177,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.026739000000020496
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1005.349268,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "C61F9F77CA91046E2D335E7A4606794F",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 4.13470099999995,
+          "end": 1009.466536,
+          "bytes": 1857727
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/assets/index-oDSQuawR.css",
+          "start": 1005.349744,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "C61F9F77CA91046E2D335E7A4606794F",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.06356400000004214,
+          "end": 1005.887286,
+          "bytes": 161721
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/__deck/session",
+          "start": 1009.687623,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "C61F9F77CA91046E2D335E7A4606794F",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.2190289999999777,
+          "end": 1009.724858,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/_files.json",
+          "start": 1009.89107,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "C61F9F77CA91046E2D335E7A4606794F",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.029421999999954096,
+          "end": 1009.916527,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/__deck/events",
+          "start": 1009.906399,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "C61F9F77CA91046E2D335E7A4606794F",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.033716000000026725
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1009.921819,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "C61F9F77CA91046E2D335E7A4606794F",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03930100000002312,
+          "end": 1009.959675,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1009.99028,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "C61F9F77CA91046E2D335E7A4606794F",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.029595999999969536,
+          "end": 1010.01539,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1009.990841,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "C61F9F77CA91046E2D335E7A4606794F",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03230099999996128,
+          "end": 1010.019693,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1016.230749,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "C61F9F77CA91046E2D335E7A4606794F",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.4010690000000068,
+          "end": 1016.627519,
+          "bytes": 181742
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 35.90000000002328,
+              "end": 63.09999999997672,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 36.09999999997672,
+              "end": 66.79999999993015,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 148.09999999997672,
+              "end": 174.09999999997672,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-DHlBLLn0.js",
+              "start": 233.09999999997672,
+              "end": 258.19999999995343,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "editor-grant",
+              "start": 527.6999999999534,
+              "end": 552.5,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 554.2999999999302,
+              "end": 5232.400000000023,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 64.80000000004657,
+              "end": 4182,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 65.20000000006985,
+              "end": 602.7000000000698,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4414.300000000047,
+              "end": 4440.20000000007,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4606.900000000023,
+              "end": 4631.900000000023,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4637.300000000047,
+              "end": 4675.099999999977,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4706,
+              "end": 4730.800000000047,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4707.5,
+              "end": 4735.099999999977,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4226.599999999977,
+              "duration": 391
+            },
+            {
+              "start": 4971.20000000007,
+              "duration": 527
+            },
+            {
+              "start": 11561.20000000007,
+              "duration": 66
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 13.900000000023283,
+              "end": 410.5999999999767,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 628.9000000000233,
+              "duration": 66
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.015183999999999996,
+        "TaskDuration": 0.310349,
+        "JSHeapUsedSize": 659860
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4192/",
+      "kind": "design",
+      "scenario": "cold",
+      "visibleMs": 7103.267710999944,
+      "usableMs": 7249.40818999994,
+      "bytes": 2208714,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4192/assets/ArtifactView-viiBJrmy.js",
+          "start": 1018.07996,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03177499999992506,
+          "end": 1018.110763,
+          "bytes": 3698
+        },
+        {
+          "url": "http://127.0.0.1:4192/api/artifacts/board-a/editor-grant",
+          "start": 1018.377012,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025299000000018168,
+          "end": 1018.401745,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/",
+          "start": 1018.416679,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.031449999999949796
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1018.473222,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "0F5B3A365D553966DAD4FF8C294AAC19",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 4.171219000000065,
+          "end": 1022.616603,
+          "bytes": 1857727
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/assets/index-oDSQuawR.css",
+          "start": 1018.473595,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "0F5B3A365D553966DAD4FF8C294AAC19",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.04274299999997311,
+          "end": 1018.994103,
+          "bytes": 161721
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/__deck/session",
+          "start": 1022.872873,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0F5B3A365D553966DAD4FF8C294AAC19",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.1973009999999249,
+          "end": 1022.911954,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/_files.json",
+          "start": 1023.053155,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0F5B3A365D553966DAD4FF8C294AAC19",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026550000000042928,
+          "end": 1023.076832,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/__deck/events",
+          "start": 1023.069831,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "0F5B3A365D553966DAD4FF8C294AAC19",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026038999999968837
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1023.086779,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0F5B3A365D553966DAD4FF8C294AAC19",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.023897000000033586,
+          "end": 1023.110421,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1023.127322,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0F5B3A365D553966DAD4FF8C294AAC19",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025154999999926986,
+          "end": 1023.152206,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1023.12763,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0F5B3A365D553966DAD4FF8C294AAC19",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028966000000082204,
+          "end": 1023.155699,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1024.538449,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "0F5B3A365D553966DAD4FF8C294AAC19",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.41334600000004684,
+          "end": 1024.946543,
+          "bytes": 181742
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 43.5,
+              "end": 589.7999999999302,
+              "transfer": 191515,
+              "encoded": 191215,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 43.79999999993015,
+              "end": 314.0999999999767,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 732.9000000000233,
+              "end": 761.4000000000233,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 812.5999999999767,
+              "end": 841.9000000000233,
+              "transfer": 3546,
+              "encoded": 3246,
+              "decoded": 7425
+            },
+            {
+              "name": "editor-grant",
+              "start": 1108.2999999999302,
+              "end": 1132.7999999999302,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1136.1999999999534,
+              "end": 5814.79999999993,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 601.9000000000233,
+              "duration": 84
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 63.70000000006985,
+              "end": 4207,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 64.09999999997672,
+              "end": 584.5,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4474.900000000023,
+              "end": 4502.300000000047,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4643.70000000007,
+              "end": 4667.20000000007,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4677.300000000047,
+              "end": 4700.800000000047,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4717.800000000047,
+              "end": 4742.599999999977,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4718,
+              "end": 4746.099999999977,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4261.599999999977,
+              "duration": 394
+            },
+            {
+              "start": 4974,
+              "duration": 281
+            },
+            {
+              "start": 6766.20000000007,
+              "duration": 53
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 22.800000000046566,
+              "end": 430.80000000004657,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 660.1000000000931,
+              "duration": 53
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.027827000000000005,
+        "TaskDuration": 0.23667299999999997,
+        "JSHeapUsedSize": 1648968
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4192/",
+      "kind": "design",
+      "scenario": "reopen",
+      "visibleMs": 131.9320569998581,
+      "usableMs": 183.38999000002332,
+      "bytes": 0,
+      "requests": [],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 43.5,
+              "end": 589.7999999999302,
+              "transfer": 191515,
+              "encoded": 191215,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 43.79999999993015,
+              "end": 314.0999999999767,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 732.9000000000233,
+              "end": 761.4000000000233,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 812.5999999999767,
+              "end": 841.9000000000233,
+              "transfer": 3546,
+              "encoded": 3246,
+              "decoded": 7425
+            },
+            {
+              "name": "editor-grant",
+              "start": 1108.2999999999302,
+              "end": 1132.7999999999302,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1136.1999999999534,
+              "end": 5814.79999999993,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 601.9000000000233,
+              "duration": 84
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 63.70000000006985,
+              "end": 4207,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 64.09999999997672,
+              "end": 584.5,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4474.900000000023,
+              "end": 4502.300000000047,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4643.70000000007,
+              "end": 4667.20000000007,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4677.300000000047,
+              "end": 4700.800000000047,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4717.800000000047,
+              "end": 4742.599999999977,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4718,
+              "end": 4746.099999999977,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4261.599999999977,
+              "duration": 394
+            },
+            {
+              "start": 4974,
+              "duration": 281
+            },
+            {
+              "start": 6766.20000000007,
+              "duration": 53
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 22.800000000046566,
+              "end": 430.80000000004657,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 660.1000000000931,
+              "duration": 53
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.005847999999999992,
+        "TaskDuration": 0.022438999999999987,
+        "JSHeapUsedSize": 135276
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4192/",
+      "kind": "design",
+      "scenario": "refresh",
+      "visibleMs": 7105.138416000045,
+      "usableMs": 7269.7507580001,
+      "bytes": 2205347,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4192/assets/ArtifactView-viiBJrmy.js",
+          "start": 1025.971763,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 304,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02694500000006883,
+          "end": 1025.998166,
+          "bytes": 331
+        },
+        {
+          "url": "http://127.0.0.1:4192/api/artifacts/board-a/editor-grant",
+          "start": 1026.27005,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024934999999913998,
+          "end": 1026.294786,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/",
+          "start": 1026.305378,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.027657000000090193
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1026.355043,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "0DAC915D10262792ED5C5044A20FBCCF",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 4.127520000000004,
+          "end": 1030.461975,
+          "bytes": 1857727
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/assets/index-oDSQuawR.css",
+          "start": 1026.355486,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "0DAC915D10262792ED5C5044A20FBCCF",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.031658999999990556,
+          "end": 1026.861834,
+          "bytes": 161721
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/__deck/session",
+          "start": 1030.685835,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0DAC915D10262792ED5C5044A20FBCCF",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.22461300000009032,
+          "end": 1030.72308,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/_files.json",
+          "start": 1030.892691,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0DAC915D10262792ED5C5044A20FBCCF",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03047399999991285,
+          "end": 1030.918429,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/__deck/events",
+          "start": 1030.910055,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "0DAC915D10262792ED5C5044A20FBCCF",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02751699999998891
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1030.934012,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0DAC915D10262792ED5C5044A20FBCCF",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02436800000009498,
+          "end": 1030.958478,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1030.974541,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0DAC915D10262792ED5C5044A20FBCCF",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025676999999859618,
+          "end": 1031.001172,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1030.975017,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "0DAC915D10262792ED5C5044A20FBCCF",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028868999999986045,
+          "end": 1031.004479,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1032.431505,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "0DAC915D10262792ED5C5044A20FBCCF",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.4127169999999296,
+          "end": 1032.838456,
+          "bytes": 181742
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 47.09999999997672,
+              "end": 72.69999999995343,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 47.5,
+              "end": 76.09999999997672,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 157.69999999995343,
+              "end": 185.39999999990687,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 228.19999999995343,
+              "end": 253.29999999993015,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "editor-grant",
+              "start": 525.5,
+              "end": 550,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 551.8999999999069,
+              "end": 5182,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 55.09999999997672,
+              "end": 4161.900000000023,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 55.59999999997672,
+              "end": 561.9000000000233,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4397.699999999953,
+              "end": 4423.099999999977,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4592.900000000023,
+              "end": 4618.400000000023,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4634,
+              "end": 4658.5,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4674.599999999977,
+              "end": 4701.199999999953,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4675.099999999977,
+              "end": 4704.5,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4205,
+              "duration": 401
+            },
+            {
+              "start": 4927.900000000023,
+              "duration": 401
+            },
+            {
+              "start": 6783.199999999953,
+              "duration": 60
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 15.900000000023283,
+              "end": 422.9000000000233,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 667.5999999999767,
+              "duration": 60
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.014960000000000001,
+        "TaskDuration": 0.216882,
+        "JSHeapUsedSize": 3152212
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4193/",
+      "kind": "design",
+      "scenario": "cold",
+      "visibleMs": 6455.86878600011,
+      "usableMs": 6628.391419000081,
+      "bytes": 1926065,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4193/assets/ArtifactView-viiBJrmy.js",
+          "start": 1034.666877,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03815499999996064,
+          "end": 1034.699701,
+          "bytes": 3698
+        },
+        {
+          "url": "http://127.0.0.1:4193/api/artifacts/board-a/editor-grant",
+          "start": 1034.969137,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02494000000001506,
+          "end": 1034.993531,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/",
+          "start": 1035.005745,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.04707900000016707
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1035.109428,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 3.6045500000000175,
+          "end": 1038.695292,
+          "bytes": 1485577
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/design-ba5aaff6de542eab.css",
+          "start": 1035.109919,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03216999999995096,
+          "end": 1035.408073,
+          "bytes": 46445
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1035.110146,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.6905699999999797,
+          "end": 1035.795007,
+          "bytes": 141812
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/__deck/session",
+          "start": 1038.916886,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.21063200000003235,
+          "end": 1038.95384,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/_files.json",
+          "start": 1039.115386,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028011999999989712,
+          "end": 1039.139426,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/__deck/events",
+          "start": 1039.127014,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025485000000116997
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1039.145774,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024065999999947962,
+          "end": 1039.169964,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1039.184112,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024665000000140935,
+          "end": 1039.208599,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1039.184394,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028108999999858497,
+          "end": 1039.212152,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/anthropicons-variable-72caa7e5fd04db48.woff2",
+          "start": 1039.60295,
+          "type": "Font",
+          "initiator": "parser",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.35008399999992434,
+          "end": 1039.946161,
+          "bytes": 102895
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1040.590996,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "61BC216894B5A666A57D46A2C1187FFC",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.3099530000001778,
+          "end": 1040.897402,
+          "bytes": 141812
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 42.90000000002328,
+              "end": 666.4000000000233,
+              "transfer": 191515,
+              "encoded": 191215,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 43.40000000002328,
+              "end": 324,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 1072.0999999999767,
+              "end": 1099.9000000000233,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 1184.5,
+              "end": 1214.7999999999302,
+              "transfer": 3546,
+              "encoded": 3246,
+              "decoded": 7425
+            },
+            {
+              "name": "editor-grant",
+              "start": 1484.5,
+              "end": 1508.6999999999534,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1511.0999999999767,
+              "end": 5655.5,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 684,
+              "duration": 318
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 110.30000000004657,
+              "end": 3696.100000000093,
+              "transfer": 1485484,
+              "encoded": 1485184,
+              "decoded": 6303213
+            },
+            {
+              "name": "design-ba5aaff6de542eab.css",
+              "start": 110.80000000004657,
+              "end": 408.9000000000233,
+              "transfer": 46361,
+              "encoded": 46061,
+              "decoded": 398295
+            },
+            {
+              "name": "dc-runtime.js",
+              "start": 110.90000000002328,
+              "end": 795.8000000000466,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            },
+            {
+              "name": "session",
+              "start": 3928.9000000000233,
+              "end": 3954.70000000007,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4116.300000000047,
+              "end": 4140.20000000007,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4146.600000000093,
+              "end": 4170.70000000007,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4185,
+              "end": 4209.400000000023,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4185.300000000047,
+              "end": 4212.900000000023,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            },
+            {
+              "name": "anthropicons-variable-72caa7e5fd04db48.woff2",
+              "start": 4604.300000000047,
+              "end": 4946.900000000023,
+              "transfer": 102856,
+              "encoded": 102556,
+              "decoded": 102556
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 873.5,
+              "duration": 77
+            },
+            {
+              "start": 3736.20000000007,
+              "duration": 389
+            },
+            {
+              "start": 4437.5,
+              "duration": 282
+            },
+            {
+              "start": 6121.400000000023,
+              "duration": 53
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 15.300000000046566,
+              "end": 321.70000000006985,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 544.9000000000233,
+              "duration": 53
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.04490899999999998,
+        "TaskDuration": 0.310404,
+        "JSHeapUsedSize": 822864
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4193/",
+      "kind": "design",
+      "scenario": "reopen",
+      "visibleMs": 150.71409999995922,
+      "usableMs": 226.72231299998202,
+      "bytes": 0,
+      "requests": [],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 42.90000000002328,
+              "end": 666.4000000000233,
+              "transfer": 191515,
+              "encoded": 191215,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 43.40000000002328,
+              "end": 324,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 1072.0999999999767,
+              "end": 1099.9000000000233,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 1184.5,
+              "end": 1214.7999999999302,
+              "transfer": 3546,
+              "encoded": 3246,
+              "decoded": 7425
+            },
+            {
+              "name": "editor-grant",
+              "start": 1484.5,
+              "end": 1508.6999999999534,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1511.0999999999767,
+              "end": 5655.5,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 684,
+              "duration": 318
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 110.30000000004657,
+              "end": 3696.100000000093,
+              "transfer": 1485484,
+              "encoded": 1485184,
+              "decoded": 6303213
+            },
+            {
+              "name": "design-ba5aaff6de542eab.css",
+              "start": 110.80000000004657,
+              "end": 408.9000000000233,
+              "transfer": 46361,
+              "encoded": 46061,
+              "decoded": 398295
+            },
+            {
+              "name": "dc-runtime.js",
+              "start": 110.90000000002328,
+              "end": 795.8000000000466,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            },
+            {
+              "name": "session",
+              "start": 3928.9000000000233,
+              "end": 3954.70000000007,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4116.300000000047,
+              "end": 4140.20000000007,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4146.600000000093,
+              "end": 4170.70000000007,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4185,
+              "end": 4209.400000000023,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4185.300000000047,
+              "end": 4212.900000000023,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            },
+            {
+              "name": "anthropicons-variable-72caa7e5fd04db48.woff2",
+              "start": 4604.300000000047,
+              "end": 4946.900000000023,
+              "transfer": 102856,
+              "encoded": 102556,
+              "decoded": 102556
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 873.5,
+              "duration": 77
+            },
+            {
+              "start": 3736.20000000007,
+              "duration": 389
+            },
+            {
+              "start": 4437.5,
+              "duration": 282
+            },
+            {
+              "start": 6121.400000000023,
+              "duration": 53
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 15.300000000046566,
+              "end": 321.70000000006985,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 544.9000000000233,
+              "duration": 53
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.002544999999999964,
+        "TaskDuration": 0.014175000000000049,
+        "JSHeapUsedSize": 135572
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4193/",
+      "kind": "design",
+      "scenario": "refresh",
+      "visibleMs": 6224.144432000003,
+      "usableMs": 6403.896448000069,
+      "bytes": 1922698,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4193/assets/ArtifactView-viiBJrmy.js",
+          "start": 1041.97469,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 304,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02504999999996471,
+          "end": 1041.999311,
+          "bytes": 331
+        },
+        {
+          "url": "http://127.0.0.1:4193/api/artifacts/board-a/editor-grant",
+          "start": 1042.273118,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02627899999993133,
+          "end": 1042.298386,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/",
+          "start": 1042.310483,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.028121999999939362
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1042.386102,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 3.416996000000154,
+          "end": 1045.77979,
+          "bytes": 1485577
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/design-ba5aaff6de542eab.css",
+          "start": 1042.386474,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.030342000000018743,
+          "end": 1042.681037,
+          "bytes": 46445
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1042.386567,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.6861599999999726,
+          "end": 1043.06872,
+          "bytes": 141812
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/__deck/session",
+          "start": 1045.995304,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.17969300000004296,
+          "end": 1046.029221,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/_files.json",
+          "start": 1046.164709,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02704700000003868,
+          "end": 1046.187827,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/__deck/events",
+          "start": 1046.174759,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025163999999904263
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1046.194394,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.023489999999810607,
+          "end": 1046.217669,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1046.231314,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.023663999999826046,
+          "end": 1046.254487,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1046.232041,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025495999999975538,
+          "end": 1046.257168,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/anthropicons-variable-72caa7e5fd04db48.woff2",
+          "start": 1046.655938,
+          "type": "Font",
+          "initiator": "parser",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.3593229999999039,
+          "end": 1047.010048,
+          "bytes": 102895
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1047.65148,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "F228749A444412EE506A9D57E777FF0D",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.30995800000005147,
+          "end": 1047.958431,
+          "bytes": 141812
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 41.90000000002328,
+              "end": 66.30000000004657,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 42.09999999997672,
+              "end": 69,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 150.59999999997672,
+              "end": 177,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 223.40000000002328,
+              "end": 246.70000000006985,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "editor-grant",
+              "start": 521.3000000000466,
+              "end": 545.8000000000466,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 549.4000000000233,
+              "end": 4436.300000000047,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 80.69999999995343,
+              "end": 3474.3000000000466,
+              "transfer": 1485484,
+              "encoded": 1485184,
+              "decoded": 6303213
+            },
+            {
+              "name": "design-ba5aaff6de542eab.css",
+              "start": 81,
+              "end": 375.5,
+              "transfer": 46361,
+              "encoded": 46061,
+              "decoded": 398295
+            },
+            {
+              "name": "dc-runtime.js",
+              "start": 81.09999999997672,
+              "end": 763.1999999999534,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            },
+            {
+              "name": "session",
+              "start": 3700.6999999999534,
+              "end": 3723.6999999999534,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 3859.4000000000233,
+              "end": 3882.4000000000233,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 3889,
+              "end": 3912.1999999999534,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 3925.9000000000233,
+              "end": 3949,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 3926.6999999999534,
+              "end": 3951.5999999999767,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            },
+            {
+              "name": "anthropicons-variable-72caa7e5fd04db48.woff2",
+              "start": 4351.5,
+              "end": 4704.5,
+              "transfer": 102856,
+              "encoded": 102556,
+              "decoded": 102556
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 3512.9000000000233,
+              "duration": 354
+            },
+            {
+              "start": 4180.199999999953,
+              "duration": 293
+            },
+            {
+              "start": 5877.900000000023,
+              "duration": 60
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 24.79999999993015,
+              "end": 331.69999999995343,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 556.5999999999767,
+              "duration": 60
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.018011000000000006,
+        "TaskDuration": 0.17753100000000002,
+        "JSHeapUsedSize": 3024060
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "design",
+      "scenario": "cold",
+      "visibleMs": 11712.718942000038,
+      "usableMs": 11891.384431000006,
+      "bytes": 2208381,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/assets/ArtifactView-DHlBLLn0.js",
+          "start": 1049.461831,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.034124000000019805,
+          "end": 1049.494017,
+          "bytes": 3365
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/artifacts/board-a/editor-grant",
+          "start": 1049.760691,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02536499999996522,
+          "end": 1049.785837,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/",
+          "start": 1049.812926,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.028096999999888794
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1049.872647,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "BA8B86039100433F06D0270EF1607342",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 4.1035430000001725,
+          "end": 1053.958072,
+          "bytes": 1857727
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/assets/index-oDSQuawR.css",
+          "start": 1049.873037,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "BA8B86039100433F06D0270EF1607342",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.0304839999998876,
+          "end": 1050.375222,
+          "bytes": 161721
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/__deck/session",
+          "start": 1054.173492,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "BA8B86039100433F06D0270EF1607342",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.18111900000008063,
+          "end": 1054.212645,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/_files.json",
+          "start": 1054.342423,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "BA8B86039100433F06D0270EF1607342",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.027300999999852138,
+          "end": 1054.368414,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/__deck/events",
+          "start": 1054.354182,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "BA8B86039100433F06D0270EF1607342",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03346699999997327
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1054.371768,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "BA8B86039100433F06D0270EF1607342",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.023748000000068714,
+          "end": 1054.395177,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1054.410207,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "BA8B86039100433F06D0270EF1607342",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03152800000020761,
+          "end": 1054.441489,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1054.410603,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "BA8B86039100433F06D0270EF1607342",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03673299999991286,
+          "end": 1054.444226,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1060.546803,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "BA8B86039100433F06D0270EF1607342",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.3968130000000656,
+          "end": 1060.939162,
+          "bytes": 181742
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 39.10000000009313,
+              "end": 575.7000000001863,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 39.5,
+              "end": 297.10000000009313,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 743.9000000001397,
+              "end": 771.3000000000466,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-DHlBLLn0.js",
+              "start": 830.3000000000466,
+              "end": 861.2000000001863,
+              "transfer": 3213,
+              "encoded": 2913,
+              "decoded": 6585
+            },
+            {
+              "name": "editor-grant",
+              "start": 1128.1000000000931,
+              "end": 1152.9000000001397,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1163.9000000001397,
+              "end": 5741.800000000047,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 588.1000000000931,
+              "duration": 98
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 69,
+              "end": 4154.300000000047,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 69.4000000001397,
+              "end": 571.5,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4382.40000000014,
+              "end": 4408.90000000014,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4538.90000000014,
+              "end": 4564.699999999953,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4568.199999999953,
+              "end": 4591.5,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4606.600000000093,
+              "end": 4637.800000000047,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4607,
+              "end": 4640.5,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4201.5,
+              "duration": 347
+            },
+            {
+              "start": 4872.90000000014,
+              "duration": 328
+            },
+            {
+              "start": 11360.90000000014,
+              "duration": 63
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 18.299999999813735,
+              "end": 410.5999999998603,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 636,
+              "duration": 63
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.039542999999999995,
+        "TaskDuration": 0.332716,
+        "JSHeapUsedSize": 1018784
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "design",
+      "scenario": "reopen",
+      "visibleMs": 150.7476100000531,
+      "usableMs": 212.89829300008023,
+      "bytes": 0,
+      "requests": [],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 39.10000000009313,
+              "end": 575.7000000001863,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 39.5,
+              "end": 297.10000000009313,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 743.9000000001397,
+              "end": 771.3000000000466,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-DHlBLLn0.js",
+              "start": 830.3000000000466,
+              "end": 861.2000000001863,
+              "transfer": 3213,
+              "encoded": 2913,
+              "decoded": 6585
+            },
+            {
+              "name": "editor-grant",
+              "start": 1128.1000000000931,
+              "end": 1152.9000000001397,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1163.9000000001397,
+              "end": 5741.800000000047,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 588.1000000000931,
+              "duration": 98
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 69,
+              "end": 4154.300000000047,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 69.4000000001397,
+              "end": 571.5,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4382.40000000014,
+              "end": 4408.90000000014,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4538.90000000014,
+              "end": 4564.699999999953,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4568.199999999953,
+              "end": 4591.5,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4606.600000000093,
+              "end": 4637.800000000047,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4607,
+              "end": 4640.5,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4201.5,
+              "duration": 347
+            },
+            {
+              "start": 4872.90000000014,
+              "duration": 328
+            },
+            {
+              "start": 11360.90000000014,
+              "duration": 63
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 18.299999999813735,
+              "end": 410.5999999998603,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 636,
+              "duration": 63
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.004186999999999996,
+        "TaskDuration": 0.025258000000000003,
+        "JSHeapUsedSize": 135440
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "design",
+      "scenario": "refresh",
+      "visibleMs": 12072.209693999866,
+      "usableMs": 12231.454862999954,
+      "bytes": 2205347,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/assets/ArtifactView-DHlBLLn0.js",
+          "start": 1061.908574,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 304,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02659199999993689,
+          "end": 1061.934525,
+          "bytes": 331
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/artifacts/board-a/editor-grant",
+          "start": 1062.20705,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026507000000037806,
+          "end": 1062.232123,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/",
+          "start": 1062.253445,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.030531999999993786
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1062.335382,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "92DD8D5D3962F1A96F20575834CA5E83",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 4.151194999999916,
+          "end": 1066.467182,
+          "bytes": 1857727
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/assets/index-oDSQuawR.css",
+          "start": 1062.335762,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "92DD8D5D3962F1A96F20575834CA5E83",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.07201800000007097,
+          "end": 1062.84059,
+          "bytes": 161721
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/__deck/session",
+          "start": 1066.748084,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "92DD8D5D3962F1A96F20575834CA5E83",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.21165499999983695,
+          "end": 1066.785416,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/_files.json",
+          "start": 1066.950486,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "92DD8D5D3962F1A96F20575834CA5E83",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02426700000000892,
+          "end": 1066.974588,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/__deck/events",
+          "start": 1066.959488,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "92DD8D5D3962F1A96F20575834CA5E83",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024462000000085027
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1066.97594,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "92DD8D5D3962F1A96F20575834CA5E83",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.10079799999994066,
+          "end": 1067.064212,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1067.173314,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "92DD8D5D3962F1A96F20575834CA5E83",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.08979000000022097,
+          "end": 1067.270974,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1067.173644,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "92DD8D5D3962F1A96F20575834CA5E83",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.09010200000011537,
+          "end": 1067.271111,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4191/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1073.274898,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "92DD8D5D3962F1A96F20575834CA5E83",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.5168120000000727,
+          "end": 1073.767783,
+          "bytes": 181742
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 50.699999999953434,
+              "end": 73.69999999995343,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 51,
+              "end": 77.80000000004657,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 164.5,
+              "end": 188.30000000004657,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-DHlBLLn0.js",
+              "start": 238.19999999995343,
+              "end": 262.69999999995343,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "editor-grant",
+              "start": 535.5,
+              "end": 560.3000000000466,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 563,
+              "end": 5298.300000000047,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 95.39999999990687,
+              "end": 4227,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 95.69999999995343,
+              "end": 600.5,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4519.799999999814,
+              "end": 4545.299999999814,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4710.59999999986,
+              "end": 4734.399999999907,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4736,
+              "end": 4824.199999999953,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4933.399999999907,
+              "end": 5030.899999999907,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4933.59999999986,
+              "end": 5031,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4268.699999999953,
+              "duration": 448
+            },
+            {
+              "start": 4837.09999999986,
+              "duration": 96
+            },
+            {
+              "start": 5030.699999999953,
+              "duration": 141
+            },
+            {
+              "start": 5191.899999999907,
+              "duration": 376
+            },
+            {
+              "start": 11749.59999999986,
+              "duration": 61
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 18.300000000046566,
+              "end": 511.10000000009313,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 733,
+              "duration": 61
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.016680999999999994,
+        "TaskDuration": 0.504712,
+        "JSHeapUsedSize": 368696
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4192/",
+      "kind": "design",
+      "scenario": "cold",
+      "visibleMs": 7385.93852200006,
+      "usableMs": 7567.480905000139,
+      "bytes": 2208714,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4192/assets/ArtifactView-viiBJrmy.js",
+          "start": 1075.260812,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03295400000001791,
+          "end": 1075.292967,
+          "bytes": 3698
+        },
+        {
+          "url": "http://127.0.0.1:4192/api/artifacts/board-a/editor-grant",
+          "start": 1075.560718,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02683600000000297,
+          "end": 1075.587166,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/",
+          "start": 1075.607253,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.030872000000044864
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1075.667648,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "CB47FFB7DA320C4A01C559039A252B73",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 4.220681999999897,
+          "end": 1079.862733,
+          "bytes": 1857727
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/assets/index-oDSQuawR.css",
+          "start": 1075.668273,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "CB47FFB7DA320C4A01C559039A252B73",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.028409000000010565,
+          "end": 1076.172855,
+          "bytes": 161721
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/__deck/session",
+          "start": 1080.203248,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "CB47FFB7DA320C4A01C559039A252B73",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.27567599999997583,
+          "end": 1080.241402,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/_files.json",
+          "start": 1080.461976,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "CB47FFB7DA320C4A01C559039A252B73",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03196000000002641,
+          "end": 1080.489808,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/__deck/events",
+          "start": 1080.478686,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "CB47FFB7DA320C4A01C559039A252B73",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02405999999996311
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1080.502152,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "CB47FFB7DA320C4A01C559039A252B73",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024047999999993408,
+          "end": 1080.525818,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1080.550574,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "CB47FFB7DA320C4A01C559039A252B73",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02349799999979041,
+          "end": 1080.573852,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1080.550835,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "CB47FFB7DA320C4A01C559039A252B73",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026292999999895983,
+          "end": 1080.576686,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1082.0425,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "CB47FFB7DA320C4A01C559039A252B73",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.39587200000005396,
+          "end": 1082.434045,
+          "bytes": 181742
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 39.9000000001397,
+              "end": 593.6000000000931,
+              "transfer": 191515,
+              "encoded": 191215,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 40.300000000046566,
+              "end": 321.30000000004657,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 777.9000000001397,
+              "end": 807.6999999999534,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 851.5,
+              "end": 882.3000000000466,
+              "transfer": 3546,
+              "encoded": 3246,
+              "decoded": 7425
+            },
+            {
+              "name": "editor-grant",
+              "start": 1150.5,
+              "end": 1176.5,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1179.6000000000931,
+              "end": 6086.699999999953,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 617.8000000000466,
+              "duration": 113
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 71.89999999990687,
+              "end": 4266.899999999907,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 72.5999999998603,
+              "end": 577.0999999998603,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4622,
+              "end": 4645.59999999986,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4866.399999999907,
+              "end": 4894,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4906.5,
+              "end": 4930.09999999986,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4954.899999999907,
+              "end": 4978.09999999986,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4955,
+              "end": 4980.899999999907,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4322.300000000047,
+              "duration": 558
+            },
+            {
+              "start": 5200.800000000047,
+              "duration": 411
+            },
+            {
+              "start": 7068.399999999907,
+              "duration": 79
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 22.600000000093132,
+              "end": 414.10000000009313,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 644.1999999999534,
+              "duration": 79
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.02638199999999999,
+        "TaskDuration": 0.22801299999999997,
+        "JSHeapUsedSize": 1685820
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4192/",
+      "kind": "design",
+      "scenario": "reopen",
+      "visibleMs": 95.4699389999405,
+      "usableMs": 126.32132299995646,
+      "bytes": 0,
+      "requests": [],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 39.9000000001397,
+              "end": 593.6000000000931,
+              "transfer": 191515,
+              "encoded": 191215,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 40.300000000046566,
+              "end": 321.30000000004657,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 777.9000000001397,
+              "end": 807.6999999999534,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 851.5,
+              "end": 882.3000000000466,
+              "transfer": 3546,
+              "encoded": 3246,
+              "decoded": 7425
+            },
+            {
+              "name": "editor-grant",
+              "start": 1150.5,
+              "end": 1176.5,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1179.6000000000931,
+              "end": 6086.699999999953,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 617.8000000000466,
+              "duration": 113
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 71.89999999990687,
+              "end": 4266.899999999907,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 72.5999999998603,
+              "end": 577.0999999998603,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4622,
+              "end": 4645.59999999986,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4866.399999999907,
+              "end": 4894,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4906.5,
+              "end": 4930.09999999986,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4954.899999999907,
+              "end": 4978.09999999986,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4955,
+              "end": 4980.899999999907,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4322.300000000047,
+              "duration": 558
+            },
+            {
+              "start": 5200.800000000047,
+              "duration": 411
+            },
+            {
+              "start": 7068.399999999907,
+              "duration": 79
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 22.600000000093132,
+              "end": 414.10000000009313,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 644.1999999999534,
+              "duration": 79
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.0020600000000000063,
+        "TaskDuration": 0.016756999999999966,
+        "JSHeapUsedSize": 135936
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4192/",
+      "kind": "design",
+      "scenario": "refresh",
+      "visibleMs": 7003.847037000014,
+      "usableMs": 7149.561474999928,
+      "bytes": 2205347,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4192/assets/ArtifactView-viiBJrmy.js",
+          "start": 1083.31849,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 304,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026915999999800988,
+          "end": 1083.344914,
+          "bytes": 331
+        },
+        {
+          "url": "http://127.0.0.1:4192/api/artifacts/board-a/editor-grant",
+          "start": 1083.616716,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.027947000000040134,
+          "end": 1083.643184,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/",
+          "start": 1083.663832,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02718700000013996
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1083.714027,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "81A6C189E38A1E67E5D841697E3C389D",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 4.0836779999999635,
+          "end": 1087.779551,
+          "bytes": 1857727
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/assets/index-oDSQuawR.css",
+          "start": 1083.714542,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "81A6C189E38A1E67E5D841697E3C389D",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03255800000010822,
+          "end": 1084.206552,
+          "bytes": 161721
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/__deck/session",
+          "start": 1087.996588,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "81A6C189E38A1E67E5D841697E3C389D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.2067019999999502,
+          "end": 1088.037692,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/_files.json",
+          "start": 1088.188437,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "81A6C189E38A1E67E5D841697E3C389D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02856799999995019,
+          "end": 1088.214992,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/__deck/events",
+          "start": 1088.202976,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "81A6C189E38A1E67E5D841697E3C389D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02380799999991723
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1088.219319,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "81A6C189E38A1E67E5D841697E3C389D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025881999999910477,
+          "end": 1088.244494,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1088.262814,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "81A6C189E38A1E67E5D841697E3C389D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024249000000054366,
+          "end": 1088.28664,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1088.263079,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "81A6C189E38A1E67E5D841697E3C389D",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.027535999999827254,
+          "end": 1088.290205,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4192/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1089.687868,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "81A6C189E38A1E67E5D841697E3C389D",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.4027770000000146,
+          "end": 1090.086928,
+          "bytes": 181742
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 44.300000000046566,
+              "end": 68.80000000004657,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 44.5999999998603,
+              "end": 72.30000000004657,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 152.19999999995343,
+              "end": 176.89999999990687,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 218.0999999998603,
+              "end": 243.0999999998603,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "editor-grant",
+              "start": 515.0999999998603,
+              "end": 541.3999999999069,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 547.3000000000466,
+              "end": 5120.399999999907,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 62.60000000009313,
+              "end": 4128.100000000093,
+              "transfer": 1856701,
+              "encoded": 1856401,
+              "decoded": 6303213
+            },
+            {
+              "name": "index-oDSQuawR.css",
+              "start": 63.10000000009313,
+              "end": 555,
+              "transfer": 161535,
+              "encoded": 161235,
+              "decoded": 535016
+            },
+            {
+              "name": "session",
+              "start": 4357.600000000093,
+              "end": 4386.199999999953,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 4537.100000000093,
+              "end": 4563.5,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 4568,
+              "end": 4593,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 4611.399999999907,
+              "end": 4635.100000000093,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 4611.600000000093,
+              "end": 4638.699999999953,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 4167.899999999907,
+              "duration": 382
+            },
+            {
+              "start": 4871.300000000047,
+              "duration": 312
+            },
+            {
+              "start": 6665.199999999953,
+              "duration": 58
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 11.699999999953434,
+              "end": 410.80000000004657,
+              "transfer": 181561,
+              "encoded": 181261,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 640.5,
+              "duration": 58
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.017925999999999997,
+        "TaskDuration": 0.192372,
+        "JSHeapUsedSize": 3366520
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4193/",
+      "kind": "design",
+      "scenario": "cold",
+      "visibleMs": 6211.289916999931,
+      "usableMs": 6446.204517000069,
+      "bytes": 1926065,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4193/assets/ArtifactView-viiBJrmy.js",
+          "start": 1091.491907,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.0318449999999757,
+          "end": 1091.522629,
+          "bytes": 3698
+        },
+        {
+          "url": "http://127.0.0.1:4193/api/artifacts/board-a/editor-grant",
+          "start": 1091.790584,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02395099999989725,
+          "end": 1091.814149,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/",
+          "start": 1091.82585,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03155400000014197
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1091.889732,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 3.4108199999998305,
+          "end": 1095.281627,
+          "bytes": 1485577
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/design-ba5aaff6de542eab.css",
+          "start": 1091.890592,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.029813999999987573,
+          "end": 1092.188791,
+          "bytes": 46445
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1091.890739,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.6883020000000215,
+          "end": 1092.575661,
+          "bytes": 141812
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/__deck/session",
+          "start": 1095.489012,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.1799510000000737,
+          "end": 1095.528041,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/_files.json",
+          "start": 1095.65822,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028240999999979977,
+          "end": 1095.681562,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/__deck/events",
+          "start": 1095.668318,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025591000000076747
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1095.688533,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025550000000066575,
+          "end": 1095.713466,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1095.734751,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024628000000120664,
+          "end": 1095.759132,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1095.735005,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026832000000013068,
+          "end": 1095.761639,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/anthropicons-variable-72caa7e5fd04db48.woff2",
+          "start": 1096.143277,
+          "type": "Font",
+          "initiator": "parser",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.34756900000002133,
+          "end": 1096.485051,
+          "bytes": 102895
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1097.115938,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "755872D76BDB910DA92CD7B2E926658E",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.31098800000017945,
+          "end": 1097.423961,
+          "bytes": 141812
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 35.9000000001397,
+              "end": 583.4000000001397,
+              "transfer": 191515,
+              "encoded": 191215,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 36.10000000009313,
+              "end": 295.69999999995343,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 739.3000000000466,
+              "end": 766.1000000000931,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 824.3000000000466,
+              "end": 853.4000000001397,
+              "transfer": 3546,
+              "encoded": 3246,
+              "decoded": 7425
+            },
+            {
+              "name": "editor-grant",
+              "start": 1121.8000000000466,
+              "end": 1145,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1149,
+              "end": 5013.100000000093,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 600.1999999999534,
+              "duration": 88
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 68.4000000001397,
+              "end": 3460.2000000001863,
+              "transfer": 1485484,
+              "encoded": 1485184,
+              "decoded": 6303213
+            },
+            {
+              "name": "design-ba5aaff6de542eab.css",
+              "start": 69.20000000018626,
+              "end": 367.4000000001397,
+              "transfer": 46361,
+              "encoded": 46061,
+              "decoded": 398295
+            },
+            {
+              "name": "dc-runtime.js",
+              "start": 69.4000000001397,
+              "end": 754.3000000000466,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            },
+            {
+              "name": "session",
+              "start": 3678.600000000093,
+              "end": 3706.7000000001863,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 3837,
+              "end": 3860.2000000001863,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 3867.2000000001863,
+              "end": 3892.100000000093,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 3913.4000000001397,
+              "end": 3937.7000000001863,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 3913.7000000001863,
+              "end": 3940.3000000000466,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            },
+            {
+              "name": "anthropicons-variable-72caa7e5fd04db48.woff2",
+              "start": 4322.5,
+              "end": 4663.700000000186,
+              "transfer": 102856,
+              "encoded": 102556,
+              "decoded": 102556
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 3498.9000000001397,
+              "duration": 346
+            },
+            {
+              "start": 4157.700000000186,
+              "duration": 278
+            },
+            {
+              "start": 5876.90000000014,
+              "duration": 99
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 13.600000000093132,
+              "end": 321.5,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 595.8000000000466,
+              "duration": 99
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.026260000000000006,
+        "TaskDuration": 0.19525100000000004,
+        "JSHeapUsedSize": 1490004
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4193/",
+      "kind": "design",
+      "scenario": "reopen",
+      "visibleMs": 109.59777600010057,
+      "usableMs": 139.21406600002229,
+      "bytes": 0,
+      "requests": [],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 35.9000000001397,
+              "end": 583.4000000001397,
+              "transfer": 191515,
+              "encoded": 191215,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 36.10000000009313,
+              "end": 295.69999999995343,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 739.3000000000466,
+              "end": 766.1000000000931,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 824.3000000000466,
+              "end": 853.4000000001397,
+              "transfer": 3546,
+              "encoded": 3246,
+              "decoded": 7425
+            },
+            {
+              "name": "editor-grant",
+              "start": 1121.8000000000466,
+              "end": 1145,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 1149,
+              "end": 5013.100000000093,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 600.1999999999534,
+              "duration": 88
+            }
+          ]
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 68.4000000001397,
+              "end": 3460.2000000001863,
+              "transfer": 1485484,
+              "encoded": 1485184,
+              "decoded": 6303213
+            },
+            {
+              "name": "design-ba5aaff6de542eab.css",
+              "start": 69.20000000018626,
+              "end": 367.4000000001397,
+              "transfer": 46361,
+              "encoded": 46061,
+              "decoded": 398295
+            },
+            {
+              "name": "dc-runtime.js",
+              "start": 69.4000000001397,
+              "end": 754.3000000000466,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            },
+            {
+              "name": "session",
+              "start": 3678.600000000093,
+              "end": 3706.7000000001863,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 3837,
+              "end": 3860.2000000001863,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 3867.2000000001863,
+              "end": 3892.100000000093,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 3913.4000000001397,
+              "end": 3937.7000000001863,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 3913.7000000001863,
+              "end": 3940.3000000000466,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            },
+            {
+              "name": "anthropicons-variable-72caa7e5fd04db48.woff2",
+              "start": 4322.5,
+              "end": 4663.700000000186,
+              "transfer": 102856,
+              "encoded": 102556,
+              "decoded": 102556
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 3498.9000000001397,
+              "duration": 346
+            },
+            {
+              "start": 4157.700000000186,
+              "duration": 278
+            },
+            {
+              "start": 5876.90000000014,
+              "duration": 99
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 13.600000000093132,
+              "end": 321.5,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 595.8000000000466,
+              "duration": 99
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.004486000000000018,
+        "TaskDuration": 0.01565899999999998,
+        "JSHeapUsedSize": 138004
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4193/",
+      "kind": "design",
+      "scenario": "refresh",
+      "visibleMs": 6238.212975000124,
+      "usableMs": 6393.294232000017,
+      "bytes": 1922698,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4193/assets/ArtifactView-viiBJrmy.js",
+          "start": 1098.420075,
+          "type": "Script",
+          "initiator": "script",
+          "target": "",
+          "status": 304,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.027469999999993888,
+          "end": 1098.447117,
+          "bytes": 331
+        },
+        {
+          "url": "http://127.0.0.1:4193/api/artifacts/board-a/editor-grant",
+          "start": 1098.71856,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025552999999945314,
+          "end": 1098.743729,
+          "bytes": 471
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/",
+          "start": 1098.761732,
+          "type": "Document",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.024947000000111075
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/index-DavTckY0.js",
+          "start": 1098.815279,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 3.4106460000000425,
+          "end": 1102.190848,
+          "bytes": 1485577
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/design-ba5aaff6de542eab.css",
+          "start": 1098.816577,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.027497000000039407,
+          "end": 1099.112492,
+          "bytes": 46445
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1098.816816,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.688816000000088,
+          "end": 1099.500264,
+          "bytes": 141812
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/__deck/session",
+          "start": 1102.442638,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.18368099999997867,
+          "end": 1102.478561,
+          "bytes": 364
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/_files.json",
+          "start": 1102.615262,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026509000000032756,
+          "end": 1102.641848,
+          "bytes": 657
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/__deck/events",
+          "start": 1102.625988,
+          "type": "EventSource",
+          "initiator": "parser",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028326000000106433
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1102.650314,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024607999999943786,
+          "end": 1102.673714,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/canvas.json",
+          "start": 1102.701499,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028520999999955166,
+          "end": 1102.728646,
+          "bytes": 589
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/project/Main.dc.html",
+          "start": 1102.702284,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03012000000012449,
+          "end": 1102.731565,
+          "bytes": 1156
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/assets/anthropicons-variable-72caa7e5fd04db48.woff2",
+          "start": 1103.118579,
+          "type": "Font",
+          "initiator": "parser",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.38987300000007963,
+          "end": 1103.502317,
+          "bytes": 102895
+        },
+        {
+          "url": "http://<grant-origin>-artifact.localhost:4193/artifact-editor/design/<grant>/artifact-type/dc-runtime.js",
+          "start": 1104.116599,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "335E603D0795C65FCFB0609820709B71",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.3100899999999456,
+          "end": 1104.422706,
+          "bytes": 141812
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-B7TIaqOD.js",
+              "start": 41.300000000046566,
+              "end": 67.9000000001397,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 41.4000000001397,
+              "end": 70.5,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 147.69999999995343,
+              "end": 173.30000000004657,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "ArtifactView-viiBJrmy.js",
+              "start": 219.10000000009313,
+              "end": 244.9000000001397,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "editor-grant",
+              "start": 516.6000000000931,
+              "end": 541.5,
+              "transfer": 447,
+              "encoded": 147,
+              "decoded": 147
+            },
+            {
+              "name": "",
+              "start": 547.1999999999534,
+              "end": 4441.800000000047,
+              "transfer": 0,
+              "encoded": 0,
+              "decoded": 0
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-DavTckY0.js",
+              "start": 64.5,
+              "end": 3439.7999999998137,
+              "transfer": 1485484,
+              "encoded": 1485184,
+              "decoded": 6303213
+            },
+            {
+              "name": "design-ba5aaff6de542eab.css",
+              "start": 65.5,
+              "end": 361.39999999990687,
+              "transfer": 46361,
+              "encoded": 46061,
+              "decoded": 398295
+            },
+            {
+              "name": "dc-runtime.js",
+              "start": 65.79999999981374,
+              "end": 749.1999999999534,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            },
+            {
+              "name": "session",
+              "start": 3703.0999999998603,
+              "end": 3727.5,
+              "transfer": 316,
+              "encoded": 16,
+              "decoded": 16
+            },
+            {
+              "name": "_files.json",
+              "start": 3864.2999999998137,
+              "end": 3890.7999999998137,
+              "transfer": 607,
+              "encoded": 307,
+              "decoded": 307
+            },
+            {
+              "name": "canvas.json",
+              "start": 3899.2999999998137,
+              "end": 3922.5999999998603,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "canvas.json",
+              "start": 3950.399999999907,
+              "end": 3977.5,
+              "transfer": 540,
+              "encoded": 240,
+              "decoded": 240
+            },
+            {
+              "name": "Main.dc.html",
+              "start": 3951.2999999998137,
+              "end": 3980.5,
+              "transfer": 1113,
+              "encoded": 813,
+              "decoded": 813
+            },
+            {
+              "name": "anthropicons-variable-72caa7e5fd04db48.woff2",
+              "start": 4368.09999999986,
+              "end": 4751.199999999953,
+              "transfer": 102856,
+              "encoded": 102556,
+              "decoded": 102556
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 3501.5,
+              "duration": 371
+            },
+            {
+              "start": 4188,
+              "duration": 332
+            },
+            {
+              "start": 5902.09999999986,
+              "duration": 58
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [
+            {
+              "name": "dc-runtime.js",
+              "start": 18.899999999906868,
+              "end": 324.89999999990687,
+              "transfer": 141748,
+              "encoded": 141448,
+              "decoded": 1156121
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 555.3999999999069,
+              "duration": 58
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.014919000000000002,
+        "TaskDuration": 0.17921400000000004,
+        "JSHeapUsedSize": 3034012
+      },
+      "errors": []
+    }
+  ],
+  "summary": {
+    "http://127.0.0.1:4191/|design|cold": {
+      "visibleMs": {
+        "p50": 11631.77535500006,
+        "p75": 11712.718942000038,
+        "p95": 11712.718942000038
+      },
+      "usableMs": {
+        "p50": 11810.128425000017,
+        "p75": 11891.384431000006,
+        "p95": 11891.384431000006
+      },
+      "bytes": {
+        "p50": 2208381,
+        "p75": 2208381,
+        "p95": 2208381
+      }
+    },
+    "http://127.0.0.1:4191/|design|reopen": {
+      "visibleMs": {
+        "p50": 124.24273700003141,
+        "p75": 150.7476100000531,
+        "p95": 150.7476100000531
+      },
+      "usableMs": {
+        "p50": 156.77747199993064,
+        "p75": 212.89829300008023,
+        "p95": 212.89829300008023
+      },
+      "bytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      }
+    },
+    "http://127.0.0.1:4191/|design|refresh": {
+      "visibleMs": {
+        "p50": 11878.149217999977,
+        "p75": 12072.209693999866,
+        "p95": 12072.209693999866
+      },
+      "usableMs": {
+        "p50": 12053.210602000036,
+        "p75": 12231.454862999954,
+        "p95": 12231.454862999954
+      },
+      "bytes": {
+        "p50": 2205347,
+        "p75": 2205347,
+        "p95": 2205347
+      }
+    },
+    "http://127.0.0.1:4192/|design|cold": {
+      "visibleMs": {
+        "p50": 7103.267710999944,
+        "p75": 7385.93852200006,
+        "p95": 7385.93852200006
+      },
+      "usableMs": {
+        "p50": 7249.40818999994,
+        "p75": 7567.480905000139,
+        "p95": 7567.480905000139
+      },
+      "bytes": {
+        "p50": 2208714,
+        "p75": 2208714,
+        "p95": 2208714
+      }
+    },
+    "http://127.0.0.1:4192/|design|reopen": {
+      "visibleMs": {
+        "p50": 95.4699389999405,
+        "p75": 131.9320569998581,
+        "p95": 131.9320569998581
+      },
+      "usableMs": {
+        "p50": 126.32132299995646,
+        "p75": 183.38999000002332,
+        "p95": 183.38999000002332
+      },
+      "bytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      }
+    },
+    "http://127.0.0.1:4192/|design|refresh": {
+      "visibleMs": {
+        "p50": 7003.847037000014,
+        "p75": 7105.138416000045,
+        "p95": 7105.138416000045
+      },
+      "usableMs": {
+        "p50": 7149.561474999928,
+        "p75": 7269.7507580001,
+        "p95": 7269.7507580001
+      },
+      "bytes": {
+        "p50": 2205347,
+        "p75": 2205347,
+        "p95": 2205347
+      }
+    },
+    "http://127.0.0.1:4193/|design|cold": {
+      "visibleMs": {
+        "p50": 6211.289916999931,
+        "p75": 6455.86878600011,
+        "p95": 6455.86878600011
+      },
+      "usableMs": {
+        "p50": 6446.204517000069,
+        "p75": 6628.391419000081,
+        "p95": 6628.391419000081
+      },
+      "bytes": {
+        "p50": 1926065,
+        "p75": 1926065,
+        "p95": 1926065
+      }
+    },
+    "http://127.0.0.1:4193/|design|reopen": {
+      "visibleMs": {
+        "p50": 109.59777600010057,
+        "p75": 150.71409999995922,
+        "p95": 150.71409999995922
+      },
+      "usableMs": {
+        "p50": 139.21406600002229,
+        "p75": 226.72231299998202,
+        "p95": 226.72231299998202
+      },
+      "bytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      }
+    },
+    "http://127.0.0.1:4193/|design|refresh": {
+      "visibleMs": {
+        "p50": 6224.144432000003,
+        "p75": 6238.212975000124,
+        "p95": 6238.212975000124
+      },
+      "usableMs": {
+        "p50": 6393.294232000017,
+        "p75": 6403.896448000069,
+        "p95": 6403.896448000069
+      },
+      "bytes": {
+        "p50": 1922698,
+        "p75": 1922698,
+        "p95": 1922698
+      }
+    }
+  }
+}

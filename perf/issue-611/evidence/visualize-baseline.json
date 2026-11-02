@@ -1,0 +1,6014 @@
+{
+  "browser": "154.0.8037.57",
+  "host": {
+    "system": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C"
+  },
+  "profile": {
+    "latencyMs": 20,
+    "downloadMbps": 4,
+    "uploadMbps": 3,
+    "cpu": 1,
+    "width": 1440,
+    "height": 1000,
+    "oopifThrottled": true
+  },
+  "scope": "Production UI/isolated gateway/editor/SDK, synthetic local API; excludes production authorization/database/IM/model latency",
+  "samples": [
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 569.0218439999626,
+      "usableMs": 682.2267769999826,
+      "bytes": 84805,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 965.92541,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.032841999999959626,
+          "end": 965.961241,
+          "bytes": 1599
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 965.967692,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.030092999999965286,
+          "end": 966.023915,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 965.96832,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03457300000002306,
+          "end": 966.161809,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 965.968762,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.031667000000084045,
+          "end": 965.999892,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 965.969536,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024894000000017513,
+          "end": 965.994147,
+          "bytes": 396
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 966.448514,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.027049999999917418,
+          "end": 966.474404,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 966.450941,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.029014000000074702,
+          "end": 966.477428,
+          "bytes": 396
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 40.800000000046566,
+              "end": 595.3000000000466,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 44.300000000046566,
+              "end": 318.4000000000233,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 710.2000000000698,
+              "end": 736.3000000000466,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 860.5,
+              "end": 895.1000000000931,
+              "transfer": 1533,
+              "encoded": 1233,
+              "decoded": 2302
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 901.6000000000931,
+              "end": 957.7000000000698,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 902.2000000000698,
+              "end": 1095.6000000000931,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 902.8000000000466,
+              "end": 933.7000000000698,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 903.4000000000233,
+              "end": 927.9000000000233,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "validate",
+              "start": 1382.4000000000233,
+              "end": 1408.2000000000698,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1384.8000000000466,
+              "end": 1411.3000000000466,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 607.8000000000466,
+              "duration": 93
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 61.79999999993015,
+              "duration": 97
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.045897999999999994,
+        "TaskDuration": 0.194463,
+        "JSHeapUsedSize": 5422208
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 67.63803899991672,
+      "usableMs": 143.04830200001106,
+      "bytes": 396,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 966.782189,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028368000000000393,
+          "end": 966.810321,
+          "bytes": 396
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 40.800000000046566,
+              "end": 595.3000000000466,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 44.300000000046566,
+              "end": 318.4000000000233,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 710.2000000000698,
+              "end": 736.3000000000466,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 860.5,
+              "end": 895.1000000000931,
+              "transfer": 1533,
+              "encoded": 1233,
+              "decoded": 2302
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 901.6000000000931,
+              "end": 957.7000000000698,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 902.2000000000698,
+              "end": 1095.6000000000931,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 902.8000000000466,
+              "end": 933.7000000000698,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 903.4000000000233,
+              "end": 927.9000000000233,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "validate",
+              "start": 1382.4000000000233,
+              "end": 1408.2000000000698,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1384.8000000000466,
+              "end": 1411.3000000000466,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "state",
+              "start": 1552.7000000000698,
+              "end": 1576.1000000000931,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "state",
+              "start": 1716.1000000000931,
+              "end": 1744.1000000000931,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 607.8000000000466,
+              "duration": 93
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 61.79999999993015,
+              "duration": 97
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.00676199999999999,
+        "TaskDuration": 0.035051,
+        "JSHeapUsedSize": 6235904
+      },
+      "errors": []
+    },
+    {
+      "run": 0,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 313.15130600000884,
+      "usableMs": 424.3610710000212,
+      "bytes": 2714,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 967.123083,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.028981000000044332,
+          "end": 967.155115,
+          "bytes": 1599
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 967.156977,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0026370000000497384,
+          "end": 967.159395,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 967.157591,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.006026000000019849,
+          "end": 967.162503,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 967.157796,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.007844000000091,
+          "end": 967.161737,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 967.158503,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024015999999960513,
+          "end": 967.182045,
+          "bytes": 396
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 967.419803,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.023617999999942185,
+          "end": 967.443102,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 967.421595,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.027714999999943757,
+          "end": 967.448842,
+          "bytes": 396
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 46.199999999953434,
+              "end": 71,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 46.40000000002328,
+              "end": 74.79999999993015,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 141.69999999995343,
+              "end": 164.59999999997672,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 235.59999999997672,
+              "end": 266.19999999995343,
+              "transfer": 1533,
+              "encoded": 1233,
+              "decoded": 2302
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 268.29999999993015,
+              "end": 270.5,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 268.69999999995343,
+              "end": 273.5999999999767,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 268.9000000000233,
+              "end": 272.79999999993015,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 269.69999999995343,
+              "end": 293.0999999999767,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "validate",
+              "start": 531.0999999999767,
+              "end": 554.1999999999534,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 533,
+              "end": 559.9000000000233,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 55.60000000009313,
+              "duration": 91
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.023861,
+        "TaskDuration": 0.123814,
+        "JSHeapUsedSize": -444936
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 574.5818440000221,
+      "usableMs": 674.5158999999603,
+      "bytes": 84805,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 968.586077,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.028506999999990512,
+          "end": 968.616469,
+          "bytes": 1599
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 968.622188,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03385599999990063,
+          "end": 968.67928,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 968.622776,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03681399999993573,
+          "end": 968.817759,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 968.623072,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.0352500000000191,
+          "end": 968.65764,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 968.623855,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.027912999999898602,
+          "end": 968.650019,
+          "bytes": 396
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 969.101074,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026392999999984568,
+          "end": 969.12704,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 969.103968,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.029284999999958927,
+          "end": 969.133271,
+          "bytes": 396
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 42.199999999953434,
+              "end": 589.0999999999767,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 42.59999999997672,
+              "end": 322.69999999995343,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 719.6999999999534,
+              "end": 748.0999999999767,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 863,
+              "end": 891.9000000000233,
+              "transfer": 1533,
+              "encoded": 1233,
+              "decoded": 2302
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 897.8000000000466,
+              "end": 954.8000000000466,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 898.3000000000466,
+              "end": 1093.3000000000466,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 898.5999999999767,
+              "end": 933.0999999999767,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 899.5,
+              "end": 925.5,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "validate",
+              "start": 1376.5999999999767,
+              "end": 1402.5999999999767,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1379.5999999999767,
+              "end": 1408.6999999999534,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 603.3000000000466,
+              "duration": 106
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 54.40000000002328,
+              "duration": 104
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.04436100000000001,
+        "TaskDuration": 0.18873399999999999,
+        "JSHeapUsedSize": 5365080
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 43.74758699998438,
+      "usableMs": 135.04357500005426,
+      "bytes": 396,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 969.347064,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028707999999937783,
+          "end": 969.375457,
+          "bytes": 396
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 42.199999999953434,
+              "end": 589.0999999999767,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 42.59999999997672,
+              "end": 322.69999999995343,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 719.6999999999534,
+              "end": 748.0999999999767,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 863,
+              "end": 891.9000000000233,
+              "transfer": 1533,
+              "encoded": 1233,
+              "decoded": 2302
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 897.8000000000466,
+              "end": 954.8000000000466,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 898.3000000000466,
+              "end": 1093.3000000000466,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 898.5999999999767,
+              "end": 933.0999999999767,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 899.5,
+              "end": 925.5,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "validate",
+              "start": 1376.5999999999767,
+              "end": 1402.5999999999767,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1379.5999999999767,
+              "end": 1408.6999999999534,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "state",
+              "start": 1477.5999999999767,
+              "end": 1501.5999999999767,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "state",
+              "start": 1622.9000000000233,
+              "end": 1651,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 603.3000000000466,
+              "duration": 106
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 54.40000000002328,
+              "duration": 104
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.003180000000000016,
+        "TaskDuration": 0.031233999999999984,
+        "JSHeapUsedSize": 6236232
+      },
+      "errors": []
+    },
+    {
+      "run": 1,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 366.67883799998435,
+      "usableMs": 453.22798899996997,
+      "bytes": 2714,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 969.636929,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02744699999993827,
+          "end": 969.667053,
+          "bytes": 1599
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 969.669047,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0016170000000101936,
+          "end": 969.669948,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 969.669328,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.004974000000061096,
+          "end": 969.673805,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 969.669726,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.007177000000069711,
+          "end": 969.673383,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 969.670143,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02689599999996517,
+          "end": 969.696568,
+          "bytes": 396
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 969.981113,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025490999999988162,
+          "end": 970.006338,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 969.983691,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028991000000019085,
+          "end": 970.012079,
+          "bytes": 396
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 40.10000000009313,
+              "end": 64,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 40.300000000046566,
+              "end": 66.70000000006985,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 128.20000000006985,
+              "end": 154.70000000006985,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 221.20000000006985,
+              "end": 249.90000000002328,
+              "transfer": 1533,
+              "encoded": 1233,
+              "decoded": 2302
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 251.90000000002328,
+              "end": 252.70000000006985,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 252.30000000004657,
+              "end": 256.60000000009313,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 252.60000000009313,
+              "end": 256.20000000006985,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 253.10000000009313,
+              "end": 279.4000000000233,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "validate",
+              "start": 564,
+              "end": 589.2000000000698,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 566.6000000000931,
+              "end": 594.9000000000233,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 67.30000000004657,
+              "duration": 103
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.017749,
+        "TaskDuration": 0.11843899999999999,
+        "JSHeapUsedSize": -334220
+      },
+      "errors": []
+    },
+    {
+      "run": 2,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 535.34614900002,
+      "usableMs": 650.8125640000344,
+      "bytes": 84807,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 971.08612,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.030333999999925254,
+          "end": 971.119195,
+          "bytes": 1599
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 971.123845,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.026333000000022366,
+          "end": 971.179155,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 971.124393,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.028719999999907486,
+          "end": 971.317217,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 971.125008,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.031247000000007574,
+          "end": 971.155169,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 971.127305,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03451500000005581,
+          "end": 971.161008,
+          "bytes": 396
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 971.583716,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025090999999974883,
+          "end": 971.608555,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 971.585512,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026292000000012195,
+          "end": 971.612108,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 45.09999999997672,
+              "end": 589.5999999999767,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 45.90000000002328,
+              "end": 314.5,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 720.0999999999767,
+              "end": 749.6999999999534,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 849.3000000000466,
+              "end": 881.1999999999534,
+              "transfer": 1533,
+              "encoded": 1233,
+              "decoded": 2302
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 886,
+              "end": 941.1999999999534,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 886.5,
+              "end": 1079.1999999999534,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 887.0999999999767,
+              "end": 917.1999999999534,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 889.5,
+              "end": 923,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "validate",
+              "start": 1345.8000000000466,
+              "end": 1370.5,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1347.5999999999767,
+              "end": 1374.0999999999767,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 602.0999999999767,
+              "duration": 94
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 51.800000000046566,
+              "duration": 107
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 12,
+              "duration": 107
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.047067999999999985,
+        "TaskDuration": 0.215793,
+        "JSHeapUsedSize": 5412724
+      },
+      "errors": []
+    },
+    {
+      "run": 2,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 47.974119000059545,
+      "usableMs": 134.75871900004677,
+      "bytes": 398,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 971.833198,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.029758000000015272,
+          "end": 971.862772,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 45.09999999997672,
+              "end": 589.5999999999767,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 45.90000000002328,
+              "end": 314.5,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 720.0999999999767,
+              "end": 749.6999999999534,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 849.3000000000466,
+              "end": 881.1999999999534,
+              "transfer": 1533,
+              "encoded": 1233,
+              "decoded": 2302
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 886,
+              "end": 941.1999999999534,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 886.5,
+              "end": 1079.1999999999534,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 887.0999999999767,
+              "end": 917.1999999999534,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 889.5,
+              "end": 923,
+              "transfer": 373,
+              "encoded": 73,
+              "decoded": 73
+            },
+            {
+              "name": "validate",
+              "start": 1345.8000000000466,
+              "end": 1370.5,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1347.5999999999767,
+              "end": 1374.0999999999767,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1446.1999999999534,
+              "end": 1469.1999999999534,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1595.3000000000466,
+              "end": 1624.8000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 602.0999999999767,
+              "duration": 94
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 51.800000000046566,
+              "duration": 107
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 12,
+              "duration": 107
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.003401000000000015,
+        "TaskDuration": 0.028355999999999992,
+        "JSHeapUsedSize": 6235968
+      },
+      "errors": []
+    },
+    {
+      "run": 2,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 354.5415269999239,
+      "usableMs": 439.2355809999344,
+      "bytes": 2719,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 972.118019,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02699099999995269,
+          "end": 972.147845,
+          "bytes": 1600
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 972.149827,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.006419000000050801,
+          "end": 972.153759,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 972.150474,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0063509999999951106,
+          "end": 972.156603,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 972.150822,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.006696000000033564,
+          "end": 972.155236,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 972.151064,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.048818999999980406,
+          "end": 972.199506,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 972.451265,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02436699999998382,
+          "end": 972.47518,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 972.452868,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02627600000005259,
+          "end": 972.478963,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 40.40000000002328,
+              "end": 64.5,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 40.59999999997672,
+              "end": 68.09999999997672,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 138.29999999993015,
+              "end": 164.29999999993015,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 221.79999999993015,
+              "end": 250.40000000002328,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 252.69999999995343,
+              "end": 256.29999999993015,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 253.19999999995343,
+              "end": 259.19999999995343,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 253.5,
+              "end": 257.79999999993015,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 253.90000000002328,
+              "end": 302.0999999999767,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 554.0999999999767,
+              "end": 577.6999999999534,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 555.5,
+              "end": 581.5999999999767,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 61.800000000046566,
+              "duration": 90
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 15.800000000046566,
+              "duration": 90
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.018300999999999998,
+        "TaskDuration": 0.119875,
+        "JSHeapUsedSize": -432472
+      },
+      "errors": []
+    },
+    {
+      "run": 3,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 515.8496640000294,
+      "usableMs": 624.5352360000425,
+      "bytes": 84811,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 973.554908,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.025630000000091968,
+          "end": 973.58254,
+          "bytes": 1601
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 973.587858,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03436599999997725,
+          "end": 973.645498,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 973.58846,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03598499999998239,
+          "end": 973.783806,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 973.589214,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.029256000000032145,
+          "end": 973.618261,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 973.590089,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025352999999995518,
+          "end": 973.614943,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 974.048974,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025347000000010667,
+          "end": 974.07447,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 974.051908,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026749999999992724,
+          "end": 974.07801,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 39,
+              "end": 579.6000000000931,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 39.60000000009313,
+              "end": 301.60000000009313,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 695.4000000000233,
+              "end": 724.1000000000931,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 829.9000000000233,
+              "end": 855.9000000000233,
+              "transfer": 1535,
+              "encoded": 1235,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 861.2000000000698,
+              "end": 918.8000000000466,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 862,
+              "end": 1057.1000000000931,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 862.6000000000931,
+              "end": 891.6000000000931,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 863.5,
+              "end": 888.2000000000698,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1322.3000000000466,
+              "end": 1347.8000000000466,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1325.3000000000466,
+              "end": 1351.3000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 590.8000000000466,
+              "duration": 92
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 52.59999999997672,
+              "duration": 104
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 13.300000000046566,
+              "duration": 104
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.04409700000000001,
+        "TaskDuration": 0.20642199999999997,
+        "JSHeapUsedSize": 5418252
+      },
+      "errors": []
+    },
+    {
+      "run": 3,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 47.061087999964,
+      "usableMs": 136.2280450000526,
+      "bytes": 398,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 974.279876,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025848000000110005,
+          "end": 974.305389,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 39,
+              "end": 579.6000000000931,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 39.60000000009313,
+              "end": 301.60000000009313,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 695.4000000000233,
+              "end": 724.1000000000931,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 829.9000000000233,
+              "end": 855.9000000000233,
+              "transfer": 1535,
+              "encoded": 1235,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 861.2000000000698,
+              "end": 918.8000000000466,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 862,
+              "end": 1057.1000000000931,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 862.6000000000931,
+              "end": 891.6000000000931,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 863.5,
+              "end": 888.2000000000698,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1322.3000000000466,
+              "end": 1347.8000000000466,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1325.3000000000466,
+              "end": 1351.3000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1407.8000000000466,
+              "end": 1432.1000000000931,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1553.3000000000466,
+              "end": 1578.7000000000698,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 590.8000000000466,
+              "duration": 92
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 52.59999999997672,
+              "duration": 104
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 13.300000000046566,
+              "duration": 104
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.00383,
+        "TaskDuration": 0.03157599999999999,
+        "JSHeapUsedSize": 6236624
+      },
+      "errors": []
+    },
+    {
+      "run": 3,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 364.6150590000161,
+      "usableMs": 478.4065369999553,
+      "bytes": 2719,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 974.568575,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02855699999997796,
+          "end": 974.598929,
+          "bytes": 1600
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 974.601057,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.001820000000066102,
+          "end": 974.602389,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 974.60156,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0016660000000001673,
+          "end": 974.604957,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 974.601869,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0031610000000910077,
+          "end": 974.604171,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 974.602404,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024264000000016495,
+          "end": 974.626416,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 974.916327,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028835999999955675,
+          "end": 974.944265,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 974.918872,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03143799999998009,
+          "end": 974.949954,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 35.90000000002328,
+              "end": 64.90000000002328,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 36.09999999997672,
+              "end": 61.09999999997672,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 132.09999999997672,
+              "end": 159.59999999997672,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 220.90000000002328,
+              "end": 250,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 252.29999999993015,
+              "end": 253.5,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 252.79999999993015,
+              "end": 256.0999999999767,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 253,
+              "end": 255.29999999993015,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 253.59999999997672,
+              "end": 277.5,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 567.5,
+              "end": 595.2999999999302,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 570.0999999999767,
+              "end": 601.0999999999767,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 54.29999999993015,
+              "duration": 120
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 12.5,
+              "duration": 120
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.018054,
+        "TaskDuration": 0.127519,
+        "JSHeapUsedSize": -109628
+      },
+      "errors": []
+    },
+    {
+      "run": 4,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 589.1391180000483,
+      "usableMs": 693.1481689999828,
+      "bytes": 84811,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 976.058144,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.030866000000060012,
+          "end": 976.091886,
+          "bytes": 1601
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 976.098139,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.023271000000022468,
+          "end": 976.148549,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 976.099009,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.028168999999934385,
+          "end": 976.288996,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 976.099529,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.031641000000036,
+          "end": 976.130458,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 976.100655,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.036815000000046894,
+          "end": 976.136616,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 976.597711,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028173000000037973,
+          "end": 976.625632,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 976.599217,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.029983000000015636,
+          "end": 976.628474,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 51.5,
+              "end": 594.7000000000698,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 51.800000000046566,
+              "end": 318.70000000006985,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 712.7000000000698,
+              "end": 742,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 846,
+              "end": 877.8000000000466,
+              "transfer": 1535,
+              "encoded": 1235,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 884.0999999999767,
+              "end": 934.4000000000233,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 885.0999999999767,
+              "end": 1074.9000000000233,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 885.7000000000698,
+              "end": 916.3000000000466,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 886.7000000000698,
+              "end": 922.5999999999767,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1383.7000000000698,
+              "end": 1411.5,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1385.5999999999767,
+              "end": 1414.3000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 605.2000000000698,
+              "duration": 82
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 70.30000000004657,
+              "duration": 103
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.049839999999999995,
+        "TaskDuration": 0.210567,
+        "JSHeapUsedSize": 5422460
+      },
+      "errors": []
+    },
+    {
+      "run": 4,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 46.4890230000492,
+      "usableMs": 122.33840100009274,
+      "bytes": 398,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 976.863872,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028103999999984808,
+          "end": 976.89186,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 51.5,
+              "end": 594.7000000000698,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 51.800000000046566,
+              "end": 318.70000000006985,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 712.7000000000698,
+              "end": 742,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 846,
+              "end": 877.8000000000466,
+              "transfer": 1535,
+              "encoded": 1235,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 884.0999999999767,
+              "end": 934.4000000000233,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 885.0999999999767,
+              "end": 1074.9000000000233,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 885.7000000000698,
+              "end": 916.3000000000466,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 886.7000000000698,
+              "end": 922.5999999999767,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1383.7000000000698,
+              "end": 1411.5,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1385.5999999999767,
+              "end": 1414.3000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1506.9000000000233,
+              "end": 1531.5999999999767,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1650.5,
+              "end": 1677.8000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 605.2000000000698,
+              "duration": 82
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 70.30000000004657,
+              "duration": 103
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.004138000000000003,
+        "TaskDuration": 0.03422200000000003,
+        "JSHeapUsedSize": 6236068
+      },
+      "errors": []
+    },
+    {
+      "run": 4,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 336.10990500005755,
+      "usableMs": 460.0842800000464,
+      "bytes": 2718,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 977.116524,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.027628999999933512,
+          "end": 977.147223,
+          "bytes": 1599
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 977.149402,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.003497000000038497,
+          "end": 977.151656,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 977.149849,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0035900000000310683,
+          "end": 977.155209,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 977.150172,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.007414000000039778,
+          "end": 977.154041,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 977.15103,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026588000000060674,
+          "end": 977.17727,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 977.480104,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025670999999988453,
+          "end": 977.504498,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 977.481579,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02710899999999583,
+          "end": 977.507335,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 42.5,
+              "end": 66.29999999993015,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 42.79999999993015,
+              "end": 69.79999999993015,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 136.19999999995343,
+              "end": 159.19999999995343,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 196,
+              "end": 225.40000000002328,
+              "transfer": 1533,
+              "encoded": 1233,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 227.59999999997672,
+              "end": 229.69999999995343,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 228,
+              "end": 233.29999999993015,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 228.5,
+              "end": 232.09999999997672,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 229.19999999995343,
+              "end": 255.29999999993015,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 558.4000000000233,
+              "end": 582.5999999999767,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 559.7999999999302,
+              "end": 585.5,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 53,
+              "duration": 110
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 15.599999999976717,
+              "duration": 110
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.017105000000000002,
+        "TaskDuration": 0.134023,
+        "JSHeapUsedSize": -102448
+      },
+      "errors": []
+    },
+    {
+      "run": 5,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 560.917371999949,
+      "usableMs": 659.8342869999669,
+      "bytes": 84810,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 978.625392,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.027825000000007094,
+          "end": 978.656125,
+          "bytes": 1600
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 978.661915,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02473999999995158,
+          "end": 978.716376,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 978.662545,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03040499999997337,
+          "end": 978.853896,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 978.662906,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02728500000000622,
+          "end": 978.689826,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 978.66367,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03265699999997196,
+          "end": 978.695779,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 979.132475,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025135999999974956,
+          "end": 979.157507,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 979.146541,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025939999999991414,
+          "end": 979.172869,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 35.300000000046566,
+              "end": 582.0999999999767,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 35.59999999997672,
+              "end": 314.9000000000233,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 719.1999999999534,
+              "end": 747.5,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 843.3000000000466,
+              "end": 872.5999999999767,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 878.5999999999767,
+              "end": 932.8000000000466,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 879.0999999999767,
+              "end": 1070.4000000000233,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 879.4000000000233,
+              "end": 906.3000000000466,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 880.1999999999534,
+              "end": 912.1999999999534,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1349.0999999999767,
+              "end": 1374,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1363.0999999999767,
+              "end": 1389.4000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 596.3000000000466,
+              "duration": 91
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 59.199999999953434,
+              "duration": 106
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 18.79999999993015,
+              "duration": 106
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.04476000000000001,
+        "TaskDuration": 0.18881799999999999,
+        "JSHeapUsedSize": 4930488
+      },
+      "errors": []
+    },
+    {
+      "run": 5,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 65.04442699997526,
+      "usableMs": 144.32714400004443,
+      "bytes": 398,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 979.413133,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026979999999980464,
+          "end": 979.439908,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 35.300000000046566,
+              "end": 582.0999999999767,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 35.59999999997672,
+              "end": 314.9000000000233,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 719.1999999999534,
+              "end": 747.5,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 843.3000000000466,
+              "end": 872.5999999999767,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 878.5999999999767,
+              "end": 932.8000000000466,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 879.0999999999767,
+              "end": 1070.4000000000233,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 879.4000000000233,
+              "end": 906.3000000000466,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 880.1999999999534,
+              "end": 912.1999999999534,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1349.0999999999767,
+              "end": 1374,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1363.0999999999767,
+              "end": 1389.4000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1466.9000000000233,
+              "end": 1490.6999999999534,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1629.6999999999534,
+              "end": 1656.4000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 596.3000000000466,
+              "duration": 91
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 59.199999999953434,
+              "duration": 106
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 18.79999999993015,
+              "duration": 106
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.003572999999999993,
+        "TaskDuration": 0.03213700000000003,
+        "JSHeapUsedSize": 6237652
+      },
+      "errors": []
+    },
+    {
+      "run": 5,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 359.58841900003335,
+      "usableMs": 458.00231700002314,
+      "bytes": 2720,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 979.703336,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03035699999998087,
+          "end": 979.735736,
+          "bytes": 1601
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 979.737455,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0017490000000179862,
+          "end": 979.738727,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 979.737741,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.006565000000023247,
+          "end": 979.742295,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 979.737898,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.006709999999998217,
+          "end": 979.741494,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 979.738146,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025953999999956068,
+          "end": 979.763742,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 980.048565,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02721699999995053,
+          "end": 980.075304,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 980.052691,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.029176000000006752,
+          "end": 980.081393,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 42.5,
+              "end": 71.20000000006985,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 43.60000000009313,
+              "end": 68.5,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 143.80000000004657,
+              "end": 167.5,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 232.10000000009313,
+              "end": 262.5,
+              "transfer": 1535,
+              "encoded": 1235,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 264.30000000004657,
+              "end": 265.5,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 264.60000000009313,
+              "end": 269.10000000009313,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 264.70000000006985,
+              "end": 268.30000000004657,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 265,
+              "end": 290.5,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 575.5,
+              "end": 602.1000000000931,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 579.5,
+              "end": 608.2000000000698,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 65.5,
+              "duration": 96
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.019421999999999995,
+        "TaskDuration": 0.12736599999999998,
+        "JSHeapUsedSize": -331772
+      },
+      "errors": []
+    },
+    {
+      "run": 6,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 542.4879349999401,
+      "usableMs": 656.4268339999444,
+      "bytes": 84810,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 981.162014,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.026496999999949367,
+          "end": 981.191256,
+          "bytes": 1600
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 981.196503,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03944500000000062,
+          "end": 981.254071,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 981.19694,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03948800000000574,
+          "end": 981.391758,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 981.19719,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03360399999996844,
+          "end": 981.227274,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 981.19887,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025949999999966167,
+          "end": 981.224624,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 981.664398,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025893999999993866,
+          "end": 981.689485,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 981.666249,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026505000000042855,
+          "end": 981.692606,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 44.10000000009313,
+              "end": 580.3000000000466,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 45.5,
+              "end": 304,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 726.7000000000698,
+              "end": 755.5,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 861.8000000000466,
+              "end": 889.6000000000931,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 894.9000000000233,
+              "end": 952.4000000000233,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 895.3000000000466,
+              "end": 1090.1000000000931,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 895.5,
+              "end": 925.6000000000931,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 897.3000000000466,
+              "end": 923,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1362.8000000000466,
+              "end": 1387.8000000000466,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1364.7000000000698,
+              "end": 1390.9000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 592.4000000000233,
+              "duration": 102
+            },
+            {
+              "start": 799.9000000000233,
+              "duration": 50
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 62.300000000046566,
+              "duration": 104
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 12.20000000006985,
+              "duration": 104
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.059065000000000006,
+        "TaskDuration": 0.204129,
+        "JSHeapUsedSize": 5030968
+      },
+      "errors": []
+    },
+    {
+      "run": 6,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 66.66612800006533,
+      "usableMs": 170.8431650000648,
+      "bytes": 398,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 982.246722,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02749200000005203,
+          "end": 982.273974,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 44.10000000009313,
+              "end": 580.3000000000466,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 45.5,
+              "end": 304,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 726.7000000000698,
+              "end": 755.5,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 861.8000000000466,
+              "end": 889.6000000000931,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 894.9000000000233,
+              "end": 952.4000000000233,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 895.3000000000466,
+              "end": 1090.1000000000931,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 895.5,
+              "end": 925.6000000000931,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 897.3000000000466,
+              "end": 923,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1362.8000000000466,
+              "end": 1387.8000000000466,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1364.7000000000698,
+              "end": 1390.9000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1668.8000000000466,
+              "end": 1822.7000000000698,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1945.1000000000931,
+              "end": 1972.3000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 592.4000000000233,
+              "duration": 102
+            },
+            {
+              "start": 799.9000000000233,
+              "duration": 50
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 62.300000000046566,
+              "duration": 104
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 12.20000000006985,
+              "duration": 104
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.004058000000000006,
+        "TaskDuration": 0.04280999999999996,
+        "JSHeapUsedSize": 6241072
+      },
+      "errors": []
+    },
+    {
+      "run": 6,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 336.83815400002004,
+      "usableMs": 557.7918689999706,
+      "bytes": 2720,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 982.535572,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02981699999998,
+          "end": 982.568269,
+          "bytes": 1601
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 982.569987,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0016990000000305372,
+          "end": 982.572062,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 982.570294,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0031880000000228392,
+          "end": 982.574621,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 982.57056,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.004477999999949134,
+          "end": 982.573474,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 982.571109,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024763000000007196,
+          "end": 982.595686,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 982.849571,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024944000000004962,
+          "end": 982.874288,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 982.850424,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.027640000000019427,
+          "end": 982.877249,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 42.699999999953434,
+              "end": 71.59999999997672,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 42.90000000002328,
+              "end": 68.09999999997672,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 117.80000000004657,
+              "end": 141,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 220.19999999995343,
+              "end": 251.19999999995343,
+              "transfer": 1535,
+              "encoded": 1235,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 253.09999999997672,
+              "end": 255.09999999997672,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 253.40000000002328,
+              "end": 257.69999999995343,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 253.69999999995343,
+              "end": 256.4000000000233,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 254.19999999995343,
+              "end": 278.69999999995343,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 532.6999999999534,
+              "end": 557.3000000000466,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 533.5,
+              "end": 560.3000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 53.10000000009313,
+              "duration": 113
+            },
+            {
+              "start": 277.4000000000233,
+              "duration": 123
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.019824,
+        "TaskDuration": 0.130886,
+        "JSHeapUsedSize": -191784
+      },
+      "errors": []
+    },
+    {
+      "run": 7,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 552.6901780000344,
+      "usableMs": 657.8151590000516,
+      "bytes": 84811,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 984.058872,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02807000000007065,
+          "end": 984.089822,
+          "bytes": 1601
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 984.095157,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02856500000007145,
+          "end": 984.150116,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 984.095951,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03375800000003437,
+          "end": 984.287802,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 984.096443,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.029720999999995,
+          "end": 984.125873,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 984.097188,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.022953000000029533,
+          "end": 984.119824,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 984.579886,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026110000000016953,
+          "end": 984.605704,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 984.581734,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.030122000000005755,
+          "end": 984.611656,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 49.20000000006985,
+              "end": 590.3000000000466,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 49.70000000006985,
+              "end": 308.10000000009313,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 708.5,
+              "end": 737.1000000000931,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 815.1000000000931,
+              "end": 844.7000000000698,
+              "transfer": 1535,
+              "encoded": 1235,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 850.1000000000931,
+              "end": 905,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 851,
+              "end": 1042.6000000000931,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 851.3000000000466,
+              "end": 880.7000000000698,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 852,
+              "end": 874.6000000000931,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1334.8000000000466,
+              "end": 1360.5,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1336.6000000000931,
+              "end": 1366.4000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 606.5,
+              "duration": 80
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 61.59999999997672,
+              "duration": 95
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.051611000000000004,
+        "TaskDuration": 0.201982,
+        "JSHeapUsedSize": 5376476
+      },
+      "errors": []
+    },
+    {
+      "run": 7,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 50.20132499998908,
+      "usableMs": 144.32051300002513,
+      "bytes": 398,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 984.845885,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02661200000000008,
+          "end": 984.873816,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 49.20000000006985,
+              "end": 590.3000000000466,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 49.70000000006985,
+              "end": 308.10000000009313,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 708.5,
+              "end": 737.1000000000931,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 815.1000000000931,
+              "end": 844.7000000000698,
+              "transfer": 1535,
+              "encoded": 1235,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 850.1000000000931,
+              "end": 905,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 851,
+              "end": 1042.6000000000931,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 851.3000000000466,
+              "end": 880.7000000000698,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 852,
+              "end": 874.6000000000931,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1334.8000000000466,
+              "end": 1360.5,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1336.6000000000931,
+              "end": 1366.4000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1439.2000000000698,
+              "end": 1462.5,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1600.8000000000466,
+              "end": 1628.7000000000698,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 606.5,
+              "duration": 80
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 61.59999999997672,
+              "duration": 95
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.004123999999999989,
+        "TaskDuration": 0.04247700000000004,
+        "JSHeapUsedSize": 6236392
+      },
+      "errors": []
+    },
+    {
+      "run": 7,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 354.4621170000255,
+      "usableMs": 449.54391999999643,
+      "bytes": 2719,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 985.146328,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02623099999993883,
+          "end": 985.175535,
+          "bytes": 1600
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 985.177165,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0030690000000959117,
+          "end": 985.181699,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 985.177543,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.005952999999976782,
+          "end": 985.20975,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 985.177889,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.006854999999973188,
+          "end": 985.1823,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 985.178314,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.0372220000000425,
+          "end": 985.212894,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 985.467595,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026109000000019478,
+          "end": 985.493479,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 985.468817,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02874100000008184,
+          "end": 985.497663,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 35.5,
+              "end": 67.79999999993015,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 35.79999999993015,
+              "end": 64.19999999995343,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 137.59999999997672,
+              "end": 161.29999999993015,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 240.59999999997672,
+              "end": 268.0999999999767,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 269.9000000000233,
+              "end": 274.19999999995343,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 270.29999999993015,
+              "end": 302.29999999993015,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 270.5999999999767,
+              "end": 274.9000000000233,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 271.0999999999767,
+              "end": 305.5,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 560.2999999999302,
+              "end": 586.0999999999767,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 561.5,
+              "end": 590.2999999999302,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 62.90000000002328,
+              "duration": 98
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 11.300000000046566,
+              "duration": 98
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.023801999999999997,
+        "TaskDuration": 0.15329399999999999,
+        "JSHeapUsedSize": -105412
+      },
+      "errors": []
+    },
+    {
+      "run": 8,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 549.8160810000172,
+      "usableMs": 669.7097469999562,
+      "bytes": 84810,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 986.592461,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.031636000000048625,
+          "end": 986.626231,
+          "bytes": 1600
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 986.634671,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.024624000000017077,
+          "end": 986.689006,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 986.635755,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02687900000000809,
+          "end": 986.827796,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 986.636787,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02939200000002984,
+          "end": 986.665801,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 986.638,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.03398900000001959,
+          "end": 986.671669,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 987.099095,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025761999999986074,
+          "end": 987.124462,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 987.101067,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028169000000048072,
+          "end": 987.127171,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 40.699999999953434,
+              "end": 590.7999999999302,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 41.199999999953434,
+              "end": 323.79999999993015,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 730.5,
+              "end": 759,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 865.6999999999534,
+              "end": 896.7999999999302,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 905.5999999999767,
+              "end": 959.5999999999767,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 906.5,
+              "end": 1098.4000000000233,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 907.5999999999767,
+              "end": 936.4000000000233,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 908.6999999999534,
+              "end": 942.2999999999302,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1369.7999999999302,
+              "end": 1395.0999999999767,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1371.6999999999534,
+              "end": 1397.7999999999302,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 614.0999999999767,
+              "duration": 77
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 54.79999999993015,
+              "duration": 96
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 15.599999999976717,
+              "duration": 96
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.049999,
+        "TaskDuration": 0.22149399999999997,
+        "JSHeapUsedSize": 5383500
+      },
+      "errors": []
+    },
+    {
+      "run": 8,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 47.06897000005483,
+      "usableMs": 142.88024200004656,
+      "bytes": 398,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 987.347122,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026972000000000662,
+          "end": 987.373788,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 40.699999999953434,
+              "end": 590.7999999999302,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 41.199999999953434,
+              "end": 323.79999999993015,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 730.5,
+              "end": 759,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 865.6999999999534,
+              "end": 896.7999999999302,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 905.5999999999767,
+              "end": 959.5999999999767,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 906.5,
+              "end": 1098.4000000000233,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 907.5999999999767,
+              "end": 936.4000000000233,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 908.6999999999534,
+              "end": 942.2999999999302,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1369.7999999999302,
+              "end": 1395.0999999999767,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1371.6999999999534,
+              "end": 1397.7999999999302,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1470.7999999999302,
+              "end": 1498,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1617.9000000000233,
+              "end": 1644.4000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 614.0999999999767,
+              "duration": 77
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 54.79999999993015,
+              "duration": 96
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 15.599999999976717,
+              "duration": 96
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.003398000000000012,
+        "TaskDuration": 0.03273900000000002,
+        "JSHeapUsedSize": 6235968
+      },
+      "errors": []
+    },
+    {
+      "run": 8,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 364.0708780000068,
+      "usableMs": 459.188657000027,
+      "bytes": 2719,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 987.65922,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.026392999999984568,
+          "end": 987.688504,
+          "bytes": 1600
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 987.693733,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.004418000000100619,
+          "end": 987.697891,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 987.694062,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.006823999999937769,
+          "end": 987.701497,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 987.694225,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.006922000000031403,
+          "end": 987.6992,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 987.694808,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02728500000000622,
+          "end": 987.72156,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 987.983002,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026469999999903848,
+          "end": 988.009239,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 987.984237,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.0288869999999406,
+          "end": 988.012823,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 41.70000000006985,
+              "end": 64.40000000002328,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 42,
+              "end": 67.20000000006985,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 134.90000000002328,
+              "end": 160.20000000006985,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 234.30000000004657,
+              "end": 262.30000000004657,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 267.70000000006985,
+              "end": 271.70000000006985,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 267.9000000000233,
+              "end": 275.30000000004657,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 268.10000000009313,
+              "end": 273,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 268.70000000006985,
+              "end": 295.4000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 556.9000000000233,
+              "end": 583.1000000000931,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 558.2000000000698,
+              "end": 586.7000000000698,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 58.90000000002328,
+              "duration": 117
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.029197,
+        "TaskDuration": 0.14548899999999998,
+        "JSHeapUsedSize": -454928
+      },
+      "errors": []
+    },
+    {
+      "run": 9,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "cold",
+      "visibleMs": 538.3063100000527,
+      "usableMs": 645.5901990000257,
+      "bytes": 84810,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 989.075328,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.028752999999937856,
+          "end": 989.106694,
+          "bytes": 1600
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 989.112099,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.025032000000010157,
+          "end": 989.166439,
+          "bytes": 6392
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 989.112689,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.03126399999996465,
+          "end": 989.310076,
+          "bytes": 74731
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 989.113238,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.02723100000002887,
+          "end": 989.140318,
+          "bytes": 968
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 989.114304,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.033237000000099215,
+          "end": 989.146511,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 989.583636,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024757000000022344,
+          "end": 989.607992,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 989.58591,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028502000000003136,
+          "end": 989.613908,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 38.60000000009313,
+              "end": 585.2000000000698,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 39.5,
+              "end": 312.60000000009313,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 722.6000000000931,
+              "end": 751.2000000000698,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 834.5,
+              "end": 864.5,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 870.1000000000931,
+              "end": 924.2000000000698,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 870.7000000000698,
+              "end": 1067.9000000000233,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 871.2000000000698,
+              "end": 898.2000000000698,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 872.2000000000698,
+              "end": 904.3000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1341.5,
+              "end": 1365.8000000000466,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1343.8000000000466,
+              "end": 1371.7000000000698,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 603.3000000000466,
+              "duration": 88
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 60.800000000046566,
+              "duration": 109
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 14.800000000046566,
+              "duration": 109
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.061410000000000006,
+        "TaskDuration": 0.225369,
+        "JSHeapUsedSize": 5404216
+      },
+      "errors": []
+    },
+    {
+      "run": 9,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "reopen",
+      "visibleMs": 49.971472000038375,
+      "usableMs": 145.74485399998593,
+      "bytes": 398,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 989.846676,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.028627000000028602,
+          "end": 989.875142,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 38.60000000009313,
+              "end": 585.2000000000698,
+              "transfer": 191527,
+              "encoded": 191227,
+              "decoded": 661163
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 39.5,
+              "end": 312.60000000009313,
+              "transfer": 60430,
+              "encoded": 60130,
+              "decoded": 425965
+            },
+            {
+              "name": "favicon.ico",
+              "start": 722.6000000000931,
+              "end": 751.2000000000698,
+              "transfer": 1566,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 834.5,
+              "end": 864.5,
+              "transfer": 1534,
+              "encoded": 1234,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 870.1000000000931,
+              "end": 924.2000000000698,
+              "transfer": 6282,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 870.7000000000698,
+              "end": 1067.9000000000233,
+              "transfer": 74581,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 871.2000000000698,
+              "end": 898.2000000000698,
+              "transfer": 853,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 872.2000000000698,
+              "end": 904.3000000000466,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 1341.5,
+              "end": 1365.8000000000466,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 1343.8000000000466,
+              "end": 1371.7000000000698,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1442.7000000000698,
+              "end": 1467.5,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "state",
+              "start": 1604.6000000000931,
+              "end": 1633,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": [
+            {
+              "start": 603.3000000000466,
+              "duration": 88
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 60.800000000046566,
+              "duration": 109
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 14.800000000046566,
+              "duration": 109
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.0034079999999999944,
+        "TaskDuration": 0.034217,
+        "JSHeapUsedSize": 6235936
+      },
+      "errors": []
+    },
+    {
+      "run": 9,
+      "url": "http://127.0.0.1:4191/",
+      "kind": "visualize",
+      "scenario": "refresh",
+      "visibleMs": 349.4388050000907,
+      "usableMs": 464.1460970000253,
+      "bytes": 2720,
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages",
+          "start": 990.136733,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.029176000000006752,
+          "end": 990.16859,
+          "bytes": 1601
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+          "start": 990.170222,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.001718999999980042,
+          "end": 990.171227,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+          "start": 990.1706,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0018049999999902866,
+          "end": 990.174324,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/assets/visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+          "start": 990.170919,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": true,
+          "encoding": "br",
+          "ttfb": 0.0030590000000074724,
+          "end": 990.173443,
+          "bytes": 0
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 990.171369,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025649999999927786,
+          "end": 990.196404,
+          "bytes": 398
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/validate",
+          "start": 990.479572,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02594099999998889,
+          "end": 990.50516,
+          "bytes": 323
+        },
+        {
+          "url": "http://127.0.0.1:4191/api/im/channels/perf-a/visualize/pages/<page>/state",
+          "start": 990.481275,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02780500000005759,
+          "end": 990.508655,
+          "bytes": 398
+        }
+      ],
+      "frames": [
+        {
+          "url": "host/editor",
+          "resources": [
+            {
+              "name": "index-wwO9fqSq.js",
+              "start": 33.800000000046566,
+              "end": 59.70000000006985,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "index-f3GDoubf.css",
+              "start": 34.10000000009313,
+              "end": 63.300000000046566,
+              "transfer": 300,
+              "encoded": 0,
+              "decoded": 0
+            },
+            {
+              "name": "favicon.ico",
+              "start": 132,
+              "end": 155.30000000004657,
+              "transfer": 300,
+              "encoded": 1266,
+              "decoded": 15086
+            },
+            {
+              "name": "pages",
+              "start": 221,
+              "end": 251.30000000004657,
+              "transfer": 1535,
+              "encoded": 1235,
+              "decoded": 2304
+            },
+            {
+              "name": "visualize-2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240.css",
+              "start": 253.10000000009313,
+              "end": 254,
+              "transfer": 0,
+              "encoded": 5982,
+              "decoded": 25224
+            },
+            {
+              "name": "visualize-2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3.js",
+              "start": 253.5,
+              "end": 257.10000000009313,
+              "transfer": 0,
+              "encoded": 74281,
+              "decoded": 282127
+            },
+            {
+              "name": "visualize-50eba7c43352ccb4c8ac7af1e1f29b36c2c35fd2daee904aebd309c07c49787a.js",
+              "start": 253.80000000004657,
+              "end": 256.20000000006985,
+              "transfer": 0,
+              "encoded": 553,
+              "decoded": 1386
+            },
+            {
+              "name": "state",
+              "start": 254.30000000004657,
+              "end": 279.20000000006985,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            },
+            {
+              "name": "validate",
+              "start": 562.5,
+              "end": 588,
+              "transfer": 302,
+              "encoded": 2,
+              "decoded": 2
+            },
+            {
+              "name": "state",
+              "start": 564.2000000000698,
+              "end": 591.4000000000233,
+              "transfer": 375,
+              "encoded": 75,
+              "decoded": 75
+            }
+          ],
+          "longTasks": []
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 63.79999999993015,
+              "duration": 121
+            }
+          ]
+        },
+        {
+          "url": "about:srcdoc",
+          "resources": [],
+          "longTasks": [
+            {
+              "start": 17.199999999953434,
+              "duration": 121
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "iframe",
+        "iframe"
+      ],
+      "metricsDelta": {
+        "ScriptDuration": 0.022944,
+        "TaskDuration": 0.136853,
+        "JSHeapUsedSize": -1990520
+      },
+      "errors": []
+    }
+  ],
+  "summary": {
+    "http://127.0.0.1:4191/|visualize|cold": {
+      "visibleMs": {
+        "p50": 549.8160810000172,
+        "p75": 569.0218439999626,
+        "p95": 589.1391180000483
+      },
+      "usableMs": {
+        "p50": 657.8151590000516,
+        "p75": 674.5158999999603,
+        "p95": 693.1481689999828
+      },
+      "bytes": {
+        "p50": 84810,
+        "p75": 84811,
+        "p95": 84811
+      }
+    },
+    "http://127.0.0.1:4191/|visualize|reopen": {
+      "visibleMs": {
+        "p50": 47.974119000059545,
+        "p75": 65.04442699997526,
+        "p95": 67.63803899991672
+      },
+      "usableMs": {
+        "p50": 142.88024200004656,
+        "p75": 144.32714400004443,
+        "p95": 170.8431650000648
+      },
+      "bytes": {
+        "p50": 398,
+        "p75": 398,
+        "p95": 398
+      }
+    },
+    "http://127.0.0.1:4191/|visualize|refresh": {
+      "visibleMs": {
+        "p50": 354.4621170000255,
+        "p75": 364.0708780000068,
+        "p95": 366.67883799998435
+      },
+      "usableMs": {
+        "p50": 458.00231700002314,
+        "p75": 464.1460970000253,
+        "p95": 557.7918689999706
+      },
+      "bytes": {
+        "p50": 2719,
+        "p75": 2720,
+        "p95": 2720
+      }
+    }
+  }
+}

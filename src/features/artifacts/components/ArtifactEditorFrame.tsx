@@ -23,20 +23,26 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
   contextCallback.current = onEditorContext
   const [url, setUrl] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [designInitialized, setDesignInitialized] = useState(false)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   const label = ARTIFACT_LABELS[kind]
+  const ready = loaded && (kind !== 'design' || designInitialized)
 
   useEffect(() => {
-    if (kind === 'design' && url && frame.current) return subscribeDesignFrameReveal(frame.current, url)
+    if (kind === 'design' && url && frame.current) return subscribeDesignFrameReveal(frame.current, url, {
+      initialized: () => setDesignInitialized(true),
+      failed: () => setError('设计编辑器资源未能加载，请重试。'),
+    })
   }, [kind, url])
 
   useEffect(() => {
     const controller = new AbortController()
     setUrl(null)
     setLoaded(false)
+    setDesignInitialized(false)
     setError('')
-    artifactsApi.editorGrant(artifactId, controller.signal)
+    artifactsApi.editorGrant(artifactId, AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]))
       .then((grant) => setUrl(grant.url + (kind === 'slides' ? `#workspace=${nonce}` : '')))
       .catch((reason) => { if (!controller.signal.aborted) setError(userFacingError(reason, `${label}编辑器暂时无法打开，请重试。`)) })
     return () => controller.abort()
@@ -60,10 +66,10 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
   }, [kind, nonce])
 
   useEffect(() => {
-    if (kind !== 'slides' || !url || loaded) return
+    if (!url || ready) return
     const timer = setTimeout(() => setError(`${label}编辑器尚未打开，请重试。`), 30_000)
     return () => clearTimeout(timer)
-  }, [kind, url, loaded, label])
+  }, [url, ready, label])
 
   useEffect(() => {
     frame.current?.contentWindow?.postMessage({ type: 'slides:agent-activity', nonce, working: agentWorking }, '*')
@@ -77,7 +83,7 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
     <Button variant="outline" onClick={() => setAttempt((current) => current + 1)}>重试</Button>
   </div>
   return <div className="relative h-full min-h-0 w-full" data-artifact-editor={kind}>
-    {!loaded && <ResourceSkeleton variant="media" label={`正在打开${label}编辑器`} className="absolute inset-0" />}
+    {!ready && <ResourceSkeleton variant="media" label={`正在打开${label}编辑器`} className="absolute inset-0" />}
     {url && <iframe
       ref={frame}
       key={url}

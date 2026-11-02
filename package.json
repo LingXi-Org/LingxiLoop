@@ -58,6 +58,7 @@
     "verify:visualize": "node scripts/verify-zcode-visualize.mjs",
     "build:visualize-runtime": "node scripts/build-visualize-runtime.mjs",
     "build:slides-editor": "node scripts/build-slides-editor.mjs",
+    "build:design-editor": "node scripts/build-design-editor.mjs",
     "prebuild": "npm run verify:visualize && npm run build:visualize-runtime",
     "memory:maintain": "tsx server/src/bin/memory-maintenance.ts"
   },
