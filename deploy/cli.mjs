@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url'
 import { classifyPaths, workflowFilters } from '../scripts/ci-scope-paths.mjs'
 import { IMAGES, imageTag } from '../scripts/image-tag.mjs'
 import { assertRetirementReleaseAllowed, convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
+import { knowledgeObservationRunId, knowledgeObservation, observePublicRunBudget } from './knowledge-observation.mjs'
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)))
 const SIGILLO = ['-p', '01M1TZH9C21C1A9PFAR8E41553', '-c', 'prod']
@@ -31,6 +32,23 @@ const PULL_REGISTRY = 'accel.way2api.fun/ghcr.io/lingxi-org'
 const shell = process.platform === 'win32'
 
 async function main(command, requested) {
+  if (command === 'knowledge-observe') {
+    const runId = knowledgeObservationRunId(requested), ssh = sshSession()
+    try {
+      const notebookScript = git('show', 'HEAD:deploy/notebook-embedding-observe.py')
+      const workerScript = git('show', 'HEAD:deploy/worker-budget-observe.mjs')
+      const result = await knowledgeObservation(runId, {
+        notebook: async () => JSON.parse(await ssh.run('txy', 'Notebook read-only observation',
+          `docker exec -i lingxiloop-knowledge-agent-open-notebook-1 /app/.venv/bin/python - --details <<'NOTEBOOK_OBSERVE_PY'\n${notebookScript}\nNOTEBOOK_OBSERVE_PY`, true, 45_000)),
+        worker: async slot => JSON.parse(await ssh.run(STACK_HOST[`app-${slot}`], `worker ${slot} budget observation`,
+          `docker exec -i lingxiloop-app-${slot}-worker-1 node --input-type=module <<'WORKER_OBSERVE_JS'\n${workerScript}\nWORKER_OBSERVE_JS`, true, 20_000)),
+        runBudget: id => observePublicRunBudget(id, { token: process.env.LINGXILOOP_MCP_SERVICE_TOKEN }),
+      })
+      console.log(JSON.stringify(result))
+      if (result.status === 'partial') process.exitCode = 1
+    } finally { ssh.close() }
+    return
+  }
   const head = git('rev-parse', 'HEAD').trim()
   const images = Object.fromEntries(IMAGES.map(image => [`${image.name.toUpperCase()}_IMAGE`, { ...image, tag: imageTag(image) }]))
   const stacks = selectStacks(requested)
@@ -62,7 +80,7 @@ async function main(command, requested) {
         else await Promise.all([deployServers(), workers()])
       },
     }
-    if (!steps[command]) throw new Error(`unknown command ${command}; use up|images|pull|plan|servers|workers|status|runtime-preflight|runtime-observe`)
+    if (!steps[command]) throw new Error(`unknown command ${command}; use up|images|pull|plan|servers|workers|status|runtime-preflight|runtime-observe|knowledge-observe`)
     await steps[command]()
   } finally { ssh.close() }
 }
@@ -124,8 +142,9 @@ function sshSession() {
   const args = ['-i', key.replaceAll('\\', '/'), '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'LogLevel=ERROR', '-o', 'UserKnownHostsFile=deploy/known_hosts',
     '-o', 'StrictHostKeyChecking=yes', '-o', 'ConnectTimeout=20', '-o', 'ServerAliveInterval=20']
   return {
-    run: (host, label, script, capture = false) => new Promise((resolve, reject) => {
+    run: (host, label, script, capture = false, timeoutMs = 0) => new Promise((resolve, reject) => {
       const child = spawn('ssh', [...args, HOSTS[host], 'bash -s'], { stdio: ['pipe', 'pipe', 'pipe'] })
+      const timer = timeoutMs ? setTimeout(() => child.kill(), timeoutMs) : undefined
       const prefix = data => process.stdout.write(String(data).replace(/^(?=.)/gm, `[${label}] `))
       let output = ''
       child.stdout.on('data', data => {
@@ -134,8 +153,8 @@ function sshSession() {
         if (Buffer.byteLength(output) > 64 * 1024) { child.kill(); reject(new Error(`${label} output exceeded bound`)) }
       })
       child.stderr.on('data', prefix)
-      child.on('error', reject)
-      child.on('exit', code => code === 0 ? resolve(output) : reject(Object.assign(new Error(`${label} on ${host} exited ${code}`), { uncertain: code === 255 || code === null })))
+      child.on('error', error => { clearTimeout(timer); reject(error) })
+      child.on('exit', code => { clearTimeout(timer); code === 0 ? resolve(output) : reject(Object.assign(new Error(`${label} on ${host} exited ${code}`), { uncertain: code === 255 || code === null })) })
       child.stdin.end(`set -euo pipefail\n${script}\n`)
     }),
     close: () => rmSync(dir, { recursive: true, force: true }),
@@ -321,9 +340,12 @@ async function status(ssh) {
 }
 
 // Refuse the automatic rollout before obtaining Sigillo credentials or SSH.
-const committedMigrations = git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean)
-assertRetirementReleaseAllowed(committedMigrations, process.argv[2] ?? 'up', process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED,
-  runtimePatchPlan(path => git('show', `HEAD:${path}`), committedMigrations))
+if (process.argv[2] === 'knowledge-observe') knowledgeObservationRunId(process.argv.slice(3))
+else {
+  const committedMigrations = git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean)
+  assertRetirementReleaseAllowed(committedMigrations, process.argv[2] ?? 'up', process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED,
+    runtimePatchPlan(path => git('show', `HEAD:${path}`), committedMigrations))
+}
 if (!process.env.DEPLOY_SSH_KEY) {
   const child = spawn('npm', ['exec', '--yes', '--package=sigillo@0.14.2', '--', 'sigillo', 'run', ...SIGILLO, '--', 'node', 'deploy/cli.mjs', ...process.argv.slice(2)], {
     stdio: 'inherit', shell,
@@ -334,8 +356,9 @@ if (!process.env.DEPLOY_SSH_KEY) {
 } else {
   const [command = 'up', ...stacks] = process.argv.slice(2)
   const started = Date.now()
+  const label = command === 'knowledge-observe' ? 'read-only observation' : 'deploy'
   main(command, stacks).then(
-    () => console.log(`deploy ${command} done in ${Math.round((Date.now() - started) / 1000)}s`),
-    error => { console.error(`deploy ${command} failed: ${error.message}`); process.exit(1) },
+    () => { if (command !== 'knowledge-observe') console.log(`${label} ${command} done in ${Math.round((Date.now() - started) / 1000)}s`) },
+    error => { console.error(`${label} ${command} failed: ${error.message}`); process.exit(1) },
   )
 }
