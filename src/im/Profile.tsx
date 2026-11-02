@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { type AgentActionProps, useOpenAgent } from '@/features/agents/useOpenAgent'
-import { motion, useMotionValue, useTransform, useReducedMotion } from 'framer-motion'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/Avatar'
 import { IMail } from '@/components/icons'
 import { cn } from '@/lib/utils'
@@ -27,7 +27,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="border-b border-hairline bg-panel px-5 py-4 last:border-b-0">
+    <section className="border-b border-[var(--im-divider-weak)] px-5 py-4 last:border-b-0">
       <h3 className="mb-3 text-xs font-medium text-muted-foreground">{title}</h3>
       {children}
     </section>
@@ -45,13 +45,6 @@ export function ParticipantProfile({
 } & AgentActionProps) {
   const participant = useParticipants((state) => state.byId[participantId])
   const meId = useMe()
-  const reduceMotion = useReducedMotion()
-  const scrollTop = useMotionValue(0)
-  const compactOpacity = useTransform(scrollTop, [36, 92], [0, 1])
-  const heroScale = useTransform(scrollTop, [0, 120], [1, 0.78])
-  const heroOpacity = useTransform(scrollTop, [44, 126], [1, 0])
-  const heroY = useTransform(scrollTop, [0, 120], [0, -18])
-  const scrollerRef = useRef<HTMLDivElement>(null)
   const { opening, error, retryingRefresh, actionLabel, open, chooseWorkspace } = useOpenAgent(participant, actions, onClose)
   const [copied, setCopied] = useState(false)
 
@@ -75,42 +68,19 @@ export function ParticipantProfile({
   }
 
   return (
-    <aside className="im-profile relative flex h-full min-h-0 flex-col overflow-hidden bg-panel">
-      <div
-        className="absolute inset-x-0 top-0 z-20 flex h-14 items-center border-b border-hairline bg-panel/88 px-2 backdrop-blur-xl"
-      >
-        <Button type="button" variant="ghost" onClick={onClose} className="grid size-11 place-items-center rounded-full text-ink-secondary hover:bg-raised" aria-label="关闭资料">
-          <span className="text-xl leading-none">×</span>
-        </Button>
-        <motion.div style={{ opacity: compactOpacity }} className="ml-1 flex min-w-0 items-center gap-2.5">
-          <Avatar p={participant} size={32} ringColor="var(--panel)" />
-          <span className="min-w-0">
-            <span className="block truncate text-[14px] font-semibold text-ink">{participant.name}</span>
-            <span className="block truncate text-xs text-ink-secondary">{roleLabel}</span>
-          </span>
-        </motion.div>
-      </div>
-
-      <div
-        ref={scrollerRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-14"
-        onScroll={(event) => scrollTop.set(event.currentTarget.scrollTop)}
-      >
-        <motion.div
-          className="relative overflow-hidden border-b border-hairline px-5 pb-6 pt-7 text-center"
-          style={{ opacity: heroOpacity }}
-        >
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,var(--sky2-100),transparent_72%)]" />
-          <motion.div style={reduceMotion ? undefined : { scale: heroScale, y: heroY }} className="relative mx-auto mb-3 w-fit origin-top">
-            <Avatar p={participant} size={96} ringColor="var(--panel)" />
-          </motion.div>
-          <h2 className="relative truncate text-xl font-semibold tracking-tight text-ink">{participant.name}</h2>
-          <p className="relative mt-0.5 text-[12px] text-ink-secondary">{roleLabel}</p>
-          <span className="relative mt-3 inline-flex items-center gap-1.5 rounded-full border border-hairline bg-panel/90 px-3 py-1.5 text-xs text-ink-secondary">
-            <span className="size-1.5 rounded-full" style={{ background: statusColor }} />
-            {STATUS_LABEL[participant.status] ?? '空闲'}
-          </span>
-        </motion.div>
+    <div className="im-profile relative flex h-full min-h-0 flex-col overflow-hidden bg-background">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex items-center gap-4 border-b border-[var(--im-divider-weak)] px-5 py-5">
+          <Avatar p={participant} size={56} ringColor="var(--background)" />
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate font-heading text-base font-semibold text-foreground">{participant.name}</h2>
+            <p className="truncate text-sm text-muted-foreground">{roleLabel}</p>
+            <Badge variant="outline" className="mt-2 gap-1.5 font-normal text-muted-foreground">
+              <span aria-hidden="true" className="size-1.5 rounded-full" style={{ background: statusColor }} />
+              {STATUS_LABEL[participant.status] ?? '空闲'}
+            </Badge>
+          </div>
+        </div>
 
         <ProfileSection title="操作">
           {isSelf ? null : isAgent ? (
@@ -123,7 +93,7 @@ export function ParticipantProfile({
               {error && !retryingRefresh && actions.onChooseWorkspace && <Button type="button" variant="outline" onClick={chooseWorkspace}>选择工作区</Button>}
             </div>
           ) : (
-            <div className="rounded-xl bg-raised px-4 py-3 text-[12px] leading-relaxed text-ink-secondary">
+            <div className="rounded-xl border border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">
               请在所属课程或学习任务中与该成员联系。
             </div>
           )}
@@ -131,10 +101,10 @@ export function ParticipantProfile({
 
         {participant.email && (
           <ProfileSection title="邮箱">
-            <Button type="button" variant="secondary" onClick={() => void copyEmail()} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left font-mono text-xs text-ink">
+            <Button type="button" variant="secondary" onClick={() => void copyEmail()} className="flex w-full items-center gap-2.5 px-3 text-left font-mono text-xs">
               <IMail className="size-4 shrink-0 text-primary" />
               <span className="min-w-0 flex-1 truncate">{participant.email}</span>
-              <span className={cn('text-xs font-medium', copied ? 'text-avail' : 'text-ink-secondary')}>{copied ? '已复制' : '复制'}</span>
+              <span className={cn('text-xs font-medium', copied ? 'text-primary' : 'text-muted-foreground')}>{copied ? '已复制' : '复制'}</span>
             </Button>
           </ProfileSection>
         )}
@@ -142,18 +112,18 @@ export function ParticipantProfile({
         {isAgent && toolLabels.length > 0 && (
           <ProfileSection title="可用工具">
             <div className="flex flex-wrap gap-1.5">
-              {toolLabels.map((tool) => <span key={tool} className="rounded-lg bg-raised px-2.5 py-1.5 text-[11px] text-ink-secondary">{tool}</span>)}
+              {toolLabels.map((tool) => <Badge key={tool} variant="secondary">{tool}</Badge>)}
             </div>
           </ProfileSection>
         )}
 
         {participant.bio && (
           <ProfileSection title={`关于 ${participant.name}`}>
-            <p className="border-l-2 border-primary pl-3 text-sm leading-relaxed text-ink-secondary">{participant.bio}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{participant.bio}</p>
           </ProfileSection>
         )}
         <div className="h-[max(24px,env(safe-area-inset-bottom))]" />
       </div>
-    </aside>
+    </div>
   )
 }

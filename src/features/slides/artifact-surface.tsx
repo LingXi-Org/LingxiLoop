@@ -2,8 +2,9 @@
 // ff654d8156680b839774296ef644b57ab1078425 (MIT). See third_party/assistant-ui-with-artifacts.
 // Its surface provider, active target and version workbench now use durable native artifacts.
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { ArrowLeftIcon, HistoryIcon, XIcon } from 'lucide-react'
+import { ArrowLeftIcon, HistoryIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { RightPanelHeader } from '@/components/shell/RightPanel'
 import { Button } from '@/components/ui/button'
 import { ArtifactEditorFrame } from '@/features/artifacts/components/ArtifactEditorFrame'
 import { artifactsApi, type SlideRevisions } from '@/features/artifacts/api'
@@ -91,27 +92,24 @@ function ArtifactWorkbench({ target, onEditorContext, context, agentWorking }: {
 
   return <aside data-testid="artifact-surface" aria-label={`演示文稿：${target.title}`}
     className={`flex h-full min-h-0 min-w-0 flex-col bg-background ${presenting ? 'fixed inset-0 z-50' : ''}`}>
-    <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b border-border px-2">
-      <h2 className="min-w-0 flex-1 truncate text-sm font-semibold">{target.title}</h2>
-      {presenting ? <Button variant="outline" className="min-h-10" onClick={() => setExitPresentation(value => value + 1)}>退出放映</Button> : <>
+    <RightPanelHeader eyebrow="演示文稿" title={target.title} onClose={presenting ? undefined : close} closeLabel="返回演示文稿列表"
+      actions={presenting ? <Button variant="outline" onClick={() => setExitPresentation(value => value + 1)}>退出放映</Button> : <>
         <div className="relative" ref={historyRef}>
-          <Button variant="ghost" className="min-h-10" aria-label="版本记录" aria-expanded={historyOpen} onClick={() => setHistoryOpen(value => !value)}>
-            <HistoryIcon className="size-4" />版本
+          <Button variant="ghost" aria-label="版本记录" aria-expanded={historyOpen} onClick={() => setHistoryOpen(value => !value)}>
+            <HistoryIcon className="size-4" /><span className="max-md:sr-only">版本</span>
           </Button>
-          {historyOpen && <div className="absolute right-0 top-11 z-20 max-h-80 w-64 overflow-y-auto rounded-md border bg-popover p-2 shadow-lg" aria-label="版本记录">
+          {historyOpen && <div className="absolute end-0 top-11 z-20 max-h-80 w-64 overflow-y-auto rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-md" aria-label="版本记录">
             {context?.dirty && <p className="p-2 text-xs text-muted-foreground">保存当前修改后即可恢复版本。</p>}
-            {historyError && <p role="alert" className="p-2 text-sm">{historyError}</p>}
-            {!versions ? <p role="status" className="p-2 text-sm">正在加载版本…</p> : !versions.revisions.length ? <p className="p-2 text-sm">首次保存后会显示版本。</p>
-              : versions.revisions.map(version => <Button key={version.seq} variant="ghost" className="h-auto min-h-11 w-full justify-start whitespace-normal text-start"
+            {historyError && <p role="alert" className="p-2 text-sm text-destructive">{historyError}</p>}
+            {!versions ? <p role="status" className="p-2 text-sm text-muted-foreground">正在加载版本…</p> : !versions.revisions.length ? <p className="p-2 text-sm text-muted-foreground">首次保存后会显示版本。</p>
+              : versions.revisions.map(version => <Button key={version.seq} variant="ghost" className="h-auto min-h-10 w-full justify-start whitespace-normal text-start font-normal"
                 disabled={restoring || context?.dirty || version.version === versions.current} onClick={() => void restore(version.seq)}>
-                <span>版本 {version.seq} · {new Date(version.createdAt).toLocaleString()}{version.version === versions.current ? ' · 当前' : ''}</span>
+                <span>版本 {version.seq} · <span className="tabular-nums">{new Date(version.createdAt).toLocaleString()}</span>{version.version === versions.current ? ' · 当前' : ''}</span>
               </Button>)}
           </div>}
         </div>
-        {target.sourceConversationId && <Button variant="ghost" className="min-h-10" onClick={returnToOrigin} aria-label="打开来源对话"><ArrowLeftIcon className="size-4" /><span className="hidden xl:inline">来源对话</span></Button>}
-        <Button variant="ghost" size="icon" className="size-10" aria-label="返回演示文稿列表" onClick={close}><XIcon className="size-4" /></Button>
-      </>}
-    </header>
+        {target.sourceConversationId && <Button variant="ghost" onClick={returnToOrigin} aria-label="打开来源对话"><ArrowLeftIcon className="size-4" /><span className="hidden xl:inline">来源对话</span></Button>}
+      </>} />
     <div className="min-h-0 flex-1">
       <ArtifactEditorFrame artifactId={target.id} kind="slides" title={target.title} onEditorContext={onEditorContext}
         agentWorking={agentWorking} exitPresentation={exitPresentation} />

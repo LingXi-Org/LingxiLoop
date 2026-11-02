@@ -15,11 +15,11 @@ export function FileManagerToolbar({ search, format, sort, onSearch, onFormat, o
 }) {
   return (
     <div className={cn('flex flex-col gap-3 xl:flex-row xl:items-center', className)}>
-      <InputGroup className="learning-page-search border-border bg-background md:max-w-lg">
+      <InputGroup className="h-9 min-w-0 flex-1 basis-60 border-border bg-background md:max-w-80">
         <InputGroupInput type="search" placeholder="搜索文件名称…" aria-label="搜索课程资料" value={search} onChange={event => onSearch(event.target.value)} />
         <InputGroupAddon><Search /></InputGroupAddon>
       </InputGroup>
-      <div className="learning-page-toolbar-controls flex flex-1 flex-wrap items-center gap-2 xl:justify-end">
+      <div className="flex flex-1 flex-wrap items-center gap-2 xl:justify-end">
         <SelectField ariaLabel="资料格式" className="w-36" value={format} onValueChange={onFormat}
           options={[{ value: 'all', label: '全部格式' }, ...Object.entries(fileKindLabels).map(([value, label]) => ({ value: value as MaterialFormat, label }))]} />
         <DropdownMenu>

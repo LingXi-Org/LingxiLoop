@@ -40,6 +40,7 @@ const testsByScope = {
   admin: ['admin/src/lingxilit-url.test.ts', 'admin/src/record-presentation.test.ts', 'admin/src/management-session.test.ts'],
   web: [
     'src/components/assistant-ui/markdown-text.test.tsx',
+    'src/components/shell/modules.test.ts',
     'src/features/chat/components/ConversationMessage.test.tsx',
     'src/features/chat/components/message-presentation.test.ts',
     'src/components/assistant-ui/elements/run-activity.test.tsx',

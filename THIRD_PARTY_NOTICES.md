@@ -262,6 +262,19 @@ records its SHA-256 and update procedure. The license is retained alongside the
 source and in `public/licenses/shadcn.txt`, which Vite copies into the SPA.
 The shadcn CLI remains available through the full development installation.
 
+## shadcn/ui blocks layout patterns
+
+The web shell in `src/components/shell/` (`SecondaryPane.tsx`, `CourseNav.tsx`,
+`DeckNav.tsx`, `PageHeader.tsx`, `RightPanel.tsx`, `ToggleGroupLite.tsx`) follows
+the layout of the shadcn/ui blocks `sidebar-09` (collapsible nested sidebars),
+`sidebar-15` (left and right sidebars) and `dashboard-01` (`site-header`,
+section cards) from https://github.com/shadcn-ui/ui at commit
+`c0d63c339d6cd2fc26135590a54cf1f362269451`, MIT © 2023 shadcn. The structure,
+spacing and states were reimplemented with the repository's existing
+`src/components/ui` primitives and tokens; no block source file was copied
+verbatim and the blocks' sample navigation data is not included. The license
+text is retained in `public/licenses/shadcn.txt`.
+
 ## Studio Admin file manager
 
 Course materials directly adapts Studio Admin's file list, toolbar, row actions,

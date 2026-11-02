@@ -64,12 +64,12 @@ function getReceiptState(outcome: ProgressTrackerChoice["outcome"]): {
   switch (outcome) {
     case "success":
       return {
-        toneClassName: "text-emerald-600 dark:text-emerald-500",
+        toneClassName: "text-success",
         icon: Check,
       };
     case "partial":
       return {
-        toneClassName: "text-amber-600 dark:text-amber-500",
+        toneClassName: "text-warning",
         icon: AlertCircle,
       };
     case "failed":

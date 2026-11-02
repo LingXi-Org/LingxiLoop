@@ -187,9 +187,9 @@ export function ConfidenceMarker({
               "text-foreground/70 inline-flex max-w-full items-start gap-1.5 rounded-2xl px-2.5 py-1.5",
             )}>
               <span aria-hidden className={cn("mt-1 size-1.5 shrink-0 rounded-full",
-                hovered.confidence === "grounded" && "bg-emerald-500",
-                hovered.confidence === "inferred" && "bg-amber-500",
-                hovered.confidence === "uncertain" && "bg-red-500",
+                hovered.confidence === "grounded" && "bg-success",
+                hovered.confidence === "inferred" && "bg-warning",
+                hovered.confidence === "uncertain" && "bg-destructive",
               )} />
               <div className="min-w-0">{basis}</div>
             </div>}

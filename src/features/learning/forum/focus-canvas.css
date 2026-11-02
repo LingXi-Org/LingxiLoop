@@ -1,6 +1,6 @@
 /* Product layout uses the app tokens. Native BlockNote UI is styled upstream. */
 .forum-focus-stage, .forum-focus-form, .forum-focus-compose-content { min-width: 0; }
-.forum-focus-composer { min-width: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--background); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; container-type: inline-size; }
+.forum-focus-composer { min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--background); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; container-type: inline-size; }
 .forum-focus-composer [hidden] { display: none !important; }
 .forum-focus-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; }
 .forum-focus-author, .forum-focus-head-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -9,7 +9,7 @@
 .forum-focus-composer .content-editor { border: 0; border-radius: 0; }
 .forum-focus-composer .content-editor:focus-within { outline-offset: -2px; }
 .forum-focus-composer .bn-editor { max-height: 300px; overflow-y: auto; }
-.forum-focus-composer[data-forum-composer-focus="true"] { box-shadow: 0 8px 40px #0002; }
+.forum-focus-composer[data-forum-composer-focus="true"] { border-color: var(--ring); }
 .forum-focus-composer[data-forum-composer-focus="true"] .bn-editor { min-height: 45dvh; max-height: 45dvh; }
 .forum-focus-composer[data-forum-composer-expanded="false"] { display: grid; grid-template-columns: 28px minmax(0,1fr) 28px; align-items: center; gap: 6px; padding: 6px 10px; }
 .forum-focus-composer[data-forum-composer-expanded="false"] .forum-focus-head { display: contents; }
@@ -20,7 +20,7 @@
 .forum-materials-summary { color: var(--muted-foreground); font-size: 12px; }
 .forum-materials-tray { padding: 0 12px 10px; }
 .forum-materials-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
-.forum-material { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; padding: 5px 8px; border: 1px solid var(--border); border-radius: 4px; }
+.forum-material { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; padding: 5px 8px; border: 1px solid var(--border); border-radius: 8px; }
 .forum-material-kind { display: grid; place-items: center; flex: 0 0 24px; height: 24px; color: var(--muted-foreground); }
 .forum-material-kind svg { width: 16px; height: 16px; }
 .forum-material-name { min-width: 0; flex: 1 1 80px; overflow-wrap: anywhere; font-size: 12px; font-weight: 500; }

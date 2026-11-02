@@ -42,8 +42,8 @@ export function ConversationHeader({
         </Button>
       )}
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
-        <ConversationAvatar conversation={conversation} size={mobile ? 28 : 30} />
-        <h1 className={cn('truncate font-heading font-semibold text-foreground', mobile ? 'text-base' : 'text-xl')}>{conversation.title}</h1>
+        <ConversationAvatar conversation={conversation} size={28} />
+        <h1 className="truncate font-heading text-base font-semibold text-foreground">{conversation.title}</h1>
       </div>
       {actions && <div className="ms-auto flex items-center gap-1">{actions}</div>}
     </header>

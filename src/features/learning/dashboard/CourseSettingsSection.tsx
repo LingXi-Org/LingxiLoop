@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { projectLifecycleApi } from '@/features/projects/api'
 import { toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
@@ -58,7 +58,7 @@ type CourseSettingsSectionProps = { space: LearningSpace; section: 'profile' | '
 export function CourseSettingsSection({ space, section }: CourseSettingsSectionProps) {
   const canView = space.perspective === 'teacher' && space.canManage && Boolean(space.courseId)
   if (!canView) {
-    return <DashboardSectionFrame space={space} section="settings"><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
+    return <DashboardSectionFrame space={space} section={section === 'profile' ? 'settings' : section}><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
   }
   return <ScopedCourseSettingsSection key={JSON.stringify([space.companyId, space.projectId, space.courseId])} space={space} section={section} />
 }
@@ -102,9 +102,9 @@ function ScopedCourseSettingsSection({ space, section }: CourseSettingsSectionPr
       active = false
     }
   }, [space.companyId, space.projectId, space.courseId, revision])
-  if (loading && !course) return <DashboardSectionFrame space={space} section="settings"><CourseSettingsSkeleton section={section} /></DashboardSectionFrame>
+  if (loading && !course) return <DashboardSectionFrame space={space} section={section === 'profile' ? 'settings' : section}><CourseSettingsSkeleton section={section} /></DashboardSectionFrame>
   if (!course) {
-    return <DashboardSectionFrame space={space} section="settings"><Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error || '课程设置暂不可用。'}<Button variant="outline" size="sm" disabled={loading} onClick={() => setRevision(value => value + 1)}>重试</Button></AlertDescription></Alert></DashboardSectionFrame>
+    return <DashboardSectionFrame space={space} section={section === 'profile' ? 'settings' : section}><Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error || '课程设置暂不可用。'}<Button variant="outline" size="sm" disabled={loading} onClick={() => setRevision(value => value + 1)}>重试</Button></AlertDescription></Alert></DashboardSectionFrame>
   }
 
   const canEdit = space.canUpdateCourse && course.canManage && course.status === space.status
@@ -140,15 +140,10 @@ function ScopedCourseSettingsSection({ space, section }: CourseSettingsSectionPr
   return (
     <DashboardSectionFrame
       space={space}
-      section="settings"
+      section={section === 'profile' ? 'settings' : section}
     >
         {error && <Alert variant="destructive" className="mb-4"><AlertDescription className="flex flex-wrap items-center gap-3">{error}<Button size="sm" variant="outline" disabled={loading} onClick={() => setRevision(value => value + 1)}>重试</Button></AlertDescription></Alert>}
         <Tabs value={section} onValueChange={value => setView(value === 'members' ? 'course-members' : value === 'status' ? 'course-status' : 'courses')} className="gap-4" data-testid="course-settings-tabs">
-          <TabsList aria-label="课程设置" className="max-w-full [&_[data-state=active]]:bg-background [&_[data-state=active]]:text-foreground">
-            <TabsTrigger value="profile">基本资料</TabsTrigger>
-            <TabsTrigger value="members">成员与邀请</TabsTrigger>
-            <TabsTrigger value="status">课程状态</TabsTrigger>
-          </TabsList>
           <TabsContent value="profile" className="min-w-0">
             <CourseProfileSettings course={course} canEdit={canEdit} onUpdated={setCourse} />
           </TabsContent>

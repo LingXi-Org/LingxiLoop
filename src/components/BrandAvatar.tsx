@@ -15,7 +15,7 @@ import {
 
 const LingxiLoopAvatar = createAvatar(avatarDefinition)
 const brandAvatarFrameStyle = {
-  background: 'linear-gradient(135deg, color-mix(in srgb, var(--primary) 14%, var(--background)), color-mix(in srgb, var(--chart-1) 18%, var(--background)))',
+  background: 'color-mix(in srgb, var(--primary) 12%, var(--background))',
   borderRadius: '18%',
   overflow: 'hidden',
 } satisfies CSSProperties

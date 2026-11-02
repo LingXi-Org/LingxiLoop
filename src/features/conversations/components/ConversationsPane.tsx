@@ -6,6 +6,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { Avatar } from '@/components/Avatar'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
@@ -117,12 +118,12 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
     }
   }
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-6 backdrop-blur-sm" onMouseDown={onClose}>
-      <div className="flex max-h-[70vh] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="text-base font-semibold text-foreground">添加群成员</h2>
-          <p className="mt-1 text-xs text-muted-foreground">选择要加入“{conversation.title}”的成员。</p>
-        </div>
+    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="flex max-h-[70vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[420px]">
+        <DialogHeader className="border-b border-border px-5 py-4">
+          <DialogTitle>添加群成员</DialogTitle>
+          <DialogDescription>选择要加入“{conversation.title}”的成员。</DialogDescription>
+        </DialogHeader>
         <div className="min-h-0 flex-1 overflow-y-auto p-2">
           {candidates.length === 0 && <p className="px-3 py-8 text-center text-sm text-muted-foreground">所有成员都已在群聊中</p>}
           <ItemGroup className="gap-1">{candidates.map((p) => (
@@ -132,11 +133,11 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
               <span className="text-xs text-primary">{busy === p.id ? '添加中…' : '添加'}</span>
             </Item>
           ))}</ItemGroup>
-          {error && <p className="m-3 rounded-lg bg-destructive/10 px-3 py-2 text-[12px] text-destructive">{userFacingError(error, '搜索失败，请稍后重试。')}</p>}
+          {error && <p role="alert" className="m-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{userFacingError(error, '搜索失败，请稍后重试。')}</p>}
         </div>
-        <div className="border-t border-border p-3 text-right"><Button type="button" onClick={onClose} size="sm">完成</Button></div>
-      </div>
-    </div>
+        <DialogFooter className="border-t border-border p-3"><Button type="button" onClick={onClose} size="sm">完成</Button></DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

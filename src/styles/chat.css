@@ -62,15 +62,6 @@
 .find-row-current { box-shadow: inset 0 0 0 2px var(--gold), 0 10px 30px -24px var(--gold); }
 [data-find-highlights="true"] .find-row-match,
 [data-find-highlights="true"] .find-row-current { box-shadow: none; }
-.desktop-detail-panel-host {
-  height: 100%;
-  background: var(--im-detail-surface);
-  color: var(--ink);
-}
-/* Grok's workspace chrome is a deliberately separate surface from the
-   transcript: base for chat, subtle for chrome, elevated for preview content.
-   Keep the detail-panel structure untouched and apply that hierarchy only to
-   the group workspace mounted inside it. */
 .desktop-openmaus [data-context-layout='flat-stacked'] {
   background: var(--im-detail-surface);
   color: var(--ink);
@@ -140,15 +131,6 @@
 .chat-composer:focus-within {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
-}
-.openmaus-quote-card {
-  background: color-mix(in srgb, var(--inset) 84%, transparent);
-  border: 1px solid color-mix(in srgb, var(--hairline) 65%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink) 4%, transparent);
-}
-.openmaus-quote-card:hover {
-  background: color-mix(in srgb, var(--raised) 72%, transparent);
-  border-color: color-mix(in srgb, var(--ring) 38%, var(--hairline));
 }
 /* Conversation-only Markdown skin. Streamdown owns parsing, streaming,
    incomplete Markdown recovery, code tools, tables, math and diagrams. */

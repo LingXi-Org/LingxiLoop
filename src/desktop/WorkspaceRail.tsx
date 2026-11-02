@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useParticipants } from '@/features/agents/state'
 import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
 import type { LearningSpace } from '@/features/learning/contracts'
-import { getLearningDashboardMenu, viewForLearningSection } from '@/features/learning/dashboard/navigation'
+import { courseEntryView, moduleForView } from '@/components/shell/modules'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
@@ -31,17 +31,17 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
   const view = useApp((state) => state.view)
   const user = useAuth((state) => state.user)
   const participantAvatar = useParticipants((state) => user ? state.byId[user.id]?.avatarUrl : undefined)
+  const currentModule = moduleForView(view)
   const menu = [
-    { view: 'conversations' as const, label: '对话', icon: BubbleChatIcon, management: false },
-    { view: 'cases' as const, label: '案例库', icon: BookOpen01Icon, management: false },
-    ...(activeSpace ? [{ view: 'slides' as const, label: '演示文稿', icon: Presentation01Icon, management: false }] : []),
-    ...(activeSpace ? getLearningDashboardMenu(activeSpace).map((item) => ({ ...item, view: viewForLearningSection(item.section) })) : []),
+    { module: 'chat' as const, view: 'conversations' as ViewKey['view'], label: '对话', icon: BubbleChatIcon },
+    { module: 'course' as const, view: courseEntryView(Boolean(activeSpace)), label: '课程', icon: BookOpen01Icon },
+    ...(activeSpace ? [{ module: 'slides' as const, view: 'slides' as ViewKey['view'], label: '演示文稿', icon: Presentation01Icon }] : []),
   ]
   const renderMenuItem = (item: typeof menu[number]) => {
-    const selected = view === item.view || (item.view === 'courses' && (view === 'course-members' || view === 'course-status'))
-    return <Tooltip key={item.view}>
+    const selected = currentModule === item.module
+    return <Tooltip key={item.module}>
       <TooltipTrigger asChild>
-        <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={item.label} data-workspace-view={item.view} aria-current={selected ? 'page' : undefined} onClick={() => onNavigate(item.view)} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', selected && 'bg-sidebar-accent text-sidebar-primary')}>
+        <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={item.label} data-workspace-view={item.view} data-workspace-module={item.module} aria-current={selected ? 'page' : undefined} onClick={() => { if (!selected) onNavigate(item.view) }} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', selected && 'bg-sidebar-accent text-sidebar-primary')}>
           <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-6" />
         </Button>
       </TooltipTrigger>
@@ -78,10 +78,7 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
       </DropdownMenu>
     </div>
     <div className="server-rail-scroll flex min-h-0 w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-2 py-2">
-      {menu.filter(item => item.view !== 'learning').map(renderMenuItem)}
-    </div>
-    <div className="flex shrink-0 flex-col items-center px-2" data-testid="workspace-bottom-navigation">
-      {menu.filter(item => item.view === 'learning').map(renderMenuItem)}
+      {menu.map(renderMenuItem)}
     </div>
     {user ? <div className="shrink-0 px-2 pt-2"><NavUser compact user={{ id: user.id, name: user.name, email: user.email, avatar: user.avatarUrl ?? participantAvatar }} /></div> : null}
   </nav>

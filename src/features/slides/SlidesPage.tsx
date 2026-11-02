@@ -1,151 +1,143 @@
-import { Add01Icon, Delete02Icon, Edit02Icon, Presentation01Icon } from '@hugeicons/core-free-icons'
+import { Add01Icon, Delete02Icon, Edit02Icon, GridViewIcon, LeftToRightListBulletIcon, MoreHorizontalIcon, Presentation01Icon, SearchIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { useEffect, useMemo, useState } from 'react'
 import { ws } from '@/api/core/realtime'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { PageBody, PageHeader, PageLayout, PageToolbar } from '@/components/shell/PageHeader'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { artifactsApi } from '@/features/artifacts/api'
-import { SlidesWorkspace } from './SlidesWorkspace'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { SelectField } from '@/components/ui/select-field'
+import { ToggleGroupLite } from '@/components/shell/ToggleGroupLite'
 import type { ArtifactSummary } from '@/features/artifacts/contracts'
-import { confirmSensitiveAction, promptSensitiveAction } from '@/lib/confirmAction'
-import { userFacingError } from '@/lib/userFacingError'
+import { useWorkspace } from '@/features/knowledge/workspace'
+import { SlidesWorkspace } from './SlidesWorkspace'
+import { formatDeckUpdated, useSlides } from './store'
 
-const readDeck = () => new URLSearchParams(window.location.search).get('deck')
-function writeDeck(deckId: string | null) {
-  const url = new URL(window.location.href)
-  if (deckId) url.searchParams.set('deck', deckId)
-  else url.searchParams.delete('deck')
-  window.history.replaceState(window.history.state, '', url)
+type Layout = 'grid' | 'list'
+type Sort = 'updated' | 'created' | 'title'
+const LAYOUT_KEY = 'lingxiloop:slides:layout:v1'
+const readLayout = (): Layout => { try { return window.localStorage.getItem(LAYOUT_KEY) === 'list' ? 'list' : 'grid' } catch { return 'grid' } }
+
+function DeckActions({ deck }: { deck: ArtifactSummary }) {
+  return <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button type="button" variant="ghost" size="icon-sm" aria-label={`管理「${deck.title}」`} className="shrink-0 text-muted-foreground">
+        <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end">
+      <DropdownMenuItem onSelect={() => void useSlides.getState().rename(deck)}><HugeiconsIcon icon={Edit02Icon} strokeWidth={2} />重命名</DropdownMenuItem>
+      <DropdownMenuItem variant="destructive" onSelect={() => void useSlides.getState().remove(deck)}><HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />删除</DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
 }
-const updated = (value: string) => new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 
-/** The project's Slides decks: the main sidebar entry for the vendored claude-slides editor. */
+const deckMeta = (deck: ArtifactSummary) => `${formatDeckUpdated(deck.updatedAt)}${deck.conversationId ? ' · 来自对话' : ''}`
+
+/** The project's Slides decks: a library home plus the vendored claude-slides editor. */
 export function SlidesPage({ projectId }: { projectId: string }) {
-  const [decks, setDecks] = useState<ArtifactSummary[] | null>(null)
-  const [error, setError] = useState('')
-  const [openId, setOpenId] = useState<string | null>(readDeck)
-  // One retained workspace avoids rebuilding its opaque iframe on a quick
-  // return from the list. Switching decks/projects still releases the old one.
-  const [retained, setRetained] = useState(() => ({ projectId, id: readDeck() }))
-  const [reopening, setReopening] = useState(false)
-  const reopeningRequest = useRef<AbortController | null>(null)
-
-  const load = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const next = await artifactsApi.listSlides(projectId, signal)
-      setDecks(next)
-      setError('')
-    } catch (reason) {
-      if (!signal?.aborted) setError(userFacingError(reason, '演示文稿列表暂时无法加载，请重试。'))
-    }
-  }, [projectId])
+  const decks = useSlides((state) => state.decks)
+  const error = useSlides((state) => state.error)
+  const openId = useSlides((state) => state.openId)
+  const retainedId = useSlides((state) => state.retainedId)
+  const reopening = useSlides((state) => state.reopening)
+  const workspaceName = useWorkspace((state) => state.list.find((item) => item.id === projectId)?.name)
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<Sort>('updated')
+  const [layout, setLayout] = useState<Layout>(readLayout)
 
   useEffect(() => {
     const controller = new AbortController()
-    setDecks(null)
-    setReopening(false)
-    void load(controller.signal)
-    return () => { controller.abort(); reopeningRequest.current?.abort() }
-  }, [load])
+    useSlides.getState().reset(projectId)
+    void useSlides.getState().load(projectId, controller.signal)
+    return () => controller.abort()
+  }, [projectId])
   useEffect(() => ws.on((event) => {
-    if (event.type === 'artifact.changed' && event.artifactKind === 'slides' && event.kind !== 'files.changed') void load()
-  }), [load])
+    if (event.type === 'artifact.changed' && event.artifactKind === 'slides' && event.kind !== 'files.changed') void useSlides.getState().load(projectId)
+  }), [projectId])
 
-  const open = async (deckId: string | null) => {
-    reopeningRequest.current?.abort()
-    setReopening(false)
-    if (deckId && retained.projectId === projectId && retained.id === deckId && !openId) {
-      // Recheck current membership before exposing a retained document.
-      const controller = new AbortController()
-      reopeningRequest.current = controller
-      setReopening(true)
-      try { await artifactsApi.slideWorkspace(deckId, controller.signal) }
-      catch (reason) {
-        if (!controller.signal.aborted) {
-          setRetained({ projectId, id: null })
-          toast.error(userFacingError(reason, '演示文稿暂时无法重新打开，请重试。'))
-          void load()
-        }
-        return
-      } finally { if (!controller.signal.aborted) setReopening(false) }
-      if (controller.signal.aborted) return
-    }
-    if (deckId) setRetained({ projectId, id: deckId })
-    writeDeck(deckId); setOpenId(deckId)
-  }
-  const create = async () => {
-    const title = await promptSensitiveAction({ title: '新建演示文稿', description: '演示文稿属于当前课程，课程成员都可以查看和编辑。',
-      inputLabel: '名称', inputPlaceholder: '例如：第三章复习', inputRequired: true, confirmLabel: '创建' })
-    if (!title) return
-    try {
-      const deck = await artifactsApi.createSlides(projectId, title)
-      await load()
-      open(deck.id)
-    } catch (reason) { toast.error(userFacingError(reason, '演示文稿没有创建成功，请重试。')) }
-  }
-  const rename = async (deck: ArtifactSummary) => {
-    const title = await promptSensitiveAction({ title: '重命名演示文稿', description: '新名称会对所有能查看它的成员显示。',
-      inputLabel: '名称', inputDefaultValue: deck.title, inputRequired: true, confirmLabel: '保存' })
-    if (!title || title === deck.title) return
-    try { await artifactsApi.rename(deck.id, title); await load() }
-    catch (reason) { toast.error(userFacingError(reason, '名称没有保存，请重试。')) }
-  }
-  const remove = async (deck: ArtifactSummary) => {
-    const confirmed = await confirmSensitiveAction({ title: `删除「${deck.title}」？`, description: '幻灯片、上传的图片和评论会一起删除，且无法恢复。',
-      confirmLabel: '删除', tone: 'destructive' })
-    if (!confirmed) return
-    try {
-      await artifactsApi.remove(deck.id)
-      if (openId === deck.id) open(null)
-      await load()
-    } catch (reason) { toast.error(userFacingError(reason, '演示文稿没有删除，请重试。')) }
-  }
+  const visible = useMemo(() => {
+    const value = query.trim().toLocaleLowerCase()
+    const list = (decks ?? []).filter((deck) => !value || deck.title.toLocaleLowerCase().includes(value))
+    return [...list].sort((a, b) => sort === 'title' ? a.title.localeCompare(b.title, 'zh-CN')
+      : Date.parse(sort === 'created' ? b.createdAt : b.updatedAt) - Date.parse(sort === 'created' ? a.createdAt : a.updatedAt))
+  }, [decks, query, sort])
 
-  const cachedId = retained.projectId === projectId && (!decks || decks.some(deck => deck.id === retained.id)) ? retained.id : null
-  const current = cachedId ? decks?.find(deck => deck.id === cachedId) : undefined
+  const changeLayout = (next: Layout) => { setLayout(next); try { window.localStorage.setItem(LAYOUT_KEY, next) } catch { /* storage may be unavailable */ } }
+  const open = (id: string | null) => { void useSlides.getState().open(id) }
+  const create = () => void useSlides.getState().create()
+
+  const cachedId = retainedId && (!decks || decks.some((deck) => deck.id === retainedId)) ? retainedId : null
+  const current = cachedId ? decks?.find((deck) => deck.id === cachedId) : undefined
   const showingWorkspace = Boolean(openId && openId === cachedId)
 
   return <>
-    {cachedId && <div hidden={!showingWorkspace} inert={!showingWorkspace} className={showingWorkspace ? 'h-full min-h-0' : 'hidden'}>
-      <SlidesWorkspace key={`${projectId}:${cachedId}`} artifactId={cachedId} title={current?.title ?? '演示文稿'} onClose={() => { void open(null) }} />
-    </div>}
-    <div hidden={showingWorkspace} className={showingWorkspace ? 'hidden' : 'flex h-full min-h-0 flex-col'} data-slides-page>
-    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
-      <div className="min-w-0">
-        <h1 className="text-lg font-semibold">演示文稿</h1>
-        <p className="text-sm text-muted-foreground">在编辑器中演示、修改并导出 PDF、HTML 或 PowerPoint。也可以在对话里让助手制作。</p>
+  {cachedId && <div hidden={!showingWorkspace} inert={!showingWorkspace} className={showingWorkspace ? 'h-full min-h-0' : 'hidden'}>
+    <SlidesWorkspace key={`${projectId}:${cachedId}`} artifactId={cachedId} title={current?.title ?? '演示文稿'} onClose={() => open(null)} />
+  </div>}
+  {!showingWorkspace && <PageLayout
+    header={<PageHeader title="全部演示文稿" crumbs={workspaceName ? [{ label: workspaceName }] : undefined}
+      actions={<Button onClick={create} className="max-md:size-11 max-md:p-0"><HugeiconsIcon icon={Add01Icon} strokeWidth={2} data-icon="inline-start" /><span className="max-md:sr-only">新建演示文稿</span></Button>} />}
+  >
+    <PageBody>
+      <div data-slides-page>
+        {reopening && <p role="status" className="mb-3 text-sm text-muted-foreground">正在重新打开演示文稿…</p>}
+        {error ? <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button variant="outline" size="sm" onClick={() => void useSlides.getState().load(projectId)}>重试</Button></AlertDescription></Alert>
+          : !decks ? <ResourceSkeleton variant="list" label="正在加载演示文稿" />
+          : !decks.length ? <Empty className="border border-dashed">
+              <EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={Presentation01Icon} /></EmptyMedia>
+                <EmptyTitle>还没有演示文稿</EmptyTitle><EmptyDescription>新建一份，或在对话中请助手为你制作。可在编辑器里演示，并导出 PDF、HTML 或 PowerPoint。</EmptyDescription></EmptyHeader>
+              <EmptyContent><Button onClick={create}>新建演示文稿</Button></EmptyContent>
+            </Empty>
+          : <>
+            <PageToolbar>
+              <InputGroup className="h-9 min-w-0 flex-1 basis-60 sm:max-w-80">
+                <InputGroupInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder="按名称搜索" aria-label="搜索演示文稿" />
+                <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4" /></InputGroupAddon>
+              </InputGroup>
+              <div className="ms-auto flex items-center gap-2">
+                <SelectField ariaLabel="排序方式" value={sort} onValueChange={(value) => setSort(value as Sort)} className="w-32"
+                  options={[{ value: 'updated', label: '最近更新' }, { value: 'created', label: '最近创建' }, { value: 'title', label: '按名称' }]} />
+                <ToggleGroupLite label="显示方式" value={layout} onValueChange={changeLayout}
+                  items={[{ value: 'grid', label: '网格', icon: GridViewIcon }, { value: 'list', label: '列表', icon: LeftToRightListBulletIcon }]} />
+              </div>
+            </PageToolbar>
+            {visible.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">没有找到匹配的演示文稿</p>
+              : layout === 'grid' ? <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-4" aria-label="演示文稿">
+                {visible.map((deck) => <li key={deck.id} className="group/deck flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-foreground/20">
+                  <button type="button" disabled={reopening} onClick={() => open(deck.id)} data-artifact-open-trigger={deck.id} aria-label={`打开「${deck.title}」`}
+                    className="relative flex aspect-video w-full items-end border-b border-border bg-muted/40 p-4 text-start focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
+                    <span aria-hidden="true" className="absolute start-4 top-4 h-1 w-8 rounded-full bg-primary/70" />
+                    <span aria-hidden="true" className="line-clamp-2 font-heading text-lg font-semibold leading-snug text-foreground/80">{deck.title}</span>
+                  </button>
+                  <div className="flex min-w-0 items-center gap-2 py-2 ps-3 pe-1.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{deck.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">{deckMeta(deck)}</p>
+                    </div>
+                    <DeckActions deck={deck} />
+                  </div>
+                </li>)}
+              </ul>
+              : <div className="overflow-hidden rounded-xl border border-border">
+                <ul aria-label="演示文稿" className="divide-y divide-border">
+                  {visible.map((deck) => <li key={deck.id} className="flex min-w-0 items-center gap-3 bg-card pe-2 hover:bg-muted/40">
+                    <button type="button" disabled={reopening} onClick={() => open(deck.id)} data-artifact-open-trigger={deck.id}
+                      className="flex min-h-14 min-w-0 flex-1 items-center gap-3 ps-4 text-start focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-muted/40 text-muted-foreground"><HugeiconsIcon icon={Presentation01Icon} strokeWidth={1.8} className="size-4" /></span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium">{deck.title}</span>
+                      <span className="hidden shrink-0 text-xs tabular-nums text-muted-foreground @min-[36rem]/page:inline">{deckMeta(deck)}</span>
+                    </button>
+                    <DeckActions deck={deck} />
+                  </li>)}
+                </ul>
+              </div>}
+          </>}
       </div>
-      <Button className="min-h-11 shrink-0" onClick={() => void create()}>
-        <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />新建
-      </Button>
-    </header>
-    <div className="min-h-0 flex-1 overflow-y-auto p-5">
-      {reopening && <p role="status" className="mb-3 text-sm text-muted-foreground">正在重新打开演示文稿…</p>}
-      {error ? <Alert variant="destructive"><AlertDescription className="flex items-center justify-between gap-3">{error}<Button variant="outline" size="sm" onClick={() => void load()}>重试</Button></AlertDescription></Alert>
-        : !decks ? <ResourceSkeleton variant="list" label="正在加载演示文稿" />
-        : !decks.length ? <Empty><EmptyHeader><EmptyMedia variant="icon"><HugeiconsIcon icon={Presentation01Icon} /></EmptyMedia>
-            <EmptyTitle>还没有演示文稿</EmptyTitle><EmptyDescription>新建一份，或在对话中请助手为你制作。</EmptyDescription></EmptyHeader>
-            <Button variant="outline" className="min-h-11" onClick={() => void create()}>新建演示文稿</Button></Empty>
-        : <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="演示文稿">
-          {decks.map((deck) => <li key={deck.id} className="flex flex-col rounded-xl border border-border bg-card">
-            <button type="button" disabled={reopening} onClick={() => { void open(deck.id) }} data-artifact-open-trigger={deck.id}
-              className="flex min-h-24 flex-1 flex-col items-start gap-1 rounded-t-xl p-4 text-start hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring">
-              <span className="line-clamp-2 font-medium">{deck.title}</span>
-              <span className="text-xs text-muted-foreground">{Math.max(0, deck.fileCount - 1)} 个文件 · 更新于 {updated(deck.updatedAt)}{deck.conversationId ? ' · 来自对话' : ''}</span>
-            </button>
-            <div className="flex justify-end gap-1 border-t border-border p-1">
-              <Button variant="ghost" size="icon" className="size-10" aria-label={`重命名「${deck.title}」`} onClick={() => void rename(deck)}>
-                <HugeiconsIcon icon={Edit02Icon} strokeWidth={2} className="size-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="size-10" aria-label={`删除「${deck.title}」`} onClick={() => void remove(deck)}>
-                <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} className="size-4" />
-              </Button>
-            </div>
-          </li>)}
-        </ul>}
-    </div>
-  </div></>
+    </PageBody>
+  </PageLayout>}
+  </>
 }

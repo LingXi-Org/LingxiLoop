@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import './cases.css'
 import { CaseCodeBlock } from './CaseCodeBlock'
-import { ArrowLeft, ImagePlus, LockKeyhole, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { ImagePlus, LockKeyhole, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -21,7 +21,8 @@ import { mergeCaseCoverMetadata } from './cover/polling'
 import { useCaseCoverPolling } from './cover/useCaseCoverPolling'
 import { caseArticleUrl, caseViewFromSearch, canManageCaseView, type CaseView } from './case-view'
 import { submitCase } from './submission'
-import { LearningPageHeader, LearningPageToolbar, LearningTopTabs } from '@/features/learning/components/LearningPageHeader'
+import { PageBody, PageHeader, PageLayout, PageToolbar } from '@/components/shell/PageHeader'
+import { PanelCloseButton } from '@/components/shell/RightPanel'
 
 const empty: CaseInput = { title: '', summary: '', body: '', cover: null, category: '', tags: [] }
 const statusLabels = { draft: '草稿', published: '已发布', unpublished: '已下架' }
@@ -293,17 +294,16 @@ export function CasesPage() {
       </div>}
     </div>
   </div>
-  return <main aria-label="组织案例库" className="cases-page learning-page-surface">
-    <div className={detail ? 'case-detail-shell' : 'learning-page-shell'}>
-      {!detail && <LearningPageHeader title="案例库" headingRef={heading} actions={<>
+  const header = !detail
+    ? <PageHeader title="案例库" titleRef={heading} actions={<>
         {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(undefined, 'manage')}>管理案例</Button> : <Button variant="outline" disabled={busy} onClick={() => navigate(undefined, 'reader')}>阅读案例</Button>}
         {managing && <Button disabled={busy} onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>}
-      </>} />}
-      {detail && <header className="case-toolbar case-detail-toolbar">
-        <h1 ref={heading} tabIndex={-1} className="sr-only">案例库</h1>
-        {detail && <Button variant="ghost" disabled={busy} onClick={() => navigate()}><ArrowLeft className="size-4"/>返回案例库</Button>}
-        <div className="ms-auto flex flex-wrap items-center justify-end gap-3">
-          {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(id ?? undefined, 'manage')}>管理案例</Button> : <Button variant="outline" disabled={busy} onClick={() => navigate(article?.status === 'published' ? id ?? undefined : undefined, 'reader')}>阅读案例</Button>}
+      </>} />
+    : <PageHeader title={editing ? (input.title.trim() || '新建案例') : article?.title ?? '案例'} titleRef={heading}
+        crumbs={[{ label: '案例库', onSelect: busy ? undefined : () => navigate() }]}
+        leading={<PanelCloseButton back label="返回案例库" onClick={() => { if (!busy) navigate() }} className="-ms-2" />}
+        actions={<div className="flex flex-wrap items-center justify-end gap-2">
+          {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(id ?? undefined, 'manage')}>管理案例</Button> : !editing && <Button variant="outline" disabled={busy} onClick={() => navigate(article?.status === 'published' ? id ?? undefined : undefined, 'reader')}>阅读案例</Button>}
           {editing && managing ? <>
             <span className="text-sm text-muted-foreground">草稿</span>
             <Button type="submit" form="case-edit-form" name="intent" value="draft" variant="outline" disabled={invalid}>{submissionStage === 'saving' ? '正在保存…' : '保存草稿'}</Button>
@@ -321,16 +321,18 @@ export function CasesPage() {
               <DropdownMenuItem variant="destructive" onSelect={() => requestDelete(article)}><Trash2 aria-hidden="true"/>删除案例</DropdownMenuItem>
             </DropdownMenuContent></DropdownMenu>
           </>}
-        </div>
-      </header>}
+        </div>} />
+  return <main aria-label="组织案例库" className="cases-page h-full min-h-0">
+    <PageLayout header={header} scrollProps={{ className: 'cases-scroll' }}>
+    <PageBody className={detail ? 'case-detail-shell' : undefined}>
       {error && <div role="alert" className="case-notice text-destructive">{error}{!editing && <Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button>}</div>}
       {notice && <p role="status" className="case-notice">{notice}</p>}
       {!detail && <>
-        <LearningTopTabs label="案例分类" value={category} onValueChange={setCategory} items={['', ...list.categories].map(value => ({ value, label: value || '全部' }))} />
-        <LearningPageToolbar>
-        <label className="learning-page-search relative"><span className="sr-only">关键词搜索</span><Search aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
+        <PageToolbar>
+        <div role="group" aria-label="案例分类" className="flex flex-wrap gap-1">{['', ...list.categories].map(value => <Button key={value || 'all'} size="sm" variant={category === value ? 'secondary' : 'ghost'} aria-pressed={category === value} onClick={() => setCategory(value)}>{value || '全部'}</Button>)}</div>
+        <label className="relative ms-auto w-full min-w-0 sm:w-72"><span className="sr-only">关键词搜索</span><Search aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
         {(search || category) && <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setCategory('') }}>清除筛选</Button>}
-        </LearningPageToolbar>
+        </PageToolbar>
       </>}
       {editing && managing ? <form id="case-edit-form" aria-busy={busy} onSubmit={event => {
         event.preventDefault()
@@ -366,7 +368,8 @@ export function CasesPage() {
         </article>)}</div>
         {!list.items.length && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '没有找到匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : managing ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
       </> : null}
-    </div>
+    </PageBody>
+    </PageLayout>
     <AlertDialog open={deleteTarget !== null} onOpenChange={open => { if (!open && !busy) { setDeleteTarget(null); setDeleteError('') } }}>
       <AlertDialogContent aria-busy={busy}>
         <AlertDialogHeader>

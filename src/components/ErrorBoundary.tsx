@@ -20,29 +20,13 @@ export class ErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.error) {
       return (
-        <div className="fixed inset-0 grid place-items-center bg-paper p-8">
-          <div className="max-w-[460px] text-center">
-            <div className="font-display font-medium text-[32px] tracking-tight text-ink-900 mb-2"
-              style={{ letterSpacing: '-0.025em' }}>
-              页面暂时无法显示
-            </div>
-            <div className="font-display italic text-[14px] text-ink-500 leading-relaxed mb-5">
-              请再试一次，或刷新应用。你的学习记录不会受到影响。
-            </div>
-            <div className="flex justify-center gap-2">
-              <Button
-                onClick={() => this.setState({ error: null, resetKey: this.state.resetKey + 1 })}
-                className="py-2 px-4 rounded-[10px] text-[13px] font-semibold text-white"
-                style={{
-                  background: 'linear-gradient(135deg, var(--skype), var(--skype-deep))',
-                  boxShadow: '0 6px 16px -4px color-mix(in srgb, var(--primary) 45%, transparent)',
-                }}
-              >再试一次</Button>
-              <Button
-                onClick={() => window.location.reload()}
-                className="py-2 px-4 rounded-[10px] text-[13px] font-semibold text-ink-700 bg-cloud"
-                style={{ border: '1px solid var(--ink-100)' }}
-              >刷新应用</Button>
+        <div role="alert" className="fixed inset-0 grid place-items-center bg-background p-6 text-foreground">
+          <div className="flex max-w-sm flex-col items-center gap-2 text-center">
+            <h1 className="font-heading text-xl font-semibold">页面暂时无法显示</h1>
+            <p className="text-sm leading-6 text-muted-foreground">请再试一次，或刷新应用。你的学习记录不会受到影响。</p>
+            <div className="mt-3 flex justify-center gap-2">
+              <Button onClick={() => this.setState({ error: null, resetKey: this.state.resetKey + 1 })}>再试一次</Button>
+              <Button variant="outline" onClick={() => window.location.reload()}>刷新应用</Button>
             </div>
           </div>
         </div>
