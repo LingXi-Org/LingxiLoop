@@ -225,3 +225,54 @@ success control, and verifies injected product-host seal refusal stays failed
 with no result. The specific in-flight-second-ACK race remains covered by the
 SDK's independent regression. These deterministic checks establish neither
 live-provider generation quality nor browser/teaching-content acceptance.
+
+
+### Independent read-only Notebook/run observation (#633)
+
+The existing `Deploy production` Actions workflow can run the fixed
+`knowledge-observe` command with its already configured `SIGILLO_TOKEN`.
+No login, new identity, secret change, extra Actions permission, token export or
+local production credentials are needed. After this observation-only change is
+reviewed and merged to `main`, the sole integrator can invoke:
+
+```sh
+gh workflow run deploy.yml --ref main -f command=knowledge-observe -f run_id='im:88655fc9ed2c99c17d6a980c071367d5867952b20a41e5a2a9f9c0d97cf765e5'
+```
+
+Keep **`[skip deploy]` in the merge commit message** for this observation-only
+PR. The existing push workflow would otherwise invoke `up` on every main merge.
+Do not use `up`, `servers`, `plan` or a runtime patch command to observe.
+This PR extracts the same observer from draft #637; after landing, rebase #637
+onto it instead of adding a second implementation. The budget increases and
+embedding/model configuration changes in #637 remain separate, unapproved gates.
+
+The Actions observation skips image builds and selects a separate, fixed CLI
+step. The run ID is passed via an environment variable as one quoted argument,
+validated before Sigillo or SSH access. `stacks` is ignored for this command.
+The CLI returns before image selection, pulls, runtime-patch plans or stack
+convergence. It does not stage host deployment files, drain/restart services,
+migrate, activate a generation, call a model/provider or retry a run.
+
+The bounded JSON output distinguishes retained `notebook.control` from
+`notebook.active`: stored model/endpoint/contract dimensions, aggregate chunk and
+invalid-dimension counts, a scalar dimension sample, generation metadata and
+pointer revision. `pointerStable=false` means the pointer changed while reading;
+these are independent metadata reads, not a transactional migration receipt.
+Notebook `configured` reflects Docker's environment, not resolved API state.
+`workerA`/`workerB` show four configured limits, not the old root's frozen budget.
+
+The fixed MCP read uses only the existing `LINGXILOOP_MCP_SERVICE_TOKEN` supplied
+by the same Sigillo run. A maximum event cursor excludes ordered tool/public-text
+events; additional diagnostics are discarded. Only run identity/state, the
+reported budget gap and aggregate counters are exported. The formal SDK has no
+public frozen-root budget or exact partial-run rejection/reservation reader, so
+both stay `unknown`; elapsed time never determines a budget dimension.
+Missing/denied existing identity is reported without fallback or new credentials.
+Existing authenticated-read auditing remains enabled.
+
+There is no source text, vector value, prompt, tenant content or credential in
+the output. Notebook metadata has a 30-second deadline; remote SSH processes are
+bounded to 20/45 seconds; the MCP read has a 20-second deadline and 256-KiB cap.
+Each view runs once. A failed view preserves the others, reports top-level
+`status=partial` and exits nonzero. Inspect each view's status in the Actions log.
+The developer task has not dispatched or executed this production observation.
