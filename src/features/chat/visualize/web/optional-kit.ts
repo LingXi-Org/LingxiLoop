@@ -22,6 +22,13 @@ export function optionalKitBootstrap(assets: Record<string, PublicScript>, loade
   const roots = new Set<Document | ShadowRoot>()
   const icons = (root: Document | ShadowRoot) => (window as unknown as {lucide?: {createIcons(options: unknown): void}}).lucide?.createIcons({root,attrs:{width:16,height:16}})
   const scan = () => {
+    if (assets['math.js'] && !pending.has('math.js')) {
+      const text = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+      while (text.nextNode()) {
+        if (text.currentNode.parentElement?.closest('script,noscript,style,textarea,pre,code,kbd,samp,option,svg,math,x-dc,template,.katex,.katex-display,.no-math')) continue
+        if (/\$\$|\\[([]|\\begin\s*\{/.test(text.currentNode.textContent ?? '')) { void load('math.js').catch(() => undefined); break }
+      }
+    }
     for (const root of roots) {
       if (root.querySelector('.nav[role="tablist"]')) void load('kit-tabs.js').catch(()=>undefined)
       if (root.querySelector('[data-tooltip]')) void load('kit-tooltip.js').catch(() => undefined)
@@ -47,7 +54,7 @@ export function optionalKitBootstrap(assets: Record<string, PublicScript>, loade
     for (const record of records) for (const node of record.addedNodes) if (node instanceof Element) discover(node)
     scan()
   })
-  const observe = (root: Document | ShadowRoot) => { roots.add(root); observer.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['data-tooltip','data-lucide','icon-name','class']}) }
+  const observe = (root: Document | ShadowRoot) => { roots.add(root); observer.observe(root,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-tooltip','data-lucide','icon-name','class']}) }
   observe(document)
   discover(document)
   scan()

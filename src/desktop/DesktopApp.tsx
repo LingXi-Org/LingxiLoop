@@ -36,12 +36,12 @@ import { useAuth } from '@/stores/auth'
 import type { Participant } from '@/types'
 import { useSurface } from '@/stores/surface'
 import { useUiCommands } from '@/stores/uiCommands'
-import { ChatPane } from './ChatPane'
-import { InfoPane } from './InfoPane'
-import { ThreadDrawer } from './ThreadDrawer'
 import { WorkspaceRail } from './WorkspaceRail'
-import { useLearningSpaces } from './useLearningSpaces'
+import type { useLearningSpaces } from './useLearningSpaces'
 
+const ChatPane = lazy(() => import('./ChatPane').then((module) => ({ default: module.ChatPane })))
+const InfoPane = lazy(() => import('./InfoPane').then((module) => ({ default: module.InfoPane })))
+const ThreadDrawer = lazy(() => import('./ThreadDrawer').then((module) => ({ default: module.ThreadDrawer })))
 const CasesPage = lazy(() => import('@/features/cases/CasesPage').then((module) => ({ default: module.CasesPage })))
 const SlidesPage = lazy(() => import('@/features/slides/SlidesPage').then((module) => ({ default: module.SlidesPage })))
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
@@ -72,11 +72,10 @@ function persistSidebarWidth(width: number): void {
 
 /** The desktop shell switches between the resizable IM workspace and the
  * personal dashboard. Compact object details continue to use the shared Drawer. */
-export function DesktopApp() {
+export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<typeof useLearningSpaces> }) {
   const companyId = useAuth((state) => state.activeCompanyId)
   const companyRole = useAuth((state) => state.companies.find(company => company.id === state.activeCompanyId)?.role)
   const isMobile = useIsMobile()
-  const learningSpaces = useLearningSpaces()
   const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
   const view = useApp((state) => state.view)
   const settingsOpen = useSettingsDialog((state) => state.open)
@@ -159,7 +158,7 @@ export function DesktopApp() {
   const page = navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" />
     : view === 'cases' ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载案例库" />}><CasesPage key={companyId} /></Suspense>
     : view === 'slides' && selectedWorkspaceId ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载演示文稿" />}><SlidesPage key={selectedWorkspaceId} projectId={selectedWorkspaceId} /></Suspense>
-    : shellModule === 'chat' && selectedWorkspaceId ? <ChatPane onChooseWorkspace={chooseWorkspace} onBackToConversations={isMobile ? () => useApp.getState().showConversationList() : undefined} />
+    : shellModule === 'chat' && selectedWorkspaceId ? <Suspense fallback={<ResourceSkeleton variant="detail" label="正在打开会话" />}><ChatPane onChooseWorkspace={chooseWorkspace} onBackToConversations={isMobile ? () => useApp.getState().showConversationList() : undefined} /></Suspense>
     : <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
         <PersonalDashboard
           view={view}

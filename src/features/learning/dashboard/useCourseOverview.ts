@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react'
 import { learningApi } from '../api'
-import type { ApiCourse, ApiCourseMember, LearningSpace } from '../contracts'
+import type { ApiCourseMember, LearningSpace } from '../contracts'
 import { forumApi } from '../forum/api'
 import type { ForumItem, ForumPage, SubmissionVersion } from '../forum/contracts'
 import { homeworkApi } from '../homework/api'
-import type { HomeworkDetail, HomeworkLearner } from '../homework/contracts'
+import type { HomeworkLearner, HomeworkOverview } from '../homework/contracts'
 import { userFacingError } from '@/lib/userFacingError'
 
 interface CourseOverview {
-  course: ApiCourse
   items: ForumItem[]
   members: ApiCourseMember[]
   submissions: Array<{ item: ForumItem; submission: SubmissionVersion }>
-  homeworks: Array<{ item: ForumItem; detail: HomeworkDetail; learners: HomeworkLearner[] }>
+  homeworks: Array<{ item: ForumItem; detail: HomeworkOverview | null; learners: HomeworkLearner[] }>
 }
 async function allPages<T>(load: (offset: number) => Promise<ForumPage<T>>) {
   const items: T[] = []
@@ -37,8 +36,7 @@ export function useCourseOverview(space: LearningSpace) {
     const load = async () => {
       if (!space.courseId) return null
       const courseId = space.courseId
-      const [course, items, members] = await Promise.all([
-        learningApi.getCourse(courseId),
+      const [items, members] = await Promise.all([
         allPages(offset => forumApi.list(courseId, { kind: 'all', search: '', tag: '', offset })),
         space.perspective === 'teacher' && space.canManage ? learningApi.listCourseMembers(courseId) : Promise.resolve([]),
       ])
@@ -48,7 +46,7 @@ export function useCourseOverview(space: LearningSpace) {
       for (let index = 0; index < assignments.length && active; index += 4) {
         homeworks.push(...await Promise.all(assignments.slice(index, index + 4).map(async item => ({
           item,
-          detail: await homeworkApi.detail(courseId, item.id),
+          detail: space.perspective === 'teacher' ? null : await homeworkApi.overview(courseId, item.id),
           learners: space.perspective === 'teacher' && space.canReview
             ? await allPages(offset => homeworkApi.learners(courseId, item.id, offset)) : [],
         }))))
@@ -66,7 +64,7 @@ export function useCourseOverview(space: LearningSpace) {
         }))
         submissions.push(...batches.flat())
       }
-      return { course, items, members, homeworks, submissions }
+      return { items, members, homeworks, submissions }
     }
     void load().then(value => { if (active) setData(value) }).catch(reason => {
       if (active) setError(userFacingError(reason, '课程概览暂时无法加载，请重试。'))

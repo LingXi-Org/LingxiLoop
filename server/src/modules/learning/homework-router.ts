@@ -39,6 +39,10 @@ homeworkRouter.get(path,safe(async(req,res)=>{
   const scope=await requireCompany(req)
   res.json(await respond(()=>homework.detail(scope,String(req.params.courseId),String(req.params.homeworkId))))
 }))
+homeworkRouter.get(`${path}/overview`,safe(async(req,res)=>{
+  const scope=await requireCompany(req)
+  res.json(await respond(()=>homework.overview(scope,String(req.params.courseId),String(req.params.homeworkId))))
+}))
 homeworkRouter.patch(`${path}/draft`,safe(async(req,res)=>{
   const scope=await requireCompany(req),input=parse(homeworkEditSchema.safeParse(req.body))
   res.json(await respond(()=>homework.updateDraft(scope,String(req.params.courseId),String(req.params.homeworkId),input)))

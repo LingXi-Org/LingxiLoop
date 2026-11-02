@@ -1,15 +1,13 @@
 // Adapted from assistant-ui/examples/with-artifacts/app/page.tsx (MIT, ff654d8).
 // ArtifactExperience/ArtifactScopes retain their conversation + active surface composition;
 // the native runtime supplies tools, persisted messages, ACLs and the shared usage ledger.
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, type ReactNode, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { PageHeader } from '@/components/shell/PageHeader'
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { artifactsApi, type SlideWorkspace } from '@/features/artifacts/api'
-import { ConversationThread } from '@/features/chat/components/ConversationThread'
-import { ConversationRuntimeProvider } from '@/features/chat/runtime'
-import { useConversationPresence } from '@/features/chat/runtime/runtime'
+import { useChatThreadStore } from '@/features/chat/runtime/store'
 import { useConversations } from '@/features/conversations/store'
 import { useParticipants } from '@/features/agents/state'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -17,12 +15,12 @@ import { userFacingError } from '@/lib/userFacingError'
 import { ArtifactSurface, ArtifactSurfaceProvider } from './artifact-surface'
 import type { SlideEditorContext } from '../../../shared/slides-editor-context'
 
-function ArtifactExperience({ workspace, context, syncContext, syncError, onClose }: {
-  workspace: SlideWorkspace; context: SlideEditorContext | null; syncContext(context: SlideEditorContext): void; syncError: string; onClose(): void
+const SlidesConversation = lazy(() => import('./SlidesConversation').then(module => ({ default: module.SlidesConversation })))
+
+function ArtifactExperience({ agentWorking, children, context, syncContext, syncError, onClose }: {
+  agentWorking: boolean; children: ReactNode; context: SlideEditorContext | null; syncContext(context: SlideEditorContext): void; syncError: string; onClose(): void
 }) {
   const mobile = useIsMobile()
-  const presence = useConversationPresence(workspace.conversationId)
-  const readOnly = useConversations(state => state.list.find(item => item.id === workspace.conversationId)?.readOnly)
   return <main className="h-full min-h-0 overflow-hidden bg-background" data-slides-workspace>
     <ResizablePanelGroup orientation={mobile ? 'vertical' : 'horizontal'}>
       <ResizablePanel id="slides-conversation" defaultSize="40%" minSize={mobile ? '25%' : '28%'} className="min-h-0 min-w-0">
@@ -32,12 +30,12 @@ function ArtifactExperience({ workspace, context, syncContext, syncError, onClos
             <p className="text-xs text-muted-foreground" role="status">{context?.slideId ? `第 ${context.slideIndex} 页${context.selectedElementIds.length ? ` · 已选 ${context.selectedElementIds.length} 个元素` : ''}` : '选中页面或元素后，可以直接说明修改。'}{context?.dirty ? ' · 正在保存修改' : ''}</p>
             {syncError && <p role="alert" className="text-xs text-destructive">{syncError}</p>}
           </div>
-          <div className="chat-thread-layout min-h-0 min-w-0 flex-1"><ConversationThread conversationId={workspace.conversationId} readOnly={readOnly} /></div>
+          <div className="chat-thread-layout min-h-0 min-w-0 flex-1">{children}</div>
         </section>
       </ResizablePanel>
       <ResizableHandle withHandle className="desktop-panel-resize-handle" aria-label="调整对话与演示文稿的大小" title="拖动调整对话与演示文稿宽度" />
       <ResizablePanel id="slides-editor" defaultSize="60%" minSize="35%" className="min-h-0 min-w-0">
-        <ArtifactSurface context={context} onEditorContext={syncContext} agentWorking={presence.activeAgentIds.length > 0} />
+        <ArtifactSurface context={context} onEditorContext={syncContext} agentWorking={agentWorking} />
       </ResizablePanel>
     </ResizablePanelGroup>
   </main>
@@ -49,17 +47,24 @@ export function SlidesWorkspace({ artifactId, title, onClose }: { artifactId: st
   const [error, setError] = useState('')
   const [syncError, setSyncError] = useState('')
   const [attempt, setAttempt] = useState(0)
+  const agentWorking = useChatThreadStore(state => Object.values(state.conversations[workspace?.conversationId ?? '']?.activeRuns ?? {})
+    .some(run => run.state === 'queued' || run.state === 'running'))
   const pending = useRef(Promise.resolve())
   const failed = useRef(false)
   const abort = useRef(new AbortController())
   useEffect(() => {
     const controller = new AbortController()
     abort.current = controller
+    return () => controller.abort()
+  }, [artifactId])
+  useEffect(() => {
+    const controller = new AbortController()
     setError('')
     artifactsApi.slideWorkspace(artifactId, controller.signal).then(async result => {
-      await Promise.all([useConversations.getState().reload(), useParticipants.getState().refresh()])
+      void useParticipants.getState().refresh()
+      await useConversations.getState().reload()
       if (!controller.signal.aborted) setWorkspace(result)
-    }).catch(reason => { if (!controller.signal.aborted) setError(userFacingError(reason, '演示文稿工作区暂时无法打开。')) })
+    }).catch(reason => { if (!controller.signal.aborted) setError(userFacingError(reason, '演示文稿助手暂时无法打开。')) })
     return () => controller.abort()
   }, [artifactId, attempt])
   const syncContext = useCallback((value: SlideEditorContext) => {
@@ -81,13 +86,16 @@ export function SlidesWorkspace({ artifactId, title, onClose }: { artifactId: st
     do { current = pending.current; await current } while (current !== pending.current)
     if (failed.current) throw new Error('编辑上下文尚未同步，请稍后重试。')
   }, [])
-  if (error) return <div className="grid h-full place-items-center p-6" role="alert"><div className="flex max-w-sm flex-col items-center gap-3 text-center">
+  const conversation = error ? <div className="grid h-full place-items-center p-6" role="alert"><div className="flex max-w-sm flex-col items-center gap-3 text-center">
     <p className="text-sm text-muted-foreground">{error}</p>
     <div className="flex gap-2"><Button onClick={() => { setAttempt(value => value + 1); setError('') }}>重试</Button><Button variant="outline" onClick={onClose}>返回列表</Button></div></div></div>
-  if (!workspace) return <ResourceSkeleton variant="media" label="正在打开演示文稿工作区" />
-  return <ConversationRuntimeProvider key={`${workspace.conversationId}:${attempt}`} conversationId={workspace.conversationId} beforeSend={beforeSend}>
-    <ArtifactSurfaceProvider initial={{ id: artifactId, title, sourceConversationId: workspace.sourceConversationId }} onClose={onClose}>
-      <ArtifactExperience workspace={workspace} context={context} syncContext={syncContext} syncError={syncError} onClose={onClose} />
-    </ArtifactSurfaceProvider>
-  </ConversationRuntimeProvider>
+    : <Suspense fallback={<ResourceSkeleton variant="media" label="正在打开演示文稿助手" />}>
+      <SlidesConversation key={attempt} conversationId={workspace?.conversationId ?? null} beforeSend={beforeSend} />
+    </Suspense>
+  // The editor has its own authorized grant; IM setup and roster loading must not gate it.
+  return <ArtifactSurfaceProvider initial={{ id: artifactId, title, sourceConversationId: workspace?.sourceConversationId ?? null }} onClose={onClose}>
+    <ArtifactExperience agentWorking={agentWorking} context={context} syncContext={syncContext} syncError={syncError} onClose={onClose}>
+      {conversation}
+    </ArtifactExperience>
+  </ArtifactSurfaceProvider>
 }

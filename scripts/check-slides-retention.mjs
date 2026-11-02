@@ -11,23 +11,23 @@ const mocks = {
   '@/features/artifacts/api': `export const artifactsApi={listSlides:async()=>window.decks,slideWorkspace:async()=>{window.rechecks++;await new Promise(r=>setTimeout(r,80));if(window.deny)throw Error('Access revoked');return {}}}`,
   '@/api/core/realtime': `export const ws={on:fn=>{window.refreshSlides=()=>fn({type:'artifact.changed',artifactKind:'slides',kind:'workspace.updated'});return()=>{}}}`,
   '@/lib/confirmAction': `export const confirmSensitiveAction=async()=>false,promptSensitiveAction=async()=>null`,
-  './SlidesWorkspace': `import{useEffect,useState}from'react';export function SlidesWorkspace({artifactId,title,onClose}){const[id]=useState(()=>++window.mounts);useEffect(()=>()=>{window.unmounts++},[]);return <section data-workspace={artifactId} data-instance={id}><h2>{title}</h2><iframe title="Fixture editor"/><button onClick={onClose} data-close>Close</button></section>}`,
+  './SlidesWorkspace': `import{useEffect,useState}from'react';window.workspaceModuleLoads=(window.workspaceModuleLoads??0)+1;export function SlidesWorkspace({artifactId,title,onClose}){const[id]=useState(()=>++window.mounts);useEffect(()=>()=>{window.unmounts++},[]);return <section data-workspace={artifactId} data-instance={id}><h2>{title}</h2><iframe title="Fixture editor"/><button onClick={onClose} data-close>Close</button></section>}`,
 }
-const entry = `import React from 'react';import{createRoot}from'react-dom/client';import{SlidesPage}from'./src/features/slides/SlidesPage';
+const entry = `import React from 'react';import{createRoot}from'react-dom/client';import{SlidesPage}from'./src/features/slides/SlidesPage';import{writeWebDestination}from'./src/lib/webNavigation';
 window.mounts=0;window.unmounts=0;window.rechecks=0;window.decks=['a','b'].map(id=>({id,title:id,updatedAt:'2026-10-31T00:00:00Z',fileCount:1}));
 const root=createRoot(document.getElementById('root'));root.render(<SlidesPage projectId="project-a"/>);
 const wait=async check=>{for(let i=0;i<100;i++){if(check())return;await new Promise(r=>setTimeout(r,20))}throw Error('UI condition timed out')};
 const click=s=>{const e=document.querySelector(s);if(!e)throw Error('Missing '+s);e.click()},visible=()=>!!document.querySelector('[data-workspace]')&&!document.querySelector('[data-workspace]').closest('[hidden]');
 const assert=(v,m)=>{if(!v)throw Error(m)};
 try{
- await wait(()=>document.querySelector('[data-artifact-open-trigger="a"]'));click('[data-artifact-open-trigger="a"]');await wait(visible);
+ await wait(()=>document.querySelector('[data-artifact-open-trigger="a"]'));assert(!window.workspaceModuleLoads,'library loaded the workspace runtime before opening a deck');click('[data-artifact-open-trigger="a"]');await wait(visible);
  const first=document.querySelector('[data-workspace]');click('[data-close]');await wait(()=>!visible());assert(document.querySelector('[data-workspace]')===first,'close discarded the live frame');
  click('[data-artifact-open-trigger="a"]');assert(!visible(),'cached content appeared before authorization');await wait(visible);assert(window.rechecks===1,'reopen did not reauthorize');assert(document.querySelector('[data-workspace]')===first&&window.mounts===1,'reopen remounted the workspace');
  click('[data-close]');await wait(()=>!visible());click('[data-artifact-open-trigger="b"]');await wait(()=>visible()&&document.querySelector('[data-workspace]').dataset.workspace==='b');assert(window.unmounts===1,'switching decks retained a second workspace');
  click('[data-close]');await wait(()=>!visible());window.deny=true;click('[data-artifact-open-trigger="b"]');await wait(()=>!document.querySelector('[data-workspace]'));assert(window.mounts===2,'denied content was remounted');
- window.deny=false;click('[data-artifact-open-trigger="a"]');await wait(visible);root.render(<SlidesPage projectId="project-b"/>);await wait(()=>!document.querySelector('[data-workspace]'));
- await fetch('/result',{method:'POST',body:JSON.stringify({passed:true,checks:['same iframe on re-open','authorization before visibility','revocation removes retained content','one retained deck','project switch releases workspace'],mounts:window.mounts,unmounts:window.unmounts,rechecks:window.rechecks})});
-}catch(e){await fetch('/result',{method:'POST',body:JSON.stringify({passed:false,error:e.message})})}`
+ window.deny=false;click('[data-artifact-open-trigger="a"]');await wait(visible);writeWebDestination({projectId:'project-b',view:'slides',conversationId:null},'replace');root.render(<SlidesPage projectId="project-b"/>);await wait(()=>!document.querySelector('[data-workspace]'));
+ await fetch('/result',{method:'POST',body:JSON.stringify({passed:true,checks:['library defers workspace runtime','same iframe on re-open','authorization before visibility','revocation removes retained content','one retained deck','project switch releases workspace'],mounts:window.mounts,unmounts:window.unmounts,rechecks:window.rechecks})});
+}catch(e){await fetch('/result',{method:'POST',body:JSON.stringify({passed:false,error:e.message,mounts:window.mounts,unmounts:window.unmounts,rechecks:window.rechecks,body:document.body.innerText.slice(0,500)})})}`
 const bundle = await build({
   stdin: { contents: entry, loader: 'jsx', resolveDir: root },
   bundle: true,

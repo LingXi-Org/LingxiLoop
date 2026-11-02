@@ -83,6 +83,7 @@ export interface HomeworkStudent {
   manualReview: { evidence: string[]; sharedAt: string } | null
 }
 export interface HomeworkDetail { homework: Homework; student: HomeworkStudent | null; teacher: boolean }
+export interface HomeworkOverview { student: Pick<HomeworkStudent, 'status' | 'latestSubmission'> | null }
 export interface HomeworkLearner {
   learnerId: string
   learnerName: string; learnerAvatarUrl?: string | null
