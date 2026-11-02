@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url'
 import { classifyPaths, workflowFilters } from '../scripts/ci-scope-paths.mjs'
 import { IMAGES, imageTag } from '../scripts/image-tag.mjs'
 import { assertRetirementReleaseAllowed, convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
+import { notebookEmbeddingTarget, assertNotebookEmbeddingCompatible } from './notebook-embedding.mjs'
 import { knowledgeObservationRunId, knowledgeObservation, observePublicRunBudget } from './knowledge-observation.mjs'
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)))
@@ -56,7 +57,10 @@ async function main(command, requested) {
   const patch = runtimePatchPlan(path => git('show', `HEAD:${path}`), migrationPaths)
   assertRetirementReleaseAllowed(migrationPaths, command, process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED, patch)
   const ssh = sshSession()
-  const deployServers = () => patch && stacks.includes('app-a') ? runtimePatch(ssh, patch, images, () => servers(ssh, stacks, images)) : servers(ssh, stacks, images)
+  const deployServers = async () => {
+    await notebookPreflight(ssh, stacks)
+    return patch && stacks.includes('app-a') ? runtimePatch(ssh, patch, images, () => servers(ssh, stacks, images)) : servers(ssh, stacks, images)
+  }
   try {
     const steps = {
       images: () => ensureImages(head, images),
@@ -256,6 +260,17 @@ function convergeScript(stack, images, { dryRun = false } = {}) {
 
 async function plan(ssh, stacks, images) {
   await Promise.all(stacks.map(stack => ssh.run(STACK_HOST[stack], stack, convergeScript(stack, images, { dryRun: true }))))
+}
+
+async function notebookPreflight(ssh, stacks) {
+  // Refuse incompatible old vectors before any files, Worker drains or restarts.
+  if (stacks.includes('knowledge')) {
+    const script = git('show', 'HEAD:deploy/notebook-embedding-observe.py')
+    const observation = await ssh.run(STACK_HOST.knowledge, 'Notebook contract preflight',
+      `docker exec -i lingxiloop-knowledge-agent-open-notebook-1 /app/.venv/bin/python - <<'NOTEBOOK_CONTRACT_PY'\n${script}\nNOTEBOOK_CONTRACT_PY`, true)
+    assertNotebookEmbeddingCompatible(JSON.parse(observation), notebookEmbeddingTarget())
+    console.log('Notebook model/index contract preflight passed')
+  }
 }
 
 async function servers(ssh, stacks, images) {

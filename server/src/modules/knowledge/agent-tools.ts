@@ -48,7 +48,7 @@ async function verifyCreated(context: ActionContext, input: Record<string, unkno
 }
 const transaction = { effect: 'transaction' as const, approval: false, authorize }
 export const knowledgeTools: ToolDefinition[] = [
-  nativeTool('knowledge.search', schemas.search, { description: 'Search the enabled knowledge sources visible to every reader in this conversation. Returns source excerpts; cite the runtime-assigned #cite-Sn markers and use read_source for more context.',
+  nativeTool('knowledge.search', schemas.search, { description: 'Search the enabled knowledge sources visible to every reader in this conversation. Returns source excerpts; cite the runtime-assigned #cite-Sn markers and use read_source for more context. A degraded result contains only successful search modes: disclose the unavailable text/vector mode, use retained evidence, and never interpret partial or unavailable retrieval as absent sources or an exhaustive no-match.',
     effect: 'read', approval: false, authorize, async execute(context, input) {
       const retrieval = await retrieveKnowledgeState({ companyId: context.work.tenantId, conversationId: productConversationId(context.work),
         authorizationUserId: context.work.principalId!, audienceUserIds: await audienceHumanIds(context), ...input, signal: context.signal }).catch(error => {
@@ -74,6 +74,7 @@ export const knowledgeTools: ToolDefinition[] = [
         chunkId: hit.chunkId, title: hit.sourceTitle, excerpt: hit.excerpt, truncated: true,
         ...(hit.sourceUrl ? { url: hit.sourceUrl } : {}) }))
       return { ok: true, value: { status: retrieval.status, matches: evidence,
+        ...('searchFailures' in retrieval ? { searchFailures: retrieval.searchFailures } : {}),
         ...('processingSources' in retrieval ? { processingSources: retrieval.processingSources } : {}) }, evidence }
     } }),
   nativeTool('knowledge.read_source', schemas.read_source, { description: 'Read a bounded range of an enabled source in this workspace. Returns actual text, version and nextOffset; continue reading when truncated. Metadata alone is not source content.',

@@ -276,3 +276,20 @@ bounded to 20/45 seconds; the MCP read has a 20-second deadline and 256-KiB cap.
 Each view runs once. A failed view preserves the others, reports top-level
 `status=partial` and exits nonzero. Inspect each view's status in the Actions log.
 The developer task has not dispatched or executed this production observation.
+
+## Notebook embedding and extended artifact execution (#633)
+
+The Notebook target uses `NOTEBOOK_EMBEDDING_BASE_URL` (default the existing
+backend HTTPS `/internal/open-notebook/v1` route) and the same
+`OPENAI_EMBEDDING_MODEL` as both app slots. The frontend still denies `/internal`.
+Backend deployment now observes the retained model/index/generation contract
+before Worker drain or Notebook restart and refuses a mismatch. Preserve the old
+index and originals; prepare/verify a separate generation through the existing
+shadow workflow before switching. Do not rename stored vectors or contracts.
+
+New roots default to 512 model attempts, 8M total tokens, $50 and two hours of
+cumulative execution. Admission still reserves the next call and settles actual
+usage through the shared ledger. Existing roots retain their original frozen
+limits. Explicit Sigillo overrides win; verify both running slots after rollout.
+See [the candidate evidence and remaining gates](evidence/issue-633/README.md).
+

@@ -2,7 +2,7 @@ import { readRunPresentationVersion } from './identity.js'
 import { AssistantStream, AssistantTransportEncoder, type AssistantStreamChunk, type AssistantTransportStateOperation } from 'assistant-stream'
 import type { ReadonlyJSONValue } from 'assistant-stream/utils'
 import { consumeAssistantMessage, consumeRunStreamEvent, consumePublicTextAttempts, createRunView, type AssistantMessage, type RunStreamEvent, type PublicTextAttempt } from '@lyyzka/lingxios/ui'
-import type { createLingxiOS, RunIdentity, RunState, RuntimeOperationContext, RunTraceSnapshot } from '@lyyzka/lingxios'
+import type { createLingxiOS, RunIdentity, RunState, RuntimeOperationContext, RunTraceSnapshot, BudgetDimension } from '@lyyzka/lingxios'
 import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { createNativeMessage } from '../im/message-types.js'
 import { archivedPublicText, runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
@@ -19,6 +19,7 @@ import { projectActivityTasks } from './activity-tasks.js'
 import { readDeliveredReference } from './delivery-reference.js'
 import { terminalFeedbackScope, terminalFeedbackText, terminalResult } from './terminal-feedback.js'
 import type { TerminalScope } from '../../../src/lib/terminalFeedback.js'
+import { executionBudgetMessages, readExecutionBudgetDimension } from '../../../src/lib/executionBudget.js'
 
 /** LingxiOS owns event ordering/fences; only public native messages cross HTTP. */
 export class RunStreamProjection {
@@ -33,6 +34,7 @@ export class RunStreamProjection {
   private nativeTraceAvailable = false
   private nativeTraceReadRevision = 0
   private error: string | null = null
+  private budgetFailure?: { requestVersion: number; fence: number; dimension: BudgetDimension; text: string }
   private sourceRef: string | null = null
   private deliveredReference?: { resultId: string; requestVersion: number; fence: number; sourceMessageId: string }
   private durableDraft = ''
@@ -63,6 +65,7 @@ export class RunStreamProjection {
     if (id !== this.view.runId) throw new Error('运行身份不一致')
     const before = this.view
     this.view = consumeRunStreamEvent(before, item)
+    if (this.budgetFailure && (this.budgetFailure.requestVersion !== this.view.requestVersion || this.budgetFailure.fence !== this.view.fence)) this.budgetFailure = undefined
     if (this.view.requestVersion !== before.requestVersion || this.view.fence !== before.fence || this.view.lifecycle !== before.lifecycle) {
       this.terminalFeedback = null
       if (this.nativeTrace !== undefined) this.nativeTrace = null
@@ -84,13 +87,26 @@ export class RunStreamProjection {
     if (item.type === 'state' && this.view !== before) {
       this.terminalState = item.state
       this.createdAt = item.state.run.createdAt
-      this.error = item.state.run.error ? userFacingError(item.state.run.error, '这次任务未能完成，请稍后重试。') : null
+      this.error = item.state.run.status === 'failed' && this.budgetFailure ? this.budgetFailure.text
+        : item.state.run.error ? userFacingError(item.state.run.error, '这次任务未能完成，请稍后重试。') : null
     }
     if (item.type === 'event' && item.event.visibility === 'user') {
+      const dimension = item.event.kind === 'run.failed' ? readExecutionBudgetDimension(item.event.data.budgetLimit) : undefined
+      const timing = item.event.data._executionTrace
+      const currentFailure = timing && typeof timing === 'object'
+        ? Reflect.get(timing, 'version') === 1 && Reflect.get(timing, 'requestVersion') === this.view.requestVersion && Reflect.get(timing, 'fence') === this.view.fence
+        // Formal 3.8.21 omits terminal event timing. Only the first unsteered
+        // attempt is unambiguous; later attempts retain the generic reason.
+        : this.view.fence === 1 && this.view.requestVersion === 1
+      if (dimension && currentFailure) {
+        this.budgetFailure = { requestVersion: this.view.requestVersion, fence: this.view.fence, dimension, text: executionBudgetMessages[dimension] }
+        if (this.view.lifecycle === 'failed') this.error = this.budgetFailure.text
+      }
       const action = this.tools.find(tool => tool.toolCallId === item.event.data.toolCallId)?.toolName
       const event = publicRunEvent(item.event, action, this.presentationVersion)
       this.tools = harnessToolParts(this.view.runId, [event], this.tools)
-      if (this.view !== before && event.kind === 'run.failed' && typeof event.data.error === 'string') this.error = event.data.error
+      if (this.view !== before && event.kind === 'run.failed' && typeof event.data.error === 'string') this.error = dimension && !currentFailure
+        ? '这次任务未能完成，请稍后重试。' : event.data.error
       if (event.kind === 'run.started' && typeof event.data.sourceRef === 'string') this.sourceRef = event.data.sourceRef
     }
   }
@@ -166,7 +182,8 @@ export class RunStreamProjection {
     this.terminalFeedback = terminal && terminal.feedback.rootWorkId === view.runId && terminal.feedback.requestVersion === view.requestVersion
       ? { id: terminal.feedback.id,requestVersion: terminal.feedback.requestVersion,reason: terminal.feedback.reason,
           status: terminal.feedback.status,delivery: terminal.delivery,scopeVersion: 1,scope,
-          ...(state ? { text: terminalFeedbackText(terminal.feedback,state,null,[],scope) } : {}) } : null
+          ...(state ? { text: terminalFeedbackText(terminal.feedback,state,
+            this.budgetFailure ? { kind: 'budget', dimension: this.budgetFailure.dimension } : null,[],scope) } : {}) } : null
   }
 
   async syncDeliveredReference(identity: RunIdentity, database?: Queryable): Promise<void> {

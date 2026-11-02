@@ -61,6 +61,21 @@ export class OpenNotebookError extends Error {
   }
 }
 
+export interface KnowledgeSearchFailure {
+  type: 'text' | 'vector'
+  code: 'embedding_endpoint' | 'embedding_configuration' | 'index_contract' | 'authentication' | 'notebook_unavailable'
+  status?: number
+}
+
+/** Classify bounded operator evidence without publishing provider response text. */
+export function knowledgeSearchFailure(type: KnowledgeSearchFailure['type'], error: OpenNotebookError): KnowledgeSearchFailure {
+  const code = /embedding.*(?:contract|dimensions|model.*changed)/i.test(error.message) ? 'index_contract'
+    : /Embedding provider returned HTTP 404\b/i.test(error.message) ? 'embedding_endpoint'
+      : /Embedding provider returned HTTP 400\b/i.test(error.message) ? 'embedding_configuration'
+        : error.status === 401 || error.status === 403 ? 'authentication' : 'notebook_unavailable'
+  return { type, code, ...(error.status === undefined ? {} : { status: error.status }) }
+}
+
 function trimBase(value: string): string {
   return value.trim().replace(/\/+$/, '')
 }

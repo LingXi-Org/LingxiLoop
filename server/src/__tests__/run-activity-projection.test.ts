@@ -6,6 +6,29 @@ import { publicRunEvent, publicToolValue } from '../agent-runtime/public-events.
 import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
 import { createNativeMessage, deserializeMessage, nativeText, nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
+import { executionBudgetMessages } from '../../../src/lib/executionBudget.js'
+
+test('structured budget failures survive terminal snapshot replay and cannot leak into a newer request', () => {
+  const projection = new RunStreamProjection('run', true)
+  const state = { run: { id: 'run', status: 'failed' as const, fence: 1, requestVersion: 1, resultId: null, resultFence: null,
+    kind: 'turn', attempts: 1, createdAt: '2026-11-02T00:00:00Z', availableAt: '', heartbeatAt: null, lastProgressAt: null,
+    goalOutcome: { status: 'blocked' as const, requestVersion: 1, verification: 'inconclusive' as const }, error: 'Model call, token, cost or execution-time budget exhausted' },
+  message: null, delivery: null }
+  const event: RunEvent = { runId: 'run', seq: 3, kind: 'run.failed', stage: 'failed', visibility: 'user', data: {
+    budgetLimit: { code: 'budget_limit', dimension: 'tokens' }, _executionTrace: { version: 1, at: 1, requestVersion: 1, fence: 1 } } }
+  projection.apply({ type: 'state', state })
+  projection.apply({ type: 'event', event: { ...event, data: { budgetLimit: event.data.budgetLimit } } })
+  assert.equal(projection.snapshot.message.metadata.custom.harnessError, executionBudgetMessages.tokens)
+  projection.apply({ type: 'state', state })
+  assert.equal(projection.snapshot.message.metadata.custom.harnessError, executionBudgetMessages.tokens)
+  projection.apply({ type: 'state', state: { ...state, run: { ...state.run, fence: 2, requestVersion: 2, status: 'queued', goalOutcome: null, error: null } } })
+  projection.apply({ type: 'event', event })
+  assert.equal(projection.snapshot.message.metadata.custom.harnessError, undefined)
+  const retry = { ...state, run: { ...state.run, fence: 2 } }
+  projection.apply({ type: 'state', state: retry })
+  projection.apply({ type: 'event', event: { ...event, seq: 100003, data: { budgetLimit: event.data.budgetLimit } } })
+  assert.equal(projection.snapshot.message.metadata.custom.harnessError, '这次任务未能完成，请稍后重试。')
+})
 
 test('historical knowledge receipts override an obsolete success summary without rewriting stored events', () => {
   const [tool] = harnessToolParts('run', [start('search', 1, 'knowledge.search'), finish('search', 2)])
