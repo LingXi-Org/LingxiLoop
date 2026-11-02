@@ -19,7 +19,7 @@ Environment: cloud Linux, Node 24.19.0. The preinstalled SDK is 3.8.16, although
 - `npm run test`: **138 passed** before the final added source-card case. `node --import tsx --test --test-force-exit src/features/chat/components/ResearchSources.test.tsx`: **7 passed** after that addition. Includes one/multiple source cards, page links, retained version identities, synthetic internal IDs/hash/unknown author/token/path omission, credential-bearing URL rejection, and visible failure/cancellation with hidden diagnostics.
 - `npm run server:lint`: passed. `npm run lint`: passed with existing warnings.
 - `npm run server:typecheck`: blocked by the old installed SDK's lack of `native-v3` in existing runtime/integration files. No diagnostics referenced changed files.
-- `npm run build`: pending at initial evidence commit; see PR/CI for final result.
+- `npm run build`: passed, including web TypeScript checks and production Vite build (existing chunk-size/dependency annotation warnings).
 
 The extended `confidence-citations.test.ts` integration fixture asserts the **actual product context reaches model requests** without the old contradictory rule, and sends a title citation through the frozen excerpt, ledger, IM delivery and authenticated reconnect path. Its existing auxiliary-call/compaction methods throw, so the fixture cannot silently add a reviewer model. Run with `npm run test:integration -- --file confidence-citations.test.ts` against a dedicated test Postgres and Redis. Local execution is unverified because those services and the locked SDK are not configured in this environment; PR CI owns this gate.
 
