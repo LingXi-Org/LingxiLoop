@@ -1,0 +1,26 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-02T06:09:56.543Z"
+  },
+  "title": "agent基础 · Study Room",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Roadmap.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 1180,
+      "title": "大模型知识全景 · 路线图"
+    }
+  },
+  "order": [
+    "Roadmap.dc.html"
+  ],
+  "notes": {},
+  "designSystems": []
+}
