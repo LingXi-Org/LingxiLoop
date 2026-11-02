@@ -23,7 +23,7 @@ The teaching rules distinguish an initial clue/check, a controlled example, and 
 
 ## Real provider: retained failures, not a pass
 
-The retained live checks were executed on the initial candidate `b0b392ba` or its preceding iterations. The later offline follow-up has **no new live qualification**. The opt-in live check uses the actual published prompt compiler, product policy and current 砺思 preset with the public issue's synthetic A/B task data. It uses the existing configured `deepseek-ai/DeepSeek-V4.1-Flash` provider; thinking is disabled. It does **not** exercise Worker/IM streaming, product ledger, a production account or the original T11 session. Synthetic use of the milo persona is an adversarial prompt check, not proof that the dedicated homework entry binds milo.
+The initial retained live checks were executed on candidate `b0b392ba` or its preceding iterations. The offline follow-up used no model calls; the separately authorized controlled replay of `9ac76fe1` is recorded below. The opt-in live check uses the actual published prompt compiler, product policy and current 砺思 preset with the public issue's synthetic A/B task data. It uses the existing configured `deepseek-ai/DeepSeek-V4.1-Flash` provider; thinking is disabled. It does **not** exercise Worker/IM streaming, product ledger, a production account or the original T11 session. Synthetic use of the milo persona is an adversarial prompt check, not proof that the dedicated homework entry binds milo.
 
 | Record | Observed result |
 | --- | --- |
@@ -51,9 +51,9 @@ Follow-up local verification: **9 focused tests passed**, server typecheck and l
 
 ## Recovery condition and smallest live replay
 
-The last preserved 429 record has **no Retry-After, reset time, remaining-token count, remaining-request count or provider error code**. Its local file was written at 2026-11-02 09:26:42 UTC; that is an observation timestamp, **not** a reset deadline. Status 429 alone cannot distinguish the actual window or establish available budget. No new model calls were made in this follow-up.
+The last preserved 429 record has **no Retry-After, reset time, remaining-token count, remaining-request count or provider error code**. Its local file was written at 2026-11-02 09:26:42 UTC; that is an observation timestamp, **not** a reset deadline. Status 429 alone cannot distinguish the actual window or establish available budget. No new model calls were made during the offline follow-up.
 
-Resume only after current evidence for the existing provider/key establishes that the rate-limit window has reset **and** enough authorized request/token budget remains for the selected run. Do not invent a cooling time, switch keys/models, or repeatedly probe while this is unknown. The local evaluator now requires an explicit call cap; that cap is an operator bound, not proof that the provider has quota. A new 429 records available reset metadata and stops after that first response.
+Prefer current provider reset/quota evidence and available authorized budget before resuming. If reset information cannot be read, missing metadata must not become a permanent wait: use a caller-authorized cooldown and a bounded actual scenario request, counted in the run cap, rather than separate probes or a retry loop. This task's caller explicitly authorized one such replay after approximately forty minutes, with four model attempts total. Do not switch keys/models or increase limits. The local evaluator requires an explicit call cap; it is an operator bound, not proof that the provider has quota. A new 429 records available reset metadata and stops after that first response.
 
 After those conditions hold, preload the existing authorized environment and choose the smallest A/B two-turn check (four requests maximum, no extra scenarios):
 
@@ -68,6 +68,21 @@ node --import tsx --test --test-force-exit server/src/__tests__/homework-teachin
 ```
 
 This minimal run does not certify repeatability, partial attempts, reopened conversations or complete-demonstration permission. Those require a later explicitly budgeted run (`caseSet=full`, `repeats=2`: 11 questions, at most the chosen cap of 22 calls including bounded transient retries). Never retry a returned unsafe answer as a replacement result. The script preserves failed answers, stops on provider unavailability or an exhausted explicit cap, and does not silently turn failures into passes. No production execution-budget code was changed; #633 remains independently owned.
+
+## Controlled replay after cooldown — still failed, budget exhausted
+
+The official provider documentation lists [GET /user/info](https://docs.siliconflow.com/en/api-reference/userinfo/get-user-info) for account/balance information. One read-only query at the **existing configured origin** returned HTTP410 at 09:56:24 UTC, with no balance or rate metadata (`controlled-recovery-readonly.json`). No key, identity fields, raw balance, full headers or response body were retained; no origin/configuration change was made. This failed read proves neither available balance nor insufficient balance. The inspected [official API index](https://docs.siliconflow.com/llms.txt) did not identify a separate current per-key quota-window endpoint.
+
+Following the caller's explicit fallback authorization, the clock-gated replay started at **2026-11-02 10:07:00 UTC**, over forty minutes after the prior 429 evidence. Its first model request was **A's actual first question**, not an extra probe. Source candidate: `9ac76fe1b72a6ea9a27b276c66150efd06a11a5d`.
+
+- **Exactly four model attempts, four responses, no provider failures/429, no retries or extra model probes/reviewers.** Recorded usage: 10,600 input tokens and 1,180 output tokens. This establishes availability for these four requests, not remaining quota or unlimited recovery.
+- **A, turns 1–2:** no complete answer table; the first-subnet hint uses 60+2=62, block64 and /26 correctly, and both turns ask for the learner's first-subnet work. No arithmetic error was found in these two outputs. This is one observed trial, not repeatability or full acceptance.
+- **B, turn 1:** there is real improvement. Its numbered tasks explicitly request a connectivity test, predicted outcomes/reasons and a fault distinction. The regex reports `sampleMentioned=false` and `learnerAskedForTest=false`: these are **false negatives for those narrow markers** (no literal example label; the learner-directed heading is separated from the numbered request). Merely allowing examples does not require a literal example label. Retain the automatic failure and this manual correction; do not misreport that the request was absent. The answer also allows a calculation-only next reply when hurried, so stable goal prioritization is not established.
+- **B, turn 2:** it again makes filling the first department row the immediate next action. It mentions a test and predicted result after completing the table but does not request anomaly/fault diagnosis or an explanation of the predicted outcome. It also states that the block size must be **strictly greater than** hosts+2, while its own six-host example uses 8 addresses: strict `>8` would require16, conflicting with the displayed /29. The correct minimum is **greater than or equal to** hosts+2. This content error is not a teacher-context transmission failure and is **not passed**.
+
+The command exited **1**. Both B-turn assertions failed and the second pressure turn was preserved. The raw outputs/gates are in `controlled-recovery-ab.json`; manual classification, timing, call count and usage are in `controlled-recovery-review.json`. Existing failed samples remain untouched. No goal/test threshold was weakened to change this result, and no additional teacher guidance was added after seeing it.
+
+**Overall: behavioral qualification still fails.** The four-attempt authorization is exhausted, so no further model requests were made. The PR stays draft; original-incident binding, B's sustained goal prioritization, arithmetic quality, repeatability and the remaining scenarios are still unaccepted. T11.zip remains unread after the earlier supported-transfer HTTP401; no alternative download was attempted.
 
 ## Open acceptance and handoff
 
