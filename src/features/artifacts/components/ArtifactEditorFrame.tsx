@@ -66,10 +66,10 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
   }, [kind, nonce])
 
   useEffect(() => {
-    if (!url || ready) return
+    if (!url || ready || error) return
     const timer = setTimeout(() => setError(`${label}编辑器尚未打开，请重试。`), 30_000)
     return () => clearTimeout(timer)
-  }, [url, ready, label])
+  }, [url, ready, label, error])
 
   useEffect(() => {
     frame.current?.contentWindow?.postMessage({ type: 'slides:agent-activity', nonce, working: agentWorking }, '*')

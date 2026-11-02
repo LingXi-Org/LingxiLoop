@@ -6,6 +6,6 @@ export function designPageAssets(html: string, publicBase: string) {
   const base = `${origin}/artifact-editor/design-assets/`
   // Failures of the trusted shell's blocking assets otherwise leave its pinned
   // Loading placeholder forever. Child-artboard events do not bubble here.
-  const failure = `<script>window.addEventListener('error',function(event){var target=event.target;if(target instanceof HTMLScriptElement&&target.src||target instanceof HTMLLinkElement&&target.rel==='stylesheet')parent.postMessage({__lingxi_design_resource_error:true},'*')},true);</script>`
+  const failure = `<script>window.addEventListener('error',function(event){var target=event.target;if((target instanceof HTMLScriptElement||target instanceof HTMLLinkElement)&&target.hasAttribute('data-lingxi-design-critical'))parent.postMessage({__lingxi_design_resource_error:true},'*')},true);</script>`
   return { html: html.replaceAll('__LINGXI_DESIGN_ASSET_ORIGIN__', origin).replace('<head>', `<head>${failure}`), source: base }
 }

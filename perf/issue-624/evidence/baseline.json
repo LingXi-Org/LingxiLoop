@@ -1,0 +1,7 @@
+{
+  "baseline": true,
+  "initial": "设计编辑器资源未能加载，请重试。\n\n重试",
+  "afterDeadline": "设计编辑器尚未打开，请重试。\n\n重试",
+  "beaconCspBlocked": true,
+  "elapsedSeconds": 35.291314865999084
+}
