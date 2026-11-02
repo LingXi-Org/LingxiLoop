@@ -87,7 +87,7 @@ export function CourseOverviewDashboard({ space }: { space: LearningSpace }) {
   const shares = data.items.filter(item => item.kind === 'share')
   const records = data.homeworks.flatMap(({ item, detail: homework, learners }) => teacher
     ? learners.map(learner => ({ item, name: learner.learnerName, status: learner.status as OverviewStatus, submission: learner.latestSubmission }))
-    : homework.student ? [{ item, name: '我', status: homework.student.status as OverviewStatus, submission: homework.student.latestSubmission }] : [])
+    : homework?.student ? [{ item, name: '我', status: homework.student.status as OverviewStatus, submission: homework.student.latestSubmission }] : [])
   const forumRecords = data.submissions.map(({ item, submission }) => ({ item, name: submission.learnerName, status: (submission.feedback.length ? 'FEEDBACK' : 'SUBMITTED') as OverviewStatus, submission }))
   const allRecords = [...records, ...forumRecords]
   const pending = allRecords.filter(row => row.status === 'PENDING')

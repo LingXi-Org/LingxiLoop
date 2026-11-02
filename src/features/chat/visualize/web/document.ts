@@ -35,6 +35,8 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
   // Only the exact known kit can skip its template. Explicit author library
   // APIs still get the dependency they need in the original execution order.
   const optimized = kitHash === PINNED_KIT_SHA256 && Object.keys(assets).length === 6 && Boolean(visualizeResourceUrl('kit.css',hashes['kit.css']))
+  const mathUrl = visualizeResourceUrl('math.js', hashes['math.js'])
+  if (optimized && mathUrl) assets['math.js'] = { url: new URL(mathUrl, publicOrigin).href, integrity: visualizeResourceIntegrity(hashes['math.js']) }
   const authoredScripts=[...fragment.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(([tag])=>tag).join('\n')
   const usesLucide=/\blucide\b/.test(authoredScripts)
   const usesFloating=/\bFloatingUI\w*\b/.test(authoredScripts)
@@ -72,8 +74,9 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
     }),read('gen-ui.js'),
     /\bviz-calendar\b/i.test(fragment) ? read('calendar.js') : Promise.resolve(''),
     Promise.all(initialModules.map(read)),
-    // Math is an enhancement: keep source readable if its renderer is unavailable.
-    optionalMath(resource),
+    // Non-math views must not compete with the SDK for the large renderer.
+    // The existing optional loader catches formulas authored after mounting.
+    !assets['math.js'] || /\$\$|\\[([]|\\begin\s*\{/.test(fragment) ? optionalMath(resource) : Promise.resolve(''),
     // Start authored dependencies alongside known kit dependencies, retaining
     // this page's capability, cancellation and shared failure boundary.
     // The later HTML discovery/substitution reuses each already-started read.
@@ -83,7 +86,7 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
   // Only old hosts without the capture-module hash need the UMD fallback.
   const captureLibrary = capture ? '' : (await import('html-to-image/dist/html-to-image.js?raw')).default
   const initial = JSON.stringify(state).replaceAll('<','\\u003c')
-  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script((capture ? '' : captureLibrary+'\n;')+'('+trustedBootstrap.toString()+')('+JSON.stringify(capture ?? null)+');')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}${math ? script(math) : ''}${enhancements.map(script).join('')}${optimized ? script('('+optionalKitBootstrap.toString()+')('+JSON.stringify(assets)+','+JSON.stringify(initialModules)+','+JSON.stringify(VISUALIZE_SMALL_ICONS)+');') : ''}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`
+  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script((capture ? '' : captureLibrary+'\n;')+'('+trustedBootstrap.toString()+')('+JSON.stringify(capture ?? null)+');')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}${math ? script(math) : ''}${enhancements.map(script).join('')}${optimized ? script('('+optionalKitBootstrap.toString()+')('+JSON.stringify(assets)+','+JSON.stringify(math ? [...initialModules, 'math.js'] : initialModules)+','+JSON.stringify(VISUALIZE_SMALL_ICONS)+');') : ''}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`
 }
 
 /** A trusted opaque outer shell supplies an ancestor frame policy for the untrusted document. */

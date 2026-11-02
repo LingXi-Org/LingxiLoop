@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useEntrance } from '@/hooks/use-entrance'
 import { DesignButton } from '@/features/design/DesignButton'
 import { DesignWorkspace } from '@/features/design/DesignWorkspace'
 import { ConversationSearch } from '@/features/chat/components/ConversationSearch'
-import { ConversationThread } from '@/features/chat/components/ConversationThread'
+import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { ConversationRuntimeProvider } from '@/features/chat/runtime'
 import { useConversations } from '@/features/conversations/store'
 import { ConversationHeader } from '@/im/ConversationHeader'
@@ -14,6 +14,8 @@ import { useAuth } from '@/stores/auth'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { NewConversationDialog } from '@/features/conversations/components/NewConversationDialog'
 import { Button } from '@/components/ui/button'
+
+const ConversationThread = lazy(() => import('@/features/chat/components/ConversationThread').then(module => ({ default: module.ConversationThread })))
 
 function EmptyConversation({ onChooseWorkspace }: { onChooseWorkspace?: () => void }) {
   const conversations = useConversations((state) => state.list)
@@ -76,7 +78,9 @@ export function ChatPane({
           <ConversationSearch conversationId={conversationId} open={searchOpen} onClose={() => setSearchOpen(false)} rootRef={rootRef} />
         </div>
         <div className="chat-thread-layout min-h-0 min-w-0">
-          <ConversationThread conversationId={conversationId} readOnly={conversation.readOnly} />
+          <Suspense fallback={<ResourceSkeleton variant="detail" label="正在打开会话" />}>
+            <ConversationThread conversationId={conversationId} readOnly={conversation.readOnly} />
+          </Suspense>
         </div>
       </main>
     </ConversationRuntimeProvider>

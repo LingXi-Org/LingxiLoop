@@ -2,7 +2,7 @@ import type { ContentDocument } from '@/features/content-editor'
 import { http } from '@/api/core/http'
 import type { ContextThreadResult } from '@/features/context-threads/api'
 import type { ConversationReference, ForumPage, ForumAttachment } from '../forum/contracts'
-import type { HomeworkAnswer, HomeworkDetail, HomeworkFields, HomeworkLearner, HomeworkStudent, HomeworkSubmission } from './contracts'
+import type { HomeworkAnswer, HomeworkDetail, HomeworkFields, HomeworkLearner, HomeworkOverview, HomeworkStudent, HomeworkSubmission } from './contracts'
 
 const base = (courseId: string, homeworkId: string) => `/courses/${encodeURIComponent(courseId)}/homeworks/${encodeURIComponent(homeworkId)}`
 export const homeworkApi = {
@@ -10,6 +10,7 @@ export const homeworkApi = {
   createDraft: (courseId: string, id: string, input: HomeworkFields) =>
     http<HomeworkDetail>(`${base(courseId, id)}/draft`, { method: 'PUT', body: JSON.stringify(input) }),
   detail: (courseId: string, id: string) => http<HomeworkDetail>(base(courseId, id)),
+  overview: (courseId: string, id: string) => http<HomeworkOverview>(`${base(courseId, id)}/overview`),
   saveDraft: (courseId: string, id: string, input: HomeworkFields & { expectedRevision: number }) =>
     http<HomeworkDetail>(`${base(courseId, id)}/draft`, { method: 'PATCH', body: JSON.stringify(input) }),
   validate: (courseId: string, id: string, expectedRevision: number) =>

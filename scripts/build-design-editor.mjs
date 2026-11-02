@@ -11,11 +11,14 @@ const source = resolve(root, 'third_party/baoyu-design/upstream/claude-design/sc
 const output = resolve(root, 'server/assets/design-editor')
 const sha = bytes => createHash('sha256').update(bytes).digest('hex')
 
-/** The pinned getter discarded the origin of its trusted runtime metadata. */
+/** Use the already prepared embedded runtime; keep the trusted URL as recovery. */
 export function adaptDesignRuntimeUrl(source) {
   const needle = `let T=document.querySelector('meta[name="'+d+'"]')?.getAttribute("content");if(T)try{return new URL(T,document.baseURI).pathname}`
   assert.equal(source.split(needle).length, 2, 'pinned Design runtime URL hook changed')
+  const selector = 'function C(T){if(!m)return(f?void 0:T.urls?.file)??T.urls?.blob}'
+  assert.equal(source.split(selector).length, 2, 'pinned Design runtime selection hook changed')
   return source.replace(needle, needle.replace('.pathname}', '.href}'))
+    .replace(selector, 'function C(T){return(m?void 0:T.urls?.blob)??(f?void 0:T.urls?.file)}')
 }
 
 /** The product acknowledges only an already visible, laid-out grant frame.
@@ -77,7 +80,6 @@ export async function buildDesignEditor() {
     .replace(`src="${publicBase}${scriptName}"`, `data-lingxi-design-critical src="${publicBase}${scriptName}" integrity="${integrity(script)}"`)
     .replace(`href="${publicBase}${cssName}"`, `data-lingxi-design-critical href="${publicBase}${cssName}" integrity="${integrity(css)}"`)
     .replace(runtimePath, `${publicBase}${runtimeName}`)
-    .replace('</head>', `<link rel="preload" as="script" href="${publicBase}${runtimeName}">\n</head>`)
   await writeFile(resolve(output, 'index.html'), html)
   const compressed = {}
   const files = {}

@@ -5,7 +5,7 @@ import { TextOffsetContext } from '@/features/chat/visualize/TextOffsetContext'
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
 import { code } from '@streamdown/code'
 import { createMathPlugin } from '@streamdown/math'
-import { createMermaidPlugin } from '@streamdown/mermaid'
+import { mermaid } from './markdown-mermaid'
 import { Block, type BlockProps, StreamdownContext, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'
 import { createContext, memo, useContext, useMemo, useState, useSyncExternalStore } from 'react'
@@ -28,7 +28,7 @@ import { MentionBadge } from '@/components/MentionBadge'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
 export type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 
-const plugins = { code, math: createMathPlugin({ singleDollarTextMath: true }), mermaid: createMermaidPlugin({ config: { securityLevel: 'strict', startOnLoad: false } }) }
+const plugins = { code, math: createMathPlugin({ singleDollarTextMath: true }), mermaid }
 const smooth = { minCommitMs: 32 }
 const motionQuery = '(prefers-reduced-motion: reduce)'
 const readReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.(motionQuery).matches

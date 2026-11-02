@@ -7,6 +7,21 @@ import { adaptDesignMath } from './build-artifact-math.mjs'
 import { adaptDesignRuntimeUrl, adaptVisibleDesignMount, buildDesignEditor } from './build-design-editor.mjs'
 import { Script } from 'node:vm'
 
+test('Design reuses its prepared embedded runtime before the external and inline fallbacks', async () => {
+  const original = await readFile('third_party/baoyu-design/upstream/claude-design/scripts/editor/assets/index-DavTckY0.js', 'utf8')
+  const adapted = adaptDesignRuntimeUrl(original)
+  const section = adapted.slice(adapted.indexOf('function HH('), adapted.indexOf('function HH(') + 4000)
+  const selector = /function C\(T\)\{[^}]+\}/.exec(section)[0]
+  const select = (blobBlocked, fileBlocked, urls = { blob: 'blob:prepared-runtime', file: 'https://assets.test/runtime.js' }) =>
+    new Function('m', 'f', `return (${selector})`)(blobBlocked, fileBlocked)({ urls })
+  assert.equal(select(false, false), 'blob:prepared-runtime', 'normal startup needs no redundant external request')
+  assert.equal(select(true, false), 'https://assets.test/runtime.js', 'a failed blob retains the external recovery path')
+  assert.equal(select(false, true), 'blob:prepared-runtime')
+  assert.equal(select(true, true), undefined, 'both failures retain the original inline program')
+  assert.equal(select(false, false, { file: 'https://assets.test/runtime.js' }), 'https://assets.test/runtime.js', 'browsers without blob support retain the external route')
+  assert.equal(select(false, false, {}), undefined)
+})
+
 test('only an acknowledged visible host skips the pinned presentation waits', async () => {
   const original = await readFile('third_party/baoyu-design/upstream/claude-design/scripts/editor/assets/index-DavTckY0.js', 'utf8')
   const adapted = adaptVisibleDesignMount(original)
@@ -52,7 +67,8 @@ test('Design package preserves the agreed math runtime and optional executable b
   assert.ok(manifest.styles.bytes < manifest.styles.originalBytes)
   const html = await readFile(resolve(output, 'index.html'), 'utf8')
   assert.equal(html.split('data-lingxi-design-critical').length - 1, 2, 'only entry and blocking stylesheet own shell failure')
-  assert.ok(html.includes(`rel="preload" as="script" href="__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/${manifest.runtime.file.split('/').at(-1)}"`))
+  assert.ok(!html.includes('rel="preload" as="script"'), 'the external fallback must not download on the embedded path')
+  assert.ok(html.includes(`name="dc-runtime-file" content="__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/${manifest.runtime.file.split('/').at(-1)}"`))
   assert.throws(() => adaptDesignRuntimeUrl('unknown pinned source'), /runtime URL hook/)
   assert.match(html, /data-placeholder[^>]*>Loading…/)
   assert.match(html, /dc-babel-file/)

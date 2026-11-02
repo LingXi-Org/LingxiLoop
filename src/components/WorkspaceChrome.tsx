@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
@@ -10,8 +11,9 @@ import { userFacingError } from '@/lib/userFacingError'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
-import OriginalFileViewer from '@/features/course-materials/OriginalFileViewer'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+
+const OriginalFileViewer = lazy(() => import('@/features/course-materials/OriginalFileViewer'))
 
 const statusLabel: Record<string, string> = {
   upload_pending: '等待上传', queued: '等待处理', processing: '处理中', parsing: '处理中',
@@ -52,7 +54,9 @@ export function SourceDetailOverlay() {
   if (selectedSource?.kind === 'file' && companyId && userId && conversationId && workspace?.companyId === companyId) return <Dialog open onOpenChange={value => { if (!value) closeDetail() }}>
     <DialogContent className="h-[85dvh] max-h-[85dvh] gap-0 overflow-hidden p-0 sm:max-w-6xl [&_[data-slot=viewer-controls]]:pe-14" aria-describedby={undefined}>
       <DialogTitle className="sr-only">{selectedSource.title}</DialogTitle>
-      <OriginalFileViewer source={selectedSource} conversationId={conversationId} context={{ companyId, userId, projectId: workspace.projectId, space: selectedSource.visibilityScope === 'PROJECT' ? 'public' : 'private' }} />
+      <Suspense fallback={<ResourceSkeleton variant="detail" label="正在加载原文件" />}>
+        <OriginalFileViewer source={selectedSource} conversationId={conversationId} context={{ companyId, userId, projectId: workspace.projectId, space: selectedSource.visibilityScope === 'PROJECT' ? 'public' : 'private' }} />
+      </Suspense>
     </DialogContent>
   </Dialog>
   return <Drawer open={open} onOpenChange={(nextOpen) => { if (!nextOpen) closeDetail() }} direction="right">

@@ -349,6 +349,8 @@ test('[integration] a genuine learning record permits a truthful report and pair
   assert.deepEqual(await assessmentHistory(task.id), [], 'The learner never needed the assess tool to run')
   const result = await homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, conversationReferences:currentReferences(), idempotencyKey: 'learning-record-without-assess' })
   assert.deepEqual({ answer: result.answer, report: result.report }, { answer: saved.answer, report: ready.report })
+  const submitted = (await homework.detail(student, courseId, task.id)).student!
+  assert.deepEqual(await homework.overview(student, courseId, task.id), { student: { status: submitted.status, latestSubmission: submitted.latestSubmission } })
   assert.equal((await homework.submissions(teacher, courseId, task.id)).items[0].id, result.id)
   assert.equal((await pool.query<{ count: number }>("SELECT count(*)::int AS count FROM llm_calls WHERE company_id=$1 AND purpose='homework.assess'", [companyId])).rows[0].count, 0)
 })
@@ -1275,6 +1277,29 @@ test('[integration] homework draft is teacher-owned and absent from learner feed
   assert.ok(!feed.items.some(item => item.id === id))
   const counts = await pool.query(`SELECT to_regclass('learning_activities') activities,to_regclass('learning_missions') missions`)
   assert.deepEqual(counts.rows, [{ activities: null, missions: null }])
+})
+
+test('[integration] homework overview keeps course, tenant and publication scope without scanning learning history', async () => {
+  const { homework: task } = await published()
+  const draft = await homework.draft(teacher, courseId, visible)
+  const id = draft.homework.id
+  for (const scope of [student, outsider]) assert.equal((await call(scope, path(id, '/overview'))).status, 404)
+  assert.deepEqual(await (await call(teacher, path(id, '/overview'))).json(), { student: null })
+  const url = path(task.id, '/overview')
+  for (const scope of [outsider, { ...student, companyId: 'another-tenant' }]) {
+    assert.equal((await call(scope, url)).status, 404)
+  }
+  assert.equal((await call(teacher, `/courses/homework-other-course/homeworks/${task.id}/overview`)).status, 404)
+  assert.deepEqual(await (await call(student, url)).json(), { student: { status: 'NOT_STARTED', latestSubmission: null } })
+  const thread = await homework.start(student, courseId, task.id)
+  const before = (await homework.detail(student, courseId, task.id)).student!
+  // An unavailable private conversation cannot block the persisted dashboard progress.
+  await pool.query('UPDATE participants SET departed_at=NOW() WHERE company_id=$1 AND id=$2', [companyId, thread.agentId])
+  const response = await call(student, url)
+  assert.equal(response.status, 200)
+  assert.deepEqual(await response.json(), { student: { status: before.status, latestSubmission: before.latestSubmission } })
+  assert.equal((await call(student, path(task.id))).status, 403, 'The full detail still checks private learning-record access')
+  assert.deepEqual(await (await call(peer, url)).json(), { student: { status: 'NOT_STARTED', latestSubmission: null } })
 })
 
 test('[integration] 597 chat history reload reads the same frozen published homework without creating another record or message', async () => {

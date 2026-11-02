@@ -1,6 +1,6 @@
 import { Add01Icon, BubbleChatIcon, Delete02Icon, Edit02Icon, GridViewIcon, LeftToRightListBulletIcon, MoreHorizontalIcon, Presentation01Icon, SearchIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { ws } from '@/api/core/realtime'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { PageBody, PageHeader, PageLayout, PageToolbar } from '@/components/shell/PageHeader'
@@ -16,8 +16,9 @@ import { useApp } from '@/stores/app'
 import { ToggleGroupLite } from '@/components/shell/ToggleGroupLite'
 import type { ArtifactSummary } from '@/features/artifacts/contracts'
 import { useWorkspace } from '@/features/knowledge/workspace'
-import { SlidesWorkspace } from './SlidesWorkspace'
 import { formatDeckUpdated, useSlides } from './store'
+
+const SlidesWorkspace = lazy(() => import('./SlidesWorkspace').then(module => ({ default: module.SlidesWorkspace })))
 
 type Layout = 'grid' | 'list'
 type Sort = 'updated' | 'created' | 'title'
@@ -78,7 +79,9 @@ export function SlidesPage({ projectId }: { projectId: string }) {
 
   return <>
   {cachedId && <div hidden={!showingWorkspace} inert={!showingWorkspace} className={showingWorkspace ? 'h-full min-h-0' : 'hidden'}>
-    <SlidesWorkspace key={`${projectId}:${cachedId}`} artifactId={cachedId} title={current?.title ?? '演示文稿'} onClose={() => open(null)} />
+    <Suspense fallback={<ResourceSkeleton variant="media" label="正在打开演示文稿" />}>
+      <SlidesWorkspace key={`${projectId}:${cachedId}`} artifactId={cachedId} title={current?.title ?? '演示文稿'} onClose={() => open(null)} />
+    </Suspense>
   </div>}
   {!showingWorkspace && <PageLayout
     header={<PageHeader title="全部演示文稿" crumbs={workspaceName ? [{ label: workspaceName }] : undefined}

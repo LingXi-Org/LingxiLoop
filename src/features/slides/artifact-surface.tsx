@@ -25,13 +25,12 @@ export function ArtifactSurfaceProvider({ children, initial, onClose }: {
   children: ReactNode; initial: ArtifactSurfaceTarget; onClose(): void
 }) {
   const [active, setActive] = useState<ArtifactSurfaceTarget | null>(initial)
-  const value = useMemo<ArtifactSurfaceContextValue>(() => ({
-    active: active?.id === initial.id ? { ...active, title: initial.title } : active, open: setActive,
-    close: onClose,
-    returnToOrigin: () => {
-      if (active?.sourceConversationId) useApp.getState().selectConversation(active.sourceConversationId)
-    },
-  }), [active, initial.id, initial.title, onClose])
+  const value = useMemo<ArtifactSurfaceContextValue>(() => {
+    const target = active?.id === initial.id ? { ...active, ...initial } : active
+    return { active: target, open: setActive, close: onClose, returnToOrigin: () => {
+      if (target?.sourceConversationId) useApp.getState().selectConversation(target.sourceConversationId)
+    } }
+  }, [active, initial.id, initial.title, initial.sourceConversationId, onClose])
   return <ArtifactSurfaceContext.Provider value={value}>{children}</ArtifactSurfaceContext.Provider>
 }
 

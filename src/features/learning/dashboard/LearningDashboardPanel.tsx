@@ -1,10 +1,13 @@
-import { CourseMaterialsPage } from '@/features/course-materials/CourseMaterialsPage'
+import { lazy } from 'react'
 import type { LearningSpace } from '../contracts'
-import { CourseForum } from '../forum/CourseForum'
-import { CourseSettingsSection } from './CourseSettingsSection'
 import { CourseOverviewDashboard } from './CourseOverviewDashboard'
 import { DashboardSectionFrame } from './DashboardSectionFrame'
 import { isLearningDashboardSectionAvailable, type LearningDashboardSection } from './navigation'
+
+const CourseMaterialsPage = lazy(() => import('@/features/course-materials/CourseMaterialsPage').then(module => ({ default: module.CourseMaterialsPage })))
+const CourseForum = lazy(() => import('../forum/CourseForum').then(module => ({ default: module.CourseForum })))
+const CourseSettingsSection = lazy(() => import('./CourseSettingsSection').then(module => ({ default: module.CourseSettingsSection })))
+
 export function LearningDashboardPanel({ space, section }: { space: LearningSpace; section: LearningDashboardSection }) {
   const available = isLearningDashboardSectionAvailable(section, space) ? section : 'overview'
   if (available === 'materials') return <CourseMaterialsPage key={`${space.companyId}:${space.projectId}`} projectId={space.projectId} projectName={space.title} />

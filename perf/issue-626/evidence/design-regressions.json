@@ -1,0 +1,21 @@
+[
+  {
+    "case": "embedded renders six formulas, edits, updates math and retains the same iframe",
+    "passed": true,
+    "externalRuntimeRequests": 0
+  },
+  {
+    "case": "external-fallback renders six formulas, edits, updates math and retains the same iframe",
+    "passed": true,
+    "externalRuntimeRequests": 1
+  },
+  {
+    "case": "inline-fallback renders six formulas, edits, updates math and retains the same iframe",
+    "passed": true,
+    "externalRuntimeRequests": 1
+  },
+  {
+    "case": "actual edit CAS publication, saved refresh and conversation isolation",
+    "passed": true
+  }
+]

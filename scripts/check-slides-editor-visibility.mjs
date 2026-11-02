@@ -64,6 +64,7 @@ const result = new Promise((r) => {
 })
 const server = createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin','*')
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return }
   if (req.url === '/blocked') { stalled.push(res); return }
   if (req.url === '/release-context') { releaseContext(); res.end('ok'); return }
   if (req.url === '/context-wait') { releaseContext=()=>res.end('ok'); return }

@@ -78,7 +78,7 @@ export async function buildSlidesEditor() {
     bundle: true, splitting: true, format: 'esm', platform: 'browser', target: ['chrome120', 'firefox120', 'safari17'],
     minify: true, legalComments: 'inline', metafile: true, write: false, external: ['fs', 'https'],
     plugins: [{ name: 'private-runtime-exports', setup(builder) {
-      builder.onLoad({ filter: /slides-source\/modules\/.*\.js$/ }, args => {
+      builder.onLoad({ filter: /slides-source[\\/]modules[\\/].*\.js$/ }, args => {
         const contents = browserBindings.sources.get(args.path)
         return contents === undefined ? null : { contents, loader: 'js' }
       })

@@ -50,6 +50,8 @@ test('native build keeps export libraries lazy and reduces initial JavaScript', 
   assert.ok(report.inputs.some(path => path.endsWith('/modules/compiler-html.js')))
   assert.ok(report.initial.bytes < report.original.bytes * 0.9)
   assert.ok(report.initial.gzip < report.original.gzip * 0.9)
+  const browserEntry = await readFile(resolve('server/assets/slides-editor/assets', report.entry.file), 'utf8')
+  assert.ok(!browserEntry.includes('"buildBootErrorPresentation"'), 'Unused browser runtime getters must be pruned on every build platform')
   assert.ok(Object.keys(report.files).some(name => name.startsWith('pptx-library-')))
   assert.ok(Object.keys(report.files).some(name => name.startsWith('exports-')))
   assert.ok(!Object.keys(report.files).some(name => name.includes('video')))

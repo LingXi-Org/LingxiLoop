@@ -55,6 +55,16 @@ export class HomeworkApplication {
     return {homework:homeworkView(hw,scope.userId),teacher,student:teacher?null:await studentHomeworkView(this.db,hw,await homeworkState(this.db,hw,scope.userId))}
   }
 
+  async overview(scope:LearningScope,courseId:string,id:string) {
+    await homeworkScope(this.db,scope,courseId)
+    const hw=await homeworkRow(this.db,scope,courseId,id)
+    const teacher=(await createPermissionService(this.db).can({actorUserId:scope.userId,companyId:scope.companyId,action:'learning:review',resource:{type:'course',id:courseId}})).allowed
+    if(teacher) return {student:null}
+    assertHomeworkPublished(hw)
+    const {status,latestSubmission}=await studentHomeworkView(this.db,hw,await homeworkState(this.db,hw,scope.userId),{readLearningRecord:false})
+    return {student:{status,latestSubmission}}
+  }
+
   async updateDraft(scope:LearningScope,courseId:string,id:string,input:z.input<typeof homeworkEditSchema>) {
     const {expectedRevision,...data}=homeworkEditSchema.parse(input)
     await this.transaction(async db=>{
