@@ -3,10 +3,31 @@ import test from 'node:test'
 import { readFile } from 'node:fs/promises'
 import { adaptDesignLayout } from './build-design-layout.mjs'
 import { build } from 'esbuild'
-const compiled = await build({ stdin: { contents: "export {resizeFlowManifest} from './shared/design-flow-size'", resolveDir: process.cwd() },
+const compiled = await build({ stdin: { contents: "export {resizeFlowManifest,hasViewportHeightDependency} from './shared/design-flow-size'", resolveDir: process.cwd() },
   bundle: true, format: 'esm', platform: 'node', write: false })
-const { resizeFlowManifest: resize } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`)
+const { resizeFlowManifest: resize, hasViewportHeightDependency } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`)
 const resizeFlowManifest = (manifest, file, size) => resize(manifest, file, size, (item, x, y) => ({ ...item, x, y }))
+
+test('viewport sizing admission checks descendants and inherited author values before computed px hide their units', () => {
+  const previous = globalThis.document
+  globalThis.document = { styleSheets: [] }
+  const element = (values, children = [], parentElement = null) => ({
+    style: { [Symbol.iterator]: function* () { yield* Object.keys(values) }, getPropertyValue: property => values[property] },
+    querySelectorAll: () => children, closest: () => null, parentElement,
+  })
+  try {
+    assert.equal(hasViewportHeightDependency(element({ 'min-height': '100vh' })), true)
+    for (const value of ['100dvh', '100svh', '100lvh', '100vb', '100vmin', '100vmax', 'calc(100vh - 12px)', '100%']) {
+      assert.equal(hasViewportHeightDependency(element({ 'min-height': '200px' }, [element({ height: value })])), true, value)
+    }
+    assert.equal(hasViewportHeightDependency(element({ 'min-height': '200px' }, [], element({ '--screen': 'calc(100svh - 1px)' }))), true)
+    assert.equal(hasViewportHeightDependency(element({ 'min-height': 'calc(100px + 100px)' }, [element({ height: 'calc(50vw - 20px)' })])), false)
+    assert.equal(hasViewportHeightDependency(element({ 'min-height': '200px' }, [element({ 'line-height': '100%' })])), false)
+  } finally {
+    if (previous === undefined) delete globalThis.document
+    else globalThis.document = previous
+  }
+})
 
 test('content height updates the model and moves later rows together, preserving pages and source objects', () => {
   const first = { file: 'one', x: 0, y: 0, w: 1280, h: 1180 }

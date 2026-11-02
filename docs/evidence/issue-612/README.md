@@ -68,7 +68,7 @@ compositions and interactive viewports keep their authored geometry. Shrinking
 does not pull later authored rows upward. No guest or overlay DOM is stretched
 independently of the model.
 
-The new programs add about 2.5KB before compression, load within the existing
+The sizing programs load within the existing
 entry/runtime programs and make no extra resource request. The public asset
 hashes and precompressed variants continue through the original build.
 Docker allowlists and CI owners include both new sources. New regressions run
@@ -159,3 +159,56 @@ The outer fixed-width canvas can require horizontal pan in a narrow panel;
 this is distinct from nested horizontal/vertical scrolling inside the page.
 Private production/model delivery and another user's live editing concurrency
 are outside this deterministic copy replay.
+
+## Independent review follow-up: viewport-height feedback
+
+Review of `8e2ac6fc` reproduced a height feedback loop. An auto-height root
+with `min-height:100vh` follows each iframe height update; a root constrained
+only in pixels can still contain a descendant with `height:100vh`. The focused
+replay uses the actual guest measurement and production model function, with
+the parent's native 400ms apply delay. Before the fix, the root case changes
+200→216→232…360; the nested case changes 200→232→264…520. These are independent
+local examples of the same failure, not a copy of the reviewer's environment.
+
+Admission now inspects declarations throughout the root subtree and ancestors,
+plus author stylesheets, before computed pixels erase their dependencies.
+Viewport-height/logical/min/max units, relevant container units, relative
+height declarations, custom variables and height-dependent CSS queries opt
+out of automatic model sizing. A stretched flex/grid host also opts out. The
+two pinned native host-floor/fill styles retain normal block-child behavior;
+they do not establish that an authored page depends on viewport height. Exact
+height properties are checked, so percentage line-height is not misclassified.
+Positive pixel calc/variable minimum heights use their computed value.
+
+`viewport-feedback/before.json` and `after.json` retain the actual Chromium
+results. All 22 final cases pass: 16 dependent cases stay at 200px, and six
+independent controls settle once at 316px without continuing reports. Controls
+include literal pixels, pixel calc/variables, width-only viewport units and
+both native wrappers. Cases cover root/nested vh, svh/lvh/dvh, logical vb/dvb,
+vmin/vmax, calc, stylesheet variables, pseudo-elements, height queries and
+percentage heights. `perf/issue-612/viewport-feedback.mjs` reproduces them:
+
+```sh
+PLAYWRIGHT_MODULE=/tmp/canvas-browser/node_modules/playwright-core/index.mjs \
+node perf/issue-612/viewport-feedback.mjs
+```
+
+The original hash-verified replay and all 13 previous browser scenarios passed
+again after this change, including 1180→1715, real CAS source editing, neighboring
+artboard/arrow movement, retained reopen, refresh and repeated growth without
+drift. The public mixed-content control still measures 875px; its unique checks
+were retained. The final local Design/CI-owner entry passes 12 checks, with
+strict TypeScript, focused lint and SPA image contract checks also passing.
+
+An initial conservative scan rejected the no-preview native fill wrapper's
+percentage host height. The existing public control exposed that failure;
+the exact pinned wrapper plus the non-stretching-host admission resolves it.
+The failed run was not counted as a pass. No overflow hiding, text clipping,
+font shrinking, production artwork write or removal of a regression was used.
+
+This is conservative admission, not a general CSS dependency solver: unrelated
+authored height-relative rules or unknown unreadable layout CSS can withhold
+automatic sizing. Existing viewport/scroll behavior remains available. The
+allowed cross-origin Google font-face service is not treated as layout CSS.
+Arbitrary script-driven layout is not proved independent by this analysis.
+Final CI and another independent integrator review remain release gates.
