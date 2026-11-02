@@ -1,0 +1,38 @@
+(node:10348) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:10348) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ connection recovery keeps reply text and exposes no diagnostic card (158.448199ms)
+✔ the real conversation thread displays native v2 messages (29.700602ms)
+✔ tool terminal and approval states are visible without requiring a result (74.243088ms)
+✔ unclassified legacy tools and retired records stay visible (23.310202ms)
+✔ native run parts have one process disclosure while answers and current decisions stay outside (33.087163ms)
+✔ run activity retains cancelled, error and incomplete outcomes (370.080745ms)
+✔ existing data names render descriptive cards without dumping JSON (18.078706ms)
+✔ memory metadata does not expose summaries in conversation messages (10.634605ms)
+✔ all senders omit bubble timestamps and only outgoing messages show delivery (41.160749ms)
+✔ attachments retain delivery feedback without a timestamp (14.385462ms)
+✔ running and completed replies omit timestamps and completion labels (19.201337ms)
+✔ mixed content and cards omit timestamps (45.518886ms)
+✔ agent replies have one complete action row after all message parts (22.003072ms)
+✔ failed streamed replies retain prose and show the official error banner with retry (9.507272ms)
+✔ terminal feedback shares the run error or cancellation display and retains retry context (21.132753ms)
+✔ structured terminal scopes keep the answer and agree on process, failure and recovery labels (50.239416ms)
+✔ cancelled follow-up remains visible when the main run itself succeeded (10.272668ms)
+✔ sender kind owns bubble chrome and agent avatars align at the top (24.339562ms)
+✔ explicit public process uses RunActivity across memory tools without legacy history controls (43.405293ms)
+✔ RunActivity contains process on both sides of a streaming answer without hiding the answer or restoring old controls (15.186716ms)
+✔ interrupt and awaiting_input share one form and read-only history has none (24.755431ms)
+✔ legacy unclassified content stays visible and the answer region is stable across ordering (27.221216ms)
+✔ partial and blocked replies retain delivered results and always expose one recovery status (218.053833ms)
+✔ incomplete recovery honors lifecycle and version protections (42.843953ms)
+✔ knowledge results use one compact tool row while preserving source and terminal states (76.557264ms)
+✔ each message render classifies its parts once and still places exactly one final footer (158.309784ms)
+✔ latest streamed public observation is outside collapsed activity exactly once and survives replay (44.17205ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8181.150615

@@ -56,7 +56,6 @@ function unclassifiedResult(part: ToolCallMessagePart): boolean {
 
 export function messagePresentation(message: Message) {
   const view = currentView(message)
-  const recovered = view?.lifecycle === 'succeeded' && view.goalOutcome?.status === 'satisfied'
   return message.content.map((part, index) => {
     const annotation = activityAnnotation(part)
     let region: MessageRegion = 'body'
@@ -64,7 +63,10 @@ export function messagePresentation(message: Message) {
       if (part.type === 'tool-call') {
         const failed = part.isError || resultStatus(part) === 'failed'
           || resultStatus(part) !== 'cancelled' && knowledgeSourceState(canonicalToolName(part.toolName), part.result)?.status === 'unavailable'
-        if (pendingTool(message, part) || resultStatus(part) === 'unknown' || failed && !recovered) region = 'attention'
+        if (pendingTool(message, part) || resultStatus(part) === 'unknown') region = 'attention'
+        // A failed receipt updates its existing activity; it is not a new decision.
+        // Keep unclassified legacy failures visible when no process owner exists.
+        else if (failed) region = annotation ? 'process' : 'attention'
         else if (annotation?.purpose === 'result' || annotation?.kind === 'result' || annotation?.kind === 'answer') region = 'body'
         else if (annotation?.purpose === 'process' || annotation && !unclassifiedResult(part)) region = 'process'
       } else if (annotation?.kind === 'attention') region = 'attention'

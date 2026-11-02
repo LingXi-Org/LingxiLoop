@@ -1,0 +1,12 @@
+> lingxiloop@0.1.0-beta prebuild
+> npm run verify:visualize && npm run build:visualize-runtime
+> lingxiloop@0.1.0-beta verify:visualize
+> node scripts/verify-zcode-visualize.mjs
+> lingxiloop@0.1.0-beta build:visualize-runtime
+> node scripts/build-visualize-runtime.mjs
+> lingxiloop@0.1.0-beta build
+> npm run typecheck && vite build
+> lingxiloop@0.1.0-beta typecheck
+> tsc --noEmit && tsc -p tsconfig.node.json --noEmit
+✓ 16227 modules transformed.
+✓ built in 52.84s

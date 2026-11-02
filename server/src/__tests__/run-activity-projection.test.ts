@@ -88,7 +88,7 @@ test('wire pages preserve more than 512 calls, attention and final answer withou
   const snapshot = projection.snapshot.message
   assert.equal(nativeText(snapshot), '结论不可丢失。')
   assert.ok(snapshot.content.length <= 81)
-  assert.deepEqual(snapshot.metadata.custom.activityHistory, { total: 1100, attention: 110 })
+  assert.deepEqual(snapshot.metadata.custom.activityHistory, { total: 1100, attention: 0 })
   const ids: string[] = []
   let after = 0
   do {
@@ -101,7 +101,7 @@ test('wire pages preserve more than 512 calls, attention and final answer withou
     after = page.nextOffset
   } while (after < 1100)
   assert.deepEqual(ids, Array.from({ length: 1100 }, (_, index) => `host:${index}`))
-  assert.equal(projection.activityPage(0, true).total, 110)
+  assert.equal(projection.activityPage(0, true).total, 0)
   assert.throws(() => projection.activityPage(-1))
   assert.equal(nativeMessageSchema.safeParse({ ...snapshot, content: Array.from({ length: 513 }, () => ({ type: 'text', text: 'x' })) }).success, false)
 })
@@ -217,5 +217,39 @@ test('a failed report cannot overwrite the accepted plan or hide its failure', (
   assert.equal(plans.length,1)
   assert.equal(planIndex(plans[0]),1,'failed reports never advance the task')
   assert.ok(parts.some(part => part.type === 'tool-call' && part.toolCallId === 'host:failed-plan' && part.isError
-    && activityAnnotation(part)?.kind === 'attention'))
+    && activityAnnotation(part)?.kind === 'tool'))
+})
+
+test('#627 partial tool failures retain process identity and original order across stream, replay and later batches', () => {
+  const events = [start('first', 1), start('peer', 2),
+    { ...finish('first', 3), stage: 'failed' as const, data: { toolCallId: 'host:first', result: { status: 'failed', error: 'PRIVATE_SECRET' }, isError: true } },
+    finish('peer', 4), start('retry', 5), finish('retry', 6)]
+  const view = { ...createRunView('run'), lifecycle: 'leased' as const, lastSeq: 6 }
+  for (const lifecycle of ['leased', 'succeeded', 'cancelled', 'failed'] as const) {
+    const parts = runMessageParts({ ...view, lifecycle }, harnessToolParts('run', events))
+    const tools = parts.filter(part => part.type === 'tool-call')
+    assert.deepEqual(tools.map(part => [part.toolCallId, activityAnnotation(part)?.kind, activityAnnotation(part)?.order]),
+      [['host:first', 'tool', 1], ['host:peer', 'tool', 2], ['host:retry', 'tool', 5]])
+    assert.equal(tools[0].isError, true)
+    assert.doesNotMatch(JSON.stringify(parts), /PRIVATE_SECRET/)
+    assert.deepEqual(runMessageParts({ ...view, lifecycle }, harnessToolParts('run', [...events].reverse())), parts)
+  }
+})
+
+
+test('#627 native model part indices preserve call order when parallel admission completes out of order', () => {
+  const identity = { requestVersion: 1, fence: 1, attemptId: 'batch' }
+  const events = [
+    { ...start('second', 1), data: { ...start('second', 1).data, ...identity, partIndex: 2 } },
+    { ...start('first', 2), data: { ...start('first', 2).data, ...identity, partIndex: 0 } },
+    finish('second', 3), finish('first', 4), start('later-batch', 5), finish('later-batch', 6),
+  ]
+  const view = { ...createRunView('run'), requestVersion: 1, fence: 1, lifecycle: 'leased' as const }
+  for (const replay of [events, [...events].reverse()]) {
+    const tools = harnessToolParts('run', replay)
+    const parts = runMessageParts(view, tools).filter(part => part.type === 'tool-call')
+    assert.deepEqual(parts.map(part => part.toolCallId), ['host:first', 'host:second', 'host:later-batch'])
+    assert.deepEqual(parts.map(part => activityAnnotation(part)?.order), [1, 2, 5])
+    assert.deepEqual(tools.map(tool => tool.startedSeq), [1, 2, 5], 'execution event sequence stays native')
+  }
 })
