@@ -76,7 +76,7 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
     Promise.all(initialModules.map(read)),
     // Non-math views must not compete with the SDK for the large renderer.
     // The existing optional loader catches formulas authored after mounting.
-    !assets['math.js'] || /\$\$|\\[([]|\\begin\s*\{/.test(fragment) ? optionalMath(resource) : Promise.resolve(''),
+    !assets['math.js'] || /\$\$|\\[([]|\\begin\s*\{|\$(?=[A-Za-z\\])[^$\n]+\$|\$\d[^$\n]*[\\^_=+*<>][^$\n]*\$/.test(fragment) ? optionalMath(resource) : Promise.resolve(''),
     // Start authored dependencies alongside known kit dependencies, retaining
     // this page's capability, cancellation and shared failure boundary.
     // The later HTML discovery/substitution reuses each already-started read.

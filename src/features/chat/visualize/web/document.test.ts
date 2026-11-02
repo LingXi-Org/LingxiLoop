@@ -8,7 +8,7 @@ const pinnedKit = '42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f418
 
 test('a view without math does not download or await the math runtime before becoming usable', async () => {
   const reads: string[] = []
-  const doc = await buildWebDocument('<button>Increase</button>', null, async name => {
+  const doc = await buildWebDocument('<button>Increase</button><p>Budget $5 and $10</p>', null, async name => {
     reads.push(name)
     return resource(name)
   }, pinnedKit, { ...hashes, 'math.js': 'b'.repeat(64) })
@@ -19,7 +19,7 @@ test('a view without math does not download or await the math runtime before bec
 })
 
 test('initial math keeps its awaited renderer for every supported delimiter', async () => {
-  for (const formula of ['$$x^2$$', '\\(x^2\\)', '\\[x^2\\]', '\\begin{align}x&=2\\end{align}']) {
+  for (const formula of ['$h_t = f(h_{t-1}, x_t)$', '$2^n$', '$$x^2$$', '\\(x^2\\)', '\\[x^2\\]', '\\begin{align}x&=2\\end{align}']) {
     const doc = await buildWebDocument(`<p>${formula}</p>`, null, resource, pinnedKit, { ...hashes, 'math.js': 'b'.repeat(64) })
     assert.ok(doc.includes('fixtureMathLoaded'), formula)
   }

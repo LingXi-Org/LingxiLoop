@@ -1,5 +1,8 @@
 # #613 — formula rendering in artifacts
 
+Historical #615 evidence. The later guarded single-dollar extension and its
+original-file access boundary are recorded in [the follow-up](../issue-613-followup/README.md).
+
 Base: `3cbc78d8`, SDK lock `3.8.21`. This is a synthetic public-content regression,
 not a production incident replay or production acceptance.
 
