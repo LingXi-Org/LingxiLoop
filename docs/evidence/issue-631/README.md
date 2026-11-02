@@ -59,7 +59,10 @@ retained. No sidebar/WorkspaceChrome files from #628 were changed.
   save/reopen semantics, all original archive/format/style checks and editor
   build. The font regression checks all 20 distinct faces and intact KaTeX base
   typography, rather than just the presence of some WOFF2.
-- `npm run typecheck`: passed. `git diff --check`: passed.
+- `npm run typecheck`: passed. Source-scoped `git diff --check -- scripts
+  third_party`: passed. The raw downloaded `sample.html` retains upstream CSS
+  keyframe trailing spaces, so the complete evidence diff is not whitespace
+  clean; the downloaded bytes and their recorded hashes are preserved.
 - `python scripts/check-slides-math.py`: passed with real Chromium
   **154.0.8037.57**, the product's opaque sandbox iframe and deterministic
   in-memory API fixtures. `browser.json` records seven formulas on synthetic
