@@ -83,8 +83,9 @@ test('search identities retain source versions, page fragments and distinct exce
   const html = renderToStaticMarkup(<ResearchSources calls={calls} lifecycle="succeeded" />)
   assert.match(html, /report#page=2/)
   assert.match(html, /report#page=3/)
-  assert.match(html, /v1/)
-  assert.match(html, /v2/)
+  assert.doesNotMatch(html, /版本 v1|版本 v2/)
+  assert.match(html, /第 2 页/)
+  assert.match(html, /第 3 页/)
   assert.match(html, /第二页另一个片段/)
 })
 
@@ -100,6 +101,25 @@ test('empty results are silent while failures, malformed results and cancellatio
   const running = harnessToolParts('run', events.slice(0, 1))
   assert.match(renderToStaticMarkup(<ResearchSources calls={running} lifecycle="cancelled" />), /搜索已取消/)
   assert.match(renderToStaticMarkup(<ResearchSources calls={running} lifecycle="failed" />), /搜索未完成/)
+})
+
+test('source cards expose useful provenance without internal metadata or synthetic secrets', () => {
+  for (const count of [1, 2]) {
+    const results = Array.from({ length: count }, (_, index) => ({
+      title: `Attention 资料 ${index + 1}`, url: `https://docs.example.test/attention/${index}#page=4`,
+      snippet: '注意力对值进行加权。', page: 4, sourceId: 'ks-synthetic-private-id',
+      sourceVersion: 'sha256:synthetic-version', ownerUserId: 'synthetic-owner',
+      author: '@未识别成员', debug: { token: 'synthetic-secret-token', path: '/internal/synthetic-path' },
+    }))
+    const calls = harnessToolParts('run', [events[0], { ...events[1], data: { toolCallId: 'host:search',
+      result: { status: 'completed', value: { results } } } }])
+    const html = renderToStaticMarkup(<ResearchSources calls={calls} lifecycle="succeeded" />)
+    assert.match(html, /Attention 资料 1/)
+    assert.match(html, /注意力对值进行加权/)
+    assert.match(html, /第 4 页/)
+    assert.match(html, /https:\/\/docs.example.test\/attention\/0#page=4/)
+    assert.doesNotMatch(html, /ks-synthetic|sha256:|synthetic-owner|未识别成员|synthetic-secret|internal\/synthetic/)
+  }
 })
 
 test('single-source images survive replay and select the with-image preview; invalid images keep the text card', () => {

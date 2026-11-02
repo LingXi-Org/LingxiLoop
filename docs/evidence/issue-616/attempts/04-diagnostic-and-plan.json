@@ -1,0 +1,117 @@
+{
+  "qualification": "real-provider-synthetic-observations-output-only",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "providerHost": "api.siliconflow.cn",
+  "productDatabaseWritten": false,
+  "reviewerCalls": 0,
+  "records": [
+    {
+      "id": "ordinary",
+      "status": "returned",
+      "elapsedMs": 3315,
+      "visible": "按资料中的说法，注意力的核心计算是两步：\n\n1. 先计算“查询”与各个“键”的相关程度，据此得到权重；\n2. 再用这些权重对“值”加权求和。\n\n依据：[注意力学习指南](#cite-S1)（第 8 页），已确认作者为周宁。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 760,
+        "completion_tokens": 69,
+        "total_tokens": 829,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 760
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "unknown-author",
+      "status": "returned",
+      "elapsedMs": 2416,
+      "visible": "资料中暂未记录可确认的作者信息，因此作者信息暂未确认。\n\n现有摘录只能支持其中的内容本身，例如说明注意力会先按查询与键的相关程度计算权重，再对值加权求和（[注意力学习指南](#cite-S1)）。摘录所附的元数据没有标明作者；而资料的创建人、上传者或所有者也不等同于作者，因此不能据此推断作者是谁。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 758,
+        "completion_tokens": 87,
+        "total_tokens": 845,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 758
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "failed-read",
+      "status": "returned",
+      "elapsedMs": 2018,
+      "visible": "暂时无法读取《注意力补充资料》，因此现在没法总结它的内容。\n\n我遇到的是读取超时，并非资料本身有问题。你可以稍后让我再试一次，或者直接把资料内容贴过来，我就可以帮你整理要点。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 678,
+        "completion_tokens": 48,
+        "total_tokens": 726,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 678
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "partial-read",
+      "status": "returned",
+      "elapsedMs": 2892,
+      "visible": "目前只能读取到其中一份资料，另一份暂时无法读取，所以还无法完成两份资料的对照。\n\n**可读取的一份：注意力学习指南**（第 8 页，作者周宁）\n- 计算思路是：先根据查询与键的相关程度算出权重，再用这些权重对值做加权求和。[注意力学习指南](#cite-S1)\n\n**另一份：注意力补充资料**\n- 这份资料暂时无法读取，因此看不到它的注意力计算方式，也没法比较它在计算步骤、权重处理或实现细节上与第一份的异同。\n\n如果你愿意，可以等这份资料恢复可读后再来对比；或者你直接说明它采用的注意力计算方式，我可以据此帮你逐项比较。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 809,
+        "completion_tokens": 148,
+        "total_tokens": 957,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 809
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "technical",
+      "status": "returned",
+      "elapsedMs": 4547,
+      "visible": "本次技术排障所需信息如下：\n\n- **第一份资料**：来源 ID 为 `ks-synthetic-616`，版本为 `sha256:synthetic616`。\n- **第二份资料**：读取失败，错误码为 `SYNTHETIC_UPSTREAM_TIMEOUT`。在返回的信息中，该资料被标记为不可用（unavailable），没有可读文本（textAvailable: false）。错误码名称表明是上游超时，但返回内容未提供更具体的原因说明，因此仅凭现有信息无法进一步确认原因。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 835,
+        "completion_tokens": 120,
+        "total_tokens": 955,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 835
+      }
+    }
+  ],
+  "manualReview": {
+    "status": "needs-correction",
+    "finding": "Technical answer echoed textAvailable and unavailable beyond the named diagnostic fields. Progress returned a plan with an invalid state/activeIndex combination; its text was not retained because schema parsing failed before recording. The narrowed phase test will request commentary explicitly, and capture visible text even on schema failure. No secret or unrelated private values appeared in the retained outputs."
+  }
+}

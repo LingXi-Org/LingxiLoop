@@ -1,0 +1,138 @@
+{
+  "qualification": "real-provider-synthetic-observations-output-only",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "providerHost": "api.siliconflow.cn",
+  "productDatabaseWritten": false,
+  "reviewerCalls": 0,
+  "records": [
+    {
+      "id": "ordinary",
+      "status": "returned",
+      "elapsedMs": 2922,
+      "visible": "注意力的核心计算分两步：先计算查询与各键的相关程度，得到权重；再用这些权重对值加权求和。[注意力学习指南](#cite-S1)\n\n以上说法来自《注意力学习指南》第 8 页，作者为周宁（已确认）。需要说明的是，资料仅给出这两步概述，没有涉及具体的打分函数或归一化方法；这些细节我无法根据现有资料补充。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 734,
+        "completion_tokens": 87,
+        "total_tokens": 821,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 734
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "unknown-author",
+      "status": "returned",
+      "elapsedMs": 2470,
+      "visible": "关于这份资料（《注意力学习指南》），**作者信息暂未确认**：检索结果里没有确认的作者署名，只有上传者或创建者的记录，而这不等于作者。\n\n如果你需要确切的作者信息，可以查看原文的署名页或版权页；如果手头有原始链接，也可以提供给我，我再核对。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 732,
+        "completion_tokens": 70,
+        "total_tokens": 802,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 732
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "failed-read",
+      "status": "returned",
+      "elapsedMs": 2863,
+      "visible": "我暂时无法读取这份《注意力补充资料》，所以没办法根据原文做概括。目前这次读取失败了，而不是资料里没有相关内容；因此我不能编造它的结构或要点。\n\n你可以这样继续：\n- 稍后重试，或直接粘贴资料正文，我可以据此为你做分段摘要；\n- 如果手上有可访问的链接或文件，也可以提供给我。\n\n收到内容后，我会按主题梳理核心概念、关键结论和可能的易混点。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 652,
+        "completion_tokens": 96,
+        "total_tokens": 748,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 652
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "partial-read",
+      "status": "returned",
+      "elapsedMs": 5432,
+      "visible": "目前我手头只有第一份资料可以读取，第二份资料暂时无法读取，因此还无法完成完整的两份资料对比。以下是目前能确认的信息和后续需要的内容。\n\n## 已读到的资料：《注意力学习指南》（周宁，第8页）\n\n这份资料对注意力计算的描述是：\n\n- 先根据查询（Query）与键（Key）的相关程度计算权重；\n- 再用这些权重对值（Value）加权求和，得到输出。\n\n也就是常见的“相似度/相关度打分 → 归一化权重 → 对值加权聚合”这一流程。[注意力学习指南](#cite-S1)\n\n需要说明的是，这段摘要只讲到了查询与键如何产生权重、权重如何用于对值求和，没有展开具体的打分函数形式（例如点积、缩放或加法式）以及归一化方式；因此，这些细节不能根据现有内容推断。\n\n## 暂时无法读取的资料：《注意力补充资料》\n\n第二份资料当前暂时无法读取，因而无法确认其注意力计算方式、与第一份资料是否一致，或存在哪些差异。\n\n## 后续\n\n如果你能重新提供或开放第二份资料，我就能补上以下对比：\n\n1. 两者计算注意力的基本步骤是否相同；\n2. 打分函数与归一化方式是否有差别；\n3. 输出聚合方式是否一致；\n4. 各自适用的场景或前提条件。\n\n在拿到第二份资料之前，建议把上面的结论视为“单份资料的说明”，而不是严格意义上的对比结果。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 783,
+        "completion_tokens": 311,
+        "total_tokens": 1094,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 783
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "technical",
+      "status": "returned",
+      "elapsedMs": 1762,
+      "visible": "第一份资料（[《注意力学习指南》第 8 页](#cite-S1)）的来源 ID 为 `ks-synthetic-616`，版本为 `sha256:synthetic616`。\n\n第二份资料《注意力补充资料》暂时无法读取；由于上游请求超时，该资料当前没有可用的正文，因此无法说明其内容。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 807,
+        "completion_tokens": 75,
+        "total_tokens": 882,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 807
+      }
+    },
+    {
+      "id": "progress",
+      "status": "returned",
+      "elapsedMs": 3638,
+      "visible": "资料读取进度\n第一份资料《注意力学习指南》已成功读取；第二份资料《注意力补充资料》暂时读取失败，因此该部分内容还不完整。接下来我会基于已读取的内容整理要点，并在引用处如实标注来源，同时说明第二份资料未能读取导致的信息缺口。\n读取第一份资料\n已成功读取《注意力学习指南》，内容可用于后续整理。\n读取第二份资料\n《注意力补充资料》暂时无法读取，暂未纳入内容。\n整理要点并说明缺口\n根据已读取内容给出要点，并标明因第二份资料缺失而未能覆盖的部分。",
+      "finishReason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 2463,
+        "completion_tokens": 258,
+        "total_tokens": 2721,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 2463
+      },
+      "checks": "passed"
+    }
+  ],
+  "manualReview": {
+    "status": "needs-correction",
+    "finding": "partial-read adds an unsupported normalization step before its source citation, despite a later caveat. Technical output page citation is useful attribution; rejecting it was an overly restrictive assertion, not a disclosure failure."
+  }
+}

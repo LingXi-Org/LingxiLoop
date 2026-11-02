@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { nativeTool } from '../agents/tools.js'
 import { pool } from '../db/pool.js'
 import { createProductContext, ProductRuntimePolicy } from '../agent-runtime/context.js'
+import { PUBLIC_ANSWER_RULES, KNOWLEDGE_CITATION_RULES } from '../agent-runtime/public-answer-rules.js'
 import { createProductDelivery } from '../agent-runtime/delivery.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { _setWukongClientForTests, WukongClient } from '../im/wukong.js'
@@ -58,13 +59,16 @@ test('product correction commits frozen excerpts and preserves them in IM delive
   const api = await application
   let calls = 0
   const math = String.raw`\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\left(\frac{QK^{\mathsf T}}{\sqrt{d_k}}\right)V`
-  const body = '建议[**分散安排**复习](#cite-S1)，并[隔天回顾](#cite-S1)，[主动回忆](#cite-S2)，[结合练习](#cite-S1,S3)，[调整间隔](#cite-S4)。'
+  const body = '建议分散安排复习（参考[**学习指南**](#cite-S1)），并[隔天回顾](#cite-S1)，[主动回忆](#cite-S2)，[结合练习](#cite-S1,S3)，[调整间隔](#cite-S4)。'
     + `\n\n示例 $QK^{\\mathsf T}$：\n\n$$\n${math}\n$$`
   const worker = createWorker({ controlPlane: api, policy: new ProductRuntimePolicy(),
     modelBudget: { inputCostMicrosPerMillion: 1, outputCostMicrosPerMillion: 1 },
     model: { modelId: 'citation-fixture', contextWindowTokens: 200000, async run(request) {
       calls++
       const prompt = request.instructions
+      assert.ok(prompt.includes(PUBLIC_ANSWER_RULES))
+      assert.ok(prompt.includes(KNOWLEDGE_CITATION_RULES))
+      assert.doesNotMatch(prompt, /never 【Sx】, a source number, title/)
       assert.ok(prompt.includes('for inline math; for display math put $$ on separate lines'))
       assert.ok(prompt.includes('Do not wrap mathematical explanations or formulas in inline backticks'))
       assert.ok(prompt.includes('Escape literal currency dollar signs'))
