@@ -6,6 +6,8 @@ import test from 'node:test'
 import { adaptDesignMath } from './build-artifact-math.mjs'
 import { adaptDesignRuntimeUrl, adaptVisibleDesignMount, buildDesignEditor } from './build-design-editor.mjs'
 import { Script } from 'node:vm'
+import { adaptDesignLayout, buildDesignLayout } from './build-design-layout.mjs'
+import './design-flow-size.test.mjs'
 
 test('Design reuses its prepared embedded runtime before the external and inline fallbacks', async () => {
   const original = await readFile('third_party/baoyu-design/upstream/claude-design/scripts/editor/assets/index-DavTckY0.js', 'utf8')
@@ -41,6 +43,7 @@ test('Design package preserves the agreed math runtime and optional executable b
   const manifest = await buildDesignEditor()
   const source = resolve(manifest.source), output = resolve('server/assets/design-editor')
   const math = await readFile('server/assets/visualize-runtime/math.js', 'utf8')
+  const layout = await buildDesignLayout()
   const injected = adaptDesignMath('supportJs:e.dcSupportSource}', math)
   const fallback = JSON.parse(injected.slice('supportJs:e.dcSupportSource+'.length, -1))
   assert.equal(fallback, '\n;' + math, 'replacement tokens cannot corrupt the inline/blob math program')
@@ -52,8 +55,8 @@ test('Design package preserves the agreed math runtime and optional executable b
     assert.ok(sizes.br < bytes.length)
     if (name.endsWith('.js')) {
       const original = await readFile(resolve(source, name === manifest.entry.file ? manifest.entry.original : name === manifest.runtime.file ? manifest.runtime.original : name))
-      const expected = name === manifest.entry.file ? Buffer.from(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptDesignMath(original.toString(), math))))
-        : name === manifest.runtime.file ? Buffer.from(original.toString() + '\n;' + math) : original
+      const expected = name === manifest.entry.file ? Buffer.from(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptDesignMath(original.toString(), math + layout.guest))), layout.host))
+        : name === manifest.runtime.file ? Buffer.from(original.toString() + '\n;' + math + layout.guest) : original
       assert.deepEqual(bytes, expected, name)
     }
   }

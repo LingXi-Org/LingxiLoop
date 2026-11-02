@@ -5,6 +5,7 @@ import { dirname, resolve, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
 import { adaptDesignMath, buildArtifactMath } from './build-artifact-math.mjs'
+import { adaptDesignLayout, buildDesignLayout } from './build-design-layout.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const source = resolve(root, 'third_party/baoyu-design/upstream/claude-design/scripts/editor')
@@ -39,6 +40,7 @@ export function adaptVisibleDesignMount(source) {
 /** Package the pinned editor with the shared math enhancement and unchanged canvas model. */
 export async function buildDesignEditor() {
   const { math } = await buildArtifactMath()
+  const layout = await buildDesignLayout()
   const originalHtml = await readFile(resolve(source, 'index.html'), 'utf8')
   const cssPath = /href="\.\/(assets\/[^"/]+\.css)"/.exec(originalHtml)?.[1]
   assert.ok(cssPath, 'Expected the pinned Design stylesheet')
@@ -55,11 +57,11 @@ export async function buildDesignEditor() {
   const cssName = `design-${sha(css)}.css`
   const scriptPath = /src="\.\/(assets\/[^"/]+\.js)"/.exec(originalHtml)?.[1]
   assert.ok(scriptPath, 'Expected the pinned editor entry')
-  const script = Buffer.from(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptDesignMath(await readFile(resolve(source, scriptPath), 'utf8'), math))))
+  const script = Buffer.from(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptDesignMath(await readFile(resolve(source, scriptPath), 'utf8'), math + layout.guest))), layout.host))
   const scriptName = `design-${sha(script)}.js`
   const publicBase = '__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/'
   const runtimePath = 'artifact-type/dc-runtime.js'
-  const runtime = Buffer.from(await readFile(resolve(source, runtimePath), 'utf8') + '\n;' + math)
+  const runtime = Buffer.from(await readFile(resolve(source, runtimePath), 'utf8') + '\n;' + math + layout.guest)
   const runtimeName = `design-${sha(runtime)}.js`
   const runtimeFile = `assets/${runtimeName}`
   // Only generated build output is replaced; the complete upstream archive stays intact.
@@ -98,7 +100,7 @@ export async function buildDesignEditor() {
   }
   await visit(output)
   const manifest = { source: relative(root, source), upstreamCommit: 'c15e76ef5134228d2bb5da35652d30d7d6b8a34d',
-    math: { sha256: sha(math), bytes: Buffer.byteLength(math) },
+    math: { sha256: sha(math), bytes: Buffer.byteLength(math) }, layout: { guestBytes: Buffer.byteLength(layout.guest), hostBytes: Buffer.byteLength(layout.host) },
     entry: { file: `assets/${scriptName}`, original: scriptPath },
     runtime: { file: runtimeFile, original: runtimePath },
     styles: { file: `assets/${cssName}`, fallbackFont: `assets/${fontName}`, icons: `assets/${iconName}`, originalIcons: iconPath, originalBytes: Buffer.byteLength(originalCss), bytes: Buffer.byteLength(css) }, files, compressed }

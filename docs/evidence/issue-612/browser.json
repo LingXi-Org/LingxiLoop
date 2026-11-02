@@ -1,0 +1,199 @@
+{
+  "browser": "154.0.8037.57",
+  "sourceHashes": {
+    "canvas.json": "9ea199d03f506b9528681361118e5b9cd0e34ba2c7bceb5dc6d999ae7a5c84e3",
+    "Roadmap.dc.html": "5260ac66ada5f34423a7bfddf313a33f2d9d2c29c090c61275ed5c78bf34bfdb"
+  },
+  "scope": "Original hash-verified files in a synthetic authenticated API fixture. No production artwork writes.",
+  "failures": [],
+  "report": [
+    {
+      "case": "raw-original",
+      "inner": {
+        "w": 1280,
+        "h": 1715
+      },
+      "scroll": {
+        "w": 1280,
+        "sw": 1280,
+        "h": 1715,
+        "sh": 1715
+      },
+      "rootHeight": 1714.171875,
+      "font": "44px",
+      "math": 2,
+      "mathFonts": "loaded",
+      "overflow": "visible",
+      "bodyOverflow": "visible"
+    },
+    {
+      "case": "retained-reopen",
+      "inner": {
+        "w": 1280,
+        "h": 1715
+      },
+      "scroll": {
+        "w": 1280,
+        "sw": 1280,
+        "h": 1715,
+        "sh": 1715
+      },
+      "rootHeight": 1714.171875,
+      "font": "44px",
+      "math": 2,
+      "mathFonts": "loaded",
+      "overflow": "visible",
+      "bodyOverflow": "visible"
+    },
+    {
+      "case": "narrow-768",
+      "inner": {
+        "w": 1280,
+        "h": 1715
+      },
+      "scroll": {
+        "w": 1280,
+        "sw": 1280,
+        "h": 1715,
+        "sh": 1715
+      },
+      "rootHeight": 1714.171875,
+      "font": "44px",
+      "math": 2,
+      "mathFonts": "loaded",
+      "overflow": "visible",
+      "bodyOverflow": "visible"
+    },
+    {
+      "case": "async-content-growth",
+      "inner": {
+        "w": 1280,
+        "h": 3095
+      },
+      "scroll": {
+        "w": 1280,
+        "sw": 1280,
+        "h": 3095,
+        "sh": 3095
+      },
+      "rootHeight": 3094.171875,
+      "font": "44px",
+      "math": 2,
+      "mathFonts": "loaded",
+      "overflow": "visible",
+      "bodyOverflow": "visible"
+    },
+    {
+      "case": "async-content-removal",
+      "inner": {
+        "w": 1280,
+        "h": 1715
+      },
+      "scroll": {
+        "w": 1280,
+        "sw": 1280,
+        "h": 1715,
+        "sh": 1715
+      },
+      "rootHeight": 1714.171875,
+      "font": "44px",
+      "math": 2,
+      "mathFonts": "loaded",
+      "overflow": "visible",
+      "bodyOverflow": "visible"
+    },
+    {
+      "case": "real-text-edit-saved",
+      "geometry": {
+        "Roadmap.dc.html": {
+          "h": 1660,
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "case": "saved-refresh",
+      "inner": {
+        "w": 1280,
+        "h": 1660
+      },
+      "scroll": {
+        "w": 1280,
+        "sw": 1280,
+        "h": 1660,
+        "sh": 1660
+      },
+      "rootHeight": 1659.171875,
+      "font": "44px",
+      "math": 2,
+      "mathFonts": "loaded",
+      "overflow": "visible",
+      "bodyOverflow": "visible"
+    },
+    {
+      "case": "full-window",
+      "inner": {
+        "w": 1280,
+        "h": 1660
+      },
+      "scroll": {
+        "w": 1280,
+        "sw": 1280,
+        "h": 1660,
+        "sh": 1660
+      },
+      "rootHeight": 1659.171875,
+      "font": "44px",
+      "math": 2,
+      "mathFonts": "loaded",
+      "overflow": "visible",
+      "bodyOverflow": "visible"
+    },
+    {
+      "case": "conversation-isolation",
+      "passed": true
+    },
+    {
+      "case": "neighbor-and-arrow-model-reflow",
+      "delta": 535,
+      "geometry": {
+        "Neighbor.dc.html": {
+          "h": 200,
+          "w": 400,
+          "x": 0,
+          "y": 1835
+        },
+        "Roadmap.dc.html": {
+          "h": 1715,
+          "w": 1280,
+          "x": 0,
+          "y": 0
+        }
+      },
+      "arrow": {
+        "kind": "arrow",
+        "x": 0,
+        "x2": 200,
+        "y": 1795,
+        "y2": 1815
+      }
+    },
+    {
+      "case": "public-block-types",
+      "text": 4,
+      "images": 500,
+      "code": 1,
+      "table": 1,
+      "math": 2,
+      "height": 875,
+      "content": 875
+    },
+    {
+      "case": "outer-canvas-reading-pan",
+      "endVisible": true,
+      "guestScrollTop": 0
+    }
+  ]
+}

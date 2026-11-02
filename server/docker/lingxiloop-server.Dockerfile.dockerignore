@@ -31,6 +31,7 @@ shared/**
 !shared/visualize-public-resources.ts
 !shared/artifact-math.ts
 !shared/artifact-math-source.ts
+!shared/design-flow-size.ts
 !shared/artifact-editor-origin.ts
 !shared/slides-editor-context.ts
 !public/**
@@ -51,6 +52,7 @@ shared/**
 !scripts/build-artifact-math.mjs
 !scripts/build-slides-editor.mjs
 !scripts/build-design-editor.mjs
+!scripts/build-design-layout.mjs
 !scripts/prune-pdfjs-server-runtime.mjs
 !scripts/prune-glibc-canvas-runtime.mjs
 # Don't bake source maps / built assets / huge logs into the layer.

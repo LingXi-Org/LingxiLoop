@@ -7,6 +7,14 @@ test('pure CSS changes check and build only the web', () => {
   const scope = computeScope(classifyPaths(['src/styles.css']))
   assert.equal(scope.web_build, true); assert.equal(scope.server, false); assert.equal(scope.integration, false)
 })
+test('Design sizing sources retain their editor build and artifact integration owners', () => {
+  for (const path of ['shared/design-flow-size.ts', 'scripts/build-design-layout.mjs', 'scripts/design-flow-size.test.mjs']) {
+    const scope = computeScope(classifyPaths([path]))
+    assert.equal(scope.web, true, path)
+    assert.equal(scope.integration, true, path)
+    assert.ok(scope.integration_files.includes('artifact-app-boundary.test.ts'), path)
+  }
+})
 test('real server imports and shared transitive helper changes check the server', () => {
   for (const path of ['src/lib/runActivity.ts', 'src/lib/participantDisplayName.ts', 'src/features/cases/cover-vm/program.ts']) {
     assert.equal(computeScope(classifyPaths([path])).server, true, path)

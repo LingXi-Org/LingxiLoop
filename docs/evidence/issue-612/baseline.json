@@ -1,0 +1,25 @@
+{
+  "browser": "154.0.8037.57",
+  "sourceHashes": {
+    "canvas.json": "9ea199d03f506b9528681361118e5b9cd0e34ba2c7bceb5dc6d999ae7a5c84e3",
+    "Roadmap.dc.html": "5260ac66ada5f34423a7bfddf313a33f2d9d2c29c090c61275ed5c78bf34bfdb"
+  },
+  "measurement": {
+    "inner": {
+      "w": 1280,
+      "h": 1180
+    },
+    "scroll": {
+      "w": 1265,
+      "sw": 1280,
+      "h": 1165,
+      "sh": 1714
+    },
+    "rootHeight": 1714.171875,
+    "font": "44px",
+    "math": 2,
+    "mathFonts": "loaded",
+    "overflow": "visible",
+    "bodyOverflow": "visible"
+  }
+}
