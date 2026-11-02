@@ -222,7 +222,7 @@ function Sidebar({
             target?.focus({ preventScroll: true })
           }}
           data-slot="sidebar-container" data-side={side} data-mobile={isMobile ? "true" : undefined}
-          style={{ width: "var(--sidebar-width)", maxWidth: "none" }}
+          style={{ width: "var(--sidebar-width)", maxWidth: "none", paddingBlock: isMobile ? "env(safe-area-inset-top) env(safe-area-inset-bottom)" : undefined }}
           className={cn("fixed inset-y-0 z-10 flex h-full w-(--sidebar-width) max-w-none gap-0 bg-sidebar p-0 text-sidebar-foreground shadow-none md:absolute md:animate-none! md:transition-[left,right,width] md:duration-200 md:ease-linear motion-reduce:animate-none! motion-reduce:transition-none",
             "data-[state=closed]:invisible [transition-property:visibility] [transition-duration:0s] data-[state=closed]:[transition-delay:200ms] md:data-[state=closed]:visible md:data-[state=closed]:delay-0 motion-reduce:delay-0!",
             side === "right" ? "right-0 border-l md:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]" : "left-0 border-r md:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]", className)}>
@@ -277,6 +277,7 @@ function Sidebar({
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
               width: "var(--sidebar-width)",
               maxWidth: "100vw",
+              paddingBlock: "env(safe-area-inset-top) env(safe-area-inset-bottom)",
             } as React.CSSProperties
           }
           side={side}

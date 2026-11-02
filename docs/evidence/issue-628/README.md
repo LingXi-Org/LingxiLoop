@@ -94,3 +94,12 @@ before merge. Production deployment, authenticated account flows, real editor
 save/export, live IM/model responses, Safari and physical mobile/IME interaction
 were not exercised here. #631 mathematics work is independent; this PR does not
 modify Slides editor math/export modules.
+
+## Integration follow-up: mobile safe areas
+
+The integrator caught a missing mobile safe-area inset after the initial review.
+[The focused follow-up](safe-area/README.md) records the independently reproduced
+failure, minimal padding restoration on both mobile containers, actual Chromium
+`env()` simulation, before/after measurements and screenshots. Reproduce with
+`node docs/evidence/issue-628/safe-area.mjs`; production/physical-device acceptance
+remains separate from this component check.
