@@ -1,0 +1,71 @@
+{
+  "ppt/slides/slide1.xml": {
+    "colors": [
+      "F5F4ED"
+    ],
+    "fonts": [],
+    "sizes": [],
+    "text": []
+  },
+  "ppt/slides/slide2.xml": {
+    "colors": [
+      "141413",
+      "3D3D3A",
+      "F5F4ED"
+    ],
+    "fonts": [
+      "Arial",
+      "Georgia"
+    ],
+    "sizes": [
+      "2200",
+      "6400"
+    ],
+    "text": [
+      "演示文稿标题",
+      "用一句话介绍这份演示文稿。"
+    ]
+  },
+  "ppt/slides/slide3.xml": {
+    "colors": [
+      "141413",
+      "3D3D3A",
+      "F5F4ED"
+    ],
+    "fonts": [
+      "Arial",
+      "Georgia"
+    ],
+    "sizes": [
+      "1600",
+      "4800"
+    ],
+    "text": [
+      "Heading",
+      "在此填写正文，双击文字即可编辑。"
+    ]
+  },
+  "ppt/slides/slide4.xml": {
+    "colors": [
+      "141413",
+      "3D3D3A",
+      "F5F4ED"
+    ],
+    "fonts": [
+      "Arial",
+      "Georgia"
+    ],
+    "sizes": [
+      "1600",
+      "3600",
+      "4800"
+    ],
+    "text": [
+      "Compare",
+      "Left",
+      "左栏正文。",
+      "Right",
+      "右栏正文。"
+    ]
+  }
+}

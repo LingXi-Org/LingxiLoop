@@ -42,11 +42,14 @@ export interface ArtifactWorkspacesApplicationContext {
   publishArtifact: PublishArtifact
 }
 
-/** Writes the kind's empty index, as an artifact the upstream skill creates would carry. */
+/** Publish the new artifact's index and static resources together; never used on open. */
 async function writeInitialIndex(db: Queryable, artifact: ArtifactRow, actorId: string) {
   const definition = artifactKind(artifact.kind)
   const index = definition.initialIndex(artifact.title, new Date().toISOString())
   await publish(db, definition, artifact.id, {
+    ...Object.fromEntries(Object.entries(definition.initialResources ?? {}).map(([path, value]) => [path, {
+      base64: Buffer.from(`${JSON.stringify(value, null, 2)}\n`).toString('base64'), contentType: 'application/json', ifMatch: null,
+    }])),
     [`project/${definition.indexFile}`]: { base64: Buffer.from(`${JSON.stringify(index, null, 2)}\n`).toString('base64'), contentType: 'application/json', ifMatch: null },
   }, actorId)
 }

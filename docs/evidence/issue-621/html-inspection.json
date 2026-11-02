@@ -1,0 +1,13 @@
+{
+  "text": "演示文稿标题\n用一句话介绍这份演示文稿。",
+  "fonts": [
+    {
+      "font": "Georgia, ui-serif, Georgia, serif",
+      "size": "128px"
+    },
+    {
+      "font": "ui-sans-serif, system-ui, sans-serif",
+      "size": "44px"
+    }
+  ]
+}

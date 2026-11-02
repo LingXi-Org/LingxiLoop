@@ -48,6 +48,11 @@ const entry = (text: string, ifMatch?: string | null) => ({ base64: Buffer.from(
 test('old Slides gain independent durable native chats without rewriting source or bytes; source revocation still denies access', async () => {
   const old = await createSlides({ companyId, projectId, conversationId: 'artifact-room', title: 'Legacy', actorId: userId, origin: 'user' })
   const original = (await pool.query('SELECT path,sha256,body FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [old.id])).rows
+  assert.deepEqual(original.map(row => row.path), ['project/deck.json', 'project/ds/slides-builtin/tokens.json'])
+  const initialIndex = JSON.parse(original[0].body.toString())
+  assert.deepEqual(initialIndex.order, [])
+  assert.equal(initialIndex.style[0].look, 'slides-builtin/light')
+  assert.equal(JSON.parse(original[1].body.toString()).name, 'Slides 内置风格')
   const opens = await Promise.all([1, 2].map(() => api(`/artifacts/${old.id}/slides-workspace`, 'POST')))
   assert.deepEqual(opens.map(result => result.status), [200, 200])
   const first = await opens[0].json() as { conversationId: string; sourceConversationId: string; agentId: string }

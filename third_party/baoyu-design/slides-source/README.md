@@ -41,4 +41,15 @@ The browser output uses hashed shared assets; exports, PPTX and WOFF2 are lazy c
 
 Chinese interface copy (the pinned translation catalog is the translation evidence); dialog sheet dependency initialization; native selection/context heartbeat and presentation-exit bridge; `__frame_claude_activity` for the existing comment agent presence; extra PDF/HTML/PPTX download formats enabled; export modules loaded on demand; video removal described above. PDF confirmation uses an explicit button callback because the product sandbox does not permit form submission. Document content, keys and enum values are not translated.
 
+`builtin-style.json` is a static Slides resource assembled from this pinned
+distribution's `namedSlideColors`, `anthropicTypeScale` and the documented
+Georgia/system font fallbacks. It is not the missing `artifact-type/demo.html`
+or a reconstruction of the screenshot's unpublished deck. New product decks
+receive its tokens and existing-format look memory at creation only. Template
+restyling consumes the active saved memory before typography can be inferred,
+and fills absent roles without replacing observed document typography. The
+archival templates and old decks without look memory retain their defaults.
+No Design System skill, runtime or upstream upgrade is introduced. Source
+mapping, actual export samples and limits: `docs/evidence/issue-621/README.md`.
+
 The runtime `value`, `value2`, etc. locals come from recovered emitted source. Functional names and module boundaries make changes reviewable; recovering original variable names or original TypeScript types is not claimed. See `docs/evidence/issue-601/README.md` for the capability matrix and the real-browser verification limits.
