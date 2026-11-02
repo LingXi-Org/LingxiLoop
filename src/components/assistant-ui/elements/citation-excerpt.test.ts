@@ -10,13 +10,14 @@ test('source titles read as document names with a file kind', () => {
   assert.deepEqual(readableTitle('v1.2 release notes'), { name: 'v1.2 release notes', kind: '' })
 })
 
-test('excerpts drop page markers and the cut-off lead of a truncated chunk', () => {
+test('excerpts remove page markers without deleting the preceding evidence', () => {
   const { pages, text } = cleanExcerpt(chunk, true)
   assert.deepEqual(pages, [15])
-  assert.doesNotMatch(text, /\[\[PAGE|0\.2483/)
-  assert.match(text, /^…12 · 自注意力与交叉注意力/)
+  assert.doesNotMatch(text, /\[\[PAGE/)
+  assert.match(text, /0\.2483/)
+  assert.equal(cleanExcerpt(chunk, true).unpagedLead, true)
   assert.match(text, /编码器输出。…$/)
-  assert.deepEqual(cleanExcerpt('[[PAGE:14]]\n上一页结尾\n[[PAGE:15]]\n下一页开头', false), { pages: [14, 15], text: '上一页结尾\n\n下一页开头' })
+  assert.deepEqual(cleanExcerpt('[[PAGE:14]]\n上一页结尾\n[[PAGE:15]]\n下一页开头', false), { pages: [14, 15], text: '上一页结尾\n\n下一页开头', unpagedLead: false })
   assert.equal(cleanExcerpt('完整的一段话。', false).text, '完整的一段话。')
   assert.equal(cleanExcerpt('[[PAGE:2]]\n导读：介绍 Q、K、V。', true).text, '导读：介绍 Q、K、V。…')
 })
@@ -48,4 +49,17 @@ test('matched sentences survive Markdown markers, hard wraps and English full st
   assert.equal(matchSentence('查询来自解码器一侧', '## 查询来自解码器一侧\n\n正文'), '查询来自解码器一侧')
   assert.equal(matchSentence('查询来自解码器，键和值来自编码器输出', '前文。查询来自解码器一侧，\n键和值来自编码器输出。后文。'), '查询来自解码器一侧，\n键和值来自编码器输出')
   assert.equal(matchSentence('queries come from the decoder side', 'Attention is general. In cross attention, queries come from the decoder side. Keys use 0.5 scale.'), 'In cross attention, queries come from the decoder side')
+})
+
+
+test('a truncated leading support sentence survives the complete expanded excerpt', () => {
+  const support = '查询来自解码器，键和值来自编码器。'
+  const result = cleanExcerpt(`${support}\n[[PAGE:15]]\n后续补充。`, true)
+  assert.equal(result.text, `…${support}\n\n---\n\n后续补充。…`)
+  assert.equal(result.unpagedLead, true)
+  assert.deepEqual(result.pages, [15])
+  const sentence = matchSentence('查询来自解码器，键和值来自编码器', result.text)
+  assert.equal(sentence, support.slice(0, -1))
+  assert.match(focusExcerpt(result.text, sentence), /查询来自解码器，键和值来自编码器/)
+  assert.equal(cleanExcerpt('[[PAGE:15]]\n后续补充。', true).unpagedLead, false)
 })

@@ -48,7 +48,7 @@ const ConfidenceContext = createContext({
 // Long excerpts start collapsed to about six lines.
 const COLLAPSE_AFTER = 140;
 
-/** Wraps the first verbatim occurrence of the supporting sentence in <mark>; formatting boundaries simply skip it. */
+/** Marks a lexical match, without asserting that it supports the claim; formatting boundaries skip it. */
 function highlightSentence(sentence: string | null) {
   return () => (tree: Root) => {
     if (!sentence) return;
@@ -158,8 +158,9 @@ export function ConfidenceMarker({
           img: ({ alt }) => <span className="text-muted-foreground">{alt}</span>,
         }}>{open ? excerpt.text : focusExcerpt(excerpt.text, sentence)}</ReactMarkdown>
       </div>
+      {excerpt.unpagedLead && <p className="text-xs text-muted-foreground">分隔线前的原文页码暂未确认。</p>}
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span>{item.truncated ? "原文节选" : "原文"}</span>
+        <span>{item.truncated ? "原文节选" : "原文"}{sentence ? " · 高亮为关键词匹配" : ""}</span>
         {collapsible && <button type="button" aria-expanded={open} aria-controls={`${basisId}-excerpt-${index}`}
           onClick={() => setExpanded((keys) => open ? keys.filter((other) => other !== key) : [...keys, key])}
           className="inline-flex items-center gap-1 rounded px-1 text-foreground/80 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">

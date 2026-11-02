@@ -3,9 +3,6 @@
 
 const PAGE = /\[\[PAGE:(\d+)\]\]/g;
 const KINDS = new Set(["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "csv", "txt", "md", "epub", "html"]);
-// A retrieval chunk usually starts mid-page; a page marker this early means
-// everything before it is the tail of the previous page.
-const LEAD_LIMIT = 160;
 const MATCH_THRESHOLD = 0.35;
 
 export function readableTitle(title: string) {
@@ -18,11 +15,14 @@ export function readableTitle(title: string) {
 export function cleanExcerpt(excerpt: string, truncated = false) {
   const pages = [...excerpt.matchAll(PAGE)].map((match) => Number(match[1]));
   const first = excerpt.search(PAGE);
-  const dropLead = truncated && first > 0 && first <= LEAD_LIMIT;
-  const body = (dropLead ? excerpt.slice(first) : excerpt)
-    .replace(PAGE, "\n\n").replace(/\n{3,}/g, "\n\n").trim();
+  // A page marker identifies the text after it. A truncated chunk can still
+  // contain complete supporting evidence before the first known page.
+  const unpagedLead = first > 0 && Boolean(excerpt.slice(0, first).trim());
+  const body = excerpt.replace(PAGE, (_marker, _page, offset) =>
+    unpagedLead && offset === first ? "\n\n---\n\n" : "\n\n")
+    .replace(/\n{3,}/g, "\n\n").trim();
   const clippedStart = truncated && first !== 0 && !/^(?:[-*+>#|]|\d+[.)]\s)/.test(body);
-  return { pages, text: `${clippedStart ? "…" : ""}${body}${truncated && body ? "…" : ""}` };
+  return { pages, unpagedLead, text: `${clippedStart ? "…" : ""}${body}${truncated && body ? "…" : ""}` };
 }
 
 export function pageLabel(pages: readonly number[]) {
@@ -58,7 +58,7 @@ export function focusExcerpt(text: string, sentence: string | null) {
   return rest.startsWith("…") ? rest : `…${rest}`;
 }
 
-/** The excerpt sentence that most plausibly supports the claim, or null when no sentence clearly does. */
+/** Find a sentence by lexical overlap; this does not verify support or truth. */
 export function matchSentence(claim: string, text: string) {
   const wanted = tokens(claim);
   if (wanted.size < 2) return null;
