@@ -45,6 +45,7 @@ const testsByScope = {
     'src/features/chat/components/message-presentation.test.ts',
     'src/components/assistant-ui/elements/run-activity.test.tsx',
     'src/components/assistant-ui/elements/task-card.test.tsx',
+    'src/components/assistant-ui/elements/citation-excerpt.test.ts',
     'src/components/trace-waterfall/trace-waterfall.test.tsx',
     'src/lib/nativeText.test.ts',
     'src/features/chat/runtime/converter.test.ts',

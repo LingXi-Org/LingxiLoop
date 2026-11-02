@@ -254,6 +254,23 @@ test('citation excerpts render safe compact Markdown while source titles remain 
   assert.equal((html.match(/<section/g) ?? []).length, 2)
 })
 
+test('citation cards read as quoted pages rather than retrieval chunks', () => {
+  const claim = { id: 'cross', text: '交叉注意力中查询来自解码器，键和值来自编码器输出', confidence: 'grounded' as const, basis: '', evidence: [{
+    marker: 'S2', chunkId: 'pdf:6797:19204', title: 'Understanding_Attention_Handbook_01_zh-CN.pdf', truncated: true,
+    excerpt: '- 0.2483[0, 2] + 0.5035[3, 1].\n\n[[PAGE:15]]\n注意力公式并不要求 Q、K、V 来自同一条序列。在编码器—解码器注意力中，查询来自解码器一侧，键和值来自编码器输出。如果目标序列长度为 L，源序列长度为 S，那么分数矩阵的形状就是 L × S。因果解码器也使用自注意力，但会掩蔽未来位置，使每个位置只能看到它之前的内容。交叉注意力常见于机器翻译、图文模型和检索增强生成。' }] }
+  const $ = load(renderMarkdown(<ConfidenceMarker claims={[claim]} hoveredId="cross" onHover={() => {}} />))
+  const card = $('[data-slot="confidence-basis"]')
+  assert.match(card.text(), /Understanding Attention Handbook 01 zh-CN/)
+  assert.match(card.text(), /PDF/)
+  assert.match(card.text(), /第 15 页/)
+  assert.doesNotMatch(card.text(), /\[\[PAGE|S2|_zh-CN\.pdf/)
+  assert.match(card.text(), /0\.2483/)
+  assert.match(card.text(), /分隔线前的原文页码暂未确认/)
+  assert.equal(card.find('hr').length, 1)
+  assert.equal(card.find('mark').text(), '在编码器—解码器注意力中，查询来自解码器一侧，键和值来自编码器输出')
+  assert.equal(card.find('button[aria-expanded="false"]').text(), '展开更多')
+})
+
 test('new citations underline answer wording and consume internal links before Link rendering', () => {
   const text = '开头😀 [**间隔复习**有助于记忆](#cite-S1,S1)。\n\n- [使用 `retrieval` 练习](#cite-S2)\n\n| 内容 |\n| --- |\n| [主动回忆](#cite-S1,S2) |\n\n[未匹配的正文](#cite-S9) 与 [官网](https://example.com)\n\n`[代码](#cite-S1)`'
   const matches = [...text.matchAll(/\[([^\]\n]+)\]\(#cite-(S\d+(?:,S\d+)*)\)/g)]
