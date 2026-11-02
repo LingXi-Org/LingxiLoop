@@ -1,0 +1,139 @@
+{
+  "qualification": "real-provider-synthetic-observations-output-only",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "providerHost": "api.siliconflow.cn",
+  "productDatabaseWritten": false,
+  "reviewerCalls": 0,
+  "records": [
+    {
+      "id": "ordinary",
+      "status": "returned",
+      "elapsedMs": 2825,
+      "visible": "注意力的核心计算分两步：先根据查询与键的相关程度算出权重，再用这些权重对值做加权求和。[注意力学习指南](#cite-S1)\n\n已确认作者为周宁，相关内容见第 8 页。[注意力学习指南](#cite-S1)",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 694,
+        "completion_tokens": 57,
+        "total_tokens": 751,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 694
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "unknown-author",
+      "status": "returned",
+      "elapsedMs": 2452,
+      "visible": "作者信息暂未确认。这份资料中可读到的部分没有提供可确认的作者署名；上传者或创建者也不等同于作者，因此不能据此认定作者是谁。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 692,
+        "completion_tokens": 36,
+        "total_tokens": 728,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 692
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "failed-read",
+      "status": "returned",
+      "elapsedMs": 1988,
+      "visible": "我无法读取「注意力补充资料」的内容：目前该资料暂时无法读取，系统没有返回正文，因此我无法可靠地总结。等资料可以访问后，我可以再为你归纳要点。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 612,
+        "completion_tokens": 41,
+        "total_tokens": 653,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 612
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "partial-read",
+      "status": "returned",
+      "elapsedMs": 5863,
+      "visible": "目前只成功读取到其中一份资料，另一份暂时无法读取，因此只能先概括清楚已读的部分，暂时无法进行完整对比。\n\n## 已读资料：缩放点积注意力的基本思路\n\n[《注意力学习指南》（周宁，第 8 页）](#cite-S1)给出的计算流程是两步：\n\n1. **算权重**：先衡量查询与各个键的相关程度，据此得到一组权重。\n2. **加权求和**：用这些权重对值做加权求和，得到输出。\n\n也就是说，注意力输出的本质是“按相关度对值进行加权平均”。\n\n## 另一份资料：暂时无法读取\n\n“注意力补充资料”这次读取失败（上游超时），正文内容未取到，所以无法确认它的计算方式，也无法判断它与上述流程是否一致、差异在哪里。为避免凭空推测，这里不做比对。\n\n## 后续建议\n\n等补充资料可以正常读取后，可以按以下方面进行对比，结论会更清晰：\n\n- **权重来源**：相关度如何计算（点积、加性网络或其他）\n- **归一化方式**：权重是否经过 softmax，是否允许为 0\n- **输出形式**：单一加权和，还是多头并行后再拼接\n- **是否含缩放或掩码**：例如除以维度的平方根、屏蔽无效位置\n\n如需，我可以在资料恢复后再补上逐项对比。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 743,
+        "completion_tokens": 293,
+        "total_tokens": 1036,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 743
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "technical",
+      "status": "returned",
+      "elapsedMs": 2012,
+      "visible": "本次第一份资料是《注意力学习指南》（第8页，作者：周宁），来源ID为 `ks-synthetic-616`，版本为 `sha256:synthetic616`，状态可正常读取。\n\n第二份资料《注意力补充资料》暂时无法读取；上游读取超时，未能取得正文内容。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 767,
+        "completion_tokens": 67,
+        "total_tokens": 834,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 767
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "progress",
+      "status": "returned",
+      "elapsedMs": 3984,
+      "visible": "资料读取进展\n第一份资料已读取成功：《注意力学习指南》第 8 页，其中说明了注意力先用查询与键的相关程度得到权重，再对值加权求和。第二份《注意力补充资料》暂时无法读取（上游超时），因此这部分内容还没有依据。下一步：我会先依据已读到的内容回答你的问题，并明确标注哪些结论尚无资料支撑；如果你随后能重新提供第二份资料，我再补充核对。",
+      "finishReason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 2113,
+        "completion_tokens": 135,
+        "total_tokens": 2248,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 2113
+      },
+      "checks": "passed"
+    }
+  ],
+  "manualReview": {
+    "status": "needs-correction",
+    "finding": "partial-read attributed an unsupported scaled-dot-product subtype and weighted average to an excerpt that states only relevance weights and weighted sum. No forbidden internal metadata was displayed."
+  }
+}

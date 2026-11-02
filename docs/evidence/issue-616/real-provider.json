@@ -1,0 +1,148 @@
+{
+  "qualification": "real-provider-synthetic-observations-output-only",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "providerHost": "api.siliconflow.cn",
+  "productDatabaseWritten": false,
+  "reviewerCalls": 0,
+  "records": [
+    {
+      "id": "ordinary",
+      "status": "returned",
+      "elapsedMs": 5701,
+      "visible": "注意力的核心计算分两步：先用查询与键的相关程度算出权重，再按这些权重对值加权求和。([注意力学习指南](#cite-S1)，周宁，第 8 页)",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 792,
+        "completion_tokens": 43,
+        "total_tokens": 835,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 792
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "unknown-author",
+      "status": "returned",
+      "elapsedMs": 2371,
+      "visible": "作者信息暂未确认。这份资料的标题是《注意力学习指南》，目前检索到的记录中没有已确认的作者信息。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 790,
+        "completion_tokens": 25,
+        "total_tokens": 815,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 790
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "failed-read",
+      "status": "returned",
+      "elapsedMs": 1981,
+      "visible": "我暂时无法读取《注意力补充资料》，因此现在没法总结它的内容。\n\n这次读取没有返回可用的正文。要看到内容，可以稍后重试，也可以让我换一个能访问的资料版本，然后再整理。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 710,
+        "completion_tokens": 46,
+        "total_tokens": 756,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 710
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "partial-read",
+      "status": "returned",
+      "elapsedMs": 4403,
+      "visible": "## 对比结果\n\n**目前只能完成对一份资料的分析**：第二份资料暂时无法读取，因此无法逐项对比两份资料的注意力计算。下面先说明已读取到的那份资料的计算方式，待第二份资料可读取后，再补上对比。\n\n### 已读取资料的计算方式\n\n[注意力学习指南](#cite-S1)（第 8 页，作者周宁）将注意力计算概括为两步：\n\n1. 先根据查询与键的相关程度得到权重；\n2. 再对值做加权求和。\n\n也就是说，该资料把注意力视为一种“先算相关度、再按相关度聚合信息”的加权机制。\n\n### 暂缺部分\n\n第二份资料《注意力补充资料》暂时无法读取，因此其计算步骤、公式形式、权重处理方式等均无法确认，也就无法判断它与第一份资料在细节上是相同、更具体还是存在差异。等资料可访问后会补充对比。\n\n> 一般知识（非资料内容）：常见的注意力计算通常会包含对相关度分数做归一化的环节，但上述资料原文只提到“得到权重”，未说明具体如何得到，因此这里不对其归一化方式做推断。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 841,
+        "completion_tokens": 249,
+        "total_tokens": 1090,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 841
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "technical",
+      "status": "returned",
+      "elapsedMs": 2552,
+      "visible": "你问的两项信息如下：\n\n- **第一份资料来源ID与版本：**来源ID `ks-synthetic-616`，版本 `sha256:synthetic616`。\n- **第二份资料失败的错误码与原因：**错误码 `SYNTHETIC_UPSTREAM_TIMEOUT`。该错误码显示为上游超时；资料本身状态为不可用，因此暂时无法读取内容。返回信息未说明超时的具体成因，无法据此判断是网络、上游服务还是其他原因。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 867,
+        "completion_tokens": 108,
+        "total_tokens": 975,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 867
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "progress",
+      "status": "returned",
+      "elapsedMs": 3068,
+      "visible": "当前进展\n第一份资料（《注意力学习指南》，周宁，第 8 页）已成功读取，可以正常使用；第二份资料（《注意力补充资料》）暂时读取失败，正文内容无法获取，因此这份资料里的内容目前不做引用。下一步：先用已读取的第一份资料整理答案；对第二份资料只说明“暂时无法读取该资料”，不推测它的内容。",
+      "progressSchemaValid": true,
+      "finishReason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 2591,
+        "completion_tokens": 109,
+        "total_tokens": 2700,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 2591
+      },
+      "checks": "passed"
+    }
+  ],
+  "manualReview": {
+    "status": "passed-for-six-scoped-cases",
+    "findings": [
+      "Ordinary answer gives weighted sum with title citation, confirmed author and page; no record dump.",
+      "Unknown author remains unconfirmed; owner/creator not substituted.",
+      "Unread and partial evidence are explicit; no invented successful comparison.",
+      "General normalization background is labelled separately and is not attributed to the source.",
+      "Technical request returns requested synthetic ID/version/error code, omitting tokens, unrelated private notes, ownership IDs and raw availability flags.",
+      "Explicit commentary progress matches native public-activity schema and preserves the failed read."
+    ],
+    "limits": "One sample per case in final run; not a secrecy guarantee or a full Worker/native-v3/ledger/delivery replay. An earlier spontaneous plan failed native schema validation; plan correction is not qualified here."
+  }
+}

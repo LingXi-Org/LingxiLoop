@@ -25,6 +25,32 @@ The extended `confidence-citations.test.ts` integration fixture asserts the **ac
 
 ## Limits and handoff
 
-Deterministic guidance tests verify policy admission, not that every model obeys the policy. Scripted output and source-card rendering do not prove a live model will omit arbitrary secrets or faithfully summarize unknown JSON. No live-provider run, original production conversation replay, or browser interaction test was performed. A live provider qualification for mixed source content/metadata, ready/unavailable/partial failure, unknown author, and explicit technical requests remains a release acceptance gap. Prompt instructions are not a secrecy boundary.
+Deterministic guidance tests verify policy admission, not that every model obeys the policy. Scripted output and source-card rendering do not prove a live model will omit arbitrary secrets or faithfully summarize unknown JSON. The follow-up below adds real provider output qualification for six synthetic cases. The original production conversation, browser interaction, complete Worker/native-v3 streaming path and live tenancy/ledger/delivery were not replayed. Prompt instructions are not a secrecy boundary.
 
 Only the issue-616 branch is owned here. At the check, open PRs 614 and 615 did not touch these changed files. The parent integrator owns independent frozen-candidate review and release coordination, including any later #611/#612 overlap. This work creates a draft PR only: no approval, merge, deployment, SDK publication, credential change or issue closure.
+
+## Real provider output follow-up (2026-11-02)
+
+The follow-up reused the existing ignored `.env.local` provider configuration through the shared `createOpenAIClient`; no credential was created, changed, printed or copied. Provider: `api.siliconflow.cn`, model: `deepseek-ai/DeepSeek-V4.1-Flash`. Only synthetic observations were sent. The test performs no product database writes, overrides no product ledger or authorization, disables provider thinking, uses zero SDK retries, and calls no reviewer model. Its local evidence retains provider token usage and visible output; this is an isolated output evaluation, not a product billable run or native Worker qualification.
+
+Reproduce the opt-in fixture (ordinary CI skips the live request):
+
+```sh
+LINGXILOOP_LIVE_PUBLIC_ANSWERS=1 NODE_USE_ENV_PROXY=1 DOTENV_CONFIG_PATH=.env.local ISSUE616_EVIDENCE_PATH=/tmp/616-live \
+  node --import dotenv/config --import tsx --test --test-force-exit server/src/__tests__/public-answer-live.test.ts
+```
+
+The fixture uses the exact current product answer/citation instruction constants, the registered progress-skill body, and the same `publicActivitySchema` → Zod JSON Schema conversion used by native tools. Tool observations are synthetic fixtures; no actual knowledge read is claimed. Progress uses a real provider tool call parsed against the native schema, with `kind=commentary` explicitly requested. Visible labels/text/plan steps are examined; internal tool-wire item IDs remain separate from public copy.
+
+Final run: **6/6 cases passed** (7 Node tests including the parent), 22.0 seconds total. [Actual visible outputs, usage and manual review](real-provider.json) cover ordinary JSON-backed answers, title/known-author/page attribution, unknown author, failed read, partial read, the explicit technical ID/version/error-code exception, and valid public commentary. All cases exclude synthetic token/private-note/ownership fields; ordinary answers and progress additionally exclude source IDs, hashes, ready and raw error codes. Partial-read source content stays at the excerpt's level; added general background is separately labelled. The final wording honestly states the missing second source and does not claim a completed comparison.
+
+All earlier attempts are retained, rather than reporting only the green sample:
+
+- [01](attempts/01-original.json): disclosure checks passed, but manual review found an unsupported scaled-dot-product subtype and weighted-average claim attributed to the excerpt. Citation guidance now prohibits expanding source claims beyond returned detail.
+- [02](attempts/02-grounding.json): a normalization step was still added before the citation. The technical test also incorrectly rejected a legitimate page citation; that overrestriction was removed.
+- [03](attempts/03-technical-exception.json): source grounding improved; the test incorrectly rejected a relevant error code during explicit troubleshooting. The technical case now explicitly asks for that code, while ordinary/progress cases continue to forbid it.
+- [04](attempts/04-diagnostic-and-plan.json): the technical answer echoed raw availability fields beyond the named diagnostic fields; guidance now limits named-field requests to those fields plus a plain-language explanation. A spontaneously chosen plan also failed native `state`/`activeIndex` validation. Its public text was not captured before parsing failed; subsequent fixture code preserves visible text on schema failure. Final progress qualification explicitly exercises commentary, and does not qualify arbitrary plan generation or correction.
+
+There were 30 direct provider calls across the five runs, with no reviewer calls; 29 public outputs are retained because of the noted initial schema-capture gap. This small directed sample does not establish a statistical non-disclosure guarantee. The existing publication, tool admission and audience authorization remain the enforcement boundaries.
+
+The first attempt to launch the whole smoke runner with the live flag used that runner's placeholder key and was refused by the new guard before a provider request. That smoke retry was stopped while an unrelated artifact test was waiting, and is not counted as passed. The isolated command above preloads the existing authorized configuration and is the recorded live result. Focused guidance/citation tests and lint were rerun after the changes; local server typecheck remains limited by the preinstalled 3.8.16 SDK. Final PR CI, rather than that old local installation, owns locked-3.8.21 qualification.

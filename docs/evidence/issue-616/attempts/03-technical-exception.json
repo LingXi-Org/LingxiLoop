@@ -1,0 +1,138 @@
+{
+  "qualification": "real-provider-synthetic-observations-output-only",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "providerHost": "api.siliconflow.cn",
+  "productDatabaseWritten": false,
+  "reviewerCalls": 0,
+  "records": [
+    {
+      "id": "ordinary",
+      "status": "returned",
+      "elapsedMs": 4412,
+      "visible": "注意力的核心计算分两步完成。资料把过程概括为：先根据查询与键的相关程度得到权重，再对值进行加权求和，也就是先算权重，再用这些权重汇总对应的值，得到最终结果[《注意力学习指南》第8页](#cite-S1)。这条定义较概括，资料没有进一步说明相关程度的具体算法或归一化方式。\n\n作者：周宁（已确认）；页码：第8页。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 760,
+        "completion_tokens": 92,
+        "total_tokens": 852,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 760
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "unknown-author",
+      "status": "returned",
+      "elapsedMs": 1851,
+      "visible": "这份资料的作者信息暂未确认。目前能看到的只是资料标题《注意力学习指南》和其中第 8 页的部分内容，没有可靠的作者署名信息。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 758,
+        "completion_tokens": 35,
+        "total_tokens": 793,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 758
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "failed-read",
+      "status": "returned",
+      "elapsedMs": 1782,
+      "visible": "我暂时无法读取「注意力补充资料」，因此没法总结它的内容。这次读取资料时没有拿到正文，不能据此猜测或补写要点。\n\n如果这篇资料可以重新上传、换个链接或稍后再试，请告诉我，我会再读取并整理内容。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 678,
+        "completion_tokens": 55,
+        "total_tokens": 733,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 678
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "partial-read",
+      "status": "returned",
+      "elapsedMs": 3683,
+      "visible": "目前只能读取第一份资料，第二份暂时无法读取，因此不能完整地逐项对比两份资料的注意力计算。\n\n1. **《注意力学习指南》**（周宁，第 8 页）说明：注意力先根据查询与键的相关程度得到权重，再对值加权求和 [注意力计算的基本方式](#cite-S1)。这份资料对注意力计算的描述止于这一层。\n\n2. **《注意力补充资料》**：暂时无法读取该资料，因此其中对注意力计算的具体说明无法确认，也无法与第一份资料进行对照。\n\n如果要继续对比，可以在资料恢复可读后重新查询；或者，如果您能提供第二份资料的内容，我也可以补充对照。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 809,
+        "completion_tokens": 145,
+        "total_tokens": 954,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 809
+      },
+      "checks": "passed"
+    },
+    {
+      "id": "technical",
+      "status": "returned",
+      "elapsedMs": 3378,
+      "visible": "本次两份资料的读取结果如下：\n\n**第一份资料**\n- 来源 ID：ks-synthetic-616\n- 版本：sha256:synthetic616\n- 状态：已读取，可正常使用\n\n**第二份资料**\n- 来源 ID：ks-synthetic-failed-616\n- 版本：未提供（该资料未能成功读取，因此没有可用的版本信息）\n- 未读到原因：上游服务超时（错误代码 SYNTHETIC_UPSTREAM_TIMEOUT），资料内容不可用\n\n如需重新读取第二份资料，可以再次发起请求。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 833,
+        "completion_tokens": 124,
+        "total_tokens": 957,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 833
+      }
+    },
+    {
+      "id": "progress",
+      "status": "returned",
+      "elapsedMs": 3680,
+      "visible": "资料读取进展\n第一份资料已读取完成；第二份资料暂时无法读取。我先基于已读到的内容整理要点，并会单独说明第二份资料的缺失情况。\n读取第一份资料\n已成功读取，内容可用。\n读取第二份资料\n暂时无法读取该资料。\n整理要点并说明缺口\n基于第一份资料整理结论，并标注第二份资料未能读取带来的不确定性。",
+      "finishReason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 2489,
+        "completion_tokens": 151,
+        "total_tokens": 2640,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 2489
+      },
+      "checks": "passed"
+    }
+  ],
+  "manualReview": {
+    "status": "policy-output-acceptable-test-correction-needed",
+    "finding": "Technical troubleshooting legitimately returned the related timeout error code. The test incorrectly prohibited that code even for an explicit technical request. Ordinary and progress outputs omitted it; no credentials or unrelated private fields were returned. Partial-read source attribution is now at the supplied excerpt level."
+  }
+}
