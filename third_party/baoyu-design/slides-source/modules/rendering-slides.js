@@ -1,5 +1,6 @@
 // Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
+import { slideMathRuns, isCodeText } from "../math.js";
 function installRenderingSlides(runtime2) {
   var SlideRendererReact, SlideRendererReactDom, SlideRendererJsx, textFitScaleVariable, textFitFontSizeVariable, textFitClipVariable, slideEditorChromeContext, slideStructureEnabledContext, linkModifierKeyLabel, linkModifierPressHint, richTextDoubleTapWindowMs, renderedLinkOptions, pointerClickMovementTolerance, pointerPositionForMouse, pointerClickMoved, pointerHasLinkModifier, slideLinkContext, richTextEditingContext, listRenderingContext, mediaPlaceholderLabelCss, transparencyCheckerboardGradient, allowEmbedScripts, htmlEmbedMarkerAttribute, embedsDisabledEventName, slideEmbedGuardConfig, slideEmbedContentSecurityPolicy, shapeStyleElementId, shapeStylesCss, shapeClipPaths, slideFrameIdContext, supportsPlaintextContentEditable, linkDoublePressTimeoutMs, plaintextPasteFallback, preventDefaultInput, pasteRichTextPlaintext, listIndentFallback, editableFocusTimeoutMs, initializeSlideRenderer;
   function nodeInlineStyleCss(style, nodeKind) {
@@ -636,7 +637,10 @@ function installRenderingSlides(runtime2) {
         }, value6) : SlideRendererJsx.jsx("div", {
           "data-cell": value6,
           style: state2,
-          children: input2
+          children: SlideRendererJsx.jsx(RichTextRuns, {
+            runs: [{ text: input2 }],
+            allowMath: !isCodeText(node)
+          })
         }, value6);
       }))
     });
@@ -721,14 +725,41 @@ function installRenderingSlides(runtime2) {
   function isLinkSelectShortcut(event) {
     return (event.key === "k" || event.key === "K") && !event.shiftKey && !event.altKey && ((0, runtime2.isApplePlatform)() ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey);
   }
-  function RichTextRuns({ runs, editing, drawn }) {
+  function MathFormula({ html, display }) {
+    const ref = SlideRendererReact.useRef(null);
+    SlideRendererReact.useLayoutEffect(() => {
+      const element = ref.current, container = element?.closest("[data-text-path], [data-cell]");
+      if (!element || !container) return;
+      const fit = () => {
+        element.style.fontSize = "";
+        const rectangle = container.getBoundingClientRect(), css = getComputedStyle(container);
+        const zoom = container.offsetWidth > 0 ? rectangle.width / container.offsetWidth : 1;
+        const available = (container.clientWidth - (parseFloat(css.paddingLeft) || 0) - (parseFloat(css.paddingRight) || 0)) * zoom;
+        const content = element.querySelector(".katex-html");
+        if (!content || available <= 0) return;
+        const natural = Math.max(...Array.from(content.children).map(child => child.getBoundingClientRect().width), content.getBoundingClientRect().width);
+        if (natural > available + 1) element.style.fontSize = String(Math.max(1, available - 2) / natural) + "em";
+      };
+      fit();
+      const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(fit);
+      observer?.observe(container);
+      container.ownerDocument.fonts?.addEventListener("loadingdone", fit);
+      return () => { observer?.disconnect(); container.ownerDocument.fonts?.removeEventListener("loadingdone", fit); };
+    }, [html]);
+    return SlideRendererJsx.jsx("span", { ref, "data-slide-math": display ? "display" : "inline",
+      className: "slides-math", dangerouslySetInnerHTML: { __html: html } });
+  }
+  function RichTextRuns({ runs, editing, drawn, allowMath = !0 }) {
     let { links: value, onLinkOpen: value2, plainPress: value3 } = SlideRendererReact.useContext(slideLinkContext), value4 = SlideRendererReact.useContext(richTextEditingContext), ref = SlideRendererReact.useRef(null), ref2 = SlideRendererReact.useRef(null), callback = SlideRendererReact.useCallback(() => {
       let current = ref2.current;
       current !== null && (ref2.current = null, clearTimeout(current.timer), current.doc.removeEventListener("pointerdown", callback, !0));
     }, []);
     return SlideRendererReact.useEffect(() => callback, [callback]), SlideRendererJsx.jsx(SlideRendererJsx.Fragment, {
-      children: runs.map((input, options) => {
-        let text = drawn === void 0 ? input.text : SlideRendererJsx.jsx(runtime2.ArtifactCardText, {
+      children: (!editing && drawn === void 0 && allowMath ? slideMathRuns(runs) : runs).map((input, options) => {
+        let text = input.mathHtml ? SlideRendererJsx.jsx(MathFormula, {
+          html: input.mathHtml,
+          display: input.mathDisplay
+        }) : drawn === void 0 ? input.text : SlideRendererJsx.jsx(runtime2.ArtifactCardText, {
           stored: input.text,
           ...drawn
         });
@@ -797,7 +828,8 @@ function installRenderingSlides(runtime2) {
   function RichTextLines({ node, editing = !1 }) {
     let listMode = SlideRendererReact.useContext(listRenderingContext), lineContent = (runs) => runs.length === 0 ? SlideRendererJsx.jsx("br", {}) : SlideRendererJsx.jsx(RichTextRuns, {
       runs,
-      editing
+      editing,
+      allowMath: !isCodeText(node)
     });
     return (0, runtime2.groupTextLinesByList)(node).flatMap((group, index4) => {
       if (group.list === null)
@@ -836,21 +868,11 @@ function installRenderingSlides(runtime2) {
       return SlideRendererJsx.jsx(RichTextLines, {
         node
       });
-    if (node.marks === void 0)
-      return SlideRendererJsx.jsx(SlideRendererJsx.Fragment, {
-        children: node.text
-      });
-    let lines = (0, runtime2.textLinesAsRuns)(node);
-    return SlideRendererJsx.jsx(SlideRendererJsx.Fragment, {
-      children: lines.map((input, options) => SlideRendererJsx.jsxs(SlideRendererReact.Fragment, {
-        children: [
-          options > 0 ? `
-` : null,
-          SlideRendererJsx.jsx(RichTextRuns, {
-            runs: input
-          })
-        ]
-      }, options))
+    // Parse the whole text, including marks and newlines inside matrix/aligned
+    // environments. Editing still uses raw RichTextLines below.
+    return SlideRendererJsx.jsx(RichTextRuns, {
+      runs: (0, runtime2.textRunsForRange)(node.text, node.marks ?? [], 0, node.text.length),
+      allowMath: !isCodeText(node)
     });
   }
   function renderedTextCss(node, background, inStack, parentDirection, fitBox, listMode) {

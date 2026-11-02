@@ -96,7 +96,22 @@ export async function buildSlidesEditor() {
   const font = Buffer.from(fontUrl[1], 'base64')
   const fontName = `anthropicons-variable-${hash(font).slice(0,16)}.woff2`
   await writeFile(resolve(output, 'assets', fontName), font)
-  const css = sourceCss.replace(fontUrl[0], `./${fontName}`)
+  let mathCss = await readFile(resolve(root, 'node_modules/katex/dist/katex.min.css'), 'utf8')
+  // Use the already locked KaTeX and local content-addressed WOFF2 assets. No
+  // network CDN, extra renderer version or editor CSP exception is needed.
+  mathCss = mathCss.replace(/src:[^;}]+(?=[;}])/g, declaration => {
+    const font = /url\(fonts\/(KaTeX_[A-Za-z0-9-]+\.woff2)\)/.exec(declaration)
+    assert.ok(font, 'Expected KaTeX WOFF2 source')
+    return `src:url(__KATEX_FONT_${font[1]}__) format("woff2")`
+  })
+  for (const [, name] of [...mathCss.matchAll(/__KATEX_FONT_(KaTeX_[A-Za-z0-9-]+\.woff2)__/g)]) {
+    const bytes = await readFile(resolve(root, 'node_modules/katex/dist/fonts', name))
+    const outputName = name.replace('.woff2', `-${hash(bytes).slice(0,16)}.woff2`)
+    await writeFile(resolve(output, 'assets', outputName), bytes)
+    mathCss = mathCss.replaceAll(`__KATEX_FONT_${name}__`, `/artifact-editor/slides-assets/${outputName}`)
+  }
+  const css = sourceCss.replace(fontUrl[0], `./${fontName}`) + '\n' + mathCss + '\n'
+    + await readFile(resolve(sourceRoot, 'math.css'), 'utf8')
   const cssName = `editor-${hash(css).slice(0,16)}.css`
   await writeFile(resolve(output, 'assets', cssName), css)
   const entry = Object.entries(result.metafile.outputs).find(([, meta]) => meta.entryPoint?.endsWith('/main.js'))
@@ -120,6 +135,7 @@ export async function buildSlidesEditor() {
     await copyFile(resolve(sourceRoot, name), resolve(output, 'assets', name))
   }
   await copyFile(resolve(sourceRoot, 'third-party-licenses.txt'), resolve(output, 'third-party-licenses.txt'))
+  await writeFile(resolve(output, 'third-party-licenses.txt'), '\nKaTeX 0.16.47 (MIT)\n' + await readFile(resolve(root, 'node_modules/katex/LICENSE'), 'utf8'), { flag: 'a' })
   await build({ entryPoints: [resolve(sourceRoot, 'node/compiler.js')], outfile: resolve(output, 'node/compiler.cjs'),
     bundle: true, format: 'cjs', platform: 'node', target: ['node22'], legalComments: 'inline' })
   const compressed = {}

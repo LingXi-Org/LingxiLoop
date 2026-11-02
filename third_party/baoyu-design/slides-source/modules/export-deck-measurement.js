@@ -1,5 +1,6 @@
 // Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
+import { slideHasMath } from "../math.js";
 function installExportDeckMeasurement(runtime2) {
   var deckMeasurementExports, reactForExportDeckMeasurement, reactDOMClientForExportDeckMeasurement, IDENTITY_TRANSFORM, ZERO_CORNER_RADII, MEASUREMENT_TOLERANCE, CANVAS_FONT_STYLE_KEYS, initializeDeckMeasurement;
   function textHorizontalHold(stack, childIndex, parentPath) {
@@ -542,7 +543,7 @@ function installExportDeckMeasurement(runtime2) {
           lateFamilies: value7
         } : {}
       }, items2 = [];
-      return assets.forEach((input, options2) => {
+      assets.forEach((input, options2) => {
         let value8 = value.querySelector('[data-measure-slide="' + String(options2) + '"]')?.firstElementChild;
         if (!value8) {
           state.slides.push({
@@ -908,7 +909,25 @@ function installExportDeckMeasurement(runtime2) {
             ground: entry.ground
           } : {}
         });
-      }), await rasterizeSvgImages(state), await replaceRasterFallbacks(state, items2), state;
+      }), await rasterizeSvgImages(state), await replaceRasterFallbacks(state, items2);
+      // Native PPTX text cannot represent KaTeX layout. Preserve the rendered
+      // page using the existing capture path, with notes and other pages intact.
+      for (let index = 0; index < assets.length; index++) {
+        if (!slideHasMath(assets[index])) continue;
+        runtime2.initializePdfCapture();
+        const capture = await runtime2.exportSlidePng(assets[index], faces, 2, options);
+        state.slides[index] = {
+          bg: assets[index].bg,
+          notes: assets[index].notes,
+          leaves: [{ kind: "img", rect: { x: 0, y: 0, w: runtime2.SLIDE_WIDTH, h: runtime2.SLIDE_HEIGHT },
+            dataUri: "data:image/png;base64," + runtime2.bytesToBase64(capture.png), fit: "contain",
+            naturalW: runtime2.SLIDE_WIDTH * 2, naturalH: runtime2.SLIDE_HEIGHT * 2,
+            alt: "Formula slide " + String(index + 1) }]
+        };
+        state.exportNotes = [...new Set([...(state.exportNotes ?? []), ...capture.warnings,
+          "含数学公式的幻灯片以图片保留排版；请在原演示文稿中编辑公式。"] )];
+      }
+      return state;
     } finally {
       value2.unmount(), value.remove();
     }

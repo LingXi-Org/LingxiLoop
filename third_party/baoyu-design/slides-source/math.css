@@ -1,0 +1,8 @@
+/* Scope math typography to the derived Slides view. Authored text stays intact. */
+.slides-math { white-space: normal; text-transform: none; letter-spacing: normal; }
+.slides-math[data-slide-math="display"] { display: block; max-width: 100%; }
+.slides-math .katex-display { margin: .35em 0; }
+/* KaTeX emits legal break points as separate .base spans. Let display math
+   wrap there, so the existing text-fit pass can measure its real height. */
+.slides-math .katex-display > .katex,
+.slides-math .katex-display > .katex > .katex-html { white-space: normal; }
