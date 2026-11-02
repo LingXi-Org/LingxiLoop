@@ -242,9 +242,10 @@ gh workflow run deploy.yml --ref main -f command=knowledge-observe -f run_id='im
 Keep **`[skip deploy]` in the merge commit message** for this observation-only
 PR. The existing push workflow would otherwise invoke `up` on every main merge.
 Do not use `up`, `servers`, `plan` or a runtime patch command to observe.
-This PR extracts the same observer from draft #637; after landing, rebase #637
-onto it instead of adding a second implementation. The budget increases and
-embedding/model configuration changes in #637 remain separate, unapproved gates.
+The observer was extracted from draft #637 into #641, with transport negotiation
+fixed in #642; #637 now inherits both as one implementation. The user approved
+#637's numerical new-root limits at 11:58 UTC on 2026-11-02. Its independent
+endpoint/index compatibility gate still blocks release.
 
 The Actions observation skips image builds and selects a separate, fixed CLI
 step. The run ID is passed via an environment variable as one quoted argument,
@@ -279,7 +280,7 @@ The developer task has not dispatched or executed this production observation.
 
 ## Notebook embedding and extended artifact execution (#633)
 
-**Draft release gates remain closed.** The integrator's read-only observation
+**The endpoint/index release gate remains closed.** The integrator's read-only observation
 41440171225 found a sealed active `Pro/BAAI/bge-m3` generation with 1024 dimensions,
 37 chunks and an exact frontend `/internal/open-notebook/v1/shadow` endpoint;
 the retained legacy database has 35 chunks. Both have zero invalid dimensions.
@@ -295,8 +296,9 @@ index to pass it. The existing coordinator has no endpoint-only operation.
 specifies required qualification, exact CAS/fence/receipt stages and rollback
 limits for parent decision; it is not implemented or authorized to execute.
 
-The proposed new-root limits of 512 calls / 8M tokens / $50 / two hours still
-require explicit numerical user approval. They are not a global spending cap.
+The user explicitly approved the new-root limits of 512 calls / 8M tokens /
+$50 / two hours on 2026-11-02 at 11:58 UTC. They are not a global spending cap
+and do not change old roots. The independent endpoint/index gate remains closed.
 Both running workers currently report 128 / 1M / $10 / 30min, which does not
 establish the original root's frozen limits. After #642, all four observation views succeeded: original run version 1 /
 fence 1 remains partial and publicly reports budget exhaustion. Its frozen

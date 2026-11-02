@@ -47,7 +47,7 @@ The parent may reject or revise this proposal. Until an approved, qualified endp
 
 ## Effective new-root budgets
 
-**Pending explicit numerical user approval.** These are per-new-root limits, not a global spending cap; multiple roots can accumulate expense. Do not merge/deploy this candidate while that approval is outstanding.
+**Numerical approval received:** on 2026-11-02 at 11:58 UTC, the user replied “允许新上限” to the explicit 512 calls / 8M tokens / $50 / 2h proposal and its no-global-cap explanation. These approved limits apply only to new roots; multiple roots can accumulate expense. No old root is modified. The independent endpoint/index compatibility gate remains closed; numerical approval is not migration or release authority for the blocked route.
 
 | Dimension | Prior product/compose default | Candidate product and both slots | Change |
 | --- | ---: | ---: | ---: |
@@ -97,3 +97,5 @@ Failures retained: the old `Promise.all` regression lost text on vector 404; old
 The new production-observation regression first failed against the automatic-backend candidate, then passed after preserving defaults and adding the explicit route gate. After rebasing onto #642, 30 Node checks (Notebook/rendered-model, inherited observation transport and runtime-CAS), five Python observer checks and four focused production RAG/import-graph/Worker-barrier contracts passed locally. Prior test counts above belong to their earlier candidate SHAs; the rebased final SHA must have its own green CI. This follow-up has made no production writes and no model calls. It only reread the already authorized Actions observation log.
 
 The successful follow-up observation was run by the integrator on observation-only main `8a8db8b5` after #641/#642 were merged with `[skip deploy]`; the actual product remained `fcfa3b71`. This task only reread its existing Actions log. No embedding request, new root, model call or index/configuration mutation was made.
+
+Budget approval follow-up: only the numerical waiting gate is removed. The route-binding proposal still requires parent review and separate qualification; no production write, deployment or extra model call follows from that approval in this developer task.
