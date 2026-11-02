@@ -8,7 +8,7 @@ test('course search state comes only from actual search receipts, not embeddings
   assert.equal(knowledgeSearchStatus([{toolName:'knowledge__search'}]),'running')
   assert.equal(knowledgeSearchStatus([{toolName:'knowledge.search'}],true),'failed')
   assert.equal(knowledgeSearchStatus([{toolName:'knowledge.search',isError:true}]),'failed')
-  for(const status of ['matched','no_matches','no_sources','processing','not_applicable'] as const)
+  for(const status of ['matched','degraded','no_matches','no_sources','processing','not_applicable'] as const)
     assert.equal(knowledgeSearchStatus([{toolName:'knowledge.search',result:{status:'completed',sourceStatus:status}}]),status)
   for(const result of [{status:'failed'},{status:'cancelled'},{status:'completed',sourceStatus:'unavailable'}])
     assert.equal(knowledgeSearchStatus([{toolName:'knowledge.search',result}]),'failed')

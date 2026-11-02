@@ -1,8 +1,9 @@
-import type { createLingxiOS, RunIdentity, RunState, RuntimeOperationContext, TerminalFeedback } from '@lyyzka/lingxios'
+import type { createLingxiOS, RunIdentity, RunState, RuntimeOperationContext, TerminalFeedback, BudgetDimension } from '@lyyzka/lingxios'
 import type { TerminalScope } from '../../../src/lib/terminalFeedback.js'
+import { executionBudgetMessages, readExecutionBudgetDimension } from '../../../src/lib/executionBudget.js'
 
 type Runtime = Awaited<ReturnType<typeof createLingxiOS>>
-export type TerminalFailure = 'protocol' | 'timeout' | null
+export type TerminalFailure = 'protocol' | 'timeout' | { kind: 'budget'; dimension: BudgetDimension } | null
 
 /** The result and message must belong to this terminal root and current fence.
  * A partial public answer or a previous request's result is not a receipt. */
@@ -40,8 +41,12 @@ export async function terminalFailure(
     for (const event of result.events) {
       if (event.kind !== 'run.failed' || event.runId !== identity.runId) continue
       const timing = event.data._executionTrace
-      if (!timing || typeof timing !== 'object'
-        || Reflect.get(timing, 'requestVersion') !== state.run.requestVersion || Reflect.get(timing, 'fence') !== state.run.fence) continue
+      const current = timing && typeof timing === 'object'
+        ? Reflect.get(timing, 'requestVersion') === state.run.requestVersion && Reflect.get(timing, 'fence') === state.run.fence
+        : state.run.requestVersion === 1 && state.run.fence === 1 && state.run.attempts === 1
+      if (!current) continue
+      const dimension = readExecutionBudgetDimension(event.data.budgetLimit)
+      if (dimension) return { kind: 'budget', dimension }
       const diagnostics = event.data.modelDiagnostics
       if (!diagnostics || typeof diagnostics !== 'object') return null
       if (Reflect.get(diagnostics, 'kind') === 'protocol') return 'protocol'
@@ -60,7 +65,7 @@ export function terminalFeedbackText(
   const delivered = scope === 'follow_up'
   const reasons = {
     context_limit: '当前执行超出了可处理的上下文范围，可以缩小材料范围后继续。',
-    budget_limit: '本轮预算已达上限，部分工作未能继续。',
+    budget_limit: failure && typeof failure === 'object' ? executionBudgetMessages[failure.dimension] : '本轮预算已达上限，部分工作未能继续。',
     model_unavailable: failure === 'timeout' ? '模型响应超时，当前答复未能完成。' : '模型服务暂时不可用，当前答复未能完成。',
     permission_denied: '当前权限不足，执行已停止。',
     dependency_unavailable: '所需服务暂时不可用，执行未能完成。',

@@ -413,6 +413,7 @@ test('partial and blocked replies retain delivered results and always expose one
           : delivered === 'process' ? [{ type: 'text', text: '公开过程', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-304', kind: 'commentary', label: '公开过程' } } } }]
           : delivered === 'text' ? [{ type: 'text', text: '保留的部分答复。' }] : []
         const harness = { ...createRunView('run'), lifecycle, requestVersion: 1,
+          ...(delivered === 'artifact' ? { resultId: 'saved-result', resultFence: 0, messageFence: 0 } : {}),
           goalOutcome: { status: outcome, requestVersion: 1 },
           artifacts: delivered === 'artifact' ? [{ path: '/workspace/已交付.pdf', mime: 'application/pdf', size: 100, sha256: 'a'.repeat(64) }] : [] }
         const reply = { ...base, content: [...content, ...(delivered === 'empty' ? [] : [{ type: 'text', text: '过程记录', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-status-304', kind: 'commentary', label: '过程记录' } } } }])], status: { type: 'incomplete', reason: 'other' },
@@ -426,8 +427,8 @@ test('partial and blocked replies retain delivered results and always expose one
         assert.equal($('[data-run-outcome]').attr('data-run-outcome'), outcome)
         assert.equal($('[data-run-outcome]').attr('role'), 'status')
         assert.equal($('[data-run-outcome][data-slot="error-state"]').length, 0)
-        assert.match($('[data-run-outcome]').text(), /答复尚未完成/)
-        assert.equal($('[data-run-outcome] button').text(), '重试')
+        assert.match($('[data-run-outcome]').text(), delivered === 'artifact' ? /作品修改已保存.*后续工作未完成/ : /答复尚未完成/)
+        assert.equal($('[data-run-outcome] button').text(), delivered === 'artifact' ? '继续未完成部分' : '重试')
       }
     }
   }

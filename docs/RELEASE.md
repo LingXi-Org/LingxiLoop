@@ -242,9 +242,11 @@ gh workflow run deploy.yml --ref main -f command=knowledge-observe -f run_id='im
 Keep **`[skip deploy]` in the merge commit message** for this observation-only
 PR. The existing push workflow would otherwise invoke `up` on every main merge.
 Do not use `up`, `servers`, `plan` or a runtime patch command to observe.
-This PR extracts the same observer from draft #637; after landing, rebase #637
-onto it instead of adding a second implementation. The budget increases and
-embedding/model configuration changes in #637 remain separate, unapproved gates.
+The observer was extracted from draft #637 into #641, with transport negotiation
+fixed in #642; #637 now inherits both as one implementation. The user approved
+#637's numerical new-root limits at 11:58 UTC on 2026-11-02. Budget/retrieval
+changes now ship independently; the separate embedding route exception remains
+pending specific approval and is not included in #637.
 
 The Actions observation skips image builds and selects a separate, fixed CLI
 step. The run ID is passed via an environment variable as one quoted argument,
@@ -276,3 +278,33 @@ bounded to 20/45 seconds; the MCP read has a 20-second deadline and 256-KiB cap.
 Each view runs once. A failed view preserves the others, reports top-level
 `status=partial` and exits nonzero. Inspect each view's status in the Actions log.
 The developer task has not dispatched or executed this production observation.
+
+## Approved root budgets and retrieval degradation (#633 / #637)
+
+This release independently applies the user's approved new-root limits of
+512 model calls / 8M tokens / $50 / two hours (approved 2026-11-02 11:58 UTC).
+These are finite per-root limits, not a global spending cap. The public SDK
+retains old roots' frozen limits and native reservation/settlement accounting;
+this release neither migrates nor modifies old roots.
+
+Hybrid search settles text/vector requests independently, preserves successful
+results with a safe degraded status, honors cancellation and rechecks current
+reader/source authorization before returning citations. Saved artifacts survive
+partial budget completion and remain available for human continuation.
+
+Notebook compose, embedding endpoint, frontend access boundaries and deployment
+preflight are unchanged from main. The global Notebook preflight and endpoint
+configuration overrides have been removed from #637; there is no bypass flag.
+The existing #641/#642 read-only observation remains unchanged. The separate
+embedding failure does not block releasing these approved, independent fixes.
+
+Embedding remains unresolved: the active Pro/1024 generation's exact sealed
+endpoint is the frontend `/internal/open-notebook/v1/shadow`, which is denied.
+The proposed follow-up is only an exact main-site POST passthrough of
+`/internal/open-notebook/v1/shadow/embeddings` to the existing backend path,
+keeping all other internal paths and artifact origins denied and preserving
+backend authentication, company/model/input checks and ledger accounting.
+That changes the frontend access boundary and requires specific user approval.
+This release contains only its analysis/test plan, with no route exception,
+new token, endpoint relabelling or index migration. See
+[the evidence and separate route qualification plan](evidence/issue-633/README.md).
