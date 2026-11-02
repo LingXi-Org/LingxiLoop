@@ -1,0 +1,16 @@
+{
+  "browser": "cloud Chromium",
+  "scope": "independent public-formula samples, not the unavailable Roadmap source/screenshot; real Design editor at a standalone test origin and real GenUiCard opaque frames; no production artwork writes",
+  "reports": [
+    {
+      "entry": "design",
+      "rendered": 6,
+      "rnn": "Budget $5; RNN $h_t = f(h_{t-1}, x_t)$"
+    },
+    {
+      "entry": "inline",
+      "rendered": 6,
+      "rnn": "Budget $5; RNN $h_t = f(h_{t-1}, x_t)$"
+    }
+  ]
+}

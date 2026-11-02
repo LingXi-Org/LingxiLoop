@@ -1,0 +1,128 @@
+{
+  "browser": "cloud Chromium",
+  "scope": "independent public-formula samples, not the unavailable Roadmap source/screenshot; real Design editor at a standalone test origin and real GenUiCard opaque frames; no production artwork writes",
+  "reports": [
+    {
+      "entry": "design",
+      "scenario": "initial",
+      "result": {
+        "formulas": 8,
+        "display": 3,
+        "matrix": 1,
+        "aligned": 1,
+        "fractions": 1,
+        "fonts": [
+          "KaTeX_Main",
+          "KaTeX_Math",
+          "KaTeX_SansSerif",
+          "KaTeX_Size1",
+          "KaTeX_Size3"
+        ],
+        "invalid": "非法公式仍可读：\\(\\unknowncommand{x}\\)",
+        "invalidDollar": "$\\unknowncommand{x}$",
+        "ordinary": "Budget $5 and $10; ordinary text stays readable.",
+        "code": "const formula = \"\\(x^2\\)\"; const price = \"$5\";",
+        "unsafeLinks": 0,
+        "rnn": "h_t = f(h_{t-1}, x_t)",
+        "inlineTab": 0,
+        "formulaFont": "19.36px",
+        "dollarAttention": true,
+        "inlineCode": "`$h_t=f(x_t)$` stays literal.",
+        "contentHeight": 758.8125,
+        "source": [
+          "x_i^2 + \\sqrt{n}",
+          "\\sum_{i=1}^{n} i",
+          "\\operatorname{Attention}(Q,K,V)=\\operatorname{softmax}\\left(\\frac{QK^{\\mathsf T}}{\\sqrt{d_k}}\\right)V",
+          "\\begin{bmatrix}1 & 2 \\\\ 3 & 4\\end{bmatrix}",
+          "\\begin{aligned}a &= b+c \\\\ d &= \\frac{1}{2}\\end{aligned}",
+          "h_t = f(h_{t-1}, x_t)",
+          "\\operatorname{Attention}(Q,K,V)=\\operatorname{softmax}(\\frac{QK^{\\mathsf T}}{\\sqrt{d_k}})V",
+          "a_1=1"
+        ]
+      }
+    },
+    {
+      "entry": "design",
+      "scenario": "dynamic-update",
+      "result": {
+        "formulas": 8,
+        "display": 3,
+        "matrix": 1,
+        "aligned": 1,
+        "fractions": 1,
+        "fonts": [
+          "KaTeX_Main",
+          "KaTeX_Math",
+          "KaTeX_SansSerif",
+          "KaTeX_Size1",
+          "KaTeX_Size3"
+        ],
+        "invalid": "非法公式仍可读：\\(\\unknowncommand{x}\\)",
+        "invalidDollar": "$\\unknowncommand{x}$",
+        "ordinary": "Budget $5 and $10; ordinary text stays readable.",
+        "code": "const formula = \"\\(x^2\\)\"; const price = \"$5\";",
+        "unsafeLinks": 0,
+        "rnn": "h_{t+1} = f(h_t, x_{t+1})",
+        "inlineTab": 0,
+        "formulaFont": "19.36px",
+        "dollarAttention": true,
+        "inlineCode": "`$h_t=f(x_t)$` stays literal.",
+        "contentHeight": 758.8125,
+        "source": [
+          "x_i^2 + \\sqrt{n}",
+          "\\sum_{i=1}^{n} i",
+          "\\operatorname{Attention}(Q,K,V)=\\operatorname{softmax}\\left(\\frac{QK^{\\mathsf T}}{\\sqrt{d_k}}\\right)V",
+          "\\begin{bmatrix}1 & 2 \\\\ 3 & 4\\end{bmatrix}",
+          "\\begin{aligned}a &= b+c \\\\ d &= \\frac{1}{2}\\end{aligned}",
+          "h_{t+1} = f(h_t, x_{t+1})",
+          "\\operatorname{Attention}(Q,K,V)=\\operatorname{softmax}(\\frac{QK^{\\mathsf T}}{\\sqrt{d_k}})V",
+          "a_2=2"
+        ]
+      }
+    },
+    {
+      "entry": "design",
+      "scenario": "240px-scrollable-formula",
+      "result": [
+        {
+          "width": 200,
+          "content": 354,
+          "tab": 0,
+          "parent": 240
+        },
+        {
+          "width": 200,
+          "content": 200,
+          "tab": 0,
+          "parent": 240
+        },
+        {
+          "width": 200,
+          "content": 200,
+          "tab": 0,
+          "parent": 240
+        }
+      ],
+      "inline": {
+        "width": 200,
+        "content": 200,
+        "tab": 0
+      }
+    },
+    {
+      "entry": "design",
+      "scenario": "full-window-back-to-canvas",
+      "passed": true
+    },
+    {
+      "entry": "design",
+      "scenario": "editor-reopen",
+      "passed": true
+    },
+    {
+      "entry": "design",
+      "scenario": "refresh",
+      "passed": true
+    }
+  ]
+}
