@@ -250,7 +250,7 @@ test('failed streamed replies retain prose and show the official error banner wi
   const error = $('[data-slot="error-state"][role="alert"]')
   assert.match(error.text(), /回复未完成.*超时/)
   assert.equal(error.find('button').text(), '重新生成回复')
-  assert.match(error.attr('class') ?? '', /rounded-2xl.*bg-red-500/)
+  assert.match(error.attr('class') ?? '', /rounded-2xl.*bg-destructive/)
 })
 
 test('terminal feedback shares the run error or cancellation display and retains retry context', () => {

@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { LearningPageHeader, LearningTopTabs } from '@/features/learning/components/LearningPageHeader'
+import { PageBody, PageHeader, PageLayout } from '@/components/shell/PageHeader'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { knowledgeApi } from '../knowledge/api'
 import type { KnowledgeSource, ProjectMaterials } from '../knowledge/contracts'
 import { useAuth } from '@/stores/auth'
@@ -40,12 +41,16 @@ function CourseMaterialsSpaces({ projectId, projectName, readOnly = false, userI
   }, materialsQueryClient)
   const canUpload = !readOnly && query.data?.capabilities.canUpload === true
   const uploadLabel = space === 'public' ? '上传到公共资料' : '上传到我的资料'
-  return <main data-course-materials aria-label={projectName ? `${projectName}课程资料` : '课程资料'} className="learning-page-surface h-full min-h-0 overflow-y-auto bg-background">
-    <div className="learning-page-shell">
-      <LearningPageHeader title="课程资料" actions={canUpload && <Button onClick={() => fileInput.current?.click()}><Upload />{uploadLabel}</Button>} />
-      <LearningTopTabs label="课程资料空间" value={space} onValueChange={value => setSpace(value as MaterialSpace)} items={[{ value: 'public', label: '公共资料' }, { value: 'private', label: '我的资料' }]} />
-      <MaterialsSpace key={space} context={context} readOnly={readOnly} query={query} fileInput={fileInput} />
-    </div>
+  return <main data-course-materials aria-label={projectName ? `${projectName}课程资料` : '课程资料'} className="h-full min-h-0">
+    <PageLayout header={<PageHeader title="课程资料" crumbs={projectName ? [{ label: projectName }] : undefined}
+      actions={canUpload && <Button onClick={() => fileInput.current?.click()} className="max-md:size-11 max-md:p-0"><Upload /><span className="max-md:sr-only">{uploadLabel}</span></Button>} />}>
+      <PageBody>
+        <Tabs value={space} onValueChange={value => setSpace(value as MaterialSpace)} className="mb-4">
+          <TabsList aria-label="课程资料空间"><TabsTrigger value="public">公共资料</TabsTrigger><TabsTrigger value="private">我的资料</TabsTrigger></TabsList>
+        </Tabs>
+        <MaterialsSpace key={space} context={context} readOnly={readOnly} query={query} fileInput={fileInput} />
+      </PageBody>
+    </PageLayout>
   </main>
 }
 
@@ -119,7 +124,7 @@ function MaterialsSpace({ context, readOnly, query, fileInput }: { context: Mate
   const onDownload = (source: KnowledgeSource) => void run([source], () => download(source))
   const resetFilters = () => { setSearch(''); setFormat('all'); setSelected(new Set()) }
   return <>
-    <FileManagerToolbar className="learning-page-toolbar" search={search} format={format} sort={sort} uploadLabel={uploadLabel}
+    <FileManagerToolbar className="mb-4" search={search} format={format} sort={sort} uploadLabel={uploadLabel}
       onSearch={value => { setSearch(value); setSelected(new Set()) }} onFormat={value => { setFormat(value); setSelected(new Set()) }} onSort={setSort} />
     <section aria-label={space === 'public' ? '公共资料' : '我的资料'} className="min-w-0 space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground"><p>{space === 'public' ? '教师上传 · 课程成员可见' : '仅自己可见'}</p>

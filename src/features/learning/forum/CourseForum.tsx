@@ -20,7 +20,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { userFacingError } from '@/lib/userFacingError'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { LearningPageHeader, LearningTopTabs, LearningPageToolbar } from '../components/LearningPageHeader'
+import { PageBody, PageHeader, PageLayout, PageToolbar } from '@/components/shell/PageHeader'
+import { useForumSection } from './forumSection'
 import { useApp } from '@/stores/app'
 import { captureConversationScope, useConversations } from '@/features/conversations/store'
 import { HomeworkComposer } from '../homework/HomeworkComposer'
@@ -29,10 +30,10 @@ import { MemoDetail } from './memos/MemoDetail'
 import { useAuth } from '@/stores/auth'
 import type { LearningSpace } from '../contracts'
 import { forumApi } from './api'
-import type { ForumFilter, ForumItem } from './contracts'
+import type { ForumItem } from './contracts'
 import { ForumComposer } from './ForumComposer'
 import { ForumFiles } from './ForumContentFields'
-import { forumSections, type ForumSection } from './ForumSidebar'
+import { forumSections } from './ForumSidebar'
 import { MemoCard } from './memos/MemoCard'
 import { MemoContent } from './memos/MemoContent'
 
@@ -44,15 +45,13 @@ export function CourseForum({ space }: { space: LearningSpace }) {
 }
 
 function ScopedCourseForum({ space }: { space: LearningSpace }) {
-  const selectSection = (section: ForumSection) => {
-    if (detailId) closeDetail()
-    setKind(section)
-  }
+
   const [display,setDisplay]=useForumDisplay()
   const userId = useAuth(state => state.user?.id)
   const [editing, setEditing] = useState<ForumItem | null>(null), [archived, setArchived] = useState(false)
   const [items, setItems] = useState<ForumItem[]>([]), [nextOffset, setNextOffset] = useState<number | null>(null)
-  const [kind, setKind] = useState<ForumFilter>('all'), [search, setSearch] = useState(''), [tag, setTag] = useState('')
+  const kind = useForumSection(state => state.kind), setKind = useForumSection(state => state.setKind)
+  const [search, setSearch] = useState(''), [tag, setTag] = useState('')
   const [discussion, setDiscussion] = useState<ForumItem | null>(null)
   const [detailId,setDetailId]=useState(()=>new URLSearchParams(location.search).get('post'))
   const [detailError,setDetailError]=useState('')
@@ -74,6 +73,13 @@ function ScopedCourseForum({ space }: { space: LearningSpace }) {
     if(history.state?.from) history.back()
     else {history.replaceState(history.state,'',url);setDetailId(null);setDiscussion(null)}
   }
+  // Choosing a board in the nested sidebar returns from an open post to the feed.
+  const shownKind=useRef(kind)
+  useEffect(()=>{
+    if(shownKind.current===kind) return
+    shownKind.current=kind
+    if(new URLSearchParams(location.search).get('post')) closeDetail()
+  })
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState('')
   const [reference,setReference]=useState<string | null>(null)
   const [date, setDate] = useState<Date>(), [property, setProperty] = useState('all')
@@ -201,11 +207,9 @@ function ScopedCourseForum({ space }: { space: LearningSpace }) {
             {item.targetType === 'post' && (space.canEditContent || item.authorId === userId) && <DropdownMenuItem onSelect={() => setDeleting(item)}>删除内容</DropdownMenuItem>}
             {item.targetType === 'post' && space.canEditContent && item.kind === 'assignment' && item.status === 'PUBLISHED' && <DropdownMenuItem onSelect={() => setClosing(item)}>关闭作业</DropdownMenuItem>}
           </DropdownMenuContent></DropdownMenu>
-  const feedContent = <div ref={feed} hidden={Boolean(detailId)} className="forum-feed learning-page-shell">
-      <LearningPageHeader title="学习论坛" actions={publicationActions} />
-      <LearningTopTabs label="学习论坛版块" value={kind} onValueChange={value => selectSection(value as ForumSection)} items={forumSections.map(({ kind: value, label }) => ({ value, label }))} />
-      <LearningPageToolbar className="forum-tools">
-        <div className="learning-page-search relative min-w-0 flex-1"><SearchIcon aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" aria-label="搜索学习论坛" placeholder="搜索标题与内容" value={search} onChange={event=>setSearch(event.target.value)} maxLength={200}/></div>
+  const feedContent = <div ref={feed} hidden={Boolean(detailId)} className="forum-feed">
+      <PageToolbar className="forum-tools">
+        <div className="relative min-w-0 flex-1"><SearchIcon aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" aria-label="搜索学习论坛" placeholder="搜索标题与内容" value={search} onChange={event=>setSearch(event.target.value)} maxLength={200}/></div>
         <Popover><PopoverTrigger asChild><Button variant="ghost" aria-label="筛选"><SlidersHorizontalIcon className="size-4"/>筛选{(date || property!=='all' || archived || tag) && <span className="size-1.5 rounded-full bg-primary"/>}</Button></PopoverTrigger><PopoverContent className="w-80 space-y-4" align="end">
           <SelectField ariaLabel="内容筛选" value={property} onValueChange={setProperty} options={[
             {value:'all',label:'全部类型'},{value:'pinned',label:'已置顶'},{value:'attachments',label:'含附件'},
@@ -221,7 +225,7 @@ function ScopedCourseForum({ space }: { space: LearningSpace }) {
           <SelectField ariaLabel="时间顺序" value={display.order} onValueChange={order=>setDisplay({...display,order:order as typeof display.order})} options={[{value:'desc',label:'最新在前'},{value:'asc',label:'最早在前'}]}/>
         </PopoverContent></Popover>
         <MemoDisplaySettings value={display} onChange={setDisplay}/>
-      </LearningPageToolbar>
+      </PageToolbar>
       {(date || property!=='all' || archived || tag) && <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
         {date && <span>{date.toLocaleDateString('zh-CN')}</span>}{archived && <span>已归档</span>}{tag && <span>#{tag}</span>}
         <Button variant="ghost" size="sm" onClick={()=>{setDate(undefined);setProperty('all');setArchived(false);setTag('')}}>清除筛选</Button>
@@ -261,7 +265,12 @@ function ScopedCourseForum({ space }: { space: LearningSpace }) {
   const content=<>{feedContent}{detailId && (detailError ? <div role="alert">{detailError}<Button variant="link" onClick={closeDetail}>返回学习论坛</Button></div> : discussion?.id===detailId
     ? <MemoDetail key={`${discussion.targetType}:${discussion.id}`} space={space} item={discussion} from={resolveMemoDetailOrigin(history.state,`/?${new URLSearchParams({project:space.projectId,view:'forum'})}`)} onBack={closeDetail} onChanged={()=>void load()} actions={<>{teacherActions}{itemActions(discussion)}</>} editor={editing?.id===discussion.id ? <ForumComposer space={space} item={discussion} onCreated={()=>void mutate(async()=>{setEditing(null)})} onCancel={()=>setEditing(null)}/> : undefined}/>
     : <p role="status">正在加载内容…</p>)}</>
-  return <section className="forum-page learning-page-surface @container/learning-grid flex h-full min-h-0 flex-col bg-background">
+  const boardLabel = forumSections.find(section => section.kind === kind)?.label
+  return <section className="forum-page h-full min-h-0">
+    <PageLayout scrollProps={{ 'data-forum-scroll': '' }} header={<PageHeader
+      title={kind === 'all' ? '论坛' : boardLabel}
+      crumbs={kind === 'all' ? [{ label: space.title }] : [{ label: space.title }, { label: '论坛', onSelect: () => setKind('all') }]}
+      actions={!detailId ? publicationActions : undefined} />}>
     {entryError && <div role="alert" className="flex flex-wrap items-center gap-2 px-4 py-2 text-sm text-destructive sm:px-6">{entryError}<Button variant="outline" size="sm" disabled={entering} onClick={() => void openHomework()}>重试打开教师助手</Button></div>}
     <Dialog open={publication !== null && (publication === 'homework' ? space.canEditContent : canWrite)} onOpenChange={open => {
       if (!open && !publicationBusy) { setPublication(null); void load() }
@@ -276,6 +285,7 @@ function ScopedCourseForum({ space }: { space: LearningSpace }) {
           : publication === 'discussion' ? <ForumComposer space={space} presentation="dialog" onCreated={published} onCancel={() => setPublication(null)} onWorkingChange={setPublicationBusy} /> : null}
       </DialogContent>
     </Dialog>
-    <div data-forum-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain"><div data-ui-page="forum">{detailId && error && <p role="alert" className="p-4 text-sm text-destructive">{error}</p>}{content}</div></div>
+    <PageBody><div data-ui-page="forum">{detailId && error && <p role="alert" className="mb-4 text-sm text-destructive">{error}</p>}{content}</div></PageBody>
+    </PageLayout>
   </section>
 }

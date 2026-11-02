@@ -14,7 +14,7 @@ const tokens = (value: number|null) => value === null ? '—' : value.toLocaleSt
 const labels = { running: '运行中',waiting: '等待处理',complete: '已完成',partial: '未完成',blocked: '受阻',cancelled: '已取消',error: '失败',unknown: '结果未知' }
 const kindLabels = { agent: 'Agent',llm: 'LLM',embedding: 'Embedding',tool: 'Tool' }
 const icons = { agent: BotIcon,llm: SparklesIcon,embedding: DatabaseIcon,tool: WrenchIcon }
-const hues = { agent: 'bg-indigo-400 dark:bg-indigo-400',llm: 'bg-sky-400 dark:bg-sky-400',embedding: 'bg-violet-400 dark:bg-violet-400',tool: 'bg-teal-400 dark:bg-teal-400' }
+const hues = { agent: 'bg-chart-1',llm: 'bg-chart-2',embedding: 'bg-chart-3',tool: 'bg-chart-4' }
 function flatten(span: TraceSpan): TraceSpan[] { return [span,...span.children.flatMap(flatten)] }
 type WorkFilter = 'all'|'model'|'tool'|'skill'|'retrieval'|'subtask'
 const workGroup = (span: TraceSpan) => span.kind === 'llm' || span.kind === 'embedding' ? 'model'
@@ -136,7 +136,7 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
             {span.id === slowest?.id && <span data-trace-slowest aria-label="最慢调用" title="最慢调用" className="text-muted-foreground inline-flex h-4 shrink-0 items-center gap-0.5 rounded-sm border border-border/60 bg-muted/50 px-0.5 text-[9px] leading-none">
               <Clock3Icon className="size-2.5" aria-hidden="true" /><span className="hidden sm:inline">最慢</span>
             </span>}
-            <span className={cn('size-1.5 shrink-0 rounded-full',span.status === 'error' ? 'bg-destructive' : span.status === 'complete' ? 'bg-emerald-500' : span.status === 'running' ? 'bg-sky-500' : 'bg-muted-foreground/50')} aria-label={labels[span.status]} />
+            <span className={cn('size-1.5 shrink-0 rounded-full',span.status === 'error' ? 'bg-destructive' : span.status === 'complete' ? 'bg-success' : span.status === 'running' ? 'bg-info' : 'bg-muted-foreground/50')} aria-label={labels[span.status]} />
           </button>
         </div>
         <button type="button" onClick={() => setSelectedId(span.id)} aria-label={`${span.name} 时间 ${ms(duration)}，${cost(span)}`}

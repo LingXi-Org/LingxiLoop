@@ -119,7 +119,7 @@ export function AssistantMessageActions() {
         selectBranch(branch.key, branch.ids[index], branch.ids.at(-1)!)
       }} className="[&>p]:hidden" />}
     <button type="button" aria-label={copied ? '已复制回复' : '复制回复'} disabled={!rawText} onClick={() => void copy()}
-      className={cn(buttonClassName, 'grid place-items-center', copied && 'text-emerald-500')}>
+      className={cn(buttonClassName, 'grid place-items-center', copied && 'text-success')}>
       <CopyIcon aria-hidden="true" className={cn(iconSwap, 'size-3.5', copied ? iconSwapOut : iconSwapIn)} />
       <CheckIcon aria-hidden="true" className={cn(iconSwap, 'size-3.5', copied ? iconSwapIn : iconSwapOut)} />
     </button>

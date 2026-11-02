@@ -1,5 +1,3 @@
-import { Cancel01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { Activity, lazy, Suspense, useEffect, useState } from 'react'
 import type { LayoutChangedMeta } from 'react-resizable-panels'
 import { CommandPalette } from '@/components/CommandPalette'
@@ -9,19 +7,22 @@ import { Button } from '@/components/ui/button'
 import '@/features/design/design-workspace.css'
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
+import { CourseNav } from '@/components/shell/CourseNav'
+import { DeckNav } from '@/components/shell/DeckNav'
+import { moduleForView, rememberCourseView } from '@/components/shell/modules'
+import { RightPanelHeader } from '@/components/shell/RightPanel'
+import { ShellNavContext } from '@/components/shell/ShellNav'
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { ConversationsPane } from '@/features/conversations/components/ConversationsPane'
 import { useConversations } from '@/features/conversations/store'
 import { useKnowledgeSources } from '@/features/knowledge/state'
 import { useWorkspace } from '@/features/knowledge/workspace'
-import { CourseAvatar } from '@/features/learning/components/CourseAvatar'
 import { useSettingsDialog } from '@/features/settings/store'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -76,10 +77,7 @@ export function DesktopApp() {
   const companyRole = useAuth((state) => state.companies.find(company => company.id === state.activeCompanyId)?.role)
   const isMobile = useIsMobile()
   const learningSpaces = useLearningSpaces()
-  const workspaces = useWorkspace((state) => state.list)
   const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
-  const activeWorkspace = workspaces.find((project) => project.id === selectedWorkspaceId)
-  const activeProjectName = activeWorkspace?.name ?? '课程'
   const view = useApp((state) => state.view)
   const settingsOpen = useSettingsDialog((state) => state.open)
   const surface = useSurface((state) => state.surface)
@@ -94,6 +92,7 @@ export function DesktopApp() {
   const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const pageRef = useEntrance(`${selectedWorkspaceId}:${view}`)
 
   useEffect(() => {
@@ -148,6 +147,34 @@ export function DesktopApp() {
     setSidebarWidth(clamped)
     persistSidebarWidth(clamped)
   }
+  const shellModule = moduleForView(view)
+  useEffect(() => { rememberCourseView(view) }, [view])
+  useEffect(() => { if (!isMobile) setMobileNavOpen(false) }, [isMobile])
+  const mobileNav = isMobile && shellModule !== 'chat' ? () => setMobileNavOpen(true) : null
+  const chatReady = Boolean(selectedWorkspaceId) && !navigationPending
+  const directPage = isMobile && (shellModule !== 'chat' || !chatReady)
+  const secondary = shellModule === 'chat' ? <ConversationsPane />
+    : shellModule === 'slides' && selectedWorkspaceId ? <DeckNav />
+    : <CourseNav space={learningSpaces.activeSpace} />
+  const page = navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" />
+    : view === 'cases' ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载案例库" />}><CasesPage key={companyId} /></Suspense>
+    : view === 'slides' && selectedWorkspaceId ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载演示文稿" />}><SlidesPage key={selectedWorkspaceId} projectId={selectedWorkspaceId} /></Suspense>
+    : shellModule === 'chat' && selectedWorkspaceId ? <ChatPane onChooseWorkspace={chooseWorkspace} onBackToConversations={isMobile ? () => useApp.getState().showConversationList() : undefined} />
+    : <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
+        <PersonalDashboard
+          view={view}
+          companyRole={companyRole}
+          space={learningSpaces.activeSpace}
+          loading={learningSpaces.loading && !learningSpaces.activeSpace}
+          error={learningSpaces.error}
+          onRetry={() => void learningSpaces.reload()}
+          hasSpaces={learningSpaces.spaces.length > 0}
+          onChooseWorkspace={chooseWorkspace}
+        />
+      </Suspense>
+  // Only the main page replays its entrance; the nested sidebar stays still across modules.
+  const animatedPage = <div ref={pageRef} className="h-full min-h-0 min-w-0">{page}</div>
+
   const drawerOpen = Boolean(infoParticipantId || openThread || documentId)
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
@@ -162,7 +189,6 @@ export function DesktopApp() {
     else if (openThread) surfaces.closeThreadView()
     else if (documentId) surfaces.closeDocumentPeek()
   }
-  const mobileForumOpen = isMobile && view === 'forum' && Boolean(learningSpaces.activeSpace?.courseId) && !navigationPending
   const mobileChatOpen = !dashboardOpen && !learningSpaces.pending && isMobile && mobileConversationOpen && Boolean(selectedConversation)
   const drawerWidth = isMobile
     ? ' data-[vaul-drawer-direction=right]:w-screen data-[vaul-drawer-direction=right]:max-w-none'
@@ -170,7 +196,7 @@ export function DesktopApp() {
 
   return (
     <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
-      {!mobileChatOpen && !mobileForumOpen && <WorkspaceRail
+      {!mobileChatOpen && <WorkspaceRail
           {...learningSpaces}
           onSelect={(space) => void learningSpaces.select(space)}
           onReload={() => void learningSpaces.reload()}
@@ -178,27 +204,11 @@ export function DesktopApp() {
           workspacePickerOpen={workspacePickerOpen}
           onWorkspacePickerOpenChange={setWorkspacePickerOpen}
         />}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)]">
-        {!isMobile && <div className="select-none flex h-7 shrink-0 items-center justify-center gap-1.5 px-2 text-accent-foreground" data-workspace-titlebar>
-          {activeWorkspace && <CourseAvatar avatarUrl={activeWorkspace.avatarUrl} courseId={activeWorkspace.courseId ?? activeWorkspace.id} title={activeWorkspace.name} size="sm" className="!size-3 rounded-sm [&_[data-slot=avatar-fallback]]:rounded-sm [&_[data-slot=avatar-image]]:rounded-sm" />}
-          <span className="max-w-80 truncate text-xs font-medium leading-none">{activeProjectName}</span>
-        </div>}
-        {navigationError && <Alert variant="destructive" className="mb-2 me-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
-        <div ref={pageRef} data-ui-page={view} aria-busy={navigationPending || undefined} className={`${mobileForumOpen ? '' : 'me-2 mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
-          {navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" /> : view === 'cases' ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载案例库" />}><CasesPage key={companyId} /></Suspense> : view === 'slides' && selectedWorkspaceId ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载演示文稿" />}><SlidesPage key={selectedWorkspaceId} projectId={selectedWorkspaceId} /></Suspense> : !selectedWorkspaceId || dashboardOpen ? (
-            <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
-              <PersonalDashboard
-                view={view}
-                companyRole={companyRole}
-                space={learningSpaces.activeSpace}
-                loading={learningSpaces.loading && !learningSpaces.activeSpace}
-                error={learningSpaces.error}
-                onRetry={() => void learningSpaces.reload()}
-                hasSpaces={learningSpaces.spaces.length > 0}
-                onChooseWorkspace={chooseWorkspace}
-              />
-            </Suspense>
-          ) : <ResizablePanelGroup
+      <div className={`flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)] ${isMobile ? '' : 'pe-2 pt-2'}`}>
+        {navigationError && <Alert variant="destructive" className="mb-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
+        <div data-ui-page={view} data-shell-module={shellModule} aria-busy={navigationPending || undefined} className={`${isMobile ? '' : 'mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
+          <ShellNavContext.Provider value={mobileNav}>
+          {directPage ? animatedPage : <ResizablePanelGroup
             id="desktop-conversation-layout"
             orientation="horizontal"
             className="desktop-im-grid min-h-0 min-w-0"
@@ -206,35 +216,33 @@ export function DesktopApp() {
             onLayoutChanged={handleSidebarLayoutChanged}
           >
             <ResizablePanel id="conversations" data-shell-panel-hidden={isMobile && mobileChatOpen} defaultSize={sidebarWidth} minSize={isMobile ? 0 : LEFT_COLUMN_MIN} maxSize={isMobile ? '100%' : LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
-              <div className="flex h-full min-h-0 flex-col bg-card">
-                <ConversationsPane />
+              <div className="flex h-full min-h-0 flex-col bg-sidebar" data-secondary-sidebar={shellModule}>
+                {secondary}
               </div>
             </ResizablePanel>
-            <ResizableHandle data-shell-panel-hidden={isMobile} withHandle className="desktop-panel-resize-handle" aria-label="调整会话列表宽度" title="拖动调整会话列表宽度，双击恢复默认" />
+            <ResizableHandle data-shell-panel-hidden={isMobile} withHandle className="desktop-panel-resize-handle" aria-label="调整侧边栏宽度" title="拖动调整侧边栏宽度，双击恢复默认" />
             <ResizablePanel id="conversation-workspace" data-shell-panel-hidden={isMobile && !mobileChatOpen} minSize={isMobile ? 0 : MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
               <Activity mode={isMobile && !mobileChatOpen ? 'hidden' : 'visible'}>
-                <ChatPane onChooseWorkspace={chooseWorkspace} onBackToConversations={isMobile ? () => useApp.getState().showConversationList() : undefined} />
+                {animatedPage}
               </Activity>
             </ResizablePanel>
           </ResizablePanelGroup>}
+          </ShellNavContext.Provider>
         </div>
       </div>
+      {isMobile && shellModule !== 'chat' ? <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="left" showCloseButton={false} className="gap-0 p-0 data-[side=left]:w-[min(20rem,calc(100vw-3rem))] motion-reduce:animate-none motion-reduce:transition-none" style={{ paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' }}>
+          <SheetTitle className="sr-only">{shellModule === 'slides' ? '演示文稿导航' : '课程导航'}</SheetTitle>
+          <SheetDescription className="sr-only">切换当前模块的页面</SheetDescription>
+          {shellModule === 'slides' ? <DeckNav onNavigate={() => setMobileNavOpen(false)} /> : <CourseNav space={learningSpaces.activeSpace} onNavigate={() => setMobileNavOpen(false)} />}
+        </SheetContent>
+      </Sheet> : null}
 
       <Drawer open={drawerOpen} onOpenChange={(open) => { if (!open) closeDrawer() }} direction="right">
         <DrawerContent className={drawerWidth} style={isMobile ? { top: 'env(safe-area-inset-top)', bottom: 'env(safe-area-inset-bottom)' } : undefined}>
-          <DrawerHeader className="border-b border-hairline p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <DrawerTitle className="truncate">{drawerTitle}</DrawerTitle>
-                <DrawerDescription className="sr-only">{drawerTitle}</DrawerDescription>
-              </div>
-              <DrawerClose asChild>
-                <Button type="button" className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted" aria-label="关闭">
-                  <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-4" />
-                </Button>
-              </DrawerClose>
-            </div>
-          </DrawerHeader>
+          <DrawerTitle className="sr-only">{drawerTitle}</DrawerTitle>
+          <DrawerDescription className="sr-only">{drawerTitle}</DrawerDescription>
+          <RightPanelHeader title={drawerTitle} onClose={closeDrawer} closeLabel={`关闭${drawerTitle}`} />
           <div className="min-h-0 flex-1 overflow-hidden">
             <Suspense fallback={<div className="flex h-full flex-col">{documentId ? <DocumentSkeleton /> : <ResourceSkeleton variant="detail" label={`正在打开${drawerTitle}`} />}</div>}>
               {drawerContent}

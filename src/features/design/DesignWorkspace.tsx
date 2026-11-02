@@ -1,6 +1,6 @@
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
-import { Button } from '@/components/ui/button'
+import { RightPanelHeader } from '@/components/shell/RightPanel'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 
 const ArtifactView = lazy(() => import('@/features/artifacts/components/ArtifactView').then(module => ({ default: module.ArtifactView })))
@@ -36,7 +36,7 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
       <ResizablePanel id="canvas-conversation" defaultSize="50%" minSize="35%" className="min-h-0 min-w-0 overflow-hidden">
         {children}
       </ResizablePanel>
-      <ResizableHandle data-design-resize-handle withHandle hidden={!open} aria-label="调整对话与画板宽度" />
+      <ResizableHandle data-design-resize-handle withHandle hidden={!open} className="desktop-panel-resize-handle" aria-label="调整对话与画板宽度" title="拖动调整对话与画板宽度" />
       <ResizablePanel id="canvas-editor" data-design-pane aria-hidden={!open} inert={!open} disabled={!open}
         defaultSize="50%" minSize="35%" maxSize="65%" className="min-h-0 min-w-0 overflow-hidden">
         <aside id="conversation-design-panel" ref={panel} tabIndex={-1} aria-label={`设计画板：${current?.title ?? '设计'}`}
@@ -44,7 +44,7 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
           onKeyDown={event => {
             if (event.key === 'Escape' && !event.defaultPrevented) { event.stopPropagation(); close() }
           }}>
-          {current && <Suspense fallback={<div className="flex h-full min-h-0 flex-col"><Button type="button" variant="ghost" className="m-2 shrink-0 self-end" onClick={close}>关闭设计</Button><ResourceSkeleton variant="media" label="正在打开设计" /></div>}>
+          {current && <Suspense fallback={<div className="flex h-full min-h-0 flex-col"><RightPanelHeader eyebrow="设计" title={current.title} onClose={close} closeLabel="关闭设计" /><ResourceSkeleton variant="media" label="正在打开设计" /></div>}>
             <ArtifactView key={current.artifactId} artifactId={current.artifactId} kind="design" title={current.title} onClose={close} />
           </Suspense>}
         </aside>

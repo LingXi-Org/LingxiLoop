@@ -155,16 +155,9 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
   const signedIn = !!tokenStr && !!tokenUserId
 
   return (
-    <div className="fixed inset-0 grid place-items-center p-6" style={{ background: 'var(--paper)' }}>
-      <div
-        className="w-full max-w-[420px] rounded-[18px] p-8 flex flex-col items-center gap-6"
-        style={{
-          background: 'var(--cloud)',
-          border: '1px solid var(--ink-100)',
-          boxShadow: '0 30px 60px -30px color-mix(in srgb, var(--foreground) 20%, transparent), 0 0 0 1px color-mix(in srgb, var(--border) 40%, transparent)',
-        }}
-      >
-        <ProductLogo size={56} rounded />
+    <div className="fixed inset-0 grid place-items-center bg-muted/40 p-6 text-foreground">
+      <div className="flex w-full max-w-[400px] flex-col items-center gap-6 rounded-2xl border border-border bg-card p-8">
+        <ProductLogo size={48} rounded />
 
         {previewErr && (
           <ErrorBlock
@@ -175,7 +168,7 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         )}
 
         {!preview && !previewErr && (
-          <div className="text-[13px] text-ink-400 italic font-display">正在检查邀请…</div>
+          <p role="status" className="text-sm text-muted-foreground">正在检查邀请…</p>
         )}
 
         {preview && preview.status === 'not_found' && (
@@ -204,9 +197,9 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
 
         {preview && preview.status === 'consumed' && (
           <div className="space-y-3 text-center">
-            <p>该邀请名额已用完。如果此前已接受，可登录重试完成开户。</p>
+            <p className="text-sm leading-6 text-muted-foreground">该邀请名额已用完。如果此前已接受，可登录重试完成开户。</p>
             {signedIn ? <Button onClick={() => void accept()} disabled={busy}>重试完成加入</Button> : <SignInToAccept token={token_} />}
-            {acceptErr && <p role="alert">{acceptErr}</p>}
+            {acceptErr && <p role="alert" className="text-sm text-destructive">{acceptErr}</p>}
           </div>
         )}
 
@@ -220,17 +213,13 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
 
         {preview && preview.status === 'wrong_email' && inv && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <h1 className="font-display text-[20px] text-ink-900">账号错误</h1>
-            <p className="text-[13px] text-ink-500 font-display italic leading-relaxed">
-              此邀请 <b className="not-italic text-ink-900">{companyName}</b> 保留用于{' '}
-              <b className="not-italic text-ink-900">{inv.email}</b>，但你当前登录的是{' '}
-              <b className="not-italic text-ink-900">{user?.email}</b>。请退出后使用受邀邮箱重新登录。
+            <h1 className="font-heading text-xl font-semibold">账号错误</h1>
+            <p className="text-sm leading-6 text-muted-foreground">
+              此邀请 <b className="font-medium text-foreground">{companyName}</b> 保留用于{' '}
+              <b className="font-medium text-foreground">{inv.email}</b>，但你当前登录的是{' '}
+              <b className="font-medium text-foreground">{user?.email}</b>。请退出后使用受邀邮箱重新登录。
             </p>
-            <Button
-              onClick={() => { useAuth.getState().clear() }}
-              className="px-4 py-2 rounded-[10px] text-[13px] font-semibold transition"
-              style={{ background: 'var(--ink-700)', color: 'white' }}
-            >退出登录</Button>
+            <Button variant="outline" onClick={() => { useAuth.getState().clear() }}>退出登录</Button>
           </div>
         )}
 
@@ -256,45 +245,23 @@ export function InviteAcceptScreen({ token, onDone }: Props) {
         {preview && preview.status === 'valid' && inv && (
           <div className="flex flex-col items-center gap-5 text-center w-full">
             <div className="space-y-1">
-              <div className="text-[12.5px] text-ink-400 font-display italic">
-                {inviter} 邀请您
-              </div>
-              <h1 className="font-display text-[24px] tracking-tight text-ink-900">
-                {course?.name ?? companyName}
-              </h1>
-              {course && <div className="text-[12px] text-ink-400">{companyName} · 课程对话</div>}
-              {inv.note && (
-                <div className="text-[12.5px] text-ink-500 font-display italic mt-2 px-3 py-2 rounded-[10px]"
-                     style={{ background: 'var(--cloud)' }}>
-                  "{inv.note}"
-                </div>
-              )}
+              <p className="text-sm text-muted-foreground">{inviter} 邀请你加入</p>
+              <h1 className="font-heading text-xl font-semibold">{course?.name ?? companyName}</h1>
+              {course && <p className="text-xs text-muted-foreground">{companyName} · 课程对话</p>}
+              {inv.note && <blockquote className="mt-3 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">“{inv.note}”</blockquote>}
             </div>
 
             {!signedIn ? (
               <SignInToAccept token={token_} />
             ) : (
               <>
-                <Button
-                  onClick={() => void accept()}
-                  disabled={busy}
-                  className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-white transition disabled:opacity-60"
-                  style={{
-                    background: 'var(--skype)',
-                    boxShadow: '0 6px 16px -4px color-mix(in srgb, var(--primary) 50%, transparent)',
-                  }}
-                >{busy ? '正在加入…' : `以${inviteRoleLabel(inv.role)}身份加入 ${companyName}`}</Button>
-                <Button
-                  onClick={onDone}
-                  className="text-[12px] text-ink-400 hover:text-ink-700 transition font-display italic"
-                >暂不</Button>
+                <Button size="lg" className="w-full" onClick={() => void accept()} disabled={busy}>{busy ? '正在加入…' : `以${inviteRoleLabel(inv.role)}身份加入 ${companyName}`}</Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onDone}>暂不加入</Button>
               </>
             )}
 
             {acceptErr && (
-              <div className="text-[12px] text-coral-deep text-center max-w-full break-words">
-                {acceptErr}
-              </div>
+              <p role="alert" className="max-w-full break-words text-center text-sm text-destructive">{acceptErr}</p>
             )}
           </div>
         )}
@@ -308,17 +275,11 @@ function AlreadyMemberBlock({ companyName, onSwitchInBrowser }: {
 }) {
   return (
     <div className="flex flex-col items-center gap-5 text-center w-full">
-      <h1 className="font-display text-[20px] text-ink-900">你已加入 {companyName}</h1>
-      <p className="text-[12.5px] text-ink-500 font-display italic -mt-2">
-        从上次离开的地方继续。
-      </p>
-      <div className="w-full flex flex-col gap-2.5">
-        <Button
-          onClick={onSwitchInBrowser}
-          className="w-full py-3 rounded-[12px] text-[14px] font-semibold text-white transition"
-          style={{ background: 'var(--skype)' }}
-        >进入工作区</Button>
+      <div className="space-y-1">
+        <h1 className="font-heading text-xl font-semibold">你已加入 {companyName}</h1>
+        <p className="text-sm text-muted-foreground">从上次离开的地方继续。</p>
       </div>
+      <Button size="lg" className="w-full" onClick={onSwitchInBrowser}>进入工作区</Button>
     </div>
   )
 }
@@ -327,15 +288,9 @@ function ErrorBlock({ title, body, onDismiss }: { title: string; body: string; o
   const tokenStr = useAuth((s) => s.authenticated)
   return (
     <div className="flex flex-col items-center gap-4 text-center">
-      <h1 className="font-display text-[20px] text-ink-900">{title}</h1>
-      <p className="text-[13px] text-ink-500 font-display italic leading-relaxed">{body}</p>
-      {tokenStr && onDismiss && (
-        <Button
-          onClick={onDismiss}
-          className="px-4 py-2 rounded-[10px] text-[12.5px] font-semibold text-ink-700 transition"
-          style={{ background: 'var(--cloud)', border: '1px solid var(--ink-100)' }}
-        >继续使用 LingxiLoop</Button>
-      )}
+      <h1 className="font-heading text-xl font-semibold">{title}</h1>
+      <p className="text-sm leading-6 text-muted-foreground">{body}</p>
+      {tokenStr && onDismiss && <Button variant="outline" onClick={onDismiss}>继续使用 LingxiLoop</Button>}
     </div>
   )
 }
@@ -349,19 +304,9 @@ function SignInToAccept({ token }: { token: string }) {
   }
   return (
     <div className="w-full flex flex-col gap-2.5">
-      <div className="text-[12.5px] text-ink-500 font-display italic text-center">
-        登录以接受此邀请
-      </div>
-      <Button
-        type="button"
-        onClick={go}
-        className="h-11 rounded-[10px] transition-colors flex items-center justify-center gap-3 text-[14px] font-semibold"
-      >
-        使用邮箱继续
-      </Button>
-      <div className="text-[10.5px] text-ink-300 text-center font-display italic">
-        注册后验证邮箱即可加入受邀空间。
-      </div>
+      <p className="text-center text-sm text-muted-foreground">登录以接受此邀请</p>
+      <Button type="button" size="lg" className="w-full" onClick={go}>使用邮箱继续</Button>
+      <p className="text-center text-xs text-muted-foreground">注册后验证邮箱即可加入受邀空间。</p>
     </div>
   )
 }

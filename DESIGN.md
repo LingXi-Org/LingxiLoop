@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: LingxiLoop
-description: 保留 Bot 角色感的亲和学习工作台，以稳定的三栏结构、清晰的任务层级和绿色品牌建立一致体验。
+description: 保留 Bot 角色感的学习工作台，以统一的主栏 + 二级侧栏外壳、shadcn 企业级 SaaS 风格和绿色品牌建立一致体验。
 colors:
   primary: "{colors.dark-primary}"
   light-background: "oklch(1 0 0)"
@@ -123,7 +123,7 @@ components:
 
 LingxiLoop 是人与 Agent 协同学习的 Web 工作台。视觉方向参考 Akeru 的亲和感：角色头像具有个性，周围的信息保持简洁、稳定和可操作。绿色用于品牌与主要操作，不用大量高饱和底色制造层级。
 
-桌面聊天的功能图标栏、会话列表、主内容三栏职责与顺序固定。学习、资料、邮件与 Agent 模块继续使用当前主内容切换方式；不为了统一外观给每个页面强行加入会话栏。详情按需使用抽屉。默认深色，浅色具有同等完整度。
+所有模块共用同一个外壳：64px 图标主栏、可调宽的二级侧栏、带 1px 边框的内容卡。主栏切换模块时二级侧栏保持同一宽度和底色，只替换其中的内容；页面统一使用 PageHeader 与 PageBody，右侧面板统一使用 RightPanel。风格对齐 shadcn 企业级 SaaS：中性底面、细分隔线、克制字号，品牌绿只用于主要操作与选中强调。默认深色，浅色具有同等完整度。
 
 本文记录实际组件应遵循的规范。使用现有 shadcn、assistant-ui、字体和图标资源，不建立第二套组件库，不改变 Agent 运行时、鉴权或业务数据模型。
 
@@ -133,7 +133,7 @@ YAML 中 `light-*` 和 `dark-*` 是对应主题的明确色值，映射到 `src/
 
 `colors.primary` 指向默认深色主题的 `dark-primary`，供需要单一主色的规范消费者使用。浅色界面使用 `light-primary`；该别名不覆盖 CSS 的明暗主题切换。颜色表同时记录页面、分隔线与状态所需的 CSS token，`components` 只列出代表性组件，不代表未被它引用的颜色未在产品中使用。
 
-内容文字使用 foreground，辅助信息使用 muted-foreground。主按钮、未读标记和当前功能强调使用 primary。危险操作使用 destructive，成功、警告与图表继续使用现有语义变量，不以角色颜色表示权限。
+内容文字使用 foreground，辅助信息使用 muted-foreground。主按钮、未读标记和当前功能强调使用 primary。危险操作使用 destructive；成功、信息、警告分别使用 `--success`（即 primary）、`--info`、`--warning`，对应 Tailwind 的 `text-success`、`bg-info`、`text-warning` 等。组件里不写 `blue-500`、`emerald-500`、`red-600` 这类调色板色值，图表分类使用 `--chart-1…5`。不以角色颜色表示权限。
 
 人类对话气泡独立于按钮配色，参考 [WhatsApp 默认气泡配色](https://chatmock.net/blog/messaging-app-ui-colour-reference)。浅色发送/接收背景为 `#D9FDD3` / `#FFFFFF`，正文 `#111B21`、辅助文字 `#52666B`；深色发送/接收背景为 `#005C4B` / `#202C33`，正文 `#E9EDEF`、辅助文字 `#C3D1D7`。色号来自第三方界面参考，并非官方跨版本规范；辅助文字按对比度调整。浅色气泡使用细微内描边，与白色聊天背景区分。
 
@@ -143,7 +143,7 @@ YAML 中 `light-*` 和 `dark-*` 是对应主题的明确色值，映射到 `src/
 
 ## Typography
 
-沿用已安装的 Inter Variable 正文和 Geist Variable 标题，中文由系统无衬线字体回退。页面标题 20px，分区标题和聊天正文 16px，业务正文及控件 14px，辅助信息 12px，统计数字 24px。可见状态文字不使用 8px、9px 等微型字号。
+沿用已安装的 Inter Variable 正文和 Geist Variable 标题，中文由系统无衬线字体回退。页头标题（PageHeader、对话头）16px/600；文章与帖子详情标题 24px（窄屏 20px）；空态与错误页标题 20px；分区标题和聊天正文 16px；业务正文、列表标题和控件 14–15px；辅助信息与面包屑 12–14px；统计数字 24px。不再使用 30px、40px 的大标题，也不用 8px、9px 等微型字号。
 
 默认行高对应现有 Tailwind 字级：页面标题 28px、分区标题 24px、业务正文与控件 20px、辅助信息 16px、统计数字 32px。正文为 400 字重，按钮为 500，标题与统计数字为 600；多行说明可按所在组件使用更宽松的行高。
 
@@ -151,13 +151,53 @@ YAML 中 `light-*` 和 `dark-*` 是对应主题的明确色值，映射到 `src/
 
 ## Layout
 
-桌面功能栏宽 64px。会话栏默认 300px，可在 260–360px 之间拖动；保留已保存的用户宽度并限制在有效区间，双击分隔线恢复默认。聊天主栏保留至少 320px。三栏各自滚动，页面本身不出现横向滚动。
+### 外壳
 
-消息行和输入框使用同一条最大 800px 的居中内容列；该宽度包含消息头像与间距。窄屏按剩余可用宽度收缩。代码、表格、工具结果和附件在自身容器内处理溢出，不撑开整页。普通业务内容最大 1200px；桌面页面内边距 24px、移动端 16px。
+```
+┌────┬──────────────┬─────────────────────────────┬──────────────┐
+│主栏│ 二级侧栏      │ PageHeader（64px）           │ RightPanel   │
+│64px│ 260–360px    ├─────────────────────────────┤ 头部 64px    │
+│    │ 头部 64px     │ PageBody（≤1200px，24/16px） │ 可拖动       │
+└────┴──────────────┴─────────────────────────────┴──────────────┘
+```
 
-桌面标题区域最小高度 64px；标题在左，当前页面主操作在右，局部导航位于标题之后。工作区名称是范围信息，页面标题是当前任务，两者不使用同样的强调。工具栏窄时换行，不裁掉主要操作。
+- 主栏（`src/desktop/WorkspaceRail.tsx`）：工作区切换、对话 / 课程 / 演示文稿三个模块、底部账户。外观与尺寸固定。
+- 二级侧栏（`src/desktop/DesktopApp.tsx` 中 id 为 `conversations` 的面板）：所有模块共用一个 ResizablePanel。默认 300px，可在 260–360px 之间拖动，宽度存于 `lingxiloop:desktop-layout:sidebar-width:v1`，双击分隔线恢复默认。底色 `--sidebar`。切换模块不重建面板，只替换内容。
+- 内容卡：外层 `--workspace-chrome-surface`，内容区 8px 外边距、`rounded-xl border`。28px 顶部标题栏已移除，工作区名称出现在二级侧栏头部和面包屑首段。
+- 每栏各自滚动，页面本身不出现横向滚动；主内容至少 320px。
 
-768px 以下沿用移动端列表与聊天切换。打开会话同时更新选中状态和可见页面，返回列表清除会话目标；刷新和浏览器前进后退能恢复同一状态。主要触控目标至少 44px，保留安全区。
+### 模块与二级侧栏内容
+
+| 模块 | `view` 值 | 二级侧栏 | 主内容 |
+| --- | --- | --- | --- |
+| 对话 | `conversations` | `ConversationsPane`：搜索 + 新建 + 会话列表 | `ChatPane` |
+| 课程 | `learning`、`forum`、`course-materials`、`cases`、`courses`、`course-members`、`course-status` | `CourseNav`：课程头部（头像、名称、角色）、课程分组（概览、论坛及其版块、课程资料、案例库）、管理分组（基本资料、成员与邀请、课程状态，仅可管理的教师） | 对应页面 |
+| 演示文稿 | `slides` | `DeckNav`：搜索 + 新建 + 全部 / 最近更新列表 | 演示文稿库或编辑器 |
+
+映射在 `src/components/shell/modules.ts`。URL 的 `view` 值保持不变；主栏「课程」回到用户上次所在的课程页，没有课程时进入案例库。
+
+### 二级侧栏规格
+
+组件在 `src/components/shell/SecondaryPane.tsx`。头部 64px，左右 8px（移动端 12px），可放搜索框（`SecondarySearch`，与会话搜索相同的 36px 无边框输入）或模块标题（`SecondaryTitle`）加一个图标操作。分组标题 12px muted，高 32px。导航行 36px（移动端 44px）、`rounded-lg`、14px；悬停 `bg-muted/60`，选中 `bg-muted` 加 500 字重和 `text-sidebar-primary` 图标，并带 `aria-current="page"`；二级子项缩进 36px、13px。
+
+### 页头与页面主体
+
+组件在 `src/components/shell/PageHeader.tsx`。
+
+- `PageHeader`：最小高度 64px，左右 24px（移动端 12px），底部 `--im-divider-weak` 分隔线，底色 `--sidebar`，与对话头完全一致。结构为「可选返回按钮 → 面包屑（14px muted，以 `/` 分隔，可点击段落回到上级）→ 标题（Geist 16px/600）→ 末端操作」。末端最多一个主按钮，其余用 outline 或 ghost；窄屏时主按钮收为 44px 图标按钮，文字保留为可访问名称。移动端在没有返回按钮时自动出现「打开导航」按钮，以 Sheet 打开二级侧栏。
+- `PageLayout`：页头固定，只有主体滚动。
+- `PageBody`：最大 1200px（阅读型页面 800px），内边距 24px，移动端 16px。
+- `PageToolbar`：主体顶部的搜索、筛选、排序与视图切换，间距 8px，底部 16px。分类用 `secondary`/`ghost` 小按钮或 shadcn Tabs，不再用 18px 下划线大标签。
+
+### 右侧面板
+
+组件在 `src/components/shell/RightPanel.tsx`。画板（`DesignWorkspace`）、成员资料、回复串和文档预览使用同一规格；演示文稿编辑器（vendored claude-slides iframe）内的助手面板也以此为目标规格，在其源码恢复后按此重写：头部 64px，与左侧 PageHeader 对齐；可选 12px 眉题加 14px/600 标题；末端为唯一的关闭按钮 `PanelCloseButton`（ghost、36px、移动端 44px、`Cancel01Icon`，返回场景用 `ArrowLeft01Icon`）。与主内容之间使用 `desktop-panel-resize-handle` 分隔线（悬停时显示绿色握把）。画板默认 50%，可在 35–65% 之间拖动；容器窄于 720px 时改为覆盖在右侧的非模态面板。
+
+### 内容宽度与移动端
+
+消息行和输入框使用同一条最大 800px 的居中内容列；该宽度包含消息头像与间距。代码、表格、工具结果和附件在自身容器内处理溢出，不撑开整页。
+
+768px 以下：对话保留列表与聊天切换；其他模块直接显示页面，二级侧栏通过页头的导航按钮以左侧 Sheet 打开，选择后自动关闭。打开会话同时更新选中状态和可见页面，返回列表清除会话目标；刷新和浏览器前进后退能恢复同一状态。主要触控目标至少 44px，保留安全区。
 
 ### 页面优先级
 
@@ -169,7 +209,7 @@ YAML 中 `light-*` 和 `dark-*` 是对应主题的明确色值，映射到 `src/
 
 ## Elevation & Depth
 
-普通内容卡使用 1px 语义边框和无阴影底面。列表通过间距、背景和选中状态分组，不给每行再套一张卡。浮层、菜单和抽屉沿用现有克制阴影，表达覆盖关系。
+普通内容卡使用 1px 语义边框和无阴影底面，悬停时只把边框加深到 `foreground` 20%。列表放在一个带边框的容器里，行之间用 `divide-y` 分隔，不给每行再套一张卡。浮层、菜单和抽屉沿用现有克制阴影，表达覆盖关系。不使用渐变、毛玻璃（`backdrop-blur`）、彩色阴影、放射状光晕背景或内联 `style` 颜色。
 
 避免同一内容同时叠加边框、ring 和明显阴影。卡片悬停不整体上浮；可操作性通过颜色和焦点表达。页面加载骨架与最终布局保持相同的主要尺寸，避免完成加载时大幅跳动。
 
@@ -182,6 +222,14 @@ CSS 的 `--radius` 为 12px；当前 Tailwind 映射中 `rounded-lg` 是 12px、
 使用 4px 间距基准。常用间距为 8、12、16、20、24、32px。圆角与间距按组件职责选择，不随页面任意更换。
 
 ## Components
+
+### 列表与卡片页面
+
+- 演示文稿库：PageToolbar（按名称搜索、排序、网格/列表切换）配合 16:9 封面卡网格（`minmax(15rem, 1fr)`，间距 16px）。封面为 muted 底面加标题排版，卡片底部为名称、更新时间和「⋯」菜单（重命名、删除）。列表视图为带边框的分隔行。空态使用带虚线边框的 shadcn `Empty`。
+- 案例库：分类按钮组 + 搜索框，卡片网格同上（16:9 封面、12px 元信息、15px 标题、13px 摘要）。详情为单列阅读：16:9 头图、24px 标题、15px 摘要、元信息行、16px 正文。
+- 论坛：版块在二级侧栏，主区为带边框容器中的帖子分隔行（15px 标题、14px 摘要），详情 24px 标题、16px 正文。
+- 课程资料：shadcn Tabs 切换公共资料与我的资料，下方是 Studio Admin 文件管理工具栏和文件表格。
+- 设置类页面：二级侧栏承担分区导航，页面内不再重复 Tabs 列表。
 
 ### 公共控件与状态
 
@@ -221,6 +269,11 @@ CSS 的 `--radius` 为 12px；当前 Tailwind 映射中 `rounded-lg` 是 12px、
 - 不以大图标空卡替代真实内容列表，不为简单分类占据整屏。
 - 不用微小文字、重复状态标签或整片高饱和绿色制造强调。
 - 不以视觉调整改变权限、消息协议、运行时、资料可见性或提交语义。
+- 新页面先用 `PageHeader`、`PageBody`、`SecondaryPane`、`RightPanel`，不自建页头、关闭按钮或侧栏。
+- 不使用渐变、毛玻璃、彩色阴影、内联颜色、`font-display` 斜体或 `×` 字符作为关闭图标。
+- 不写调色板色值（`blue-500` 等），状态色用 `success`、`info`、`warning`、`destructive`。
 - 不绕过官方 E2E 引擎的凭据截图保护；视觉图片来自无凭据合成 fixture，真实流程另用脱敏报告验证。
+
+外壳结构参考 [shadcn/ui](https://github.com/shadcn-ui/ui) 的 sidebar-09（嵌套侧栏）、sidebar-15（左右双侧栏）与 dashboard-01（site-header、卡片和数据表），出处见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md#shadcnui-blocks-layout-patterns)。
 
 格式依据：[Google Labs DESIGN.md alpha](https://github.com/google-labs-code/design.md/blob/main/docs/spec.md)。规范与实际 CSS、生产组件及验收产物一起更新。
