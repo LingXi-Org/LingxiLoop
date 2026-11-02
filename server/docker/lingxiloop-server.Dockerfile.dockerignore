@@ -29,6 +29,7 @@ src/features/cases/cover-vm/**
 !shared
 shared/**
 !shared/visualize-public-resources.ts
+!shared/artifact-math.ts
 !shared/artifact-editor-origin.ts
 !shared/slides-editor-context.ts
 !public/**
@@ -46,6 +47,7 @@ shared/**
 !third_party/react-chat-elements/reply-message/LICENSE
 !scripts/verify-zcode-visualize.mjs
 !scripts/build-visualize-runtime.mjs
+!scripts/build-artifact-math.mjs
 !scripts/build-slides-editor.mjs
 !scripts/prune-pdfjs-server-runtime.mjs
 !scripts/prune-glibc-canvas-runtime.mjs

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { lstat, readFile, realpath } from 'node:fs/promises'
-import { extname, join, resolve } from 'node:path'
+import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Router, type Request, type Response } from 'express'
 import { pool } from '../../db/pool.js'
@@ -12,7 +12,7 @@ import {
   createComment, deleteComment, editComment, listComments, publishArtifactFiles, replyComment, sendComment, setCommentStatus,
 } from './facade.js'
 import { readGrant, type EditorGrant } from './grants.js'
-import { ARTIFACT_KIND_DEFINITIONS, BAOYU_DESIGN_ROOT, artifactKind, type ArtifactKindDefinition } from './kinds.js'
+import { ARTIFACT_KIND_DEFINITIONS, artifactKind, type ArtifactKindDefinition } from './kinds.js'
 import { blobFile, contentTypeOf, isWireEntry, listing, putBlob, readProjectFile, type WireEntry } from './store.js'
 import { availableAgents } from './repository.js'
 import { EDITOR_DOWNLOAD_SCRIPT } from './editor-downloads.js'
@@ -24,6 +24,7 @@ import { slideWorkspaceConversation } from './slides-workspace.js'
 // the loopback grant by a signed grant and fs.watch by artifact events.
 const ROUTES = { listing: '_files.json', publish: '__deck/publish', assets: '__deck/assets', events: '__deck/events', session: '__deck/session' }
 const COMMENTS_ROUTE = '__comments'
+const DESIGN_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/design-editor/', import.meta.url))
 const SLIDES_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/slides-editor/', import.meta.url))
 const BLOB_PATH = /^_blob\/([0-9a-f]{32})$/
 const DATA_CSP = "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:"
@@ -138,7 +139,7 @@ async function commentsSnapshot(session: EditorSession) {
 }
 
 async function serveEditor(request: Request, response: Response, definition: ArtifactKindDefinition, rest: string) {
-  const editorDir = definition.kind === 'slides' ? SLIDES_EDITOR_ROOT : resolve(BAOYU_DESIGN_ROOT, definition.skillDirectory, 'scripts', 'editor')
+  const editorDir = definition.kind === 'slides' ? SLIDES_EDITOR_ROOT : DESIGN_EDITOR_ROOT
   const parts = rest === '' ? ['index.html'] : rest.split('/')
   const invalid = parts.some(p => p === '' || p === '.' || p === '..' || p.startsWith('.') || p.includes('\\')) || parts[0] === 'node'
   const realDist = invalid ? null : await realpath(editorDir).catch(() => null)

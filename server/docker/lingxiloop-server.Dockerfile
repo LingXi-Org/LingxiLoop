@@ -67,7 +67,9 @@ RUN --mount=type=secret,id=npm_token \
 # enters this graph. CI selects target runtime after the static ingress handoff.
 FROM web-deps AS visualize-build
 COPY third_party/zcode ./third_party/zcode
-COPY scripts/build-visualize-runtime.mjs ./scripts/
+COPY scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs ./scripts/
+COPY shared/artifact-math.ts ./shared/
+COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
 RUN node scripts/build-visualize-runtime.mjs
 
 FROM web-deps AS slides-build
@@ -91,7 +93,9 @@ COPY tailwind.config.ts ./
 COPY third_party/zcode ./third_party/zcode
 # StreamingText imports the pinned upstream range helper; include its license and provenance.
 COPY third_party/assistant-ui/streaming-text ./third_party/assistant-ui/streaming-text
-COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs ./scripts/
+COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs ./scripts/
+COPY shared/artifact-math.ts ./shared/
+COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
 RUN npm run build
 
 # ─── stage 3: runtime ───────────────────────────────────────────────
@@ -148,6 +152,7 @@ COPY third_party/zcode/LICENSE third_party/zcode/README.md third_party/zcode/man
 COPY third_party/baoyu-design ./third_party/baoyu-design
 COPY third_party/zcode/upstream/LICENSE ./third_party/zcode/upstream/LICENSE
 COPY --from=visualize-build /app/server/assets/visualize-runtime ./server/assets/visualize-runtime
+COPY --from=visualize-build /app/server/assets/design-editor ./server/assets/design-editor
 COPY --from=slides-build /app/server/assets/slides-editor ./server/assets/slides-editor
 
 ENV NODE_ENV=production \

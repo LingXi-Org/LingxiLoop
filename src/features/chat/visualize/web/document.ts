@@ -44,7 +44,7 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
     if (!pending) { pending = resource(name); reads.set(name, pending) }
     return pending
   }
-  const [css, content, runtime, calendar, enhancements] = await Promise.all([
+  const [css, content, runtime, calendar, enhancements, math] = await Promise.all([
     read(optimized ? 'kit.css' : 'visualize.css'),(optimized ? Promise.resolve('') : read('visualize.html')).then(async kit => {
       let content = fragment + kit.replace('<!--__INLINE_VISUALIZATION_FRAGMENT__-->','')
       // Discover optional/unknown-kit dependencies from the actual HTML as soon
@@ -61,6 +61,8 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
     }),read('gen-ui.js'),
     /\bviz-calendar\b/i.test(fragment) ? read('calendar.js') : Promise.resolve(''),
     Promise.all(initialModules.map(read)),
+    // Math is an enhancement: keep source readable if its renderer is unavailable.
+    read('math.js').catch(() => ''),
     // Start authored dependencies alongside known kit dependencies, retaining
     // this page's capability, cancellation and shared failure boundary.
     // The later HTML discovery/substitution reuses each already-started read.
@@ -70,7 +72,7 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
   // Only old hosts without the capture-module hash need the UMD fallback.
   const captureLibrary = capture ? '' : (await import('html-to-image/dist/html-to-image.js?raw')).default
   const initial = JSON.stringify(state).replaceAll('<','\\u003c')
-  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script((capture ? '' : captureLibrary+'\n;')+'('+trustedBootstrap.toString()+')('+JSON.stringify(capture ?? null)+');')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}${enhancements.map(script).join('')}${optimized ? script('('+optionalKitBootstrap.toString()+')('+JSON.stringify(assets)+','+JSON.stringify(initialModules)+','+JSON.stringify(VISUALIZE_SMALL_ICONS)+');') : ''}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`
+  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script((capture ? '' : captureLibrary+'\n;')+'('+trustedBootstrap.toString()+')('+JSON.stringify(capture ?? null)+');')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}${math ? script(math) : ''}${enhancements.map(script).join('')}${optimized ? script('('+optionalKitBootstrap.toString()+')('+JSON.stringify(assets)+','+JSON.stringify(initialModules)+','+JSON.stringify(VISUALIZE_SMALL_ICONS)+');') : ''}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`
 }
 
 /** A trusted opaque outer shell supplies an ancestor frame policy for the untrusted document. */

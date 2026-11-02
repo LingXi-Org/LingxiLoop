@@ -74,12 +74,15 @@ jobs:
               - 'shared/artifact-editor-origin.ts'
               - 'shared/slides-editor-context.ts'
               - 'shared/visualize-public-resources.ts'
+              - 'shared/artifact-math.ts'
               - 'third_party/zcode/**'
               - 'third_party/assistant-ui/streaming-text/**'
               - 'third_party/assistant-ui-elements/**'
               - 'third_party/react-chat-elements/reply-message/**'
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'
+              - 'scripts/build-artifact-math.mjs'
+              - 'scripts/artifact-math.test.mjs'
               - 'scripts/build-slides-editor.mjs'
               - 'src/**'
               - 'public/**'
@@ -126,10 +129,13 @@ jobs:
               - 'shared/artifact-editor-origin.ts'
               - 'shared/slides-editor-context.ts'
               - 'shared/visualize-public-resources.ts'
+              - 'shared/artifact-math.ts'
               - 'third_party/zcode/**'
               - 'third_party/baoyu-design/**'
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'
+              - 'scripts/build-artifact-math.mjs'
+              - 'scripts/artifact-math.test.mjs'
               - 'scripts/build-slides-editor.mjs'
               - 'server/.npmrc'
               - 'server/scripts/**'
@@ -398,7 +404,7 @@ jobs:
       - run: node server/scripts/scoped-dependencies.mjs && node server/scripts/install-scoped-dependencies.mjs integration
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-      - run: npm run verify:visualize && npm run build:visualize-runtime && node --test scripts/slides-editor.test.mjs
+      - run: npm run verify:visualize && npm run build:visualize-runtime && node --test scripts/slides-editor.test.mjs scripts/artifact-math.test.mjs
       - run: node --test server/scripts/bootstrap-runtime-patch-test-db.test.mjs && node server/scripts/bootstrap-runtime-patch-test-db.mjs
         env:
           NODE_ENV: test
