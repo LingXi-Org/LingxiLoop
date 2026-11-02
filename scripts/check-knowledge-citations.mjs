@@ -45,8 +45,8 @@ try{
   document.querySelector('[data-confidence-id="'+id+'"]').click();
   await wait(()=>document.querySelector('[data-slot="confidence-basis"]')?.textContent.includes(text));
   const basis=document.querySelector('[data-slot="confidence-basis"]').textContent;
-  assert(basis.includes('[[PAGE:'+page+']]'),'wrong page '+id);
-  assert(!basis.includes('[[PAGE:'+(page==='2'?'15':'2')+']]'),'cross-range excerpt '+id);
+  assert(basis.includes('第 '+page+' 页'),'wrong page '+id);
+  assert(!basis.includes('第 '+(page==='2'?'15':'2')+' 页')&&!basis.includes('[[PAGE:'),'cross-range excerpt '+id);
  }
  if(!restored){location.reload()}else await fetch('/result',{method:'POST',body:JSON.stringify({passed:true,checks:['four real receipt summaries override obsolete recorded copy','page2/page15/page2 original excerpts before reload','same markers and excerpts after actual reload'],limits:['synthetic source data','no provider generation or backend ACL exercised']})});
 }catch(error){await fetch('/result',{method:'POST',body:JSON.stringify({passed:false,error:error.message,body:document.body.textContent.slice(0,1500)})})}`
