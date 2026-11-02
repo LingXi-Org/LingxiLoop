@@ -59,8 +59,10 @@ rejected rather than truncated.
 
 The existing 400ms merge, edit/read-only guard, gesture deferral, frequency
 limit, history reconciliation, model serialization and CAS save path own the
-change. Later rows on the same canvas page move down by the height increase,
-retaining their gaps. Annotation movement delegates to native `moveAnnotation`,
+change. When the page would cross a later row, later rows on the same canvas
+page move together by the height increase. Free space left after shrinking is
+reused by later growth, preventing repeated content toggles from pushing rows
+ever farther down. Annotation movement delegates to native `moveAnnotation`,
 so both ends of lines/arrows move together. Existing overlapping artboard
 compositions and interactive viewports keep their authored geometry. Shrinking
 does not pull later authored rows upward. No guest or overlay DOM is stretched
@@ -93,7 +95,9 @@ flow run in Chromium. This is not a production/API tenancy test.
   needed. Two rendered formulas and loaded font status remain observed.
 - An original-copy variant adds one independent fixed artboard and an arrow on
   the next row. Growth by 535px moves the neighbor from y1300 to y1835, keeps
-  its 200px fixed height, and moves both arrow endpoints by 535px.
+  its 200px fixed height, and moves both arrow endpoints by 535px. Repeating an
+  async content expansion after removal keeps the neighbor at y3457 in both
+  expanded states, confirming that spare space is reused without row drift.
 - The independent public control includes text, image, wrapped code, table,
   inline RNN and display matrix. Its natural 875px height is fully retained.
   At 390px, the native outer canvas pan reaches the final paragraph while

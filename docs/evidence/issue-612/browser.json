@@ -194,6 +194,11 @@
       "case": "outer-canvas-reading-pan",
       "endVisible": true,
       "guestScrollTop": 0
+    },
+    {
+      "case": "repeated-async-content-no-row-drift",
+      "neighborY": 3457,
+      "repeatNeighborY": 3457
     }
   ]
 }

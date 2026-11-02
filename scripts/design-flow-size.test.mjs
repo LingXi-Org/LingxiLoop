@@ -28,6 +28,9 @@ test('content height updates the model and moves later rows together, preserving
   const shorter = resizeFlowManifest(grown, 'one', { w: 1280, h: 1400 })
   assert.equal(shorter.artboards[0].h, 1400)
   assert.equal(shorter.artboards[1].y, 1835, 'shrinking never pulls authored later rows upward')
+  const repeated = resizeFlowManifest(shorter, 'one', { w: 1280, h: 1715 })
+  assert.equal(repeated.artboards[1].y, 1835, 'repeated content growth reuses spare space without row drift')
+  assert.equal(repeated.annotations[0].y, 1795)
   assert.equal(resizeFlowManifest(grown, 'one', { w: 1280, h: 1715 }), grown, 'settled reports do no work')
 })
 

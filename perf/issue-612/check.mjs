@@ -181,6 +181,25 @@ assert.equal(await controlGuest.evaluate(()=>document.scrollingElement.scrollTop
 report.push({case:'outer-canvas-reading-pan',endVisible:true,guestScrollTop:0});
 await control.screenshot({path:out+'/public-control-bottom.png'});
 
+
+let multiGuest;
+for (const frame of second.frames()) {
+  try { if (await frame.evaluate(()=>window.__dcRootPath === 'Roadmap.dc.html')) multiGuest = frame; } catch {}
+}
+assert(multiGuest);
+const append = () => { const p = document.createElement('p'); p.id='repeat-flow'; p.textContent='Growing content '.repeat(600); document.querySelector('.sc-host > [data-dc-tpl]').append(p); };
+const multiGeometry = async () => JSON.parse((await api('/__fixture/documents'))['board-multi']['project/canvas.json']);
+await multiGuest.evaluate(append);
+await wait(async () => (await multiGeometry()).boards['Roadmap.dc.html'].h > 1900);
+const firstExpansion = await multiGeometry();
+await multiGuest.locator('#repeat-flow').evaluate(e => e.remove());
+await wait(async () => (await multiGeometry()).boards['Roadmap.dc.html'].h < 1800);
+await multiGuest.evaluate(append);
+await wait(async () => (await multiGeometry()).boards['Roadmap.dc.html'].h > 1900);
+const secondExpansion = await multiGeometry();
+assert.equal(secondExpansion.boards['Neighbor.dc.html'].y,firstExpansion.boards['Neighbor.dc.html'].y);
+assert.equal(secondExpansion.notes.arrow.y,firstExpansion.notes.arrow.y);
+report.push({case:'repeated-async-content-no-row-drift',neighborY:firstExpansion.boards['Neighbor.dc.html'].y,repeatNeighborY:secondExpansion.boards['Neighbor.dc.html'].y});
 assert.deepEqual(failures, []);
 await writeFile(out + "/results.json", JSON.stringify({ browser: browser.version(), sourceHashes: expected, scope: "Original hash-verified files in a synthetic authenticated API fixture. No production artwork writes.", failures, report }, (key, value) => key === "title" ? void 0 : value, 2));
 console.log(JSON.stringify(report));

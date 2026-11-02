@@ -2,7 +2,7 @@ interface Box { x: number; y: number; w: number; h: number; page?: string }
 interface Board extends Box { file: string; frameless?: boolean; is_interactive?: boolean }
 interface Annotation { x: number; y: number; page?: string }
 
-/** Grow a natural-height page through the model, retaining gaps to later rows.
+/** Grow a natural-height page through the model, moving later rows together.
  * Existing layered compositions and fixed interaction viewports keep their geometry. */
 export function resizeFlowManifest<T extends { artboards: Board[]; annotations?: Annotation[] }>(
   manifest: T, file: string, size: { w: number; h: number },
@@ -17,7 +17,12 @@ export function resizeFlowManifest<T extends { artboards: Board[]; annotations?:
   if (manifest.artboards.some(item => item !== board && samePage(item)
     && item.x < board.x + board.w && item.x + item.w > board.x
     && item.y < board.y + board.h && item.y + item.h > board.y)) return manifest
-  const delta = Math.max(0, h - board.h), bottom = board.y + board.h
+  const bottom = board.y + board.h
+  // Shrinking leaves spare canvas space. Reuse it on the next expansion instead
+  // of pushing later rows again on every expand/collapse of dynamic content.
+  const intersectsLaterRow = [...manifest.artboards, ...(manifest.annotations ?? [])].some(item => samePage(item)
+    && item.y >= bottom && item.y < board.y + h)
+  const delta = intersectsLaterRow ? Math.max(0, h - board.h) : 0
   const move = <U extends Annotation>(item: U): U => samePage(item) && item.y >= bottom && delta
     ? { ...item, y: item.y + delta } : item
   return { ...manifest, artboards: manifest.artboards.map(item => item === board ? { ...item, h } : move(item)),
