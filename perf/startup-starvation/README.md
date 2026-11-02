@@ -107,3 +107,47 @@ and per-grant origin are unchanged) and the real Slides editor bundle (its opaqu
 sandbox still prevents HTTP cache reuse across opens). The fixture machine runs
 third-party security software that injects scripts into every page; both arms
 are equally affected.
+
+## Integrator regressions on the final candidate
+
+The first `ced1794a` candidate failed two targeted checks: a late ensure response
+from an old scope closed the next scope's pending canvas; reopening a folded
+canvas replaced its retained editor with a placeholder and lost an unsaved draft.
+The fixes compare the pending surface by object identity and keep this
+conversation's existing editor mounted while ensure is pending.
+
+Observed in Chromium 154 on Linux with real DesignButton, DesignWorkspace,
+Sidebar, ArtifactView, ArtifactEditorFrame and the Zustand surface store:
+
+- Closing during ensure does not reopen the canvas on the late response.
+- An ensure failure can be retried successfully.
+- Folding/reopening retains the same frame, one grant and the edited draft.
+- Old account/company/project/conversation responses cannot replace or close a
+  newer scope's placeholder; the old board receives no editor grant.
+- The 390px native sidebar opens and closes with an editable child.
+
+The APIs are deferred synthetic responses and the child is a small editable
+fixture, not the full Design editor or an authenticated production session.
+The unchanged Slides loading probe also passed: assistant code and workspace
+readiness do not block the authorized editor, assistant failure/retry retains the
+frame, send waits for saved context, and a known channel opens before list refresh.
+The actual conversation store's focused tests cover burst coalescing, trailing
+reads, failed refresh retry and stale account/company/project reads.
+
+Reproduce the Design regression (Playwright is a local probe dependency):
+
+```sh
+node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5191 --strictPort
+# In another terminal, use the installed Playwright package or its module path:
+PLAYWRIGHT_MODULE=/path/to/playwright-core/index.mjs node perf/startup-starvation/design-smoke.mjs
+node --import tsx --experimental-test-module-mocks --test --test-force-exit src/features/design/open-design.test.ts src/features/design/DesignWorkspace.test.tsx src/features/conversations/reload.test.ts
+node perf/issue-626/slides-loading.mjs
+```
+
+Thirty renderer/Design/avatar checks passed before the final retained-frame fix;
+the final affected Design/store checks (9), Design browser probe and Slides probe
+passed afterward. Markdown's real primitive rendered lazy math, matrices, streamed
+and invalid formulas while preserving citations and TeX copying. This is not an
+additional full-editor formula export or live-provider acceptance.
+
+Final candidate source typecheck (`tsc --noEmit`) and affected-file lint passed.

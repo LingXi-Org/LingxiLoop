@@ -5,17 +5,15 @@ import { useAuth } from '@/stores/auth'
 import { useSurface } from '@/stores/surface'
 import { PENDING_DESIGN_ID } from './pending'
 
-const placeholderOpen = () => {
-  const surface = useSurface.getState().surface
-  return surface?.kind === 'design' && surface.artifactId === PENDING_DESIGN_ID
-}
-
 /** A slow ensure request belongs to the conversation that initiated it. */
 export async function openConversationDesign(conversationId: string, opener?: HTMLElement) {
   const { user, activeCompanyId } = useAuth.getState()
   const projectId = useWorkspace.getState().selectedId
   const placeholder = useSurface.getState().surface?.kind !== 'design'
   if (placeholder) useSurface.getState().openDesign(PENDING_DESIGN_ID, '设计')
+  // A later open owns a different surface, even when both use the pending ID.
+  const pendingSurface = useSurface.getState().surface
+  const placeholderOpen = () => useSurface.getState().surface === pendingSurface
   let design
   try {
     design = await artifactsApi.ensureConversationDesign(conversationId)

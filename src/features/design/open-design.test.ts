@@ -55,3 +55,21 @@ test('closing the placeholder or a failed ensure leaves the canvas closed', asyn
   await assert.rejects(failed, /offline/)
   assert.equal(surface, null)
 })
+
+test('an old scope response cannot close a newer canvas placeholder', async () => {
+  for (const fails of [false, true]) {
+    reset()
+    const old = openConversationDesign('room')
+    const oldResolve = resolve, oldReject = reject
+    conversationId = 'next-room'
+    surface = null
+    const current = openConversationDesign('next-room')
+    const currentResolve = resolve
+    if (fails) { oldReject(new Error('old offline')); await assert.rejects(old) }
+    else { oldResolve({ id: 'old-board', title: '旧画板' }); await old }
+    assert.deepEqual(surface, { kind: 'design', artifactId: PENDING_DESIGN_ID, title: '设计' })
+    currentResolve({ id: 'new-board', title: '新画板' })
+    await current
+    assert.deepEqual(surface, { kind: 'design', artifactId: 'new-board', title: '新画板' })
+  }
+})

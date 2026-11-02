@@ -13,8 +13,11 @@ type Design = { artifactId: string; title: string }
  * Keep the editor alive when folded, including its unsaved edits and live updates. */
 export function DesignWorkspace({ children, design, onClose }: { children: ReactNode; design: Design | null; onClose(): void }) {
   const [retained, setRetained] = useState(design)
-  if (design && design !== retained) setRetained(design)
-  const current = design ?? retained
+  const pending = design?.artifactId === PENDING_DESIGN_ID
+  if (design && !pending && design !== retained) setRetained(design)
+  // Reopening this conversation's one canvas must retain its live draft while
+  // the ensure request checks the existing board again.
+  const current = pending && retained?.artifactId ? retained : design ?? retained
   const open = Boolean(design)
   const panel = useRef<HTMLElement>(null)
   const opener = useRef<HTMLElement | null>(null)
