@@ -41,6 +41,18 @@ The browser output uses hashed shared assets; exports, PPTX and WOFF2 are lazy c
 
 Chinese interface copy (the pinned translation catalog is the translation evidence); dialog sheet dependency initialization; native selection/context heartbeat and presentation-exit bridge; `__frame_claude_activity` for the existing comment agent presence; extra PDF/HTML/PPTX download formats enabled; export modules loaded on demand; video removal described above. PDF confirmation uses an explicit button callback because the product sandbox does not permit form submission. Document content, keys and enum values are not translated.
 
+Slides read-only text and table cells render explicitly delimited TeX through
+the root-locked KaTeX 0.16.47 (`math.js`); the pinned auto-render delimiter splitter
+owns delimiter/brace matching. Editing and persisted HTML retain the original
+source, marks and format. Backtick and monospace code, amounts and invalid TeX
+stay readable as text. The build supplies content-addressed local WOFF2 fonts;
+HTML/PDF capture includes those faces. Display formulas wrap at KaTeX's legal
+breaks; indivisible formulas fit the available content width. Existing vertical
+text-fit rules still apply. Native PPTX cannot represent this layout: formula
+pages use the existing PNG capture, keep speaker notes and report the picture
+fallback; other pages keep native text. Reproduction, syntax and boundaries are
+in `docs/evidence/issue-631/README.md`.
+
 `builtin-style.json` is a static Slides resource assembled from this pinned
 distribution's `namedSlideColors`, `anthropicTypeScale` and the documented
 Georgia/system font fallbacks. It is not the missing `artifact-type/demo.html`
