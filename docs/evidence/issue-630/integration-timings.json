@@ -1,0 +1,22 @@
+{
+  "mode": "selected",
+  "availableFiles": 54,
+  "selectedFiles": [
+    "homework.test.ts"
+  ],
+  "executedFiles": [
+    "homework.test.ts"
+  ],
+  "records": [
+    {
+      "files": [
+        "homework.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 56115,
+      "exitCode": 0
+    }
+  ],
+  "durationMs": 56115,
+  "exitCode": 0
+}
