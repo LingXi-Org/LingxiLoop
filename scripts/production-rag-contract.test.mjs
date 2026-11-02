@@ -268,7 +268,7 @@ test('production Open Notebook receives only the explicit RAG environment', () =
     'OPENAI_EMBEDDING_MODEL',
   ]) assert.match(service, new RegExp(`${variable}:`))
   assert.match(service, /OPENAI_API_KEY: \$\{OPEN_NOTEBOOK_PASSWORD:\?/)
-  assert.ok(service.includes('OPENAI_BASE_URL: \"${NOTEBOOK_EMBEDDING_BASE_URL:-${LINGXILOOP_PUBLIC_ORIGIN:?LINGXILOOP_PUBLIC_ORIGIN is required}/internal/open-notebook/v1}\"'))
+  assert.ok(service.includes('OPENAI_BASE_URL: "${NOTEBOOK_EMBEDDING_BASE_URL:-${LINGXILOOP_PUBLIC_ORIGIN:?LINGXILOOP_PUBLIC_ORIGIN is required}/internal/open-notebook/v1}"'))
   // Preserve configured legacy identity; the sealed active-generation resolver selects Pro.
   assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{NOTEBOOK_EMBEDDING_MODEL:-BAAI\/bge-m3\}/)
 
