@@ -20,23 +20,28 @@ const entry = `import React,{useState}from'react';import{createRoot}from'react-d
 import{AssistantRuntimeProvider,useExternalStoreRuntime,MessagePrimitive,ThreadPrimitive}from'@assistant-ui/react';
 import{NativeTool}from'./src/features/chat/components/NativeTool';
 import{ConfidenceMarker}from'./src/components/assistant-ui/elements/confidence-marker';
+import{ResearchSources}from'./src/features/chat/components/ResearchSources';
 const key='issue579-synthetic',restored=sessionStorage.getItem(key);
 const fixture=restored?JSON.parse(restored):{claims:[
- {id:'intro',text:'导读介绍 Q、K、V',confidence:'grounded',basis:'',evidence:[{marker:'S1',chunkId:'pdf:0:6797',title:'测试手册',excerpt:'[[PAGE:2]]\\n导读：介绍 Q、K、V。',truncated:true}]},
- {id:'cross',text:'交叉注意力允许不同序列',confidence:'grounded',basis:'',evidence:[{marker:'S2',chunkId:'pdf:6797:19204',title:'测试手册',excerpt:'[[PAGE:15]]\\n交叉注意力：Q、K、V 可以来自不同序列。',truncated:true}]}],
+ {id:'intro',text:'查询来自解码器，键和值来自编码器',confidence:'grounded',basis:'',evidence:[{marker:'S1',chunkId:'pdf:0:6797',title:'Attention_Handbook.pdf',excerpt:'查询来自解码器，键和值来自编码器。\\n[[PAGE:2]]\\n导读：介绍 Q、K、V。'+ '其他原文内容。'.repeat(30),truncated:true}]},
+ {id:'cross',text:'交叉注意力允许不同序列',confidence:'grounded',basis:'',evidence:[{marker:'S2',chunkId:'pdf:6797:19204',title:'Cross_Attention.pdf',excerpt:'[[PAGE:15]]\\n交叉注意力：Q、K、V 可以来自不同序列。',truncated:true}]}],
  tools:['unavailable','matched','no_matches','processing'].map((sourceStatus,index)=>({type:'tool-call',toolCallId:'search-'+index,toolName:'knowledge.search',args:{},argsText:'{}',
  result:{status:'completed',sourceStatus,display:{title:'检索课程资料',purpose:'查找课程依据。',summary:'检索已完成，可在下方查看资料结果。'}},isError:false}))};
 sessionStorage.setItem(key,JSON.stringify(fixture));
 const Fallback=p=><NativeTool {...p} readOnly/>;
 const Message=()=> <MessagePrimitive.Root><MessagePrimitive.Parts components={{tools:{Fallback}}}/></MessagePrimitive.Root>;
 function App(){const[id,setId]=useState('');const runtime=useExternalStoreRuntime({messages:[{id:'fixture',role:'assistant',content:fixture.tools,status:{type:'complete',reason:'stop'},metadata:{custom:{}}}],onNew:async()=>{}});
- return <><AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{Message}}/></AssistantRuntimeProvider>
+ const sources=[{toolCallId:'public-source',toolName:'research.search',args:{},result:{status:'completed',sources:[{title:'Attention Handbook',url:'https://docs.example.test/attention#page=2',snippet:'查询来自解码器，键和值来自编码器。',page:2,sourceVersion:'sha256:synthetic-version'}]}}];
+ return <><ResearchSources calls={sources} lifecycle='succeeded'/><AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{Message}}/></AssistantRuntimeProvider>
  <ConfidenceMarker claims={fixture.claims} hoveredId={id} onHover={setId} floatingBasis/></>}
 createRoot(document.getElementById('root')).render(<App/>);
 const wait=async check=>{for(let i=0;i<120;i++){if(check())return;await new Promise(r=>setTimeout(r,25))}throw Error('UI condition timed out')};
 const assert=(ok,message)=>{if(!ok)throw Error(message)};
 try{
  await wait(()=>document.querySelectorAll('[data-confidence-id]').length===2);
+ const sourceLink=document.querySelector('a[href="https://docs.example.test/attention#page=2"]');
+ assert(sourceLink?.textContent.includes('Attention Handbook'),'public source title/link mismatch');
+ assert(!document.body.textContent.includes('sha256:synthetic-version'),'internal version displayed');
  const labels=['课程检索未完成','课程检索已命中','课程检索未命中','课程资料仍在处理'];
  for(const button of document.querySelectorAll('button'))if(button.textContent.includes('检索课程资料'))button.click();
  await wait(()=>labels.every(x=>document.body.textContent.includes(x)));
@@ -47,8 +52,18 @@ try{
   const basis=document.querySelector('[data-slot="confidence-basis"]').textContent;
   assert(basis.includes('第 '+page+' 页'),'wrong page '+id);
   assert(!basis.includes('第 '+(page==='2'?'15':'2')+' 页')&&!basis.includes('[[PAGE:'),'cross-range excerpt '+id);
+  if(id==='intro'){
+   const panel=document.querySelector('[data-slot="confidence-basis"]');
+   assert(basis.includes('Attention Handbook')&&basis.includes('分隔线前的原文页码暂未确认'),'unpaged source boundary missing');
+   assert(panel.querySelector('hr'),'page boundary missing');
+   assert(panel.querySelector('mark')?.textContent.includes('查询来自解码器'),'leading support sentence missing');
+   const expand=panel.querySelector('[aria-expanded="false"]');
+   if(expand){expand.click();await wait(()=>panel.querySelector('[aria-expanded="true"]'));}
+   assert(panel.textContent.includes('查询来自解码器，键和值来自编码器。')&&panel.textContent.includes('其他原文内容。'),'expanded evidence lost');
+   assert(panel.textContent.includes('高亮为关键词匹配'),'match meaning missing');
+  }else assert(basis.includes('Cross Attention'),'wrong frozen source title');
  }
- if(!restored){location.reload()}else await fetch('/result',{method:'POST',body:JSON.stringify({passed:true,checks:['four real receipt summaries override obsolete recorded copy','page2/page15/page2 original excerpts before reload','same markers and excerpts after actual reload'],limits:['synthetic source data','no provider generation or backend ACL exercised']})});
+ if(!restored){location.reload()}else await fetch('/result',{method:'POST',body:JSON.stringify({passed:true,checks:['four real receipt summaries override obsolete recorded copy','page2/page15/page2 frozen titles and excerpts before reload','leading support evidence, page boundary and complete expansion','public source title/link with hidden internal version','same markers and excerpts after actual reload'],limits:['synthetic source data','no provider generation or backend ACL exercised']})});
 }catch(error){await fetch('/result',{method:'POST',body:JSON.stringify({passed:false,error:error.message,body:document.body.textContent.slice(0,1500)})})}`
 const bundle = await build({ stdin: { contents: entry, loader: 'jsx', resolveDir: root }, bundle: true, write: false,
   format: 'esm', jsx: 'automatic', alias: { '@': resolve(root, 'src') },
