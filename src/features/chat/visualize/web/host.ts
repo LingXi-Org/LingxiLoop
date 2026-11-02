@@ -237,7 +237,8 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
         active = page
         const pending = new Set<string>()
         const progress = () => onProgress?.({stage:'resources',pending:[...pending]})
-        const [html] = await Promise.all([buildWebDocument(result.html,result.state,async name => {
+        const [html] = await Promise.all([buildWebDocument(result.html,result.state,async (name, budgetSignal) => {
+          const readSignal = budgetSignal ? AbortSignal.any([resourceSignal, budgetSignal]) : resourceSignal
           pending.add(name);progress()
           try {
             const authorizedRead = (attemptSignal: AbortSignal) => {
@@ -259,7 +260,7 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
             // A stalled public edge must not consume both recovery GETs on
             // the same route. The existing page capability and digest remain
             // required; authorization/rate-limit errors are never retried.
-            }, resourceSignal, authorizedRead), resourceSignal)
+            }, readSignal, authorizedRead), readSignal)
           } finally { pending.delete(name);progress() }
         }, result.resourceHashes?.['visualize.html'], result.resourceHashes), refreshState(page,false,resourceSignal)])
         assertScope()
@@ -272,7 +273,7 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
         if (active === page) active = undefined
         await webPlatform.disposeSandbox(page.sandboxId,page.initId)
         throw error
-      }
+      } finally { resources.abort() }
       return page
     },
     async getState(_target, signal) {

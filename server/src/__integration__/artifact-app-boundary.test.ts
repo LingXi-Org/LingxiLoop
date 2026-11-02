@@ -124,6 +124,19 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   const page = await fetch(origin + grant.url)
   assert.equal(page.status, 200)
   assert.match(page.headers.get('content-security-policy') ?? '', /^sandbox allow-scripts/)
+  const html = await page.text()
+  const sharedEntry = /src="(https?:\/\/[^"]+\/artifact-editor\/design-assets\/design-[a-f0-9]{64}\.js)"/.exec(html)?.[1]
+  assert.ok(sharedEntry, 'the fixed renderer can be cached across unique grant origins')
+  const shared = await fetch(origin + new URL(sharedEntry).pathname)
+  assert.equal(shared.status, 200)
+  assert.match(shared.headers.get('content-type') ?? '', /javascript/)
+  assert.equal(shared.headers.get('access-control-allow-origin'), '*')
+  assert.match(shared.headers.get('cache-control') ?? '', /immutable/)
+  assert.match(page.headers.get('content-security-policy') ?? '', /\/artifact-editor\/design-assets\//)
+  assert.match(html, /integrity="sha256-/)
+  for (const privatePath of ['project/canvas.json', 'index.html', 'artifact-type/dc-runtime.js']) {
+    assert.equal((await fetch(`${origin}/artifact-editor/design-assets/${privatePath}`)).status, 404)
+  }
   assert.equal((await (await fetch(`${origin}${grant.url}__deck/session`)).json() as { canEdit: boolean }).canEdit, true)
 
   const first = await save(grant.url, { 'project/Main.dc.html': entry('<x-dc>one</x-dc>', null) })

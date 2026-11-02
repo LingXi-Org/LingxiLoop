@@ -1,0 +1,14 @@
+{
+  "browser": "cloud Chromium",
+  "scope": "synthetic public files; real Design editor in standalone test origin, real GenUiCard/host/opaque guest; production outer Design sandbox blocked separately by #611",
+  "reports": [
+    {
+      "entry": "design",
+      "rendered": 0
+    },
+    {
+      "entry": "inline",
+      "rendered": 0
+    }
+  ]
+}

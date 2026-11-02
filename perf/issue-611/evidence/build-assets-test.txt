@@ -1,0 +1,12 @@
+✔ Design preview math covers both external and inline runtime without changing archived bytes (252.843097ms)
+✔ math injection preserves replacement tokens and minified dollar identifiers literally (0.541059ms)
+✔ only an acknowledged visible host skips the pinned presentation waits (358.521344ms)
+✔ Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources (43566.36201ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 44458.31352

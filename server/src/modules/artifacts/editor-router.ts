@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto'
 import { lstat, readFile, realpath } from 'node:fs/promises'
-import { extname, join, resolve } from 'node:path'
+import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Router, type Request, type Response } from 'express'
 import { pool } from '../../db/pool.js'
+import { env } from '../../env.js'
 import { permissionService } from '../access/public.js'
 import { storage } from '../../storage.js'
 import { CommentsError, readEdit, readNewThread, readReply, readStatus } from './comments.js'
@@ -12,11 +13,12 @@ import {
   createComment, deleteComment, editComment, listComments, publishArtifactFiles, replyComment, sendComment, setCommentStatus,
 } from './facade.js'
 import { readGrant, type EditorGrant } from './grants.js'
-import { ARTIFACT_KIND_DEFINITIONS, BAOYU_DESIGN_ROOT, artifactKind, type ArtifactKindDefinition } from './kinds.js'
+import { ARTIFACT_KIND_DEFINITIONS, artifactKind, type ArtifactKindDefinition } from './kinds.js'
 import { blobFile, contentTypeOf, isWireEntry, listing, putBlob, readProjectFile, type WireEntry } from './store.js'
 import { availableAgents } from './repository.js'
 import { EDITOR_DOWNLOAD_SCRIPT } from './editor-downloads.js'
 import { sendEditorAsset } from './editor-static.js'
+import { designPageAssets } from './design-page.js'
 import { slideWorkspaceConversation } from './slides-workspace.js'
 
 // Ported from baoyu-design server.mjs `startServer`/`route`: the same routes under
@@ -25,6 +27,7 @@ import { slideWorkspaceConversation } from './slides-workspace.js'
 const ROUTES = { listing: '_files.json', publish: '__deck/publish', assets: '__deck/assets', events: '__deck/events', session: '__deck/session' }
 const COMMENTS_ROUTE = '__comments'
 const SLIDES_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/slides-editor/', import.meta.url))
+const DESIGN_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/design-editor/', import.meta.url))
 const BLOB_PATH = /^_blob\/([0-9a-f]{32})$/
 const DATA_CSP = "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:"
 const MAX_PUBLISH_BYTES = 64 * 1024 * 1024
@@ -39,14 +42,14 @@ const STATIC_TYPES: Record<string, string> = {
 class TooLarge extends Error {}
 
 /** Upstream's page policy, plus `sandbox`: the page has an opaque origin even when opened directly. */
-function pageCsp(scriptSrc: string) {
+function pageCsp(scriptSrc: string, designAssets = '') {
   const fonts = 'https://fonts.googleapis.com https://fonts.gstatic.com'
   return [
     'sandbox allow-scripts allow-downloads allow-popups allow-modals',
     "default-src 'self'",
-    scriptSrc,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' data: https://fonts.gstatic.com",
+    `${scriptSrc} ${designAssets}`.trim(),
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${designAssets}`.trim(),
+    `font-src 'self' data: https://fonts.gstatic.com ${designAssets}`.trim(),
     "img-src 'self' data: blob:",
     "media-src 'self' blob:",
     "worker-src 'self' blob:",
@@ -138,7 +141,7 @@ async function commentsSnapshot(session: EditorSession) {
 }
 
 async function serveEditor(request: Request, response: Response, definition: ArtifactKindDefinition, rest: string) {
-  const editorDir = definition.kind === 'slides' ? SLIDES_EDITOR_ROOT : resolve(BAOYU_DESIGN_ROOT, definition.skillDirectory, 'scripts', 'editor')
+  const editorDir = definition.kind === 'slides' ? SLIDES_EDITOR_ROOT : DESIGN_EDITOR_ROOT
   const parts = rest === '' ? ['index.html'] : rest.split('/')
   const invalid = parts.some(p => p === '' || p === '.' || p === '..' || p.startsWith('.') || p.includes('\\')) || parts[0] === 'node'
   const realDist = invalid ? null : await realpath(editorDir).catch(() => null)
@@ -153,15 +156,17 @@ async function serveEditor(request: Request, response: Response, definition: Art
   const type = STATIC_TYPES[ext] ?? 'application/octet-stream'
   if (ext === '.html') {
     const bytes = await readFile(file)
-    const html = bytes.toString('utf8').replace('</head>', `<script>${EDITOR_DOWNLOAD_SCRIPT}</script></head>`)
+    const page = definition.kind === 'design' ? designPageAssets(bytes.toString('utf8'), env.INVITE_BASE_URL) : { html: bytes.toString('utf8'), source: '' }
+    const html = page.html.replace('</head>', `<script>${EDITOR_DOWNLOAD_SCRIPT}</script></head>`)
     response.status(200).set({ 'Content-Type': type, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': pageCsp(definition.pageScriptSrc(html)) })
+      'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': pageCsp(definition.pageScriptSrc(html), page.source) })
     response.end(request.method === 'HEAD' ? undefined : html)
     return
   }
   // Precompressed sidecars avoid spending request CPU on immutable assets.
-  if (definition.kind === 'slides' && parts[0] === 'assets' && ['.js', '.css'].includes(ext)) {
-    await sendEditorAsset(request, response, file, type, true)
+  if (['.js', '.css'].includes(ext) && (parts[0] === 'assets' || definition.kind === 'design' && parts[0] === 'artifact-type')) {
+    await sendEditorAsset(request, response, file, type, parts[0] === 'assets'
+      || definition.kind === 'design' && /^dc-runtime-[a-f0-9]{64}\.js$/.test(parts[1] ?? ''))
     return
   }
   response.status(200).set({ 'Content-Type': type, 'X-Content-Type-Options': 'nosniff',
@@ -398,6 +403,10 @@ artifactEditorRouter.use((request, response, next) => {
 artifactEditorRouter.get(/^\/slides-assets\/([A-Za-z0-9_-]+\.(?:js|css|woff2))$/, (request, response) => {
   const name = request.path.slice('/slides-assets/'.length)
   void guard(response, () => serveEditor(request, response, ARTIFACT_KIND_DEFINITIONS.slides, `assets/${name}`))
+})
+artifactEditorRouter.get(/^\/design-assets\/(design-[a-f0-9]{64}\.(?:js|css|woff2))$/, (request, response) => {
+  const name = request.path.slice('/design-assets/'.length)
+  void guard(response, () => serveEditor(request, response, ARTIFACT_KIND_DEFINITIONS.design, `assets/${name}`))
 })
 
 artifactEditorRouter.all(/^\/([a-z-]+)\/([^/]+)(\/.*)?$/, (request, response) => {

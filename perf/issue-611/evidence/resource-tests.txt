@@ -1,0 +1,21 @@
+✔ math runs inside the content document after authored content on both kit paths (5.392735ms)
+✔ unavailable math enhancement keeps the authored source and the SDK usable (3.054513ms)
+✔ a stalled optional math resource cannot exhaust whole-view initialization (4.460705ms)
+(node:7240) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7240) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ the real host releases stalled optional readers and cache ownership before preparation completes (312.214927ms)
+✔ an idle public resource recovers through the authorized page within the original deadline (54.78554ms)
+✔ HTTP 401 does not invoke a recovery route (1.866715ms)
+✔ HTTP 403 does not invoke a recovery route (1.585779ms)
+✔ HTTP 429 does not invoke a recovery route (1.952989ms)
+✔ cancelling before recovery prevents a late authorized request (1.769541ms)
+✔ authorized recovery bytes still require the declared public digest before caching (24.513812ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 700.012002

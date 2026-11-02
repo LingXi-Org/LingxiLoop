@@ -1,0 +1,15 @@
+✔ API, protected files, dynamic visualize, artifact editor and WebSocket routes never become HTML (38.025047ms)
+✔ upstream loop, hop loops and internal endpoints fail closed (1.288925ms)
+✔ only HTML navigation receives SPA; old hashed chunks come from retained R2 (4.064914ms)
+✔ WebSocket 101 response is passed through without reconstructing it (0.454534ms)
+✔ auth service binding keeps the public request origin for password and sign-in flows (1.177777ms)
+✔ fixed visualize assets are anonymous immutable CORS resources, including retained old hashes (4.217081ms)
+✔ executable Design origins are grant-bound and never proxy authenticated product requests (16.670445ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 307.36386

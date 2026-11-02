@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build, transform } from 'esbuild'
+import { buildDesignEditor } from './build-design-editor.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const upstream = resolve(root, 'third_party/zcode/upstream')
@@ -37,6 +38,7 @@ export async function buildGuestRuntime({ slim = true, write = true } = {}) {
 }
 
 export async function buildVisualizeRuntime() {
+  await buildDesignEditor()
   await mkdir(output, { recursive: true })
   const result = await buildGuestRuntime()
   const hash = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -83,7 +85,7 @@ export async function buildVisualizeRuntime() {
     .replace('root.setAttribute("role", "group");', 'root.setAttribute("data-lingxi-carousel", "");\nroot.setAttribute("role", "group");')
   await writeFile(resolve(output, 'kit-carousel.js'), `/* Adapted from pinned ZCode visualize.html; Apache-2.0. */\n(() => { const initialize = () => {${dynamicCarousel}}; initialize(); const observer = new MutationObserver(initialize); observer.observe(document, {childList:true,subtree:true}); window.addEventListener('pagehide',()=>observer.disconnect(),{once:true}); })();`)
   await build({ absWorkingDir: root, stdin: { contents: 'export { toCanvas } from "html-to-image"', resolveDir: root }, outfile: resolve(output, 'capture.js'), bundle: true, platform: 'browser', format: 'esm', target: ['chrome120', 'firefox120', 'safari17'], minify: true, legalComments: 'inline' })
-  for (const name of ['kit-tooltip.js', 'kit-carousel.js', 'kit-tabs.js', 'kit-icons.js', 'kit.css', 'capture.js']) {
+  for (const name of ['kit-tooltip.js', 'kit-carousel.js', 'kit-tabs.js', 'kit-icons.js', 'kit.css', 'capture.js', 'math.js']) {
     const content = await readFile(resolve(output, name))
     manifest.files[name] = {sha256:hash(content),bytes:content.length}
   }
