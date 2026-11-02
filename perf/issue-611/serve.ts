@@ -129,7 +129,7 @@ app.use((req,res,next)=>{
   next()
 })
 app.use(express.static(web))
-app.get('/', (_req,res)=>res.sendFile(resolve(web,'perf/issue-611/index.html')))
+app.get('/', (_req,res)=>res.sendFile(resolve(web,'perf/issue-611/index.html'), { dotfiles: 'allow' }))
 app.use((error: Error,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{console.error(error.message);res.status(500).send(error.name)})
-const server = tls ? createServer({key:await readFile('/tmp/611-fixture-key.pem'),cert:await readFile('/tmp/611-fixture-cert.pem')},app) : app
+const server = tls ? createServer({key:await readFile(process.env.PERF_TLS_KEY ?? '/tmp/611-fixture-key.pem'),cert:await readFile(process.env.PERF_TLS_CERT ?? '/tmp/611-fixture-cert.pem')},app) : app
 server.listen(port,'0.0.0.0',()=>console.log(JSON.stringify({port,root,editor,fixtureHashes:{canvas:sha(JSON.stringify(canvas)),board:sha(board),visualization:sha(visualization)}})))

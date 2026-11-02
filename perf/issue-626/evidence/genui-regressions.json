@@ -1,0 +1,24 @@
+[
+  {
+    "case": "unchanged interactive output and exact screenshot at 1440px",
+    "passed": true
+  },
+  {
+    "case": "unchanged interactive output and exact screenshot at 390px",
+    "passed": true
+  },
+  {
+    "case": "unavailable unused math cannot delay initial SDK state acknowledgement",
+    "passed": true,
+    "usableMs": 436.3377000008768,
+    "mathRequests": 0
+  },
+  {
+    "case": "dynamic inline and display math render from one hash-verified optional request",
+    "passed": true
+  },
+  {
+    "case": "initial formulas render; ordinary currency and code remain literal",
+    "passed": true
+  }
+]

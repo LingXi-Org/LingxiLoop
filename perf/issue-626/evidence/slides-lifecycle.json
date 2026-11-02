@@ -1,0 +1,1 @@
+{"checks":["authorized editor ready while workspace request is pending","assistant code loads independently; roster does not block; frame/source retained; send waits for context","assistant failure and retry preserve live editor"],"passed":true}

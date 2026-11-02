@@ -1,0 +1,22 @@
+[
+  {
+    "view": "conversations",
+    "width": 1440,
+    "changedPixelRatio": 0.0
+  },
+  {
+    "view": "learning",
+    "width": 1440,
+    "changedPixelRatio": 0.0
+  },
+  {
+    "view": "conversations",
+    "width": 390,
+    "changedPixelRatio": 0.0
+  },
+  {
+    "view": "learning",
+    "width": 390,
+    "changedPixelRatio": 0.0
+  }
+]
