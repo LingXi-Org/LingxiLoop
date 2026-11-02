@@ -314,3 +314,16 @@ verification limits are recorded in [issue #568 evidence](docs/evidence/issue-56
 The grilling skill in `.agents/skills/grilling` is from
 [mattpocock/skills](https://github.com/mattpocock/skills/tree/a496f5513d4a4cf889bc48e189e579f4b0bdf6aa/skills/productivity/grilling).
 Its MIT license is retained alongside the skill.
+
+## shadcn Sidebar and Sheet transitions (#628)
+
+`src/components/ui/sidebar.tsx` retains the shadcn Sidebar provider, offcanvas
+width gap and side-position transition mechanism. `src/components/ui/sheet.tsx`
+uses the official Radix state selectors and left/right slide directions, checked
+against `apps/v4/registry/new-york-v4/ui/{sidebar,sheet}.tsx` at shadcn-ui/ui commit
+`4aaea19d9cff3e0908e12a8c1d504b8c5ec34610` (MIT © 2023 shadcn):
+https://github.com/shadcn-ui/ui/tree/4aaea19d9cff3e0908e12a8c1d504b8c5ec34610/apps/v4/registry/new-york-v4/ui
+The local adaptations retain project tokens/icons, accessible labels and reduced
+motion, scope the panels to the workspace, and keep the nonmodal Canvas iframe
+mounted across folding and responsive placement changes. The MIT license is
+retained at `public/licenses/shadcn.txt`.

@@ -1,7 +1,8 @@
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { RightPanelHeader } from '@/components/shell/RightPanel'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import { Sidebar, SidebarProvider } from '@/components/ui/sidebar'
+import { SidebarResizeHandle } from '@/components/ui/sidebar-resize-handle'
 
 const ArtifactView = lazy(() => import('@/features/artifacts/components/ArtifactView').then(module => ({ default: module.ArtifactView })))
 type Design = { artifactId: string; title: string }
@@ -15,10 +16,11 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
   const open = Boolean(design)
   const panel = useRef<HTMLElement>(null)
   const opener = useRef<HTMLElement | null>(null)
+  const [width, setWidth] = useState<number | null>(null)
 
   useLayoutEffect(() => {
     if (!open) return
-    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    if (!panel.current?.contains(document.activeElement)) opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     panel.current?.focus({ preventScroll: true })
   }, [open, design?.artifactId])
 
@@ -32,13 +34,11 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
   }
 
   return <div data-design-workspace data-design-open={open} className="relative h-full min-h-0 min-w-0 overflow-hidden">
-    <ResizablePanelGroup orientation="horizontal">
-      <ResizablePanel id="canvas-conversation" defaultSize="50%" minSize="35%" className="min-h-0 min-w-0 overflow-hidden">
-        {children}
-      </ResizablePanel>
-      <ResizableHandle data-design-resize-handle withHandle hidden={!open} className="desktop-panel-resize-handle" aria-label="调整对话与画板宽度" title="拖动调整对话与画板宽度" />
-      <ResizablePanel id="canvas-editor" data-design-pane aria-hidden={!open} inert={!open} disabled={!open}
-        defaultSize="50%" minSize="35%" maxSize="65%" className="min-h-0 min-w-0 overflow-hidden">
+    <SidebarProvider open={open} openMobile={open} onOpenChange={value => { if (!value) close() }} onOpenMobileChange={value => { if (!value) close() }} keyboardShortcut={open}
+      className="relative h-full min-h-0 overflow-hidden" style={{ '--sidebar-width': width === null ? '50cqw' : `clamp(35cqw, ${width}px, 65cqw)` } as React.CSSProperties}>
+      <div className="h-full min-h-0 min-w-0 flex-1 overflow-hidden">{children}</div>
+      <Sidebar side="right" data-design-pane aria-hidden={!open} inert={!open} keepMobileMounted
+        mobileTitle="设计画板" mobileDescription="编辑当前会话的设计画板。" className="max-md:w-screen max-md:max-w-none md:absolute md:h-full">
         <aside id="conversation-design-panel" ref={panel} tabIndex={-1} aria-label={`设计画板：${current?.title ?? '设计'}`}
           className="h-full min-h-0 min-w-0 bg-background focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
           onKeyDown={event => {
@@ -48,7 +48,8 @@ export function DesignWorkspace({ children, design, onClose }: { children: React
             <ArtifactView key={current.artifactId} artifactId={current.artifactId} kind="design" title={current.title} onClose={close} />
           </Suspense>}
         </aside>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+        <SidebarResizeHandle data-design-resize-handle side="right" label="调整对话与画板宽度" min="35%" max="65%" onResize={setWidth} />
+      </Sidebar>
+    </SidebarProvider>
   </div>
 }

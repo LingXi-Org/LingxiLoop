@@ -14,7 +14,7 @@ import {
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { CourseNav } from '@/components/shell/CourseNav'
-import { DeckNav } from '@/components/shell/DeckNav'
+import { SlidesSidebarLayout } from '@/components/shell/SlidesSidebarLayout'
 import { moduleForView, rememberCourseView } from '@/components/shell/modules'
 import { RightPanelHeader } from '@/components/shell/RightPanel'
 import { ShellNavContext } from '@/components/shell/ShellNav'
@@ -153,7 +153,6 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   const chatReady = Boolean(selectedWorkspaceId) && !navigationPending
   const directPage = isMobile && (shellModule !== 'chat' || !chatReady)
   const secondary = shellModule === 'chat' ? <ConversationsPane />
-    : shellModule === 'slides' && selectedWorkspaceId ? <DeckNav />
     : <CourseNav space={learningSpaces.activeSpace} />
   const page = navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" />
     : view === 'cases' ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载案例库" />}><CasesPage key={companyId} /></Suspense>
@@ -207,7 +206,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
         {navigationError && <Alert variant="destructive" className="mb-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
         <div data-ui-page={view} data-shell-module={shellModule} aria-busy={navigationPending || undefined} className={`${isMobile ? '' : 'mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
           <ShellNavContext.Provider value={mobileNav}>
-          {directPage ? animatedPage : <ResizablePanelGroup
+          {shellModule === 'slides' ? <SlidesSidebarLayout key={`${companyId}:${selectedWorkspaceId}`}>{animatedPage}</SlidesSidebarLayout> : directPage ? animatedPage : <ResizablePanelGroup
             id="desktop-conversation-layout"
             orientation="horizontal"
             className="desktop-im-grid min-h-0 min-w-0"
@@ -229,11 +228,11 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
           </ShellNavContext.Provider>
         </div>
       </div>
-      {isMobile && shellModule !== 'chat' ? <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+      {isMobile && shellModule !== 'chat' && shellModule !== 'slides' ? <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent side="left" showCloseButton={false} className="gap-0 p-0 data-[side=left]:w-[min(20rem,calc(100vw-3rem))] motion-reduce:animate-none motion-reduce:transition-none" style={{ paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' }}>
-          <SheetTitle className="sr-only">{shellModule === 'slides' ? '演示文稿导航' : '课程导航'}</SheetTitle>
+          <SheetTitle className="sr-only">课程导航</SheetTitle>
           <SheetDescription className="sr-only">切换当前模块的页面</SheetDescription>
-          {shellModule === 'slides' ? <DeckNav onNavigate={() => setMobileNavOpen(false)} /> : <CourseNav space={learningSpaces.activeSpace} onNavigate={() => setMobileNavOpen(false)} />}
+          <CourseNav space={learningSpaces.activeSpace} onNavigate={() => setMobileNavOpen(false)} />
         </SheetContent>
       </Sheet> : null}
 
