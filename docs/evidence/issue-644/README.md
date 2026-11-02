@@ -36,7 +36,7 @@ The multi-entry runner passed **51 scenarios**; the GenUiCard runner passed **8 
 
 In the same GenUiCard snapshots, display fraction/matrix/aligned boxes retain their font sizes and heights (48/56/77px respectively) before/after. Visual records show the numerator, denominator, radical and matrix/alignment edges; the change does not remove their padding or clip the glyphs.
 
-- [Multi-entry before](entries-before.json), [after](entries-after.json). Baseline combines the initial four-entry run with the additional forum/native host run; no measurements are synthesized.
+- [Multi-entry before](entries-before.json), [after](entries-after.json). Baseline combines the initial four-entry run with the additional forum/native host run; no measurements are synthesized. JSON is losslessly compacted to one scenario per line.
 - [GenUiCard before](inline-before.json), [after](inline-after.json).
 - GenUiCard [before](inline-before.png), [after](inline-after.png), [wide formulas at narrow width](inline-after-narrow.png).
 - Design [before](design-before.png), [after](design-after.png), [narrow](design-after-narrow.png).
