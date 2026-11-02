@@ -18,6 +18,21 @@ export function adaptDesignRuntimeUrl(source) {
   return source.replace(needle, needle.replace('.pathname}', '.href}'))
 }
 
+/** The product acknowledges only an already visible, laid-out grant frame.
+ * No parent animation remains to wait for. Keep the original standalone/held
+ * path, and keep Loading until the real editor and child runtime mount. */
+export function adaptVisibleDesignMount(source) {
+  const changes = [
+    ['function W(Y){return Y.flipAt!==void 0?Math.max(0,Y.flipAt+n-Y.now):', 'function W(Y){return Y.flipAt!==void 0?0:'],
+    ['function B(Y){let q=Y.pokedAt', 'function B(Y){if(Y.framed&&Y.revealedAt!==void 0)return Math.max(Y.mountedAt,Y.revealedAt);let q=Y.pokedAt'],
+  ]
+  for (const [needle, replacement] of changes) {
+    assert.equal(source.split(needle).length, 2, 'pinned Design visible mount hook changed')
+    source = source.replace(needle, () => replacement)
+  }
+  return source
+}
+
 /** Package the pinned editor with the shared math enhancement and unchanged canvas model. */
 export async function buildDesignEditor() {
   const { math } = await buildArtifactMath()
@@ -37,7 +52,7 @@ export async function buildDesignEditor() {
   const cssName = `design-${sha(css)}.css`
   const scriptPath = /src="\.\/(assets\/[^"/]+\.js)"/.exec(originalHtml)?.[1]
   assert.ok(scriptPath, 'Expected the pinned editor entry')
-  const script = Buffer.from(adaptDesignRuntimeUrl(adaptDesignMath(await readFile(resolve(source, scriptPath), 'utf8'), math)))
+  const script = Buffer.from(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptDesignMath(await readFile(resolve(source, scriptPath), 'utf8'), math))))
   const scriptName = `design-${sha(script)}.js`
   const publicBase = '__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/'
   const runtimePath = 'artifact-type/dc-runtime.js'

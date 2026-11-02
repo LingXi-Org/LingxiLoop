@@ -4,12 +4,32 @@ import { resolve } from 'node:path'
 import { brotliDecompressSync, gunzipSync } from 'node:zlib'
 import test from 'node:test'
 import { adaptDesignMath } from './build-artifact-math.mjs'
-import { adaptDesignRuntimeUrl, buildDesignEditor } from './build-design-editor.mjs'
+import { adaptDesignRuntimeUrl, adaptVisibleDesignMount, buildDesignEditor } from './build-design-editor.mjs'
+import { Script } from 'node:vm'
+
+test('only an acknowledged visible host skips the pinned presentation waits', async () => {
+  const original = await readFile('third_party/baoyu-design/upstream/claude-design/scripts/editor/assets/index-DavTckY0.js', 'utf8')
+  const adapted = adaptVisibleDesignMount(original)
+  const section = adapted.slice(adapted.indexOf('function O9('), adapted.indexOf('function j9('))
+  const settle = /function W\(Y\)\{[^}]+\}/.exec(section)[0]
+  const reveal = /function B\(Y\)\{[^}]+\}/.exec(section)[0]
+  const [settleDelay, deadline] = new Function('n', 'd', 'b', 'C', `return [${settle},${reveal}]`)(300, 300, 900, (value, init) => Math.max(value, init ?? value))
+  assert.equal(settleDelay({ flipAt: 100, now: 100 }), 0)
+  assert.equal(deadline({ framed: true, mountedAt: 200, revealedAt: 100 }), 200)
+  assert.equal(deadline({ framed: true, mountedAt: 200, revealedAt: 300 }), 300)
+  assert.equal(settleDelay({ loadEnd: 100, now: 200 }), 200, 'standalone load settle remains')
+  assert.equal(deadline({ framed: true, mountedAt: 200 }), undefined, 'no acknowledgement does not claim visible')
+  assert.equal(deadline({ framed: false, mountedAt: 200 }), 1100, 'standalone path remains')
+})
 
 test('Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources', async () => {
   const manifest = await buildDesignEditor()
   const source = resolve(manifest.source), output = resolve('server/assets/design-editor')
   const math = await readFile('server/assets/visualize-runtime/math.js', 'utf8')
+  const injected = adaptDesignMath('supportJs:e.dcSupportSource}', math)
+  const fallback = JSON.parse(injected.slice('supportJs:e.dcSupportSource+'.length, -1))
+  assert.equal(fallback, '\n;' + math, 'replacement tokens cannot corrupt the inline/blob math program')
+  assert.doesNotThrow(() => new Script(fallback))
   for (const [name, sizes] of Object.entries(manifest.compressed)) {
     const bytes = await readFile(resolve(output, name))
     assert.deepEqual(brotliDecompressSync(await readFile(resolve(output, `${name}.br`))), bytes)
@@ -17,7 +37,7 @@ test('Design package preserves the agreed math runtime and optional executable b
     assert.ok(sizes.br < bytes.length)
     if (name.endsWith('.js')) {
       const original = await readFile(resolve(source, name === manifest.entry.file ? manifest.entry.original : name === manifest.runtime.file ? manifest.runtime.original : name))
-      const expected = name === manifest.entry.file ? Buffer.from(adaptDesignRuntimeUrl(adaptDesignMath(original.toString(), math)))
+      const expected = name === manifest.entry.file ? Buffer.from(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptDesignMath(original.toString(), math))))
         : name === manifest.runtime.file ? Buffer.from(original.toString() + '\n;' + math) : original
       assert.deepEqual(bytes, expected, name)
     }
