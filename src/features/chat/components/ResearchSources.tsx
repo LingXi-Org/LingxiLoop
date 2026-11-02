@@ -7,9 +7,7 @@ import type { HarnessToolPart } from '../runtime/model'
 import type { ResearchSource } from '@/lib/researchSources'
 
 function sourceLocation(source: ResearchSource) {
-  return [source.sourceVersion ? `版本 ${source.sourceVersion}` : undefined,
-    source.page ? `第 ${source.page} 页` : source.pageNumbers?.length ? `第 ${source.pageNumbers.join('、')} 页` : undefined]
-    .filter(Boolean).join(' · ')
+  return source.page ? `第 ${source.page} 页` : source.pageNumbers?.length ? `第 ${source.pageNumbers.join('、')} 页` : undefined
 }
 
 export function ResearchSources({ calls, lifecycle }: { calls: readonly HarnessToolPart[]; lifecycle: RunView['lifecycle'] }) {

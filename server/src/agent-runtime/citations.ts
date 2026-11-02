@@ -2,7 +2,7 @@ import type { EvidenceItem } from '@lyyzka/lingxios'
 import { markdownToProseMirrorContent, type ProseMirrorJsonMark, type ProseMirrorJsonNode } from '../modules/documents/markdown.js'
 
 const normalizeLabel = (text: string) => text.replace(/[\s《》〈〉【】[\](),，:：;；。.!！?？]/g, '').toLowerCase()
-const correction = 'Cite the supported answer wording itself: [supported answer wording](#cite-S1). Do not use source numbers, 【Sx】, source titles or generic source labels as the link text. Keep surrounding Markdown and cite only relevant recorded evidence.'
+const correction = 'Cite a descriptive source title or the supported answer wording: [source title](#cite-S1) or [supported answer wording](#cite-S1). Do not use internal source IDs, source numbers, 【Sx】 or generic source labels as link text. Keep surrounding Markdown and cite only relevant recorded evidence.'
 
 export function citationTextViolation(text: string, evidence: readonly EvidenceItem[]): string | null {
   const labels = new Map<ProseMirrorJsonMark, string>()
@@ -24,7 +24,7 @@ export function citationTextViolation(text: string, evidence: readonly EvidenceI
     if (!label || /^(?:s?\d+)+$/i.test(label)
       || /^(?:来源|参考资料?|引文|引用|原文|source|citation|ref(?:erence)?)(?:s?\d+)?$/i.test(label)
       || evidence.some(item => markers.includes(item.marker)
-        && [item.title, item.sourceId, item.url].some(value => value && normalizeLabel(value) === label))) return correction
+        && [item.sourceId, item.url].some(value => value && normalizeLabel(value) === label))) return correction
   }
   return null
 }
