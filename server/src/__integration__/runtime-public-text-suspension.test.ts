@@ -24,8 +24,8 @@ class HeldPreviewPolicy extends ProductRuntimePolicy {
     return input.isFinal?result:{...result,safeThrough:Math.min(3,result.safeThrough)}
   }
 }
-for(const {delayedAck,rejectSeal,invalidReplacement} of [{delayedAck:false,rejectSeal:false,invalidReplacement:false},{delayedAck:true,rejectSeal:false,invalidReplacement:false},{delayedAck:true,rejectSeal:true,invalidReplacement:false},{delayedAck:false,rejectSeal:false,invalidReplacement:true}].filter(value=>!value.invalidReplacement||actual==='3.8.23'))test(`real product native-v3 bounded preview; delayed ACK=${delayedAck}, host rejects seal=${rejectSeal}, invalid replacement=${invalidReplacement}`,{timeout:30000},async()=>{
-  assert.ok(['3.8.20','3.8.21','3.8.22','3.8.23'].includes(actual))
+for(const {delayedAck,rejectSeal,invalidReplacement} of [{delayedAck:false,rejectSeal:false,invalidReplacement:false},{delayedAck:true,rejectSeal:false,invalidReplacement:false},{delayedAck:true,rejectSeal:true,invalidReplacement:false},{delayedAck:false,rejectSeal:false,invalidReplacement:true}].filter(value=>!value.invalidReplacement||['3.8.23','3.8.24'].includes(actual)))test(`real product native-v3 bounded preview; delayed ACK=${delayedAck}, host rejects seal=${rejectSeal}, invalid replacement=${invalidReplacement}`,{timeout:30000},async()=>{
+  assert.ok(['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(actual))
   await ensureSchemaOnce();await resetAllTables()
   const im=await installRecordingWukong(),{companyId,projectId,agentId}=await seedCompanyWithAgent()
   const userId='suspension-user',channelId='suspension-room',members=[userId,agentId]
@@ -71,9 +71,11 @@ for(const {delayedAck,rejectSeal,invalidReplacement} of [{delayedAck:false,rejec
     // SDK's separate in-flight-second-ACK race reproduction.
     if(invalidReplacement){
       assert.equal(state?.run.status,'failed');assert.equal(seals,0);assert.deepEqual(reasons,[])
+      assert.equal((await pool.query('SELECT result_id FROM lingxios.agent_work_items WHERE id=$1',[run.runId])).rows[0].result_id,null)
       assert.equal((await api.readDiagnostics(run))?.runtimeFailure?.errorName,'ModelDriverError')
       const failure=events.find(event=>event.kind==='model.failed')?.data.modelDiagnostics
-      assert.equal(failure?.kind,'provider');assert.equal(failure?.category,'unknown')
+      assert.equal(failure?.kind,actual==='3.8.24'?'output':'provider');assert.equal(failure?.category,'unknown')
+      if(actual==='3.8.24')assert.equal(failure?.outputCallback,'operation')
     }else if(rejectSeal){
       assert.equal(sealRejected,true);assert.equal(state?.run.status,'failed');assert.equal(seals,0)
       assert.equal((await pool.query('SELECT result_id FROM lingxios.agent_work_items WHERE id=$1',[run.runId])).rows[0].result_id,null)
@@ -83,14 +85,17 @@ for(const {delayedAck,rejectSeal,invalidReplacement} of [{delayedAck:false,rejec
       assert.equal(state?.run.status,'succeeded');assert.equal(state?.message?.body,body)
       assert.deepEqual(reasons,['completed']);assert.equal(seals,1)
     }
-    if(['3.8.22','3.8.23'].includes(actual)){
+    if(['3.8.22','3.8.23','3.8.24'].includes(actual)){
       const deadline=Date.now()+8000
       let modelStages=await readAdminModelStageCalls(pool,run,1)
       while(!modelStages.calls.length&&Date.now()<deadline){await delay(25);modelStages=await readAdminModelStageCalls(pool,run,1)}
       assert.equal(modelStages.calls.length,1,'actual model callback must reach the shared ledger')
       const stages=modelStages.calls[0].stages
       assert.equal(stages.providerTime,'unavailable');assert.equal(stages.httpToFirstContentMs,undefined,'tool-only HTTP has no content-first zero')
-      if(invalidReplacement){assert.equal(stages.streamCompleted,false);assert.equal(stages.outputCallbackCount,1)}
+      if(invalidReplacement){
+        assert.equal(stages.streamCompleted,false);assert.equal(stages.outputCallbackCount,1)
+        if(actual==='3.8.24')assert.deepEqual(modelStages.calls[0].failureAttribution,{kind:'output',outputCallback:'operation'})
+      }
       else{assert.ok((stages.observedStreamMs??0)>=1000);assert.ok((stages.httpToFirstCompleteToolCallMs??0)>=1000)}
       const diagnostics=await api.readDiagnostics(run),projected=runStageTiming(run,1,modelStages,diagnostics)
       assert.ok(projected.publicationTimings.length>0,'use the formal authorized public diagnostic reader')

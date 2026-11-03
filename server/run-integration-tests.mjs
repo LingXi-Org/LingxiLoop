@@ -3,7 +3,7 @@
  * Requires a dedicated real Postgres test database and explicit Redis URL.
  * These tests TRUNCATE their database and remain serialized.
  */
-import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runProduct58MigrationTests, runFormal19Product60Tests, runFormal20Product60Tests, runFormal21Product61Tests, runFormal22Product61Tests, runTestChild } from './run-historical-migration-tests.mjs'
+import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runProduct58MigrationTests, runFormal19Product60Tests, runFormal20Product60Tests, runFormal21Product61Tests, runFormal22Product61Tests, runFormal23Product61Tests, runTestChild } from './run-historical-migration-tests.mjs'
 import { releaseVersions } from '@lyyzka/lingxios'
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs'
 import { parseIntegrationArgs, selectIntegrationFiles } from './integration-suite.mjs'
@@ -97,16 +97,17 @@ for (const name of groups.current) {
   const begin = performance.now()
   const fileTimeout = name === 'runtime-first-action-contracts.test.ts' && process.env.LINGXIOS_LIVE_ARTIFACTS === '1'
     ? 300_000 : mode === 'full' ? 600_000 : 180_000
-  const formal19Source = name === 'runtime-patch60-provenance.test.ts' && ['3.8.20','3.8.21','3.8.22','3.8.23'].includes(String(releaseVersions.runtime))
-  const formal21Source = name === 'runtime-patch61-21-provenance.test.ts' && ['3.8.22','3.8.23'].includes(String(releaseVersions.runtime))
-  const formal20Source = name === 'runtime-patch60-20-provenance.test.ts' && ['3.8.21','3.8.22','3.8.23'].includes(String(releaseVersions.runtime))
-  const formal22Source = name === 'runtime-patch61-22-provenance.test.ts' && String(releaseVersions.runtime) === '3.8.23'
-  const exitCode = formal22Source ? await runFormal22Product61Tests(join(here, '..'), [name]) : formal21Source ? await runFormal21Product61Tests(join(here, '..'), [name]) : formal20Source ? await runFormal20Product60Tests(join(here, '..'), [name]) : formal19Source ? await runFormal19Product60Tests(join(here, '..'), [name]) : await runTestChild([
+  const formal19Source = name === 'runtime-patch60-provenance.test.ts' && ['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime))
+  const formal21Source = name === 'runtime-patch61-21-provenance.test.ts' && ['3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime))
+  const formal20Source = name === 'runtime-patch60-20-provenance.test.ts' && ['3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime))
+  const formal22Source = name === 'runtime-patch61-22-provenance.test.ts' && ['3.8.23','3.8.24'].includes(String(releaseVersions.runtime))
+  const formal23Source = ['runtime-patch61-23-provenance.test.ts','runtime-patch61-23-from21-provenance.test.ts'].includes(name) && String(releaseVersions.runtime) === '3.8.24'
+  const exitCode = formal23Source ? await runFormal23Product61Tests(join(here, '..'), [name]) : formal22Source ? await runFormal22Product61Tests(join(here, '..'), [name]) : formal21Source ? await runFormal21Product61Tests(join(here, '..'), [name]) : formal20Source ? await runFormal20Product60Tests(join(here, '..'), [name]) : formal19Source ? await runFormal19Product60Tests(join(here, '..'), [name]) : await runTestChild([
     '--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-reporter=tap',
     '--test-concurrency=1', '--test-force-exit', join(integrationDir, name),
   ], { timeout: Math.max(1, Math.floor(Math.min(remaining, fileTimeout))) })
   const durationMs = Math.round(performance.now() - begin)
-  records.push({ files: [name], runtime: formal22Source ? '3.8.22' : formal21Source ? '3.8.21' : formal20Source ? '3.8.20' : formal19Source ? '3.8.19' : 'current', durationMs, exitCode })
+  records.push({ files: [name], runtime: formal23Source ? '3.8.23' : formal22Source ? '3.8.22' : formal21Source ? '3.8.21' : formal20Source ? '3.8.20' : formal19Source ? '3.8.19' : 'current', durationMs, exitCode })
   console.log(`[integration file] ${name} duration_ms=${durationMs} exit=${exitCode}`)
   if (exitCode !== 0) { code = exitCode; break }
 }

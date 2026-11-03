@@ -19,6 +19,7 @@ export function ModelStageTimingCard({ stages }: { stages?: RunStageTiming }) {
     {!stages.modelCallsAvailable && <p role="status">模型阶段账本暂不可用。</p>}
     {stages.modelCallsAvailable && !stages.calls.length && <p>暂无可用的模型阶段计时。</p>}
     {stages.calls.map(call => <details key={JSON.stringify([call.callId, call.fence, call.requestVersion])} className="rounded-lg border p-4"><summary className="cursor-pointer font-medium">{call.operation === 'correction' ? '协议纠正' : call.operation === 'generation' ? '生成' : '模型调用'} · {call.status === 'succeeded' ? '成功' : '失败'} · {call.callId}</summary>
+      {call.status === 'failed' && <p className="mt-3 text-sm">失败来源：{call.failureAttribution?.kind === 'output' ? '本地输出' : '未提供'}{call.failureAttribution?.outputCallback ? `；${call.failureAttribution.outputCallback === 'operation' ? '输出操作回调' : '文本增量回调'}` : ''}</p>}
       <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{phaseLabels.map(([key, label]) => <div key={key}><dt className="text-sm text-muted-foreground">{label}</dt><dd className="tabular-nums">{ms(call.stages[key])}</dd></div>)}
         <div><dt>HTTP 请求次数</dt><dd>{call.stages.httpRequestCount ?? '未提供'}</dd></div><div><dt>输出回调次数</dt><dd>{call.stages.outputCallbackCount ?? '未提供'}</dd></div>
         <div><dt>流读取正常结束</dt><dd>{call.stages.streamCompleted === undefined ? '未提供' : call.stages.streamCompleted ? '是' : '否'}</dd></div>

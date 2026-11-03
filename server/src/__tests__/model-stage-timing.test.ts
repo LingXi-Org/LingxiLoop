@@ -24,7 +24,7 @@ test('ledger timing extras preserve observed zero, omit invalid/missing phases a
 test('model stage reader binds complete authorized identity/current request and retains failed correction calls', async () => {
   const calls: unknown[][] = []
   const db = { query: async (sql: string, params: unknown[]) => { calls.push([sql, params]); return { rows: [
-    { call_id: 'call', request_version: '1', fence: '2', operation: 'correction', status: 'failed', stages: stage },
+    { call_id: 'call', request_version: '1', fence: '2', operation: 'correction', status: 'failed', stages: stage, failure_kind: 'output', output_callback: 'operation' },
     { call_id: 'old', request_version: '2', fence: '1', status: 'succeeded', stages: stage },
     { call_id: 'legacy', request_version: '1', fence: null, stages: stage },
   ] } } } as unknown as Queryable
@@ -36,6 +36,7 @@ test('model stage reader binds complete authorized identity/current request and 
   assert.equal(result.calls[0].operation, 'correction')
   assert.equal(result.calls[0].status, 'failed')
   assert.equal(result.calls[0].fence, 2)
+  assert.deepEqual(result.calls[0].failureAttribution, { kind: 'output', outputCallback: 'operation' })
   assert.equal(result.calls[0].stages.providerTime, 'unavailable')
   assert.doesNotMatch(JSON.stringify(result), /PRIVATE/)
 })
@@ -62,4 +63,17 @@ test('missing old measurements and unavailable readers never become zero or a fa
   assert.deepEqual(result.calls, [])
   assert.deepEqual(result.publicationTimings, [])
   assert.equal(result.providerTime, 'unavailable')
+})
+
+test('failure origin is closed and legacy missing metadata never becomes a provider diagnosis', async () => {
+  const db = { query: async () => ({ rows: [
+    { call_id: 'legacy', request_version: '1', fence: '1', status: 'failed', stages: stage, failure_kind: 'PRIVATE_RAW', output_callback: 'PRIVATE_STAGE' },
+    { call_id: 'protocol-callback', request_version: '1', fence: '1', status: 'failed', stages: stage, output_callback: 'delta' },
+    { call_id: 'success', request_version: '1', fence: '1', status: 'succeeded', stages: stage, failure_kind: 'output', output_callback: 'operation' },
+  ] }) } as unknown as Queryable
+  const result = await readAdminModelStageCalls(db, identity, 1)
+  assert.equal(result.calls[0].failureAttribution, undefined)
+  assert.deepEqual(result.calls[1].failureAttribution, { kind: null, outputCallback: 'delta' })
+  assert.equal(result.calls[2].failureAttribution, undefined)
+  assert.doesNotMatch(JSON.stringify(result), /PRIVATE_RAW|PRIVATE_STAGE/)
 })

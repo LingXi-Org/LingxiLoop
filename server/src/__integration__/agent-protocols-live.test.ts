@@ -122,7 +122,7 @@ test('live provider delivers full learning help and native cards with measured f
         }catch{artifactRead=false} // Public reads reject missing, corrupt or inaccessible bytes; never persist their content.
       }
       const checks={streamValid,nonthinking:calls.rows[0].reasoning_tokens===0,delivered:state?.delivery==='delivered',accepted:outcome?.status==='satisfied'||expectedPartial,bodyValid:validBody(body),coverage:scenario.terms.every(term=>term.test(coverageText)),artifactRead,artifactValid,encoding:!body.includes('\\n\\n'),brief:scenario.id!=='brief'||body.length<180,cards:scenario.id!=='practice'||actions.includes('chat.recommend')&&actions.includes('files.create'),course:scenario.id!=='course'||actions.some(action=>action.startsWith('knowledge.'))}
-      const modelCalls=await pool.query("SELECT purpose,latency_ms,input_tokens,cached_input_tokens,output_tokens,extras->>'firstContentMs' AS first_content_ms FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at",[companyId,run.runId])
+      const modelCalls=await pool.query("SELECT purpose,status,extras->>'operation' AS operation,latency_ms,input_tokens,cached_input_tokens,output_tokens,extras->>'firstContentMs' AS first_content_ms FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at",[companyId,run.runId])
       console.info(JSON.stringify({scenario:scenario.id,repeat,firstTextMs,totalMs:Date.now()-started,calls:calls.rows[0].n,modelCalls:modelCalls.rows,characters:body.length,actions,checks,...(artifactEvidence?{artifact:artifactEvidence}:{}),status:state?.run.status}))
       if(Object.values(checks).some(value=>!value))failures.push(scenario.id)
     }

@@ -6,6 +6,7 @@ export interface AdminModelStageCall {
   requestVersion: number
   operation: 'generation' | 'correction' | null
   status: 'succeeded' | 'failed'
+  failureAttribution?: { kind: 'output' | null; outputCallback: 'operation' | 'delta' | null }
   stages: ModelStageTimings
 }
 export interface RunStageTiming {

@@ -9,9 +9,10 @@ const object = (value: unknown): Record<string, unknown> => value && typeof valu
 /** Administrative caller must authorize this run first. Read only the product
  * ledger, rechecking its complete bound identity; no SDK-private SQL/events. */
 export async function readAdminModelStageCalls(db: Queryable, identity: RunIdentity, requestVersion: number) {
-  const { rows } = await db.query<{ call_id: unknown; fence: unknown; request_version: unknown; operation: unknown; status: unknown; stages: unknown }>(
+  const { rows } = await db.query<{ call_id: unknown; fence: unknown; request_version: unknown; operation: unknown; status: unknown; stages: unknown; failure_kind: unknown; output_callback: unknown }>(
     `SELECT l.extras->>'callId' AS call_id,l.extras->>'fence' AS fence,l.extras->>'requestVersion' AS request_version,
-      l.extras->>'operation' AS operation,l.status,l.extras->'stageTimings' AS stages
+      l.extras->>'operation' AS operation,l.status,l.extras->'stageTimings' AS stages,
+      l.extras->'failure'->>'kind' AS failure_kind,l.extras->'failure'->>'outputCallback' AS output_callback
     FROM llm_calls l JOIN agent_run_bindings b ON b.company_id=l.company_id AND b.run_id=l.run_id
     WHERE l.company_id=$1 AND l.run_id=$2 AND b.agent_id=$3 AND b.principal_id=$4 AND b.session_id=$5
       AND b.thread_id IS NOT DISTINCT FROM $6 AND l.agent_id=b.agent_id AND l.source='agent-os'
@@ -23,10 +24,13 @@ export async function readAdminModelStageCalls(db: Queryable, identity: RunIdent
     const stages = readModelStageTimings(row.stages), fence = positive(row.fence), version = positive(row.request_version)
     if (!stages || !fence || version !== requestVersion || typeof row.call_id !== 'string' || !row.call_id || row.call_id.length > 2000
       || !['succeeded', 'failed'].includes(String(row.status))) continue
+    const kind = row.failure_kind === 'output' ? 'output' as const : null
+    const outputCallback = row.output_callback === 'operation' || row.output_callback === 'delta' ? row.output_callback : null
+    const failureAttribution = row.status === 'failed' && (kind || outputCallback) ? { kind, outputCallback } : undefined
     const key = JSON.stringify([row.call_id, fence, version])
     if (!selected.has(key)) selected.set(key, { callId: row.call_id, fence, requestVersion: version,
       operation: row.operation === 'generation' || row.operation === 'correction' ? row.operation : null,
-      status: row.status as 'succeeded' | 'failed', stages })
+      status: row.status as 'succeeded' | 'failed', ...(failureAttribution ? { failureAttribution } : {}), stages })
   }
   return { calls: [...selected.values()], truncated: rows.length > 64 }
 }

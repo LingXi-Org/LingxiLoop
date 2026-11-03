@@ -25,7 +25,7 @@ test('formal stage observations preserve ledger idempotency, fees and identity-s
       observedStreamMs: 100, outputCallbackTotalMs: 90, outputCallbackWaitMs: 60, streamCompleted: true } }
   await recordModelCall(base)
   await recordModelCall({ ...base, latencyMs: 999, cost: { ...base.cost!, amountMicros: 999 } })
-  await recordModelCall({ ...base, callId: 'stage-correction', operation: 'correction', fence: 2, status: 'failed', error: 'Model request failed (protocol)' })
+  await recordModelCall({ ...base, callId: 'stage-correction', operation: 'correction', fence: 2, status: 'failed', failure: { kind: 'output', outputCallback: 'operation', category: 'unknown', retryable: false }, error: 'Model output callback rejected' })
   await recordModelCall({ ...base, callId: 'stage-new-request', requestVersion: 2, fence: 3 })
   await recordModelCall({ ...base, callId: 'stage-legacy', stageTimings: undefined, fence: undefined, requestVersion: undefined })
   const saved = (await pool.query('SELECT latency_ms,input_tokens,output_tokens,cost_usd,extras FROM llm_calls WHERE id=$1', ['lingxios-stage-generation'])).rows[0]
@@ -35,6 +35,7 @@ test('formal stage observations preserve ledger idempotency, fees and identity-s
   const result = await readAdminModelStageCalls(pool, identity, 1)
   assert.equal(result.calls.length, 2)
   assert.ok(result.calls.some(call => call.operation === 'correction' && call.status === 'failed' && call.fence === 2))
+  assert.deepEqual(result.calls.find(call => call.operation === 'correction')?.failureAttribution, { kind: 'output', outputCallback: 'operation' })
   assert.equal((await readAdminModelStageCalls(pool, identity, 2)).calls.length, 1)
   for (const changed of [{ tenantId: 'other' }, { principalId: 'other' }, { agentId: 'other' }, { sessionId: 'other' }, { threadId: 'other' }]) {
     assert.deepEqual((await readAdminModelStageCalls(pool, { ...identity, ...changed }, 1)).calls, [])

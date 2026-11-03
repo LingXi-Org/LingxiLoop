@@ -96,3 +96,15 @@ test('stage card distinguishes settled correction, missing first content and pub
   assert.match(html, /不能相加或相减推算供应商纯推理时间/)
   assert.match(html, /call&lt;script&gt;/); assert.doesNotMatch(html, /<script>/)
 })
+
+test('stage card reports only the provided local output origin and preserves unknown historical failures', () => {
+  const timing = { version: 1, clock: 'monotonic', providerTime: 'unavailable', totalMs: 1 } as const
+  const stages: RunStageTiming = { calls: [
+    { callId: 'local', fence: 1, requestVersion: 1, operation: 'generation', status: 'failed', stages: timing, failureAttribution: { kind: 'output', outputCallback: 'operation' } },
+    { callId: 'legacy', fence: 1, requestVersion: 1, operation: 'generation', status: 'failed', stages: timing },
+  ], modelCallsAvailable: true, callsTruncated: false, publicationTimings: [], publicationMeasurementsAvailable: true, publicationsTruncated: false, providerTime: 'unavailable', unattributedRunMs: null }
+  const html = renderToStaticMarkup(createElement(ModelStageTimingCard, { stages }))
+  assert.match(html, /失败来源：本地输出；输出操作回调/)
+  assert.match(html, /失败来源：未提供/)
+  assert.doesNotMatch(html, /失败来源：供应商/)
+})
