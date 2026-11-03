@@ -61,6 +61,11 @@ and SSR14/14; server/admin/web types, owning lint and admin build. Existing lint
 informational notices and bundle-size warning remain. Final CI and independent
 candidate review are recorded in the PR.
 
+Final review caught a TypeScript widening error in the attribution projection.
+The projection now explicitly uses the shared closed attribution type; service
+typecheck, service lint and the five owning projection cases passed after that
+correction. Earlier failed typecheck logs do not count as successful checks.
+
 The original full-product brief fixture was run with the formal registry package,
 real provider, local recording IM and an isolated test database. Each root was
 bounded to3 model calls and its existing test-only token/cost/time admission

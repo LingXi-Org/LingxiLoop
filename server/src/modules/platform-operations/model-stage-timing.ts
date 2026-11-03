@@ -26,7 +26,7 @@ export async function readAdminModelStageCalls(db: Queryable, identity: RunIdent
       || !['succeeded', 'failed'].includes(String(row.status))) continue
     const kind = row.failure_kind === 'output' ? 'output' as const : null
     const outputCallback = row.output_callback === 'operation' || row.output_callback === 'delta' ? row.output_callback : null
-    const failureAttribution = row.status === 'failed' && (kind || outputCallback) ? { kind, outputCallback } : undefined
+    const failureAttribution: AdminModelStageCall['failureAttribution'] = row.status === 'failed' && (kind || outputCallback) ? { kind, outputCallback } : undefined
     const key = JSON.stringify([row.call_id, fence, version])
     if (!selected.has(key)) selected.set(key, { callId: row.call_id, fence, requestVersion: version,
       operation: row.operation === 'generation' || row.operation === 'correction' ? row.operation : null,
