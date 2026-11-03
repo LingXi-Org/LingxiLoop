@@ -67,9 +67,10 @@ RUN --mount=type=secret,id=npm_token \
 # enters this graph. CI selects target runtime after the static ingress handoff.
 FROM web-deps AS visualize-build
 COPY third_party/zcode ./third_party/zcode
-COPY scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs scripts/build-design-editor.mjs scripts/build-design-layout.mjs ./scripts/
+COPY scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs scripts/build-design-editor.mjs scripts/build-design-layout.mjs scripts/design-copy.mjs ./scripts/
 COPY shared/artifact-math.ts shared/artifact-math-source.ts shared/design-flow-size.ts ./shared/
 COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
+COPY third_party/baoyu-design/host/design-zh-CN.json third_party/baoyu-design/host/slides-zh-CN.json ./third_party/baoyu-design/host/
 RUN node scripts/build-visualize-runtime.mjs
 
 FROM web-deps AS slides-build
@@ -93,9 +94,10 @@ COPY tailwind.config.ts ./
 COPY third_party/zcode ./third_party/zcode
 # StreamingText imports the pinned upstream range helper; include its license and provenance.
 COPY third_party/assistant-ui/streaming-text ./third_party/assistant-ui/streaming-text
-COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs scripts/build-design-editor.mjs scripts/build-design-layout.mjs ./scripts/
+COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs scripts/build-design-editor.mjs scripts/build-design-layout.mjs scripts/design-copy.mjs ./scripts/
 COPY shared/artifact-math.ts shared/artifact-math-source.ts shared/design-flow-size.ts ./shared/
 COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
+COPY third_party/baoyu-design/host/design-zh-CN.json third_party/baoyu-design/host/slides-zh-CN.json ./third_party/baoyu-design/host/
 RUN npm run build
 
 # ─── stage 3: runtime ───────────────────────────────────────────────

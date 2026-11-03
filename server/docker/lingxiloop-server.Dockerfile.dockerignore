@@ -53,6 +53,7 @@ shared/**
 !scripts/build-slides-editor.mjs
 !scripts/build-design-editor.mjs
 !scripts/build-design-layout.mjs
+!scripts/design-copy.mjs
 !scripts/prune-pdfjs-server-runtime.mjs
 !scripts/prune-glibc-canvas-runtime.mjs
 # Don't bake source maps / built assets / huge logs into the layer.

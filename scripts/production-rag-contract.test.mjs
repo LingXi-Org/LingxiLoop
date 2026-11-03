@@ -251,6 +251,50 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   }
 })
 
+// Failure: a local editor build succeeds with inputs absent from the image.
+test('Design image stages include the build import graph and translation catalogs', () => {
+  const root = fileURLToPath(new URL('../', import.meta.url))
+  const dockerfile = read('server/docker/lingxiloop-server.Dockerfile')
+  const patterns = read('server/docker/lingxiloop-server.Dockerfile.dockerignore')
+    .split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'))
+  const inContext = path => {
+    const ancestors = path.split('/').map((_, index, parts) => parts.slice(0, index + 1).join('/'))
+    let included = true
+    for (const rule of patterns) {
+      const pattern = rule.startsWith('!') ? rule.slice(1) : rule
+      if (ancestors.some(parent => matchesGlob(parent, pattern))) included = rule.startsWith('!')
+    }
+    return included
+  }
+  const inputs = new Set([
+    'scripts/build-visualize-runtime.mjs',
+    'third_party/baoyu-design/host/design-zh-CN.json',
+    'third_party/baoyu-design/host/slides-zh-CN.json',
+  ])
+  for (const path of inputs) {
+    if (!path.endsWith('.mjs')) continue
+    for (const item of ts.preProcessFile(read(path), true, true).importedFiles) {
+      if (item.fileName.startsWith('.')) inputs.add(relative(root, resolve(root, path, '..', item.fileName)).replaceAll('\\', '/'))
+    }
+  }
+  for (const name of ['visualize-build', 'spa-build']) {
+    const stage = dockerfile.split(/^FROM /m).find(part => part.split('\n')[0].endsWith(` AS ${name}`))
+    assert.ok(stage, `${name} exists`)
+    const copied = stage.split(/\r?\n/).filter(line => /^COPY /.test(line)).flatMap(line => {
+      const [, ...args] = line.trim().split(/\s+/), destination = args.pop()
+      return args.map(source => ({ source, destination: resolve(root, destination) }))
+    })
+    for (const path of inputs) {
+      assert.ok(inContext(path), `${name} input excluded from context: ${path}`)
+      assert.ok(copied.some(({ source, destination }) => {
+        if (path !== source && !path.startsWith(`${source}/`)) return false
+        const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
+        return resolve(destination, suffix) === resolve(root, path)
+      }), `${name} input absent or copied to the wrong path: ${path}`)
+    }
+  }
+})
+
 test('production Open Notebook receives only the explicit RAG environment', () => {
   const compose = read('deploy/knowledge/compose.yml')
   const service = compose.slice(compose.indexOf('  open-notebook:'))
