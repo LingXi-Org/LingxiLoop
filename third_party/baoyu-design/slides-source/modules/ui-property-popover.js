@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiPropertyPopover(runtime2) {
   var reactForUiPropertyPopover, reactDOMForUiPropertyPopover, jsxForUiPropertyPopover, initializeUiPropertyPopover, reactForUiPropertyPopover2, jsxForUiPropertyPopover2, popupCloseStack, preventPopupMouseDown, preservePopupSelection, initializeUiPropertyPopover2;
@@ -90,7 +90,8 @@ function installUiPropertyPopover(runtime2) {
   function suppressEnterClicksUntilRelease() {
     suppressRepeatedEnterClicks(!0)();
   }
-  function PropertyPopup({ open: open4, onClose, trigger, onOpen, children, align: align2 = "right", side: side2, planHeight, positionAnchor, popupAttrs, editsAreUndoSteps = !1, padding = "default", className, "aria-label": ariaLabel, focusOnOpen = !1, initialFocus, keepFocus = !1, maxWidth, gap }) {
+  function PropertyPopup({ open: open4, onClose, trigger, onOpen, children, align: align2 = "right",
+    scrim = !0, side: side2, planHeight, positionAnchor, popupAttrs, editsAreUndoSteps = !1, padding = "default", className, "aria-label": ariaLabel, focusOnOpen = !1, initialFocus, keepFocus = !1, maxWidth, gap }) {
     let ref = reactForUiPropertyPopover2.useRef(null);
     usePopupOpenFocus(open4 && focusOnOpen);
     let documentHasFocus = (0, runtime2.useDocumentHasFocus)(open4 && focusOnOpen), hadFocusWhileOpen = reactForUiPropertyPopover2.useRef(!0);
@@ -128,7 +129,7 @@ function installUiPropertyPopover(runtime2) {
         !value10 && !value11 && ref3.current();
       }, callback3 = (event) => {
         let target = event.target;
-        target instanceof Element && target.closest("[data-mc-strip]") !== null && callback2(event);
+        target instanceof Element && (scrim && target.closest("[data-mc-strip]") === null || callback2(event));
       }, callback4 = (event) => {
         event.defaultPrevented || !callback() || (0, runtime2.anyMenuOrPopoverOpen)() || event.key === "Escape" && (event.preventDefault(), ref3.current());
       }, callback5 = (event) => {
@@ -137,7 +138,7 @@ function installUiPropertyPopover(runtime2) {
         let target = event.target;
         target && (ref.current?.contains(target) || target.closest("[data-mc-popover]") !== null) && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) || (event.preventDefault(), event.stopPropagation(), ref3.current());
       };
-      return document.addEventListener("pointerdown", callback2), document.addEventListener("pointerdown", callback3, {
+      return scrim && document.addEventListener("pointerdown", callback2), document.addEventListener("pointerdown", callback3, {
         capture: !0
       }), window.addEventListener("keydown", callback4), window.addEventListener("keydown", callback5, {
         capture: !0
@@ -149,14 +150,14 @@ function installUiPropertyPopover(runtime2) {
           capture: !0
         });
       };
-    }, [open4]), jsxForUiPropertyPopover2.jsxs(jsxForUiPropertyPopover2.Fragment, {
+    }, [open4, scrim]), jsxForUiPropertyPopover2.jsxs(jsxForUiPropertyPopover2.Fragment, {
       children: [
         jsxForUiPropertyPopover2.jsx("span", {
           ref: ref2,
           className: "hidden",
           "aria-hidden": "true"
         }),
-        open4 ? jsxForUiPropertyPopover2.jsx(PopupScrim, {
+        open4 && scrim ? jsxForUiPropertyPopover2.jsx(PopupScrim, {
           onClose: () => ref3.current()
         }) : null,
         jsxForUiPropertyPopover2.jsxs(runtime2.PopoverComponents.Root, {
@@ -185,7 +186,7 @@ function installUiPropertyPopover(runtime2) {
               "aria-label": ariaLabel,
               anchor: () => positionAnchor?.() ?? ref2.current?.parentElement ?? null,
               side: value8,
-              align: !value4 || align2 === "left" ? "start" : "end",
+              align: value4 && align2 === "center" ? "center": !value4 || align2 === "left" ? "start" : "end",
               sideOffset: gap ?? (value3 === "right" ? 12 : value3 === "left" ? 8 : 4),
               collisionPadding,
               style: {

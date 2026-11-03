@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiKitFieldUndo(runtime2) {
-  var isKitField, kitFieldUndoStates, kitFieldUndoWindows, kitFieldUndoStateFor, pendingKitFieldRestore, kitFieldRestoreTimer, initializeKitFieldUndo;
+  var isKitField, HEX_COLOR_FIELD_KIT, kitFieldUndoStates, kitFieldUndoWindows, kitFieldUndoStateFor, pendingKitFieldRestore, kitFieldRestoreTimer, initializeKitFieldUndo;
   function markKitField(element) {
     element?.setAttribute("data-kit-field", ""), element !== null && trackKitFieldUndo(element);
   }
@@ -17,7 +17,7 @@ function installUiKitFieldUndo(runtime2) {
       to: element ?? null,
       start,
       end,
-      way: way === "forward" || way === "backward" || way === "none" ? way : null
+      way
     };
   }
   function restoreFieldSelection({ to, start, end, way }) {
@@ -85,7 +85,9 @@ function installUiKitFieldUndo(runtime2) {
       element.ownerDocument.activeElement === element && element.select();
     });
   }
-  return bindRuntimeValue(runtime2, "markKitField", () => markKitField), bindRuntimeValue(runtime2, "hashFieldValue", () => hashFieldValue), bindRuntimeValue(runtime2, "captureFieldSelection", () => captureFieldSelection), bindRuntimeValue(runtime2, "restoreFieldSelection", () => restoreFieldSelection), bindRuntimeValue(runtime2, "onKitFieldBeforeInput", () => onKitFieldBeforeInput), bindRuntimeValue(runtime2, "onKitFieldInput", () => onKitFieldInput), bindRuntimeValue(runtime2, "trackKitFieldUndo", () => trackKitFieldUndo), bindRuntimeValue(runtime2, "reselectKitField", () => reselectKitField), bindRuntimeValue(runtime2, "isKitField", () => isKitField, (value) => {
+  return bindRuntimeValue(runtime2, "markKitField", () => markKitField), bindRuntimeValue(runtime2, "hashFieldValue", () => hashFieldValue), bindRuntimeValue(runtime2, "captureFieldSelection", () => captureFieldSelection), bindRuntimeValue(runtime2, "restoreFieldSelection", () => restoreFieldSelection), bindRuntimeValue(runtime2, "onKitFieldBeforeInput", () => onKitFieldBeforeInput), bindRuntimeValue(runtime2, "onKitFieldInput", () => onKitFieldInput), bindRuntimeValue(runtime2, "trackKitFieldUndo", () => trackKitFieldUndo), bindRuntimeValue(runtime2, "reselectKitField", () => reselectKitField), bindRuntimeValue(runtime2, "HEX_COLOR_FIELD_KIT", () => HEX_COLOR_FIELD_KIT, (value) => {
+    HEX_COLOR_FIELD_KIT = value;
+  }), bindRuntimeValue(runtime2, "isKitField", () => isKitField, (value) => {
     isKitField = value;
   }), bindRuntimeValue(runtime2, "kitFieldUndoStates", () => kitFieldUndoStates, (value) => {
     kitFieldUndoStates = value;
@@ -100,7 +102,7 @@ function installUiKitFieldUndo(runtime2) {
   }), bindRuntimeValue(runtime2, "initializeKitFieldUndo", () => initializeKitFieldUndo, (value) => {
     initializeKitFieldUndo = value;
   }), () => {
-    isKitField = (element) => element?.hasAttribute?.("data-kit-field") === !0, kitFieldUndoStateFor = (event) => event.target === null ? void 0 : kitFieldUndoStates.get(event.target), pendingKitFieldRestore = null, initializeKitFieldUndo = (0, runtime2.initializeOnce)(() => {
+    isKitField = (element) => element?.hasAttribute?.("data-kit-field") === !0, HEX_COLOR_FIELD_KIT = "hex-color", kitFieldUndoStateFor = (event) => event.target === null ? void 0 : kitFieldUndoStates.get(event.target), pendingKitFieldRestore = null, initializeKitFieldUndo = (0, runtime2.initializeOnce)(() => {
       kitFieldUndoStates = /* @__PURE__ */ new WeakMap(), kitFieldUndoWindows = /* @__PURE__ */ new WeakSet();
     });
   };

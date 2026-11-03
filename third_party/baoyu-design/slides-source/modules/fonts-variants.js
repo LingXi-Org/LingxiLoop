@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFontsVariants(runtime2) {
-  var weightNames, fontWeightValues, webSafeFontVariants, defaultFontVariants, webSafeFontFamilyNames, sortFontVariants, initializeFontVariants;
+  var fontWeightValues, webSafeFontVariants, defaultFontVariants, webSafeFontFamilyNames, sortFontVariants, initializeFontVariants;
   function optionalGoogleFontStylesheetUrls(href, weights) {
     if (typeof href != "string" || href.length > 1024 || href.slice(0, 34) !== "https://fonts.googleapis.com/css2?")
       return [];
@@ -64,10 +64,6 @@ function installFontsVariants(runtime2) {
   }
   function normalizeFontWeight(weight) {
     return Math.min(900, Math.max(100, Math.round(weight / 100) * 100));
-  }
-  function fontVariantLabel(weight, italic) {
-    let value = weightNames[normalizeFontWeight(weight)] ?? String(weight);
-    return italic ? normalizeFontWeight(weight) === 400 ? "Italic" : value + " italic" : value;
   }
   function fontVariantKey(weight, italic) {
     return String(normalizeFontWeight(weight)) + (italic ? "i" : "");
@@ -133,12 +129,10 @@ function installFontsVariants(runtime2) {
       italic: current.italic
     }), sortedVariants.map((input) => ({
       value: fontVariantKey(input.weight, input.italic),
-      label: fontVariantLabel(input.weight, input.italic)
+      label: (0, runtime2. fontVariantLabel)(input.weight, input.italic)
     }));
   }
-  return bindRuntimeValue(runtime2, "optionalGoogleFontStylesheetUrls", () => optionalGoogleFontStylesheetUrls), bindRuntimeValue(runtime2, "normalizeFontWeight", () => normalizeFontWeight), bindRuntimeValue(runtime2, "fontVariantLabel", () => fontVariantLabel), bindRuntimeValue(runtime2, "fontVariantKey", () => fontVariantKey), bindRuntimeValue(runtime2, "parseFontVariantKey", () => parseFontVariantKey), bindRuntimeValue(runtime2, "firstFontFamily", () => firstFontFamily), bindRuntimeValue(runtime2, "availableFontVariants", () => availableFontVariants), bindRuntimeValue(runtime2, "knownFontVariants", () => knownFontVariants), bindRuntimeValue(runtime2, "fontVariantsOrDefault", () => fontVariantsOrDefault), bindRuntimeValue(runtime2, "fontVariantChoices", () => fontVariantChoices), bindRuntimeValue(runtime2, "weightNames", () => weightNames, (value) => {
-    weightNames = value;
-  }), bindRuntimeValue(runtime2, "fontWeightValues", () => fontWeightValues, (value) => {
+  return bindRuntimeValue(runtime2, "optionalGoogleFontStylesheetUrls", () => optionalGoogleFontStylesheetUrls), bindRuntimeValue(runtime2, "normalizeFontWeight", () => normalizeFontWeight), bindRuntimeValue(runtime2, "fontVariantKey", () => fontVariantKey), bindRuntimeValue(runtime2, "parseFontVariantKey", () => parseFontVariantKey), bindRuntimeValue(runtime2, "firstFontFamily", () => firstFontFamily), bindRuntimeValue(runtime2, "availableFontVariants", () => availableFontVariants), bindRuntimeValue(runtime2, "knownFontVariants", () => knownFontVariants), bindRuntimeValue(runtime2, "fontVariantsOrDefault", () => fontVariantsOrDefault), bindRuntimeValue(runtime2, "fontVariantChoices", () => fontVariantChoices), bindRuntimeValue(runtime2, "fontWeightValues", () => fontWeightValues, (value) => {
     fontWeightValues = value;
   }), bindRuntimeValue(runtime2, "webSafeFontVariants", () => webSafeFontVariants, (value) => {
     webSafeFontVariants = value;
@@ -152,17 +146,7 @@ function installFontsVariants(runtime2) {
     initializeFontVariants = value;
   }), () => {
     sortFontVariants = (input) => [...input].sort((input2, options) => input2.weight - options.weight || Number(input2.italic) - Number(options.italic)), initializeFontVariants = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeFontCatalog)(), weightNames = {
-        100: "极细",
-        200: "特细",
-        300: "细体",
-        400: "常规",
-        500: "中等",
-        600: "半粗",
-        700: "加粗",
-        800: "特粗",
-        900: "黑体"
-      }, fontWeightValues = [100, 200, 300, 400, 500, 600, 700, 800, 900], webSafeFontVariants = [
+      (0, runtime2.initializeFontCatalog)(), fontWeightValues = [100, 200, 300, 400, 500, 600, 700, 800, 900], webSafeFontVariants = [
         {
           weight: 400,
           italic: !1

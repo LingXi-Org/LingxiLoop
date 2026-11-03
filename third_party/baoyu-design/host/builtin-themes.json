@@ -1,0 +1,350 @@
+[
+  {
+    "namespace": "academic-blue",
+    "title": "学术蓝",
+    "description": "适合课程讲解与研究汇报的清晰蓝白配色。",
+    "tokens": {
+      "name": "学术蓝",
+      "color": {
+        "themes": [
+          {
+            "id": "light",
+            "name": "浅色"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "background",
+            "value": "#F5F8FD"
+          },
+          {
+            "name": "surface",
+            "value": "#FFFFFF"
+          },
+          {
+            "name": "text",
+            "value": "#14243B"
+          },
+          {
+            "name": "text-secondary",
+            "value": "#40536B"
+          },
+          {
+            "name": "accent",
+            "value": "#2457A7"
+          },
+          {
+            "name": "border",
+            "value": "#CCD8E8"
+          },
+          {
+            "name": "on-accent",
+            "value": "#FFFFFF"
+          }
+        ]
+      },
+      "type": {
+        "families": {
+          "serif": "Georgia, serif",
+          "sans": "system-ui, sans-serif"
+        },
+        "groups": [
+          {
+            "name": "演示文稿",
+            "styles": [
+              {
+                "name": "display",
+                "family": "serif",
+                "fontSize": 128,
+                "fontWeight": 300,
+                "lineHeight": 1.15
+              },
+              {
+                "name": "h1",
+                "family": "serif",
+                "fontSize": 112,
+                "fontWeight": 300,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "h2",
+                "family": "serif",
+                "fontSize": 96,
+                "fontWeight": 300,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "h3",
+                "family": "serif",
+                "fontSize": 72,
+                "fontWeight": 300,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "lead",
+                "family": "sans",
+                "fontSize": 44,
+                "fontWeight": 430,
+                "lineHeight": 1.4
+              },
+              {
+                "name": "eyebrow",
+                "family": "sans",
+                "fontSize": 36,
+                "fontWeight": 500,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "body",
+                "family": "sans",
+                "fontSize": 32,
+                "fontWeight": 430,
+                "lineHeight": 1.4
+              },
+              {
+                "name": "caption",
+                "family": "sans",
+                "fontSize": 24,
+                "fontWeight": 430,
+                "lineHeight": 1.4
+              }
+            ]
+          }
+        ]
+      },
+      "description": "适合课程讲解与研究汇报的清晰蓝白配色。"
+    }
+  },
+  {
+    "namespace": "forest-classroom",
+    "title": "森林课堂",
+    "description": "适合自然科学与课堂分享的柔和绿白配色。",
+    "tokens": {
+      "name": "森林课堂",
+      "color": {
+        "themes": [
+          {
+            "id": "light",
+            "name": "浅色"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "background",
+            "value": "#F4F8F3"
+          },
+          {
+            "name": "surface",
+            "value": "#FFFFFF"
+          },
+          {
+            "name": "text",
+            "value": "#183328"
+          },
+          {
+            "name": "text-secondary",
+            "value": "#405D4D"
+          },
+          {
+            "name": "accent",
+            "value": "#276B47"
+          },
+          {
+            "name": "border",
+            "value": "#C9DCCF"
+          },
+          {
+            "name": "on-accent",
+            "value": "#FFFFFF"
+          }
+        ]
+      },
+      "type": {
+        "families": {
+          "serif": "Georgia, serif",
+          "sans": "system-ui, sans-serif"
+        },
+        "groups": [
+          {
+            "name": "演示文稿",
+            "styles": [
+              {
+                "name": "display",
+                "family": "serif",
+                "fontSize": 128,
+                "fontWeight": 300,
+                "lineHeight": 1.15
+              },
+              {
+                "name": "h1",
+                "family": "serif",
+                "fontSize": 112,
+                "fontWeight": 300,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "h2",
+                "family": "serif",
+                "fontSize": 96,
+                "fontWeight": 300,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "h3",
+                "family": "serif",
+                "fontSize": 72,
+                "fontWeight": 300,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "lead",
+                "family": "sans",
+                "fontSize": 44,
+                "fontWeight": 430,
+                "lineHeight": 1.4
+              },
+              {
+                "name": "eyebrow",
+                "family": "sans",
+                "fontSize": 36,
+                "fontWeight": 500,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "body",
+                "family": "sans",
+                "fontSize": 32,
+                "fontWeight": 430,
+                "lineHeight": 1.4
+              },
+              {
+                "name": "caption",
+                "family": "sans",
+                "fontSize": 24,
+                "fontWeight": 430,
+                "lineHeight": 1.4
+              }
+            ]
+          }
+        ]
+      },
+      "description": "适合自然科学与课堂分享的柔和绿白配色。"
+    }
+  },
+  {
+    "namespace": "dark-presentation",
+    "title": "深色演示",
+    "description": "适合投影演示的深色背景与明亮文字。",
+    "tokens": {
+      "name": "深色演示",
+      "color": {
+        "themes": [
+          {
+            "id": "dark",
+            "name": "深色"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "background",
+            "value": "#111827"
+          },
+          {
+            "name": "surface",
+            "value": "#1F2937"
+          },
+          {
+            "name": "text",
+            "value": "#F9FAFB"
+          },
+          {
+            "name": "text-secondary",
+            "value": "#CBD5E1"
+          },
+          {
+            "name": "accent",
+            "value": "#93C5FD"
+          },
+          {
+            "name": "border",
+            "value": "#475569"
+          },
+          {
+            "name": "on-accent",
+            "value": "#111827"
+          }
+        ]
+      },
+      "type": {
+        "families": {
+          "serif": "Georgia, serif",
+          "sans": "system-ui, sans-serif"
+        },
+        "groups": [
+          {
+            "name": "演示文稿",
+            "styles": [
+              {
+                "name": "display",
+                "family": "serif",
+                "fontSize": 128,
+                "fontWeight": 300,
+                "lineHeight": 1.15
+              },
+              {
+                "name": "h1",
+                "family": "serif",
+                "fontSize": 112,
+                "fontWeight": 300,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "h2",
+                "family": "serif",
+                "fontSize": 96,
+                "fontWeight": 300,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "h3",
+                "family": "serif",
+                "fontSize": 72,
+                "fontWeight": 300,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "lead",
+                "family": "sans",
+                "fontSize": 44,
+                "fontWeight": 430,
+                "lineHeight": 1.4
+              },
+              {
+                "name": "eyebrow",
+                "family": "sans",
+                "fontSize": 36,
+                "fontWeight": 500,
+                "lineHeight": 1.2
+              },
+              {
+                "name": "body",
+                "family": "sans",
+                "fontSize": 32,
+                "fontWeight": 430,
+                "lineHeight": 1.4
+              },
+              {
+                "name": "caption",
+                "family": "sans",
+                "fontSize": 24,
+                "fontWeight": 430,
+                "lineHeight": 1.4
+              }
+            ]
+          }
+        ]
+      },
+      "description": "适合投影演示的深色背景与明亮文字。"
+    }
+  }
+]

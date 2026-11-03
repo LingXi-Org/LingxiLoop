@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiPropertyRow(runtime2) {
   var PROPERTY_ROW_INTERACTIVE_SELECTOR, initializeUiPropertyRow, reactForUiPropertyRow, jsxForUiPropertyRow, initializeUiPropertyRow2, reactForUiPropertyRow2, jsxForUiPropertyRow2, PROPERTY_INPUT_SURFACE_CLASS, PROPERTY_INPUT_CLASS, PROPERTY_PLACEHOLDER_CLASS, COLOR_SWATCH_CLASS, FieldButton, PROPERTY_SECTION_GUTTER_CLASS, PROPERTY_ACTIONS_CLASS, mixedSectionCollapseWarningShown, untitledSectionCollapseWarningShown, initializeUiPropertyRow3;
@@ -100,7 +100,7 @@ function installUiPropertyRow(runtime2) {
                 size: "xs",
                 iconOnly: !0,
                 icon: "ArrowCounterClockwise",
-                "aria-label": resetLabel ?? (value ? runtime2.RESET_LABEL + " " + value : runtime2.RESET_LABEL),
+                "aria-label": resetLabel ?? (0, runtime2.resetLabelFor)( value),
                 tooltipSide: "left",
                 disabled: disabled2,
                 onPointerDown: (input) => {
@@ -179,7 +179,7 @@ function installUiPropertyRow(runtime2) {
         type: "button",
         "aria-expanded": !collapsed,
         onClick: onToggle,
-        className: (0, runtime2.joinClassNames)(value2, "w-full cursor-default text-left outline-none focus-visible:outline-hidden focus-visible:shadow-focus"),
+        className: (0, runtime2.joinClassNames)(value2, "w-full cursor-default text-left outline-none focus-visible:outline-hidden focus-visible:inset-ring-1 focus-visible:inset-ring-fill-accent forced-colors:focus-visible:-outline-offset-2"),
         children: [
           jsxForUiPropertyRow2.jsx("span", {
             className: (0, runtime2.joinClassNames)("min-w-0 truncate", summaryElement === null ? "flex-1" : "shrink-0 pr-2"),

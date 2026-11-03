@@ -1,22 +1,22 @@
 {
   "schemaVersion": 1,
   "repository": "https://github.com/JimLiu/baoyu-design",
-  "commit": "c15e76ef5134228d2bb5da35652d30d7d6b8a34d",
+  "commit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
   "files": [
     {
       "upstreamPath": "LICENSE",
       "path": "LICENSE",
-      "bytes": 1071,
-      "sha256": "50426a43964d21a284c1f248a2b86aa239274d6e7619947ff166e0c8842d5fef",
-      "gitBlobSha1": "e3af54201da9e463acd6875dc9cb19044dd10a31",
+      "bytes": 1325,
+      "sha256": "9be8148aa0237d67a619feb0973383ba82a37460263ad828ad3d06560ac7f9b6",
+      "gitBlobSha1": "611c492067fbda3a4299e4c1d764f93580cb7951",
       "gitMode": "100644"
     },
     {
       "upstreamPath": "skills/claude-design/SKILL.md",
       "path": "upstream/claude-design/SKILL.md",
-      "bytes": 20760,
-      "sha256": "fd0c1bc519512c8fbc0ef808ee4c7f2d488f974a619a209c006d774e97b52c89",
-      "gitBlobSha1": "d744812330b6146e827d36e1a7091c2de2790aac",
+      "bytes": 30872,
+      "sha256": "b5d81acd3f1cc69ed53ad7f3c16bfce404829fc56d3830131f2bb8bffa894cab",
+      "gitBlobSha1": "62157a536eab5852b4a94c22f27bdaa7da080ba1",
       "gitMode": "100644"
     },
     {
@@ -102,9 +102,9 @@
     {
       "upstreamPath": "skills/claude-design/artifact-type/reference/print.md",
       "path": "upstream/claude-design/artifact-type/reference/print.md",
-      "bytes": 5443,
-      "sha256": "ed7b2b2c069c0fb164201afe15041158f2c5427bed2cb6c25a84876d51ac0253",
-      "gitBlobSha1": "e23f56d28c68c91bbb792c14a6005ce6516200eb",
+      "bytes": 5827,
+      "sha256": "f2b00538b800f8c3d1456baa916c72db1f2ab82c0ea886b0a3ef8c7a7d3e7c07",
+      "gitBlobSha1": "35738cd92d1c4ea4319a2864efb77eff66eeadb2",
       "gitMode": "100644"
     },
     {
@@ -126,9 +126,9 @@
     {
       "upstreamPath": "skills/claude-design/scripts/artifact.mjs",
       "path": "upstream/claude-design/scripts/artifact.mjs",
-      "bytes": 151877,
-      "sha256": "7f83ca215b6daaccc644dc7aadf06436e6a0cf00e93a4eb2f9667792ffd91a3c",
-      "gitBlobSha1": "9e500e47405f0a2da2f45ee1f64e648af66dfed8",
+      "bytes": 185110,
+      "sha256": "05e272520666e668b2f3f0faf0624a3d04bd87562877c725d9e88c5f93a846b1",
+      "gitBlobSha1": "747af9b72c70c2fcbc43a4de39d56ef75a4fd9ee",
       "gitMode": "100644"
     },
     {
@@ -180,35 +180,43 @@
       "gitMode": "100644"
     },
     {
-      "upstreamPath": "skills/claude-design/scripts/editor/assets/anthropicons-fizzy-lake-c1fxtHDl.woff2",
-      "path": "upstream/claude-design/scripts/editor/assets/anthropicons-fizzy-lake-c1fxtHDl.woff2",
-      "bytes": 44224,
-      "sha256": "b11ef2e83c6031152aa63078133907be657a57d6f9932836c648874192fcd901",
-      "gitBlobSha1": "f17a18f8dbd43ad0cf0888bd0d75725f6fa3603b",
+      "upstreamPath": "skills/claude-design/scripts/editor/assets/anthropicons-fizzy-lake-CfC2JIbf.woff2",
+      "path": "upstream/claude-design/scripts/editor/assets/anthropicons-fizzy-lake-CfC2JIbf.woff2",
+      "bytes": 47932,
+      "sha256": "3b2802f4331409152b38402763d94a99520adca364f0dd65012f49f9b3383c33",
+      "gitBlobSha1": "be2cae26755791e2108204d109b9d13c0b667669",
       "gitMode": "100644"
     },
     {
-      "upstreamPath": "skills/claude-design/scripts/editor/assets/index-DavTckY0.js",
-      "path": "upstream/claude-design/scripts/editor/assets/index-DavTckY0.js",
-      "bytes": 6303213,
-      "sha256": "f467444746d4a5cce78f3dc622ad7a8e9b1676ac1c860b2edb1e31eb63cb9bba",
-      "gitBlobSha1": "0062d9fdc8b44fac1e8c2d8627ce3b85a407bc79",
+      "upstreamPath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+      "path": "upstream/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+      "bytes": 6662991,
+      "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+      "gitBlobSha1": "c8438bb41a79d00e05ab5bb7606e3ebc258193ad",
       "gitMode": "100644"
     },
     {
-      "upstreamPath": "skills/claude-design/scripts/editor/assets/index-oDSQuawR.css",
-      "path": "upstream/claude-design/scripts/editor/assets/index-oDSQuawR.css",
-      "bytes": 535016,
-      "sha256": "7c17e8e83e69537bf2a7d1fb53ec9ed5744276be90c80438d5f663b7bcde2971",
-      "gitBlobSha1": "ad0fc0914276d6ea937d5d2ed9b398c9f9b19f3a",
+      "upstreamPath": "skills/claude-design/scripts/editor/assets/index-tSD8GYWj.css",
+      "path": "upstream/claude-design/scripts/editor/assets/index-tSD8GYWj.css",
+      "bytes": 644571,
+      "sha256": "644c2d900468953c965f375e384b4b52d90f64a626aa3a65fb154340140364d9",
+      "gitBlobSha1": "e129c5acf4116f30c2edf08480c0a9e1fc88e3d9",
       "gitMode": "100644"
     },
     {
       "upstreamPath": "skills/claude-design/scripts/editor/index.html",
       "path": "upstream/claude-design/scripts/editor/index.html",
-      "bytes": 2578,
-      "sha256": "6addcff84136152a1d440746e300bf6d0b9abba9b585506d9e307bc451cbb3eb",
-      "gitBlobSha1": "e35fbc30b1fbf00eca39f000b1f0a14f11be4e65",
+      "bytes": 2577,
+      "sha256": "fa0d8402c92c5eac08c1c6ef73a07f872cf579c32d533e5b4f34a9ba3e677323",
+      "gitBlobSha1": "dfa77bc3dd6dc79b9c125469f1efa86678bf35a2",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-design/scripts/editor/share-ui.js",
+      "path": "upstream/claude-design/scripts/editor/share-ui.js",
+      "bytes": 84824,
+      "sha256": "8aa902510e3d745db1822ec79aa197cc06803b04d8db5526c3e5ebf93398f5c5",
+      "gitBlobSha1": "b2b323040451af02b5ffa1c0c3afb2c0f8c3cd51",
       "gitMode": "100644"
     },
     {
@@ -222,17 +230,17 @@
     {
       "upstreamPath": "skills/claude-design/scripts/server.mjs",
       "path": "upstream/claude-design/scripts/server.mjs",
-      "bytes": 61469,
-      "sha256": "5370cdf58dec4e4aae052ee9a2bf6dce288b1cd2dc3681f21e294d2d4931b4a6",
-      "gitBlobSha1": "03d772b6ccc7c511c99d34d0343f68406393f7d9",
+      "bytes": 220328,
+      "sha256": "de22edfbd4a0d44cae9c70334b8bf7974d775c74ad503ce02916e13363952948",
+      "gitBlobSha1": "644afab4fed0c1ee11008ffd7243676cf7afe0ee",
       "gitMode": "100644"
     },
     {
       "upstreamPath": "skills/claude-slides/SKILL.md",
       "path": "upstream/claude-slides/SKILL.md",
-      "bytes": 19592,
-      "sha256": "05dae466702e3f90b58e729918a029d85208950d18865cf9083bb1cd581abc95",
-      "gitBlobSha1": "b44baa462b73bea1b3192431d1ae25cc624396a7",
+      "bytes": 29190,
+      "sha256": "251662dcf746ca7dfe9bed91cd856cacf0a01af2dc475c6b4fb7a77428ded0fe",
+      "gitBlobSha1": "9c5c310d90fba1d3b21c5e68b57330cf6924f51c",
       "gitMode": "100644"
     },
     {
@@ -278,9 +286,9 @@
     {
       "upstreamPath": "skills/claude-slides/artifact-type/reference/format.md",
       "path": "upstream/claude-slides/artifact-type/reference/format.md",
-      "bytes": 16247,
-      "sha256": "b39026f68e7cdd6cc6e32efa1777d52c26e12ea3fcfd16a9346ac1eca4261ebc",
-      "gitBlobSha1": "427010706a58567cf1b4f23fd1cbb547d13121bd",
+      "bytes": 16245,
+      "sha256": "32c7498c320dea867c35cf27020923b1a0073a2759c8f4013c6de3b602b4045c",
+      "gitBlobSha1": "f24ca1e499687fdc3704438b1a1c782717a676de",
       "gitMode": "100644"
     },
     {
@@ -358,9 +366,9 @@
     {
       "upstreamPath": "skills/claude-slides/scripts/artifact.mjs",
       "path": "upstream/claude-slides/scripts/artifact.mjs",
-      "bytes": 151877,
-      "sha256": "3497fced3773de5668cbd11ebaae0efe22125980a351ffa07accd6afe198014b",
-      "gitBlobSha1": "f7edb91d55cf2633c1d3460c1fac722ef5feef0c",
+      "bytes": 185110,
+      "sha256": "066fce05c4a2209a4307b518fe6eb14e23511cae5a0315433671783f5d770813",
+      "gitBlobSha1": "8d109cb2c954c6dfe0645e9f29d318154ce24c3d",
       "gitMode": "100644"
     },
     {
@@ -388,51 +396,51 @@
       "gitMode": "100644"
     },
     {
-      "upstreamPath": "skills/claude-slides/scripts/editor/assets/anthropicons-fizzy-lake-yNspLiPZ.woff2",
-      "path": "upstream/claude-slides/scripts/editor/assets/anthropicons-fizzy-lake-yNspLiPZ.woff2",
-      "bytes": 81444,
-      "sha256": "2ca3f2a7ae15cb9c35ab91128fe7bd52b3fb5864058dab78443590eacf3e4923",
-      "gitBlobSha1": "044517971d0379a79576f7678085d93f12f09c87",
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/anthropicons-fizzy-lake-D4byUNVq.woff2",
+      "path": "upstream/claude-slides/scripts/editor/assets/anthropicons-fizzy-lake-D4byUNVq.woff2",
+      "bytes": 88012,
+      "sha256": "f823eeae0cc8afc316c4c8ea19098265b6f25c27ffceeadbb84ec1fd16a6d1a6",
+      "gitBlobSha1": "bce63e24f09c8e35acb6ed692d01e1f83541235e",
       "gitMode": "100644"
     },
     {
-      "upstreamPath": "skills/claude-slides/scripts/editor/assets/index-BSIksl9u.js",
-      "path": "upstream/claude-slides/scripts/editor/assets/index-BSIksl9u.js",
-      "bytes": 4666628,
-      "sha256": "57b922483d900e57b3abf0287f9b5225c22b7c5a733006cf47047a16a1816a66",
-      "gitBlobSha1": "e392ad56d9d24eef64adf4a6e8603138bec77702",
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/index-DX-X-CY8.css",
+      "path": "upstream/claude-slides/scripts/editor/assets/index-DX-X-CY8.css",
+      "bytes": 605589,
+      "sha256": "d81e7f456e34d3f3ccaa368dc978bec2a5654b134ae05a76381c65b89f3c84aa",
+      "gitBlobSha1": "3cf097d0d3fdbbb8fb69ceabb0516d782e775fc7",
       "gitMode": "100644"
     },
     {
-      "upstreamPath": "skills/claude-slides/scripts/editor/assets/index-DooSdFer.css",
-      "path": "upstream/claude-slides/scripts/editor/assets/index-DooSdFer.css",
-      "bytes": 470617,
-      "sha256": "9a5a37d02d8cc037fabd46be0caf43678b55c42929ddbf60792a4d5ce01c8156",
-      "gitBlobSha1": "764ce23f3ba2808568a3dc64274fae317bd6046b",
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+      "path": "upstream/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+      "bytes": 4943004,
+      "sha256": "878eab1994de6c7896126cf1549cd46950b74c547bb45f7da5eddf9bef488caf",
+      "gitBlobSha1": "a66de2007aa2f87b43790bb4f0318aec84f259bb",
       "gitMode": "100644"
     },
     {
-      "upstreamPath": "skills/claude-slides/scripts/editor/assets/woff2-decoder-BGQ3SeZf.js",
-      "path": "upstream/claude-slides/scripts/editor/assets/woff2-decoder-BGQ3SeZf.js",
+      "upstreamPath": "skills/claude-slides/scripts/editor/assets/woff2-decoder-P1USYjds.js",
+      "path": "upstream/claude-slides/scripts/editor/assets/woff2-decoder-P1USYjds.js",
       "bytes": 305629,
-      "sha256": "29a2a06b3834c69def4677b9ee9e418d0f52246e561cc236f9084820b7cfc41e",
-      "gitBlobSha1": "970e619f22c41a3ffb6722e8a3d21c8e04ff4a14",
+      "sha256": "38ea87743f3358949a4c59d277ede44542c397653ecc5cb6162fb3c74d9a42e5",
+      "gitBlobSha1": "eef52257ece9bd85b27eec208acc6c77d3a9a136",
       "gitMode": "100644"
     },
     {
       "upstreamPath": "skills/claude-slides/scripts/editor/index.html",
       "path": "upstream/claude-slides/scripts/editor/index.html",
-      "bytes": 3185,
-      "sha256": "082ff43b98e8111fcdfa341e189d6aec2348e69865feabdd8561020115c278cd",
-      "gitBlobSha1": "922a8cb79302b95e5ba4d18f906309dd9141e69f",
+      "bytes": 3238,
+      "sha256": "05ba3678097eed75cc9bf5f8f1569b58355f4471b6a5efcd16723564771f1dfe",
+      "gitBlobSha1": "714bf1b9e928d449731497057d4a627036c09652",
       "gitMode": "100644"
     },
     {
       "upstreamPath": "skills/claude-slides/scripts/editor/node/compiler.cjs",
       "path": "upstream/claude-slides/scripts/editor/node/compiler.cjs",
-      "bytes": 10264229,
-      "sha256": "bba806b77b93512546799620047c62dc77258c5da4c2fbd318ebe14a4f90e61e",
-      "gitBlobSha1": "e91f034aff35b4646839a854eb1dd1115b132428",
+      "bytes": 10761731,
+      "sha256": "78d5448dacb104d91c905e4473f13e113e7dad6b558d4671e795a0ae45718bb5",
+      "gitBlobSha1": "1ba72f235562983ee2fd8a4173130c00ef9bf4c9",
       "gitMode": "100644"
     },
     {
@@ -441,6 +449,14 @@
       "bytes": 95020,
       "sha256": "4bd79f56dc6660adf38a69bbffce120b65d2b5d8dc962d3950fb753a1419acef",
       "gitBlobSha1": "80a910d3ed1907a23546cd8172bc702101862e86",
+      "gitMode": "100644"
+    },
+    {
+      "upstreamPath": "skills/claude-slides/scripts/editor/share-ui.js",
+      "path": "upstream/claude-slides/scripts/editor/share-ui.js",
+      "bytes": 84824,
+      "sha256": "8aa902510e3d745db1822ec79aa197cc06803b04d8db5526c3e5ebf93398f5c5",
+      "gitBlobSha1": "b2b323040451af02b5ffa1c0c3afb2c0f8c3cd51",
       "gitMode": "100644"
     },
     {
@@ -454,9 +470,9 @@
     {
       "upstreamPath": "skills/claude-slides/scripts/server.mjs",
       "path": "upstream/claude-slides/scripts/server.mjs",
-      "bytes": 62317,
-      "sha256": "cb158fee32903e62a60b9a471d199a09a3407e6cb15a43686c495e41d7335902",
-      "gitBlobSha1": "e2ef90c65e8c7e43e57d93a089b939092b140fc7",
+      "bytes": 221693,
+      "sha256": "c84affe33a71d8164f8509faaff718f25360b7e30238e886c2e6a06a42c667a8",
+      "gitBlobSha1": "421d7e1dfdb1f5bdeab81cf570d7519a0422762c",
       "gitMode": "100644"
     }
   ]

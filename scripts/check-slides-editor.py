@@ -25,9 +25,17 @@ BASE = "/artifact-editor/slides/test-grant/"
 def run(browser, upstream=False, mobile=False):
     editor = ROOT / ("third_party/baoyu-design/upstream/claude-slides/scripts/editor" if upstream else "server/assets/slides-editor")
     files = {"project/deck.json": json.dumps(dict(v=4, lists="css", title="Keep English 用户标题", order=[], sections={}, faces={}, designSystems=[])).encode()}
-    requests, errors, publishes = [], [], []
+    if not upstream and not mobile:
+        themes = json.loads((ROOT / "third_party/baoyu-design/host/builtin-themes.json").read_text(encoding="utf-8"))
+        deck = json.loads(files["project/deck.json"])
+        deck["designSystems"] = [dict(namespace=t["namespace"], title=t["title"], artifact="LingxiLoop 内置主题", version="1", copiedAt="2026-11-03T00:00:00Z") for t in themes]
+        files["project/deck.json"] = json.dumps(deck).encode()
+        for theme in themes:
+            files[f"project/ds/{theme['namespace']}/tokens.json"] = json.dumps(theme["tokens"]).encode()
+    requests, errors, publishes, failed_responses = [], [], [], []
     page = browser.new_page(viewport={"width": 390 if mobile else 1280, "height": 844 if mobile else 900})
     page.on("pageerror", lambda error: errors.append(str(error)))
+    page.on("response", lambda response: failed_responses.append((response.status, response.url)) if response.status >= 400 else None)
 
     def sha(data):
         return hashlib.sha256(data).hexdigest()
@@ -83,6 +91,8 @@ def run(browser, upstream=False, mobile=False):
     page.goto(ORIGIN + (BASE if upstream else "/host"), wait_until="domcontentloaded")
     view = page if upstream else page.frame_locator("iframe")
     view.get_by_role("button", name="Add slide" if upstream else "添加幻灯片", exact=True).click()
+    if not upstream:
+        assert not failed_responses, failed_responses
     if upstream:
         expect(page.get_by_text("Cannot read properties of undefined (reading 'useContext')", exact=True)).to_be_visible()
         print("PASS: upstream first-slide rendering error reproduced")
@@ -109,14 +119,24 @@ def run(browser, upstream=False, mobile=False):
         view.get_by_role("button", name="添加幻灯片", exact=True).click()
         expect(view.get_by_role("group", name="布局", exact=True)).to_be_visible()
         assert not errors, errors
+        assert not failed_responses, failed_responses
         print("PASS: mobile create, save, reload and reopen layout dialog")
         page.close()
         return
 
     view.get_by_role("button", name="属性", exact=True).click()
     view.get_by_role("tab", name="主题", exact=True).click()
-    expect(view.get_by_text("原始样式", exact=True)).to_be_visible()
+    expect(view.get_by_role("button", name="设计系统：", exact=False)).to_be_visible()
     expect(view.get_by_text("Original look", exact=True)).to_have_count(0)
+    view.get_by_role("button", name="设计系统：", exact=False).click()
+    for title in ["学术蓝", "森林课堂", "深色演示"]:
+        expect(view.get_by_role("button", name=title, exact=True)).to_be_visible()
+    page.screenshot(path=str(ROOT / "docs/evidence/issue-648/slides-chinese.png"))
+    view.get_by_role("button", name="森林课堂", exact=True).click()
+    deadline = time.monotonic() + 10
+    while b"forest-classroom" not in files["project/deck.json"] and time.monotonic() < deadline:
+        page.wait_for_timeout(50)
+    expect(view.get_by_role("button", name="设计系统：森林课堂", exact=False)).to_be_visible()
     view.get_by_role("button", name="关闭面板", exact=True).click()
 
     view.get_by_role("button", name="下载", exact=True).click()
@@ -131,8 +151,19 @@ def run(browser, upstream=False, mobile=False):
             assert "演示文稿标题" in archive.read("ppt/slides/slide1.xml").decode()
     assert any("pptx-library-" in path for path in requests), "PPTX library did not load on demand"
     assert not any("video-worker-source-" in path for path in requests), "video encoder loaded without a video"
+    view.get_by_role("button", name="下载", exact=True).click()
+    view.get_by_role("menuitem", name="PDF（.pdf）", exact=False).click()
+    dialog = view.get_by_test_id("pdf-options-dialog")
+    expect(dialog).to_be_visible()
+    with page.expect_download(timeout=60_000) as pdf_event:
+        dialog.get_by_role("button", name="下载", exact=True).click()
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "deck.pdf"
+        pdf_event.value.save_as(path)
+        assert path.read_bytes().startswith(b"%PDF-"), "PDF confirm did not produce a PDF"
     assert not errors, errors
-    print("PASS: desktop create, save, reload, Chinese theme and lazy PPTX export")
+    assert not failed_responses, failed_responses
+    print("PASS: desktop create, save, reload, Chinese theme, lazy PPTX and explicit PDF confirm; no HTTP errors")
     page.close()
 
 

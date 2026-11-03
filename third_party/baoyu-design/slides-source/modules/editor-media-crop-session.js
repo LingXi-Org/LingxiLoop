@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorMediaCropSession(runtime2) {
   var reactp4, CROP_LAYOUT_REASON, CROP_REFUSAL_MESSAGES, cropImageSource, matchesCropImageIdentity, hasCropTransform;
@@ -206,7 +206,13 @@ function installEditorMediaCropSession(runtime2) {
           fit: "cover"
         };
         return value8 !== void 0 ? state.crop = value8 : delete state.crop, state;
-      })), announceSlideStatus(value8 !== void 0 || value9 ? "Cropped." : "已移除裁剪。"));
+      })), announceSlideStatus(value8 !== void 0 || value9 ? (0, runtime2.formatMessage)({
+        defaultMessage: "已裁剪。",
+        id: "n2Cc4vkabY"
+      }) : (0, runtime2.formatMessage)({
+        defaultMessage : "已移除裁剪。",
+        id: "4x4PwR9xmR"
+      })));
     }, []), value5 = value !== null && options.slide.id === value.slideId, value6 = value !== null && value5 && (!options.editable || !matchesCropImageIdentity(cropImageLocation(options.slide, value.unit, options.assets), value)), value7 = value !== null && (!value5 || options.busy || options.selection.length !== 1 || !(0, runtime2.selectionsEqual)(options.selection[0], value.unit));
     reactp4.useEffect(() => {
       value6 ? callback3(!1) : value7 && callback3(!0);

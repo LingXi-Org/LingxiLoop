@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorCoverTitle(runtime2) {
   var ReactCoverTitle, UNTITLED_DECK_TITLE, TITLE_INVISIBLE_CHARACTERS, TITLE_KEPT_FORMAT_CHARACTERS, templateSampleTexts, COVER_TITLE_HOST;

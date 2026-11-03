@@ -1,12 +1,14 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiSessionProperties(runtime2) {
-  var reactD9, jsxpJ, SELECTION_HOVER_CLASS, SESSION_POPOVER_CLOSE_DELAY_MS, isTextInputEventTarget, SESSION_POPUP_SELECTOR, SESSION_POPUP_ATTRIBUTES, SESSION_POPUP_ITEM_SELECTORS, SESSION_POPUP_PRESSED_SELECTOR, SESSION_POPUP_ENABLED_SELECTOR, sessionPopupInitialFocus, preserveSessionSelection, IMAGE_CHECKERBOARD_BACKGROUND;
+  var reactD9, jsxpJ, textStyleLabel, customTextStyleLabel, SELECTION_HOVER_CLASS, SESSION_POPOVER_CLOSE_DELAY_MS, isTextInputEventTarget, SESSION_POPUP_SELECTOR, SESSION_POPUP_ATTRIBUTES, SESSION_POPUP_ITEM_SELECTORS, SESSION_POPUP_PRESSED_SELECTOR, SESSION_POPUP_ENABLED_SELECTOR, sessionPopupInitialFocus, preserveSessionSelection, IMAGE_CHECKERBOARD_BACKGROUND;
   function useSessionPopupKeyboardFocus(open4, toggle) {
-    let [value, value2] = reactD9.useState(!1), ref = reactD9.useRef(null), callback = () => sessionPopupInitialFocus(ref.current);
+    let [value, value2] = reactD9.useState(!1), ref = reactD9.useRef(null), callback = () => sessionPopupInitialFocus(ref.current), body = reactD9.useCallback((element) => {
+      ref.current = element, (0, runtime2.scrollIntoOverlayView)(element?.querySelector(SESSION_POPUP_PRESSED_SELECTOR));
+    }, []);
     return {
       byKey: value,
-      body: ref,
+      body,
       initialFocus: callback,
       keyed: {
         onKeyDown: (event) => {
@@ -113,15 +115,15 @@ function installUiSessionProperties(runtime2) {
     });
   }
   function SessionTextStylePopover({ testid, value, chipText, options, onChange, custom, systemHeader }) {
-    let [value2, value3] = reactD9.useState(!1), { byKey, body, initialFocus, keyed } = useSessionPopupKeyboardFocus(value2, () => value3(!0)), value4 = options.length > 0 || systemHeader != null, [value5, value6] = reactD9.useState("system"), value7 = value4 ? value5 : "custom", value8 = options.some((input) => input.group !== void 0) || options.length > runtime2.OPTION_LIST_MAX_HEIGHT, [value9, value10] = reactD9.useState("");
+    let [value2, value3] = reactD9.useState(!1), bottomChrome = (0, runtime2.useBottomToolbarChrome)(), { byKey, body, initialFocus, keyed } = useSessionPopupKeyboardFocus(value2, () => value3(!0)), value4 = options.length > 0 || systemHeader != null, [value5, value6] = reactD9.useState("system"), value7 = value4 ? value5 : "custom", value8 = options.some((input) => input.group !== void 0) || options.filter((input) => input.unsearched !== !0).length > runtime2.OPTION_LIST_MAX_HEIGHT, [value9, value10] = reactD9.useState("");
     !value2 && value9 !== "" && value10("");
-    let value11 = value8 ? value9.trim().toLowerCase() : "", value12 = options.filter((input) => (0, runtime2.optionMatchesQuery)(value11, input.text, input.hint, input.subgroup, input.group)), value13 = options.reduce((input, options2, context) => {
+    let value11 = value8 ? value9.trim().toLowerCase() : "", value12 = options.filter((input) => (value11 === "" || input.unsearched !== !0) && (0, runtime2.optionMatchesQuery)(value11, input.text, input.hint, input.subgroup, input.group)), value13 = options.reduce((input, options2, context) => {
       let value16 = options2.group !== void 0 && options2.group !== options[context - 1]?.group;
       return input + 1 + (value16 ? 1 : 0) + (options2.subgroup !== void 0 && (value16 || options2.subgroup !== options[context - 1]?.subgroup) ? 1 : 0);
-    }, 0), value14 = value4 ? Math.max(SESSION_POPOVER_CLOSE_DELAY_MS, 52 + (systemHeader != null ? 40 : 0) + (value8 ? 36 : 0) + Math.min(384, 32 * value13)) : void 0, value15 = jsxpJ.jsx(runtime2.ToolbarStripButton, {
+    }, 0), separatorAbove = (input, options2, list) => options2 > 0 && (input.group !== void 0 && input.group !== list[options2 - 1]?.group || input.separatorBefore === !0), value14 = value4 ? Math.max(SESSION_POPOVER_CLOSE_DELAY_MS, 52 + (systemHeader != null ? 40 : 0) + (value8 ? 36 : 0) + Math.min(384, (bottomChrome ? 39 : 32) * value13 + 9 * options.filter(separatorAbove).length)) : void 0, value15 = jsxpJ.jsx(runtime2.ToolbarStripButton, {
       "data-testid": testid,
       "data-mc-bordered": "",
-      title: "文字样式",
+      title: textStyleLabel(),
       chevron: !0,
       className: (0, runtime2.joinClassNames)("rounded-lg border border-border-line px-2", value2 && SELECTION_HOVER_CLASS),
       ...keyed,
@@ -130,7 +132,7 @@ function installUiSessionProperties(runtime2) {
         children: [
           jsxpJ.jsx(runtime2.KitIcon, {
             name: "TextAa",
-            size: 13,
+            size: bottomChrome ? 20 : 13,
             className: "text-muted"
           }),
           jsxpJ.jsx("span", {
@@ -166,7 +168,7 @@ function installUiSessionProperties(runtime2) {
             }) : null,
             value7 === "system" ? jsxpJ.jsxs("div", {
               role: "group",
-              "aria-label": "文字样式",
+              "aria-label": textStyleLabel(),
               children: [
                 systemHeader,
                 jsxpJ.jsxs("div", {
@@ -192,6 +194,7 @@ function installUiSessionProperties(runtime2) {
                         let value16 = input.group !== void 0 && input.group !== value12[options2 - 1]?.group, value17 = input.subgroup !== void 0 && (value16 || input.subgroup !== value12[options2 - 1]?.subgroup);
                         return jsxpJ.jsxs(reactD9.Fragment, {
                           children: [
+                            separatorAbove(input, options2, value12) ? jsxpJ.jsx(runtime2.Menu.Separator, {}) : null,
                             value16 ? jsxpJ.jsx(runtime2.ColorPickerHeader, {
                               text: input.group,
                               title: !0
@@ -232,7 +235,7 @@ function installUiSessionProperties(runtime2) {
               ]
             }) : "body" in custom ? jsxpJ.jsx("div", {
               className: "flex flex-col gap-2",
-              "aria-label": "自定义文字样式",
+              "aria-label": customTextStyleLabel(),
               children: custom.body
             }) : jsxpJ.jsx(CustomTextStylePanel, {
               c: custom
@@ -245,17 +248,23 @@ function installUiSessionProperties(runtime2) {
   function CustomTextStylePanel({ c }) {
     return jsxpJ.jsxs("div", {
       className: "flex flex-col gap-2",
-      "aria-label": "自定义文字样式",
+      "aria-label": customTextStyleLabel(),
       children: [
         jsxpJ.jsx("div", {
           className: "flex",
           children: jsxpJ.jsx(runtime2.Select, {
-            "aria-label": "字体",
+            "aria-label": (0, runtime2.formatMessage)({
+              defaultMessage: "字体",
+              id: "Abxwgvl2Lc"
+            }),
             items: c.family.options,
             value: c.family.value,
             onChange: c.family.onChange,
             searchable: c.family.searchable,
-            searchLabel: "搜索字体",
+            searchLabel: (0, runtime2.formatMessage)({
+              defaultMessage: "搜索字体",
+              id: "tu29N5JRz4"
+            }),
             quietCaptions: !0,
             onOpenChange: c.family.onOpenChange,
             popupAttrs: SESSION_POPUP_ATTRIBUTES
@@ -265,7 +274,10 @@ function installUiSessionProperties(runtime2) {
           className: "grid grid-cols-2 gap-2",
           children: [
             jsxpJ.jsx(runtime2.Select, {
-              "aria-label": "字重",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "字重",
+                id: "4+BaDrBnvy"
+              }),
               items: (0, runtime2.fontVariantChoices)(c.face.faces, c.face),
               value: (0, runtime2.fontVariantKey)(c.face.weight, c.face.italic),
               onOpenChange: c.face.onOpenChange,
@@ -276,9 +288,15 @@ function installUiSessionProperties(runtime2) {
               popupAttrs: SESSION_POPUP_ATTRIBUTES
             }),
             jsxpJ.jsx(runtime2.PropertyNumberInput, {
-              "aria-label": "字号",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "字号",
+                id: "QXmPvLu1Eu"
+              }),
               unit: "px",
-              title: "字号（像素），留空使用样式默认值",
+              title: (0, runtime2.formatMessage)({
+                defaultMessage: "字号（px）；清空则使用样式自身的字号",
+                id: "Ka6IXn+E5D"
+              }),
               clearable: !0,
               ...c.size
             }),
@@ -286,8 +304,14 @@ function installUiSessionProperties(runtime2) {
               prefix: jsxpJ.jsx(runtime2.PropertyIcon, {
                 icon: runtime2.LINE_HEIGHT_ICON
               }),
-              "aria-label": "行高",
-              title: "行高（字号的倍数）",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "行高",
+                id: "zCOeKqjZJt"
+              }),
+              title: (0, runtime2.formatMessage)({
+                defaultMessage: "行高（字号的倍数）",
+                id: "ZVL9SR7Rmj"
+              }),
               clearable: !0,
               ...c.lineHeight,
               step: c.lineHeight.step ?? 0.05
@@ -296,9 +320,15 @@ function installUiSessionProperties(runtime2) {
               prefix: jsxpJ.jsx(runtime2.PropertyIcon, {
                 icon: "LetterSpacing"
               }),
-              "aria-label": "字间距",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "字间距",
+                id: "H1XEjrd9X/"
+              }),
               unit: "px",
-              title: "字间距（像素）",
+              title: (0, runtime2.formatMessage)({
+                defaultMessage: "字间距（像素）",
+                id: "abMgAfSVE7"
+              }),
               clearable: !0,
               ...c.letterSpacing,
               step: c.letterSpacing.step ?? 0.5
@@ -441,6 +471,10 @@ function installUiSessionProperties(runtime2) {
     reactD9 = value;
   }), bindRuntimeValue(runtime2, "jsxpJ", () => jsxpJ, (value) => {
     jsxpJ = value;
+  }), bindRuntimeValue(runtime2, "textStyleLabel", () => textStyleLabel, (value) => {
+    textStyleLabel = value;
+  }), bindRuntimeValue(runtime2, "customTextStyleLabel", () => customTextStyleLabel, (value) => {
+    customTextStyleLabel = value;
   }), bindRuntimeValue(runtime2, "SELECTION_HOVER_CLASS", () => SELECTION_HOVER_CLASS, (value) => {
     SELECTION_HOVER_CLASS = value;
   }), bindRuntimeValue(runtime2, "SESSION_POPOVER_CLOSE_DELAY_MS", () => SESSION_POPOVER_CLOSE_DELAY_MS, (value) => {
@@ -464,7 +498,13 @@ function installUiSessionProperties(runtime2) {
   }), bindRuntimeValue(runtime2, "SessionSwatchDot", () => SessionSwatchDot), bindRuntimeValue(runtime2, "isScrollbarMouseDown", () => isScrollbarMouseDown), bindRuntimeValue(runtime2, "SessionNumberField", () => SessionNumberField), bindRuntimeValue(runtime2, "IMAGE_CHECKERBOARD_BACKGROUND", () => IMAGE_CHECKERBOARD_BACKGROUND, (value) => {
     IMAGE_CHECKERBOARD_BACKGROUND = value;
   }), bindRuntimeValue(runtime2, "SessionImageReplaceButton", () => SessionImageReplaceButton), () => {
-    (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiAnnouncements)(), (0, runtime2.initializeUiColorPicker)(), (0, runtime2.initializeUiPropertySearch)(), (0, runtime2.initializeColorSelect)(), (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeUiContrastControls)(), (0, runtime2.initializeUiPropertyIcons)(), (0, runtime2.initializeUiNumberControls2)(), (0, runtime2.initializeUiPropertyPopover2)(), (0, runtime2.initializeUiPropertyFocus)(), (0, runtime2.initializeSelect)(), (0, runtime2.initializeFontVariants)(), reactD9 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), (0, runtime2.initializeUiInspectorIcons)(), (0, runtime2.initializeUiPropertyLabels)(), jsxpJ = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), SELECTION_HOVER_CLASS = "bg-fill-ghost-hover", SESSION_POPOVER_CLOSE_DELAY_MS = 180, isTextInputEventTarget = (target) => target instanceof Element && target.closest(runtime2.TEXT_EDITABLE_SELECTOR) !== null, SESSION_POPUP_SELECTOR = '[data-session-strip="popup"]', SESSION_POPUP_ATTRIBUTES = {
+    (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiAnnouncements)(), (0, runtime2.initializeUiColorPicker)(), (0, runtime2.initializeUiPropertySearch)(), (0, runtime2.initializeColorSelect)(), (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeUiContrastControls)(), (0, runtime2.initializeUiPropertyIcons)(), (0, runtime2.initializeUiNumberControls2)(), (0, runtime2.initializeUiPropertyPopover2)(), (0, runtime2.initializeUiPropertyFocus)(), (0, runtime2.initializeSelect)(), (0, runtime2.initializeFontVariants)(), reactD9 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), (0, runtime2.initializeUiInspectorIcons)(), (0, runtime2.initializeUiPropertyLabels)(), jsxpJ = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), textStyleLabel = () => (0, runtime2.formatMessage)({
+      defaultMessage: "文字样式",
+      id: "DTg+lYbGrx"
+    }), customTextStyleLabel = () => (0, runtime2.formatMessage)({
+      defaultMessage: "自定义文字样式",
+      id: "/ASH2E4SaM"
+    }), SELECTION_HOVER_CLASS = "bg-fill-ghost-hover", SESSION_POPOVER_CLOSE_DELAY_MS = 180, isTextInputEventTarget = (target) => target instanceof Element && target.closest(runtime2.TEXT_EDITABLE_SELECTOR) !== null, SESSION_POPUP_SELECTOR = '[data-session-strip="popup"]', SESSION_POPUP_ATTRIBUTES = {
       "data-session-strip": "popup"
     }, SESSION_POPUP_ITEM_SELECTORS = [
       '[data-kit="MenuItem"]',

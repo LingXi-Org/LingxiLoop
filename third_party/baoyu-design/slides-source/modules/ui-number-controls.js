@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiNumberControls(runtime2) {
   var initializeNumberScrubNoop, reactForUiNumberControls, activeNumberScrubCleanup, initializeUiNumberControls, reactForUiNumberControls2, jsxForUiNumberControls, PROPERTY_NUMBER_FORMAT_OPTIONS, propertyNumberFormatter, NUMBER_MINUS_SIGNS, NUMBER_PLUS_SIGNS, PROPERTY_NUMBER_UNIT_CLASS, PROPERTY_NUMBER_INPUT_CLASS, PROPERTY_NUMBER_STEPPER_CLASS, initializeUiNumberControls2;
@@ -258,8 +258,12 @@ function installUiNumberControls(runtime2) {
         parsed !== null ? callback3(clampValue(parsed.n), parsed.unit) : ref2.current || (ref4.current && (ref6.current = !0), (0, runtime2.announceLiveMessage)((0, runtime2.numberChangeRefusalMessage)(value7, ownUnit)));
       },
       title,
+      "aria-roledescription": (0, runtime2.formatMessage)({
+        defaultMessage: "数字字段",
+        id: "hnsHwc73Wt"
+      }),
       fullWidth,
-      className: (0, runtime2.joinClassNames)("group/field min-w-12", !mixed && value3 === void 0 && placeholder !== void 0 && placeholder !== runtime2.MIXED_LABEL && "[&_input]:placeholder:text-primary", className),
+      className: (0, runtime2.joinClassNames)("group/field min-w-12", !mixed && value3 === void 0 && placeholder !== void 0 && "[&_input]:placeholder:text-primary", className),
       slotStart: prefix !== void 0 && prefix !== "" ? jsxForUiNumberControls.jsx("span", {
         "data-scrub": "",
         onMouseDown: value9 ? callback5 : void 0,
@@ -283,7 +287,7 @@ function installUiNumberControls(runtime2) {
               jsxForUiNumberControls.jsx("button", {
                 type: "button",
                 tabIndex: -1,
-                "aria-label": value7 ? runtime2.INCREASE_LABEL + " " + value7 : runtime2.INCREASE_LABEL,
+                "aria-label": (0, runtime2.increaseLabelFor)( value7),
                 className: PROPERTY_NUMBER_STEPPER_CLASS,
                 disabled: disabled2,
                 onMouseDown: (event) => {
@@ -299,7 +303,7 @@ function installUiNumberControls(runtime2) {
               jsxForUiNumberControls.jsx("button", {
                 type: "button",
                 tabIndex: -1,
-                "aria-label": value7 ? runtime2.DECREASE_LABEL + " " + value7 : runtime2.DECREASE_LABEL,
+                "aria-label": (0, runtime2.decreaseLabelFor)( value7),
                 className: PROPERTY_NUMBER_STEPPER_CLASS,
                 disabled: disabled2,
                 onMouseDown: (event) => {

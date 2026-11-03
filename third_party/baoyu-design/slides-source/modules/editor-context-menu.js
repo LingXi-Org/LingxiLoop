@@ -1,9 +1,21 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorContextMenu(runtime2) {
-  var CanvasContextMenuJsx, ENABLE_OBJECT_PROPERTIES_MENU, OBJECT_PROPERTIES_MENU_GROUPS, OBJECT_CONTEXT_MENU_GROUPS, COPY_SLIDE_LINK_MENU_ITEM, objectContextMenuGroups;
+  var CanvasContextMenuJsx, ENABLE_OBJECT_PROPERTIES_MENU, OBJECT_PROPERTIES_MENU_GROUPS, OBJECT_CONTEXT_MENU_GROUPS, COPY_SLIDE_LINK_MENU_ITEM, SCALE_MENU_ITEM, objectContextMenuGroups;
   function CanvasContextMenu({ objects, fitLabel, copyLink, ...props }) {
-    let linkItems = copyLink ? [COPY_SLIDE_LINK_MENU_ITEM] : [], value = objects === 0 ? "Slide actions" : objects === 1 ? "Object actions" : "操作：" + String(objects) + " objects";
+    let linkItems = copyLink ? [COPY_SLIDE_LINK_MENU_ITEM] : [], value = objects === 0 ? (0, runtime2.formatMessage)({
+      defaultMessage: "幻灯片操作",
+      id: "6HI7cnSWos"
+    }) : objects === 1 ? (0, runtime2.formatMessage)({
+      defaultMessage: "对象操作",
+      id: "bel+iaF/oo"
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage: "{count} 个对象的操作",
+      id: "EyJN0QY7rV"
+    }, {
+      n: objects,
+      count : String(objects)
+    });
     return CanvasContextMenuJsx.jsx(runtime2.EditContextMenu, {
       ...props,
       name: value,
@@ -30,6 +42,8 @@ function installEditorContextMenu(runtime2) {
     OBJECT_CONTEXT_MENU_GROUPS = value;
   }), bindRuntimeValue(runtime2, "COPY_SLIDE_LINK_MENU_ITEM", () => COPY_SLIDE_LINK_MENU_ITEM, (value) => {
     COPY_SLIDE_LINK_MENU_ITEM = value;
+  }), bindRuntimeValue(runtime2, "SCALE_MENU_ITEM", () => SCALE_MENU_ITEM, (value) => {
+    SCALE_MENU_ITEM = value;
   }), bindRuntimeValue(runtime2, "objectContextMenuGroups", () => objectContextMenuGroups, (value) => {
     objectContextMenuGroups = value;
   }), bindRuntimeValue(runtime2, "CanvasContextMenu", () => CanvasContextMenu), () => {
@@ -44,9 +58,16 @@ function installEditorContextMenu(runtime2) {
       id: "link",
       label: runtime2.COPY_SLIDE_LINK_LABEL,
       shortcut: runtime2.COPY_SLIDE_LINK_SHORTCUT
+    }, SCALE_MENU_ITEM = {
+      id: "scale",
+      label: (0, runtime2.formatMessage)({
+        defaultMessage: "缩放…",
+        id: "yuIG7L1Dl9"
+      }),
+      shortcut: runtime2.EDIT_COMMAND_DEFINITIONS.scale.shortcut
     }, objectContextMenuGroups = (linkItems) => [
       ["cut", "copy", ...linkItems, "paste", "duplicate"],
-      ["front", "back", "group", "ungroup"],
+      ["front", "back", "group", "ungroup", SCALE_MENU_ITEM],
       ...OBJECT_PROPERTIES_MENU_GROUPS,
       ["delete"]
     ], OBJECT_CONTEXT_MENU_GROUPS = objectContextMenuGroups([]);

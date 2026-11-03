@@ -18,7 +18,7 @@ test('native copy translation preserves icon names, enums, shortcuts and documen
 })
 
 test('every translated ICU message parses and formats using the bundled formatter', async () => {
-  const source = await readFile(new URL('../third_party/baoyu-design/upstream/claude-slides/scripts/editor/assets/index-BSIksl9u.js', import.meta.url), 'utf8')
+  const source = await readFile(new URL('../third_party/baoyu-design/upstream/claude-slides/scripts/editor/assets/index-kN-1njux.js', import.meta.url), 'utf8')
   const catalog = JSON.parse(await readFile(new URL('../third_party/baoyu-design/host/slides-zh-CN.json', import.meta.url), 'utf8'))
   const tree = ts.createSourceFile('slides.js', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
   const formatter = tree.statements.find(node => ts.isFunctionDeclaration(node) && node.getText(tree).includes('a(e,"createMessageFormatter"'))
@@ -39,13 +39,13 @@ test('every translated ICU message parses and formats using the bundled formatte
     ts.forEachChild(node, visit)
   }
   visit(tree)
-  assert.ok(count >= 475)
+  assert.ok(count >= 1446)
 })
 
 test('native build keeps export libraries lazy and reduces initial JavaScript', async () => {
   const report = await buildSlidesEditor()
-  assert.equal(report.messageCount, 499)
-  assert.equal(report.modules + report.removedModules.length, 321)
+  assert.equal(report.messageCount, 1446)
+  assert.equal(report.modules + report.removedModules.length, 332)
   assert.ok(report.inputs.every(path => path.startsWith('third_party/baoyu-design/slides-source/') ||
     ['node_modules/katex/dist/katex.mjs', 'node_modules/katex/contrib/auto-render/splitAtDelimiters.ts'].includes(path)))
   assert.ok(report.inputs.some(path => path.endsWith('/modules/editor-app.js')))
@@ -61,7 +61,7 @@ test('native build keeps export libraries lazy and reduces initial JavaScript', 
   const html = await readFile(resolve('server/assets/slides-editor/index.html'), 'utf8')
   assert.match(html, /lang="zh-CN"/)
   assert.match(html, /\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js/)
-  assert.doesNotMatch(html, /index-BSIksl9u/)
+  assert.doesNotMatch(html, /index-kN-1njux/)
   assert.ok(html.includes(report.styles.file))
   const css = await readFile(resolve('server/assets/slides-editor/assets', report.styles.file), 'utf8')
   assert.equal((css.match(/@font-face\{[^}]*font-family:["']?KaTeX_/g) ?? []).length, 20)
@@ -83,7 +83,7 @@ test('complete upstream distributions retain every pinned byte and license', asy
     const directory = resolve('third_party', folder)
     const manifest = JSON.parse(await readFile(resolve(directory, 'complete-manifest.json'), 'utf8'))
     assert.ok(manifest.files.some(file => file.path === 'LICENSE'))
-    assert.equal(manifest.files.length, folder === 'baoyu-design' ? 319 : 14)
+    assert.equal(manifest.files.length, folder === 'baoyu-design' ? 542 : 14)
     for (const file of manifest.files) {
       const bytes = await readFile(resolve(directory, file.path))
       assert.equal(bytes.length, file.bytes, file.upstreamPath)
@@ -204,4 +204,27 @@ test('legacy decks have no automatic default and saved HTML retains authored sty
   const content = runtime.compileSlideHtml(html).content
   const reopened = runtime.compileSlideHtml(runtime.serializeDeckHtml(content, 'History')).content
   assert.deepEqual(reopened.slides, content.slides)
+})
+
+test('built-in themes parse and restyle slides with readable text', async () => {
+  const runtime = createRequire(import.meta.url)('../server/assets/slides-editor/node/compiler.cjs').runtime
+  const themes = JSON.parse(await readFile('third_party/baoyu-design/host/builtin-themes.json', 'utf8'))
+  const slide = runtime.SLIDE_TEMPLATES.find(template => template.id === 'title-body').make()
+  for (const theme of themes) {
+    const palette = runtime.parseDesignTokens(theme.tokens, { title: theme.title })
+    assert.equal(palette.colors.length, 7)
+    assert.ok(palette.type.length > 0)
+    const system = runtime.analyzeDesignSystem(theme.tokens, { key: theme.namespace, title: theme.title })
+    assert.equal(system.themes.length, 1)
+    const colors = Object.fromEntries(theme.tokens.color.tokens.map(token => [token.name, token.value]))
+    for (const background of [colors.background, colors.surface]) {
+      for (const ink of [colors.text, colors['text-secondary']]) assert.ok(runtime.themeContrastRatio(background, ink) >= 4.5, theme.title)
+    }
+    assert.ok(runtime.themeContrastRatio(colors.accent, colors['on-accent']) >= 4.5, theme.title)
+    const analysis = runtime.analyzeDeckRestyle([slide], undefined, undefined)
+    const plan = runtime.planSystemRestyle(analysis, system, undefined, { theme: system.themes[0].id })
+    const styled = runtime.createSlideRestyler(plan, { slides: [slide], declared: new Set() })(slide)
+    assert.equal(styled.bg.toLowerCase(), colors.background.toLowerCase())
+    assert.equal(slide.bg, 'white')
+  }
 })

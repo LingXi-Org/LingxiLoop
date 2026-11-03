@@ -1,47 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiInputs(runtime2) {
-  var reactHu, supportsNativeFieldSizing, initializeUiInputs, reactForUiInputs, jsxForUiInputs, TextArea, initializeUiInputs2, reactForUiInputs2, jsxForUiInputs2, COUNTER_VARIANT_CLASSES, COUNTER_SIZE_CLASSES, COUNTER_STACKS_CLASSES, Counter, initializeUiInputs3, reactfK0, REACT_MEMO_SYMBOL, REACT_FORWARD_REF_SYMBOL, initializeUiInputs4, pictogramCardRadiusClass, initializeSplitButtonNoop, leadingIconInsetClasses, leadingIconOutsetClasses, SPLIT_BUTTON_LABEL_CLASS, trailingIconOutsetClasses, SPLIT_BUTTON_ICON_CLASS, leadingIconSpacingClasses, SPLIT_BUTTON_STYLE_DEFAULTS, initializeUiInputs5, reactZQ, jsxd8, calloutSizeByDensity, CALLOUT_PICTOGRAM_SIZE, calloutVariantClasses, calloutTextClasses, calloutIconStacksClasses, CALLOUT_TEXT_TINT_CLASS = "text-[color-mix(in_srgb,currentColor_85%,transparent)]", CALLOUT_ACTION_TRAILING_CLASS = "-me-[calc(var(--cds-pad-md)-2px)]", CALLOUT_FIZZY_ACTION_TRAILING_CLASS = "-me-[calc(var(--cds-pad-md)-6px)]", CALLOUT_ACTION_ROW_CLASS = "min-h-control my-[calc((1lh-var(--cds-h-control))/2)]", CALLOUT_STACKS_CLASS = "stacks:bg-page stacks:bg-none stacks:shadow-card-ring stacks:text-primary stacks:[--cds-text-link-color:initial]", CALLOUT_STACKS_COVER_CLASS = "stacks:in-data-cds-covers-content:bg-surface-popover stacks:in-data-cds-covers-content:shadow-panel-md", calloutDefaultIcons, initializeUiInputs6, reactpK0, jsxGP, interactiveLinkReservedProps, initializeUiInputs7, jsxdK0, initializeUiInputs8, reactForUiInputs3, jsxp4, TEXT_LINK_CLASS, TEXT_LINK_UNDERLINE_CLASS, textLinkVariants, TEXT_LINK_COLOR_CLASS, TEXT_LINK_FOCUS_CLASS, TEXT_LINK_OWN_COLOR_CLASS = "[--cds-text-link-color:initial]", TEXT_LINK_DISABLED_CLASS, TEXT_LINK_EXTERNAL_ICON_CLASS, TextLink, initializeUiInputs9, reactc4, DIALOG_KEYBOARD_MARGIN_PX, DIALOG_KEYBOARD_MARGIN_CSS, MINIMUM_DIALOG_KEYBOARD_VISIBLE_HEIGHT, dialogOverrideStyleProperties, dialogKeyboardExcludedStyleProperties, dialogKeyboardPositionProperties, initializeUiInputs10;
-  function resizeTextAreaToContent(input, options) {
-    if (input.clientWidth === 0 || input.style.height !== options.current && input.style.height !== "")
-      return;
-    let offsetHeight = input.offsetHeight, value = offsetHeight - input.clientHeight, { overflowY: style, marginBottom: style2 } = input.style;
-    input.style.height = "0px", input.style.marginBottom = `${offsetHeight}px`, input.style.overflowY = "hidden", options.current = `${input.scrollHeight + value}px`, input.style.height = options.current, input.style.marginBottom = style2, input.style.overflowY = style;
-  }
-  function observeTextAreaValue(input, options) {
-    let value = Object.getOwnPropertyDescriptor(input, "value"), value2 = value ?? Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), "value");
-    if (!value2?.set || !value2.configurable)
-      return;
-    let flag = !0, callback = (input2) => {
-      value2.set?.call(input, input2), flag && options();
-    };
-    return Object.defineProperty(input, "value", {
-      ...value2,
-      set: callback
-    }), () => {
-      flag = !1, Object.getOwnPropertyDescriptor(input, "value")?.set === callback && (value ? Object.defineProperty(input, "value", value) : Reflect.deleteProperty(input, "value"));
-    };
-  }
-  function useTextAreaAutosize({ autosize, value, defaultValue }) {
-    let value2 = autosize && !supportsNativeFieldSizing, value3 = value !== void 0, ref = reactHu.useRef(null), ref2 = reactHu.useRef("");
-    return (0, runtime2.useIsomorphicLayoutEffect)(() => {
-      let current = ref.current, value4 = current?.ownerDocument.defaultView;
-      if (!value2 || !current || !value4)
-        return;
-      let callback = () => resizeTextAreaToContent(current, ref2), index4 = 0, callback2 = () => {
-        value4.cancelAnimationFrame(index4), index4 = value4.requestAnimationFrame(callback);
-      }, value5 = new value4.ResizeObserver(callback2);
-      value5.observe(current), value4.document.fonts.addEventListener("loadingdone", callback);
-      let callback3 = (event) => {
-        event.target === current.form && callback2();
-      }, value6 = current.getRootNode(), value7 = value6 instanceof value4.ShadowRoot ? value6 : value4.document, value8;
-      return value3 || (value8 = observeTextAreaValue(current, callback), current.addEventListener("input", callback), value7.addEventListener("reset", callback3, !0)), () => {
-        value8?.(), value7.removeEventListener("reset", callback3, !0), value5.disconnect(), value4.cancelAnimationFrame(index4), value4.document.fonts.removeEventListener("loadingdone", callback), current.removeEventListener("input", callback), current.style.height === ref2.current && (current.style.height = "");
-      };
-    }, [value2, value3]), (0, runtime2.useIsomorphicLayoutEffect)(() => {
-      value2 && ref.current && resizeTextAreaToContent(ref.current, ref2);
-    }, [value2, value2 ? value : null, value2 ? defaultValue : null]), ref;
-  }
+  var reactForUiInputs2, jsxForUiInputs2, COUNTER_VARIANT_CLASSES, COUNTER_SIZE_CLASSES, COUNTER_STACKS_CLASSES, Counter, initializeUiInputs3, reactfK0, REACT_MEMO_SYMBOL, REACT_FORWARD_REF_SYMBOL, initializeUiInputs4, pictogramCardRadiusClass, initializeSplitButtonNoop, leadingIconInsetClasses, leadingIconOutsetClasses, SPLIT_BUTTON_LABEL_CLASS, trailingIconOutsetClasses, SPLIT_BUTTON_ICON_CLASS, leadingIconSpacingClasses, SPLIT_BUTTON_STYLE_DEFAULTS, initializeUiInputs5, reactZQ, jsxd8, calloutSizeByDensity, CALLOUT_PICTOGRAM_SIZE, calloutVariantClasses, calloutTextClasses, calloutIconStacksClasses, CALLOUT_TEXT_TINT_CLASS = "text-[color-mix(in_srgb,currentColor_85%,transparent)]", CALLOUT_ACTION_TRAILING_CLASS = "-me-[calc(var(--cds-pad-md)-2px)]", CALLOUT_FIZZY_ACTION_TRAILING_CLASS = "-me-[calc(var(--cds-pad-md)-6px)]", CALLOUT_ACTION_ROW_CLASS = "min-h-control my-[calc((1lh-var(--cds-h-control))/2)]", CALLOUT_STACKS_CLASS = "stacks:bg-page stacks:bg-none stacks:shadow-card-ring stacks:text-primary stacks:[--cds-text-link-color:initial]", CALLOUT_STACKS_COVER_CLASS = "stacks:in-data-cds-covers-content:bg-surface-popover stacks:in-data-cds-covers-content:shadow-panel-md", calloutDefaultIcons, initializeUiInputs6, reactpK0, jsxGP, interactiveLinkReservedProps, initializeUiInputs7, jsxdK0, initializeUiInputs8, reactForUiInputs3, jsxp4, TEXT_LINK_CLASS, TEXT_LINK_UNDERLINE_CLASS, textLinkVariants, TEXT_LINK_COLOR_CLASS, TEXT_LINK_FOCUS_CLASS, TEXT_LINK_OWN_COLOR_CLASS = "[--cds-text-link-color:initial]", TEXT_LINK_DISABLED_CLASS, TEXT_LINK_EXTERNAL_ICON_CLASS, TextLink, initializeUiInputs9, reactc4, DIALOG_KEYBOARD_MARGIN_PX, DIALOG_KEYBOARD_MARGIN_CSS, MINIMUM_DIALOG_KEYBOARD_VISIBLE_HEIGHT, dialogOverrideStyleProperties, dialogKeyboardExcludedStyleProperties, dialogKeyboardPositionProperties, initializeUiInputs10;
   function isPictogramElement(input) {
     return !reactfK0.isValidElement(input) || typeof input.type == "string" ? !1 : isPictogramComponent(input.type);
   }
@@ -61,7 +21,7 @@ function installUiInputs(runtime2) {
     return !1;
   }
   function Callout({ variant, icon, action, actionAlign = "first-line", details, defaultDetailsOpen = !1, detailsOpen, onDetailsOpenChange, onDismiss, dismissLabel, role, composerCalibration, className, "data-testid": dataTestid, children }) {
-    let value = (0, runtime2.useTranslation)("dismiss", "Dismiss"), value2 = dismissLabel ?? value, value3 = (0, runtime2.useDensity)(), fizzyPanels = (0, runtime2.useFeatureFlagPart)("panels"), fizzyColor = (0, runtime2.useFizzyColorPart)(), detailsCaretIcon = (0, runtime2.useFeatureFlagPart)("icons") ? (0, runtime2.fizzyIconName)("CaretDownFilled") : runtime2.fizzyLakeFallbackNames.CaretDownFilled, state = {
+    let value = (0, runtime2.useTranslation)("dismiss", "关闭"), value2 = dismissLabel ?? value, value3 = (0, runtime2.useDensity)(), fizzyPanels = (0, runtime2.useFeatureFlagPart)("panels"), fizzyColor = (0, runtime2.useFizzyColorPart)(), detailsCaretIcon = (0, runtime2.useFeatureFlagPart)("icons") ? (0, runtime2.fizzyIconName)("CaretDownFilled") : runtime2.fizzyLakeFallbackNames.CaretDownFilled, state = {
       "data-step": (0, runtime2.getDensitySizeIndex)(value3, calloutSizeByDensity[value3])
     }, value4 = variant ?? "neutral", value5 = composerCalibration === !0 ? "glyph" : composerCalibration === !1 ? void 0 : composerCalibration, value6 = value5 !== void 0, value7 = icon != null && typeof icon != "boolean", value8 = isPictogramElement(icon), value9 = details != null && typeof details != "boolean", value10 = role ?? (value9 ? "none" : "status"), [value11, value12] = reactZQ.useState(defaultDetailsOpen), [value13, value14] = reactZQ.useState(!1), ref = reactZQ.useRef(null), ref2 = reactZQ.useRef(null), ref3 = reactZQ.useRef(null), ref4 = reactZQ.useRef(0), value15 = action != null && typeof action != "boolean", centeredIcon = value8 || value6 && actionAlign === "center", value22 = value9 || !centeredIcon, value16 = !value9 && (centeredIcon || actionAlign === "center"), value17 = value16, value18 = !value9 && value15, value19 = value18 && value13, value20 = value6 && value19 && !value16, centerDismiss = value22 && value16 && value15 && !value19;
     reactZQ.useLayoutEffect(() => {
@@ -246,7 +206,7 @@ function installUiInputs(runtime2) {
       id,
       hidden: !0,
       className: "sr-only",
-      children: (0, runtime2.useTranslation)("opensInNewTab", "(opens in new tab)")
+      children: (0, runtime2.useTranslation)("opensInNewTab", "（在新标签页中打开）")
     });
   }
   function TextLinkIcon(input) {
@@ -357,21 +317,7 @@ function installUiInputs(runtime2) {
         bounds2.bottom > bounds.bottom ? parentElement.scrollTop += bounds2.bottom - bounds.bottom + DIALOG_KEYBOARD_MARGIN_PX : bounds2.top < bounds.top && (parentElement.scrollTop -= bounds.top - bounds2.top + DIALOG_KEYBOARD_MARGIN_PX);
       }
   }
-  return bindRuntimeValue(runtime2, "resizeTextAreaToContent", () => resizeTextAreaToContent), bindRuntimeValue(runtime2, "observeTextAreaValue", () => observeTextAreaValue), bindRuntimeValue(runtime2, "useTextAreaAutosize", () => useTextAreaAutosize), bindRuntimeValue(runtime2, "reactHu", () => reactHu, (value) => {
-    reactHu = value;
-  }), bindRuntimeValue(runtime2, "supportsNativeFieldSizing", () => supportsNativeFieldSizing, (value) => {
-    supportsNativeFieldSizing = value;
-  }), bindRuntimeValue(runtime2, "initializeUiInputs", () => initializeUiInputs, (value) => {
-    initializeUiInputs = value;
-  }), bindRuntimeValue(runtime2, "reactForUiInputs", () => reactForUiInputs, (value) => {
-    reactForUiInputs = value;
-  }), bindRuntimeValue(runtime2, "jsxForUiInputs", () => jsxForUiInputs, (value) => {
-    jsxForUiInputs = value;
-  }), bindRuntimeValue(runtime2, "TextArea", () => TextArea, (value) => {
-    TextArea = value;
-  }), bindRuntimeValue(runtime2, "initializeUiInputs2", () => initializeUiInputs2, (value) => {
-    initializeUiInputs2 = value;
-  }), bindRuntimeValue(runtime2, "reactForUiInputs2", () => reactForUiInputs2, (value) => {
+  return bindRuntimeValue(runtime2, "reactForUiInputs2", () => reactForUiInputs2, (value) => {
     reactForUiInputs2 = value;
   }), bindRuntimeValue(runtime2, "jsxForUiInputs2", () => jsxForUiInputs2, (value) => {
     jsxForUiInputs2 = value;
@@ -477,37 +423,7 @@ function installUiInputs(runtime2) {
     dialogKeyboardPositionProperties = value;
   }), bindRuntimeValue(runtime2, "initializeUiInputs10", () => initializeUiInputs10, (value) => {
     initializeUiInputs10 = value;
-  }), () => {
-    initializeUiInputs = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeIsomorphicLayoutEffect)(), reactHu = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), supportsNativeFieldSizing = typeof CSS > "u" || typeof CSS.supports != "function" || CSS.supports("field-sizing", "content");
-    }), initializeUiInputs2 = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeClassNames)(), (0, runtime2.initializeCdsRoot)(), (0, runtime2.initializeMergedRefs)(), (0, runtime2.initializeUiDisclosure12)(), (0, runtime2.initializeUiMenu)(), initializeUiInputs(), (0, runtime2.initializeNpmDependency)(), reactForUiInputs = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxForUiInputs = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), TextArea = reactForUiInputs.forwardRef(({ className, rows, resize = "none", autosize = !1, bare = !1, size: size4, fullWidth = !0, id, "aria-describedby": ariaDescribedby, "aria-invalid": ariaInvalid, disabled: disabled2, style, ...props }, options) => {
-        let value = (0, runtime2.useFieldInvalid)(), value2 = rows ?? 3, value3 = autosize && rows !== void 0, value4 = resize === "y" ? "resize-y" : "resize-none", value5 = autosize ? "[field-sizing:content]" : "", value6 = useTextAreaAutosize({
-          autosize,
-          value: props.value,
-          defaultValue: props.defaultValue
-        }), value7 = (0, runtime2.useMergedRefs)(options, value6), value8 = value3 ? bare ? "min-h-[calc(var(--cds-textarea-rows)*1lh)]" : "min-h-[calc(var(--cds-textarea-rows)*1lh+2*var(--cds-pad-sm))]" : "", value9 = value3 ? {
-          ...style,
-          "--cds-textarea-rows": value2
-        } : style, value10 = fullWidth ? "w-full" : "";
-        return jsxForUiInputs.jsx(runtime2.baseField.Control, {
-          id,
-          "aria-describedby": ariaDescribedby,
-          disabled: disabled2,
-          render: jsxForUiInputs.jsx("textarea", {
-            ref: value7,
-            "data-cds": "TextArea",
-            rows: value2,
-            style: value9,
-            ...(0, runtime2.getControlSizeAttributes)(size4),
-            "data-invalid": value || void 0,
-            "aria-invalid": value || ariaInvalid,
-            ...props,
-            className: (0, runtime2.cn)("cds-reset", value10, bare ? "block resize-none border-0 bg-transparent p-0 shadow-none" : `cds-input font-normal ${runtime2.TEXT_INPUT_PLACEHOLDER_CLASS} enabled:[&:hover:not(:focus):not([data-invalid])]:shadow-field-hover focus-visible:shadow-focus data-[invalid]:focus-visible:shadow-focus-danger ${value4}`, "font-sans text-body text-primary placeholder:text-muted outline-none focus-visible:outline-hidden disabled:opacity-disabled", value5, value8, className)
-          })
-        });
-      }), TextArea.displayName = "TextArea";
-    }), initializeUiInputs3 = (0, runtime2.initializeOnce)(() => {
+  }), () => { initializeUiInputs3 = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeClassNames)(), (0, runtime2.initializeCdsRoot)(), reactForUiInputs2 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxForUiInputs2 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), COUNTER_VARIANT_CLASSES = {
         neutral: "bg-neutral text-secondary",
         accent: "bg-fill-accent text-on-accent",
@@ -552,14 +468,14 @@ function installUiInputs(runtime2) {
     }), pictogramCardRadiusClass = "rounded-composer", initializeSplitButtonNoop = () => {
     }, initializeUiInputs5 = (0, runtime2.initializeOnce)(() => {
       leadingIconInsetClasses = {
-        glyph: "ml-[6px] compact:ml-[6px] comfortable:ml-[4px]",
-        text: "ml-[4px] compact:ml-[4px] comfortable:ml-[2px]"
+        glyph: "ms-[6px] compact:ms-[6px] comfortable:ms-[4px]",
+        text: "ms-[4px] compact:ms-[4px] comfortable:ms-[2px]"
       }, leadingIconOutsetClasses = {
-        glyph: "-ml-[6px] compact:-ml-[6px] comfortable:-ml-[4px]",
-        text: "-ml-[4px] compact:-ml-[4px] comfortable:-ml-[2px]"
+        glyph: "-ms-[6px] compact:-ms-[6px] comfortable:-ms-[4px]",
+        text: "-ms-[4px] compact:-ms-[4px] comfortable:-ms-[2px]"
       }, SPLIT_BUTTON_LABEL_CLASS = leadingIconInsetClasses.glyph, trailingIconOutsetClasses = {
-        glyph: "-mr-[4px]",
-        text: "-mr-[2px] compact:-mr-[2px] comfortable:-mr-[4px]"
+        glyph: "-me-[4px]",
+        text: "-me-[2px] compact:-me-[2px] comfortable:-me-[4px]"
       }, SPLIT_BUTTON_ICON_CLASS = trailingIconOutsetClasses.glyph, leadingIconSpacingClasses = {
         glyph: "me-[calc(8px-var(--cds-pad-md))] compact:me-[calc(8px-var(--cds-pad-md))] comfortable:me-[calc(4px-var(--cds-pad-md))]",
         text: "me-[calc(6px-var(--cds-pad-md))] compact:me-[calc(6px-var(--cds-pad-md))] comfortable:me-[calc(5px-var(--cds-pad-md))]"

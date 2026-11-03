@@ -1,10 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportDeckHtml(runtime2) {
-  var deckHtmlExports, WEB_FONT_OFFLINE_NOTE, WEB_FONT_BUDGET_NOTE, LIVE_EXPORTED_EMBEDS, EXPORTED_FONT_BUDGET, HTML_REBUILD_TIMEOUT_MS, FONT_PACK_TIMEOUT_MS, HOSTED_HTML_OVERHEAD_BYTES, UNSAFE_EXPORT_ELEMENT_SELECTOR, EXPORT_LENGTH_STYLE_PATTERN, EXPORTED_PAGE_LABEL_MAX, EXPORTED_CANVAS_WIDTH, EXPORTED_CANVAS_HEIGHT, EXPORTED_HTML_CSP, BASIC_PAGE_ROOT_CSS, IMPORTABLE_PAGE_ROOT_CSS, BASIC_PAGE_LAYOUT_CSS, IMPORTABLE_PAGE_LAYOUT_CSS, PAGE_PAGER_CSS, BASIC_PAGE_MOBILE_CSS, IMPORTABLE_PAGE_MOBILE_CSS, PAGE_STAGE_CSS, BASIC_PAGE_PRINT_CSS, IMPORTABLE_PAGE_PRINT_CSS, htmlFontNoticePreamble, initializeDeckHtml;
-  function imagesReducedNote(count, maxBytes) {
-    return String(count) + (count === 1 ? " picture was" : " pictures were") + " reduced to fit the " + String(Math.round(maxBytes / 1024 / 1024)) + " MB export limit";
-  }
+  var deckHtmlExports, WEB_FONT_OFFLINE_NOTE, LIVE_EXPORTED_EMBEDS, EXPORTED_FONT_BUDGET, HTML_REBUILD_TIMEOUT_MS, FONT_PACK_TIMEOUT_MS, imagesReducedNote, HOSTED_HTML_OVERHEAD_BYTES, UNSAFE_EXPORT_ELEMENT_SELECTOR, EXPORT_LENGTH_STYLE_PATTERN, EXPORTED_PAGE_LABEL_MAX, EXPORTED_CANVAS_WIDTH, EXPORTED_CANVAS_HEIGHT, EXPORTED_HTML_CSP, BASIC_PAGE_ROOT_CSS, IMPORTABLE_PAGE_ROOT_CSS, BASIC_PAGE_LAYOUT_CSS, IMPORTABLE_PAGE_LAYOUT_CSS, PAGE_PAGER_CSS, BASIC_PAGE_MOBILE_CSS, IMPORTABLE_PAGE_MOBILE_CSS, PAGE_STAGE_CSS, BASIC_PAGE_PRINT_CSS, IMPORTABLE_PAGE_PRINT_CSS, htmlFontNoticePreamble, initializeDeckHtml;
   async function fitHtmlPictures(pages, buildHtml, collectImages, options) {
     let value = buildHtml(pages), state = {
       pages,
@@ -33,7 +30,8 @@ function installExportDeckHtml(runtime2) {
       return state;
     }
   }
-  async function renderDeckHtml(title, slides, assets, { importerReady: options = !1, inlineWebFonts = !1, maxBytes = 1 / 0, shrinkImages = !1, deadline, encodeImage, opaqueImage, fontsReadyMs, nameMissingFonts, fontLicences } = {}) {
+  async function renderDeckHtml(title, slides, assets, { importerReady: options = !1, inlineWebFonts = !1, maxBytes = 1 / 0, shrinkImages = !1, deadline, encodeImage, opaqueImage, fontsReadyMs, nameMissingFonts,
+    settleEmbeds = !1, fontLicences } = {}) {
     let value = await (0, runtime2.mountSlidesOffscreen)(slides, assets, {
       fontsReadyMs,
       nameMissingFonts
@@ -44,7 +42,9 @@ function installExportDeckHtml(runtime2) {
     } : {};
     try {
       (0, runtime2.notePageMissingFonts)(value2, value.missingFamilies, () => host.textContent ?? "");
-      let value3 = await (0, runtime2.rasterizeEmbedFrames)(host, slides, warnings);
+      let value3 = await (0, runtime2.rasterizeEmbedFrames)(host, slides, warnings, {
+        settlePictures: settleEmbeds
+      });
       (0, runtime2.labelUncapturedEmbeds)(host, slides, value3);
       let items = [];
       for (let index4 = 0; index4 < slides.length; index4++)
@@ -89,7 +89,7 @@ function installExportDeckHtml(runtime2) {
             return cleared === void 0 ? [] : [cleared];
           }))
         ], linkedNotices = lists?.noticesOf(linkedCleared) ?? /* @__PURE__ */ new Map(), noticeOf = (family) => {
-          let cleared = lists?.cleared(family), notice = cleared === void 0 ? void 0 : linkedNotices.get(cleared);
+          let cleared = linkedCleared.find((name) => name.toLowerCase() === family.toLowerCase()) ?? lists?.cleared(family), notice = cleared === void 0 ? void 0 : linkedNotices.get(cleared);
           return cleared === void 0 || notice === void 0 ? void 0 : [cleared, notice];
         }, value13 = await (0, runtime2.inlineGoogleFontFaces)(value6, {
           text,
@@ -104,7 +104,13 @@ function installExportDeckHtml(runtime2) {
         });
         value13.requested && (value2.webRequested = !0);
         let listsMissing = lists === null && value13.heldBack.length > 0;
-        (value13.unavailable || listsMissing) && (warnings.push(WEB_FONT_OFFLINE_NOTE), value2.missing = value2.missingWebFetch = !0, (0, runtime2.noteWebFontFailures)(value2, value13.failures), listsMissing && (value2.missingWebLists = !0)), value13.overBudget && lists !== null && (warnings.push(WEB_FONT_BUDGET_NOTE), value2.overBudget = !0), lists !== null && value13.heldBack.length > 0 && warnings.push((0, runtime2.heldBackFontsNote)(value13.heldBack));
+        (value13.unavailable || listsMissing) && (warnings.push(WEB_FONT_OFFLINE_NOTE), value2.missing = value2.missingWebFetch = !0, (0, runtime2.noteWebFontFailures)(value2, value13.failures), listsMissing && (value2.missingWebLists = !0)), value13.overBudget && lists !== null && (warnings.push((0, runtime2.exportNote)("fonts_over_budget_linked")), value2.overBudget = !0), lists !== null && value13.heldBack.length > 0 && warnings.push((0, runtime2.exportNote)("fonts_held_back", {
+          families:value13.heldBack
+        }));
+        let unchecked5 = lists === null ? [] : value13.carried.filter((family) => lists.unchecked(family));
+        unchecked5.length > 0 && warnings.unshift((0, runtime2.exportNote)("fonts_license_check", {
+          families: unchecked5
+        }));
         let carriedNotices = lists === null ? /* @__PURE__ */ new Map() : lists.noticesOf(value13.carried.flatMap((family) => {
           let cleared = lists.cleared(family);
           return cleared === void 0 ? [] : [cleared];
@@ -119,7 +125,7 @@ function installExportDeckHtml(runtime2) {
       }
       return {
         html: value11,
-        warnings: Array.from(new Set(warnings)),
+        warnings: (0, runtime2.uniqueExportNotes)(warnings),
         fontFindings: value2,
         reducedNote: value12
       };
@@ -263,7 +269,7 @@ function installExportDeckHtml(runtime2) {
       let value3 = /(?:^|\s)(https?:\/\/\S+)$/i.exec(value2.getAttribute("title") ?? "")?.[1] ?? "";
       (0, runtime2.isSafeHyperlink)(value3) && (value2.setAttribute("href", value3), value2.setAttribute("target", "_blank"), value2.setAttribute("rel", "noopener noreferrer"), value2.setAttribute("title", value3), value2.style.cursor = "pointer");
     }
-    return value.removeAttribute("data-uncommentable"), value.outerHTML;
+    return value.removeAttribute("data-uncommentable"), value.removeAttribute("lang"), value.outerHTML;
   }
   function exportedPageInfo(slide) {
     let value = (0, runtime2.slideTitleSnippet)(slide, EXPORTED_PAGE_LABEL_MAX), value2 = (slide.notes ?? "").trim();
@@ -338,10 +344,8 @@ function installExportDeckHtml(runtime2) {
   }
   return bindRuntimeValue(runtime2, "deckHtmlExports", () => deckHtmlExports, (value) => {
     deckHtmlExports = value;
-  }), bindRuntimeValue(runtime2, "imagesReducedNote", () => imagesReducedNote), bindRuntimeValue(runtime2, "fitHtmlPictures", () => fitHtmlPictures), bindRuntimeValue(runtime2, "renderDeckHtml", () => renderDeckHtml), bindRuntimeValue(runtime2, "splitFontImports", () => splitFontImports), bindRuntimeValue(runtime2, "motionSchedule", () => motionSchedule), bindRuntimeValue(runtime2, "motionConfig", () => motionConfig), bindRuntimeValue(runtime2, "inlineSafeJson", () => inlineSafeJson), bindRuntimeValue(runtime2, "hostedHtmlBytes", () => hostedHtmlBytes), bindRuntimeValue(runtime2, "hostedPageBytes", () => hostedPageBytes), bindRuntimeValue(runtime2, "packedFontBudget", () => packedFontBudget), bindRuntimeValue(runtime2, "resolveInlineVars", () => resolveInlineVars), bindRuntimeValue(runtime2, "serializeSlide", () => serializeSlide), bindRuntimeValue(runtime2, "exportedPageInfo", () => exportedPageInfo), bindRuntimeValue(runtime2, "exportedPageAttributes", () => exportedPageAttributes), bindRuntimeValue(runtime2, "escapeHtmlAttribute", () => escapeHtmlAttribute), bindRuntimeValue(runtime2, "escapeStyleClosingTag", () => escapeStyleClosingTag), bindRuntimeValue(runtime2, "pageCss", () => pageCss), bindRuntimeValue(runtime2, "inlineDeckRuntimeSource", () => inlineDeckRuntimeSource), bindRuntimeValue(runtime2, "buildDeckPage", () => buildDeckPage), bindRuntimeValue(runtime2, "htmlFilename", () => htmlFilename), bindRuntimeValue(runtime2, "WEB_FONT_OFFLINE_NOTE", () => WEB_FONT_OFFLINE_NOTE, (value) => {
+  }), bindRuntimeValue(runtime2, "fitHtmlPictures", () => fitHtmlPictures), bindRuntimeValue(runtime2, "renderDeckHtml", () => renderDeckHtml), bindRuntimeValue(runtime2, "splitFontImports", () => splitFontImports), bindRuntimeValue(runtime2, "motionSchedule", () => motionSchedule), bindRuntimeValue(runtime2, "motionConfig", () => motionConfig), bindRuntimeValue(runtime2, "inlineSafeJson", () => inlineSafeJson), bindRuntimeValue(runtime2, "hostedHtmlBytes", () => hostedHtmlBytes), bindRuntimeValue(runtime2, "hostedPageBytes", () => hostedPageBytes), bindRuntimeValue(runtime2, "packedFontBudget", () => packedFontBudget), bindRuntimeValue(runtime2, "resolveInlineVars", () => resolveInlineVars), bindRuntimeValue(runtime2, "serializeSlide", () => serializeSlide), bindRuntimeValue(runtime2, "exportedPageInfo", () => exportedPageInfo), bindRuntimeValue(runtime2, "exportedPageAttributes", () => exportedPageAttributes), bindRuntimeValue(runtime2, "escapeHtmlAttribute", () => escapeHtmlAttribute), bindRuntimeValue(runtime2, "escapeStyleClosingTag", () => escapeStyleClosingTag), bindRuntimeValue(runtime2, "pageCss", () => pageCss), bindRuntimeValue(runtime2, "inlineDeckRuntimeSource", () => inlineDeckRuntimeSource), bindRuntimeValue(runtime2, "buildDeckPage", () => buildDeckPage), bindRuntimeValue(runtime2, "htmlFilename", () => htmlFilename), bindRuntimeValue(runtime2, "WEB_FONT_OFFLINE_NOTE", () => WEB_FONT_OFFLINE_NOTE, (value) => {
     WEB_FONT_OFFLINE_NOTE = value;
-  }), bindRuntimeValue(runtime2, "WEB_FONT_BUDGET_NOTE", () => WEB_FONT_BUDGET_NOTE, (value) => {
-    WEB_FONT_BUDGET_NOTE = value;
   }), bindRuntimeValue(runtime2, "LIVE_EXPORTED_EMBEDS", () => LIVE_EXPORTED_EMBEDS, (value) => {
     LIVE_EXPORTED_EMBEDS = value;
   }), bindRuntimeValue(runtime2, "EXPORTED_FONT_BUDGET", () => EXPORTED_FONT_BUDGET, (value) => {
@@ -350,6 +354,8 @@ function installExportDeckHtml(runtime2) {
     HTML_REBUILD_TIMEOUT_MS = value;
   }), bindRuntimeValue(runtime2, "FONT_PACK_TIMEOUT_MS", () => FONT_PACK_TIMEOUT_MS, (value) => {
     FONT_PACK_TIMEOUT_MS = value;
+  }), bindRuntimeValue(runtime2, "imagesReducedNote", () => imagesReducedNote, (value) => {
+    imagesReducedNote = value;
   }), bindRuntimeValue(runtime2, "HOSTED_HTML_OVERHEAD_BYTES", () => HOSTED_HTML_OVERHEAD_BYTES, (value) => {
     HOSTED_HTML_OVERHEAD_BYTES = value;
   }), bindRuntimeValue(runtime2, "UNSAFE_EXPORT_ELEMENT_SELECTOR", () => UNSAFE_EXPORT_ELEMENT_SELECTOR, (value) => {
@@ -392,8 +398,11 @@ function installExportDeckHtml(runtime2) {
     deckHtmlExports = {}, (0, runtime2.defineLiveExports)(deckHtmlExports, {
       htmlFilename: () => htmlFilename,
       renderDeckHtml: () => renderDeckHtml
-    }), WEB_FONT_OFFLINE_NOTE = "a web font could not be included in the file; its text keeps that typeface only while online", WEB_FONT_BUDGET_NOTE = "some web fonts were too large to include in the file; their text keeps those typefaces only while online", LIVE_EXPORTED_EMBEDS = !0, EXPORTED_FONT_BUDGET = 1048576, HTML_REBUILD_TIMEOUT_MS = 2e3, FONT_PACK_TIMEOUT_MS = 4e3, HOSTED_HTML_OVERHEAD_BYTES = 131072, UNSAFE_EXPORT_ELEMENT_SELECTOR = "script,noscript,iframe,object,embed,frame,template,xmp,plaintext,noembed,noframes,base,link,meta,animate,set,video,audio,source,track", EXPORTED_PAGE_LABEL_MAX = 80, EXPORTED_HTML_CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src data: https://fonts.gstatic.com; img-src data: blob:; media-src 'none'; frame-src about:; child-src about:; worker-src 'none'; connect-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'", BASIC_PAGE_MOBILE_CSS = "@media (max-aspect-ratio:1/1){html{scroll-snap-type:y proximity}.deck-slide{height:auto;padding:6px 0;scroll-snap-stop:normal}.deck-slide:first-child{padding-top:0}}", IMPORTABLE_PAGE_MOBILE_CSS = "@media (max-aspect-ratio:1/1){html.deck-js{scroll-snap-type:y proximity}.deck-js .deck-slide{height:auto;padding:6px 0;scroll-snap-stop:normal}.deck-js .deck-slide:first-child{padding-top:0}}", BASIC_PAGE_PRINT_CSS = "@media print{html,body{background:none;overflow:visible;height:auto;color-scheme:light}.deck-slide{display:block;height:auto;padding:0;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}.deck-slide:last-child{break-after:auto;page-break-after:auto}.deck-fit{width:auto;height:auto}.deck-scaler{transform:none}.deck-pager{display:none}iframe{display:none!important}}", IMPORTABLE_PAGE_PRINT_CSS = "@media print{html,html.deck-js,body{background:none;overflow:visible;height:auto;color-scheme:light}:root .deck-slide{display:block;height:auto;padding:0;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}:root .deck-slide:last-child{break-after:auto;page-break-after:auto}:root .deck-fit{width:auto;height:auto}:root .deck-scaler{transform:none}.deck-pager{display:none}iframe{display:none!important}}", initializeDeckHtml = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeEmbeds)(), (0, runtime2.initializeGoogleFontLicences)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeBuildEffects)(), (0, runtime2.initializeSlideRenderer)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeFontFetching)(), (0, runtime2.initializeCaptureFallback)(), (0, runtime2.initializePdfCapture)(), (0, runtime2.initializeImageShrinking)(), (0, runtime2.initializeFontInlining)(), htmlFontNoticePreamble = "The font files embedded in this page (the data: URLs in the @font-face rules above, each in place of a fonts.gstatic.com address) are the files Google Fonts served when the page was saved, byte for byte. Google Fonts serves subsets of a family, one file per range of characters, so they may not be a family’s complete files. The license of each family follows; each family stays under its own license. If you pass this file on, keep this comment in it.", EXPORT_LENGTH_STYLE_PATTERN = /^padding|^border(-\w+)*-width$/, EXPORTED_CANVAS_WIDTH = String(runtime2.SLIDE_WIDTH), EXPORTED_CANVAS_HEIGHT = String(runtime2.SLIDE_HEIGHT), BASIC_PAGE_ROOT_CSS = [
+    }), LIVE_EXPORTED_EMBEDS = !0, EXPORTED_FONT_BUDGET = 1048576, HTML_REBUILD_TIMEOUT_MS = 2e3, FONT_PACK_TIMEOUT_MS = 4e3, imagesReducedNote = (count, maxBytes) => (0, runtime2.exportNote)("pictures_reduced", {
+      n: count,
+      mb: Math.round(maxBytes / 1024 / 1024)
+    }), HOSTED_HTML_OVERHEAD_BYTES = 131072, UNSAFE_EXPORT_ELEMENT_SELECTOR = "script,noscript,iframe,object,embed,frame,template,xmp,plaintext,noembed,noframes,base,link,meta,animate,set,video,audio,source,track", EXPORTED_PAGE_LABEL_MAX = 80, EXPORTED_HTML_CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src data: https://fonts.gstatic.com; img-src data: blob:; media-src 'none'; frame-src about:; child-src about:; worker-src 'none'; connect-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'", BASIC_PAGE_MOBILE_CSS = "@media (max-aspect-ratio:1/1){html{scroll-snap-type:y proximity}.deck-slide{height:auto;padding:6px 0;scroll-snap-stop:normal}.deck-slide:first-child{padding-top:0}}", IMPORTABLE_PAGE_MOBILE_CSS = "@media (max-aspect-ratio:1/1){html.deck-js{scroll-snap-type:y proximity}.deck-js .deck-slide{height:auto;padding:6px 0;scroll-snap-stop:normal}.deck-js .deck-slide:first-child{padding-top:0}}", BASIC_PAGE_PRINT_CSS = "@media print{html,body{background:none;overflow:visible;height:auto;color-scheme:light}.deck-slide{display:block;height:auto;padding:0;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}.deck-slide:last-child{break-after:auto;page-break-after:auto}.deck-fit{width:auto;height:auto}.deck-scaler{transform:none}.deck-pager{display:none}iframe{display:none!important}}", IMPORTABLE_PAGE_PRINT_CSS = "@media print{html,html.deck-js,body{background:none;overflow:visible;height:auto;color-scheme:light}:root .deck-slide{display:block;height:auto;padding:0;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}:root .deck-slide:last-child{break-after:auto;page-break-after:auto}:root .deck-fit{width:auto;height:auto}:root .deck-scaler{transform:none}.deck-pager{display:none}iframe{display:none!important}}", initializeDeckHtml = (0, runtime2.initializeOnce)(() => {
+      (0, runtime2.initializeEmbeds)(), (0, runtime2.initializeGoogleFontLicences)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeBuildEffects)(), (0, runtime2.initializeSlideRenderer)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeFontFetching)(), (0, runtime2.initializeCaptureFallback)(), (0, runtime2.initializeExportNotes)(), (0, runtime2.initializePdfCapture)(), (0, runtime2.initializeImageShrinking)(), (0, runtime2.initializeFontInlining)(), htmlFontNoticePreamble = "The font files embedded in this page (the data: URLs in the @font-face rules above, each in place of a fonts.gstatic.com address) are the files Google Fonts served when the page was saved, byte for byte. Google Fonts serves subsets of a family, one file per range of characters, so they may not be a family’s complete files. The license of each family follows; each family stays under its own license. If you pass this file on, keep this comment in it.", WEB_FONT_OFFLINE_NOTE = (0, runtime2.exportNote)("fonts_not_packed"), EXPORT_LENGTH_STYLE_PATTERN = /^padding|^border(-\w+)*-width$/, EXPORTED_CANVAS_WIDTH = String(runtime2.SLIDE_WIDTH), EXPORTED_CANVAS_HEIGHT = String(runtime2.SLIDE_HEIGHT), BASIC_PAGE_ROOT_CSS = [
         "html{overflow:hidden auto;scroll-snap-type:y mandatory;scrollbar-width:none;background:#000;color-scheme:dark}",
         "html::-webkit-scrollbar{display:none}",
         "body{margin:0;background:#000;overflow:visible}",

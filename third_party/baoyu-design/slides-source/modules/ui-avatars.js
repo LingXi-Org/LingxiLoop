@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiAvatars(runtime2) {
   var reactForUiAvatars, jsxForUiAvatars, CLAUDE_SPARK_PATH, CLAUDE_CLAY_COLOR, CLAUDE_CLAY_CSS_COLOR, SPARK_SIZE_CLASS, StaticSpark, Spark, initializeUiAvatars, reactForUiAvatars2, AvatarStackContext, initializeUiAvatars2, reactForUiAvatars3, jsxForUiAvatars2, avatarVariants, Avatar, initializeUiAvatars3, reactShortcut, jsxShortcut, shortcutKeycapClasses, singleCharacterKeycapClasses, multipleCharacterKeycapClasses, shortcutTextKeyClasses, shortcutVariantClasses, SHORTCUT_RTL_CLASSES, SHORTCUT_SEQUENCE_SEPARATOR, SHORTCUT_MODIFIER_SEPARATOR, appleKeyboardUserAgentPattern, subscribeAppleKeyboardNoop, shortcutModifierNames, isShortcutModifier, shortcutModifierOrder, appleModifierLabels, otherModifierLabels, appleKeyLabels, otherKeyLabels, appleAriaModifierNames, otherAriaModifierNames, initializeShortcuts, reactTextClipping, documentTextRanges, initializeTextClipping, reactCancelableTimeout, initializeCancelableTimeout, SHRINK_WRAP_STYLE_PROPERTY, shrinkWrapBaselineWidths, shrinkWrapWrittenWidths, SHRINK_WRAP_MAX_ITERATIONS, SHRINK_WRAP_ATTRIBUTE, SHRINK_WRAP_MAX_LINE_RECTS, SHRINK_WRAP_MEMORY_LIMIT, SHRINK_WRAP_MAX_TEXT_LENGTH, shrinkWrapMemory, SHRINK_WRAP_HASH_SEED, shrinkWrapAtomicTags, shrinkWrapQueues, shrinkWrapResizeObservers, shrinkWrapWindowResizeStores, initializeShrinkWrapMeasurement, reactShrinkWrap, jsxShrinkWrap, ShrinkWrap, initializeShrinkWrap, buttonBackgroundLayerClasses, buttonFocusClasses, dangerButtonFocusClasses, buttonFillLayerClasses, buttonBackgroundShadowClasses, buttonJoinedFillClasses, buttonPressedFillClasses, secondaryButtonFillClasses, buttonSolidInsetClasses, ghostButtonPressedFillClasses, buttonPressedTextClasses, buttonPaddingClasses, buttonRadiusClasses, buttonEndRadiusClasses, stacksSecondaryButtonFillClasses, stacksButtonNoShadowClasses, stacksGhostButtonFillClasses, stacksDisabledButtonFillClasses, stacksDangerButtonFillClasses, stacksDangerButtonTextClasses, stacksDangerButtonBgClasses, stacksAccentButtonFillClasses, stacksAccentButtonTextClasses, stacksAccentPressedHoverClasses, stacksGhostPressedFillClasses, stacksDangerPressedFillClasses, stacksAccentPressedFillClasses, stacksNoTransformClasses, stacksButtonInsetClasses, stacksDisabledButtonClasses, stacksButtonFillClasses, stacksButtonActiveClasses, initializeButtonVariantClasses, initializeDisabledReasonDebug, reactDisabledReason, jsxDisabledReason, disabledReasonFocusClasses, disabledReasonTypeIds, nextDisabledReasonTypeId, DISABLED_REASON_ATTRIBUTE, initializeDisabledReason, jsxTooltipClasses, tooltipBaseClasses, singleLineTooltipClasses, tooltipDetailClasses, multilineTooltipBaseClasses, multilineTooltipClasses, multilineTooltipArrowClass, initializeTooltipClasses, reactTooltipContext, tooltipsDisabledContext, tooltipImplementationContext, initializeTooltipContext, tooltipExports, reactTooltip, jsxTooltip, activeTooltipActionsRef, TOOLTIP_NO_SHOW, closedTooltipState, openTooltipState, closeTooltipState, clearTooltipBody, openTooltipWithBody, replaceTooltipBody, resetTooltipState, tooltipSingleLineClasses, tooltipTextBalanceClass, tooltipSecondaryDetailClasses, tooltipContentRowClasses, tooltipContentAlignmentClass, tooltipMultilineBodyClasses, OverflowTooltip, defaultTooltipImplementation, tooltipDelayContext, initializeTooltip, initializeTooltipSingleton, OVERFLOW_TOOLTIP_OWNER_SELECTOR, OVERFLOW_TOOLTIP_REVEAL_SELECTOR, overflowTooltipRevealers, focusedOverflowLabels, focusBeforeWindowBlur, watchedOverflowDocuments, settleOverflowReveal, TOOLTIP_DEFAULT_DELAY, reactDomTooltip;
@@ -1464,9 +1464,24 @@ function installUiAvatars(runtime2) {
             className: "size-full object-cover",
             draggable: !1,
             onError: () => value4(!0)
-          }) : variant === "claude" ? jsxForUiAvatars2.jsx(Spark, {
-            size: "60%",
-            color: "currentColor"
+          }) : variant === "claude" ? jsxForUiAvatars2.jsxs("svg", {
+            viewBox: "0 0 16 16",
+            width: "60%",
+            height: "60%",
+            fill: "none",
+            stroke: "currentColor",
+            strokeWidth: 1.4,
+            strokeLinecap: "round",
+            strokeLinejoin: "round",
+            "aria-hidden": !0,
+            children: [
+              jsxForUiAvatars2.jsx("rect", { x: 3, y: 5.5, width: 10, height: 7.5, rx: 2 }),
+              jsxForUiAvatars2.jsx("path", { d: "M8 5.5V3.3" }),
+              jsxForUiAvatars2.jsx("circle", { cx: 8, cy: 2.6, r: 0.7, fill: "currentColor", stroke: "none" }),
+              jsxForUiAvatars2.jsx("circle", { cx: 6.1, cy: 8.9, r: 1, fill: "currentColor", stroke: "none" }),
+              jsxForUiAvatars2.jsx("circle", { cx: 9.9, cy: 8.9, r: 1, fill: "currentColor", stroke: "none" }),
+              jsxForUiAvatars2.jsx("path", { d: "M6.6 11.1h2.8M1.5 8.5v2M14.5 8.5v2" })
+            ]
           }) : memo4
         });
       }), Avatar.displayName = "Avatar";

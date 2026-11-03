@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportBackgroundPicturesTail(runtime2) {
   var backgroundCaptureStyleKeys, BACKGROUND_PICTURE_BUDGET, BACKGROUND_CAPTURE_SCALES, BACKGROUND_CAPTURE_TIMEOUT_MS, initializeBackgroundCapture;
@@ -89,7 +89,9 @@ function installExportBackgroundPicturesTail(runtime2) {
         break;
     }
     let items2 = [];
-    value < 1 && [...entries.values()].some((input) => input !== void 0) && items2.push("slide backgrounds saved at " + (value === 0.5 ? "half" : "quarter") + " resolution to keep the file small");
+    value < 1 && [...entries.values()].some((input) => input !== void 0) && items2.push( (0, runtime2.exportNote)("backdrops_smaller", {
+      scale:value === 0.5 ? "half" : "quarter"
+    }));
     let entries2 = /* @__PURE__ */ new Map(), items3 = [];
     for (let value2 of items) {
       let entry = entries.get(value2.key);
@@ -99,11 +101,9 @@ function installExportBackgroundPicturesTail(runtime2) {
         frameIds: value2.frameIds
       }) : items3.push(value2.index + 1);
     }
-    if (items3.length > 0) {
-      let value2 = items3.length > 1, value3 = items3.slice(0, 3).join(", ") + (items3.length > 3 ? " and " + String(items3.length - 3) + " more" : "");
-      items2.push("the gradient background" + (value2 ? "s on slides " : " on slide ") + value3 + (value2 ? " were not saved as pictures, so they" : " was not saved as a picture, so it") + " may look different in the file");
-    }
-    return {
+    return items3.length > 0 && items2.push((0, runtime2.exportNote) ("backdrops_missed", {
+      slides:items3
+    })), {
       pictures: entries2,
       notes: items2
     };
@@ -120,6 +120,7 @@ function installExportBackgroundPicturesTail(runtime2) {
     initializeBackgroundCapture = value;
   }), () => {
     BACKGROUND_PICTURE_BUDGET = 8388608, BACKGROUND_CAPTURE_TIMEOUT_MS = 5e3, initializeBackgroundCapture = (0, runtime2.initializeOnce)(() => {
+      (0, runtime2.initializeExportNotes)(),
       (0, runtime2.initializeSlideModel)(), (0, runtime2.initializePdfCapture)(), (0, runtime2.initializePngEncoding)(), backgroundCaptureStyleKeys = /* @__PURE__ */ new Set([
         "backgroundGradient",
         "backgroundColor",

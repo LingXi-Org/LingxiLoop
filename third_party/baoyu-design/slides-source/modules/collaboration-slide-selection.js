@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCollaborationSlideSelection(runtime2) {
   var SlidePeerSelectionJsx;
@@ -9,7 +9,7 @@ function installCollaborationSlideSelection(runtime2) {
       slideId
     }), value2 = JSON.stringify(value.map((input) => [
       input.peer,
-      input.collaborator,
+      input.color,
       input.selected
     ])), [value3, value4] = runtime2.ReactPeerSelectionMeasurement.useState([]);
     return runtime2.ReactPeerSelectionMeasurement.useLayoutEffect(() => {
@@ -24,7 +24,7 @@ function installCollaborationSlideSelection(runtime2) {
             w: value8.w,
             h: value8.h,
             rotation: value8.rotation,
-            collaborator: value5.collaborator
+            color: value5.color
           });
         }
       value4((input) => JSON.stringify(input) === JSON.stringify(items) ? input : items);

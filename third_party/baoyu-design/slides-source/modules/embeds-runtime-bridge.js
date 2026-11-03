@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEmbedsRuntimeBridge(runtime2) {
   var defaultEmbedRuntimeScript, interactiveEmbedRuntimeScript, initializeEmbedRuntimeScript;
@@ -33,7 +33,22 @@ function installEmbedsRuntimeBridge(runtime2) {
         return value26 && value26.get ? value26.get : function() {
           return this[options];
         };
-      }, value9 = callback(KeyboardEvent.prototype, "key"), value10 = callback(KeyboardEvent.prototype, "repeat"), value11 = callback(KeyboardEvent.prototype, "isComposing"), value12 = callback(Event.prototype, "defaultPrevented"), value13 = callback(MouseEvent.prototype, "ctrlKey"), value14 = callback(MouseEvent.prototype, "metaKey"), value15 = callback(MouseEvent.prototype, "clientX"), value16 = callback(MouseEvent.prototype, "clientY"), value17 = callback(WheelEvent.prototype, "deltaX"), value18 = callback(WheelEvent.prototype, "deltaY"), value19 = callback(WheelEvent.prototype, "deltaMode"), value20 = callback(Element.prototype, "shadowRoot"), value21 = callback(typeof ShadowRoot > "u" ? {} : ShadowRoot.prototype, "activeElement"), callback2 = function() {
+      }, value9 = callback(KeyboardEvent.prototype, "key"), value10 = callback(KeyboardEvent.prototype, "repeat"), value11 = callback(KeyboardEvent.prototype, "isComposing"), keyCtrlKey = callback(KeyboardEvent.prototype, "ctrlKey"), keyMetaKey = callback(KeyboardEvent.prototype, "metaKey"), keyAltKey = callback(KeyboardEvent.prototype, "altKey"), value12 = callback(Event.prototype, "defaultPrevented"), value22 = callback(Event.prototype, "timeStamp"), eventTarget = callback(Event.prototype, "target"), eventCurrentTarget = callback(Event.prototype, "currentTarget"), clockNow = performance.now.bind(performance), eventTime = function(input) {
+        return apply(value22, input, []);
+      };
+      value6({
+        kind: "clock",
+        now: clockNow()
+      });
+      var messageData = callback(MessageEvent.prototype, "data");
+      value5.port1.onmessage = function(input) {
+        value6({
+          kind: "echo",
+          of: apply(messageData, input, []),
+          now: clockNow()
+        });
+      };
+      var value13 = callback(MouseEvent.prototype, "ctrlKey"), value14 = callback(MouseEvent.prototype, "metaKey"), value15 = callback(MouseEvent.prototype, "clientX"), value16 = callback(MouseEvent.prototype, "clientY"), value17 = callback(WheelEvent.prototype, "deltaX"), value18 = callback(WheelEvent.prototype, "deltaY"), value19 = callback(WheelEvent.prototype, "deltaMode"), value20 = callback(Element.prototype, "shadowRoot"), value21 = callback(typeof ShadowRoot > "u" ? {} : ShadowRoot.prototype, "activeElement"), callback2 = function() {
         for (var activeElement2 = document.activeElement, value26 = activeElement2 && (apply(value20, activeElement2, []) || __appifactShadowRootOf && __appifactShadowRootOf(activeElement2)); value26 && apply(value21, value26, []); )
           activeElement2 = apply(value21, value26, []), value26 = apply(value20, activeElement2, []) || __appifactShadowRootOf && __appifactShadowRootOf(activeElement2);
         if (!activeElement2)
@@ -72,14 +87,42 @@ function installEmbedsRuntimeBridge(runtime2) {
         value8(function() {
           apply(value12, input, []) === !0 && value6({
             kind: "press",
-            cancelled: !0
+            cancelled: !0,
+            t: eventTime(input),
+            now: clockNow()
           });
         }, 0);
-      };
+      }, pointerPressed = !1, pendingKeys = 0;
       window.addEventListener("pointerdown", function(input) {
-        input.isTrusted && (value6({
-          kind: "press"
+        input.isTrusted && (pointerPressed = !0,value6({
+          kind: "press",
+          t: eventTime(input),
+          now: clockNow()
         }), callback5(input));
+      }, !0);
+      var releasePointer = function(input) {
+        input.isTrusted && value8(function() {
+          pointerPressed = !1;
+        }, 0);
+      };
+      window.addEventListener("pointerup", releasePointer, !0), window.addEventListener("pointercancel", releasePointer, !0), window.addEventListener("click", function(input) {
+        input.isTrusted && !pointerPressed && pendingKeys === 0 && value6({
+          kind: "press",
+          t: eventTime(input),
+          now: clockNow()
+        });
+      }, !0);
+      var countKey = function(input) {
+        !input.isTrusted || (pendingKeys++, value8(function() {
+          pendingKeys--;
+        }, 0));
+      };
+      window.addEventListener("keydown", countKey, !0), window.addEventListener("keypress", countKey, !0), window.addEventListener("keyup", countKey, !0), window.addEventListener("blur", function(input) {
+        input.isTrusted && apply(eventTarget, input, []) === apply(eventCurrentTarget, input, []) && value6({
+          kind: "blur",
+          t: eventTime(input),
+          now: clockNow()
+        });
       }, !0), window.addEventListener("mousedown", function(input) {
         input.isTrusted && callback5(input);
       }, !0), window.addEventListener("keydown", function(input) {
@@ -87,16 +130,22 @@ function installEmbedsRuntimeBridge(runtime2) {
           var value26 = apply(value9, input, []);
           value26 === "Escape" ? value6({
             kind: "key",
-            key: "Escape"
-          }) : (value26 === "Delete" || value26 === "Backspace") && !callback2() && value8(function() {
+            key: "Escape",
+            t: eventTime(input),
+            now: clockNow()
+          }) : (value26 === "Delete" || value26 === "Backspace") && !callback2() ? value8(function() {
             apply(value12, input, []) !== !0 && value6({
               kind: "key",
               key: "Delete"
             });
-          }, 0);
+          }, 0) : (value26 === " " || value26 === "Enter" || value26 === "ArrowUp" || value26 === "ArrowDown" || value26 === "ArrowLeft" || value26 === "ArrowRight" || value26 === "Home" || value26 === "End" || value26 === "PageUp" || value26 === "PageDown") && apply(keyCtrlKey, input, []) !== !0 && apply(keyMetaKey, input, []) !== !0 && apply(keyAltKey, input, []) !== !0 && value6({
+            kind: "keypress",
+            t: eventTime(input),
+            now: clockNow()
+          });
         }
       }, !0);
-      var value22 = callback(Event.prototype, "timeStamp"), index22 = 0, value23 = -1 / 0, flag = !1, index32 = 0;
+      var index22 = 0, value23 = -1 / 0, flag = !1, index32 = 0;
       window.addEventListener("wheel", function(event) {
         if (event.isTrusted) {
           var value26 = apply(value22, event, []);
@@ -147,7 +196,7 @@ function installEmbedsRuntimeBridge(runtime2) {
     window.addEventListener("beforeunload", callback7, !0), window.addEventListener("pagehide", function(input) {
       input && input.persisted === !0 || callback7();
     }, !0);
-    function value24(input, options) {
+    function value24(input, options, settlePictures) {
       return new Promise(function(input2, options2) {
         for (var value26 = document.documentElement.cloneNode(!0), value27 = value26.querySelectorAll("script"), index42 = 0; index42 < value27.length; index42++) {
           var value28 = value27[index42];
@@ -186,6 +235,10 @@ function installEmbedsRuntimeBridge(runtime2) {
             } catch {
             }
         }
+        for (var pictures = settlePictures ? value26.querySelectorAll("img") : [], index7 = 0; index7 < pictures.length; index7++) {
+          var picture = pictures[index7];
+          picture && picture.setAttribute("decoding", "sync");
+        }
         var value36 = Math.max(1, document.documentElement.clientWidth || input), value37 = Math.max(1, document.documentElement.clientHeight || options);
         value26.style.width = value36 + "px", value26.style.height = value37 + "px";
         var element = value26.querySelector("body");
@@ -199,13 +252,24 @@ function installEmbedsRuntimeBridge(runtime2) {
             options2(Error("no 2d context"));
             return;
           }
-          value42.drawImage(value40, 0, 0, input, options), input2(value41);
+          if (
+          value42.drawImage(value40, 0, 0, input, options), !settlePictures) { input2(value41);
+            return;
+          }
+          var context2 = value42;
+          setTimeout(function() {
+            try {
+              context2.clearRect(0, 0, input, options), context2.drawImage(value40, 0, 0, input, options), input2(value41);
+            } catch (value43) {
+              options2(value43 instanceof Error ? value43 : Error(String(value43)));
+            }
+          }, 0);
         }, value40.onerror = function() {
           options2(Error("snapshot decode failed"));
         }, value40.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(value39);
       });
     }
-    function value25(input, options, context, value26, extra) {
+    function value25(input, options, context, value26, extra, settlePictures) {
       var callback9 = function(input2) {
         try {
           var value32 = input2.getContext("2d");
@@ -269,7 +333,7 @@ function installEmbedsRuntimeBridge(runtime2) {
           }
           value31.drawImage(value2, 0, 0, value26, extra), callback9(value30);
         } else
-          value24(value26, extra).then(callback9, function(input2) {
+          value24(value26, extra, settlePictures).then(callback9, function(input2) {
             callback10(String(input2).slice(0, 200));
           });
       } catch (value32) {
@@ -344,7 +408,7 @@ function installEmbedsRuntimeBridge(runtime2) {
             var value32 = typeof data.seq == "number" ? data.seq : -1, value33 = typeof data.width == "number" ? Math.floor(data.width) : 0, value34 = typeof data.height == "number" ? Math.floor(data.height) : 0;
             if (value32 < 0 || value33 < 1 || value34 < 1 || value33 > 8192 || value34 > 8192)
               return;
-            value25(value32, typeof data.t == "number" ? data.t : 0, typeof data.props == "object" && data.props !== null ? data.props : {}, value33, value34);
+            value25(value32, typeof data.t == "number" ? data.t : 0, typeof data.props == "object" && data.props !== null ? data.props : {}, value33, value34, data.settlePictures === !0);
           }
         }
       }

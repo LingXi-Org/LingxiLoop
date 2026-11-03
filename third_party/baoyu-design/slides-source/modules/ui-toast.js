@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiToast(runtime2) {
   var reactg6, jsxt5, DEFAULT_TOAST_TIMEOUT_MS, TOAST_TRANSITION_TIMEOUT_MS, toastSurfaceClasses, toastVariantClasses, toastStackedVariantClasses, toastDescriptionClasses, toastVariantTextClasses, toastDefaultIconNames, toastSecondaryTextClasses, toastStackTransformClasses, toastContentClasses, toastBodyClasses, toastDismissButtonClasses, emptyToastList, pinnedToastContext, noopToastPinSetter, initializeUiToast, reactForUiToast, jsxForUiToast, FIELD_LABEL_LAYOUT_CLASSES, FieldRoot3, FieldLabel3, FieldDescription3, FieldError3, FieldRootWithLabel, FieldRow, initializeUiToast2, FIELD_MESSAGE_CLASSES, fieldErrorIcon;
@@ -6,7 +6,7 @@ function installUiToast(runtime2) {
     return timeout === void 0 || timeout <= 0 ? timeout : Number.isFinite(timeout) ? timeout < 6e3 ? DEFAULT_TOAST_TIMEOUT_MS : timeout : 0;
   }
   function ToastView({ toast, front, frontHeight, zIndex }) {
-    let value = toast.data?.variant ?? toast.type ?? "neutral", value2 = toast.data?.icon, value3 = value2 != null && typeof value2 != "boolean", value4 = !front, value5 = value4 && frontHeight ? frontHeight : void 0, value6 = (0, runtime2.useTranslation)("dismiss", "Dismiss"), { update: value7 } = runtime2.baseToast.useToastManager(), value8 = reactg6.useContext(pinnedToastContext), ref = reactg6.useRef(null), ref2 = reactg6.useRef(""), value9 = toast.data?.titleNode, value10 = toast.data?.count ?? 1, id = toast.id, callback = () => {
+    let value = toast.data?.variant ?? toast.type ?? "neutral", value2 = toast.data?.icon, value3 = value2 != null && typeof value2 != "boolean", value4 = !front, value5 = value4 && frontHeight ? frontHeight : void 0, value6 = (0, runtime2.useTranslation)("dismiss", "关闭"), { update: value7 } = runtime2.baseToast.useToastManager(), value8 = reactg6.useContext(pinnedToastContext), ref = reactg6.useRef(null), ref2 = reactg6.useRef(""), value9 = toast.data?.titleNode, value10 = toast.data?.count ?? 1, id = toast.id, callback = () => {
       let value16 = value8?.userDismissAt, value17 = Date.now();
       for (let [value18, value19] of value16 ?? [])
         value17 - value19 > TOAST_TRANSITION_TIMEOUT_MS && value16?.delete(value18);
@@ -107,7 +107,7 @@ function installUiToast(runtime2) {
     });
   }
   function PinnedToastView({ pinned, onDismiss }) {
-    let value = pinned.variant ?? "neutral", value2 = (0, runtime2.useTranslation)("dismiss", "Dismiss");
+    let value = pinned.variant ?? "neutral", value2 = (0, runtime2.useTranslation)("dismiss", "关闭");
     return jsxt5.jsx("div", {
       "data-pinned": "",
       className: `pointer-events-auto relative w-full ${toastSurfaceClasses} ${toastVariantClasses[value]} ${toastStackedVariantClasses[value]} ${toastVariantTextClasses[value]}`,

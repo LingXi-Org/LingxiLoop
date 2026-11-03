@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesUnsavedSlides(runtime2) {
   var UNSAVED_SLIDE_STASH_PREFIX, KEPT_SLIDE_STASH_PREFIX, MAX_SLIDE_STASH_ENTRIES, MAX_SLIDE_STASH_ENTRY_CHARS, MAX_SLIDE_STASH_ARTIFACT_CHARS, MAX_SLIDE_STASH_TOTAL_CHARS, isSlideStashStorageKey;

@@ -1,7 +1,22 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorSlideGrid(runtime2) {
-  var GRID_SLIDE_WIDTH, GRID_SLIDE_HEIGHT, GRID_COLUMN_GAP, GRID_ROW_GAP, GRID_MAX_COLUMNS, GRID_NOTES_HEIGHT, SlideGridJsx, SECTION_LIMIT_MESSAGE, GRID_LABEL_HEIGHT, GRID_TILE_CORNER_RADIUS, GRID_LABEL_FONT_SIZE, GRID_TOUCH_LABEL_FONT_SIZE, GRID_SELECTION_OUTSET, GRID_CHROME_GAP, GRID_TOUCH_CHROME_SIZE, EMPTY_GRID_SELECTION_SET, copiedGridSlideKey, GRID_DRAG_THRESHOLD_PX, GRID_WHEEL_PAN_FACTOR, GRID_ZOOM_ANIMATION_MS, MIN_FOCUSED_GRID_SLIDE_WIDTH, FOCUSED_GRID_SLIDE_SIDE_PADDING, GRID_RECT_SELECTION_THRESHOLD_PX, GRID_PREVIEW_SLIDE_ID, GRID_INTERACTIVE_TARGET_SELECTOR, GridSlideThumbnail;
+  var GRID_SLIDE_WIDTH, GRID_SLIDE_HEIGHT, GRID_COLUMN_GAP, GRID_ROW_GAP, GRID_MAX_COLUMNS, GRID_NOTES_HEIGHT, SlideGridJsx, SECTION_LIMIT_MESSAGE, GRID_LABEL_HEIGHT, GRID_TILE_CORNER_RADIUS, GRID_LABEL_FONT_SIZE, GRID_TOUCH_LABEL_FONT_SIZE, GRID_SELECTION_OUTSET, GRID_CHROME_GAP, GRID_TOUCH_CHROME_SIZE, EMPTY_GRID_SELECTION_SET, copiedGridSlideKey, GRID_DRAG_THRESHOLD_PX, GRID_WHEEL_PAN_FACTOR, GRID_ZOOM_ANIMATION_MS, MIN_FOCUSED_GRID_SLIDE_WIDTH, FOCUSED_GRID_SLIDE_SIDE_PADDING, GRID_RECT_SELECTION_THRESHOLD_PX, GRID_PREVIEW_SLIDE_ID, GRID_INTERACTIVE_TARGET_SELECTOR, GridSlideThumbnail, gridCameraTransform, GRID_LAND_SETTLE_MS, GRID_GLIDE_SETTLE_AT, easeOutCubic, GRID_GLIDE_EASE, reactDOMSlideGrid;
+  function cubicBezierEase(x1, y1, x2, y2) {
+    let ax = 3 * x1 - 3 * x2 + 1, bx = 3 * x2 - 6 * x1, cx2 = 3 * x1, ay = 3 * y1 - 3 * y2 + 1, by = 3 * y2 - 6 * y1, cy = 3 * y1, sample = (a, b, c, t) => ((a * t + b) * t + c) * t;
+    return (progress) => {
+      if (progress <= 0 || progress >= 1)
+        return progress <= 0 ? 0 : 1;
+      let t = progress;
+      for (let step = 0; step < 8; step++) {
+        let error = sample(ax, bx, cx2, t) - progress, slope = (3 * ax * t + 2 * bx) * t + cx2;
+        if (Math.abs(error) < 1e-5 || slope === 0)
+          break;
+        t -= error / slope;
+      }
+      return sample(ay, by, cy, Math.min(1, Math.max(0, t)));
+    };
+  }
   function calculateGridAddButtonSize(scale) {
     let gap = GRID_COLUMN_GAP * scale, size4 = Math.max(12, Math.min(32, gap / 2));
     return {
@@ -273,35 +288,65 @@ function installEditorSlideGrid(runtime2) {
     }), ref14 = runtime2.ReactGridMemo.useRef(value10), ref15 = runtime2.ReactGridMemo.useRef({
       minScale: 0.02,
       maxScale: GRID_DRAG_THRESHOLD_PX
-    }), callback7 = runtime2.ReactGridMemo.useCallback((input2) => {
-      ref14.current = input2, value11(input2);
-    }, []), ref16 = runtime2.ReactGridMemo.useRef(!0), ref17 = runtime2.ReactGridMemo.useRef(null), [, value12] = runtime2.ReactGridMemo.useState(0), callback8 = runtime2.ReactGridMemo.useCallback((input2) => {
-      let current2 = ref17.current;
-      current2 && (ref17.current = null, cancelAnimationFrame(current2.raf), value12((input3) => input3 + 1), current2.onEnd?.(input2));
+    }), cameraRef = runtime2.ReactGridMemo.useRef(null), cameraWrittenRef = runtime2.ReactGridMemo.useRef(!1), callback7 = runtime2.ReactGridMemo.useCallback((input2) => {
+      ref14.current = input2, cameraWrittenRef.current && cameraRef.current && (cameraRef.current.style.transform = gridCameraTransform(input2)), value11(input2);
+    }, []), ref16 = runtime2.ReactGridMemo.useRef(!0), ref17 = runtime2.ReactGridMemo.useRef(null), leavingRef = runtime2.ReactGridMemo.useRef(!1), [landed, setLanded] = runtime2.ReactGridMemo.useState(0), landingRef = runtime2.ReactGridMemo.useRef({}), clearLanding = runtime2.ReactGridMemo.useCallback(() => {
+      let current2 = ref10.current, { raf, timer, onEnd } = landingRef.current;
+      raf !== void 0 && cancelAnimationFrame(raf), window.clearTimeout(timer), onEnd && current2?.removeEventListener("animationend", onEnd), landingRef.current = {}, current2?.removeAttribute("data-grid-landed");
     }, []);
+    runtime2.ReactGridMemo.useEffect(() => clearLanding, [clearLanding]), runtime2.ReactGridMemo.useLayoutEffect(() => {
+      if (landed === 0 || ref17.current?.direct && !ref17.current.settled)
+        return;
+      clearLanding();
+      let current2 = ref10.current;
+      !current2 || (landingRef.current.raf = requestAnimationFrame(() => {
+        if (ref17.current?.direct && !ref17.current.settled)
+          return;
+        current2.removeAttribute("data-grid-gliding"), current2.setAttribute("data-grid-landed", "");
+        let onEnd = (event) => {
+          event.animationName === "sl-grid-settle-panel" && requestAnimationFrame(clearLanding);
+        };
+        current2.addEventListener("animationend", onEnd), landingRef.current = {
+          onEnd,
+          timer: window.setTimeout(clearLanding, GRID_LAND_SETTLE_MS + 600)
+        };
+      }));
+    }, [landed, clearLanding]);
+    let [, value12] = runtime2.ReactGridMemo.useState(0), callback8 = runtime2.ReactGridMemo.useCallback((input2) => {
+      let current2 = ref17.current;
+      current2 && (ref17.current = null, cancelAnimationFrame(current2.raf), leavingRef.current = !1, current2.unmark?.(), current2.direct ? (setLanded((input3) => input3 + 1), callback7(ref14.current)) : value12((input3) => input3 + 1), current2.onEnd?.(input2));
+    }, [callback7]);
     runtime2.ReactGridMemo.useEffect(() => () => callback8(!1), [callback8]);
     let callback9 = runtime2.ReactGridMemo.useCallback((input2) => {
       input2 !== ref14.current && (callback8(!1), ref16.current = !1, callback7(input2));
-    }, [callback8, callback7]), callback10 = runtime2.ReactGridMemo.useCallback((input2, options, context, value47) => {
+    }, [callback8, callback7]), callback10 = runtime2.ReactGridMemo.useCallback((input2, options, context, value47, timing, glide = {}) => {
+      let { ease = easeOutCubic, settleAt = 1 } = glide;
       callback8(!1);
       let current2 = ref14.current;
       if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+        ref10.current?.removeAttribute("data-grid-gliding"),
         callback7(input2), context?.(!0);
         return;
       }
-      let value48 = -1, state2 = {
+      let value48 = -1, pendingRun = timing !== void 0, direct = ref.current.directCamera === !0 && cameraRef.current !== null, state2 = {
         raf: 0,
         onEnd: context,
-        tile: value47
+        tile: value47,
+        direct
+      };
+      direct && (clearLanding(), ref.current.onScaleChange?.(current2.scale), ref10.current?.querySelector("[data-carried]")?.removeAttribute("data-carried"), ref10.current?.setAttribute("data-grid-gliding", ""));
+      let settledOnce = !1, settle = () => {
+        settledOnce = !0, state2.settled = !0, state2.tile = void 0, setLanded((input3) => input3 + 1), value11(input2);
       }, callback43 = (input3) => {
-        value48 < 0 && (value48 = input3);
-        let value49 = Math.min(1, (input3 - value48) / GRID_ZOOM_ANIMATION_MS);
-        callback7(interpolateGridViewport(current2, input2, options, 1 - (1 - value49) ** 3)), value49 < 1 ? state2.raf = requestAnimationFrame(callback43) : state2.raf = requestAnimationFrame(() => {
-          ref17.current = null, value12((input4) => input4 + 1), context?.(!0);
+        let now = direct ? performance.now() : input3;
+        value48 < 0 && (value48 = now), pendingRun && timing !== void 0 && now - value48 >= GRID_ZOOM_ANIMATION_MS - timing.msBeforeLanding && (pendingRun = !1, timing.run());
+        let value49 = Math.min(1, (now - value48) / GRID_ZOOM_ANIMATION_MS), view =interpolateGridViewport(current2, input2, options, direct ? ease(value49) : easeOutCubic(value49));
+        direct ? (ref14.current = view, cameraRef.current && (cameraRef.current.style.transform = gridCameraTransform(view)), cameraWrittenRef.current = !0, ref.current.onScaleChange?.(view.scale), ref10.current?.dispatchEvent(new Event (runtime2.CAMERA_MOVED_EVENT)), !settledOnce && value49 >= settleAt && settle()) : callback7(view), value49 < 1 ? state2.raf = requestAnimationFrame(callback43) : state2.raf = requestAnimationFrame(() => {
+          ref17.current = null, direct || value12((input4) => input4 + 1), context?.(!0);
         });
       };
       ref17.current = state2, state2.raf = requestAnimationFrame(callback43);
-    }, [callback8, callback7]), callback11 = runtime2.ReactGridMemo.useCallback((input2, options) => {
+    }, [callback8, callback7, clearLanding]), callback11 = runtime2.ReactGridMemo.useCallback((input2, options) => {
       let value47 = ref3.current.tiles.find((input3) => input3.id === input2), value48 = ref10.current?.getBoundingClientRect();
       return value47 && value48 ? gridViewportFromTileRect(value47, options, value48) : null;
     }, []), callback12 = runtime2.ReactGridMemo.useCallback(() => {
@@ -317,44 +362,76 @@ function installEditorSlideGrid(runtime2) {
     }, []), callback13 = runtime2.ReactGridMemo.useCallback(() => {
       let value47 = callback12();
       value47 && (callback9(value47), ref16.current = !0);
-    }, [callback12, callback9]);
+    }, [callback12, callback9]), enteringRef = runtime2.ReactGridMemo.useRef(!1), stagedEnterRef = runtime2.ReactGridMemo.useRef({}), cancelStagedEnter = runtime2.ReactGridMemo.useCallback(() => {
+      stagedEnterRef.current.raf !== void 0 && cancelAnimationFrame(stagedEnterRef.current.raf), window.clearTimeout(stagedEnterRef.current.timer), stagedEnterRef.current = {};
+    }, []);
     runtime2.ReactGridMemo.useLayoutEffect(() => {
-      ref16.current && !ref17.current && !ref.current.inert && callback13();
+      ref16.current && !ref17.current && !enteringRef.current && !ref.current.inert && callback13();
     }, [value8.w, value8.h, value, callback13]), runtime2.ReactGridMemo.useLayoutEffect(() => {
       let value47 = callback12();
       value47 && (ref15.current.minScale = Math.min(value47.scale, ref14.current.scale, Math.max(0.02, Math.min(0.15, value47.scale) * 0.8)));
     }, [value8.w, value8.h, value, memo22, callback12]);
-    let callback14 = runtime2.ReactGridMemo.useCallback((input2) => {
+    let callback14 = runtime2.ReactGridMemo.useCallback((input2, done, glide) => {
       let value47 = callback12(), value48 = ref3.current.tiles.find((input3) => input3.id === input2);
-      if (!value47 || !value48)
-        return callback13();
+      if (!value47 || !value48) {
+        ref10.current?.removeAttribute("data-grid-gliding"), callback13(), done?.();
+        return;
+      }
       callback10(value47, {
         x: value48.x + GRID_SLIDE_WIDTH / 2,
         y: value48.y + GRID_SLIDE_HEIGHT / 2
       }, (input3) => {
-        input3 && callback13();
-      }, value48.id);
-    }, [callback12, callback13, callback10]), ref18 = runtime2.ReactGridMemo.useRef(!1), ref19 = runtime2.ReactGridMemo.useRef(input.enterFrom), startCameraRef = runtime2.ReactGridMemo.useRef(input.startCamera);
+        input3 && callback13(), done?.();
+      }, value48.id, void 0, glide);
+      let current2 = ref17.current, tile = current2?.direct ? ref10.current?.querySelector('[data-grid-tile="' + CSS.escape(input2) + '"]') : null;
+      current2 && tile && (tile.setAttribute("data-carried", ""), current2.unmark = () => requestAnimationFrame(() => {
+        ref17.current?.tile !== input2 && tile.removeAttribute("data-carried");
+      }));
+    }, [callback12, callback13, callback10]), ref18 = runtime2.ReactGridMemo.useRef(!1), ref19 = runtime2.ReactGridMemo.useRef(input.enterFrom), startCameraRef = runtime2.ReactGridMemo.useRef(input.startCamera), [entered, setEntered] = runtime2.ReactGridMemo.useState(() => !(input.stagedEnter === !0 && input.enterFrom != null && input.startCamera == null && input.inert !== !0)), lateTilesRef = runtime2.ReactGridMemo.useRef(!entered), enterStartedRef = runtime2.ReactGridMemo.useRef(!1);
     runtime2.ReactGridMemo.useLayoutEffect(() => {
-      if (ref18.current || !callback12())
+      let reportEntered = () => ref.current.onEntered?.(), endEnter = () => {
+        enteringRef.current = !1, ref10.current?.removeAttribute("data-grid-gliding"), ref10.current?.querySelector("[data-carried]")?.removeAttribute("data-carried"), entered || setEntered(!0);
+      };
+      if (ref18.current || value8.w === 0 || value8.h === 0)
         return;
-      if (ref18.current = !0, startCameraRef.current)
-        return ref15.current.minScale = Math.min(ref15.current.minScale, startCameraRef.current.scale), callback9(startCameraRef.current);
+      if ( !callback12()) {
+        endEnter(), reportEntered();
+        return;
+      }
+      if (startCameraRef.current) {ref18.current = !0, ref15.current.minScale = Math.min(ref15.current.minScale, startCameraRef.current.scale), callback9(startCameraRef.current), reportEntered();
+        return;
+      }
       let value47 = ref.current.inert ? null : ref19.current, value48 = value47 ? callback11(value47.id, value47.rect) : null;
-      !value47 || !value48 || (callback7(value48), callback14(value47.id));
+      if (
+      !value47 || !value48) {
+        ref18.current = !0, endEnter(), reportEntered();
+        return;
+      }
+      if (enterStartedRef.current || (enterStartedRef.current = !0, enteringRef.current = !0, entered || (ref10.current?.setAttribute("data-grid-gliding", ""), ref10.current?.querySelector('[data-grid-tile="' + CSS.escape(value47.id) + '"]')?.setAttribute("data-carried", "")),callback7(value48)), !entered) {
+        let current2 = stagedEnterRef.current;
+        return current2.raf = requestAnimationFrame(() => {
+          current2.timer = window.setTimeout(() => reactDOMSlideGrid.flushSync(() => setEntered(!0)), 0);
+        }), cancelStagedEnter;
+      }
+      ref18.current = !0, enteringRef.current = !1, callback14(value47.id, reportEntered, {
+        ease: GRID_GLIDE_EASE,
+        settleAt: GRID_GLIDE_SETTLE_AT
+      });
     }, [
       value8.w,
       value8.h,
+      entered,
       callback12,
       callback11,
       callback7,
       callback9,
-      callback14
+      callback14,
+      cancelStagedEnter
     ]);
     let ref20 = runtime2.ReactGridMemo.useRef(memo22);
     runtime2.ReactGridMemo.useLayoutEffect(() => {
       let current2 = ref20.current;
-      if (ref20.current = memo22, current2.notes === memo22.notes || ref.current.inert || ref17.current)
+      if (ref20.current = memo22, current2.notes === memo22.notes || ref.current.inert || ref17.current || enteringRef.current)
         return;
       if (ref16.current) {
         callback13();
@@ -397,13 +474,22 @@ function installEditorSlideGrid(runtime2) {
       setScaleTo: (input2) => callback15(input2 / ref14.current.scale),
       fitAll: (input2) => input2 !== void 0 ? callback14(input2) : callback13(),
       stepZoom: callback15,
-      glideToSlide: (input2, options, context) => {
-        ref33.current?.end("drop"), ref26.current && callback23();
+      glideToSlide: (input2, options, context, timing) => {
+        ref33.current?.end("drop"), ref26.current && callback23(), (enteringRef.current || !ref18.current) && (ref18.current = !0, enteringRef.current = !1, cancelStagedEnter(), ref10.current?.removeAttribute("data-grid-gliding"), ref10.current?.querySelector("[data-carried]")?.removeAttribute("data-carried"));
         let value47 = ref3.current.tiles.find((input3) => input3.id === input2), value48 = callback11(input2, options);
-        !value47 || !value48 ? context?.(!1) : callback10(value48, {
+        if (
+        !value47 || !value48) context?.(!1);
+        else { callback10(value48, {
           x: value47.x + GRID_SLIDE_WIDTH / 2,
           y: value47.y + GRID_SLIDE_HEIGHT / 2
-        }, context, input2);
+        }, context, input2, timing);
+          let current2 = ref17.current;
+          leavingRef.current = ref.current.markLeave === !0 && current2 !== null;
+          let grid = ref10.current, tile = grid?.querySelector('[data-grid-tile="' + CSS.escape(input2) + '"]');
+          ref.current.markLeave && current2 && grid && tile && (grid.setAttribute("data-grid-phase", "leaving"), tile.setAttribute("data-carried", ""), current2.unmark = () => {
+            grid.removeAttribute("data-grid-phase"), tile.removeAttribute("data-carried");
+      });
+        }
       },
       follow: (input2, options, context) => {
         callback8(!1), ref16.current = !1, ref21.current = {
@@ -441,6 +527,7 @@ function installEditorSlideGrid(runtime2) {
     }), runtime2.ReactGridMemo.useEffect(() => () => {
       zoomApiRef && zoomApiRef.current === ref23.current && (zoomApiRef.current = null);
     }, [zoomApiRef]), runtime2.ReactGridMemo.useEffect(() => {
+      ref17.current?.direct ||
       onScaleChange?.(value10.scale);
     }, [value10.scale, onScaleChange]);
     let onCamera = input.onCamera;
@@ -544,7 +631,7 @@ function installEditorSlideGrid(runtime2) {
           preventScroll: !0
         });
       }, value48 = event.metaKey || event.ctrlKey;
-      if (ref17.current && !(event.key === "Escape" && ref33.current)) {
+      if ((ref17.current || leavingRef.current) && !(event.key === "Escape" && ref33.current)) {
         (!value48 || event.key === "a" || event.key === "A") && event.preventDefault();
         return;
       }
@@ -989,7 +1076,10 @@ function installEditorSlideGrid(runtime2) {
       "data-slides-grid": "",
       tabIndex: value2 ? -1 : 0,
       role: "application",
-      "aria-label": "画布",
+      "aria-label": (0, runtime2.formatMessage)({
+        defaultMessage: "画布",
+        id: "4OyZ1AyEVy"
+      }),
       "aria-hidden": value2 || void 0,
       className: (0, runtime2.joinClassNames)("relative h-full w-full overflow-hidden bg-editor-canvas outline-none", value2 && "pointer-events-none"),
       onKeyDown: callback19,
@@ -1038,12 +1128,14 @@ function installEditorSlideGrid(runtime2) {
       },
       children: [
         SlideGridJsx.jsxs("div", {
+          ref: cameraRef,
           className: "absolute top-0 left-0 pointer-fine:will-change-transform",
           style: {
-            transform: "translate(" + String(-value10.x * scale) + "px, " + String(-value10.y * scale) + "px) scale(" + String(scale) + ")",
+            transform: gridCameraTransform(ref14.current),
             transformOrigin: "0 0"
           },
           children: [
+            entered &&
             value29.rows.map((input2) => {
               if (input2.continuation)
                 return null;
@@ -1051,7 +1143,15 @@ function installEditorSlideGrid(runtime2) {
                 y: value48.y,
                 dx: value13.dx,
                 dy: value13.dy
-              } : null, value50 = section?.description ?? "", value51 = "章节 " + String(input2.seg + 1), text = "描述此章节", value52 = !readOnly && section?.id !== GRID_PREVIEW_SLIDE_ID, value53 = section !== null && value6.sections.includes(section.id), value54 = value47 ? 1 : value38, value55 = value49 ? value49.y + value49.dy : input2.y;
+              } : null, value50 = section?.description ?? "", value51 = (0, runtime2.formatMessage)({
+                defaultMessage: "第 {n} 节",
+                id: "ILnxiM5UnG"
+              }, {
+                n: String(input2.seg + 1)
+              }), text = (0, runtime2.formatMessage)({
+                defaultMessage: "描述此章节",
+                id: "K8qEeqNXmK"
+              }), value52 = !readOnly && section?.id !== GRID_PREVIEW_SLIDE_ID, value53 = section !== null && value6.sections.includes(section.id), value54 = value47 ? 1 : value38, value55 = value49 ? value49.y + value49.dy : input2.y;
               return SlideGridJsx.jsxs("div", {
                 children: [
                   SlideGridJsx.jsx("div", {
@@ -1068,7 +1168,12 @@ function installEditorSlideGrid(runtime2) {
                       ...section !== null && section.id !== GRID_PREVIEW_SLIDE_ID ? {
                         role: "button",
                         "aria-pressed": value53,
-                        "aria-label": value50 !== "" ? value50 : value52 ? value51 + ", " + text : value51
+                        "aria-label": value50 !== "" ? value50 : value52 ? (0, runtime2.formatMessage)({
+                          defaultMessage: "第 {n} 节，为此章节添加描述",
+                          id: "AvloecPdY1"
+                        }, {
+                          n: String(input2.seg + 1)
+                        }) : value51
                       } : {},
                       className: (0, runtime2.joinClassNames)("absolute bottom-0 left-0 z-[35] flex items-end gap-2 pb-[5px] text-[13px] leading-[18px] select-none", value53 ? "font-medium text-app-accent" : "text-fg", value52 && section !== null && !value47 && "cursor-grab", value49 && "cursor-grabbing"),
                       style: {
@@ -1097,7 +1202,12 @@ function installEditorSlideGrid(runtime2) {
                           value: value3.text,
                           maxLength: runtime2.maxSectionDescriptionLength,
                           placeholder: text,
-                          "aria-label": "描述" + value51,
+                          "aria-label": (0, runtime2.formatMessage)({
+                            defaultMessage: "为第 {n} 节添加描述",
+                            id: "uO0LIvBhj5"
+                          }, {
+                            n: String(input2.seg + 1)
+                          }),
                           selectOnOpen: !1,
                           className: "min-w-0 [--kit-rn-max-w:45rem] [--kit-rn-min-w:10rem]",
                           onChange: (input3) => value4({
@@ -1137,7 +1247,10 @@ function installEditorSlideGrid(runtime2) {
                               name: "Trash",
                               size: "xs"
                             }),
-                            "aria-label": "移除章节",
+                            "aria-label": (0, runtime2.formatMessage)({
+                              defaultMessage: "移除章节",
+                              id: "wRQ+dWAb3s"
+                            }),
                             tooltip: (0, runtime2.formatMessage)({
                               defaultMessage: "移除此章节，保留其中的幻灯片",
                               id: "4NCiR7gvCK"
@@ -1227,7 +1340,10 @@ function installEditorSlideGrid(runtime2) {
                           name: "Add",
                           size: "xs"
                         }),
-                        "aria-label": "在此添加幻灯片",
+                        "aria-label": (0, runtime2.formatMessage)({
+                          defaultMessage: "在此添加幻灯片",
+                          id: "K6TPRgwCoz"
+                        }),
                         tooltip: (0, runtime2.formatMessage)({
                           defaultMessage: "在此处新建幻灯片",
                           id: "DhP1S2co8Y"
@@ -1279,7 +1395,10 @@ function installEditorSlideGrid(runtime2) {
                         name: "Add",
                         size: "xs"
                       }),
-                      "aria-label": "在此添加章节",
+                      "aria-label": (0, runtime2.formatMessage)({
+                        defaultMessage: "在此添加章节",
+                        id: "IhEELTtgIF"
+                      }),
                       tooltip: (0, runtime2.formatMessage)({
                         defaultMessage: "在此处新建章节",
                         id: "wfKeB41+Zh"
@@ -1323,9 +1442,9 @@ function installEditorSlideGrid(runtime2) {
             }) : null,
             memo22.tiles.flatMap((input2) => (memo7.has(input2.id) ? [!1, !0] : [!1]).map((input3) => {
               let value47 = slides[input2.id];
-              if (!value47)
+              if (!value47 || !entered && input2.id !== ref19.current?.id)
                 return null;
-              let value48 = input2.id === behind, value49 = value6.slides.includes(input2.id), value50 = value45 ? input3 : memo6.has(input2.id), value51 = value50 && input2.id !== value44 && value46 ? Math.min(3, value13.ids.filter((input4) => input4 !== value44).indexOf(input2.id) + 1) : 0, value52 = value51 > 0 && value46 ? value46 : input2, value53 = value13?.kind === "row" && memo8.has(memo4[input2.seg]?.section?.id ?? ""), value54 = value53 ? input2 : memo5.get(input2.id) ?? input2, value55 = value50 ? value13.dx + value51 * 28 * value30 : value53 ? value13.dx : 0, value56 = value50 ? value13.dy + value51 * 28 * value30 : value53 ? value13.dy : 0, value57 = (0, runtime2.slideDisplayLabel)(value47) ?? "", value58 = value47.skipped === !0, value59 = ref17.current?.tile === input2.id, value60 = value5 ? (value47.notes ?? "").trim() : "", state2 = {
+              let late = lateTilesRef.current && input2.id !== ref19.current?.id, value48 = input2.id === behind, value49 = value6.slides.includes(input2.id), value50 = value45 ? input3 : memo6.has(input2.id), value51 = value50 && input2.id !== value44 && value46 ? Math.min(3, value13.ids.filter((input4) => input4 !== value44).indexOf(input2.id) + 1) : 0, value52 = value51 > 0 && value46 ? value46 : input2, value53 = value13?.kind === "row" && memo8.has(memo4[input2.seg]?.section?.id ?? ""), value54 = value53 ? input2 : memo5.get(input2.id) ?? input2, value55 = value50 ? value13.dx + value51 * 28 * value30 : value53 ? value13.dx : 0, value56 = value50 ? value13.dy + value51 * 28 * value30 : value53 ? value13.dy : 0, value57 = (0, runtime2.slideDisplayLabel)(value47) ?? "", value58 = value47.skipped === !0, value59 = ref17.current?.tile === input2.id, value60 = value5 ? (value47.notes ?? "").trim() : "", state2 = {
                 onPointerDown: (input4) => {
                   callback5() || callback24(input4, input2.id);
                 },
@@ -1342,6 +1461,7 @@ function installEditorSlideGrid(runtime2) {
               };
               return SlideGridJsx.jsxs("div", {
                 "data-grid-tile": input3 ? void 0 : input2.id,
+                "data-grid-late": late ? "" : void 0,
                 "aria-hidden": input3 || void 0,
                 className: (0, runtime2.joinClassNames)("group/tile absolute", input3 && "pointer-events-none", value50 || value53 ? value51 > 0 ? "z-[39] opacity-80" : "z-40 opacity-80" : value13 !== null && "transition-[left,top] duration-150 ease-out"),
                 style: {
@@ -1375,6 +1495,7 @@ function installEditorSlideGrid(runtime2) {
                     ]
                   }) : null,
                   value48 ? null : SlideGridJsx.jsxs("div", {
+                    "data-tile-panel": "",
                     className: (0, runtime2.joinClassNames)("absolute inset-0 overflow-hidden bg-panel", value50 && "opacity-90"),
                     style: {
                       borderRadius: value59 ? 0 : 6 * Math.min(value30, 6),
@@ -1396,7 +1517,13 @@ function installEditorSlideGrid(runtime2) {
                       }),
                       SlideGridJsx.jsx("div", {
                         role: "button",
-                        "aria-label": "幻灯片 " + String(input2.n) + (input2.id === coverId ? "（封面缩略图）" : "") + (value57 !== "" ? ": " + value57 : "") + (0, runtime2.formatOpenCommentCount)(commentCounts?.get(input2.id) ?? 0),
+                        "data-tile-press": "",
+                        "aria-label":(0, runtime2.slideAccessibleLabel)({
+                          n:input2.n,
+                          cover:input2.id === coverId,
+                          title :value57 !== "" ? value57 : void 0,
+                          comments:commentCounts?.get(input2.id) ?? 0
+                        }),
                         "aria-current": input2.id === currentId ? "true" : void 0,
                         "aria-pressed": value49,
                         "aria-description": value60 !== "" ? (0, runtime2.truncateUtf16Safely)(value60, 200) + (value60.length > 200 ? "…" : "") : void 0,
@@ -1424,16 +1551,20 @@ function installEditorSlideGrid(runtime2) {
                           transformOrigin: "left bottom"
                         }
                       }) : null,
-                      value58 && value13 === null && !value59 ? SlideGridJsx.jsx(runtime2.SkippedSlideBadge, {
+                      value58 && value13 === null && !value59 ? SlideGridJsx.jsx("span", {
+                        "data-tile-chrome": "",
+                        className: "absolute right-0 bottom-0",
+                        children: SlideGridJsx.jsx(runtime2.SkippedSlideBadge, {
                         why: readOnly ? runtime2.READ_ONLY_PRESENTATION_MESSAGE : heldSlide?.(input2.id) !== void 0 ? runtime2.HELD_SLIDE_MESSAGE : void 0,
                         onUnskip: () => input.onToggleSkip(input2.id),
                         style: {
                           transform: "scale(" + String(value30) + ")",
                           transformOrigin: "right bottom"
                         }
+                      })
                       }) : null,
                       GRID_SLIDE_WIDTH * scale >= (value58 ? 96 : 56) && value13 === null && !value59 ? SlideGridJsx.jsx(runtime2.ThumbnailActionsButton, {
-                        label: "幻灯片 " + String(value54.n) + "操作",
+                        label: (0, runtime2.slideActionsLabel)(value54.n),
                         current: input2.id === currentId && input.commenting !== !0,
                         expanded: value17?.id === input2.id,
                         skipped: value58,
@@ -1502,7 +1633,8 @@ function installEditorSlideGrid(runtime2) {
         SlideGridJsx.jsx(runtime2.ContextMenuPopup, {
           at: value17 && value21 ? value17 : null,
           anchor: value17?.tap ? "tap" : "point",
-          "aria-label": value21 ? value22.length > 1 ? "操作：" + String(value22.length) + " 页幻灯片" : "幻灯片 " + String(value21.n) + "操作" : void 0,
+          "aria-label": value21 ? value22.length > 1 ? (0, runtime2.slidesActionsLabel)(value22.length) : (0, runtime2.slideActionsLabel)(value21.n) : void 0,
+          popupAttrs: runtime2.SLIDE_MENU_POPUP_ATTRS,
           focusFirstItem: value17?.keyboard === !0,
           onClose: callback34,
           children: value17 && value21 ? SlideGridJsx.jsx(runtime2.SlideContextMenu, {
@@ -1524,7 +1656,13 @@ function installEditorSlideGrid(runtime2) {
               moveReason: runtime2.MOVE_SEVERAL_SLIDES_REASON
             } : void 0,
             onNewSection: () => input.onSectionFromSlides(value22),
-            newSectionDisabledReason: value24 ? value23.section === null ? value22.length > 1 ? "这些幻灯片已组成第 1 章" : "此页已组成第 1 章" : value22.length > 1 ? (0, runtime2.formatMessage)({
+            newSectionDisabledReason: value24 ? value23.section === null ? value22.length > 1 ? (0, runtime2.formatMessage)({
+              defaultMessage: "这些幻灯片已组成第 1 章",
+              id: "RYdjxE5sTy"
+            }) : (0, runtime2.formatMessage)({
+              defaultMessage : "此页已组成第 1 章",
+              id: "QtWOqJLGwu"
+            }) : value22.length > 1 ? (0, runtime2.formatMessage)({
               defaultMessage: "这些幻灯片已经单独组成一个章节",
               id: "s8zbEln7f/"
             }) : (0, runtime2.formatMessage)({
@@ -1592,10 +1730,22 @@ function installEditorSlideGrid(runtime2) {
     GRID_PREVIEW_SLIDE_ID = value;
   }), bindRuntimeValue(runtime2, "GRID_INTERACTIVE_TARGET_SELECTOR", () => GRID_INTERACTIVE_TARGET_SELECTOR, (value) => {
     GRID_INTERACTIVE_TARGET_SELECTOR = value;
-  }), bindRuntimeValue(runtime2, "canStartGridRectSelection", () => canStartGridRectSelection), bindRuntimeValue(runtime2, "collectGridTilesInRect", () => collectGridTilesInRect), bindRuntimeValue(runtime2, "hitTestGridTile", () => hitTestGridTile), bindRuntimeValue(runtime2, "extendGridSelection", () => extendGridSelection), bindRuntimeValue(runtime2, "GridSlideThumbnail", () => GridSlideThumbnail, (value) => {
+  }), bindRuntimeValue(runtime2, "canStartGridRectSelection", () => canStartGridRectSelection), bindRuntimeValue(runtime2, "collectGridTilesInRect", () => collectGridTilesInRect), bindRuntimeValue(runtime2, "hitTestGridTile", () => hitTestGridTile), bindRuntimeValue(runtime2, "extendGridSelection", () => extendGridSelection), bindRuntimeValue(runtime2, "gridCameraTransform", () => gridCameraTransform, (value) => {
+    gridCameraTransform = value;
+  }), bindRuntimeValue(runtime2, "GRID_LAND_SETTLE_MS", () => GRID_LAND_SETTLE_MS, (value) => {
+    GRID_LAND_SETTLE_MS = value;
+  }), bindRuntimeValue(runtime2, "GRID_GLIDE_SETTLE_AT", () => GRID_GLIDE_SETTLE_AT, (value) => {
+    GRID_GLIDE_SETTLE_AT = value;
+  }), bindRuntimeValue(runtime2, "easeOutCubic", () => easeOutCubic, (value) => {
+    easeOutCubic = value;
+  }), bindRuntimeValue(runtime2, "GRID_GLIDE_EASE", () => GRID_GLIDE_EASE, (value) => {
+    GRID_GLIDE_EASE = value;
+  }), bindRuntimeValue(runtime2, "cubicBezierEase", () => cubicBezierEase), bindRuntimeValue(runtime2, "reactDOMSlideGrid", () => reactDOMSlideGrid, (value) => {
+    reactDOMSlideGrid = value;
+  }), bindRuntimeValue(runtime2, "GridSlideThumbnail", () => GridSlideThumbnail, (value) => {
     GridSlideThumbnail = value;
   }), bindRuntimeValue(runtime2, "SlideGrid", () => SlideGrid), () => {
-    (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeSections)(), (0, runtime2.initializeSlideRenderer)(), (0, runtime2.initializeSlideModel)(), GRID_SLIDE_WIDTH = runtime2.SLIDE_WIDTH, GRID_SLIDE_HEIGHT = runtime2.SLIDE_HEIGHT, GRID_COLUMN_GAP = 160, GRID_ROW_GAP = 480, GRID_MAX_COLUMNS = 6, GRID_NOTES_HEIGHT = 440, SlideGridJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), SECTION_LIMIT_MESSAGE = (0, runtime2.formatMessage)({
+    (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeSections)(), (0, runtime2.initializeSlideRenderer)(), (0, runtime2.initializeSlideModel)(), GRID_SLIDE_WIDTH = runtime2.SLIDE_WIDTH, GRID_SLIDE_HEIGHT = runtime2.SLIDE_HEIGHT, GRID_COLUMN_GAP = 160, GRID_ROW_GAP = 480, GRID_MAX_COLUMNS = 6, GRID_NOTES_HEIGHT = 440, SlideGridJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), reactDOMSlideGrid = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactDomNamespace)(), 1), SECTION_LIMIT_MESSAGE = (0, runtime2.formatMessage)({
       defaultMessage: "此演示文稿的章节数已达上限",
       id: "JWcg6XPPpg"
     }), GRID_LABEL_HEIGHT = 22, GRID_TILE_CORNER_RADIUS = 8, GRID_LABEL_FONT_SIZE = 18, GRID_TOUCH_LABEL_FONT_SIZE = 28, GRID_SELECTION_OUTSET = 20, GRID_CHROME_GAP = 6, GRID_TOUCH_CHROME_SIZE = 32, EMPTY_GRID_SELECTION_SET = /* @__PURE__ */ new Set(), copiedGridSlideKey = (input) => "copy:" + input, GRID_DRAG_THRESHOLD_PX = 4, GRID_WHEEL_PAN_FACTOR = 1, GRID_ZOOM_ANIMATION_MS = 250, MIN_FOCUSED_GRID_SLIDE_WIDTH = 420, FOCUSED_GRID_SLIDE_SIDE_PADDING = 24, GRID_RECT_SELECTION_THRESHOLD_PX = 5, GRID_PREVIEW_SLIDE_ID = "__preview__", GRID_INTERACTIVE_TARGET_SELECTOR = "[data-grid-tile],[data-grid-label],[data-grid-chrome],button,input", GridSlideThumbnail = runtime2.ReactGridMemo.memo(function({ slide, assets, readOnly }) {
@@ -1605,7 +1755,7 @@ function installEditorSlideGrid(runtime2) {
         animate: !1,
         editorChrome: !readOnly
       });
-    });
+    }), gridCameraTransform = (view) => "translate(" + String(-view.x * view.scale) + "px, " + String(-view.y * view.scale) + "px) scale(" + String(view.scale) + ")", GRID_LAND_SETTLE_MS = 100, GRID_GLIDE_SETTLE_AT = 0.6666666666666666, easeOutCubic = (progress) => 1 - (1 - progress) ** 3, GRID_GLIDE_EASE = cubicBezierEase(0.4, 0, 0.2, 1);
   };
 }
 export {

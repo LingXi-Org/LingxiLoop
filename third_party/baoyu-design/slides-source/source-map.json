@@ -1,7 +1,7 @@
 {
-  "upstreamCommit": "c15e76ef5134228d2bb5da35652d30d7d6b8a34d",
+  "upstreamCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
   "source": "upstream/claude-slides/scripts/editor/node/compiler.cjs",
-  "translatedMessages": 499,
+  "translatedMessages": 1446,
   "modules": [
     {
       "file": "modules/module-interop.js",
@@ -23,7 +23,7 @@
         "initializeOnce",
         "dynamicRequire"
       ],
-      "upstreamLine": 62344
+      "upstreamLine": 62398
     },
     {
       "file": "modules/environment-i18n.js",
@@ -44,13 +44,16 @@
         "installPageMessages",
         "readPageMessages",
         "pageTextDirection",
+        "pageMessagesLanguage",
+        "applyPageLanguage",
+        "currentDesignKitI18n",
         "formattingLocale",
         "designKitI18n",
         "SOURCE_MESSAGE_LOCALE",
         "I18N_GLOBAL_KEY",
         "MessageFormatError"
       ],
-      "upstreamLine": 62548
+      "upstreamLine": 62602
     },
     {
       "file": "modules/ui-foundation.js",
@@ -250,7 +253,7 @@
         "themeTokenManifest",
         "initializeThemeTokenManifest"
       ],
-      "upstreamLine": 63284
+      "upstreamLine": 63354
     },
     {
       "file": "modules/ui-interactions.js",
@@ -529,7 +532,7 @@
         "isSheetTreeDialog",
         "getOverlayOwnerChain"
       ],
-      "upstreamLine": 66438
+      "upstreamLine": 66508
     },
     {
       "file": "modules/ui-overlays.js",
@@ -829,7 +832,7 @@
         "surfaceTokenNames",
         "initializeCdsRoot"
       ],
-      "upstreamLine": 71309
+      "upstreamLine": 71380
     },
     {
       "file": "modules/ui-editor-tokens.js",
@@ -838,7 +841,7 @@
         "designTokens",
         "initializeUiEditorTokens"
       ],
-      "upstreamLine": 76518
+      "upstreamLine": 76591
     },
     {
       "file": "modules/ui-editor-selection.js",
@@ -868,7 +871,7 @@
         "AlignmentGuides",
         "initializeUiEditorSelection2"
       ],
-      "upstreamLine": 78629
+      "upstreamLine": 78702
     },
     {
       "file": "modules/ui-avatars.js",
@@ -1110,7 +1113,7 @@
         "defaultTooltipImplementation",
         "initializeTooltip"
       ],
-      "upstreamLine": 79071
+      "upstreamLine": 79144
     },
     {
       "file": "modules/ui-avatar-stack.js",
@@ -1128,7 +1131,7 @@
         "AvatarStack",
         "initializeUiAvatarStack"
       ],
-      "upstreamLine": 82934
+      "upstreamLine": 83025
     },
     {
       "file": "modules/ui-disclosure.js",
@@ -1276,7 +1279,7 @@
         "initializeUiDisclosure12",
         "staysSecondaryTextClasses"
       ],
-      "upstreamLine": 83153
+      "upstreamLine": 83244
     },
     {
       "file": "modules/ui-menu.js",
@@ -1413,22 +1416,12 @@
         "Checkbox",
         "initializeUiMenu12"
       ],
-      "upstreamLine": 86040
+      "upstreamLine": 86135
     },
     {
       "file": "modules/ui-inputs.js",
       "install": "installUiInputs",
       "exports": [
-        "resizeTextAreaToContent",
-        "observeTextAreaValue",
-        "useTextAreaAutosize",
-        "reactHu",
-        "supportsNativeFieldSizing",
-        "initializeUiInputs",
-        "reactForUiInputs",
-        "jsxForUiInputs",
-        "TextArea",
-        "initializeUiInputs2",
         "reactForUiInputs2",
         "jsxForUiInputs2",
         "COUNTER_VARIANT_CLASSES",
@@ -1496,7 +1489,7 @@
         "dialogKeyboardPositionProperties",
         "initializeUiInputs10"
       ],
-      "upstreamLine": 90123
+      "upstreamLine": 90218
     },
     {
       "file": "modules/ui-dialog.js",
@@ -1589,7 +1582,7 @@
         "SPLIT_PAINT_EDGE_CLASS",
         "initializeUiDialog3"
       ],
-      "upstreamLine": 91672
+      "upstreamLine": 91535
     },
     {
       "file": "modules/ui-tabs.js",
@@ -1651,7 +1644,7 @@
         "ResizeHandle",
         "initializeUiTabs6"
       ],
-      "upstreamLine": 93589
+      "upstreamLine": 93541
     },
     {
       "file": "modules/ui-dialog2.js",
@@ -1674,7 +1667,7 @@
         "pausedFlipAnimations",
         "initializeUiDialog22"
       ],
-      "upstreamLine": 94848
+      "upstreamLine": 94800
     },
     {
       "file": "modules/ui-table.js",
@@ -1742,7 +1735,7 @@
         "NumberInput",
         "initializeUiTable7"
       ],
-      "upstreamLine": 95053
+      "upstreamLine": 95005
     },
     {
       "file": "modules/ui-scroll-pager.js",
@@ -1777,7 +1770,7 @@
         "ScrollPagerFrame",
         "initializeUiScrollPager"
       ],
-      "upstreamLine": 96902
+      "upstreamLine": 96854
     },
     {
       "file": "modules/ui-tabs2.js",
@@ -1826,7 +1819,7 @@
         "Tabs",
         "initializeUiTabs23"
       ],
-      "upstreamLine": 97577
+      "upstreamLine": 97529
     },
     {
       "file": "modules/ui-toast.js",
@@ -1873,7 +1866,7 @@
         "FIELD_MESSAGE_CLASSES",
         "fieldErrorIcon"
       ],
-      "upstreamLine": 98564
+      "upstreamLine": 98516
     },
     {
       "file": "modules/ui-preview-card.js",
@@ -1884,7 +1877,7 @@
         "PreviewCardJsx",
         "initializePreviewCard"
       ],
-      "upstreamLine": 99580
+      "upstreamLine": 99532
     },
     {
       "file": "modules/ui-pulse.js",
@@ -1894,7 +1887,7 @@
         "PulseJsx",
         "initializePulse"
       ],
-      "upstreamLine": 100380
+      "upstreamLine": 100332
     },
     {
       "file": "modules/ui-inputs2.js",
@@ -1927,7 +1920,7 @@
         "initializeUiInputs29",
         "initializeUiInputs210"
       ],
-      "upstreamLine": 100432
+      "upstreamLine": 100384
     },
     {
       "file": "modules/ui-property-focus.js",
@@ -1955,7 +1948,7 @@
         "popupFocusReturnTimer",
         "initializeUiPropertyFocus"
       ],
-      "upstreamLine": 100991
+      "upstreamLine": 100944
     },
     {
       "file": "modules/ui-property-icons.js",
@@ -1967,7 +1960,7 @@
         "jsxq20",
         "initializeUiPropertyIcons"
       ],
-      "upstreamLine": 101268
+      "upstreamLine": 101221
     },
     {
       "file": "modules/ui-announcements.js",
@@ -1984,7 +1977,7 @@
         "MAX_ANNOUNCEMENT_LENGTH",
         "initializeUiAnnouncements"
       ],
-      "upstreamLine": 101327
+      "upstreamLine": 101280
     },
     {
       "file": "modules/ui-contrast.js",
@@ -1998,7 +1991,6 @@
         "colorContrastResults",
         "worstContrastResult",
         "contrastRatioReadout",
-        "contrastRatioSpoken",
         "contrastColorHex",
         "rgbToOklch",
         "oklchToRgb",
@@ -2016,24 +2008,28 @@
         "rgbIsInGamut",
         "initializeUiContrast"
       ],
-      "upstreamLine": 101480
+      "upstreamLine": 101433
     },
     {
       "file": "modules/ui-property-labels.js",
       "install": "installUiPropertyLabels",
       "exports": [
         "numberChangeRefusalMessage",
+        "partsToggleLabel",
         "additionalPassingGroundsMessage",
         "contrastResultSummary",
         "contrastResultDetails",
         "contrastResultCountSummary",
         "contrastFixDescription",
+        "CHAT_ABOUT_LABEL",
         "RESET_LABEL",
+        "resetLabelFor",
         "MORE_ACTIONS_LABEL",
         "addToSectionLabel",
         "ADD_LABEL",
         "DEFAULT_CLOSE_LABEL",
         "TYPE_LABEL",
+        "labelWithValue",
         "MIXED_LABEL",
         "COLOR_LABEL",
         "COLOR_SEARCH_LABEL",
@@ -2042,21 +2038,25 @@
         "STYLE_SEARCH_LABEL",
         "INCREASE_LABEL",
         "DECREASE_LABEL",
+        "increaseLabelFor",
+        "decreaseLabelFor",
         "INHERITED_LABEL",
-        "PER_SIDE_LABEL",
-        "PER_CORNER_LABEL",
-        "EDIT_LABEL",
-        "HIDE_LABEL",
+        "lowercaseUnlessTranslated",
+        "perPartsLabel",
         "UNIFIED_VALUES_DISABLED_REASON",
-        "SIDE_LABELS",
-        "CORNER_LABELS_rc0",
-        "CONTRAST_GROUND_PREPOSITION",
+        "boxPartLabels",
+        "labeledPartLabels",
+        "labelPart",
+        "SELECT_SOMETHING_HINT",
+        "ratioToOneLabel",
+        "ratioOnGroundLabel",
         "CONTRAST_PASSES_LABEL",
         "CONTRAST_FAILS_LABEL",
+        "joinClauses",
         "COLOR_FIX_LABEL",
         "initializeUiPropertyLabels"
       ],
-      "upstreamLine": 101856
+      "upstreamLine": 101805
     },
     {
       "file": "modules/ui-contrast-controls.js",
@@ -2074,7 +2074,7 @@
         "contrastVerdictClass",
         "initializeUiContrastControls"
       ],
-      "upstreamLine": 102194
+      "upstreamLine": 102290
     },
     {
       "file": "modules/ui-kit-field-undo.js",
@@ -2088,6 +2088,7 @@
         "onKitFieldInput",
         "trackKitFieldUndo",
         "reselectKitField",
+        "HEX_COLOR_FIELD_KIT",
         "isKitField",
         "kitFieldUndoStates",
         "kitFieldUndoWindows",
@@ -2096,7 +2097,7 @@
         "kitFieldRestoreTimer",
         "initializeKitFieldUndo"
       ],
-      "upstreamLine": 102496
+      "upstreamLine": 102604
     },
     {
       "file": "modules/ui-color-picker.js",
@@ -2127,7 +2128,7 @@
         "COLOR_PICKER_POPOVER_CLASS",
         "initializeUiColorPicker"
       ],
-      "upstreamLine": 102710
+      "upstreamLine": 102828
     },
     {
       "file": "modules/editor-shape-icon-paths.js",
@@ -2141,7 +2142,7 @@
         "isShapeIconFilledAlias",
         "initializeShapeIconNames"
       ],
-      "upstreamLine": 103736
+      "upstreamLine": 103966
     },
     {
       "file": "modules/ui-inspector-icons.js",
@@ -2174,7 +2175,7 @@
         "PROPERTY_ICONS_BY_SHAPE_KEY",
         "initializeUiInspectorIcons"
       ],
-      "upstreamLine": 103958
+      "upstreamLine": 104188
     },
     {
       "file": "modules/ui-number-controls.js",
@@ -2208,7 +2209,7 @@
         "PROPERTY_NUMBER_STEPPER_CLASS",
         "initializeUiNumberControls2"
       ],
-      "upstreamLine": 104428
+      "upstreamLine": 104658
     },
     {
       "file": "modules/ui-property-row.js",
@@ -2240,7 +2241,7 @@
         "untitledSectionCollapseWarningShown",
         "initializeUiPropertyRow3"
       ],
-      "upstreamLine": 105230
+      "upstreamLine": 105464
     },
     {
       "file": "modules/ui-scrim-press-through.js",
@@ -2256,7 +2257,7 @@
         "pressThroughTarget",
         "initializeScrimPressThrough"
       ],
-      "upstreamLine": 105945
+      "upstreamLine": 106179
     },
     {
       "file": "modules/ui-property-popover.js",
@@ -2282,21 +2283,23 @@
         "preservePopupSelection",
         "initializeUiPropertyPopover2"
       ],
-      "upstreamLine": 106075
+      "upstreamLine": 106309
     },
     {
       "file": "modules/ui-property-search.js",
       "install": "installUiPropertySearch",
       "exports": [
+        "scrollIntoOverlayView",
         "optionMatchesQuery",
         "optionTypeaheadMatch",
         "createOptionListKeyHandler",
         "OptionList",
         "jsxForUiPropertySearch",
+        "reactForUiPropertySearch",
         "OPTION_LIST_MAX_HEIGHT",
         "initializeUiPropertySearch"
       ],
-      "upstreamLine": 106755
+      "upstreamLine": 106992
     },
     {
       "file": "modules/ui-pointer-media.js",
@@ -2310,7 +2313,7 @@
         "SMALL_COARSE_POINTER_QUERY",
         "initializeUiPointerMedia"
       ],
-      "upstreamLine": 106908
+      "upstreamLine": 107202
     },
     {
       "file": "modules/ui-select.js",
@@ -2322,10 +2325,11 @@
         "SelectReact",
         "SelectJsx",
         "selectTriggerClasses",
+        "selectPopupWidthClasses",
         "selectRowSizes",
         "initializeSelect"
       ],
-      "upstreamLine": 106990
+      "upstreamLine": 107284
     },
     {
       "file": "modules/ui-gradient-editor.js",
@@ -2342,10 +2346,12 @@
         "symbolicGradientColorPattern",
         "gradientStopLengthPattern",
         "handAuthoredGradientExplanation",
+        "GRADIENT_STOPS_LABEL",
+        "gradientStopPositionLabel",
         "gradientTypeChoices",
         "initializeGradientEditor"
       ],
-      "upstreamLine": 107363
+      "upstreamLine": 107719
     },
     {
       "file": "modules/ui-tooltip-wrapper.js",
@@ -2355,7 +2361,7 @@
         "TooltipWrapperJsx",
         "initializeTooltipWrapper"
       ],
-      "upstreamLine": 108101
+      "upstreamLine": 108551
     },
     {
       "file": "modules/ui-icon-button.js",
@@ -2364,7 +2370,7 @@
         "IconButtonJsx",
         "initializeIconButton"
       ],
-      "upstreamLine": 108160
+      "upstreamLine": 108610
     },
     {
       "file": "modules/ui-color-select.js",
@@ -2386,9 +2392,11 @@
         "swatchLabelIsColor",
         "swatchPaletteColumns",
         "emptySwatchValue",
+        "revealPressedSwatch",
+        "EMPTY_SWATCH_LABEL",
         "initializeColorSelect"
       ],
-      "upstreamLine": 108191
+      "upstreamLine": 108641
     },
     {
       "file": "modules/environment-color-mode.js",
@@ -2401,17 +2409,19 @@
         "automaticColorModeScript",
         "pinnedColorModeAttribute"
       ],
-      "upstreamLine": 108772
+      "upstreamLine": 109251
     },
     {
       "file": "modules/environment-platform-shortcuts.js",
       "install": "installEnvironmentPlatformShortcuts",
       "exports": [
+        "KEY_NAME_MESSAGES",
+        "shortcutKeyName",
         "isApplePlatform",
         "formatCommandShortcut",
         "isDuplicateShortcut"
       ],
-      "upstreamLine": 108867
+      "upstreamLine": 109346
     },
     {
       "file": "modules/media-image-crop.js",
@@ -2436,7 +2446,7 @@
         "maxImageCropZoom",
         "initializeImageCrop"
       ],
-      "upstreamLine": 108894
+      "upstreamLine": 109514
     },
     {
       "file": "modules/media-image-downsampling.js",
@@ -2450,11 +2460,15 @@
         "encodeImageBlob",
         "downsampleImageToBlob",
         "isImageFile",
+        "ImageProblem",
+        "DEFAULT_DATA_URL_MAX_EDGE",
         "imageDataUrlQualities",
+        "DOWNSAMPLE_STEP_RATIO",
+        "MIN_DOWNSAMPLE_EDGE",
         "imageBlobQualities",
         "initializeImageDownsampling"
       ],
-      "upstreamLine": 109195
+      "upstreamLine": 109815
     },
     {
       "file": "modules/environment-links.js",
@@ -2473,7 +2487,7 @@
         "linkEnterHandler",
         "initializeExternalLinks"
       ],
-      "upstreamLine": 109390
+      "upstreamLine": 110070
     },
     {
       "file": "modules/environment-host-capabilities.js",
@@ -2488,7 +2502,7 @@
         "capabilityHasMethod",
         "capabilityLoadTimeoutMs"
       ],
-      "upstreamLine": 109539
+      "upstreamLine": 110219
     },
     {
       "file": "modules/environment-compiled-page.js",
@@ -2516,7 +2530,7 @@
         "databaseCapabilityKey",
         "initializeCompiledPage"
       ],
-      "upstreamLine": 109624
+      "upstreamLine": 110304
     },
     {
       "file": "modules/environment-emulator.js",
@@ -2527,7 +2541,7 @@
         "emulatorPageDetected",
         "initializeEmulatorDetection"
       ],
-      "upstreamLine": 109917
+      "upstreamLine": 110597
     },
     {
       "file": "modules/media-assets.js",
@@ -2557,7 +2571,7 @@
         "blobFailureCooldownMs",
         "initializeAssetStorage"
       ],
-      "upstreamLine": 109956
+      "upstreamLine": 110636
     },
     {
       "file": "modules/legacy-media-metadata.js",
@@ -2566,30 +2580,21 @@
         "isValidVideoProviderId",
         "videoProviderIdHint",
         "videoProviderKeepsStart",
-        "videoProviderAcceptsAnyFile",
         "rawQueryParameter",
         "isSupportedVideoProvider",
         "normalizeVideoStartSeconds",
         "normalizeVideoLink",
         "parseYouTubeTimestamp",
         "parseVideoLinkUrl",
-        "videoProviderFrameUrl",
-        "videoProviderOrigin",
-        "videoLinkEmbedParts",
-        "videoEmbedUrl",
-        "videoWatchUrl",
-        "canEmbedVideoProvider",
-        "canShowVideoProviderThumbnail",
         "videoProviders",
         "videoProviderLabels",
-        "openOnVideoProviderLabel",
         "maxVideoLinkStartSeconds",
         "optionalUrlPart",
         "firstRegexGroup",
         "videoProviderSpecs",
         "initializeVideoLinks"
       ],
-      "upstreamLine": 110714
+      "upstreamLine": 111391
     },
     {
       "file": "modules/model-sections.js",
@@ -2635,7 +2640,7 @@
         "sectionDiffFields",
         "initializeSections"
       ],
-      "upstreamLine": 111056
+      "upstreamLine": 111733
     },
     {
       "file": "modules/model-type-scales.js",
@@ -2646,7 +2651,7 @@
         "namedSlideColors",
         "initializeSlideTypeScales"
       ],
-      "upstreamLine": 112201
+      "upstreamLine": 112878
     },
     {
       "file": "modules/model-style-schema.js",
@@ -2802,7 +2807,7 @@
         "dynamicStyleAttribute",
         "initializeStyleSchema"
       ],
-      "upstreamLine": 112342
+      "upstreamLine": 113019
     },
     {
       "file": "modules/model-artifact-links.js",
@@ -2825,7 +2830,7 @@
         "useArtifactAnswer",
         "initializeArtifactMetadata"
       ],
-      "upstreamLine": 115545
+      "upstreamLine": 116222
     },
     {
       "file": "modules/model-deck.js",
@@ -3011,7 +3016,7 @@
         "enumStringOrUndefined",
         "initializeSlideModel"
       ],
-      "upstreamLine": 115844
+      "upstreamLine": 116521
     },
     {
       "file": "modules/design-system-tokens.js",
@@ -3069,7 +3074,7 @@
         "fontWeightLabels",
         "initializeDesignTokenParser"
       ],
-      "upstreamLine": 119123
+      "upstreamLine": 119800
     },
     {
       "file": "modules/design-system-store.js",
@@ -3090,7 +3095,7 @@
         "designSystemsSubscribers",
         "initializeDesignSystemsStore"
       ],
-      "upstreamLine": 120063
+      "upstreamLine": 120740
     },
     {
       "file": "modules/compiler-css-values.js",
@@ -3160,7 +3165,7 @@
         "gradientHasCustomRadialGeometry",
         "initializeCssValueParser"
       ],
-      "upstreamLine": 120217
+      "upstreamLine": 120894
     },
     {
       "file": "modules/compiler-html.js",
@@ -3279,6 +3284,8 @@
         "htmlCompilerCounters",
         "inheritedInlineStyles",
         "elementInlineStyle",
+        "PERCENT_HEALED_WARNING",
+        "percentBasisWarning",
         "compileWarningCodes",
         "estimatedGlyphWidthFactor",
         "estimatedLongWordWidthFactor",
@@ -3299,7 +3306,7 @@
         "fontFaceRulesPattern",
         "initializeHtmlCompiler"
       ],
-      "upstreamLine": 122617
+      "upstreamLine": 123294
     },
     {
       "file": "modules/model-typography.js",
@@ -3319,7 +3326,8 @@
         "inferDeckTypographyStyles",
         "fontFamilyLabel",
         "typographyStylesSignature",
-        "nodeTypographyLabel",
+        "nodeTypographyFace",
+        "customTypographyStyle",
         "defaultBodyTypographyStyle",
         "typographyEmphasisMatches",
         "findTypographyStyle",
@@ -3337,10 +3345,11 @@
         "emptyTypographyStyles",
         "systemTypographyStylesCache",
         "inferredBodyRolePriority",
+        "CUSTOM_TYPOGRAPHY_STYLE_ID",
         "clampTypographyValue",
         "initializeTypographyInference"
       ],
-      "upstreamLine": 133421
+      "upstreamLine": 134231
     },
     {
       "file": "modules/model-geometry.js",
@@ -3393,7 +3402,7 @@
         "nodeAxisHasSize",
         "initializeModelGeometry"
       ],
-      "upstreamLine": 134079
+      "upstreamLine": 134935
     },
     {
       "file": "modules/model-rich-text-dom.js",
@@ -3414,7 +3423,7 @@
         "replayingRichTextHistory",
         "initializeRichTextDom"
       ],
-      "upstreamLine": 134925
+      "upstreamLine": 135781
     },
     {
       "file": "modules/serialization-html.js",
@@ -3453,7 +3462,7 @@
         "cssPropertyOrderMap",
         "initializeHtmlWriter"
       ],
-      "upstreamLine": 135554
+      "upstreamLine": 136410
     },
     {
       "file": "modules/model-editing.js",
@@ -3512,9 +3521,6 @@
         "replaceImageAsset",
         "setImageFit",
         "resetImageDimensions",
-        "setVideoStartMode",
-        "setVideoLink",
-        "setVideoSound",
         "clearImageMedia",
         "nodeDisplayLabel",
         "nodeTextLabel",
@@ -3525,10 +3531,6 @@
         "slideTitleText",
         "applyTextListFields",
         "imageNodeAtPath",
-        "setVideoStillAsset",
-        "videoStillNeedsRefresh",
-        "withVideoStill",
-        "setVideoLoop",
         "videoStillMaxAgeDays",
         "nodeFallbackLabel",
         "slideDisplayLabel",
@@ -3555,7 +3557,7 @@
         "headingTextRoles",
         "initializeModelEditing"
       ],
-      "upstreamLine": 137208
+      "upstreamLine": 138064
     },
     {
       "file": "modules/model-selection.js",
@@ -3572,6 +3574,8 @@
         "selectionsKey",
         "selectedObjectContextIds",
         "selectedObjectContext",
+        "gridSlideContextItems",
+        "gridSectionContextItems",
         "parseObjectContextId",
         "frameContextId",
         "normalizeObjectContextIds",
@@ -3593,7 +3597,7 @@
         "overlayHasVisiblePaint",
         "initializeModelSelection"
       ],
-      "upstreamLine": 138993
+      "upstreamLine": 139849
     },
     {
       "file": "modules/fonts-catalog.js",
@@ -3611,7 +3615,7 @@
         "webSafeFontFamilyPattern",
         "initializeFontCatalog"
       ],
-      "upstreamLine": 139516
+      "upstreamLine": 140410
     },
     {
       "file": "modules/fonts-variants.js",
@@ -3619,7 +3623,6 @@
       "exports": [
         "optionalGoogleFontStylesheetUrls",
         "normalizeFontWeight",
-        "fontVariantLabel",
         "fontVariantKey",
         "parseFontVariantKey",
         "firstFontFamily",
@@ -3627,7 +3630,6 @@
         "knownFontVariants",
         "fontVariantsOrDefault",
         "fontVariantChoices",
-        "weightNames",
         "fontWeightValues",
         "webSafeFontVariants",
         "defaultFontVariants",
@@ -3635,7 +3637,7 @@
         "sortFontVariants",
         "initializeFontVariants"
       ],
-      "upstreamLine": 139798
+      "upstreamLine": 140692
     },
     {
       "file": "modules/rendering-theme.js",
@@ -3675,7 +3677,7 @@
         "defaultDeckColorNames",
         "initializeRenderingTheme"
       ],
-      "upstreamLine": 140142
+      "upstreamLine": 141003
     },
     {
       "file": "modules/rendering-artifact-link-cards.js",
@@ -3690,7 +3692,7 @@
         "ARTIFACT_LINK_CARD_HEIGHT",
         "textWordsElementId"
       ],
-      "upstreamLine": 140656
+      "upstreamLine": 141516
     },
     {
       "file": "modules/model-navigation.js",
@@ -3705,11 +3707,17 @@
         "boundaryNavigationSelection",
         "ellipsizeAccessibleLabel",
         "quotedAccessibleLabel",
-        "pluralCountLabel",
+        "ACCESSIBLE_NODE_KIND_NAMES",
+        "UNKNOWN_OBJECT_LABEL",
+        "accessibleNodeKindName",
         "accessibleNodeKind",
         "accessibleNodeDetail",
         "capitalizeLabel",
-        "accessiblePositionSuffix",
+        "selectedObjectsLabel",
+        "OBJECT_WORD",
+        "DELETED_NODE_KIND_LABELS",
+        "SHOWN_TEXT_MARKER",
+        "splitShownTextLabel",
         "deletedObjectsLabel",
         "accessibleNodePositionLabel",
         "accessibleSelectionLabel",
@@ -3721,7 +3729,19 @@
         "maxAccessibleLabelLength",
         "initializeObjectNavigation"
       ],
-      "upstreamLine": 140837
+      "upstreamLine": 141697
+    },
+    {
+      "file": "modules/export-coded-failure.js",
+      "install": "installExportCodedFailure",
+      "exports": [
+        "failureKindForLog",
+        "CodedFailure",
+        "remapNotesPageFailure",
+        "slideFailure",
+        "initializeCodedFailure"
+      ],
+      "upstreamLine": 142859
     },
     {
       "file": "modules/model-rich-text-commands.js",
@@ -3731,7 +3751,7 @@
         "executingRichTextCommand",
         "isExecutingRichTextCommand"
       ],
-      "upstreamLine": 142603
+      "upstreamLine": 143851
     },
     {
       "file": "modules/embeds-sanitizer.js",
@@ -3750,7 +3770,7 @@
         "embedSandboxDiagnosticsScript",
         "initializeEmbedSanitizer"
       ],
-      "upstreamLine": 142642
+      "upstreamLine": 143890
     },
     {
       "file": "modules/embeds-runtime-bridge.js",
@@ -3762,7 +3782,7 @@
         "interactiveEmbedRuntimeScript",
         "initializeEmbedRuntimeScript"
       ],
-      "upstreamLine": 143155
+      "upstreamLine": 144403
     },
     {
       "file": "modules/embeds-document.js",
@@ -3774,7 +3794,7 @@
         "webEmbedDiagnosticsScript",
         "initializeEmbedDocument"
       ],
-      "upstreamLine": 143789
+      "upstreamLine": 145135
     },
     {
       "file": "modules/embeds-frame-host.js",
@@ -3790,7 +3810,7 @@
         "createEmbedFrame",
         "initializeEmbedFrameHost"
       ],
-      "upstreamLine": 143844
+      "upstreamLine": 145190
     },
     {
       "file": "modules/embeds-react-frame.js",
@@ -3802,7 +3822,7 @@
         "initializeEmbedFrameComponent",
         "initializeEmbeds"
       ],
-      "upstreamLine": 145194
+      "upstreamLine": 146616
     },
     {
       "file": "modules/rendering-icon-font.js",
@@ -3812,7 +3832,7 @@
         "iconFontCss",
         "initializeIconFont"
       ],
-      "upstreamLine": 145362
+      "upstreamLine": 146788
     },
     {
       "file": "modules/rendering-artifact-link-card-views.js",
@@ -3839,7 +3859,7 @@
         "ArtifactCardIcon",
         "initializeArtifactLinkCardViews"
       ],
-      "upstreamLine": 147331
+      "upstreamLine": 148759
     },
     {
       "file": "modules/rendering-slide-snapshots.js",
@@ -3868,7 +3888,7 @@
         "hasSlideSnapshot",
         "initializeSlideSnapshots"
       ],
-      "upstreamLine": 147630
+      "upstreamLine": 149058
     },
     {
       "file": "modules/rendering-slides.js",
@@ -3899,20 +3919,9 @@
         "ConnectorShape",
         "PolygonShape",
         "ImageNode",
-        "slideHasVideo",
         "isLinkSelectShortcut",
         "RichTextLines",
-        "slideVideoLinkClipKeys",
-        "createClipCapacity",
-        "ClipPlaybackProvider",
-        "LinkedVideoNode",
-        "useSlideClip",
-        "UploadedClipNode",
         "prefersReducedMotion",
-        "StoredVideoNode",
-        "useVideoDelay",
-        "VideoWithCapacity",
-        "VideoElement",
         "hexColorRgba",
         "TextNode",
         "useRichTextFormatInput",
@@ -3943,10 +3952,12 @@
         "textFitScaleVariable",
         "textFitFontSizeVariable",
         "textFitClipVariable",
+        "DEFAULT_SLIDE_RENDERER_MESSAGES",
+        "slideRendererMessagesContext",
+        "SLIDE_CONTENT_LANGUAGE",
         "slideEditorChromeContext",
         "slideStructureEnabledContext",
         "linkModifierKeyLabel",
-        "linkModifierPressHint",
         "richTextDoubleTapWindowMs",
         "renderedLinkOptions",
         "pointerClickMovementTolerance",
@@ -3966,13 +3977,7 @@
         "shapeStyleElementId",
         "shapeStylesCss",
         "shapeClipPaths",
-        "liveClipCapacity",
-        "clipSlideIdContext",
-        "clipCapacityContext",
-        "clipPlaybackModeContext",
-        "clipQueueContext",
         "slideFrameIdContext",
-        "slideClipFocusContext",
         "supportsPlaintextContentEditable",
         "linkDoublePressTimeoutMs",
         "plaintextPasteFallback",
@@ -3982,7 +3987,7 @@
         "editableFocusTimeoutMs",
         "initializeSlideRenderer"
       ],
-      "upstreamLine": 147882
+      "upstreamLine": 149310
     },
     {
       "file": "modules/fonts-fetch.js",
@@ -3992,6 +3997,8 @@
         "documentFontSet",
         "googleFontVariantAvailable",
         "fetchFailureKind",
+        "sniffFontFileType",
+        "fontBlobDataUrl",
         "fetchWithSingleRetry",
         "fetchResourceWithTimeout",
         "fetchResourceText",
@@ -4011,12 +4018,14 @@
         "fetchErrorStatus",
         "isNonRetryableFetchStatus",
         "isNonRetryableFetchError",
+        "NotFontError",
+        "FONT_FILE_SIGNATURES",
         "cachedFontStylesheet",
         "fontStylesheetSettled",
         "fetchFontDataUrl",
         "initializeFontFetching"
       ],
-      "upstreamLine": 151661
+      "upstreamLine": 153142
     },
     {
       "file": "modules/presentation-build-effects.js",
@@ -4035,7 +4044,29 @@
         "slideTransitionEasing",
         "initializeBuildEffects"
       ],
-      "upstreamLine": 152120
+      "upstreamLine": 153689
+    },
+    {
+      "file": "modules/export-export-notes.js",
+      "install": "installExportExportNotes",
+      "exports": [
+        "outcomeReason",
+        "remapNotesPageNote",
+        "joinFontNames",
+        "formatFontFamilyList",
+        "formatFontNameList",
+        "slideSuffix",
+        "altTextSuffix",
+        "exportTargetSuffix",
+        "exportPageLabel",
+        "EXPORT_NOTE_SAYS",
+        "exportNote",
+        "exportNoteText",
+        "hasExportNote",
+        "uniqueExportNotes",
+        "initializeExportNotes"
+      ],
+      "upstreamLine": 153876
     },
     {
       "file": "modules/fonts-readiness.js",
@@ -4043,15 +4074,15 @@
       "exports": [
         "loadingFontFaces",
         "uniqueFontFamilyNames",
-        "fontTimeoutWarning",
-        "fontUnavailableWarning",
-        "formatFontFamilyList",
         "waitForDocumentFonts",
         "promiseWithTimeout",
         "fontReadyTimeoutMs",
-        "unquoteFontFamilyName"
+        "unquoteFontFamilyName",
+        "fontTimeoutWarning",
+        "fontUnavailableWarning",
+        "initializeCaptureFallback"
       ],
-      "upstreamLine": 152307
+      "upstreamLine": 154152
     },
     {
       "file": "modules/fonts-google-font-licences.js",
@@ -4059,24 +4090,21 @@
       "exports": [
         "loadGoogleFontLicences",
         "googleFontNoticeText",
-        "heldBackFontsNote",
         "fontNoticeComment",
-        "fontFamilyListPhrase",
         "GOOGLE_FONT_LISTS_DIR",
         "initializeGoogleFontLicences"
       ],
-      "upstreamLine": 152405
+      "upstreamLine": 154266
     },
     {
       "file": "modules/export-filenames.js",
       "install": "installExportFilenames",
       "exports": [
-        "initializeCaptureFallback",
         "bytesToBase64",
         "exportFilename",
         "slideExportFilename"
       ],
-      "upstreamLine": 152605
+      "upstreamLine": 154469
     },
     {
       "file": "modules/export-embed-capture.js",
@@ -4093,7 +4121,7 @@
         "embedCaptureBatchSize",
         "initializeEmbedCapture"
       ],
-      "upstreamLine": 152641
+      "upstreamLine": 154494
     },
     {
       "file": "modules/export-react-capture.js",
@@ -4105,7 +4133,7 @@
         "CaptureErrorBoundary",
         "initializeSynchronousReactRender"
       ],
-      "upstreamLine": 152860
+      "upstreamLine": 154714
     },
     {
       "file": "modules/export-font-tables.js",
@@ -4115,7 +4143,7 @@
         "renameFontFace",
         "initializeFontTables"
       ],
-      "upstreamLine": 152961
+      "upstreamLine": 154815
     },
     {
       "file": "modules/export-pptx.js",
@@ -4221,7 +4249,7 @@
         "exportBorderSides",
         "initializePptxExport"
       ],
-      "upstreamLine": 153487
+      "upstreamLine": 155341
     },
     {
       "file": "modules/export-pdf-writer.js",
@@ -4318,7 +4346,7 @@
         "maxPdfTextCoordinate",
         "initializePdfWriter"
       ],
-      "upstreamLine": 156655
+      "upstreamLine": 158570
     },
     {
       "file": "modules/export-rendered-semantics.js",
@@ -4326,7 +4354,7 @@
       "exports": [
         "inspectRenderedSemantics"
       ],
-      "upstreamLine": 158999
+      "upstreamLine": 160914
     },
     {
       "file": "modules/fonts-face-parser.js",
@@ -4345,7 +4373,7 @@
         "unicodeRangePropertyPattern",
         "initializeFontFaceParser"
       ],
-      "upstreamLine": 159238
+      "upstreamLine": 161153
     },
     {
       "file": "modules/fonts-inlining.js",
@@ -4363,6 +4391,7 @@
         "fontUsageHints",
         "removeUnusedFontFaces",
         "removeRuntimeFontFaces",
+        "noteFontFetchFailure",
         "inlineGoogleFontFaces",
         "textCodePointsWithCaseVariants",
         "countCodePointsInRange",
@@ -4384,7 +4413,7 @@
         "initializeExportFontWarming",
         "initializeFontInlining"
       ],
-      "upstreamLine": 159416
+      "upstreamLine": 161331
     },
     {
       "file": "modules/export-pdf-capture.js",
@@ -4399,6 +4428,11 @@
         "remainingCaptureTimeBudget",
         "createAdaptiveCaptureBudget",
         "canvasImageBytes",
+        "closingParenIndex",
+        "scanCssSelector",
+        "selectorTargetsFizzyLake",
+        "selectorListTargetsFizzyLake",
+        "cssRuleTextWithoutFizzyLake",
         "documentStylesheetCss",
         "captureFontCss",
         "captureInlineFontCss",
@@ -4433,13 +4467,11 @@
         "pdfFinalizationTimeReserveMs",
         "pdfCaptureBudgetMultiplier",
         "pdfFontsReadyTimeoutMs",
+        "FIZZY_LAKE_SELECTOR_PREFIX",
         "pdfFontInliningBudget",
         "maxFontFetchCacheEntries",
-        "fontFetchFallbackWarning",
-        "fontInliningBudgetWarning",
         "localFontSourcePattern",
         "fetchLocalFontDataUrl",
-        "uncapturedEmbedWarning",
         "textRunBaselineDescentFactor",
         "pdfMaximumTextRunFontSize",
         "pdfMaximumTextCoordinate",
@@ -4451,7 +4483,7 @@
         "pdfSlideHeightPoints",
         "initializePdfCapture"
       ],
-      "upstreamLine": 160095
+      "upstreamLine": 162016
     },
     {
       "file": "modules/export-png.js",
@@ -4465,7 +4497,7 @@
         "pngCrc32Table",
         "initializePngEncoding"
       ],
-      "upstreamLine": 161824
+      "upstreamLine": 163867
     },
     {
       "file": "modules/export-background.js",
@@ -4476,7 +4508,7 @@
         "stableJsonStringify",
         "imagePixelsAreWhite"
       ],
-      "upstreamLine": 161941
+      "upstreamLine": 163984
     },
     {
       "file": "modules/export-background-pictures-tail.js",
@@ -4491,7 +4523,7 @@
         "BACKGROUND_CAPTURE_TIMEOUT_MS",
         "initializeBackgroundCapture"
       ],
-      "upstreamLine": 161996
+      "upstreamLine": 164039
     },
     {
       "file": "modules/export-deck-measurement.js",
@@ -4501,7 +4533,6 @@
         "textHorizontalHold",
         "applyHeldTextPosition",
         "collectMeasuredModelNodes",
-        "darkVideoCaption",
         "textLineMetrics",
         "oneLineTextWidth",
         "textLinesHeight",
@@ -4531,7 +4562,7 @@
         "CANVAS_FONT_STYLE_KEYS",
         "initializeDeckMeasurement"
       ],
-      "upstreamLine": 162238
+      "upstreamLine": 164285
     },
     {
       "file": "modules/export-font-substitution.js",
@@ -4546,7 +4577,7 @@
         "normalizeFontFamily",
         "initializeFontSubstitution"
       ],
-      "upstreamLine": 163877
+      "upstreamLine": 165927
     },
     {
       "file": "modules/export-google-font-catalog.js",
@@ -4556,7 +4587,7 @@
         "GOOGLE_SLIDES_FONT_FAMILIES",
         "initializeGoogleFontFamilies"
       ],
-      "upstreamLine": 164025
+      "upstreamLine": 166075
     },
     {
       "file": "modules/export-google-slides-fonts.js",
@@ -4584,7 +4615,7 @@
         "GOOGLE_SLIDES_FONT_WAIT_MS",
         "initializeGoogleSlidesFonts"
       ],
-      "upstreamLine": 166004
+      "upstreamLine": 168054
     },
     {
       "file": "modules/export-current-fonts.js",
@@ -4598,16 +4629,15 @@
         "canvasFontIsLoaded",
         "unloadedFontFamilies",
         "withoutFontFamilies",
-        "unloadedFontNote",
         "toCurrentFonts",
         "normalizeCurrentFontName",
         "isFontFaceSet",
         "CURRENT_FONT_PROBE_TIMEOUT_MS",
-        "joinFontNames",
+        "unloadedFontNote",
         "usesLinkedGoogleFamily",
         "initializeCurrentFonts"
       ],
-      "upstreamLine": 166488
+      "upstreamLine": 168538
     },
     {
       "file": "modules/export-pptx-font-embedding.js",
@@ -4618,7 +4648,7 @@
         "pptxFontNoticePreamble",
         "initializePptxFontEmbedding"
       ],
-      "upstreamLine": 166836
+      "upstreamLine": 168882
     },
     {
       "file": "modules/export-notes-pages.js",
@@ -4644,7 +4674,7 @@
         "notesPictureAsset",
         "initializeNotesPages"
       ],
-      "upstreamLine": 167358
+      "upstreamLine": 169429
     },
     {
       "file": "modules/export-picture-pptx.js",
@@ -4656,7 +4686,7 @@
         "PICTURE_ALT_MAX",
         "initializePicturePptx"
       ],
-      "upstreamLine": 167814
+      "upstreamLine": 169885
     },
     {
       "file": "modules/export-page-runtime.js",
@@ -4665,7 +4695,7 @@
         "deckPageRuntime",
         "deckPageRuntimeSource"
       ],
-      "upstreamLine": 167901
+      "upstreamLine": 169972
     },
     {
       "file": "modules/export-image-shrinking.js",
@@ -4685,14 +4715,13 @@
         "imageHasOpaquePixels",
         "initializeImageShrinking"
       ],
-      "upstreamLine": 168748
+      "upstreamLine": 170819
     },
     {
       "file": "modules/export-deck-html.js",
       "install": "installExportDeckHtml",
       "exports": [
         "deckHtmlExports",
-        "imagesReducedNote",
         "fitHtmlPictures",
         "renderDeckHtml",
         "splitFontImports",
@@ -4713,11 +4742,11 @@
         "buildDeckPage",
         "htmlFilename",
         "WEB_FONT_OFFLINE_NOTE",
-        "WEB_FONT_BUDGET_NOTE",
         "LIVE_EXPORTED_EMBEDS",
         "EXPORTED_FONT_BUDGET",
         "HTML_REBUILD_TIMEOUT_MS",
         "FONT_PACK_TIMEOUT_MS",
+        "imagesReducedNote",
         "HOSTED_HTML_OVERHEAD_BYTES",
         "UNSAFE_EXPORT_ELEMENT_SELECTOR",
         "EXPORT_LENGTH_STYLE_PATTERN",
@@ -4738,7 +4767,7 @@
         "htmlFontNoticePreamble",
         "initializeDeckHtml"
       ],
-      "upstreamLine": 169128
+      "upstreamLine": 171199
     },
     {
       "file": "modules/host-hot-reload.js",
@@ -4758,7 +4787,7 @@
         "isEmbeddedArtifact",
         "hotReloadBridge"
       ],
-      "upstreamLine": 169981
+      "upstreamLine": 172071
     },
     {
       "file": "modules/host-feature-flags.js",
@@ -4768,6 +4797,9 @@
         "sameFlagValueType",
         "getFeatureFlagAsync",
         "getFeatureFlag",
+        "featureFlagReadiness",
+        "awaitFeatureFlagsReady",
+        "featureFlagsReady",
         "CREATION_SEQUENCE_FLAG",
         "creationSequenceFlagRequested",
         "creationSequenceFlagSnapshot",
@@ -4775,7 +4807,7 @@
         "wasCreationSequenceFlagRequested",
         "creationSequenceEnabled"
       ],
-      "upstreamLine": 170439
+      "upstreamLine": 172529
     },
     {
       "file": "modules/host-agent-activity.js",
@@ -4790,7 +4822,7 @@
         "agentActivityStore",
         "useAgentActivity"
       ],
-      "upstreamLine": 170575
+      "upstreamLine": 172698
     },
     {
       "file": "modules/ui-editor-bootstrap-imports.js",
@@ -4801,7 +4833,7 @@
         "reactDOMN3_",
         "reactd3"
       ],
-      "upstreamLine": 170722
+      "upstreamLine": 172845
     },
     {
       "file": "modules/host-frame-bridge.js",
@@ -4860,6 +4892,9 @@
         "subscribeHostFootInset",
         "setHostFootSlotInset",
         "claimHostChatToggle",
+        "chatSlotCovers",
+        "createLeaveWarningHold",
+        "coverHostChatSlot",
         "setHostActions",
         "hostWords",
         "hostChromeWitnessed",
@@ -4868,7 +4903,7 @@
         "useHoldHostChatToggle",
         "useClaimHostChatToggle"
       ],
-      "upstreamLine": 170781
+      "upstreamLine": 172904
     },
     {
       "file": "modules/host-frame-composer.js",
@@ -4880,10 +4915,12 @@
         "listenForFrameComposer",
         "showFrameComposer",
         "subscribeFrameComposer",
+        "useFrameChatAvailable",
         "useFrameChatReleaseAt",
+        "isFrameComposerVisible",
         "useFrameChat"
       ],
-      "upstreamLine": 171945
+      "upstreamLine": 174122
     },
     {
       "file": "modules/ui-undo-keys.js",
@@ -4895,7 +4932,7 @@
         "createUndoKeyHandler",
         "useUndoKeys"
       ],
-      "upstreamLine": 172246
+      "upstreamLine": 174439
     },
     {
       "file": "modules/ui-collaborator-tints.js",
@@ -4905,7 +4942,7 @@
         "COLLABORATOR_TINTS_WITH_MUTED",
         "jsxMc0"
       ],
-      "upstreamLine": 172328
+      "upstreamLine": 174521
     },
     {
       "file": "modules/ui-viewport-gestures.js",
@@ -4929,7 +4966,7 @@
         "registerViewportGestureHandlers",
         "attachViewportGestures"
       ],
-      "upstreamLine": 172373
+      "upstreamLine": 174566
     },
     {
       "file": "modules/ui-design-provider.js",
@@ -4939,17 +4976,30 @@
         "reactAl",
         "reactDOMvT_",
         "jsxfp0",
-        "reactPl",
+        "reactFizzyLake",
+        "FIZZY_LAKE_SHEET_PARTS",
+        "KIT_APPLIES_FIZZY_LAKE_ATTRIBUTE",
+        "ICON_SET_ON_WHEN_UNSET",
+        "reactIconSet",
+        "ICONS_FOR_EVERY_VIEWER",
         "ICON_SET_FLAG",
-        "DEFAULT_EXPERIMENTAL_PARTS",
-        "ICON_EXPERIMENTAL_PARTS",
-        "experimentalIconPartsAsync",
-        "experimentalIconParts",
+        "ICON_SET_ROLLOUT",
+        "isClaudeNativeApp",
+        "createIconSetGate",
+        "createFizzyLakePartsSource",
+        "useFizzyLakePartsSource",
+        "applyFizzyLakeAttribute",
+        "fizzyLakePartsSource",
         "useExperimentalIconParts",
         "jsxTl",
-        "AppDesignProvider"
+        "AppDesignProvider",
+        "reactBottomToolbarFlag",
+        "BOTTOM_TOOLBAR_FLAG_KEY",
+        "readBottomToolbarFlag",
+        "useBottomToolbarFlag",
+        "useBottomToolbarChrome"
       ],
-      "upstreamLine": 173220
+      "upstreamLine": 175413
     },
     {
       "file": "modules/ui-commit-text-input.js",
@@ -4959,7 +5009,7 @@
         "jsxlp0",
         "CommitTextInput"
       ],
-      "upstreamLine": 173396
+      "upstreamLine": 175764
     },
     {
       "file": "modules/ui-side-panels.js",
@@ -4976,6 +5026,7 @@
         "jsxe5",
         "PanelIconButton",
         "SidePanelContext",
+        "SidePanelWidthContext",
         "SidePanelHostContext",
         "SidePanelProvider",
         "useSidePanel",
@@ -5012,7 +5063,7 @@
         "jsxaZ",
         "PanedLayout"
       ],
-      "upstreamLine": 173500
+      "upstreamLine": 175868
     },
     {
       "file": "modules/ui-context-menu-popup.js",
@@ -5025,7 +5076,7 @@
         "CONTEXT_MENU_MARGIN",
         "ContextMenuPopup"
       ],
-      "upstreamLine": 174936
+      "upstreamLine": 177359
     },
     {
       "file": "modules/ui-canvas-focus.js",
@@ -5039,7 +5090,7 @@
         "focusCanvasWhenDocumentIsIdle",
         "isInspectorFocusTarget"
       ],
-      "upstreamLine": 175222
+      "upstreamLine": 177645
     },
     {
       "file": "modules/ui-property-rows.js",
@@ -5064,7 +5115,7 @@
         "preventDefaultEvent",
         "ColorTextPropertyRow"
       ],
-      "upstreamLine": 175349
+      "upstreamLine": 177772
     },
     {
       "file": "modules/ui-segmented-property.js",
@@ -5076,9 +5127,10 @@
         "TIGHT_SEGMENTED_CLASS",
         "VERTICAL_GLYPH_STYLE",
         "SegmentedPropertyControl",
-        "SegmentedPropertyRow"
+        "SegmentedPropertyRow",
+        "tipWithHint"
       ],
-      "upstreamLine": 176238
+      "upstreamLine": 178682
     },
     {
       "file": "modules/ui-sides-property.js",
@@ -5094,7 +5146,7 @@
         "CORNER_ICON_NAMES",
         "SideOrCornerIcon"
       ],
-      "upstreamLine": 176425
+      "upstreamLine": 178878
     },
     {
       "file": "modules/editor-hit-testing.js",
@@ -5102,7 +5154,7 @@
       "exports": [
         "editableElementAtPoint"
       ],
-      "upstreamLine": 176684
+      "upstreamLine": 179147
     },
     {
       "file": "modules/editor-media-crop-overlay.js",
@@ -5126,7 +5178,7 @@
         "blurCropEditingTarget",
         "MediaCropOverlay"
       ],
-      "upstreamLine": 176716
+      "upstreamLine": 179179
     },
     {
       "file": "modules/editor-measurement-overlay.js",
@@ -5136,7 +5188,7 @@
         "jsxlH",
         "MeasureOverlay"
       ],
-      "upstreamLine": 177521
+      "upstreamLine": 180042
     },
     {
       "file": "modules/editor-drag-geometry.js",
@@ -5149,7 +5201,28 @@
         "unionSelectionRectangles",
         "selectionResizeScaleLimits"
       ],
-      "upstreamLine": 177716
+      "upstreamLine": 180237
+    },
+    {
+      "file": "modules/ui-toolbar-fold.js",
+      "install": "installUiToolbarFold",
+      "exports": [
+        "reactToolbarFold",
+        "reactDOMToolbarFold",
+        "jsxToolbarFold",
+        "ToolbarFoldContext",
+        "FOLD_CARD_GAP",
+        "FOLD_CARD_MARGIN",
+        "foldCellHosts",
+        "FOLD_SLOT_STYLE",
+        "ToolbarFoldCell",
+        "foldCells",
+        "markToolbarFoldGroups",
+        "layoutToolbarFold",
+        "placeToolbarFoldCard",
+        "whenToolbarFoldIdle"
+      ],
+      "upstreamLine": 182113
     },
     {
       "file": "modules/ui-toolbar-controls.js",
@@ -5180,6 +5253,12 @@
         "spokenShortcut",
         "useButtonAccessibility",
         "TOOLBAR_LINK_DESCRIPTION",
+        "shortcutDescription",
+        "joinDescriptionSentences",
+        "joinDescriptionWords",
+        "pointInsideElementBox",
+        "closeFrameComposerFromFoot",
+        "useInsideToolbarFoot",
         "ToolbarButton",
         "jsxR8",
         "toolbarPointerSession",
@@ -5218,7 +5297,7 @@
         "TOOLBAR_SCROLL_FOCUS_MARGIN",
         "scrollToolbarButtonIntoView"
       ],
-      "upstreamLine": 177844
+      "upstreamLine": 180365
     },
     {
       "file": "modules/ui-toolbar-tabs.js",
@@ -5228,7 +5307,7 @@
         "jsxT_",
         "ToolbarTabs"
       ],
-      "upstreamLine": 179288
+      "upstreamLine": 182375
     },
     {
       "file": "modules/ui-artifact-load-boundary.js",
@@ -5242,7 +5321,7 @@
         "ARTIFACT_LOAD_DELAY_MS",
         "ArtifactLoadBoundary"
       ],
-      "upstreamLine": 179348
+      "upstreamLine": 182435
     },
     {
       "file": "modules/ui-agent-cursor.js",
@@ -5280,7 +5359,7 @@
         "jsxWz",
         "AgentCursor"
       ],
-      "upstreamLine": 179530
+      "upstreamLine": 182626
     },
     {
       "file": "modules/ui-file-drop.js",
@@ -5292,7 +5371,18 @@
         "installInternalFileDragTracking",
         "useFileDrop"
       ],
-      "upstreamLine": 180236
+      "upstreamLine": 183336
+    },
+    {
+      "file": "modules/ui-toast-f6-visit.js",
+      "install": "installUiToastF6Visit",
+      "exports": [
+        "useToastF6Visit",
+        "reactToastF6Visit",
+        "TOAST_F6_VISIT_ATTRIBUTE",
+        "initializeToastF6Visit"
+      ],
+      "upstreamLine": 183710
     },
     {
       "file": "modules/ui-toasts.js",
@@ -5314,21 +5404,24 @@
         "subscribeToasts",
         "useToastBridge"
       ],
-      "upstreamLine": 180402
+      "upstreamLine": 183502
     },
     {
       "file": "modules/ui-toolbar-popover.js",
       "install": "installUiToolbarPopover",
       "exports": [
-        "reactv4",
+        "reactToolbarPopover",
+        "MENU_CUT_HOST_WORD",
+        "supportsUserActivation",
+        "createMenuCutReporter",
+        "findControlledMenu",
+        "useFootMenuCut",
         "jsxeQ",
         "ToolbarPopover",
         "TOOLBAR_SPLIT_TRIGGER_CLASS",
-        "TOOLBAR_SPLIT_TRIGGER_FIZZY_CLASS",
-        "jsx_T",
-        "ToolbarMenuItem"
+        "TOOLBAR_SPLIT_TRIGGER_FIZZY_CLASS"
       ],
-      "upstreamLine": 180607
+      "upstreamLine": 183777
     },
     {
       "file": "modules/ui-property-popover2.js",
@@ -5342,7 +5435,7 @@
         "PropertyPopoverTrigger",
         "RemovePropertyButton"
       ],
-      "upstreamLine": 180978
+      "upstreamLine": 184415
     },
     {
       "file": "modules/ui-artifact-toolbar.js",
@@ -5360,6 +5453,7 @@
         "toolbarContentCount",
         "collectToolbarLeaves",
         "TOOLBAR_FOCUSABLE_SELECTOR",
+        "TOOLBAR_PAGE_STOP_SELECTOR",
         "toolbarLeadFloor",
         "updateToolbarHug",
         "TOOLBAR_REFIT_EVENT",
@@ -5369,11 +5463,14 @@
         "TOOLBAR_WORD_LOCK_MARGIN",
         "updateToolbarWordLock",
         "effectiveToolbarDensity",
+        "effectiveToolbarTouchDensity",
         "useToolbarInsets",
         "ArtifactToolbarDivider",
         "SaveStatusDot",
         "SaveStatusControl",
         "SaveProblemStatus",
+        "TOOLBAR_PAGE_SLACK",
+        "toolbarControlPageTarget",
         "toolbarScrollPageTarget",
         "TOOLBAR_PADDLE_CLASS",
         "isFocusVisible",
@@ -5384,9 +5481,11 @@
         "ArtifactToolbar",
         "ChatToolbarButton",
         "ChatWordButton",
-        "ChatToolbarGroup"
+        "ChatToolbarGroup",
+        "CHAT_LABEL",
+        "CHAT_NEW_REPLY_LABEL"
       ],
-      "upstreamLine": 181252
+      "upstreamLine": 184720
     },
     {
       "file": "modules/ui-toolbar-foot.js",
@@ -5396,9 +5495,42 @@
         "PRESENTATION_ATTRIBUTE",
         "subscribePresentationAttribute",
         "usePresentationSheetOpen",
-        "jsxChatToggleSlot",
-        "ChatToggleSlot",
         "reactFloatingToolbar",
+        "watchChatSlotCover",
+        "CHAT_SLOT_COVER_INSET",
+        "CHAT_SLOT_COVER_SETTLE_MS",
+        "CHAT_SLOT_COVER_RECHECKS",
+        "CHAT_SLOT_COVER_EVENTS",
+        "CHAT_SLOT_COVER_LAZY_EVENTS",
+        "isLiveRegionElement",
+        "chatSlotCoverKind",
+        "XHTML_NAMESPACE",
+        "jsxChatToggleSlot",
+        "CHAT_SLOT_OPEN_WIDTH",
+        "ChatToggleSlot",
+        "reactChatSlot",
+        "FRAME_BAR_TIP_KEY",
+        "FRAME_BAR_TIP_GAP",
+        "reportFrameBarTip",
+        "reactArmedTool",
+        "usePutDownArmedToolOnBlur",
+        "reactPlaceChatSlot",
+        "chatSlotReportedWidth",
+        "chatSlotGeometry",
+        "subpixelTranslate",
+        "alignChatSlot",
+        "usePlaceChatSlot",
+        "reactToolbarHitAreas",
+        "TOOLBAR_HIT_MAX",
+        "TOOLBAR_HIT_SLOT_GAP",
+        "rangesOverlap",
+        "clampToolbarHit",
+        "toolbarHitInsets",
+        "toolbarHitTarget",
+        "toolbarHitElements",
+        "clearToolbarHit",
+        "layoutToolbarHitAreas",
+        "useToolbarHitAreas",
         "jsxFloatingToolbar",
         "FOOT_INSET_MARGIN",
         "FOOT_TOOLBAR_PAD_CLASS",
@@ -5418,14 +5550,9 @@
         "footRevealListeners",
         "revealFoot",
         "subscribeFootReveal",
-        "useFootToolbarReveal",
-        "chatSlotGeometry",
-        "subpixelTranslate",
-        "alignChatSlot",
-        "reactChatSlot",
-        "usePlaceChatSlot"
+        "useFootToolbarReveal"
       ],
-      "upstreamLine": 182474
+      "upstreamLine": 186101
     },
     {
       "file": "modules/ui-artifact-shell.js",
@@ -5437,7 +5564,7 @@
         "LocalStashRecoveryOffer",
         "ArtifactShell"
       ],
-      "upstreamLine": 182952
+      "upstreamLine": 187211
     },
     {
       "file": "modules/host-artifact-text.js",
@@ -5451,7 +5578,7 @@
         "UNSAFE_ARTIFACT_LABEL_PATTERN",
         "safeArtifactLabel"
       ],
-      "upstreamLine": 183308
+      "upstreamLine": 187604
     },
     {
       "file": "modules/host-clipboard-text.js",
@@ -5467,7 +5594,7 @@
         "canWriteRichClipboard",
         "writeRichClipboard"
       ],
-      "upstreamLine": 183404
+      "upstreamLine": 187700
     },
     {
       "file": "modules/host-room-presence.js",
@@ -5480,6 +5607,10 @@
         "roomApiOwner",
         "roomApiPromise",
         "cachedHostRoom",
+        "ownWhoPresence",
+        "publishWhoPresence",
+        "currentWhoPresence",
+        "rememberWhoPresence",
         "EMPTY_ROOM_PEERS",
         "normalizeRoomPeers",
         "roomPeers",
@@ -5491,7 +5622,7 @@
         "roomPeerHost",
         "roomConnected"
       ],
-      "upstreamLine": 183553
+      "upstreamLine": 187849
     },
     {
       "file": "modules/editor-frame-comments.js",
@@ -5514,6 +5645,7 @@
         "subscribeFrameComments",
         "toggleFrameComments",
         "useFrameCommentsOffered",
+        "useFrameChatDraft",
         "useFrameComments",
         "useFrameCommentsFootReport",
         "FRAME_COMMENT_FOCUS_RETURN_MS",
@@ -5524,10 +5656,9 @@
         "deferCommentFootPress",
         "runAfterFootClick",
         "CommentButtonOnScreenContext",
-        "FrameCommentButton",
-        "ToolbarCommentTools"
+        "FrameCommentButton"
       ],
-      "upstreamLine": 183790
+      "upstreamLine": 188135
     },
     {
       "file": "modules/host-agent-session.js",
@@ -5562,7 +5693,7 @@
         "jsxKd",
         "agentSendResultMessage"
       ],
-      "upstreamLine": 184240
+      "upstreamLine": 188580
     },
     {
       "file": "modules/host-handoff-preference.js",
@@ -5572,20 +5703,26 @@
         "jsxzd",
         "HANDOFF_TARGETS",
         "HANDOFF_TARGET_STORAGE_KEY",
+        "HANDOFF_TARGET_LABELS",
         "preferredHandoffTarget"
       ],
-      "upstreamLine": 184647
+      "upstreamLine": 189005
     },
     {
       "file": "modules/host-busy-holds.js",
       "install": "installHostBusyHolds",
       "exports": [
+        "EXPORT_HOLD_MAX_MS",
+        "SHELL_SAVE_HOLD_MAX_MS",
+        "exportHolds",
+        "shellSaveHolds",
+        "addBusyHold",
         "holdExportInProgress",
         "holdShellSaveInProgress",
         "exportOrShellSaveInProgress",
         "shellSaveInProgress"
       ],
-      "upstreamLine": 184711
+      "upstreamLine": 189083
     },
     {
       "file": "modules/host-artifact-clipboard.js",
@@ -5609,7 +5746,7 @@
         "useArtifactClipboard",
         "copyArtifactToClipboard"
       ],
-      "upstreamLine": 184769
+      "upstreamLine": 189184
     },
     {
       "file": "modules/model-comments.js",
@@ -5625,7 +5762,7 @@
         "applicableCommentOperations",
         "normalizeCommentOperations"
       ],
-      "upstreamLine": 185135
+      "upstreamLine": 189550
     },
     {
       "file": "modules/host-artifact-edit-count.js",
@@ -5644,7 +5781,7 @@
         "recordArtifactEdit",
         "subscribeArtifactEdits"
       ],
-      "upstreamLine": 185288
+      "upstreamLine": 189703
     },
     {
       "file": "modules/host-artifact-presence.js",
@@ -5654,6 +5791,7 @@
         "MAX_PRESENCE_FIELDS",
         "MAX_PRESENCE_OBJECTS",
         "MAX_PRESENCE_LABEL_LENGTH",
+        "MAX_PEER_NAME_LENGTH",
         "MAX_PRESENCE_TEXT_LENGTH",
         "MAX_PRESENCE_ID_LENGTH",
         "PRESENCE_FIELD_PATTERN",
@@ -5667,12 +5805,13 @@
         "normalizePresenceGlyph",
         "isEmojiTagCodepoint",
         "isDisallowedPresenceCodepoint",
+        "isDroppedPeerNameCharacter",
         "sanitizePresenceLabel",
         "normalizePresenceObjects",
         "normalizePresenceFields",
         "createArtifactPresence"
       ],
-      "upstreamLine": 185426
+      "upstreamLine": 189841
     },
     {
       "file": "modules/host-user-api.js",
@@ -5691,22 +5830,36 @@
         "currentUserCanEditAsync",
         "currentUserProfile"
       ],
-      "upstreamLine": 185857
+      "upstreamLine": 190291
     },
     {
       "file": "modules/ui-peer-cursors.js",
       "install": "installUiPeerCursors",
       "exports": [
+        "PEER_COLORS",
+        "RESERVED_PEER_COLORS",
+        "LEGACY_PEER_COLORS",
+        "rotatePeerColors",
+        "peerNameCache",
+        "normalizePeerName",
+        "peerColorFromId",
+        "knownPeerColor",
+        "peerColor",
+        "peerInkColor",
+        "leastUsedPeerColor",
+        "peerWho",
+        "peerColorClaim",
+        "peerColorClaims",
+        "takenPeerColors",
+        "peerClaimPrecedes",
+        "sortPeerColorClaims",
+        "createPeerColorPicker",
         "jsxGY",
         "PEER_CURSOR_IDLE_TIMEOUT_MS",
         "PEER_CURSOR_STALE_MS",
         "PEER_CURSOR_GLIDE_MS",
-        "PEER_CURSOR_COLORS",
-        "peerColorFromId",
+        "PEER_CURSOR_FOCUS_LOOK_MS",
         "PEER_COLOR_PATTERN",
-        "PEER_COLOR_INDEXES",
-        "peerColorIndex",
-        "peerColorCssVariable",
         "MAX_PEER_CHAT_LENGTH",
         "MAX_PEER_CHAT_DISPLAY_LENGTH",
         "PEER_CHAT_HOLD_MS",
@@ -5717,14 +5870,16 @@
         "usePeerMessageFade",
         "PeerCursorTag",
         "sanitizePeerChatMessage",
+        "watchCursorLeave",
         "createCursorPresence",
         "peerProfileCache",
         "visiblePeerCursors",
         "usePeerProfiles",
         "usePeerCursors",
-        "PeerCursors"
+        "PeerCursors",
+        "INTERACTIVE_TARGET_SELECTOR"
       ],
-      "upstreamLine": 186061
+      "upstreamLine": 190495
     },
     {
       "file": "modules/ui-remote-change-announcer.js",
@@ -5739,7 +5894,7 @@
         "EMPTY_REMOTE_WORDS",
         "useRemoteChangeAnnouncer"
       ],
-      "upstreamLine": 186666
+      "upstreamLine": 191555
     },
     {
       "file": "modules/editor-command-history.js",
@@ -5750,7 +5905,17 @@
         "setArtifactFeedbackHandler",
         "reportArtifactFeedback"
       ],
-      "upstreamLine": 188039
+      "upstreamLine": 192932
+    },
+    {
+      "file": "modules/export-failure-messages.js",
+      "install": "installExportFailureMessages",
+      "exports": [
+        "exportFailureReason",
+        "imageProblemReason",
+        "genericFailureReason"
+      ],
+      "upstreamLine": 193048
     },
     {
       "file": "modules/model-deck-metadata.js",
@@ -5770,7 +5935,7 @@
         "restoreKeptListedSlides",
         "conflictingUndoMessage"
       ],
-      "upstreamLine": 188155
+      "upstreamLine": 193170
     },
     {
       "file": "modules/editor-deck-command-history.js",
@@ -5778,7 +5943,7 @@
       "exports": [
         "createDeckCommandHistory"
       ],
-      "upstreamLine": 188397
+      "upstreamLine": 193412
     },
     {
       "file": "modules/editor-slide-gesture-history.js",
@@ -5786,13 +5951,13 @@
       "exports": [
         "createSlideGestureHistory"
       ],
-      "upstreamLine": 188566
+      "upstreamLine": 193581
     },
     {
       "file": "modules/design-system-color-analysis.js",
       "install": "installDesignSystemColorAnalysis",
       "exports": [],
-      "upstreamLine": 188795
+      "upstreamLine": 193857
     },
     {
       "file": "modules/ui-zoom-control.js",
@@ -5801,12 +5966,15 @@
         "reactRF",
         "jsxh6",
         "ZOOM_PRESETS",
-        "ZOOM_LIMIT_MESSAGES",
+        "zoomLabel",
+        "formatZoomPercent",
+        "zoomBelowLimitMessage",
+        "zoomAboveLimitMessage",
         "fitZoomIcon",
         "isValidZoomScale",
         "ZoomControl"
       ],
-      "upstreamLine": 189812
+      "upstreamLine": 194874
     },
     {
       "file": "modules/ui-find-bar.js",
@@ -5847,7 +6015,7 @@
         "preserveFindStatusWhileSearching",
         "OpenFindBar"
       ],
-      "upstreamLine": 190115
+      "upstreamLine": 195254
     },
     {
       "file": "modules/design-system-theme-looks.js",
@@ -5864,7 +6032,7 @@
         "useSectionMemory",
         "ThemeLookPicker"
       ],
-      "upstreamLine": 190688
+      "upstreamLine": 195870
     },
     {
       "file": "modules/ui-artifact-find.js",
@@ -5881,7 +6049,7 @@
         "dismissLinkEditorForFind",
         "useArtifactFind"
       ],
-      "upstreamLine": 191288
+      "upstreamLine": 196481
     },
     {
       "file": "modules/editor-dom-text-search.js",
@@ -5908,7 +6076,7 @@
         "liveRangeFromStaticRange",
         "findRangeRectangle"
       ],
-      "upstreamLine": 191826
+      "upstreamLine": 197019
     },
     {
       "file": "modules/ui-find-highlights.js",
@@ -5921,7 +6089,7 @@
         "setFindHighlights",
         "clearFindHighlights"
       ],
-      "upstreamLine": 192226
+      "upstreamLine": 197419
     },
     {
       "file": "modules/ui-find-result-icons.js",
@@ -5932,7 +6100,7 @@
         "textFindResultIcon",
         "frameFindResultIcon"
       ],
-      "upstreamLine": 192318
+      "upstreamLine": 197511
     },
     {
       "file": "modules/model-artifact-store-records.js",
@@ -5949,13 +6117,14 @@
         "cloneFontFaceRecord",
         "serializedSlideRecord"
       ],
-      "upstreamLine": 192368
+      "upstreamLine": 197561
     },
     {
       "file": "modules/editor-font-face-choices.js",
       "install": "installEditorFontFaceChoices",
       "exports": [
         "DECK_FONT_LIMIT_MESSAGE",
+        "DECK_FONT_LIMIT_SENTENCE",
         "FONT_FALLBACK_OPTIONS",
         "BUILTIN_FONT_FACE_CHOICES",
         "findCarriedFontFace",
@@ -5970,7 +6139,7 @@
         "fontFamilyPatchFromChoice",
         "fontFamilyChoiceValue"
       ],
-      "upstreamLine": 192517
+      "upstreamLine": 197710
     },
     {
       "file": "modules/editor-gesture-cursor.js",
@@ -5979,7 +6148,7 @@
         "setGestureCursor",
         "clearGestureCursor"
       ],
-      "upstreamLine": 192827
+      "upstreamLine": 198045
     },
     {
       "file": "modules/editor-slide-generation.js",
@@ -5989,7 +6158,7 @@
         "slideGeneration",
         "isSlideGenerationStale"
       ],
-      "upstreamLine": 192844
+      "upstreamLine": 198062
     },
     {
       "file": "modules/ui-session-properties.js",
@@ -5997,6 +6166,8 @@
       "exports": [
         "reactD9",
         "jsxpJ",
+        "textStyleLabel",
+        "customTextStyleLabel",
         "SELECTION_HOVER_CLASS",
         "SESSION_POPOVER_CLOSE_DELAY_MS",
         "isTextInputEventTarget",
@@ -6019,7 +6190,7 @@
         "IMAGE_CHECKERBOARD_BACKGROUND",
         "SessionImageReplaceButton"
       ],
-      "upstreamLine": 192883
+      "upstreamLine": 198101
     },
     {
       "file": "modules/ui-style-inspector.js",
@@ -6032,10 +6203,13 @@
         "propertyValidatorStringArray",
         "stylePropertyValidator",
         "MAX_INLINE_ENUM_CHOICES",
-        "MAX_INLINE_ENUM_LABEL_LENGTH",
+        "MAX_INLINE_ENUM_WIDTH",
+        "INLINE_ENUM_OPTION_PADDING",
+        "enumLabelWidth",
         "enumChoicesFitInline",
         "stylePropertyRowModel",
         "STYLE_GROUP_ORDER",
+        "STYLE_GROUP_TITLES",
         "stylePropertyGroup",
         "HIDDEN_STYLE_PROPERTY_KEYS",
         "stylePropertyGroups",
@@ -6069,13 +6243,18 @@
         "styleStringValue",
         "styleRecordValue",
         "styleEffectRecords",
+        "STYLE_EFFECT_WORDS",
         "STYLE_PROPERTY_LABELS",
-        "BLUR_EFFECT_LABELS",
-        "styleEffectLabel",
+        "BLUR_EFFECT_WORDS",
+        "shadowEffectWords",
         "stylePropertyLabel",
+        "styleKeyLabel",
+        "STYLE_ENUM_VALUE_LABELS_BY_KEY",
+        "styleKeyedEnumValueLabel",
         "STYLE_ENUM_VALUE_LABELS",
         "styleEnumValueLabel",
         "styleEnumOptions",
+        "styleDefaultHint",
         "styleValuesEqual",
         "changedStyleProperty",
         "createStyleEditor",
@@ -6093,6 +6272,7 @@
         "validatedColorLiveProps",
         "StyleValueRow",
         "MIXED_STYLE_CHOICE",
+        "requiredRemoveName",
         "StyleRemoveShorthandButton",
         "validatedStyleColor",
         "StyleColorTextRow",
@@ -6102,10 +6282,14 @@
         "useNestedStyleEditor",
         "NestedStyleNumberRows",
         "SHADOW_EDITOR_BOUNDS",
+        "NESTED_STYLE_REMOVE_LABELS",
+        "STYLE_COLOR_REMOVE_LABELS",
         "normalizedShadowRecord",
         "validatedShadowRecord",
+        "shadowSummary",
         "ShadowStyleRow",
         "BlurStyleRow",
+        "styleNoneLabel",
         "nestedStyleSummary",
         "NestedStylePopoverRow",
         "gradientStopRecords",
@@ -6113,7 +6297,7 @@
         "GradientPickerStyleEditor",
         "GradientStopsStyleEditor"
       ],
-      "upstreamLine": 193661
+      "upstreamLine": 198943
     },
     {
       "file": "modules/ui-box-quick-panels.js",
@@ -6123,7 +6307,9 @@
         "jsxk5",
         "BORDER_SIDE_MENU_ORDER",
         "BORDER_SIDE_NAMES",
-        "BORDER_SIDE_LABELS",
+        "BORDER_SIDE_TOGGLE_LABELS",
+        "BORDER_SIDE_WIDTH_LABELS",
+        "BORDER_SIDE_WIDTH_TITLES",
         "BORDER_SIDE_SHORT_LABELS",
         "BORDER_STYLE_VALUES",
         "BORDER_STYLE_LABELS",
@@ -6135,13 +6321,15 @@
         "QuickPanelButton",
         "BorderQuickPanel",
         "CORNER_KEYS",
-        "CORNER_LABELS",
+        "CORNER_SHORT_LABELS",
+        "CORNER_RADIUS_LABELS",
+        "SIDE_SPACING_LABELS",
         "CornerRadiusField",
         "CornerQuickPanel",
         "SpacingQuickPanel",
         "SideSpacingFields"
       ],
-      "upstreamLine": 196052
+      "upstreamLine": 202079
     },
     {
       "file": "modules/ui-box-style-toolbar.js",
@@ -6150,6 +6338,7 @@
         "jsxK7",
         "STYLE_SIDE_NAMES",
         "ensureVisibleBorderStyle",
+        "BORDER_COLOR_LABEL",
         "BORDER_REQUIRED_REASON",
         "SHAPE_BORDER_SIDES_REASON",
         "isClosedShape",
@@ -6167,7 +6356,7 @@
         "CornerStylePopover",
         "cornerStyleBindings"
       ],
-      "upstreamLine": 196647
+      "upstreamLine": 202945
     },
     {
       "file": "modules/ui-selection-actions.js",
@@ -6177,12 +6366,13 @@
         "jsxNY",
         "TEXT_LIST_LABELS",
         "TEXT_LIST_OPTIONS",
+        "TEXT_ALIGN_LABELS",
         "LINK_INPUT_CLASS",
         "LinkEditor",
         "normalizeExternalLink",
         "SelectionActionButtons"
       ],
-      "upstreamLine": 197223
+      "upstreamLine": 203531
     },
     {
       "file": "modules/ui-edit-context-menu.js",
@@ -6200,7 +6390,7 @@
         "copySelectionForCommand",
         "isContextMenuKey"
       ],
-      "upstreamLine": 197433
+      "upstreamLine": 203817
     },
     {
       "file": "modules/ui-roving-focus.js",
@@ -6212,7 +6402,7 @@
         "createRovingKeyHandler",
         "visibleRovingFocusElements"
       ],
-      "upstreamLine": 197640
+      "upstreamLine": 204088
     },
     {
       "file": "modules/ui-scrollbar-overlay.js",
@@ -6230,7 +6420,7 @@
         "scrollbarMetrics",
         "ScrollbarOverlay"
       ],
-      "upstreamLine": 197741
+      "upstreamLine": 204189
     },
     {
       "file": "modules/editor-child-size-modes.js",
@@ -6253,15 +6443,30 @@
         "resetChildSizeMode",
         "dimensionLimitKeys"
       ],
-      "upstreamLine": 198041
+      "upstreamLine": 204489
     },
     {
       "file": "modules/ui-input-activation.js",
       "install": "installUiInputActivation",
       "exports": [
+        "SHAPE_KIND_LABELS",
+        "shapeKindLabel",
+        "SLIDE_ICON_LABELS",
+        "slideIconLabel",
+        "TEXT_ROLE_LABELS",
+        "textRoleLabel",
+        "TEXT_ROLE_WORDS",
+        "typographyStyleName",
+        "typographyStyleWord",
+        "FONT_FACE_WORDS",
+        "typographyFaceLabel",
+        "typographyLabel",
+        "FONT_WEIGHT_LABELS",
+        "ITALIC_FONT_WEIGHT_LABELS",
+        "fontVariantLabel",
         "isKeyboardOrPrimaryActivation"
       ],
-      "upstreamLine": 198362
+      "upstreamLine": 204810
     },
     {
       "file": "modules/editor-contrast-backgrounds.js",
@@ -6327,7 +6532,7 @@
         "OVERLAY_LAYOUT_ICON",
         "SELECTION_ALIGN_ICONS"
       ],
-      "upstreamLine": 198454
+      "upstreamLine": 205364
     },
     {
       "file": "modules/ui-selection-inspector.js",
@@ -6345,9 +6550,7 @@
         "STACK_CHILD_ALIGN_OPTIONS",
         "GRID_CHILD_ALIGN_OPTIONS",
         "GridTracksPropertyRows",
-        "videoPlayerAt",
         "imagePropertyLabel",
-        "VideoProgressPropertyRow",
         "focusPropertyRowControl",
         "PROPERTY_ROW_FOCUS_SELECTOR",
         "adjacentPropertyRowControl",
@@ -6374,9 +6577,20 @@
         "isDecorativePolygonShape",
         "normalizedHexRgba",
         "isDefaultShapeFill",
+        "FONT_LABEL",
+        "WEIGHT_LABEL",
+        "FONT_SIZE_LABEL",
+        "SPACING_LABEL",
+        "SPACING_TITLE",
+        "LINE_HEIGHT_LABEL",
+        "LETTER_SPACING_NAME",
+        "LETTER_SPACING_LABEL",
+        "SEARCH_FONTS_LABEL",
+        "CUSTOM_STYLE_LABEL",
+        "customFaceLabel",
         "SelectionInspector"
       ],
-      "upstreamLine": 199468
+      "upstreamLine": 206384
     },
     {
       "file": "modules/editor-media-crop-session.js",
@@ -6398,7 +6612,7 @@
         "computedCropFrameSize",
         "useMediaCropSession"
       ],
-      "upstreamLine": 203830
+      "upstreamLine": 210967
     },
     {
       "file": "modules/editor-grouping.js",
@@ -6434,9 +6648,10 @@
         "moveLeadingGroupLayer",
         "scaleLeadingOverlayGroup",
         "resizeGroupedFrame",
+        "linkShortcutKind",
         "canFlattenNestedStackGroup"
       ],
-      "upstreamLine": 204439
+      "upstreamLine": 211582
     },
     {
       "file": "modules/layout-selection-groups.js",
@@ -6453,7 +6668,7 @@
         "removeGroupMarker",
         "ungroupSelectedUnits"
       ],
-      "upstreamLine": 205155
+      "upstreamLine": 212312
     },
     {
       "file": "modules/layout-snapping.js",
@@ -6473,7 +6688,7 @@
         "applyFrameSnapAnchors",
         "snapLineEndpoint"
       ],
-      "upstreamLine": 205899
+      "upstreamLine": 213056
     },
     {
       "file": "modules/creation-timing.js",
@@ -6510,7 +6725,7 @@
         "CREATION_CURSOR_DEPART_MS",
         "CREATION_EMPTY_DECK_FADE_MS"
       ],
-      "upstreamLine": 206311
+      "upstreamLine": 213468
     },
     {
       "file": "modules/collaboration-slide-presence.js",
@@ -6530,7 +6745,7 @@
         "formatSlidePresenceLabel",
         "SlidePresenceBadge"
       ],
-      "upstreamLine": 206624
+      "upstreamLine": 213781
     },
     {
       "file": "modules/editor-slide-selection.js",
@@ -6544,7 +6759,7 @@
         "resolveSlideSelectionClick",
         "useSlideSelection"
       ],
-      "upstreamLine": 206929
+      "upstreamLine": 214129
     },
     {
       "file": "modules/editor-slide-rail-marquee.js",
@@ -6552,7 +6767,7 @@
       "exports": [
         "useSlideRailMarquee"
       ],
-      "upstreamLine": 207210
+      "upstreamLine": 214410
     },
     {
       "file": "modules/editor-slide-rail-layout.js",
@@ -6579,13 +6794,16 @@
         "RAIL_THUMB_RESIZE_SETTLE_MS",
         "useSlideRailLayout"
       ],
-      "upstreamLine": 207367
+      "upstreamLine": 214567
     },
     {
       "file": "modules/editor-slide-messages.js",
       "install": "installEditorSlideMessages",
       "exports": [
         "SPEAKER_NOTES_LABEL",
+        "SPEAKER_NOTES_TOGGLE_LABEL",
+        "SPEAKER_NOTES_FIELD_LABEL",
+        "NOTES_REGION_LABEL",
         "NO_SPEAKER_NOTES_MESSAGE",
         "SPEAKER_NOTES_DESCRIPTION",
         "SHOW_SPEAKER_NOTES_LABEL",
@@ -6598,9 +6816,14 @@
         "COPY_SLIDE_LINK_LABEL",
         "FIRST_SLIDE_LABEL",
         "LAST_SLIDE_LABEL",
-        "HELD_SLIDE_EDIT_MESSAGE"
+        "HELD_SLIDE_EDIT_MESSAGE",
+        "SLIDES_LIST_LABEL",
+        "slideAccessibleLabel",
+        "SLIDE_MENU_POPUP_ATTRS",
+        "slideActionsLabel",
+        "slidesActionsLabel"
       ],
-      "upstreamLine": 207861
+      "upstreamLine": 215061
     },
     {
       "file": "modules/editor-slide-rail.js",
@@ -6616,6 +6839,9 @@
         "SELECT_ONE_SLIDE_TO_COPY_LINK_MESSAGE",
         "UNSKIP_SLIDE_LABEL",
         "HIDE_SLIDE_THUMBNAILS_LABEL",
+        "RAIL_SHOW_THUMBNAILS_LABEL",
+        "RAIL_TOOLBAR_STACK_GAP_CLASS",
+        "RAIL_TOOLBAR_CARD_MIN_WIDTH_CLASS",
         "ADD_SLIDE_LABEL",
         "RAIL_COLUMN_WIDTH_CLASS",
         "RAIL_COLUMN_THUMB_WIDTH",
@@ -6638,7 +6864,6 @@
         "THUMBNAIL_BADGE_SURFACE_CLASS",
         "THUMBNAIL_ICON_BADGE_CLASS",
         "SlideCommentCountBadge",
-        "formatOpenCommentCount",
         "THUMBNAIL_ACTION_BUTTON_CLASS",
         "SKIPPED_THUMBNAIL_ACTION_OFFSET_CLASS",
         "SkippedSlideBadge",
@@ -6649,7 +6874,7 @@
         "disabledActionFromReason",
         "SlideContextMenu"
       ],
-      "upstreamLine": 207988
+      "upstreamLine": 215285
     },
     {
       "file": "modules/editor-slide-grid.js",
@@ -6697,10 +6922,17 @@
         "collectGridTilesInRect",
         "hitTestGridTile",
         "extendGridSelection",
+        "gridCameraTransform",
+        "GRID_LAND_SETTLE_MS",
+        "GRID_GLIDE_SETTLE_AT",
+        "easeOutCubic",
+        "GRID_GLIDE_EASE",
+        "cubicBezierEase",
+        "reactDOMSlideGrid",
         "GridSlideThumbnail",
         "SlideGrid"
       ],
-      "upstreamLine": 210054
+      "upstreamLine": 217441
     },
     {
       "file": "modules/bridge-frame-viewport.js",
@@ -6714,6 +6946,7 @@
         "createBottomInsetSmoother",
         "frameBottomInset",
         "frameBottomInsetSubscribers",
+        "setFrameBottomInset",
         "updateFrameBottomInset",
         "subscribeFrameBottomInset",
         "useFrameBottomInset",
@@ -6725,7 +6958,7 @@
         "useFootInsetCollisionPadding",
         "initializeFrameFootInset"
       ],
-      "upstreamLine": 213058
+      "upstreamLine": 220768
     },
     {
       "file": "modules/comments-capability.js",
@@ -6737,7 +6970,7 @@
         "getCustomCommentAnchors",
         "getCommentsCapability"
       ],
-      "upstreamLine": 213337
+      "upstreamLine": 221055
     },
     {
       "file": "modules/comments-anchors.js",
@@ -6770,7 +7003,7 @@
         "parsePromotedFrameId",
         "resolvePromotedCommentFrame"
       ],
-      "upstreamLine": 213422
+      "upstreamLine": 221140
     },
     {
       "file": "modules/comments-composer.js",
@@ -6783,7 +7016,7 @@
         "getCommentAnchorController",
         "composeFrameComment"
       ],
-      "upstreamLine": 213950
+      "upstreamLine": 221668
     },
     {
       "file": "modules/comments-labels.js",
@@ -6815,7 +7048,7 @@
         "getCommentNodeText",
         "buildCommentLabel"
       ],
-      "upstreamLine": 214040
+      "upstreamLine": 221758
     },
     {
       "file": "modules/editor-touch-long-press.js",
@@ -6827,7 +7060,39 @@
         "canEditAfterTouchLongPress",
         "reduceTouchLongPress"
       ],
-      "upstreamLine": 214507
+      "upstreamLine": 222225
+    },
+    {
+      "file": "modules/editor-scale-geometry.js",
+      "install": "installEditorScaleGeometry",
+      "exports": [
+        "SCALE_MIN_FACTOR",
+        "SCALE_MAX_FACTOR",
+        "clampScaleFactor",
+        "roundToHundredths",
+        "parseScaleInput",
+        "formatScalePercent",
+        "scaleGripAnchor",
+        "gripScaleFactor",
+        "scaleAnchorShift",
+        "scaleUnitsForSelection",
+        "scaleGripMode",
+        "unitsBoundingRect",
+        "scaleLimits",
+        "scaleUnits",
+        "frozenRectLookup"
+      ],
+      "upstreamLine": 232567
+    },
+    {
+      "file": "modules/editor-scale-mode.js",
+      "install": "installEditorScaleMode",
+      "exports": [
+        "ScaleField",
+        "SCALE_REFUSAL_MESSAGES",
+        "useScaleMode"
+      ],
+      "upstreamLine": 233383
     },
     {
       "file": "modules/editor-canvas.js",
@@ -6840,6 +7105,7 @@
         "resolveSingleUnitStyleTarget",
         "placementSideToSnapLine",
         "HORIZONTAL_GROUP_RESIZE_HANDLES",
+        "FAR_CORNER_RESIZE_HANDLES",
         "copySelectedUnitsToClipboard",
         "EDITOR_ENTER_KEY_HINTS",
         "editorRectsEqual",
@@ -6937,7 +7203,7 @@
         "TABLE_TEXT_ALIGNMENT_OPTIONS",
         "TEXT_ALIGNMENT_OPTIONS"
       ],
-      "upstreamLine": 214616
+      "upstreamLine": 222334
     },
     {
       "file": "modules/editor-speaker-notes.js",
@@ -6951,7 +7217,7 @@
         "setSlideSpeakerNotes",
         "SpeakerNotesEditor"
       ],
-      "upstreamLine": 224577
+      "upstreamLine": 233943
     },
     {
       "file": "modules/editor-shape-icons.js",
@@ -6960,7 +7226,7 @@
         "ShapeIconJsx",
         "ShapeIcon"
       ],
-      "upstreamLine": 224783
+      "upstreamLine": 234161
     },
     {
       "file": "modules/editor-damaged-slide.js",
@@ -6972,6 +7238,7 @@
         "buildSlideDiagnosticRequest",
         "buildSlideRepairPrompt",
         "askAgentToRepairSlide",
+        "sendSlideRepairRequest",
         "UNREADABLE_SLIDE_MESSAGE",
         "DamagedSlideJsx",
         "DAMAGED_SLIDE_MESSAGE",
@@ -6979,7 +7246,7 @@
         "VIEW_ONLY_SLIDE_REPAIR_MESSAGE",
         "DamagedSlideNotice"
       ],
-      "upstreamLine": 224894
+      "upstreamLine": 234272
     },
     {
       "file": "modules/editor-palette.js",
@@ -6989,7 +7256,7 @@
         "visitNodeColors",
         "collectPresentationPalette"
       ],
-      "upstreamLine": 225163
+      "upstreamLine": 234577
     },
     {
       "file": "modules/editor-context-menu.js",
@@ -7000,10 +7267,11 @@
         "OBJECT_PROPERTIES_MENU_GROUPS",
         "OBJECT_CONTEXT_MENU_GROUPS",
         "COPY_SLIDE_LINK_MENU_ITEM",
+        "SCALE_MENU_ITEM",
         "objectContextMenuGroups",
         "CanvasContextMenu"
       ],
-      "upstreamLine": 225263
+      "upstreamLine": 234677
     },
     {
       "file": "modules/editor-clipboard.js",
@@ -7048,7 +7316,7 @@
         "parsePastedSlides",
         "clipboardPressTargetMatches"
       ],
-      "upstreamLine": 225372
+      "upstreamLine": 234818
     },
     {
       "file": "modules/presentation-fullscreen.js",
@@ -7072,7 +7340,7 @@
         "exitFullscreen",
         "subscribeFullscreenChange"
       ],
-      "upstreamLine": 226163
+      "upstreamLine": 235609
     },
     {
       "file": "modules/presentation-slide-index.js",
@@ -7081,7 +7349,7 @@
         "preservePresentationSlideIndex",
         "presentationOrdersEqual"
       ],
-      "upstreamLine": 226450
+      "upstreamLine": 235896
     },
     {
       "file": "modules/presentation-announcements.js",
@@ -7090,9 +7358,10 @@
         "ReactSlideAnnouncement",
         "SlideAnnouncementJsx",
         "SlideNavigationAnnouncement",
-        "formatPresentationSlideAnnouncement"
+        "formatPresentationSlideAnnouncement",
+        "formatSlideOfCountAnnouncement"
       ],
-      "upstreamLine": 226500
+      "upstreamLine": 235946
     },
     {
       "file": "modules/presentation-speaker-protocol.js",
@@ -7111,7 +7380,7 @@
         "parseSpeakerNotesEndMessage",
         "parseSpeakerNavigateMessage"
       ],
-      "upstreamLine": 226581
+      "upstreamLine": 236054
     },
     {
       "file": "modules/presentation-phone-remote.js",
@@ -7128,7 +7397,7 @@
         "createRemoteStageHost",
         "createRemoteClient"
       ],
-      "upstreamLine": 226819
+      "upstreamLine": 236292
     },
     {
       "file": "modules/presentation-popouts.js",
@@ -7148,7 +7417,7 @@
         "focusPopoutWindow",
         "openPopoutView"
       ],
-      "upstreamLine": 227177
+      "upstreamLine": 236650
     },
     {
       "file": "modules/documents-json-records.js",
@@ -7166,7 +7435,7 @@
         "documentRecordsEqual",
         "basenameDocumentPath"
       ],
-      "upstreamLine": 227457
+      "upstreamLine": 236930
     },
     {
       "file": "modules/documents-comment-records.js",
@@ -7176,7 +7445,7 @@
         "decomposeCommentDocuments",
         "composeCommentDocuments"
       ],
-      "upstreamLine": 227568
+      "upstreamLine": 237041
     },
     {
       "file": "modules/documents-migration-markers.js",
@@ -7188,7 +7457,7 @@
         "createdOnFilesMarker",
         "readMovedToMarker"
       ],
-      "upstreamLine": 227620
+      "upstreamLine": 237093
     },
     {
       "file": "modules/documents-slide-codec.js",
@@ -7222,7 +7491,7 @@
         "registerSlideDocumentCodec",
         "getSlideDocumentCodec"
       ],
-      "upstreamLine": 227695
+      "upstreamLine": 237168
     },
     {
       "file": "modules/presentation-speaker-panel.js",
@@ -7247,7 +7516,7 @@
         "SpeakerAdjacentSlide",
         "SpeakerNotesControl"
       ],
-      "upstreamLine": 228364
+      "upstreamLine": 237837
     },
     {
       "file": "modules/presentation-speaker-session.js",
@@ -7266,7 +7535,7 @@
         "openSpeakerNotes",
         "CompactSpeakerNotes"
       ],
-      "upstreamLine": 229156
+      "upstreamLine": 238645
     },
     {
       "file": "modules/presentation-animation-engine.js",
@@ -7284,7 +7553,7 @@
         "animationEnginesByRoot",
         "createSlideAnimationEngine"
       ],
-      "upstreamLine": 229392
+      "upstreamLine": 238890
     },
     {
       "file": "modules/design-system-theme-panel.js",
@@ -7296,7 +7565,7 @@
         "reactForThemeTabFlag",
         "useThemeTabEnabled"
       ],
-      "upstreamLine": 229790
+      "upstreamLine": 239288
     },
     {
       "file": "modules/presentation-player.js",
@@ -7326,7 +7595,7 @@
         "presentationRectsApproximatelyEqual",
         "PresentationSlideTransition"
       ],
-      "upstreamLine": 230277
+      "upstreamLine": 240053
     },
     {
       "file": "modules/creation-overlay.js",
@@ -7344,7 +7613,7 @@
         "creationRectsApproximatelyEqual",
         "SlideCreationOverlay"
       ],
-      "upstreamLine": 231889
+      "upstreamLine": 241680
     },
     {
       "file": "modules/editor-slide-ticks.js",
@@ -7362,7 +7631,7 @@
         "useSlideTicksFocusFollow",
         "useSlideTicksReach"
       ],
-      "upstreamLine": 232331
+      "upstreamLine": 242123
     },
     {
       "file": "modules/creation-controller.js",
@@ -7387,7 +7656,7 @@
         "subscribeCreationReducedMotion",
         "creationPrefersReducedMotion"
       ],
-      "upstreamLine": 232632
+      "upstreamLine": 242424
     },
     {
       "file": "modules/editor-early-slide.js",
@@ -7405,7 +7674,7 @@
         "waitForEarlySlidePaint",
         "EarlySlideView"
       ],
-      "upstreamLine": 233941
+      "upstreamLine": 243743
     },
     {
       "file": "modules/editor-focus-regions.js",
@@ -7418,7 +7687,7 @@
         "createRegionKeyboardNavigator",
         "useRegionKeyboardNavigation"
       ],
-      "upstreamLine": 234217
+      "upstreamLine": 244019
     },
     {
       "file": "modules/editor-find.js",
@@ -7434,19 +7703,18 @@
         "waitForFindHighlightFrame",
         "createFindHighlightPainter"
       ],
-      "upstreamLine": 234401
+      "upstreamLine": 244203
     },
     {
       "file": "modules/editor-change-announcements.js",
       "install": "installEditorChangeAnnouncements",
       "exports": [
-        "formatSlideCount",
         "PRESENTATION_CHANGE_ANNOUNCEMENTS",
         "slideAnnouncementFingerprintCache",
         "createSlideAnnouncementFingerprints",
         "slideAnnouncementFingerprint"
       ],
-      "upstreamLine": 234627
+      "upstreamLine": 244437
     },
     {
       "file": "modules/comments-area-selection.js",
@@ -7464,7 +7732,7 @@
         "subscribeDocumentCommentMode",
         "useDocumentCommentMode"
       ],
-      "upstreamLine": 234739
+      "upstreamLine": 244566
     },
     {
       "file": "modules/comments-area-geometry.js",
@@ -7482,7 +7750,7 @@
         "describeCommentAreaCoverage",
         "createCommentOperationToken"
       ],
-      "upstreamLine": 235062
+      "upstreamLine": 244890
     },
     {
       "file": "modules/comments-pin-geometry.js",
@@ -7497,7 +7765,7 @@
         "encodedCommentPinSvg",
         "COMMENT_MODE_CURSOR"
       ],
-      "upstreamLine": 235308
+      "upstreamLine": 245136
     },
     {
       "file": "modules/comments-hit-testing.js",
@@ -7519,7 +7787,7 @@
         "createCommentAnchorDescription",
         "describeSlideCommentArea"
       ],
-      "upstreamLine": 235399
+      "upstreamLine": 245227
     },
     {
       "file": "modules/comments-pin.js",
@@ -7529,7 +7797,7 @@
         "offsetCommentPinCoordinate",
         "CommentPin"
       ],
-      "upstreamLine": 235795
+      "upstreamLine": 245623
     },
     {
       "file": "modules/comments-highlights.js",
@@ -7540,7 +7808,7 @@
         "CommentKeyHighlight",
         "CommentKeyPin"
       ],
-      "upstreamLine": 235851
+      "upstreamLine": 245679
     },
     {
       "file": "modules/comments-pin-occlusion.js",
@@ -7548,6 +7816,7 @@
       "exports": [
         "COMMENT_PIN_BUTTON",
         "COMMENT_PIN_OCCLUDER_SELECTOR",
+        "CAMERA_MOVED_EVENT",
         "commentPinButtonRect",
         "collectCommentPinOccluders",
         "commentPinOccluded",
@@ -7555,7 +7824,7 @@
         "observeCommentLayoutShifts",
         "createCommentPinReporter"
       ],
-      "upstreamLine": 235904
+      "upstreamLine": 245732
     },
     {
       "file": "modules/design-system-deck-restyle.js",
@@ -7565,19 +7834,20 @@
         "deckLookMemory",
         "useDeckRestyle"
       ],
-      "upstreamLine": 236066
+      "upstreamLine": 245900
     },
     {
       "file": "modules/comments-keyboard.js",
       "install": "installCommentsKeyboard",
       "exports": [
+        "DEFAULT_COMMENT_POINT_INSET",
         "defaultCommentPoint",
         "formatCommentTargetLabel",
         "commentKeyboardInstructions",
         "isCommentKeyboardTarget",
         "SCROLLED_OUT_COMMENT_TARGET_MESSAGE"
       ],
-      "upstreamLine": 236448
+      "upstreamLine": 246282
     },
     {
       "file": "modules/comments-slide-layer.js",
@@ -7595,7 +7865,7 @@
         "slideCommentTargetsSameElement",
         "SlideCommentLayer"
       ],
-      "upstreamLine": 236504
+      "upstreamLine": 246367
     },
     {
       "file": "modules/comments-grid-layer.js",
@@ -7613,7 +7883,7 @@
         "SlideGridCommentLayer",
         "GridCommentPinsLayer"
       ],
-      "upstreamLine": 237901
+      "upstreamLine": 247764
     },
     {
       "file": "modules/editor-grid-notes-click.js",
@@ -7622,7 +7892,7 @@
         "reduceGridNotesOutsideClick",
         "classifyGridNotesClickTarget"
       ],
-      "upstreamLine": 239310
+      "upstreamLine": 249173
     },
     {
       "file": "modules/collaboration-grid-cursors.js",
@@ -7634,7 +7904,7 @@
         "peerCursorSurfaceSnapshot",
         "GridPeerCursorLayers"
       ],
-      "upstreamLine": 239360
+      "upstreamLine": 249223
     },
     {
       "file": "modules/collaboration-selection-rings.js",
@@ -7650,7 +7920,7 @@
         "usePeerSelections",
         "PeerSelectionRings"
       ],
-      "upstreamLine": 239470
+      "upstreamLine": 249333
     },
     {
       "file": "modules/collaboration-slide-selection.js",
@@ -7659,7 +7929,7 @@
         "SlidePeerSelectionJsx",
         "SlidePeerSelections"
       ],
-      "upstreamLine": 239636
+      "upstreamLine": 249502
     },
     {
       "file": "modules/delivery-shell-downloads.js",
@@ -7677,7 +7947,7 @@
         "shellSaveErrorCode",
         "saveThroughShell"
       ],
-      "upstreamLine": 239707
+      "upstreamLine": 249573
     },
     {
       "file": "modules/delivery-provider.js",
@@ -7706,7 +7976,7 @@
         "registerExportEntries",
         "useExportEntries"
       ],
-      "upstreamLine": 239910
+      "upstreamLine": 249781
     },
     {
       "file": "modules/delivery-labels.js",
@@ -7718,7 +7988,7 @@
         "joinMessages",
         "formatFileSize"
       ],
-      "upstreamLine": 240433
+      "upstreamLine": 250304
     },
     {
       "file": "modules/delivery-browser-download.js",
@@ -7726,7 +7996,7 @@
       "exports": [
         "downloadBlobInBrowser"
       ],
-      "upstreamLine": 240479
+      "upstreamLine": 250350
     },
     {
       "file": "modules/delivery-pdf-options.js",
@@ -7748,7 +8018,7 @@
         "PdfExportOptionsDialog",
         "PdfExportOptionsHost"
       ],
-      "upstreamLine": 240498
+      "upstreamLine": 250369
     },
     {
       "file": "modules/delivery-notes-dialog.js",
@@ -7758,7 +8028,21 @@
         "ExportNotesJsx",
         "ExportNotesDialog"
       ],
-      "upstreamLine": 240847
+      "upstreamLine": 250718
+    },
+    {
+      "file": "modules/delivery-export-note-messages.js",
+      "install": "installDeliveryExportNoteMessages",
+      "exports": [
+        "formatConjunctionList",
+        "formatShortConjunctionList",
+        "formatNarrowList",
+        "fontLeftOutMessage",
+        "altTextOrPlaceholder",
+        "exportTargetMessageValues",
+        "exportNoteMessage"
+      ],
+      "upstreamLine": 250805
     },
     {
       "file": "modules/delivery-font-substitution.js",
@@ -7767,12 +8051,10 @@
         "isHelveticaFallbackFont",
         "createFontSubstitutionTracker",
         "formatFontSubstitutionNotes",
-        "MAX_FORMATTED_FONT_NAMES",
-        "formatFontNameList",
         "collectCustomPresentationFontFamilies",
         "presentationFontPortabilityWarning"
       ],
-      "upstreamLine": 240934
+      "upstreamLine": 251591
     },
     {
       "file": "modules/bridge-page-occlusion.js",
@@ -7782,7 +8064,7 @@
         "calculatePageOcclusionBottom",
         "PageOcclusionReporter"
       ],
-      "upstreamLine": 241051
+      "upstreamLine": 251682
     },
     {
       "file": "modules/editor-dialogs.js",
@@ -7801,12 +8083,14 @@
         "dismissEditorDialog",
         "resolveEditorDialog",
         "dismissMatchingEditorDialog",
+        "EDITOR_DIALOG_OK_LABEL",
+        "EDITOR_DIALOG_CANCEL_LABEL",
         "EditorDialogLayout",
         "EditorConfirmDialog",
         "EditorPromptDialog",
         "EditorDialogHost"
       ],
-      "upstreamLine": 241217
+      "upstreamLine": 251851
     },
     {
       "file": "modules/documents-edit-protection.js",
@@ -7826,7 +8110,7 @@
         "activeSlideProtectionTimers",
         "createActiveSlideProtection"
       ],
-      "upstreamLine": 241522
+      "upstreamLine": 252188
     },
     {
       "file": "modules/editor-view-state.js",
@@ -7855,7 +8139,7 @@
         "ReactHotRestore",
         "HotRestoreRevealGate"
       ],
-      "upstreamLine": 241737
+      "upstreamLine": 252403
     },
     {
       "file": "modules/documents-self-publish.js",
@@ -7870,7 +8154,7 @@
         "normalizeSelfPublishError",
         "createSelfPublisher"
       ],
-      "upstreamLine": 242017
+      "upstreamLine": 252683
     },
     {
       "file": "modules/documents-artifact-document.js",
@@ -7884,20 +8168,33 @@
         "setAutoSavingArtifactRuntime",
         "getAutoSavingArtifactRuntime",
         "detectAutoSavingArtifactRuntime",
+        "AUTOSAVE_RETRYING_MESSAGE",
+        "VIEW_CANNOT_EDIT_MESSAGE",
         "READ_ONLY_ARTIFACT_MESSAGE",
         "ARTIFACT_STASH_PREFIX",
         "ARTIFACT_READ_ONLY_PREFIX",
         "artifactStashKey",
         "createSessionStorageSlot",
         "currentArtifactStash",
+        "artifactSessionSlot",
         "readCurrentArtifactReadOnlyReason",
         "currentArtifactReadOnlySlot",
         "hashArtifactState",
         "parseArtifactStash",
         "parseEmbeddedArtifactState",
-        "createArtifactDocument"
+        "createArtifactDocument",
+        "ReactPeopleColor",
+        "peerColorPicker",
+        "peerColorListeners",
+        "notifyPeerColorListeners",
+        "runAfterDelay",
+        "runEveryInterval",
+        "startPeopleColor",
+        "wornPeerColor",
+        "subscribePeerColor",
+        "useWornPeerColor"
       ],
-      "upstreamLine": 242142
+      "upstreamLine": 252808
     },
     {
       "file": "modules/documents-removed-slides.js",
@@ -7905,7 +8202,7 @@
       "exports": [
         "preserveRecentlyRemovedSlides"
       ],
-      "upstreamLine": 243345
+      "upstreamLine": 254283
     },
     {
       "file": "modules/documents-deck-store.js",
@@ -7925,7 +8222,7 @@
         "describeInvalidDeckHtml",
         "SlidesDocumentStore"
       ],
-      "upstreamLine": 243388
+      "upstreamLine": 254326
     },
     {
       "file": "modules/documents-asset-undo.js",
@@ -7935,7 +8232,7 @@
         "createUnusedAssetUndoOperation",
         "filterReferencedDeckAssets"
       ],
-      "upstreamLine": 244145
+      "upstreamLine": 255088
     },
     {
       "file": "modules/editor-current-slide.js",
@@ -7957,7 +8254,7 @@
         "newLinkedSlideId",
         "initialCurrentSlideId"
       ],
-      "upstreamLine": 244215
+      "upstreamLine": 255158
     },
     {
       "file": "modules/bridge-place-links.js",
@@ -7993,7 +8290,7 @@
         "listenForCopySlideLinkShortcut",
         "createPlaceLinkCopier"
       ],
-      "upstreamLine": 244473
+      "upstreamLine": 255416
     },
     {
       "file": "modules/editor-templates.js",
@@ -8008,9 +8305,10 @@
         "SLIDE_TEMPLATES",
         "SlideTemplatesJsx",
         "SlideTemplatePicker",
-        "SlideTemplatePreview"
+        "SlideTemplatePreview",
+        "SLIDE_RENDERER_MESSAGES"
       ],
-      "upstreamLine": 244936
+      "upstreamLine": 255887
     },
     {
       "file": "modules/editor-template-restyling.js",
@@ -8034,7 +8332,7 @@
         "recursivelyRestyleNode",
         "createTemplateRestyler"
       ],
-      "upstreamLine": 245510
+      "upstreamLine": 256561
     },
     {
       "file": "modules/delivery-dialog.js",
@@ -8049,7 +8347,53 @@
         "exportDeliveryFailureMessage",
         "ExportDeliveryDialog"
       ],
-      "upstreamLine": 245960
+      "upstreamLine": 257011
+    },
+    {
+      "file": "modules/editor-rail-placement.js",
+      "install": "installEditorRailPlacement",
+      "exports": [
+        "ReactRailPlacement",
+        "RAIL_LEFT_MIN_VIEWPORT_WIDTH",
+        "RAIL_LEFT_COLUMN_WIDTH",
+        "RAIL_FOOT_GAP",
+        "RAIL_BOTTOM_HEIGHT",
+        "RAIL_PLACEMENT_FOOT_HEIGHT",
+        "RAIL_PLACEMENT_SIDE_PAD",
+        "RAIL_PLACEMENT_TOP_HEIGHT",
+        "RAIL_PLACEMENT_HYSTERESIS",
+        "fittedSlideWidth",
+        "slideWidthForRailPlacement",
+        "railPlacementAdvantage",
+        "chooseRailPlacement",
+        "subscribeViewportResize",
+        "useRailPlacement"
+      ],
+      "upstreamLine": 257273
+    },
+    {
+      "file": "modules/editor-rail-peek.js",
+      "install": "installEditorRailPeek",
+      "exports": [
+        "ReactRailPeek",
+        "RAIL_PEEK_CLOSE_DELAY_MS",
+        "RAIL_PEEK_ATTRIBUTE",
+        "RAIL_PEEK_SELECTOR",
+        "RAIL_PEEK_HOVER_SELECTOR",
+        "useRailPeek"
+      ],
+      "upstreamLine": 257454
+    },
+    {
+      "file": "modules/bridge-bottom-toolbar.js",
+      "install": "installBridgeBottomToolbar",
+      "exports": [
+        "ReactBottomToolbar",
+        "BOTTOM_TOOLBAR_FLAG",
+        "readBottomToolbarFlagNow",
+        "useBottomToolbarLayout"
+      ],
+      "upstreamLine": 257659
     },
     {
       "file": "modules/editor-app.js",
@@ -8075,9 +8419,11 @@
         "SPEAKER_NOTES_POPOUT_FALLBACK_MESSAGE",
         "ALL_SLIDES_SKIPPED_EXPORT_MESSAGE",
         "PRESENTATION_BUILDING_MESSAGE",
+        "PRESENTATION_BUILDING_SENTENCE",
         "formatPresentationBuildProgress",
         "PRESENTATION_EXPORT_ALL_SLIDES_ARRIVED_MESSAGE",
         "incompleteDeckExportConfirmation",
+        "incompleteDeckPdfWarning",
         "PresentationWaitingAnnouncement",
         "EXTRA_EXPORT_FORMATS_META_NAME",
         "EMPTY_EXTRA_EXPORT_FORMATS",
@@ -8099,10 +8445,6 @@
         "ignoreGlobalFileDrop",
         "COPIED_VIDEO_OMISSION_MESSAGE",
         "jpegReplacementUploadInput",
-        "VIDEO_UPLOAD_UNAVAILABLE_ERROR_CODES",
-        "MAX_VIDEO_DURATION_MS",
-        "VIDEO_REPLACEMENT_STALE_MESSAGE",
-        "EMPTY_VIDEO_POSTER_DATA_URI",
         "editorHasBlockingOverlay",
         "SlidesApp",
         "EmptyPresentationView",
@@ -8111,7 +8453,7 @@
         "loadImageDimensions",
         "isFrameCaptureMode"
       ],
-      "upstreamLine": 246222
+      "upstreamLine": 257739
     },
     {
       "file": "modules/documents-write-access.js",
@@ -8127,7 +8469,7 @@
         "EMPTY_EMBEDDED_PAGE_PARTS",
         "readOnlyEmbeddedDocumentOptions"
       ],
-      "upstreamLine": 255403
+      "upstreamLine": 268643
     },
     {
       "file": "modules/boot-thumbnail-capture.js",
@@ -8143,7 +8485,7 @@
         "waitForThumbnailAssets",
         "waitForSlidesRootContent"
       ],
-      "upstreamLine": 255560
+      "upstreamLine": 268812
     },
     {
       "file": "modules/boot-state-file.js",
@@ -8157,7 +8499,7 @@
         "readableStateStorageSlot",
         "unavailableStateStorageSlot"
       ],
-      "upstreamLine": 255703
+      "upstreamLine": 268955
     },
     {
       "file": "modules/boot-legacy-html.js",
@@ -8168,7 +8510,7 @@
         "MAX_LEGACY_HTML_CHARS",
         "parseLegacySlidesHtml"
       ],
-      "upstreamLine": 255853
+      "upstreamLine": 269105
     },
     {
       "file": "modules/editor-thumbnail-app.js",
@@ -8182,7 +8524,7 @@
         "SlidesThumbnailSlide",
         "SlidesTitleCover"
       ],
-      "upstreamLine": 255921
+      "upstreamLine": 269173
     },
     {
       "file": "modules/editor-cover-title.js",
@@ -8199,7 +8541,7 @@
         "COVER_TITLE_HOST",
         "useCoverTitleFromContent"
       ],
-      "upstreamLine": 256121
+      "upstreamLine": 269373
     },
     {
       "file": "modules/documents-stash-recovery-message.js",
@@ -8208,7 +8550,7 @@
         "STASH_DISCARD_LABEL",
         "stashedSlideRestoreConfirmation"
       ],
-      "upstreamLine": 256301
+      "upstreamLine": 269553
     },
     {
       "file": "modules/files-slide-codec.js",
@@ -8220,7 +8562,7 @@
         "createSlidesFileCodec",
         "defaultSlidesFileCodec"
       ],
-      "upstreamLine": 256371
+      "upstreamLine": 269623
     },
     {
       "file": "modules/design-system-system-fonts.js",
@@ -8235,7 +8577,7 @@
         "enablePeekFonts",
         "loadFaceStylesheets"
       ],
-      "upstreamLine": 256544
+      "upstreamLine": 269796
     },
     {
       "file": "modules/design-system-slide-styles.js",
@@ -8248,14 +8590,13 @@
         "createSlideRestyler",
         "restylePlanFamilies"
       ],
-      "upstreamLine": 256706
+      "upstreamLine": 269958
     },
     {
       "file": "modules/files-crash-stash.js",
       "install": "installFilesCrashStash",
       "exports": [
         "CRASH_STASH_MAX_AGE_MS",
-        "CRASH_STASH_RETENTION_LABEL",
         "CRASH_STASH_MAX_ENTRIES",
         "CRASH_STASH_MAX_ARTIFACT_CHARS",
         "CRASH_STASH_MAX_TOTAL_CHARS",
@@ -8276,7 +8617,7 @@
         "createIndexedDbCrashStashKit",
         "createCurrentArtifactCrashStash"
       ],
-      "upstreamLine": 257096
+      "upstreamLine": 270348
     },
     {
       "file": "modules/files-unsaved-slides.js",
@@ -8293,7 +8634,7 @@
         "createCrashStashStorageAdapter",
         "createPersistentUnsavedSlideStash"
       ],
-      "upstreamLine": 257504
+      "upstreamLine": 270746
     },
     {
       "file": "modules/files-unload-flush.js",
@@ -8302,7 +8643,7 @@
         "installUnloadSaveFlush",
         "readLastUnloadFlushReport"
       ],
-      "upstreamLine": 257888
+      "upstreamLine": 271130
     },
     {
       "file": "modules/files-sync-error-notifier.js",
@@ -8310,7 +8651,7 @@
       "exports": [
         "createDelayedSyncErrorNotifier"
       ],
-      "upstreamLine": 258016
+      "upstreamLine": 271258
     },
     {
       "file": "modules/files-design-systems.js",
@@ -8346,13 +8687,13 @@
         "DESIGN_SYSTEM_INSTALL_DETAILS",
         "createInstalledDesignSystemTracker"
       ],
-      "upstreamLine": 258055
+      "upstreamLine": 271297
     },
     {
       "file": "modules/design-system-restyle.js",
       "install": "installDesignSystemRestyle",
       "exports": [],
-      "upstreamLine": 258542
+      "upstreamLine": 271784
     },
     {
       "file": "modules/files-project-paths.js",
@@ -8363,7 +8704,7 @@
         "isRuntimeInternalFilePath",
         "isProjectIndexFilePath"
       ],
-      "upstreamLine": 259890
+      "upstreamLine": 273132
     },
     {
       "file": "modules/files-sha256.js",
@@ -8375,7 +8716,7 @@
         "sha256Sync",
         "sha256"
       ],
-      "upstreamLine": 259941
+      "upstreamLine": 273183
     },
     {
       "file": "modules/files-publish-inputs.js",
@@ -8414,7 +8755,7 @@
         "fileContentContainsRuntimeMarkers",
         "encodeFileUrlPath"
       ],
-      "upstreamLine": 260112
+      "upstreamLine": 273354
     },
     {
       "file": "modules/files-read-retries.js",
@@ -8426,7 +8767,7 @@
         "retryFileRead",
         "onHotPageLeaving"
       ],
-      "upstreamLine": 260652
+      "upstreamLine": 273894
     },
     {
       "file": "modules/files-hot-updates.js",
@@ -8450,7 +8791,7 @@
         "waitForHotUpdateIdle",
         "createFilesHotUpdateController"
       ],
-      "upstreamLine": 260766
+      "upstreamLine": 274008
     },
     {
       "file": "modules/files-boot-reader.js",
@@ -8462,7 +8803,7 @@
         "errorMessage",
         "readFilesBootState"
       ],
-      "upstreamLine": 261643
+      "upstreamLine": 274885
     },
     {
       "file": "modules/files-sequence-merge.js",
@@ -8471,7 +8812,7 @@
         "stringArraysEqual",
         "longestCommonSubsequence"
       ],
-      "upstreamLine": 261963
+      "upstreamLine": 275205
     },
     {
       "file": "modules/files-browser-port.js",
@@ -8492,7 +8833,7 @@
         "fileTextDecoder",
         "createBrowserFilesPort"
       ],
-      "upstreamLine": 262009
+      "upstreamLine": 275251
     },
     {
       "file": "modules/files-document-merge.js",
@@ -8518,7 +8859,7 @@
         "mergeObjectValues",
         "mergeDocumentValues"
       ],
-      "upstreamLine": 262898
+      "upstreamLine": 276140
     },
     {
       "file": "modules/files-index-store.js",
@@ -8531,7 +8872,7 @@
         "IndexFileError",
         "createIndexFileStore"
       ],
-      "upstreamLine": 263300
+      "upstreamLine": 276542
     },
     {
       "file": "modules/files-boot-recovery.js",
@@ -8543,7 +8884,7 @@
         "FILES_BOOT_PERMANENT_RETRY_MS",
         "filesBootRetryDelayForHotUpdate"
       ],
-      "upstreamLine": 263571
+      "upstreamLine": 276813
     },
     {
       "file": "modules/files-save-queue.js",
@@ -8573,7 +8914,7 @@
         "defaultFilesSaveTimers",
         "createFilesSaveQueue"
       ],
-      "upstreamLine": 263656
+      "upstreamLine": 276898
     },
     {
       "file": "modules/files-debug-panel.js",
@@ -8597,17 +8938,20 @@
         "createNoopFilesDebugger",
         "createFilesDebugger"
       ],
-      "upstreamLine": 265037
+      "upstreamLine": 278283
     },
     {
       "file": "modules/files-slide-order-merge.js",
       "install": "installFilesSlideOrderMerge",
       "exports": [
+        "joinLostEditSentences",
+        "CRASH_STASH_RETENTION_VALUES",
+        "SAVE_REFUSAL_MESSAGES",
         "formatLostSlideEditsMessage",
         "uniqueSlideOrder",
         "mergeSlideOrderWithReplay"
       ],
-      "upstreamLine": 266912
+      "upstreamLine": 280158
     },
     {
       "file": "modules/files-slides-document.js",
@@ -8630,7 +8974,7 @@
         "isPermanentSlidesLoadFailure",
         "createSlidesFilesDocument"
       ],
-      "upstreamLine": 266998
+      "upstreamLine": 280362
     },
     {
       "file": "modules/files-early-slides.js",
@@ -8639,7 +8983,7 @@
         "MAX_EARLY_FILE_SLIDES",
         "readEarlySlidesFilesEnvelope"
       ],
-      "upstreamLine": 269875
+      "upstreamLine": 283387
     },
     {
       "file": "modules/bootstrap.js",
@@ -8677,7 +9021,7 @@
         "isFrameRevealedMessage",
         "revealPlaceholderWhenShown"
       ],
-      "upstreamLine": 269929
+      "upstreamLine": 283441
     }
   ],
   "removedModules": [
@@ -8708,7 +9052,7 @@
         "videoPlaybackDefaults",
         "initializeVideoAssets"
       ],
-      "upstreamLine": 110308,
+      "upstreamLine": 110991,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8724,7 +9068,7 @@
         "videoControllerSeekEvents",
         "initializeVideoController"
       ],
-      "upstreamLine": 141294,
+      "upstreamLine": 142458,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8768,7 +9112,7 @@
         "videoPlayerLabelRoom",
         "initializeVideoLinkPlayer"
       ],
-      "upstreamLine": 141754,
+      "upstreamLine": 143002,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8780,7 +9124,7 @@
         "videoSoundEvents",
         "initializeVideoSound"
       ],
-      "upstreamLine": 145461,
+      "upstreamLine": 146887,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8799,7 +9143,7 @@
         "videoPlayButtonBusyDelayMs",
         "initializeVideoPlayButton"
       ],
-      "upstreamLine": 146032,
+      "upstreamLine": 147458,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8815,7 +9159,7 @@
         "videoControlIcons",
         "initializeVideoControlIcons"
       ],
-      "upstreamLine": 146294,
+      "upstreamLine": 147720,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8835,7 +9179,7 @@
         "videoControlKeyTargets",
         "initializeVideoControls"
       ],
-      "upstreamLine": 146497,
+      "upstreamLine": 147923,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8855,7 +9199,7 @@
         "videoThumbnailSources",
         "initializeVideoThumbnails"
       ],
-      "upstreamLine": 146898,
+      "upstreamLine": 148324,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8872,7 +9216,7 @@
         "videoStillsContext",
         "initializeVideoStills"
       ],
-      "upstreamLine": 147120,
+      "upstreamLine": 148546,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8891,7 +9235,7 @@
         "VIDEO_LIMIT_MEGABYTES",
         "videoShrinkFailureMessage"
       ],
-      "upstreamLine": 186938,
+      "upstreamLine": 191827,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8907,7 +9251,7 @@
         "probeVideoFile",
         "videoWorkerEncoder"
       ],
-      "upstreamLine": 187138,
+      "upstreamLine": 192027,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8931,7 +9275,7 @@
         "hasVideoShrinkJobs",
         "subscribeVideoShrinkJobs"
       ],
-      "upstreamLine": 187599,
+      "upstreamLine": 192491,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8947,7 +9291,7 @@
         "CancelVideoShrinkButton",
         "VideoShrinkToastBridge"
       ],
-      "upstreamLine": 188621,
+      "upstreamLine": 193636,
       "reason": "User explicitly removed all video functionality"
     },
     {
@@ -8975,7 +9319,7 @@
         "subscribeClipRegistry",
         "initializeClipRegistry"
       ],
-      "upstreamLine": 141461,
+      "upstreamLine": 142625,
       "reason": "User requested removal of video playback infrastructure"
     },
     {
@@ -8986,7 +9330,7 @@
         "ClipBadgeJsx",
         "initializeClipBadge"
       ],
-      "upstreamLine": 141695,
+      "upstreamLine": 142943,
       "reason": "User requested removal of video playback infrastructure"
     },
     {
@@ -8998,7 +9342,7 @@
         "playNextAutoplayCandidate",
         "initializeAutoplayCandidates"
       ],
-      "upstreamLine": 145402,
+      "upstreamLine": 146828,
       "reason": "User requested removal of video playback infrastructure"
     },
     {
@@ -9021,7 +9365,7 @@
         "embeddedPlayerApis",
         "initializeEmbeddedPlayerApi"
       ],
-      "upstreamLine": 145714,
+      "upstreamLine": 147140,
       "reason": "User requested removal of video playback infrastructure"
     },
     {
@@ -9035,7 +9379,7 @@
         "PlaybackTurnContext",
         "initializePlaybackTurn"
       ],
-      "upstreamLine": 145539,
+      "upstreamLine": 146965,
       "reason": "Unused video player coordination and embed capability probing removed with video features"
     },
     {
@@ -9050,7 +9394,7 @@
         "canEmbedAnyVideoProvider",
         "initializeEmbeddedPlayerSupport"
       ],
-      "upstreamLine": 187925,
+      "upstreamLine": 192818,
       "reason": "Unused video player coordination and embed capability probing removed with video features"
     }
   ]

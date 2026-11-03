@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiGradientEditor(runtime2) {
-  var GradientEditorReact, GradientEditorJsx, gradientStopKeyboardHandlers, clampGradientEditorValue, normalizeGradientColor, normalizeGradientColorInput, symbolicGradientColorPattern, gradientStopLengthPattern, handAuthoredGradientExplanation, gradientTypeChoices, initializeGradientEditor;
+  var GradientEditorReact, GradientEditorJsx, gradientStopKeyboardHandlers, clampGradientEditorValue, normalizeGradientColor, normalizeGradientColorInput, symbolicGradientColorPattern, gradientStopLengthPattern, handAuthoredGradientExplanation, GRADIENT_STOPS_LABEL, gradientStopPositionLabel, gradientTypeChoices, initializeGradientEditor;
   function normalizeGradientStopPositions(stops) {
     let value = stops.map((input) => input.pos === void 0 ? void 0 : clampGradientEditorValue(input.pos, 0, 100));
     if (value.length === 0)
@@ -159,14 +159,20 @@ function installUiGradientEditor(runtime2) {
       className: "flex flex-col",
       children: [
         GradientEditorJsx.jsx(runtime2.PropertyRow, {
-          label: "样式",
+          label: (0, runtime2.formatMessage)({
+            defaultMessage: "样式",
+            id: "ycOOCQJUim"
+          }),
           children: GradientEditorJsx.jsxs("div", {
             className: "flex min-w-0 flex-1 items-center gap-2",
             children: [
               GradientEditorJsx.jsx("div", {
                 className: "min-w-0 flex-1",
                 children: GradientEditorJsx.jsx(runtime2.Select, {
-                  "aria-label": "渐变样式",
+                  "aria-label": (0, runtime2.formatMessage)({
+                    defaultMessage: "渐变样式",
+                    id: "XBT7rTIEHj"
+                  }),
                   items: gradientTypeChoices(onRadial !== void 0),
                   value: radial ? "radial" : "linear",
                   disabled: disabled2,
@@ -177,9 +183,15 @@ function installUiGradientEditor(runtime2) {
               }),
               GradientEditorJsx.jsx("div", {
                 className: "w-[4.75rem] shrink-0",
-                title: radial ? "径向渐变不设角度。" : void 0,
+                title: radial ? (0, runtime2.formatMessage)({
+                  defaultMessage: "径向渐变不设角度。",
+                  id: "K99gw5YIay"
+                }) : void 0,
                 children: GradientEditorJsx.jsx(runtime2.PropertyNumberInput, {
-                  "aria-label": "角度",
+                  "aria-label": (0, runtime2.formatMessage)({
+                    defaultMessage: "角度",
+                    id: "zqD8qwNo7t"
+                  }),
                   prefix: GradientEditorJsx.jsx(runtime2.PropertyIcon, {
                     icon: runtime2.ANGLE_ICON
                   }),
@@ -220,7 +232,7 @@ function installUiGradientEditor(runtime2) {
                 children: value3.map((input, options) => GradientEditorJsx.jsx("button", {
                   type: "button",
                   role: "slider",
-                  "aria-label": "色标 " + String(options + 1) + "位置",
+                  "aria-label": gradientStopPositionLabel(options),
                   "aria-valuemin": 0,
                   "aria-valuemax": 100,
                   "aria-valuenow": Math.round(value5[options]),
@@ -249,7 +261,7 @@ function installUiGradientEditor(runtime2) {
           })
         }),
         GradientEditorJsx.jsx(runtime2.PropertyRow, {
-          label: "色标",
+          label: GRADIENT_STOPS_LABEL,
           children: GradientEditorJsx.jsx("div", {
             className: "flex min-w-0 flex-1 justify-end",
             children: GradientEditorJsx.jsx(runtime2.Button, {
@@ -257,16 +269,25 @@ function installUiGradientEditor(runtime2) {
               size: "sm",
               iconOnly: !0,
               icon: "Add",
-              "aria-label": "添加色标",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "添加色标",
+                id: "IOF+Ckwb7f"
+              }),
               disabled: disabled2 || value3.length >= maxStops,
-              disabledReason: String(maxStops) + " stops at most.",
+              disabledReason: (0, runtime2.formatMessage)({
+                defaultMessage: "最多 {count} 个色标。",
+                id: "bR1p1L6FNc"
+              }, {
+                n: maxStops,
+                count: String(maxStops)
+              }),
               onClick: callback11
             })
           })
         }),
         GradientEditorJsx.jsx("div", {
           role: "list",
-          "aria-label": "色标",
+          "aria-label": GRADIENT_STOPS_LABEL,
           className: (0, runtime2.joinClassNames)(runtime2.PROPERTY_SECTION_GUTTER_CLASS, "mt-1 flex flex-col gap-2"),
           children: value3.map((input, options) => {
             let value17 = !symbolicGradientColorPattern.test(callback(input)) && !gradientStopLengthPattern.test(callback(input));
@@ -277,7 +298,7 @@ function installUiGradientEditor(runtime2) {
                 GradientEditorJsx.jsx("div", {
                   className: "w-[3.75rem] shrink-0",
                   children: GradientEditorJsx.jsx(runtime2.PropertyNumberInput, {
-                    "aria-label": "色标 " + String(options + 1) + "位置",
+                    "aria-label": gradientStopPositionLabel(options),
                     value: Math.round(value5[options]),
                     unit: "%",
                     min: 0,
@@ -299,7 +320,13 @@ function installUiGradientEditor(runtime2) {
                     onOpen: () => value9(current[options]),
                     onClose: () => value9(null),
                     trigger: GradientEditorJsx.jsx(runtime2.FieldButton, {
-                      "aria-label": "色标 " + String(options + 1) + "颜色：" + normalizeGradientColorInput(input.color),
+                      "aria-label": (0, runtime2.formatMessage)({
+                        defaultMessage: "色标 {number} 颜色：{color}",
+                        id: "VJd2USGWJb"
+                      }, {
+                        number: String(options + 1),
+                        color: normalizeGradientColorInput(input.color)
+                      }),
                       "data-selected": options === value7 ? "" : void 0,
                       disabled: disabled2,
                       onClick: (input2) => {
@@ -327,9 +354,21 @@ function installUiGradientEditor(runtime2) {
                   size: "sm",
                   iconOnly: !0,
                   icon: "Minus",
-                  "aria-label": "移除色标 " + String(options + 1),
+                  "data-kit": "row-remove",
+                  "aria-label": (0, runtime2.formatMessage)({
+                    defaultMessage: "移除色标 {number}",
+                    id: "xc3YEZl9aw"
+                  }, {
+                    number: String(options + 1)
+                  }),
                   disabled: !callback9(options),
-                  disabledReason: "A gradient needs " + String(minStops) + " color stops.",
+                  disabledReason: (0, runtime2.formatMessage)({
+                    defaultMessage: "渐变至少需要 {count} 个色标。",
+                    id: "UiL2aM9WUU"
+                  }, {
+                    n: minStops,
+                    count: String(minStops)
+                  }),
                   onClick: () => callback10(options)
                 }) : null
               ]
@@ -357,21 +396,45 @@ function installUiGradientEditor(runtime2) {
     gradientStopLengthPattern = value;
   }), bindRuntimeValue(runtime2, "handAuthoredGradientExplanation", () => handAuthoredGradientExplanation, (value) => {
     handAuthoredGradientExplanation = value;
+  }), bindRuntimeValue(runtime2, "GRADIENT_STOPS_LABEL", () => GRADIENT_STOPS_LABEL, (value) => {
+    GRADIENT_STOPS_LABEL = value;
+  }), bindRuntimeValue(runtime2, "gradientStopPositionLabel", () => gradientStopPositionLabel, (value) => {
+    gradientStopPositionLabel = value;
   }), bindRuntimeValue(runtime2, "gradientTypeChoices", () => gradientTypeChoices, (value) => {
     gradientTypeChoices = value;
   }), bindRuntimeValue(runtime2, "initializeGradientEditor", () => initializeGradientEditor, (value) => {
     initializeGradientEditor = value;
   }), () => {
-    clampGradientEditorValue = (input, options, context) => Math.min(context, Math.max(options, input)), normalizeGradientColor = (input) => (0, runtime2.hsvaToCssColor)((0, runtime2.parseCssColorToHsva)(input)), normalizeGradientColorInput = (input) => /^#[0-9a-f]{3,8}$/i.test(input.trim()) ? input.trim().toUpperCase() : input.trim(), handAuthoredGradientExplanation = "Written by hand in a form this editor keeps as is.", gradientTypeChoices = (input) => [
+    clampGradientEditorValue = (input, options, context) => Math.min(context, Math.max(options, input)), normalizeGradientColor = (input) => (0, runtime2.hsvaToCssColor)((0, runtime2.parseCssColorToHsva)(input)), normalizeGradientColorInput = (input) => /^#[0-9a-f]{3,8}$/i.test(input.trim()) ? input.trim().toUpperCase() : input.trim(), handAuthoredGradientExplanation = (0, runtime2.formatMessage)({
+      defaultMessage: "手写的格式，编辑器会原样保留。",
+      id: "LgIxm81HV4"
+    }), GRADIENT_STOPS_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "色标",
+      id: "SfuMCY5jnq"
+    }), gradientStopPositionLabel = (index4) => (0, runtime2.formatMessage)({
+      defaultMessage: "色标 {number} 位置",
+      id: "YfaqRzhShQ"
+    }, {
+      number: String(index4 + 1)
+    }), gradientTypeChoices = (input) => [
       {
         value: "linear",
-        label: "线性"
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "线性",
+          id: "sJkkrfPBG3"
+        })
       },
       {
         value: "radial",
-        label: "径向",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "径向",
+          id: "qQJ1L0wUx1"
+        }),
         disabled: !input,
-        title: input ? void 0 : "此处仅支持线性渐变。"
+        title: input ? void 0 : (0, runtime2.formatMessage)({
+          defaultMessage: "此处仅支持线性渐变。",
+          id: "7/WIA0LcjW"
+        })
       }
     ], initializeGradientEditor = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiColorPicker)(), (0, runtime2.initializeUiInspectorIcons)(), (0, runtime2.initializeUiNumberControls2)(), (0, runtime2.initializeUiPropertyRow3)(), (0, runtime2.initializeUiPropertyPopover2)(), (0, runtime2.initializeSelect)(), GradientEditorReact = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), GradientEditorJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), gradientStopKeyboardHandlers = {

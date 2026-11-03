@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiBoxStyleToolbar(runtime2) {
-  var jsxK7, STYLE_SIDE_NAMES, BORDER_REQUIRED_REASON, SHAPE_BORDER_SIDES_REASON, isClosedShape, BORDER_STYLE_CLEAR_PATCH, BORDER_STYLES;
+  var jsxK7, STYLE_SIDE_NAMES, BORDER_COLOR_LABEL, BORDER_REQUIRED_REASON, SHAPE_BORDER_SIDES_REASON, isClosedShape, BORDER_STYLE_CLEAR_PATCH, BORDER_STYLES;
   function ensureVisibleBorderStyle(before, patch, node) {
     return ![
       "borderWidth",
@@ -164,8 +164,8 @@ function installUiBoxStyleToolbar(runtime2) {
                 sides: activeBorderSides(value7),
                 color: jsxK7.jsx(runtime2.ColorPropertyRow, {
                   testid: "frame-border-color",
-                  label: "边框颜色",
-                  title: (0, runtime2.formatMessage)({ defaultMessage: "边框颜色", id: "8JBKFXn1Pk" }),
+                  label: BORDER_COLOR_LABEL,
+                  title: BORDER_COLOR_LABEL,
                   value: bag?.borderColor,
                   swatches,
                   fold: !0,
@@ -334,7 +334,9 @@ function installUiBoxStyleToolbar(runtime2) {
     jsxK7 = value;
   }), bindRuntimeValue(runtime2, "STYLE_SIDE_NAMES", () => STYLE_SIDE_NAMES, (value) => {
     STYLE_SIDE_NAMES = value;
-  }), bindRuntimeValue(runtime2, "ensureVisibleBorderStyle", () => ensureVisibleBorderStyle), bindRuntimeValue(runtime2, "BORDER_REQUIRED_REASON", () => BORDER_REQUIRED_REASON, (value) => {
+  }), bindRuntimeValue(runtime2, "ensureVisibleBorderStyle", () => ensureVisibleBorderStyle), bindRuntimeValue(runtime2, "BORDER_COLOR_LABEL", () => BORDER_COLOR_LABEL, (value) => {
+    BORDER_COLOR_LABEL = value;
+  }), bindRuntimeValue(runtime2, "BORDER_REQUIRED_REASON", () => BORDER_REQUIRED_REASON, (value) => {
     BORDER_REQUIRED_REASON = value;
   }), bindRuntimeValue(runtime2, "SHAPE_BORDER_SIDES_REASON", () => SHAPE_BORDER_SIDES_REASON, (value) => {
     SHAPE_BORDER_SIDES_REASON = value;
@@ -345,7 +347,7 @@ function installUiBoxStyleToolbar(runtime2) {
   }), bindRuntimeValue(runtime2, "normalizedBorderPatch", () => normalizedBorderPatch), bindRuntimeValue(runtime2, "borderColorPatch", () => borderColorPatch), bindRuntimeValue(runtime2, "uniformVisibleBorderWidth", () => uniformVisibleBorderWidth), bindRuntimeValue(runtime2, "activeBorderSides", () => activeBorderSides), bindRuntimeValue(runtime2, "definedBorderSides", () => definedBorderSides), bindRuntimeValue(runtime2, "BORDER_STYLES", () => BORDER_STYLES, (value) => {
     BORDER_STYLES = value;
   }), bindRuntimeValue(runtime2, "BoxStyleToolbar", () => BoxStyleToolbar), bindRuntimeValue(runtime2, "paddingStylePatch", () => paddingStylePatch), bindRuntimeValue(runtime2, "CornerStylePopover", () => CornerStylePopover), bindRuntimeValue(runtime2, "cornerStyleBindings", () => cornerStyleBindings), () => {
-    (0, runtime2.initializeUiInspectorIcons)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeRenderingTheme)(), jsxK7 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), STYLE_SIDE_NAMES = ["top", "right", "bottom", "left"], BORDER_REQUIRED_REASON = (0, runtime2.formatMessage)({ defaultMessage: "请先添加边框", id: "jz/BmAs8dh" }), SHAPE_BORDER_SIDES_REASON = (0, runtime2.formatMessage)({ defaultMessage: "形状的四周使用同一条描边", id: "bnqFXl1WFV" }), isClosedShape = (source) => source.kind === "shape" && source.shape !== "connector", BORDER_STYLE_CLEAR_PATCH = {
+    (0, runtime2.initializeUiInspectorIcons)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeRenderingTheme)(), jsxK7 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), STYLE_SIDE_NAMES = ["top", "right", "bottom", "left"], BORDER_COLOR_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "边框颜色", id: "DAC6Ioh5XP" }), BORDER_REQUIRED_REASON = (0, runtime2.formatMessage)({ defaultMessage: "请先添加边框", id: "jz/BmAs8dh" }), SHAPE_BORDER_SIDES_REASON = (0, runtime2.formatMessage)({ defaultMessage: "形状的四周使用同一条描边", id: "bnqFXl1WFV" }), isClosedShape = (source) => source.kind === "shape" && source.shape !== "connector", BORDER_STYLE_CLEAR_PATCH = {
       borderStyle: void 0,
       borderWidth: void 0,
       borderColor: void 0,

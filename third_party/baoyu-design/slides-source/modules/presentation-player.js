@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installPresentationPlayer(runtime2) {
   var ReactPresentation, PresentationReactDom, PresentationJsx, PRESENTATION_CONTROLS_HIDE_DELAY_MS, PRESENTATION_FOCUSABLE_SELECTOR, PRESENTATION_NAVIGATION_KEYS, presentationModeActive, pendingPresentationFullscreenRequest;
@@ -234,10 +234,16 @@ function installPresentationPlayer(runtime2) {
       callback4();
       let toastButton = (target) => target instanceof Element ? target.closest('[data-cds="Toast"] button:not(:disabled)') : null, toastFocusVisible = !1, leftFocus = null, callback15 = (event) => {
         if (focusKeeper.current = null, event.repeat || (spaceAdvanced.current = !1), event.key === "Tab" && !event.ctrlKey && !event.metaKey && ref8.current) {
-          let current = ref8.current, ownerDocument2 = current.ownerDocument, activeElement2 = ownerDocument2.activeElement;
-          if (activeElement2 !== null && activeElement2 !== ownerDocument2.body && activeElement2 !== ownerDocument2.documentElement && !current.contains(activeElement2))
-            return;
-          let focusables = Array.from(current.querySelectorAll(PRESENTATION_FOCUSABLE_SELECTOR)).filter((input) => input.tabIndex >= 0 && !input.hasAttribute("disabled") && !input.hasAttribute(runtime2.playerBeforeAttribute) && input.closest('[hidden], [inert], [aria-hidden="true"]') === null && ownerDocument2.defaultView?.getComputedStyle(input).display !== "none");
+          let current = ref8.current, ownerDocument2 = current.ownerDocument, activeElement2 = ownerDocument2.activeElement, focusablesIn = (root, hiddenSelector) => Array.from(root.querySelectorAll(PRESENTATION_FOCUSABLE_SELECTOR)).filter((input) => input.tabIndex >= 0 && !input.hasAttribute("disabled") && !input.hasAttribute(runtime2.playerBeforeAttribute) && input.closest(hiddenSelector) === null && ownerDocument2.defaultView?.getComputedStyle(input).display !== "none");
+          if (activeElement2 !== null && activeElement2 !== ownerDocument2.body && activeElement2 !== ownerDocument2.documentElement && !current.contains(activeElement2)) {
+            let toast = activeElement2.closest('[data-cds="Toast"]');
+            if (toast === null)
+              return;
+            let toastFocusables = focusablesIn(toast, "[hidden], [inert]").filter((input) => ownerDocument2.defaultView?.getComputedStyle(input).visibility !== "hidden");
+            if (activeElement2 !== toastFocusables[event.shiftKey ? 0 : toastFocusables.length - 1])
+              return;
+          }
+          let focusables = focusablesIn(current, '[hidden], [inert], [aria-hidden="true"]');
           if (event.preventDefault(), focusables.length === 0)
             return;
           let at = activeElement2 === null ? -1 : focusables.indexOf(activeElement2), stride = event.shiftKey ? focusables.length - 1 : 1, target = event.shiftKey ? at <= 0 ? focusables.length - 1 : at - 1 : at < 0 || at === focusables.length - 1 ? 0 : at + 1, focusFrom = (tried, first) => {
@@ -511,7 +517,7 @@ function installPresentationPlayer(runtime2) {
       tabIndex: -1,
       role: "dialog",
       "aria-modal": "true",
-      "aria-label": "演示文稿",
+      "aria-label": (0, runtime2.untranslatedMessage)( "演示文稿"),
       "data-appifact-content": "",
       className: "fixed inset-0 z-50 flex flex-col bg-black outline-none",
       onPointerMove: (input) => {
@@ -544,7 +550,10 @@ function installPresentationPlayer(runtime2) {
           ref: ref9,
           tabIndex: -1,
           role: "application",
-          "aria-label": "幻灯片放映",
+          "aria-label": (0, runtime2.formatMessage)({
+            defaultMessage: "幻灯片放映",
+            id: "LmFNiA0+V0"
+          }),
           className: "relative min-h-0 flex-1 outline-none",
           children: [
             PresentationJsx.jsxs("div", {
@@ -597,7 +606,7 @@ function installPresentationPlayer(runtime2) {
             PresentationJsx.jsx(runtime2.SlideNavigationAnnouncement, {
               slideKey: value26.id,
               announceMount: !0,
-              message: () => (0, runtime2.formatPresentationSlideAnnouncement)(index4, slides.length, (0, runtime2.slideTitleSnippet)(value26))
+              message: () => (0, runtime2.formatSlideOfCountAnnouncement)(index4, slides.length, (0, runtime2.slideTitleSnippet)(value26))
             }),
             PresentationJsx.jsx(runtime2.LiveAnnouncer, {}),
             PresentationJsx.jsxs("div", {
@@ -783,7 +792,7 @@ function installPresentationPlayer(runtime2) {
           ref,
           tabIndex: 0,
           role: "region",
-          "aria-label": "备注",
+          "aria-label": runtime2.NOTES_REGION_LABEL,
           "data-notes-scroll": "",
           className: "min-h-0 flex-1 overflow-y-auto px-6 pb-[calc(1rem+var(--sl-safe-b,0px))] text-sm leading-relaxed whitespace-pre-wrap outline-none focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:ring-inset forced-colors:focus-visible:-outline-offset-2",
           children: PresentationJsx.jsx("div", {

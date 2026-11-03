@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiTabs2(runtime2) {
   var reactuP, tabsOverflowContext, STASHED_TAB_ATTRIBUTE, TABS_MENU_TRIGGER_ID, TABS_MENU_LABEL_ID, initializeUiTabs22, reactm3, jsxg3, TAB_SELECTOR, TAB_TEXT_EXCLUDED_SELECTOR, initializeUiTabs222, reacti6, jsxForUiTabs22, TAB_LIST_CLASS, TAB_EDGE_RADIUS_CLASS, TAB_SELECTED_CLASS, TAB_INACTIVE_CLASS, TAB_UNDERLINE_CLASS, TABS_OVERFLOW_RECHECK_MS, TAB_ACTIVE_SELECTOR, TabsList3, TAB_CLOSE_BUTTON_CLASS, TAB_ACTIVE_HOVER_CLASS, TAB_CLOSE_BUTTON_HOVER_CLASS, TabsTab3, TabsPanel3, TabsRoot3, Tabs, initializeUiTabs23;

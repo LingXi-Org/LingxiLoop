@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorThumbnailApp(runtime2) {
   var ReactSlidesThumbnail, SlidesThumbnailJsx, DEFAULT_THUMBNAIL_THEME;

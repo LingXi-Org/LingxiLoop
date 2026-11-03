@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesHotUpdates(runtime2) {
   var BOOT_FILE_READ_RETRY_DELAYS_MS, MAX_HOT_FETCH_RETRIES, HOT_UPDATE_MAX_DEFER_MS, HOT_RESTART_GRACE_MS, HOT_UPDATE_SETTLE_MS, HOT_RESTART_BACKOFF_MS, HOT_RESTART_BACKOFF_MAX_MS, HOT_UNSENT_WAIT_MS, hotChangedPath, shortHotErrorMessage, hotListingDescriptor, describeHotChangedPaths, hotAdoptMethodKind, HOT_INDEX_RECHECK_DELAY_MS;

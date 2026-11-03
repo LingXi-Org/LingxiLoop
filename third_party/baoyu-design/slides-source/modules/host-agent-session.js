@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installHostAgentSession(runtime2) {
   var SEND_TO_AGENT_METHOD, CAN_SEND_TO_AGENT_METHOD, CLAUDE_SELECTION_TEXT_MAX, CLAUDE_SELECTION_LABEL_MAX, CLAUDE_REQUEST_MAX, CLAUDE_PAYLOAD_MAX, CLAUDE_SEND_TIMEOUT_MS, AgentRequestTimeoutError, UNSAFE_CLAUDE_REQUEST_CHARACTERS, sanitizeAgentRequest, selectionTruncationNote, SELECTION_TRUNCATION_NOTE_PATTERN, SELECTION_TRUNCATION_NOTE_RESERVE, agentPayloadLength, jsxKd;
@@ -106,21 +106,39 @@ function installHostAgentSession(runtime2) {
       }
     return await copyText(prompt) ? "copied" : "failed";
   }
-  function agentSendResultMessage(result, suffix = "") {
+  function agentSendResultMessage(result) {
     switch (result) {
       case "staged":
       case "waiting":
-        return "Added to your message to the agent. Send it when you're ready." + suffix;
+        return (0, runtime2.formatMessage)({
+          defaultMessage: "已添加到发给智能体的消息中，准备好后即可发送。",
+          id: "8H0KRsz7ya"
+        });
       case "unanswered":
-        return "Couldn't reach the agent just now. Try again in a moment.";
+        return (0, runtime2.formatMessage)({
+          defaultMessage: "暂时无法联系智能体，请稍后重试。",
+          id: "SGUPvqFH0L"
+        });
       case "sent":
-        return "Sent to the agent." + suffix;
+        return (0, runtime2.formatMessage)({
+          defaultMessage: "已发送给智能体。",
+          id: "/7O/iF0/Fe"
+        });
       case "started":
-        return "Sending to the agent…" + suffix;
+        return (0, runtime2.formatMessage)({
+          defaultMessage: "正在发送给智能体…",
+          id: "j2WinJ0Coq"
+        });
       case "copied":
-        return "Prompt copied. Paste it to the agent." + suffix;
+        return (0, runtime2.formatMessage)({
+          defaultMessage: "提示已复制，请粘贴给智能体。",
+          id: "5elMsqMrOR"
+        });
       case "failed":
-        return "Couldn't copy the prompt. Try again, or copy the text yourself.";
+        return (0, runtime2.formatMessage)({
+          defaultMessage: "无法复制提示，请重试或手动复制文本。",
+          id: "jyMoVfZkDm"
+        });
     }
   }
   return bindRuntimeValue(runtime2, "objectProperty", () => objectProperty), bindRuntimeValue(runtime2, "resolvePromptSuggestion", () => resolvePromptSuggestion), bindRuntimeValue(runtime2, "SEND_TO_AGENT_METHOD", () => SEND_TO_AGENT_METHOD, (value) => {

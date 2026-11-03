@@ -1,10 +1,10 @@
 # baoyu-design Design and Slides provenance
 
-Pinned source: [`JimLiu/baoyu-design@c15e76ef5134228d2bb5da35652d30d7d6b8a34d`](https://github.com/JimLiu/baoyu-design/tree/c15e76ef5134228d2bb5da35652d30d7d6b8a34d) (v2.1.0, MIT, [LICENSE](LICENSE)).
+Pinned source: [`JimLiu/baoyu-design@016b39d7fdcc30bfacee31ea5541498ac53921c6`](https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6) (v2.8.0, MIT, [LICENSE](LICENSE)).
 
 - `upstream/claude-design/` and `upstream/claude-slides/` are the complete, byte-identical `skills/claude-design` and `skills/claude-slides` folders. No host adaptation belongs inside them; `.gitattributes` keeps their bytes on every platform.
-- `manifest.json` lists all 57 files with upstream path, byte count, SHA-256, Git blob SHA-1 and mode; each blob was checked against the pinned Git tree when it was fetched. `server/src/modules/artifacts/artifacts.test.ts` re-verifies every SHA-256.
-- `distribution/` contains every remaining published file, including the design-system skill, templates and references. `complete-manifest.json` inventories the entire 319-file repository; existing snapshot paths and bytes are unchanged.
+- `manifest.json` lists all 59 files with upstream path, byte count, SHA-256, Git blob SHA-1 and mode; each blob was checked against the pinned Git tree when it was fetched. `server/src/modules/artifacts/artifacts.test.ts` re-verifies every SHA-256.
+- `distribution/` contains every remaining published file, including the design-system skill, templates and references. `complete-manifest.json` inventories the entire 542-file repository; paths and bytes match the pinned Git tree.
 - Design retains its original bundled editor. Slides is rebuilt from [recovered named source](slides-source/README.md), including model, compiler, editing and export implementations, with the user's subsequent video removal applied to executable code.
 
 ## Native Slides build
@@ -30,5 +30,24 @@ Host routes live in `server/src/modules/artifacts/` and `src/features/artifacts/
 | `comments.json` + lock file | `artifact_comments.doc`, locked by row; the comment model functions are ported unchanged |
 | `--agent-hook` / `comments --wait` | A sent comment becomes a conversation message to the room's agent |
 | `artifact.mjs check <root>` | `check.ts` runs the vendored `artifact.mjs check` unchanged on a temporary copy |
-| `SKILL.md` and `artifact-type/reference/` | `skills.ts` registers the SKILL.md text with only "The calls" and "Comments" replaced by native tools; references via `<kind>.read_reference` |
+| `SKILL.md` and `artifact-type/reference/` | `skills.ts` registers the SKILL.md text with only local CLI, comments and sharing instructions adapted to native tools; references via `<kind>.read_reference` |
 | Local `<root>` folder, `open`, `list`, `cp` | One Design per conversation, Slides per project; Slides design systems stored under project/ds/<namespace> through native tools |
+
+## Chinese copy and built-in themes
+
+Design's UI is translated at build time with `scripts/design-copy.mjs` and
+`host/design-zh-CN.json`, sharing the Slides catalog where wording agrees.
+Recovered Slides modules retain translated native UI and template placeholders.
+User content, persisted names, identifiers, protocol values, font/brand names and
+format abbreviations are preserved. ICU tests retain arguments and plural/select
+branches. The original vendored files remain byte-identical.
+
+`host/builtin-themes.json` adds original 学术蓝, 森林课堂 and 深色演示 palettes
+using upstream's documented color/type token schema and local font fallbacks.
+Only new artifacts receive these `designSystems` records and token files through
+`initialIndex`/`initialResources`; existing artifacts are never backfilled.
+Slides retains its original default style. Selecting a theme uses the existing
+editor controls and saved look memory. Slides' existing four-system limit means
+its default plus these three fills the quota; replacing a system uses the
+existing document tooling. No remote import, filesystem sync or new API is added.
+See [upgrade evidence](../../docs/evidence/issue-648/README.md).

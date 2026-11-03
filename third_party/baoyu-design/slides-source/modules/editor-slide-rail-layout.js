@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorSlideRailLayout(runtime2) {
   var ReactSlideRailLayout, MIN_RAIL_THUMB_WIDTH, MIN_STAGE_HEIGHT_AFTER_RAIL, MAX_RAIL_HEIGHT_FRACTION, RAIL_RESIZE_VIEWPORT_MINIMUM, RAIL_THUMB_WIDTH_CSS_VARIABLE, SLIDE_THUMB_ASPECT_RATIO, RAIL_THUMB_WIDTH_STORAGE_KEY, RAIL_THUMB_RESIZE_SETTLE_MS;

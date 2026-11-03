@@ -1,8 +1,8 @@
 {
   "namespace": "slides-builtin",
   "title": "Slides 内置风格",
-  "source": "https://github.com/JimLiu/baoyu-design/tree/c15e76ef5134228d2bb5da35652d30d7d6b8a34d/skills/claude-slides",
-  "version": "c15e76ef5134228d2bb5da35652d30d7d6b8a34d",
+  "source": "https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-slides",
+  "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
   "style": [
     {
       "look": "slides-builtin/light",

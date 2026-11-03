@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiSidePanels(runtime2) {
-  var reactl0, reactDOMip, reactb20, jsxf1, PANEL_HEADER_CLASS, jsxe5, PanelIconButton, SidePanelContext, SidePanelHostContext, PANEL_STORAGE_PREFIX, isFinitePanelNumber, isPanelDockMode, isPanelPosition, MIN_PANEL_WIDTH, NON_TEXT_INPUT_TYPES, approximatelyEqualPanelSize, MIN_PANEL_HEIGHT, PANEL_SHEET_MAX_HEIGHT, IFRAME_POINTER_LOCK_CLASS, activeIframePointerLocks, COARSE_PANEL_WIDTH, jsxaZ;
+  var reactl0, reactDOMip, reactb20, jsxf1, PANEL_HEADER_CLASS, jsxe5, PanelIconButton, SidePanelContext, SidePanelWidthContext, SidePanelHostContext, PANEL_STORAGE_PREFIX, isFinitePanelNumber, isPanelDockMode, isPanelPosition, MIN_PANEL_WIDTH, NON_TEXT_INPUT_TYPES, approximatelyEqualPanelSize, MIN_PANEL_HEIGHT, PANEL_SHEET_MAX_HEIGHT, IFRAME_POINTER_LOCK_CLASS, activeIframePointerLocks, COARSE_PANEL_WIDTH, jsxaZ;
   function PanelHeaderContent({ tabs, activateOnFocus, tabsLabel, title, onClose, closeLabel = runtime2.DEFAULT_CLOSE_LABEL, trailing }) {
     let value = tabs !== void 0 && tabs.length > 0;
     return jsxf1.jsxs(jsxf1.Fragment, {
@@ -265,7 +265,11 @@ function installUiSidePanels(runtime2) {
     };
   }
   function usePanelWidth(initialWidth = 304, onResize) {
-    let [value] = reactl0.useState(() => typeof matchMedia == "function" && matchMedia(runtime2.COARSE_POINTER_QUERY).matches ? Math.max(initialWidth, COARSE_PANEL_WIDTH) : initialWidth), [value2, value3] = reactl0.useState(() => readPanelPreference("width", isFinitePanelNumber) ?? value), [value4, value5] = reactl0.useState(maximumPanelWidth);
+    let [coarse] = reactl0.useState(() => typeof matchMedia == "function" && matchMedia(runtime2.COARSE_POINTER_QUERY).matches), value = coarse ? Math.max(initialWidth, COARSE_PANEL_WIDTH) : initialWidth, [stored] = reactl0.useState(() => readPanelPreference("width", isFinitePanelNumber)), [value2, value3] = reactl0.useState(stored ?? value), resized = reactl0.useRef(stored !== void 0);
+    reactl0.useLayoutEffect(() => {
+      resized.current || value3(clampPanelWidth(value));
+    }, [value]);
+    let [value4, value5] = reactl0.useState(maximumPanelWidth);
     reactl0.useLayoutEffect(() => {
       let callback = () => {
         value5(maximumPanelWidth()), value3((input) => clampPanelWidth(input));
@@ -281,6 +285,7 @@ function installUiSidePanels(runtime2) {
         ref3.current = ref.current;
       },
       onResize: (input) => {
+        resized.current = !0;
         let value6 = clampPanelWidth(ref3.current - input);
         value3(value6), ref2.current?.(value6, ref3.current);
       },
@@ -296,7 +301,10 @@ function installUiSidePanels(runtime2) {
       gesture: memo4
     };
   }
-  function PanelWidthResizeHandle({ width, min: min2, max: max2, defaultWidth, gesture, label = "调整面板大小", className }) {
+  function PanelWidthResizeHandle({ width, min: min2, max: max2, defaultWidth, gesture, label = (0, runtime2.formatMessage)({
+      defaultMessage: "调整面板大小",
+      id: "bsWNb93boA"
+    }), className }) {
     let callback = (input) => () => {
       gesture.onResizeStart("keys"), gesture.onResize(width - input, "keys"), gesture.onResizeEnd(!0, "keys");
     };
@@ -307,7 +315,13 @@ function installUiSidePanels(runtime2) {
       now: width,
       min: min2,
       max: max2,
-      valueText: String(width) + " pixels wide",
+      valueText: (0, runtime2.formatMessage)({
+        defaultMessage: "宽 {count} 像素",
+        id: "1rQMltZY3m"
+      }, {
+        n: width,
+        count: String(width)
+      }),
       gesture,
       onHome: callback(min2),
       onEnd: callback(max2),
@@ -373,7 +387,7 @@ function installUiSidePanels(runtime2) {
         let value12 = disabled2 ? void 0 : event.key === "Home" ? onHome : onEnd;
         value12 && (event.preventDefault(), callback2(value12));
       },
-      className: (0, runtime2.joinClassNames)("z-10 touch-none [--cds-ring-outer:1px] [--cds-ring-inner:0px]", value2 && "[--cds-resize-pill-force:1]", disabled2 ? "pointer-events-none pointer-coarse:[--cds-resize-pill-force:0.2]" : !value && !value2 && "pointer-coarse:[--cds-resize-pill-force:0.5] [&:hover:not(:focus-visible)>[data-cds-part=resize-pill]]:opacity-50", !value && "[&:not(:focus-visible)>[data-cds-part=resize-pill]]:top-[calc(50%+6px)]", className)
+      className: (0, runtime2.joinClassNames)("z-10 touch-none [--cds-ring-outer:1px] [--cds-ring-inner:0px]", value2 && "[--cds-resize-pill-force:1]", disabled2 ? "pointer-events-none pointer-coarse:[--cds-resize-pill-force:0.2]" : !value && !value2 && "pointer-coarse:[--cds-resize-pill-force:0.5] [&:hover:not(:focus-visible)>[data-cds-part=resize-pill]]:opacity-50", !value && "[&:not(:focus-visible)>[data-cds-part=resize-pill]]:top-[calc(50%+6px)]", !value && "pointer-coarse:[&:not(:focus-visible)>[data-cds-part=resize-pill]]:h-[3px] pointer-coarse:[&:not(:focus-visible)>[data-cds-part=resize-pill]]:w-12 pointer-coarse:[&:not(:focus-visible)>[data-cds-part=resize-pill]]:-translate-y-1/2 pointer-coarse:[&:not(:focus-visible)>[data-cds-part=resize-pill]]:rounded-full pointer-coarse:[&:not(:focus-visible)>[data-cds-part=resize-pill]]:bg-current", !value && (value2 ? "pointer-coarse:[&:not(:focus-visible)>[data-cds-part=resize-pill]]:text-secondary" : "pointer-coarse:[&:not(:focus-visible)>[data-cds-part=resize-pill]]:text-muted"), className)
     });
     return jsxe5.jsxs(jsxe5.Fragment, {
       children: [
@@ -423,7 +437,7 @@ function installUiSidePanels(runtime2) {
     let { meta, hidden, setHostEl, setLeadingEl, setTrailingEl } = value, [value2, value3] = reactl0.useState(() => {
       let value28 = readPanelPreference("sheetH", isFinitePanelNumber) ?? 0;
       return value28 > 0 ? clampPanelHeight(value28) : 0;
-    }), [value4, value5] = reactl0.useState(() => window.innerHeight), [value6, value7] = reactl0.useState(0), value8 = value2 > 0 ? Math.max(value2, minimumPanelHeight(value6, value4)) : 0, [value9, value10] = reactl0.useState(() => readPanelPreference("mode", isPanelDockMode) ?? "docked"), value11 = meta?.detachable === !0, value12 = value11 ? value9 : "docked", [value13, value14] = reactl0.useState(() => readPanelPreference("pos", isPanelPosition)), ref = reactl0.useRef(null), [value15, value16] = reactl0.useState(!1), ref2 = reactl0.useRef(void 0), value17 = usePanelWidth(304, (input, options) => {
+    }), [value4, value5] = reactl0.useState(() => window.innerHeight), [value6, value7] = reactl0.useState(0), value8 = value2 > 0 ? Math.max(value2, minimumPanelHeight(value6, value4)) : 0, [value9, value10] = reactl0.useState(() => readPanelPreference("mode", isPanelDockMode) ?? "docked"), value11 = meta?.detachable === !0, value12 = value11 ? value9 : "docked", [value13, value14] = reactl0.useState(() => readPanelPreference("pos", isPanelPosition)), ref = reactl0.useRef(null), [value15, value16] = reactl0.useState(!1), ref2 = reactl0.useRef(void 0), value17 = usePanelWidth(reactl0.useContext(SidePanelWidthContext), (input, options) => {
       let current = ref2.current;
       value12 === "floating" && current && value14(clampFloatingPanelPosition({
         x: current.x + (options - input),
@@ -553,7 +567,16 @@ function installUiSidePanels(runtime2) {
       ...value8 > 0 && !value23 ? {
         "--mc-sheet-h": `${value8}px`
       } : {}
-    }, value25 = meta.tabs !== void 0 && meta.tabs.length > 0 ? meta.tabs : void 0, value26 = value25 !== void 0, value27 = value25 !== void 0 ? jsxe5.jsx("div", {
+    }, value25 = meta.tabs !== void 0 && meta.tabs.length > 0 ? meta.tabs : void 0, value26 = value25 !== void 0, dockLabel = (0, runtime2.formatMessage)({
+      defaultMessage: "固定面板",
+      id: "a3D2yxivX1"
+    }), dockTip = (0, runtime2.formatMessage)({
+      defaultMessage: "固定回侧边栏",
+      id: "zR1UvlJoZJ"
+    }), closePanelLabel = (0, runtime2.formatMessage)({
+      defaultMessage: "关闭面板",
+      id: "j1uaWQmV5p"
+    }), value27 = value25 !== void 0 ? jsxe5.jsx("div", {
       onPointerDown: callback3,
       className: (0, runtime2.joinClassNames)("shrink-0 touch-none select-none border-b border-border-line", value11 && (value15 ? "cursor-grabbing" : "cursor-grab")),
       children: jsxe5.jsx(runtime2.CdsRoot, {
@@ -563,18 +586,21 @@ function installUiSidePanels(runtime2) {
           tabs: value25,
           tab: meta.tab ?? value25[0]?.value,
           onTabChange: meta.onTabChange,
-          tabsLabel: meta.tabsLabel ?? "Panel view",
+          tabsLabel: meta.tabsLabel ?? (0, runtime2.formatMessage)({
+            defaultMessage: "面板视图",
+            id: "EGju9BGG8O"
+          }),
           trailing: value22 ? jsxe5.jsx(runtime2.Button, {
             iconOnly: !0,
             variant: "ghost",
             icon: "SidebarRight",
-            "aria-label": "固定面板",
-            tooltip: "固定回侧边栏",
+            "aria-label": dockLabel,
+            tooltip: dockTip,
             className: "relative shrink-0",
             onClick: callback4
           }) : void 0,
           onClose: () => meta.onClose(),
-          closeLabel: "关闭面板"
+          closeLabel: closePanelLabel
         }, meta.id)
       })
     }) : jsxe5.jsxs("div", {
@@ -596,13 +622,13 @@ function installUiSidePanels(runtime2) {
         }),
         value22 ? jsxe5.jsx(PanelIconButton, {
           icon: "SidebarRight",
-          "aria-label": "固定面板",
-          tooltip: "固定回侧边栏",
+          "aria-label": dockLabel,
+          tooltip: dockTip,
           onClick: callback4
         }) : null,
         jsxe5.jsx(PanelIconButton, {
           icon: "X",
-          "aria-label": "关闭面板",
+          "aria-label": closePanelLabel,
           className: meta.closeInset === "shell" ? void 0 : "-mr-[5px]",
           onClick: () => meta.onClose()
         })
@@ -632,9 +658,18 @@ function installUiSidePanels(runtime2) {
       children: [
         !value22 && meta.narrow === "sheet" && !value23 ? jsxe5.jsx(PanelResizeHandle, {
           name: "sheet",
-          label: "调整面板大小",
+          label: (0, runtime2.formatMessage)({
+            defaultMessage: "调整面板大小",
+            id: "F9gFnH3lxw"
+          }),
           now: value24,
-          valueText: String(value24) + " pixels tall",
+          valueText: (0, runtime2.formatMessage)({
+            defaultMessage: "高 {count} 像素",
+            id: "R3web4AZ4b"
+          }, {
+            n: value24,
+            count: String(value24)
+          }),
           min: minimumPanelHeight(value6, value4),
           max: maximumPanelHeight(value4),
           gesture: memo22,
@@ -722,6 +757,8 @@ function installUiSidePanels(runtime2) {
     PanelIconButton = value;
   }), bindRuntimeValue(runtime2, "SidePanelContext", () => SidePanelContext, (value) => {
     SidePanelContext = value;
+  }), bindRuntimeValue(runtime2, "SidePanelWidthContext", () => SidePanelWidthContext, (value) => {
+    SidePanelWidthContext = value;
   }), bindRuntimeValue(runtime2, "SidePanelHostContext", () => SidePanelHostContext, (value) => {
     SidePanelHostContext = value;
   }), bindRuntimeValue(runtime2, "SidePanelProvider", () => SidePanelProvider), bindRuntimeValue(runtime2, "useSidePanel", () => useSidePanel), bindRuntimeValue(runtime2, "SidePanel", () => SidePanel), bindRuntimeValue(runtime2, "PANEL_STORAGE_PREFIX", () => PANEL_STORAGE_PREFIX, (value) => {
@@ -759,7 +796,7 @@ function installUiSidePanels(runtime2) {
         variant: "ghost",
         ...input
       });
-    }), SidePanelContext = reactl0.createContext(null), SidePanelHostContext = reactl0.createContext(null), PANEL_STORAGE_PREFIX = "mc-side/", isFinitePanelNumber = (value) => typeof value == "number" && Number.isFinite(value), isPanelDockMode = (value) => value === "docked" || value === "floating", isPanelPosition = (value) => typeof value == "object" && value !== null && Number.isFinite(value.x) && Number.isFinite(value.y), MIN_PANEL_WIDTH = 285, NON_TEXT_INPUT_TYPES = /^(checkbox|radio|range|button|submit|reset|image|color)$/i, approximatelyEqualPanelSize = (left, right) => Math.abs(left - right) < 1, MIN_PANEL_HEIGHT = 160, PANEL_SHEET_MAX_HEIGHT = "min(50dvh, calc(24rem + var(--mc-foot-inset, 0px)))", IFRAME_POINTER_LOCK_CLASS = "[&_iframe]:pointer-events-none!", activeIframePointerLocks = 0, COARSE_PANEL_WIDTH = 376, jsxaZ = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1);
+    }), SidePanelContext = reactl0.createContext(null), SidePanelWidthContext = reactl0.createContext(304), SidePanelHostContext = reactl0.createContext(null), PANEL_STORAGE_PREFIX = "mc-side/", isFinitePanelNumber = (value) => typeof value == "number" && Number.isFinite(value), isPanelDockMode = (value) => value === "docked" || value === "floating", isPanelPosition = (value) => typeof value == "object" && value !== null && Number.isFinite(value.x) && Number.isFinite(value.y), MIN_PANEL_WIDTH = 285, NON_TEXT_INPUT_TYPES = /^(checkbox|radio|range|button|submit|reset|image|color)$/i, approximatelyEqualPanelSize = (left, right) => Math.abs(left - right) < 1, MIN_PANEL_HEIGHT = 160, PANEL_SHEET_MAX_HEIGHT = "min(50dvh, calc(24rem + var(--mc-foot-inset, 0px)))", IFRAME_POINTER_LOCK_CLASS = "[&_iframe]:pointer-events-none!", activeIframePointerLocks = 0, COARSE_PANEL_WIDTH = 376, jsxaZ = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1);
   };
 }
 export {

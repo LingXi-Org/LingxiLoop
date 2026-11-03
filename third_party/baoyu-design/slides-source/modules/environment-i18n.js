@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEnvironmentI18n(runtime2) {
   var LOCALE_FALLBACKS, intlFormatterCache, TAG_NAME_PATTERN, PLURAL_SELECTOR_PATTERN, parsedMessageCache, SOURCE_MESSAGE_LOCALE, sourceMessageFormatter, LANGUAGE_TAG_PATTERN, RTL_SCRIPTS, I18N_GLOBAL_KEY, LOCALE_MATCHING, pageMessages, activeMessageFormatter, designKitI18n, isPlainObject, messageValues;
@@ -424,6 +424,20 @@ function installEnvironmentI18n(runtime2) {
     if (pageMessages !== void 0 && isRightToLeftLanguage(pageMessages.lang))
       return "rtl";
   }
+  function pageMessagesLanguage() {
+    return pageMessages?.lang;
+  }
+  function applyPageLanguage(doc) {
+    let lang = pageMessagesLanguage();
+    if (lang === void 0)
+      return;
+    doc.body.lang = lang;
+    let direction = pageTextDirection();
+    direction !== void 0 && (doc.body.dir = direction);
+  }
+  function currentDesignKitI18n() {
+    return designKitI18n;
+  }
   function formatMessage(descriptor, values) {
     return activeMessageFormatter.formatMessage(descriptor, messageValues(values));
   }
@@ -437,7 +451,7 @@ function installEnvironmentI18n(runtime2) {
     let locale = formattingLocale();
     return locale === void 0 ? fallback : kind === "Collator" || kind === "Segmenter" ? locale : supportedIntlLocale(kind, locale);
   }
-  return bindRuntimeValue(runtime2, "formatMessage", () => formatMessage), bindRuntimeValue(runtime2, "untranslatedMessage", () => untranslatedMessage), bindRuntimeValue(runtime2, "literalMessage", () => literalMessage), bindRuntimeValue(runtime2, "intlLocale", () => intlLocale), bindRuntimeValue(runtime2, "createMessageFormatter", () => createMessageFormatter), bindRuntimeValue(runtime2, "formatIcuMessage", () => formatIcuMessage), bindRuntimeValue(runtime2, "parseIcuMessage", () => parseIcuMessage), bindRuntimeValue(runtime2, "supportedIntlLocale", () => supportedIntlLocale), bindRuntimeValue(runtime2, "cachedIntlFormatter", () => cachedIntlFormatter), bindRuntimeValue(runtime2, "isMessageLanguageTag", () => isMessageLanguageTag), bindRuntimeValue(runtime2, "isRightToLeftLanguage", () => isRightToLeftLanguage), bindRuntimeValue(runtime2, "resolveFormattingLocale", () => resolveFormattingLocale), bindRuntimeValue(runtime2, "installPageMessages", () => installPageMessages), bindRuntimeValue(runtime2, "readPageMessages", () => readPageMessages), bindRuntimeValue(runtime2, "pageTextDirection", () => pageTextDirection), bindRuntimeValue(runtime2, "formattingLocale", () => formattingLocale), bindRuntimeValue(runtime2, "designKitI18n", () => designKitI18n), bindRuntimeValue(runtime2, "SOURCE_MESSAGE_LOCALE", () => SOURCE_MESSAGE_LOCALE), bindRuntimeValue(runtime2, "I18N_GLOBAL_KEY", () => I18N_GLOBAL_KEY), bindRuntimeValue(runtime2, "MessageFormatError", () => MessageFormatError), () => {
+  return bindRuntimeValue(runtime2, "formatMessage", () => formatMessage), bindRuntimeValue(runtime2, "untranslatedMessage", () => untranslatedMessage), bindRuntimeValue(runtime2, "literalMessage", () => literalMessage), bindRuntimeValue(runtime2, "intlLocale", () => intlLocale), bindRuntimeValue(runtime2, "createMessageFormatter", () => createMessageFormatter), bindRuntimeValue(runtime2, "formatIcuMessage", () => formatIcuMessage), bindRuntimeValue(runtime2, "parseIcuMessage", () => parseIcuMessage), bindRuntimeValue(runtime2, "supportedIntlLocale", () => supportedIntlLocale), bindRuntimeValue(runtime2, "cachedIntlFormatter", () => cachedIntlFormatter), bindRuntimeValue(runtime2, "isMessageLanguageTag", () => isMessageLanguageTag), bindRuntimeValue(runtime2, "isRightToLeftLanguage", () => isRightToLeftLanguage), bindRuntimeValue(runtime2, "resolveFormattingLocale", () => resolveFormattingLocale), bindRuntimeValue(runtime2, "installPageMessages", () => installPageMessages), bindRuntimeValue(runtime2, "readPageMessages", () => readPageMessages), bindRuntimeValue(runtime2, "pageTextDirection", () => pageTextDirection), bindRuntimeValue(runtime2, "pageMessagesLanguage", () => pageMessagesLanguage), bindRuntimeValue(runtime2, "applyPageLanguage", () => applyPageLanguage), bindRuntimeValue(runtime2, "currentDesignKitI18n", () => currentDesignKitI18n), bindRuntimeValue(runtime2, "formattingLocale", () => formattingLocale), bindRuntimeValue(runtime2, "designKitI18n", () => designKitI18n), bindRuntimeValue(runtime2, "SOURCE_MESSAGE_LOCALE", () => SOURCE_MESSAGE_LOCALE), bindRuntimeValue(runtime2, "I18N_GLOBAL_KEY", () => I18N_GLOBAL_KEY), bindRuntimeValue(runtime2, "MessageFormatError", () => MessageFormatError), () => {
     LOCALE_FALLBACKS = {
       bho: {
         locale: "hi"

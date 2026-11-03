@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFontsInlining(runtime2) {
   var defaultFontInliningBudget, maxConcurrentFontFetches, fontInliningTimeoutMs, minimumFontInliningBudget, isFullUnicodeRange, rangesIntersect, unicodeRangesKey, fontFamilyStyleKey, unicodeSpaceCodePoint, fontInliningFacePattern, fontInliningFamilyPattern, embeddedFontFilePattern, initializeFontInlining, initializeExportFontWarming, warmedExportFontsKey = "", exportFontWarming;
@@ -114,6 +114,9 @@ function installFontsInlining(runtime2) {
   function removeRuntimeFontFaces(css) {
     return css.replace(fontInliningFacePattern, (input) => /url\(["']?[^"')]*\/_runtime\//.test(input) ? "" : input);
   }
+  function noteFontFetchFailure(failures, stage, error) {
+    stage === "file" && error instanceof runtime2.NotFontError ? failures.badData = !0 : failures[stage] = failures[(0, runtime2.fetchFailureKind)(error)] = !0;
+  }
   async function inlineGoogleFontFaces(css, options) {
     let { hrefs, optional } = (0, runtime2.googleFontImports)(css), empty = {
       css: "",
@@ -157,16 +160,14 @@ function installFontsInlining(runtime2) {
         },
         heldBack: linkedName(heldBack)
       };
-    let value4 = options.fetchText ?? runtime2.fetchFontStylesheet, value5 = options.fetchDataUrl ?? runtime2.fetchFontDataUrl, value6 = options.faceInUse ?? (value2 === "settled" ? (input) => (0, runtime2.googleFontVariantAvailable)(input, !0) : runtime2.googleFontVariantAvailable), value8 = value3 === void 0 ? void 0 : documentFontCoverage(value3), flag = !1, requested = !1, failures = {}, noteFailure = (stage, error) => {
-      failures[stage] = failures[(0, runtime2.fetchFailureKind)(error)] = !0;
-    }, value10 = await Promise.all(hrefs.map(async (input) => {
+    let value4 = options.fetchText ?? runtime2.fetchFontStylesheet, value5 = options.fetchDataUrl ?? runtime2.fetchFontDataUrl, value6 = options.faceInUse ?? (value2 === "settled" ? (input) => (0, runtime2.googleFontVariantAvailable)(input, !0) : runtime2.googleFontVariantAvailable), value8 = value3 === void 0 ? void 0 : documentFontCoverage(value3), flag = !1, requested = !1, failures = {}, value10 = await Promise.all(hrefs.map(async (input) => {
       if (optional.has(input) && !value6(input) || !googleFontUrlFamiliesLowercase(input).some(callback))
         return [];
       requested = !0;
       try {
         return reconcileFontFaceWeights((0, runtime2.parseFontFaceDeclarations)(await value4(input)).filter((input2) => input2.files.length > 0 && callback(input2.family)), value8);
       } catch (error) {
-        return flag = !0, noteFailure("sheet", error), [];
+        return flag = !0, noteFontFetchFailure(failures,"sheet", error), [];
       }
     })), values = /* @__PURE__ */ new Set(), value11 = value10.flat().filter((input) => values.has(input.text) ? !1 : (values.add(input.text), !0)), value12 = textCodePointsWithCaseVariants(options.text), entries2 = new Map(value11.map((input) => [
       input,
@@ -187,7 +188,7 @@ function installFontsInlining(runtime2) {
           let value18 = await value5(input), isFont = embeddedFontFilePattern.test(value18);
           entries3.set(input, isFont ? value18 : null), isFont || (failures.badData = !0);
         } catch (error) {
-          entries3.set(input, null), noteFailure("file", error);
+          entries3.set(input, null), noteFontFetchFailure(failures,"file", error);
         }
       }));
       let value17 = value16.length > 0 && value16.every((input) => entries3.get(input) === null);
@@ -233,7 +234,7 @@ function installFontsInlining(runtime2) {
     };
     return lowerBound(maximum + 1) - lowerBound(minimum);
   }
-  return bindRuntimeValue(runtime2, "loadedDocumentFontFaces", () => loadedDocumentFontFaces), bindRuntimeValue(runtime2, "fontUnicodeRangesEqual", () => fontUnicodeRangesEqual), bindRuntimeValue(runtime2, "fontUnicodeRangesOverlap", () => fontUnicodeRangesOverlap), bindRuntimeValue(runtime2, "nearestAvailableWeightRange", () => nearestAvailableWeightRange), bindRuntimeValue(runtime2, "documentFontCoverage", () => documentFontCoverage), bindRuntimeValue(runtime2, "unicodeRangeContainsSpace", () => unicodeRangeContainsSpace), bindRuntimeValue(runtime2, "reconcileFontFaceWeights", () => reconcileFontFaceWeights), bindRuntimeValue(runtime2, "googleFontUrlFamilies", () => googleFontUrlFamilies), bindRuntimeValue(runtime2, "googleFontUrlFamiliesLowercase", () => googleFontUrlFamiliesLowercase), bindRuntimeValue(runtime2, "fontUsageHints", () => fontUsageHints), bindRuntimeValue(runtime2, "removeUnusedFontFaces", () => removeUnusedFontFaces), bindRuntimeValue(runtime2, "removeRuntimeFontFaces", () => removeRuntimeFontFaces), bindRuntimeValue(runtime2, "inlineGoogleFontFaces", () => inlineGoogleFontFaces), bindRuntimeValue(runtime2, "textCodePointsWithCaseVariants", () => textCodePointsWithCaseVariants), bindRuntimeValue(runtime2, "countCodePointsInRange", () => countCodePointsInRange), bindRuntimeValue(runtime2, "defaultFontInliningBudget", () => defaultFontInliningBudget, (value) => {
+  return bindRuntimeValue(runtime2, "loadedDocumentFontFaces", () => loadedDocumentFontFaces), bindRuntimeValue(runtime2, "fontUnicodeRangesEqual", () => fontUnicodeRangesEqual), bindRuntimeValue(runtime2, "fontUnicodeRangesOverlap", () => fontUnicodeRangesOverlap), bindRuntimeValue(runtime2, "nearestAvailableWeightRange", () => nearestAvailableWeightRange), bindRuntimeValue(runtime2, "documentFontCoverage", () => documentFontCoverage), bindRuntimeValue(runtime2, "unicodeRangeContainsSpace", () => unicodeRangeContainsSpace), bindRuntimeValue(runtime2, "reconcileFontFaceWeights", () => reconcileFontFaceWeights), bindRuntimeValue(runtime2, "googleFontUrlFamilies", () => googleFontUrlFamilies), bindRuntimeValue(runtime2, "googleFontUrlFamiliesLowercase", () => googleFontUrlFamiliesLowercase), bindRuntimeValue(runtime2, "fontUsageHints", () => fontUsageHints), bindRuntimeValue(runtime2, "removeUnusedFontFaces", () => removeUnusedFontFaces), bindRuntimeValue(runtime2, "removeRuntimeFontFaces", () => removeRuntimeFontFaces), bindRuntimeValue(runtime2, "noteFontFetchFailure", () => noteFontFetchFailure), bindRuntimeValue(runtime2, "inlineGoogleFontFaces", () => inlineGoogleFontFaces), bindRuntimeValue(runtime2, "textCodePointsWithCaseVariants", () => textCodePointsWithCaseVariants), bindRuntimeValue(runtime2, "countCodePointsInRange", () => countCodePointsInRange), bindRuntimeValue(runtime2, "defaultFontInliningBudget", () => defaultFontInliningBudget, (value) => {
     defaultFontInliningBudget = value;
   }), bindRuntimeValue(runtime2, "maxConcurrentFontFetches", () => maxConcurrentFontFetches, (value) => {
     maxConcurrentFontFetches = value;
@@ -262,7 +263,7 @@ function installFontsInlining(runtime2) {
   }), bindRuntimeValue(runtime2, "initializeFontInlining", () => initializeFontInlining, (value) => {
     initializeFontInlining = value;
   }), () => {
-    defaultFontInliningBudget = 4194304, maxConcurrentFontFetches = 8, fontInliningTimeoutMs = 2e4, minimumFontInliningBudget = 16384, isFullUnicodeRange = (items) => items.length === 1 && items[0][0] <= 0 && items[0][1] >= 1114111, rangesIntersect = (input, options) => input[0] <= options[1] && options[0] <= input[1], unicodeRangesKey = (input) => input.map((input2) => String(input2[0]) + "-" + String(input2[1])).join(","), fontFamilyStyleKey = (input, options) => (0, runtime2.normalizeFontFaceFamily)(input) + `
+    defaultFontInliningBudget = 16777216, maxConcurrentFontFetches = 8, fontInliningTimeoutMs = 2e4, minimumFontInliningBudget = 16384, isFullUnicodeRange = (items) => items.length === 1 && items[0][0] <= 0 && items[0][1] >= 1114111, rangesIntersect = (input, options) => input[0] <= options[1] && options[0] <= input[1], unicodeRangesKey = (input) => input.map((input2) => String(input2[0]) + "-" + String(input2[1])).join(","), fontFamilyStyleKey = (input, options) => (0, runtime2.normalizeFontFaceFamily)(input) + `
 ` + options.trim().toLowerCase(), unicodeSpaceCodePoint = 32, initializeFontInlining = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeFontFetching)(), (0, runtime2.initializeFontFaceParser)(), fontInliningFacePattern = /@font-face\s*\{[^}]*\}/g, fontInliningFamilyPattern = /font-family:\s*(["']?)([^;"'}]+)\1/, embeddedFontFilePattern = /^data:(?:font|application)\/[\w+.-]+(?:; ?[\w.+-]+=[\w.+-]+)*;base64,[A-Za-z0-9+/=]*$/;
     }), initializeExportFontWarming = (0, runtime2.initializeOnce)(() => {

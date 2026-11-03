@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installPresentationSpeakerProtocol(runtime2) {
   var SPEAKER_NOTES_POPOUT_KEY, SPEAKER_MESSAGE_TITLE_MAX_CHARS, SPEAKER_NOTES_ID_PATTERN;

@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiToolbarControls(runtime2) {
-  var reacty8, PANEL_ELEVATION, POPOVER_ELEVATION, reactq8, jsxv1, ToolbarFloatingContext, ToolbarQuietContext, SHORTCUT_MODIFIER_NAMES, SHORTCUT_MODIFIER_LABELS, SHORTCUT_KEY_NAMES, ownShortcutMapping, SHORTCUT_SYMBOL_MODIFIERS, SHORTCUT_SPOKEN_REPLACEMENTS, TOOLBAR_LINK_DESCRIPTION, ToolbarButton, jsxR8, toolbarPointerSession, installedToolbarPointerDocuments, monotonicNow, TOOLBAR_POINTER_TIME_TOLERANCE, TOOLBAR_POINTER_COORDINATE_TOLERANCE, TOOLBAR_TOUCH_HOLD_MS, TOOLBAR_TOUCH_RECENCY_MS, TOOLBAR_STRAY_HOLD_MS, TOOLBAR_EARLY_HOLD_MS, pointInsideElement, matchesToolbarPointerEvent, toolbarStrips, toolbarClickThroughTimer, lastToolbarTouchRelease, afterTwoAnimationFrames, TOOLBAR_POSITION_TOLERANCE, toolbarTouchDeadlines, ToolbarGroupWrapContext, ToolbarStripButton, TOOLBAR_SCROLL_FOCUS_MARGIN;
+  var reacty8, PANEL_ELEVATION, POPOVER_ELEVATION, reactq8, jsxv1, ToolbarFloatingContext, ToolbarQuietContext, SHORTCUT_MODIFIER_NAMES, SHORTCUT_MODIFIER_LABELS, SHORTCUT_KEY_NAMES, ownShortcutMapping, SHORTCUT_SYMBOL_MODIFIERS, SHORTCUT_SPOKEN_REPLACEMENTS, TOOLBAR_LINK_DESCRIPTION, shortcutDescription, joinDescriptionSentences, joinDescriptionWords, pointInsideElementBox, ToolbarButton, jsxR8, toolbarPointerSession, installedToolbarPointerDocuments, monotonicNow, TOOLBAR_POINTER_TIME_TOLERANCE, TOOLBAR_POINTER_COORDINATE_TOLERANCE, TOOLBAR_TOUCH_HOLD_MS, TOOLBAR_TOUCH_RECENCY_MS, TOOLBAR_STRAY_HOLD_MS, TOOLBAR_EARLY_HOLD_MS, pointInsideElement, matchesToolbarPointerEvent, toolbarStrips, toolbarClickThroughTimer, lastToolbarTouchRelease, afterTwoAnimationFrames, TOOLBAR_POSITION_TOLERANCE, toolbarTouchDeadlines, ToolbarGroupWrapContext, ToolbarStripButton, TOOLBAR_SCROLL_FOCUS_MARGIN;
   function ToolbarWhenVisible({ children }) {
     return reactq8.useContext(ToolbarQuietContext) ? null : jsxv1.jsx(jsxv1.Fragment, {
       children
@@ -62,12 +62,32 @@ function installUiToolbarControls(runtime2) {
       className
     });
   }
+  function closeFrameComposerFromFoot(element, force = !1) {
+    element?.closest("[data-tb-foot], [data-tb-foot-tools]") == null || !force && element.matches('[data-chat-button], [data-tb-foot-quiet], [aria-haspopup]:not([aria-haspopup="false"])') || ((0, runtime2.hostWords)()?.has(runtime2.CHAT_TOGGLE_COMMAND) === !0 ? (0, runtime2.postToHost)({
+      [runtime2.FRAME_COMPOSER_COMMAND]: !0,
+      show: !1
+    }, window, void 0, !0) : (0, runtime2.isFrameComposerVisible)() && (0, runtime2.showFrameComposer)(!1));
+  }
+  function useInsideToolbarFoot(ref) {
+    let [inside, setInside] = reactq8.useState(!1);
+    return reactq8.useLayoutEffect(() => {
+      let next = ref.current?.closest("[data-tb-foot]") != null;
+      next !== inside && setInside(next);
+    }), inside;
+  }
   function toolbarTooltipContent(props) {
-    return props.disabled ? {
-      content: props.disabledTip ?? props.tip ?? props.label,
+    if ( props.disabled) {
+      let content2 = props.disabledTip ?? props.tip ?? props.label;
+      return {
+        content: content2,
+        shown: content2,
       shortcut: void 0
-    } : {
-      content: props.tip ?? props.label,
+    };
+    }
+    let content = props.tip ?? props.label;
+    return {
+      content,
+      shown: props.nameOnly === !0 && !props.label.includes(content) ? props.label : content,
       shortcut: props.shortcut
     };
   }
@@ -163,10 +183,10 @@ function installUiToolbarControls(runtime2) {
         continue;
       }
       let value5 = ownShortcutMapping(SHORTCUT_KEY_NAMES, value3);
-      items2.push(value5 !== void 0 ? typeof value5 == "string" ? value5 : value5[isMac ? 0 : 1] : value3.length === 1 ? value3.toUpperCase() : value3.charAt(0).toUpperCase() + value3.slice(1));
+      items2.push(value5 !== void 0 ? (0, runtime2.shortcutKeyName)( typeof value5 == "string" ? value5 : value5[isMac ? 0 : 1]) : value3.length === 1 ? value3.toUpperCase() : value3.charAt(0).toUpperCase() + value3.slice(1));
     }
     if (items2.length !== 0)
-      return items.sort((input, options) => SHORTCUT_MODIFIER_LABELS.indexOf(input) - SHORTCUT_MODIFIER_LABELS.indexOf(options)), [...items, ...items2].join("+");
+      return items.sort((input, options) => SHORTCUT_MODIFIER_LABELS.indexOf(input) - SHORTCUT_MODIFIER_LABELS.indexOf(options)), [...items.map((input) => (0, runtime2.shortcutKeyName)(input)), ...items2].join("+");
   }
   function shortcutSymbols(shortcut) {
     let value = shortcut.trim().replace(/\s*\+\s*/g, "+").split("+").filter((input) => input !== ""), callback = (input) => SHORTCUT_SYMBOL_MODIFIERS.some(([, ...input2]) => input2.includes(input.toLowerCase())), value2 = SHORTCUT_SYMBOL_MODIFIERS.filter(([, ...input]) => value.some((input2) => input.includes(input2.toLowerCase()))).map(([input]) => input), value3 = value.filter((input) => !callback(input)).map((input) => input.charAt(0).toUpperCase() + input.slice(1));
@@ -174,8 +194,9 @@ function installUiToolbarControls(runtime2) {
   }
   function spokenShortcut(shortcut, isMac = (0, runtime2.isApplePlatform)()) {
     let value = shortcut;
-    for (let [value2, value3, value4] of SHORTCUT_SPOKEN_REPLACEMENTS)
-      value = value.replace(value2, isMac ? value3 : value4);
+    for (let [value2, value3, value4,
+      value5] of SHORTCUT_SPOKEN_REPLACEMENTS)
+      value = value.replace(value2, () => (0, runtime2.shortcutKeyName)( isMac ? value3 : value4) + value5);
     return value.replace(/ {2,}/g, " ").trim();
   }
   function useButtonAccessibility(props) {
@@ -186,10 +207,9 @@ function installUiToolbarControls(runtime2) {
         keyShortcuts: value6,
         mirror: null
       };
-    let value10 = [
-      value4 ? spokenShortcut(props.tip, value2) : void 0,
-      value5 !== void 0 ? "Shortcut: " + value5 : void 0
-    ].filter(Boolean).join(". "), value11 = value7 === void 0 ? value10 : value10 === "" ? value7 : value10 + (/[.!?]$/.test(value10) ? " " : ". ") + value7;
+    let spokenTip =
+      value4 ? spokenShortcut(props.tip, value2) : "", shortcutText =
+      value5 !== void 0 ? shortcutDescription( value5) : "", value10 = spokenTip !== "" && shortcutText !== "" ? joinDescriptionSentences(spokenTip, shortcutText) : spokenTip || shortcutText, value11 = value7 === void 0 ? value10 : value10 === "" ? value7 :/[.!?]$/.test(value10) ? joinDescriptionWords(value10, value7) : joinDescriptionSentences(value10, value7);
     return {
       describedBy: value9,
       keyShortcuts: value6,
@@ -315,10 +335,20 @@ function installUiToolbarControls(runtime2) {
     }
     value !== null && index4 > 0 && (toolbarClickThroughTimer = setTimeout(updateToolbarClickThroughAttributes, Math.min(TOOLBAR_POINTER_TIME_TOLERANCE, Math.max(0, index4 - value)) + 1));
   }
-  function ToolbarStrip({ className, onPointerDown, onMouseDown, onMouseDownCapture, onClickCapture, onScroll, children, surface = "panel", placed = "above", coversSelection, wrap = !1, ...remainingProps }) {
+  function ToolbarStrip({ className, onPointerDown, onMouseDown, onMouseDownCapture, onClickCapture, onScroll, children,
+    surface = "panel", placed = "above", coversSelection, wrap = !1,
+    fold = !1,
+    foldKey,
+    foldBand,
+    onKeyDownCapture,
+    onKeyUpCapture, ...remainingProps }) {
     reacty8.useEffect(() => installToolbarPointerTracking(document), []);
-    let ref = reacty8.useRef(null), ref2 = reacty8.useRef(null), value = (0, runtime2.useCoarsePointer)();
-    return reacty8.useLayoutEffect(() => {
+    let ref = reacty8.useRef(null), ref2 = reacty8.useRef(null), value = (0, runtime2.useCoarsePointer)(), bottomToolbar = (0, runtime2.useBottomToolbarFlag)(), bottomLook = bottomToolbar && !value, shownSurface = bottomLook ? "popover" : surface, foldable = fold && bottomToolbar, wraps = wrap && !foldable, cardRef = reacty8.useRef(null), cardRowRef = reacty8.useRef(null), cardId = reacty8.useId(), moreLabel = (0, runtime2.untranslatedMessage)("更多工具"), toggleRef = reacty8.useRef(null), [folded, setFolded] = reacty8.useState(!1), [cardOpen, setCardOpen] = reacty8.useState(!1), [escapeHeld, setEscapeHeld] = reacty8.useState(!1), relayout = reacty8.useRef(() => {
+    }), placeCard = reacty8.useRef(() => {
+    }), [cellsVersion, setCellsVersion] = reacty8.useState(0), cellsChanged = reacty8.useCallback(() => setCellsVersion((version2) => version2 + 1), []), openedByKey = reacty8.useRef(!1), foldState = reacty8.useMemo(() => ({
+      folded,
+      cellsChanged
+    }), [folded, cellsChanged]); reacty8.useLayoutEffect(() => {
       let current = ref.current;
       if (current !== null)
         return toolbarStrips.add(current), () => {
@@ -334,20 +364,60 @@ function installUiToolbarControls(runtime2) {
       return observer.observe(current2), () => observer.disconnect();
     }, []), reacty8.useLayoutEffect(() => {
       let current = ref.current, current2 = ref2.current;
-      if (surface !== "popover" || current === null || current2 === null || typeof ResizeObserver > "u")
+      if (shownSurface !== "popover" || current === null || current2 === null || typeof ResizeObserver > "u")
         return;
       let callback = () => {
         let element = current2.querySelector('[data-cds="Button"]'), value2 = getComputedStyle(current2), value3 = (element?.offsetHeight ?? 0) + (parseFloat(value2.paddingTop) || 0) + (parseFloat(value2.paddingBottom) || 0);
         current.toggleAttribute("data-mc-wrapped", element !== null && current2.clientHeight > value3 + 1);
       }, observer = new ResizeObserver(callback);
       return observer.observe(current2), callback(), () => observer.disconnect();
-    }, [surface]), jsxR8.jsx(runtime2.CdsRoot, {
-      density: surface === "popover" && value ? "comfortable" : "compact",
+    }, [shownSurface]);
+    let maxWidth = remainingProps.style?.maxWidth;
+    return reacty8.useLayoutEffect(() => {
+      let strip = ref.current, row = ref2.current, cardRow = cardRowRef.current, card = cardRef.current;
+      if (!foldable || strip === null || row === null || cardRow === null || card === null) {
+        relayout.current = () => {
+        }, setCardOpen(!1);
+        return;
+      }
+      let rowWidth = 0, cancelPending = () => {
+      }, layout = () => {
+        cancelPending(), cancelPending = (0, runtime2.whenToolbarFoldIdle)(strip, card, () => {
+          let didFold = (0, runtime2.layoutToolbarFold)(strip, row, cardRow);
+          rowWidth = row.getBoundingClientRect().width, setFolded(didFold), didFold || setCardOpen(!1), card.hidden || placeCard.current();
+        });
+      };
+      relayout.current = layout, layout();
+      let observer = typeof ResizeObserver == "undefined" ? null : new ResizeObserver(() => {
+        Math.abs(row.getBoundingClientRect().width - rowWidth) > 0.5 && relayout.current();
+      });
+      return observer?.observe(row), window.addEventListener("resize", relayout.current), () => {
+        cancelPending(), observer?.disconnect(), window.removeEventListener("resize", relayout.current), relayout.current = () => {
+        };
+      };
+    }, [foldable]), reacty8.useLayoutEffect(() => relayout.current(), [cellsVersion]), reacty8.useLayoutEffect(() => {
+      !folded && typeof maxWidth == "number" && ref.current !== null && ref.current.getBoundingClientRect().width < maxWidth || relayout.current();
+    }, [maxWidth]), reacty8.useLayoutEffect(() => {
+      cardRef.current?.contains(document.activeElement) === !0 && toggleRef.current?.focus({
+        preventScroll: !0
+      }), setCardOpen(!1);
+    }, [foldKey]), reacty8.useLayoutEffect(() => {
+      let strip = ref.current, card = cardRef.current;
+      placeCard.current = () => {
+        strip !== null && card !== null && (0, runtime2.placeToolbarFoldCard)(strip, card, placed, foldBand);
+      }, cardOpen && placeCard.current();
+    }), reacty8.useLayoutEffect(() => {
+      cardOpen && openedByKey.current && cardRef.current?.querySelector("button:not([disabled])")?.focus({
+        preventScroll: !0
+      }), openedByKey.current = !1;
+    }, [cardOpen]), jsxR8.jsxs(runtime2.CdsRoot, {
+      density: bottomLook || shownSurface === "popover" && value ? "comfortable" : "compact",
       render: jsxR8.jsx(runtime2.Surface, {
         elevation: POPOVER_ELEVATION,
         role: "toolbar",
         "data-mc-strip": "",
-        "data-mc-surface": surface,
+        "data-mc-surface": shownSurface,
+        "data-mc-foldable": foldable ? "" : void 0,
         onPointerDown: (input) => {
           input.stopPropagation(), onPointerDown?.(input);
         },
@@ -360,11 +430,26 @@ function installUiToolbarControls(runtime2) {
         onMouseDown: (event) => {
           event.target.closest(runtime2.TEXT_EDITABLE_SELECTOR) || event.preventDefault(), onMouseDown?.(event);
         },
-        className: (0, runtime2.joinClassNames)("z-selection flex items-center", surface === "popover" ? "[--mc-group-gap:2px] [--mc-strip-gap:4px] [--mc-strip-pad:5px] pointer-coarse:rounded-xl pointer-coarse:[--mc-group-gap:8px] pointer-coarse:[--mc-strip-gap:8px] pointer-coarse:[--mc-strip-pad:6px] [&_[data-mc-divider]]:mx-0" : "[--mc-strip-gap:2px] [--mc-strip-pad:4px] [--mc-group-gap:4px]", "max-w-[calc(100vw-16px)] overflow-clip", className),
+        className: (0, runtime2.joinClassNames)("z-selection flex items-center", shownSurface === "popover" ? (bottomLook ? "[--mc-strip-pad:4px] " : "[--mc-strip-pad:5px] ") + "[--mc-group-gap:2px] [--mc-strip-gap:4px] pointer-coarse:rounded-xl pointer-coarse:[--mc-group-gap:8px] pointer-coarse:[--mc-strip-gap:8px] pointer-coarse:[--mc-strip-pad:6px] [&_[data-mc-divider]]:mx-0" : "[--mc-strip-gap:2px] [--mc-strip-pad:4px] [--mc-group-gap:4px]", "max-w-[calc(100vw-16px)]", !foldable && "overflow-clip", className),
         ...remainingProps,
+        onKeyDownCapture: (event) => {
+          let target = event.target;
+          if (event.key === "Escape" && !event.defaultPrevented && !(0, runtime2.hasOpenOverlay)() && target.closest("[data-mc-own-escape]") !== null && !target.matches(runtime2.TEXT_EDITABLE_SELECTOR)) {
+            if (event.preventDefault(), event.stopPropagation(), event.repeat)
+              return;
+            setCardOpen(!1), setEscapeHeld(!0), toggleRef.current?.focus({
+              preventScroll: !0
+            });
+            return;
+          }
+          onKeyDownCapture?.(event);
+        },
+        onKeyUpCapture: (event) => {
+          event.key === "Escape" && setEscapeHeld(!1), onKeyUpCapture?.(event);
+        },
         ref
       }),
-      children: jsxR8.jsxs("div", {
+      children: [ jsxR8.jsxs("div", {
         className: "relative min-w-0 flex-auto rounded-[inherit]",
         children: [
           jsxR8.jsx("div", {
@@ -373,13 +458,39 @@ function installUiToolbarControls(runtime2) {
             onScroll: (input) => {
               ref.current !== null && updateToolbarOverflowAttributes(ref.current, input.currentTarget), onScroll?.(input);
             },
-            className: (0, runtime2.joinClassNames)("flex min-w-0 items-center gap-[var(--mc-strip-gap)] rounded-[inherit] p-[var(--mc-strip-pad)]", wrap ? "flex-wrap" : "overflow-x-auto [clip-path:inset(0_1px)] [scrollbar-width:none] [&>*]:shrink-0"),
+            className: (0, runtime2.joinClassNames)("flex min-w-0 items-center gap-[var(--mc-strip-gap)] rounded-[inherit] p-[var(--mc-strip-pad)]", wraps ? "flex-wrap" : "overflow-x-auto [clip-path:inset(0_1px)] [scrollbar-width:none] [&>*]:shrink-0"),
             children: jsxR8.jsx(runtime2.ToolbarTooltipSideContext.Provider, {
               value: placed === "below" ? "bottom" : "top",
               children: jsxR8.jsx(ToolbarGroupWrapContext.Provider, {
-                value: wrap,
-                children: jsxR8.jsx(runtime2.TooltipProvider, {
-                  children
+                value: wraps,
+                children: jsxR8.jsx(runtime2.ToolbarFoldContext.Provider, {
+                    value: foldable ? foldState : null,
+                    children: jsxR8.jsxs(runtime2.TooltipProvider, {
+                  children: [
+                        children,
+                        foldable ? jsxR8.jsx("span", {
+                          "data-mc-group": "",
+                          "data-mc-fold-more": "",
+                          "data-mc-own-escape": cardOpen || escapeHeld ? "" : void 0,
+                          children: jsxR8.jsx(ToolbarStripButton, {
+                            ref: toggleRef,
+                            icon: "DotsHorizontal",
+                            "data-testid": "frame-fold",
+                            "data-mc-fold-toggle": "",
+                            title: moreLabel,
+                            "aria-label": moreLabel,
+                            "aria-expanded": cardOpen,
+                            "aria-controls": cardId,
+                            className: cardOpen ? "bg-fill-ghost-hover" : void 0,
+                            onClick: (event) => {
+                              openedByKey.current = event.detail === 0, cardRef.current?.contains(document.activeElement) === !0 && toggleRef.current?.focus({
+                                preventScroll: !0
+                              }), setCardOpen((open4) => !open4);
+                            }
+                          })
+                        }) : null
+                      ]
+                    })
                 })
               })
             })
@@ -401,15 +512,36 @@ function installUiToolbarControls(runtime2) {
             })
           })
         ]
-      })
+      }),
+        foldable ? jsxR8.jsx(runtime2.Surface, {
+          ref: cardRef,
+          id: cardId,
+          elevation: POPOVER_ELEVATION,
+          role: "group",
+          "aria-label": moreLabel,
+          "data-mc-fold-card": "",
+          "data-mc-own-escape": "",
+          hidden: !cardOpen,
+          className: "absolute right-0 w-max max-w-[calc(100vw-16px)] pointer-coarse:rounded-xl",
+          children: jsxR8.jsx("div", {
+            ref: cardRowRef,
+            "data-mc-group": "",
+            className: "flex items-center gap-x-[var(--mc-group-gap)] overflow-x-auto rounded-[inherit] p-[var(--mc-strip-pad)] [scrollbar-width:none] [&>*>*]:shrink-0"
+          })
+        }) : null
+      ]
     });
   }
-  function ToolbarGroup({ wrap = !1, fields = !1, className, ...remainingProps }) {
-    let value = reacty8.useContext(ToolbarGroupWrapContext);
+  function ToolbarGroup({ wrap = !1, fields = !1, className,
+    children, ...remainingProps }) {
+    let value = reacty8.useContext(ToolbarGroupWrapContext), inFold = reacty8.useContext(runtime2.ToolbarFoldContext) !== null;
     return jsxR8.jsx("span", {
       "data-mc-group": "",
       className: (0, runtime2.joinClassNames)("flex items-center gap-y-1", fields ? "gap-x-1" : "gap-x-[var(--mc-group-gap,4px)]", wrap && value && "max-w-full shrink-0 flex-wrap", className),
-      ...remainingProps
+      ...remainingProps,
+      children: inFold ? reacty8.Children.map(children, (child) => child == null || typeof child == "boolean" ? child : jsxR8.jsx(runtime2.ToolbarFoldCell, {
+        children: child
+      })) : children
     });
   }
   function ToolbarDivider() {
@@ -454,7 +586,15 @@ function installUiToolbarControls(runtime2) {
     SHORTCUT_SPOKEN_REPLACEMENTS = value;
   }), bindRuntimeValue(runtime2, "spokenShortcut", () => spokenShortcut), bindRuntimeValue(runtime2, "useButtonAccessibility", () => useButtonAccessibility), bindRuntimeValue(runtime2, "TOOLBAR_LINK_DESCRIPTION", () => TOOLBAR_LINK_DESCRIPTION, (value) => {
     TOOLBAR_LINK_DESCRIPTION = value;
-  }), bindRuntimeValue(runtime2, "ToolbarButton", () => ToolbarButton, (value) => {
+  }), bindRuntimeValue(runtime2, "shortcutDescription", () => shortcutDescription, (value) => {
+    shortcutDescription = value;
+  }), bindRuntimeValue(runtime2, "joinDescriptionSentences", () => joinDescriptionSentences, (value) => {
+    joinDescriptionSentences = value;
+  }), bindRuntimeValue(runtime2, "joinDescriptionWords", () => joinDescriptionWords, (value) => {
+    joinDescriptionWords = value;
+  }), bindRuntimeValue(runtime2, "pointInsideElementBox", () => pointInsideElementBox, (value) => {
+    pointInsideElementBox = value;
+  }), bindRuntimeValue(runtime2, "closeFrameComposerFromFoot", () => closeFrameComposerFromFoot), bindRuntimeValue(runtime2, "useInsideToolbarFoot", () => useInsideToolbarFoot), bindRuntimeValue(runtime2, "ToolbarButton", () => ToolbarButton, (value) => {
     ToolbarButton = value;
   }), bindRuntimeValue(runtime2, "jsxR8", () => jsxR8, (value) => {
     jsxR8 = value;
@@ -500,79 +640,101 @@ function installUiToolbarControls(runtime2) {
     TOOLBAR_SCROLL_FOCUS_MARGIN = value;
   }), bindRuntimeValue(runtime2, "scrollToolbarButtonIntoView", () => scrollToolbarButtonIntoView), () => {
     (0, runtime2.initializeUiInputs210)(), reacty8 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), PANEL_ELEVATION = "panel", POPOVER_ELEVATION = "popover", (0, runtime2.initializeUiPropertyFocus)(), (0, runtime2.initializeUiColorPicker)(), (0, runtime2.initializeColorSelect)(), (0, runtime2.initializeUiPointerMedia)(), (0, runtime2.initializeUiPropertyPopover2)(), (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeShapeIconPaths)(), (0, runtime2.initializeShapeIconNames)(), reactq8 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxv1 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), ToolbarFloatingContext = reactq8.createContext(!1), ToolbarQuietContext = reactq8.createContext(!1), SHORTCUT_MODIFIER_NAMES = {
-      ctrl: ["Control", "Ctrl"],
-      control: ["Control", "Ctrl"],
-      alt: ["Option", "Alt"],
-      option: ["Option", "Alt"],
-      shift: ["Shift", "Shift"],
-      cmd: ["Command", "Ctrl"],
-      command: ["Command", "Ctrl"],
-      meta: ["Command", "Ctrl"]
+      ctrl: ["control", "ctrl"],
+      control: ["control", "ctrl"],
+      alt: ["option", "alt"],
+      option: ["option", "alt"],
+      shift: ["shift", "shift"],
+      cmd: ["command", "ctrl"],
+      command: ["command", "ctrl"],
+      meta: ["command", "ctrl"]
     }, SHORTCUT_MODIFIER_LABELS = [
-      "Control",
-      "Ctrl",
-      "Option",
-      "Alt",
-      "Shift",
-      "Command"
+      "control",
+      "ctrl",
+      "option",
+      "alt",
+      "shift",
+      "command"
     ], SHORTCUT_KEY_NAMES = {
-      esc: "Escape",
-      escape: "Escape",
-      enter: ["Return", "Enter"],
-      return: ["Return", "Enter"],
-      delete: ["Delete", "Backspace"],
-      backspace: ["Delete", "Backspace"],
-      space: "Space",
-      tab: "Tab",
-      up: "Up Arrow",
-      down: "Down Arrow",
-      left: "Left Arrow",
-      right: "Right Arrow",
-      pageup: "Page Up",
-      pagedown: "Page Down",
-      "\\": "Backslash",
-      "/": "Slash",
-      "-": "Minus",
-      "=": "Equals",
-      ",": "Comma",
-      ".": "Period",
-      ";": "Semicolon",
-      "'": "Apostrophe",
-      "`": "Backtick",
-      "[": "Left Bracket",
-      "]": "Right Bracket"
+      esc: "escape",
+      escape: "escape",
+      enter: ["return", "enter"],
+      return: ["return", "enter"],
+      delete: ["delete", "backspace"],
+      backspace: ["delete", "backspace"],
+      space: "space",
+      tab: "tab",
+      up: "up",
+      down: "down",
+      left: "left",
+      right: "right",
+      pageup: "pageUp",
+      pagedown: "pageDown",
+      "\\": "backslash",
+      "/": "slash",
+      "-": "minus",
+      "=": "equals",
+      ",": "comma",
+      ".": "period",
+      ";": "semicolon",
+      "'": "apostrophe",
+      "`": "backtick",
+      "[": "leftBracket",
+      "]": "rightBracket"
     }, ownShortcutMapping = (mapping, key) => Object.hasOwn(mapping, key) ? mapping[key] : void 0, SHORTCUT_SYMBOL_MODIFIERS = [
       ["⌃", "ctrl", "control"],
       ["⌥", "alt", "option"],
       ["⇧", "shift"],
       ["⌘", "cmd", "command", "meta"]
     ], SHORTCUT_SPOKEN_REPLACEMENTS = [
-      [/⌘/g, "Command ", "Ctrl "],
-      [/⇧/g, "Shift ", "Shift "],
-      [/⌥/g, "Option ", "Alt "],
-      [/⌃/g, "Control ", "Ctrl "],
-      [/⏎/g, "Return", "Enter"],
-      [/⌫/g, "Delete", "Backspace"]
-    ], TOOLBAR_LINK_DESCRIPTION = "(opens in new tab)", ToolbarButton = reactq8.forwardRef(function({ icon, glyph, label, tip, disabledTip, shortcut, descriptionSuffix, children, pressed: pressed3, expanded, count, indicator, iconOnly, caret, tipSide = "bottom", tipShut = !1, className, variant = "ghost", href, "aria-expanded": ariaExpanded, "aria-describedby": ariaDescribedby, ...props }, options) {
+      [/⌘/g, "command", "ctrl", " "],
+      [/⇧/g, "shift", "shift", " "],
+      [/⌥/g, "option", "alt", " "],
+      [/⌃/g, "control", "ctrl", " "],
+      [/⏎/g, "return", "enter", ""],
+      [/⌫/g, "delete", "backspace", ""]
+    ], shortcutDescription = (keys) => (0, runtime2.formatMessage)({
+      defaultMessage: "快捷键：{keys}",
+      id: "e1JQ5VBtDg"
+    }, {
+      keys
+    }), joinDescriptionSentences = (first, next) => (0, runtime2.formatMessage)({
+      defaultMessage: "{first}。{next}",
+      id: "VvL+N7PXMZ"
+    }, {
+      first,
+      next
+    }), joinDescriptionWords = (first, next) => (0, runtime2.formatMessage)({
+      defaultMessage: "{first} {next}",
+      id: "VY+s8eC0+Q"
+    }, {
+      first,
+      next
+    }), TOOLBAR_LINK_DESCRIPTION = () => (0, runtime2.formatMessage)({
+      defaultMessage: "（在新标签页中打开）",
+      id: "3bRgQBSsLo"
+    }), ToolbarButton = reactq8.forwardRef(function({ icon, glyph, label, tip, disabledTip, shortcut, descriptionSuffix, children, pressed: pressed3, expanded, count, indicator, iconOnly, caret, tipSide = "bottom", tipShut = !1, className, variant = "ghost", href,
+      onClick, "aria-expanded": ariaExpanded, "aria-describedby": ariaDescribedby, ...props }, options) {
       let value = reactq8.useContext(ToolbarFloatingContext), linkUrl = href === void 0 ? void 0 : (0, runtime2.classifyExternalLink)(href, {
         storedUrl: !0
       });
       reactq8.useEffect(() => {
         linkUrl === null && console.warn('ToolbarButton: this page may not open the href of "' + label + '", so the control is not drawn');
       }, [linkUrl, label]);
-      let value2 = href === void 0 && props.disabled === !0, value3 = count ? label + " (" + String(count) + ")" : label, value4 = icon ?? glyph, value5 = toolbarTooltipContent({
+      let value2 = href === void 0 && props.disabled === !0, value3 = count ? label + " (" + String(count) + ")" : label, value4 = icon ?? glyph, ref = reactq8.useRef(null), value5 = toolbarTooltipContent({
         label,
         tip,
         disabledTip,
         shortcut,
-        disabled: value2
+        disabled: value2,
+        nameOnly: useInsideToolbarFoot(ref)
       }), value6 = useButtonAccessibility({
         disabled: value2,
         name: value3,
         tip: value5.content,
         shortcut: value5.shortcut,
         describedBy: ariaDescribedby,
-        descriptionSuffix: href === void 0 ? descriptionSuffix : [descriptionSuffix, TOOLBAR_LINK_DESCRIPTION].filter(Boolean).join(" ")
+        descriptionSuffix: href === void 0 ? descriptionSuffix : descriptionSuffix ? joinDescriptionWords(descriptionSuffix, TOOLBAR_LINK_DESCRIPTION()) : TOOLBAR_LINK_DESCRIPTION()
       }), value7 = useDisabledButtonDescription({
         disabled: value2,
         name: value3,
@@ -580,12 +742,15 @@ function installUiToolbarControls(runtime2) {
         pressed: pressed3,
         expanded: expanded ?? ariaExpanded,
         hasPopup: props["aria-haspopup"]
-      }), ref = reactq8.useRef(null);
+      });
       useDeferredTooltipFocus(ref, value2);
       let state = {
         ...props,
         ref: options,
         variant,
+        onClick: (event) => {
+          closeFrameComposerFromFoot(event.currentTarget), onClick?.(event);
+        },
         ...linkUrl == null ? {
           pressed: pressed3,
           "aria-expanded": expanded ?? ariaExpanded
@@ -607,7 +772,7 @@ function installUiToolbarControls(runtime2) {
         return null;
       let value8 = iconOnly === !0 || value && variant !== "primary", value9 = value8 && caret !== !0;
       return jsxv1.jsx(runtime2.Tooltip, {
-        content: value5.content,
+        content: value5.shown,
         shortcut: value5.shortcut,
         side: tipSide,
         hoverable: !1,
@@ -654,9 +819,12 @@ function installUiToolbarControls(runtime2) {
           ]
         })
       });
-    }), jsxR8 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), toolbarPointerSession = null, installedToolbarPointerDocuments = /* @__PURE__ */ new WeakSet(), monotonicNow = () => typeof performance > "u" ? null : performance.now(), TOOLBAR_POINTER_TIME_TOLERANCE = 500, TOOLBAR_POINTER_COORDINATE_TOLERANCE = 8, TOOLBAR_TOUCH_HOLD_MS = 1e3, TOOLBAR_TOUCH_RECENCY_MS = 5e3, TOOLBAR_STRAY_HOLD_MS = 3e3, TOOLBAR_EARLY_HOLD_MS = 8e3, pointInsideElement = (element, x, y) => {
+    }), jsxR8 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), toolbarPointerSession = null, installedToolbarPointerDocuments = /* @__PURE__ */ new WeakSet(), monotonicNow = () => typeof performance > "u" ? null : performance.now(), TOOLBAR_POINTER_TIME_TOLERANCE = 500, TOOLBAR_POINTER_COORDINATE_TOLERANCE = 8, TOOLBAR_TOUCH_HOLD_MS = 1e3, TOOLBAR_TOUCH_RECENCY_MS = 5e3, TOOLBAR_STRAY_HOLD_MS = 3e3, TOOLBAR_EARLY_HOLD_MS = 8e3, pointInsideElementBox = (element, x, y) => {
       let bounds = element.getBoundingClientRect();
       return bounds.width > 0 && bounds.height > 0 && x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom;
+    }, pointInsideElement = (element, x, y) => {
+      let card = element.querySelector("[data-mc-fold-card]:not([hidden])");
+      return pointInsideElementBox(element, x, y) || card !== null && pointInsideElementBox(card, x, y);
     }, typeof document < "u" && installToolbarPointerTracking(document), matchesToolbarPointerEvent = (event, timestamp, x, y) => Math.abs(event.timeStamp - timestamp) <= TOOLBAR_POINTER_TIME_TOLERANCE && Math.abs(event.clientX - x) <= TOOLBAR_POINTER_COORDINATE_TOLERANCE && Math.abs(event.clientY - y) <= TOOLBAR_POINTER_COORDINATE_TOLERANCE, toolbarStrips = /* @__PURE__ */ new Set(), toolbarClickThroughTimer = null, lastToolbarTouchRelease = null, afterTwoAnimationFrames = (callback) => {
       typeof requestAnimationFrame == "function" && requestAnimationFrame(() => requestAnimationFrame(callback));
     }, TOOLBAR_POSITION_TOLERANCE = 4, toolbarTouchDeadlines = /* @__PURE__ */ new WeakMap(), ToolbarGroupWrapContext = reacty8.createContext(!0), ToolbarStripButton = reacty8.forwardRef(function({ className, type, onMouseDown, chevron, icon, children, title, disabled: disabled2, "aria-pressed": ariaPressed, "aria-label": ariaLabel, "aria-expanded": ariaExpanded, "aria-describedby": ariaDescribedby, ...props }, options) {

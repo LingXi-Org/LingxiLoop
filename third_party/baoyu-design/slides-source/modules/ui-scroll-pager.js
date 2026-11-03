@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiScrollPager(runtime2) {
   var SCROLL_PAGER_SCROLLER_PART, SCROLL_PAGER_CONTROL_PART, parsePixels, reactScrollPagerControl, jsxScrollPagerControl, PAGER_HOLD_MS, PAGER_CHAIN_MS, NO_PAGER_EDGES, initializeUiScrollPagerControl, reactScrollPager, jsxScrollPager, PAGER_FADE_INSET, PAGER_FADE_WIDTH, PAGER_SCROLLER_CLASS, PAGER_CONTENT_CLASS, PAGER_EDGES, noopPagerSubscribe, pagerNever, pagerContains, pagerScrollPadding, ScrollPagerFrame, initializeUiScrollPager;
@@ -17,7 +17,7 @@ function installUiScrollPager(runtime2) {
     return (0, runtime2.isHtmlElement)(element) || (0, runtime2.isSvgElement)(element) ? element : null;
   }
   function ScrollPagerControl({ toward, more, seen, label, size: size4, top, onPage, onWheel, onHeld }) {
-    let atStart = toward === "start", fallbackLabel = (0, runtime2.useTranslation)(atStart ? "scrollBack" : "scrollForward", atStart ? "Scroll back" : "Scroll forward"), ref = reactScrollPagerControl.useRef(null), timer = reactScrollPagerControl.useRef(void 0), announce = reactScrollPagerControl.useCallback(() => {
+    let atStart = toward === "start", fallbackLabel = (0, runtime2.useTranslation)(atStart ? "scrollBack" : "scrollForward", atStart ? "向前滚动" : "向后滚动"), ref = reactScrollPagerControl.useRef(null), timer = reactScrollPagerControl.useRef(void 0), announce = reactScrollPagerControl.useCallback(() => {
       let element = ref.current;
       onHeld(toward, element?.ownerDocument.activeElement === element ? "focus" : timer.current !== void 0 && "press");
     }, [onHeld, toward]), press = () => {

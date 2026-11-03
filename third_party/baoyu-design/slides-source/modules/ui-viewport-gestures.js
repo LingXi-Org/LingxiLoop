@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiViewportGestures(runtime2) {
   var POINTER_STALE_TIMEOUT_MS, SAFARI_GESTURE_WHEEL_SUPPRESSION_MS, SAFARI_GESTURE_EVENTS, TOUCH_COUNT_EVENTS, activeViewportGestures, activeTouchCount, isReroutingViewportEvent, updateTouchCount, viewportGestureElementAtPoint, rerouteViewportWheelEvent, rerouteSafariGestureEvent, registerViewportGestureHandlers;

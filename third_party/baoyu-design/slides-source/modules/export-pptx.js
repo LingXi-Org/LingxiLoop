@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportPptx(runtime2) {
   var pptxGeometryExports, pptxDefaultLineHeight, exportPixelsPerInch, defaultMasterName, maxMasterNameLength, titleRolePriority, maxInferredFontSize, maxInferredBodyFontSize, minThemeColorSamples, chromaticColorThreshold, themeColorSimilarityThreshold, capitalizationWordCharacterPattern, capitalizationApostrophePattern, capitalizationCjkCharacterPattern, pptxTextPaddingRatio, pptxListNumberWidthFactor, pptxMaximumTextWidth, pptxTextHugTolerancePx, pptxTextAlignmentTolerancePx, pptxShapeTextMarginTolerancePx, pptxShapeInsetTolerancePx, pptxTextHeightTolerancePx, pptxRoundedCornerInsetRatio, pptxMinimumShapeTextRoom, pptxTextHugRoomRatio, pptxTextFillWidthRatio, pptxTextRoomAllowance, pptxBoxOverlapTolerancePx, pptxTextBoxGapTolerancePx, pptxPaddingByAlignment, pptxPaddingByLeaf, exportBorderSides, initializePptxExport;
@@ -852,7 +852,7 @@ function installExportPptx(runtime2) {
         color: flattenedSlideBackground(value2.bg).slice(1)
       });
       for (let value6 of value2.leaves)
-        value6.kind === "text" ? (value6.embedPlaceholder === !0 && warnings.push("a web embed could not be rendered and exported as a placeholder"), writePptxText(value4, value6, value2.bg, warnings, " (slide " + String(value + 1) + ")", value2.leaves, value6 === value5, options.forGoogleSlides === !0)) : value6.kind === "img" ? writePptxImage(value4, value6, warnings) : value6.kind === "box" ? writePptxBox(value4, value6, " (slide " + String(value + 1) + ")", warnings) : writePptxTable(value4, value6, value2.bg, warnings, options.forGoogleSlides === !0);
+        value6.kind === "text" ? (value6.embedPlaceholder === !0 && warnings.push((0, runtime2.exportNote)("embed_placeholder")), writePptxText(value4, value6, value2.bg, warnings,value + 1, value2.leaves, value6 === value5, options.forGoogleSlides === !0)) : value6.kind === "img" ? writePptxImage(value4, value6, warnings) : value6.kind === "box" ? writePptxBox(value4, value6,value + 1, warnings) : writePptxTable(value4, value6, value + 1, value2.bg, warnings, options.forGoogleSlides === !0);
       value2.notes !== void 0 && value4.addNotes(value2.notes);
     }
     return warnings.push(...deck.exportNotes ?? []), {
@@ -884,24 +884,34 @@ function installExportPptx(runtime2) {
       }));
     });
   }
-  function applyPptxTextFill(fill, textOptions, leaf, warnings, location2) {
+  function applyPptxTextFill(fill, opacity, restartsPerRun, warnings, slideNumber) {
     if (fill === void 0)
       return;
     let warnOnce = {
-      push: (input) => {
-        warnings.includes(input) || warnings.push(input);
+      push: (note) => {
+        (0, runtime2.hasExportNote)(warnings, note) || warnings.push(note);
       }
     };
     if (fill.kind === "image") {
-      warnOnce.push("image-filled text exported in its plain colour (PowerPoint text takes no picture fill here)" + location2);
+      warnOnce.push((0, runtime2.exportNote)("text_image_fill_plain", {
+        slide: slideNumber
+      }));
       return;
     }
-    let gradient = fill.gradient, value = pptxGradientStops(gradient.stops, textOptions);
+    let gradient = fill.gradient, value = pptxGradientStops(gradient.stops, opacity);
     if (value === void 0) {
-      warnOnce.push("text gradient exported in its plain colour (a stop color is not converted by the PPTX export)" + location2);
+      warnOnce.push((0, runtime2.exportNote)("text_gradient_plain", {
+        slide: slideNumber
+      }));
       return;
     }
-    return gradient.radial === !0 ? warnOnce.push("radial text gradient exported as a linear ramp (PowerPoint text gradients are linear)" + location2) : gradient.repeat !== void 0 && warnOnce.push("repeating text gradient exported as one stretched ramp (PPTX gradients do not repeat)" + location2), leaf && warnOnce.push("gradient text with styled spans or list lines: PowerPoint restarts the ramp in each run, so it reads slightly differently there" + location2), {
+    return gradient.radial === !0 ? warnOnce.push((0, runtime2.exportNote)("text_gradient_radial", {
+      slide: slideNumber
+    })) : gradient.repeat !== void 0 && warnOnce.push((0, runtime2.exportNote)("text_gradient_repeating", {
+      slide: slideNumber
+    })), restartsPerRun && warnOnce.push((0, runtime2.exportNote)("text_gradient_runs", {
+      slide: slideNumber
+    })), {
       stops: value,
       angle: gradient.radial === !0 ? 90 : ((gradient.angle - 90) % 360 + 360) % 360
     };
@@ -1049,8 +1059,8 @@ function installExportPptx(runtime2) {
         path: value16
       };
   }
-  function writePptxText(slide, leaf, warnings, assets, background, theme, inShape = !1, forGoogleSlides = !1) {
-    let value = (0, runtime2.renderingTypeScaleForRole)(leaf.role), callback = (input) => leaf.textTransform === "uppercase" ? input.toUpperCase() : leaf.textTransform === "lowercase" ? input.toLowerCase() : input, value2 = leaf.textTransform === "capitalize" ? capitalizePptxText(leaf.text) : leaf.text, value3 = (leaf.fontSize ?? value.fontSize) * (leaf.fitScale ?? 1), value4 = leaf.fontWeight ?? value.fontWeight, value5 = writtenPptxAlignment(leaf), value6 = leaf.opacity ?? 1, { color: value7, transparency: value8 } = applyPptxOpacity(hexToPptxColor((0, runtime2.resolveSlideColor)(leaf.color) ?? (0, runtime2.slideTextColor)(warnings)), value6), items = [], value9 = applyPptxTextFill(leaf.textFill, value6, leaf.marks !== void 0 || leaf.list !== void 0 || leaf.lineLists !== void 0, items, background), value10 = pptxTextRoomAllowance(leaf.rect.w), value11 = pptxTextBoxPadding(leaf, theme), value12 = pptxListOptions(leaf.list, leaf, value3), bulletIndent = (input) => input !== void 0 ? {
+  function writePptxText(slide, leaf, slideBackground, warnings, slideNumber, slideLeaves, inShape = !1, forGoogleSlides = !1) {
+    let value = (0, runtime2.renderingTypeScaleForRole)(leaf.role), callback = (input) => leaf.textTransform === "uppercase" ? input.toUpperCase() : leaf.textTransform === "lowercase" ? input.toLowerCase() : input, value2 = leaf.textTransform === "capitalize" ? capitalizePptxText(leaf.text) : leaf.text, value3 = (leaf.fontSize ?? value.fontSize) * (leaf.fitScale ?? 1), value4 = leaf.fontWeight ?? value.fontWeight, value5 = writtenPptxAlignment(leaf), value6 = leaf.opacity ?? 1, { color: value7, transparency: value8 } = applyPptxOpacity(hexToPptxColor((0, runtime2.resolveSlideColor)(leaf.color) ?? (0, runtime2.slideTextColor)(slideBackground)), value6), items = [], value9 = applyPptxTextFill(leaf.textFill, value6, leaf.marks !== void 0 || leaf.list !== void 0 || leaf.lineLists !== void 0, items, slideNumber), value10 = pptxTextRoomAllowance(leaf.rect.w), value11 = pptxTextBoxPadding(leaf, slideLeaves), value12 = pptxListOptions(leaf.list, leaf, value3), bulletIndent = (input) => input !== void 0 ? {
       indent: pxToPoints(input.marL),
       hanging: pxToPoints(input.hang)
     } : void 0, lineBulletIndent = (list) => bulletIndent(leaf.list !== void 0 ? value12 : pptxListOptions(list, leaf.listsBy?.[list] ?? {}, value3, !0)), value14 = insetRect(leaf.rect, {
@@ -1162,17 +1172,20 @@ function installExportPptx(runtime2) {
     }, flag = !1, value17;
     if (leaf.box !== void 0) {
       let value18 = leaf.list === void 0 && leaf.lineLists === void 0 && leaf.fit !== "grow" && (leaf.rect.rotate ?? 0) === (leaf.box.rect.rotate ?? 0) ? inShape ? (input, options, context) => (value17 = context, !1) : (...input) => flag = callback3(...input) : void 0;
-      writePptxBox(slide, leaf.box, background, assets, value18);
+      writePptxBox(slide, leaf.box, slideNumber, warnings, value18);
     }
     for (let value18 of items)
-      assets.includes(value18) || assets.push(value18);
+      (0, runtime2.hasExportNote)(warnings,value18) || warnings.push(value18);
     if (!flag)
       try {
         let value18;
         try {
           value18 = value17 !== void 0 ? textInShapeOptions(leaf, value17, 0, value3 * (leaf.lineHeight ?? value.lineHeight), value10, value5) : void 0;
         } catch (value19) {
-          assets.push("a title laid over its box as a plain text box instead" + background + ": " + (value19 instanceof Error ? value19.message : String(value19)));
+          warnings.push( (0, runtime2.exportNote)("title_plain_box", {
+            slide: slideNumber,
+            thrown:value19 instanceof Error ? value19.message : String(value19)
+          }));
         }
         if (value17 !== void 0 && value18 !== void 0) {
           let { ins: value19 } = value18;
@@ -1194,21 +1207,34 @@ function installExportPptx(runtime2) {
             ...pptxRectOptions(value14),
             margin: 0
           });
-        value16 !== void 0 && assets.push("a text and its box exported as two objects, not one" + background + ": " + value16);
+        value16 !== void 0 && warnings.push((0, runtime2.exportNote)("text_and_box_apart", {
+          slide: slideNumber,
+          thrown: value16
+        }));
       } catch (value18) {
-        assets.push("addText failed: " + (value18 instanceof Error ? value18.message : String(value18)));
+        warnings.push( (0, runtime2.exportNote)("text_not_written", {
+          slide: slideNumber,
+          thrown:value18 instanceof Error ? value18.message : String(value18)
+        }));
       }
   }
   function writePptxImage(slide, leaf, warnings) {
     if (leaf.dataUri === void 0) {
-      warnings.push("image skipped (missing asset): " + (leaf.alt || "(no alt text)"));
+      warnings.push( (0, runtime2.exportNote)("image_missing_asset", {
+        alt:leaf.alt
+      }));
       return;
     }
     if (leaf.dataUri.startsWith("data:image/svg+xml")) {
-      warnings.push("SVG image skipped (could not rasterize for PowerPoint): " + (leaf.alt || "(no alt text)"));
+      warnings.push( (0, runtime2.exportNote)("svg_unrasterized", {
+        alt:leaf.alt
+      }));
       return;
     }
-    let value = leaf.opacity ?? 1, { w: value2, widthOf: value3, line: value4, sides: value5 } = pptxBorderOptions(leaf.border, warnings, "image", ": " + (leaf.alt || "(no alt text)"), value), value6 = value5 ?? (leaf.clipRounded === !0 && value4 !== void 0 && (value4.dashType ?? "solid") === "solid" ? [...exportBorderSides] : void 0), value7 = insetRect(leaf.rect, {
+    let value = leaf.opacity ?? 1, { w: value2, widthOf: value3, line: value4, sides: value5 } = pptxBorderOptions(leaf.border, warnings, {
+      what: "image",
+      alt:leaf.alt
+    }, value), value6 = value5 ?? (leaf.clipRounded === !0 && value4 !== void 0 && (value4.dashType ?? "solid") === "solid" ? [...exportBorderSides] : void 0), value7 = insetRect(leaf.rect, {
       left: value3("left"),
       top: value3("top"),
       right: value3("right"),
@@ -1240,7 +1266,10 @@ function installExportPptx(runtime2) {
         };
       }
     } else
-      warnings.push(leaf.fit + " exported as stretch — natural dimensions unavailable: " + (leaf.alt || "(no alt text)"));
+      warnings.push((0, runtime2.exportNote)("image_fit_stretched", {
+        fit:leaf.fit,
+        alt:leaf.alt
+      }));
     let value12 = Math.min(leaf.rect.w, leaf.rect.h), value13 = Math.min(leaf.radius ?? 0, value12 / 2), value14 = value13 > 0, value15 = value14 && Math.abs(leaf.rect.w - leaf.rect.h) <= 1 && value13 >= value12 / 2 - 0.5, value16 = Math.min(value3("left"), value3("top"), value3("right"), value3("bottom")), value17 = leaf.corners !== void 0 ? insetCornerRadii(leaf.corners, {
       tl: Math.min(value3("top"), value3("left")),
       tr: Math.min(value3("top"), value3("right")),
@@ -1297,7 +1326,10 @@ function installExportPptx(runtime2) {
     value20 ? value24 = leaf.clipRounded === !0 ? callback(value3("left") + value19.x, value3("top") + value19.y, state.w - 2 * value19.x, state.h - 2 * value19.y) : letterboxCutout(state.w, state.h, value19, value17) : leaf.clipRounded === !0 ? value24 = value2 > 0 ? callback(value3("left"), value3("top"), state.w, state.h) : oversizedCornerCutout(state.w, state.h, value23) : leaf.corners !== void 0 && (value24 = roundedCornerPath(state.w, state.h, value17));
     let value25 = value24?.length === 0, value26 = !value20 && (leaf.clipRounded !== !0 || value2 <= 0);
     if (value24 !== void 0 ? value22.points = value24 : value26 && value15 ? value22.rounding = !0 : value26 && value13 > value16 && (value22.rectRadius = pxToInches(value13 - value16)), leaf.shadow !== void 0) {
-      let value27 = pptxShadowOptions(leaf.shadow, warnings, "image", ": " + (leaf.alt || "(no alt text)"), !0, value);
+      let value27 = pptxShadowOptions(leaf.shadow, warnings, {
+        what: "image",
+        alt:leaf.alt
+      }, !0, value);
       value27 !== void 0 && (value22.shadow = value27);
     }
     leaf.href !== void 0 && (0, runtime2.isSafeHyperlink)(leaf.href) && (value22.hyperlink = {
@@ -1307,7 +1339,10 @@ function installExportPptx(runtime2) {
     try {
       value25 || slide.addImage(value22);
     } catch (value27) {
-      warnings.push("addImage failed: " + (value27 instanceof Error ? value27.message : String(value27)));
+      warnings.push( (0, runtime2.exportNote)("image_not_written", {
+        alt: leaf.alt,
+        thrown:value27 instanceof Error ? value27.message : String(value27)
+      }));
     }
     if (value4 !== void 0)
       try {
@@ -1340,7 +1375,9 @@ function installExportPptx(runtime2) {
             br: value13,
             bl: value13
           }, value28 = leaf.clipRounded === !0 && (value4.dashType ?? "solid") === "solid";
-          (value14 || leaf.corners !== void 0) && !value28 && (leaf.clipRounded !== !0 || borderSidesHaveRoundedCorners(value6, value27)) && warnings.push("a border that is not the same on all four sides of a picture with rounded or clipped corners exported as straight lines: " + (leaf.alt || "(no alt text)"));
+          (value14 || leaf.corners !== void 0) && !value28 && (leaf.clipRounded !== !0 || borderSidesHaveRoundedCorners(value6, value27)) && warnings.push( (0, runtime2.exportNote)("picture_border_straight", {
+            alt:leaf.alt
+          }));
           let value29 = value28 ? borderBandRects(leaf.rect.w, leaf.rect.h, value27, {
             left: value3("left"),
             top: value3("top"),
@@ -1359,7 +1396,10 @@ function installExportPptx(runtime2) {
           }) : value28 || writePptxBorderSides(slide, leaf.rect, value3, value6, value4);
         }
       } catch (value27) {
-        warnings.push("addShape failed: " + (value27 instanceof Error ? value27.message : String(value27)));
+        warnings.push( (0, runtime2.exportNote)("picture_border_not_written", {
+          alt: leaf.alt,
+          thrown:value27 instanceof Error ? value27.message : String(value27)
+        }));
       }
   }
   function applyPptxOpacity(color, opacity) {
@@ -1379,7 +1419,7 @@ function installExportPptx(runtime2) {
     let enabledSide = border.sides === void 0 || border.sides.split(" ").includes(side2), widths = border.widths;
     return widths !== void 0 ? widths[side2] ?? (border.width !== void 0 && enabledSide ? border.width : 0) : enabledSide ? border.width ?? 3 : 0;
   }
-  function pptxBorderOptions(border, color, rect, warnings, opacity = 1) {
+  function pptxBorderOptions(border, warnings, target, opacity = 1) {
     let value = border !== void 0 && border.style !== "none" ? border : void 0, value2 = value?.sides?.split(" "), value3 = value?.widths, callback = (input) => exportedBorderSideWidth(border, input), value4 = value3 !== void 0 ? exportBorderSides.filter((input) => callback(input) > 0) : value2, value5 = value === void 0 ? 0 : value3 !== void 0 ? Math.max(0, ...exportBorderSides.map(callback)) : value.width ?? 3;
     if (value === void 0 || value5 <= 0)
       return {
@@ -1388,14 +1428,17 @@ function installExportPptx(runtime2) {
         sides: value4
       };
     if (value.color === void 0)
-      return color.push(rect + " border skipped (currentcolor is not converted by the PPTX export)" + warnings), {
+      return warnings.push((0, runtime2.exportNote)("border_currentcolor", target)), {
         w: value5,
         widthOf: callback,
         sides: value4
       };
     let value6 = cssToPptxColor(value.color);
     if (value6 === void 0)
-      return color.push(rect + ' border skipped (color "' + value.color + '" is not converted by the PPTX export)' + warnings), {
+      return warnings.push((0, runtime2.exportNote)("border_color", {
+        ...target,
+        color: value.color
+      })), {
         w: value5,
         widthOf: callback,
         sides: value4
@@ -1407,7 +1450,7 @@ function installExportPptx(runtime2) {
         widthOf: callback,
         sides: value4
       };
-    value.style === "double" && color.push("double border exported as solid (PPTX lines have no double style)" + warnings);
+    value.style === "double" && warnings.push((0, runtime2.exportNote)("border_double", target));
     let value8 = value.style === "dashed" ? "dash" : value.style === "dotted" ? "sysDot" : "solid";
     return {
       w: value5,
@@ -1438,14 +1481,17 @@ function installExportPptx(runtime2) {
       });
     }
   }
-  function pptxShadowOptions(shadow, warnings, kind, location2, allowInset, opacity = 1) {
+  function pptxShadowOptions(shadow, warnings, target, allowInset, opacity = 1) {
     if (shadow.inset === !0 && !allowInset) {
-      warnings.push("inset " + kind + " shadow skipped (PPTX shapes carry outer shadows only)" + location2);
+      warnings.push((0, runtime2.exportNote)("shadow_inset", target));
       return;
     }
     let color = cssToPptxColor(shadow.color);
     if (color === void 0) {
-      warnings.push(kind + ' shadow skipped (color "' + shadow.color + '" is not converted by the PPTX export)' + location2);
+      warnings.push((0, runtime2.exportNote)("shadow_color", {
+        ...target,
+        color: shadow.color
+      }));
       return;
     }
     let value = (1 - (color.transparency ?? 0) / 100) * opacity;
@@ -1461,9 +1507,12 @@ function installExportPptx(runtime2) {
       angle: Math.max(1, Math.round((value4 % 360 + 360) % 360) % 360)
     };
   }
-  function writePptxBox(slide, leaf, location2, warnings, assets) {
+  function writePptxBox(slide, leaf, slideNumber, warnings, assets) {
     if (leaf.blend !== void 0) {
-      warnings.push("box paint skipped (mix-blend-mode " + leaf.blend + " has no PowerPoint equivalent)" + location2);
+      warnings.push((0, runtime2.exportNote)("box_blend", {
+        blend: leaf.blend,
+        slide: slideNumber
+      }));
       return;
     }
     let value = leaf.opacity ?? 1;
@@ -1486,17 +1535,35 @@ function installExportPptx(runtime2) {
         type: "gradient",
         stops: value22,
         angle: ((leaf.gradient.angle - 90) % 360 + 360) % 360
-      }, leaf.gradient.repeat !== void 0 && leaf.gradient.radial !== !0 && warnings.push("repeating box gradient exported as one stretched ramp (PPTX gradients do not repeat)" + location2), leaf.gradient.radial === !0 && leaf.gradient.extent !== void 0 && warnings.push("a radial gradient's " + leaf.gradient.extent + " size is not kept in PowerPoint" + location2)) : warnings.push("box gradient skipped (a stop color is not converted by the PPTX export)" + location2);
+      }, leaf.gradient.repeat !== void 0 && leaf.gradient.radial !== !0 && warnings.push((0, runtime2.exportNote)("box_gradient_repeating", {
+        slide: slideNumber
+      })), leaf.gradient.radial === !0 && leaf.gradient.extent !== void 0 && warnings.push((0, runtime2.exportNote)("box_gradient_extent", {
+        extent: leaf.gradient.extent,
+        slide: slideNumber
+      }))) : warnings.push((0, runtime2.exportNote)("box_gradient_skipped", {
+        slide: slideNumber
+      }));
     }
     let value3;
     if (leaf.fill !== void 0) {
       let value22 = cssToPptxColor(leaf.fill);
-      value22 === void 0 ? warnings.push('box fill skipped (color "' + leaf.fill + '" is not converted by the PPTX export)' + location2) : applyPptxOpacity(value22, value).transparency !== 100 && (value3 = applyPptxOpacity(value22, value));
+      value22 === void 0 ? warnings.push((0, runtime2.exportNote)("box_fill_color", {
+        color: leaf.fill,
+        slide: slideNumber
+      })) : applyPptxOpacity(value22, value).transparency !== 100 && (value3 = applyPptxOpacity(value22, value));
     }
-    let value4 = value2 ?? value3, value5 = value2 !== void 0 ? value3 : void 0, { w: value6, widthOf: value7, line: value8, sides: value9 } = pptxBorderOptions(leaf.border, warnings, "box", location2, value), value10 = value9 ?? (leaf.clipRounded === !0 && value8 !== void 0 && (value8.dashType ?? "solid") === "solid" ? [...exportBorderSides] : void 0), value11 = value8 !== void 0 && value10 === void 0 ? value8 : void 0, value12 = value4 === void 0 && value9 === void 0 && value10 !== void 0;
-    if (value4 === void 0 && value11 === void 0 && leaf.shadow !== void 0 && !value12 && warnings.push("box shadow skipped (no fill or outline to cast it)" + location2), value4 === void 0 && value8 === void 0)
+    let value4 = value2 ?? value3, value5 = value2 !== void 0 ? value3 : void 0, { w: value6, widthOf: value7, line: value8, sides: value9 } = pptxBorderOptions(leaf.border, warnings, {
+      what: "box",
+      slide: slideNumber
+    }, value), value10 = value9 ?? (leaf.clipRounded === !0 && value8 !== void 0 && (value8.dashType ?? "solid") === "solid" ? [...exportBorderSides] : void 0), value11 = value8 !== void 0 && value10 === void 0 ? value8 : void 0, value12 = value4 === void 0 && value9 === void 0 && value10 !== void 0;
+    if (value4 === void 0 && value11 === void 0 && leaf.shadow !== void 0 && !value12 && warnings.push((0, runtime2.exportNote)("box_shadow_nothing", {
+      slide: slideNumber
+    })), value4 === void 0 && value8 === void 0)
       return;
-    let value13 = leaf.shadow !== void 0 && (value4 !== void 0 || value11 !== void 0) ? pptxShadowOptions(leaf.shadow, warnings, "box", location2, !1, value) : void 0, value14 = value11 !== void 0 ? value6 / 2 : 0, value15 = insetRect(leaf.rect, {
+    let value13 = leaf.shadow !== void 0 && (value4 !== void 0 || value11 !== void 0) ? pptxShadowOptions(leaf.shadow, warnings, {
+      what: "box",
+      slide: slideNumber
+    }, !1, value) : void 0, value14 = value11 !== void 0 ? value6 / 2 : 0, value15 = insetRect(leaf.rect, {
       left: value14,
       top: value14,
       right: value14,
@@ -1544,7 +1611,10 @@ function installExportPptx(runtime2) {
         };
         assets !== void 0 && (value4 !== void 0 || value13 === void 0) && assets(value21, state3, state, value21 === "roundRect" ? value16 : 0) || slide.addShape(value21, state3);
       } catch (value22) {
-        warnings.push("addShape failed: " + (value22 instanceof Error ? value22.message : String(value22)));
+        warnings.push( (0, runtime2.exportNote)("box_not_written", {
+          slide: slideNumber,
+          thrown:value22 instanceof Error ? value22.message : String(value22)
+        }));
       }
     if (value8 !== void 0 && value10 !== void 0) {
       let value22 = value16 > 0 || leaf.corners !== void 0, value23 = (value8.dashType ?? "solid") === "solid", value24 = leaf.corners ?? {
@@ -1553,7 +1623,9 @@ function installExportPptx(runtime2) {
         br: value16,
         bl: value16
       };
-      value22 && !value23 && (leaf.clipRounded !== !0 || borderSidesHaveRoundedCorners(value10, value24)) && warnings.push("a dashed or dotted border that is not the same on all four sides of a box with rounded or clipped corners exported as straight lines" + location2);
+      value22 && !value23 && (leaf.clipRounded !== !0 || borderSidesHaveRoundedCorners(value10, value24)) && warnings.push((0, runtime2.exportNote)("box_border_straight", {
+        slide: slideNumber
+      }));
       try {
         let state3 = {
           left: value7("left"),
@@ -1567,7 +1639,10 @@ function installExportPptx(runtime2) {
           } : {}
         };
         if (value22 && value23 && leaf.clipRounded === !0) {
-          let value25 = borderBandRects(leaf.rect.w, leaf.rect.h, value24, state3), value26 = value12 && leaf.shadow !== void 0 ? pptxShadowOptions(leaf.shadow, warnings, "box", location2, !1, value) : void 0;
+          let value25 = borderBandRects(leaf.rect.w, leaf.rect.h, value24, state3), value26 = value12 && leaf.shadow !== void 0 ? pptxShadowOptions(leaf.shadow, warnings, {
+            what: "box",
+            slide: slideNumber
+          }, !1, value) : void 0;
           value25.length > 0 && slide.addShape("custGeom", {
             ...pptxRectOptions(leaf.rect),
             points: pptxPathToEmu(value25),
@@ -1586,7 +1661,10 @@ function installExportPptx(runtime2) {
         } else
           writePptxBorderSides(slide, leaf.rect, value7, value10, value8);
       } catch (value25) {
-        warnings.push("addShape failed: " + (value25 instanceof Error ? value25.message : String(value25)));
+        warnings.push( (0, runtime2.exportNote)("box_border_not_written", {
+          slide: slideNumber,
+          thrown:value25 instanceof Error ? value25.message : String(value25)
+        }));
       }
     }
   }
@@ -1602,12 +1680,12 @@ function installExportPptx(runtime2) {
   function encodePptxXmlEntities(value) {
     return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
   }
-  function writePptxTable(slide, leaf, background, warnings, forGoogleSlides = !1) {
+  function writePptxTable(slide, leaf, slideNumber, background, warnings, forGoogleSlides = !1) {
     if (leaf.rows.length === 0) {
-      warnings.push("table skipped (no rows after truncation)");
+      warnings.push((0, runtime2.exportNote)("table_empty"));
       return;
     }
-    leaf.rect.rotate !== void 0 && warnings.push("rotated table exported unrotated (PPTX tables do not turn)");
+    leaf.rect.rotate !== void 0 && warnings.push((0, runtime2.exportNote)("table_rotated"));
     let value = leaf.role ?? "body", value2 = (0, runtime2.renderingTypeScaleForRole)(value), state = {
       ...value2,
       fontSize: (leaf.fontSize ?? value2.fontSize) * (leaf.fitScale ?? 1)
@@ -1738,7 +1816,7 @@ function installExportPptx(runtime2) {
         };
       });
     }), value18 = pxToInches(leaf.rect.x), value19 = pxToInches(leaf.rect.y);
-    (value18 < 0 || value19 < 0) && warnings.push("table at a negative position exported clamped to the slide edge");
+    (value18 < 0 || value19 < 0) && warnings.push((0, runtime2.exportNote)("table_negative"));
     let value20 = leaf.rowHeights !== void 0 && leaf.rowHeights.length === leaf.rows.length ? leaf.rowHeights.map(pxToInches) : void 0, state4 = {
       x: pptxLengthEmu(value18),
       y: pptxLengthEmu(value19),
@@ -1760,7 +1838,10 @@ function installExportPptx(runtime2) {
     try {
       slide.addTable(value17, state4);
     } catch (value21) {
-      warnings.push("addTable failed: " + (value21 instanceof Error ? value21.message : String(value21)));
+      warnings.push( (0, runtime2.exportNote)("table_not_written", {
+        slide: slideNumber,
+        thrown:value21 instanceof Error ? value21.message : String(value21)
+      }));
     }
   }
   async function exportPptxBlob(deck, options) {
@@ -1859,7 +1940,7 @@ function installExportPptx(runtime2) {
       left: 0,
       right: options
     }, pptxPaddingByLeaf = (input) => pptxPaddingByAlignment(writtenPptxAlignment(input), pptxTextRoomAllowance(input.rect.w)), initializePptxExport = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeNpmDependency)(), (0, runtime2.initializeNpmDependency)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeImageCrop)(), (0, runtime2.initializeRichTextDom)(), (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeRenderingTheme)(), titleRolePriority = ["display", "h1", "h2", "h3"], capitalizationWordCharacterPattern = /^[\p{Alphabetic}\p{Nd}\p{Pc}\p{M}]$/u, capitalizationApostrophePattern = /^['\u2019\u00B7\u2027]$/u, capitalizationCjkCharacterPattern = /^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]$/u, exportBorderSides = ["top", "right", "bottom", "left"];
+      (0, runtime2.initializeNpmDependency)(), (0, runtime2.initializeNpmDependency)(), (0, runtime2.initializeExportNotes)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeImageCrop)(), (0, runtime2.initializeRichTextDom)(), (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeRenderingTheme)(), titleRolePriority = ["display", "h1", "h2", "h3"], capitalizationWordCharacterPattern = /^[\p{Alphabetic}\p{Nd}\p{Pc}\p{M}]$/u, capitalizationApostrophePattern = /^['\u2019\u00B7\u2027]$/u, capitalizationCjkCharacterPattern = /^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]$/u, exportBorderSides = ["top", "right", "bottom", "left"];
     });
   };
 }
