@@ -93,7 +93,25 @@ Windows, Node 22.22.2, installed Chrome via Python Playwright. Deterministic
 browser fixtures use real built editor programs and in-memory API replies;
 they do not prove production database, authentication or tenant integration.
 
-Commands and final outcomes are recorded here after the final candidate build.
+Final candidate checks after rebasing onto `dd064748`:
+
+- `node --test scripts/slides-editor.test.mjs scripts/design-editor.test.mjs scripts/artifact-math.test.mjs scripts/design-copy.test.mjs scripts/slides-copy.test.mjs`: 36 passed (both builds run by packaging tests).
+- `npm run build:slides-editor`: passed; subsequent final packaging tests rebuilt the latest source.
+- Artifact and Slides page tests with repository unit-test environment (`node --import tsx --experimental-test-module-mocks --test --test-force-exit server/src/modules/artifacts/artifacts.test.ts server/src/modules/artifacts/slides-page.test.ts`): 13 passed.
+- Scoped Biome lint for kinds, skills and artifacts tests: passed. `biome check` additionally reported existing import-order conventions; repository lint is the applicable gate.
+- `python scripts/check-slides-editor.py`: desktop/mobile create/save/reload,
+  all three theme choices, persisted forest theme, lazy PPTX and explicit PDF confirmation passed with zero HTTP errors. The iframe uses a separate origin and the current sandbox flags.
+- `python scripts/check-design-editor.py`: editable/read-only startup, math,
+  all three theme choices, academic theme selection and editing/save passed;
+  zero failed HTTP responses or unported route calls.
+- Independent read-only review of candidate `61f2dc93`: no blocking findings;
+  additionally executed the retained stylesheet-origin font resolver with
+  separate grant/asset origins successfully.
+- Native diff whitespace check passed; upstream archival bytes are not formatted.
+
+Browser screenshots: [Design](design-chinese.png), [Slides](slides-chinese.png).
+Full product integration/deployment and exhaustive interaction coverage are not
+claimed. The fixtures exercise the real built editor with deterministic APIs.
 The initial route audit found two real gaps (direct agent requests and local
 design-system sync). A new Design packaging assertion failed before the
 capability removal and passed after it.
@@ -101,7 +119,7 @@ capability removal and passed after it.
 ## Size comparison
 
 [`sizes.json`](sizes.json) records exact byte counts for both editors. Baseline
-is native v2.1.0 at LingxiLoop `3173bbb7`, rebuilt in an isolated checkout with
+is native v2.1.0 at LingxiLoop `dd064748`, rebuilt in an isolated checkout with
 the same installed dependencies, Node and Brotli quality 11 as the candidate.
 Initial JavaScript means script entries plus HTML modulepreloads; optional
 runtime meta URLs do not count. Full browser JS/CSS includes lazy chunks and
@@ -110,12 +128,19 @@ compression sidecars. Sum raw file sizes and the corresponding `.br` sidecars
 listed by each generated manifest; verify their lengths against `compressed`.
 This is a payload comparison, not a loading-time benchmark.
 
+| Editor / payload | v2.1.0 raw / br (bytes) | v2.8.0 raw / br (bytes) | Delta raw / br |
+| --- | ---: | ---: | ---: |
+| Design initial JS | 6,969,114 / 1,818,544 | 7,324,147 / 1,904,981 | +355,033 / +86,437 |
+| Design all browser JS/CSS | 14,708,102 / 3,043,724 | 15,172,690 / 3,136,850 | +464,588 / +93,126 |
+| Slides initial JS | 3,717,414 / 964,716 | 3,952,808 / 1,016,186 | +235,394 / +51,470 |
+| Slides all browser JS/CSS | 5,058,844 / 1,313,547 | 5,422,458 / 1,372,747 | +363,614 / +59,200 |
+
 ## Parallel loading work
 
-PR #647 (`claude/editor-instant-open`, `6a1f593f`) is pending separately. It owns
-isolated Slides origins, preload routing/caching, and shared font URL resolution.
-This branch changes neither artifact transport nor authorization. Overlapping
-files need integration when #647 lands: provenance README, artifact-math tests,
-and the recovered `export-pdf-capture.js`. Preserve #647's stylesheet-origin
-font resolution while retaining the new recovered exports. Re-run the editor
-checks and #647's export-font regression after rebasing.
+PR #647 landed as `0461197c` while this upgrade was being verified. The upgrade
+was rebased onto `dd064748` without textual conflicts. Both the size baseline and
+candidate include #647. Its isolated Slides origins, preload routing/caching and
+stylesheet-origin export-font fix remain intact. The combined math tests include
+its cross-origin font regression. Browser fixtures also use isolated iframe
+origins. No changes to artifact transport or authorization were introduced by
+this upgrade.

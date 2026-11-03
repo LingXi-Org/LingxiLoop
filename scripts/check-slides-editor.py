@@ -19,6 +19,7 @@ from playwright.sync_api import expect, sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
 ORIGIN = "https://slides.test"
+HOST_ORIGIN = "https://app.test"
 BASE = "/artifact-editor/slides/test-grant/"
 
 
@@ -41,12 +42,13 @@ def run(browser, upstream=False, mobile=False):
         return hashlib.sha256(data).hexdigest()
 
     def route(request):
-        path = request.request.url.split(ORIGIN, 1)[1].split("?", 1)[0]
+        path = request.request.url.split("/", 3)[-1].split("?", 1)[0]
+        path = "/" + path
         requests.append(path)
         relative = path.removeprefix(BASE)
         headers = {"Access-Control-Allow-Origin": "*"}
         if path == "/host":
-            request.fulfill(body=f'<iframe title="演示文稿编辑器" sandbox="allow-scripts allow-downloads allow-popups allow-modals" allow="fullscreen" src="{BASE}" style="position:fixed;inset:0;width:100%;height:100%;border:0"></iframe>', content_type="text/html")
+            request.fulfill(body=f'<iframe title="演示文稿编辑器" sandbox="allow-scripts allow-same-origin allow-downloads allow-popups allow-modals" allow="fullscreen" src="{ORIGIN}{BASE}" style="position:fixed;inset:0;width:100%;height:100%;border:0"></iframe>', content_type="text/html")
             return
         if path.startswith("/artifact-editor/slides-assets/"):
             relative = "assets/" + path.rsplit("/", 1)[1]
@@ -88,7 +90,8 @@ def run(browser, upstream=False, mobile=False):
         request.fulfill(body=body, content_type=content_type, headers=headers)
 
     page.route(ORIGIN + "/**", route)
-    page.goto(ORIGIN + (BASE if upstream else "/host"), wait_until="domcontentloaded")
+    page.route(HOST_ORIGIN + "/host", route)
+    page.goto(ORIGIN + BASE if upstream else HOST_ORIGIN + "/host", wait_until="domcontentloaded")
     view = page if upstream else page.frame_locator("iframe")
     view.get_by_role("button", name="Add slide" if upstream else "添加幻灯片", exact=True).click()
     if not upstream:
@@ -134,8 +137,9 @@ def run(browser, upstream=False, mobile=False):
     page.screenshot(path=str(ROOT / "docs/evidence/issue-648/slides-chinese.png"))
     view.get_by_role("button", name="森林课堂", exact=True).click()
     deadline = time.monotonic() + 10
-    while b"forest-classroom" not in files["project/deck.json"] and time.monotonic() < deadline:
+    while "forest-classroom" not in json.dumps(json.loads(files["project/deck.json"]).get("style")) and time.monotonic() < deadline:
         page.wait_for_timeout(50)
+    assert "forest-classroom" in json.dumps(json.loads(files["project/deck.json"]).get("style")), "theme selection was not saved"
     expect(view.get_by_role("button", name="设计系统：森林课堂", exact=False)).to_be_visible()
     view.get_by_role("button", name="关闭面板", exact=True).click()
 
