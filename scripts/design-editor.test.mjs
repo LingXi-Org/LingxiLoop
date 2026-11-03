@@ -5,10 +5,11 @@ import { resolve } from 'node:path'
 import { brotliDecompressSync, gunzipSync } from 'node:zlib'
 import test from 'node:test'
 import { adaptDesignMath, buildDesignMathAssets } from './build-artifact-math.mjs'
-import { adaptDesignHostCapabilities, adaptDesignRuntimeUrl, adaptVisibleDesignMount, adaptOnlineDesignMath, splitOptionalDesignSources, buildDesignEditor } from './build-design-editor.mjs'
+import { adaptDesignHostCapabilities, adaptDesignRuntimeUrl, adaptVisibleDesignMount, adaptOnlineDesignMath, splitCriticalDesignSources, splitOptionalDesignSources, buildDesignEditor } from './build-design-editor.mjs'
 import { runInNewContext, Script } from 'node:vm'
 import { adaptDesignLayout, buildDesignLayout } from './build-design-layout.mjs'
 import './design-flow-size.test.mjs'
+import './design-startup.test.mjs'
 import { translateDesign } from './design-copy.mjs'
 
 test('Design omits direct agent requests and local design-system controls without disabling comments or themes', async () => {
@@ -66,7 +67,8 @@ test('Design package preserves the agreed math runtime and optional executable b
   assert.equal(fallback, '\n;' + math, 'replacement tokens cannot corrupt the inline/blob math program')
   assert.doesNotThrow(() => new Script(fallback))
   const online = await buildDesignMathAssets()
-  const split = splitOptionalDesignSources(await readFile(resolve(source, manifest.entry.original), 'utf8'))
+  const critical = splitCriticalDesignSources(await readFile(resolve(source, manifest.entry.original), 'utf8'))
+  const split = splitOptionalDesignSources(critical.source)
   assert.ok(manifest.math.loaderBytes < 10_000, 'entry carries only the detector')
   assert.ok(!entry.includes('KaTeX_AMS'), 'online entry must not carry math fonts')
   assert.ok(manifest.files['assets/' + manifest.math.onlineFile])
@@ -78,11 +80,12 @@ test('Design package preserves the agreed math runtime and optional executable b
     assert.deepEqual(gunzipSync(await readFile(resolve(output, `${name}.gz`))), bytes)
     assert.ok(sizes.br < bytes.length)
     if (name.endsWith('.js')) {
+      if (critical.files.has(name.replace('assets/', ''))) { assert.deepEqual(bytes, critical.files.get(name.replace('assets/', ''))); continue }
       if (split.files.has(name.replace('assets/', ''))) { assert.deepEqual(bytes, split.files.get(name.replace('assets/', ''))); continue }
       if (name === 'assets/' + manifest.math.offlineFile) { assert.equal(bytes.toString(), math); continue }
       if (online.files.has(name.replace('assets/', ''))) { assert.deepEqual(bytes, online.files.get(name.replace('assets/', ''))); continue }
       const original = await readFile(resolve(source, name === manifest.entry.file ? manifest.entry.original : name === manifest.runtime.file ? manifest.runtime.original : name))
-      const expected = name === manifest.entry.file ? Buffer.from(translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, online, layout.guest, manifest.math.offlineFile, 'sha256-' + createHash('sha256').update(math).digest('base64')))), layout.host)), catalog))
+      const expected = name === manifest.entry.file ? Buffer.from('globalThis.__lingxiDesignStartup.run(function(){\n' + translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, online, layout.guest, manifest.math.offlineFile, 'sha256-' + createHash('sha256').update(math).digest('base64')))), layout.host)), catalog) + '\n});\n')
         : name === manifest.runtime.file ? Buffer.from(original.toString() + '\n;' + layout.guest + ';(' + online.loader + ')(new URL(document.currentScript.src).origin);') : original
       assert.deepEqual(bytes, expected, name)
     }

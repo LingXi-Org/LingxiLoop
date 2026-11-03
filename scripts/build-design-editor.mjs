@@ -100,6 +100,93 @@ export function adaptOnlineDesignMath(source, assets, guest, offlineFile, offlin
   return `let __lingxiOfflineMathPending;function __lingxiOfflineMath(){return __lingxiOfflineMathPending??=(fetch(${origin}+${JSON.stringify('/artifact-editor/design-assets/'+offlineFile)},{credentials:"omit",mode:"cors",signal:AbortSignal.timeout(30000),integrity:${JSON.stringify(offlineIntegrity)}}).then(r=>{if(!r.ok)throw Error("Offline formula resource unavailable");return r.text()}).catch(e=>{__lingxiOfflineMathPending=undefined;throw e}))}\n` + source
 }
 
+/** Exact first-editor programs keep their native synchronous string API after
+ * one explicit preparation boundary. Optional capture/property/export sources
+ * stay at their existing asynchronous consumers. */
+export function splitCriticalDesignSources(source) {
+  const tree = ts.createSourceFile('design.js', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
+  const ids = { IO: 'react', FO: 'reactDom', OO: 'support', MO: 'picker' }
+  const files = new Map(), programs = {}, edits = []
+  function visit(node) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && ids[node.name.text]) {
+      assert.ok(node.initializer && (ts.isStringLiteral(node.initializer) || ts.isNoSubstitutionTemplateLiteral(node.initializer)), 'pinned Design critical program changed')
+      const id = ids[node.name.text], text = node.initializer.text, bytes = Buffer.from(text)
+      assert.equal(bytes.toString(), text, 'critical program must survive UTF-8 losslessly')
+      const sha256 = sha(bytes), file = `design-${sha256}.js`
+      files.set(file, bytes);programs[id] = { file, bytes: bytes.length, sha256, integrity: `sha256-${createHash('sha256').update(bytes).digest('base64')}` }
+      edits.push([node.initializer.getStart(tree), node.initializer.end, `globalThis.__lingxiDesignStartup.sources.${id}`])
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(tree)
+  assert.equal(edits.length, 4, 'pinned Design critical source count changed')
+  for (const [start, end, replacement] of edits.sort((a, b) => b[0] - a[0])) source = source.slice(0, start) + replacement + source.slice(end)
+  return { source, programs, files }
+}
+
+/** Serialized into the trusted grant shell. Public code only, four fixed
+ * build-time resources. Native initialization starts once all are available;
+ * failed preparation never replaces an initialized document. */
+export function createDesignStartup(programs, host = globalThis) {
+  const sources = Object.create(null), requests = new Map()
+  let pending, status = 'loading', start, started = false, notice, line, button, notified = false
+  const doc = host.document
+  function render() {
+    const root = doc?.getElementById('root')
+    if (!root || started) return
+    if (status === 'loading' && !notice) return
+    if (!notice) {
+      notice = doc.createElement('section');notice.setAttribute('data-lingxi-design-preparation', '')
+      notice.style.cssText = 'margin:24px;padding:20px;font:14px/1.6 system-ui;color:var(--cds-fg,#333);background:var(--cds-bg,#fff);border-radius:12px'
+      line = doc.createElement('p');line.setAttribute('role', 'alert')
+      button = doc.createElement('button');button.type = 'button';button.textContent = '重试'
+      button.style.cssText = 'margin-top:8px;padding:6px 14px;cursor:pointer'
+      button.addEventListener('click', () => { void prepare() })
+      notice.append(line, button);root.replaceChildren(notice)
+    }
+    line.textContent = status === 'failed' ? '编辑器暂时无法加载，请重试。' : '正在准备编辑器…'
+    button.disabled = status === 'loading'
+    // Reuse the existing, source/origin-checked host failure and fresh-grant
+    // retry. Wait until the main module is cached before signalling failure.
+    if (status === 'failed' && start && !notified && host.parent && host.parent !== host) {
+      notified = true;host.parent.postMessage({ __lingxi_design_resource_error: true }, '*')
+    }
+  }
+  function boot() {
+    if (!started && start && status === 'ready') {
+      started = true;notice?.remove();start()
+      if (host.dispatchEvent && host.Event) host.dispatchEvent(new host.Event('lingxi:design-runtime-ready'))
+    }
+  }
+  function read(id, item) {
+    let request = requests.get(id)
+    if (!request) {
+      request = host.fetch(item.url, { credentials: 'omit', mode: 'cors', cache: 'force-cache',
+        integrity: item.integrity, signal: AbortSignal.timeout(30_000) })
+        .then(response => { if (!response.ok) throw Error('required editor program unavailable');return response.text() })
+        .then(text => { sources[id] = text })
+        .catch(error => { if (requests.get(id) === request) requests.delete(id);throw error })
+      requests.set(id, request)
+    }
+    return request
+  }
+  function prepare() {
+    if (pending) return pending
+    status = 'loading';notified = false;render()
+    pending = Promise.all(Object.entries(programs).map(([id, item]) => read(id, item))).then(() => {
+      status = 'ready';boot();return true
+    }, () => { status = 'failed';pending = undefined;render();return false })
+    return pending
+  }
+  const controller = { sources, prepare, get status() { return status }, run(callback) {
+    if (start || started) return
+    start = callback;render();boot()
+  } }
+  doc?.addEventListener('DOMContentLoaded', render, { once: true })
+  void prepare()
+  return controller
+}
+
 /** Package the pinned editor with the shared math enhancement and unchanged canvas model. */
 export async function buildDesignEditor() {
   const { math } = await buildArtifactMath()
@@ -123,9 +210,11 @@ export async function buildDesignEditor() {
   const cssName = `design-${sha(css)}.css`
   const scriptPath = /src="\.\/(assets\/[^"/]+\.js)"/.exec(originalHtml)?.[1]
   assert.ok(scriptPath, 'Expected the pinned editor entry')
-  const split = splitOptionalDesignSources(await readFile(resolve(source, scriptPath), 'utf8'))
+  const critical = splitCriticalDesignSources(await readFile(resolve(source, scriptPath), 'utf8'))
+  const split = splitOptionalDesignSources(critical.source)
   const catalog = { ...JSON.parse(await readFile(resolve(root, 'third_party/baoyu-design/host/slides-zh-CN.json'), 'utf8')), ...JSON.parse(await readFile(resolve(root, 'third_party/baoyu-design/host/design-zh-CN.json'), 'utf8')) }
-  const script = Buffer.from(translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, mathAssets, layout.guest, offlineFile, offlineIntegrity))), layout.host)), catalog))
+  const nativeSource = translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, mathAssets, layout.guest, offlineFile, offlineIntegrity))), layout.host)), catalog)
+  const script = Buffer.from('globalThis.__lingxiDesignStartup.run(function(){\n' + nativeSource + '\n});\n')
   const scriptName = `design-${sha(script)}.js`
   const publicBase = '__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/'
   const runtimePath = 'artifact-type/dc-runtime.js'
@@ -140,6 +229,7 @@ export async function buildDesignEditor() {
   await writeFile(resolve(output, 'assets', iconName), icon)
   await writeFile(resolve(output, 'assets', scriptName), script)
   await writeFile(resolve(output, runtimeFile), runtime)
+  for (const [name, bytes] of critical.files) await writeFile(resolve(output, 'assets', name), bytes)
   for (const [name, bytes] of split.files) await writeFile(resolve(output, 'assets', name), bytes)
   for (const [name, bytes] of mathAssets.files) await writeFile(resolve(output, 'assets', name), bytes)
   await writeFile(resolve(output, 'assets', offlineFile), math)
@@ -151,7 +241,9 @@ export async function buildDesignEditor() {
   // Upstream's local-network sharing/history UI calls server routes this host does not have (/__share, __history).
   await rm(resolve(output, 'share-ui.js'))
   const integrity = bytes => `sha256-${createHash('sha256').update(bytes).digest('base64')}`
-  const html = originalHtml.replace('<html lang="en"', '<html lang="zh-CN"').replace('>Loading…</p>', '>正在加载…</p>').replace(`./${cssPath}`, `${publicBase}${cssName}`).replace(`./${scriptPath}`, `${publicBase}${scriptName}`)
+  const programs = Object.fromEntries(Object.entries(critical.programs).map(([id, item]) => [id, { url: publicBase + item.file, integrity: item.integrity }]))
+  const startup = `<script>globalThis.__lingxiDesignStartup=(${createDesignStartup.toString()})(${JSON.stringify(programs)});</script>`
+  const html = originalHtml.replace('<head>', '<head>' + startup).replace('<html lang="en"', '<html lang="zh-CN"').replace('>Loading…</p>', '>正在加载…</p>').replace(`./${cssPath}`, `${publicBase}${cssName}`).replace(`./${scriptPath}`, `${publicBase}${scriptName}`)
     .replace(`src="${publicBase}${scriptName}"`, `data-lingxi-design-critical src="${publicBase}${scriptName}" integrity="${integrity(script)}"`)
     .replace(`href="${publicBase}${cssName}"`, `data-lingxi-design-critical href="${publicBase}${cssName}" integrity="${integrity(css)}"`)
     .replace(runtimePath, `${publicBase}${runtimeName}`)
@@ -174,7 +266,7 @@ export async function buildDesignEditor() {
   }
   await visit(output)
   const manifest = { source: relative(root, source), upstreamCommit: '016b39d7fdcc30bfacee31ea5541498ac53921c6',
-    optionalPrograms: split.programs,
+    startupPrograms: critical.programs, optionalPrograms: split.programs,
     math: { sha256: sha(math), bytes: Buffer.byteLength(math), offlineFile, onlineFile: mathAssets.onlineFile, onlineBytes: mathAssets.onlineBytes, loaderBytes: Buffer.byteLength(mathAssets.loader) }, layout: { guestBytes: Buffer.byteLength(layout.guest), hostBytes: Buffer.byteLength(layout.host) },
     entry: { file: `assets/${scriptName}`, original: scriptPath },
     runtime: { file: runtimeFile, original: runtimePath },
