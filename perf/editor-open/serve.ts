@@ -51,7 +51,7 @@ function pageCsp(scriptSrc: string, assets: string) {
   const fonts = 'https://fonts.googleapis.com https://fonts.gstatic.com'
   return ['sandbox allow-scripts allow-downloads allow-popups allow-modals', "default-src 'self'", `${scriptSrc} ${assets}`.trim(),
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${assets}`.trim(), `font-src 'self' data: https://fonts.gstatic.com ${assets}`.trim(),
-    "img-src 'self' data: blob:", "media-src 'self' blob:", "worker-src 'self' blob:", `connect-src 'self' data: blob: ${fonts}`,
+    "img-src 'self' data: blob:", "media-src 'self' blob:", "worker-src 'self' blob:", `connect-src 'self' data: blob: ${fonts} ${slidesPage ? assets : ''}`.trim(),
     "frame-src 'self' blob: data:", "object-src 'none'", "base-uri 'self'", "form-action 'none'"].join('; ')
 }
 

@@ -153,7 +153,13 @@ function installExportPdfCapture(runtime2) {
     let ignored = new Set(ignoredFamilies.map((input) => input.toLowerCase())), faces = css.match(/@font-face\s*\{[^}]*\}/g) ?? [], callback = (input) => /font-family\s*:\s*["']?([^"';}]+)/.exec(faces.find((input2) => input2.includes(input)) ?? "")?.[1]?.trim().toLowerCase(), entries = /* @__PURE__ */ new Map(), flag = !1;
     return await Promise.all([...urls].filter((input) => !ignored.has(callback(input) ?? "")).map(async (input) => {
       try {
-        entries.set(input, await fetchDataUrl(input));
+        let url = input;
+        // Shared formula fonts belong to the stylesheet's origin, not this grant.
+        if (input.startsWith("/artifact-editor/slides-assets/")) {
+          let sheet = Array.from(document.styleSheets).find((sheet) => sheet.href?.includes("/artifact-editor/slides-assets/"));
+          if (sheet) url = new URL(input, sheet.href).href;
+        }
+        entries.set(input, await fetchDataUrl(url));
       } catch {
         flag = !0;
       }

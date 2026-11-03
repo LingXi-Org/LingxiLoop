@@ -54,7 +54,7 @@ function pageCsp(scriptSrc: string, designAssets = '') {
     "img-src 'self' data: blob:",
     "media-src 'self' blob:",
     "worker-src 'self' blob:",
-    `connect-src 'self' data: blob: ${fonts}`,
+    `connect-src 'self' data: blob: ${fonts} ${designAssets}`.trim(),
     "frame-src 'self' blob: data:",
     "object-src 'none'",
     "base-uri 'self'",

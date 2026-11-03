@@ -2,6 +2,33 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import { adaptDesignMath } from './build-artifact-math.mjs'
+import { installExportPdfCapture } from '../third_party/baoyu-design/slides-source/modules/export-pdf-capture.js'
+
+test('Slides exports fetch formula fonts from the public stylesheet while project fonts keep their grant paths', async () => {
+  const noop = () => {}
+  const runtime = new Proxy({ initializeOnce: fn => fn, defineLiveExports: noop, toModuleNamespace: () => ({}),
+    designSystemFontPathSource: 'project/fonts/[\\w.-]+' }, { get: (target, key) => key in target ? target[key] : noop })
+  installExportPdfCapture(runtime)()
+  runtime.initializePdfCapture()
+  const originalDocument = globalThis.document
+  globalThis.document = { styleSheets: [{ href: 'https://loop.example.com/artifact-editor/slides-assets/editor-123.css' }] }
+  try {
+    const paths = ['/artifact-editor/slides-assets/KaTeX_Main-Regular-0123456789abcdef.woff2',
+      '_blob/0123456789abcdef0123456789abcdef', 'project/fonts/custom.woff2']
+    const css = paths.map((path, index) => `@font-face{font-family:face${index};src:url(${path})}`).join('')
+    const requests = [], warnings = []
+    const inlined = await runtime.inlineLocalFonts(css, warnings, async path => {
+      requests.push(path)
+      return 'data:font/woff2;base64,AA=='
+    })
+    assert.deepEqual(requests, ['https://loop.example.com' + paths[0], ...paths.slice(1)])
+    assert.equal(inlined.match(/data:font\/woff2;base64,AA==/g)?.length, 3)
+    assert.deepEqual(warnings, [])
+  } finally {
+    if (originalDocument === undefined) delete globalThis.document
+    else globalThis.document = originalDocument
+  }
+})
 
 test('Design preview math covers both external and inline runtime without changing archived bytes', async () => {
   const original = await readFile('third_party/baoyu-design/upstream/claude-design/scripts/editor/assets/index-DavTckY0.js','utf8')

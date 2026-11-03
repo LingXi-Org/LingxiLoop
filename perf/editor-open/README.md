@@ -62,6 +62,10 @@ An unthrottled single trial also showed the baseline's first deck taking
 
 ## Regression checks
 
+- `scripts/artifact-math.test.mjs`: formula exports resolve their KaTeX fonts
+  against the public stylesheet origin; project fonts and blobs retain their
+  grant paths. Final review caught and corrected this export regression after
+  the paired measurements; those measurements were not rerun for this correction.
 - `src/features/artifacts/editor-preload.test.ts`: one grant per person, company
   and artifact; a retry or failed grant is not reused; assets are fetched once,
   anonymously; an open during warm-up waits instead of downloading twice.

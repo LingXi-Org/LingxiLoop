@@ -200,6 +200,7 @@ test('project Slides decks are listed, created with their index, renamed and del
   const assetUrl = /src="(https?:\/\/[^"]+\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js)"/.exec(html)?.[1]
   assert.ok(assetUrl, 'every deck and grant origin shares one cached editor')
   assert.match(csp, /script-src [^;]*\/artifact-editor\/slides-assets\//)
+  assert.match(csp, /connect-src [^;]*\/artifact-editor\/slides-assets\//, 'formula exports fetch public fonts from the isolated editor')
   const asset = await fetch(origin + new URL(assetUrl).pathname)
   assert.equal(asset.status, 200)
   assert.equal(asset.headers.get('cache-control'), 'public, max-age=31536000, immutable')
