@@ -2,9 +2,9 @@
 export function connectWorkspace(runtime) {
   const nonce = new URLSearchParams(location.hash.slice(1)).get('workspace')
   if (!nonce || window.parent === window) return
-  let latest
+  let latest, visible = true
   const send = () => {
-    if (latest) parent.postMessage({ type: 'slides:context', nonce, context: latest }, '*')
+    if (visible && latest) parent.postMessage({ type: 'slides:context', nonce, context: latest }, '*')
   }
   runtime.reportNativeEditorContext = view => {
     latest = {
@@ -18,12 +18,19 @@ export function connectWorkspace(runtime) {
   }
   window.addEventListener('message', event => {
     if (event.source !== parent || event.data?.nonce !== nonce) return
+    if (event.data.type === 'slides:visibility' && typeof event.data.visible === 'boolean') {
+      visible = event.data.visible
+      document.documentElement.dataset.lingxiHidden = visible ? 'false' : 'true'
+      clearInterval(heartbeat)
+      heartbeat = visible ? setInterval(send, 15000) : undefined
+      if (visible) send()
+    }
     if (event.data.type === 'slides:exit-presentation') window.dispatchEvent(new Event('slides-exit-presentation'))
     if (event.data.type === 'slides:request-context') send()
     if (event.data.type === 'slides:agent-activity') {
       window.dispatchEvent(new MessageEvent('message', { source: parent, data: { __frame_claude_activity: true, working: event.data.working === true } }))
     }
   })
-  const heartbeat = setInterval(send, 15000)
+  let heartbeat = setInterval(send, 15000)
   window.addEventListener('pagehide', () => clearInterval(heartbeat), { once: true })
 }

@@ -72,11 +72,28 @@ export async function buildSlidesEditor({ metafilePath } = {}) {
   const sourceRoot = resolve(root, 'third_party/baoyu-design/slides-source')
   const recovered = JSON.parse(await readFile(resolve(sourceRoot, 'source-map.json'), 'utf8'))
   const browserBindings = await pruneBrowserBindings(sourceRoot)
+  let mathCss = await readFile(resolve(root, 'node_modules/katex/dist/katex.min.css'), 'utf8')
+  // Use the already locked KaTeX and local content-addressed WOFF2 assets. No
+  // network CDN, extra renderer version or editor CSP exception is needed.
+  mathCss = mathCss.replace(/src:[^;}]+(?=[;}])/g, declaration => {
+    const font = /url\(fonts\/(KaTeX_[A-Za-z0-9-]+\.woff2)\)/.exec(declaration)
+    assert.ok(font, 'Expected KaTeX WOFF2 source')
+    return `src:url(__KATEX_FONT_${font[1]}__) format("woff2")`
+  })
+  const mathFonts = new Map()
+  for (const [, name] of [...mathCss.matchAll(/__KATEX_FONT_(KaTeX_[A-Za-z0-9-]+\.woff2)__/g)]) {
+    const bytes = await readFile(resolve(root, 'node_modules/katex/dist/fonts', name))
+    const outputName = name.replace('.woff2', `-${hash(bytes).slice(0,16)}.woff2`)
+    mathFonts.set(outputName, bytes)
+    mathCss = mathCss.replaceAll(`__KATEX_FONT_${name}__`, `/artifact-editor/slides-assets/${outputName}`)
+  }
+  mathCss += '\n' + await readFile(resolve(sourceRoot, 'math.css'), 'utf8')
   const result = await build({
     absWorkingDir: root, entryPoints: [{ in: resolve(sourceRoot, 'main.js'), out: 'editor' }],
     outdir: resolve(output, 'assets'), entryNames: 'editor-[hash]', chunkNames: '[name]-[hash]',
     bundle: true, splitting: true, format: 'esm', platform: 'browser', target: ['chrome120', 'firefox120', 'safari17'],
     minify: true, legalComments: 'inline', metafile: true, write: false, external: ['fs', 'https'],
+    define: { __LINGXI_SLIDES_MATH_CSS__: JSON.stringify(mathCss) },
     plugins: [{ name: 'private-runtime-exports', setup(builder) {
       builder.onLoad({ filter: /slides-source[\\/]modules[\\/].*\.js$/ }, args => {
         const contents = browserBindings.sources.get(args.path)
@@ -96,22 +113,8 @@ export async function buildSlidesEditor({ metafilePath } = {}) {
   const font = Buffer.from(fontUrl[1], 'base64')
   const fontName = `anthropicons-variable-${hash(font).slice(0,16)}.woff2`
   await writeFile(resolve(output, 'assets', fontName), font)
-  let mathCss = await readFile(resolve(root, 'node_modules/katex/dist/katex.min.css'), 'utf8')
-  // Use the already locked KaTeX and local content-addressed WOFF2 assets. No
-  // network CDN, extra renderer version or editor CSP exception is needed.
-  mathCss = mathCss.replace(/src:[^;}]+(?=[;}])/g, declaration => {
-    const font = /url\(fonts\/(KaTeX_[A-Za-z0-9-]+\.woff2)\)/.exec(declaration)
-    assert.ok(font, 'Expected KaTeX WOFF2 source')
-    return `src:url(__KATEX_FONT_${font[1]}__) format("woff2")`
-  })
-  for (const [, name] of [...mathCss.matchAll(/__KATEX_FONT_(KaTeX_[A-Za-z0-9-]+\.woff2)__/g)]) {
-    const bytes = await readFile(resolve(root, 'node_modules/katex/dist/fonts', name))
-    const outputName = name.replace('.woff2', `-${hash(bytes).slice(0,16)}.woff2`)
-    await writeFile(resolve(output, 'assets', outputName), bytes)
-    mathCss = mathCss.replaceAll(`__KATEX_FONT_${name}__`, `/artifact-editor/slides-assets/${outputName}`)
-  }
-  const css = sourceCss.replace(fontUrl[0], `./${fontName}`) + '\n' + mathCss + '\n'
-    + await readFile(resolve(sourceRoot, 'math.css'), 'utf8')
+  for (const [name, bytes] of mathFonts) await writeFile(resolve(output, 'assets', name), bytes)
+  const css = sourceCss.replace(fontUrl[0], `./${fontName}`)
   const cssName = `editor-${hash(css).slice(0,16)}.css`
   await writeFile(resolve(output, 'assets', cssName), css)
   const entry = Object.entries(result.metafile.outputs).find(([, meta]) => meta.entryPoint?.endsWith('/main.js'))
@@ -125,10 +128,25 @@ export async function buildSlidesEditor({ metafilePath } = {}) {
     for (const item of result.metafile.outputs[name].imports) if (item.kind !== 'dynamic-import' && !item.external) addInitial(item.path)
   }
   addInitial(entry[0])
+  const features = {}
+  const featureEntries = { math: '/math.js', exports: '/exports.js', pptx: '/vendor/pptx-library.js', woff2: '/vendor/woff2-decoder.js' }
+  for (const [feature, suffix] of Object.entries(featureEntries)) {
+    const entry = Object.entries(result.metafile.outputs).find(([, meta]) => meta.entryPoint?.endsWith(suffix))?.[0]
+    assert.ok(entry, `Missing lazy Slides feature: ${feature}`)
+    const graph = new Set()
+    function visit(name) {
+      if (graph.has(name)) return
+      graph.add(name)
+      for (const item of result.metafile.outputs[name].imports) if (item.kind !== 'dynamic-import' && !item.external) visit(item.path)
+    }
+    visit(entry)
+    features[feature] = [...graph].filter(name => !initial.has(name)).map(name => name.split('/').at(-1)).sort()
+  }
+  const featureMeta = `<meta name="lingxi-editor-features" content="${JSON.stringify(features).replaceAll('&', '&amp;').replaceAll('"', '&quot;')}">`
   const html = (await readFile(resolve(sourceRoot, 'index.html'), 'utf8'))
     .replace('__EDITOR_ENTRY__', `/artifact-editor/slides-assets/${entryName}`)
     .replace('__EDITOR_STYLES__', `/artifact-editor/slides-assets/${cssName}`)
-    .replace('</head>', [...initial].filter(name => name !== entry[0]).map(name =>
+    .replace('</head>', featureMeta + [...initial].filter(name => name !== entry[0]).map(name =>
       `<link rel="modulepreload" crossorigin href="/artifact-editor/slides-assets/${name.split('/').at(-1)}">`).join('') + '</head>')
   await writeFile(resolve(output, 'index.html'), html)
   for (const name of ['anthropicons-fizzy-lake-D4byUNVq.woff2']) {
@@ -151,11 +169,11 @@ export async function buildSlidesEditor({ metafilePath } = {}) {
   const initialFiles = result.outputFiles.filter(file => initial.has(Object.keys(result.metafile.outputs).find(name => resolve(root, name) === file.path)))
   const report = { upstreamCommit: recovered.upstreamCommit, source: 'third_party/baoyu-design/slides-source',
     modules: recovered.modules.length, removedModules: recovered.removedModules, messageCount: recovered.translatedMessages,
-    unusedBrowserBindings: browserBindings.removed,
+    unusedBrowserBindings: browserBindings.removed, features,
     compressed, styles: { file: cssName, fallbackFont: fontName, fallbackFontBytes: font.length },
     original: { bytes: 4943004, gzip: 1591657 },
     entry: { file: entryName, bytes: entryFile.contents.length, gzip: gzipSync(entryFile.contents).length },
-    initial: { bytes: initialFiles.reduce((sum, file) => sum + file.contents.length, 0), gzip: initialFiles.reduce((sum, file) => sum + gzipSync(file.contents).length, 0) },
+    initial: { inputs: [...new Set([...initial].flatMap(name => Object.entries(result.metafile.outputs[name].inputs).filter(([, value]) => value.bytesInOutput > 0).map(([path]) => path)))], bytes: initialFiles.reduce((sum, file) => sum + file.contents.length, 0), gzip: initialFiles.reduce((sum, file) => sum + gzipSync(file.contents).length, 0) },
     inputs: Object.keys(result.metafile.inputs),
     files: Object.fromEntries(result.outputFiles.map(file => [file.path.split(/[\\/]/).at(-1), { bytes: file.contents.length, sha256: hash(file.contents) }])) }
   await writeFile(resolve(output, 'manifest.json'), JSON.stringify(report, null, 2) + '\n')

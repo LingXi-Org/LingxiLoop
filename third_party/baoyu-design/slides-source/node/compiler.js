@@ -1,6 +1,9 @@
 // Reconstructed from JimLiu/baoyu-design 016b39d, MIT.
 // Published node/compiler.cjs preserves the named module implementation.
 import libraries from '../vendor/node-dependencies.cjs'
+import * as math from '../math.js'
+import { registerSlideMath } from '../math-loading.js'
+registerSlideMath(math)
 const { React263, ReactDOM15, jsxRuntime, ReactDOMClient, index_parts_exports, index_parts_exports2, index_parts_exports3, index_parts_exports4, index_parts_exports5, index_parts_exports6, index_parts_exports7, index_parts_exports8, index_parts_exports9, index_parts_exports10, index_parts_exports11, index_parts_exports12, RadioGroup, Button, useRender, mergeProps, LabelableProvider, index_parts_exports13, index_parts_exports14, index_parts_exports15, index_parts_exports16, Menubar, DirectionProvider, useDirection, index_parts_exports17, createChangeEventDetails, createGenericEventDetails, useFieldRootContext, useLabelableContext, cva, clsx, extendTailwindMerge, validators, import_pptxgenjs, init_woff2_decoder, woff2_decoder_exports } = libraries
 function installLibraries(runtime2) {
   runtime2.loadReactNamespace = () => React263;

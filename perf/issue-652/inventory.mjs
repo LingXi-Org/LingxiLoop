@@ -53,7 +53,7 @@ scan(runtime, node => {
 const report = {
   upstreamCommit: design.upstreamCommit,
   design: { buildModel: 'One pinned monolithic entry plus synchronous runtime source strings; this is a consumer inventory, not a complete internal call graph.',
-    entry: design.entry, runtime: design.runtime, math: design.math, programs: [...programs.values()].sort((a, b) => b.bytes - a.bytes),
+    entry: design.entry, runtime: design.runtime, math: design.math, optionalPrograms: design.optionalPrograms ?? {}, programs: [...programs.values()].sort((a, b) => b.bytes - a.bytes),
     files: design.files, compressed: design.compressed },
   slides: { buildModel: 'Actual esbuild browser metafile; dynamic imports and eager edges are distinguished by kind.',
     initial: slides.initial, entry: slides.entry, compressed: slides.compressed, initializers,

@@ -52,7 +52,7 @@ function DeckActions({ deck }: { deck: ArtifactSummary }) {
 
 
 /** The project's Slides decks: a library home plus the vendored claude-slides editor. */
-export function SlidesPage({ projectId }: { projectId: string }) {
+export function SlidesPage({ projectId, active = true }: { projectId: string; active?: boolean }) {
   const decks = useSlides((state) => state.decks)
   const error = useSlides((state) => state.error)
   const openId = useSlides((state) => state.openId)
@@ -90,9 +90,9 @@ export function SlidesPage({ projectId }: { projectId: string }) {
   const showingWorkspace = Boolean(openId && openId === cachedId)
 
   return <>
-  {cachedId && <div hidden={!showingWorkspace} inert={!showingWorkspace} className={showingWorkspace ? 'h-full min-h-0' : 'hidden'}>
+  {cachedId && <div aria-hidden={!showingWorkspace} inert={!showingWorkspace} style={showingWorkspace ? undefined : { position: 'absolute', inset: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' }} className="h-full min-h-0">
     <Suspense fallback={<ResourceSkeleton variant="media" label="正在打开演示文稿" />}>
-      <SlidesWorkspace key={`${projectId}:${cachedId}`} artifactId={cachedId} title={current?.title ?? '演示文稿'} onClose={() => open(null)} />
+      <SlidesWorkspace key={`${projectId}:${cachedId}`} artifactId={cachedId} title={current?.title ?? '演示文稿'} visible={active && showingWorkspace} onClose={() => open(null)} />
     </Suspense>
   </div>}
   {!showingWorkspace && <PageLayout

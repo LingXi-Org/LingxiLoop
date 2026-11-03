@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
 import { brotliDecompressSync, gunzipSync } from 'node:zlib'
 import test from 'node:test'
-import { adaptDesignMath } from './build-artifact-math.mjs'
-import { adaptDesignHostCapabilities, adaptDesignRuntimeUrl, adaptVisibleDesignMount, buildDesignEditor } from './build-design-editor.mjs'
+import { adaptDesignMath, buildDesignMathAssets } from './build-artifact-math.mjs'
+import { adaptDesignHostCapabilities, adaptDesignRuntimeUrl, adaptVisibleDesignMount, adaptOnlineDesignMath, splitOptionalDesignSources, buildDesignEditor } from './build-design-editor.mjs'
 import { runInNewContext, Script } from 'node:vm'
 import { adaptDesignLayout, buildDesignLayout } from './build-design-layout.mjs'
 import './design-flow-size.test.mjs'
@@ -64,15 +65,25 @@ test('Design package preserves the agreed math runtime and optional executable b
   const fallback = JSON.parse(injected.slice('supportJs:e.dcSupportSource+'.length, -1))
   assert.equal(fallback, '\n;' + math, 'replacement tokens cannot corrupt the inline/blob math program')
   assert.doesNotThrow(() => new Script(fallback))
+  const online = await buildDesignMathAssets()
+  const split = splitOptionalDesignSources(await readFile(resolve(source, manifest.entry.original), 'utf8'))
+  assert.ok(manifest.math.loaderBytes < 10_000, 'entry carries only the detector')
+  assert.ok(!entry.includes('KaTeX_AMS'), 'online entry must not carry math fonts')
+  assert.ok(manifest.files['assets/' + manifest.math.onlineFile])
+  assert.ok(manifest.files['assets/' + manifest.math.offlineFile])
+  assert.ok(!entry.includes(math), 'full offline program is assembled at export')
   for (const [name, sizes] of Object.entries(manifest.compressed)) {
     const bytes = await readFile(resolve(output, name))
     assert.deepEqual(brotliDecompressSync(await readFile(resolve(output, `${name}.br`))), bytes)
     assert.deepEqual(gunzipSync(await readFile(resolve(output, `${name}.gz`))), bytes)
     assert.ok(sizes.br < bytes.length)
     if (name.endsWith('.js')) {
+      if (split.files.has(name.replace('assets/', ''))) { assert.deepEqual(bytes, split.files.get(name.replace('assets/', ''))); continue }
+      if (name === 'assets/' + manifest.math.offlineFile) { assert.equal(bytes.toString(), math); continue }
+      if (online.files.has(name.replace('assets/', ''))) { assert.deepEqual(bytes, online.files.get(name.replace('assets/', ''))); continue }
       const original = await readFile(resolve(source, name === manifest.entry.file ? manifest.entry.original : name === manifest.runtime.file ? manifest.runtime.original : name))
-      const expected = name === manifest.entry.file ? Buffer.from(translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptDesignMath(original.toString(), math + layout.guest))), layout.host)), catalog))
-        : name === manifest.runtime.file ? Buffer.from(original.toString() + '\n;' + math + layout.guest) : original
+      const expected = name === manifest.entry.file ? Buffer.from(translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, online, layout.guest, manifest.math.offlineFile, 'sha256-' + createHash('sha256').update(math).digest('base64')))), layout.host)), catalog))
+        : name === manifest.runtime.file ? Buffer.from(original.toString() + '\n;' + layout.guest + ';(' + online.loader + ')(new URL(document.currentScript.src).origin);') : original
       assert.deepEqual(bytes, expected, name)
     }
   }
@@ -95,4 +106,21 @@ test('Design package preserves the agreed math runtime and optional executable b
   assert.match(html, /dc-babel-file/)
   assert.match(html, /fast-edit-worker-file/)
   assert.match(html, /__LINGXI_DESIGN_ASSET_ORIGIN__\/artifact-editor\/design-assets\/design-[a-f0-9]{64}\.js" integrity="sha256-/)
+})
+
+test('unused capture, property-worker and offline-export programs leave the first-view source', async () => {
+  const { splitOptionalDesignSources } = await import('./build-design-editor.mjs')
+  const original = await readFile('third_party/baoyu-design/upstream/claude-design/scripts/editor/assets/index-CYLuwRoc.js', 'utf8')
+  const split = splitOptionalDesignSources(original)
+  assert.deepEqual(Object.keys(split.programs).sort(), ['propertyScrubber', 'standaloneExport', 'svgCapture'])
+  for (const [id, asset] of Object.entries(split.programs)) {
+    const code = split.files.get(asset.file).toString()
+    assert.equal(Buffer.byteLength(code), asset.bytes)
+    assert.equal(createHash('sha256').update(code).digest('hex'), asset.sha256)
+    assert.doesNotThrow(() => new Script(code), id)
+    assert.ok(!split.source.includes(JSON.stringify(code)), id + ' must wait for its actual consumer')
+  }
+  assert.match(split.source, /await __lingxiDesignSource\("svgCapture"\)/)
+  assert.match(split.source, /await __lingxiDesignSource\("propertyScrubber"\)/)
+  assert.match(split.source, /await __lingxiDesignSource\("standaloneExport"\)/)
 })

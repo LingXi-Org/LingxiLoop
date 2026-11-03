@@ -40,16 +40,17 @@ export function useArtifactSurface() {
   return value
 }
 
-export function ArtifactSurface({ onEditorContext, context, agentWorking }: {
+export function ArtifactSurface({ onEditorContext, context, agentWorking, visible = true }: {
+  visible?: boolean
   onEditorContext(context: SlideEditorContext): void; context: SlideEditorContext | null; agentWorking: boolean
 }) {
   const { active } = useArtifactSurface()
   if (!active) return null
-  return <ArtifactWorkbench key={active.id} target={active} onEditorContext={onEditorContext} context={context} agentWorking={agentWorking} />
+  return <ArtifactWorkbench key={active.id} target={active} onEditorContext={onEditorContext} context={context} agentWorking={agentWorking} visible={visible} />
 }
 
-function ArtifactWorkbench({ target, onEditorContext, context, agentWorking }: {
-  target: ArtifactSurfaceTarget; onEditorContext(context: SlideEditorContext): void
+function ArtifactWorkbench({ target, onEditorContext, context, agentWorking, visible }: {
+  visible: boolean; target: ArtifactSurfaceTarget; onEditorContext(context: SlideEditorContext): void
   context: SlideEditorContext | null; agentWorking: boolean
 }) {
   const { close, returnToOrigin } = useArtifactSurface()
@@ -111,7 +112,7 @@ function ArtifactWorkbench({ target, onEditorContext, context, agentWorking }: {
       </>} />
     <div className="min-h-0 flex-1">
       <ArtifactEditorFrame artifactId={target.id} kind="slides" title={target.title} onEditorContext={onEditorContext}
-        agentWorking={agentWorking} exitPresentation={exitPresentation} />
+        visible={visible} agentWorking={agentWorking} exitPresentation={exitPresentation} />
     </div>
   </aside>
 }

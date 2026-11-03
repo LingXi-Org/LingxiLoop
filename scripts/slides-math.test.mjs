@@ -61,3 +61,57 @@ test('existing monospace model values stay code and tables participate in formul
   }
   assert.equal(slideHasMath({ frames: [{ node: { kind: 'table', rows: [[String.raw`\(x^2\)`]] } }] }), true)
 })
+
+test('ordinary text does not request math; first use coalesces and a failed chunk can retry', async () => {
+  const loading = await build({ entryPoints: ['third_party/baoyu-design/slides-source/math-loading.js'], bundle: true, format: 'esm', write: false })
+  const { createSlideMathLoader, hasSlideMathSource } = await import('data:text/javascript;base64,' + Buffer.from(loading.outputFiles[0].text).toString('base64'))
+  for (const text of ['Ordinary text', '$5 and $10', String.raw`\$x^2$`, '`$x^2$`']) assert.equal(hasSlideMathSource([{ text }]), false, text)
+  for (const text of ['$x^2$', String.raw`\(x_i^2\)`, '$$x$$']) assert.equal(hasSlideMathSource([{ text }]), true, text)
+  let calls = 0, finish
+  const module = { slideMathRuns, installMathStyles() {} }
+  const loader = createSlideMathLoader(() => {
+    calls++
+    return calls === 1 ? Promise.reject(Error('temporarily offline')) : new Promise(resolve => { finish = () => resolve(module) })
+  })
+  let notifications = 0
+  const unsubscribe = loader.subscribe(() => { notifications++ })
+  assert.equal(calls, 0)
+  assert.equal(loader.current(), null)
+  await assert.rejects(loader.load(), /offline/)
+  const first = loader.load(), second = loader.load()
+  assert.equal(first, second)
+  finish()
+  assert.equal(await first, module)
+  assert.equal(loader.current(), module)
+  assert.equal(notifications, 1, 'all formula readers observe the shared retry')
+  unsubscribe()
+  assert.equal(await loader.load(), module)
+  assert.equal(calls, 2)
+})
+
+test('feature dependency preparation coalesces and a failed fetch never starts a cached module failure', async () => {
+  const { prepareEditorFeature } = await import('../third_party/baoyu-design/slides-source/feature-resources.js')
+  const priorDocument = globalThis.document, priorFetch = globalThis.fetch
+  let calls = 0
+  globalThis.document = { querySelector: selector => selector.startsWith('meta')
+    ? { content: JSON.stringify({ math: ['math-SYNTHETIC.js'] }) }
+    : { src: 'https://static.test/artifact-editor/slides-assets/editor-SYNTHETIC.js' } }
+  globalThis.fetch = async (url, options) => {
+    calls++
+    assert.equal(String(url), 'https://static.test/artifact-editor/slides-assets/math-SYNTHETIC.js')
+    assert.equal(options.credentials, 'omit')
+    return new Response('synthetic module', { status: calls === 1 ? 503 : 200 })
+  }
+  try {
+    await assert.rejects(prepareEditorFeature('math'), /重试/)
+    const first = prepareEditorFeature('math'), second = prepareEditorFeature('math')
+    assert.equal(first, second)
+    await first
+    await prepareEditorFeature('math')
+    assert.equal(calls, 2)
+  } finally {
+    if (priorDocument === undefined) delete globalThis.document
+    else globalThis.document = priorDocument
+    globalThis.fetch = priorFetch
+  }
+})

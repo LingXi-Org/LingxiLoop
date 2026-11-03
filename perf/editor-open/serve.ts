@@ -38,12 +38,15 @@ const sha = (value: string | Buffer) => createHash('sha256').update(value).diges
 
 const imageId = '1234567890abcdef1234567890abcdef'
 const image = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="#426b46"/><circle cx="320" cy="180" r="120" fill="#b8d994"/></svg>')
-const order = Array.from({ length: 20 }, (_, index) => `slide-${index + 1}`)
+const mathFixture = process.env.PERF_MATH_FIXTURE === '1'
+const failedFeatures = new Set<string>()
+const failFeatures = (process.env.PERF_FAIL_FEATURES ?? '').split(',').filter(value => ['math', 'exports', 'pptx-library', 'woff2-decoder'].includes(value))
+const order = Array.from({ length: mathFixture ? 3 : 20 }, (_, index) => `slide-${index + 1}`)
 const documents = {
   design: new Map([['project/canvas.json', JSON.stringify(canvas)], ['project/Main.dc.html', board]]),
   slides: new Map<string, string>([
     ['project/deck.json', JSON.stringify({ v: 4, lists: 'css', title: '加载基准稿', order, sections: {}, faces: {}, designSystems: [] })],
-    ...order.map((id, index): [string, string] => [`project/slides/${id}.html`, `<section id="${id}" style="background:#faf8f4;padding:80px;display:flex;flex-direction:column;gap:32px"><h1>幻灯片 ${index + 1}</h1><p>固定样稿，用于测量打开时间。</p><img src="/_blob/${imageId}" style="width:640px;height:360px"><aside>第 ${index + 1} 页讲者备注。</aside></section>`]),
+    ...order.map((id, index): [string, string] => [`project/slides/${id}.html`, `<section id="${id}" style="background:#faf8f4;padding:80px;display:flex;flex-direction:column;gap:32px"><h1>幻灯片 ${index + 1}</h1><p>固定样稿，用于测量打开时间。</p>${mathFixture && index === 0 ? String.raw`<p>\(x^2\)</p>` : ''}<img src="/_blob/${imageId}" style="width:640px;height:360px"><aside>第 ${index + 1} 页讲者备注。</aside></section>`]),
   ]),
 }
 const grants = new Map<string, 'design' | 'slides'>()
@@ -98,6 +101,12 @@ app.get('/artifact-editor/preload.json', async (_req, res, next) => {
 app.get(/^\/artifact-editor\/(design|slides)-assets\/([\w-]+\.(js|css|woff2))$/, async (req, res, next) => {
   try {
     const [, kind, name, ext] = /^\/artifact-editor\/(design|slides)-assets\/([\w-]+\.(js|css|woff2))$/.exec(req.path)!
+    for (const feature of failFeatures) {
+      if (kind === 'slides' && name.startsWith(feature + '-') && !failedFeatures.has(feature)) {
+        failedFeatures.add(feature)
+        res.set('Cache-Control', 'no-store').status(503).send('Synthetic first-use failure'); return
+      }
+    }
     const file = resolve(editors[kind as 'design' | 'slides'], 'assets', name)
     if (!existsSync(file)) { res.sendStatus(404); return }
     if (ext === 'woff2') { res.set({ 'Cache-Control': `${slidesPage ? 'public' : 'private'}, max-age=31536000, immutable`, 'Content-Type': 'font/woff2' }).send(await readFile(file)); return }

@@ -1,3 +1,4 @@
+import { prepareEditorFeature } from './feature-resources.js'
 // Reconstructed from JimLiu/baoyu-design 016b39d, MIT.
 // Published node/compiler.cjs preserves the named module implementation.
 import { registerDependenciesE4 as installLibraries } from './modules/dependencies-e4.js'
@@ -297,7 +298,7 @@ export function createSlidesRuntime(options = {}) {
   const runtime2 = /* @__PURE__ */ Object.create(null);
   installLibraries(runtime2);
   let exportsReady;
-  runtime2.loadExportModules = () => exportsReady ??= import("./exports.js").then(module => module.installExportModules(runtime2)).catch(error => { exportsReady = undefined; throw error; });
+  runtime2.loadExportModules = () => exportsReady ??= prepareEditorFeature("exports").then(() => import("./exports.js")).then(module => module.installExportModules(runtime2)).catch(error => { exportsReady = undefined; throw error; });
   const initializers = [
     installModuleInterop(runtime2),
     // Upstream runs the i18n setup eagerly at load (no lazy wrapper); messages are formatted from module inits on, so it

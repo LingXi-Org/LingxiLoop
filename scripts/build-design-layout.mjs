@@ -5,8 +5,8 @@ export async function buildDesignLayout() {
   const compile = async (contents, extra = {}) => (await build({ stdin: { contents, resolveDir: process.cwd() },
     bundle: true, format: 'iife', platform: 'browser', target: ['chrome120', 'firefox120', 'safari17'],
     minify: true, write: false, ...extra })).outputFiles[0].text
-  const guest = await compile("import {installDesignFlowSize} from './shared/design-flow-size';installDesignFlowSize()")
-  const host = await compile("export {resizeFlowManifest} from './shared/design-flow-size'", { globalName: '__lingxiDesignFlow' })
+  const guest = await compile("import {installDesignFlowSize,installDesignFrameVisibility} from './shared/design-flow-size';installDesignFlowSize();installDesignFrameVisibility()")
+  const host = await compile("import {installDesignFrameVisibility} from './shared/design-flow-size';installDesignFrameVisibility();export {resizeFlowManifest} from './shared/design-flow-size'", { globalName: '__lingxiDesignFlow' })
   return { guest, host }
 }
 

@@ -7,6 +7,7 @@ import base64
 import hashlib
 import json
 import time
+import re
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -17,7 +18,7 @@ ORIGIN = "https://design.test"
 BASE = "/artifact-editor/design/test-grant/"
 
 
-def run(browser, read_only=False):
+def run(browser, read_only=False, math_retry=False):
     editor = ROOT / "server/assets/design-editor"
     themes = json.loads((ROOT / "third_party/baoyu-design/host/builtin-themes.json").read_text(encoding="utf-8"))
     builtin = json.loads((ROOT / "third_party/baoyu-design/slides-source/builtin-style.json").read_text(encoding="utf-8"))
@@ -26,6 +27,11 @@ def run(browser, read_only=False):
                   boards={"Main.dc.html": dict(x=0, y=0, w=720, h=480)},
                   order=["Main.dc.html"], notes={}, designSystems=[dict(namespace=t["namespace"], title=t["title"], artifact=t["source"], version=t["version"], copiedAt="2026-11-03T00:00:00Z") for t in themes])
     board = r'<html><head><script src="./support.js"></script></head><body><x-dc><h1>Upgrade fixture</h1><p>\(x^2\)</p></x-dc></body></html>'
+    if math_retry:
+        board = board.replace(r"\(x^2\)", "Plain text")
+    manifest = json.loads((editor / "manifest.json").read_text())
+    math_path = "/artifact-editor/design-assets/" + manifest["math"]["onlineFile"]
+    math_attempts = 0
     files = {"project/canvas.json": json.dumps(canvas).encode(), "project/Main.dc.html": board.encode()}
     for theme in themes:
         files[f"project/ds/{theme['namespace']}/tokens.json"] = json.dumps(theme["tokens"]).encode()
@@ -38,8 +44,14 @@ def run(browser, read_only=False):
         return hashlib.sha256(data).hexdigest()
 
     def route(request):
+        nonlocal math_attempts
         path = urlparse(request.request.url).path
         requests.append(path)
+        if path == math_path:
+            math_attempts += 1
+            if math_retry and math_attempts == 1:
+                request.fulfill(status=503, body="temporary formula failure")
+                return
         relative = path.removeprefix(BASE)
         if path.startswith("/artifact-editor/design-assets/"):
             relative = "assets/" + path.rsplit("/", 1)[1]
@@ -76,7 +88,8 @@ def run(browser, read_only=False):
             body = file.read_bytes()
             content_type = {".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2"}.get(file.suffix, "text/html")
             if file.name == "index.html":
-                body = body.decode().replace("__LINGXI_DESIGN_ASSET_ORIGIN__", ORIGIN)
+                download_script = (ROOT / "server/src/modules/artifacts/editor-downloads.ts").read_text().split("`", 2)[1]
+                body = body.decode().replace("__LINGXI_DESIGN_ASSET_ORIGIN__", ORIGIN).replace("</head>", "<script>" + download_script + "</script></head>")
         request.fulfill(body=body, content_type=content_type)
 
     page.route(ORIGIN + "/**", route)
@@ -84,7 +97,7 @@ def run(browser, read_only=False):
     deadline = time.monotonic() + 30
     while time.monotonic() < deadline:
         try:
-            artboard = next((frame for frame in page.frames if frame.locator("h1").count() and frame.locator(".katex").count()), None)
+            artboard = next((frame for frame in page.frames if frame.locator("h1").count() and (math_retry or frame.locator(".katex").count())), None)
         except Error as error:
             if "detached" not in str(error):
                 raise
@@ -95,8 +108,26 @@ def run(browser, read_only=False):
     else:
         raise AssertionError(f"Design artboard/math did not mount: {errors}, {failed_responses}")
     assert not publishes, "opening rewrote the saved source"
+    if math_retry:
+        page.wait_for_timeout(500)
+        assert math_attempts == 0, "ordinary board downloaded the renderer"
+        assert not any("KaTeX" in path for path in requests)
+        artboard.locator("p").dblclick()
+        editable = artboard.locator('p[contenteditable="true"]')
+        expect(editable).to_be_visible()
+        editable.fill(r"\(x^2\)")
+        page.keyboard.press("Escape")
+        retry = artboard.get_by_role("button", name="重试公式", exact=True)
+        expect(retry).to_be_visible()
+        assert not artboard.locator(".katex").count()
+        retry.click()
+        expect(artboard.locator(".katex")).to_have_count(1)
+        expect(retry).to_have_count(0)
+        assert math_attempts == 2
+        assert not any(path.endswith(manifest["math"]["offlineFile"]) for path in requests)
+        print("PASS: Design plain first view defers math; first-use 503 retries without changing the document format", flush=True)
     if not read_only:
-        page.get_by_role("button", name="属性", exact=True).click()
+        page.get_by_test_id("dc-props-toggle").click()
         page.get_by_role("tab", name="主题", exact=True).click()
         expect(page.get_by_test_id("dc-theme-tab")).to_be_visible()
         expect(page.get_by_text("Original look", exact=True)).to_have_count(0)
@@ -107,10 +138,10 @@ def run(browser, read_only=False):
         page.get_by_test_id("dc-theme-tab").get_by_role("button").filter(has_text="原始外观").click()
         for title in ["Claude 经典", "Ember, Light", "Ember, Dark", "Seazar, Light", "Seazar, Dark", "Seazar, High contrast"]:
             expect(page.get_by_role("button", name=title, exact=True)).to_be_visible()
-        page.screenshot(path=str(ROOT / "docs/evidence/issue-648/design-chinese.png"))
+        page.screenshot(path=str(ROOT / ("perf/issue-652/evidence/phase2/design-math-retry.png" if math_retry else "docs/evidence/issue-648/design-chinese.png")))
         page.get_by_role("button", name="Claude 经典", exact=True).click()
         expect(page.get_by_test_id("dc-theme-tab").get_by_role("button").filter(has_text="Claude 经典")).to_be_visible()
-        page.get_by_role("button", name="属性", exact=True).click()
+        page.get_by_test_id("dc-props-toggle").click()
         artboard.locator("h1").dblclick()
         heading = artboard.locator('h1[contenteditable="true"]')
         expect(heading).to_be_visible()
@@ -123,17 +154,43 @@ def run(browser, read_only=False):
     else:
         assert not artboard.locator('[contenteditable="true"]').count()
     assert not errors, errors
-    assert not failed_responses, failed_responses
+    assert failed_responses == ([(503, ORIGIN + math_path)] if math_retry else []), failed_responses
     assert not any(any(part in path for part in ("__share", "__history", "__presence", "__ds", "agent/requests")) for path in requests), requests
+    if math_retry:
+        page.get_by_role("button", name="导出", exact=True).first.click()
+        with page.expect_download(timeout=45000) as download:
+            page.get_by_role("menuitem", name=re.compile("^HTML")).click()
+        output = ROOT / "perf/issue-652/evidence/phase2/design-offline.html"
+        download.value.save_as(output)
+        offline = browser.new_page()
+        remote = []
+        html = output.read_text()
+        offline.route("**/*", lambda route: route.fulfill(body=html, content_type="text/html") if route.request.url == "https://offline.test/board.html" else (remote.append(route.request.url), route.abort()))
+        offline.goto("https://offline.test/board.html", wait_until="domcontentloaded")
+        expect(offline.locator(".katex")).to_have_count(1)
+        expect(offline.locator("h1")).to_have_text("Upgrade saved")
+        offline.wait_for_timeout(300)
+        assert not remote, remote
+        offline.close()
+        for id, program in manifest["optionalPrograms"].items():
+            count = requests.count("/artifact-editor/design-assets/" + program["file"])
+            assert count == (1 if id == "standaloneExport" else 0), (id, count)
+        page.get_by_role("button", name="导出", exact=True).first.click()
+        with page.expect_download(timeout=45000) as download:
+            page.get_by_role("menuitem", name=re.compile("^PNG")).click()
+        download.value.save_as(ROOT / "perf/issue-652/evidence/phase2/design-capture.png")
+        assert not errors, errors
+        print("PASS: Design HTML runs with zero external requests; PNG capture waits for formulas", flush=True)
     print(f"PASS: Design {'read-only' if read_only else 'editable/save'} startup, math, no failed HTTP responses or unported routes")
     page.close()
 
 
 if __name__ == "__main__":
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(channel="chrome", headless=True)
+        browser = playwright.chromium.launch(executable_path="/usr/bin/chromium", headless=True, args=["--no-sandbox"])
         try:
             run(browser)
             run(browser, read_only=True)
+            run(browser, math_retry=True)
         finally:
             browser.close()
