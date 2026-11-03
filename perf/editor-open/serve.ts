@@ -12,6 +12,8 @@ import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
 import { Readable } from 'node:stream'
+import { createServer as createHttpsServer } from 'node:https'
+import { createServer as createHttpServer } from 'node:http'
 import { pathToFileURL } from 'node:url'
 import compression from 'compression'
 import express from 'express'
@@ -20,7 +22,9 @@ const root = resolve(process.argv[2] ?? '.')
 const host = resolve(process.argv[3] ?? '.codex-tmp/editor-host')
 const port = Number(process.argv[4] ?? 4410), listen = Number(process.env.LISTEN_PORT ?? port)
 const site = 'lingxi-perf.cn'
-const appOrigin = `http://app.${site}:${port}`, editorBase = `http://artifact.${site}:${port}`
+const protocol = process.env.PERF_TLS === '1' ? 'https' : 'http'
+const upstreamPort = protocol === 'https' ? listen + 100 : listen
+const appOrigin = `${protocol}://app.${site}:${port}`, editorBase = `${protocol}://artifact.${site}:${port}`
 const load = (path: string) => import(pathToFileURL(resolve(root, path)).href)
 const { artifactEditorOrigin, isolatedEditor } = await load('shared/artifact-editor-origin.ts')
 const { sendEditorAsset, readEditorPreloads } = await load('server/src/modules/artifacts/editor-static.ts')
@@ -29,7 +33,7 @@ const slidesPage = existsSync(resolve(root, 'server/src/modules/artifacts/slides
 const { ARTIFACT_KIND_DEFINITIONS } = await load('server/src/modules/artifacts/kinds.ts')
 const { EDITOR_DOWNLOAD_SCRIPT } = await load('server/src/modules/artifacts/editor-downloads.ts')
 const { canvas, board } = await import(pathToFileURL(resolve('perf/issue-611/fixtures.mjs')).href)
-const editors = { design: resolve('server/assets/design-editor'), slides: resolve('server/assets/slides-editor') }
+const editors = { design: resolve(process.env.PERF_DESIGN_DIST ?? 'server/assets/design-editor'), slides: resolve(process.env.PERF_SLIDES_DIST ?? 'server/assets/slides-editor') }
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex')
 
 const imageId = '1234567890abcdef1234567890abcdef'
@@ -64,7 +68,7 @@ app.use((req, res, next) => {
     for (const [key, value] of Object.entries(req.headers)) if (value !== undefined) headers.set(key, Array.isArray(value) ? value.join(', ') : value)
     // Node fetch decompresses upstream bodies; the outer middleware compresses again.
     headers.set('accept-encoding', 'identity')
-    const reply = await isolatedEditor(new Request(`http://${req.headers.host}${req.originalUrl}`, { method: req.method, headers }), editorBase, `http://127.0.0.1:${listen}`)
+    const reply = await isolatedEditor(new Request(`${protocol}://${req.headers.host}${req.originalUrl}`, { method: req.method, headers }), editorBase, `http://127.0.0.1:${upstreamPort}`)
     if (!reply) return next()
     res.status(reply.status)
     reply.headers.forEach((value: string, key: string) => { if (!['content-length', 'content-encoding', 'transfer-encoding', 'connection', 'keep-alive'].includes(key)) res.setHeader(key, value) })
@@ -129,6 +133,12 @@ app.use('/artifact-editor/:kind/:grant', express.json({ limit: '16mb' }), (req, 
 })
 app.use(express.static(host))
 app.use((error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => { console.error(error); res.status(500).send(error.name) })
-const server = app.listen(listen, '127.0.0.1', () => console.log(JSON.stringify({ port, listen, root, host, isolatedSlides: Boolean(slidesPage), preload: Boolean(readEditorPreloads) })))
+// HTTPS lets the real browser negotiate Brotli and use secure editor APIs.
+// Only explicit fixture certificates are accepted; no product trust is changed.
+const server = protocol === 'https' ? createHttpsServer({
+  key: await readFile(process.env.PERF_TLS_KEY!), cert: await readFile(process.env.PERF_TLS_CERT!),
+}, app) : createHttpServer(app)
+if (protocol === 'https') app.listen(upstreamPort, '127.0.0.1')
+server.listen(listen, '127.0.0.1', () => console.log(JSON.stringify({ port, listen, protocol, root, host, isolatedSlides: Boolean(slidesPage), preload: Boolean(readEditorPreloads) })))
 // Idle sockets stay open past the delayed link, so a reused one is never closed mid-request.
 server.keepAliveTimeout = 120_000

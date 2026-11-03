@@ -68,7 +68,7 @@ export function translateSlides(source, catalog) {
 }
 
 /** Compile maintained editor modules. Published bundles are archival evidence only. */
-export async function buildSlidesEditor() {
+export async function buildSlidesEditor({ metafilePath } = {}) {
   const sourceRoot = resolve(root, 'third_party/baoyu-design/slides-source')
   const recovered = JSON.parse(await readFile(resolve(sourceRoot, 'source-map.json'), 'utf8'))
   const browserBindings = await pruneBrowserBindings(sourceRoot)
@@ -159,6 +159,11 @@ export async function buildSlidesEditor() {
     inputs: Object.keys(result.metafile.inputs),
     files: Object.fromEntries(result.outputFiles.map(file => [file.path.split(/[\\/]/).at(-1), { bytes: file.contents.length, sha256: hash(file.contents) }])) }
   await writeFile(resolve(output, 'manifest.json'), JSON.stringify(report, null, 2) + '\n')
+  if (metafilePath) {
+    const file = resolve(root, metafilePath)
+    await mkdir(dirname(file), { recursive: true })
+    await writeFile(file, JSON.stringify(result.metafile, null, 2) + '\n')
+  }
   return report
 }
 
@@ -207,5 +212,6 @@ async function pruneBrowserBindings(sourceRoot) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  console.log(JSON.stringify(await buildSlidesEditor(), null, 2))
+  const metafilePath = process.argv.slice(2).find(arg => arg.startsWith('--metafile='))?.slice('--metafile='.length)
+  console.log(JSON.stringify(await buildSlidesEditor({ metafilePath }), null, 2))
 }

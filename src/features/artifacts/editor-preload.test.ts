@@ -17,7 +17,7 @@ globalThis.fetch = (async (url: string, init?: RequestInit) => {
   if (url === '/artifact-editor/preload.json') return new Response(JSON.stringify({ design: ['https://app.example.com/d.js'], slides: ['https://app.example.com/s.js', 'https://app.example.com/s.css'] }), { status: preloadStatus })
   return new Response('bytes')
 }) as typeof fetch
-const { editorGrant, editorWarming, warmEditor } = await import('./editor-preload')
+const { editorGrant, warmEditor } = await import('./editor-preload')
 
 test('an intent and the open share one grant per person, company and artifact', async () => {
   const first = await editorGrant('deck')
@@ -51,8 +51,7 @@ test('editor assets are fetched once, anonymously, as the editor frame requests 
   assert.equal(requests.filter(request => request.url === '/artifact-editor/preload.json').length, 2, 'a failed list is fetched again')
 })
 
-test('an editor opened mid warm-up waits for that download instead of fetching it twice', async () => {
-  await editorWarming('design')
+test('overlapping speculative warm-ups share their pending download', async () => {
   let release!: () => void
   const original = globalThis.fetch
   globalThis.fetch = (async (url: string, init?: RequestInit) => {
@@ -62,15 +61,10 @@ test('an editor opened mid warm-up waits for that download instead of fetching i
   }) as typeof fetch
   try {
     const warm = warmEditor('design', 'low')
-    let joined = false
-    void editorWarming('design').then(() => { joined = true })
     await new Promise(done => setTimeout(done, 10))
-    assert.equal(joined, false, 'the open waits while the editor code is still downloading')
-    void warmEditor('design')
+    const second = warmEditor('design')
     release()
-    await warm
-    await new Promise(done => setTimeout(done, 0))
-    assert.equal(joined, true)
+    await Promise.all([warm, second])
     assert.equal(requests.filter(request => request.url.endsWith('/d.js')).length, 1, 'nothing is downloaded a second time')
   } finally { globalThis.fetch = original }
 })

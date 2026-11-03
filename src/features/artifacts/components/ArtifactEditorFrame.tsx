@@ -4,7 +4,7 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { userFacingError } from '@/lib/userFacingError'
 import { ARTIFACT_LABELS, type ArtifactKind } from '../contracts'
-import { editorGrant, editorWarming } from '../editor-preload'
+import { editorGrant } from '../editor-preload'
 import { subscribeDesignFrameReveal } from './design-frame-lifecycle'
 
 /**
@@ -46,10 +46,10 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
     setLoaded(false)
     setDesignInitialized(false)
     setError('')
-    // A retry asks for a new grant; an open right after intent reuses its grant
-    // and lets an in-flight warm-up finish rather than downloading twice.
-    Promise.all([editorGrant(artifactId, attempt > 0), editorWarming(kind)])
-      .then(([grant]) => { if (!controller.signal.aborted) setUrl((grant.isolatedUrl ?? grant.url) + (kind === 'slides' ? `#workspace=${nonce}` : '')) })
+    // Intent can reuse a grant, but speculative asset warming must never hold
+    // an authorized frame behind an unused font or stalled optional request.
+    editorGrant(artifactId, attempt > 0)
+      .then((grant) => { if (!controller.signal.aborted) setUrl((grant.isolatedUrl ?? grant.url) + (kind === 'slides' ? `#workspace=${nonce}` : '')) })
       .catch((reason) => { if (!controller.signal.aborted) setError(userFacingError(reason, `${label}编辑器暂时无法打开，请重试。`)) })
     return () => controller.abort()
   }, [artifactId, attempt, kind, label, nonce])

@@ -1,0 +1,9 @@
+{
+  "baselineCommit": "9194a43613faf240a978b9f765bd38ff2295b56e",
+  "baselineEvidence": "evidence/baseline-9194a436-https.json.gz",
+  "coldEditableP75Ms": { "design": 2786.25, "slides": 1761.6 },
+  "retainedEditableP75Ms": 300,
+  "stagedChangeMaxColdRegressionRatio": 1.1,
+  "minimumSamplesPerArm": 10,
+  "instanceAndBackgroundBudgets": "pending real retained-instance memory/background measurements; no additional retained instances are enabled by this stage"
+}

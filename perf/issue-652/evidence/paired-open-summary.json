@@ -1,0 +1,122 @@
+{
+  "rows": [
+    {
+      "kind": "design",
+      "scenario": "cold",
+      "baseline": {
+        "n": 10,
+        "p50": 5562,
+        "p75": 5567.9,
+        "p95": 5581.8,
+        "bytesP50": 2014052
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 5347.3,
+        "p75": 5549.9,
+        "p95": 5581.7,
+        "bytesP50": 2014053
+      }
+    },
+    {
+      "kind": "design",
+      "scenario": "warm-new-frame",
+      "baseline": {
+        "n": 10,
+        "p50": 1069.3,
+        "p75": 1093,
+        "p95": 1120.9,
+        "bytesP50": 6452
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 1063.2,
+        "p75": 1075.8,
+        "p95": 1092.6,
+        "bytesP50": 6453
+      }
+    },
+    {
+      "kind": "design",
+      "scenario": "switch",
+      "baseline": {
+        "n": 10,
+        "p50": 1192.2,
+        "p75": 1207.8,
+        "p95": 1229.4,
+        "bytesP50": 6974
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 1193.2,
+        "p75": 1199,
+        "p95": 1213.6,
+        "bytesP50": 6975
+      }
+    },
+    {
+      "kind": "slides",
+      "scenario": "cold",
+      "baseline": {
+        "n": 10,
+        "p50": 3483.1,
+        "p75": 3546.5,
+        "p95": 3601.4,
+        "bytesP50": 1183299
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 3456.6,
+        "p75": 3534.5,
+        "p95": 3592.2,
+        "bytesP50": 1183299
+      }
+    },
+    {
+      "kind": "slides",
+      "scenario": "warm-new-frame",
+      "baseline": {
+        "n": 10,
+        "p50": 788.3,
+        "p75": 817.9,
+        "p95": 840.8,
+        "bytesP50": 19508
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 812.8,
+        "p75": 857.8,
+        "p95": 909.6,
+        "bytesP50": 19508
+      }
+    },
+    {
+      "kind": "slides",
+      "scenario": "switch",
+      "baseline": {
+        "n": 10,
+        "p50": 920.3,
+        "p75": 927.4,
+        "p95": 942.8,
+        "bytesP50": 20542
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 919.7,
+        "p75": 926.4,
+        "p95": 935.2,
+        "bytesP50": 20542
+      }
+    }
+  ],
+  "stagedGate": true,
+  "coldTargetMet": false,
+  "retainedTargetMet": false,
+  "remainingIssueGates": [
+    "complete functional splitting and dependency inventory",
+    "first-use failure/retry and exports",
+    "real retained-instance count/memory/background bounds",
+    "account/project/access/expiry cleanup",
+    "final independent review and release"
+  ]
+}
