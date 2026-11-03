@@ -192,3 +192,17 @@ test('runtime21 is only an exact20 to21 patch over the unchanged complete61 inve
   f.files['server/package-lock.json']=JSON.stringify(badLock)
   assert.throws(()=>runtimePatchPlan(f.read,f.paths),/receipts differ/)
 })
+
+test('runtime22 accepts only exact21 to22 over the unchanged installed61 inventory', () => {
+  const f=fixture('3.8.22')
+  for(const name of ['0059_retire_presentation_generation','0060_native_artifacts','0061_slides_workspaces']) {
+    const path=`server/src/db/migrations/${name}.sql`;f.paths.push(path);f.files[path]='-- unchanged installed61 fixture'
+  }
+  const plan=runtimePatchPlan(f.read,f.paths)
+  assert.equal(plan.source.runtime,'3.8.21');assert.equal(plan.target.runtime,'3.8.22')
+  assert.equal(plan.target.productVersion,61);assert.deepEqual(plan.source.migrations,plan.target.migrations)
+  for(const command of ['up','servers'])assert.doesNotThrow(()=>assertRetirementReleaseAllowed(f.paths,command,undefined,plan))
+  for(const source of ['3.8.19','3.8.20'])assert.throws(()=>assertRetirementReleaseAllowed(f.paths,'up',undefined,{...plan,source:{...plan.source,runtime:source}}))
+  assert.throws(()=>assertRetirementReleaseAllowed(f.paths,'workers',undefined,plan))
+  for(const count of [58,59,60])assert.throws(()=>runtimePatchPlan(f.read,f.paths.slice(0,count)))
+})

@@ -160,7 +160,7 @@ test('platform Agent operations resolve the authoritative run identity', async (
     decideApproval: async (value: unknown) => { calls.push(['decideApproval', value]); return { approvalId: 'approval-1', runId: 'run-1', approved: true } },
   } as unknown as PlatformAgentRuntime
 
-  const inspected = await inspectPlatformAgentRun(runtime, 'run-1', 3)
+  const inspected = await inspectPlatformAgentRun(runtime, 'run-1', 3, { query: async () => ({ rows: [] }) } as unknown as Queryable)
   assert.equal('message' in (inspected.state ?? {}), false)
   assert.equal(inspected.timing.eventHistory, 'cursor-page')
   assert.equal(inspected.timing.initialEligibleToStartedMs, null)

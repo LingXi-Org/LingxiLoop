@@ -3,7 +3,7 @@
   "version": "0.1.0-beta",
   "private": true,
   "dependencies": {
-    "@lyyzka/lingxios": "3.8.21",
+    "@lyyzka/lingxios": "3.8.22",
     "@modelcontextprotocol/sdk": "1.30.0",
     "pg": "^8.20.0"
   },

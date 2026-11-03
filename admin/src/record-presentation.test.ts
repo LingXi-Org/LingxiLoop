@@ -1,3 +1,5 @@
+import { ModelStageTimingCard } from './model-stage-timing.js'
+import type { RunStageTiming } from '../../shared/model-stage-timing.js'
 import { AgentRunTimingCard } from './agent-run-timing.js'
 import type { AgentRunTiming } from '../../shared/agent-run-timing.js'
 import assert from 'node:assert/strict'
@@ -79,4 +81,18 @@ test('run timing distinguishes unavailable from zero and never labels a lease as
   assert.match(html, /未提供/)
   assert.match(html, /不能相加作为端到端用时/)
   assert.equal(renderToStaticMarkup(createElement(AgentRunTimingCard, {})), '')
+})
+
+
+test('stage card distinguishes settled correction, missing first content and publication failure without provider-time fiction', () => {
+  const stages: RunStageTiming = { calls: [{ callId: 'call<script>', requestVersion: 1, fence: 1, operation: 'correction', status: 'failed',
+    stages: { version: 1, clock: 'monotonic', providerTime: 'unavailable', totalMs: 100, modelPermitWaitMs: 0, observedStreamMs: 80, outputCallbackWaitMs: 60, streamCompleted: false } }],
+    modelCallsAvailable: true, callsTruncated: false, publicationTimings: [{ version: 1, clock: 'monotonic', callId: 'call<script>', requestVersion: 1, fence: 1, revision: 2,
+      publicationTotalMs: 70, publicationWaitMs: 60, publicationCount: 3, acknowledgedCount: 2, failure: { stage: 'seal', code: 'persistence_rejected' } }],
+    publicationMeasurementsAvailable: true, publicationsTruncated: true, providerTime: 'unavailable', unattributedRunMs: null }
+  const html = renderToStaticMarkup(createElement(ModelStageTimingCard, { stages }))
+  assert.match(html, /协议纠正/); assert.match(html, /0 ms/); assert.match(html, /未提供/)
+  assert.match(html, /修订 2/); assert.match(html, /最终封存：持久化确认被拒绝/)
+  assert.match(html, /不能相加或相减推算供应商纯推理时间/)
+  assert.match(html, /call&lt;script&gt;/); assert.doesNotMatch(html, /<script>/)
 })

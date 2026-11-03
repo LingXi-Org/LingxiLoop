@@ -9,9 +9,10 @@ import {promisify} from 'node:util'
 const execute=promisify(execFile)
 
 export const withFormal19TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.19',run)
+export const withFormal21TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.21',run)
 export const withFormal20TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.20',run)
 async function withFormalRuntimeTestFixture(root,env,version,run){
- assert.ok(['3.8.19','3.8.20'].includes(version))
+ assert.ok(['3.8.19','3.8.20','3.8.21'].includes(version))
  const userconfig=env.LINGXILOOP_TEST_PACKAGE_USERCONFIG??join(root,'.npmrc')
  const url=new URL(env.INTEGRATION_DATABASE_URL??'')
  assert.equal(env.NODE_ENV,'test')
@@ -24,7 +25,7 @@ async function withFormalRuntimeTestFixture(root,env,version,run){
  assert.ok(record.resolved.startsWith(prefix));assert.match(record.resolved.slice(prefix.length),/^[a-f0-9]{40}$/)
  const fixture=await mkdtemp(join(tmpdir(),`lingxi-actual-formal${version}-test-`))
  try{
-  let archive=env[version==='3.8.19'?'LINGXILOOP_RUNTIME_PATCH_19_SOURCE_ARCHIVE':'LINGXILOOP_RUNTIME_PATCH_20_SOURCE_ARCHIVE']
+  let archive=env[`LINGXILOOP_RUNTIME_PATCH_${version.split('.')[2]}_SOURCE_ARCHIVE`]
   if(archive)assert.ok(isAbsolute(archive))
   else{
    const packed=await execute('npm',['pack',record.resolved,'--ignore-scripts','--json','--pack-destination',fixture,'--userconfig',userconfig,'--loglevel','error','--fetch-retries=0','--fetch-timeout=60000'],{cwd:root,env,timeout:90000,maxBuffer:2*1024*1024})
