@@ -29,6 +29,7 @@ with sync_playwright() as pw:
     expect(frame.locator('[data-progressive-slide]')).to_be_visible()
     assert state()['publishes']==0,'partial deck published before other reads completed'
     assert not any('/project/slides/slide-2.html' in row['url'] and row.get('status')==200 for row in trace.requests.values()),'later page completed before edit'
+    assert frame.locator('[data-progressive-slide]').evaluate('el=>{const b=el.getBoundingClientRect(),p=el.style.pointerEvents;el.style.pointerEvents="auto";const top=document.elementFromPoint(b.x+b.width/2,b.y+b.height/2);el.style.pointerEvents=p;return el.contains(top)}'),'loading/unsaved notice is painted behind the canvas'
     page.screenshot(path=str(destination/'editable-first.png'))
     try:expect(frame.locator('[data-progressive-slide]')).to_have_count(0,timeout=60000)
     except Exception:
@@ -48,6 +49,6 @@ with sync_playwright() as pw:
     page.keyboard.press('Control+Shift+z');expect(frame.locator('[data-slides-editor] [data-text-path]').filter(has_text='Typed before later pages').first).to_be_visible()
     page.screenshot(path=str(destination/'complete.png'))
     assert not errors,errors
-    report={'scope':'Actual native first slide editor, HTTP/gateway/CSP and CAS fixture with eight-second delayed later reads; no interception. Other page source and order stay intact; early edit merges and saves, then undo/redo works.','browser':browser.version,'errors':errors,'editedBeforeLaterRead':True,'noPartialPublish':True,'allOtherFilesPreserved':True,'fullOrderPreserved':True,'undoRedoAfterFullLoad':True,'requests':list(trace.requests.values())}
+    report={'scope':'Actual native first slide editor, HTTP/gateway/CSP and CAS fixture with eight-second delayed later reads; no interception. Other page source and order stay intact; early edit merges and saves, then undo/redo works.','browser':browser.version,'errors':errors,'editedBeforeLaterRead':True,'unobscuredLoadingNotice':True,'noPartialPublish':True,'allOtherFilesPreserved':True,'fullOrderPreserved':True,'undoRedoAfterFullLoad':True,'requests':list(trace.requests.values())}
     with gzip.GzipFile(str(destination/'browser.json.gz'),'wb',mtime=0)as f:f.write(json.dumps(report,ensure_ascii=False).encode())
     print(json.dumps({k:v for k,v in report.items()if k!='requests'},ensure_ascii=False));browser.close()

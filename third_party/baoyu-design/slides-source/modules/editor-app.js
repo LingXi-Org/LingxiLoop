@@ -4226,7 +4226,8 @@ function installEditorApp(runtime2) {
           }),
           documentStore.doc.progressive?.() ? SlidesAppJsx.jsx("div", {
             role: "status", "data-progressive-slide": "",
-            className: "absolute inset-x-0 top-[var(--tb-overlay-h,0px)] z-10 bg-panel px-4 py-2 text-center text-xs text-fg-muted",
+            className: "rounded-lg bg-panel px-4 py-2 text-center text-xs text-fg-muted shadow-sm",
+            style: {position:"absolute",top:8,left:16,right:16,zIndex:60,pointerEvents:"none"},
             children: saveMessage
           }) : null,
           SlidesAppJsx.jsx(runtime2.HotRestoreRevealGate, {
