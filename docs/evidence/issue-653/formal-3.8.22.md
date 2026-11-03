@@ -96,3 +96,32 @@ Final independent review of code candidated37b725b found no P0/P1/P2 blockers.
 The stage integration is PR #659, dependent on #654. It targets main for the
 normal owning CI; merge #654 first and refresh this branch before integration.
 The complete baseline diff must not be mistaken for duplicate feature work.
+
+## Opt-in private wire diagnosis
+
+The existing `agent-protocols-live.test.ts` can use
+`LINGXIOS_LIVE_WIRE_SUMMARY=1` to observe its exact production-profile transport.
+Only fixed counters/flags escape; requests, prompt/body text, schemas, arguments
+and credentials stay in process memory. Raw preview capture cannot be combined
+with this mode. The stream forwards the original bytes. Fetch is restored even
+if fixture cleanup fails; trailing provider-base slashes are normalized.
+
+`LINGXIOS_LIVE_WIRE_CONTROLS=1` adds three matched replay controls after the Worker
+stops: same request, parallel flag disabled, and minimal synthetic messages.
+`LINGXIOS_LIVE_WIRE_CONTROLS=schema` instead tries a public-answer-only baseline,
+then bounded tool partitions, capped at eight probes. It returns only remaining
+indices, never definitions or parameters. A single candidate is not called
+isolated without an observed failed subset. Successful provider calls here do
+not execute any business tool and do not qualify product delivery.
+
+Control requests use the same configured provider. They bypass SDK admission and
+the shared root ledger, so the root's monetary cap does **not** cover them. Their
+bounds are the three/eight-probe limit,45s per-request abort and inherited output
+limit; these are not a total monetary ceiling. Use only an explicitly isolated
+test DB, synthetic fixture data, one selected brief case and a deliberate small
+probe plan. `LINGXIOS_LIVE_MAX_MODEL_CALLS` bounds the actual fixture root to1..12
+(default12); reducing it for request capture is not release qualification.
+
+The diagnostic results are handed privately to the coordinating thread. No raw
+request/response payload or live parameter values are published in this evidence.
+The real-provider release gate remains open until successful requalification.
