@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 import { slideHasMath } from "../math.js";
 function installExportDeckMeasurement(runtime2) {
@@ -484,10 +484,10 @@ function installExportDeckMeasurement(runtime2) {
           }
       }
   }
-  async function replaceRasterFallbacks(measuredDeck, requests) {
+  async function replaceRasterFallbacks(measuredDeck, requests, captureOptions) {
     if (requests.length === 0)
       return;
-    let value = await (0, runtime2.captureHtmlEmbeds)(requests.map((input) => input.req));
+    let value = await (0, runtime2.captureHtmlEmbeds)(requests.map((input) => input.req), captureOptions);
     for (let value2 of requests) {
       let entry = value.get(value2.req.key), value3 = measuredDeck.slides[value2.slide]?.leaves[value2.leaf];
       entry === void 0 || value3 === void 0 || (measuredDeck.slides[value2.slide].leaves[value2.leaf] = {
@@ -909,7 +909,9 @@ function installExportDeckMeasurement(runtime2) {
             ground: entry.ground
           } : {}
         });
-      }), await rasterizeSvgImages(state), await replaceRasterFallbacks(state, items2);
+      }), await rasterizeSvgImages(state), await replaceRasterFallbacks(state, items2, {
+        settlePictures: options?.settleEmbeds === !0
+      });
       // Native PPTX text cannot represent KaTeX layout. Preserve the rendered
       // page using the existing capture path, with notes and other pages intact.
       for (let index = 0; index < assets.length; index++) {

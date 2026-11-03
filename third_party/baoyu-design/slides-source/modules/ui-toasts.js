@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiToasts(runtime2) {
   var jsxid0, jsxr__, reactk_, toastQueue, pinnedToast, nextToastId, toastSubscribers, pinnedToastSubscribers;
@@ -48,7 +48,9 @@ function installUiToasts(runtime2) {
     };
   }
   function useToastBridge() {
-    let { add, close, setPinned } = (0, runtime2.useToastNotifications)(), ref = reactk_.useRef(/* @__PURE__ */ new Map());
+    let { add, close, setPinned } = (0, runtime2.useToastNotifications)();
+    (0, runtime2.useToastF6Visit)();
+    let ref = reactk_.useRef(/* @__PURE__ */ new Map());
     return reactk_.useEffect(() => {
       let callback = (input) => setPinned(input);
       return pinnedToastSubscribers.add(callback), pinnedToast !== null && callback(pinnedToast), () => {
@@ -94,7 +96,7 @@ function installUiToasts(runtime2) {
   }), bindRuntimeValue(runtime2, "pinnedToastSubscribers", () => pinnedToastSubscribers, (value) => {
     pinnedToastSubscribers = value;
   }), bindRuntimeValue(runtime2, "notifyToastSubscribers", () => notifyToastSubscribers), bindRuntimeValue(runtime2, "setPinnedToast", () => setPinnedToast), bindRuntimeValue(runtime2, "showToast", () => showToast), bindRuntimeValue(runtime2, "showActionToast", () => showActionToast), bindRuntimeValue(runtime2, "closeToast", () => closeToast), bindRuntimeValue(runtime2, "subscribeToasts", () => subscribeToasts), bindRuntimeValue(runtime2, "useToastBridge", () => useToastBridge), () => {
-    (0, runtime2.initializeImageDownsampling)(), (0, runtime2.initializeUiPropertyIcons)(), jsxid0 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), jsxr__ = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), (0, runtime2.initializeUiAnnouncements)(), (0, runtime2.initializeUiInputs210)(), reactk_ = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), toastQueue = [], pinnedToast = null, nextToastId = 1, toastSubscribers = /* @__PURE__ */ new Set(), pinnedToastSubscribers = /* @__PURE__ */ new Set();
+    (0, runtime2.initializeImageDownsampling)(), (0, runtime2.initializeUiPropertyIcons)(), jsxid0 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), jsxr__ = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), (0, runtime2.initializeUiAnnouncements)(), (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeToastF6Visit)(), reactk_ = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), toastQueue = [], pinnedToast = null, nextToastId = 1, toastSubscribers = /* @__PURE__ */ new Set(), pinnedToastSubscribers = /* @__PURE__ */ new Set();
   };
 }
 export {

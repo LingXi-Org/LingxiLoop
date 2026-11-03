@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCommentsAreaSelection(runtime2) {
   var ReactSlideComments, CommentAreaJsx, ReactCommentSelection, COMMENT_AREA_RESIZE_MIN_PX, ReactDocumentCommentMode, documentCommentModeSnapshot, useDocumentCommentMode;
@@ -173,7 +173,7 @@ function installCommentsAreaSelection(runtime2) {
   }), bindRuntimeValue(runtime2, "subscribeDocumentCommentMode", () => subscribeDocumentCommentMode), bindRuntimeValue(runtime2, "useDocumentCommentMode", () => useDocumentCommentMode, (value) => {
     useDocumentCommentMode = value;
   }), () => {
-    (0, runtime2.initializeCaptureFallback)(), (0, runtime2.initializeSlideRenderer)(), ReactSlideComments = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), CommentAreaJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), ReactCommentSelection = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), COMMENT_AREA_RESIZE_MIN_PX = 12, ReactDocumentCommentMode = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), documentCommentModeSnapshot = () => document.documentElement.hasAttribute("data-comment-mode"), useDocumentCommentMode = () => ReactDocumentCommentMode.useSyncExternalStore(subscribeDocumentCommentMode, documentCommentModeSnapshot);
+    (0, runtime2.initializeCaptureFallback)(), (0, runtime2.initializeGoogleFontLicences)(), (0, runtime2.initializeSlideRenderer)(), ReactSlideComments = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), CommentAreaJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), ReactCommentSelection = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), COMMENT_AREA_RESIZE_MIN_PX = 12, ReactDocumentCommentMode = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), documentCommentModeSnapshot = () => document.documentElement.hasAttribute("data-comment-mode"), useDocumentCommentMode = () => ReactDocumentCommentMode.useSyncExternalStore(subscribeDocumentCommentMode, documentCommentModeSnapshot);
   };
 }
 export {

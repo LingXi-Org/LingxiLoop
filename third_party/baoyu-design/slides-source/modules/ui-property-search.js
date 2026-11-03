@@ -1,7 +1,26 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiPropertySearch(runtime2) {
-  var jsxForUiPropertySearch, OPTION_LIST_MAX_HEIGHT, initializeUiPropertySearch;
+  var jsxForUiPropertySearch, reactForUiPropertySearch, OPTION_LIST_MAX_HEIGHT, initializeUiPropertySearch;
+  function scrollIntoOverlayView(element, top = !1) {
+    let overlay = element?.closest(runtime2.OPEN_OVERLAY_SELECTOR), view = element?.ownerDocument.defaultView;
+    if (element == null || overlay == null || view == null || element.closest("[data-closed]") !== null)
+      return;
+    let parent = element.parentElement;
+    for (; parent !== null && !/auto|scroll/.test(view.getComputedStyle(parent).overflowY); )
+      parent = parent === overlay ? null : parent.parentElement;
+    if (parent === null)
+      return;
+    let scroller = parent, apply = () => {
+      let rect = element.getBoundingClientRect(), bounds = scroller.getBoundingClientRect();
+      top ? scroller.scrollTop = 0 : (rect.top < bounds.top || rect.bottom > bounds.bottom) && (scroller.scrollTop = Math.max(0, scroller.scrollTop + (rect.top + rect.bottom - bounds.top - bounds.bottom) / 2));
+    };
+    apply();
+    let observer = new view.ResizeObserver(() => {
+      observer.disconnect(), apply();
+    });
+    observer.observe(scroller);
+  }
   function optionMatchesQuery(query, ...values) {
     let value = query.trim().toLowerCase();
     return value === "" || values.some((input) => input !== void 0 && input.toLowerCase().includes(value));
@@ -36,7 +55,11 @@ function installUiPropertySearch(runtime2) {
     };
   }
   function OptionList({ value, onChange, label, rowSelector, onEnterIndex, className, "data-testid": dataTestid }) {
-    return jsxForUiPropertySearch.jsx("div", {
+    let ref = reactForUiPropertySearch.useRef(null), rows = () => Array.from(ref.current?.closest("[data-search-scope]")?.querySelectorAll(rowSelector) ?? []).filter((input) => !input.matches(":disabled")), firstRow = (list) => (value.trim() === "" ? list.find((input) => input.getAttribute("aria-pressed") === "true") : void 0) ?? list[0];
+    return reactForUiPropertySearch.useLayoutEffect(() => {
+      value.trim() !== "" && scrollIntoOverlayView(rows()[0], !0);
+    }, [value]), jsxForUiPropertySearch.jsx("div", {
+      ref,
       className: className ?? "mt-0.5 mb-2 w-0 min-w-full",
       children: jsxForUiPropertySearch.jsx(runtime2.TextInput, {
         value,
@@ -44,7 +67,7 @@ function installUiPropertySearch(runtime2) {
         onKeyDown: (event) => {
           if (event.nativeEvent.isComposing)
             return;
-          let value2 = Array.from(event.currentTarget.closest("[data-search-scope]")?.querySelectorAll(rowSelector) ?? []).filter((input) => !input.matches(":disabled")), value3 = event.key === "ArrowDown" ? value2[0] : event.key === "ArrowUp" ? value2[value2.length - 1] : void 0;
+          let value2 = rows(), value3 = event.key === "ArrowDown" ? firstRow( value2) : event.key === "ArrowUp" ? value2[value2.length - 1] : void 0;
           if (value3 !== void 0)
             event.preventDefault(), value3.focus();
           else if (event.key === "Enter" && value.trim() !== "" && value2.length > 0)
@@ -73,15 +96,17 @@ function installUiPropertySearch(runtime2) {
       })
     });
   }
-  return bindRuntimeValue(runtime2, "optionMatchesQuery", () => optionMatchesQuery), bindRuntimeValue(runtime2, "optionTypeaheadMatch", () => optionTypeaheadMatch), bindRuntimeValue(runtime2, "createOptionListKeyHandler", () => createOptionListKeyHandler), bindRuntimeValue(runtime2, "OptionList", () => OptionList), bindRuntimeValue(runtime2, "jsxForUiPropertySearch", () => jsxForUiPropertySearch, (value) => {
+  return bindRuntimeValue(runtime2, "scrollIntoOverlayView", () => scrollIntoOverlayView), bindRuntimeValue(runtime2, "optionMatchesQuery", () => optionMatchesQuery), bindRuntimeValue(runtime2, "optionTypeaheadMatch", () => optionTypeaheadMatch), bindRuntimeValue(runtime2, "createOptionListKeyHandler", () => createOptionListKeyHandler), bindRuntimeValue(runtime2, "OptionList", () => OptionList), bindRuntimeValue(runtime2, "jsxForUiPropertySearch", () => jsxForUiPropertySearch, (value) => {
     jsxForUiPropertySearch = value;
+  }), bindRuntimeValue(runtime2, "reactForUiPropertySearch", () => reactForUiPropertySearch, (value) => {
+    reactForUiPropertySearch = value;
   }), bindRuntimeValue(runtime2, "OPTION_LIST_MAX_HEIGHT", () => OPTION_LIST_MAX_HEIGHT, (value) => {
     OPTION_LIST_MAX_HEIGHT = value;
   }), bindRuntimeValue(runtime2, "initializeUiPropertySearch", () => initializeUiPropertySearch, (value) => {
     initializeUiPropertySearch = value;
   }), () => {
     OPTION_LIST_MAX_HEIGHT = 12, initializeUiPropertySearch = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiPropertyIcons)(), jsxForUiPropertySearch = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1);
+      (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiPropertyIcons)(), reactForUiPropertySearch = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxForUiPropertySearch = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1);
     });
   };
 }

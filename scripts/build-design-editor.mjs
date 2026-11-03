@@ -6,20 +6,32 @@ import { fileURLToPath } from 'node:url'
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib'
 import { adaptDesignMath, buildArtifactMath } from './build-artifact-math.mjs'
 import { adaptDesignLayout, buildDesignLayout } from './build-design-layout.mjs'
+import { translateDesign } from './design-copy.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const source = resolve(root, 'third_party/baoyu-design/upstream/claude-design/scripts/editor')
 const output = resolve(root, 'server/assets/design-editor')
 const sha = bytes => createHash('sha256').update(bytes).digest('hex')
 
+/** Keep optional local-server features out of the grant-hosted editor. */
+export function adaptDesignHostCapabilities(source) {
+  const request = ',sendRequest:x=>g.sendRequest(x)'
+  assert.equal(source.split(request).length, 2, 'pinned Design direct agent request capability changed')
+  const controls = /function r\(\{system:y\}\)\{return y===void 0\|\|[\s\S]*?(?=function S\(\))/g
+  const matches = source.match(controls) ?? []
+  assert.equal(matches.length, 1, 'pinned Design local design-system controls changed')
+  assert.ok(matches[0].includes('dc-theme-system-link') && matches[0].includes('(v,{systemKey:y.key})'))
+  return source.replace(request, '').replace(controls, 'function r(){return null}')
+}
+
 /** Use the already prepared embedded runtime; keep the trusted URL as recovery. */
 export function adaptDesignRuntimeUrl(source) {
-  const needle = `let T=document.querySelector('meta[name="'+d+'"]')?.getAttribute("content");if(T)try{return new URL(T,document.baseURI).pathname}`
+  const needle = `let M=document.querySelector('meta[name="'+u+'"]')?.getAttribute("content");if(M)try{return new URL(M,document.baseURI).pathname}`
   assert.equal(source.split(needle).length, 2, 'pinned Design runtime URL hook changed')
-  const selector = 'function C(T){if(!m)return(f?void 0:T.urls?.file)??T.urls?.blob}'
+  const selector = 'function w(M){if(!m)return(f?void 0:M.urls?.file)??M.urls?.blob}'
   assert.equal(source.split(selector).length, 2, 'pinned Design runtime selection hook changed')
   return source.replace(needle, needle.replace('.pathname}', '.href}'))
-    .replace(selector, 'function C(T){return(m?void 0:T.urls?.blob)??(f?void 0:T.urls?.file)}')
+    .replace(selector, 'function w(M){return(m?void 0:M.urls?.blob)??(f?void 0:M.urls?.file)}')
 }
 
 /** The product acknowledges only an already visible, laid-out grant frame.
@@ -27,8 +39,8 @@ export function adaptDesignRuntimeUrl(source) {
  * path, and keep Loading until the real editor and child runtime mount. */
 export function adaptVisibleDesignMount(source) {
   const changes = [
-    ['function W(Y){return Y.flipAt!==void 0?Math.max(0,Y.flipAt+n-Y.now):', 'function W(Y){return Y.flipAt!==void 0?0:'],
-    ['function B(Y){let q=Y.pokedAt', 'function B(Y){if(Y.framed&&Y.revealedAt!==void 0)return Math.max(Y.mountedAt,Y.revealedAt);let q=Y.pokedAt'],
+    ['function K($){return $.flipAt!==void 0?Math.max(0,$.flipAt+n-$.now):', 'function K($){return $.flipAt!==void 0?0:'],
+    ['function U($){let Y=$.pokedAt', 'function U($){if($.framed&&$.revealedAt!==void 0)return Math.max($.mountedAt,$.revealedAt);let Y=$.pokedAt'],
   ]
   for (const [needle, replacement] of changes) {
     assert.equal(source.split(needle).length, 2, 'pinned Design visible mount hook changed')
@@ -57,7 +69,8 @@ export async function buildDesignEditor() {
   const cssName = `design-${sha(css)}.css`
   const scriptPath = /src="\.\/(assets\/[^"/]+\.js)"/.exec(originalHtml)?.[1]
   assert.ok(scriptPath, 'Expected the pinned editor entry')
-  const script = Buffer.from(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptDesignMath(await readFile(resolve(source, scriptPath), 'utf8'), math + layout.guest))), layout.host))
+  const catalog = { ...JSON.parse(await readFile(resolve(root, 'third_party/baoyu-design/host/slides-zh-CN.json'), 'utf8')), ...JSON.parse(await readFile(resolve(root, 'third_party/baoyu-design/host/design-zh-CN.json'), 'utf8')) }
+  const script = Buffer.from(translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptDesignMath(await readFile(resolve(source, scriptPath), 'utf8'), math + layout.guest))), layout.host)), catalog))
   const scriptName = `design-${sha(script)}.js`
   const publicBase = '__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/'
   const runtimePath = 'artifact-type/dc-runtime.js'
@@ -77,8 +90,10 @@ export async function buildDesignEditor() {
   await rm(resolve(output, scriptPath))
   await rm(resolve(output, 'assets', iconPath))
   await rm(resolve(output, runtimePath))
+  // Upstream's local-network sharing/history UI calls server routes this host does not have (/__share, __history).
+  await rm(resolve(output, 'share-ui.js'))
   const integrity = bytes => `sha256-${createHash('sha256').update(bytes).digest('base64')}`
-  const html = originalHtml.replace(`./${cssPath}`, `${publicBase}${cssName}`).replace(`./${scriptPath}`, `${publicBase}${scriptName}`)
+  const html = originalHtml.replace('<html lang="en"', '<html lang="zh-CN"').replace('>Loading…</p>', '>正在加载…</p>').replace(`./${cssPath}`, `${publicBase}${cssName}`).replace(`./${scriptPath}`, `${publicBase}${scriptName}`)
     .replace(`src="${publicBase}${scriptName}"`, `data-lingxi-design-critical src="${publicBase}${scriptName}" integrity="${integrity(script)}"`)
     .replace(`href="${publicBase}${cssName}"`, `data-lingxi-design-critical href="${publicBase}${cssName}" integrity="${integrity(css)}"`)
     .replace(runtimePath, `${publicBase}${runtimeName}`)
@@ -99,7 +114,7 @@ export async function buildDesignEditor() {
     }
   }
   await visit(output)
-  const manifest = { source: relative(root, source), upstreamCommit: 'c15e76ef5134228d2bb5da35652d30d7d6b8a34d',
+  const manifest = { source: relative(root, source), upstreamCommit: '016b39d7fdcc30bfacee31ea5541498ac53921c6',
     math: { sha256: sha(math), bytes: Buffer.byteLength(math) }, layout: { guestBytes: Buffer.byteLength(layout.guest), hostBytes: Buffer.byteLength(layout.host) },
     entry: { file: `assets/${scriptName}`, original: scriptPath },
     runtime: { file: runtimeFile, original: runtimePath },

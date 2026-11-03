@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiEditContextMenu(runtime2) {
   var isMacControlClick, isPlainMousePointer, isContextMenuEditingTarget, jsxCv, EDIT_COMMAND_DEFINITIONS, internalPasteOnlyMessage, isContextMenuKey;
@@ -43,7 +43,17 @@ function installUiEditContextMenu(runtime2) {
     };
   }
   function copySelectionForCommand(command, kind, payload) {
-    return (0, runtime2.copyArtifactToClipboard)(kind, payload) ? !0 : ((0, runtime2.showToast)("操作未完成：" + (command === "cut" ? "cut" : "copied") + ". Press " + (0, runtime2.formatCommandShortcut)(command === "cut" ? "X" : "C") + " instead."), !1);
+    return (0, runtime2.copyArtifactToClipboard)(kind, payload) ? !0 : ((0, runtime2.showToast)(command === "cut" ? (0, runtime2.formatMessage)({
+      defaultMessage: "无法剪切，请改按 {keys}。",
+      id: "oZ9QTsWvR+"
+    }, {
+      keys : (0, runtime2.formatCommandShortcut)( "X")
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage: "无法复制，请改按 {keys}。",
+      id: "z8kb14T86S"
+    }, {
+      keys: (0, runtime2.formatCommandShortcut)( "C")
+    })), !1);
   }
   return bindRuntimeValue(runtime2, "isMacControlClick", () => isMacControlClick, (value) => {
     isMacControlClick = value;
@@ -62,46 +72,91 @@ function installUiEditContextMenu(runtime2) {
   }), () => {
     isMacControlClick = (event) => event.pointerType === "mouse" && event.button === 0 && event.ctrlKey === !0 && (0, runtime2.isApplePlatform)(), isPlainMousePointer = (event) => event.button !== 2 && !(event.ctrlKey && (0, runtime2.isApplePlatform)()) && event.pointerType !== "pen" && event.pointerType !== "touch", isContextMenuEditingTarget = (target) => target?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])') != null, (0, runtime2.initializeUiInputs210)(), jsxCv = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), EDIT_COMMAND_DEFINITIONS = {
       cut: {
-        label: "剪切",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "剪切",
+          id: "6zhcCfobKR"
+        }),
         shortcut: "cmd+x"
       },
       copy: {
-        label: "复制",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "复制",
+          id: "KcdfMmNv8Q"
+        }),
         shortcut: "cmd+c"
       },
       paste: {
-        label: "粘贴",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "粘贴",
+          id: "xwIXeZgj8c"
+        }),
         shortcut: "cmd+v"
       },
       duplicate: {
-        label: "创建副本",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "创建副本",
+          id: "tz9sbJQcgN"
+        }),
         shortcut: "cmd+d"
       },
       front: {
-        label: "置于顶层",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "置于顶层",
+          id: "BSiFMmTht/"
+        }),
         shortcut: "]"
       },
       back: {
-        label: "置于底层",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "置于底层",
+          id: "A9iIvOtcyX"
+        }),
         shortcut: "["
       },
       group: {
-        label: "组合",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "组合",
+          id: "t9C7cnk98O"
+        }),
         shortcut: "cmd+g"
       },
       ungroup: {
-        label: "取消组合",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "取消组合",
+          id: "NNBNcDwX8W"
+        }),
         shortcut: "shift+cmd+g"
       },
+      scale: {
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "缩放…",
+          id: "eUF9F02IrS"
+        }),
+        shortcut: "k"
+      },
       delete: {
-        label: "删除",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "删除",
+          id: "Uv8tTk6JvM"
+        }),
         shortcut: "backspace"
       },
       "select-all": {
-        label: "全选",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "全选",
+          id: "9tRJnwyHS6"
+        }),
         shortcut: "cmd+a"
       }
-    }, internalPasteOnlyMessage = () => ((0, runtime2.usesImmediateModalRelease)() ? "按 " + (0, runtime2.formatCommandShortcut)("V") + " 进行粘贴。" : "") + "此菜单只能粘贴刚在此编辑器中复制或剪切的内容。", isContextMenuKey = (event) => event.key === "ContextMenu" || event.key === "F10" && event.shiftKey;
+    }, internalPasteOnlyMessage = () => (0, runtime2.usesImmediateModalRelease)() ? (0, runtime2.formatMessage)({
+      defaultMessage: "按 {keys} 粘贴。此菜单只能在你于此处复制或剪切后立即粘贴。",
+      id: "5+8oOEnxEl"
+    }, {
+      keys: (0, runtime2.formatCommandShortcut)("V")
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage: "此菜单只能粘贴刚在此编辑器中复制或剪切的内容。",
+      id: "oaBNESNRMe"
+    }), isContextMenuKey = (event) => event.key === "ContextMenu" || event.key === "F10" && event.shiftKey;
   };
 }
 export {

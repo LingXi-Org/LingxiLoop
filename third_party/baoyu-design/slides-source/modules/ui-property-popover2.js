@@ -1,8 +1,12 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiPropertyPopover2(runtime2) {
   var reactdC, jsxcC, PropertyPopoverTrigger;
   function PropertyPopoverPanel({ title, onClose, labelWidth = "3rem", children }) {
+    let closeLabel = (0, runtime2.formatMessage)({
+      defaultMessage: "关闭",
+      id: "9u59UeOhRM"
+    });
     return jsxcC.jsxs("div", {
       role: "dialog",
       "aria-label": typeof title == "string" ? title : void 0,
@@ -25,8 +29,8 @@ function installUiPropertyPopover2(runtime2) {
               size: "sm",
               iconOnly: !0,
               icon: "X",
-              "aria-label": "关闭",
-              tooltip: "关闭",
+              "aria-label": closeLabel,
+              tooltip: closeLabel,
               onClick: onClose
             })
           ]
@@ -51,14 +55,20 @@ function installUiPropertyPopover2(runtime2) {
       onClose,
       children: [
         jsxcC.jsx(runtime2.PropertyRow, {
-          label: "偏移",
+          label: (0, runtime2.formatMessage)({
+            defaultMessage: "偏移",
+            id: "ioGY4cESJ9"
+          }),
           disabled: disabled2,
           onPress: (element) => element.querySelector("input")?.focus(),
           children: jsxcC.jsxs("div", {
             className: "flex min-w-0 flex-1 items-center gap-2",
             children: [
               jsxcC.jsx(runtime2.PropertyNumberInput, {
-                "aria-label": "水平偏移",
+                "aria-label": (0, runtime2.formatMessage)({
+                  defaultMessage: "水平偏移",
+                  id: "tOvEyjx9fO"
+                }),
                 prefix: "X",
                 steppers: !1,
                 value: value.x,
@@ -70,7 +80,10 @@ function installUiPropertyPopover2(runtime2) {
                 ...callback2("x")
               }),
               jsxcC.jsx(runtime2.PropertyNumberInput, {
-                "aria-label": "垂直偏移",
+                "aria-label": (0, runtime2.formatMessage)({
+                  defaultMessage: "垂直偏移",
+                  id: "OwuvBZJI5j"
+                }),
                 prefix: "Y",
                 steppers: !1,
                 value: value.y,
@@ -85,7 +98,10 @@ function installUiPropertyPopover2(runtime2) {
           })
         }),
         jsxcC.jsx(runtime2.NumberPropertyRow, {
-          label: "模糊",
+          label: (0, runtime2.formatMessage)({
+            defaultMessage: "模糊",
+            id: "CFg2mwDQy0"
+          }),
           unit: "px",
           value: value.blur,
           onValue: (input) => input !== void 0 && callback({
@@ -97,7 +113,10 @@ function installUiPropertyPopover2(runtime2) {
           ...callback2("blur")
         }),
         spread && jsxcC.jsx(runtime2.NumberPropertyRow, {
-          label: "扩散",
+          label: (0, runtime2.formatMessage)({
+            defaultMessage: "扩散",
+            id: "WdSuHmK0OJ"
+          }),
           unit: "px",
           value: value.spread ?? 0,
           onValue: (input) => input !== void 0 && callback({
@@ -108,7 +127,10 @@ function installUiPropertyPopover2(runtime2) {
           ...callback2("spread")
         }),
         jsxcC.jsx(runtime2.ColorTextPropertyRow, {
-          label: "颜色",
+          label: (0, runtime2.formatMessage)({
+            defaultMessage: "颜色",
+            id: "F71ivaEfkh"
+          }),
           value: value.color,
           disabled: disabled2,
           swatches,
@@ -143,8 +165,9 @@ function installUiPropertyPopover2(runtime2) {
       children
     });
   }
-  function RemovePropertyButton({ label, verb = "Remove", onClick, disabled: disabled2, disabledReason }) {
-    let value = verb + " " + label.toLowerCase();
+  function RemovePropertyButton({
+    name, label, onClick, disabled: disabled2, disabledReason }) {
+    let value = name ?? label;
     return jsxcC.jsx(runtime2.Button, {
       variant: "ghost",
       iconOnly: !0,
@@ -174,7 +197,12 @@ function installUiPropertyPopover2(runtime2) {
         } : void 0,
         ...props,
         ref: options,
-        "aria-label": label + ": " + text,
+        "aria-label": (0, runtime2.formatMessage)({
+          defaultMessage: "{label}：{brief}",
+          id: "V5QMka2APb"
+        }, { label,
+          brief: text
+        }),
         disabled: disabled2,
         onClick,
         chip: color !== void 0 ? jsxcC.jsx(runtime2.ColorChip, {

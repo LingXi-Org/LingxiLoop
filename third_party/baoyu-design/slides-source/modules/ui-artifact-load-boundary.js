@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiArtifactLoadBoundary(runtime2) {
   var reactGQ, jsxX1, ARTIFACT_LOAD_FAILURE_MESSAGE, ARTIFACT_LOAD_DELAY_MS;
@@ -15,7 +15,10 @@ function installUiArtifactLoadBoundary(runtime2) {
     return jsxX1.jsx("span", {
       className: (0, runtime2.joinClassNames)("inline-flex", className),
       children: jsxX1.jsx(runtime2.Spinner, {
-        label: "正在加载"
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "正在加载",
+          id: "Xdivmp7Kr9"
+        })
       })
     });
   }
@@ -73,7 +76,10 @@ function installUiArtifactLoadBoundary(runtime2) {
                 onClick: () => {
                   ref3.current = !0, doc.save?.();
                 },
-                children: "重试"
+                children: (0, runtime2.formatMessage)({
+                  defaultMessage: "重试",
+                  id: "ckcnai9B6y"
+                })
               })
             ]
           })
@@ -90,7 +96,10 @@ function installUiArtifactLoadBoundary(runtime2) {
   }), bindRuntimeValue(runtime2, "ARTIFACT_LOAD_DELAY_MS", () => ARTIFACT_LOAD_DELAY_MS, (value) => {
     ARTIFACT_LOAD_DELAY_MS = value;
   }), bindRuntimeValue(runtime2, "ArtifactLoadBoundary", () => ArtifactLoadBoundary), () => {
-    (0, runtime2.initializeNumberScrubNoop)(), (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiAnnouncements)(), reactGQ = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxX1 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), ARTIFACT_LOAD_FAILURE_MESSAGE = "The latest content failed to load", ARTIFACT_LOAD_DELAY_MS = 100;
+    (0, runtime2.initializeNumberScrubNoop)(), (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiAnnouncements)(), reactGQ = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxX1 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), ARTIFACT_LOAD_FAILURE_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "最新内容加载失败",
+      id: "Z/7fDOwC1R"
+    }), ARTIFACT_LOAD_DELAY_MS = 100;
   };
 }
 export {

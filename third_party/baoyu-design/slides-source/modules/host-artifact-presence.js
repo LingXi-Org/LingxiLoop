@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installHostArtifactPresence(runtime2) {
-  var MAX_PRESENCE_BYTES, MAX_PRESENCE_FIELDS, MAX_PRESENCE_OBJECTS, MAX_PRESENCE_LABEL_LENGTH, MAX_PRESENCE_TEXT_LENGTH, MAX_PRESENCE_ID_LENGTH, PRESENCE_FIELD_PATTERN, RESERVED_PRESENCE_FIELDS, PRESENCE_ID_PATTERN, UNSAFE_PRESENCE_ID_CHARACTERS, UNSAFE_PRESENCE_LABEL_CHARACTERS, EMPTY_PRESENCE_LABEL_PATTERN, EMOJI_PRESENCE_LABEL_PATTERN;
+  var MAX_PRESENCE_BYTES, MAX_PRESENCE_FIELDS, MAX_PRESENCE_OBJECTS, MAX_PRESENCE_LABEL_LENGTH, MAX_PEER_NAME_LENGTH, MAX_PRESENCE_TEXT_LENGTH, MAX_PRESENCE_ID_LENGTH, PRESENCE_FIELD_PATTERN, RESERVED_PRESENCE_FIELDS, PRESENCE_ID_PATTERN, UNSAFE_PRESENCE_ID_CHARACTERS, UNSAFE_PRESENCE_LABEL_CHARACTERS, EMPTY_PRESENCE_LABEL_PATTERN, EMOJI_PRESENCE_LABEL_PATTERN;
   function isValidPresenceId(id) {
     if (typeof id != "string" || id.length > MAX_PRESENCE_ID_LENGTH || !PRESENCE_ID_PATTERN.test(id))
       return !1;
@@ -20,6 +20,10 @@ function installHostArtifactPresence(runtime2) {
   }
   function isDisallowedPresenceCodepoint(codepoint) {
     return codepoint >= 55296 && codepoint <= 57343 || (codepoint & 65534) === 65534 || codepoint >= 64976 && codepoint <= 65007 || codepoint >= 65520 && codepoint <= 65528 || codepoint >= 917504 && codepoint <= 921599;
+  }
+  function isDroppedPeerNameCharacter(character) {
+    let value = character.codePointAt(0) ?? 0;
+    return isDisallowedPresenceCodepoint(value) && !(value >= 917760 && value <= 917999) || UNSAFE_PRESENCE_LABEL_CHARACTERS.test(character) && !/[<>"`\\]/.test(character);
   }
   function sanitizePresenceLabel(text, maxLength = MAX_PRESENCE_LABEL_LENGTH) {
     let text2 = "", index4 = 0, flag = !1, callback = (input, options) => {
@@ -158,6 +162,8 @@ function installHostArtifactPresence(runtime2) {
     MAX_PRESENCE_OBJECTS = value;
   }), bindRuntimeValue(runtime2, "MAX_PRESENCE_LABEL_LENGTH", () => MAX_PRESENCE_LABEL_LENGTH, (value) => {
     MAX_PRESENCE_LABEL_LENGTH = value;
+  }), bindRuntimeValue(runtime2, "MAX_PEER_NAME_LENGTH", () => MAX_PEER_NAME_LENGTH, (value) => {
+    MAX_PEER_NAME_LENGTH = value;
   }), bindRuntimeValue(runtime2, "MAX_PRESENCE_TEXT_LENGTH", () => MAX_PRESENCE_TEXT_LENGTH, (value) => {
     MAX_PRESENCE_TEXT_LENGTH = value;
   }), bindRuntimeValue(runtime2, "MAX_PRESENCE_ID_LENGTH", () => MAX_PRESENCE_ID_LENGTH, (value) => {
@@ -176,8 +182,8 @@ function installHostArtifactPresence(runtime2) {
     EMPTY_PRESENCE_LABEL_PATTERN = value;
   }), bindRuntimeValue(runtime2, "EMOJI_PRESENCE_LABEL_PATTERN", () => EMOJI_PRESENCE_LABEL_PATTERN, (value) => {
     EMOJI_PRESENCE_LABEL_PATTERN = value;
-  }), bindRuntimeValue(runtime2, "normalizePresenceGlyph", () => normalizePresenceGlyph), bindRuntimeValue(runtime2, "isEmojiTagCodepoint", () => isEmojiTagCodepoint), bindRuntimeValue(runtime2, "isDisallowedPresenceCodepoint", () => isDisallowedPresenceCodepoint), bindRuntimeValue(runtime2, "sanitizePresenceLabel", () => sanitizePresenceLabel), bindRuntimeValue(runtime2, "normalizePresenceObjects", () => normalizePresenceObjects), bindRuntimeValue(runtime2, "normalizePresenceFields", () => normalizePresenceFields), bindRuntimeValue(runtime2, "createArtifactPresence", () => createArtifactPresence), () => {
-    MAX_PRESENCE_BYTES = 3072, MAX_PRESENCE_FIELDS = 20, MAX_PRESENCE_OBJECTS = 5, MAX_PRESENCE_LABEL_LENGTH = 60, MAX_PRESENCE_TEXT_LENGTH = 400, MAX_PRESENCE_ID_LENGTH = 256, PRESENCE_FIELD_PATTERN = /^[A-Za-z_][A-Za-z0-9_-]{0,63}$/, RESERVED_PRESENCE_FIELDS = ["edits"], PRESENCE_ID_PATTERN = /^(?:[A-Za-z0-9_./#:@+!~*'()-]|%[0-9A-Fa-f]{2})*$/, UNSAFE_PRESENCE_ID_CHARACTERS = /[\p{Cc}\p{Co}\p{Cs}]|[^\P{Cf}\u200C\u200D]|["`<>\\\p{Zl}\p{Zp}]/u, UNSAFE_PRESENCE_LABEL_CHARACTERS = /[<>"`\\]|[^\P{Cf}\u200C\u200D]|[\p{Co}\u034F\u115F\u1160\u17B4\u17B5\u2065\u2800\u3164\uFFA0\uFFFC\uFFFD\u{16FE4}\u{1D159}]/u, EMPTY_PRESENCE_LABEL_PATTERN = /^[ \u200C\u200D\p{Variation_Selector}]*$/u, EMOJI_PRESENCE_LABEL_PATTERN = /\p{Extended_Pictographic}/u;
+  }), bindRuntimeValue(runtime2, "normalizePresenceGlyph", () => normalizePresenceGlyph), bindRuntimeValue(runtime2, "isEmojiTagCodepoint", () => isEmojiTagCodepoint), bindRuntimeValue(runtime2, "isDisallowedPresenceCodepoint", () => isDisallowedPresenceCodepoint), bindRuntimeValue(runtime2, "isDroppedPeerNameCharacter", () => isDroppedPeerNameCharacter), bindRuntimeValue(runtime2, "sanitizePresenceLabel", () => sanitizePresenceLabel), bindRuntimeValue(runtime2, "normalizePresenceObjects", () => normalizePresenceObjects), bindRuntimeValue(runtime2, "normalizePresenceFields", () => normalizePresenceFields), bindRuntimeValue(runtime2, "createArtifactPresence", () => createArtifactPresence), () => {
+    MAX_PRESENCE_BYTES = 3072, MAX_PRESENCE_FIELDS = 20, MAX_PRESENCE_OBJECTS = 5, MAX_PRESENCE_LABEL_LENGTH = 60, MAX_PEER_NAME_LENGTH = 40, MAX_PRESENCE_TEXT_LENGTH = 400, MAX_PRESENCE_ID_LENGTH = 256, PRESENCE_FIELD_PATTERN = /^[A-Za-z_][A-Za-z0-9_-]{0,63}$/, RESERVED_PRESENCE_FIELDS = ["edits"], PRESENCE_ID_PATTERN = /^(?:[A-Za-z0-9_./#:@+!~*'()-]|%[0-9A-Fa-f]{2})*$/, UNSAFE_PRESENCE_ID_CHARACTERS = /[\p{Cc}\p{Co}\p{Cs}]|[^\P{Cf}\u200C\u200D]|["`<>\\\p{Zl}\p{Zp}]/u, UNSAFE_PRESENCE_LABEL_CHARACTERS = /[<>"`\\]|[^\P{Cf}\u200C\u200D]|[\p{Co}\u034F\u115F\u1160\u17B4\u17B5\u2065\u2800\u3164\uFFA0\uFFFC\uFFFD\u{16FE4}\u{1D159}]/u, EMPTY_PRESENCE_LABEL_PATTERN = /^[ \u200C\u200D\p{Variation_Selector}]*$/u, EMOJI_PRESENCE_LABEL_PATTERN = /\p{Extended_Pictographic}/u;
   };
 }
 export {

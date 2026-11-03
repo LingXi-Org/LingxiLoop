@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorDialogs(runtime2) {
-  var ReactEditorDialogs, EditorDialogsJsx, pendingEditorDialog, editorDialogSequence, editorDialogSubscribers;
+  var ReactEditorDialogs, EditorDialogsJsx, pendingEditorDialog, editorDialogSequence, editorDialogSubscribers, EDITOR_DIALOG_OK_LABEL, EDITOR_DIALOG_CANCEL_LABEL;
   function notifyEditorDialogSubscribers() {
     for (let value of editorDialogSubscribers)
       value(pendingEditorDialog);
@@ -83,8 +83,11 @@ function installEditorDialogs(runtime2) {
       },
       title: opts.title,
       description: opts.message,
-      confirmLabel: opts.confirmLabel ?? (opts.danger ? "Delete" : "OK"),
-      cancelLabel: opts.cancelLabel ?? "Cancel",
+      confirmLabel: opts.confirmLabel ?? (opts.danger ? (0, runtime2.formatMessage)({
+        defaultMessage: "删除",
+        id : "3xqfaomggQ"
+      }) : EDITOR_DIALOG_OK_LABEL),
+      cancelLabel: opts.cancelLabel ?? EDITOR_DIALOG_CANCEL_LABEL,
       confirmVariant: opts.danger ? "danger" : "primary",
       size: "sm",
       onConfirm: () => resolveEditorDialog(p, !0)
@@ -101,17 +104,20 @@ function installEditorDialogs(runtime2) {
         children: [
           EditorDialogsJsx.jsx(runtime2.Button, {
             onClick: callback2,
-            children: opts.cancelLabel ?? "取消"
+            children: opts.cancelLabel ?? EDITOR_DIALOG_CANCEL_LABEL
           }),
           EditorDialogsJsx.jsx(runtime2.DisabledReasonTooltip, {
             wrapperClassName: "grid",
-            reason: value4 ? "Type something first" : void 0,
+            reason: value4 ? (0, runtime2.formatMessage)({
+              defaultMessage: "请先输入内容",
+              id: "QjdUBAf0se"
+            }) : void 0,
             children: EditorDialogsJsx.jsx(runtime2.Button, {
               variant: "primary",
               disabled: value4,
               "data-testid": "mc-alert-confirm",
               onClick: callback,
-              children: opts.confirmLabel ?? "确定"
+              children: opts.confirmLabel ?? EDITOR_DIALOG_OK_LABEL
             })
           })
         ]
@@ -158,8 +164,18 @@ function installEditorDialogs(runtime2) {
     editorDialogSequence = value;
   }), bindRuntimeValue(runtime2, "editorDialogSubscribers", () => editorDialogSubscribers, (value) => {
     editorDialogSubscribers = value;
-  }), bindRuntimeValue(runtime2, "notifyEditorDialogSubscribers", () => notifyEditorDialogSubscribers), bindRuntimeValue(runtime2, "cancelEditorDialogRequest", () => cancelEditorDialogRequest), bindRuntimeValue(runtime2, "enqueueEditorDialog", () => enqueueEditorDialog), bindRuntimeValue(runtime2, "confirmEditorAction", () => confirmEditorAction), bindRuntimeValue(runtime2, "promptEditorText", () => promptEditorText), bindRuntimeValue(runtime2, "dismissEditorDialog", () => dismissEditorDialog), bindRuntimeValue(runtime2, "resolveEditorDialog", () => resolveEditorDialog), bindRuntimeValue(runtime2, "dismissMatchingEditorDialog", () => dismissMatchingEditorDialog), bindRuntimeValue(runtime2, "EditorDialogLayout", () => EditorDialogLayout), bindRuntimeValue(runtime2, "EditorConfirmDialog", () => EditorConfirmDialog), bindRuntimeValue(runtime2, "EditorPromptDialog", () => EditorPromptDialog), bindRuntimeValue(runtime2, "EditorDialogHost", () => EditorDialogHost), () => {
-    (0, runtime2.initializeUiInputs210)(), ReactEditorDialogs = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), EditorDialogsJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), pendingEditorDialog = null, editorDialogSequence = 1, editorDialogSubscribers = /* @__PURE__ */ new Set();
+  }), bindRuntimeValue(runtime2, "notifyEditorDialogSubscribers", () => notifyEditorDialogSubscribers), bindRuntimeValue(runtime2, "cancelEditorDialogRequest", () => cancelEditorDialogRequest), bindRuntimeValue(runtime2, "enqueueEditorDialog", () => enqueueEditorDialog), bindRuntimeValue(runtime2, "confirmEditorAction", () => confirmEditorAction), bindRuntimeValue(runtime2, "promptEditorText", () => promptEditorText), bindRuntimeValue(runtime2, "dismissEditorDialog", () => dismissEditorDialog), bindRuntimeValue(runtime2, "resolveEditorDialog", () => resolveEditorDialog), bindRuntimeValue(runtime2, "dismissMatchingEditorDialog", () => dismissMatchingEditorDialog), bindRuntimeValue(runtime2, "EDITOR_DIALOG_OK_LABEL", () => EDITOR_DIALOG_OK_LABEL, (value) => {
+    EDITOR_DIALOG_OK_LABEL = value;
+  }), bindRuntimeValue(runtime2, "EDITOR_DIALOG_CANCEL_LABEL", () => EDITOR_DIALOG_CANCEL_LABEL, (value) => {
+    EDITOR_DIALOG_CANCEL_LABEL = value;
+  }), bindRuntimeValue(runtime2, "EditorDialogLayout", () => EditorDialogLayout), bindRuntimeValue(runtime2, "EditorConfirmDialog", () => EditorConfirmDialog), bindRuntimeValue(runtime2, "EditorPromptDialog", () => EditorPromptDialog), bindRuntimeValue(runtime2, "EditorDialogHost", () => EditorDialogHost), () => {
+    (0, runtime2.initializeUiInputs210)(), ReactEditorDialogs = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), EditorDialogsJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), pendingEditorDialog = null, editorDialogSequence = 1, editorDialogSubscribers = /* @__PURE__ */ new Set(), EDITOR_DIALOG_OK_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "确定",
+      id: "wM+6Y3UiAj"
+    }), EDITOR_DIALOG_CANCEL_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "取消",
+      id: "22FwhB5Khd"
+    });
   };
 }
 export {

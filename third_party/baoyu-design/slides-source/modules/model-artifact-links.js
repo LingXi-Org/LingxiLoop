@@ -1,13 +1,13 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installModelArtifactLinks(runtime2) {
-  var artifactAddressHosts, artifactShareKeyPattern, artifactAddressPathPattern, maxBase58ArtifactId, artifactLinkLimits, artifactLinkCardSize, visibleTitleCharacterPattern, artifactTypeLabels, initializeArtifactAddresses, React264, emptyArtifactAnswers, artifactAnswers, artifactAnswerSources, artifactAnswerListeners, initializeArtifactMetadata;
+  var artifactAddressHosts, artifactShareKeyPattern, artifactAddressPathPattern, maxBase58ArtifactId, artifactLinkLimits, artifactLinkCardSize, visibleTitleCharacterPattern, artifactTypeLabels, initializeArtifactAddresses, React263, emptyArtifactAnswers, artifactAnswers, artifactAnswerSources, artifactAnswerListeners, initializeArtifactMetadata;
   const base58ArtifactIdInRange = (id) => [...id].reduce((total, character) => total * BigInt(58) + BigInt("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".indexOf(character)), BigInt(0)) <= maxBase58ArtifactId, isArtifactLinkType = (input) => typeof input == "string" && Object.hasOwn(artifactTypeLabels, input), artifactLinkTypeLabel = (link, answer) => {
     let kind = answer?.type ?? link.kind;
-    return (kind === void 0 ? void 0 : artifactTypeLabels[kind]) ?? "Artifact";
+    return (kind === void 0 ? void 0 : artifactTypeLabels[kind]) ?? "作品";
   }, stripArtifactAddressQuery = (href) => href.split("?")[0] ?? href, artifactLinkQuietLabel = (link, answer) => (answer?.title ?? link.title) === void 0 ? stripArtifactAddressQuery(link.href).replace("https://", "") : artifactLinkTypeLabel(link, answer), isArtifactMetadataCapability = (input) => (0, runtime2.capabilityHasMethod)("metadata")(input) && "metadata" in input, publishArtifactAnswers = (answers, source = artifactAnswerSources, replace = !0) => {
     replace && artifactAnswerSources.delete(source), answers.size > 0 ? artifactAnswerSources.set(source, answers) : artifactAnswerSources.delete(source), artifactAnswers = new Map([...artifactAnswerSources.values()].flatMap((entry) => [...entry])), artifactAnswerListeners.forEach((listener) => listener());
-  }, subscribeArtifactAnswers = (listener) => (artifactAnswerListeners.add(listener), () => void artifactAnswerListeners.delete(listener)), useArtifactAnswer = (href) => React264.useSyncExternalStore(subscribeArtifactAnswers, () => artifactAnswers, () => artifactAnswers).get(href);
+  }, subscribeArtifactAnswers = (listener) => (artifactAnswerListeners.add(listener), () => void artifactAnswerListeners.delete(listener)), useArtifactAnswer = (href) => React263.useSyncExternalStore(subscribeArtifactAnswers, () => artifactAnswers, () => artifactAnswers).get(href);
   function normalizeArtifactAddressUrl(input) {
     let url;
     try {
@@ -78,8 +78,8 @@ function installModelArtifactLinks(runtime2) {
     };
   }
   function useArtifactLinkMetadata(hrefs) {
-    let poller = React264.useRef(null);
-    poller.current ??= createArtifactMetadataPoller(() => (0, runtime2.getOrLoadHostCapability)("artifact", isArtifactMetadataCapability), (answers, replace) => publishArtifactAnswers(answers, poller, replace)), React264.useEffect(() => poller.current?.links(hrefs), [hrefs]), React264.useEffect(() => () => poller.current?.links([]), []), React264.useEffect(() => {
+    let poller = React263.useRef(null);
+    poller.current ??= createArtifactMetadataPoller(() => (0, runtime2.getOrLoadHostCapability)("artifact", isArtifactMetadataCapability), (answers, replace) => publishArtifactAnswers(answers, poller, replace)), React263.useEffect(() => poller.current?.links(hrefs), [hrefs]), React263.useEffect(() => () => poller.current?.links([]), []), React263.useEffect(() => {
       let onVisibilityChange = () => void (document.visibilityState === "visible" && poller.current?.cameBack());
       return document.addEventListener("visibilitychange", onVisibilityChange), () => document.removeEventListener("visibilitychange", onVisibilityChange);
     }, []);
@@ -108,14 +108,14 @@ function installModelArtifactLinks(runtime2) {
         w: 320,
         h: 56
       }, visibleTitleCharacterPattern = /[\p{L}\p{N}\p{S}\p{P}]/u, artifactTypeLabels = {
-        slides: "Slide deck",
-        motion: "Motion",
-        doc: "Doc",
-        design: "Design",
-        dashboard: "Dashboard"
+        slides: "演示文稿",
+        motion: "动画",
+        doc: "文档",
+        design: "设计",
+        dashboard: "仪表板"
       };
     }), initializeArtifactMetadata = (0, runtime2.initializeOnce)(() => {
-      initializeArtifactAddresses(), React264 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), emptyArtifactAnswers = /* @__PURE__ */ new Map(), artifactAnswers = emptyArtifactAnswers, artifactAnswerSources = /* @__PURE__ */ new Map(), artifactAnswerListeners = /* @__PURE__ */ new Set();
+      initializeArtifactAddresses(), React263 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), emptyArtifactAnswers = /* @__PURE__ */ new Map(), artifactAnswers = emptyArtifactAnswers, artifactAnswerSources = /* @__PURE__ */ new Map(), artifactAnswerListeners = /* @__PURE__ */ new Set();
     });
   };
 }

@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { isRecord, bindRuntimeValue } from "../module-helpers.js";
 function installDesignSystemColorAnalysis(runtime2) {
   const HEX_COLOR_PATTERN = /^#([0-9a-f]{6})([0-9a-f]{2})?$/;

@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorSlideRail(runtime2) {
-  var SlideRailJsx, INHERIT_RAIL_THUMB_WIDTH_CLASS, RAIL_THUMB_DIMENSIONS_STYLE, READ_ONLY_PRESENTATION_MESSAGE, SLIDE_ALREADY_AT_DESTINATION_MESSAGE, SELECT_ONE_SLIDE_TO_COPY_LINK_MESSAGE, UNSKIP_SLIDE_LABEL, HIDE_SLIDE_THUMBNAILS_LABEL, ADD_SLIDE_LABEL, RAIL_COLUMN_WIDTH_CLASS, RAIL_COLUMN_THUMB_WIDTH, getRailScrollButtonPadding, preventRailMouseDownDefault, getRailScrollBehavior, RAIL_HOVER_ACTIONS_CLASS, RAIL_PAGE_BUTTON_CLASS, RAIL_THUMB_BORDER_CLASS, RAIL_PAGE_GRADIENT_CLASS, RAIL_SELECTION_RING_CLASS, THUMBNAIL_BADGE_CLASS, THUMBNAIL_BADGE_SURFACE_CLASS, THUMBNAIL_ICON_BADGE_CLASS, THUMBNAIL_ACTION_BUTTON_CLASS, SKIPPED_THUMBNAIL_ACTION_OFFSET_CLASS, SLIDE_VIEW_SWITCH_NAVIGATION_KEYS, disabledActionFromReason;
+  var SlideRailJsx, INHERIT_RAIL_THUMB_WIDTH_CLASS, RAIL_THUMB_DIMENSIONS_STYLE, READ_ONLY_PRESENTATION_MESSAGE, SLIDE_ALREADY_AT_DESTINATION_MESSAGE, SELECT_ONE_SLIDE_TO_COPY_LINK_MESSAGE, UNSKIP_SLIDE_LABEL, HIDE_SLIDE_THUMBNAILS_LABEL, RAIL_SHOW_THUMBNAILS_LABEL, ADD_SLIDE_LABEL, RAIL_COLUMN_WIDTH_CLASS, RAIL_COLUMN_THUMB_WIDTH, getRailScrollButtonPadding, preventRailMouseDownDefault, getRailScrollBehavior, RAIL_HOVER_ACTIONS_CLASS, RAIL_PAGE_BUTTON_CLASS, RAIL_THUMB_BORDER_CLASS, RAIL_PAGE_GRADIENT_CLASS, RAIL_SELECTION_RING_CLASS, THUMBNAIL_BADGE_CLASS, THUMBNAIL_BADGE_SURFACE_CLASS, THUMBNAIL_ICON_BADGE_CLASS, THUMBNAIL_ACTION_BUTTON_CLASS, SKIPPED_THUMBNAIL_ACTION_OFFSET_CLASS, RAIL_TOOLBAR_STACK_GAP_CLASS, RAIL_TOOLBAR_CARD_MIN_WIDTH_CLASS, SLIDE_VIEW_SWITCH_NAVIGATION_KEYS, disabledActionFromReason;
   function SlideCreationRailPlaceholder({ column }) {
     return SlideRailJsx.jsxs("div", {
       "aria-hidden": "true",
@@ -74,15 +74,39 @@ function installEditorSlideRail(runtime2) {
   }
   function formatSlideThumbnailLabel(slide, index4, thumbnail, openComments = 0) {
     let name = (0, runtime2.slideDisplayLabel)(slide);
-    return "幻灯片 " + String(index4 + 1) + (slide.skipped === !0 ? " (skipped)" : "") + (thumbnail ? "（封面缩略图）" : "") + (name !== void 0 ? ": " + name : "") + formatOpenCommentCount(openComments);
+    return(0, runtime2.slideAccessibleLabel)({
+      n:index4 + 1,
+      skipped:slide.skipped === !0,
+      cover :thumbnail,
+      title : name,
+      comments :openComments
+    });
   }
-  function SlideThumbnailRail({ slides, look, assets, currentId, onSelect, onAdd, onDuplicate, onCopy, onDelete, onMove, onDuplicateAt, onToggleSkip, onSetCover, onCopyLink, coverId, heldSlide, onCollapse, onEnterSlide, gridOpen = !1, onSetGridOpen, notesOpen = !1, onToggleNotes, rootRef, readOnly = !1, commentCounts, peersDeck, resize, pending, personPaged = 0, actionsDensity, placement = "bottom", overPage = !1, actionRow = !0, several }) {
+  function SlideThumbnailRail({ slides, look, assets, currentId, onSelect, onAdd, onDuplicate, onCopy, onDelete, onMove, onDuplicateAt, onToggleSkip, onSetCover, onCopyLink, coverId, heldSlide, onCollapse, onEnterSlide, gridOpen = !1, onSetGridOpen, notesOpen = !1, onToggleNotes, rootRef, readOnly = !1, commentCounts, peersDeck, resize, pending, personPaged = 0, actionsDensity, placement = "bottom", overPage = !1,
+    arriving = !1, actionRow = !0, several }) {
     let column = placement === "left", selection = several?.selection, quiet = several?.quiet, isSelected = (id) => selection?.has(id) ?? id === currentId, selectedCount = selection?.selected.length ?? 1, lastCountRef = runtime2.ReactGrid.useRef(selectedCount);
     runtime2.ReactGrid.useEffect(() => {
       let previous = lastCountRef.current;
-      lastCountRef.current = selectedCount, previous !== selectedCount && (selectedCount > 1 ? (0, runtime2.announceLiveMessage)((selectedCount === slides.length ? "All " : "") + String(selectedCount) + " 页已选中", {
+      lastCountRef.current = selectedCount, previous !== selectedCount && (selectedCount > 1 ? (0, runtime2.announceLiveMessage)(selectedCount === slides.length ? (0, runtime2.formatMessage)({
+        defaultMessage: "已选择全部 {count} 页幻灯片",
+        id: "YK8b8IZmOp"
+      }, {
+        n: selectedCount,
+        count: String(selectedCount)
+      }) : (0, runtime2.formatMessage)({
+        defaultMessage: "已选择 {count} 页幻灯片",
+        id: "fxSd+JV5hk"
+      }, {
+        n: selectedCount,
+        count: String(selectedCount)
+      }), {
         ifIdle: !0
-      }) : previous > 1 && currentId !== null && quiet !== !0 && (0, runtime2.announceLiveMessage)("仅幻灯片 " + String(callback(currentId, slides.findIndex((slide) => slide.id === currentId)) + 1) + " selected", {
+      }) : previous > 1 && currentId !== null && quiet !== !0 && (0, runtime2.announceLiveMessage)((0, runtime2.formatMessage)({
+        defaultMessage: "仅选择了第 {n} 页",
+        id: "VYPM1wtr5g"
+      }, {
+        n: String(callback(currentId, slides.findIndex((slide) => slide.id === currentId)) + 1)
+      }), {
         ifIdle: !0
       }));
     }, [selectedCount, slides, currentId, quiet]);
@@ -390,16 +414,21 @@ function installEditorSlideRail(runtime2) {
     });
     return SlideRailJsx.jsxs("aside", {
       ref: callback5,
-      "data-slides-rail-panel": column && !overPage ? "" : void 0,
+      "data-slides-rail-panel": column && !overPage && !arriving ? "" : void 0,
+      "data-slides-rail-arriving": column && arriving ? "" : void 0,
+      inert: column && arriving,
       "data-slides-rail-drag": value4 !== null ? "" : void 0,
-      className: (0, runtime2.joinClassNames)("relative flex shrink-0 flex-col border-border-line", !overPage && "bg-panel", "pb-[var(--sl-safe-b,0px)]", column ? (0, runtime2.joinClassNames)(RAIL_COLUMN_WIDTH_CLASS, "h-full min-h-0", !overPage && "border-r") : "w-full border-t"),
+      className: (0, runtime2.joinClassNames)("relative flex shrink-0 flex-col border-border-line", !overPage && "bg-panel", "pb-[var(--sl-safe-b,0px)]", column ? (0, runtime2.joinClassNames)(RAIL_COLUMN_WIDTH_CLASS, "h-full min-h-0 border-r") : "w-full border-t"),
       style: {
         [runtime2.RAIL_THUMB_WIDTH_CSS_VARIABLE]: thumbW
       },
       children: [
         resizeOptions ? SlideRailJsx.jsx(runtime2.PanelResizeHandle, {
           name: "rail",
-          label: "调整幻灯片缩略图大小",
+          label: (0, runtime2.formatMessage)({
+            defaultMessage: "调整幻灯片缩略图大小",
+            id: "ROvBGkBLR/"
+          }),
           now: thumbW,
           min: runtime2.MIN_RAIL_THUMB_WIDTH,
           max: maxW,
@@ -429,7 +458,7 @@ function installEditorSlideRail(runtime2) {
               ref: ref5,
               ...value3 ? {
                 role: "listbox",
-                "aria-label": "演示文稿",
+                "aria-label": runtime2.SLIDES_LIST_LABEL,
                 "aria-orientation": column ? "vertical" : "horizontal",
                 "aria-multiselectable": selection !== void 0 ? !0 : void 0
               } : {
@@ -561,7 +590,7 @@ function installEditorSlideRail(runtime2) {
                                 onUnskip: () => onToggleSkip(input.id)
                               }) : null,
                               SlideRailJsx.jsx(ThumbnailActionsButton, {
-                                label: multiIds.includes(input.id) ? "操作：" + String(multiIds.length) + " 页幻灯片" : "幻灯片 " + String(callback(input.id, options) + 1) + "操作",
+                                label: multiIds.includes(input.id) ? (0, runtime2.slidesActionsLabel)(multiIds.length) : (0, runtime2.slideActionsLabel)(callback(input.id, options) + 1),
                                 current: input.id === currentId,
                                 expanded: value8?.id === input.id,
                                 skipped: input.skipped === !0,
@@ -622,7 +651,8 @@ function installEditorSlideRail(runtime2) {
         SlideRailJsx.jsx(runtime2.ContextMenuPopup, {
           at: value8 && value19 >= 0 ? value8 : null,
           anchor: value8?.tap ? "tap" : "point",
-          "aria-label": value19 >= 0 && value8 ? menuIds.length > 1 ? "操作：" + String(menuIds.length) + " 页幻灯片" : "幻灯片 " + String(callback(value8.id, value19) + 1) + "操作" : void 0,
+          "aria-label": value19 >= 0 && value8 ? menuIds.length > 1 ? (0, runtime2.slidesActionsLabel)(menuIds.length) : (0, runtime2.slideActionsLabel)(callback(value8.id, value19) + 1) : void 0,
+          popupAttrs: runtime2.SLIDE_MENU_POPUP_ATTRS,
           focusFirstItem: value8?.keyboard === !0,
           onClose: callback15,
           children: value8 && value19 >= 0 ? SlideRailJsx.jsx(SlideContextMenu, {
@@ -670,7 +700,13 @@ function installEditorSlideRail(runtime2) {
         SlideRailJsx.jsx("button", {
           type: "button",
           tabIndex: -1,
-          "aria-label": dir === -1 ? "向左滚动幻灯片" : "向右滚动幻灯片",
+          "aria-label": dir === -1 ? (0, runtime2.formatMessage)({
+            defaultMessage: "向左滚动幻灯片",
+            id: "OM6+kksHzV"
+          }) : (0, runtime2.formatMessage)({
+            defaultMessage : "向右滚动幻灯片",
+            id: "+/ecx36OYa"
+          }),
           onMouseDown: preventRailMouseDownDefault,
           onClick: () => onPage(dir),
           className: (0, runtime2.joinClassNames)(RAIL_PAGE_BUTTON_CLASS, dir === -1 ? "left-0" : "right-0"),
@@ -709,9 +745,6 @@ function installEditorSlideRail(runtime2) {
       style,
       children: value > 9 ? "9+" : value
     });
-  }
-  function formatOpenCommentCount(count) {
-    return count > 0 ? ", " + String(count) + " 条未解决评论" : "";
   }
   function SkippedSlideBadge({ why, onUnskip, style }) {
     let value = why === void 0;
@@ -779,7 +812,7 @@ function installEditorSlideRail(runtime2) {
     });
   }
   function SlideRailToolbar({ readOnly, onAdd, notesOpen = !1, onToggleNotes, notesDisabledReason, gridOpen = !1, slideShortcut, canvasShortcut = gridOpen ? void 0 : "shift+cmd+0", onSetGridOpen, onCollapse, collapseDisabledReason, density = "compact", placement = "bottom", sidebar }) {
-    let beside = placement !== "bottom", collapseButton = onCollapse && collapseDisabledReason !== void 0 ? SlideRailJsx.jsx(runtime2.Button, {
+    let beside = placement !== "bottom", inCard = placement === "card", seat = inCard ? "" : void 0, collapseButton = onCollapse && collapseDisabledReason !== void 0 ? SlideRailJsx.jsx(runtime2.Button, {
       iconOnly: !0,
       variant: "ghost",
       icon: beside ? "Sidebar" : "CaretDown",
@@ -798,26 +831,29 @@ function installEditorSlideRail(runtime2) {
       iconOnly: !0,
       variant: "ghost",
       icon: "Sidebar",
-      "aria-label": (0, runtime2.formatMessage)({
-        defaultMessage: "显示幻灯片缩略图",
-        id: "ypdKDA1W5l"
-      }),
+      "aria-label": RAIL_SHOW_THUMBNAILS_LABEL,
       "data-slides-rail-show": "",
+      disabled: "off" in sidebar,
+      disabledReason: "off" in sidebar ? sidebar.off: null,
+      ..."off" in sidebar ? {} : {
       onClick: sidebar.onShow,
       onPointerEnter: sidebar.onPointerEnter,
       onPointerLeave: sidebar.onPointerLeave
+    }
     }) : null;
     return SlideRailJsx.jsx(runtime2.CdsRoot, {
       density,
       className: "contents",
       children: SlideRailJsx.jsxs("div", {
         "data-rail-actions": "",
-        className: (0, runtime2.joinClassNames)("flex items-center", beside ? (0, runtime2.joinClassNames)("pointer-coarse:gap-1", placement === "left" && "pointer-coarse:flex-wrap") : "justify-between", placement === "left" ? "pt-4 pb-2 pl-4 pe-lg pointer-coarse:pt-[17px] pointer-coarse:pl-[17px] pointer-coarse:pe-0" : placement === "bottom" && "px-2 pt-1.5 pb-1"),
+        "data-tb-seat": seat,
+        className: (0, runtime2.joinClassNames)("flex items-center", beside ? (0, runtime2.joinClassNames)(RAIL_TOOLBAR_STACK_GAP_CLASS, "justify-between pointer-coarse:justify-start", placement === "left" && "pointer-coarse:flex-wrap", inCard && RAIL_TOOLBAR_CARD_MIN_WIDTH_CLASS) : "justify-between", placement === "left" ? "pt-4 pb-4 pl-4 pe-lg pointer-coarse:pt-[17px] pointer-coarse:pb-2 pointer-coarse:pl-[17px] pointer-coarse:pe-0" : placement === "bottom" && "px-2 pt-1.5 pb-1"),
         children: [
           SlideRailJsx.jsxs("div", {
-            className: (0, runtime2.joinClassNames)("flex items-center", beside ? "pointer-coarse:gap-1" : "gap-1"),
+            "data-tb-seat": seat,
+            className: (0, runtime2.joinClassNames)("flex items-center", beside ? RAIL_TOOLBAR_STACK_GAP_CLASS : "gap-1"),
             children: [
-              placement === "card" ? showButton : beside ? collapseButton : null,
+              inCard ? showButton : beside ? collapseButton : null,
               readOnly ? null : SlideRailJsx.jsx(runtime2.TooltipWrapper, {
                 tip: ADD_SLIDE_LABEL,
                 children: SlideRailJsx.jsx(runtime2.Button, {
@@ -834,7 +870,7 @@ function installEditorSlideRail(runtime2) {
                   iconOnly: !0,
                   variant: "ghost",
                   icon: "BookText",
-                  "aria-label": "演讲者备注",
+                  "aria-label": runtime2.SPEAKER_NOTES_TOGGLE_LABEL,
                   pressed: notesOpen,
                   disabled: !0,
                   onClick: onToggleNotes
@@ -843,7 +879,7 @@ function installEditorSlideRail(runtime2) {
                 iconOnly: !0,
                 variant: "ghost",
                 icon: "BookText",
-                "aria-label": "演讲者备注",
+                "aria-label": runtime2.SPEAKER_NOTES_TOGGLE_LABEL,
                 tooltip: notesOpen ? runtime2.HIDE_SPEAKER_NOTES_LABEL : runtime2.SHOW_SPEAKER_NOTES_LABEL,
                 pressed: notesOpen,
                 onClick: onToggleNotes
@@ -851,6 +887,7 @@ function installEditorSlideRail(runtime2) {
             ]
           }),
           SlideRailJsx.jsxs("div", {
+            "data-tb-seat": seat,
             className: "flex items-center gap-1.5",
             children: [
               onSetGridOpen ? SlideRailJsx.jsx(SlidesViewSwitch, {
@@ -890,7 +927,10 @@ function installEditorSlideRail(runtime2) {
           event.key === "Enter" && !event.shiftKey && (event.preventDefault(), event.stopPropagation(), event.repeat || value.click());
       },
       children: SlideRailJsx.jsx(runtime2.SegmentedControl, {
-        "aria-label": "视图",
+        "aria-label": (0, runtime2.formatMessage)({
+          defaultMessage: "视图",
+          id: "NCTk8Je56Q"
+        }),
         segments: [
           {
             value: "slide",
@@ -1009,7 +1049,13 @@ function installEditorSlideRail(runtime2) {
             id: "U4hHhcy4Ph"
           }) : void 0)),
           onClick: via(() => onMove(id, index4 - 1)),
-          children: column ? "上移" : "左移"
+          children: column ? (0, runtime2.formatMessage)({
+            defaultMessage: "上移",
+            id: "z5LoL21TvO"
+          }) : (0, runtime2.formatMessage)({
+            defaultMessage : "左移",
+            id: "jzR9AbKuO+"
+          })
         }),
         SlideRailJsx.jsx(runtime2.Menu.Item, {
           ...disabledActionFromReason(readOnly ? READ_ONLY_PRESENTATION_MESSAGE : value6 ?? (index4 >= count - 1 ? (0, runtime2.formatMessage)({
@@ -1017,7 +1063,13 @@ function installEditorSlideRail(runtime2) {
             id: "kdTtnSEm95"
           }) : void 0)),
           onClick: via(() => onMove(id, index4 + 1)),
-          children: column ? "下移" : "右移"
+          children: column ? (0, runtime2.formatMessage)({
+            defaultMessage: "下移",
+            id: "94CgHRct3Y"
+          }) : (0, runtime2.formatMessage)({
+            defaultMessage : "右移",
+            id: "hiXagVcId/"
+          })
         }),
         SlideRailJsx.jsx(runtime2.Menu.Separator, {}),
         SlideRailJsx.jsx(runtime2.Menu.Item, {
@@ -1054,6 +1106,12 @@ function installEditorSlideRail(runtime2) {
     UNSKIP_SLIDE_LABEL = value;
   }), bindRuntimeValue(runtime2, "HIDE_SLIDE_THUMBNAILS_LABEL", () => HIDE_SLIDE_THUMBNAILS_LABEL, (value) => {
     HIDE_SLIDE_THUMBNAILS_LABEL = value;
+  }), bindRuntimeValue(runtime2, "RAIL_SHOW_THUMBNAILS_LABEL", () => RAIL_SHOW_THUMBNAILS_LABEL, (value) => {
+    RAIL_SHOW_THUMBNAILS_LABEL = value;
+  }), bindRuntimeValue(runtime2, "RAIL_TOOLBAR_STACK_GAP_CLASS", () => RAIL_TOOLBAR_STACK_GAP_CLASS, (value) => {
+    RAIL_TOOLBAR_STACK_GAP_CLASS = value;
+  }), bindRuntimeValue(runtime2, "RAIL_TOOLBAR_CARD_MIN_WIDTH_CLASS", () => RAIL_TOOLBAR_CARD_MIN_WIDTH_CLASS, (value) => {
+    RAIL_TOOLBAR_CARD_MIN_WIDTH_CLASS = value;
   }), bindRuntimeValue(runtime2, "ADD_SLIDE_LABEL", () => ADD_SLIDE_LABEL, (value) => {
     ADD_SLIDE_LABEL = value;
   }), bindRuntimeValue(runtime2, "RAIL_COLUMN_WIDTH_CLASS", () => RAIL_COLUMN_WIDTH_CLASS, (value) => {
@@ -1082,7 +1140,7 @@ function installEditorSlideRail(runtime2) {
     THUMBNAIL_BADGE_SURFACE_CLASS = value;
   }), bindRuntimeValue(runtime2, "THUMBNAIL_ICON_BADGE_CLASS", () => THUMBNAIL_ICON_BADGE_CLASS, (value) => {
     THUMBNAIL_ICON_BADGE_CLASS = value;
-  }), bindRuntimeValue(runtime2, "SlideCommentCountBadge", () => SlideCommentCountBadge), bindRuntimeValue(runtime2, "formatOpenCommentCount", () => formatOpenCommentCount), bindRuntimeValue(runtime2, "THUMBNAIL_ACTION_BUTTON_CLASS", () => THUMBNAIL_ACTION_BUTTON_CLASS, (value) => {
+  }), bindRuntimeValue(runtime2, "SlideCommentCountBadge", () => SlideCommentCountBadge), bindRuntimeValue(runtime2, "THUMBNAIL_ACTION_BUTTON_CLASS", () => THUMBNAIL_ACTION_BUTTON_CLASS, (value) => {
     THUMBNAIL_ACTION_BUTTON_CLASS = value;
   }), bindRuntimeValue(runtime2, "SKIPPED_THUMBNAIL_ACTION_OFFSET_CLASS", () => SKIPPED_THUMBNAIL_ACTION_OFFSET_CLASS, (value) => {
     SKIPPED_THUMBNAIL_ACTION_OFFSET_CLASS = value;
@@ -1112,10 +1170,13 @@ function installEditorSlideRail(runtime2) {
     }), HIDE_SLIDE_THUMBNAILS_LABEL = (0, runtime2.formatMessage)({
       defaultMessage: "隐藏幻灯片缩略图",
       id: "mVZsYVZwNi"
+    }), RAIL_SHOW_THUMBNAILS_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "显示幻灯片缩略图",
+      id: "ypdKDA1W5l"
     }), ADD_SLIDE_LABEL = (0, runtime2.formatMessage)({
       defaultMessage: "添加幻灯片",
       id: "V8HonhGReX"
-    }), THUMBNAIL_BADGE_CLASS = "flex min-w-4 items-center justify-center gap-0.5 px-1 text-[9px] leading-4", THUMBNAIL_BADGE_SURFACE_CLASS = "rounded-sm bg-panel/90 shadow-sm ring-1 ring-border-line", THUMBNAIL_ICON_BADGE_CLASS = "flex h-4 w-4 items-center justify-center", THUMBNAIL_ACTION_BUTTON_CLASS = "h-7 w-6 pointer-coarse:h-10 pointer-coarse:w-10", SKIPPED_THUMBNAIL_ACTION_OFFSET_CLASS = "[--more-shift:1.5rem] pointer-coarse:[--more-shift:2.5rem]", SLIDE_VIEW_SWITCH_NAVIGATION_KEYS = {
+    }), THUMBNAIL_BADGE_CLASS = "flex min-w-4 items-center justify-center gap-0.5 px-1 text-[9px] leading-4", THUMBNAIL_BADGE_SURFACE_CLASS = "rounded-sm bg-panel/90 shadow-sm ring-1 ring-border-line", THUMBNAIL_ICON_BADGE_CLASS = "flex h-4 w-4 items-center justify-center", THUMBNAIL_ACTION_BUTTON_CLASS = "h-7 w-6 pointer-coarse:h-10 pointer-coarse:w-10", SKIPPED_THUMBNAIL_ACTION_OFFSET_CLASS = "[--more-shift:1.5rem] pointer-coarse:[--more-shift:2.5rem]", RAIL_TOOLBAR_STACK_GAP_CLASS = "pointer-coarse:gap-1 [[data-cds-fizzy-lake~=panels]_&]:gap-1", RAIL_TOOLBAR_CARD_MIN_WIDTH_CLASS = "min-w-[calc(11rem-17px)]", SLIDE_VIEW_SWITCH_NAVIGATION_KEYS = {
       ArrowLeft: "prev",
       ArrowUp: "prev",
       ArrowRight: "next",

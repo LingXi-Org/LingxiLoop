@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDeliveryPdfOptions(runtime2) {
   var ReactPdfOptions, PdfOptionsJsx, DEFAULT_PDF_EXPORT_OPTIONS, PDF_EXPORT_QUALITY_OPTIONS, pendingPdfOptionsRequest, pdfOptionsRequestSequence, pdfOptionsSubscribers, preventRepeatedExportDialogActivation;
@@ -37,7 +37,7 @@ function installDeliveryPdfOptions(runtime2) {
   function PdfExportOptionsDialog({ p, warning, notesAvailable }) {
     let [value, value2] = ReactPdfOptions.useState(p.ask.defaults ?? DEFAULT_PDF_EXPORT_OPTIONS), ref = ReactPdfOptions.useRef(null), [value3] = ReactPdfOptions.useState(() => document.hasFocus() ? captureExportDialogReturnFocus() : []), callback = () => document.hasFocus() && value3.find((input) => input.isConnected) || !1, [value4, value5] = ReactPdfOptions.useState(warning);
     warning !== void 0 && value4 !== warning && value5(warning);
-    let value6 = warning !== void 0 ? warning.title + ". " + warning.message : value4?.cleared;
+    let value6 = warning !== void 0 ? warning.line : value4?.cleared;
     return PdfOptionsJsx.jsx(runtime2.DialogComponents.Root, {
       open: !0,
       onOpenChange: (input) => {

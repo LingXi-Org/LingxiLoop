@@ -88,8 +88,8 @@ The required source-form notice and license URL are preserved in both files.
 
 The Design and Slides artifacts vendor `skills/claude-design` and
 `skills/claude-slides` from
-[JimLiu/baoyu-design](https://github.com/JimLiu/baoyu-design/tree/c15e76ef5134228d2bb5da35652d30d7d6b8a34d)
-at commit `c15e76ef5134228d2bb5da35652d30d7d6b8a34d` (v2.1.0), byte for byte,
+[JimLiu/baoyu-design](https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6)
+at commit `016b39d7fdcc30bfacee31ea5541498ac53921c6` (v2.8.0), byte for byte,
 under `third_party/baoyu-design/upstream/`. `third_party/baoyu-design/manifest.json`
 records every file's upstream path, size, SHA-256 and Git blob SHA-1.
 
@@ -101,7 +101,7 @@ claude.ai Design and Slides artifact types. The editors' bundled dependencies
 keep their own licenses in `scripts/editor/third-party-licenses.txt` and
 `scripts/editor/node/third-party-licenses.txt` under each vendored skill.
 
-The complete 319-file baoyu-design distribution is retained and inventoried in
+The complete 542-file baoyu-design distribution is retained and inventoried in
 `third_party/baoyu-design/complete-manifest.json`; remaining files are under
 `distribution/`. The Slides editor is rebuilt from recovered named application
 modules in `slides-source/`, with the original MIT and dependency licenses.

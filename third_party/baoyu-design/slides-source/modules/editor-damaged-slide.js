@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorDamagedSlide(runtime2) {
   var ReactDamagedSlide, DIAGNOSTIC_SLIDE_ID_PATTERN, SLIDE_DIAGNOSTIC_SELECTION_MAX_CHARS, DamagedSlideJsx, DAMAGED_SLIDE_MESSAGE, UNREADABLE_SLIDE_MESSAGE, SLIDE_REPAIR_REQUEST_TIMEOUT_MS, VIEW_ONLY_SLIDE_REPAIR_MESSAGE;
@@ -15,16 +15,18 @@ The deck’s title, from its saved document:
 
 ` + (0, runtime2.wrapUntrustedArtifactText)("diagnostic text from the page (it can quote the slide’s own content)", (0, runtime2.truncateUtf16Safely)(diagnostic, SLIDE_DIAGNOSTIC_SELECTION_MAX_CHARS));
   }
-  function askAgentToRepairSlide(context, diagnostic, triggerElement) {
-    let prompt = buildSlideRepairPrompt(context, diagnostic);
-    return triggerElement === null ? (0, runtime2.suggestPromptOrCopy)(prompt) : (0, runtime2.sendOrSuggestToAgent)({
+  function askAgentToRepairSlide(context, diagnostic) {
+    return{
       selection: {
         label: "幻灯片问题",
         text: (0, runtime2.truncateUtf16Safely)(diagnostic, SLIDE_DIAGNOSTIC_SELECTION_MAX_CHARS)
       },
       request: buildSlideDiagnosticRequest(context, "The viewer", diagnostic === runtime2.SLIDE_READ_FAILED_DIAGNOSTIC),
-      fallbackPrompt: prompt
-    }, triggerElement);
+      fallbackPrompt: buildSlideRepairPrompt(context, diagnostic)
+    };
+    }
+  function sendSlideRepairRequest(context, diagnostic, triggerElement) {
+    return triggerElement === null ? (0, runtime2.suggestPromptOrCopy)(buildSlideRepairPrompt(context, diagnostic)) : (0, runtime2.sendOrSuggestToAgent)(askAgentToRepairSlide(context, diagnostic), triggerElement);
   }
   function DamagedSlideNotice({ slideId, scope, deckTitle, reason, diagnostic, canAsk, className }) {
     let ref = ReactDamagedSlide.useRef(null), ref2 = ReactDamagedSlide.useRef(!0), ref3 = ReactDamagedSlide.useRef(0), ref4 = ReactDamagedSlide.useRef(0), [value, value2] = ReactDamagedSlide.useState(!1), [value3, value4] = ReactDamagedSlide.useState(null), callback = ReactDamagedSlide.useCallback(() => {
@@ -54,9 +56,10 @@ The deck’s title, from its saved document:
         ...deckTitle !== void 0 ? {
           deckTitle
         } : {}
-      }, value7 = await askAgentToRepairSlide(state, diagnostic, ref.current);
+      }, value7 = await sendSlideRepairRequest(state, diagnostic, ref.current);
       (0, runtime2.showToast)((0, runtime2.agentSendResultMessage)(value7)), !(!ref2.current || value6 !== ref3.current) && (value2(!1), value4(value7 === "failed" ? buildSlideRepairPrompt(state, diagnostic) : null), value7 !== "staged" && callback());
     }
+    let message = diagnostic === runtime2.SLIDE_READ_FAILED_DIAGNOSTIC ? UNREADABLE_SLIDE_MESSAGE : DAMAGED_SLIDE_MESSAGE;
     return DamagedSlideJsx.jsxs("div", {
       "data-testid": "slides-held-notice",
       className,
@@ -72,13 +75,21 @@ The deck’s title, from its saved document:
             onFocus: callback,
             onClick: () => void value5(),
             "data-testid": "slides-held-ask",
-            children: "请助手修复"
+            children: (0, runtime2.formatMessage)({
+              defaultMessage: "请助手修复",
+              id: "bEWItWM6/Q"
+            })
           }) : void 0,
           children: [
-            (diagnostic === runtime2.SLIDE_READ_FAILED_DIAGNOSTIC ? UNREADABLE_SLIDE_MESSAGE : DAMAGED_SLIDE_MESSAGE) + (canAsk ? "" : " " + VIEW_ONLY_SLIDE_REPAIR_MESSAGE),
+            canAsk ? message :
+            (0, runtime2.joinMessages) (message, VIEW_ONLY_SLIDE_REPAIR_MESSAGE),
             diagnostic === runtime2.SLIDE_READ_FAILED_DIAGNOSTIC ? null : DamagedSlideJsx.jsx("span", {
               className: "block select-text break-words text-fg-secondary",
-              children: "详情：" + reason
+              children: (0, runtime2.formatMessage)({
+                defaultMessage: "详细信息：{reason}",
+                id: "s3rhkmm+Og"
+              }, { reason
+            })
             })
           ]
         }),
@@ -87,7 +98,10 @@ The deck’s title, from its saved document:
           children: [
             DamagedSlideJsx.jsx("p", {
               className: "text-xs text-fg-muted",
-              children: "将以下内容发送给助手："
+              children: (0, runtime2.formatMessage)({
+                defaultMessage: "将以下内容发送给助手：",
+                id: "BG6NRnAJ4U"
+              })
             }),
             DamagedSlideJsx.jsx("pre", {
               className: "select-text max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-md bg-wash-1 p-2 text-[11px] leading-snug text-fg-secondary",
@@ -104,7 +118,7 @@ The deck’s title, from its saved document:
     DIAGNOSTIC_SLIDE_ID_PATTERN = value;
   }), bindRuntimeValue(runtime2, "SLIDE_DIAGNOSTIC_SELECTION_MAX_CHARS", () => SLIDE_DIAGNOSTIC_SELECTION_MAX_CHARS, (value) => {
     SLIDE_DIAGNOSTIC_SELECTION_MAX_CHARS = value;
-  }), bindRuntimeValue(runtime2, "buildSlideDiagnosticRequest", () => buildSlideDiagnosticRequest), bindRuntimeValue(runtime2, "buildSlideRepairPrompt", () => buildSlideRepairPrompt), bindRuntimeValue(runtime2, "askAgentToRepairSlide", () => askAgentToRepairSlide), bindRuntimeValue(runtime2, "UNREADABLE_SLIDE_MESSAGE", () => UNREADABLE_SLIDE_MESSAGE, (value) => {
+  }), bindRuntimeValue(runtime2, "buildSlideDiagnosticRequest", () => buildSlideDiagnosticRequest), bindRuntimeValue(runtime2, "buildSlideRepairPrompt", () => buildSlideRepairPrompt), bindRuntimeValue(runtime2, "askAgentToRepairSlide", () => askAgentToRepairSlide), bindRuntimeValue(runtime2, "sendSlideRepairRequest", () => sendSlideRepairRequest), bindRuntimeValue(runtime2, "UNREADABLE_SLIDE_MESSAGE", () => UNREADABLE_SLIDE_MESSAGE, (value) => {
     UNREADABLE_SLIDE_MESSAGE = value;
   }), bindRuntimeValue(runtime2, "DamagedSlideJsx", () => DamagedSlideJsx, (value) => {
     DamagedSlideJsx = value;
@@ -115,7 +129,16 @@ The deck’s title, from its saved document:
   }), bindRuntimeValue(runtime2, "VIEW_ONLY_SLIDE_REPAIR_MESSAGE", () => VIEW_ONLY_SLIDE_REPAIR_MESSAGE, (value) => {
     VIEW_ONLY_SLIDE_REPAIR_MESSAGE = value;
   }), bindRuntimeValue(runtime2, "DamagedSlideNotice", () => DamagedSlideNotice), () => {
-    (0, runtime2.initializeUiInputs210)(), ReactDamagedSlide = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), DIAGNOSTIC_SLIDE_ID_PATTERN = /^[\w-]{1,64}$/, SLIDE_DIAGNOSTIC_SELECTION_MAX_CHARS = 600, DamagedSlideJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), DAMAGED_SLIDE_MESSAGE = "This slide can’t be edited right now. Its saved content has a problem, so part of it may be hidden. What was saved is still there.", UNREADABLE_SLIDE_MESSAGE = "This slide can’t be shown or edited, because the editor couldn’t read it. What was saved is still there.", SLIDE_REPAIR_REQUEST_TIMEOUT_MS = 1e4, VIEW_ONLY_SLIDE_REPAIR_MESSAGE = "Someone who can edit this presentation can ask the agent to fix the slide.";
+    (0, runtime2.initializeUiInputs210)(), ReactDamagedSlide = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), DIAGNOSTIC_SLIDE_ID_PATTERN = /^[\w-]{1,64}$/, SLIDE_DIAGNOSTIC_SELECTION_MAX_CHARS = 600, DamagedSlideJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), DAMAGED_SLIDE_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "此页暂时无法编辑。已保存的内容存在问题，部分内容可能被隐藏，但已保存的内容仍然保留。",
+      id: "in5JHSLGWN"
+    }), UNREADABLE_SLIDE_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "编辑器无法读取此页，因此无法显示或编辑。已保存的内容仍然保留。",
+      id: "PUOqFyFawj"
+    }), SLIDE_REPAIR_REQUEST_TIMEOUT_MS = 1e4, VIEW_ONLY_SLIDE_REPAIR_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "有编辑权限的人可以请智能体修复此页。",
+      id: "6E4gKJHZfQ"
+    });
   };
 }
 export {

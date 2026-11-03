@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorContrastBackgrounds(runtime2) {
   var SLIDE_BACKGROUND_LABEL, BOX_FILL_LABEL, LARGE_TEXT_THRESHOLD, OPAQUE_BACKGROUND_THRESHOLD, TRANSPARENT_BACKGROUND_THRESHOLD, hasInsetBoxShadow, hasVisibleShadow, isHiddenContrastNode, coversWholeSlide, rectanglesOverlap_Ae0, FULL_SLIDE_RECTANGLE, rgbToHexColor, SLIDE_CONTRAST_SOURCE, UNKNOWN_CONTAINER_SIZE, LOWERCASE_GLYPH_WIDTH, UPPERCASE_GLYPH_WIDTH, WIDE_CONTRAST_GLYPH_PATTERN, UPPERCASE_CONTRAST_GLYPH_PATTERN, CONTRAST_KIND_PRIORITY, DEFAULT_CONTRAST_NODE_KINDS, TEXT_CONTRAST_NODE_KINDS, ICON_CONTRAST_NODE_KINDS, toolbarIconPath, createToolbarIcon, DEFAULT_JUSTIFY_ICON, JUSTIFY_ICONS, ALIGN_ICONS, CONNECTOR_DIRECTION_ICONS, STACK_LAYOUT_ICON, OVERLAY_LAYOUT_ICON, SELECTION_ALIGN_ICONS;
@@ -369,7 +369,13 @@ function installEditorContrastBackgrounds(runtime2) {
   }), bindRuntimeValue(runtime2, "SELECTION_ALIGN_ICONS", () => SELECTION_ALIGN_ICONS, (value) => {
     SELECTION_ALIGN_ICONS = value;
   }), () => {
-    (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeHtmlWriter)(), (0, runtime2.initializeModelGeometry)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeModelSelection)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeTypographyInference)(), SLIDE_BACKGROUND_LABEL = "幻灯片背景", BOX_FILL_LABEL = "文本框填充", LARGE_TEXT_THRESHOLD = 44, OPAQUE_BACKGROUND_THRESHOLD = 0.98, TRANSPARENT_BACKGROUND_THRESHOLD = 0.02, hasInsetBoxShadow = (style) => boxShadowRecords(style).some((input) => input.inset === !0), hasVisibleShadow = (style) => boxShadowRecords(style).some((input) => input.inset !== !0) || textShadowRecords(style).length > 0, isHiddenContrastNode = (node) => node.style?.visibility === "hidden", coversWholeSlide = (rectangle) => rectangle.x <= 0 && rectangle.y <= 0 && rectangle.x + rectangle.w >= runtime2.SLIDE_WIDTH && rectangle.y + rectangle.h >= runtime2.SLIDE_HEIGHT, rectanglesOverlap_Ae0 = (left, right) => left.x <= right.x + right.w && right.x <= left.x + left.w && left.y <= right.y + right.h && right.y <= left.y + left.h, FULL_SLIDE_RECTANGLE = {
+    (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeHtmlWriter)(), (0, runtime2.initializeModelGeometry)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeModelSelection)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeTypographyInference)(), SLIDE_BACKGROUND_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "幻灯片背景",
+      id: "6lTwHYBNOv"
+    }), BOX_FILL_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "文本框填充",
+      id: "q1/Ygk9x8M"
+    }), LARGE_TEXT_THRESHOLD = 44, OPAQUE_BACKGROUND_THRESHOLD = 0.98, TRANSPARENT_BACKGROUND_THRESHOLD = 0.02, hasInsetBoxShadow = (style) => boxShadowRecords(style).some((input) => input.inset === !0), hasVisibleShadow = (style) => boxShadowRecords(style).some((input) => input.inset !== !0) || textShadowRecords(style).length > 0, isHiddenContrastNode = (node) => node.style?.visibility === "hidden", coversWholeSlide = (rectangle) => rectangle.x <= 0 && rectangle.y <= 0 && rectangle.x + rectangle.w >= runtime2.SLIDE_WIDTH && rectangle.y + rectangle.h >= runtime2.SLIDE_HEIGHT, rectanglesOverlap_Ae0 = (left, right) => left.x <= right.x + right.w && right.x <= left.x + left.w && left.y <= right.y + right.h && right.y <= left.y + left.h, FULL_SLIDE_RECTANGLE = {
       x: 0,
       y: 0,
       w: runtime2.SLIDE_WIDTH,

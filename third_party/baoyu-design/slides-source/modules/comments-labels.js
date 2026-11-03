@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCommentsLabels(runtime2) {
   var COMMENT_LABEL_MAX_UTF8_BYTES, COMMENT_DETAIL_MAX_UTF8_BYTES, COMMENT_LABEL_MAX_CODEPOINTS, commentLabelTextEncoder, commentLabelByteLength, quoteCommentLabelText, COMMENT_LABEL_BREADCRUMB, COMMENT_AREA_MAX_DESCRIBED_ELEMENTS, COMMENT_DETAIL_MAX_CODEPOINTS, slideDiagnosticIdSuffix, parenthesizeCommentAreaPart;

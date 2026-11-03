@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installHostFeatureFlags(runtime2) {
-  var CREATION_SEQUENCE_FLAG, creationSequenceFlagRequested, creationSequenceFlagSnapshot;
+  var featureFlagReadiness, CREATION_SEQUENCE_FLAG, creationSequenceFlagRequested, creationSequenceFlagSnapshot;
   function resolveFeatureFlagApi() {
     let __appifact_flags = globalThis.__appifact_flags;
     if (typeof __appifact_flags != "object" || __appifact_flags === null)
@@ -36,6 +36,21 @@ function installHostFeatureFlags(runtime2) {
       return fallback;
     }
   }
+  async function awaitFeatureFlagsReady() {
+    try {
+      let api = resolveFeatureFlagApi();
+      if (api === void 0)
+        return !1;
+      let ready2 = await api.ready() === !0;
+      return featureFlagReadiness.set(api, ready2), ready2;
+    } catch {
+      return !1;
+    }
+  }
+  function featureFlagsReady() {
+    let api = resolveFeatureFlagApi();
+    return api !== void 0 && featureFlagReadiness.get(api) === !0;
+  }
   function requestCreationSequenceFlag() {
     if (creationSequenceFlagRequested)
       return;
@@ -51,13 +66,16 @@ function installHostFeatureFlags(runtime2) {
   function creationSequenceEnabled() {
     return creationSequenceFlagSnapshot ??= creationSequenceFlagRequested && getFeatureFlag(CREATION_SEQUENCE_FLAG, !1), creationSequenceFlagSnapshot;
   }
-  return bindRuntimeValue(runtime2, "resolveFeatureFlagApi", () => resolveFeatureFlagApi), bindRuntimeValue(runtime2, "sameFlagValueType", () => sameFlagValueType), bindRuntimeValue(runtime2, "getFeatureFlagAsync", () => getFeatureFlagAsync), bindRuntimeValue(runtime2, "getFeatureFlag", () => getFeatureFlag), bindRuntimeValue(runtime2, "CREATION_SEQUENCE_FLAG", () => CREATION_SEQUENCE_FLAG, (value) => {
+  return bindRuntimeValue(runtime2, "resolveFeatureFlagApi", () => resolveFeatureFlagApi), bindRuntimeValue(runtime2, "sameFlagValueType", () => sameFlagValueType), bindRuntimeValue(runtime2, "getFeatureFlagAsync", () => getFeatureFlagAsync), bindRuntimeValue(runtime2, "getFeatureFlag", () => getFeatureFlag), bindRuntimeValue(runtime2, "featureFlagReadiness", () => featureFlagReadiness, (value) => {
+    featureFlagReadiness = value;
+  }), bindRuntimeValue(runtime2, "awaitFeatureFlagsReady", () => awaitFeatureFlagsReady), bindRuntimeValue(runtime2, "featureFlagsReady", () => featureFlagsReady), bindRuntimeValue(runtime2, "CREATION_SEQUENCE_FLAG", () => CREATION_SEQUENCE_FLAG, (value) => {
     CREATION_SEQUENCE_FLAG = value;
   }), bindRuntimeValue(runtime2, "creationSequenceFlagRequested", () => creationSequenceFlagRequested, (value) => {
     creationSequenceFlagRequested = value;
   }), bindRuntimeValue(runtime2, "creationSequenceFlagSnapshot", () => creationSequenceFlagSnapshot, (value) => {
     creationSequenceFlagSnapshot = value;
   }), bindRuntimeValue(runtime2, "requestCreationSequenceFlag", () => requestCreationSequenceFlag), bindRuntimeValue(runtime2, "wasCreationSequenceFlagRequested", () => wasCreationSequenceFlagRequested), bindRuntimeValue(runtime2, "creationSequenceEnabled", () => creationSequenceEnabled), () => {
+    featureFlagReadiness = /* @__PURE__ */ new WeakMap(),
     CREATION_SEQUENCE_FLAG = "appifact_creation_sequence", creationSequenceFlagRequested = !1;
   };
 }

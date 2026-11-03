@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportGoogleFontCatalog(runtime2) {
   var GOOGLE_FONT_FAMILIES, GOOGLE_SLIDES_FONT_FAMILIES, initializeGoogleFontFamilies;

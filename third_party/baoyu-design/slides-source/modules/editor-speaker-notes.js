@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorSpeakerNotes(runtime2) {
   var ReactSpeakerNotesEditor, SpeakerNotesEditorJsx, MIN_SPEAKER_NOTES_EDITOR_HEIGHT, DEFAULT_SPEAKER_NOTES_EDITOR_HEIGHT;
@@ -42,11 +42,20 @@ function installEditorSpeakerNotes(runtime2) {
       children: [
         SpeakerNotesEditorJsx.jsx(runtime2.PanelResizeHandle, {
           name: "notes",
-          label: "调整演讲者备注区域大小",
+          label: (0, runtime2.formatMessage)({
+            defaultMessage: "调整演讲者备注区域大小",
+            id: "3Ov+88ULUU"
+          }),
           now: clampSpeakerNotesEditorHeight(height2),
           min: MIN_SPEAKER_NOTES_EDITOR_HEIGHT,
           max: clampSpeakerNotesEditorHeight(1 / 0),
-          valueText: String(clampSpeakerNotesEditorHeight(height2)) + " pixels tall",
+          valueText: (0, runtime2.formatMessage)({
+            defaultMessage: "高 {count} 像素",
+            id: "yhLAFTa9Cp"
+          }, {
+            n: clampSpeakerNotesEditorHeight(height2),
+            count: String(clampSpeakerNotesEditorHeight(height2))
+          }),
           gesture: state,
           onHome: () => onResize(MIN_SPEAKER_NOTES_EDITOR_HEIGHT),
           onEnd: () => onResize(clampSpeakerNotesEditorHeight(1 / 0)),
@@ -60,7 +69,7 @@ function installEditorSpeakerNotes(runtime2) {
             defaultMessage: "此页没有演讲者备注。",
             id: "v2wTzhZqQa"
           }) : runtime2.SPEAKER_NOTES_DESCRIPTION,
-          "aria-label": "演讲者备注",
+          "aria-label": runtime2.SPEAKER_NOTES_FIELD_LABEL,
           className: "min-h-0 flex-1 resize-none bg-transparent px-3 pb-2 pt-2.5 text-sm outline-none placeholder:text-fg-muted",
           onFocus: () => {
             ref.current = slide;

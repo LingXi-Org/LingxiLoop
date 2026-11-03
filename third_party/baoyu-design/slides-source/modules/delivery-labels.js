@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDeliveryLabels(runtime2) {
   function megabytesLabel(size4) {
@@ -8,7 +8,7 @@ function installDeliveryLabels(runtime2) {
     return (0, runtime2.formatMessage)({ defaultMessage: "{size} KB", id: "jDAZMKmBAt" }, { size: size4 });
   }
   function joinMessages(first, second) {
-    return (0, runtime2.formatMessage)({ defaultMessage: "{first} {second}", id: "8U4f+v7Rxv" }, { first, second });
+    return (0, runtime2.formatMessage)({ defaultMessage: "{first} {second}", id: "H4/tnuQVI+" }, { first, second });
   }
   function formatFileSize(bytes) {
     let locale = (0, runtime2.intlLocale)("NumberFormat", "en-US");

@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installBridgeFrameViewport(runtime2) {
-  var FrameViewportReactDom, ReactFrameViewport, MAX_FRAME_BOTTOM_INSET, FRAME_BOTTOM_INSET_SHRINK_DELAY_MS, frameBottomInset, frameBottomInsetSubscribers, updateFrameBottomInset, KEYBOARD_INPUT_TYPE_PATTERN;
+  var FrameViewportReactDom, ReactFrameViewport, MAX_FRAME_BOTTOM_INSET, FRAME_BOTTOM_INSET_SHRINK_DELAY_MS, frameBottomInset, frameBottomInsetSubscribers, setFrameBottomInset, updateFrameBottomInset, KEYBOARD_INPUT_TYPE_PATTERN;
   function revealFocusedDialogField() {
     let active = document.activeElement;
     if (active?.closest('[data-cds="Dialog"]') == null)
@@ -80,16 +80,18 @@ function installBridgeFrameViewport(runtime2) {
     frameBottomInset = value;
   }), bindRuntimeValue(runtime2, "frameBottomInsetSubscribers", () => frameBottomInsetSubscribers, (value) => {
     frameBottomInsetSubscribers = value;
+  }), bindRuntimeValue(runtime2, "setFrameBottomInset", () => setFrameBottomInset, (value) => {
+    setFrameBottomInset = value;
   }), bindRuntimeValue(runtime2, "updateFrameBottomInset", () => updateFrameBottomInset, (value) => {
     updateFrameBottomInset = value;
   }), bindRuntimeValue(runtime2, "subscribeFrameBottomInset", () => subscribeFrameBottomInset), bindRuntimeValue(runtime2, "useFrameBottomInset", () => useFrameBottomInset), bindRuntimeValue(runtime2, "KEYBOARD_INPUT_TYPE_PATTERN", () => KEYBOARD_INPUT_TYPE_PATTERN, (value) => {
     KEYBOARD_INPUT_TYPE_PATTERN = value;
   }), bindRuntimeValue(runtime2, "revealFocusedDialogField", () => revealFocusedDialogField), bindRuntimeValue(runtime2, "applyKeyboardInset", () => applyKeyboardInset), bindRuntimeValue(runtime2, "revealFieldOnViewportShrink", () => revealFieldOnViewportShrink), bindRuntimeValue(runtime2, "readFrameFootInset", () => readFrameFootInset), bindRuntimeValue(runtime2, "useFootInsetCollisionPadding", () => useFootInsetCollisionPadding), bindRuntimeValue(runtime2, "initializeFrameFootInset", () => initializeFrameFootInset), () => {
-    (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeImageDownsampling)(), FrameViewportReactDom = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactDomNamespace)(), 1), ReactFrameViewport = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), MAX_FRAME_BOTTOM_INSET = 9999, FRAME_BOTTOM_INSET_SHRINK_DELAY_MS = 400, frameBottomInset = 0, frameBottomInsetSubscribers = /* @__PURE__ */ new Set(), KEYBOARD_INPUT_TYPE_PATTERN = /^(text|search|url|tel|email|password|number)$/, updateFrameBottomInset = createBottomInsetSmoother((input) => {
+    (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeImageDownsampling)(), FrameViewportReactDom = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactDomNamespace)(), 1), ReactFrameViewport = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), MAX_FRAME_BOTTOM_INSET = 9999, FRAME_BOTTOM_INSET_SHRINK_DELAY_MS = 400, frameBottomInset = 0, frameBottomInsetSubscribers = /* @__PURE__ */ new Set(), KEYBOARD_INPUT_TYPE_PATTERN = /^(text|search|url|tel|email|password|number)$/, setFrameBottomInset =(input) => {
       frameBottomInset = input, applyKeyboardInset();
       for (let value of frameBottomInsetSubscribers)
         value();
-    }), typeof window < "u" && window.parent !== window && window.addEventListener("message", (dataset) => {
+    }, updateFrameBottomInset = createBottomInsetSmoother(setFrameBottomInset), typeof window < "u" && window.parent !== window && window.addEventListener("message", (dataset) => {
       if (dataset.source !== window.parent || !(0, runtime2.isAllowedHostMessageOrigin)(dataset.origin))
         return;
       let value = parseFrameViewportMessage(dataset, window.parent, runtime2.isAllowedHostMessageOrigin);

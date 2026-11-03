@@ -1,11 +1,11 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesSlidesDocument(runtime2) {
   var slidesFilesTimers, SLIDES_FILES_SAVE_DEBOUNCE_MS, SLIDES_FILES_SHARED_MAX_WAIT_MS, SLIDES_FILES_SOLO_MAX_WAIT_MS, SLIDES_FILES_MAX_PARALLEL_READS, SLIDES_FILES_BOOT_REFRESH_MS, SLIDES_FILES_RECONNECT_TIMEOUT_MS, SLIDES_FILES_STALE_SYNC_TIMEOUT_MS, SLIDES_FILES_ERROR_NOTIFY_MS, SLIDES_FILES_MAX_RECOVERY_ATTEMPTS, LOCAL_SLIDE_RECOVERY_ORIGIN, SLIDES_FILES_PENDING_NOTE_TIMEOUT_MS, slideDocumentPathForFile, SlidesContentUnbuildableError, isPermanentSlidesLoadFailure;
   function createSlidesFilesDocument(options) {
     let timers = options.timers ?? slidesFilesTimers, mayWrite = options.port.mayWrite ?? options.port.canWrite, canWrite = mayWrite, listingNarrowed = !1, newDeckUsesCssLists = !1, codecState = options.codec ?? (0, runtime2.createSlideDocumentCodec)(), notesStoredInFiles = options.notes === void 0, fileCodec = (0, runtime2.createSlidesFileCodec)(codecState.codec, {
       notesInFiles: notesStoredInFiles
-    }), liveSlideFiles = /* @__PURE__ */ new Map(), knownSlideShas = /* @__PURE__ */ new Map(), localSlideOverrides = /* @__PURE__ */ new Map(), heldRemoteSlideBases = /* @__PURE__ */ new Map(), dirtySlidePaths = /* @__PURE__ */ new Set(), inFlightSlidePaths = /* @__PURE__ */ new Set(), slideConflicts = /* @__PURE__ */ new Map(), slideLocalRevisions = /* @__PURE__ */ new Map(), deckLocalRevision = 0, getSlideLocalRevision = (input) => deckLocalRevision * 1e6 + (slideLocalRevisions.get(input) ?? 0), reportedStaleSlideRevisions = /* @__PURE__ */ new Map(), bumpSlideLocalRevision = (input) => {
+    }), liveSlideFiles = /* @__PURE__ */ new Map(), slideTextsBySha = /* @__PURE__ */ new Map(), knownSlideShas = /* @__PURE__ */ new Map(), localSlideOverrides = /* @__PURE__ */ new Map(), heldRemoteSlideBases = /* @__PURE__ */ new Map(), dirtySlidePaths = /* @__PURE__ */ new Set(), inFlightSlidePaths = /* @__PURE__ */ new Set(), slideConflicts = /* @__PURE__ */ new Map(), askedClashes = /* @__PURE__ */ new Set(), askedClashesKey = "", slideLocalRevisions = /* @__PURE__ */ new Map(), deckLocalRevision = 0, getSlideLocalRevision = (input) => deckLocalRevision * 1e6 + (slideLocalRevisions.get(input) ?? 0), reportedStaleSlideRevisions = /* @__PURE__ */ new Map(), bumpSlideLocalRevision = (input) => {
       let value = (0, runtime2.slideIdFromFilePath)(input);
       value !== void 0 && slideLocalRevisions.set(value, (slideLocalRevisions.get(value) ?? 0) + 1);
     }, remotePathRevisions = /* @__PURE__ */ new Map(), remoteSeenWhilePublishing = /* @__PURE__ */ new Map(), deletionConflicts = /* @__PURE__ */ new Set(), recentPublishedSlideText = /* @__PURE__ */ new Map(), overwrittenSlideText = /* @__PURE__ */ new Map(), keptSlideVersions = /* @__PURE__ */ new Map(), recentPublishTimes = [], structureRevision = 0, touchedSlidePaths = /* @__PURE__ */ new Set(), indexTouched = !1, structureTouched = !1, stashedSlideOffers = /* @__PURE__ */ new Map(), offeredSlideIds = /* @__PURE__ */ new Set(), stashOfferTimer, stashWriteCount = 0, localNotesChangedAt = /* @__PURE__ */ new Map(), notesBySlide = {}, emitEvent = (input, options2) => {
@@ -63,7 +63,7 @@ function installFilesSlidesDocument(runtime2) {
             liveSlideFiles.set(value2, {
               text: value3,
               sha: value4
-            }), knownSlideShas.set(value2, value4), localSlideOverrides.get(value2) === value3 && !dirtySlidePaths.has(value2) && localSlideOverrides.delete(value2), recentPublishedSlideText.set(value2, {
+            }), rememberSlideText(value4, value3), knownSlideShas.set(value2, value4), localSlideOverrides.get(value2) === value3 && !dirtySlidePaths.has(value2) && localSlideOverrides.delete(value2), recentPublishedSlideText.set(value2, {
               text: value3,
               at: timers.now()
             });
@@ -125,6 +125,7 @@ function installFilesSlidesDocument(runtime2) {
       ...options.paced !== void 0 ? {
         paced: options.paced
       } : {},
+      keptByCaller: (paths) => paths === void 0 ? unsavedStash?.durable() === !0 : allPathsStashed(paths),
       onShared: () => {
         disposed || maxWaitCommitTimer === void 0 || (timers.clearTimeout(maxWaitCommitTimer), maxWaitCommitTimer = void 0, scheduleMaxWaitCommit());
       },
@@ -181,12 +182,7 @@ function installFilesSlidesDocument(runtime2) {
       if (loadState === "failed")
         return {
           status: "error",
-          message: withHint(loadFailureMessage !== void 0 ? (0, runtime2.formatMessage)({
-            defaultMessage: "演示文稿加载失败（{reason}）。",
-            id: "C4AnEHL+1C"
-          }, {
-            reason: loadFailureMessage
-          }) : (0, runtime2.formatMessage)({
+          message: withHint( (0, runtime2.formatMessage)({
             defaultMessage: "演示文稿加载失败。",
             id: "AZ/iGfWBDL"
           }), (0, runtime2.formatMessage)({
@@ -335,18 +331,47 @@ function installFilesSlidesDocument(runtime2) {
       let value = countBlockedFiles();
       return loadState === "live" && slideConflicts.size === 0 && stuckSave === void 0 && lastSaveError === void 0 && !saveTrouble && dirtySlidePaths.size === 0 && !decompositionPending && inFlightSlidePaths.size === value.slides && (!indexStore.dirty() || value.index === 1);
     }
+    function allPathsStashed(paths) {
+      return unsavedStash?.durable() === !0 && paths.every((path) => typeof localSlideOverrides.get(path) == "string" && unsavedStash.read((0, runtime2.slideIdFromFilePath)(path) ?? "")?.html === localSlideOverrides.get(path));
+    }
     function formatUnsendableMessage(input) {
       let callback = (input2) => {
         let value5 = (0, runtime2.slideIdFromFilePath)(input2);
         return value5 === void 0 ? 0 : getSlideNumber(value5);
-      }, callback2 = (input2) => input2 === runtime2.DECK_METADATA_PATH ? "the presentation’s own record (its title, sections and slide order)" : callback(input2) > 0 ? "slide " + String(callback(input2)) : void 0, value = [...input].sort((input2, options2) => callback(input2.path) - callback(options2.path));
-      if (value.some((input2) => callback2(input2.path) === void 0))
+      }, isSlideOrDeck = (input2) => input2 === runtime2.DECK_METADATA_PATH || callback(input2) > 0, value = [...input].sort((input2, options2) => callback(input2.path) - callback(options2.path));
+      if (!value.every((input2) => isSlideOrDeck(input2.path)))
         return (0, runtime2.formatLostSlideEditsMessage)(value);
-      let value2 = unsavedStash?.durable() === !0 && value.every((input2) => typeof localSlideOverrides.get(input2.path) == "string" && unsavedStash.read((0, runtime2.slideIdFromFilePath)(input2.path) ?? "")?.html === localSlideOverrides.get(input2.path)), value3 = value.length === 1, value4 = String(value.length) + (value.every((input2) => callback(input2.path) > 0) ? " 页幻灯片" : " parts of this presentation");
-      return "Everything else is saved, but " + (value3 ? callback2(value[0].path) + " is not: " : value4 + " are not. The first, " + callback2(value[0].path) + ": ") + value[0].why + ". Until then " + (value3 ? "it is" : "they are") + " kept " + (value2 ? "in this browser for " + runtime2.CRASH_STASH_RETENTION_LABEL + ", even if this tab closes." : "only while this tab stays open.");
+      let stashed = allPathsStashed( value.map((input2) =>input2.path)), first = value[0], days = runtime2.CRASH_STASH_MAX_AGE_MS / 864e5, values = {
+        slide: String(callback(first.path)),
+        why: first.why,
+        days,
+        dayCount: String(days),
+        n: value.length,
+        count: String(value.length)
+      };
+      return value.length === 1 ? first.path === runtime2.DECK_METADATA_PATH ?(0, runtime2.formatMessage)({
+        defaultMessage: "其余内容均已保存，但演示文稿自身的记录（标题、章节和幻灯片顺序）未保存：{why}。在此之前，它仅在此标签页保持打开时保留。",
+        id: "SgCj+SgVzc"
+      }, values) : stashed ?(0, runtime2.formatMessage)({
+        defaultMessage: "其余内容均已保存，但第 {slide} 页未保存：{why}。在此之前，它会在此浏览器中保留 {days} 天，即使关闭此标签页。",
+        id: "d8Fs12fCSx"
+      }, values) : ( 0, runtime2.formatMessage)({
+        defaultMessage: "其余内容均已保存，但第 {slide} 页未保存：{why}。在此之前，它仅在此标签页保持打开时保留。",
+        id : "rQSz5ipyD6"
+      }, values) : first.path === runtime2.DECK_METADATA_PATH ?(0, runtime2.formatMessage)({
+        defaultMessage: "其余内容均已保存，但此演示文稿有 {count} 个部分未保存。第一个为演示文稿自身的记录（标题、章节和幻灯片顺序）：{why}。在此之前，它们仅在此标签页保持打开时保留。",
+        id: "ZB6xGNoaqU"
+      }, values) : stashed ?(0, runtime2.formatMessage) ({
+        defaultMessage: "其余内容均已保存，但有 {count} 页幻灯片未保存。第一页为第 {slide} 页：{why}。在此之前，它们会在此浏览器中保留 {dayCount} 天，即使关闭此标签页。",
+        id : "vCMKyvATr8"
+      }, values) : (0, runtime2.formatMessage)({
+        defaultMessage: "其余内容均已保存，但有 {count} 页幻灯片未保存。第一页为第 {slide} 页：{why}。在此之前，它们仅在此标签页保持打开时保留。",
+        id : "aBC8NSHIpX"
+      }, values);
     }
     let lastSaveAnnouncementKey = "";
     function notifySaveSubscribers() {
+      syncAskedClashes();
       let value = getSaveState();
       unsendableFiles !== void 0 && !unsendableNoticeShown && canReportUnsendable() && (unsendableNoticeShown = !0, emitEvent("save-left-out", {
         files: unsendableFiles,
@@ -890,6 +915,26 @@ function installFilesSlidesDocument(runtime2) {
       dirtyButUnsendablePaths.delete(input), remoteSeenWhilePublishing.delete(input), rebasedSlideShas.delete(input), value && notifySaveSubscribers();
     }
     let rebasedSlideShas = /* @__PURE__ */ new Map();
+    function syncAskedClashes() {
+      if (options.onClashes === void 0 && askedClashes.size === 0)
+        return;
+      for (let value of [...askedClashes])
+        slideConflicts.has(value) || askedClashes.delete(value);
+      let items = [...askedClashes].map((input) => {
+        let entry = slideConflicts.get(input);
+        return {
+          ...entry,
+          slideNo: getSlideNumber(entry.slideId)
+        };
+      }), value2 = JSON.stringify(items);
+      if (value2 !== askedClashesKey) {
+        askedClashesKey = value2;
+        try {
+          options.onClashes?.(items);
+        } catch {
+        }
+      }
+    }
     function retryDirtySlide(input) {
       if (disposed || !slideConflicts.has(input))
         return;
@@ -900,6 +945,17 @@ function installFilesSlidesDocument(runtime2) {
       let value = slideDocumentPathForFile(input);
       if (inFlightSlidePaths.has(input) && !saveQueue.unsendable().has(input) && !(stuckSave !== void 0 && !stuckSave.retryable))
         return;
+      let merged = mergeClashingSlide(input, entry);
+      if (merged !== null) {
+        if (value !== void 0 && (options.holdRemote?.(value) === !0 || options.inSlide?.(value) === !0))
+          return;
+        applyMergedSlide(input, entry, merged);
+        return;
+      }
+      if (askedClashes.has(input) || options.askClash?.(entry) === !0) {
+        askedClashes.has(input) || (askedClashes.add(input), emitEvent("clash-asked", entry)), syncAskedClashes();
+        return;
+      }
       if (LOCAL_SLIDE_RECOVERY_ORIGIN === "mine") {
         let value3 = entry.theirsSha === null && typeof localSlideOverrides.get(input) == "string";
         value3 && restoreMissingIndexSlides([entry.slideId]), resolveSlideConflict(input, "mine", !0), value3 && recomposeFromFiles(!1);
@@ -909,6 +965,47 @@ function installFilesSlidesDocument(runtime2) {
         return;
       let value2 = getSlideNumber(entry.slideId);
       remotePathRevisions.set(input, (remotePathRevisions.get(input) ?? 0) + 1), resolveSlideConflict(input, "theirs", !0), options.onNotice?.((value2 > 0 ? "幻灯片 " + String(value2) : "A slide") + (entry.theirsSha === null ? " deleted remotely" : " changed remotely"));
+    }
+    function rememberSlideText(sha, text) {
+      if (slideTextsBySha.delete(sha), slideTextsBySha.set(sha, text), slideTextsBySha.size <= 2 * liveSlideFiles.size + 32)
+        return;
+      let values = /* @__PURE__ */ new Set([
+        ...knownSlideShas.values(),
+        ...[...liveSlideFiles.values()].map((input) => input.sha)
+      ]);
+      for (let value of [...slideTextsBySha.keys()]) {
+        if (slideTextsBySha.size <= liveSlideFiles.size + 16)
+          break;
+        values.has(value) || slideTextsBySha.delete(value);
+      }
+    }
+    function mergeClashingSlide(input, entry) {
+      if (options.mergeText === void 0 || entry.kind !== "edited" || entry.theirsSha === null)
+        return null;
+      let value = localSlideOverrides.get(input), entry2 = liveSlideFiles.get(input), value2 = knownSlideShas.get(input), value3 = value2 === void 0 ? void 0 : slideTextsBySha.get(value2);
+      if (typeof value != "string" || entry2 === void 0 || entry2.sha !== entry.theirsSha || value3 === void 0 || value2 === entry2.sha)
+        return null;
+      try {
+        return options.mergeText(value3, value, entry2.text);
+      } catch {
+        return null;
+      }
+    }
+    function applyMergedSlide(input, entry, merged) {
+      if (emitEvent("clash-merged", {
+        path: input,
+        slide: entry.slideId,
+        theirs: entry.theirsSha
+      }), merged === liveSlideFiles.get(input)?.text) {
+        resolveSlideConflict(input, "theirs", !0), syncAskedClashes();
+        return;
+      }
+      localSlideOverrides.set(input, merged), stashLocalSlideEdit(input, merged, indexStore.get().order), bumpSlideLocalRevision(input), recomposeFromFiles(!0);
+      try {
+        options.onMerged?.(input, entry.theirsSha);
+      } catch {
+      }
+      resolveSlideConflict(input, "mine", !0), syncAskedClashes();
     }
     function clashLocalSlide(input) {
       let value = (0, runtime2.slideFilePath)(input);
@@ -1088,7 +1185,7 @@ function installFilesSlidesDocument(runtime2) {
           entries.delete(value3);
           continue;
         }
-        value4 === null ? liveSlideFiles.delete(value3) : liveSlideFiles.set(value3, value4), rebasedSlideShas.delete(value3), (entry === void 0 && value4 !== null || entry !== void 0 && value4 === null) && (flag2 = !0), remotePathRevisions.set(value3, (remotePathRevisions.get(value3) ?? 0) + 1);
+        value4 === null ? liveSlideFiles.delete(value3) : ( liveSlideFiles.set(value3, value4), rememberSlideText(value4.sha, value4.text)), rebasedSlideShas.delete(value3), (entry === void 0 && value4 !== null || entry !== void 0 && value4 === null) && (flag2 = !0), remotePathRevisions.set(value3, (remotePathRevisions.get(value3) ?? 0) + 1);
         let value5 = dirtySlidePaths.has(value3) || inFlightSlidePaths.has(value3), entry2 = recentPublishedSlideText.get(value3);
         if (overwrittenSlideText.has(value3) && (value4?.text ?? null) === overwrittenSlideText.get(value3)) {
           overwrittenSlideText.delete(value3);
@@ -1387,7 +1484,7 @@ function installFilesSlidesDocument(runtime2) {
           liveSlideFiles.set(value7, {
             text: value8.text,
             sha: value8.sha256
-          }), knownSlideShas.set(value7, value8.sha256);
+          }), rememberSlideText(value8.sha256, value8.text), knownSlideShas.set(value7, value8.sha256);
         if (bootRetryAttempt = 0, loadFailureMessage = void 0, bootFailure = void 0, deckLocalRevision += 1, !composeFromFiles())
           throw contentUnbuildable = !0, new SlidesContentUnbuildableError("its content could not be read");
         unbuildableAttempts = 0, loadState = "live", notifyDocumentSubscribers(!0);
@@ -1535,7 +1632,8 @@ function installFilesSlidesDocument(runtime2) {
         mayEdit: canWrite
       } : void 0,
       conflicts: () => [...slideConflicts.values()],
-      resolveConflict: (input, options2) => resolveSlideConflict(input, options2),
+      resolveConflict: (input, options2) => { resolveSlideConflict(input, options2), syncAskedClashes();
+      },
       stashOffers: getStashOffers,
       restoreStashed: restoreStashedSlide,
       discardStashed: discardStashedSlide,

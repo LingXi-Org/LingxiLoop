@@ -1,4 +1,4 @@
-// Reconstructed from baoyu-design c15e76e (MIT). See ../README.md and source-map.json.
+// Recovered baoyu-design 016b39d PPTX/ZIP implementation (MIT); see ../README.md.
 function kv(e) {
   return e && e.__esModule && Object.prototype.hasOwnProperty.call(e, "default") ? e.default : e;
 }
@@ -3575,7 +3575,7 @@ function aC(e) {
       p.options._lineIdx = m, m > 0 && p.options.softBreakBefore && (i += "<a:br/>"), p.options.align = p.options.align || t.align, p.options.lineSpacing = p.options.lineSpacing || t.lineSpacing, p.options.lineSpacingMultiple = p.options.lineSpacingMultiple || t.lineSpacingMultiple, p.options.firstLineIndent = p.options.firstLineIndent ?? t.firstLineIndent, p.options.indentLevel = p.options.indentLevel || t.indentLevel, p.options.paraSpaceBefore = p.options.paraSpaceBefore || t.paraSpaceBefore, p.options.paraSpaceAfter = p.options.paraSpaceAfter || t.paraSpaceAfter, n = tC(p, false), m === 0 && (i += n.replace("<a:pPr></a:pPr>", "")), Object.entries(t).filter(([d, b]) => !(p.options.hyperlink && d === "color")).forEach(([d, b]) => {
         d !== "bullet" && !p.options[d] && (p.options[d] = b);
       }), i += z6(p), (!p.text && t.fontSize || p.options.fontSize) && (f = true, t.fontSize = t.fontSize || p.options.fontSize);
-    }), e._type === "tablecell" && (t.fontSize || t.fontFace) ? t.fontFace ? (i += `<a:endParaRPr lang="${t.lang || "en-US"}"` + (t.fontSize ? ` sz="${Math.round(t.fontSize * 100)}"` : "") + ' dirty="0">', i += `<a:latin typeface="${t.fontFace}" charset="0"/>`, i += `<a:ea typeface="${t.fontFace}" charset="0"/>`, i += `<a:cs typeface="${t.fontFace}" charset="0"/>`, i += "</a:endParaRPr>") : i += `<a:endParaRPr lang="${t.lang || "en-US"}"` + (t.fontSize ? ` sz="${Math.round(t.fontSize * 100)}"` : "") + ' dirty="0"/>' : f ? i += `<a:endParaRPr lang="${t.lang || "en-US"}"` + (t.fontSize ? ` sz="${Math.round(t.fontSize * 100)}"` : "") + ' dirty="0"/>' : i += `<a:endParaRPr lang="${t.lang || "en-US"}" dirty="0"/>`, i += "</a:p>";
+    }), t.fontFace || e._type === "tablecell" && t.fontSize ? t.fontFace ? (i += `<a:endParaRPr lang="${t.lang || "en-US"}"` + (t.fontSize ? ` sz="${Math.round(t.fontSize * 100)}"` : "") + ' dirty="0">', i += `<a:latin typeface="${t.fontFace}" charset="0"/>`, i += `<a:ea typeface="${t.fontFace}" charset="0"/>`, i += `<a:cs typeface="${t.fontFace}" charset="0"/>`, i += "</a:endParaRPr>") : i += `<a:endParaRPr lang="${t.lang || "en-US"}"` + (t.fontSize ? ` sz="${Math.round(t.fontSize * 100)}"` : "") + ' dirty="0"/>' : f ? i += `<a:endParaRPr lang="${t.lang || "en-US"}"` + (t.fontSize ? ` sz="${Math.round(t.fontSize * 100)}"` : "") + ' dirty="0"/>' : i += `<a:endParaRPr lang="${t.lang || "en-US"}" dirty="0"/>`, i += "</a:p>";
   }), i += e._type === "tablecell" ? "</a:txBody>" : "</p:txBody>", i;
 }
 function fv(e, t = false) {

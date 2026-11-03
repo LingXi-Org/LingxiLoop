@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import slidesBuiltin from '../../../../third_party/baoyu-design/slides-source/builtin-style.json' with { type: 'json' }
+import builtinThemes from '../../../../third_party/baoyu-design/host/builtin-themes.json' with { type: 'json' }
 
 // Ported from JimLiu/baoyu-design@c15e76e skills/claude-{design,slides}/scripts/server.mjs:
 // each kind's LAYOUT, comment location and editor page script policy. Limits that
@@ -51,6 +52,12 @@ export function inlineScriptHashes(html: string) {
 
 const SEGMENT = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/
 const MB = 1024 * 1024
+const themes = [{ namespace: slidesBuiltin.namespace, title: 'Claude 经典', source: slidesBuiltin.source,
+  version: slidesBuiltin.version, tokens: slidesBuiltin.tokens }, ...builtinThemes]
+const themeRecords = (at: string) => themes.map(theme => ({
+  namespace: theme.namespace, title: theme.title, artifact: theme.source, version: theme.version, copiedAt: at,
+}))
+const themeResources = Object.fromEntries(themes.map(theme => [`project/ds/${theme.namespace}/tokens.json`, theme.tokens]))
 
 function isDesignFile(rel: string) {
   const parts = rel.split('/')
@@ -97,7 +104,8 @@ export const ARTIFACT_KIND_DEFINITIONS: Record<ArtifactKind, ArtifactKindDefinit
       return board && file ? { file, board } : { file: 'project/canvas.json' }
     },
     initialIndex: (title, at) => ({ v: 3, createdOnFiles: { v: 1, at }, title, launch: { view: 'canvas' },
-      pages: [], boards: {}, order: [], notes: {}, designSystems: [] }),
+      pages: [], boards: {}, order: [], notes: {}, designSystems: themeRecords(at) }),
+    initialResources: themeResources,
   },
   slides: {
     kind: 'slides',
@@ -131,11 +139,8 @@ export const ARTIFACT_KIND_DEFINITIONS: Record<ArtifactKind, ArtifactKindDefinit
       return slideId && file && exists(file) ? { file, slide, slideId } : { file: 'project/deck.json', slide }
     },
     initialIndex: (title, at) => ({ v: 4, createdOnFiles: { v: 1, at }, lists: 'css', title, order: [],
-      sections: {}, faces: {}, style: structuredClone(slidesBuiltin.style), designSystems: [{
-        namespace: slidesBuiltin.namespace, title: slidesBuiltin.title, artifact: slidesBuiltin.source,
-        version: slidesBuiltin.version, copiedAt: at,
-      }] }),
-    initialResources: { 'project/ds/slides-builtin/tokens.json': slidesBuiltin.tokens },
+      sections: {}, faces: {}, style: structuredClone(slidesBuiltin.style), designSystems: themeRecords(at) }),
+    initialResources: themeResources,
   },
 }
 

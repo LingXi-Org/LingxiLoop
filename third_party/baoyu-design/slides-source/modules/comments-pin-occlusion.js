@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCommentsPinOcclusion(runtime2) {
-  var COMMENT_PIN_BUTTON, COMMENT_PIN_OCCLUDER_SELECTOR;
+  var COMMENT_PIN_BUTTON, COMMENT_PIN_OCCLUDER_SELECTOR, CAMERA_MOVED_EVENT;
   function commentPinButtonRect(x, y) {
     let below = window.innerHeight - (y + COMMENT_PIN_BUTTON.gap), above = y - COMMENT_PIN_BUTTON.gap, flip4 = below < 320 && above > below && (above >= 240 || below < 240 && above >= 48), left = Math.min(Math.max(x, 0), Math.max(0, window.innerWidth - COMMENT_PIN_BUTTON.size - COMMENT_PIN_BUTTON.edge)), top = flip4 ? y - COMMENT_PIN_BUTTON.gap - COMMENT_PIN_BUTTON.size : y + COMMENT_PIN_BUTTON.gap;
     return {
@@ -43,10 +43,10 @@ function installCommentsPinOcclusion(runtime2) {
   }
   function observeCommentLayoutShifts(target, callback) {
     let onTransitionEnd = (event) => void (/^(height|width|transform|top|left|right|bottom|inset|flex-basis)/.test(event.propertyName) && !(event.target instanceof Element && event.target.closest(".mc-peer-cursors")) && callback());
-    target?.addEventListener("transitionend", onTransitionEnd, !0), target?.addEventListener("load", callback, !0);
+    target?.addEventListener("transitionend", onTransitionEnd, !0), target?.addEventListener("load", callback, !0), target?.addEventListener(CAMERA_MOVED_EVENT, callback, !0);
     let fonts = typeof document < "u" ? document.fonts : void 0;
     return fonts?.addEventListener?.("loadingdone", callback), () => {
-      target?.removeEventListener("transitionend", onTransitionEnd, !0), target?.removeEventListener("load", callback, !0), fonts?.removeEventListener?.("loadingdone", callback);
+      target?.removeEventListener("transitionend", onTransitionEnd, !0), target?.removeEventListener("load", callback, !0), target?.removeEventListener(CAMERA_MOVED_EVENT, callback, !0), fonts?.removeEventListener?.("loadingdone", callback);
     };
   }
   function createCommentPinReporter(report, enabled = () => !0) {
@@ -79,7 +79,7 @@ function installCommentsPinOcclusion(runtime2) {
     COMMENT_PIN_BUTTON = value;
   }), bindRuntimeValue(runtime2, "COMMENT_PIN_OCCLUDER_SELECTOR", () => COMMENT_PIN_OCCLUDER_SELECTOR, (value) => {
     COMMENT_PIN_OCCLUDER_SELECTOR = value;
-  }), bindRuntimeValue(runtime2, "commentPinButtonRect", () => commentPinButtonRect), bindRuntimeValue(runtime2, "collectCommentPinOccluders", () => collectCommentPinOccluders), bindRuntimeValue(runtime2, "commentPinOccluded", () => commentPinOccluded), bindRuntimeValue(runtime2, "observeBodyChildren", () => observeBodyChildren), bindRuntimeValue(runtime2, "observeCommentLayoutShifts", () => observeCommentLayoutShifts), bindRuntimeValue(runtime2, "createCommentPinReporter", () => createCommentPinReporter), () => {
+  }), bindRuntimeValue(runtime2, "CAMERA_MOVED_EVENT", () => CAMERA_MOVED_EVENT), bindRuntimeValue(runtime2, "commentPinButtonRect", () => commentPinButtonRect), bindRuntimeValue(runtime2, "collectCommentPinOccluders", () => collectCommentPinOccluders), bindRuntimeValue(runtime2, "commentPinOccluded", () => commentPinOccluded), bindRuntimeValue(runtime2, "observeBodyChildren", () => observeBodyChildren), bindRuntimeValue(runtime2, "observeCommentLayoutShifts", () => observeCommentLayoutShifts), bindRuntimeValue(runtime2, "createCommentPinReporter", () => createCommentPinReporter), () => {
     (0, runtime2.initializeUiPropertyFocus)(), COMMENT_PIN_BUTTON = {
       size: 36,
       gap: 4,
@@ -87,11 +87,12 @@ function installCommentsPinOcclusion(runtime2) {
     }, COMMENT_PIN_OCCLUDER_SELECTOR = [
       ...runtime2.OPEN_OVERLAY_SELECTOR.split(", ").filter((selector) => selector !== "[data-mc-scrim]"),
       "[data-mc-strip]",
+      "[data-mc-fold-card]",
       "[" + runtime2.FIND_BAR_ATTRIBUTE + "]",
       "[data-slides-pager] > *",
       "[data-tb-foot]",
       ".mc-follow-note"
-    ].join(", ");
+    ].join(", "), CAMERA_MOVED_EVENT = "sl-camera-moved";
   };
 }
 export {

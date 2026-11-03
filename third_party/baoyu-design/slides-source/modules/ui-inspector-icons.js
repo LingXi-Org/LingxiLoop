@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiInspectorIcons(runtime2) {
   var reactForUiInspectorIcons, propertyIconPath, TEXT_ALIGN_LEFT_ICON, TEXT_ALIGN_CENTER_ICON, TEXT_ALIGN_RIGHT_ICON, TEXT_ALIGN_JUSTIFY_ICON, LINE_HEIGHT_ICON, BORDER_WEIGHT_ICON, BORDER_SIDES_ICON, CORNER_RADIUS_ICON, INDIVIDUAL_CORNERS_ICON, CROP_ICON, SPACING_ICON, BORDER_SOLID_ICON, BORDER_DASHED_ICON, BORDER_DOTTED_ICON, TABLE_ROWS_ICON, TABLE_COLUMNS_ICON, FILL_SOLID_ICON, FILL_GRADIENT_ICON, ANGLE_ICON, FILL_MODE_ICONS, PROPERTY_ICONS_BY_SHAPE_KEY, initializeUiInspectorIcons;

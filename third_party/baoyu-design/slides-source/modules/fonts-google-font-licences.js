@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFontsGoogleFontLicences(runtime2) {
   var knownLicences, listFiles, defaultListRetryDelays, listRetryDelays, listFetchTimeoutMs, listLoadTimeoutMs, loadsByDir, failedAtByDir, failureCooldownMs, GOOGLE_FONT_LISTS_DIR, initializeGoogleFontLicences;
@@ -18,7 +18,14 @@ function installFontsGoogleFontLicences(runtime2) {
   function noticesOf(table, families) {
     return new Map(families.flatMap((family) => {
       if (!Object.hasOwn(table.families, family))
-        return [];
+        return [
+          [
+            family,
+            {
+              licence: "",
+              notice: "License: https://fonts.google.com/specimen/" + encodeURIComponent(family).replace(/%20/g, "+") + "/license"
+            }
+          ]];
       let [textIndex, copyright] = table.families[family];
       return [
         [
@@ -40,9 +47,10 @@ function installFontsGoogleFontLicences(runtime2) {
     let checked5 = table, listed = familyLookup(families), reservedSet = new Set(reservedFamilies);
     return {
       listed,
-      cleared: (input) => {
+      cleared: (input) => listed(input) ?? (typeof input == "string" && input !== "" ? input : void 0),
+      unchecked: (input) => {
         let family = listed(input);
-        return family !== void 0 && !reservedSet.has(family) && Object.hasOwn(checked5.families, family) ? family : void 0;
+        return family === void 0 ||reservedSet.has(family) || ! Object.hasOwn(checked5.families, family);
       },
       noticesOf: (input) => noticesOf(checked5, input)
     };
@@ -66,6 +74,9 @@ function installFontsGoogleFontLicences(runtime2) {
       throw Error("fetch " + String(answer.status));
     return answer.json();
   }
+  function unreadLicenceLists() {
+    return readLicenceLists([], { families: [] }, { texts: [], families: {} });
+  }
   async function loadGoogleFontLicences(options) {
     let get = options.get ?? fetchListFile, load = async () => {
       let [families, reserved, notices] = await Promise.all([listFiles.families, listFiles.reserved, listFiles.notices].map((input) => get(options.dir + input))), gzip = typeof notices == "object" && notices !== null ? notices.gzip : void 0;
@@ -74,7 +85,7 @@ function installFontsGoogleFontLicences(runtime2) {
       return readLicenceLists(families, reserved, await decodeGzipBase64Json(gzip));
     };
     if (options.get === void 0 && !loadsByDir.has(options.dir) && Date.now() - (failedAtByDir.get(options.dir) ?? 0) < failureCooldownMs)
-      return null;
+      return unreadLicenceLists();
     let timer, waitMs = options.deadline === void 0 ? listLoadTimeoutMs : Math.max(0, options.deadline - Date.now()), timeout = new Promise((resolve) => {
       timer = setTimeout(() => resolve(null), waitMs);
     });
@@ -84,9 +95,9 @@ function installFontsGoogleFontLicences(runtime2) {
       let current = pending;
       return pending.catch(() => {
         loadsByDir.get(options.dir) === current && (loadsByDir.delete(options.dir), failedAtByDir.set(options.dir, Date.now()));
-      }), await Promise.race([pending, timeout]);
+      }), await Promise.race([pending, timeout]) ?? unreadLicenceLists();
     } catch {
-      return null;
+      return unreadLicenceLists();
     } finally {
       timer !== void 0 && clearTimeout(timer);
     }
@@ -100,20 +111,13 @@ function installFontsGoogleFontLicences(runtime2) {
 `).join(`
 `);
   }
-  function fontFamilyListPhrase(families) {
-    return families.length === 1 ? "the font " + String(families[0]) + " is" : "the fonts " + families.slice(0, -1).join(", ") + " and " + String(families[families.length - 1]) + " are";
-  }
-  function heldBackFontsNote(families, kind = "link") {
-    let single = families.length === 1, effect = kind === "link" ? (single ? "its text keeps that typeface" : "their text keeps those typefaces") + " only while online" : (single ? "its" : "their") + " text uses a fallback font";
-    return fontFamilyListPhrase(families) + " not included in the file, for licensing reasons; " + effect;
-  }
   function fontNoticeComment(text) {
     return text === "" ? "" : `<!--
 ` + commentSafe(text) + `
 -->
 `;
   }
-  return bindRuntimeValue(runtime2, "loadGoogleFontLicences", () => loadGoogleFontLicences), bindRuntimeValue(runtime2, "googleFontNoticeText", () => googleFontNoticeText), bindRuntimeValue(runtime2, "heldBackFontsNote", () => heldBackFontsNote), bindRuntimeValue(runtime2, "fontNoticeComment", () => fontNoticeComment), bindRuntimeValue(runtime2, "fontFamilyListPhrase", () => fontFamilyListPhrase), bindRuntimeValue(runtime2, "GOOGLE_FONT_LISTS_DIR", () => GOOGLE_FONT_LISTS_DIR, (value) => {
+  return bindRuntimeValue(runtime2, "loadGoogleFontLicences", () => loadGoogleFontLicences), bindRuntimeValue(runtime2, "googleFontNoticeText", () => googleFontNoticeText), bindRuntimeValue(runtime2, "fontNoticeComment", () => fontNoticeComment), bindRuntimeValue(runtime2, "GOOGLE_FONT_LISTS_DIR", () => GOOGLE_FONT_LISTS_DIR, (value) => {
     GOOGLE_FONT_LISTS_DIR = value;
   }), bindRuntimeValue(runtime2, "initializeGoogleFontLicences", () => initializeGoogleFontLicences, (value) => {
     initializeGoogleFontLicences = value;

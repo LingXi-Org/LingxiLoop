@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDesignSystemDeckRestyle(runtime2) {
   var reactForDeckRestyle;
@@ -81,7 +81,7 @@ function installDesignSystemDeckRestyle(runtime2) {
         });
         write((id) => wrote.has(id) ? before.get(id) : void 0, revert, snap.style, faces.filter((face) => droppedFamilies.has(lower(face.family))), familySet(newFaces));
       }
-    }), host.commit(), host.announce("Theme changed on every slide."), !0;
+    }), host.commit(), host.announce("已更改所有幻灯片的主题。"), !0;
   }
   function deckSystem(slides, systems, memory) {
     if (memory !== void 0)

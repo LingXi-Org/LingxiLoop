@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDocumentsEditProtection(runtime2) {
   var MAX_ACTIVE_SLIDE_PROTECTION_MS, ACTIVE_SLIDE_IDLE_RELEASE_MS, protectedSlideId, activeEditingSlideId, recentlyEditingSlideId, recentSlideBusyPredicate, activeSlideProtectionTimers;

@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installPresentationPhoneRemote(runtime2) {
   var REMOTE_ID_PATTERN, REMOTE_MAX_ACKS, REMOTE_CHANNEL, REMOTE_ROUTE, disconnectedRemoteRoom, HOST_HELLO_RETRIES_MS, HOST_MAX_REMOTES, CLIENT_IDLE_MS, CLIENT_LOST_AFTER, CLIENT_ENDED_AFTER, PRESS_RETRY_MS, PRESS_MAX_RESENDS, PRESS_QUEUE_MAX, CONNECTION_GRACE_MS;

@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEmbedsReactFrame(runtime2) {
   var EmbedFrameReact, EmbedFrameJsx, initializeEmbedFrameComponent, initializeEmbeds;
@@ -26,7 +26,7 @@ function installEmbedsReactFrame(runtime2) {
       let value5 = ref3.current.isOwnWrite?.(state) === !0;
       value5 && !ref5.current || state === ref4.current || (ref5.current = !value5, ref4.current = state, ref6.current?.state(state));
     }, [state]);
-    let value3 = interactive !== void 0, value4 = onSave !== void 0, ref7 = EmbedFrameReact.useRef(title);
+    let value3 = interactive !== void 0, keyboard2 = interactive?.keyboard, id = interactive?.id, value4 = onSave !== void 0, ref7 = EmbedFrameReact.useRef(title);
     ref7.current = title;
     let ref8 = EmbedFrameReact.useRef(null);
     return EmbedFrameReact.useEffect(() => {
@@ -48,18 +48,22 @@ function installEmbedsReactFrame(runtime2) {
             ref4.current = input, ref5.current = !1, ref3.current.onSave?.(input);
           }
         } : {},
-        ...value3 ? {
+        ...keyboard2 !== void 0 && id !== void 0 ? {
           interactive: {
+            keyboard: keyboard2,
+            id,
             onPress: (input) => ref3.current.interactive?.onPress(input),
             onKey: (input) => ref3.current.interactive?.onKey(input),
-            onWheel: (input) => ref3.current.interactive?.onWheel(input)
+            onWheel: (input) => ref3.current.interactive?.onWheel(input),
+            onKeyPress: () => ref3.current.interactive?.onKeyPress?.(),
+            onBlur: (input) => ref3.current.interactive?.onBlur?.(input)
           }
         } : {}
       });
       return ref8.current = value5.iframe, ref6.current = value5.host, current.appendChild(value5.iframe), ref3.current.onHost(value5.host), value5.refused && ref3.current.interactive?.onRefused(), () => {
         ref3.current.onHost(null), ref8.current = null, ref6.current = null, value5.dispose();
       };
-    }, [value, allowScripts, markerAttr, value3, value4]), EmbedFrameReact.useEffect(() => {
+    }, [value, allowScripts, markerAttr, keyboard2, id, value4]), EmbedFrameReact.useEffect(() => {
       ref8.current !== null && (ref8.current.title = title);
     }, [title]), EmbedFrameJsx.jsx("div", {
       ref,

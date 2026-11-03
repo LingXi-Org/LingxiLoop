@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesPublishInputs(runtime2) {
   var MAX_FILE_BATCH_ENTRIES, MAX_FILE_PATH_UTF8_BYTES, MAX_FILE_PUBLISH_ENCODED_BYTES, MAX_FILE_BATCH_ENCODED_BYTES, FILE_MIME_TYPES_BY_EXTENSION, FILE_ALLOWED_MIME_TYPES, FILE_BINARY_MIME_TYPES, TEXT_FILE_MIME_TYPES, UNICODE_REPLACEMENT_CHARACTER, FILE_UNPAIRED_SURROGATE_PATTERN, textContainsInvalidUnicode, isHtmlFilePath, FRAME_RUNTIME_BLOCK_START, FRAME_RUNTIME_BLOCK_END, filePublishContent, encodeFileUrlPath;

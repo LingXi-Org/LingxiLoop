@@ -1,10 +1,10 @@
 # baoyu-design Design and Slides provenance
 
-Pinned source: [`JimLiu/baoyu-design@c15e76ef5134228d2bb5da35652d30d7d6b8a34d`](https://github.com/JimLiu/baoyu-design/tree/c15e76ef5134228d2bb5da35652d30d7d6b8a34d) (v2.1.0, MIT, [LICENSE](LICENSE)).
+Pinned source: [`JimLiu/baoyu-design@016b39d7fdcc30bfacee31ea5541498ac53921c6`](https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6) (v2.8.0, MIT, [LICENSE](LICENSE)).
 
 - `upstream/claude-design/` and `upstream/claude-slides/` are the complete, byte-identical `skills/claude-design` and `skills/claude-slides` folders. No host adaptation belongs inside them; `.gitattributes` keeps their bytes on every platform.
-- `manifest.json` lists all 57 files with upstream path, byte count, SHA-256, Git blob SHA-1 and mode; each blob was checked against the pinned Git tree when it was fetched. `server/src/modules/artifacts/artifacts.test.ts` re-verifies every SHA-256.
-- `distribution/` contains every remaining published file, including the design-system skill, templates and references. `complete-manifest.json` inventories the entire 319-file repository; existing snapshot paths and bytes are unchanged.
+- `manifest.json` lists all 59 files with upstream path, byte count, SHA-256, Git blob SHA-1 and mode; each blob was checked against the pinned Git tree when it was fetched. `server/src/modules/artifacts/artifacts.test.ts` re-verifies every SHA-256.
+- `distribution/` contains every remaining published file, including the design-system skill, templates and references. `complete-manifest.json` inventories the entire 542-file repository; paths and bytes match the pinned Git tree.
 - Design retains its original bundled editor. Slides is rebuilt from [recovered named source](slides-source/README.md), including model, compiler, editing and export implementations, with the user's subsequent video removal applied to executable code.
 
 ## Native Slides build
@@ -30,5 +30,43 @@ Host routes live in `server/src/modules/artifacts/` and `src/features/artifacts/
 | `comments.json` + lock file | `artifact_comments.doc`, locked by row; the comment model functions are ported unchanged |
 | `--agent-hook` / `comments --wait` | A sent comment becomes a conversation message to the room's agent |
 | `artifact.mjs check <root>` | `check.ts` runs the vendored `artifact.mjs check` unchanged on a temporary copy |
-| `SKILL.md` and `artifact-type/reference/` | `skills.ts` registers the SKILL.md text with only "The calls" and "Comments" replaced by native tools; references via `<kind>.read_reference` |
+| `SKILL.md` and `artifact-type/reference/` | `skills.ts` registers the SKILL.md text with only local CLI, comments and sharing instructions adapted to native tools; references via `<kind>.read_reference` |
 | Local `<root>` folder, `open`, `list`, `cp` | One Design per conversation, Slides per project; Slides design systems stored under project/ds/<namespace> through native tools |
+
+## Chinese copy and built-in themes
+
+Design's UI is translated at build time with `scripts/design-copy.mjs` and
+`host/design-zh-CN.json`, sharing the Slides catalog where wording agrees.
+Recovered Slides modules retain translated native UI and template placeholders.
+User content, persisted names, identifiers, protocol values, font/brand names and
+format abbreviations are preserved. ICU tests retain arguments and plural/select
+branches. The original vendored files remain byte-identical.
+
+New Design and Slides documents install the same three source-backed systems:
+
+- **Claude 经典** (`slides-builtin`): the existing `slides-source/builtin-style.json`,
+  extracted from the pinned Slides `namedSlideColors` and `anthropicTypeScale`.
+  Its color/type tokens and default Slides look memory are unchanged from v2.1.0.
+  This is the source-derived Claude-style default, not a separately published
+  official Claude design-system package.
+- **Ember** (`baoyu-ember`): the exact parsed `tokens.json` embedded in
+  `distribution/skills/claude-design-system/artifact-type/demo.json` under
+  `content.files`. Includes the upstream Light/Dark variants.
+- **Seazar** (`baoyu-seazar`): the exact
+  `distribution/skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json`.
+  Includes the upstream Light/Dark/High contrast variants.
+
+Ember and Seazar are examples shipped by the MIT-licensed baoyu-design project,
+not invented LingxiLoop palettes or claimed official Claude themes.
+`host/builtin-themes.json` preserves their token values, references and typography,
+with fixed source URLs, commit and JSON pointers. Initialization tests compare
+installed data to those archived sources. Only wrapper display titles are local.
+Both editors expose all six looks through their existing theme pickers. Their fonts use the upstream local system stacks; no font download
+or new dependency is required.
+
+Only new artifacts receive these records/token files through
+`initialIndex`/`initialResources`; existing artifacts are never backfilled.
+Slides retains its Claude-style default. Agent instructions use the installed
+Claude tokens for new content when no other style is requested. Existing authored
+content keeps its look. All three systems fit within the current four-system limit.
+See [upgrade evidence](../../docs/evidence/issue-648/README.md).

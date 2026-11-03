@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiAvatarStack(runtime2) {
   var reactForUiAvatarStack, jsxForUiAvatarStack, AVATAR_STACK_SIZE_CLASSES, AVATAR_STACK_SURPLUS_SIZE_CLASSES, AVATAR_STACK_DEFAULT_MAX, AVATAR_STACK_ITEM_CLASS, AVATAR_STACK_SURPLUS_TUCK_CLASSES, AvatarStack, initializeUiAvatarStack;
@@ -55,7 +55,7 @@ function installUiAvatarStack(runtime2) {
         let value = reactForUiAvatarStack.Children.toArray(children), value2 = total ?? value.length, value3 = (0, runtime2.useTranslation)("avatarGroup", "{count} {noun}", {
           count: value2,
           noun: noun ?? ""
-        }), value4 = ariaLabel ?? value3, value5 = Math.max(0, Math.min(max2, value.length)), value6 = value.slice(0, value5), value7 = value.slice(value5), value8 = Math.max(0, value2 - value5), value9 = value7.map(avatarAccessibleName).filter((items) => !!items && items.length > 0).slice(0, AVATAR_STACK_DEFAULT_MAX), value10 = value8 - value9.length, value11 = value9.length > 0 ? value9.join(", ") + (value10 > 0 ? `, and ${value10} other${value10 === 1 ? "" : "s"}` : "") : void 0, value12 = surplusTooltip ? value11 : void 0, value13 = (0, runtime2.useTranslation)("overflowCount", "and {count} more", {
+        }), value4 = ariaLabel ?? value3, value5 = Math.max(0, Math.min(max2, value.length)), value6 = value.slice(0, value5), value7 = value.slice(value5), value8 = Math.max(0, value2 - value5), value9 = value7.map(avatarAccessibleName).filter((items) => !!items && items.length > 0).slice(0, AVATAR_STACK_DEFAULT_MAX), value10 = value8 - value9.length, value11 = value9.length > 0 ? value9.join(", ") + (value10 > 0 ? `，另有 ${value10} 人` : "") : void 0, value12 = surplusTooltip ? value11 : void 0, value13 = (0, runtime2.useTranslation)("overflowCount", "另有 {count} 人", {
           count: value8
         }) + (value11 ? `: ${value11}` : ""), memo4 = reactForUiAvatarStack.useMemo(() => ({
           size: size4

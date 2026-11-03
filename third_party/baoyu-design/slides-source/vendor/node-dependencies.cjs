@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e, MIT.
+// Recovered JimLiu/baoyu-design 016b39d Node dependencies (MIT); see ../README.md.
 // Published node/compiler.cjs preserves the named module implementation.
 var __create = Object.create;
 
@@ -28917,7 +28917,7 @@ var require_pptxgen_cjs = __commonJS({
               textObj.options[key] = val;
           }), strSlideXml += genXmlTextRun(textObj), !textObj.text && opts.fontSize || textObj.options.fontSize)
             reqsClosingFontSize = true, opts.fontSize = opts.fontSize || textObj.options.fontSize;
-        }), slideObj._type === "tablecell" && (opts.fontSize || opts.fontFace)) {
+        }), opts.fontFace || slideObj._type === "tablecell" && opts.fontSize) {
           if (opts.fontFace)
             strSlideXml += `<a:endParaRPr lang="${opts.lang || "en-US"}"` + (opts.fontSize ? ` sz="${Math.round(opts.fontSize * 100)}"` : "") + ' dirty="0">', strSlideXml += `<a:latin typeface="${opts.fontFace}" charset="0"/>`, strSlideXml += `<a:ea typeface="${opts.fontFace}" charset="0"/>`, strSlideXml += `<a:cs typeface="${opts.fontFace}" charset="0"/>`, strSlideXml += "</a:endParaRPr>";
           else

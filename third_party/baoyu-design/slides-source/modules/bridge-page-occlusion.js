@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installBridgePageOcclusion(runtime2) {
   var ReactPageOcclusion;
@@ -32,7 +32,7 @@ function installBridgePageOcclusion(runtime2) {
           x: slotRect.left + slotRect.width / 2,
           y: document.documentElement.clientHeight - (slotRect.top + slotRect.height / 2),
           ...chatSlot?.hasAttribute("data-chat-slot-wide") === !0 && {
-            width: slotRect.width
+            width: (0, runtime2.chatSlotReportedWidth)(chatSlot, slotRect.width)
           }
         }
       });

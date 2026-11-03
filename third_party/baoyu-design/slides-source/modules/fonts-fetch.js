@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFontsFetch(runtime2) {
-  var googleFontsImportRegex, googleFontFileUrlRegex, resourceFetchTimeoutMs, resourceFetchRetryBudgetMs, defaultResourceFetchRetryDelayMs, minimumResourceFetchRetryMs, resourceFetchRetryDelayMs, ResourceFetchError, retryableHttpStatuses, fetchErrorStatus, isNonRetryableFetchStatus, isNonRetryableFetchError, warmedStylesheets, warmingStylesheets, stylesheetWarmingStarted = !1, unwarmedStylesheets, googleFontFaceSheetPattern, defaultStylesheetWarmingSchedule, stylesheetWarmingSchedule, maxPrefetchedFontFiles, maxPrefetchedFontBytes, prefetchedFontFiles, prefetchedFontBytes = 0, keepPrefetchedFontDataUrls = !1, prefetchedFontDataUrls, cachedFontStylesheet, fontStylesheetSettled, fetchFontDataUrl, initializeFontFetching;
+  var googleFontsImportRegex, googleFontFileUrlRegex, resourceFetchTimeoutMs, resourceFetchRetryBudgetMs, defaultResourceFetchRetryDelayMs, minimumResourceFetchRetryMs, resourceFetchRetryDelayMs, ResourceFetchError, retryableHttpStatuses, fetchErrorStatus, isNonRetryableFetchStatus, isNonRetryableFetchError, NotFontError, FONT_FILE_SIGNATURES, warmedStylesheets, warmingStylesheets, stylesheetWarmingStarted = !1, unwarmedStylesheets, googleFontFaceSheetPattern, defaultStylesheetWarmingSchedule, stylesheetWarmingSchedule, maxPrefetchedFontFiles, maxPrefetchedFontBytes, prefetchedFontFiles, prefetchedFontBytes = 0, keepPrefetchedFontDataUrls = !1, prefetchedFontDataUrls, cachedFontStylesheet, fontStylesheetSettled, fetchFontDataUrl, initializeFontFetching;
   function googleFontImports(css) {
     let hrefs = [
       ...new Set([...css.matchAll(googleFontsImportRegex)].map((input) => input[2]))
@@ -27,6 +27,17 @@ function installFontsFetch(runtime2) {
   function fetchFailureKind(error) {
     return fetchErrorStatus(error) !== void 0 ? "status" : typeof error == "object" && error !== null && "name" in error && error.name === "AbortError" ? "timeout" : "network";
   }
+  function sniffFontFileType(head, size4) {
+    return FONT_FILE_SIGNATURES.find((signature) => size4 >= signature.headerBytes && signature.head.every((byte, index4) => head[index4] === byte))?.type;
+  }
+  async function fontBlobDataUrl(blob) {
+    let type = sniffFontFileType(new Uint8Array(await blob.slice(0, 4).arrayBuffer()), blob.size);
+    if (type === void 0)
+      throw new NotFontError();
+    return readBlobAsDataUrl(blob.type === type ? blob : new Blob([blob], {
+      type
+    }));
+  }
   async function fetchWithSingleRetry(fetchWithTimeout, timeoutMs, retry) {
     let startedAt = Date.now();
     try {
@@ -35,7 +46,7 @@ function installFontsFetch(runtime2) {
       let remaining = resourceFetchRetryBudgetMs - (Date.now() - startedAt);
       if (!retry || isNonRetryableFetchError(error) || Math.min(timeoutMs, remaining) < minimumResourceFetchRetryMs)
         throw error;
-      let delay = Math.min(resourceFetchRetryDelayMs, remaining - minimumResourceFetchRetryMs);
+      let delay = error instanceof NotFontError ? 0 : Math.min(resourceFetchRetryDelayMs, remaining - minimumResourceFetchRetryMs);
       return await new Promise((resolve) => {
         setTimeout(resolve, delay);
       }), fetchWithTimeout(Math.min(timeoutMs, remaining - delay), error);
@@ -47,7 +58,7 @@ function installFontsFetch(runtime2) {
       let state = {
         signal: controller.signal,
         credentials: options.credentials ?? "omit"
-      }, cache2 = options.cache === "force-cache" && fetchErrorStatus(previousError) !== void 0 ? "reload" : options.cache, value = await fetch(url, {
+      }, cache2 = options.cache === "force-cache" && ( fetchErrorStatus(previousError) !== void 0 || previousError instanceof NotFontError) ? "reload" : options.cache, value = await fetch(url, {
         ...state,
         ...cache2 !== void 0 && {
           cache: cache2
@@ -113,7 +124,7 @@ function installFontsFetch(runtime2) {
           let blob = await fetchResourceWithTimeout(url, resourceFetchTimeoutMs, {
             cache: "force-cache"
           }, (input) => input.blob());
-          prefetchedFontBytes += blob.size, keepPrefetchedFontDataUrls && prefetchedFontDataUrls.set(url, await readBlobAsDataUrl(blob));
+          prefetchedFontBytes += blob.size, keepPrefetchedFontDataUrls && prefetchedFontDataUrls.set(url, await fontBlobDataUrl(blob));
         } catch (error) {
           if (isNonRetryableFetchError(error))
             continue;
@@ -144,7 +155,7 @@ function installFontsFetch(runtime2) {
     });
     return googleFontFaceSheetPattern.test(css) && warmedStylesheets.set(href, css), css;
   }
-  return bindRuntimeValue(runtime2, "googleFontImports", () => googleFontImports), bindRuntimeValue(runtime2, "documentFontSet", () => documentFontSet), bindRuntimeValue(runtime2, "googleFontVariantAvailable", () => googleFontVariantAvailable), bindRuntimeValue(runtime2, "fetchFailureKind", () => fetchFailureKind), bindRuntimeValue(runtime2, "fetchWithSingleRetry", () => fetchWithSingleRetry), bindRuntimeValue(runtime2, "fetchResourceWithTimeout", () => fetchResourceWithTimeout), bindRuntimeValue(runtime2, "fetchResourceText", () => fetchResourceText), bindRuntimeValue(runtime2, "fetchResourceDataUrl", () => fetchResourceDataUrl), bindRuntimeValue(runtime2, "readBlobAsDataUrl", () => readBlobAsDataUrl), bindRuntimeValue(runtime2, "warmFontStylesheets", () => warmFontStylesheets), bindRuntimeValue(runtime2, "prefetchFontFiles", () => prefetchFontFiles), bindRuntimeValue(runtime2, "fetchFontStylesheet", () => fetchFontStylesheet), bindRuntimeValue(runtime2, "googleFontsImportRegex", () => googleFontsImportRegex, (value) => {
+  return bindRuntimeValue(runtime2, "googleFontImports", () => googleFontImports), bindRuntimeValue(runtime2, "documentFontSet", () => documentFontSet), bindRuntimeValue(runtime2, "googleFontVariantAvailable", () => googleFontVariantAvailable), bindRuntimeValue(runtime2, "fetchFailureKind", () => fetchFailureKind), bindRuntimeValue(runtime2, "sniffFontFileType", () => sniffFontFileType), bindRuntimeValue(runtime2, "fontBlobDataUrl", () => fontBlobDataUrl), bindRuntimeValue(runtime2, "fetchWithSingleRetry", () => fetchWithSingleRetry), bindRuntimeValue(runtime2, "fetchResourceWithTimeout", () => fetchResourceWithTimeout), bindRuntimeValue(runtime2, "fetchResourceText", () => fetchResourceText), bindRuntimeValue(runtime2, "fetchResourceDataUrl", () => fetchResourceDataUrl), bindRuntimeValue(runtime2, "readBlobAsDataUrl", () => readBlobAsDataUrl), bindRuntimeValue(runtime2, "warmFontStylesheets", () => warmFontStylesheets), bindRuntimeValue(runtime2, "prefetchFontFiles", () => prefetchFontFiles), bindRuntimeValue(runtime2, "fetchFontStylesheet", () => fetchFontStylesheet), bindRuntimeValue(runtime2, "googleFontsImportRegex", () => googleFontsImportRegex, (value) => {
     googleFontsImportRegex = value;
   }), bindRuntimeValue(runtime2, "googleFontFileUrlRegex", () => googleFontFileUrlRegex, (value) => {
     googleFontFileUrlRegex = value;
@@ -166,6 +177,10 @@ function installFontsFetch(runtime2) {
     isNonRetryableFetchStatus = value;
   }), bindRuntimeValue(runtime2, "isNonRetryableFetchError", () => isNonRetryableFetchError, (value) => {
     isNonRetryableFetchError = value;
+  }), bindRuntimeValue(runtime2, "NotFontError", () => NotFontError, (value) => {
+    NotFontError = value;
+  }), bindRuntimeValue(runtime2, "FONT_FILE_SIGNATURES", () => FONT_FILE_SIGNATURES, (value) => {
+    FONT_FILE_SIGNATURES = value;
   }), bindRuntimeValue(runtime2, "cachedFontStylesheet", () => cachedFontStylesheet, (value) => {
     cachedFontStylesheet = value;
   }), bindRuntimeValue(runtime2, "fontStylesheetSettled", () => fontStylesheetSettled, (value) => {
@@ -180,17 +195,51 @@ function installFontsFetch(runtime2) {
       return status !== void 0 && isNonRetryableFetchStatus(status);
     }, stylesheetWarmingStarted = !1, maxPrefetchedFontFiles = 16, maxPrefetchedFontBytes = 2097152, prefetchedFontBytes = 0, keepPrefetchedFontDataUrls = !1, cachedFontStylesheet = (href) => warmedStylesheets.get(href), fontStylesheetSettled = (href) => warmedStylesheets.has(href) || unwarmedStylesheets.has(href), fetchFontDataUrl = (input) => {
       let prefetched = keepPrefetchedFontDataUrls ? prefetchedFontDataUrls.get(input) : void 0;
-      return prefetched !== void 0 ? Promise.resolve(prefetched) : fetchResourceDataUrl(input, resourceFetchTimeoutMs, {
+      if ( prefetched !== void 0)
+        return Promise.resolve(prefetched);
+      let options = {
         retry: !0,
         cache: "force-cache"
-      });
+      };
+      return fetchWithSingleRetry((timeoutMs, previousError) => fetchResourceWithTimeout(input, timeoutMs, options, async (response) => fontBlobDataUrl(await response.blob()), previousError), resourceFetchTimeoutMs, !0);
     }, initializeFontFetching = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeFontCatalog)(), googleFontsImportRegex = /@import url\((["']?)(https:\/\/fonts\.googleapis\.com\/[^"')\s]+)\1\);?/g, googleFontFileUrlRegex = /url\((["']?)(https:\/\/fonts\.gstatic\.com\/[^"')\s]+)\1\)/g, resourceFetchRetryDelayMs = defaultResourceFetchRetryDelayMs, ResourceFetchError = class extends Error {
         status;
         constructor(input) {
           super("fetch " + String(input)), this.status = input;
         }
-      }, retryableHttpStatuses = /* @__PURE__ */ new Set([408, 425, 429]), warmedStylesheets = /* @__PURE__ */ new Map(), warmingStylesheets = /* @__PURE__ */ new Map(), unwarmedStylesheets = /* @__PURE__ */ new Set(), googleFontFaceSheetPattern = /@font-face\s*\{[^}]*https:\/\/fonts\.gstatic\.com\//i, defaultStylesheetWarmingSchedule = [0, 2e3, 1e4, 3e4], stylesheetWarmingSchedule = defaultStylesheetWarmingSchedule, prefetchedFontFiles = /* @__PURE__ */ new Set(), prefetchedFontDataUrls = /* @__PURE__ */ new Map();
+      }, retryableHttpStatuses = /* @__PURE__ */ new Set([408, 425, 429]), NotFontError = class extends Error {
+        constructor() {
+          super("not a font");
+          this.name = "NotFontError";
+        }
+      }, FONT_FILE_SIGNATURES = [
+        {
+          head: [119, 79, 70, 50],
+          type: "font/woff2",
+          headerBytes: 48
+        },
+        {
+          head: [119, 79, 70, 70],
+          type: "font/woff",
+          headerBytes: 44
+        },
+        {
+          head: [0, 1, 0, 0],
+          type: "font/ttf",
+          headerBytes: 12
+        },
+        {
+          head: [79, 84, 84, 79],
+          type: "font/otf",
+          headerBytes: 12
+        },
+        {
+          head: [116, 116, 99, 102],
+          type: "font/collection",
+          headerBytes: 12
+        }
+      ], warmedStylesheets = /* @__PURE__ */ new Map(), warmingStylesheets = /* @__PURE__ */ new Map(), unwarmedStylesheets = /* @__PURE__ */ new Set(), googleFontFaceSheetPattern = /@font-face\s*\{[^}]*https:\/\/fonts\.gstatic\.com\//i, defaultStylesheetWarmingSchedule = [0, 2e3, 1e4, 3e4], stylesheetWarmingSchedule = defaultStylesheetWarmingSchedule, prefetchedFontFiles = /* @__PURE__ */ new Set(), prefetchedFontDataUrls = /* @__PURE__ */ new Map();
     });
   };
 }

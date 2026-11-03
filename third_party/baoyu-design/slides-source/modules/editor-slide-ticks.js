@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorSlideTicks(runtime2) {
   var ReactSlideTicks, SlideTicksJsx, SLIDE_TICK_BASE_REM, SLIDE_TICK_HOVER_GROWTH_REM, SLIDE_TICK_HOVER_SPREAD, SLIDE_TICKS_REACH_PX, SLIDE_TICKS_GUTTER;
@@ -41,7 +41,7 @@ function installEditorSlideTicks(runtime2) {
         children: SlideTicksJsx.jsx("div", {
           ref: listRef,
           role: "listbox",
-          "aria-label": "演示文稿",
+          "aria-label": runtime2.SLIDES_LIST_LABEL,
           "aria-orientation": "vertical",
           "data-reachable": reachable ? "" : void 0,
           className: "ml-1 flex max-h-full min-h-0 w-fit flex-col self-start px-1.5 py-1.5 opacity-0 transition-opacity duration-snap ease-out motion-reduce:transition-none has-[:focus-visible]:opacity-100! data-reachable:pointer-events-auto touch:pointer-events-auto touch:opacity-100!",

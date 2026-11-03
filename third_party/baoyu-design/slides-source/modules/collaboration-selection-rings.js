@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCollaborationSelectionRings(runtime2) {
   var ReactPeerSelectionMeasurement, ReactPeerSelections, PeerSelectionJsx, MAX_PEER_SELECTED_UNITS, MAX_PEER_SELECTION_KEY_CHARS;
@@ -29,7 +29,7 @@ function installCollaborationSelectionRings(runtime2) {
       let who = value.presence.who, value5 = typeof who == "object" && who !== null ? who : {};
       items.push({
         peer: value.peer,
-        collaborator: (0, runtime2.peerColorIndex)(value5.c, value.peer),
+        color: (0, runtime2.peerColor)(value5.c, value.by ?? value.peer),
         selected: value3,
         lists: state
       });
@@ -60,7 +60,10 @@ function installCollaborationSelectionRings(runtime2) {
         },
         scale: value,
         rotation: input.rotation,
-        collaborator: input.collaborator
+        collaborator: 1,
+        style: {
+          "--cds-editor-collaborator-1": input.color
+        }
       }, input.key))
     });
   }

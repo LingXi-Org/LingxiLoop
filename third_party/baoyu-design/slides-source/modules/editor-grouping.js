@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorGrouping(runtime2) {
   var GROUP_COMMAND, GROUP_TEXT_TAP_ENABLED, GROUP_MEMBER_SIZES_FROM_MODEL, GROUP_RESIZING_ENABLED, GROUP_GROWING_STACK_CHILDREN_ENABLED, GROUP_MIXED_FRAME_STACK_CHILDREN_ENABLED, UNGROUP_UNMARKED_STACK_ENABLED, GROUP_REFUSAL_MESSAGES, GROUP_COORDINATE_TOLERANCE, roundGroupCoordinate, groupMainDimension, structurallyEqualGroupValues, hasGroupSizingConstraint, childHasGrow, GROUP_ZERO_ANCHOR, hasLeadingOverlayAnchors, isLeadingOverlayGroup;
@@ -224,6 +224,13 @@ function installEditorGrouping(runtime2) {
       build: before.build
     } : value3;
   }
+  function linkShortcutKind(event, apple2 = (0, runtime2.isApplePlatform)()) {
+    if (event.shiftKey || event.altKey)
+      return;
+    let nonLatinLetter = /^[\p{L}\p{M}]$/u.test(event.key) && !/\p{Script=Latin}/u.test(event.key);
+    if (!(event.key.toLowerCase() !== "k" && !(event.code === "KeyK" && nonLatinLetter)))
+      return !event.metaKey && !event.ctrlKey ? "plain" : (apple2 ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey) ? "mod" : void 0;
+  }
   function canFlattenNestedStackGroup(parent, child) {
     return parent.kind !== "stack" || child.kind !== "stack" || parent.group !== !0 || parent.style !== void 0 && Object.keys(parent.style).length > 0 ? !1 : parent.dir === child.dir && parent.gap === child.gap && parent.align === child.align && parent.wrap !== !0 && parent.justify === void 0 && !parent.children.some((source) => source.kind === "spacer");
   }
@@ -261,7 +268,7 @@ function installEditorGrouping(runtime2) {
     hasLeadingOverlayAnchors = value;
   }), bindRuntimeValue(runtime2, "isLeadingOverlayGroup", () => isLeadingOverlayGroup, (value) => {
     isLeadingOverlayGroup = value;
-  }), bindRuntimeValue(runtime2, "moveLeadingGroupLayer", () => moveLeadingGroupLayer), bindRuntimeValue(runtime2, "scaleLeadingOverlayGroup", () => scaleLeadingOverlayGroup), bindRuntimeValue(runtime2, "resizeGroupedFrame", () => resizeGroupedFrame), bindRuntimeValue(runtime2, "canFlattenNestedStackGroup", () => canFlattenNestedStackGroup), () => {
+  }), bindRuntimeValue(runtime2, "moveLeadingGroupLayer", () => moveLeadingGroupLayer), bindRuntimeValue(runtime2, "scaleLeadingOverlayGroup", () => scaleLeadingOverlayGroup), bindRuntimeValue(runtime2, "resizeGroupedFrame", () => resizeGroupedFrame), bindRuntimeValue(runtime2, "linkShortcutKind", () => linkShortcutKind), bindRuntimeValue(runtime2, "canFlattenNestedStackGroup", () => canFlattenNestedStackGroup), () => {
     (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeModelGeometry)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeModelSelection)(), GROUP_COMMAND = "group", GROUP_TEXT_TAP_ENABLED = !0, GROUP_MEMBER_SIZES_FROM_MODEL = !1, GROUP_RESIZING_ENABLED = !0, GROUP_GROWING_STACK_CHILDREN_ENABLED = !0, GROUP_MIXED_FRAME_STACK_CHILDREN_ENABLED = !0, UNGROUP_UNMARKED_STACK_ENABLED = !1, GROUP_REFUSAL_MESSAGES = {
       few: (0, runtime2.formatMessage)({
         defaultMessage: "请选择至少两个对象进行组合。",

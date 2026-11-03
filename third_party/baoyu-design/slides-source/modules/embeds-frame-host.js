@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEmbedsFrameHost(runtime2) {
   var EmbedFrameHost, scheduleEmbedAnimationFrame, clampEmbedNumber, initializeEmbedFrameHost;
@@ -585,15 +585,28 @@ function installEmbedsFrameHost(runtime2) {
       renderTimeoutMs: options.renderTimeoutMs,
       onNavigating: value2,
       input: options.interactive,
+      onReplaced: () => {
+        if (!(flag || flag3)) {
+          if (!options.onRelocated)
+            return value2();
+          flag3 = !0, options.onRelocated();
+        }
+      },
       ...options.onSave ? {
         onSave: options.onSave
       } : {}
-    });
+    }), unmountKeyboard;
+    try {
+      unmountKeyboard = options.interactive?.keyboard.mount(options.interactive.id, value);
+    } catch (error) {
+      throw value5.dispose(), error;
+    }
     return {
       iframe: value,
       host: value5,
       refused: flag2,
       dispose: () => {
+        unmountKeyboard?.(),
         value5.dispose(), value.remove();
       }
     };
@@ -620,6 +633,7 @@ function installEmbedsFrameHost(runtime2) {
       navigated = !1;
       onNavigating;
       input;
+      onReplaced;
       onSave;
       waitingState = null;
       sent = 0;
@@ -629,24 +643,48 @@ function installEmbedsFrameHost(runtime2) {
       }
       port = null;
       portFrom = null;
+      replaced = !1;
+      atMost = 1 / 0;
+      atLeast = performance.now();
+      pings = /* @__PURE__ */ new Set();
       wheel = null;
       lastUpdate = null;
       constructor(input) {
-        this.frame = input.frame, this.hostWindow = input.hostWindow ?? window, this.onNavigating = input.onNavigating, this.input = input.input, this.onSave = input.onSave, this.renderTimeoutMs = input.renderTimeoutMs ?? 1500, this.onMessage = (input2) => this.receive(input2), this.hostWindow.addEventListener("message", this.onMessage);
+        this.frame = input.frame, this.hostWindow = input.hostWindow ?? window, this.onNavigating = input.onNavigating, this.input = input.input, this.onReplaced = input.onReplaced, this.onSave = input.onSave, this.renderTimeoutMs = input.renderTimeoutMs ?? 1500, this.onMessage = (input2) => this.receive(input2), this.hostWindow.addEventListener("message", this.onMessage);
       }
       get ready() {
         return this._ready;
       }
+      ping() {
+        if (this.port === null)
+          return;
+        let value = performance.now();
+        this.pings.add(value), this.port.postMessage(value);
+      }
       closePort() {
-        this.port !== null && (this.port.onmessage = null, this.port.close(), this.port = null);
+        this.port !== null && (this.port.onmessage = null, this.port.close(), this.port = null, this.pings.clear());
       }
       receiveInput(input) {
         if (this.disposed || this.navigated || this.input === void 0 || typeof input != "object" || input === null)
           return;
-        let value = input;
+        let value = input, { keyboard: keyboard2, id } = this.input, [at, sentAt, now] = [
+          Number(value.t),
+          Number(value.now),
+          performance.now()
+        ];
+        Number.isFinite(sentAt) && (this.atMost = Math.min(this.atMost, now - sentAt));
+        let hostAt = at + Math.min(this.atMost, this.atLeast), placedAt = sentAt >= at && hostAt <= now ? hostAt : NaN;
         if (value.kind === "press")
-          this.input.onPress(value.cancelled === !0);
+          keyboard2.reported(id, placedAt, now - placedAt) &&
+          this.input.onPress(value.cancelled === !0), this.ping();
+        else if (value.kind === "echo")
+          this.pings.delete(Number(value.of)) && Number.isFinite(sentAt) && (this.atLeast = Math.max(this.atLeast, Number(value.of) - sentAt));
+        else if (value.kind === "keypress")
+          keyboard2.keyed(id, placedAt, now - placedAt) && this.input.onKeyPress?.(), this.ping();
+        else if (value.kind === "blur")
+          keyboard2.blurred(id), this.input.onBlur?.(placedAt);
         else if (value.kind === "key" && (value.key === "Delete" || value.key === "Escape"))
+          value.key === "Escape" && keyboard2.pressedElsewhere(placedAt),
           this.input.onKey(value.key);
         else if (value.kind === "wheel") {
           let value2 = value.pinch === !0;
@@ -719,7 +757,7 @@ function installEmbedsFrameHost(runtime2) {
           }
         });
       }
-      render(input, options, context, value) {
+      render(input, options, context, value, renderOptions = {}) {
         let value2 = Math.max(1, Math.min(8192, Math.floor(context))), value3 = Math.max(1, Math.min(8192, Math.floor(value))), value4 = this.seq++;
         return new Promise((input2) => {
           let value5 = setTimeout(() => {
@@ -736,7 +774,8 @@ function installEmbedsFrameHost(runtime2) {
             t: input,
             props: normalizeEmbedProps(options),
             width: value2,
-            height: value3
+            height: value3,
+            settlePictures: renderOptions.settlePictures === !0
           });
         });
       }
@@ -760,14 +799,20 @@ function installEmbedsFrameHost(runtime2) {
             return;
           }
           if (data.type === "appifact-embed:port") {
-            let value = dataset.ports?.[0], value2 = this.port === null ? !this._ready : dataset.source !== this.portFrom;
-            if (this.input === void 0 || value === void 0 || !value2)
+            let value = dataset.ports?.[0];
+            if (this.input === void 0 || value === void 0)
               return;
-            this.closePort(), this.port = value, this.portFrom = dataset.source, value.onmessage = (input) => this.receiveInput(input.data);
+            if (this.port !== null && dataset.source !== this.portFrom) {
+            this.closePort(), this.replaced = !0, this.onReplaced?.();
+              return;
+            }
+            if (this.port !== null || this._ready || this.replaced)
+              return;
+            this.port = value, this.portFrom = dataset.source, value.onmessage = (input) => this.receiveInput(input.data);
             return;
           }
           if (data.type === "appifact-embed:ready") {
-            data.version === 1 && (this._ready = !0, this._version = data.version, this.readyFrom === null && (this.readyFrom = dataset.source), this.lastUpdate !== null && this.post({
+            data.version === 1 && (this._ready = !0, this._version = data.version, this.readyFrom === null && (this.readyFrom = dataset.source), this.ping(), this.lastUpdate !== null && this.post({
               type: "appifact-embed:update",
               ...this.lastUpdate
             }), this.waitingState !== null && this.post({

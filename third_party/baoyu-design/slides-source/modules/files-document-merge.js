@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesDocumentMerge(runtime2) {
   var FILE_MIGRATION_MARKER_FIELDS, isMergeObject, isStringArray, ownMergeProperty, cloneMergeValue;

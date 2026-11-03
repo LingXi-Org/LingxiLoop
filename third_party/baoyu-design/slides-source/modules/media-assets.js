@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installMediaAssets(runtime2) {
   var storedBlobPattern, allowedImageMimeTypes, maxImageUploadBytes, maxStoredImageBytes, maxStoredImageEdge, downsampleStoredImage, blobFetchPromises, blobObjectUrls, blobCacheByteSizes, blobCacheBytes, maxBlobCacheBytes, recentBlobFetchFailures, blobFailureCooldownMs, initializeAssetStorage;
@@ -65,6 +65,7 @@ function installMediaAssets(runtime2) {
       } catch {
         return callback("downsize_failed");
       }
+    let releaseLeaveWarning = options.unseen === !0 ? void 0 : (0, runtime2.holdHostLeaveWarning)();
     try {
       let value7 = normalizeUploadedAsset(await value5.upload.call(value5, value6, {
         type: value6.type || type
@@ -76,6 +77,8 @@ function installMediaAssets(runtime2) {
     } catch (value7) {
       let value8 = typeof value7 == "object" && value7 !== null ? String(value7.code ?? "") : "";
       return callback(value8 || "upload_failed");
+    } finally {
+      releaseLeaveWarning?.();
     }
   }
   function accountBlobCacheEntry(url, byteLength) {

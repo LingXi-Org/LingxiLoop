@@ -31,7 +31,7 @@ test('Slides exports fetch formula fonts from the public stylesheet while projec
 })
 
 test('Design preview math covers both external and inline runtime without changing archived bytes', async () => {
-  const original = await readFile('third_party/baoyu-design/upstream/claude-design/scripts/editor/assets/index-DavTckY0.js','utf8')
+  const original = await readFile('third_party/baoyu-design/upstream/claude-design/scripts/editor/assets/index-CYLuwRoc.js','utf8')
   const adapted = adaptDesignMath(original, '/* math regression marker */')
   assert.ok(adapted.includes('supportJs:e.dcSupportSource+'))
   assert.ok(adapted.includes('/* math regression marker */'))

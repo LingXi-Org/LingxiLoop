@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDocumentsJsonRecords(runtime2) {
   var ReactSpeakerNotesPanel, JSON_HTML_ESCAPE_PATTERN, JSON_LINE_SEPARATOR_ESCAPE_PATTERN, DELETE_DOCUMENT_RECORD, canonicalJsonCache;

@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesDebugPanel(runtime2) {
   var FILES_DEBUG_REFRESH_MS, FILES_DEBUG_EVENT_STAGGER_MS, FILES_DEBUG_VIEW_REFRESH_MS, FILES_DEBUG_PANEL_DEFAULT_SIZE, FILES_DEBUG_PANEL_MIN_SIZE, FILES_DEBUG_TOGGLE_SHORTCUT, createFilesDebugTabId, formatFilesDebugTimestamp, escapeFilesDebugHtml;

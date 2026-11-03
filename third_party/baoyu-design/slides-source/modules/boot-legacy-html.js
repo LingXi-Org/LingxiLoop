@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installBootLegacyHtml(runtime2) {
   var LEGACY_SLIDES_HTML_PATH, LEGACY_SLIDES_DEMO_PATH, MAX_LEGACY_HTML_CHARS, parseLegacySlidesHtml;

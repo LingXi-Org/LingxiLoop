@@ -1,4 +1,4 @@
-// Reconstructed from baoyu-design c15e76e (MIT). See ../README.md and source-map.json.
+// Verified against baoyu-design 016b39d (MIT), with native fieldset/host adaptations; see README.md.
 function Rg(e, t) {
   for (var r = 0; r < t.length; r++) {
     const l = t[r];
@@ -18679,7 +18679,7 @@ function uC({ items: e, label: t = "\u66F4\u591A\u9009\u9879" }) {
   } })) }) })] });
 }
 function gU({ resolved: e = false, busy: t = false, onResolve: r }) {
-  return e ? Pa.jsx(vA, { content: "Resolved", side: "top", children: Pa.jsx("span", { role: "img", "aria-label": "\u5DF2\u89E3\u51B3", "data-cds-part": "resolved-mark", className: "inline-flex size-control items-center justify-center", children: Pa.jsx(Bu, { name: "CheckCircleFilled", size: "sm", className: "text-accent" }) }) }) : r ? Pa.jsxs(Pa.Fragment, { children: [Pa.jsx(df, { variant: "ghost", iconOnly: true, "aria-label": "\u6807\u8BB0\u4E3A\u5DF2\u89E3\u51B3", ...t ? { "aria-busy": true, "aria-disabled": true } : {}, "data-cds-part": "resolve", "data-resolving": t ? "true" : void 0, icon: t ? Pa.jsxs("span", { className: "cds-resolve-check relative inline-flex", children: [Pa.jsx("svg", { viewBox: "0 0 16 16", "aria-hidden": true, className: "pointer-events-none absolute inset-0 size-full overflow-visible", children: Pa.jsx("rect", { className: "cds-resolve-square", x: "0.75", y: "0.75", width: "14.5", height: "14.5", rx: "4" }) }), Pa.jsx(Bu, { name: "Check", size: "sm", className: "relative" })] }) : Pa.jsx(Bu, { name: "Check", size: "sm" }), onClick: t ? void 0 : r, className: yA }), Pa.jsx("span", { role: "status", className: "sr-only" })] }) : null;
+  return e ? Pa.jsx(vA, { content: "已解决", side: "top", children: Pa.jsx("span", { role: "img", "aria-label": "\u5DF2\u89E3\u51B3", "data-cds-part": "resolved-mark", className: "inline-flex size-control items-center justify-center", children: Pa.jsx(Bu, { name: "CheckCircleFilled", size: "sm", className: "text-accent" }) }) }) : r ? Pa.jsxs(Pa.Fragment, { children: [Pa.jsx(df, { variant: "ghost", iconOnly: true, "aria-label": "\u6807\u8BB0\u4E3A\u5DF2\u89E3\u51B3", ...t ? { "aria-busy": true, "aria-disabled": true } : {}, "data-cds-part": "resolve", "data-resolving": t ? "true" : void 0, icon: t ? Pa.jsxs("span", { className: "cds-resolve-check relative inline-flex", children: [Pa.jsx("svg", { viewBox: "0 0 16 16", "aria-hidden": true, className: "pointer-events-none absolute inset-0 size-full overflow-visible", children: Pa.jsx("rect", { className: "cds-resolve-square", x: "0.75", y: "0.75", width: "14.5", height: "14.5", rx: "4" }) }), Pa.jsx(Bu, { name: "Check", size: "sm", className: "relative" })] }) : Pa.jsx(Bu, { name: "Check", size: "sm" }), onClick: t ? void 0 : r, className: yA }), Pa.jsx("span", { role: "status", className: "sr-only" })] }) : null;
 }
 const Yy = 'textarea, [contenteditable="true"], [role="textbox"]';
 function vR(e, t) {

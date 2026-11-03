@@ -1,8 +1,11 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiZoomControl(runtime2) {
-  var reactRF, jsxh6, ZOOM_PRESETS, ZOOM_LIMIT_MESSAGES, fitZoomIcon, isValidZoomScale;
-  function ZoomControl({ getScale: getScale2, onPickScale, onFit, getLimits, fitLabel = "Fit", tip = "缩放", disabled: disabled2 = !1, disabledTip, tipSide, "data-testid": dataTestid = "mc-zoom", readout = !1, subscribeScale, onStepZoom, undo, zoomRowsDisabled = !1, zoomRowsDisabledTip, viewToggles = [], pickOne, actions = [] }) {
+  var reactRF, jsxh6, ZOOM_PRESETS, zoomLabel, formatZoomPercent, zoomBelowLimitMessage, zoomAboveLimitMessage, fitZoomIcon, isValidZoomScale;
+  function ZoomControl({ getScale: getScale2, onPickScale, onFit, getLimits, fitLabel = (0, runtime2.formatMessage)({
+      defaultMessage: "适配",
+      id: "xb3yNn3BZj"
+    }), tip = zoomLabel(), disabled: disabled2 = !1, disabledTip, tipSide, "data-testid": dataTestid = "mc-zoom", readout = !1, subscribeScale, onStepZoom, undo, zoomRowsDisabled = !1, zoomRowsDisabledTip, viewToggles = [], pickOne, actions = [] }) {
     let [value, value2] = reactRF.useState(1), [value3, value4] = reactRF.useState(() => readout ? getScale2() : 1), ref = reactRF.useRef(!1);
     reactRF.useLayoutEffect(() => {
       if (!(!readout || subscribeScale === void 0))
@@ -23,18 +26,24 @@ function installUiZoomControl(runtime2) {
             jsxh6.jsx(runtime2.Menu.Item, {
               disabled: zoomRowsDisabled || value7 >= value9,
               disabledReason: value11,
-              trailing: callback2(value10 ? "⌘+" : "Ctrl +"),
+              trailing: callback2(value10 ? "⌘+" : (0, runtime2.literalMessage)( "Ctrl +")),
               "aria-keyshortcuts": value10 ? "Meta+=" : "Control+=",
               onClick: () => onStepZoom(1),
-              children: "放大"
+              children: (0, runtime2.formatMessage)({
+                defaultMessage: "放大",
+                id: "89ldVlyNRB"
+              })
             }),
             jsxh6.jsx(runtime2.Menu.Item, {
               disabled: zoomRowsDisabled || value7 <= value8,
               disabledReason: value11,
-              trailing: callback2(value10 ? "⌘−" : "Ctrl −"),
+              trailing: callback2(value10 ? "⌘−" : (0, runtime2.literalMessage)( "Ctrl −")),
               "aria-keyshortcuts": value10 ? "Meta+-" : "Control+-",
               onClick: () => onStepZoom(-1),
-              children: "缩小"
+              children: (0, runtime2.formatMessage)({
+                defaultMessage: "缩小",
+                id: "/OavqnPe44"
+              })
             })
           ]
         }) : null,
@@ -48,20 +57,25 @@ function installUiZoomControl(runtime2) {
         jsxh6.jsxs(runtime2.Menu.Group, {
           children: [
             ZOOM_PRESETS.every((input) => Math.round(input * 100) !== value7) ? jsxh6.jsx(runtime2.Menu.GroupLabel, {
-              children: jsxh6.jsxs("span", {
+              children: jsxh6.jsx("span", {
                 className: "tabular-nums",
-                children: ["当前 ", value7, "%"]
+                children: (0, runtime2.formatMessage)({
+                  defaultMessage: "当前 {percent}%",
+                  id: "oFFhO2lVSV"
+                }, {
+                  percent: value7
+                })
               })
             }) : null,
             ZOOM_PRESETS.map((input) => {
-              let value13 = Math.round(input * 100), value14 = value13 < value8 ? "below" : value13 > value9 ? "above" : null, value15 = zoomRowsDisabled ? value11 ?? null : value14 === null ? null : value14 === "below" ? value5.minTip ?? ZOOM_LIMIT_MESSAGES.below : value5.maxTip ?? ZOOM_LIMIT_MESSAGES.above;
-              return jsxh6.jsxs(runtime2.Menu.Item, {
+              let value13 = Math.round(input * 100), value14 = value13 < value8 ? "below" : value13 > value9 ? "above" : null, value15 = zoomRowsDisabled ? value11 ?? null : value14 === null ? null : value14 === "below" ? value5.minTip ?? zoomBelowLimitMessage() : value5.maxTip ?? zoomAboveLimitMessage();
+              return jsxh6.jsx(runtime2.Menu.Item, {
                 checkedRole: "radio",
                 checked: value13 === value7,
                 disabled: zoomRowsDisabled || value14 !== null,
                 disabledReason: value15,
                 onClick: () => onPickScale(input),
-                children: [value13, "%"]
+                children: formatZoomPercent(value13)
               }, input);
             })
           ]
@@ -117,17 +131,29 @@ function installUiZoomControl(runtime2) {
             jsxh6.jsx(runtime2.Menu.Separator, {}),
             jsxh6.jsx(runtime2.Menu.Item, {
               disabled: !undo.canUndo(),
-              disabledReason: "暂无可撤销的操作",
+              disabledReason: (0, runtime2.formatMessage)({
+                defaultMessage: "暂无可撤销的操作",
+                id: "AdEug02E/V"
+              }),
               shortcut: "cmd+z",
               onClick: () => undo.undo(),
-              children: "撤销"
+              children: (0, runtime2.formatMessage)({
+                defaultMessage: "撤销",
+                id: "MTX0qSwEI5"
+              })
             }),
             jsxh6.jsx(runtime2.Menu.Item, {
               disabled: !undo.canRedo(),
-              disabledReason: "暂无可重做的操作",
+              disabledReason: (0, runtime2.formatMessage)({
+                defaultMessage: "暂无可重做的操作",
+                id: "dOz8+YZ1K1"
+              }),
               shortcut: "shift+cmd+z",
               onClick: () => undo.redo(),
-              children: "重做"
+              children: (0, runtime2.formatMessage)({
+                defaultMessage: "重做",
+                id: "WGqPtdaUiD"
+              })
             })
           ]
         }) : null,
@@ -145,9 +171,9 @@ function installUiZoomControl(runtime2) {
       ]
     });
     return readout ? jsxh6.jsx(runtime2.ToolbarPopover, {
-      readout: String(isValidZoomScale(value3)) + "%",
-      readoutSizer: "100%",
-      label: "缩放",
+      readout: formatZoomPercent(isValidZoomScale(value3)),
+      readoutSizer: formatZoomPercent(100),
+      label: zoomLabel(),
       tip,
       disabled: disabled2,
       disabledTip,
@@ -158,7 +184,7 @@ function installUiZoomControl(runtime2) {
     }) : jsxh6.jsx(runtime2.ToolbarPopover, {
       glyph: fitZoomIcon,
       iconOnly: !0,
-      label: "缩放",
+      label: zoomLabel(),
       tip,
       disabled: disabled2,
       disabledTip,
@@ -174,17 +200,34 @@ function installUiZoomControl(runtime2) {
     jsxh6 = value;
   }), bindRuntimeValue(runtime2, "ZOOM_PRESETS", () => ZOOM_PRESETS, (value) => {
     ZOOM_PRESETS = value;
-  }), bindRuntimeValue(runtime2, "ZOOM_LIMIT_MESSAGES", () => ZOOM_LIMIT_MESSAGES, (value) => {
-    ZOOM_LIMIT_MESSAGES = value;
+  }), bindRuntimeValue(runtime2, "zoomLabel", () => zoomLabel, (value) => {
+    zoomLabel = value;
+  }), bindRuntimeValue(runtime2, "formatZoomPercent", () => formatZoomPercent, (value) => {
+    formatZoomPercent = value;
+  }), bindRuntimeValue(runtime2, "zoomBelowLimitMessage", () => zoomBelowLimitMessage, (value) => {
+    zoomBelowLimitMessage = value;
+  }), bindRuntimeValue(runtime2, "zoomAboveLimitMessage", () => zoomAboveLimitMessage, (value) => {
+    zoomAboveLimitMessage = value;
   }), bindRuntimeValue(runtime2, "fitZoomIcon", () => fitZoomIcon, (value) => {
     fitZoomIcon = value;
   }), bindRuntimeValue(runtime2, "isValidZoomScale", () => isValidZoomScale, (value) => {
     isValidZoomScale = value;
   }), bindRuntimeValue(runtime2, "ZoomControl", () => ZoomControl), () => {
-    (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiPropertyIcons)(), reactRF = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxh6 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), ZOOM_PRESETS = [0.25, 0.5, 0.75, 1, 1.5, 2], ZOOM_LIMIT_MESSAGES = {
-      below: "已达到最小缩放比例",
-      above: "已达到最大缩放比例"
-    }, fitZoomIcon = jsxh6.jsx(runtime2.ZoomInIcon, {}), isValidZoomScale = (scale) => Number.isFinite(scale) && scale > 0 ? Math.max(1, Math.round(scale * 100)) : 100;
+    (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiPropertyIcons)(), reactRF = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxh6 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), ZOOM_PRESETS = [0.25, 0.5, 0.75, 1, 1.5, 2], zoomLabel = () => (0, runtime2.formatMessage)({
+      defaultMessage: "缩放",
+      id: "+KLeF6NxPf"
+    }), formatZoomPercent = (percent) => (0, runtime2.formatMessage)({
+      defaultMessage: "{percent}%",
+      id: "euJ5RaA9+c"
+    }, {
+      percent
+    }), zoomBelowLimitMessage = () => (0, runtime2.formatMessage)({
+      defaultMessage: "已低于缩放下限，无法再缩小",
+      id: "YN9OxTGJai"
+    }), zoomAboveLimitMessage = () => (0, runtime2.formatMessage)( {
+      defaultMessage: "已超出缩放上限，无法再放大",
+      id: "38SD+H0shj"
+    }), fitZoomIcon = jsxh6.jsx(runtime2.ZoomInIcon, {}), isValidZoomScale = (scale) => Number.isFinite(scale) && scale > 0 ? Math.max(1, Math.round(scale * 100)) : 100;
   };
 }
 export {
