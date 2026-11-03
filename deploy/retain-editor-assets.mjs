@@ -104,7 +104,7 @@ async function readFileAfterCheck(path) { await regularFile(path);return readFil
 export async function editorAssetPreparation({ target, helper, observe, prepare }) {
   const imagePattern = /^(?:ghcr\.io\/lingxi-org|accel\.way2api\.fun\/ghcr\.io\/lingxi-org)\/lingxiloop-server:(?:[a-f0-9]{24}|[a-f0-9]{40})$/
   const observed = await Promise.all(['a', 'b'].map(observe))
-  const images = [...new Set([...observed.filter(Boolean), target])]
+  const images = [...new Set([...observed, target])]
   if (images.some(image => !imagePattern.test(image))) throw Error('unrecognized editor source image; inspect release state before rollout')
   await Promise.all(['a', 'b'].map(slot => prepare(slot, [
     'umask 022; mkdir -p /opt/lingxiloop/editor-assets',

@@ -86,3 +86,12 @@ test('preparation captures both observed source images and target on both hosts 
   assert.deepEqual(calls.sort(), ['a', 'b'])
   await assert.rejects(editorAssetPreparation({ target, helper: '', observe: async () => 'untrusted/image:latest', prepare: async () => assert.fail('must refuse before host writes') }), /source image/)
 })
+
+
+test('a missing observed app image blocks retention rather than guessing a rollout state', async () => {
+  const target = 'ghcr.io/lingxi-org/lingxiloop-server:' + 'c'.repeat(24)
+  const writes = []
+  await assert.rejects(editorAssetPreparation({target, helper:'', observe:async slot => slot === 'a' ? '' : target,
+    prepare:async slot => { writes.push(slot) }}), /source image/)
+  assert.deepEqual(writes, [], 'unknown app state must block before any host write')
+})
