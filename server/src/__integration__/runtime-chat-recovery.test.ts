@@ -48,7 +48,7 @@ for (const scenario of [
     }
     // The production model exposes public_answer; ordinary content is private.
     assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'))
-    assert.equal(input.tool_choice, String(releaseVersions.runtime) === '3.8.22' ? 'required' : 'auto')
+    assert.equal(input.tool_choice, ['3.8.22','3.8.23'].includes(String(releaseVersions.runtime)) ? 'required' : 'auto')
     const call = { id: `recovery-answer-${scenario.name}-${issued.length}`, type: 'function',
       function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '',
         answer: 'Flow control protects a receiver; congestion control protects a network.', outcome: { status: 'satisfied', gaps: [] } }) } }
@@ -261,7 +261,7 @@ for (const binding of ['native-v1', 'native-v2', 'native-v3'] as const) for (con
     await until(async () => (await pool.query('SELECT 1 FROM llm_calls WHERE run_id=$1', [run.runId])).rowCount === expectedCalls)
     const ledger = (await pool.query('SELECT status,extras FROM llm_calls WHERE run_id=$1 ORDER BY created_at,id', [run.runId])).rows
     assert.deepEqual(ledger.map(call => call.status), scenario === 'correction' ? ['failed', 'succeeded'] : Array(expectedCalls).fill('succeeded'))
-    if (String(releaseVersions.runtime) === '3.8.22') {
+    if (['3.8.22','3.8.23'].includes(String(releaseVersions.runtime))) {
       const model = await readAdminModelStageCalls(pool, run, 1)
       assert.equal(model.calls.length, expectedCalls)
       assert.ok(model.calls.every(call => call.stages.providerTime === 'unavailable' && call.fence === 1 && call.requestVersion === 1))

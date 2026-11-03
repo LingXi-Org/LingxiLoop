@@ -24,7 +24,7 @@ class HeldPreviewPolicy extends ProductRuntimePolicy {
   }
 }
 for(const {delayedAck,rejectSeal} of [{delayedAck:false,rejectSeal:false},{delayedAck:true,rejectSeal:false},{delayedAck:true,rejectSeal:true}])test(`real product native-v3 bounded preview; delayed ACK=${delayedAck}, host rejects seal=${rejectSeal}`,{timeout:30000},async()=>{
-  assert.ok(['3.8.20','3.8.21','3.8.22'].includes(actual))
+  assert.ok(['3.8.20','3.8.21','3.8.22','3.8.23'].includes(actual))
   await ensureSchemaOnce();await resetAllTables()
   const im=await installRecordingWukong(),{companyId,projectId,agentId}=await seedCompanyWithAgent()
   const userId='suspension-user',channelId='suspension-room',members=[userId,agentId]
@@ -75,7 +75,7 @@ for(const {delayedAck,rejectSeal} of [{delayedAck:false,rejectSeal:false},{delay
       assert.equal(state?.run.status,'succeeded');assert.equal(state?.message?.body,body)
       assert.deepEqual(reasons,['completed']);assert.equal(seals,1)
     }
-    if(actual==='3.8.22'){
+    if(['3.8.22','3.8.23'].includes(actual)){
       const deadline=Date.now()+8000
       let modelStages=await readAdminModelStageCalls(pool,run,1)
       while(!modelStages.calls.length&&Date.now()<deadline){await delay(25);modelStages=await readAdminModelStageCalls(pool,run,1)}

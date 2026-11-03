@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os'
 import {basename,isAbsolute,join,sep} from 'node:path'
 import {execFile,spawn} from 'node:child_process'
 import {promisify} from 'node:util'
-import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture} from './scripts/formal19-test-fixture.mjs'
+import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal22TestFixture} from './scripts/formal19-test-fixture.mjs'
 const execute=promisify(execFile)
 const PATCH54=new Set(['runtime-patch-provenance.test.ts'])
 const PATCH57=new Set(['runtime-patch57-provenance.test.ts'])
@@ -102,6 +102,14 @@ export async function runFormal21Product61Tests(root,files,env=process.env){
  assertFixtureTarget(files,env,new Set(['runtime-patch61-21-provenance.test.ts']))
  return withFormal21TestFixture(root,env,async(fixture,sourceEnv)=>{
   const proof="import assert from'node:assert/strict';import{releaseVersions}from'@lyyzka/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';assert.equal(releaseVersions.runtime,'3.8.21');assert.equal((await loadLockedRuntimePackage()).runtime,'3.8.21');console.log('[integration product61 source] actual formal21; original20 to21 owning coverage retained')"
+  if(await runTestChild(['--import','tsx','--input-type=module','-e',proof],{cwd:fixture,env:sourceEnv,timeout:30000}))return 1
+  return runTestChild(['--import','tsx','--experimental-test-module-mocks','--test','--test-reporter=tap','--test-concurrency=1','--test-force-exit',...files.map(file=>join(fixture,'server/src/__integration__',file))],{cwd:fixture,env:sourceEnv})
+ })
+}
+export async function runFormal22Product61Tests(root,files,env=process.env){
+ assertFixtureTarget(files,env,new Set(['runtime-patch61-22-provenance.test.ts']))
+ return withFormal22TestFixture(root,env,async(fixture,sourceEnv)=>{
+  const proof="import assert from'node:assert/strict';import{releaseVersions}from'@lyyzka/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';assert.equal(releaseVersions.runtime,'3.8.22');assert.equal((await loadLockedRuntimePackage()).runtime,'3.8.22');console.log('[integration product61 source] actual formal22; original21 to22 owning coverage retained')"
   if(await runTestChild(['--import','tsx','--input-type=module','-e',proof],{cwd:fixture,env:sourceEnv,timeout:30000}))return 1
   return runTestChild(['--import','tsx','--experimental-test-module-mocks','--test','--test-reporter=tap','--test-concurrency=1','--test-force-exit',...files.map(file=>join(fixture,'server/src/__integration__',file))],{cwd:fixture,env:sourceEnv})
  })

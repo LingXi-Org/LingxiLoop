@@ -9,10 +9,11 @@ import {promisify} from 'node:util'
 const execute=promisify(execFile)
 
 export const withFormal19TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.19',run)
+export const withFormal22TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.22',run)
 export const withFormal21TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.21',run)
 export const withFormal20TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.20',run)
 async function withFormalRuntimeTestFixture(root,env,version,run){
- assert.ok(['3.8.19','3.8.20','3.8.21'].includes(version))
+ assert.ok(['3.8.19','3.8.20','3.8.21','3.8.22'].includes(version))
  const userconfig=env.LINGXILOOP_TEST_PACKAGE_USERCONFIG??join(root,'.npmrc')
  const url=new URL(env.INTEGRATION_DATABASE_URL??'')
  assert.equal(env.NODE_ENV,'test')

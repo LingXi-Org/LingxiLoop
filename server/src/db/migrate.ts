@@ -201,8 +201,8 @@ export async function migrateDatabase(
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
   const full61=migrations.length===61&&migrations[60]?.name==='slides_workspaces'
-  if(full61&&!['3.8.20','3.8.21','3.8.22'].includes(String(releaseVersions.runtime)))throw new Error('product61 requires exact formal20 or reviewed formal21/22 runtime')
-  const runtimeOnly61=full61&&['3.8.21','3.8.22'].includes(String(releaseVersions.runtime))
+  if(full61&&!['3.8.20','3.8.21','3.8.22','3.8.23'].includes(String(releaseVersions.runtime)))throw new Error('product61 requires exact formal20 or reviewed formal21/22/23 runtime')
+  const runtimeOnly61=full61&&['3.8.21','3.8.22','3.8.23'].includes(String(releaseVersions.runtime))
   const full60=(migrations.length===60||full61)&&migrations[59]?.name==='native_artifacts'
   const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
   const runtimeOnly60=full60&&['3.8.19','3.8.20'].includes(String(releaseVersions.runtime))
@@ -382,8 +382,8 @@ export async function assertMigrationsCurrent(
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
   const full61=migrations.length===61&&migrations[60]?.name==='slides_workspaces'
-  if(full61&&!['3.8.20','3.8.21','3.8.22'].includes(String(releaseVersions.runtime)))throw new Error('product61 requires exact formal20 or reviewed formal21/22 runtime')
-  const runtimeOnly61=full61&&['3.8.21','3.8.22'].includes(String(releaseVersions.runtime))
+  if(full61&&!['3.8.20','3.8.21','3.8.22','3.8.23'].includes(String(releaseVersions.runtime)))throw new Error('product61 requires exact formal20 or reviewed formal21/22/23 runtime')
+  const runtimeOnly61=full61&&['3.8.21','3.8.22','3.8.23'].includes(String(releaseVersions.runtime))
   const full60=(migrations.length===60||full61)&&migrations[59]?.name==='native_artifacts'
   const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
   const runtimeOnly60=full60&&['3.8.19','3.8.20'].includes(String(releaseVersions.runtime))
