@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useApp } from '@/stores/app'
 import { ToggleGroupLite } from '@/components/shell/ToggleGroupLite'
 import type { ArtifactSummary } from '@/features/artifacts/contracts'
+import { prefetchEditor, warmEditorWhenIdle } from '@/features/artifacts/editor-preload'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { formatDeckUpdated, useSlides } from './store'
 
@@ -22,7 +23,13 @@ const loadSlidesWorkspace = () => import('./SlidesWorkspace')
 const SlidesWorkspace = lazy(() => loadSlidesWorkspace().then(module => ({ default: module.SlidesWorkspace })))
 // The library stays light; pointing at or focusing a deck starts its workspace
 // and assistant code, so the click itself only waits for that deck's data.
-const prefetchDeckCode = () => { void loadSlidesWorkspace().then(module => module.preloadSlidesAssistant?.()).catch(() => {}) }
+// The deck's editor grant and editor assets start at the same intent.
+const prefetchDeck = (target: EventTarget) => {
+  const trigger = (target as Element).closest?.('[data-artifact-open-trigger]')
+  if (!trigger) return
+  void loadSlidesWorkspace().then(module => module.preloadSlidesAssistant?.()).catch(() => {})
+  prefetchEditor('slides', trigger.getAttribute('data-artifact-open-trigger') || undefined)
+}
 
 type Layout = 'grid' | 'list'
 type Sort = 'updated' | 'created' | 'title'
@@ -62,6 +69,7 @@ export function SlidesPage({ projectId }: { projectId: string }) {
     void useSlides.getState().load(projectId, controller.signal)
     return () => controller.abort()
   }, [projectId])
+  useEffect(() => warmEditorWhenIdle('slides'), [])
   useEffect(() => ws.on((event) => {
     if (event.type === 'artifact.changed' && event.artifactKind === 'slides' && event.kind !== 'files.changed') void useSlides.getState().load(projectId)
   }), [projectId])
@@ -92,8 +100,7 @@ export function SlidesPage({ projectId }: { projectId: string }) {
       actions={<Button onClick={create} className="max-md:size-11 max-md:p-0"><HugeiconsIcon icon={Add01Icon} strokeWidth={2} data-icon="inline-start" /><span className="max-md:sr-only">新建演示文稿</span></Button>} />}
   >
     <PageBody>
-      <div data-slides-page className="space-y-8" onPointerOver={event => { if ((event.target as Element).closest?.('[data-artifact-open-trigger]')) prefetchDeckCode() }}
-        onFocus={event => { if ((event.target as Element).closest?.('[data-artifact-open-trigger]')) prefetchDeckCode() }}>
+      <div data-slides-page className="space-y-8" onPointerOver={event => prefetchDeck(event.target)} onFocus={event => prefetchDeck(event.target)}>
         {reopening && <p role="status" className="text-sm text-muted-foreground">正在重新打开演示文稿…</p>}
         <section aria-labelledby="slides-start" className="space-y-3">
           <h2 id="slides-start" className="text-sm font-medium">开始</h2>

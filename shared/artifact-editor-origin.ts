@@ -8,10 +8,11 @@ export async function artifactEditorOrigin(grant: string, base: string): Promise
 }
 
 // No auth, SPA or other artifact grant is served on an executable editor's origin.
+// Each Design or Slides grant gets one; only its own editor and uploads are reachable.
 export async function isolatedEditor(request: Request, base: string, backend: string, fetcher: typeof fetch = fetch): Promise<Response | null> {
   const url = new URL(request.url), origin = new URL(base)
   if (!url.hostname.endsWith(`-${origin.hostname}`)) return null
-  const editor = /^\/artifact-editor\/design\/([A-Za-z0-9_.-]{1,2048})(?:\/.*)?$/.exec(url.pathname)
+  const editor = /^\/artifact-editor\/(?:design|slides)\/([A-Za-z0-9_.-]{1,2048})(?:\/.*)?$/.exec(url.pathname)
   const blob = /^\/_blob\/[a-f0-9]{32}$/.test(url.pathname)
   if (url.protocol !== origin.protocol || url.port !== origin.port || request.headers.has('service-worker') || (!editor && !blob)
     || !/^[a-f0-9]{32}$/.test(url.hostname.slice(0, -(origin.hostname.length + 1)))

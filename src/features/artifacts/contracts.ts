@@ -26,6 +26,8 @@ export interface ArtifactSnapshot extends Omit<ArtifactSummary, 'fileCount' | 'a
 
 export interface ArtifactEditorGrant {
   url: string
+  /** The grant's own editor origin; absent from servers that predate it. */
+  isolatedUrl?: string
   expiresAt: number
   write: boolean
 }

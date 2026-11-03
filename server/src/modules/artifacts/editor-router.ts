@@ -17,8 +17,9 @@ import { ARTIFACT_KIND_DEFINITIONS, artifactKind, type ArtifactKindDefinition } 
 import { blobFile, contentTypeOf, isWireEntry, listing, putBlob, readProjectFile, type WireEntry } from './store.js'
 import { availableAgents } from './repository.js'
 import { EDITOR_DOWNLOAD_SCRIPT } from './editor-downloads.js'
-import { sendEditorAsset } from './editor-static.js'
+import { readEditorPreloads, sendEditorAsset } from './editor-static.js'
 import { designPageAssets } from './design-page.js'
+import { slidesPageAssets } from './slides-page.js'
 import { slideWorkspaceConversation } from './slides-workspace.js'
 
 // Ported from baoyu-design server.mjs `startServer`/`route`: the same routes under
@@ -53,7 +54,7 @@ function pageCsp(scriptSrc: string, designAssets = '') {
     "img-src 'self' data: blob:",
     "media-src 'self' blob:",
     "worker-src 'self' blob:",
-    `connect-src 'self' data: blob: ${fonts}`,
+    `connect-src 'self' data: blob: ${fonts} ${designAssets}`.trim(),
     "frame-src 'self' blob: data:",
     "object-src 'none'",
     "base-uri 'self'",
@@ -104,7 +105,7 @@ async function readJson(request: Request) {
   try { return JSON.parse(raw.toString('utf8') || 'null') as unknown } catch { throw new CommentsError('INVALID_CONTENT', 'malformed JSON', 400) }
 }
 
-/** The opaque-origin editor reaches its own routes cross-origin; the grant in the path is the credential. */
+/** A main-site (opaque) editor reaches its own routes cross-origin; the grant in the path is the credential. */
 function cors(response: Response) {
   response.set({ 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,HEAD,POST,PATCH,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'content-type,last-event-id', 'Access-Control-Max-Age': '600', 'Cross-Origin-Resource-Policy': 'cross-origin' })
@@ -140,7 +141,7 @@ async function commentsSnapshot(session: EditorSession) {
   return { threads: doc.threads, agent: await agentPresence(session), me: { name: session.userName } }
 }
 
-async function serveEditor(request: Request, response: Response, definition: ArtifactKindDefinition, rest: string) {
+async function serveEditor(request: Request, response: Response, definition: ArtifactKindDefinition, rest: string, shared = false) {
   const editorDir = definition.kind === 'slides' ? SLIDES_EDITOR_ROOT : DESIGN_EDITOR_ROOT
   const parts = rest === '' ? ['index.html'] : rest.split('/')
   const invalid = parts.some(p => p === '' || p === '.' || p === '..' || p.startsWith('.') || p.includes('\\')) || parts[0] === 'node'
@@ -156,7 +157,7 @@ async function serveEditor(request: Request, response: Response, definition: Art
   const type = STATIC_TYPES[ext] ?? 'application/octet-stream'
   if (ext === '.html') {
     const bytes = await readFile(file)
-    const page = definition.kind === 'design' ? designPageAssets(bytes.toString('utf8'), env.INVITE_BASE_URL) : { html: bytes.toString('utf8'), source: '' }
+    const page = (definition.kind === 'design' ? designPageAssets : slidesPageAssets)(bytes.toString('utf8'), env.INVITE_BASE_URL)
     const html = page.html.replace('</head>', `<script>${EDITOR_DOWNLOAD_SCRIPT}</script></head>`)
     response.status(200).set({ 'Content-Type': type, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': pageCsp(definition.pageScriptSrc(html), page.source) })
@@ -166,12 +167,21 @@ async function serveEditor(request: Request, response: Response, definition: Art
   // Precompressed sidecars avoid spending request CPU on immutable assets.
   if (['.js', '.css'].includes(ext) && (parts[0] === 'assets' || definition.kind === 'design' && parts[0] === 'artifact-type')) {
     await sendEditorAsset(request, response, file, type, parts[0] === 'assets'
-      || definition.kind === 'design' && /^dc-runtime-[a-f0-9]{64}\.js$/.test(parts[1] ?? ''))
+      || definition.kind === 'design' && /^dc-runtime-[a-f0-9]{64}\.js$/.test(parts[1] ?? ''), shared ? 'public' : 'private')
     return
   }
   response.status(200).set({ 'Content-Type': type, 'X-Content-Type-Options': 'nosniff',
-    'Cache-Control': parts[0] === 'assets' ? 'private, max-age=31536000, immutable' : 'no-cache' })
+    'Cache-Control': parts[0] === 'assets' ? `${shared ? 'public' : 'private'}, max-age=31536000, immutable` : 'no-cache' })
   response.end(request.method === 'HEAD' ? undefined : await readFile(file))
+}
+
+let preloads: Promise<Record<'design' | 'slides', string[]>> | undefined
+function editorPreloads() {
+  const origin = new URL(env.INVITE_BASE_URL).origin
+  preloads ??= Promise.all([readEditorPreloads(DESIGN_EDITOR_ROOT, 'design', origin), readEditorPreloads(SLIDES_EDITOR_ROOT, 'slides', origin)])
+    .then(([design, slides]) => ({ design, slides }))
+  preloads.catch(() => { preloads = undefined })
+  return preloads
 }
 
 async function serveBlob(request: Request, response: Response, id: string, artifactId?: string) {
@@ -402,11 +412,17 @@ artifactEditorRouter.use((request, response, next) => {
 // Document files, uploads and editor pages still require their existing grants.
 artifactEditorRouter.get(/^\/slides-assets\/([A-Za-z0-9_-]+\.(?:js|css|woff2))$/, (request, response) => {
   const name = request.path.slice('/slides-assets/'.length)
-  void guard(response, () => serveEditor(request, response, ARTIFACT_KIND_DEFINITIONS.slides, `assets/${name}`))
+  void guard(response, () => serveEditor(request, response, ARTIFACT_KIND_DEFINITIONS.slides, `assets/${name}`, true))
 })
 artifactEditorRouter.get(/^\/design-assets\/(design-[a-f0-9]{64}\.(?:js|css|woff2))$/, (request, response) => {
   const name = request.path.slice('/design-assets/'.length)
-  void guard(response, () => serveEditor(request, response, ARTIFACT_KIND_DEFINITIONS.design, `assets/${name}`))
+  void guard(response, () => serveEditor(request, response, ARTIFACT_KIND_DEFINITIONS.design, `assets/${name}`, true))
+})
+// The application warms these before an editor opens, so opening finds them cached.
+artifactEditorRouter.get('/preload.json', (_request, response) => {
+  void guard(response, async () => {
+    response.status(200).set({ 'Cache-Control': 'public, max-age=300', 'X-Content-Type-Options': 'nosniff' }).json(await editorPreloads())
+  })
 })
 
 artifactEditorRouter.all(/^\/([a-z-]+)\/([^/]+)(\/.*)?$/, (request, response) => {
