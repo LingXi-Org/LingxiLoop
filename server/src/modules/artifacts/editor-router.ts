@@ -370,7 +370,11 @@ async function route(request: Request, response: Response, session: EditorSessio
     return
   }
   if (rest === ROUTES.listing) return sendJson(response, 200, await listing(pool, artifactId))
-  if (rest === ROUTES.session) return sendJson(response, 200, { canEdit: session.grant.write })
+  if (rest === ROUTES.session) {
+    const canEdit = session.grant.write && (await permissionService.can({ actorUserId: session.grant.userId,
+      companyId: session.grant.companyId, action: 'artifact:write', resource: { type: 'artifact', id: session.grant.artifactId } })).allowed
+    return sendJson(response, 200, { canEdit })
+  }
   if (rest === ROUTES.events) return events(request, response, session)
   if (rest.startsWith('project/')) {
     const bytes = await readProjectFile(pool, session.definition, artifactId, rest)
