@@ -1,0 +1,65 @@
+{
+  "factories": 664,
+  "totalCandidates": 4568,
+  "removed": 10,
+  "before": {
+    "bytes": 5280558,
+    "br": 1327781
+  },
+  "after": {
+    "bytes": 5270291,
+    "br": 1325417
+  },
+  "largest": [
+    {
+      "factory": "s9",
+      "function": "g",
+      "bytes": 2561
+    },
+    {
+      "factory": "s9",
+      "function": "d",
+      "bytes": 2077
+    },
+    {
+      "factory": "zU",
+      "function": "v",
+      "bytes": 1572
+    },
+    {
+      "factory": "s9",
+      "function": "c",
+      "bytes": 1349
+    },
+    {
+      "factory": "E6",
+      "function": "H",
+      "bytes": 1236
+    },
+    {
+      "factory": "s9",
+      "function": "h",
+      "bytes": 708
+    },
+    {
+      "factory": "X4",
+      "function": "g",
+      "bytes": 366
+    },
+    {
+      "factory": "E6",
+      "function": "I",
+      "bytes": 112
+    },
+    {
+      "factory": "A9",
+      "function": "c",
+      "bytes": 102
+    },
+    {
+      "factory": "s9",
+      "function": "o",
+      "bytes": 71
+    }
+  ]
+}

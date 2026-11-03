@@ -1,0 +1,6 @@
+{"trial": 0, "arm": "control", "totalsMs": {"libraries": 0.2, "install": 61.2, "initialize": 100.6}}
+{"trial": 0, "arm": "candidate", "totalsMs": {"libraries": 0.2, "install": 53.7, "initialize": 118.7}}
+{"trial": 1, "arm": "candidate", "totalsMs": {"libraries": 0.1, "install": 44.4, "initialize": 101.1}}
+{"trial": 1, "arm": "control", "totalsMs": {"libraries": 0.1, "install": 65.3, "initialize": 133.4}}
+{"trial": 2, "arm": "control", "totalsMs": {"libraries": 0.3, "install": 62.1, "initialize": 106.4}}
+{"trial": 2, "arm": "candidate", "totalsMs": {"libraries": 0, "install": 46.6, "initialize": 111.6}}
