@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import ts from 'typescript'
 import { computeScope } from './ci-scope.mjs'
+import '../deploy/retain-editor-assets.test.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8').replaceAll('\r\n', '\n')
 

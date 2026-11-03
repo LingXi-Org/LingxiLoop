@@ -2,6 +2,15 @@ import { readFile, realpath } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { Request, Response } from 'express'
 
+/** Only the two public program routes use this release cache. Private grant
+ * pages/project files never fall back to it, and it is mounted read-only. */
+export async function retainedEditorAsset(kind: 'design' | 'slides', name: string, root = '/var/lib/lingxiloop/editor-assets'): Promise<string | null> {
+  const publicName = kind === 'design' ? /^design-[a-f0-9]{64}\.(?:js|css|woff2)$/ : /^[A-Za-z0-9_-]+\.(?:js|css|woff2)$/
+  if (!publicName.test(name)) return null
+  const file = join(root, kind, name)
+  return await realpath(file).catch(() => null) === file ? file : null
+}
+
 /** An editor's blocking script and stylesheet, preloaded chunks and the fonts
  * its first view uses (math fonts load only with math), on the shared asset URLs. */
 export async function readEditorPreloads(root: string, kind: 'design' | 'slides', origin: string) {

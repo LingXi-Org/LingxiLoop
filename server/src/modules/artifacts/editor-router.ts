@@ -17,7 +17,7 @@ import { ARTIFACT_KIND_DEFINITIONS, artifactKind, type ArtifactKindDefinition } 
 import { blobFile, contentTypeOf, isWireEntry, listing, putBlob, readProjectFile, type WireEntry } from './store.js'
 import { availableAgents } from './repository.js'
 import { EDITOR_DOWNLOAD_SCRIPT } from './editor-downloads.js'
-import { readEditorPreloads, sendEditorAsset } from './editor-static.js'
+import { readEditorPreloads, retainedEditorAsset, sendEditorAsset } from './editor-static.js'
 import { designPageAssets } from './design-page.js'
 import { slidesPageAssets } from './slides-page.js'
 import { slideWorkspaceConversation } from './slides-workspace.js'
@@ -146,7 +146,10 @@ async function serveEditor(request: Request, response: Response, definition: Art
   const parts = rest === '' ? ['index.html'] : rest.split('/')
   const invalid = parts.some(p => p === '' || p === '.' || p === '..' || p.startsWith('.') || p.includes('\\')) || parts[0] === 'node'
   const realDist = invalid ? null : await realpath(editorDir).catch(() => null)
-  const file = realDist === null ? null : join(realDist, ...parts)
+  let file = realDist === null ? null : join(realDist, ...parts)
+  if (shared && parts.length === 2 && parts[0] === 'assets' && (file === null || await realpath(file).catch(() => null) !== file)) {
+    file = await retainedEditorAsset(definition.kind, parts[1])
+  }
   const real = file === null ? null : await realpath(file).catch(() => null)
   const info = real === null ? null : await lstat(real).catch(() => null)
   if (file === null || real !== file || !info?.isFile()) {

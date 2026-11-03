@@ -20,6 +20,7 @@ import { classifyPaths, workflowFilters } from '../scripts/ci-scope-paths.mjs'
 import { IMAGES, imageTag } from '../scripts/image-tag.mjs'
 import { assertRetirementReleaseAllowed, convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
 import { knowledgeObservationRunId, knowledgeObservation, observePublicRunBudget } from './knowledge-observation.mjs'
+import { editorAssetPreparation } from './retain-editor-assets.mjs'
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)))
 const SIGILLO = ['-p', '01M1TZH9C21C1A9PFAR8E41553', '-c', 'prod']
@@ -56,7 +57,16 @@ async function main(command, requested) {
   const patch = runtimePatchPlan(path => git('show', `HEAD:${path}`), migrationPaths)
   assertRetirementReleaseAllowed(migrationPaths, command, process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED, patch)
   const ssh = sshSession()
-  const deployServers = () => patch && stacks.includes('app-a') ? runtimePatch(ssh, patch, images, () => servers(ssh, stacks, images)) : servers(ssh, stacks, images)
+  const deployServers = async () => {
+    if (stacks.includes('app-a')) await editorAssetPreparation({
+      target: imageRef(images.SERVER_IMAGE),
+      helper: git('show', 'HEAD:deploy/retain-editor-assets.mjs'),
+      observe: slot => ssh.run(STACK_HOST[`app-${slot}`], `editor source ${slot}`,
+        `docker inspect -f '{{.Config.Image}}' lingxiloop-app-${slot}-lingxiloop-1 2>/dev/null || true`, true).then(value => value.trim()),
+      prepare: (slot, script) => ssh.run(STACK_HOST[`app-${slot}`], `retain editor assets ${slot}`, script),
+    })
+    return patch && stacks.includes('app-a') ? runtimePatch(ssh, patch, images, () => servers(ssh, stacks, images)) : servers(ssh, stacks, images)
+  }
   try {
     const steps = {
       images: () => ensureImages(head, images),
