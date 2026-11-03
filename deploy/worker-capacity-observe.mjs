@@ -36,11 +36,12 @@ function metricSamples(text) {
     const labels = {}
     if (rawLabels !== undefined) {
       for (const part of rawLabels.split(',')) {
-        const pair = /^(resource|priority|le)="([^"]+)"$/.exec(part)
+        const pair = /^(resource|priority|lane|le)="([^"]+)"$/.exec(part)
         if (!pair || Object.hasOwn(labels, pair[1])) return []
         const [, key, label] = pair
         if (key === 'resource' && label !== 'model'
           || key === 'priority' && !['foreground', 'background'].includes(label)
+          || key === 'lane' && !['interactive', 'approval', 'collaboration', 'background'].includes(label)
           || key === 'le' && label !== '+Inf' && !/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(label)) return []
         labels[key] = label
       }

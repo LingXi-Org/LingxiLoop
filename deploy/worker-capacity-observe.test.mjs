@@ -10,6 +10,9 @@ const healthy = { ok: true, activeRuns: 2, maxConcurrentRuns: 2, draining: false
 const metrics = `agentos_worker_active_runs 2
 agentos_queue_pending 5
 agentos_queue_oldest_seconds 151.1
+agentos_run_seconds_count{lane="interactive"} 3
+agentos_run_seconds_sum{lane="background"} 56.2
+agentos_run_seconds_count{lane="${PRIVATE}"} 88
 agentos_resource_queue_wait_seconds_count{resource="model",priority="foreground"} 12
 agentos_resource_queue_wait_seconds_sum{resource="model",priority="foreground"} 0.25
 agentos_resource_queue_wait_seconds_count{resource="${PRIVATE}",priority="foreground"} 999
@@ -27,7 +30,8 @@ test('read only loopback health and metrics once, filtering all non-numeric and 
   assert.equal(result.health.activeRuns, 2)
   assert.equal(result.configuration.AGENT_OS_MODEL_CONCURRENCY, 2)
   assert.equal(result.metrics.find(row => row.name === 'agentos_queue_oldest_seconds').value, 151.1)
-  assert.equal(result.metrics.length, 5)
+  assert.equal(result.metrics.length, 7)
+  assert.equal(result.metrics.find(row => row.name === 'agentos_run_seconds_count').labels.lane, 'interactive')
   assert.doesNotMatch(JSON.stringify(result), new RegExp(PRIVATE))
   assert.equal(result.providerLimits, 'unknown')
 })
