@@ -1330,8 +1330,13 @@ function installEditorApp(runtime2) {
     let dropFilesOnSlide = async (files, x, y) => {
       const images = files.filter(runtime2.isImageFile);
       images.length !== files.length && runtime2.showToast("仅支持图片，其他文件已跳过。");
-      for (let i = 0; i < images.length; i++)
-        await insertImageFromInput(images[i], { at: { x: x + i * 12, y: y + i * 12 } });
+      if (!images.length) return;
+      const finishRecoveryBatch = beginArtifactRecoveryAsyncEdit(documentStore.doc);
+      if (!finishRecoveryBatch) return runtime2.showToast("编辑器正在重新打开，请在新页面重试插入图片。");
+      try {
+        for (let i = 0; i < images.length; i++)
+          await insertImageFromInput(images[i], { at: { x: x + i * 12, y: y + i * 12 } });
+      } finally { finishRecoveryBatch(); }
     }, onDropInsert = (input, options, context) => {
       if (setInsertMenuOpen(!1), input === "text")
         insertText({

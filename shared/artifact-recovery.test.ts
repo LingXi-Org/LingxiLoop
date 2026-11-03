@@ -93,14 +93,18 @@ for (const kind of ['design', 'slides'] as const) test(`${kind}: an edit arrivin
 test('handoff drains a native image edit before replying and fences the delayed parent message window', async () => {
   const old = native(), recovery = createArtifactRecovery('slides', old.doc, value => value)
   await recovery.confirm()
+  const finishBatch = beginArtifactRecoveryAsyncEdit(old.doc)
   const finishImage = beginArtifactRecoveryAsyncEdit(old.doc)
-  assert.ok(finishImage)
+  assert.ok(finishBatch && finishImage)
   let replied = false
   const pending = recovery.handoffSnapshot().then(value => { replied = true;return value })
   await Promise.resolve()
   assert.equal(replied, false, 'image preparation must finish before snapshot reply')
   old.edit({ files: { 'Main.dc.html': 'image inserted after async preparation' } })
   finishImage()
+  await Promise.resolve()
+  assert.equal(replied, false, 'the outer multi-image drop must remain pending between files')
+  finishBatch()
   const response = await pending
   assert.equal(response.result, 'snapshot')
   assert.equal(JSON.parse(new TextDecoder().decode(response.bytes)).state.content.files['Main.dc.html'], 'image inserted after async preparation')
