@@ -65,3 +65,27 @@ test('a remote update during asynchronous hashing refuses restoration', async ()
   await assert.rejects(restore)
   assert.deepEqual(fresh.doc.content(), { files: { 'Main.dc.html': 'new remote state' } })
 })
+
+for (const kind of ['design', 'slides'] as const) test(`${kind}: an edit arriving while clean-state hashing is pending is captured before iframe replacement`, async t => {
+  const old = native(), capture = createArtifactRecovery(kind, old.doc, value => value)
+  await capture.confirm()
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'crypto')
+  const nativeCrypto = globalThis.crypto, nativeDigest = nativeCrypto.subtle.digest.bind(nativeCrypto.subtle)
+  let entered!: () => void, release!: () => void
+  const hashing = new Promise<void>(resolve => { entered = resolve })
+  const gate = new Promise<void>(resolve => { release = resolve })
+  Object.defineProperty(globalThis, 'crypto', { configurable: true, value: {
+    randomUUID: nativeCrypto.randomUUID.bind(nativeCrypto),
+    subtle: { digest: async (algorithm: AlgorithmIdentifier, data: BufferSource) => {
+      entered();await gate;return nativeDigest(algorithm, data)
+    } },
+  } })
+  t.after(() => { if (original) Object.defineProperty(globalThis, 'crypto', original);else Reflect.deleteProperty(globalThis, 'crypto') })
+  const pending = capture.snapshot()
+  await hashing
+  old.edit({ files: { 'Main.dc.html': 'late unsent edit' } })
+  release()
+  const result = await pending
+  assert.equal(result.result, 'snapshot', 'a late dirty edit must never be reported clean')
+  assert.deepEqual(JSON.parse(new TextDecoder().decode(result.bytes)).state.content, old.doc.content())
+})

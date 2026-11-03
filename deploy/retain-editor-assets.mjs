@@ -111,10 +111,13 @@ export async function editorAssetPreparation({ target, helper, observe, prepare 
     'exec 9>/opt/lingxiloop/editor-assets.lock; flock -x 9',
     ...images.map((image, index) => [
       `docker image inspect '${image}' >/dev/null 2>&1 || ctr -n moby images pull --platform linux/amd64 '${image}' >/dev/null`,
-      `docker run --rm --pull never --network none --read-only --cap-drop ALL --security-opt no-new-privileges --memory 192m --pids-limit 32 --user 0 --mount type=bind,source=/opt/lingxiloop/editor-assets,target=/retained --entrypoint node '${image}' --input-type=module <<'RETAIN_EDITOR_ASSETS_JS'`,
+      `retained=$(docker run -i --rm --pull never --network none --read-only --cap-drop ALL --security-opt no-new-privileges --memory 192m --pids-limit 32 --user 0 --mount type=bind,source=/opt/lingxiloop/editor-assets,target=/retained --entrypoint node '${image}' --input-type=module <<'RETAIN_EDITOR_ASSETS_JS'`,
       helper,
       `console.log(JSON.stringify(await retainEditorAssets({prune:${index === images.length - 1},requireEditors:${image === target}})));`,
       'RETAIN_EDITOR_ASSETS_JS',
+      ')',
+      `test -n "$retained" || { echo 'editor asset helper produced no retention report' >&2; exit 1; }`,
+      `printf '%s\n' "$retained"`,
     ].join('\n')),
   ].join('\n'))))
 }

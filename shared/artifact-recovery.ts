@@ -11,11 +11,12 @@ type NativeDocument = {
 type Package = { format: 'lingxi-editor-recovery-v1'; kind: 'design' | 'slides'; id: string; baseSha: string | null; state: State }
 const encode = (value: unknown) => new TextEncoder().encode(JSON.stringify(value, (_key, value) => value && typeof value === 'object' && !Array.isArray(value)
   ? Object.fromEntries(Object.keys(value).sort().map(key => [key, value[key]])) : value))
-const digest = async (state: State) => {
-  const bytes = encode(state)
+const digestBytes = async (bytes: Uint8Array<ArrayBuffer>) => {
   if (bytes.length > MAX_ARTIFACT_RECOVERY_BYTES) throw Error('本地副本过大，原编辑器已保留。')
   return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), byte => byte.toString(16).padStart(2, '0')).join('')
 }
+const digest = (state: State) => digestBytes(encode(state))
+const sameBytes = (left: Uint8Array, right: Uint8Array) => left.length === right.length && left.every((byte, index) => byte === right[index])
 
 export function createArtifactRecovery(kind: 'design' | 'slides', doc: NativeDocument, parse: (content: unknown) => unknown) {
   const read = (): State => ({ title: doc.title(), content: doc.content() })
@@ -60,8 +61,16 @@ export function createArtifactRecovery(kind: 'design' | 'slides', doc: NativeDoc
       if (!live()) throw Error('编辑器尚未就绪，原页面已保留。')
       await checkpoint.catch(() => {})
       const state = read()
-      if (!doc.dirty() && baseSha && await digest(state) === baseSha) return { result: 'clean' as const }
-      const bytes = encode({ format: 'lingxi-editor-recovery-v1', kind, id: crypto.randomUUID(), baseSha, state } satisfies Package)
+      if (!doc.dirty() && baseSha) {
+        const before = encode(state)
+        const sha = await digestBytes(before)
+        // Native content may change while Web Crypto is hashing. Check the
+        // current model synchronously after that await before telling the
+        // parent it may discard this iframe.
+        if (sha === baseSha && !doc.dirty() && sameBytes(before, encode(read()))) return { result: 'clean' as const }
+      }
+      const current = read()
+      const bytes = encode({ format: 'lingxi-editor-recovery-v1', kind, id: crypto.randomUUID(), baseSha, state: current } satisfies Package)
       if (bytes.length > MAX_ARTIFACT_RECOVERY_BYTES) throw Error('本地副本过大，原编辑器已保留。')
       return { result: 'snapshot' as const, bytes: bytes.buffer }
     },

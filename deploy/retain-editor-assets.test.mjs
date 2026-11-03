@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, readFile, readdir, rm, symlink, utimes, writeFile } fro
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
+import { spawnSync } from 'node:child_process'
 import { brotliCompressSync, gzipSync } from 'node:zlib'
 import test from 'node:test'
 import { retainEditorAssets, EDITOR_ASSET_RETENTION_MS, editorAssetPreparation } from './retain-editor-assets.mjs'
@@ -85,6 +86,46 @@ test('preparation captures both observed source images and target on both hosts 
   await editorAssetPreparation({ target, helper: '// fixed helper', observe: async slot => slot === 'a' ? oldA : oldB, prepare: async (slot, script) => { calls.push(slot);for (const image of [oldA, oldB, target]) assert.ok(script.includes(image));assert.match(script, /--network none/);assert.match(script, /flock/);assert.doesNotMatch(script, /docker stop|compose up|db:migrate/) } })
   assert.deepEqual(calls.sort(), ['a', 'b'])
   await assert.rejects(editorAssetPreparation({ target, helper: '', observe: async () => 'untrusted/image:latest', prepare: async () => assert.fail('must refuse before host writes') }), /source image/)
+})
+
+test('generated retention command passes its heredoc to Node inside the image', async t => {
+  const f = await fixture(t), bin = join(f.root, 'bin')
+  await mkdir(bin)
+  // Docker closes a container's stdin unless -i is passed. Execute the exact
+  // generated shell script with that stdin contract; no host mounts or remote
+  // deployment are needed to detect a silently skipped retention helper.
+  await writeFile(join(bin, 'docker'), `#!/bin/sh
+if [ "$1" = image ]; then exit 0; fi
+if [ "$FAKE_DOCKER_EMPTY" = 1 ]; then exit 0; fi
+for arg do
+  if [ "$arg" = -i ]; then exec node --input-type=module; fi
+done
+exec node --input-type=module </dev/null
+`, { mode: 0o755 })
+  const target = 'ghcr.io/lingxi-org/lingxiloop-server:' + 'c'.repeat(24)
+  let prepared = 0
+  await editorAssetPreparation({
+    target,
+    helper: 'export async function retainEditorAssets() { return {copied:7} }',
+    observe: async () => target,
+    prepare: async (_slot, script) => {
+      const local = script.replaceAll('/opt/lingxiloop/editor-assets', f.cacheRoot)
+      const result = spawnSync('bash', ['-s'], {
+        input: `set -euo pipefail\n${local}\n`, encoding: 'utf8',
+        env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+      })
+      assert.equal(result.status, 0, result.stderr)
+      assert.match(result.stdout, /"copied":7/, 'retention helper must actually execute')
+      const empty = spawnSync('bash', ['-s'], {
+        input: `set -euo pipefail\n${local}\n`, encoding: 'utf8',
+        env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, FAKE_DOCKER_EMPTY: '1' },
+      })
+      assert.notEqual(empty.status, 0, 'empty successful container must fail closed')
+      assert.match(empty.stderr, /produced no retention report/)
+      prepared++
+    },
+  })
+  assert.equal(prepared, 2, 'both hosts must run the helper')
 })
 
 
