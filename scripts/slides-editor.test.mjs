@@ -46,7 +46,7 @@ test('native build keeps export libraries lazy and reduces initial JavaScript', 
   const report = await buildSlidesEditor()
   assert.equal(report.messageCount, 1446)
   assert.equal(report.modules + report.removedModules.length, 332)
-  assert.ok(report.inputs.every(path => path.startsWith('third_party/baoyu-design/slides-source/') ||
+  assert.ok(report.inputs.every(path => path === 'shared/artifact-recovery.ts' || path.startsWith('third_party/baoyu-design/slides-source/') ||
     ['node_modules/katex/dist/katex.mjs', 'node_modules/katex/contrib/auto-render/splitAtDelimiters.ts'].includes(path)))
   assert.ok(report.inputs.some(path => path.endsWith('/modules/editor-app.js')))
   assert.ok(report.inputs.some(path => path.endsWith('/modules/compiler-html.js')))

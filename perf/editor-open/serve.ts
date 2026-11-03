@@ -27,7 +27,7 @@ const upstreamPort = protocol === 'https' ? listen + 100 : listen
 const appOrigin = `${protocol}://app.${site}:${port}`, editorBase = `${protocol}://artifact.${site}:${port}`
 const load = (path: string) => import(pathToFileURL(resolve(root, path)).href)
 const { artifactEditorOrigin, isolatedEditor } = await load('shared/artifact-editor-origin.ts')
-const { sendEditorAsset, readEditorPreloads } = await load('server/src/modules/artifacts/editor-static.ts')
+const { sendEditorAsset, readEditorPreloads, retainedEditorAsset } = await load('server/src/modules/artifacts/editor-static.ts')
 const { designPageAssets } = await load('server/src/modules/artifacts/design-page.ts')
 const slidesPage = existsSync(resolve(root, 'server/src/modules/artifacts/slides-page.ts')) ? await load('server/src/modules/artifacts/slides-page.ts') : null
 const { ARTIFACT_KIND_DEFINITIONS } = await load('server/src/modules/artifacts/kinds.ts')
@@ -50,6 +50,13 @@ const documents = {
   ]),
 }
 const grants = new Map<string, 'design' | 'slides'>()
+// Explicit, loopback-only recovery fixture. Ordinary performance documents keep
+// their fixed read-only backing store and cannot take this control path.
+const recoveryFixture = process.env.PERF_RECOVERY_FIXTURE === '1'
+const initialDocuments = { design: new Map(documents.design), slides: new Map(documents.slides) }
+const access = { read: true, write: true, failPublish: true, shortGrants: false }
+const grantAccess = new Map<string, { expiresAt: number; write: boolean }>()
+let publishes = 0, refusedPublishes = 0
 let issued = 0
 const kindOf = (artifactId: string) => artifactId.startsWith('deck') ? 'slides' as const : 'design' as const
 
@@ -71,7 +78,9 @@ app.use((req, res, next) => {
     for (const [key, value] of Object.entries(req.headers)) if (value !== undefined) headers.set(key, Array.isArray(value) ? value.join(', ') : value)
     // Node fetch decompresses upstream bodies; the outer middleware compresses again.
     headers.set('accept-encoding', 'identity')
-    const reply = await isolatedEditor(new Request(`${protocol}://${req.headers.host}${req.originalUrl}`, { method: req.method, headers }), editorBase, `http://127.0.0.1:${upstreamPort}`)
+    const reply = await isolatedEditor(new Request(`${protocol}://${req.headers.host}${req.originalUrl}`, { method: req.method, headers,
+      ...(!['GET', 'HEAD'].includes(req.method) ? { body: Readable.toWeb(req) as ReadableStream<Uint8Array>, duplex: 'half' } : {}),
+    }), editorBase, `http://127.0.0.1:${upstreamPort}`)
     if (!reply) return next()
     res.status(reply.status)
     reply.headers.forEach((value: string, key: string) => { if (!['content-length', 'content-encoding', 'transfer-encoding', 'connection', 'keep-alive'].includes(key)) res.setHeader(key, value) })
@@ -85,13 +94,27 @@ app.use(/^\/(artifact-editor|_blob)/, (req, res, next) => {
   if (req.method === 'OPTIONS') res.sendStatus(204); else next()
 })
 app.post('/api/artifacts/:id/editor-grant', async (req, res) => {
+  if (recoveryFixture && !access.read) { res.status(403).json({ code: 'forbidden' });return }
   const kind = kindOf(req.params.id), grant = `g${++issued}`
   grants.set(grant, kind)
   const isolatedUrl = `${await artifactEditorOrigin(grant, editorBase)}/artifact-editor/${kind}/${grant}/`
+  const expiresAt = Date.now() + (recoveryFixture && access.shortGrants ? 12_000 : 3_600_000), write = !recoveryFixture || access.write
+  grantAccess.set(grant, { expiresAt, write })
   // The arm's own response shape: before this change Slides had no isolated URL.
-  res.json(slidesPage ? { url: kind === 'design' ? isolatedUrl : `/artifact-editor/slides/${grant}/`, isolatedUrl, expiresAt: Date.now() + 3_600_000, write: true }
-    : { url: kind === 'design' ? isolatedUrl : `/artifact-editor/slides/${grant}/`, expiresAt: Date.now() + 3_600_000, write: true })
+  res.json(slidesPage ? { url: kind === 'design' ? isolatedUrl : `/artifact-editor/slides/${grant}/`, isolatedUrl, expiresAt, write }
+    : { url: kind === 'design' ? isolatedUrl : `/artifact-editor/slides/${grant}/`, expiresAt, write })
 })
+if (recoveryFixture) {
+  app.post('/fixture/access', express.json({ limit: '4kb' }), (req, res) => {
+    if (req.body.reset === true) {
+      for (const kind of ['design', 'slides'] as const) { documents[kind].clear();for (const [name, text] of initialDocuments[kind]) documents[kind].set(name, text) }
+      grants.clear();grantAccess.clear();publishes = 0;refusedPublishes = 0
+    }
+    for (const key of ['read', 'write', 'failPublish', 'shortGrants'] as const) if (typeof req.body[key] === 'boolean') access[key] = req.body[key]
+    res.json({ ...access })
+  })
+  app.get('/fixture/state', (_req, res) => { res.json({ publishes, refusedPublishes, files: Object.fromEntries(Object.entries(documents).map(([kind, files]) => [kind, Object.fromEntries(files)])) }) })
+}
 app.get('/artifact-editor/preload.json', async (_req, res, next) => {
   if (!readEditorPreloads) { res.sendStatus(404); return }
   try {
@@ -107,8 +130,12 @@ app.get(/^\/artifact-editor\/(design|slides)-assets\/([\w-]+\.(js|css|woff2))$/,
         res.set('Cache-Control', 'no-store').status(503).send('Synthetic first-use failure'); return
       }
     }
-    const file = resolve(editors[kind as 'design' | 'slides'], 'assets', name)
-    if (!existsSync(file)) { res.sendStatus(404); return }
+    let file = resolve(editors[kind as 'design' | 'slides'], 'assets', name)
+    if (!existsSync(file)) {
+      const previous = process.env.PERF_RETAINED_EDITOR_ROOT && retainedEditorAsset ? await retainedEditorAsset(kind, name, resolve(process.env.PERF_RETAINED_EDITOR_ROOT)) : null
+      if (!previous) { res.sendStatus(404); return }
+      file = previous
+    }
     if (ext === 'woff2') { res.set({ 'Cache-Control': `${slidesPage ? 'public' : 'private'}, max-age=31536000, immutable`, 'Content-Type': 'font/woff2' }).send(await readFile(file)); return }
     await sendEditorAsset(req, res, file, ext === 'js' ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8', true, ...(slidesPage ? ['public'] : []))
   } catch (error) { next(error) }
@@ -117,9 +144,23 @@ app.get('/_blob/:id', (req, res) => { if (req.params.id === imageId) res.type('s
 app.use('/artifact-editor/:kind/:grant', express.json({ limit: '16mb' }), (req, res, next) => {
   const kind = grants.get(req.params.grant)
   if (!kind || kind !== req.params.kind) { res.sendStatus(404); return }
+  const grant = grantAccess.get(req.params.grant)!
+  if (recoveryFixture && (!access.read || grant.expiresAt <= Date.now())) { res.sendStatus(404);return }
   const files = documents[kind], path = decodeURIComponent(req.path.slice(1))
   res.set('Cache-Control', 'no-store')
-  if (path === '__deck/session') { res.json({ canEdit: true }); return }
+  if (path === '__deck/session') { res.json({ canEdit: !recoveryFixture || access.write && grant.write }); return }
+  if (recoveryFixture && path === '__deck/publish' && req.method === 'POST') {
+    if (!access.write || !grant.write) { refusedPublishes++;res.status(403).json({ code: 'not_writer' });return }
+    if (access.failPublish) { refusedPublishes++;res.status(503).json({ code: 'upstream_error' });return }
+    const batch = req.body.files
+    if (!batch || typeof batch !== 'object' || Object.entries(batch).some(([name, entry]) => !name.startsWith('project/') || name.includes('..') || entry && typeof entry === 'object' && 'ifMatch' in entry && entry.ifMatch !== (files.has(name) ? sha(files.get(name)!) : null))) { res.status(409).json({ code: 'conflict' });return }
+    const shas: Record<string, string> = {}
+    for (const [name, entry] of Object.entries(batch) as Array<[string, { delete?: boolean; base64?: string } | null]>) {
+      if (entry === null || entry.delete) files.delete(name)
+      else { const text = Buffer.from(entry.base64 ?? '', 'base64').toString('utf8');files.set(name, text);shas[name] = sha(text) }
+    }
+    publishes++;res.json({ version: `recovery-${publishes}`, shas });return
+  }
   if (path === '_files.json') { res.json({ ver: 'fixed', files: Object.fromEntries([...files].map(([name, value]) => [name, { sha256: sha(value), size: Buffer.byteLength(value), contentType: name.endsWith('.json') ? 'application/json' : 'text/html' }])) }); return }
   if (path.endsWith('events')) { res.set('Content-Type', 'text/event-stream'); res.write(': connected\n\n'); return }
   if (path === '__comments') { res.json({ threads: [], agent: { available: false, listening: false, busy: false, hook: false }, me: { name: '基准测试' } }); return }

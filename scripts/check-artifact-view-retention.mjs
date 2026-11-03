@@ -78,7 +78,7 @@ const server = createServer(async (req, res) => {
   if (req.url === '/result') { let raw='';for await(const part of req)raw+=part;finish(JSON.parse(raw));res.end('ok');return }
   if (req.url === '/test.js') {res.setHeader('Content-Type','text/javascript');res.end(bundle.outputFiles[0].text);return}
   res.setHeader('Content-Type','text/html')
-  if (req.url.startsWith('/editor/')) {res.end('<h1>Saved document</h1><script>const nonce=new URLSearchParams(location.hash.slice(1)).get("workspace");parent.postMessage(nonce?{type:"slides:context",nonce,context:'+JSON.stringify(context)+'}:{__frame_reveal_ready:true},"*");</script>');return}
+  if (req.url.startsWith('/editor/')) {res.end('<h1>Saved document</h1><script>const nonce=new URLSearchParams(location.hash.slice(1)).get("workspace");parent.postMessage(nonce?{type:"slides:context",nonce,context:'+JSON.stringify(context)+'}:{__frame_reveal_ready:true},"*");addEventListener("message",e=>{if(e.source===parent&&e.data?.type==="artifact:recovery-request"&&e.data.command==="snapshot")parent.postMessage({type:"artifact:recovery-response",nonce:e.data.nonce,requestId:e.data.requestId,result:"clean"},"*")});</script>');return}
   res.end('<style>'+retentionCss+'html,body,#root{height:100%;margin:0}.h-full{height:100%}.h-dvh{height:100dvh}.flex{display:flex}.flex-1{flex:1}.flex-col{flex-direction:column}.relative{position:relative}iframe{height:100%;width:100%}[hidden]{display:none!important}</style><div id="root"></div><script type="module" src="/test.js"></script>')
 })
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))

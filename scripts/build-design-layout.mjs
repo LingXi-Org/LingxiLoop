@@ -6,7 +6,7 @@ export async function buildDesignLayout() {
     bundle: true, format: 'iife', platform: 'browser', target: ['chrome120', 'firefox120', 'safari17'],
     minify: true, write: false, ...extra })).outputFiles[0].text
   const guest = await compile("import {installDesignFlowSize,installDesignFrameVisibility} from './shared/design-flow-size';installDesignFlowSize();installDesignFrameVisibility()")
-  const host = await compile("import {installDesignFrameVisibility} from './shared/design-flow-size';installDesignFrameVisibility();export {resizeFlowManifest} from './shared/design-flow-size'", { globalName: '__lingxiDesignFlow' })
+  const host = await compile("import {installDesignFrameVisibility} from './shared/design-flow-size';installDesignFrameVisibility();export {resizeFlowManifest} from './shared/design-flow-size';export {installDesignRecovery} from './shared/artifact-recovery'", { globalName: '__lingxiDesignFlow' })
   return { guest, host }
 }
 
@@ -14,6 +14,7 @@ export async function buildDesignLayout() {
  * Keep source/archive bytes, native edit guards, throttles and CAS persistence. */
 export function adaptDesignLayout(source, host) {
   const changes = [
+    ['function S(w){(0,e.setHtmlReferenceStore)', 'function S(w){__lingxiDesignFlow.installDesignRecovery(w,e.parseDesignContent);(0,e.setHtmlReferenceStore)'],
     // ArtboardFrame props in this pin: frameless l, expanded d, playing i, box r, onContentHull v, file f.
     ['if(Sr&&Sr.type==="contentHull"){', 'if(Sr&&Sr.type==="flowSize"){if(l||d||i||!r||!Number.isFinite(Sr.w)||!Number.isFinite(Sr.h)||Sr.h<40||Sr.h>8000||Math.abs(Sr.w-r.w)>1)return;let Cn=(0,e.normalizeArtboardMeasuredSize)(Sr);Cn&&v?.(f,{...Cn,flow:true});return}if(Sr&&Sr.type==="contentHull"){'],
     ['if(!at||!at.frameless)return;', 'if(!at||(!at.frameless&&!xe.flow))return;'],
