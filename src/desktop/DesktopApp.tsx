@@ -237,6 +237,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
           {keepSlides && selectedWorkspaceId && <div key={`slides:${scope}`} style={!slidesActive ? { position: 'absolute', inset: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined} aria-hidden={!slidesActive} inert={!slidesActive} className="h-full min-h-0 min-w-0">
             <SlidesSidebarLayout active={slidesActive}><Suspense fallback={<ResourceSkeleton variant="list" label="正在加载演示文稿" />}><SlidesPage projectId={selectedWorkspaceId} active={slidesActive} /></Suspense></SlidesSidebarLayout>
           </div>}
+          {shellModule === 'slides' && !slidesActive && animatedPage}
           {directPage && shellModule !== 'slides' && animatedPage}
           </ShellNavContext.Provider>
         </div>
