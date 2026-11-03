@@ -210,19 +210,20 @@ clock remain unavailable, without claiming that a lease means a model is running
 The admin labels leased work as **已领取**, execution as **累计执行**, and the
 run-list timestamp as **创建时间**. The previous average-completion wording was
 incorrect for attempt sums and is corrected without changing ledger values.
-The overview queue count is explicitly scoped to runs created within24h and may
+The overview queue/waiting counts are scoped to runs created within24h, while
+outstanding delivery/usage/memory failures retain their global scope. Queue may
 include future availability, so it is not a current eligible queue-depth gauge.
 
 [Controlled fixture](controlled-fixture.json) uses the exact lock-matching public
 SDK Worker factory and ModelDriver with six tasks per scenario: pure interactive,
 pure background and mixed bursts. All scenarios retain task2/model2/reserve1,
-one25ms synthetic model invocation plus a10ms synthetic work/tool delay per task.
+one25ms synthetic model invocation plus a10ms synthetic processor delay per task.
 The fixture records actual SDK lifecycle events and attempt intervals; its host
 implements public claim filters in memory. It makes no provider HTTP call, has
 no billing, persistent database, production tenant or credentials, and executes
 no Python. All18 tasks completed; actual task/model maxima remained bounded,
 pure-background task concurrency remained1 with progress, and mixed reached2.
-The separate slow-model and slow-work tests inject80ms in each phase and prove
+The separate slow-model and slow-processor tests inject80ms in each phase and prove
 that the measured time is inside attempt execution, independently of queue time.
 
 The fixture JSON retains n/duration and nearest-rank queue/execution/end-to-end
@@ -238,10 +239,32 @@ baseline and shared quota information described above.
 
 Checks for this extension: five projection tests cover delayed availability,
 cancellation, missing/invalid data, foreign events, cursor pages, revisions/retries,
-151s queue vs55s execution and unknown lease validity. Two public-Worker fixture
-tests cover three bounded workload mixes and slow-model/slow-work attribution.
+151s queue vs55s execution and unknown lease validity. Three public-Worker fixture
+tests cover three bounded workload mixes, slow-model/slow-processor attribution
+and an80ms public recoverWork-hook delay after claim. Recovery contributes to
+both eligible-to-started and attempt execution, so adding those intervals double
+counts it. This does not qualify durable PostgreSQL lease recovery.
 Existing server smoke passed164/164 before these two new test files were added
 to its default selection; the new Node22-focused cases passed7/7. Admin tests
 passed9/9; server typecheck/lint and admin typecheck/build passed. Existing admin
 lint informational notices and bundle-size warning are unrelated. Final candidate
 CI and independent review for this extension remain required before handoff.
+
+
+### Continued validation and environment interruption
+
+The extended default server smoke passed171/171 on ebc2ed03; admin9/9, admin
+lint/build and server typecheck passed locally. Independent review found the
+24h/global failure-count wording mismatch and it is corrected here. The fixture's
+processor delay is now named as such, not described as an actual native-tool call.
+The existing runtime-worker-diagnostics HTTP integration is explicitly selected
+for these reader/shared-contract changes, with assertions on platform detail,
+company detail and operations timing while retaining sensitive-field checks.
+
+The managed execution environment disconnected during the last local work and
+became unavailable. The final recovery/owner/HTTP additions therefore require
+GitHub CI; no missing local result is counted as passed. These narrow changes
+were reconstructed against the pushed ebc2ed03 via repository tools. An inaccessible
+local worktree may still contain matching uncommitted edits; reconcile it with
+the final remote branch before resuming filesystem work. No production write,
+merge, restart or deployment was attempted, and #651 remains untouched.

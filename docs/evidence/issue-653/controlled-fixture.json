@@ -197,7 +197,7 @@
     "modelConcurrency": 2,
     "interactiveReserve": 1,
     "injectedModelMs": 25,
-    "injectedToolMs": 10,
+    "injectedProcessorMs": 10,
     "arrival": "six tasks in one burst per scenario",
     "provider": "synthetic ModelDriver, no HTTP",
     "host": "in-memory fixture implementing public claim filters; not PostgreSQL or production leases"

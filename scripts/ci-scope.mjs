@@ -11,6 +11,7 @@ const HISTORICAL_FILES = [
   'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts',
 ]
 const OWNERS = [
+  [/^server\/src\/modules\/platform-operations\/(?:agent-operations|agent-run-timing|company-router|router)\.ts$|^shared\/agent-run-timing\.ts$/, ['runtime-worker-diagnostics.test.ts']],
   [/^server\/src\/(?:db\/runtime-patch\.ts|runtime-patch-bin\.ts)$/, ['runtime-patch58-provenance.test.ts', 'runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts']],
   [/^server\/src\/modules\/(?:cases|case-covers)\/|^src\/features\/cases\/cover-vm\/(?:runtime|protocol|program|guest-source|svg)\.ts$/, ['case-covers.test.ts']],
   [/^server\/(?:src\/db\/|src\/migrate-bin\.ts$|package(?:-lock)?\.json$|fixtures\/|run-historical-migration-tests\.mjs$)/, HISTORICAL_FILES],

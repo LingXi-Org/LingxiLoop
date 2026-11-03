@@ -8,7 +8,7 @@ import { createLogger, MetricsRegistry, releaseVersions, type RunEvent, type Wor
 import { createWorker, type HostPort, type ModelDriver } from '@lyyzka/lingxios/worker'
 import { agentRunTiming } from '../modules/platform-operations/agent-run-timing.js'
 
-async function scenario(lanes: WorkItem['lane'][], modelMs = 25, toolMs = 10) {
+async function scenario(lanes: WorkItem['lane'][], modelMs = 25, processorMs = 10, recoveryMs = 0) {
   const createdMonotonic = performance.now()
   const events: RunEvent[] = [], finished = new Map<string, { start: number; end: number; status: string }>()
   const started = new Map<string, number>(), calls = new Set<string>(), created = Date.now()
@@ -27,6 +27,7 @@ async function scenario(lanes: WorkItem['lane'][], modelMs = 25, toolMs = 10) {
     // A fixed short wake delay avoids a busy fixture loop; stopping aborts it.
     waitForWork: async (_cursor: string | undefined, _timeoutMs: number, signal: AbortSignal) => { await delay(2, undefined, { signal }); return 'fixture' },
     heartbeat: async () => ({ ok: true }),
+    recoverWork: async () => { if (recoveryMs) await delay(recoveryMs); return false },
     emitEvent: async (_work: WorkItem, event: RunEvent) => { events.push(event) },
     reserveModelCall: async (_work: WorkItem, callId: string, limits: { deadlineAt: string }) => { calls.add(callId); return { allowed: true, deadlineAt: limits.deadlineAt } },
     recordModelUsage: async () => {},
@@ -43,7 +44,7 @@ async function scenario(lanes: WorkItem['lane'][], modelMs = 25, toolMs = 10) {
     kernelFactory: () => ({ size: 0, close: () => {}, execute: async () => { throw Error('no Python in capacity fixture') } }),
     processors: { queue_probe: { process: async (_work, context) => {
       await context.model.run({ instructions: 'synthetic', items: [], signal: context.signal })
-      await delay(toolMs, undefined, { signal: context.signal })
+      await delay(processorMs, undefined, { signal: context.signal })
     } } } })
   try {
     await worker.start()
@@ -78,11 +79,20 @@ test('formal public Worker keeps interactive/background/mixed fixture load bound
   assert.ok(interactive.samples.at(-1)!.queueMs > interactive.samples[0].queueMs, 'bounded slots create measurable queue wait')
 })
 
-test('synthetic slow model and slow tool both count inside attempt execution, not as first queue', { timeout: 5000 }, async () => {
-  for (const [modelMs, toolMs] of [[80, 0], [0, 80]]) {
-    const { samples } = await scenario(['interactive'], modelMs, toolMs)
+test('synthetic slow model and slow processor both count inside attempt execution, not as first queue', { timeout: 5000 }, async () => {
+  for (const [modelMs, processorMs] of [[80, 0], [0, 80]]) {
+    const { samples } = await scenario(['interactive'], modelMs, processorMs)
     assert.ok(samples[0].executionMs >= 65)
     // Claim/start was observed separately before duration injection; no phase subtraction.
     assert.ok(Number.isFinite(samples[0].queueMs))
   }
+})
+
+test('public recovery runs after claim, so eligible-to-started and execution can overlap', { timeout: 5000 }, async () => {
+  const { samples } = await scenario(['interactive'], 0, 0, 80)
+  const observed = samples[0]
+  assert.ok(observed.queueMs >= 65)
+  assert.ok(observed.executionMs >= 65)
+  assert.ok(observed.endToEndMs < observed.queueMs + observed.executionMs - 40,
+    'claim recovery is in both observed intervals; adding them would double count it')
 })
