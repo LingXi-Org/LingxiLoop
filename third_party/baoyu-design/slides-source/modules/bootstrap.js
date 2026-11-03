@@ -152,6 +152,7 @@ function installBootstrap(runtime2) {
         holdRemote: (input) => input === (0, runtime2.protectedSlideDocumentPath)(),
         inSlide: (input) => input === (0, runtime2.activeEditingDocumentPath)(),
         startEmpty: !0,
+        progressive: !0,
         paced: !0,
         early: runtime2.hotReloadBridge,
         firstSlide: {

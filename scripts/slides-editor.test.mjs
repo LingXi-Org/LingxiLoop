@@ -259,3 +259,18 @@ test('a hidden retained Slides frame suspends its heartbeat and resumes the late
   assert.equal(timers.size, 1)
   assert.equal(sent.at(-1).context.slideId, 'two')
 })
+
+test('progressive first edit preserves unloaded files and native CAS', async () => {
+  const {checkProgressiveFiles} = await import('./slides-progressive.test.mjs')
+  await checkProgressiveFiles()
+})
+
+test('progressive editing respects read-only, narrowed listings and revoked reads', async () => {
+  const {checkProgressiveFiles} = await import('./slides-progressive.test.mjs')
+  await checkProgressiveFiles({write:false})
+  await checkProgressiveFiles({narrowed:true})
+  await checkProgressiveFiles({revoke:true})
+  await checkProgressiveFiles({downgrade:true})
+  await checkProgressiveFiles({concurrent:true})
+  await checkProgressiveFiles({deleted:true})
+})

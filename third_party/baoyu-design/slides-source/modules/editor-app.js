@@ -4224,6 +4224,11 @@ function installEditorApp(runtime2) {
           SlidesAppJsx.jsx("style", {
             children: runtime2.SLIDES_PRINT_STYLES
           }),
+          documentStore.doc.progressive?.() ? SlidesAppJsx.jsx("div", {
+            role: "status", "data-progressive-slide": "",
+            className: "absolute inset-x-0 top-[var(--tb-overlay-h,0px)] z-10 bg-panel px-4 py-2 text-center text-xs text-fg-muted",
+            children: saveMessage
+          }) : null,
           SlidesAppJsx.jsx(runtime2.HotRestoreRevealGate, {
             box: currentSlide === void 0 ? null : () => (slideSurface() ?? editorElementRef.current ?? gridViewElementRef.current?.querySelector("[data-grid-surface]"))?.getBoundingClientRect()
           }),

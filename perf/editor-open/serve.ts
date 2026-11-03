@@ -162,6 +162,9 @@ app.use('/artifact-editor/:kind/:grant', express.json({ limit: '16mb' }), (req, 
     }
     publishes++;res.json({ version: `recovery-${publishes}`, shas });return
   }
+  if (recoveryFixture && kind === 'slides' && path.startsWith('project/slides/') && path !== 'project/slides/slide-1.html' && Number(process.env.PERF_LATER_SLIDES_DELAY_MS) > 0) {
+    setTimeout(() => { if (!access.read || grant.expiresAt <= Date.now()) res.sendStatus(403);else res.type('text/html').send(files.get(path)) }, Number(process.env.PERF_LATER_SLIDES_DELAY_MS));return
+  }
   if (path === '_files.json') { res.json({ ver: 'fixed', files: Object.fromEntries([...files].map(([name, value]) => [name, { sha256: sha(value), size: Buffer.byteLength(value), contentType: name.endsWith('.json') ? 'application/json' : 'text/html' }])) }); return }
   if (path.endsWith('events')) { res.set('Content-Type', 'text/event-stream'); res.write(': connected\n\n'); return }
   if (path === '__comments') { res.json({ threads: [], agent: { available: false, listening: false, busy: false, hook: false }, me: { name: '基准测试' } }); return }

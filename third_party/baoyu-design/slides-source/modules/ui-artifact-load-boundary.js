@@ -24,6 +24,7 @@ function installUiArtifactLoadBoundary(runtime2) {
   }
   function ArtifactLoadBoundary({ doc, skeleton, skeletonFlush, held = !1, exposed = !0, children }) {
     let callback = () => {
+      if (doc.progressive?.()) return "live";
       let value5 = typeof doc.loadState == "function" ? doc.loadState() : "live";
       return value5 === "loading" || value5 === "failed" ? value5 : "live";
     }, [value, value2] = reactGQ.useState(callback), [value3, value4] = reactGQ.useState(""), ref = reactGQ.useRef(null), ref2 = reactGQ.useRef(!1), ref3 = reactGQ.useRef(!0);
