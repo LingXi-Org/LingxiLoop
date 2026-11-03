@@ -182,10 +182,11 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   const stage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
     .find(part => /^.* AS spa-build\r?\n/.test(part))
   assert.ok(stage, 'SPA build stage exists')
-  const copied = stage.split(/\r?\n/).filter(line => /^COPY /.test(line)).flatMap(line => {
+  const copiesOf = stage => stage.split(/\r?\n/).filter(line => /^COPY /.test(line)).flatMap(line => {
     const [, ...args] = line.trim().split(/\s+/), destination = args.pop()
     return args.map(source => ({ source, destination: resolve(root, destination) }))
   })
+  const copied = copiesOf(stage)
   const patterns = read('server/docker/lingxiloop-server.Dockerfile.dockerignore')
     .split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'))
   const inContext = path => {
@@ -197,11 +198,29 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     }
     return included
   }
-  const packaged = path => inContext(path) && copied.some(({ source, destination }) => {
+  const packaged = (path, copies = copied) => inContext(path) && copies.some(({ source, destination }) => {
     if (path !== source && !path.startsWith(`${source}/`)) return false
     const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
     return resolve(destination, suffix) === resolve(root, path)
   })
+  // Follow local build imports as well as the data catalogs: a newly imported
+  // helper must not silently work only in a complete development checkout.
+  const editorInputs = new Set(['scripts/build-visualize-runtime.mjs',
+    'third_party/baoyu-design/host/design-zh-CN.json', 'third_party/baoyu-design/host/slides-zh-CN.json'])
+  for (const path of editorInputs) {
+    if (!path.endsWith('.mjs')) continue
+    for (const item of ts.preProcessFile(read(path), true, true).importedFiles) {
+      if (item.fileName.startsWith('.')) editorInputs.add(relative(root, resolve(root, path, '..', item.fileName)).replaceAll('\\', '/'))
+    }
+  }
+  for (const name of ['visualize-build', 'spa-build']) {
+    const editorStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
+      .find(part => part.split('\n')[0].endsWith(` AS ${name}`))
+    assert.ok(editorStage, `${name} exists`)
+    for (const path of editorInputs) {
+      assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing Design translation input: ${path}`)
+    }
+  }
   for (const path of ['server/package.json', 'server/package-lock.json', 'server/build/web/package.json',
     'server/build/web/package-lock.json', 'server/scripts/check-packaged-startup.mjs']) {
     assert.ok(inContext(path), `Missing build/runtime input: ${path}`)
@@ -248,50 +267,6 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     assert.ok(inContext(source), `Distributed component license missing from build context: ${source}`)
     assert.ok(finalStage.includes(`COPY ${source} ./dist/licenses/${target}`), `Distributed component license missing from final image: ${source}`)
     assert.match(read(source), /Permission is hereby granted/)
-  }
-})
-
-// Failure: a local editor build succeeds with inputs absent from the image.
-test('Design image stages include the build import graph and translation catalogs', () => {
-  const root = fileURLToPath(new URL('../', import.meta.url))
-  const dockerfile = read('server/docker/lingxiloop-server.Dockerfile')
-  const patterns = read('server/docker/lingxiloop-server.Dockerfile.dockerignore')
-    .split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'))
-  const inContext = path => {
-    const ancestors = path.split('/').map((_, index, parts) => parts.slice(0, index + 1).join('/'))
-    let included = true
-    for (const rule of patterns) {
-      const pattern = rule.startsWith('!') ? rule.slice(1) : rule
-      if (ancestors.some(parent => matchesGlob(parent, pattern))) included = rule.startsWith('!')
-    }
-    return included
-  }
-  const inputs = new Set([
-    'scripts/build-visualize-runtime.mjs',
-    'third_party/baoyu-design/host/design-zh-CN.json',
-    'third_party/baoyu-design/host/slides-zh-CN.json',
-  ])
-  for (const path of inputs) {
-    if (!path.endsWith('.mjs')) continue
-    for (const item of ts.preProcessFile(read(path), true, true).importedFiles) {
-      if (item.fileName.startsWith('.')) inputs.add(relative(root, resolve(root, path, '..', item.fileName)).replaceAll('\\', '/'))
-    }
-  }
-  for (const name of ['visualize-build', 'spa-build']) {
-    const stage = dockerfile.split(/^FROM /m).find(part => part.split('\n')[0].endsWith(` AS ${name}`))
-    assert.ok(stage, `${name} exists`)
-    const copied = stage.split(/\r?\n/).filter(line => /^COPY /.test(line)).flatMap(line => {
-      const [, ...args] = line.trim().split(/\s+/), destination = args.pop()
-      return args.map(source => ({ source, destination: resolve(root, destination) }))
-    })
-    for (const path of inputs) {
-      assert.ok(inContext(path), `${name} input excluded from context: ${path}`)
-      assert.ok(copied.some(({ source, destination }) => {
-        if (path !== source && !path.startsWith(`${source}/`)) return false
-        const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
-        return resolve(destination, suffix) === resolve(root, path)
-      }), `${name} input absent or copied to the wrong path: ${path}`)
-    }
   }
 })
 
