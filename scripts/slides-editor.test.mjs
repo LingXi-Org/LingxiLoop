@@ -206,25 +206,24 @@ test('legacy decks have no automatic default and saved HTML retains authored sty
   assert.deepEqual(reopened.slides, content.slides)
 })
 
-test('built-in themes parse and restyle slides with readable text', async () => {
+test('upstream theme variants parse and restyle slides', async () => {
   const runtime = createRequire(import.meta.url)('../server/assets/slides-editor/node/compiler.cjs').runtime
   const themes = JSON.parse(await readFile('third_party/baoyu-design/host/builtin-themes.json', 'utf8'))
+  assert.deepEqual(themes.map(theme => theme.namespace), ['baoyu-ember', 'baoyu-seazar'])
   const slide = runtime.SLIDE_TEMPLATES.find(template => template.id === 'title-body').make()
   for (const theme of themes) {
     const palette = runtime.parseDesignTokens(theme.tokens, { title: theme.title })
-    assert.equal(palette.colors.length, 7)
-    assert.ok(palette.type.length > 0)
+    assert.ok(palette.colors.length > 0 && palette.type.length > 0)
     const system = runtime.analyzeDesignSystem(theme.tokens, { key: theme.namespace, title: theme.title })
-    assert.equal(system.themes.length, 1)
-    const colors = Object.fromEntries(theme.tokens.color.tokens.map(token => [token.name, token.value]))
-    for (const background of [colors.background, colors.surface]) {
-      for (const ink of [colors.text, colors['text-secondary']]) assert.ok(runtime.themeContrastRatio(background, ink) >= 4.5, theme.title)
+    assert.deepEqual(system.themes.map(variant => variant.id), theme.tokens.color.themes.map(variant => variant.id))
+    for (const variant of system.themes) {
+      const background = runtime.themeColorsWithRole(variant, 'background')[0]
+      assert.ok(background, `${theme.title}: ${variant.id}`)
+      const analysis = runtime.analyzeDeckRestyle([slide], undefined, undefined)
+      const plan = runtime.planSystemRestyle(analysis, system, undefined, { theme: variant.id })
+      const styled = runtime.createSlideRestyler(plan, { slides: [slide], declared: new Set() })(slide)
+      assert.equal((runtime.namedSlideColors[styled.bg] ?? styled.bg).toLowerCase(), background.value.toLowerCase())
     }
-    assert.ok(runtime.themeContrastRatio(colors.accent, colors['on-accent']) >= 4.5, theme.title)
-    const analysis = runtime.analyzeDeckRestyle([slide], undefined, undefined)
-    const plan = runtime.planSystemRestyle(analysis, system, undefined, { theme: system.themes[0].id })
-    const styled = runtime.createSlideRestyler(plan, { slides: [slide], declared: new Set() })(slide)
-    assert.equal(styled.bg.toLowerCase(), colors.background.toLowerCase())
     assert.equal(slide.bg, 'white')
   }
 })

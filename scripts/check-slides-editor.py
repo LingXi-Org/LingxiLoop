@@ -28,8 +28,11 @@ def run(browser, upstream=False, mobile=False):
     files = {"project/deck.json": json.dumps(dict(v=4, lists="css", title="Keep English 用户标题", order=[], sections={}, faces={}, designSystems=[])).encode()}
     if not upstream and not mobile:
         themes = json.loads((ROOT / "third_party/baoyu-design/host/builtin-themes.json").read_text(encoding="utf-8"))
+        builtin = json.loads((ROOT / "third_party/baoyu-design/slides-source/builtin-style.json").read_text(encoding="utf-8"))
+        themes.insert(0, dict(namespace=builtin["namespace"], title="Claude 经典", source=builtin["source"], version=builtin["version"], tokens=builtin["tokens"]))
         deck = json.loads(files["project/deck.json"])
-        deck["designSystems"] = [dict(namespace=t["namespace"], title=t["title"], artifact="LingxiLoop 内置主题", version="1", copiedAt="2026-11-03T00:00:00Z") for t in themes]
+        deck["style"] = builtin["style"]
+        deck["designSystems"] = [dict(namespace=t["namespace"], title=t["title"], artifact=t["source"], version=t["version"], copiedAt="2026-11-03T00:00:00Z") for t in themes]
         files["project/deck.json"] = json.dumps(deck).encode()
         for theme in themes:
             files[f"project/ds/{theme['namespace']}/tokens.json"] = json.dumps(theme["tokens"]).encode()
@@ -132,15 +135,15 @@ def run(browser, upstream=False, mobile=False):
     expect(view.get_by_role("button", name="设计系统：", exact=False)).to_be_visible()
     expect(view.get_by_text("Original look", exact=True)).to_have_count(0)
     view.get_by_role("button", name="设计系统：", exact=False).click()
-    for title in ["学术蓝", "森林课堂", "深色演示"]:
+    for title in ["Claude 经典", "Ember, Light", "Ember, Dark", "Seazar, Light", "Seazar, Dark", "Seazar, High contrast"]:
         expect(view.get_by_role("button", name=title, exact=True)).to_be_visible()
     page.screenshot(path=str(ROOT / "docs/evidence/issue-648/slides-chinese.png"))
-    view.get_by_role("button", name="森林课堂", exact=True).click()
+    view.get_by_role("button", name="Ember, Dark", exact=True).click()
     deadline = time.monotonic() + 10
-    while "forest-classroom" not in json.dumps(json.loads(files["project/deck.json"]).get("style")) and time.monotonic() < deadline:
+    while "baoyu-ember/dark" not in json.dumps(json.loads(files["project/deck.json"]).get("style")) and time.monotonic() < deadline:
         page.wait_for_timeout(50)
-    assert "forest-classroom" in json.dumps(json.loads(files["project/deck.json"]).get("style")), "theme selection was not saved"
-    expect(view.get_by_role("button", name="设计系统：森林课堂", exact=False)).to_be_visible()
+    assert "baoyu-ember/dark" in json.dumps(json.loads(files["project/deck.json"]).get("style")), "theme selection was not saved"
+    expect(view.get_by_role("button", name="设计系统：Ember, Dark", exact=False)).to_be_visible()
     view.get_by_role("button", name="关闭面板", exact=True).click()
 
     view.get_by_role("button", name="下载", exact=True).click()

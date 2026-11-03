@@ -27,13 +27,25 @@ ICU arguments and branches, icons, keys, enums, saved user text, font names and
 format abbreviations remain intact; debugging/protocol diagnostics are retained.
 Two GPT-6.1 Terra workers implemented the editor copy in parallel.
 
-Three original palettes use the upstream color/type design-system schema:
-学术蓝 (`academic-blue`), 森林课堂 (`forest-classroom`), 深色演示
-(`dark-presentation`). They are stored as ordinary `project/ds/*/tokens.json`
-resources only during document creation. Existing documents are unchanged;
-Slides keeps its existing default style. No remote fonts or new dependencies.
-The existing Slides four-system quota is now occupied by the default plus these
-three systems; replacing one uses the existing document tools.
+Three source-backed systems are installed only for new documents:
+
+| System | Exact upstream source | Variants |
+| --- | --- | --- |
+| Claude 经典 (`slides-builtin`) | Existing recovered `namedSlideColors` + `anthropicTypeScale`, in `slides-source/builtin-style.json` | Claude-style light default |
+| Ember (`baoyu-ember`) | `skills/claude-design-system/artifact-type/demo.json` → `content.files["tokens.json"]` | Light, Dark |
+| Seazar (`baoyu-seazar`) | `skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json` | Light, Dark, High contrast |
+
+All sources are pinned to `016b39d7fdcc30bfacee31ea5541498ac53921c6` (MIT).
+The Claude color/type tokens and saved Slides default are unchanged from the
+v2.1.0 baseline. Ember and Seazar are upstream examples, not official Claude
+skins. Their token objects are copied exactly, with source URL/commit/JSON pointer
+in the catalog; tests compare installed objects directly with the archived source.
+The initial original palettes were removed after the user's source requirement.
+
+Both Design and Slides expose all six looks through their existing pickers. New documents use Claude-style tokens as the
+agent's starting point when no style was requested. Existing documents and user
+content remain unchanged. The three installed systems leave one of the existing
+four slots free. No remote fonts, custom palettes or new dependencies.
 
 ## New upstream server routes
 
@@ -100,9 +112,9 @@ Final candidate checks after rebasing onto `dd064748`:
 - Artifact and Slides page tests with repository unit-test environment (`node --import tsx --experimental-test-module-mocks --test --test-force-exit server/src/modules/artifacts/artifacts.test.ts server/src/modules/artifacts/slides-page.test.ts`): 13 passed.
 - Scoped Biome lint for kinds, skills and artifacts tests: passed. `biome check` additionally reported existing import-order conventions; repository lint is the applicable gate.
 - `python scripts/check-slides-editor.py`: desktop/mobile create/save/reload,
-  all three theme choices, persisted forest theme, lazy PPTX and explicit PDF confirmation passed with zero HTTP errors. The iframe uses a separate origin and the current sandbox flags.
+  all six upstream theme choices, persisted Ember Dark theme, lazy PPTX and explicit PDF confirmation passed with zero HTTP errors. The iframe uses a separate origin and the current sandbox flags.
 - `python scripts/check-design-editor.py`: editable/read-only startup, math,
-  all three theme choices, academic theme selection and editing/save passed;
+  all six upstream theme choices, Claude selection and editing/save passed;
   zero failed HTTP responses or unported route calls.
 - Independent read-only review of candidate `61f2dc93`: no blocking findings;
   additionally executed the retained stylesheet-origin font resolver with
@@ -115,6 +127,22 @@ claimed. The fixtures exercise the real built editor with deterministic APIs.
 The initial route audit found two real gaps (direct agent requests and local
 design-system sync). A new Design packaging assertion failed before the
 capability removal and passed after it.
+
+### Source-backed theme follow-up
+
+After replacing the original palettes: 13 artifact/page unit tests, three focused
+source-token/default-style/variant-restyle tests, scoped lint and both real built
+editor browser fixtures passed. Both pickers display all six upstream looks;
+Design selects Claude and Slides saves Ember Dark before PPTX/PDF exports.
+Editor executable source and bytes did not change, so size measurements remain
+valid. New-document resource tokens and agent guidance changed.
+
+The first PR integration run failed on two stale file-list expectations (and a
+cascading leftover test deck). The boundary test now expects the new source-backed
+token files and explicitly removes them to construct the legacy fixture before
+checking that opening leaves its bytes unchanged. Local integration execution is
+blocked by absent INTEGRATION_DATABASE_URL/REDIS_URL; CI will run the actual
+service-backed test. Production remains untouched.
 
 ## Size comparison
 

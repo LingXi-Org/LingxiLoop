@@ -42,12 +42,31 @@ User content, persisted names, identifiers, protocol values, font/brand names an
 format abbreviations are preserved. ICU tests retain arguments and plural/select
 branches. The original vendored files remain byte-identical.
 
-`host/builtin-themes.json` adds original 学术蓝, 森林课堂 and 深色演示 palettes
-using upstream's documented color/type token schema and local font fallbacks.
-Only new artifacts receive these `designSystems` records and token files through
+New Design and Slides documents install the same three source-backed systems:
+
+- **Claude 经典** (`slides-builtin`): the existing `slides-source/builtin-style.json`,
+  extracted from the pinned Slides `namedSlideColors` and `anthropicTypeScale`.
+  Its color/type tokens and default Slides look memory are unchanged from v2.1.0.
+  This is the source-derived Claude-style default, not a separately published
+  official Claude design-system package.
+- **Ember** (`baoyu-ember`): the exact parsed `tokens.json` embedded in
+  `distribution/skills/claude-design-system/artifact-type/demo.json` under
+  `content.files`. Includes the upstream Light/Dark variants.
+- **Seazar** (`baoyu-seazar`): the exact
+  `distribution/skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json`.
+  Includes the upstream Light/Dark/High contrast variants.
+
+Ember and Seazar are examples shipped by the MIT-licensed baoyu-design project,
+not invented LingxiLoop palettes or claimed official Claude themes.
+`host/builtin-themes.json` preserves their token values, references and typography,
+with fixed source URLs, commit and JSON pointers. Initialization tests compare
+installed data to those archived sources. Only wrapper display titles are local.
+Both editors expose all six looks through their existing theme pickers. Their fonts use the upstream local system stacks; no font download
+or new dependency is required.
+
+Only new artifacts receive these records/token files through
 `initialIndex`/`initialResources`; existing artifacts are never backfilled.
-Slides retains its original default style. Selecting a theme uses the existing
-editor controls and saved look memory. Slides' existing four-system limit means
-its default plus these three fills the quota; replacing a system uses the
-existing document tooling. No remote import, filesystem sync or new API is added.
+Slides retains its Claude-style default. Agent instructions use the installed
+Claude tokens for new content when no other style is requested. Existing authored
+content keeps its look. All three systems fit within the current four-system limit.
 See [upgrade evidence](../../docs/evidence/issue-648/README.md).

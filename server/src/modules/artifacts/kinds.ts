@@ -52,10 +52,12 @@ export function inlineScriptHashes(html: string) {
 
 const SEGMENT = /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/
 const MB = 1024 * 1024
-const themeRecords = (at: string) => builtinThemes.map(theme => ({
-  namespace: theme.namespace, title: theme.title, artifact: 'LingxiLoop 内置主题', version: '1', copiedAt: at,
+const themes = [{ namespace: slidesBuiltin.namespace, title: 'Claude 经典', source: slidesBuiltin.source,
+  version: slidesBuiltin.version, tokens: slidesBuiltin.tokens }, ...builtinThemes]
+const themeRecords = (at: string) => themes.map(theme => ({
+  namespace: theme.namespace, title: theme.title, artifact: theme.source, version: theme.version, copiedAt: at,
 }))
-const themeResources = Object.fromEntries(builtinThemes.map(theme => [`project/ds/${theme.namespace}/tokens.json`, theme.tokens]))
+const themeResources = Object.fromEntries(themes.map(theme => [`project/ds/${theme.namespace}/tokens.json`, theme.tokens]))
 
 function isDesignFile(rel: string) {
   const parts = rel.split('/')
@@ -137,11 +139,8 @@ export const ARTIFACT_KIND_DEFINITIONS: Record<ArtifactKind, ArtifactKindDefinit
       return slideId && file && exists(file) ? { file, slide, slideId } : { file: 'project/deck.json', slide }
     },
     initialIndex: (title, at) => ({ v: 4, createdOnFiles: { v: 1, at }, lists: 'css', title, order: [],
-      sections: {}, faces: {}, style: structuredClone(slidesBuiltin.style), designSystems: [{
-        namespace: slidesBuiltin.namespace, title: slidesBuiltin.title, artifact: slidesBuiltin.source,
-        version: slidesBuiltin.version, copiedAt: at,
-      }, ...themeRecords(at)] }),
-    initialResources: { 'project/ds/slides-builtin/tokens.json': slidesBuiltin.tokens, ...themeResources },
+      sections: {}, faces: {}, style: structuredClone(slidesBuiltin.style), designSystems: themeRecords(at) }),
+    initialResources: themeResources,
   },
 }
 

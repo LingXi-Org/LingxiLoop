@@ -20,9 +20,11 @@ BASE = "/artifact-editor/design/test-grant/"
 def run(browser, read_only=False):
     editor = ROOT / "server/assets/design-editor"
     themes = json.loads((ROOT / "third_party/baoyu-design/host/builtin-themes.json").read_text(encoding="utf-8"))
+    builtin = json.loads((ROOT / "third_party/baoyu-design/slides-source/builtin-style.json").read_text(encoding="utf-8"))
+    themes.insert(0, dict(namespace=builtin["namespace"], title="Claude 经典", source=builtin["source"], version=builtin["version"], tokens=builtin["tokens"]))
     canvas = dict(v=3, title="Upgrade fixture", launch={"view": "canvas"}, pages=[],
                   boards={"Main.dc.html": dict(x=0, y=0, w=720, h=480)},
-                  order=["Main.dc.html"], notes={}, designSystems=[dict(namespace=t["namespace"], title=t["title"], artifact="LingxiLoop 内置主题", version="1", copiedAt="2026-11-03T00:00:00Z") for t in themes])
+                  order=["Main.dc.html"], notes={}, designSystems=[dict(namespace=t["namespace"], title=t["title"], artifact=t["source"], version=t["version"], copiedAt="2026-11-03T00:00:00Z") for t in themes])
     board = r'<html><head><script src="./support.js"></script></head><body><x-dc><h1>Upgrade fixture</h1><p>\(x^2\)</p></x-dc></body></html>'
     files = {"project/canvas.json": json.dumps(canvas).encode(), "project/Main.dc.html": board.encode()}
     for theme in themes:
@@ -103,11 +105,11 @@ def run(browser, read_only=False):
             assert BASE + f"project/ds/{theme['namespace']}/tokens.json" in requests
         expect(page.get_by_test_id("dc-theme-system-link")).to_have_count(0)
         page.get_by_test_id("dc-theme-tab").get_by_role("button").filter(has_text="原始外观").click()
-        for theme in themes:
-            expect(page.get_by_role("button", name=theme["title"], exact=True)).to_be_visible()
+        for title in ["Claude 经典", "Ember, Light", "Ember, Dark", "Seazar, Light", "Seazar, Dark", "Seazar, High contrast"]:
+            expect(page.get_by_role("button", name=title, exact=True)).to_be_visible()
         page.screenshot(path=str(ROOT / "docs/evidence/issue-648/design-chinese.png"))
-        page.get_by_role("button", name="学术蓝", exact=True).click()
-        expect(page.get_by_test_id("dc-theme-tab").get_by_role("button").filter(has_text="学术蓝")).to_be_visible()
+        page.get_by_role("button", name="Claude 经典", exact=True).click()
+        expect(page.get_by_test_id("dc-theme-tab").get_by_role("button").filter(has_text="Claude 经典")).to_be_visible()
         page.get_by_role("button", name="属性", exact=True).click()
         artboard.locator("h1").dblclick()
         heading = artboard.locator('h1[contenteditable="true"]')

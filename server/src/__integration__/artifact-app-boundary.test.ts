@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { after, before, test } from 'node:test'
 import { createServer, type Server } from 'node:http'
 import { artifactEditorOrigin } from '../../../shared/artifact-editor-origin.js'
@@ -49,12 +50,20 @@ const entry = (text: string, ifMatch?: string | null) => ({ base64: Buffer.from(
 
 test('old Slides gain independent durable native chats without rewriting source or bytes; source revocation still denies access', async () => {
   const old = await createSlides({ companyId, projectId, conversationId: 'artifact-room', title: 'Legacy', actorId: userId, origin: 'user' })
+  const created = (await pool.query('SELECT path,sha256,body FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [old.id])).rows
+  assert.deepEqual(created.map(row => row.path), ['project/deck.json', 'project/ds/baoyu-ember/tokens.json', 'project/ds/baoyu-seazar/tokens.json', 'project/ds/slides-builtin/tokens.json'])
+  const initialIndex = JSON.parse(created.find(row => row.path === 'project/deck.json').body.toString())
+  initialIndex.designSystems = initialIndex.designSystems.filter((system: { namespace: string }) => system.namespace === 'slides-builtin')
+  const legacyIndex = Buffer.from(JSON.stringify(initialIndex))
+  await pool.query('UPDATE artifact_files SET body=$2, sha256=$3, size=$4 WHERE artifact_id=$1 AND path=$5',
+    [old.id, legacyIndex, createHash('sha256').update(legacyIndex).digest('hex'), legacyIndex.length, 'project/deck.json'])
+  await pool.query('DELETE FROM artifact_files WHERE artifact_id=$1 AND path = ANY($2::text[])',
+    [old.id, ['project/ds/baoyu-ember/tokens.json', 'project/ds/baoyu-seazar/tokens.json']])
   const original = (await pool.query('SELECT path,sha256,body FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [old.id])).rows
   assert.deepEqual(original.map(row => row.path), ['project/deck.json', 'project/ds/slides-builtin/tokens.json'])
-  const initialIndex = JSON.parse(original[0].body.toString())
   assert.deepEqual(initialIndex.order, [])
   assert.equal(initialIndex.style[0].look, 'slides-builtin/light')
-  assert.equal(JSON.parse(original[1].body.toString()).name, 'Slides 内置风格')
+  assert.equal(JSON.parse(original.find(row => row.path === 'project/ds/slides-builtin/tokens.json').body.toString()).name, 'Slides 内置风格')
   const opens = await Promise.all([1, 2].map(() => api(`/artifacts/${old.id}/slides-workspace`, 'POST')))
   assert.deepEqual(opens.map(result => result.status), [200, 200])
   const first = await opens[0].json() as { conversationId: string; sourceConversationId: string; agentId: string }
@@ -155,7 +164,7 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   const readOnly = await save(grant.url, { 'project/assets/x.html': entry('x') })
   assert.equal(readOnly.status, 400)
   const listing = await (await fetch(`${origin}${grant.url}_files.json`)).json() as { files: Record<string, unknown> }
-  assert.deepEqual(Object.keys(listing.files).sort(), ['project/Main.dc.html', 'project/canvas.json'])
+  assert.deepEqual(Object.keys(listing.files).sort(), ['project/Main.dc.html', 'project/canvas.json', 'project/ds/baoyu-ember/tokens.json', 'project/ds/baoyu-seazar/tokens.json', 'project/ds/slides-builtin/tokens.json'])
   const file = await fetch(`${origin}${grant.url}project/Main.dc.html`)
   assert.match(file.headers.get('content-security-policy') ?? '', /^sandbox;/)
   const savedBody = await file.text()
