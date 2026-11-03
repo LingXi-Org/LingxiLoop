@@ -1,7 +1,7 @@
 export type AdminRecord = Record<string, unknown> & { id: string }
 
 export const FIELD_LABELS: Record<string, string> = {
-  seat_limit: '席位上限', ends_at: '结束时间', current_period_end: '订阅到期', failed_at: '失败时间', channel: '投递渠道', executionMs: '执行耗时', costMicros: '费用（微单位）', createdAt: '创建时间',
+  seat_limit: '席位上限', ends_at: '结束时间', current_period_end: '订阅到期', failed_at: '失败时间', channel: '投递渠道', executionMs: '累计执行耗时', costMicros: '费用（微单位）', createdAt: '创建时间',
   id: '记录编号', name: '名称', title: '标题', display_name: '姓名', email: '邮箱', subject: '主题',
   status: '状态', role: '角色', kind: '类型', type: '类型', description: '描述', summary: '摘要',
   created_at: '创建时间', updated_at: '更新时间', deleted_at: '删除时间', suspended_at: '停用时间',
@@ -39,7 +39,7 @@ export function recordTitle(record: AdminRecord): string {
 }
 
 export const STATUS_LABELS: Record<string, string> = {
-  teacher: '教师', student: '学生', processing: '处理中', sending: '发送中', leased: '执行中', waiting: '等待中', partial: '部分完成', blocked: '受阻',
+  teacher: '教师', student: '学生', processing: '处理中', sending: '发送中', leased: '已领取', waiting: '等待中', partial: '部分完成', blocked: '受阻',
   active: '有效', ready: '已就绪', healthy: '健康', completed: '已完成', success: '成功', succeeded: '成功',
   approved: '已批准', delivered: '已送达', sent: '已发送', verified: '已验证', triggered: '已触发',
   failed: '失败', error: '错误', unhealthy: '异常', down: '离线', 'crash-looping': '反复崩溃',

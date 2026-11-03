@@ -1,4 +1,5 @@
 import type { createLingxiOS } from '@lyyzka/lingxios'
+import { agentRunTiming } from './agent-run-timing.js'
 import { HttpError } from '../../http/errors.js'
 
 export type PlatformAgentRuntime = Pick<Awaited<ReturnType<typeof createLingxiOS>>,
@@ -20,7 +21,8 @@ export async function inspectPlatformAgentRun(runtime: PlatformAgentRuntime, run
     runtime.readUsage(run.identity),
   ])
   return { run, state: state ? { run: state.run, delivery: state.delivery } : null, diagnostics,
-    workerFailure: diagnostics?.runtimeFailure ?? null, ...events, usage }
+    workerFailure: diagnostics?.runtimeFailure ?? null, ...events, usage,
+    timing: agentRunTiming(run, { events: events.events, afterSeq }) }
 }
 
 export async function revisePlatformAgentRun(runtime: PlatformAgentRuntime, runId: string, text: string) {

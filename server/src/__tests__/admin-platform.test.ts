@@ -162,6 +162,9 @@ test('platform Agent operations resolve the authoritative run identity', async (
 
   const inspected = await inspectPlatformAgentRun(runtime, 'run-1', 3)
   assert.equal('message' in (inspected.state ?? {}), false)
+  assert.equal(inspected.timing.eventHistory, 'cursor-page')
+  assert.equal(inspected.timing.initialEligibleToStartedMs, null)
+  assert.equal(inspected.timing.endToEndMs, null)
   assert.deepEqual(inspected.state, { run, delivery: 'pending' })
   assert.equal((await revisePlatformAgentRun(runtime, 'run-1', 'new direction')).revised, true)
   assert.equal((await cancelPlatformAgentRun(runtime, 'run-1')).cancelled, true)

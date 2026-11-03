@@ -5,8 +5,8 @@ or related PR existed at initial issue/comment/PR lookup. The single comment
 was the task-email receipt. #646/#648/#649 are user-owned; no files from those
 changes are edited here. LingxiOS #83/#84 remain separately owned and open.
 
-This is a prerequisite observation change, **not a capacity fix or completion of
-#653**. It must not close that issue. No Worker limit, model route, execution
+This implements product timing presentation and prerequisite observation,
+**not a capacity fix or completion of #653**. It must not close that issue. No Worker limit, model route, execution
 budget, provider setting, credential, permission or security setting changes.
 The approved #633 budgets remain 512 calls / 8M tokens / $50 / two hours for
 new roots; those are per-root limits, not shared provider quotas.
@@ -89,10 +89,12 @@ capacity root cause. The model duration can include local publication backpressu
 
 ## Delivery boundary
 
-Open a draft prerequisite PR. The parent thread's designated sole integrator
-owns merge and production writes. Use **`[skip deploy]` in the merge commit** for
-this observation-only prerequisite. Review/merge of the observer does not
-qualify a capacity change, deployment, provider benchmark or #653 acceptance.
+The draft PR now includes admin/API product timing changes as well as the
+observer. The parent thread's designated sole integrator owns merge and production
+writes. The earlier observer-only `[skip deploy]` recommendation does not qualify
+these product changes for release; coordinate their rollout through normal CI and
+health probes. Reviewing or merging the code does not establish a completed
+deployment, provider benchmark or #653 capacity acceptance.
 A branch workflow observation also does not publish the code to production.
 
 The last completed main CI/deploy at investigation start was
@@ -186,6 +188,60 @@ add these evidence records; final PR-head CI must still be checked.
 
 Public GET probes returned HTTP200 for `/readyz` and the main web origin on
 2026-11-03. They verify current service availability, not deployment of this PR.
-The sole integrator must review/merge the prerequisite with `[skip deploy]`;
+The sole integrator must coordinate the eventual product release;
 this contributor has performed no merge, production configuration mutation,
 service drain/restart, image pull or deployment. #653 stays open.
+
+## Product timing correction and controlled public-Worker fixture
+
+The admin detail/operations readers now project only public run snapshots and
+public `run.started` fields. The same authorized platform/company detail routes
+are retained; no SDK-internal table, export or private trace metadata is read.
+The detail's extra first-page lifecycle read fails softly to unavailable timing;
+it does not remove the existing run/diagnostic view. Operations cursor reads do
+not issue an extra historical read or fabricate a first-start value.
+
+`timing` distinguishes future availability, current eligible queue age, first
+eligible→started (only a fully identified original single attempt/request/fence
+and seq1), attempt execution total and leased heartbeat age. Null is unavailable,
+not zero. Revised/retried roots do not inherit another attempt's first wait.
+Exact lease expiry/validity, model-permit wait, ingress delay and terminal wall
+clock remain unavailable, without claiming that a lease means a model is running.
+The admin labels leased work as **已领取**, execution as **累计执行**, and the
+run-list timestamp as **创建时间**. The previous average-completion wording was
+incorrect for attempt sums and is corrected without changing ledger values.
+The overview queue count is explicitly scoped to runs created within24h and may
+include future availability, so it is not a current eligible queue-depth gauge.
+
+[Controlled fixture](controlled-fixture.json) uses the exact lock-matching public
+SDK Worker factory and ModelDriver with six tasks per scenario: pure interactive,
+pure background and mixed bursts. All scenarios retain task2/model2/reserve1,
+one25ms synthetic model invocation plus a10ms synthetic work/tool delay per task.
+The fixture records actual SDK lifecycle events and attempt intervals; its host
+implements public claim filters in memory. It makes no provider HTTP call, has
+no billing, persistent database, production tenant or credentials, and executes
+no Python. All18 tasks completed; actual task/model maxima remained bounded,
+pure-background task concurrency remained1 with progress, and mixed reached2.
+The separate slow-model and slow-work tests inject80ms in each phase and prove
+that the measured time is inside attempt execution, independently of queue time.
+
+The fixture JSON retains n/duration and nearest-rank queue/execution/end-to-end
+p50/p95/max. Its synthetic host knows its own completion timestamp, so fixture
+end-to-end is measured separately; the product API correctly leaves end-to-end
+null where that timestamp is unavailable. Model/tool values are not summed to
+fabricate wall time. This is a controlled **boundary regression**, not a same-live-
+model production baseline or capacity-fix comparison. It cannot establish real
+supplier limits, durable lease fencing/recovery, retry/backoff correctness or a
+production latency SLA. No production capacity correction is made. Numerical
+production budgets and alerts still require the controlled real-boundary
+baseline and shared quota information described above.
+
+Checks for this extension: five projection tests cover delayed availability,
+cancellation, missing/invalid data, foreign events, cursor pages, revisions/retries,
+151s queue vs55s execution and unknown lease validity. Two public-Worker fixture
+tests cover three bounded workload mixes and slow-model/slow-work attribution.
+Existing server smoke passed164/164 before these two new test files were added
+to its default selection; the new Node22-focused cases passed7/7. Admin tests
+passed9/9; server typecheck/lint and admin typecheck/build passed. Existing admin
+lint informational notices and bundle-size warning are unrelated. Final candidate
+CI and independent review for this extension remain required before handoff.
