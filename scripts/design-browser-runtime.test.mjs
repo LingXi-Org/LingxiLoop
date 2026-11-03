@@ -19,7 +19,7 @@ test('Design private namespace pruning retains native reads, setters and initial
 
 test('Design refuses unreviewed private namespace and constructor access',async()=>{
  assert.equal(typeof builder.optimizeDesignBrowserRuntime,'function')
- for(const code of [fixture.replace('(0,e.used)()',"e['used']()"),fixture.replace('(0,e.used)()','e.used()'),fixture.replace('e.value=11;','globalThis.leaked=e;e.value=11;'),fixture.replace('}nW();','}globalThis.exposed=nW;nW();')])
+ for(const code of [fixture.replace('(0,e.used)()',"e['used']()"),fixture.replace('(0,e.used)()','e.used()'),fixture.replace('e.value=11;','globalThis.leaked=e;e.value=11;'),fixture.replace('e.value=11;',"eval('e.debugOnly');e.value=11;"),fixture.replace('e.value=11;',"(eval)('e.debugOnly');e.value=11;"),fixture.replace('}nW();','}globalThis.exposed=nW;nW();'),fixture.replace('}nW();','}globalThis.factory=one;nW();')])
   await assert.rejects(builder.optimizeDesignBrowserRuntime(code,{expectedFactories:2}),/private|namespace|constructor/i)
  await assert.rejects(builder.optimizeDesignBrowserRuntime(fixture,{expectedFactories:3}),/factory/i)
 })

@@ -1,0 +1,849 @@
+{
+  "scope": "Diagnostic CPU profiles/traces across host and all attached native/guest targets. Profiling overhead is present; not timing acceptance. Synthetic fixture, actual native editing.",
+  "selfCpuByUrl": [
+    [
+      "(idle)",
+      2389.0220000000036
+    ],
+    [
+      "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+      583.6580000000002
+    ],
+    [
+      "(program)",
+      385.5709999999993
+    ],
+    [
+      "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+      285.83799999999974
+    ],
+    [
+      "https://app.lingxi-perf.cn:4412/assets/index-CWVincpI.js",
+      66.23400000000001
+    ],
+    [
+      "(garbage collector)",
+      49.86599999999998
+    ],
+    [
+      "",
+      8.892000000000001
+    ],
+    [
+      "fetch",
+      7.951
+    ],
+    [
+      "InjectedScript",
+      5.135
+    ],
+    [
+      "evaluate",
+      3.4869999999999997
+    ],
+    [
+      "parseEvaluationResultValue",
+      3.101
+    ],
+    [
+      "callMatchedElements",
+      2.686
+    ],
+    [
+      "_queryEngineAll",
+      2.43
+    ],
+    [
+      "appendChild",
+      2.2430000000000003
+    ],
+    [
+      "retarget",
+      2.1950000000000003
+    ]
+  ],
+  "selfCpuFunctions": [
+    {
+      "key": [
+        "",
+        "(idle)",
+        -1,
+        -1
+      ],
+      "ms": 2389.0220000000036
+    },
+    {
+      "key": [
+        "",
+        "(program)",
+        -1,
+        -1
+      ],
+      "ms": 385.5709999999993
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "Oe",
+        813,
+        2896
+      ],
+      "ms": 71.91000000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "$g",
+        933,
+        83538
+      ],
+      "ms": 50.254000000000005
+    },
+    {
+      "key": [
+        "",
+        "(garbage collector)",
+        -1,
+        -1
+      ],
+      "ms": 49.86599999999998
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "ge",
+        830,
+        109234
+      ],
+      "ms": 48.543
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Up",
+        7,
+        50167
+      ],
+      "ms": 42.88000000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "ta",
+        830,
+        172944
+      ],
+      "ms": 33.17999999999999
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Gl",
+        7,
+        96464
+      ],
+      "ms": 20.975999999999996
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "bt",
+        866,
+        66003
+      ],
+      "ms": 16.881
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "",
+        437,
+        488338
+      ],
+      "ms": 13.067999999999998
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "",
+        813,
+        18823
+      ],
+      "ms": 12.016000000000002
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "",
+        0,
+        9151
+      ],
+      "ms": 11.030000000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "h",
+        0,
+        8314
+      ],
+      "ms": 10.984000000000002
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "",
+        437,
+        170254
+      ],
+      "ms": 9.886000000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "",
+        843,
+        43566
+      ],
+      "ms": 9.783000000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/assets/index-CWVincpI.js",
+        "",
+        0,
+        0
+      ],
+      "ms": 9.554
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "me",
+        813,
+        3252
+      ],
+      "ms": 8.749000000000002
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Bt",
+        8,
+        71
+      ],
+      "ms": 8.74
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js",
+        "ft",
+        843,
+        20988
+      ],
+      "ms": 8.636
+    }
+  ],
+  "inclusiveCpuFunctions": [
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "vy",
+        7,
+        106052
+      ],
+      "ms": 12988.227999999961
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "ma",
+        7,
+        117418
+      ],
+      "ms": 12762.675000000021
+    },
+    {
+      "key": [
+        "",
+        "(root)",
+        -1,
+        -1
+      ],
+      "ms": 3819.1870000000085
+    },
+    {
+      "key": [
+        "",
+        "(idle)",
+        -1,
+        -1
+      ],
+      "ms": 2389.0220000000036
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Sy",
+        7,
+        110911
+      ],
+      "ms": 1606.0060000000199
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Gn",
+        7,
+        110424
+      ],
+      "ms": 1588.004000000019
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Ry",
+        7,
+        119784
+      ],
+      "ms": 1191.2999999999959
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Or",
+        7,
+        119643
+      ],
+      "ms": 1157.2849999999967
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "zy",
+        7,
+        124976
+      ],
+      "ms": 686.2949999999993
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Iy",
+        7,
+        138118
+      ],
+      "ms": 510.4320000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "tc",
+        7,
+        136365
+      ],
+      "ms": 510.4320000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "",
+        7,
+        138180
+      ],
+      "ms": 468.99900000000025
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Qy",
+        7,
+        136774
+      ],
+      "ms": 468.68900000000025
+    },
+    {
+      "key": [
+        "",
+        "(program)",
+        -1,
+        -1
+      ],
+      "ms": 385.5709999999993
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "qg",
+        7,
+        128471
+      ],
+      "ms": 366.31900000000024
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "G4",
+        7,
+        128954
+      ],
+      "ms": 365.44600000000025
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "qy",
+        7,
+        129925
+      ],
+      "ms": 364.35800000000023
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "ny",
+        7,
+        83742
+      ],
+      "ms": 325.3180000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Uy",
+        7,
+        131193
+      ],
+      "ms": 319.9759999999996
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+        "Fy",
+        7,
+        126095
+      ],
+      "ms": 319.9759999999996
+    }
+  ],
+  "timelineInclusiveByName": [
+    [
+      "v8.parseOnBackgroundParsing",
+      4646.065000000001,
+      955
+    ],
+    [
+      "v8.parseOnBackground",
+      3309.9249999999997,
+      269
+    ],
+    [
+      "BackgroundJSStreamManager::RunScriptStreamingTask",
+      3215.321,
+      7
+    ],
+    [
+      "v8.parseOnBackgroundWaiting",
+      3037.947999999997,
+      686
+    ],
+    [
+      "BackgroundCompileTask::Run",
+      1734.332,
+      269
+    ],
+    [
+      "v8.callFunction",
+      1302.714999999998,
+      738
+    ],
+    [
+      "FunctionCall",
+      787.3739999999987,
+      567
+    ],
+    [
+      "V8.CompileCode",
+      375.22299999999433,
+      7041
+    ],
+    [
+      "EventDispatch",
+      276.19,
+      225
+    ],
+    [
+      "v8.evaluateModule",
+      272.053,
+      4
+    ],
+    [
+      "UpdateLayoutTree",
+      175.48200000000008,
+      265
+    ],
+    [
+      "V8.ParseFunction",
+      162.62799999999694,
+      6984
+    ],
+    [
+      "TimerFire",
+      129.103,
+      9
+    ],
+    [
+      "V8.MaglevTask",
+      122.06200000000007,
+      584
+    ],
+    [
+      "Layout",
+      119.52500000000013,
+      149
+    ],
+    [
+      "V8.MaglevBackground",
+      107.12800000000006,
+      344
+    ],
+    [
+      "V8.CompileIgnition",
+      83.896000000001,
+      7417
+    ],
+    [
+      "V8.PreParse",
+      81.01200000000108,
+      6054
+    ],
+    [
+      "V8.Maglev.GraphBuilding",
+      57.518000000000036,
+      344
+    ],
+    [
+      "V8.GC_SCAVENGER_BACKGROUND_SCAVENGE_PARALLEL",
+      55.587999999999994,
+      42
+    ],
+    [
+      "V8.TurbofanTask",
+      51.495,
+      19
+    ],
+    [
+      "V8.OptimizeBackground",
+      51.288999999999994,
+      19
+    ],
+    [
+      "V8.GC_MC_BACKGROUND_MARKING",
+      45.992999999999995,
+      19
+    ],
+    [
+      "MinorGC",
+      32.021,
+      15
+    ],
+    [
+      "v8.streamingCompile.complete",
+      32.01000000000003,
+      266
+    ],
+    [
+      "V8.GCScavenger",
+      31.319000000000003,
+      15
+    ],
+    [
+      "V8.GC_SCAVENGER",
+      30.475999999999996,
+      15
+    ],
+    [
+      "V8.GC_SCAVENGER_SCAVENGE",
+      30.180999999999997,
+      15
+    ],
+    [
+      "V8.CompileIgnitionFinalization",
+      28.387000000002,
+      6883
+    ],
+    [
+      "V8.GC_SCAVENGER_SCAVENGE_PARALLEL_PHASE",
+      26.137,
+      15
+    ]
+  ],
+  "longCompileEvents": [
+    {
+      "name": "v8.parseOnBackground",
+      "ms": 345.099,
+      "pid": 46625,
+      "args": {
+        "data": {
+          "requestId": "46625.2",
+          "url": "https://app.lingxi-perf.cn:4412/assets/index-CWVincpI.js"
+        }
+      }
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 345.083,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 17.907,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 25.129,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 14.8,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 60.149,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 41.932,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 29.653,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 17.179,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 30.451,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackground",
+      "ms": 63.435,
+      "pid": 46625,
+      "args": {
+        "data": {
+          "requestId": "46625.14",
+          "url": "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-JV5WIUZU.js"
+        }
+      }
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 63.43,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 15.131,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackground",
+      "ms": 906.974,
+      "pid": 46625,
+      "args": {
+        "data": {
+          "requestId": "46625.11",
+          "url": "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/chunk-QC32QTJR.js"
+        }
+      }
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 906.97,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "BackgroundCompileTask::Run",
+      "ms": 368.261,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 13.467,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.38,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 12.206,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.831,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.713,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackground",
+      "ms": 1897.819,
+      "pid": 46625,
+      "args": {
+        "data": {
+          "requestId": "46625.9",
+          "url": "https://app.lingxi-perf.cn:4412/artifact-editor/slides-assets/editor-PNYI7CRY.js"
+        }
+      }
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 1897.815,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "BackgroundCompileTask::Run",
+      "ms": 1284.288,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.527,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.608,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.376,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.432,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.331,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 12.43,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 12.559,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 10.109,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 10.213,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 120.146,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 78.286,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 36.05,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 54.253,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 12.821,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 24.823,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 10.407,
+      "pid": 46625,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 609.699,
+      "pid": 46625,
+      "args": {}
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "scope": "Changed Design only, ten alternating control=a80e6589/candidate=e6dc55ca pairs. Slides code/files unchanged; Phase4 cold result is historical, not a new measurement. Fixed cold targets are unchanged.",
+  "rows": [
+    {
+      "kind": "design",
+      "scenario": "cold",
+      "control": {
+        "n": 10,
+        "p50": 4651.4,
+        "p75": 4683.8,
+        "p95": 4692.3
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 4649.0,
+        "p75": 4665.5,
+        "p95": 4686.8
+      }
+    },
+    {
+      "kind": "design",
+      "scenario": "warm-new-frame",
+      "control": {
+        "n": 10,
+        "p50": 1057.1,
+        "p75": 1071.9,
+        "p95": 1084.1
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 1075.4,
+        "p75": 1088.3,
+        "p95": 1103.1
+      }
+    },
+    {
+      "kind": "design",
+      "scenario": "switch",
+      "control": {
+        "n": 10,
+        "p50": 1190.2,
+        "p75": 1201.6,
+        "p95": 1217.0
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 1189.7,
+        "p75": 1196.2,
+        "p95": 1214.9
+      }
+    }
+  ],
+  "designStagedGate": true,
+  "designColdTargetMs": 2786.25,
+  "designColdTargetMet": false,
+  "bothEditorColdGoalComplete": false,
+  "allIssueAcceptanceComplete": false,
+  "retained": {
+    "desktop": {
+      "summary": {
+        "design": {
+          "p50": 173.7,
+          "p75": 198.3,
+          "p95": 210.9
+        },
+        "slides": {
+          "p50": 209.4,
+          "p75": 221.2,
+          "p95": 284.7
+        }
+      },
+      "freshGrantEveryOpen": true,
+      "zeroScriptOrSourceDataTransfers": true,
+      "sameIframeAndDocument": true
+    },
+    "narrow": {
+      "summary": {
+        "design": {
+          "p50": 199.9,
+          "p75": 205.9,
+          "p95": 214.2
+        },
+        "slides": {
+          "p50": 209.8,
+          "p75": 215.0,
+          "p95": 240.7
+        }
+      },
+      "freshGrantEveryOpen": true,
+      "zeroScriptOrSourceDataTransfers": true,
+      "sameIframeAndDocument": true
+    }
+  }
+}

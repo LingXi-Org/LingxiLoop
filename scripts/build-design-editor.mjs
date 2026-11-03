@@ -70,11 +70,27 @@ export async function optimizeDesignBrowserRuntime(source, { expectedFactories =
     if (ts.isFunctionDeclaration(node) && registrars.has(node.name?.text)) declarations.set(node.name.text, node)
   })
   assert.equal(declarations.size, registrars.size, 'Design private factory definitions changed')
+  const factorySymbols = new Map([...declarations.values()].map(factory => [checker.getSymbolAtLocation(factory.name), factory]))
+  scan(tree, node => {
+    if (!ts.isIdentifier(node)) return
+    const factory = factorySymbols.get(checker.getSymbolAtLocation(node))
+    if (!factory || node === factory.name) return
+    let owner = node.parent
+    while (owner && !ts.isFunctionDeclaration(owner)) owner = owner.parent
+    assert.ok(owner === boot && ts.isCallExpression(node.parent) && node.parent.expression === node, 'Design private factory escapes its constructor')
+  })
   for (const factory of declarations.values()) {
     const parameter = factory.parameters[0]?.name
     assert.ok(parameter && ts.isIdentifier(parameter), 'Design private factory parameter changed')
     const symbol = checker.getSymbolAtLocation(parameter)
     scan(factory, node => {
+      if (ts.isCallExpression(node)) {
+        let callee = node.expression
+        while (ts.isParenthesizedExpression(callee)) callee = callee.expression
+        // Direct eval could read a namespace name without a bound identifier
+        // in this AST. Fail closed before removing any alias in that scope.
+        assert.ok(!(ts.isIdentifier(callee) && callee.text === 'eval'), 'Design private namespace uses direct eval')
+      }
       if (isBinding(node) && checker.getSymbolAtLocation(node.arguments[0]) === symbol) {
         // Never discard an argument with registration-time side effects.
         if (node.arguments.length === 3 || node.arguments.length === 4 && ts.isArrowFunction(node.arguments[3]))

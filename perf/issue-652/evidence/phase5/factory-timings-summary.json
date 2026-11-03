@@ -1,0 +1,225 @@
+{
+  "scope": "Diagnostic synchronous Design native factory installation and initializer timers. Same actual native editable endpoint and 20ms/4Mbps. Instrumented copies; not cold acceptance or whole renderer CPU. Timers, compilation, streaming waits and React/render work outside factories must not be conflated.",
+  "summary": {
+    "control": {
+      "n": 3,
+      "totalsMs": {
+        "libraries": 0.2,
+        "install": 62.1,
+        "initialize": 106.4
+      },
+      "largestFactoryMedians": [
+        {
+          "phase": "initialize",
+          "factory": "Pj",
+          "ms": 21.3
+        },
+        {
+          "phase": "initialize",
+          "factory": "iB",
+          "ms": 13.2
+        },
+        {
+          "phase": "initialize",
+          "factory": "aW",
+          "ms": 6.6
+        },
+        {
+          "phase": "initialize",
+          "factory": "E9",
+          "ms": 3.1
+        },
+        {
+          "phase": "initialize",
+          "factory": "GO",
+          "ms": 1.7
+        },
+        {
+          "phase": "install",
+          "factory": "Jj",
+          "ms": 1.5
+        },
+        {
+          "phase": "initialize",
+          "factory": "BH",
+          "ms": 1.4
+        },
+        {
+          "phase": "initialize",
+          "factory": "$H",
+          "ms": 1.3
+        },
+        {
+          "phase": "initialize",
+          "factory": "XH",
+          "ms": 1.3
+        },
+        {
+          "phase": "initialize",
+          "factory": "NB",
+          "ms": 1.3
+        },
+        {
+          "phase": "initialize",
+          "factory": "Jj",
+          "ms": 1.2
+        },
+        {
+          "phase": "initialize",
+          "factory": "N7",
+          "ms": 0.9
+        },
+        {
+          "phase": "initialize",
+          "factory": "z4",
+          "ms": 0.8
+        },
+        {
+          "phase": "initialize",
+          "factory": "rV",
+          "ms": 0.8
+        },
+        {
+          "phase": "initialize",
+          "factory": "mV",
+          "ms": 0.8
+        },
+        {
+          "phase": "install",
+          "factory": "nH",
+          "ms": 0.7
+        },
+        {
+          "phase": "install",
+          "factory": "sj",
+          "ms": 0.7
+        },
+        {
+          "phase": "initialize",
+          "factory": "o8",
+          "ms": 0.7
+        },
+        {
+          "phase": "install",
+          "factory": "Q6",
+          "ms": 0.6
+        },
+        {
+          "phase": "install",
+          "factory": "o8",
+          "ms": 0.6
+        }
+      ]
+    },
+    "candidate": {
+      "n": 3,
+      "totalsMs": {
+        "libraries": 0.1,
+        "install": 46.6,
+        "initialize": 111.6
+      },
+      "largestFactoryMedians": [
+        {
+          "phase": "initialize",
+          "factory": "Pj",
+          "ms": 23.1
+        },
+        {
+          "phase": "initialize",
+          "factory": "iB",
+          "ms": 12.9
+        },
+        {
+          "phase": "initialize",
+          "factory": "aW",
+          "ms": 7.9
+        },
+        {
+          "phase": "initialize",
+          "factory": "E9",
+          "ms": 3.7
+        },
+        {
+          "phase": "initialize",
+          "factory": "GO",
+          "ms": 1.8
+        },
+        {
+          "phase": "install",
+          "factory": "l8",
+          "ms": 1.4
+        },
+        {
+          "phase": "initialize",
+          "factory": "BH",
+          "ms": 1.3
+        },
+        {
+          "phase": "initialize",
+          "factory": "XH",
+          "ms": 1.3
+        },
+        {
+          "phase": "initialize",
+          "factory": "NB",
+          "ms": 1.3
+        },
+        {
+          "phase": "initialize",
+          "factory": "Jj",
+          "ms": 1.2
+        },
+        {
+          "phase": "initialize",
+          "factory": "$H",
+          "ms": 1.1
+        },
+        {
+          "phase": "install",
+          "factory": "Jj",
+          "ms": 1
+        },
+        {
+          "phase": "initialize",
+          "factory": "N7",
+          "ms": 0.9
+        },
+        {
+          "phase": "initialize",
+          "factory": "o8",
+          "ms": 0.7
+        },
+        {
+          "phase": "initialize",
+          "factory": "z4",
+          "ms": 0.7
+        },
+        {
+          "phase": "initialize",
+          "factory": "rV",
+          "ms": 0.7
+        },
+        {
+          "phase": "install",
+          "factory": "o8",
+          "ms": 0.6
+        },
+        {
+          "phase": "initialize",
+          "factory": "sj",
+          "ms": 0.6
+        },
+        {
+          "phase": "initialize",
+          "factory": "mV",
+          "ms": 0.6
+        },
+        {
+          "phase": "install",
+          "factory": "lV",
+          "ms": 0.6
+        }
+      ]
+    }
+  }
+}

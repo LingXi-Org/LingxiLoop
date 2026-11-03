@@ -5,13 +5,13 @@ PERF_FAIL_DESIGN_OPTIONAL=propertyScrubber. No interception.
 import base64,gzip,hashlib,json,subprocess,sys,time
 from pathlib import Path
 from playwright.sync_api import expect,sync_playwright
-port,destination=sys.argv[1:];destination=Path(destination);destination.mkdir(parents=True,exist_ok=True)
+port,destination,*rest=sys.argv[1:];width=int(rest[0])if rest else 1440;destination=Path(destination);destination.mkdir(parents=True,exist_ok=True)
 sys.argv=[sys.argv[0]];sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'issue-611'))
 from bench import Trace
 pub=subprocess.check_output(['openssl','x509','-pubkey','-noout','-in','.codex-tmp/issue-652/tls/cert.pem']);spki=base64.b64encode(hashlib.sha256(subprocess.check_output(['openssl','pkey','-pubin','-outform','der'],input=pub)).digest()).decode()
 manifest=json.loads(Path('server/assets/design-editor/manifest.json').read_text());worker=manifest['optionalPrograms']['propertyScrubber']['file']
 with sync_playwright()as pw:
- b=pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--no-proxy-server','--host-resolver-rules=MAP *.lingxi-perf.cn 127.0.0.1','--ignore-certificate-errors-spki-list='+spki]);c=b.new_context(viewport={'width':1440,'height':1000});p=c.new_page();errors=[];p.on('pageerror',lambda e:errors.append(str(e)));trace=Trace(c,p)
+ b=pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--no-proxy-server','--host-resolver-rules=MAP *.lingxi-perf.cn 127.0.0.1','--ignore-certificate-errors-spki-list='+spki]);c=b.new_context(viewport={'width':width,'height':1000});p=c.new_page();errors=[];p.on('pageerror',lambda e:errors.append(str(e)));trace=Trace(c,p)
  p.goto(f'https://app.lingxi-perf.cn:{port}/',wait_until='domcontentloaded');access=lambda **data:p.evaluate('(data)=>fetch("/fixture/access",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(data)}).then(r=>r.json())',data);access(read=True,write=True,failPublish=True,shortGrants=False,reset=True)
  state=lambda:p.evaluate('fetch("/fixture/state").then(r=>r.json())');before=state()['files']['design'];p.locator('#open-board-a').click();deadline=time.monotonic()+35;guest=None
  while time.monotonic()<deadline:
@@ -56,6 +56,6 @@ with sync_playwright()as pw:
   p.wait_for_timeout(50)
  assert loaded,'saved typed component did not reopen with both edits';assert not errors,errors
  requests=[r for r in trace.requests.values()if worker in r['url']];assert any(r.get('status')==200 and r.get('bytes',0)>1000 for r in requests),'retry did not fetch actual worker source'
- report={'scope':'Actual Design installed typed x-import bundle/declarations, native property-worker HTTP/SRI/CSP first 503, native re-selection retry, unconfirmed draft retained, enum edit/CAS save/reopen. Actual product Frame/gateway and checked guest, synthetic ACL, no production login or interception.','browser':b.version,'errors':errors,'workerFirst503AndRetry':True,'sameEditedNativeDocument':True,'unconfirmedDraftRetained':True,'nativeTypedEnumEditedSavedReopened':True,'installedSourceAndCanvasPreserved':True,'userCodeRemainsInCheckedGuest':True,'requests':list(trace.requests.values())}
+ report={'scope':'Actual Design installed typed x-import bundle/declarations, native property-worker HTTP/SRI/CSP first 503, native re-selection retry, unconfirmed draft retained, enum edit/CAS save/reopen. Actual product Frame/gateway and checked guest, synthetic ACL, no production login or interception.','browser':b.version,'viewportWidth':width,'errors':errors,'workerFirst503AndRetry':True,'sameEditedNativeDocument':True,'unconfirmedDraftRetained':True,'nativeTypedEnumEditedSavedReopened':True,'installedSourceAndCanvasPreserved':True,'userCodeRemainsInCheckedGuest':True,'requests':list(trace.requests.values())}
  with gzip.GzipFile(str(destination/'browser.json.gz'),'wb',mtime=0)as out:out.write(json.dumps(report,ensure_ascii=False).encode())
  print(json.dumps({k:v for k,v in report.items()if k!='requests'},ensure_ascii=False));b.close()
