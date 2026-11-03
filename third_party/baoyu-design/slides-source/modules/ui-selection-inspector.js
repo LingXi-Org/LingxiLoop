@@ -347,7 +347,7 @@ function TextResizePropertyRow({ nodes, updateNodes }) {
       })
     });
   }
-function SelectionInspector({ slide, selection, onChange, onLiveChange, onGestureEnd, deckCellCount, typeStyles, deckTypeStyles, faces, facesFull, fonts, measure, designColors, slideColors, assets, onReplaceImage, onRemoveImages, onRemoveCover, onChangeVideoLink, pickImage, editsAreUndoSteps, unasked }) {
+function SelectionInspector({ slide, selection, onChange, onLiveChange, onGestureEnd, deckCellCount, typeStyles, deckTypeStyles, faces, facesFull, fonts, measure, designColors, slideColors, assets, onReplaceImage, onRemoveImages, onRemoveCover, onChangeVideoLink, pickImage, beginImageEdit, editsAreUndoSteps, unasked }) {
     let value = (0, runtime2.useDeckColorChoices)(designColors, slideColors), [, value2] = runtime2.reactw8.useState(0), value3 = (0, runtime2.filterValidSelections)(slide, selection), value4 = value3.length > 0 ? value3[value3.length - 1] : void 0, value5 = value4 ? (0, runtime2.selectedNode)(slide, value4) : void 0, value6 = value3.length === 1, callback = (input) => {
       if (value3.length < 2)
         return !1;
@@ -2034,7 +2034,8 @@ function SelectionInspector({ slide, selection, onChange, onLiveChange, onGestur
                   updateNodes: callback13,
                   liveUpdateNodes: callback14,
                   end: callback7,
-                  pickImage
+                  pickImage,
+                  beginImageEdit
                 }, value13 + ":textfill"),
                 value58 !== void 0 || value59 || callback8("text:emphasis") ? runtime2.jsxq_.jsxs(runtime2.PropertyRow, {
                   label: EMPHASIS_LABEL,

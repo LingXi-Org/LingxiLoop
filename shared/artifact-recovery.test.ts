@@ -128,3 +128,21 @@ test('cancelling a handoff while a native edit is pending keeps the old document
   assert.equal(old.doc.readOnly(), false)
   finishImage()
 })
+
+test('a cancelled pending handoff cannot seal or cancel an immediate retry', async () => {
+  const old = native(), recovery = createArtifactRecovery('slides', old.doc, value => value)
+  const finishImage = beginArtifactRecoveryAsyncEdit(old.doc)
+  assert.ok(finishImage)
+  const cancelled = recovery.handoffSnapshot()
+  recovery.cancelHandoff()
+  const retried = recovery.handoffSnapshot()
+  old.edit({ files: { 'Main.dc.html': 'edit completed before retry' } })
+  finishImage()
+  await assert.rejects(cancelled, /取消/)
+  const packet = await retried
+  assert.equal(packet.result, 'snapshot')
+  assert.equal(JSON.parse(new TextDecoder().decode(packet.bytes)).state.content.files['Main.dc.html'], 'edit completed before retry')
+  assert.equal(old.doc.readOnly(), true)
+  recovery.cancelHandoff()
+  assert.equal(old.doc.readOnly(), false)
+})

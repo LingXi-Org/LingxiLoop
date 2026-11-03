@@ -10,7 +10,7 @@ function useFillEditor(options) {
     });
     if (ref2.current.updateNodes = options?.updateNodes, runtime2.reactw8.useEffect(() => (ref2.current.mounted = !0, () => void (ref2.current.mounted = !1)), []), options === void 0)
       return {};
-    let { node, slideBg, swatches, fillMixed, updateNodes, liveUpdateNodes, end, pickImage } = options, value5 = fillMixed ? void 0 : node.fill, callback = (input) => (source) => source.kind === "text" ? input(source) : source, callback2 = (input) => updateNodes(callback((input2) => (0, runtime2.setTextFill)(input2, input))), callback3 = (input) => liveUpdateNodes(callback((input2) => (0, runtime2.setTextFill)(input2, input))), value6 = value5?.kind === "gradient" ? value5.gradient : void 0, state = {
+    let { node, slideBg, swatches, fillMixed, updateNodes, liveUpdateNodes, end, pickImage, beginImageEdit } = options, value5 = fillMixed ? void 0 : node.fill, callback = (input) => (source) => source.kind === "text" ? input(source) : source, callback2 = (input) => updateNodes(callback((input2) => (0, runtime2.setTextFill)(input2, input))), callback3 = (input) => liveUpdateNodes(callback((input2) => (0, runtime2.setTextFill)(input2, input))), value6 = value5?.kind === "gradient" ? value5.gradient : void 0, state = {
       kind: "slides-text",
       bag: void 0,
       disabled: !1,
@@ -29,7 +29,10 @@ function useFillEditor(options) {
       }),
       liveEnd: end
     }, callback4 = (input) => {
-      pickImage !== void 0 && (value4(!0), pickImage(input).then((input2) => {
+      if (pickImage === void 0) return;
+      const finishImageEdit = beginImageEdit?.();
+      if (finishImageEdit === null) return (0, runtime2.showToast)("编辑器正在重新打开，请在新页面重试添加图片。");
+      value4(!0), pickImage(input).then((input2) => {
         if (!ref2.current.mounted || ref2.current.updateNodes === void 0) {
           input2 !== void 0 && (0, runtime2.showToast)((0, runtime2.formatMessage)({ defaultMessage: "图片加载期间文字已更改，请重新选择文字和图片。", id: "S5SbLHHbjZ" }));
           return;
@@ -49,7 +52,7 @@ function useFillEditor(options) {
         }
       }, (input2) => {
         ref2.current.mounted && value4(!1), console.warn("slides: adding a picture to a text failed: " + (0, runtime2.failureKindForLog)(input2)), (0, runtime2.showToast)((0, runtime2.formatMessage)({ defaultMessage: "添加图片失败：{reason}", id: "Wu5qYtPjZP" }, { reason: (0, runtime2.exportFailureReason)(input2) }));
-      }));
+      }).then(() => finishImageEdit?.(), () => finishImageEdit?.());
     }, value7 = value ?? value5?.kind ?? "color";
     return fillMixed ? {} : {
       kind: {

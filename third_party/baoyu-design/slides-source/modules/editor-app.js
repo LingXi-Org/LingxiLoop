@@ -4589,6 +4589,7 @@ function installEditorApp(runtime2) {
                                       designColors: designPalette,
                                       slideColors: slidePalette,
                                       pickImage: currentSlideReadOnly ? void 0 : async (input) => (await prepareImageAsset(input)).src,
+                                      beginImageEdit: () => beginArtifactRecoveryAsyncEdit(documentStore.doc),
                                       slide: currentSlide,
                                                 lookPreview: pendingLook?.(currentSlide),
                                       slideNumber: slides.indexOf(currentSlide) + 1,
@@ -4896,7 +4897,8 @@ function installEditorApp(runtime2) {
                                         input
                                       ]),
                                       measure: (input) => editorZoomApiRef.current?.measureUnit(input),
-                                      pickImage: currentSlideReadOnly ? void 0 : async (input) => (await prepareImageAsset(input)).src
+                                      pickImage: currentSlideReadOnly ? void 0 : async (input) => (await prepareImageAsset(input)).src,
+                                      beginImageEdit: () => beginArtifactRecoveryAsyncEdit(documentStore.doc)
                                     })
                                   })
                                 })

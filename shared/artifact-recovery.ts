@@ -9,7 +9,7 @@ type NativeDocument = {
   updateContent?(update: (content: never) => unknown, options?: unknown): void
   subscribeSave(callback: () => void): () => void; subscribeLoad?(callback: () => void): () => void
 }
-type Handoff = { closed: boolean; pending: number; wake: Set<() => void> }
+type Handoff = { closed: boolean; pending: number; epoch: number; wake: Set<() => void> }
 const handoffs = new WeakMap<object, Handoff>()
 
 /** Native async gestures register before their first await, then finish only
@@ -37,7 +37,7 @@ const digest = (state: State) => digestBytes(encode(state))
 const sameBytes = (left: Uint8Array, right: Uint8Array) => left.length === right.length && left.every((byte, index) => byte === right[index])
 
 export function createArtifactRecovery(kind: 'design' | 'slides', doc: NativeDocument, parse: (content: unknown) => unknown) {
-  const handoff: Handoff = { closed: false, pending: 0, wake: new Set() }
+  const handoff: Handoff = { closed: false, pending: 0, epoch: 0, wake: new Set() }
   handoffs.set(doc, handoff)
   const read = (): State => ({ title: doc.title(), content: doc.content() })
   const live = () => doc.shown?.() ?? doc.loadState?.() === 'live'
@@ -59,6 +59,7 @@ export function createArtifactRecovery(kind: 'design' | 'slides', doc: NativeDoc
   let validated: State | null = null
   let releaseSeal: (() => void) | null = null, interrupted = false
   const cancelHandoff = () => {
+    handoff.epoch++
     handoff.closed = false
     releaseSeal?.();releaseSeal = null
     for (const wake of handoff.wake) wake();handoff.wake.clear()
@@ -98,15 +99,17 @@ export function createArtifactRecovery(kind: 'design' | 'slides', doc: NativeDoc
     async handoffSnapshot() {
       if (handoff.closed) throw Error('编辑器交接正在进行。')
       handoff.closed = true
+      const epoch = ++handoff.epoch
       interrupted = false
       try {
         if (handoff.pending) await new Promise<void>(resolve => handoff.wake.add(resolve))
-        if (!handoff.closed) throw Error('编辑器交接已取消。')
+        if (epoch !== handoff.epoch || !handoff.closed) throw Error('编辑器交接已取消。')
         seal()
         const result = await this.snapshot()
+        if (epoch !== handoff.epoch || !handoff.closed) throw Error('编辑器交接已取消。')
         if (interrupted) throw Error('编辑器交接期间出现新编辑，原编辑器已保留。')
         return result
-      } catch (error) { cancelHandoff();throw error }
+      } catch (error) { if (epoch === handoff.epoch) cancelHandoff();throw error }
     },
     status: () => !live() ? 'loading' : doc.readOnly() ? 'readonly' : 'ready',
     async snapshot() {
@@ -154,7 +157,7 @@ export function installArtifactRecovery(kind: 'design' | 'slides', doc: NativeDo
   if (typeof window === 'undefined' || window.parent === window) return
   disconnect?.()
   const recovery = createArtifactRecovery(kind, doc, parse)
-  let active = true, pending = false
+  let active = true, pending = false, requestSequence = 0
   let acknowledgement: { nonce: string; id: string } | null = null
   const checkAcknowledgement = async () => {
     const current = acknowledgement
@@ -172,11 +175,12 @@ export function installArtifactRecovery(kind: 'design' | 'slides', doc: NativeDo
     if (event.source !== parent || data?.type !== 'artifact:recovery-request' || data.kind !== kind
       || typeof data.nonce !== 'string' || data.nonce.length > 100 || typeof data.requestId !== 'string' || data.requestId.length > 100
       || !['snapshot', 'status', 'inspect', 'restore', 'cancel'].includes(data.command)) return
-    if (data.command === 'cancel') { recovery.cancelHandoff();return }
+    if (data.command === 'cancel') { recovery.cancelHandoff();pending = false;requestSequence++;return }
     if (pending) return
     pending = true
+    const sequence = ++requestSequence
     const reply = (result: string, bytes?: ArrayBuffer) => {
-      if (active) parent.postMessage({ type: 'artifact:recovery-response', requestId: data.requestId, nonce: data.nonce, result, bytes }, '*', bytes ? [bytes] : [])
+      if (active && sequence === requestSequence) parent.postMessage({ type: 'artifact:recovery-response', requestId: data.requestId, nonce: data.nonce, result, bytes }, '*', bytes ? [bytes] : [])
     }
     try {
       if (data.command === 'status') reply(recovery.status())
@@ -199,8 +203,8 @@ export function installArtifactRecovery(kind: 'design' | 'slides', doc: NativeDo
         reply(result)
         if (data.command === 'restore') { if (result === 'restored') acknowledgement = null;else void checkAcknowledgement().catch(() => {}) }
       }
-    } catch { recovery.cancelHandoff();acknowledgement = null;reply('unavailable') }
-    finally { pending = false }
+    } catch { if (sequence === requestSequence) { recovery.cancelHandoff();acknowledgement = null;reply('unavailable') } }
+    finally { if (sequence === requestSequence) pending = false }
   }
   window.addEventListener('message', receive)
   disconnect = () => { active = false;for (const stop of unsubscribe) stop?.();window.removeEventListener('message', receive) }

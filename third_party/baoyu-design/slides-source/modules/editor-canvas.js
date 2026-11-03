@@ -878,7 +878,7 @@ function installEditorCanvas(runtime2) {
     let frame = (0, runtime2.frameById)(slide, unit.frameId), node = frame ? (0, runtime2.nodeAtPath)(frame.node, unit.path) : void 0, cell = unit.cell;
     return cell ? (0, runtime2.isTableNode)(node) && (0, runtime2.tableCellExists)(node, cell.r, cell.c) : (0, runtime2.isEditableTextNode)(node);
   }
-  function SlideCanvasEditor({ slide, lookPreview, slideNumber, slideName, busy, designColors, slideColors, assets, faces, facesFull, fonts, typeStyles, deckTypeStyles, onReplaceImage, pickImage, pending = [], covered, peerLayer, onPointerNorm, selection, onSelectionChange, onLiveChange, onGestureEnd, onMenu, dragLiveRef, textEdit, onTextEdit, onDropImage, onDropInsert, onCropStart, returnTakenHint, deckCellCount, withinStyleBudget, onOpenInspector, moreMenu, onDeleteSelection, selectionMenuHidden = !1, onChangeSlide, presenting, commenting = !1, commentStop = !0, zoomApiRef, onScaleChange, onStageMoved, startCamera, onCamera, bottomInset, topInset, sideInset, readOnly = !1, stageOverlay, surround }) {
+  function SlideCanvasEditor({ slide, lookPreview, slideNumber, slideName, busy, designColors, slideColors, assets, faces, facesFull, fonts, typeStyles, deckTypeStyles, onReplaceImage, pickImage, beginImageEdit, pending = [], covered, peerLayer, onPointerNorm, selection, onSelectionChange, onLiveChange, onGestureEnd, onMenu, dragLiveRef, textEdit, onTextEdit, onDropImage, onDropInsert, onCropStart, returnTakenHint, deckCellCount, withinStyleBudget, onOpenInspector, moreMenu, onDeleteSelection, selectionMenuHidden = !1, onChangeSlide, presenting, commenting = !1, commentStop = !0, zoomApiRef, onScaleChange, onStageMoved, startCamera, onCamera, bottomInset, topInset, sideInset, readOnly = !1, stageOverlay, surround }) {
     let stageRef = runtime2.reactK_.useRef(null), slideSurfaceRef = runtime2.reactK_.useRef(null), pointInsideSlide = runtime2.reactK_.useCallback((input, options) => {
       let value59 = slideSurfaceRef.current?.getBoundingClientRect();
       return value59 !== void 0 && input >= value59.left && input <= value59.right && options >= value59.top && options <= value59.bottom;
@@ -4113,7 +4113,8 @@ function installEditorCanvas(runtime2) {
                 updateNodes: callback80,
                 liveUpdateNodes: callback77,
                 end: callback79,
-                pickImage
+                pickImage,
+                beginImageEdit
               }
             },
             bold: value50,
