@@ -1,0 +1,146 @@
+TAP version 13
+# Subtest: Slides renders delimited inline, display, matrix and aligned math with the installed KaTeX
+ok 1 - Slides renders delimited inline, display, matrix and aligned math with the installed KaTeX
+  ---
+  duration_ms: 15.842431
+  type: 'test'
+  ...
+# Subtest: math keeps original text and rich marks across a formula, including line breaks
+ok 2 - math keeps original text and rich marks across a formula, including line breaks
+  ---
+  duration_ms: 1.481266
+  type: 'test'
+  ...
+# Subtest: amounts, escaped delimiters, code and unmarked TeX stay literal
+ok 3 - amounts, escaped delimiters, code and unmarked TeX stay literal
+  ---
+  duration_ms: 1.431934
+  type: 'test'
+  ...
+# Subtest: an amount before explicit math cannot consume its delimiters
+ok 4 - an amount before explicit math cannot consume its delimiters
+  ---
+  duration_ms: 0.919397
+  type: 'test'
+  ...
+# Subtest: invalid math and untrusted commands stay readable without executing HTML
+ok 5 - invalid math and untrusted commands stay readable without executing HTML
+  ---
+  duration_ms: 2.248458
+  type: 'test'
+  ...
+# Subtest: existing monospace model values stay code and tables participate in formula export
+ok 6 - existing monospace model values stay code and tables participate in formula export
+  ---
+  duration_ms: 0.629786
+  type: 'test'
+  ...
+# Subtest: ordinary text does not request math; first use coalesces and a failed chunk can retry
+ok 7 - ordinary text does not request math; first use coalesces and a failed chunk can retry
+  ---
+  duration_ms: 88.805949
+  type: 'test'
+  ...
+# Subtest: feature dependency preparation coalesces and a failed fetch never starts a cached module failure
+ok 8 - feature dependency preparation coalesces and a failed fetch never starts a cached module failure
+  ---
+  duration_ms: 22.491305
+  type: 'test'
+  ...
+# Subtest: native copy translation preserves icon names, enums, shortcuts and document values
+ok 9 - native copy translation preserves icon names, enums, shortcuts and document values
+  ---
+  duration_ms: 26.174813
+  type: 'test'
+  ...
+# Subtest: every translated ICU message parses and formats using the bundled formatter
+ok 10 - every translated ICU message parses and formats using the bundled formatter
+  ---
+  duration_ms: 1776.309002
+  type: 'test'
+  ...
+# Subtest: native build keeps export libraries lazy and reduces initial JavaScript
+ok 11 - native build keeps export libraries lazy and reduces initial JavaScript
+  ---
+  duration_ms: 12799.120343
+  type: 'test'
+  ...
+# Subtest: complete upstream distributions retain every pinned byte and license
+ok 12 - complete upstream distributions retain every pinned byte and license
+  ---
+  duration_ms: 251.054886
+  type: 'test'
+  ...
+# Subtest: rebuilt compiler preserves pinned format behavior, ids, notes, tables, images and design-system includes
+ok 13 - rebuilt compiler preserves pinned format behavior, ids, notes, tables, images and design-system includes
+  ---
+  duration_ms: 617.199224
+  type: 'test'
+  ...
+# Subtest: Slides formula sources and monospace semantics survive existing-format save/reopen
+ok 14 - Slides formula sources and monospace semantics survive existing-format save/reopen
+  ---
+  duration_ms: 7.934074
+  type: 'test'
+  ...
+# Subtest: new deck templates use persisted source-derived style, including after a blank page
+ok 15 - new deck templates use persisted source-derived style, including after a blank page
+  ---
+  duration_ms: 11.371982
+  type: 'test'
+  ...
+# Subtest: built-in color and type data match the pinned Slides implementation
+ok 16 - built-in color and type data match the pinned Slides implementation
+  ---
+  duration_ms: 1.776357
+  type: 'test'
+  ...
+# Subtest: new pages inherit edited look memory and observed typography after a file roundtrip
+ok 17 - new pages inherit edited look memory and observed typography after a file roundtrip
+  ---
+  duration_ms: 9.313269
+  type: 'test'
+  ...
+# Subtest: legacy decks have no automatic default and saved HTML retains authored styles
+ok 18 - legacy decks have no automatic default and saved HTML retains authored styles
+  ---
+  duration_ms: 1.437755
+  type: 'test'
+  ...
+# Subtest: upstream theme variants parse and restyle slides
+ok 19 - upstream theme variants parse and restyle slides
+  ---
+  duration_ms: 42.097461
+  type: 'test'
+  ...
+# Subtest: a hidden retained Slides frame suspends its heartbeat and resumes the latest context only for its parent nonce
+ok 20 - a hidden retained Slides frame suspends its heartbeat and resumes the latest context only for its parent nonce
+  ---
+  duration_ms: 3.061427
+  type: 'test'
+  ...
+# Subtest: progressive first edit preserves unloaded files and native CAS
+ok 21 - progressive first edit preserves unloaded files and native CAS
+  ---
+  duration_ms: 20.310312
+  type: 'test'
+  ...
+# slides (files): load failed (access_revoked, BootReadError, HTTP 403)
+# slides (files): load failed (unbuildable, Error)
+# slides (files): load failed (unbuildable, Error)
+# slides (files): load failed (unbuildable, Error)
+# Subtest: progressive editing respects read-only, narrowed listings and revoked reads
+ok 22 - progressive editing respects read-only, narrowed listings and revoked reads
+  ---
+  duration_ms: 257.57156
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16620.127394
