@@ -203,12 +203,21 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
     return resolve(destination, suffix) === resolve(root, path)
   })
+  // Follow local build imports as well as the data catalogs: a newly imported
+  // helper must not silently work only in a complete development checkout.
+  const editorInputs = new Set(['scripts/build-visualize-runtime.mjs',
+    'third_party/baoyu-design/host/design-zh-CN.json', 'third_party/baoyu-design/host/slides-zh-CN.json'])
+  for (const path of editorInputs) {
+    if (!path.endsWith('.mjs')) continue
+    for (const item of ts.preProcessFile(read(path), true, true).importedFiles) {
+      if (item.fileName.startsWith('.')) editorInputs.add(relative(root, resolve(root, path, '..', item.fileName)).replaceAll('\\', '/'))
+    }
+  }
   for (const name of ['visualize-build', 'spa-build']) {
     const editorStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
       .find(part => part.split('\n')[0].endsWith(` AS ${name}`))
     assert.ok(editorStage, `${name} exists`)
-    for (const path of ['scripts/design-copy.mjs', 'third_party/baoyu-design/host/design-zh-CN.json',
-      'third_party/baoyu-design/host/slides-zh-CN.json']) {
+    for (const path of editorInputs) {
       assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing Design translation input: ${path}`)
     }
   }
