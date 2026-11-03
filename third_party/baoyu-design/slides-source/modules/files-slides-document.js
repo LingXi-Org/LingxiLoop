@@ -1328,7 +1328,7 @@ function installFilesSlidesDocument(runtime2) {
       }
       value2 !== void 0 && retryDirtySlide(value2), commitChanges("hold-released");
     }
-    let earlySlide, earlySlideSubscribers = /* @__PURE__ */ new Set(), bootGeneration = 0;
+    let earlySlide, earlySlideSubscribers = /* @__PURE__ */ new Set(), bootGeneration = 0, earlySystemsReady = !1, earlyDependencies = "";
     function setEarlySlide(input) {
       if (earlySlide !== input) {
         earlySlide = input;
@@ -1386,8 +1386,8 @@ function installFilesSlidesDocument(runtime2) {
         }, void 0);
         if (value4?.slides[value3] !== void 0) {
           setEarlySlide({id: value3, content: value4});
-          if (mayProgress && progressive === null && value.designSystems.length === 0 && notesStoredInFiles) {
-            progressive = {id: value3, baseContent: value4, baseSha: (0, runtime2.sha256Sync)(entry), text: entry, dirty: !1};
+          if (mayProgress && progressive === null && (value.designSystems.length === 0 || earlySystemsReady) && notesStoredInFiles) {
+            progressive = {id: value3, baseContent: value4, baseSha: (0, runtime2.sha256Sync)(entry), text: entry, systems: JSON.stringify(designSystemTracker.current()), faces: JSON.stringify(value.faces), style: JSON.stringify(value.style), dependencies: earlyDependencies, dirty: !1};
             envelope = {title: (0, runtime2.normalizeArtifactTitle)(value.title) ?? envelope.title, content: value4, comments: []};
             notifyDocumentSubscribers(!0);
             for (const subscriber of [...loadSubscribers]) subscriber();
@@ -1454,7 +1454,7 @@ function installFilesSlidesDocument(runtime2) {
     async function loadDocument() {
       bootFailureAt = timers.now();
       let value = ++bootGeneration;
-      contentUnbuildable = !1, remoteChangedWhileLoading = !1, setEarlySlide(void 0);
+      contentUnbuildable = !1, remoteChangedWhileLoading = !1, earlySystemsReady = !1, setEarlySlide(void 0);
       try {
         let value2, callback = () => options.port.list().then((input) => (value2 = input, !1), (input) => input?.status === 404), flag = !1;
         if (options.startEmpty === !0 && await callback()) {
@@ -1477,6 +1477,14 @@ function installFilesSlidesDocument(runtime2) {
           wants: (input) => input.path.startsWith(runtime2.SLIDE_FILE_DIRECTORY) && (0, runtime2.slideIdFromFilePath)(input.path) !== void 0,
           timers,
           mayWrite,
+          beforeFiles: async (metadata, listing) => {
+            // Only declared native files, through the same authorized port.
+            // Failed/invalid dependencies retain the full-load fallback.
+            let index;
+            try { index = JSON.parse(metadata.text); } catch { return; }
+            earlySystemsReady = await designSystemTracker.refresh(index);
+            earlyDependencies = JSON.stringify(listing.filter((entry) => entry.path.startsWith("project/ds/")).map((entry) => [entry.path, entry.sha256]).sort());
+          },
           ...options.early !== void 0 ? {
             early: options.early
           } : {},
@@ -1511,10 +1519,12 @@ function installFilesSlidesDocument(runtime2) {
         // A remotely removed first page must never be recreated by completing
         // a partial load. Preserve its current native model for recovery.
         if (draft !== void 0 && (!canWrite || !indexStore.get().order.includes(partial.id)
+          || partial.systems !== JSON.stringify(designSystemTracker.current()) || partial.faces !== JSON.stringify(indexStore.get().faces)
+          || partial.style !== JSON.stringify(indexStore.get().style) || partial.dependencies !== earlyDependencies
           || liveSlideFiles.get((0, runtime2.slideFilePath)(partial.id))?.sha !== partial.baseSha)) {
           partial.blocked = !canWrite ? "写入权限已变化，当前页更改尚未保存。请保留此标签页并复制更改。"
             : !indexStore.get().order.includes(partial.id) ? "当前页已在其他地方删除，更改尚未保存。请保留此标签页并复制更改。"
-            : "当前页已在其他地方更新，更改尚未保存。请保留此标签页并复制更改后比较。";
+            : "当前页或主题已在其他地方更新，更改尚未保存。请保留此标签页并复制更改后比较。";
           throw new SlidesContentUnbuildableError("keep the partial draft for explicit recovery");
         }
         const partialEnvelope = envelope;
