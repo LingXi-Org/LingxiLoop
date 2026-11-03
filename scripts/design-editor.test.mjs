@@ -85,7 +85,7 @@ test('Design package preserves the agreed math runtime and optional executable b
       if (name === 'assets/' + manifest.math.offlineFile) { assert.equal(bytes.toString(), math); continue }
       if (online.files.has(name.replace('assets/', ''))) { assert.deepEqual(bytes, online.files.get(name.replace('assets/', ''))); continue }
       const original = await readFile(resolve(source, name === manifest.entry.file ? manifest.entry.original : name === manifest.runtime.file ? manifest.runtime.original : name))
-      const expected = name === manifest.entry.file ? Buffer.from('globalThis.__lingxiDesignStartup.run(function(){\n' + translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, online, layout.guest, manifest.math.offlineFile, 'sha256-' + createHash('sha256').update(math).digest('base64')))), layout.host)), catalog) + '\n});\n')
+      const expected = name === manifest.entry.file ? Buffer.from('await new Promise(resolve=>globalThis.__lingxiDesignStartup.run(resolve));\n' + translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, online, layout.guest, manifest.math.offlineFile, 'sha256-' + createHash('sha256').update(math).digest('base64')))), layout.host)), catalog) + '\nglobalThis.dispatchEvent(new Event("lingxi:design-runtime-ready"));\n')
         : name === manifest.runtime.file ? Buffer.from(original.toString() + '\n;' + layout.guest + ';(' + online.loader + ')(new URL(document.currentScript.src).origin);') : original
       assert.deepEqual(bytes, expected, name)
     }

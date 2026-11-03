@@ -19,8 +19,8 @@ test('Design separates exact critical native source programs before entering syn
 
 test('critical preparation coalesces, preserves successful code and retries before native initialization exactly once', async () => {
   assert.equal(typeof builder.createDesignStartup,'function')
-  const calls=[],bodies={react:'native react',support:'native support'};let fail=true,initialized=0
-  const host={fetch:async(url,options)=>{calls.push({url,options});return{ok:!(url.endsWith('support.js')&&fail),text:async()=>bodies[url.endsWith('support.js')?'support':'react']}}}
+  const calls=[],bodies={react:'native react',support:'native support'};let fail=true,initialized=0,earlyReadySignals=0
+  const host={Event:class {},dispatchEvent:()=>{earlyReadySignals++},fetch:async(url,options)=>{calls.push({url,options});return{ok:!(url.endsWith('support.js')&&fail),text:async()=>bodies[url.endsWith('support.js')?'support':'react']}}}
   const programs={react:{url:'https://assets.test/react.js',integrity:'sha256-test-react'},support:{url:'https://assets.test/support.js',integrity:'sha256-test-support'}}
   const startup=builder.createDesignStartup(programs,host)
   startup.run(()=>{initialized++;assert.deepEqual({...startup.sources},bodies)})
@@ -29,6 +29,7 @@ test('critical preparation coalesces, preserves successful code and retries befo
   assert.equal(startup.sources.react,'native react')
   fail=false;await startup.prepare();assert.equal(startup.status,'ready');assert.equal(initialized,1)
   startup.run(()=>{initialized++});await startup.prepare();assert.equal(initialized,1)
+  assert.equal(earlyReadySignals,0,'preparation must not signal readiness before the native module body resumes')
   assert.equal(calls.filter(x=>x.url.endsWith('react.js')).length,1);assert.equal(calls.filter(x=>x.url.endsWith('support.js')).length,2)
   assert.ok(calls.every(x=>x.options.credentials==='omit'&&x.options.integrity.startsWith('sha256-')))
 })

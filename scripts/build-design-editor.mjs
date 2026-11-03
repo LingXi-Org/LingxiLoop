@@ -155,7 +155,6 @@ export function createDesignStartup(programs, host = globalThis) {
   function boot() {
     if (!started && start && status === 'ready') {
       started = true;notice?.remove();start()
-      if (host.dispatchEvent && host.Event) host.dispatchEvent(new host.Event('lingxi:design-runtime-ready'))
     }
   }
   function read(id, item) {
@@ -214,7 +213,10 @@ export async function buildDesignEditor() {
   const split = splitOptionalDesignSources(critical.source)
   const catalog = { ...JSON.parse(await readFile(resolve(root, 'third_party/baoyu-design/host/slides-zh-CN.json'), 'utf8')), ...JSON.parse(await readFile(resolve(root, 'third_party/baoyu-design/host/design-zh-CN.json'), 'utf8')) }
   const nativeSource = translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, mathAssets, layout.guest, offlineFile, offlineIntegrity))), layout.host)), catalog)
-  const script = Buffer.from('globalThis.__lingxiDesignStartup.run(function(){\n' + nativeSource + '\n});\n')
+  // Keep the original module's lexical/top-level execution model. Wrapping
+  // the whole native entry in a function can trigger a second V8 parse when
+  // that function is called immediately after preparation.
+  const script = Buffer.from('await new Promise(resolve=>globalThis.__lingxiDesignStartup.run(resolve));\n' + nativeSource + '\nglobalThis.dispatchEvent(new Event("lingxi:design-runtime-ready"));\n')
   const scriptName = `design-${sha(script)}.js`
   const publicBase = '__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/'
   const runtimePath = 'artifact-type/dc-runtime.js'
