@@ -3,13 +3,14 @@ import { slideEditorContextSchema, type SlideEditorContext } from '../../../../s
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { userFacingError } from '@/lib/userFacingError'
-import { artifactsApi } from '../api'
 import { ARTIFACT_LABELS, type ArtifactKind } from '../contracts'
+import { editorGrant, editorWarming } from '../editor-preload'
 import { subscribeDesignFrameReveal } from './design-frame-lifecycle'
 
 /**
- * Design needs same-origin child frames, so each grant gets an isolated hostname.
- * Slides stays opaque; neither editor origin serves this application's session or API.
+ * Each grant gets an isolated hostname: Design needs same-origin child frames,
+ * and a real origin lets both editors reuse their cached code across opens.
+ * No editor origin serves this application's session or API.
  */
 export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, agentWorking = false, exitPresentation = 0 }: {
   artifactId: string; kind: ArtifactKind; title: string
@@ -28,6 +29,9 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
   const [attempt, setAttempt] = useState(0)
   const label = ARTIFACT_LABELS[kind]
   const ready = loaded && (kind !== 'design' || designInitialized)
+  // Only a grant's own isolated origin may keep its origin; an editor page on
+  // this application's origin stays opaque (its CSP sandboxes it as well).
+  const isolated = url !== null && new URL(url, location.href).origin !== location.origin
 
   useEffect(() => {
     if (kind === 'design' && url && frame.current) return subscribeDesignFrameReveal(frame.current, url, {
@@ -42,8 +46,10 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
     setLoaded(false)
     setDesignInitialized(false)
     setError('')
-    artifactsApi.editorGrant(artifactId, AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]))
-      .then((grant) => setUrl(grant.url + (kind === 'slides' ? `#workspace=${nonce}` : '')))
+    // A retry asks for a new grant; an open right after intent reuses its grant
+    // and lets an in-flight warm-up finish rather than downloading twice.
+    Promise.all([editorGrant(artifactId, attempt > 0), editorWarming(kind)])
+      .then(([grant]) => { if (!controller.signal.aborted) setUrl((grant.isolatedUrl ?? grant.url) + (kind === 'slides' ? `#workspace=${nonce}` : '')) })
       .catch((reason) => { if (!controller.signal.aborted) setError(userFacingError(reason, `${label}编辑器暂时无法打开，请重试。`)) })
     return () => controller.abort()
   }, [artifactId, attempt, kind, label, nonce])
@@ -89,7 +95,7 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
       key={url}
       src={url}
       title={`${label}编辑器：${title}`}
-      sandbox={kind === 'design' ? 'allow-scripts allow-same-origin allow-downloads allow-popups allow-modals' : 'allow-scripts allow-downloads allow-popups allow-modals'}
+      sandbox={`allow-scripts ${isolated ? 'allow-same-origin ' : ''}allow-downloads allow-popups allow-modals`}
       allow="clipboard-read; clipboard-write; fullscreen"
       referrerPolicy="no-referrer"
       onLoad={() => { if (kind !== 'slides') setLoaded(true) }}

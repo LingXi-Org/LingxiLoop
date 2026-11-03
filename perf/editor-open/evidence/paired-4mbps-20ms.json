@@ -1,0 +1,972 @@
+{
+ "browser": "148.0.7778.96",
+ "platform": "Windows-11-10.0.22621-SP0",
+ "link": {
+  "offline": false,
+  "latency": 20,
+  "downloadThroughput": 500000.0,
+  "uploadThroughput": 375000.0
+ },
+ "samples": [
+  {
+   "trial": 0,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5979,
+   "contentMs": 6667,
+   "bytes": 2662622,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 630.2,
+   "contentMs": 1121.9,
+   "bytes": 245098,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3518.6,
+   "contentMs": 3682.8,
+   "bytes": 1532968,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 3301.9,
+   "contentMs": 3406.4,
+   "bytes": 1532968,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 5861.8,
+   "contentMs": 6567.1,
+   "bytes": 2659942,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 3551.5,
+   "contentMs": 3698.7,
+   "bytes": 1532968,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 5853.8,
+   "contentMs": 6526.6,
+   "bytes": 2662354,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 3688.3,
+   "contentMs": 3851.8,
+   "bytes": 1535112,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5929.2,
+   "contentMs": 6581.6,
+   "bytes": 2662464,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 644.3,
+   "contentMs": 1150.1,
+   "bytes": 245211,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3586.5,
+   "contentMs": 3760.9,
+   "bytes": 1535598,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 730.1,
+   "contentMs": 796.9,
+   "bytes": 210498,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 973.1,
+   "contentMs": 1634.8,
+   "bytes": 245211,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 1089,
+   "contentMs": 1222.7,
+   "bytes": 210766,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 4189.2,
+   "contentMs": 4899,
+   "bytes": 2496951,
+   "errors": 0
+  },
+  {
+   "trial": 0,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 2036.3,
+   "contentMs": 2197.7,
+   "bytes": 1081648,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5919.1,
+   "contentMs": 6557.2,
+   "bytes": 2662464,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 633.3,
+   "contentMs": 1115.1,
+   "bytes": 245214,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3518.3,
+   "contentMs": 3668,
+   "bytes": 1535600,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 673.8,
+   "contentMs": 749.7,
+   "bytes": 210500,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 993.3,
+   "contentMs": 1667.5,
+   "bytes": 245214,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 1006.6,
+   "contentMs": 1128.1,
+   "bytes": 210768,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 4125.3,
+   "contentMs": 4751.1,
+   "bytes": 2496954,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 1993.5,
+   "contentMs": 2098,
+   "bytes": 1081650,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5890.9,
+   "contentMs": 6597.7,
+   "bytes": 2662354,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 633.6,
+   "contentMs": 1148,
+   "bytes": 245368,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3536.9,
+   "contentMs": 3699.4,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 3337.3,
+   "contentMs": 3406.6,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 5830.4,
+   "contentMs": 6519.8,
+   "bytes": 2659944,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 3644.8,
+   "contentMs": 3787.9,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 5925.9,
+   "contentMs": 6638.5,
+   "bytes": 2662356,
+   "errors": 0
+  },
+  {
+   "trial": 1,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 3616.3,
+   "contentMs": 3770.2,
+   "bytes": 1535113,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5903.1,
+   "contentMs": 6536.4,
+   "bytes": 2662356,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 709.9,
+   "contentMs": 1188.8,
+   "bytes": 245100,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3542.8,
+   "contentMs": 3702.2,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 3325,
+   "contentMs": 3431.6,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 5942,
+   "contentMs": 6594.6,
+   "bytes": 2659944,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 3727.2,
+   "contentMs": 3917.3,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 5823.3,
+   "contentMs": 6521.4,
+   "bytes": 2662356,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 3744.4,
+   "contentMs": 3924.8,
+   "bytes": 1535113,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5900.6,
+   "contentMs": 6565.1,
+   "bytes": 2662467,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 630.6,
+   "contentMs": 1103.4,
+   "bytes": 245214,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3738.5,
+   "contentMs": 3881.1,
+   "bytes": 1535868,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 765.7,
+   "contentMs": 831.1,
+   "bytes": 210500,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 1115.9,
+   "contentMs": 1761,
+   "bytes": 245214,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 1112.2,
+   "contentMs": 1252.6,
+   "bytes": 210768,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 4157.8,
+   "contentMs": 4831.2,
+   "bytes": 2496954,
+   "errors": 0
+  },
+  {
+   "trial": 2,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 2093.8,
+   "contentMs": 2257,
+   "bytes": 1081650,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5822.8,
+   "contentMs": 6495.3,
+   "bytes": 2662467,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 627.4,
+   "contentMs": 1167.2,
+   "bytes": 245482,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3621.1,
+   "contentMs": 3754.8,
+   "bytes": 1535868,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 747.1,
+   "contentMs": 821.4,
+   "bytes": 210500,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 1020.9,
+   "contentMs": 1672.3,
+   "bytes": 245214,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 1033.7,
+   "contentMs": 1205.4,
+   "bytes": 210768,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 4186.4,
+   "contentMs": 4840.9,
+   "bytes": 2496954,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 2019.1,
+   "contentMs": 2188.6,
+   "bytes": 1081918,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5885.1,
+   "contentMs": 6500.4,
+   "bytes": 2662356,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 648.9,
+   "contentMs": 1135.3,
+   "bytes": 245100,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3612.5,
+   "contentMs": 3784.6,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 3303.1,
+   "contentMs": 3433.7,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 6063.8,
+   "contentMs": 6915.9,
+   "bytes": 2660212,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 3923.4,
+   "contentMs": 4143.9,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 6055.6,
+   "contentMs": 6826.8,
+   "bytes": 2662356,
+   "errors": 0
+  },
+  {
+   "trial": 3,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 3976.6,
+   "contentMs": 4264.5,
+   "bytes": 1535113,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 6160.8,
+   "contentMs": 6925.8,
+   "bytes": 2662624,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 707,
+   "contentMs": 1249.3,
+   "bytes": 245100,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3687.7,
+   "contentMs": 3881.3,
+   "bytes": 1532701,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 3332.9,
+   "contentMs": 3460.2,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 5878.1,
+   "contentMs": 6603.5,
+   "bytes": 2659944,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 3663,
+   "contentMs": 3808,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 5944.3,
+   "contentMs": 6643.9,
+   "bytes": 2662356,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 3623.7,
+   "contentMs": 3773.6,
+   "bytes": 1535113,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5859.6,
+   "contentMs": 6555.2,
+   "bytes": 2662467,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 644.2,
+   "contentMs": 1139.9,
+   "bytes": 245214,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3780.1,
+   "contentMs": 3954.7,
+   "bytes": 1535868,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 705.9,
+   "contentMs": 790.9,
+   "bytes": 210768,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 1012.9,
+   "contentMs": 1687.3,
+   "bytes": 245214,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 1059.2,
+   "contentMs": 1192.8,
+   "bytes": 210768,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 4188.6,
+   "contentMs": 4941.2,
+   "bytes": 2496954,
+   "errors": 0
+  },
+  {
+   "trial": 4,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 1966.3,
+   "contentMs": 2121.9,
+   "bytes": 1081918,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5838.3,
+   "contentMs": 6497.9,
+   "bytes": 2662467,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 667.7,
+   "contentMs": 1170,
+   "bytes": 245482,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3599.6,
+   "contentMs": 3734.2,
+   "bytes": 1535868,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "candidate",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 721.4,
+   "contentMs": 818.3,
+   "bytes": 210500,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 1050.8,
+   "contentMs": 1741.5,
+   "bytes": 245214,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "candidate",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 1103.8,
+   "contentMs": 1266.5,
+   "bytes": 210768,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 4129.2,
+   "contentMs": 4827.6,
+   "bytes": 2496954,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "candidate",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 1976,
+   "contentMs": 2118.1,
+   "bytes": 1081918,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-a",
+   "shownMs": 5953.1,
+   "contentMs": 6657.7,
+   "bytes": 2662624,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "board-b",
+   "shownMs": 687.4,
+   "contentMs": 1123.6,
+   "bytes": 245100,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-a",
+   "shownMs": 3586.3,
+   "contentMs": 3754.4,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "baseline",
+   "scenario": "cold",
+   "artifact": "deck-b",
+   "shownMs": 3320.3,
+   "contentMs": 3441,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "board-a",
+   "shownMs": 5867.3,
+   "contentMs": 6516.4,
+   "bytes": 2659944,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "baseline",
+   "scenario": "warmed",
+   "artifact": "deck-a",
+   "shownMs": 3647.3,
+   "contentMs": 3776.2,
+   "bytes": 1532969,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "board-a",
+   "shownMs": 5878.2,
+   "contentMs": 6594.5,
+   "bytes": 2662088,
+   "errors": 0
+  },
+  {
+   "trial": 5,
+   "arm": "baseline",
+   "scenario": "early",
+   "artifact": "deck-a",
+   "shownMs": 3591.7,
+   "contentMs": 3789.2,
+   "bytes": 1534845,
+   "errors": 0
+  }
+ ]
+}

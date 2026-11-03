@@ -3,6 +3,7 @@ import { ArtifactCard } from '@/components/assistant-ui/elements/artifact-card'
 import { useApp } from '@/stores/app'
 import { useSurface } from '@/stores/surface'
 import { ARTIFACT_LABELS, type ArtifactKind } from '../contracts'
+import { prefetchEditor } from '../editor-preload'
 
 /** Opens a Design canvas over the conversation, or a Slides deck in the presentations view. */
 export function openArtifact(kind: ArtifactKind, artifactId: string, title: string) {
@@ -21,6 +22,8 @@ export function ArtifactChatCard({ artifactId, kind, title, description }: { art
     icon={kind === 'slides' ? <PresentationIcon /> : <PanelsTopLeftIcon />}
     preview={<p className="grid h-full place-items-center px-4 text-center text-xs text-muted-foreground">打开{label}查看和编辑</p>}
     onOpen={() => openArtifact(kind, artifactId, title)}
+    onPointerEnter={() => prefetchEditor(kind, artifactId)}
+    onFocus={() => prefetchEditor(kind, artifactId)}
     openLabel={`打开${label}`}
     data-artifact-open-trigger={artifactId}
   />

@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
 import { createServer, type Server } from 'node:http'
+import { artifactEditorOrigin } from '../../../shared/artifact-editor-origin.js'
 import { pool } from '../db/pool.js'
+import { env } from '../env.js'
 import { CH_ARTIFACTS, sub } from '../redis.js'
 import { publishArtifactEvent } from '../modules/artifacts/events.js'
 import { artifactBlobRouter, artifactEditorRouter } from '../modules/artifacts/index.js'
@@ -121,8 +123,9 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   assert.ok(design.files['project/canvas.json'])
   assert.equal((await (await api('/conversations/artifact-room/design', 'POST')).json() as { id: string }).id, design.id)
 
-  const grant = await (await api(`/artifacts/${design.id}/editor-grant`, 'POST')).json() as { url: string; write: boolean }
+  const grant = await (await api(`/artifacts/${design.id}/editor-grant`, 'POST')).json() as { url: string; isolatedUrl: string; write: boolean }
   assert.match(grant.url, /^http:\/\/[a-f0-9]{32}-artifact\.localhost:5180\//)
+  assert.equal(grant.isolatedUrl, grant.url)
   grant.url = new URL(grant.url).pathname
   assert.equal(grant.write, true)
   assert.match(grant.url, /^\/artifact-editor\/design\/[^/]+\/$/)
@@ -136,7 +139,7 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   assert.equal(shared.status, 200)
   assert.match(shared.headers.get('content-type') ?? '', /javascript/)
   assert.equal(shared.headers.get('access-control-allow-origin'), '*')
-  assert.match(shared.headers.get('cache-control') ?? '', /immutable/)
+  assert.equal(shared.headers.get('cache-control'), 'public, max-age=31536000, immutable')
   assert.match(page.headers.get('content-security-policy') ?? '', /\/artifact-editor\/design-assets\//)
   assert.match(html, /integrity="sha256-/)
   for (const privatePath of ['project/canvas.json', 'index.html', 'artifact-type/dc-runtime.js']) {
@@ -183,20 +186,28 @@ test('project Slides decks are listed, created with their index, renamed and del
   assert.ok(deck.files['project/deck.json'])
   const listed = await (await api(`/projects/${projectId}/slides`)).json() as { id: string; title: string }[]
   assert.deepEqual(listed.map(item => item.id), [deck.id])
-  const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string }
-  const page = await fetch(origin + new URL(grant.url, origin).pathname)
+  const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string; isolatedUrl: string }
+  // Pages served before isolated Slides keep the main-site address.
+  assert.match(grant.url, /^\/artifact-editor\/slides\/[^/]+\/$/)
+  assert.equal(grant.isolatedUrl, `${await artifactEditorOrigin(grant.url.split('/')[3], env.ARTIFACT_EDITOR_BASE)}${grant.url}`)
+  const page = await fetch(origin + grant.url)
   assert.equal(page.status, 200)
   const html = await page.text()
   assert.match(html, /lang="zh-CN"/)
   const csp = page.headers.get('content-security-policy') ?? ''
   assert.match(csp, /^sandbox allow-scripts allow-downloads allow-popups allow-modals;/)
   for (const hash of inlineScriptHashes(html)) assert.ok(csp.includes(`'${hash}'`))
-  const assetPath = /src="(\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js)"/.exec(html)?.[1]
-  assert.ok(assetPath)
-  const asset = await fetch(origin + assetPath)
+  const assetUrl = /src="(https?:\/\/[^"]+\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js)"/.exec(html)?.[1]
+  assert.ok(assetUrl, 'every deck and grant origin shares one cached editor')
+  assert.match(csp, /script-src [^;]*\/artifact-editor\/slides-assets\//)
+  const asset = await fetch(origin + new URL(assetUrl).pathname)
   assert.equal(asset.status, 200)
-  assert.match(asset.headers.get('cache-control') ?? '', /max-age=31536000, immutable/)
+  assert.equal(asset.headers.get('cache-control'), 'public, max-age=31536000, immutable')
   assert.equal(asset.headers.get('access-control-allow-origin'), '*')
+  const preloads = await (await fetch(`${origin}/artifact-editor/preload.json`)).json() as Record<'design' | 'slides', string[]>
+  assert.ok(preloads.slides.includes(assetUrl))
+  assert.ok(preloads.design.some(url => /\/design-assets\/design-[a-f0-9]{64}\.js$/.test(url)))
+  assert.ok(!preloads.slides.some(url => url.includes('KaTeX_')), 'math fonts load only with math')
   for (const path of ['/artifact-editor/slides-assets/project/deck.json', '/artifact-editor/slides-assets/node/compiler.cjs', '/artifact-editor/slides/invalid/project/deck.json']) {
     assert.equal((await fetch(origin + path)).status, 404)
   }

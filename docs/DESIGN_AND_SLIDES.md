@@ -17,12 +17,22 @@ capability handles both editors’ exports inside the sandbox.
   one from a conversation (`slides.create`). The editor presents and exports PDF,
   HTML and PowerPoint.
 
-Editors use `/artifact-editor/<kind>/<grant>/`. Slides runs in an opaque-origin
-sandbox. Design needs DOM access to its child artboards, so each signed grant gets
-its own `<grant-hash>-artifact.lingxilearn.cn` origin. That ingress accepts only the
-matching Design grant and blob routes, strips credentials/cookies, rejects service
-workers, and never serves the SPA or `/api`. The main-site editor URL retains its
-opaque sandbox. The grant comes from
+Editors use `/artifact-editor/<kind>/<grant>/`. Each signed Design or Slides grant
+gets its own `<grant-hash>-artifact.lingxilearn.cn` origin: Design needs DOM access
+to its child artboards, and a real (not opaque) origin lets both editors read their
+code from the HTTP cache. That ingress accepts only the matching grant's editor and
+blob routes, strips credentials/cookies, rejects service workers, and never serves
+the SPA or `/api`. The main-site editor URL retains its opaque sandbox; the grant
+response keeps Slides' main-site `url` for pages served before this ingress accepted
+Slides, and current pages open `isolatedUrl`.
+
+Both editors load their hashed scripts, styles and fonts from the shared
+`/artifact-editor/{design,slides}-assets/` URLs on the public origin. They are
+`public, immutable`, so the edge caches them, and same-site with every grant
+origin, so one download serves every later open. The application fetches the
+list at `/artifact-editor/preload.json` and warms it when idle (not on Save-Data
+or 2G) and on intent (hovering or focusing a deck, a chat card or the Design
+button), together with that artifact's grant; a grant is reused for ten minutes. The grant comes from
 `POST /api/artifacts/:id/editor-grant`, is bound to the person, artifact and access
 mode, and every editor request re-checks the person's current `artifact:read` or
 `artifact:write` permission. Uploads are served at `/_blob/<id>`; ids are bound to

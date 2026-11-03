@@ -116,8 +116,10 @@ api.post('/artifacts/:id/editor-grant', safe(async (req, res) => {
   const write = (await permissionService.can({ actorUserId: read.userId, companyId: read.companyId, action: 'artifact:write',
     resource: { type: 'artifact', id: String(req.params.id) } })).allowed
   const { grant, expiresAt } = issueGrant({ artifactId: String(req.params.id), companyId: read.companyId, userId: read.userId, kind: read.kind, write })
-  const origin = read.kind === 'design' ? await artifactEditorOrigin(grant, env.ARTIFACT_EDITOR_BASE) : ''
-  res.json({ url: `${origin}/artifact-editor/${read.kind}/${grant}/`, expiresAt, write })
+  const isolatedUrl = `${await artifactEditorOrigin(grant, env.ARTIFACT_EDITOR_BASE)}/artifact-editor/${read.kind}/${grant}/`
+  // Slides keeps its opaque main-site `url` for pages served before their
+  // ingress accepted isolated Slides; current pages open `isolatedUrl`.
+  res.json({ url: read.kind === 'design' ? isolatedUrl : `/artifact-editor/slides/${grant}/`, isolatedUrl, expiresAt, write })
 }))
 
 /* ============== Collaboration (shared state, isolated execution) ============== */

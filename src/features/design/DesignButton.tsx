@@ -1,19 +1,25 @@
 import { CanvasIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { userFacingError } from '@/lib/userFacingError'
 import { useSurface } from '@/stores/surface'
 import { loadArtifactView } from './DesignWorkspace'
-import { openConversationDesign } from './open-design'
+import { warmEditorWhenIdle } from '@/features/artifacts/editor-preload'
+import { openConversationDesign, prefetchConversationDesign } from './open-design'
 
 /** The conversation header's Design entry: the conversation's one canvas, created on first open. */
 export function DesignButton({ conversationId }: { conversationId: string }) {
   const [pending, setPending] = useState(false)
   const expanded = useSurface(state => state.surface?.kind === 'design')
-  // Intent (hover/focus/press) starts the editor code while the board is being ensured.
-  const warm = () => { void loadArtifactView().catch(() => {}) }
+  useEffect(() => warmEditorWhenIdle('design'), [])
+  // Intent (hover/focus/press) starts the panel code, the editor assets and an
+  // existing board's grant while the board is being ensured.
+  const warm = () => {
+    void loadArtifactView().catch(() => {})
+    prefetchConversationDesign(conversationId)
+  }
   const open = async (opener: HTMLButtonElement) => {
     warm()
     if (pending) return

@@ -14,10 +14,16 @@ mock.module('@/stores/surface', { namedExports: { useSurface: { getState: () => 
   openDesign: (artifactId: string, title: string) => { opened.push(artifactId); surface = { kind: 'design', artifactId, title } },
   closeDesign: () => { surface = null },
 }) } } })
-mock.module('@/features/artifacts/api', { namedExports: { artifactsApi: { ensureConversationDesign: () => new Promise<{ id: string; title: string }>((done, fail) => { resolve = done; reject = fail }) } } })
-const { openConversationDesign } = await import('./open-design')
+let existing: { id: string } | null = null, looked = 0
+mock.module('@/features/artifacts/api', { namedExports: { artifactsApi: {
+  ensureConversationDesign: () => new Promise<{ id: string; title: string }>((done, fail) => { resolve = done; reject = fail }),
+  getConversationDesign: async () => { looked++; return existing },
+} } })
+const prefetched: (string | undefined)[] = []
+mock.module('@/features/artifacts/editor-preload', { namedExports: { prefetchEditor: (_kind: string, artifactId?: string) => { prefetched.push(artifactId) } } })
+const { openConversationDesign, prefetchConversationDesign } = await import('./open-design')
 const { PENDING_DESIGN_ID } = await import('./pending')
-const reset = () => { userId = 'user'; companyId = 'company'; projectId = 'project'; conversationId = 'room'; surface = null; opened.length = 0 }
+const reset = () => { userId = 'user'; companyId = 'company'; projectId = 'project'; conversationId = 'room'; surface = null; opened.length = 0; prefetched.length = 0 }
 
 test('late Canvas requests cannot open a private board after scope changes', async () => {
   for (const change of [() => { userId = 'other-user' }, () => { companyId = 'other-company' }, () => { projectId = 'other-project' }, () => { conversationId = 'other-room' }]) {
@@ -28,6 +34,7 @@ test('late Canvas requests cannot open a private board after scope changes', asy
     await pending
     assert.deepEqual(opened, [PENDING_DESIGN_ID])
     assert.equal(surface, null)
+    assert.deepEqual(prefetched, [], 'no grant is requested for a board of another scope')
   }
 })
 
@@ -39,6 +46,22 @@ test('the canvas expands on the click, then shows the ensured board once', async
   await pending
   assert.deepEqual(opened, [PENDING_DESIGN_ID, 'current-board'])
   assert.deepEqual(surface, { kind: 'design', artifactId: 'current-board', title: '当前画板' })
+  assert.deepEqual(prefetched, ['current-board'], 'the grant starts before the panel code mounts')
+})
+
+test('hovering only reads: an existing board gets its grant early, a missing one is never created', async () => {
+  reset()
+  existing = { id: 'existing-board' }
+  prefetchConversationDesign('hover-room')
+  prefetchConversationDesign('hover-room')
+  await new Promise(done => setTimeout(done, 0))
+  assert.equal(looked, 1, 'repeated intent reads the board once')
+  assert.deepEqual(prefetched, [undefined, undefined, 'existing-board'])
+  existing = null
+  prefetchConversationDesign('empty-room')
+  await new Promise(done => setTimeout(done, 0))
+  assert.deepEqual(prefetched.slice(3), [undefined])
+  assert.deepEqual(opened, [])
 })
 
 test('closing the placeholder or a failed ensure leaves the canvas closed', async () => {
