@@ -13,6 +13,8 @@ options = dict(item.removeprefix('--').split('=', 1) for item in arguments if it
 arms = [item.split('=', 1) for item in arguments if not item.startswith('--')]
 width = int(options.get('width', 1440))
 warm = options.get('warm') == 'true'
+kinds = options.get('kinds', 'design,slides').split(',')
+assert kinds and all(kind in ['design', 'slides'] for kind in kinds)
 sys.argv = [sys.argv[0]]
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'issue-611'))
 from bench import Trace, INIT
@@ -52,7 +54,7 @@ with sync_playwright() as pw:
     report['browser'] = browser.version
     for trial in range(runs):
         for arm, port in (arms if trial % 2 == 0 else arms[::-1]):
-            for kind, prefix in [('design', 'board'), ('slides', 'deck')]:
+            for kind, prefix in [(kind, 'board' if kind == 'design' else 'deck') for kind in kinds]:
                 context = browser.new_context(viewport={'width': width, 'height': 1000})
                 context.add_init_script(INIT)
                 page = context.new_page()
@@ -92,7 +94,7 @@ with sync_playwright() as pw:
                 encoded = json.dumps(report, ensure_ascii=False, indent=2).encode()
                 out.write_bytes(gzip.compress(encoded, mtime=0) if out.suffix == '.gz' else encoded)
     browser.close()
-for kind in ['design', 'slides']:
+for kind in kinds:
     for scenario in (['inflight-prewarm'] if warm else ['cold', 'warm-new-frame', 'switch']):
         for arm, _ in arms:
             rows = [row for row in report['samples'] if row['kind'] == kind and row['scenario'] == scenario and row['arm'] == arm]

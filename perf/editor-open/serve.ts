@@ -57,6 +57,14 @@ if (process.env.PERF_COMPONENT_FIXTURE === '1') {
   documents.design.set('project/Main.dc.html', board.replace('</div></x-dc>', '<dc-import name="Card" hint-size="360px,180px"></dc-import></div></x-dc>'))
   documents.design.set('project/Card.dc.html', '<html><head><script src="./support.js"></script></head><body><x-dc><div style="width:360px;height:180px;background:#fef3c7;padding:16px"><h2>Reusable card original</h2><button onClick="{{ increment }}">Increment child</button><output>{{ count }}</output></div></x-dc><script type="text/x-dc" data-dc-script>class Component extends DCLogic { state = {count: 0}; renderVals() { return {count: this.state.count, increment: () => this.setState({count: this.state.count + 1})}; } }</script></body></html>')
 }
+if (process.env.PERF_TYPED_COMPONENT_FIXTURE === '1') {
+  const typedCanvas = structuredClone(canvas)
+  typedCanvas.designSystems.push({ title: 'Typed fixture', namespace: 'fixture', artifact: 'https://claude.ai/artifact/typed-fixture', version: null, copiedAt: '2026-11-03T00:00:00.000Z' })
+  documents.design.set('project/canvas.json', JSON.stringify(typedCanvas))
+  documents.design.set('project/Main.dc.html', board.replace('</head>', '<script src="ds/fixture/bundle.js"></script></head>').replace('</div></x-dc>', '<x-import component-from-global-scope="Fixture.Button" variant="primary">Typed fixture button</x-import></div></x-dc>'))
+  documents.design.set('project/ds/fixture/bundle.js', 'window.Fixture={Button:function Button(props){return React.createElement("button",{"data-variant":props.variant,disabled:props.disabled,style:{padding:"12px",background:props.variant==="primary"?"#bfdbfe":"#ddd"}},props.children)}};')
+  documents.design.set('project/ds/fixture/fixture.d.ts', 'export interface ButtonProps { variant?: "primary" | "secondary"; disabled?: boolean; children?: React.ReactNode; } export declare function Button(props: ButtonProps): React.ReactElement;')
+}
 if (process.env.PERF_THEME_FIXTURE === '1') {
   const metadata = JSON.parse(documents.slides.get('project/deck.json')!)
   const styled = ARTIFACT_KIND_DEFINITIONS.slides.initialIndex(metadata.title, '2026-11-03T00:00:00.000Z')
@@ -153,8 +161,12 @@ app.get(/^\/artifact-editor\/(design|slides)-assets\/([\w-]+\.(js|css|woff2))$/,
         res.set('Cache-Control', 'no-store').status(503).send('Synthetic first-use failure'); return
       }
     }
-    if (kind === 'design' && (process.env.PERF_FAIL_DESIGN_PROGRAMS || process.env.PERF_DESIGN_PROGRAM_DELAY_MS)) {
+    if (kind === 'design' && (process.env.PERF_FAIL_DESIGN_PROGRAMS || process.env.PERF_FAIL_DESIGN_OPTIONAL || process.env.PERF_DESIGN_PROGRAM_DELAY_MS)) {
       const manifest = JSON.parse(await readFile(resolve(editors.design, 'manifest.json'), 'utf8'))
+      const optional = Object.entries(manifest.optionalPrograms ?? {}).find(([, value]) => (value as { file: string }).file === name)?.[0]
+      if (optional && (process.env.PERF_FAIL_DESIGN_OPTIONAL ?? '').split(',').includes(optional) && !failedFeatures.has('design:' + optional)) {
+        failedFeatures.add('design:' + optional);res.set('Cache-Control', 'no-store').status(503).send('Synthetic optional-program failure');return
+      }
       const program = Object.entries(manifest.startupPrograms ?? {}).find(([, value]) => (value as { file: string }).file === name)?.[0]
       if (program && (process.env.PERF_FAIL_DESIGN_PROGRAMS ?? '').split(',').includes(program) && !failedFeatures.has('design:' + program)) {
         failedFeatures.add('design:' + program);res.set('Cache-Control', 'no-store').status(503).send('Synthetic required-program failure');return
@@ -196,11 +208,12 @@ app.use('/artifact-editor/:kind/:grant', express.json({ limit: '16mb' }), (req, 
   if (recoveryFixture && kind === 'slides' && path.startsWith('project/slides/') && path !== 'project/slides/slide-1.html' && Number(process.env.PERF_LATER_SLIDES_DELAY_MS) > 0) {
     setTimeout(() => { if (!access.read || grant.expiresAt <= Date.now()) res.sendStatus(403);else res.type('text/html').send(files.get(path)) }, Number(process.env.PERF_LATER_SLIDES_DELAY_MS));return
   }
-  if (path === '_files.json') { res.json({ ver: 'fixed', files: Object.fromEntries([...files].map(([name, value]) => [name, { sha256: sha(value), size: Buffer.byteLength(value), contentType: name.endsWith('.json') ? 'application/json' : 'text/html' }])) }); return }
+  const fileType = (path: string) => ({ '.json': 'application/json', '.js': 'text/javascript', '.ts': 'text/plain', '.css': 'text/css' } as Record<string, string>)[extname(path)] ?? 'text/html'
+  if (path === '_files.json') { res.json({ ver: 'fixed', files: Object.fromEntries([...files].map(([name, value]) => [name, { sha256: sha(value), size: Buffer.byteLength(value), contentType: fileType(name) }])) }); return }
   if (path.endsWith('events')) { res.set('Content-Type', 'text/event-stream'); res.write(': connected\n\n'); return }
   if (path === '__comments') { res.json({ threads: [], agent: { available: false, listening: false, busy: false, hook: false }, me: { name: '基准测试' } }); return }
   if (path === `_blob/${imageId}`) { res.type('svg').send(image); return }
-  if (files.has(path)) { res.type(path.endsWith('.json') ? 'json' : 'html').send(files.get(path)); return }
+  if (files.has(path)) { res.type(fileType(path)).send(files.get(path)); return }
   void (async () => {
     if (path.includes('..') || path.startsWith('project/')) { res.sendStatus(404); return }
     const file = resolve(editors[kind], path || 'index.html')

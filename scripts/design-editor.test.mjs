@@ -5,11 +5,12 @@ import { resolve } from 'node:path'
 import { brotliDecompressSync, gunzipSync } from 'node:zlib'
 import test from 'node:test'
 import { adaptDesignMath, buildDesignMathAssets } from './build-artifact-math.mjs'
-import { adaptDesignHostCapabilities, adaptDesignRuntimeUrl, adaptVisibleDesignMount, adaptOnlineDesignMath, splitCriticalDesignSources, splitOptionalDesignSources, buildDesignEditor } from './build-design-editor.mjs'
+import { adaptDesignHostCapabilities, adaptDesignRuntimeUrl, adaptVisibleDesignMount, adaptOnlineDesignMath, splitCriticalDesignSources, splitOptionalDesignSources, optimizeDesignBrowserRuntime, buildDesignEditor } from './build-design-editor.mjs'
 import { runInNewContext, Script } from 'node:vm'
 import { adaptDesignLayout, buildDesignLayout } from './build-design-layout.mjs'
 import './design-flow-size.test.mjs'
 import './design-startup.test.mjs'
+import './design-browser-runtime.test.mjs'
 import { translateDesign } from './design-copy.mjs'
 
 test('Design omits direct agent requests and local design-system controls without disabling comments or themes', async () => {
@@ -69,6 +70,9 @@ test('Design package preserves the agreed math runtime and optional executable b
   const online = await buildDesignMathAssets()
   const critical = splitCriticalDesignSources(await readFile(resolve(source, manifest.entry.original), 'utf8'))
   const split = splitOptionalDesignSources(critical.source)
+  const optimized = await optimizeDesignBrowserRuntime(translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, online, layout.guest, manifest.math.offlineFile, 'sha256-' + createHash('sha256').update(math).digest('base64')))), layout.host)), catalog))
+  assert.ok(optimized.removedBindings > 5000)
+  assert.deepEqual(manifest.browserRuntime.removedNames, optimized.removedNames)
   assert.ok(manifest.math.loaderBytes < 10_000, 'entry carries only the detector')
   assert.ok(!entry.includes('KaTeX_AMS'), 'online entry must not carry math fonts')
   assert.ok(manifest.files['assets/' + manifest.math.onlineFile])
@@ -85,7 +89,7 @@ test('Design package preserves the agreed math runtime and optional executable b
       if (name === 'assets/' + manifest.math.offlineFile) { assert.equal(bytes.toString(), math); continue }
       if (online.files.has(name.replace('assets/', ''))) { assert.deepEqual(bytes, online.files.get(name.replace('assets/', ''))); continue }
       const original = await readFile(resolve(source, name === manifest.entry.file ? manifest.entry.original : name === manifest.runtime.file ? manifest.runtime.original : name))
-      const expected = name === manifest.entry.file ? Buffer.from('await new Promise(resolve=>globalThis.__lingxiDesignStartup.run(resolve));\n' + translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, online, layout.guest, manifest.math.offlineFile, 'sha256-' + createHash('sha256').update(math).digest('base64')))), layout.host)), catalog) + '\nglobalThis.dispatchEvent(new Event("lingxi:design-runtime-ready"));\n')
+      const expected = name === manifest.entry.file ? Buffer.from('await new Promise(resolve=>globalThis.__lingxiDesignStartup.run(resolve));\n' + optimized.source + '\nglobalThis.dispatchEvent(new Event("lingxi:design-runtime-ready"));\n')
         : name === manifest.runtime.file ? Buffer.from(original.toString() + '\n;' + layout.guest + ';(' + online.loader + ')(new URL(document.currentScript.src).origin);') : original
       assert.deepEqual(bytes, expected, name)
     }

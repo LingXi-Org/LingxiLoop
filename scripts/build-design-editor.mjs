@@ -14,6 +14,90 @@ const source = resolve(root, 'third_party/baoyu-design/upstream/claude-design/sc
 const output = resolve(root, 'server/assets/design-editor')
 const sha = bytes => createHash('sha256').update(bytes).digest('hex')
 
+/** The browser-only namespace is closed over the pinned factories. Remove
+ * unread aliases without renaming functions, reordering initialization or
+ * changing native function bodies used by source-string consumers. */
+export async function optimizeDesignBrowserRuntime(source, { expectedFactories = 663 } = {}) {
+  const filename = '/design-browser-runtime.js', options = {allowJs:true, noLib:true, noResolve:true, target:ts.ScriptTarget.ESNext}
+  const host = ts.createCompilerHost(options)
+  host.getSourceFile = (name, version) => name === filename ? ts.createSourceFile(name, source, version, true, ts.ScriptKind.JS) : undefined
+  const program = ts.createProgram([filename], options, host), tree = program.getSourceFile(filename), checker = program.getTypeChecker()
+  const boot = tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'nW')
+  const helper = tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 't')
+  assert.ok(boot && helper, 'pinned Design private runtime constructor changed')
+  assert.equal(helper.getText(tree), 'function t(e,a,n,u){Object.defineProperty(e,a,{enumerable:!0,configurable:!0,get:n,...u?{set:u}:{}})}', 'pinned Design alias registration changed')
+  const helperSymbol = checker.getSymbolAtLocation(helper.name), bootSymbol = checker.getSymbolAtLocation(boot.name)
+  const factories = new Set(), arrays = []
+  const scan = (node, visit) => { visit(node);ts.forEachChild(node, child => scan(child, visit)) }
+  scan(boot, node => {
+    if (ts.isArrayLiteralExpression(node) && node.elements.length === expectedFactories && node.elements.every(ts.isCallExpression)) arrays.push(node)
+  })
+  assert.equal(arrays.length, 1, 'pinned Design factory registry changed')
+  for (const call of arrays[0].elements) {
+    assert.ok(ts.isIdentifier(call.expression) && call.arguments.length === 1 && ts.isIdentifier(call.arguments[0]), 'pinned Design factory call changed')
+    factories.add(call.expression.text)
+  }
+  assert.equal(factories.size, expectedFactories, 'pinned Design factory count changed')
+  const namespaceSymbol = checker.getSymbolAtLocation(arrays[0].elements[0].arguments[0])
+  let bootCalls = 0
+  scan(tree, node => {
+    if (!ts.isIdentifier(node) || node === boot.name || checker.getSymbolAtLocation(node) !== bootSymbol) return
+    assert.ok(ts.isCallExpression(node.parent) && node.parent.expression === node && ts.isExpressionStatement(node.parent.parent), 'Design private constructor escapes the browser entry')
+    bootCalls++
+  })
+  assert.equal(bootCalls, 1, 'Design private constructor usage changed')
+  scan(boot, node => {
+    if (!ts.isIdentifier(node) || checker.getSymbolAtLocation(node) !== namespaceSymbol) return
+    const parent = node.parent
+    if (ts.isVariableDeclaration(parent) && parent.name === node) return
+    if (ts.isReturnStatement(parent) && parent.expression === node) return  // Its sole caller ignores the result.
+    assert.ok(ts.isCallExpression(parent) && parent.arguments[0] === node && (factories.has(parent.expression.getText(tree)) || parent.expression.getText(tree) === 'VO'), 'Design private namespace escapes its constructor')
+  })
+  const registrars = new Set(factories)
+  scan(boot, node => {
+    if (ts.isCallExpression(node) && node.expression.getText(tree) === 'VO'
+      && checker.getSymbolAtLocation(node.arguments[0]) === namespaceSymbol) registrars.add('VO')
+  })
+  const bindings = [], reads = new Set(), declarations = new Map()
+  const receiverCalls = new Set(), reviewedReceiverCalls = new Set(['sheetFrameHeight','npm_useLabelableContext_xl','buildCaptureTemplate','toPercent','hueName','isOpenLinkClick','artifactLinkFromAnnotation','finiteProbeNumber'])
+  const isBinding = node => ts.isCallExpression(node) && checker.getSymbolAtLocation(node.expression) === helperSymbol
+    && node.arguments.length >= 3 && ts.isStringLiteral(node.arguments[1]) && ts.isArrowFunction(node.arguments[2])
+  // Keep names mentioned by non-namespace consumers as well. This conservative
+  // superset protects native receiver calls and static protocol/name tables.
+  scan(tree, node => {
+    if (ts.isPropertyAccessExpression(node)) reads.add(node.name.text)
+    if (ts.isStringLiteral(node) && !(isBinding(node.parent) && node.parent.arguments[1] === node)) reads.add(node.text)
+    if (ts.isFunctionDeclaration(node) && registrars.has(node.name?.text)) declarations.set(node.name.text, node)
+  })
+  assert.equal(declarations.size, registrars.size, 'Design private factory definitions changed')
+  for (const factory of declarations.values()) {
+    const parameter = factory.parameters[0]?.name
+    assert.ok(parameter && ts.isIdentifier(parameter), 'Design private factory parameter changed')
+    const symbol = checker.getSymbolAtLocation(parameter)
+    scan(factory, node => {
+      if (isBinding(node) && checker.getSymbolAtLocation(node.arguments[0]) === symbol) {
+        // Never discard an argument with registration-time side effects.
+        if (node.arguments.length === 3 || node.arguments.length === 4 && ts.isArrowFunction(node.arguments[3]))
+          bindings.push({name:node.arguments[1].text, start:node.getStart(tree), end:node.end})
+      }
+      if (!ts.isIdentifier(node) || node === parameter || checker.getSymbolAtLocation(node) !== symbol) return
+      const parent = node.parent
+      if (ts.isPropertyAccessExpression(parent) && parent.expression === node) {
+        if (ts.isCallExpression(parent.parent) && parent.parent.expression === parent) {
+          assert.ok(reviewedReceiverCalls.has(parent.name.text), `Design private namespace receiver needs review: ${parent.name.text}`)
+          receiverCalls.add(parent.name.text)
+        }
+        return
+      }
+      if (isBinding(parent) && parent.arguments[0] === node) return
+      throw Error(`Design private namespace needs review: ${factory.name.text}: ${parent.getText(tree).slice(0,100)}`)
+    })
+  }
+  const removed = bindings.filter(binding => !reads.has(binding.name))
+  for (const binding of removed.sort((a,b) => b.start - a.start)) source = source.slice(0,binding.start) + 'void 0' + source.slice(binding.end)
+  return {source, factories:expectedFactories, bindings:bindings.length, removedBindings:removed.length, removedNames:removed.map(binding => binding.name), receiverCalls:[...receiverCalls]}
+}
+
 /** Keep optional local-server features out of the grant-hosted editor. */
 export function adaptDesignHostCapabilities(source) {
   const request = ',sendRequest:x=>g.sendRequest(x)'
@@ -213,10 +297,11 @@ export async function buildDesignEditor() {
   const split = splitOptionalDesignSources(critical.source)
   const catalog = { ...JSON.parse(await readFile(resolve(root, 'third_party/baoyu-design/host/slides-zh-CN.json'), 'utf8')), ...JSON.parse(await readFile(resolve(root, 'third_party/baoyu-design/host/design-zh-CN.json'), 'utf8')) }
   const nativeSource = translateDesign(adaptDesignHostCapabilities(adaptDesignLayout(adaptVisibleDesignMount(adaptDesignRuntimeUrl(adaptOnlineDesignMath(split.source, mathAssets, layout.guest, offlineFile, offlineIntegrity))), layout.host)), catalog)
+  const {source: browserSource, ...browserRuntime} = await optimizeDesignBrowserRuntime(nativeSource)
   // Keep the original module's lexical/top-level execution model. Wrapping
   // the whole native entry in a function can trigger a second V8 parse when
   // that function is called immediately after preparation.
-  const script = Buffer.from('await new Promise(resolve=>globalThis.__lingxiDesignStartup.run(resolve));\n' + nativeSource + '\nglobalThis.dispatchEvent(new Event("lingxi:design-runtime-ready"));\n')
+  const script = Buffer.from('await new Promise(resolve=>globalThis.__lingxiDesignStartup.run(resolve));\n' + browserSource + '\nglobalThis.dispatchEvent(new Event("lingxi:design-runtime-ready"));\n')
   const scriptName = `design-${sha(script)}.js`
   const publicBase = '__LINGXI_DESIGN_ASSET_ORIGIN__/artifact-editor/design-assets/'
   const runtimePath = 'artifact-type/dc-runtime.js'
@@ -268,7 +353,7 @@ export async function buildDesignEditor() {
   }
   await visit(output)
   const manifest = { source: relative(root, source), upstreamCommit: '016b39d7fdcc30bfacee31ea5541498ac53921c6',
-    startupPrograms: critical.programs, optionalPrograms: split.programs,
+    startupPrograms: critical.programs, optionalPrograms: split.programs, browserRuntime,
     math: { sha256: sha(math), bytes: Buffer.byteLength(math), offlineFile, onlineFile: mathAssets.onlineFile, onlineBytes: mathAssets.onlineBytes, loaderBytes: Buffer.byteLength(mathAssets.loader) }, layout: { guestBytes: Buffer.byteLength(layout.guest), hostBytes: Buffer.byteLength(layout.host) },
     entry: { file: `assets/${scriptName}`, original: scriptPath },
     runtime: { file: runtimeFile, original: runtimePath },
