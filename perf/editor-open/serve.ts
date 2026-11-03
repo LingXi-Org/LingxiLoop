@@ -40,7 +40,7 @@ const imageId = '1234567890abcdef1234567890abcdef'
 const image = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="#426b46"/><circle cx="320" cy="180" r="120" fill="#b8d994"/></svg>')
 const mathFixture = process.env.PERF_MATH_FIXTURE === '1'
 const failedFeatures = new Set<string>()
-const failFeatures = (process.env.PERF_FAIL_FEATURES ?? '').split(',').filter(value => ['math', 'templates', 'exports', 'pptx-library', 'woff2-decoder'].includes(value))
+const failFeatures = (process.env.PERF_FAIL_FEATURES ?? '').split(',').filter(value => ['math', 'templates', 'presentation', 'exports', 'pptx-library', 'woff2-decoder'].includes(value))
 const order = Array.from({ length: mathFixture ? 3 : 20 }, (_, index) => `slide-${index + 1}`)
 const documents = {
   design: new Map([['project/canvas.json', JSON.stringify(canvas)], ['project/Main.dc.html', board]]),

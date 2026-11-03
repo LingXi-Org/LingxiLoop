@@ -1,5 +1,6 @@
 // Reconstructed from JimLiu/baoyu-design 016b39d, MIT.
 // Published node/compiler.cjs preserves the named module implementation.
+import { bindRuntimeValue } from '../module-helpers.js'
 import libraries from '../vendor/node-dependencies.cjs'
 import * as math from '../math.js'
 import { registerSlideMath } from '../math-loading.js'
@@ -276,11 +277,13 @@ import { installDocumentsJsonRecords } from '../modules/documents-json-records.j
 import { installDocumentsCommentRecords } from '../modules/documents-comment-records.js'
 import { installDocumentsMigrationMarkers } from '../modules/documents-migration-markers.js'
 import { installDocumentsSlideCodec } from '../modules/documents-slide-codec.js'
+import { installPresentationSpeakerStyles } from '../modules/presentation-speaker-styles.js'
 import { installPresentationSpeakerPanel } from '../modules/presentation-speaker-panel.js'
 import { installPresentationSpeakerSession } from '../modules/presentation-speaker-session.js'
 import { installPresentationAnimationEngine } from '../modules/presentation-animation-engine.js'
 import { installDesignSystemThemePanel } from '../modules/design-system-theme-panel.js'
 import { installPresentationPlayer } from '../modules/presentation-player.js'
+import { installPresentationView } from '../modules/presentation-view.js'
 import { installCreationOverlay } from '../modules/creation-overlay.js'
 import { installEditorSlideTicks } from '../modules/editor-slide-ticks.js'
 import { installCreationController } from '../modules/creation-controller.js'
@@ -596,11 +599,13 @@ function createSlidesRuntime(options = {}) {
     installDocumentsCommentRecords(runtime2),
     installDocumentsMigrationMarkers(runtime2),
     installDocumentsSlideCodec(runtime2),
+    installPresentationSpeakerStyles(runtime2),
     installPresentationSpeakerPanel(runtime2),
     installPresentationSpeakerSession(runtime2),
     installPresentationAnimationEngine(runtime2),
     installDesignSystemThemePanel(runtime2),
     installPresentationPlayer(runtime2),
+    installPresentationView(runtime2),
     installCreationOverlay(runtime2),
     installEditorSlideTicks(runtime2),
     installCreationController(runtime2),
@@ -684,6 +689,8 @@ function createSlidesRuntime(options = {}) {
     installFilesEarlySlides(runtime2),
     installBootstrap(runtime2)
   ];
+  runtime2.presentationModulesReady = true;
+  bindRuntimeValue(runtime2, 'PresentationView', () => runtime2.LoadedPresentationView);
   for (let index4 = 0; index4 < initializers.length; index4++) {
     if (options.boot === false && index4 === initializers.length - 1) continue;
     initializers[index4]();

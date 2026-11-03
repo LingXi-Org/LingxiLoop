@@ -208,7 +208,7 @@ import { installDocumentsJsonRecords } from './modules/documents-json-records.js
 import { installDocumentsCommentRecords } from './modules/documents-comment-records.js'
 import { installDocumentsMigrationMarkers } from './modules/documents-migration-markers.js'
 import { installDocumentsSlideCodec } from './modules/documents-slide-codec.js'
-import { installPresentationSpeakerPanel } from './modules/presentation-speaker-panel.js'
+import { installPresentationSpeakerStyles } from './modules/presentation-speaker-styles.js'
 import { installPresentationSpeakerSession } from './modules/presentation-speaker-session.js'
 import { installPresentationAnimationEngine } from './modules/presentation-animation-engine.js'
 import { installDesignSystemThemePanel } from './modules/design-system-theme-panel.js'
@@ -302,6 +302,10 @@ export function createSlidesRuntime(options = {}) {
   runtime2.loadTemplateModules = () => templatesReady ??= prepareEditorFeature('templates').then(() => import('./templates.js'))
     .then(module => { module.installTemplateModules(runtime2);runtime2.templateModulesReady = true })
     .catch(error => { templatesReady = undefined;throw error });
+  let presentationReady;
+  runtime2.loadPresentationModules = () => presentationReady ??= prepareEditorFeature('presentation').then(() => import('./presentation.js'))
+    .then(module => { module.installPresentationModules(runtime2);runtime2.presentationModulesReady = true })
+    .catch(error => { presentationReady = undefined;throw error });
   const initializers = [
     installModuleInterop(runtime2),
     // Upstream runs the i18n setup eagerly at load (no lazy wrapper); messages are formatted from module inits on, so it
@@ -511,7 +515,7 @@ export function createSlidesRuntime(options = {}) {
     installDocumentsCommentRecords(runtime2),
     installDocumentsMigrationMarkers(runtime2),
     installDocumentsSlideCodec(runtime2),
-    installPresentationSpeakerPanel(runtime2),
+    installPresentationSpeakerStyles(runtime2),
     installPresentationSpeakerSession(runtime2),
     installPresentationAnimationEngine(runtime2),
     installDesignSystemThemePanel(runtime2),
