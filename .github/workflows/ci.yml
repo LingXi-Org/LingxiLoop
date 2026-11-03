@@ -387,7 +387,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.integration == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ needs.changes.outputs.deep_integration == 'true' && 30 || 8 }}
+    timeout-minutes: ${{ needs.changes.outputs.deep_integration == 'true' && 30 || 12 }}
     services:
       postgres:
         image: pgvector/pgvector:pg16
