@@ -1,5 +1,11 @@
 # Issue #652: editor performance work in progress
 
+The current implementation and qualification are in [PHASE2.md](PHASE2.md).
+It adds lazy math/source resources and bounded cross-view retention, but **does
+not complete #652**. The fixed cold-start budgets still apply.
+
+## Archived first-stage report (`b7c9f54a`)
+
 This first stage removes a confirmed optional-warm-up barrier and establishes a
 reproducible baseline. It **does not complete #652**, split either editor's
 functional modules, or enable extra retained instances. Cold-start targets and

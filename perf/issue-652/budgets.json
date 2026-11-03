@@ -1,9 +1,12 @@
 {
   "baselineCommit": "9194a43613faf240a978b9f765bd38ff2295b56e",
   "baselineEvidence": "evidence/baseline-9194a436-https.json.gz",
-  "coldEditableP75Ms": { "design": 2786.25, "slides": 1761.6 },
+  "coldEditableP75Ms": {
+    "design": 2786.25,
+    "slides": 1761.6
+  },
   "retainedEditableP75Ms": 300,
   "stagedChangeMaxColdRegressionRatio": 1.1,
   "minimumSamplesPerArm": 10,
-  "instanceAndBackgroundBudgets": "pending real retained-instance memory/background measurements; no additional retained instances are enabled by this stage"
+  "instanceAndBackgroundBudgets": "Phase 2: at most one Design and one Slides native frame within the current account/company/project. Replacement, deletion, explicit access denial or scope teardown releases frames. Hidden work is paused where supported and measured separately. No hard memory-byte cap or time eviction of unconfirmed drafts is claimed; grant expiry is checked before reveal. See PHASE2.md for PSS/CPU results and unresolved draft recovery."
 }
