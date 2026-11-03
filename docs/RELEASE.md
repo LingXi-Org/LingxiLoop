@@ -29,6 +29,12 @@ always deploys the committed `HEAD`. On GitHub the same commands are
 2. **pull** – each host fetches its missing images with `ctr` through
    `accel.way2api.fun` (Docker's own proxied pull measured >10× slower).
    Base images are pinned by digest, so code-only changes pull a few MB.
+   Before pulling, a per-host lock serializes cleanup and pulls. Cleanup removes
+   only obsolete LingxiLoop image tags (including old direct-GHCR tags), retaining
+   every container's image, the two newest tagged images per package and all
+   target images. It also prunes build cache unused for seven days, retaining
+   up to 512 MB. It never removes containers, volumes, backups or other apps'
+   images. Older rollback images remain in GHCR and are pulled again as needed.
 3. **servers** – writes `deploy/<stack>/` plus a `.env` (exactly the Sigillo
    values its compose file references) and `images.env` to
    `/opt/lingxiloop/<stack>/`, then `docker compose up -d --wait`. core-state,
