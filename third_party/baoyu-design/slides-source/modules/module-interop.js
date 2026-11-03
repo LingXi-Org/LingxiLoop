@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installModuleInterop(runtime2) {
   var createObject, getPrototypeOf, defineProperty, getOwnPropertyNames, hasOwnProperty, commonJSNamespaceCache, esmNamespaceCache, toModuleNamespace, initializeCommonJS, identity, defineLiveExports, initializeOnce, dynamicRequire;

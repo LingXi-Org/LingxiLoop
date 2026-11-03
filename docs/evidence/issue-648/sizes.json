@@ -1,0 +1,95 @@
+{
+  "baselineCommit": "dd064748",
+  "node": "v22.22.2",
+  "platform": "win32",
+  "brotliQuality": 11,
+  "scope": "Initial JS is script entry plus HTML modulepreloads (not runtime meta URLs). All browser JS/CSS includes lazy exports and optional runtime/Babel, excluding fonts, Node compiler, HTML, maps and sidecars. Both versions include merged loading optimization #647.",
+  "editors": {
+    "design": {
+      "before": {
+        "upstreamCommit": "c15e76ef5134228d2bb5da35652d30d7d6b8a34d",
+        "initialJs": {
+          "raw": 6969114,
+          "br": 1818544
+        },
+        "allBrowserJsCss": {
+          "raw": 14708102,
+          "br": 3043724
+        },
+        "initialFiles": [
+          "assets/design-3b667bfee22bf3ae3147e0a53df4d0556e4161df2ae7370e4885241b2c15f8dd.js"
+        ]
+      },
+      "after": {
+        "upstreamCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+        "initialJs": {
+          "raw": 7324147,
+          "br": 1904981
+        },
+        "allBrowserJsCss": {
+          "raw": 15172690,
+          "br": 3136850
+        },
+        "initialFiles": [
+          "assets/design-dd5973c46dcfa8272420cde886d04d025dc2cae5167165ea1d1fcc070495ce40.js"
+        ]
+      },
+      "delta": {
+        "initialJs": {
+          "raw": 355033,
+          "br": 86437
+        },
+        "allBrowserJsCss": {
+          "raw": 464588,
+          "br": 93126
+        }
+      }
+    },
+    "slides": {
+      "before": {
+        "upstreamCommit": "c15e76ef5134228d2bb5da35652d30d7d6b8a34d",
+        "initialJs": {
+          "raw": 3717414,
+          "br": 964716
+        },
+        "allBrowserJsCss": {
+          "raw": 5058844,
+          "br": 1313547
+        },
+        "initialFiles": [
+          "chunk-DSVHES4B.js",
+          "chunk-I7AUKTXE.js",
+          "chunk-TONHXD7W.js",
+          "editor-EESPBOK2.js"
+        ]
+      },
+      "after": {
+        "upstreamCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+        "initialJs": {
+          "raw": 3952808,
+          "br": 1016186
+        },
+        "allBrowserJsCss": {
+          "raw": 5422458,
+          "br": 1372747
+        },
+        "initialFiles": [
+          "chunk-C3GEGKEX.js",
+          "chunk-I7AUKTXE.js",
+          "chunk-QC32QTJR.js",
+          "editor-QZZ3VPS5.js"
+        ]
+      },
+      "delta": {
+        "initialJs": {
+          "raw": 235394,
+          "br": 51470
+        },
+        "allBrowserJsCss": {
+          "raw": 363614,
+          "br": 59200
+        }
+      }
+    }
+  }
+}

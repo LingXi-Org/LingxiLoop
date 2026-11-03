@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installPresentationSpeakerPanel(runtime2) {
   var SpeakerNotesPanelJsx, SPEAKER_NOTES_WIDE_BREAKPOINT, SPEAKER_NOTES_POPOUT_CSS, SPEAKER_NOTES_SCROLL_KEYS, preventSpeakerControlMouseDown, SPEAKER_NOTES_WIDE_MEDIA_QUERY, SPEAKER_NOTES_REMOTE_WIDE_MEDIA_QUERY;
@@ -49,16 +49,16 @@ function installPresentationSpeakerPanel(runtime2) {
     }, [window2, query]), wide;
   }
   function SpeakerNotesPanel({ first, link, win, slides, assets, fontCss = "", canEdit = !1, heldSlide = runtime2.slideHtmlHold, remote }) {
-    let React264 = runtime2.ReactSpeakerNotesPanel, Jsx = SpeakerNotesPanelJsx, formatMessage = runtime2.formatMessage, [place, setPlace] = React264.useState(first), [editing, setEditing] = React264.useState(!1), [draft, setDraft] = React264.useState(null), draftRef = React264.useRef(draft);
+    let React263 = runtime2.ReactSpeakerNotesPanel, Jsx = SpeakerNotesPanelJsx, formatMessage = runtime2.formatMessage, [place, setPlace] = React263.useState(first), [editing, setEditing] = React263.useState(!1), [draft, setDraft] = React263.useState(null), draftRef = React263.useRef(draft);
     draftRef.current = draft;
-    let slidesRef = React264.useRef(slides);
+    let slidesRef = React263.useRef(slides);
     slidesRef.current = slides;
-    let editingRef = React264.useRef(editing);
+    let editingRef = React263.useRef(editing);
     editingRef.current = editing;
-    let sentTexts = React264.useRef([]), seenNotes = React264.useRef(void 0), resetDraft = (slide) => {
+    let sentTexts = React263.useRef([]), seenNotes = React263.useRef(void 0), resetDraft = (slide) => {
       sentTexts.current = [], seenNotes.current = slide?.notes ?? "", setDraft(slide === void 0 ? null : { id: slide.id, text: slide.notes ?? "" });
     };
-    React264.useLayoutEffect(() => {
+    React263.useLayoutEffect(() => {
       let slide = slides[place.index], current2 = draftRef.current;
       if (slide?.id !== current2?.id)
         return resetDraft(slide);
@@ -73,12 +73,12 @@ function installPresentationSpeakerPanel(runtime2) {
         return void sentTexts.current.splice(0, echoed + 1);
       notes !== current2.text && resetDraft(slide);
     }, [slides, place.index]);
-    let [clock, setClock] = React264.useState(() => ({
+    let [clock, setClock] = React263.useState(() => ({
       running: !0,
       start: first.since ?? Date.now(),
       accum: 0
-    })), linkRef = React264.useRef(link), wide = useSpeakerNotesWindowWide(win, remote !== void 0 ? SPEAKER_NOTES_REMOTE_WIDE_MEDIA_QUERY : SPEAKER_NOTES_WIDE_MEDIA_QUERY);
-    React264.useEffect(() => linkRef.current.listen((data) => {
+    })), linkRef = React263.useRef(link), wide = useSpeakerNotesWindowWide(win, remote !== void 0 ? SPEAKER_NOTES_REMOTE_WIDE_MEDIA_QUERY : SPEAKER_NOTES_WIDE_MEDIA_QUERY);
+    React263.useEffect(() => linkRef.current.listen((data) => {
       let message = (0, runtime2.parseSpeakerSlideMessage)(data);
       message !== null && setPlace(message);
     }), []);
@@ -87,37 +87,37 @@ function installPresentationSpeakerPanel(runtime2) {
       setClock((input) => input.running ? { running: !1, start: input.start, accum: input.accum + (now - input.start) } : { running: !0, start: now, accum: input.accum });
     }, resetClock = () => {
       setClock((input) => ({ ...input, start: Date.now(), accum: 0 }));
-    }, blocked = React264.useRef({ prev: !1, next: !1 }), navigate = (delta) => {
+    }, blocked = React263.useRef({ prev: !1, next: !1 }), navigate = (delta) => {
       (delta === 1 ? blocked.current.next : blocked.current.prev) || linkRef.current.post({ type: "nav", delta });
     }, jump = (index4) => {
       linkRef.current.post({ type: "jump", index: index4 });
     }, exit = () => {
       linkRef.current.post({ type: "exit" });
-    }, textareaRef = React264.useRef(null), startEditing = () => {
+    }, textareaRef = React263.useRef(null), startEditing = () => {
       resetDraft(slidesRef.current[place.index]), setEditing(!0);
     }, stopEditing = () => {
       setEditing(!1), linkRef.current.post({ type: "notes-end" });
-    }, stopEditingRef = React264.useRef(stopEditing);
-    stopEditingRef.current = stopEditing, React264.useEffect(() => {
+    }, stopEditingRef = React263.useRef(stopEditing);
+    stopEditingRef.current = stopEditing, React263.useEffect(() => {
       let textarea = textareaRef.current;
       !editing || textarea === null || (textarea.focus(), textarea.setSelectionRange(textarea.value.length, textarea.value.length));
-    }, [editing]), React264.useEffect(() => {
+    }, [editing]), React263.useEffect(() => {
       canEdit || !editingRef.current || (setEditing(!1), linkRef.current.post({ type: "notes-end" }));
     }, [canEdit]);
-    let countRef = React264.useRef(place.count);
+    let countRef = React263.useRef(place.count);
     countRef.current = place.count;
     let atEnd = place.index >= place.count - 1, noPrev = place.canPrev === !1, noNext = place.canNext === !1, trouble = remote?.trouble;
     blocked.current = remote === void 0 ? { prev: !1, next: !1 } : { prev: noPrev || trouble !== void 0, next: noNext || trouble !== void 0 };
-    let onCloseRef = React264.useRef(remote?.onClose);
+    let onCloseRef = React263.useRef(remote?.onClose);
     onCloseRef.current = remote?.onClose;
-    let notesRef = React264.useRef(null);
-    React264.useLayoutEffect(() => {
+    let notesRef = React263.useRef(null);
+    React263.useLayoutEffect(() => {
       notesRef.current !== null && (notesRef.current.scrollTop = 0);
     }, [place.index]);
     let popout = remote === void 0;
-    React264.useEffect(() => {
+    React263.useEffect(() => {
       popout && (win.document.title = formatMessage({ defaultMessage: "演讲者备注 · 第 {n} / {count} 页", id: "PFunK6URSx" }, { n: String(place.index + 1), count: String(place.count) }));
-    }, [win, popout, place.index, place.count]), React264.useEffect(() => {
+    }, [win, popout, place.index, place.count]), React263.useEffect(() => {
       let onKeyDown = (event) => {
         if (editingRef.current) {
           event.key === "Escape" && !event.isComposing && (event.preventDefault(), stopEditingRef.current());
@@ -188,17 +188,19 @@ function installPresentationSpeakerPanel(runtime2) {
           children: Jsx.jsx(runtime2.KitIcon, { name: "CaretRight", size: 16 })
         })
       ]
-    }), styles = React264.useMemo(() => Jsx.jsxs(Jsx.Fragment, {
+    }), styles = React263.useMemo(() => Jsx.jsxs(Jsx.Fragment, {
       children: [
         Jsx.jsx("style", { children: fontCss }),
         Jsx.jsx("style", { children: runtime2.shapeStylesCss })
       ]
-    }), [fontCss]), current = slides[place.index], readOnlyReason = draft === null ? formatMessage({ defaultMessage: "此处没有幻灯片。", id: "u37uVi16U0" }) : heldSlide(draft.id) !== void 0 ? runtime2.HELD_SLIDE_EDIT_MESSAGE : void 0, previous = place.index > 0 ? slides[place.index - 1] : void 0, next = atEnd ? void 0 : slides[place.index + 1], builds = remote === void 0 || current === void 0 ? 0 : (0, runtime2.slideBuildCount)(current), step = place.step ?? builds, nextLine = step < builds ? Jsx.jsxs("div", {
+    }), [fontCss]), current = slides[place.index], readOnlyReason = draft === null ? formatMessage({ defaultMessage: "此处没有幻灯片。", id: "u37uVi16U0" }) : heldSlide(draft.id) !== void 0 ? runtime2.HELD_SLIDE_EDIT_MESSAGE : void 0, previous = place.index > 0 ? slides[place.index - 1] : void 0, next = atEnd ? void 0 : slides[place.index + 1], builds = remote === void 0 || current === void 0 ? 0 : (0, runtime2.slideBuildCount)(current), step = place.step ?? builds, nextLine = step < builds ? Jsx.jsx("div", {
       className: "sn-next",
-      children: [
-        Jsx.jsx("span", { className: "sn-dim", children: "下一页：" }),
-        "构建 " + String(step + 1) + " / " + String(builds)
-      ]
+      children: richMessage({ defaultMessage: "<dim>下一步：</dim>构建 {n} / {total}", id: "STeFpnka9e" }, {
+        n: String(step + 1),
+        total: String(builds),
+        dim: (chunks) =>
+        Jsx.jsx("span", { className: "sn-dim", children: chunks }, "dim")
+      })
     }) : !wide && (place.next !== void 0 || atEnd) ? Jsx.jsx("div", {
       className: "sn-next",
       children: atEnd ? Jsx.jsx("span", { className: "sn-dim", children: runtime2.LAST_SLIDE_LABEL }) : richMessage({ defaultMessage: "<dim>下一页：</dim>{title}", id: "L3QmRnOZgu" }, {
@@ -248,7 +250,8 @@ function installPresentationSpeakerPanel(runtime2) {
                     Jsx.jsxs("span", {
                       className: "sn-lbl",
                       children: [
-                        "接下来",
+                        (0, runtime2.formatMessage)({ defaultMessage:
+                        "接下来", id: "J0Hd9xP9md" }),
                         Jsx.jsx("span", {
                           className: "sn-dim",
                           children: " · " + (0, runtime2.slideTitleSnippet)(next, 60)
@@ -274,7 +277,10 @@ function installPresentationSpeakerPanel(runtime2) {
                     Jsx.jsx(SpeakerAdjacentSlide, {
                       win,
                       heading: formatMessage({ defaultMessage: "上一页", id: "mW0Env/498" }),
-                      goTo: "转到上一页",
+                      goTo: (0, runtime2.formatMessage)({
+                        defaultMessage: "转到上一页",
+                        id: "vt23h5SYS7"
+                      }),
                       slide: previous,
                       assets,
                       onClick: () => jump(place.index - 1)
@@ -282,7 +288,10 @@ function installPresentationSpeakerPanel(runtime2) {
                     Jsx.jsx(SpeakerAdjacentSlide, {
                       win,
                       heading: formatMessage({ defaultMessage: "下一页", id: "sliMTlbl36" }),
-                      goTo: "转到下一页",
+                      goTo: (0, runtime2.formatMessage)({
+                        defaultMessage: "转到下一页",
+                        id: "lhNJz8GPOq"
+                      }),
                       slide: next,
                       assets,
                       onClick: () => jump(place.index + 1)
@@ -302,7 +311,10 @@ function installPresentationSpeakerPanel(runtime2) {
                       type: "button",
                       role: "switch",
                       "aria-checked": editing,
-                      "aria-label": "编辑备注",
+                      "aria-label": (0, runtime2.formatMessage)({
+                        defaultMessage: "编辑备注",
+                        id: "KHxgh4kwHv"
+                      }),
                       title: canEdit ? formatMessage({
                         defaultMessage: "在此编辑备注",
                         id: "Zr+JZZBSkQ"
@@ -311,14 +323,15 @@ function installPresentationSpeakerPanel(runtime2) {
                       className: "sn-switch",
                       onMouseDown: preventSpeakerControlMouseDown,
                       onClick: () => editing ? stopEditing() : startEditing(),
-                      children: ["编辑", Jsx.jsx("i", { "aria-hidden": "true" })]
+                      children: [
+                        (0, runtime2.formatMessage)({ defaultMessage:"编辑", id: "8KUtEj8mtO" }), Jsx.jsx("i", { "aria-hidden": "true" })]
                     })
                   ]
                 }),
                 editing ? Jsx.jsx("textarea", {
                   ref: textareaRef,
                   "data-notes-scroll": "",
-                  "aria-label": "备注",
+                  "aria-label": runtime2.NOTES_REGION_LABEL,
                   className: "sn-notes",
                   value: draft?.text ?? "",
                   readOnly: readOnlyReason !== void 0,
@@ -335,7 +348,7 @@ function installPresentationSpeakerPanel(runtime2) {
                   ref: notesRef,
                   tabIndex: 0,
                   role: "region",
-                  "aria-label": "备注",
+                  "aria-label": runtime2.NOTES_REGION_LABEL,
                   "data-notes-scroll": "",
                   className: "sn-notes",
                   children: Jsx.jsx("div", {

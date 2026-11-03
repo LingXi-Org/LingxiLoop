@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorFontFaceChoices(runtime2) {
-  var DECK_FONT_LIMIT_MESSAGE, FONT_FALLBACK_OPTIONS, BUILTIN_FONT_FACE_CHOICES, findCarriedFontFace, fontFaceMenuLabel, sameStoredFontFace;
+  var DECK_FONT_LIMIT_MESSAGE, DECK_FONT_LIMIT_SENTENCE, FONT_FALLBACK_OPTIONS, BUILTIN_FONT_FACE_CHOICES, findCarriedFontFace, fontFaceMenuLabel, sameStoredFontFace;
   function usedDeckFontFamilies(slides) {
     let values = /* @__PURE__ */ new Set(), callback = (input) => {
       let value = input.style?.fontFamily;
@@ -111,7 +111,7 @@ function installEditorFontFaceChoices(runtime2) {
   }
   return bindRuntimeValue(runtime2, "DECK_FONT_LIMIT_MESSAGE", () => DECK_FONT_LIMIT_MESSAGE, (value) => {
     DECK_FONT_LIMIT_MESSAGE = value;
-  }), bindRuntimeValue(runtime2, "FONT_FALLBACK_OPTIONS", () => FONT_FALLBACK_OPTIONS, (value) => {
+  }), bindRuntimeValue(runtime2, "DECK_FONT_LIMIT_SENTENCE", () => DECK_FONT_LIMIT_SENTENCE), bindRuntimeValue(runtime2, "FONT_FALLBACK_OPTIONS", () => FONT_FALLBACK_OPTIONS, (value) => {
     FONT_FALLBACK_OPTIONS = value;
   }), bindRuntimeValue(runtime2, "BUILTIN_FONT_FACE_CHOICES", () => BUILTIN_FONT_FACE_CHOICES, (value) => {
     BUILTIN_FONT_FACE_CHOICES = value;
@@ -122,7 +122,19 @@ function installEditorFontFaceChoices(runtime2) {
   }), bindRuntimeValue(runtime2, "usedDeckFontFamilies", () => usedDeckFontFamilies), bindRuntimeValue(runtime2, "canCarryAnotherFontFace", () => canCarryAnotherFontFace), bindRuntimeValue(runtime2, "sameStoredFontFace", () => sameStoredFontFace, (value) => {
     sameStoredFontFace = value;
   }), bindRuntimeValue(runtime2, "removableCarriedFontFaces", () => removableCarriedFontFaces), bindRuntimeValue(runtime2, "addCarriedFontFace", () => addCarriedFontFace), bindRuntimeValue(runtime2, "restoreCarriedFontFaces", () => restoreCarriedFontFaces), bindRuntimeValue(runtime2, "fontFamilyOptions", () => fontFamilyOptions), bindRuntimeValue(runtime2, "fontFamilyPatchFromChoice", () => fontFamilyPatchFromChoice), bindRuntimeValue(runtime2, "fontFamilyChoiceValue", () => fontFamilyChoiceValue), () => {
-    (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeRenderingTheme)(), DECK_FONT_LIMIT_MESSAGE = "演示文稿最多容纳 " + String(runtime2.maxDeckFontFaces) + " 种字体，当前均在使用中", FONT_FALLBACK_OPTIONS = [
+    (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeRenderingTheme)(), DECK_FONT_LIMIT_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "一个演示文稿最多使用 {count} 种字体，目前已全部用上",
+      id: "x+Y9wKJzQ6"
+    }, {
+      limit: runtime2.maxDeckFontFaces,
+      count: String(runtime2.maxDeckFontFaces)
+    }), DECK_FONT_LIMIT_SENTENCE = (0, runtime2.formatMessage)({
+      defaultMessage: "一个演示文稿最多使用 {count} 种字体，目前已全部用上。",
+      id: "ULSIQeCBty"
+    }, {
+      limit: runtime2.maxDeckFontFaces,
+      count: String(runtime2.maxDeckFontFaces)
+    }), FONT_FALLBACK_OPTIONS = [
       {
         value: "sans",
         label: (0, runtime2.formatMessage)({

@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiContrastControls(runtime2) {
   var reactForUiContrastControls, jsxForUiContrastControls, opaqueContrastColor, contrastVerdictClass, initializeUiContrastControls;
@@ -7,10 +7,10 @@ function installUiContrastControls(runtime2) {
       value,
       ...value2.sort((input, options) => input.ratio - options.ratio)
     ], state = {
-      ratio: (0, runtime2.contrastRatioSpoken)(value.ratio),
+      ratio: (0, runtime2.ratioToOneLabel)((0, runtime2.formatContrastRatio)(value.ratio)),
       ground: value.ground.label,
       passes: value.passes,
-      min: (0, runtime2.contrastRatioSpoken)(value.min),
+      min: (0, runtime2.ratioToOneLabel)((0, runtime2.formatContrastRatio)(value.min)),
       alsoPassing: value2.filter((input) => input.passes).length
     }, value3 = value2.filter((input) => !input.passes), value4 = (0, runtime2.contrastResultCountSummary)({
       ...state,
@@ -26,7 +26,7 @@ function installUiContrastControls(runtime2) {
     }
     return {
       worst: value,
-      title: items.map((input) => (0, runtime2.contrastRatioReadout)(input.ratio) + " " + runtime2.CONTRAST_GROUND_PREPOSITION + " " + input.ground.label).join(" · "),
+      title: items.map((input) => (0, runtime2.ratioOnGroundLabel)((0, runtime2.contrastRatioReadout)(input.ratio), input.ground.label)).join(" · "),
       sentence: (0, runtime2.contrastResultDetails)({
         ...state,
         alsoFailing: value3.map((input) => input.ground.label)
@@ -145,7 +145,7 @@ function installUiContrastControls(runtime2) {
       children: [
         jsxForUiContrastControls.jsx(runtime2.Button, {
           variant: "secondary",
-          title: fix.css + " · " + (0, runtime2.contrastRatioReadout)(fix.ratio) + " " + runtime2.CONTRAST_GROUND_PREPOSITION + " " + fix.ground,
+          title: fix.css + " · " + (0, runtime2.ratioOnGroundLabel)((0, runtime2.contrastRatioReadout)(fix.ratio), fix.ground),
           "aria-describedby": value,
           disabled: held,
           onPointerDown: (input) => {
@@ -162,7 +162,7 @@ function installUiContrastControls(runtime2) {
           className: "sr-only",
           children: (0, runtime2.contrastFixDescription)({
             hex: fix.css,
-            ratio: (0, runtime2.contrastRatioSpoken)(fix.ratio),
+            ratio: (0, runtime2.ratioToOneLabel)((0, runtime2.formatContrastRatio)(fix.ratio)),
             ground: fix.ground
           })
         })

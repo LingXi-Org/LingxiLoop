@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiAgentCursor(runtime2) {
   var reactIV0, jsxFc, clampCursorProgress, cursorMotionEase, cursorBendEnvelope, cursorMotionEndTime, jsxsG, CLAUDE_WORKING_LABEL, CLAUDE_WORKING_LABEL_WIDTH, CLAUDE_WORKING_LABEL_HEIGHT, CLAUDE_WORKING_MARGIN, CLAUDE_CURSOR_IDLE_MS, CLAUDE_CURSOR_GLIDE_MS, CLAUDE_CURSOR_ARROW_SIZE, CLAUDE_CURSOR_LABEL_OFFSET, reactc3, jsxcq, CLAUDE_LABEL_OUT_MS, CLAUDE_LABEL_IN_MS, jsxWz;
@@ -378,7 +378,10 @@ function installUiAgentCursor(runtime2) {
     }, cursorBendEnvelope = (progress) => {
       let value = clampCursorProgress(progress) * (1 - clampCursorProgress(progress));
       return 16 * value * value;
-    }, cursorMotionEndTime = (motions) => motions.reduce((input, options) => Math.max(input, options.t0 + options.T), 0), jsxsG = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), CLAUDE_WORKING_LABEL = "The agent is working…", CLAUDE_WORKING_LABEL_WIDTH = 176, CLAUDE_WORKING_LABEL_HEIGHT = 56, CLAUDE_WORKING_MARGIN = 8, CLAUDE_CURSOR_IDLE_MS = 1600, CLAUDE_CURSOR_GLIDE_MS = 76, CLAUDE_CURSOR_ARROW_SIZE = 12, CLAUDE_CURSOR_LABEL_OFFSET = 14, reactc3 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxcq = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), CLAUDE_LABEL_OUT_MS = 80, CLAUDE_LABEL_IN_MS = 120, jsxWz = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1);
+    }, cursorMotionEndTime = (motions) => motions.reduce((input, options) => Math.max(input, options.t0 + options.T), 0), jsxsG = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), CLAUDE_WORKING_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "智能体正在处理…",
+      id: "dK+9OeYtBY"
+    }), CLAUDE_WORKING_LABEL_WIDTH = 176, CLAUDE_WORKING_LABEL_HEIGHT = 56, CLAUDE_WORKING_MARGIN = 8, CLAUDE_CURSOR_IDLE_MS = 1600, CLAUDE_CURSOR_GLIDE_MS = 76, CLAUDE_CURSOR_ARROW_SIZE = 12, CLAUDE_CURSOR_LABEL_OFFSET = 14, reactc3 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxcq = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), CLAUDE_LABEL_OUT_MS = 80, CLAUDE_LABEL_IN_MS = 120, jsxWz = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1);
   };
 }
 export {

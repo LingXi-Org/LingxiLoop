@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorMediaCropOverlay(runtime2) {
   var reactqY, jsxR4, CROP_CORNER_HANDLES, CROP_ALL_HANDLES, CROP_HANDLE_LABELS, CROP_CORNER_LABELS, CROP_HANDLE_CURSORS, CROP_CHANGE_EPSILON, CROP_HANDLE_SIZE, CROP_HANDLE_VISUAL_SIZE, CROP_HANDLE_BORDER_WIDTH, CROP_TOUCH_HANDLE_SIZE, CROP_DRAG_OPACITY, CROP_ZOOM_STEP, CROP_ARROW_DELTAS;
@@ -51,8 +51,20 @@ function installEditorMediaCropOverlay(runtime2) {
       } : void 0), value2(!1), ref.current.onGesture?.(!1));
     };
     reactqY.useEffect(() => {
-      let current = ref.current;
-      (0, runtime2.announceLiveMessage)("Cropping. Press Enter when done. " + (current.onFrame ? "Drag an edge to crop. " : "") + "Arrow keys move the picture." + (current.zoomDisabledReason === void 0 ? " Plus and minus zoom it." : ""));
+      let current = ref.current, zoomable = current.zoomDisabledReason === void 0;
+      (0, runtime2.announceLiveMessage)(current.onFrame ? zoomable ? (0, runtime2.formatMessage)({
+        defaultMessage: "正在裁剪。完成后按 Enter。拖动边缘进行裁剪，方向键移动图片，加号和减号缩放图片。",
+        id: "7VIUQPhtBH"
+      }) : (0, runtime2.formatMessage)({
+        defaultMessage: "正在裁剪。完成后按 Enter。拖动边缘进行裁剪，方向键移动图片。",
+        id : "QK5ZxLYTFq"
+      }) : zoomable ? (0, runtime2.formatMessage)({
+        defaultMessage: "正在裁剪。完成后按 Enter。方向键移动图片，加号和减号缩放图片。",
+        id: "2CmKIGQOgB"
+      }) : ( 0, runtime2.formatMessage)({
+        defaultMessage: "正在裁剪。完成后按 Enter。方向键移动图片。",
+        id : "3D0lO0eriQ"
+      }));
       let callback8 = (event) => {
         let current3 = ref.current, target = event.target;
         if (ref5.current || target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) || (event.key === "Enter" || event.key === " ") && target instanceof Element && target.closest('button, a[href], [role="button"]'))
@@ -71,7 +83,7 @@ function installEditorMediaCropOverlay(runtime2) {
           value18 !== 0 ? current3.zoomDisabledReason === void 0 ? callback((0, runtime2.zoomImageCrop)(current3.frame, current3.natural, current3.crop, value18)) : (0, runtime2.announceLiveMessage)(current3.zoomDisabledReason) : value17 ? event.key.toLowerCase() === "z" && !event.shiftKey && current3.onDone(!1) : current3.onDone(!0);
       }, callback9 = (event) => {
         let value17 = event.target instanceof Element ? event.target : null;
-        ref5.current || event.button === 0 && !ref2.current?.contains(value17) && !value17?.closest("[data-media-crop-keep]") && ref.current.onDone(!0);
+        ref5.current || event.button === 0 && !ref2.current?.contains(value17) && !value17?.closest("[data-media-crop-keep], [data-mc-fold-toggle]") && ref.current.onDone(!0);
       }, callback10 = (input, options, context) => {
         let current3 = ref.current, current4 = ref2.current;
         if (!current4 || ref3.current || ref5.current)
@@ -227,7 +239,10 @@ function installEditorMediaCropOverlay(runtime2) {
       ref: ref2,
       "data-media-crop": "",
       role: "group",
-      "aria-label": "裁剪",
+      "aria-label": (0, runtime2.formatMessage)({
+        defaultMessage: "裁剪",
+        id: "DFOfmxkzgJ"
+      }),
       style: {
         position: "absolute",
         inset: 0
@@ -299,8 +314,11 @@ function installEditorMediaCropOverlay(runtime2) {
           return jsxR4.jsx("div", {
             "data-media-crop-side": items3,
             role: "img",
-            "aria-label": "裁剪控制点，" + CROP_HANDLE_LABELS[items3],
-            title: value17 ?? "拖动以裁剪。",
+            "aria-label": CROP_HANDLE_LABELS[items3](),
+            title: value17 ?? (0, runtime2.formatMessage)({
+              defaultMessage: "拖动以裁剪。",
+              id: "3RyJj6GC6e"
+            }),
             "aria-disabled": value17 !== void 0 || void 0,
             style: {
               position: "absolute",
@@ -357,8 +375,11 @@ function installEditorMediaCropOverlay(runtime2) {
         (!value11 || value3) && CROP_CORNER_HANDLES.map((input) => jsxR4.jsx("div", {
           "data-media-crop-handle": input,
           role: "img",
-          "aria-label": "缩放控制点，" + CROP_CORNER_LABELS[input],
-          title: zoomDisabledReason ?? "拖动以缩放。",
+          "aria-label": CROP_CORNER_LABELS[input](),
+          title: zoomDisabledReason ?? (0, runtime2.formatMessage)({
+            defaultMessage: "拖动以缩放。",
+            id: "43WMP+aXSR"
+          }),
           "aria-disabled": value10 || void 0,
           style: {
             position: "absolute",
@@ -425,19 +446,55 @@ function installEditorMediaCropOverlay(runtime2) {
     CROP_ARROW_DELTAS = value;
   }), bindRuntimeValue(runtime2, "blurCropEditingTarget", () => blurCropEditingTarget), bindRuntimeValue(runtime2, "MediaCropOverlay", () => MediaCropOverlay), () => {
     (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiAnnouncements)(), (0, runtime2.initializeImageCrop)(), reactqY = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxR4 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), CROP_CORNER_HANDLES = ["nw", "ne", "se", "sw"], CROP_ALL_HANDLES = ["n", "e", "s", "w", "nw", "ne", "se", "sw"], CROP_HANDLE_LABELS = {
-      n: "top edge",
-      e: "right edge",
-      s: "bottom edge",
-      w: "left edge",
-      nw: "top left",
-      ne: "top right",
-      se: "bottom right",
-      sw: "bottom left"
+      n: () => (0, runtime2.formatMessage)({
+        defaultMessage: "裁剪手柄，上边缘",
+        id: "S8PIyxr1r/"
+      }),
+      e: () => (0, runtime2.formatMessage)({
+        defaultMessage: "裁剪手柄，右边缘",
+        id: "DWm65iFB+p"
+      }),
+      s: () => (0, runtime2.formatMessage)({
+        defaultMessage: "裁剪手柄，下边缘",
+        id: "S7M/18+Vxc"
+      }),
+      w: () => (0, runtime2.formatMessage)({
+        defaultMessage: "裁剪手柄，左边缘",
+        id: "eXt1+johAz"
+      }),
+      nw: () => (0, runtime2.formatMessage)({
+        defaultMessage: "裁剪手柄，左上",
+        id: "pTIHWT1w3R"
+      }),
+      ne: () => (0, runtime2.formatMessage)({
+        defaultMessage: "裁剪手柄，右上",
+        id: "NkKh9C8LzW"
+      }),
+      se: () => (0, runtime2.formatMessage)({
+        defaultMessage: "裁剪手柄，右下",
+        id: "syS4i185f9"
+      }),
+      sw: () => (0, runtime2.formatMessage)({
+        defaultMessage: "裁剪手柄，左下",
+        id: "XL4tSA8QV1"
+      })
     }, CROP_CORNER_LABELS = {
-      nw: "top left",
-      ne: "top right",
-      se: "bottom right",
-      sw: "bottom left"
+      nw: () => (0, runtime2.formatMessage)({
+        defaultMessage: "缩放手柄，左上",
+        id: "7WeQoifbk5"
+      }),
+      ne: () => (0, runtime2.formatMessage)({
+        defaultMessage: "缩放手柄，右上",
+        id: "p/pR+5Po0I"
+      }),
+      se: () => (0, runtime2.formatMessage)({
+        defaultMessage: "缩放手柄，右下",
+        id: "jnXiBzVeu3"
+      }),
+      sw: () => (0, runtime2.formatMessage)({
+        defaultMessage: "缩放手柄，左下",
+        id: "tzwo6Y8Ajp"
+      })
     }, CROP_HANDLE_CURSORS = {
       n: "ns-resize",
       s: "ns-resize",

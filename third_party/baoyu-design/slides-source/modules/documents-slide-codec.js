@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDocumentsSlideCodec(runtime2) {
   var DECK_HTML_DOCUMENT_PATH, DECK_ASSETS_DOCUMENT_PATH, MAX_SYNC_DOCUMENT_BYTES, MAX_SYNC_TOTAL_BYTES, SYNC_RECORD_ID_PATTERN, SLIDE_READ_FAILED_DIAGNOSTIC, decomposedSlideRecordCache, decomposedDeckMetaCache, INVALID_FONT_PLACEHOLDER_DATA_URI, SLIDE_HTML_HOLD_TIMEOUT_MS, EMPTY_AWAITING_SLIDE_LIST, bytesToKilobytes, defaultSlideDocumentCodec, slideDocumentCodec, slideHtmlHold, awaitingSlideHtml, slideDocumentCodecByDocument;

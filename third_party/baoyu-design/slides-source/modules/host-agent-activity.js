@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installHostAgentActivity(runtime2) {
   var reactql0, CLAUDE_ACTIVITY_REQUEST_MESSAGE, CLAUDE_ACTIVITY_MESSAGE, agentActivityBridge, agentActivityStore;

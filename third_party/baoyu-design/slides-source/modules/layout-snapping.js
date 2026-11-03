@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installLayoutSnapping(runtime2) {
   var SNAP_SLIDE_MARGIN, SNAP_SLIDE_MARGIN_LABEL, SNAP_GUIDE_PRIORITY, SNAP_DISTANCE_TIE_EPSILON;

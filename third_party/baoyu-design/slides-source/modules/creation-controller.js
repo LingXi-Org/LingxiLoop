@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCreationController(runtime2) {
   var ReactCreationController, QUIET_SLIDE_CREATION_STATE, slideCreationTimers, INITIAL_CREATION_PRESENTATION_STATE, creationPlacementsEqual, creationCellsEqual, formatCreationStartAnnouncement, creationReducedMotionMediaQuery, getCreationReducedMotionMediaQuery, creationPrefersReducedMotion;
@@ -589,7 +589,12 @@ function installCreationController(runtime2) {
       fromEmptyDeck: !1,
       sheetIn: !1,
       holdsEmptyDeck: !1
-    }), creationPlacementsEqual = (input, options) => input === options || input !== null && options !== null && input.on === options.on && (input.on !== "cell" || input.id === options.id), creationCellsEqual = (items, items2) => items === items2 || items !== null && items2 !== null && items.length === items2.length && items.every((input, options) => input.id === items2[options].id && input.as === items2[options].as), formatCreationStartAnnouncement = (count) => "The agent is adding " + String(count) + (count === 1 ? " slide" : " 页幻灯片"), getCreationReducedMotionMediaQuery = () => creationReducedMotionMediaQuery ??= typeof matchMedia == "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null, creationPrefersReducedMotion = () => getCreationReducedMotionMediaQuery()?.matches === !0;
+    }), creationPlacementsEqual = (input, options) => input === options || input !== null && options !== null && input.on === options.on && (input.on !== "cell" || input.id === options.id), creationCellsEqual = (items, items2) => items === items2 || items !== null && items2 !== null && items.length === items2.length && items.every((input, options) => input.id === items2[options].id && input.as === items2[options].as), formatCreationStartAnnouncement = (count) =>(0, runtime2.formatMessage) ({
+      defaultMessage: "智能体正在添加 {count} 页幻灯片",
+      id: "tyIKskvg/N"
+    }, {
+      n: count,count : String(count)
+    }), getCreationReducedMotionMediaQuery = () => creationReducedMotionMediaQuery ??= typeof matchMedia == "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null, creationPrefersReducedMotion = () => getCreationReducedMotionMediaQuery()?.matches === !0;
   };
 }
 export {

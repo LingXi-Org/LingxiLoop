@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installPresentationSpeakerSession(runtime2) {
   var CompactSpeakerNotesJsx, SPEAKER_NOTES_POPOUT_SIZE, activeSpeakerNotesSession, speakerNotesSessionSubscribers, speakerNotesSessionByPopout;
@@ -38,12 +38,15 @@ function installPresentationSpeakerSession(runtime2) {
         reused: !0
       };
     let view = value.view;
-    value.reused !== !0 && (view.win.document.title = runtime2.SPEAKER_NOTES_LABEL);
+    value.reused !== !0 && (view.win.document.title = runtime2.SPEAKER_NOTES_LABEL, (0, runtime2.applyPageLanguage)(view.win.document));
     let entry = speakerNotesSessionByPopout.get(view);
     entry === void 0 && (entry = runtime2.SpeakerNotesReactRoot.createRoot(view.root), speakerNotesSessionByPopout.set(view, entry));
     let value3 = entry, state = {
       view,
-      render: (input) => value3.render(input),
+      render: (input) => value3.render(CompactSpeakerNotesJsx.jsx(runtime2.slideRendererMessagesContext.Provider, {
+        value: runtime2.SLIDE_RENDERER_MESSAGES,
+        children:input
+      })),
       close: () => view.close()
     };
     return setSpeakerNotesSession(state), view.closed.then(() => {
@@ -93,7 +96,7 @@ function installPresentationSpeakerSession(runtime2) {
           CompactSpeakerNotesJsx.jsx("div", {
             tabIndex: 0,
             role: "region",
-            "aria-label": "备注",
+            "aria-label": runtime2.NOTES_REGION_LABEL,
             "data-notes-scroll": "",
             className: "sn-notes",
             children: CompactSpeakerNotesJsx.jsxs("div", {

@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportCurrentFonts(runtime2) {
-  var currentFontExports, normalizeCurrentFontName, isFontFaceSet, CURRENT_FONT_PROBE_TIMEOUT_MS, joinFontNames, initializeCurrentFonts;
+  var currentFontExports, normalizeCurrentFontName, isFontFaceSet, CURRENT_FONT_PROBE_TIMEOUT_MS, unloadedFontNote, initializeCurrentFonts;
   function currentRoleFontFace(fonts) {
     let value = (0, runtime2.getRenderingTheme)() !== "neutral";
     return (input) => {
@@ -110,10 +110,6 @@ function installExportCurrentFonts(runtime2) {
       standIns: entries2
     };
   }
-  function unloadedFontNote(standIns) {
-    let items = [...standIns.keys()], items2 = [...new Set([...standIns.values()].flat())], value = [...standIns].map(([input, input2]) => input + " with " + joinFontNames(input2)), value2 = items.length === 1 || items2.length === 1 ? "uses " + joinFontNames(items2) + " instead" : "replaces " + value.slice(0, -1).join(", ") + ", and " + String(value[value.length - 1]);
-    return (items.length === 1 ? "the font " : "the fonts ") + joinFontNames(items) + " did not load on this page, so this file " + value2 + "; to retry, export again in a moment or reload the page";
-  }
   async function toCurrentFonts(fontSet, options, faces, fonts, timeoutMs = runtime2.fontReadyTimeoutMs) {
     let value = resolveCurrentFontFaces(options, fonts), value2 = await unloadedFontFamilies(fontSet, value, faces, fonts, timeoutMs).catch(() => []);
     if (value2.length === 0)
@@ -131,7 +127,7 @@ function installExportCurrentFonts(runtime2) {
   }
   bindRuntimeValue(runtime2, "currentFontExports", () => currentFontExports, (value) => {
     currentFontExports = value;
-  }), bindRuntimeValue(runtime2, "currentRoleFontFace", () => currentRoleFontFace), bindRuntimeValue(runtime2, "resolveCurrentFontFaces", () => resolveCurrentFontFaces), bindRuntimeValue(runtime2, "collectCustomFontUsage", () => collectCustomFontUsage), bindRuntimeValue(runtime2, "pageFontSet", () => pageFontSet), bindRuntimeValue(runtime2, "canvasFontIsLoaded", () => canvasFontIsLoaded), bindRuntimeValue(runtime2, "unloadedFontFamilies", () => unloadedFontFamilies), bindRuntimeValue(runtime2, "withoutFontFamilies", () => withoutFontFamilies), bindRuntimeValue(runtime2, "unloadedFontNote", () => unloadedFontNote);
+  }), bindRuntimeValue(runtime2, "currentRoleFontFace", () => currentRoleFontFace), bindRuntimeValue(runtime2, "resolveCurrentFontFaces", () => resolveCurrentFontFaces), bindRuntimeValue(runtime2, "collectCustomFontUsage", () => collectCustomFontUsage), bindRuntimeValue(runtime2, "pageFontSet", () => pageFontSet), bindRuntimeValue(runtime2, "canvasFontIsLoaded", () => canvasFontIsLoaded), bindRuntimeValue(runtime2, "unloadedFontFamilies", () => unloadedFontFamilies), bindRuntimeValue(runtime2, "withoutFontFamilies", () => withoutFontFamilies);
   function usesLinkedGoogleFamily(slides, faces, fonts) {
     return (0, runtime2.collectGoogleSlidesFontRequests)(resolveCurrentFontFaces(slides, fonts), (0, runtime2.carriedFontFamilyMap)(faces, fonts)).size > 0;
   }
@@ -141,8 +137,8 @@ function installExportCurrentFonts(runtime2) {
     isFontFaceSet = value;
   }), bindRuntimeValue(runtime2, "CURRENT_FONT_PROBE_TIMEOUT_MS", () => CURRENT_FONT_PROBE_TIMEOUT_MS, (value) => {
     CURRENT_FONT_PROBE_TIMEOUT_MS = value;
-  }), bindRuntimeValue(runtime2, "joinFontNames", () => joinFontNames, (value) => {
-    joinFontNames = value;
+  }), bindRuntimeValue(runtime2, "unloadedFontNote", () => unloadedFontNote, (value) => {
+    unloadedFontNote = value;
   }), bindRuntimeValue(runtime2, "usesLinkedGoogleFamily", () => usesLinkedGoogleFamily), bindRuntimeValue(runtime2, "initializeCurrentFonts", () => initializeCurrentFonts, (value) => {
     initializeCurrentFonts = value;
   }), () => {
@@ -150,7 +146,10 @@ function installExportCurrentFonts(runtime2) {
       pageFontSet: () => pageFontSet,
       toCurrentFonts: () => toCurrentFonts,
       usesLinkedGoogleFamily: () => usesLinkedGoogleFamily
-    }), normalizeCurrentFontName = (family) => (0, runtime2.firstFontFamily)(family).toLowerCase(), isFontFaceSet = (value) => value != null && typeof value.load == "function" && typeof value[Symbol.iterator] == "function" && value.ready !== void 0, CURRENT_FONT_PROBE_TIMEOUT_MS = 2e3, joinFontNames = (names) => names.length <= 1 ? names.join("") : names.slice(0, -1).join(", ") + " and " + String(names[names.length - 1]), initializeCurrentFonts = (0, runtime2.initializeOnce)(() => {
+    }), normalizeCurrentFontName = (family) => (0, runtime2.firstFontFamily)(family).toLowerCase(), isFontFaceSet = (value) => value != null && typeof value.load == "function" && typeof value[Symbol.iterator] == "function" && value.ready !== void 0, CURRENT_FONT_PROBE_TIMEOUT_MS = 2e3, unloadedFontNote = (standIns) =>(0, runtime2.exportNote)("fonts_unloaded", {
+      standIns:[...standIns]
+    }), initializeCurrentFonts = (0, runtime2.initializeOnce)(() => {
+      (0, runtime2.initializeExportNotes)(),
       (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeDesignTokenParser)(), (0, runtime2.initializeFontVariants)(), (0, runtime2.initializeHtmlCompiler)(), (0, runtime2.initializeCaptureFallback)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeFontSubstitution)(), (0, runtime2.initializeGoogleSlidesFonts)();
     });
   };

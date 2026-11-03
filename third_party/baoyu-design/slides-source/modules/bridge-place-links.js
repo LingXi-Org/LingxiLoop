@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installBridgePlaceLinks(runtime2) {
   var PLACE_LINK_MESSAGES_ENABLED, PLACE_LINK_INITIAL_POST_DELAY_MS, PLACE_LINK_RETRY_DELAYS_MS, PLACE_LINK_FRAGMENT_PATTERN, RESERVED_PLACE_LINK_FRAGMENTS, getPlaceLinkSessionStorage, PLACE_LINK_STORAGE_FIELDS, setPlaceLinkTimeout, clearPlaceLinkTimeout, placeLinkMessagesEnabled, getPlaceLinkLocalStorage, lastPlaceStorageKey, COPY_PAGE_LINK_TIMEOUT_MS, COPY_PAGE_LINK_ERROR_QUIET_MS, COPY_PAGE_LINK_FAILURES, isCopySlideLinkShortcut, COPY_SLIDE_LINK_SHORTCUT;
@@ -47,8 +47,14 @@ function installBridgePlaceLinks(runtime2) {
       let done = (failure) => {
         if (busy = !1, failure === null || failure === "rate_limited")
           return;
-        let message = "Couldn’t copy the link. " + (failure === "no_answer" ? "Refresh the page, then try again." : "Try again in a moment.");
-        message !== lastMessage && (lastMessage = message, quietTimer !== null && clearPlaceLinkTimeout(quietTimer), quietTimer = setPlaceLinkTimeout(() => void (lastMessage = null), COPY_PAGE_LINK_ERROR_QUIET_MS), onError(message));
+        let message =failure === "no_answer" ? "refresh" : "again";
+        message !== lastMessage && (lastMessage = message, quietTimer !== null && clearPlaceLinkTimeout(quietTimer), quietTimer = setPlaceLinkTimeout(() => void (lastMessage = null), COPY_PAGE_LINK_ERROR_QUIET_MS), onError(message === "refresh" ? (0, runtime2.formatMessage)({
+          defaultMessage: "无法复制链接。请刷新页面后重试。",
+          id: "SMamW7MuDY"
+        }) : (0, runtime2.formatMessage)({
+          defaultMessage: "无法复制链接。请稍后重试。",
+          id: "bKWg3l7Wra"
+        })));
       };
       copy(fragment).then(done, () => done("no_answer"));
     };

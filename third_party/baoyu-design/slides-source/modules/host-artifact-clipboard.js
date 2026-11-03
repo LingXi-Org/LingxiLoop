@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installHostArtifactClipboard(runtime2) {
   var reactNH0, ARTIFACT_CLIPBOARD_ATTRIBUTE, ARTIFACT_CLIPBOARD_PATTERN, artifactClipboardFallback, pictureCopy, ARTIFACT_COPY_MARK_ATTRIBUTE;

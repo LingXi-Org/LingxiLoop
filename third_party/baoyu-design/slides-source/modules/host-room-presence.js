@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installHostRoomPresence(runtime2) {
-  var roomApiOwner, roomApiPromise, EMPTY_ROOM_PEERS, roomPeers, roomPeerSubscribers, roomPeerListenerStarted, roomPeerUnsubscribe, roomPeerHost, roomConnected, roomPeerStore;
+  var roomApiOwner, roomApiPromise, ownWhoPresence, currentWhoPresence, rememberWhoPresence, EMPTY_ROOM_PEERS, roomPeers, roomPeerSubscribers, roomPeerListenerStarted, roomPeerUnsubscribe, roomPeerHost, roomConnected, roomPeerStore;
   function hasHostRoomApi() {
     let slidesHost = globalThis.slidesHost;
     return typeof slidesHost?.use == "function" || typeof slidesHost?.room?.presence == "function";
@@ -32,6 +32,15 @@ function installHostRoomPresence(runtime2) {
       let value3 = hostErrorCode(value2);
       return value3 === "upstream_error" ? "retry" : (value3 === "invalid_argument" && console.warn("appifact room: rejected presence patch", value2), "off");
     }
+  }
+  function publishWhoPresence(patch) {
+    let callback = (input) => Object.fromEntries(Object.entries({ ...input, ...patch }).filter(([, input2]) => input2 !== null));
+    return ownWhoPresence = callback(ownWhoPresence), reportRoomPresence((input) => {
+      let who = normalizeRoomPeers(input.peers?.()).find((input2) => input2.sameTab)?.presence.who;
+      return {
+        who: ownWhoPresence = callback(typeof who == "object" && who !== null ? who : ownWhoPresence)
+      };
+    });
   }
   function cachedHostRoom() {
     let slidesHost = globalThis.slidesHost;
@@ -81,7 +90,13 @@ function installHostRoomPresence(runtime2) {
     roomApiOwner = value;
   }), bindRuntimeValue(runtime2, "roomApiPromise", () => roomApiPromise, (value) => {
     roomApiPromise = value;
-  }), bindRuntimeValue(runtime2, "cachedHostRoom", () => cachedHostRoom), bindRuntimeValue(runtime2, "EMPTY_ROOM_PEERS", () => EMPTY_ROOM_PEERS, (value) => {
+  }), bindRuntimeValue(runtime2, "cachedHostRoom", () => cachedHostRoom), bindRuntimeValue(runtime2, "ownWhoPresence", () => ownWhoPresence, (value) => {
+    ownWhoPresence = value;
+  }), bindRuntimeValue(runtime2, "publishWhoPresence", () => publishWhoPresence), bindRuntimeValue(runtime2, "currentWhoPresence", () => currentWhoPresence, (value) => {
+    currentWhoPresence = value;
+  }), bindRuntimeValue(runtime2, "rememberWhoPresence", () => rememberWhoPresence, (value) => {
+    rememberWhoPresence = value;
+  }), bindRuntimeValue(runtime2, "EMPTY_ROOM_PEERS", () => EMPTY_ROOM_PEERS, (value) => {
     EMPTY_ROOM_PEERS = value;
   }), bindRuntimeValue(runtime2, "normalizeRoomPeers", () => normalizeRoomPeers), bindRuntimeValue(runtime2, "roomPeers", () => roomPeers, (value) => {
     roomPeers = value;
@@ -98,6 +113,7 @@ function installHostRoomPresence(runtime2) {
   }), bindRuntimeValue(runtime2, "roomConnected", () => roomConnected, (value) => {
     roomConnected = value;
   }), () => {
+    ownWhoPresence = {}, currentWhoPresence = () => ownWhoPresence, rememberWhoPresence = (input) => void (ownWhoPresence = { ...ownWhoPresence, ...input }),
     EMPTY_ROOM_PEERS = Object.freeze([]), roomPeers = EMPTY_ROOM_PEERS, roomPeerSubscribers = /* @__PURE__ */ new Set(), roomPeerListenerStarted = !1, roomPeerUnsubscribe = null, roomPeerHost = null, roomConnected = () => roomPeerHost?.connected?.() === !0, roomPeerStore = {
       getSnapshot: () => roomPeers,
       subscribe(input) {

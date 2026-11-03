@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorShapeIconPaths(runtime2) {
   var SHAPE_ICON_PATHS, initializeShapeIconPaths, SHAPE_DRAWN_ICON_NAMES, CARET_DOWN_SMALL_SHAPE_ICON, SHAPE_ICON_FILLED_ALIASES, isShapeIconFilledAlias, initializeShapeIconNames;

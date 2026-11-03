@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiRemoteChangeAnnouncer(runtime2) {
   var reactsH, REMOTE_CHANGE_WORD_SEPARATOR, REMOTE_CHANGE_HOLD_MS, REMOTE_CHANGE_DELAY_MS, EMPTY_REMOTE_WORDS;

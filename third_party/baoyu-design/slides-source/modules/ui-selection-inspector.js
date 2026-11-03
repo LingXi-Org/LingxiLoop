@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiSelectionInspector(runtime2) {
-  var jsxq_, TABLE_HEIGHT_REASON, TEXT_SHADOW_FILL_REASON, LINE_DASH_REASON, ZERO_SIDE_PLACEHOLDERS, SIDE_INDEXES, EMPTY_SIDE_VALUES, anchorSizePatch, STACK_CHILD_ALIGN_OPTIONS, GRID_CHILD_ALIGN_OPTIONS, PROPERTY_ROW_FOCUS_SELECTOR, CONNECTOR_END_CHOICES, CONNECTOR_ARROW_OPTIONS, CONNECTOR_ROUTE_OPTIONS, CONNECTOR_STROKE_OPTIONS, CONNECTOR_DIRECTION_OPTIONS, slideTransitionLabels, SLIDE_TRANSITION_OPTIONS, START_LABEL, END_LABEL, STRETCH_LABEL, FILL_COLOR_LABEL, FILL_GRADIENT_LABEL, FILL_IMAGE_LABEL, SOLID_LABEL, DASHED_LABEL, TEXT_COLOR_LABEL, COVER_LABEL, CONTAIN_LABEL, RADIAL_LABEL, LINEAR_LABEL, COLUMNS_LABEL, PADDING_LABEL, APPEARANCE_LABEL, BACKGROUND_LABEL, STROKE_WIDTH_LABEL, SIZE_WIDTH_LABEL, SIZE_HEIGHT_LABEL, MIN_WIDTH_LABEL, MAX_WIDTH_LABEL, MIN_HEIGHT_LABEL, MAX_HEIGHT_LABEL, AUTO_LABEL, EMPHASIS_LABEL, LIST_LABEL, CASE_LABEL, NONE_LABEL, FONT_LABEL, WEIGHT_LABEL, FONT_SIZE_LABEL, SPACING_LABEL, SPACING_TITLE, LINE_HEIGHT_LABEL, LETTER_SPACING_LABEL, SEARCH_FONTS_LABEL, STYLE_DEFAULT_LABEL, SYSTEM_FONT_LABEL, CONNECTOR_DIRECTION_ARROW_ICONS, CONNECTOR_DIRECTION_ICON_CHOICES, CONNECTOR_DIRECTION_GLYPH_CHOICES, lastPropertyInput, MEDIA_SOURCE_KINDS, isNonConnectorShape, isDecorativePolygonShape, normalizedHexRgba, isDefaultShapeFill;
+  var jsxq_, TABLE_HEIGHT_REASON, TEXT_SHADOW_FILL_REASON, LINE_DASH_REASON, ZERO_SIDE_PLACEHOLDERS, SIDE_INDEXES, EMPTY_SIDE_VALUES, anchorSizePatch, STACK_CHILD_ALIGN_OPTIONS, GRID_CHILD_ALIGN_OPTIONS, PROPERTY_ROW_FOCUS_SELECTOR, CONNECTOR_END_CHOICES, CONNECTOR_ARROW_OPTIONS, CONNECTOR_ROUTE_OPTIONS, CONNECTOR_STROKE_OPTIONS, CONNECTOR_DIRECTION_OPTIONS, slideTransitionLabels, SLIDE_TRANSITION_OPTIONS, START_LABEL, END_LABEL, STRETCH_LABEL, FILL_COLOR_LABEL, FILL_GRADIENT_LABEL, FILL_IMAGE_LABEL, SOLID_LABEL, DASHED_LABEL, TEXT_COLOR_LABEL, COVER_LABEL, CONTAIN_LABEL, RADIAL_LABEL, LINEAR_LABEL, COLUMNS_LABEL, PADDING_LABEL, APPEARANCE_LABEL, BACKGROUND_LABEL, STROKE_WIDTH_LABEL, SIZE_WIDTH_LABEL, SIZE_HEIGHT_LABEL, MIN_WIDTH_LABEL, MAX_WIDTH_LABEL, MIN_HEIGHT_LABEL, MAX_HEIGHT_LABEL, AUTO_LABEL, ALT_TEXT_LABEL, HEADER_ROW_LABEL, EMPHASIS_LABEL, LIST_LABEL, CASE_LABEL, NONE_LABEL, FONT_LABEL, WEIGHT_LABEL, FONT_SIZE_LABEL, SPACING_LABEL, SPACING_TITLE, LINE_HEIGHT_LABEL, LETTER_SPACING_LABEL, LETTER_SPACING_NAME, SEARCH_FONTS_LABEL, STYLE_DEFAULT_LABEL, SYSTEM_FONT_LABEL, CUSTOM_STYLE_LABEL, customFaceLabel, CONNECTOR_DIRECTION_ARROW_ICONS, CONNECTOR_DIRECTION_ICON_CHOICES, CONNECTOR_DIRECTION_GLYPH_CHOICES, lastPropertyInput, VIDEO_LABEL, REMOVE_VIDEO_LABEL, REPLACE_IMAGE_UNAVAILABLE_REASON, CHANGE_VIDEO_UNAVAILABLE_REASON, MEDIA_SOURCE_KINDS, isNonConnectorShape, isDecorativePolygonShape, normalizedHexRgba, isDefaultShapeFill;
   function isTransparentStyleColor(color) {
     let value = color.trim().toLowerCase();
     return value === "transparent" || /^(?:rgb|hsl)a?\([^,)]+,[^,)]+,[^,)]+,\s*(?:0+(?:\.0+)?|\.0+)%?\s*\)$/.test(value) || /^(?:rgb|hsl)a?\([^/)]+\/\s*(?:0+(?:\.0+)?|\.0+)%?\s*\)$/.test(value) || /^#(?:[0-9a-f]{3}0|[0-9a-f]{6}00)$/.test(value);
@@ -128,15 +128,27 @@ function installUiSelectionInspector(runtime2) {
     (0, runtime2.undoRedoKeyCommand)(event.nativeEvent) !== void 0 && event.currentTarget.contains(target) && !target.matches("input, textarea, select") && !target.isContentEditable && focusAfterPropertyRemoval(target, "undo");
   }
   function MediaSourcePropertyRow({ testid, kind, src, name, mixed = !1, empty = !1, onPick, onPress, offReason, onRemove }) {
-    let { label, tip, off, accept } = MEDIA_SOURCE_KINDS[kind], ref = runtime2.reactw8.useRef(null), press = onPress ?? (() => ref.current?.click()), reason = mixed ? "请选择一张图片进行替换" : onPick === void 0 && onPress === void 0 ? offReason ?? off : void 0, text = mixed ? "Mixed" : empty ? "添加图片…" : name;
+    let { label, remove, tip, off, accept } = MEDIA_SOURCE_KINDS[kind], uploadLabel = (0, runtime2.formatMessage)({
+      defaultMessage: "上传图片…",
+      id: "CvONZsWgFs"
+    }), ref = runtime2.reactw8.useRef(null), press = onPress ?? (() => ref.current?.click()), reason = mixed ? (0, runtime2.formatMessage)({
+      defaultMessage: "请选择一张图片进行替换",
+      id: "aEiDBSQCYO"
+    }) : onPick === void 0 && onPress === void 0 ? offReason ?? off : void 0, text = mixed ? (0, runtime2.formatMessage)({
+      defaultMessage: "混合",
+      id: "pFqnMbf3uL"
+    }) : empty ? (0, runtime2.formatMessage)({
+      defaultMessage: "添加图片…",
+      id: "Rz3ztXifMC"
+    }) : name;
     return jsxq_.jsxs(runtime2.PropertyRow, {
       label,
       trailing: empty ? jsxq_.jsx(runtime2.Button, {
         variant: "ghost",
         iconOnly: !0,
         icon: "Upload",
-        "aria-label": "上传图片…",
-        tooltip: "上传图片…",
+        "aria-label": uploadLabel,
+        tooltip: uploadLabel,
         disabledReason: reason,
         disabled: reason !== void 0,
         onClick: press,
@@ -145,8 +157,7 @@ function installUiSelectionInspector(runtime2) {
         className: "contents",
         onClickCapture: focusPropertyRowControl,
         children: jsxq_.jsx(runtime2.RemovePropertyButton, {
-          label,
-          verb: kind === "cover" ? "Reset" : void 0,
+          name: remove,
           onClick: onRemove
         })
       }) : void 0,
@@ -157,7 +168,13 @@ function installUiSelectionInspector(runtime2) {
           wrapperClassName: "flex min-w-0 flex-1",
           children: jsxq_.jsx(runtime2.FieldButton, {
             "data-testid": testid + "-" + kind + "-source",
-            "aria-label": label + ": " + (empty ? "none" : text),
+            "aria-label": empty ? (0, runtime2.formatMessage)({
+              defaultMessage: "{label}：无",
+              id: "U7STAVfMGZ"
+            }, { label }) : (0, runtime2.formatMessage) ({
+              defaultMessage: "{label}：{name}",
+              id: "ObPxsTNsy+"
+            }, { label, name : text }),
             title: reason === void 0 && !empty ? tip : void 0,
             className: "min-w-0",
             disabled: reason !== void 0,
@@ -282,13 +299,16 @@ function installUiSelectionInspector(runtime2) {
           })));
         }
       }, (input2) => {
-        ref2.current.mounted && value4(!1), (0, runtime2.showToast)((0, runtime2.formatMessage)({ defaultMessage: "添加图片失败：{reason}", id: "p2BejcXS+1" }, { reason: input2 instanceof Error ? input2.message : String(input2) }));
+        ref2.current.mounted && value4(!1), console.warn("slides: adding a picture to a text failed: " + (0, runtime2.failureKindForLog)(input2)), (0, runtime2.showToast)((0, runtime2.formatMessage)({ defaultMessage: "添加图片失败：{reason}", id: "Wu5qYtPjZP" }, { reason: (0, runtime2.exportFailureReason)(input2) }));
       }));
     }, value7 = value ?? value5?.kind ?? "color";
     return fillMixed ? {} : {
       kind: {
         value: value7,
-        label: "填充类型",
+        label: (0, runtime2.formatMessage)({
+          defaultMessage: "填充类型",
+          id: "kSbwUcdoR2"
+        }),
         options: [
           {
             value: "color",
@@ -488,7 +508,8 @@ function installUiSelectionInspector(runtime2) {
         }
       ],
       value: value2 ? "" : value[0],
-      placeholder: (0, runtime2.untranslatedMessage)("混合"),
+      placeholder: runtime2.MIXED_LABEL,
+      mutedPlaceholder: !0,
       onChange: (input) => updateNodes((source) => source.kind !== "text" && source.kind !== "table" || input === "" ? source : {
         ...source,
         fit: input
@@ -665,7 +686,10 @@ function installUiSelectionInspector(runtime2) {
               variant: "ghost",
               iconOnly: !0,
               icon: "ArrowReturn",
-              "aria-label": "换行",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "换行",
+                id: "Z/ag9ZIhor"
+              }),
               tooltip: value48 ? (0, runtime2.formatMessage)({ defaultMessage: "所选对象的换行设置不同，点击全部开启", id: "pRDRwzVqkd" }) : source.dir === "h" ? source.wrap === !0 ? (0, runtime2.formatMessage)({ defaultMessage: "子元素已换行，点击改为单行", id: "c0WYUtCu1p" }) : (0, runtime2.formatMessage)({ defaultMessage: "允许子元素换行", id: "fpdW7BANRi" }) : (0, runtime2.formatMessage)({ defaultMessage: "换行适用于水平堆叠布局", id: "1f4WvFMp/d" }),
               pressed: source.wrap === !0 && !value48,
               disabled: source.dir !== "h" || value44,
@@ -704,7 +728,10 @@ function installUiSelectionInspector(runtime2) {
               icon: jsxq_.jsx(runtime2.PropertyIcon, {
                 icon: runtime2.DEFAULT_JUSTIFY_ICON
               }),
-              "aria-label": "分布",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "分布",
+                id: "1Kbg42TITh"
+              }),
               tooltip: value46 ? (0, runtime2.formatMessage)({ defaultMessage: "所选对象的分布设置不同，点击统一分布", id: "AtSkGl/0xL" }) : value51 ? (0, runtime2.formatMessage)({ defaultMessage: "两端分布，点击改为紧密排列", id: "kqtOEJJFCQ" }) : (0, runtime2.formatMessage)({ defaultMessage: "两端分布，需要主轴有剩余空间", id: "jmUQwLQsmj" }),
               pressed: value51 && !value46,
               "data-testid": "sl-distribute",
@@ -735,7 +762,10 @@ function installUiSelectionInspector(runtime2) {
                     className: "min-w-[calc(var(--cds-h-control)*3)] flex-1",
                     title: source.justify !== void 0 && source.justify !== "start" && source.justify !== "center" && source.justify !== "end" ? (0, runtime2.formatMessage)({ defaultMessage: "自动计算，由分布设置决定此轴", id: "Rm1XXvWu5N" }) : void 0,
                     children: jsxq_.jsx(runtime2.SegmentedPropertyControl, {
-                      label: "两端对齐",
+                      label: (0, runtime2.formatMessage)({
+                        defaultMessage: "两端对齐",
+                        id: "NTZOi3E6LU"
+                      }),
                       "data-testid": "sl-justify",
                       compact: !0,
                       vertical: source.dir === "v",
@@ -773,7 +803,10 @@ function installUiSelectionInspector(runtime2) {
                   jsxq_.jsx("span", {
                     className: "min-w-[calc(var(--cds-h-control)*3)] flex-1",
                     children: jsxq_.jsx(runtime2.SegmentedPropertyControl, {
-                      label: "对齐",
+                      label: (0, runtime2.formatMessage)({
+                        defaultMessage: "对齐",
+                        id: "md6s7hTHSB"
+                      }),
                       "data-testid": "sl-align",
                       compact: !0,
                       vertical: source.dir === "v",
@@ -834,7 +867,7 @@ function installUiSelectionInspector(runtime2) {
     };
     if (value5 === void 0)
       return jsxq_.jsxs("div", {
-        className: "flex h-full flex-col overflow-y-auto pb-1 [--pp-label-w:72px] " + runtime2.HIDDEN_NATIVE_SCROLLBAR_CLASS,
+        className: "flex h-full flex-col overflow-y-auto pb-1 [--pp-label-w:72px] [[data-cds-fizzy-lake~=panels]_&]:[--pp-label-w:4.75rem] " + runtime2.HIDDEN_NATIVE_SCROLLBAR_CLASS,
         children: [
           jsxq_.jsx(runtime2.PropertySection, {
             title: (0, runtime2.formatMessage)({ defaultMessage: "幻灯片", id: "wKo+QURBXE" }),
@@ -1212,7 +1245,10 @@ function installUiSelectionInspector(runtime2) {
           className: "contents",
           onClickCapture: value49 ? focusPropertyRowControl : void 0,
           children: jsxq_.jsx(runtime2.RemovePropertyButton, {
-            label: "背景",
+            name: (0, runtime2.formatMessage)({
+              defaultMessage: "移除背景",
+              id: "DlP1b3bS/a"
+            }),
             disabled: !value49,
             disabledReason: runtime2.BORDER_REQUIRED_REASON,
             onClick: callback30
@@ -1321,7 +1357,10 @@ function installUiSelectionInspector(runtime2) {
           adornment: jsxq_.jsx(runtime2.Select, {
             compact: !0,
             align: "end",
-            "aria-label": options + "模式",
+            "aria-label": (0, runtime2.formatMessage)({
+              defaultMessage: "{label}模式",
+              id: "swsrRp7FgQ"
+            }, { label: options }),
             items: value49,
             value: value50.mode,
             disabled: value49.length < 2,
@@ -1482,7 +1521,7 @@ function installUiSelectionInspector(runtime2) {
         };
     })() : void 0;
     return jsxq_.jsxs("div", {
-      className: "flex h-full flex-col overflow-y-auto pb-1 [--pp-label-w:72px] " + runtime2.HIDDEN_NATIVE_SCROLLBAR_CLASS,
+      className: "flex h-full flex-col overflow-y-auto pb-1 [--pp-label-w:72px] [[data-cds-fizzy-lake~=panels]_&]:[--pp-label-w:4.75rem] " + runtime2.HIDDEN_NATIVE_SCROLLBAR_CLASS,
       "data-slides": "properties",
       onPointerDownCapture: notePropertyPointer,
       onClickCapture: propertiesClickCapture,
@@ -1579,10 +1618,10 @@ function installUiSelectionInspector(runtime2) {
               null,
               null,
               jsxq_.jsx(runtime2.PropertyRow, {
-                label: (0, runtime2.formatMessage)({ defaultMessage: "替代文本", id: "emJyC1LcuX" }),
+                label: ALT_TEXT_LABEL,
                 children: jsxq_.jsx(runtime2.TextInput, {
                   value: value19.alt,
-                  "aria-label": "替代文本",
+                  "aria-label": ALT_TEXT_LABEL,
                   onChange: (event) => callback13((source) => source.kind === "img" ? {
                     ...source,
                     alt: event.target.value
@@ -1600,7 +1639,7 @@ function installUiSelectionInspector(runtime2) {
                 label: (0, runtime2.formatMessage)({ defaultMessage: "符号", id: "9DM3b83EN1" }),
                 options: runtime2.slideIconNames.map((input) => ({
                   value: input,
-                  label: input.charAt(0) + input.slice(1).replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
+                  label:(0, runtime2.slideIconLabel)(input)
                 })),
                 value: value19.icon,
                 onChange: (input) => callback13((source) => source.kind === "icon" ? {
@@ -1719,7 +1758,7 @@ function installUiSelectionInspector(runtime2) {
                   },
                   ...runtime2.textRoles.map((input) => ({
                     value: input,
-                    label: runtime2.textRoleLabels[input]
+                    label: (0, runtime2.textRoleLabel)(input)
                   }))
                 ],
                 value: value19.role ?? "default",
@@ -1764,11 +1803,11 @@ function installUiSelectionInspector(runtime2) {
                 ]
               }),
               jsxq_.jsx(runtime2.PropertyRow, {
-                label: (0, runtime2.formatMessage)({ defaultMessage: "标题行", id: "simB7abwl3" }),
+                label: HEADER_ROW_LABEL,
                 onPress: (element) => element.querySelector('[role="checkbox"]')?.click(),
                 children: jsxq_.jsx(runtime2.Checkbox, {
                   checked: value19.header,
-                  "aria-label": "标题行",
+                  "aria-label": HEADER_ROW_LABEL,
                   onCheckedChange: (input) => callback13((source) => source.kind === "table" ? {
                     ...source,
                     header: input === !0
@@ -1883,9 +1922,9 @@ function installUiSelectionInspector(runtime2) {
         }) : null,
         value19.kind === "text" && value7 === "text" ? jsxq_.jsx(jsxq_.Fragment, {
           children: (() => {
-            let value42 = (0, runtime2.getRenderingTheme)(), value43 = typeStyles ?? runtime2.emptyTypographyStyles, value44 = deckTypeStyles ?? runtime2.emptyTypographyStyles, value45 = value3.map((input) => (0, runtime2.selectedNode)(slide, input)).filter((input) => input?.kind === "text"), { style: value46, mixed: value47 } = (0, runtime2.matchingTypographyNodes)(value19, value45, value43, value42), value48 = value42 === "neutral", callback27 = (input) => (0, runtime2.resolveNodeTypographyStyle)(input, value43, value44, value42, !0), value49 = !value47 && value46 !== null, value50 = value47 ? void 0 : callback27(value19), value51 = value47 ? void 0 : value46?.name ?? (value50 === void 0 ? (0, runtime2.nodeTypographyLabel)(value19, value42) : value43.includes(value50) ? value50.name : "演示文稿的" + value50.name.toLowerCase() + "文字"), value52 = value47 ? void 0 : value46 === null && value50 !== void 0 && !value43.includes(value50) ? (0, runtime2.formatMessage)({ defaultMessage: "来自演示文稿的“{style}”文字样式", id: "Thf3cWx1LE" }, { style: value50.name.toLowerCase() }) : (0, runtime2.formatMessage)({ defaultMessage: "来自“{style}”", id: "c/ltsU3EuV" }, {
-              style: value46?.name ?? (value50 === void 0 ? (0, runtime2.nodeTypographyLabel)(value19, value42) : value50.name)
-            }), value53 = value51 !== void 0 ? "继承自" + value51 : void 0, value54 = (0, runtime2.nodeTypographyCombo)(value19, value42), style = value19.style, callback28 = (source, options) => {
+            let value42 = (0, runtime2.getRenderingTheme)(), value43 = typeStyles ?? runtime2.emptyTypographyStyles, value44 = deckTypeStyles ?? runtime2.emptyTypographyStyles, value45 = value3.map((input) => (0, runtime2.selectedNode)(slide, input)).filter((input) => input?.kind === "text"), { style: value46, mixed: value47 } = (0, runtime2.matchingTypographyNodes)(value19, value45, value43, value42), value48 = value42 === "neutral", callback27 = (input) => (0, runtime2.resolveNodeTypographyStyle)(input, value43, value44, value42, !0), value49 = !value47 && value46 !== null, customStyle = (0, runtime2.customTypographyStyle)(value19, { style: value46, mixed: value47 }, value43, value42), value50 = value47 ? void 0 : callback27(value19), originStyleName = () => value46 !== null ? ( 0, runtime2.typographyStyleName)(value46) :value50 === void 0 ? (0, runtime2.typographyLabel)(value19, value42) : (0, runtime2.typographyStyleName)(value50), value52 = value47 ? void 0 : value46 === null && value50 !== void 0 && !value43.includes(value50) ? (0, runtime2.formatMessage)({ defaultMessage: "来自演示文稿的“{style}”文字样式", id: "PU4zvZZzxa" }, { style: (0, runtime2.typographyStyleWord)(value50) }) : (0, runtime2.formatMessage)({ defaultMessage: "来自“{style}”", id: "j+G/QEORbS" }, {
+              style: originStyleName() }), value53 = value47 ? void 0 : value46 === null &&value50 !== void 0 && !value43.includes(value50) ? (0, runtime2.formatMessage)({ defaultMessage: "继承自演示文稿的{style}文本", id: "zPCqimSs5Q" }, { style: (0, runtime2.typographyStyleWord)(value50) }) : (0, runtime2.formatMessage)({ defaultMessage: "继承自{style}", id: "c2Ia+b7xam"
+            }, { style : originStyleName() }), value54 = (0, runtime2.nodeTypographyCombo)(value19, value42), style = value19.style, callback28 = (source, options) => {
               if (source.kind !== "text")
                 return source;
               let value63 = callback27(source);
@@ -1995,9 +2034,16 @@ function installUiSelectionInspector(runtime2) {
               children: [
                 jsxq_.jsx(runtime2.SelectPropertyRow, {
                   label: (0, runtime2.formatMessage)({ defaultMessage: "文字样式", id: "6vfom2flMn" }),
-                  options: value43.map((input) => ({
+                  options: (customStyle !== null ? [
+                    {
+                      ...customStyle,
+                      name: CUSTOM_STYLE_LABEL,
+                      title: (0, runtime2.typographyLabel)(value19, value42)
+                    },
+                    ... value43
+                  ] : value43).map((input) => ({
                     value: input.id,
-                    label: input.name,
+                    label: (0, runtime2.typographyStyleName)( input),
                     labelStyle: (0, runtime2.typographyStyleCss)(input),
                     hint: input.hint,
                     ...input.title !== void 0 ? {
@@ -2010,11 +2056,12 @@ function installUiSelectionInspector(runtime2) {
                       subgroup: input.subgroup
                     } : {}
                   })),
-                  value: value49 && value46 !== null ? value46.id : "",
+                  value: (value47 ? null : value46 ?? customStyle)?.id ?? "",
                   icon: value49 ? "TextAa" : void 0,
-                  placeholder: value47 ? (0, runtime2.untranslatedMessage)("混合") : value49 ? "" : (0, runtime2.formatMessage)({ defaultMessage: "自定义", id: "3UJQ5YFFqk" }),
+                  mutedPlaceholder: value47,
+                  placeholder: value47 ? runtime2.MIXED_LABEL : value49 ? "" : CUSTOM_STYLE_LABEL,
                   disabled: value43.length === 0,
-                  title: value43.length === 0 ? value.systems > 0 ? (0, runtime2.formatMessage)({ defaultMessage: "此演示文稿的设计系统中没有文字样式", id: "lt+uSqt7if" }) : (0, runtime2.formatMessage)({ defaultMessage: "此演示文稿没有文字样式", id: "ExZb82Ktmo" }) : !value49 && !value47 ? (0, runtime2.formatMessage)({ defaultMessage: "自定义 · {style}", id: "9SyqjJ6sdv" }, { style: (0, runtime2.nodeTypographyLabel)(value19, value42) }) : void 0,
+                  title: value43.length === 0 ? value.systems > 0 ? (0, runtime2.formatMessage)({ defaultMessage: "此演示文稿的设计系统中没有文字样式", id: "lt+uSqt7if" }) : (0, runtime2.formatMessage)({ defaultMessage: "此演示文稿没有文字样式", id: "ExZb82Ktmo" }) : !value49 && !value47 ? (0, runtime2.formatMessage)({ defaultMessage: "自定义 · {style}", id: "0pcW07+Kc9" }, { style: (0, runtime2.typographyLabel)(value19, value42) }) : void 0,
                   onChange: (input) => {
                     let value63 = value43.find((input2) => input2.id === input);
                     value63 !== void 0 && callback13((source) => source.kind === "text" ? (0, runtime2.clearTypographyOverrides)(source, value63, value42) : source);
@@ -2042,7 +2089,8 @@ function installUiSelectionInspector(runtime2) {
                       searchLabel: SEARCH_FONTS_LABEL,
                       onOpenChange: (input) => input && (0, runtime2.ensureGoogleFonts)(runtime2.fontFamilyChoices),
                       value: value61 ? "\0mixed" : value55,
-                      placeholder: value61 ? (0, runtime2.untranslatedMessage)("混合") : value56,
+                      placeholder: value61 ? runtime2.MIXED_LABEL : value56,
+                      mutedPlaceholder: value61,
                       title: value55 === "" ? value52 : void 0,
                       description: value55 === "" && !value61 ? value53 : void 0,
                       onReset: style?.fontFamily !== void 0 && changesCombo((input) => callback28(input, "fontFamily")) ? () => callback13((input) => callback28(input, "fontFamily")) : void 0,
@@ -2060,7 +2108,8 @@ function installUiSelectionInspector(runtime2) {
                         italic: value54.italic
                       }),
                       value: value62 ? "\0mixed" : value57 ? (0, runtime2.fontVariantKey)(value54.fontWeight, value54.italic) : "",
-                      placeholder: value62 ? (0, runtime2.untranslatedMessage)("混合") : (0, runtime2.fontVariantLabel)(value54.fontWeight, value54.italic),
+                      placeholder: value62 ? runtime2.MIXED_LABEL : (0, runtime2.fontVariantLabel)(value54.fontWeight, value54.italic),
+                      mutedPlaceholder: value62,
                       title: value57 ? void 0 : value52,
                       description: !value57 && !value62 ? value53 : void 0,
                       onOpenChange: (input) => input && value2((input2) => input2 + 1),
@@ -2086,7 +2135,7 @@ function installUiSelectionInspector(runtime2) {
                         className: "grid min-w-0 flex-1 grid-cols-2 gap-2",
                         children: [
                           jsxq_.jsx(runtime2.PropertyNumberInput, {
-                            "aria-label": "行高",
+                            "aria-label": LINE_HEIGHT_LABEL,
                             title: LINE_HEIGHT_LABEL,
                             prefix: jsxq_.jsx(runtime2.PropertyIcon, {
                               icon: runtime2.LINE_HEIGHT_ICON
@@ -2117,7 +2166,7 @@ function installUiSelectionInspector(runtime2) {
                             onScrubEnd: callback7
                           }),
                           jsxq_.jsx(runtime2.PropertyNumberInput, {
-                            "aria-label": "字间距",
+                            "aria-label": LETTER_SPACING_NAME,
                             title: LETTER_SPACING_LABEL,
                             prefix: jsxq_.jsx(runtime2.PropertyIcon, {
                               icon: "LetterSpacing"
@@ -2160,7 +2209,7 @@ function installUiSelectionInspector(runtime2) {
                   label: EMPHASIS_LABEL,
                   children: [
                     jsxq_.jsxs(runtime2.ButtonGroup, {
-                      "aria-label": "强调",
+                      "aria-label": EMPHASIS_LABEL,
                       variant: "joined",
                       buttonVariant: "secondary",
                       children: [
@@ -2488,11 +2537,31 @@ function installUiSelectionInspector(runtime2) {
     normalizedHexRgba = value;
   }), bindRuntimeValue(runtime2, "isDefaultShapeFill", () => isDefaultShapeFill, (value) => {
     isDefaultShapeFill = value;
-  }), bindRuntimeValue(runtime2, "SelectionInspector", () => SelectionInspector), () => {
+  }), bindRuntimeValue(runtime2, "FONT_LABEL", () => FONT_LABEL, (value) => {
+    FONT_LABEL = value;
+  }), bindRuntimeValue(runtime2, "WEIGHT_LABEL", () => WEIGHT_LABEL, (value) => {
+    WEIGHT_LABEL = value;
+  }), bindRuntimeValue(runtime2, "FONT_SIZE_LABEL", () => FONT_SIZE_LABEL, (value) => {
+    FONT_SIZE_LABEL = value;
+  }), bindRuntimeValue(runtime2, "SPACING_LABEL", () => SPACING_LABEL, (value) => {
+    SPACING_LABEL = value;
+  }), bindRuntimeValue(runtime2, "SPACING_TITLE", () => SPACING_TITLE, (value) => {
+    SPACING_TITLE = value;
+  }), bindRuntimeValue(runtime2, "LINE_HEIGHT_LABEL", () => LINE_HEIGHT_LABEL, (value) => {
+    LINE_HEIGHT_LABEL = value;
+  }), bindRuntimeValue(runtime2, "LETTER_SPACING_NAME", () => LETTER_SPACING_NAME, (value) => {
+    LETTER_SPACING_NAME = value;
+  }), bindRuntimeValue(runtime2, "LETTER_SPACING_LABEL", () => LETTER_SPACING_LABEL, (value) => {
+    LETTER_SPACING_LABEL = value;
+  }), bindRuntimeValue(runtime2, "SEARCH_FONTS_LABEL", () => SEARCH_FONTS_LABEL, (value) => {
+    SEARCH_FONTS_LABEL = value;
+  }), bindRuntimeValue(runtime2, "CUSTOM_STYLE_LABEL", () => CUSTOM_STYLE_LABEL, (value) => {
+    CUSTOM_STYLE_LABEL = value;
+  }), bindRuntimeValue(runtime2, "customFaceLabel", () => customFaceLabel), bindRuntimeValue(runtime2, "SelectionInspector", () => SelectionInspector), () => {
     (0, runtime2.initializeUiInspectorIcons)(), (0, runtime2.initializeStyleSchema)(), jsxq_ = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), TABLE_HEIGHT_REASON = (0, runtime2.formatMessage)({ defaultMessage: "表格高度由各行决定", id: "zCu8YUUcKu" }), TEXT_SHADOW_FILL_REASON = (0, runtime2.formatMessage)({ defaultMessage: "阴影会覆盖渐变或图片文字，请先将文字颜色改为纯色", id: "Hv+08uK1ac" }), LINE_DASH_REASON = (0, runtime2.formatMessage)({ defaultMessage: "线条为实线，连接线可使用虚线", id: "utBm9bGLeq" }), ZERO_SIDE_PLACEHOLDERS = ["0", "0", "0", "0"], SIDE_INDEXES = [0, 1, 2, 3], EMPTY_SIDE_VALUES = SIDE_INDEXES.map((input) => ({
       side: input,
       value: void 0
-    })), START_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "开始", id: "UG/KpW7dUe" }), END_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "终点", id: "9JMLASnNUR" }), STRETCH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "拉伸", id: "g3uS42cJ93" }), FILL_COLOR_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "颜色", id: "aO2sd/ASsJ" }), FILL_GRADIENT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "渐变", id: "LUSKhaHwto" }), FILL_IMAGE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "图片", id: "nboRLjzNa6" }), SOLID_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "实线", id: "iCYC9mSzFf" }), DASHED_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "虚线", id: "cJEcXcTL8Y" }), TEXT_COLOR_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "颜色", id: "xnhFHhDoUA" }), COVER_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "覆盖", id: "Im0bbVAXaS" }), CONTAIN_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "完整显示", id: "aPBlQtePo5" }), RADIAL_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "径向", id: "rgC7JLM5tB" }), LINEAR_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "线性", id: "bX8TwQu4kw" }), COLUMNS_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "列", id: "NFqT/+7+bt" }), PADDING_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "内边距", id: "74/o0QNJOA" }), APPEARANCE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "外观", id: "56s4qpIKQ7" }), BACKGROUND_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "背景", id: "/Q0PdFz/4u" }), STROKE_WIDTH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "宽度", id: "8rzIwZ0J39" }), SIZE_WIDTH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "宽度", id: "hJhfyc+uAo" }), SIZE_HEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "高度", id: "G6WBGd60by" }), MIN_WIDTH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "最小宽度", id: "bVAI/S+p5k" }), MAX_WIDTH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "最大宽度", id: "W3Bhyrk/20" }), MIN_HEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "最小高度", id: "OsQ7/AHILY" }), MAX_HEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "最大高度", id: "xvmjas9ecG" }), AUTO_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "自动", id: "2WaITb6OQR" }), EMPHASIS_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "强调", id: "Teyf8eM+GA" }), LIST_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "列表", id: "iJ3Kzrro9L" }), CASE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "大小写", id: "xCKX1r+USd" }), NONE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "无", id: "bQR7z2mqdf" }), FONT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "字体", id: "5iolZFVZ1k" }), WEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "字重", id: "CeGDuVs6HD" }), FONT_SIZE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "尺寸", id: "s0EoMNYk84" }), SPACING_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "间距", id: "gEwgl8OUVX" }), SPACING_TITLE = (0, runtime2.formatMessage)({ defaultMessage: "行高 · 字间距", id: "veoPon18W4" }), LINE_HEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "行高", id: "vWv0iqiJz6" }), LETTER_SPACING_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "字间距（像素）", id: "dADReMJKg2" }), SEARCH_FONTS_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "搜索字体", id: "oy9MnyB2Y4" }), STYLE_DEFAULT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "样式默认", id: "AFst2NiWrl" }), SYSTEM_FONT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "系统字体", id: "K2Lx/k3SeI" }), anchorSizePatch = (size4) => (input) => {
+    })), START_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "开始", id: "UG/KpW7dUe" }), END_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "终点", id: "9JMLASnNUR" }), STRETCH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "拉伸", id: "g3uS42cJ93" }), FILL_COLOR_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "颜色", id: "aO2sd/ASsJ" }), FILL_GRADIENT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "渐变", id: "LUSKhaHwto" }), FILL_IMAGE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "图片", id: "nboRLjzNa6" }), SOLID_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "实线", id: "iCYC9mSzFf" }), DASHED_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "虚线", id: "cJEcXcTL8Y" }), TEXT_COLOR_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "颜色", id: "xnhFHhDoUA" }), COVER_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "覆盖", id: "Im0bbVAXaS" }), CONTAIN_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "完整显示", id: "aPBlQtePo5" }), RADIAL_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "径向", id: "rgC7JLM5tB" }), LINEAR_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "线性", id: "bX8TwQu4kw" }), COLUMNS_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "列", id: "NFqT/+7+bt" }), PADDING_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "内边距", id: "74/o0QNJOA" }), APPEARANCE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "外观", id: "56s4qpIKQ7" }), BACKGROUND_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "背景", id: "/Q0PdFz/4u" }), STROKE_WIDTH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "宽度", id: "8rzIwZ0J39" }), SIZE_WIDTH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "宽度", id: "hJhfyc+uAo" }), SIZE_HEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "高度", id: "G6WBGd60by" }), MIN_WIDTH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "最小宽度", id: "bVAI/S+p5k" }), MAX_WIDTH_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "最大宽度", id: "W3Bhyrk/20" }), MIN_HEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "最小高度", id: "OsQ7/AHILY" }), MAX_HEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "最大高度", id: "xvmjas9ecG" }), AUTO_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "自动", id: "2WaITb6OQR" }), ALT_TEXT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "替代文本", id: "EoeIYasifR" }), HEADER_ROW_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "标题行", id: "+7Dz/9xOZL" }), EMPHASIS_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "强调", id: "6/nc8+WwEg" }), LIST_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "列表", id: "iJ3Kzrro9L" }), CASE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "大小写", id: "xCKX1r+USd" }), NONE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "无", id: "bQR7z2mqdf" }), FONT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "字体", id: "5iolZFVZ1k" }), WEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "字重", id: "CeGDuVs6HD" }), FONT_SIZE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "尺寸", id: "s0EoMNYk84" }), SPACING_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "间距", id: "gEwgl8OUVX" }), SPACING_TITLE = (0, runtime2.formatMessage)({ defaultMessage: "行高 · 字间距", id: "veoPon18W4" }), LINE_HEIGHT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "行高", id: "Ys19rY+ePY" }), LETTER_SPACING_NAME = (0, runtime2.formatMessage)({ defaultMessage: "字间距", id: "vc9WlPDpxW" }), LETTER_SPACING_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "字间距（像素）", id: "dADReMJKg2" }), SEARCH_FONTS_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "搜索字体", id: "oy9MnyB2Y4" }), STYLE_DEFAULT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "样式默认", id: "AFst2NiWrl" }), SYSTEM_FONT_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "系统字体", id: "K2Lx/k3SeI" }), CUSTOM_STYLE_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "自定义", id: "NjDEIRUXSS" }), customFaceLabel = (face) => (0, runtime2.formatMessage)({ defaultMessage: "自定义{face}", id: "cU7d5yek9U" }, { face }), anchorSizePatch = (size4) => (input) => {
       let state = {
         ...input
       };
@@ -2510,33 +2579,44 @@ function installUiSelectionInspector(runtime2) {
       { value: "center", label: (0, runtime2.formatMessage)({ defaultMessage: "居中", id: "lzVYYpt34l" }) },
       { value: "end", label: END_LABEL },
       { value: "stretch", label: STRETCH_LABEL }
-    ], PROPERTY_ROW_FOCUS_SELECTOR = 'input:not([tabindex="-1"]):not([type="file"]):not([type="hidden"]), button:not([tabindex="-1"]):not([data-kit="row-reset"]):not([data-kit="row-remove"]):not([aria-label^="Remove "])', lastPropertyInput = "key", MEDIA_SOURCE_KINDS = {
+    ], PROPERTY_ROW_FOCUS_SELECTOR = 'input:not([tabindex="-1"]):not([type="file"]):not([type="hidden"]), button:not([tabindex="-1"]):not([data-kit="row-reset"]):not([data-kit="row-remove"])', lastPropertyInput = "key", VIDEO_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "视频", id: "FuOs3BofLN" }), REMOVE_VIDEO_LABEL = (0, runtime2.formatMessage)({ defaultMessage: "移除视频", id: "YZiQhFtO7u" }), REPLACE_IMAGE_UNAVAILABLE_REASON = (0, runtime2.formatMessage)({
+      defaultMessage: "此处不支持替换图片",
+      id: "2VweXF09h/"
+    }), CHANGE_VIDEO_UNAVAILABLE_REASON = (0, runtime2.formatMessage)({
+      defaultMessage: "此处不支持更换视频。",
+      id: "7VKBJXU3Z1"
+    }), MEDIA_SOURCE_KINDS = {
       image: {
-        label: "图片",
-        tip: "替换图片…",
-        off: "此处不支持替换图片",
+        label: (0, runtime2.formatMessage)({ defaultMessage: "图片", id: "hnTfADRai5" }),
+        remove: (0, runtime2.formatMessage)({ defaultMessage: "移除图片", id: "pRthWM5HlS" }),
+        tip: (0, runtime2.formatMessage)({ defaultMessage: "替换图片…", id: "hn52N6gd2h" }),
+        off: REPLACE_IMAGE_UNAVAILABLE_REASON,
         accept: "image/*"
       },
       clip: {
-        label: "视频",
-        tip: "替换视频",
-        off: "此处不支持更换视频。",
+        label: VIDEO_LABEL,
+        remove: REMOVE_VIDEO_LABEL,
+        tip: (0, runtime2.formatMessage)({ defaultMessage: "替换视频", id: "l/Q/4NIrO7" }),
+        off: CHANGE_VIDEO_UNAVAILABLE_REASON,
         accept: ""
       },
       clipOrPicture: {
-        label: "视频",
-        tip: "替换视频…",
-        off: "此处不支持替换图片",
+        label: VIDEO_LABEL,
+        remove: REMOVE_VIDEO_LABEL,
+        tip: (0, runtime2.formatMessage)({ defaultMessage: "替换视频…", id: "pvwkQVYkHf" }),
+        off: REPLACE_IMAGE_UNAVAILABLE_REASON,
         accept: "image/*"
       },
       link: {
-        label: "视频",
+        label: VIDEO_LABEL,
+        remove: REMOVE_VIDEO_LABEL,
         tip: "更改视频链接",
-        off: "此处不支持更换视频。",
+        off: CHANGE_VIDEO_UNAVAILABLE_REASON,
         accept: void 0
       },
       cover: {
         label: "封面图片",
+        remove: "重置封面图片",
         tip: "设置封面图片",
         off: "此处不支持设置封面图片。",
         accept: "image/*"

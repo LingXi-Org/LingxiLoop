@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installModelArtifactStoreRecords(runtime2) {
   var reactK_, DECK_STORE_COLLECTION, DECK_META_STORE_KEY, SLIDE_STORE_COLLECTION, FONT_STORE_COLLECTION;

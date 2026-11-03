@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiDialog(runtime2) {
-  var reactI5, jsxD5, DIALOG_POPUP_CLASS, DIALOG_MAX_HEIGHT_CLASS, dialogFullHeightClasses, dialogPopupPositionClasses, dialogPopupTransitionClasses, dialogBackdropClasses, dialogStartingOpacityClass, dialogBackdropFocusAbortController, desktopWindowDragStripStyle, nestedDialogOverlayClasses, nestedDialogBlurClasses, dialogSizeClasses, DIALOG_Z_INDEX_CLASS_PATTERN, dialogStateContext, confirmationDialogContext, dialogTitleClasses, DIALOG_TITLE_CLASS, dialogDescriptionSmallSpacing, dialogDescriptionLargeSpacing, dialogDescriptionClasses, dialogTriggerRefContext, dialogInitialFocusContext, dialogPressTargets, isDialogActivationKey, TALL_WINDOW_QUERY, dialogBackdropBaseClasses, DialogTrigger3, DIALOG_AUTOFILL_WAIT_MS, DIALOG_HIDDEN_SELECTOR, DialogPopupInner, ConfirmationDialogPopupInner, DialogPopup3, DialogTitle3, dialogCloseButtonOutsetClasses, DialogDescription3, dialogFooterAlignmentClasses, DialogComponents, AlertDialogComponents, initializeUiDialog, reactForUiDialog, jsxForUiDialog, BUTTON_GROUP_SEGMENT_RING_CLASS, BUTTON_GROUP_VARIANT_COLORS, BUTTON_GROUP_SEAM_HOVER_CLASS, BUTTON_GROUP_SEAM_DISABLED_CLASS, BUTTON_GROUP_STACKS_NO_SHADOW_CLASS = "stacks:shadow-none stacks:after:shadow-none", BUTTON_GROUP_STACKS_SEAM_DISABLED_CLASS = "stacks:[[data-cds-segment]:has(:disabled:not([aria-busy]))+&:has(+[data-cds-segment]_:disabled:not([aria-busy]))]:opacity-100 stacks:[[data-cds-segment]:has(:disabled:not([aria-busy]))+&:has(+[data-cds-segment]_:disabled:not([aria-busy]))]:bg-fill-disabled", BUTTON_GROUP_STACKS_DANGER_LINE_CLASS = "stacks:bg-[var(--cds-text-danger)]", initializeUiDialog2, reactForUiDialog2, jsxForUiDialog2, SPLIT_CARET_STYLES, SPLIT_CARET_AUTO_STYLES, SPLIT_LABEL_STYLES, SPLIT_LABEL_CLASS, SPLIT_LABEL_PAD_STYLES, SPLIT_LABEL_HOVER_CLASSES, SPLIT_BUTTON_TRANSITION_CLASS, SPLIT_BUTTON_DISABLED_CLASS, SPLIT_INLINE_CARET_STYLES, SPLIT_CARET_HIT_CLASS, SPLIT_CARET_RECESSED_HIT_CLASS, SPLIT_CARET_OPEN_CLASS, SPLIT_LABEL_RADIUS_CLASS, SPLIT_CARET_RADIUS_CLASS, SPLIT_BUTTON_RING_CLASS, SPLIT_PAINT_EDGE_CLASS, SPLIT_GHOST_SEGMENT_CLASS, SPLIT_STACKS_SECONDARY_HOVER_CLASS, SPLIT_STACKS_GHOST_PEER_HOVER_CLASS, SPLIT_STACKS_DANGER_HOVER_CLASS, SPLIT_STACKS_DISABLED_TEXT_CLASS, SPLIT_STACKS_DISABLED_FILL_CLASS, SPLIT_STACKS_RING_CLASS, SPLIT_STACKS_GHOST_HOVER_CLASS, SPLIT_STACKS_ACTIVE_CLASSES, SPLIT_STACKS_CARET_EXPANDED_CLASS, SPLIT_FIZZY_CARET_HIT_CLASS, SPLIT_FIZZY_LABEL_HIT_CLASS, SPLIT_FIZZY_CARET_STYLES, SPLIT_FIZZY_CARET_ICON_STYLES, initializeUiDialog3;
+  var reactI5, jsxD5, DIALOG_POPUP_CLASS, DIALOG_MAX_HEIGHT_CLASS, dialogFullHeightClasses, dialogPopupPositionClasses, dialogPopupTransitionClasses, dialogBackdropClasses, dialogStartingOpacityClass, dialogBackdropFocusAbortController, desktopWindowDragStripStyle, nestedDialogOverlayClasses, nestedDialogBlurClasses, dialogSizeClasses, DIALOG_Z_INDEX_CLASS_PATTERN, dialogStateContext, confirmationDialogContext, dialogTitleClasses, DIALOG_TITLE_CLASS, dialogDescriptionSmallSpacing, dialogDescriptionLargeSpacing, dialogDescriptionClasses, dialogTriggerRefContext, dialogInitialFocusContext, dialogPressTargets, isDialogActivationKey, TALL_WINDOW_QUERY, DIALOG_PANELS_PAD_CLASS, dialogPanelsBodyClasses, dialogPanelsScrollBodyClasses, dialogBandClasses, dialogStickyBandClasses, dialogAlertBandClasses, dialogBandTitleClasses, dialogAlertBandTitleClasses, dialogBandSlotClasses, dialogBandDescriptionClasses, dialogAlertBandDescriptionClasses, dialogAfterBandDescriptionClasses, dialogPanelsContext, dialogBackdropBaseClasses, DialogTrigger3, DIALOG_AUTOFILL_WAIT_MS, DIALOG_HIDDEN_SELECTOR, DialogPopupInner, ConfirmationDialogPopupInner, DialogPopup3, DialogTitle3, dialogCloseButtonOutsetClasses, DialogDescription3, dialogFooterAlignmentClasses, DialogComponents, AlertDialogComponents, initializeUiDialog, reactForUiDialog, jsxForUiDialog, BUTTON_GROUP_SEGMENT_RING_CLASS, BUTTON_GROUP_VARIANT_COLORS, BUTTON_GROUP_SEAM_HOVER_CLASS, BUTTON_GROUP_SEAM_DISABLED_CLASS, BUTTON_GROUP_STACKS_NO_SHADOW_CLASS = "stacks:shadow-none stacks:after:shadow-none", BUTTON_GROUP_STACKS_SEAM_DISABLED_CLASS = "stacks:[[data-cds-segment]:has(:disabled:not([aria-busy]))+&:has(+[data-cds-segment]_:disabled:not([aria-busy]))]:opacity-100 stacks:[[data-cds-segment]:has(:disabled:not([aria-busy]))+&:has(+[data-cds-segment]_:disabled:not([aria-busy]))]:bg-fill-disabled", BUTTON_GROUP_STACKS_DANGER_LINE_CLASS = "stacks:bg-[var(--cds-text-danger)]", initializeUiDialog2, reactForUiDialog2, jsxForUiDialog2, SPLIT_CARET_STYLES, SPLIT_CARET_AUTO_STYLES, SPLIT_LABEL_STYLES, SPLIT_LABEL_CLASS, SPLIT_LABEL_PAD_STYLES, SPLIT_LABEL_HOVER_CLASSES, SPLIT_BUTTON_TRANSITION_CLASS, SPLIT_BUTTON_DISABLED_CLASS, SPLIT_INLINE_CARET_STYLES, SPLIT_CARET_HIT_CLASS, SPLIT_CARET_RECESSED_HIT_CLASS, SPLIT_CARET_OPEN_CLASS, SPLIT_LABEL_RADIUS_CLASS, SPLIT_CARET_RADIUS_CLASS, SPLIT_BUTTON_RING_CLASS, SPLIT_PAINT_EDGE_CLASS, SPLIT_GHOST_SEGMENT_CLASS, SPLIT_STACKS_SECONDARY_HOVER_CLASS, SPLIT_STACKS_GHOST_PEER_HOVER_CLASS, SPLIT_STACKS_DANGER_HOVER_CLASS, SPLIT_STACKS_DISABLED_TEXT_CLASS, SPLIT_STACKS_DISABLED_FILL_CLASS, SPLIT_STACKS_RING_CLASS, SPLIT_STACKS_GHOST_HOVER_CLASS, SPLIT_STACKS_ACTIVE_CLASSES, SPLIT_STACKS_CARET_EXPANDED_CLASS, SPLIT_FIZZY_CARET_HIT_CLASS, SPLIT_FIZZY_LABEL_HIT_CLASS, SPLIT_FIZZY_CARET_STYLES, SPLIT_FIZZY_CARET_ICON_STYLES, initializeUiDialog3;
   function preventDialogBackdropDefault(event) {
     event.preventDefault();
   }
@@ -91,7 +91,7 @@ function installUiDialog(runtime2) {
     }, [input, options, context, value, extra, detail]);
   }
   function DialogCloseButton({ "aria-label": ariaLabel, className, flush = !1 }) {
-    let value = (0, runtime2.useTranslation)("close", "Close");
+    let value = (0, runtime2.useTranslation)("close", "关闭");
     return jsxD5.jsx(runtime2.baseAlertDialog.Close, {
       render: jsxD5.jsx(runtime2.Button, {
         variant: "ghost",
@@ -105,7 +105,33 @@ function installUiDialog(runtime2) {
   }
   function DialogHeader({ actions, description, showClose = !0, closeLabel, className, children }) {
     let value = reactI5.useContext(confirmationDialogContext);
-    return jsxD5.jsxs("div", {
+    return reactI5.useContext(dialogPanelsContext) ? jsxD5.jsxs(jsxD5.Fragment, {
+      children: [
+        jsxD5.jsxs("div", {
+          "data-cds-part": "band",
+          "data-cds-alert": value ? "" : void 0,
+          className: (0, runtime2.cn)(value ? dialogAlertBandClasses : dialogStickyBandClasses, className),
+          children: [
+            jsxD5.jsx(DialogTitle3, {
+              className: value ? dialogAlertBandTitleClasses : dialogBandTitleClasses,
+              children
+            }),
+            actions && jsxD5.jsx("div", {
+              className: dialogBandSlotClasses,
+              children: actions
+            }),
+            showClose && jsxD5.jsx(DialogCloseButton, {
+              "aria-label": closeLabel,
+              className: dialogBandSlotClasses
+            })
+          ]
+        }),
+        description && jsxD5.jsx(runtime2.baseAlertDialog.Description, {
+          className: value ? `${dialogAlertBandDescriptionClasses} mb-pad-md` : `${dialogBandDescriptionClasses} mb-pad-xl`,
+          children: description
+        })
+      ]
+    }) : jsxD5.jsxs("div", {
       className: (0, runtime2.cn)("mb-pad-md flex items-start gap-2", className),
       children: [
         jsxD5.jsxs("div", {
@@ -244,7 +270,7 @@ function installUiDialog(runtime2) {
     });
   }
   function ConfirmationDialog({ open: open4, onOpenChange, title, description, confirmLabel, cancelLabel, confirmVariant = "primary", initialFocus = "confirm", disabled: disabled2 = !1, confirmDisabledReason, size: size4 = "sm", className, portalClassName, onConfirm, closeOnConfirm = !1, children }) {
-    let value = (0, runtime2.useTranslation)("confirm", "Confirm"), value2 = (0, runtime2.useTranslation)("cancel", "Cancel"), value3 = confirmLabel ?? value, value4 = cancelLabel ?? value2, [value5, value6] = reactI5.useState(!1), ref = reactI5.useRef(null), ref2 = reactI5.useRef(null), { finalFocus: value7, popupRef: value8 } = (0, runtime2.useOverlayFinalFocus)(open4), callback = () => initialFocus === "cancel" ? "cancel" : disabled2 ? "pending" : "confirm", [value9, value10] = reactI5.useState(callback), ref3 = reactI5.useRef(value9);
+    let value = (0, runtime2.useTranslation)("confirm", "确认"), value2 = (0, runtime2.useTranslation)("cancel", "取消"), value3 = confirmLabel ?? value, value4 = cancelLabel ?? value2, [value5, value6] = reactI5.useState(!1), ref = reactI5.useRef(null), ref2 = reactI5.useRef(null), { finalFocus: value7, popupRef: value8 } = (0, runtime2.useOverlayFinalFocus)(open4), callback = () => initialFocus === "cancel" ? "cancel" : disabled2 ? "pending" : "confirm", [value9, value10] = reactI5.useState(callback), ref3 = reactI5.useRef(value9);
     (0, runtime2.useIsomorphicLayoutEffect)(() => {
       ref3.current = value9;
     }, [value9]);
@@ -315,7 +341,7 @@ function installUiDialog(runtime2) {
       });
     }, [value5, onOpenChange, open4]), value13 = (0, runtime2.useDefaultOverlayLayer)("modal");
     useDialogStyleDebug(portalClassName);
-    let ref7 = reactI5.useRef(null), value14 = jsxD5.jsx(runtime2.Button, {
+    let panels = (0, runtime2.useFeatureFlagPart)("panels"), ref7 = reactI5.useRef(null), value14 = jsxD5.jsx(runtime2.Button, {
       ref: ref2,
       variant: confirmVariant,
       busy: value5,
@@ -350,24 +376,37 @@ function installUiDialog(runtime2) {
                 jsxD5.jsx(DesktopWindowDragStrip, {}),
                 jsxD5.jsx(ConfirmationDialogPopupInner, {
                   "data-cds": "ConfirmationDialog",
+                  "data-cds-fizzy": panels ? "" : void 0,
                   ref: value8,
                   onKeyDownCapture: callback3,
                   onPointerDownCapture: callback3,
                   initialFocus: value11,
                   finalFocus: value7,
-                  className: (0, runtime2.cn)("draggable-none", nestedDialogOverlayClasses, dialogFullHeightClasses, dialogPopupTransitionClasses, nestedDialogBlurClasses, dialogSizeClasses[size4], className),
+                  className: (0, runtime2.cn)("draggable-none", nestedDialogOverlayClasses, dialogFullHeightClasses, dialogPopupTransitionClasses, nestedDialogBlurClasses, dialogSizeClasses[size4], panels && DIALOG_PANELS_PAD_CLASS, className),
                   children: jsxD5.jsxs("div", {
-                    className: dialogPopupPositionClasses,
+                    className: panels ? dialogPanelsBodyClasses : dialogPopupPositionClasses,
                     children: [
+                      panels ? jsxD5.jsx("div", {
+                        "data-cds-part": "band",
+                        "data-cds-alert": "",
+                        className: dialogAlertBandClasses,
+                        children: jsxD5.jsx(runtime2.baseDialog.Title, {
+                          className: `${dialogAlertBandTitleClasses} break-words text-primary`,
+                          children: title
+                        })
+                      }) :
                       jsxD5.jsx(runtime2.baseDialog.Title, {
                         className: (0, runtime2.clsx)(dialogDescriptionSmallSpacing, dialogTitleClasses, "text-primary"),
                         children: title
                       }),
                       description && jsxD5.jsx(runtime2.baseDialog.Description, {
-                        className: dialogDescriptionClasses,
+                        className: panels ? dialogAlertBandDescriptionClasses : dialogDescriptionClasses,
                         children: description
                       }),
-                      children,
+                      jsxD5.jsx(dialogPanelsContext.Provider, {
+                        value: panels,
+                      children
+                      }),
                       jsxD5.jsxs(DialogFooter, {
                         children: [
                           jsxD5.jsx(runtime2.baseDialog.Close, {
@@ -699,13 +738,13 @@ function installUiDialog(runtime2) {
   }), bindRuntimeValue(runtime2, "initializeUiDialog3", () => initializeUiDialog3, (value) => {
     initializeUiDialog3 = value;
   }), () => {
-    DIALOG_MAX_HEIGHT_CLASS = "max-h-[calc(100dvh_-_max(2rem,2*var(--desktop-titlebar-inset,0px))_-_2*max(env(safe-area-inset-top,0px),env(safe-area-inset-bottom,0px)))]", dialogPopupPositionClasses = "isolate flex min-h-0 flex-1 flex-col overflow-y-auto scroll-fade-y rounded-[inherit] p-xl break-words", dialogPopupTransitionClasses = "transition-[opacity,scale,filter] duration-base ease-out motion-reduce:transition-none data-[starting-style]:opacity-0 data-[starting-style]:scale-[0.98] starting:opacity-0 starting:scale-[0.98] motion-reduce:data-[starting-style]:scale-100 data-[ending-style]:opacity-0 data-[ending-style]:scale-[0.98]", dialogBackdropBaseClasses = "fixed inset-0 bg-backdrop transition-opacity duration-base ease-out motion-reduce:transition-none data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 has-[~[data-nested]]:bg-transparent has-[~[data-nested]]:backdrop-blur-none", dialogBackdropClasses = `draggable-none ${dialogBackdropBaseClasses}`, TALL_WINDOW_QUERY = "(min-height: 30rem)", isDialogActivationKey = (event) => {
+    DIALOG_MAX_HEIGHT_CLASS = "max-h-[calc(100dvh_-_max(2rem,2*var(--desktop-titlebar-inset,0px))_-_2*max(env(safe-area-inset-top,0px),env(safe-area-inset-bottom,0px)))]", dialogPopupPositionClasses = "isolate flex min-h-0 flex-1 flex-col overflow-y-auto scroll-fade-y rounded-[inherit] p-xl break-words", DIALOG_PANELS_PAD_CLASS = "[--cds-pad-xl:var(--cds-pad-lg)]", dialogPopupTransitionClasses = "transition-[opacity,scale,filter] duration-base ease-out motion-reduce:transition-none data-[starting-style]:opacity-0 data-[starting-style]:scale-[0.98] starting:opacity-0 starting:scale-[0.98] motion-reduce:data-[starting-style]:scale-100 data-[ending-style]:opacity-0 data-[ending-style]:scale-[0.98]", dialogBackdropBaseClasses = "fixed inset-0 bg-backdrop transition-opacity duration-base ease-out motion-reduce:transition-none data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 has-[~[data-nested]]:bg-transparent has-[~[data-nested]]:backdrop-blur-none", dialogBackdropClasses = `draggable-none ${dialogBackdropBaseClasses}`, TALL_WINDOW_QUERY = "(min-height: 30rem)", dialogBandClasses = "-mx-pad-xl first:-mt-pad-xl mb-1 flex shrink-0 items-center gap-1 min-h-[calc(var(--cds-h-control)_+_2_*_var(--cds-toolbar-pad-block))] ps-xl pe-[var(--cds-toolbar-pad-block)] py-[var(--cds-toolbar-pad-block)]", dialogBandTitleClasses = "pointer-events-auto min-w-0 flex-1 last:me-[calc(var(--cds-pad-xl)_-_var(--cds-toolbar-pad-block))] text-heading font-semibold font-header", dialogBandSlotClasses = "pointer-events-auto self-start", dialogBandDescriptionClasses = "text-body font-normal text-secondary break-words", dialogAfterBandDescriptionClasses = "[[data-cds-part=band]+&]:mt-0 [[data-cds-part=band][data-cds-alert]+&]:-mt-[calc(var(--cds-toolbar-pad-block)_+_(var(--cds-h-control)_-_var(--cds-leading-heading))_/_2)]", isDialogActivationKey = (event) => {
       if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229 || event.key !== "Enter" && event.key !== " ")
         return !1;
       let target = event.target;
       return (0, runtime2.isEditableElement)(target) ? event.key === "Enter" && (event.metaKey || event.ctrlKey || target.tagName !== "TEXTAREA" && (0, runtime2.asElement)(target)?.isContentEditable !== !0) : !0;
     }, dialogStartingOpacityClass = "starting:opacity-0", dialogBackdropFocusAbortController = null, nestedDialogOverlayClasses = "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-backdrop after:opacity-0 after:z-50 after:transition-opacity after:duration-base after:ease-out data-[nested-dialog-open]:after:opacity-100", nestedDialogBlurClasses = "data-[nested-dialog-open]:blur-[2px]", dialogTitleClasses = "text-heading font-medium font-header break-words", DIALOG_TITLE_CLASS = "text-title font-semibold font-header break-words", dialogDescriptionSmallSpacing = "-mt-0.5", dialogDescriptionLargeSpacing = "-mt-1", dialogDescriptionClasses = "mt-1 text-body font-normal text-secondary break-words", DIALOG_AUTOFILL_WAIT_MS = 250, DIALOG_HIDDEN_SELECTOR = '[aria-hidden="true"], [inert]', dialogCloseButtonOutsetClasses = "-me-pad-sm -mt-pad-sm", initializeUiDialog = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeIsomorphicLayoutEffect)(), (0, runtime2.initializeClassNames)(), (0, runtime2.initializeTranslations)(), (0, runtime2.initializeCdsRoot)(), (0, runtime2.initializeElementAccess)(), (0, runtime2.initializeLayers)(), (0, runtime2.initializeOverlaySelector)(), (0, runtime2.initializeCloseOnActivityHide)(), (0, runtime2.initializeMergedRefs)(), (0, runtime2.initializePortalRoot)(), (0, runtime2.initializeUiDisclosure9)(), (0, runtime2.initializeSurfaces)(), (0, runtime2.initializeOverlayActions)(), (0, runtime2.initializeOverlayFocus)(), (0, runtime2.initializeUiInputs10)(), (0, runtime2.initializeNpmDependency)(), (0, runtime2.initializeNpmDependency)(), (0, runtime2.initializeNpmDependency)(), reactI5 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxD5 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), DIALOG_POPUP_CLASS = `${(0, runtime2.getSurfaceClasses)("popover")} shadow-panel-lg`, dialogFullHeightClasses = `fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col w-[calc(100vw_-_2rem_-_2*max(env(safe-area-inset-left,0px),env(safe-area-inset-right,0px)))] ${DIALOG_MAX_HEIGHT_CLASS} ${DIALOG_POPUP_CLASS} cds-reset text-body font-normal text-primary outline-none focus-visible:outline-hidden`, desktopWindowDragStripStyle = {
+      (0, runtime2.initializeIsomorphicLayoutEffect)(), (0, runtime2.initializeClassNames)(), (0, runtime2.initializeTranslations)(), (0, runtime2.initializeCdsRoot)(), (0, runtime2.initializeElementAccess)(), (0, runtime2.initializeLayers)(), (0, runtime2.initializeOverlaySelector)(), (0, runtime2.initializeCloseOnActivityHide)(), (0, runtime2.initializeOutsidePressWrappers)(), (0, runtime2.initializeMergedRefs)(), (0, runtime2.initializePortalRoot)(), (0, runtime2.initializeUiDisclosure9)(), (0, runtime2.initializeSurfaces)(), (0, runtime2.initializeStablePopupPlacement)(), (0, runtime2.initializeOverlayActions)(), (0, runtime2.initializeOverlayOwners)(), (0, runtime2.initializeOverlayFocus)(), (0, runtime2.initializeSheetTreeAnnouncements)(), (0, runtime2.initializeUiInputs10)(), (0, runtime2.initializeNpmDependency)(), (0, runtime2.initializeNpmDependency)(), (0, runtime2.initializeNpmDependency)(), reactI5 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxD5 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), DIALOG_POPUP_CLASS = `${(0, runtime2.getSurfaceClasses)("popover")} shadow-panel-lg`, dialogFullHeightClasses = `fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col w-[calc(100vw_-_2rem_-_2*max(env(safe-area-inset-left,0px),env(safe-area-inset-right,0px)))] ${DIALOG_MAX_HEIGHT_CLASS} ${DIALOG_POPUP_CLASS} cds-reset text-body font-normal text-primary outline-none focus-visible:outline-hidden`, dialogPanelsBodyClasses = `${dialogPopupPositionClasses} m-[var(--cds-ring-inner)]`, dialogPanelsScrollBodyClasses = `${dialogPanelsBodyClasses} [:where([data-cds-tall-window])_&]:has-[[data-cds-part=band]]:scroll-fade-hide-top [scroll-timeline:--cds-dialog-scroll_block] [:where([data-cds-tall-window])_&]:scroll-pt-[calc(var(--cds-h-control)_+_3_*_var(--cds-toolbar-pad-block))]`, dialogStickyBandClasses = `${dialogBandClasses} sticky [:where([data-cds-tall-window])_&]:top-[calc(-1_*_var(--cds-pad-xl))] z-[calc(var(--cds-layer-base,0)_+_1000)] bg-[var(--cds-scroll-fade-strip-color,var(--cds-page-bg))] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 [:where([data-cds-tall-window])_&]:after:border-b-[length:var(--cds-toolbar-line)] after:border-[color:var(--cds-border-line,var(--cds-border))] supports-[animation-timeline:scroll()]:after:opacity-[calc(var(--cds-sticky-edge-start)_*_var(--cds-sticky-edge-active))] supports-[animation-timeline:scroll()]:after:[animation-name:cds-sticky-edge-start,cds-sticky-edge-active] after:[animation-timing-function:linear] after:[animation-fill-mode:both,none] after:[animation-duration:auto] after:[animation-timeline:--cds-dialog-scroll] after:[animation-range:0px_var(--spacing),0px_101%]`, dialogAlertBandClasses = `${dialogBandClasses} pointer-events-none`, dialogAlertBandTitleClasses = `${dialogBandTitleClasses} py-[calc((var(--cds-h-control)_-_1lh)_/_2)]`, dialogAlertBandDescriptionClasses = `${dialogBandDescriptionClasses} -mt-[calc(var(--cds-toolbar-pad-block)_+_(var(--cds-h-control)_-_var(--cds-leading-heading))_/_2)]`, dialogPanelsContext = reactI5.createContext(!1), desktopWindowDragStripStyle = {
         height: "var(--desktop-titlebar-inset, 0px)",
         WebkitAppRegion: "drag"
       }, dialogSizeClasses = {
@@ -748,7 +787,7 @@ function installUiDialog(runtime2) {
           })
         });
       }), ConfirmationDialogPopupInner.displayName = "ConfirmationDialog.PopupInner", DialogPopup3 = reactI5.forwardRef(({ size: size4 = "md", fullHeight = !1, unstyled = !1, surface, backdropClassName, backdropStyle, portalClassName, className, children, ...props }, options) => {
-        let value = unstyled ? "" : `${dialogFullHeightClasses} ${dialogPopupTransitionClasses} ${nestedDialogBlurClasses} ${dialogSizeClasses[size4]} ${fullHeight ? "h-dvh" : ""}`, value2 = (0, runtime2.useDefaultOverlayLayer)("modal");
+        let panels = (0, runtime2.useFeatureFlagPart)("panels") && !unstyled, confirm = reactI5.useContext(confirmationDialogContext), value = unstyled ? "" : `${dialogFullHeightClasses} ${dialogPopupTransitionClasses} ${nestedDialogBlurClasses} ${dialogSizeClasses[size4]} ${fullHeight ? "h-dvh" : ""} ${panels ? DIALOG_PANELS_PAD_CLASS : ""}`, value2 = (0, runtime2.useDefaultOverlayLayer)("modal");
         useDialogStyleDebug(portalClassName);
         let value3 = reactI5.useContext(dialogStateContext), value4 = reactI5.useContext(dialogInitialFocusContext), value5 = value3 === void 0 || value3 === !0, nonModal = value3 === !1;
         return jsxD5.jsx(runtime2.baseAlertDialog.Portal, {
@@ -773,17 +812,24 @@ function installUiDialog(runtime2) {
                 !nonModal && jsxD5.jsx(DesktopWindowDragStrip, {}),
                 jsxD5.jsx(DialogPopupInner, {
                   "data-cds": "Dialog",
+                  "data-cds-fizzy": panels ? "" : void 0,
                   ref: options,
                   ...props,
                   fitVisualViewport: !unstyled,
                   className: (0, runtime2.cn)("draggable-none", nestedDialogOverlayClasses, value, className),
-                  children: jsxD5.jsx(runtime2.outsidePressWrappersContext.Provider, {
+                  children: jsxD5.jsx(dialogPanelsContext.Provider, {
+                    value: panels,
+                    children: jsxD5.jsx(runtime2.outsidePressWrappersContext.Provider, {
                     value: value4,
-                    children: unstyled ? children : jsxD5.jsx("div", {
+                    children: unstyled ? children : panels ? jsxD5.jsx("div", {
+                        className: confirm ? dialogPanelsBodyClasses : dialogPanelsScrollBodyClasses,
+                        children
+                      }) : jsxD5.jsx("div", {
                       className: dialogPopupPositionClasses,
                       children
                     })
                   })
+                })
                 })
               ]
             })
@@ -796,11 +842,14 @@ function installUiDialog(runtime2) {
           ...props,
           className: (0, runtime2.cn)("text-primary", value ? dialogTitleClasses : DIALOG_TITLE_CLASS, className)
         });
-      }), DialogTitle3.displayName = "Dialog.Title", DialogCloseButton.displayName = "Dialog.CloseButton", DialogHeader.displayName = "Dialog.Header", DialogDescription3 = reactI5.forwardRef(({ className, ...props }, options) => jsxD5.jsx(runtime2.baseAlertDialog.Description, {
+      }), DialogTitle3.displayName = "Dialog.Title", DialogCloseButton.displayName = "Dialog.CloseButton", DialogHeader.displayName = "Dialog.Header", DialogDescription3 = reactI5.forwardRef(({ className, ...props }, options) => {
+        let panels = reactI5.useContext(dialogPanelsContext);
+        return jsxD5.jsx(runtime2.baseAlertDialog.Description, {
         ref: options,
         ...props,
-        className: (0, runtime2.cn)(dialogDescriptionClasses, className)
-      })), DialogDescription3.displayName = "Dialog.Description", dialogFooterAlignmentClasses = {
+        className: (0, runtime2.cn)(dialogDescriptionClasses, panels && dialogAfterBandDescriptionClasses, className)
+      });
+      }), DialogDescription3.displayName = "Dialog.Description", dialogFooterAlignmentClasses = {
         start: "sm:justify-start",
         center: "sm:justify-center",
         end: "sm:justify-end",

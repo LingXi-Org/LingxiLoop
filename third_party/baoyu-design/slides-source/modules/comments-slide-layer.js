@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCommentsSlideLayer(runtime2) {
   var SlideCommentLayerJsx, COMMENT_AREA_TAP_TIMEOUT_MS, COMMENT_POINTER_MOVE_THRESHOLD_PX, COMMENT_TOUCH_MOVE_THRESHOLD_PX, COMMENT_AREA_MIN_SIZE_PX, SLIDE_COMMENT_UNIT_RECT, clampSlideCommentFraction, slideCommentTargetsEqual, slideCommentTargetsSameElement;

@@ -131,7 +131,7 @@ export async function buildSlidesEditor() {
     .replace('</head>', [...initial].filter(name => name !== entry[0]).map(name =>
       `<link rel="modulepreload" crossorigin href="/artifact-editor/slides-assets/${name.split('/').at(-1)}">`).join('') + '</head>')
   await writeFile(resolve(output, 'index.html'), html)
-  for (const name of ['anthropicons-fizzy-lake-yNspLiPZ.woff2']) {
+  for (const name of ['anthropicons-fizzy-lake-D4byUNVq.woff2']) {
     await copyFile(resolve(sourceRoot, name), resolve(output, 'assets', name))
   }
   await copyFile(resolve(sourceRoot, 'third-party-licenses.txt'), resolve(output, 'third-party-licenses.txt'))
@@ -153,7 +153,7 @@ export async function buildSlidesEditor() {
     modules: recovered.modules.length, removedModules: recovered.removedModules, messageCount: recovered.translatedMessages,
     unusedBrowserBindings: browserBindings.removed,
     compressed, styles: { file: cssName, fallbackFont: fontName, fallbackFontBytes: font.length },
-    original: { bytes: 4666628, gzip: 1508796 },
+    original: { bytes: 4943004, gzip: 1591657 },
     entry: { file: entryName, bytes: entryFile.contents.length, gzip: gzipSync(entryFile.contents).length },
     initial: { bytes: initialFiles.reduce((sum, file) => sum + file.contents.length, 0), gzip: initialFiles.reduce((sum, file) => sum + gzipSync(file.contents).length, 0) },
     inputs: Object.keys(result.metafile.inputs),

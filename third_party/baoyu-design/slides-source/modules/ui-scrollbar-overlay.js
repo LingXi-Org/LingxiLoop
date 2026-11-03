@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiScrollbarOverlay(runtime2) {
   var reactw8, reactU3, jsxRK0, HIDDEN_NATIVE_SCROLLBAR_CLASS, SCROLLBAR_WIDTH, SCROLLBAR_INSET, MIN_SCROLLBAR_THUMB_SIZE, SCROLLBAR_IDLE_HIDE_MS, SCROLLBAR_THUMB_CLASS;
@@ -132,7 +132,7 @@ function installUiScrollbarOverlay(runtime2) {
   }), bindRuntimeValue(runtime2, "SCROLLBAR_THUMB_CLASS", () => SCROLLBAR_THUMB_CLASS, (value) => {
     SCROLLBAR_THUMB_CLASS = value;
   }), bindRuntimeValue(runtime2, "scrollbarMetrics", () => scrollbarMetrics), bindRuntimeValue(runtime2, "ScrollbarOverlay", () => ScrollbarOverlay), () => {
-    (0, runtime2.initializeSlideRenderer)(), reactw8 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), (0, runtime2.initializeFontCatalog)(), (0, runtime2.initializeUiPropertyPopover2)(), reactU3 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxRK0 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), HIDDEN_NATIVE_SCROLLBAR_CLASS = "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden", SCROLLBAR_WIDTH = 6, SCROLLBAR_INSET = 2, MIN_SCROLLBAR_THUMB_SIZE = 24, SCROLLBAR_IDLE_HIDE_MS = 800, SCROLLBAR_THUMB_CLASS = "rounded-full bg-alpha-3 hover:bg-alpha-4 data-[dragging]:bg-alpha-4 transition-opacity duration-150 motion-reduce:transition-none touch-none";
+    (0, runtime2.initializeSlideRenderer)(), reactw8 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), (0, runtime2.initializeFontCatalog)(), (0, runtime2.initializeUiPropertyPopover2)(), reactU3 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxRK0 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), HIDDEN_NATIVE_SCROLLBAR_CLASS = "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden", SCROLLBAR_WIDTH = 6, SCROLLBAR_INSET = 2, MIN_SCROLLBAR_THUMB_SIZE = 24, SCROLLBAR_IDLE_HIDE_MS = 800, SCROLLBAR_THUMB_CLASS = "rounded-full bg-alpha-3 hover:bg-alpha-4 data-[dragging]:bg-alpha-4 forced-colors:border-3 transition-opacity duration-150 motion-reduce:transition-none touch-none";
   };
 }
 export {

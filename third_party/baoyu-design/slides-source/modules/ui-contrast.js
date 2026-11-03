@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiContrast(runtime2) {
   var CONTRAST_HEX_PATTERN, CONTRAST_RGB_PATTERN, clampColorChannel_di, CONTRAST_RATIO_EPSILON, CONTRAST_MINIMUMS, formatContrastRatio, srgbToLinearChannel, linearToSrgbChannel, oklchHueRadians, rgbIsInGamut, initializeUiContrast;
@@ -84,9 +84,6 @@ function installUiContrast(runtime2) {
   function contrastRatioReadout(ratio) {
     return formatContrastRatio(ratio) + ":1";
   }
-  function contrastRatioSpoken(ratio) {
-    return formatContrastRatio(ratio) + " to 1";
-  }
   function contrastColorHex(color) {
     let callback = (input) => Math.round(clampColorChannel_di(input) * 255).toString(16).padStart(2, "0").toUpperCase();
     return "#" + callback(color.r) + callback(color.g) + callback(color.b) + (color.a < 1 ? callback(color.a) : "");
@@ -166,7 +163,7 @@ function installUiContrast(runtime2) {
         ratio: value6.worst.ratio
       };
   }
-  return bindRuntimeValue(runtime2, "parseContrastColor", () => parseContrastColor), bindRuntimeValue(runtime2, "relativeLuminance", () => relativeLuminance), bindRuntimeValue(runtime2, "compositeContrastColor", () => compositeContrastColor), bindRuntimeValue(runtime2, "contrastRatio", () => contrastRatio), bindRuntimeValue(runtime2, "strongerContrastColor", () => strongerContrastColor), bindRuntimeValue(runtime2, "colorContrastResults", () => colorContrastResults), bindRuntimeValue(runtime2, "worstContrastResult", () => worstContrastResult), bindRuntimeValue(runtime2, "contrastRatioReadout", () => contrastRatioReadout), bindRuntimeValue(runtime2, "contrastRatioSpoken", () => contrastRatioSpoken), bindRuntimeValue(runtime2, "contrastColorHex", () => contrastColorHex), bindRuntimeValue(runtime2, "rgbToOklch", () => rgbToOklch), bindRuntimeValue(runtime2, "oklchToRgb", () => oklchToRgb), bindRuntimeValue(runtime2, "clippedOklchColor", () => clippedOklchColor), bindRuntimeValue(runtime2, "contrastColorFix", () => contrastColorFix), bindRuntimeValue(runtime2, "CONTRAST_HEX_PATTERN", () => CONTRAST_HEX_PATTERN, (value) => {
+  return bindRuntimeValue(runtime2, "parseContrastColor", () => parseContrastColor), bindRuntimeValue(runtime2, "relativeLuminance", () => relativeLuminance), bindRuntimeValue(runtime2, "compositeContrastColor", () => compositeContrastColor), bindRuntimeValue(runtime2, "contrastRatio", () => contrastRatio), bindRuntimeValue(runtime2, "strongerContrastColor", () => strongerContrastColor), bindRuntimeValue(runtime2, "colorContrastResults", () => colorContrastResults), bindRuntimeValue(runtime2, "worstContrastResult", () => worstContrastResult), bindRuntimeValue(runtime2, "contrastRatioReadout", () => contrastRatioReadout), bindRuntimeValue(runtime2, "contrastColorHex", () => contrastColorHex), bindRuntimeValue(runtime2, "rgbToOklch", () => rgbToOklch), bindRuntimeValue(runtime2, "oklchToRgb", () => oklchToRgb), bindRuntimeValue(runtime2, "clippedOklchColor", () => clippedOklchColor), bindRuntimeValue(runtime2, "contrastColorFix", () => contrastColorFix), bindRuntimeValue(runtime2, "CONTRAST_HEX_PATTERN", () => CONTRAST_HEX_PATTERN, (value) => {
     CONTRAST_HEX_PATTERN = value;
   }), bindRuntimeValue(runtime2, "CONTRAST_RGB_PATTERN", () => CONTRAST_RGB_PATTERN, (value) => {
     CONTRAST_RGB_PATTERN = value;

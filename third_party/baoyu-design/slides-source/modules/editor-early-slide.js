@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorEarlySlide(runtime2) {
   var ReactEarlySlide, LOCAL_WORDS_STYLES, SLIDES_PRINT_STYLES, EarlySlideJsx, emptyEarlySlideSource, getEarlySlideSource, EarlySlideErrorBoundary, EARLY_SLIDE_PAINT_TIMEOUT_MS;

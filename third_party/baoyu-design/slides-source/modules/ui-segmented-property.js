@@ -1,9 +1,9 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiSegmentedProperty(runtime2) {
-  var jsxz30, jsxoG, COMPACT_SEGMENTED_CLASS, TIGHT_SEGMENTED_CLASS, VERTICAL_GLYPH_STYLE;
+  var jsxz30, jsxoG, COMPACT_SEGMENTED_CLASS, TIGHT_SEGMENTED_CLASS, VERTICAL_GLYPH_STYLE, tipWithHint;
   function SegmentedPropertyControl({ label, options, value, inherited, inheritedHint = runtime2.INHERITED_LABEL, onChange, disabled: disabled2, mixed, vertical, compact, dir, "data-testid": dataTestid }) {
-    let value2 = value === void 0 && !mixed && inherited !== void 0, value3 = options.every((input) => input.glyph !== void 0 || input.icon !== void 0), value4 = mixed ? "" : value ?? inherited ?? "", callback = (input) => (input.tooltip ?? input.label) + (value2 && input.value === inherited ? " (" + inheritedHint + ")" : "");
+    let value2 = value === void 0 && !mixed && inherited !== void 0, value3 = options.every((input) => input.glyph !== void 0 || input.icon !== void 0), value4 = mixed ? "" : value ?? inherited ?? "", callback = (input) => value2 && input.value === inherited ? tipWithHint (input.tooltip ?? input.label, inheritedHint) : input.tooltip ?? input.label;
     return jsxoG.jsx("span", {
       dir,
       className: (0, runtime2.joinClassNames)("block min-w-0 flex-1", compact ? TIGHT_SEGMENTED_CLASS : value3 && COMPACT_SEGMENTED_CLASS),
@@ -45,7 +45,8 @@ function installUiSegmentedProperty(runtime2) {
     });
   }
   function SegmentedPropertyRow(input) {
-    let { label, onReset, title, description, trailing, options, disabled: disabled2, "data-testid": value, ...remainingProps } = input, value2 = jsxoG.jsx(SegmentedPropertyControl, {
+    let { label, onReset,
+      resetLabel, title, description, trailing, options, disabled: disabled2, "data-testid": value, ...remainingProps } = input, value2 = jsxoG.jsx(SegmentedPropertyControl, {
       ...remainingProps,
       label,
       options,
@@ -60,6 +61,7 @@ function installUiSegmentedProperty(runtime2) {
           label,
           title,
           onReset,
+          resetLabel,
           disabled: disabled2,
           className: "min-h-0 pt-1"
         }),
@@ -76,6 +78,7 @@ function installUiSegmentedProperty(runtime2) {
       title,
       description,
       onReset,
+      resetLabel,
       trailing,
       disabled: disabled2,
       "data-testid": value,
@@ -92,10 +95,10 @@ function installUiSegmentedProperty(runtime2) {
     TIGHT_SEGMENTED_CLASS = value;
   }), bindRuntimeValue(runtime2, "VERTICAL_GLYPH_STYLE", () => VERTICAL_GLYPH_STYLE, (value) => {
     VERTICAL_GLYPH_STYLE = value;
-  }), bindRuntimeValue(runtime2, "SegmentedPropertyControl", () => SegmentedPropertyControl), bindRuntimeValue(runtime2, "SegmentedPropertyRow", () => SegmentedPropertyRow), () => {
+  }), bindRuntimeValue(runtime2, "SegmentedPropertyControl", () => SegmentedPropertyControl), bindRuntimeValue(runtime2, "SegmentedPropertyRow", () => SegmentedPropertyRow), bindRuntimeValue(runtime2, "tipWithHint", () => tipWithHint), () => {
     jsxz30 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiPropertyRow3)(), (0, runtime2.initializeUiInspectorIcons)(), (0, runtime2.initializeUiPropertyLabels)(), jsxoG = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), COMPACT_SEGMENTED_CLASS = "[&_[role=radio]]:px-0 [&_[role=radio]]:min-w-[calc(var(--cds-h-control)_-_2px)]", TIGHT_SEGMENTED_CLASS = "[&_[data-cds=SegmentedControl]]:gap-0 [&_[data-cds=SegmentedControl]]:p-0 [&_[role=radio]]:px-0 [&_[role=radio]]:min-w-[var(--cds-h-control)]", VERTICAL_GLYPH_STYLE = {
       transform: "matrix(0, 1, 1, 0, 0, 0)"
-    };
+    }, tipWithHint = (tip, hint) => (0, runtime2.formatMessage)({ defaultMessage: "{tip}（{hint}）", id: "k/nffs0I7G" }, { tip, hint });
   };
 }
 export {

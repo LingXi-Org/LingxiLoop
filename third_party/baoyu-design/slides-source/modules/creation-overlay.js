@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCreationOverlay(runtime2) {
   var ReactCreationOverlay, ReactCreationTips, CREATION_TIPS, CreationOverlayJsx, escapeCreationSelector, creationCoordinatesApproximatelyEqual, creationRectsApproximatelyEqual, SlideCreationOverlay;
@@ -278,7 +278,7 @@ function installCreationOverlay(runtime2) {
                   inMs: runtime2.CREATION_TIP_FADE_IN_MS
                 } : {
                   kind: "name",
-                  text: "Agent"
+                  text: (0, runtime2.literalMessage)( "智能体")
                 }
               }) : null
             ]

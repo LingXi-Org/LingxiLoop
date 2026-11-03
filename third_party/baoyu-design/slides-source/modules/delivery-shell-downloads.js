@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDeliveryShellDownloads(runtime2) {
   var ReactDownloadsPermission, DOWNLOADS_UNAVAILABLE_MESSAGE, MAX_SHELL_DOWNLOAD_BYTES, supportsShellSave, cachedDownloadsWithheld;
@@ -15,8 +15,14 @@ function installDeliveryShellDownloads(runtime2) {
       return !1;
     }
   }
+  function guestPage() {
+    let role = window.__baoyuShare?.role;
+    return role !== void 0 && role !== "owner";
+  }
   async function downloadsWithheld(input = runtime2.capabilityLoadTimeoutMs) {
     let value;
+    if (guestPage())
+      return !0;
     try {
       if (!(0, runtime2.hasHostCapabilityLoader)() || !pageDeclaresDownloads())
         return !1;
@@ -48,7 +54,7 @@ function installDeliveryShellDownloads(runtime2) {
     }
   }
   function useDownloadsWithheld() {
-    let [value, value2] = ReactDownloadsPermission.useState(cachedDownloadsWithheld);
+    let [value, value2] = ReactDownloadsPermission.useState(guestPage() ||cachedDownloadsWithheld);
     return ReactDownloadsPermission.useEffect(() => {
       let flag = !0;
       return downloadsWithheld().then((input) => {

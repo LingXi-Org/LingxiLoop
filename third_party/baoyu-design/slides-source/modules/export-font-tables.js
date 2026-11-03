@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportFontTables(runtime2) {
   var FONT_TAG_TRUE, FONT_TAG_CFF, FONT_TAG_COLLECTION, FONT_TAG_WOFF, FONT_TAG_WOFF2, maxFontNameBytes, maxFontLongNameBytes, readFontNameIds, uint32, rewrittenNameIds, droppedNameIds, initializeFontTables;

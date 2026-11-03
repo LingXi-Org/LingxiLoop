@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesBrowserPort(runtime2) {
   var FILE_LISTING_PATH, supportsFilesPublish, FILE_PUBLISH_WRITE_REVOKED_CODES, FILE_PUBLISH_ERROR_CODE_MAP, FILE_SHA256_PATTERN, normalizeFileSha256, FILE_SCOPE_PATH_PATTERN, FILE_FETCH_TIMEOUT_MS, fileTextDecoder;

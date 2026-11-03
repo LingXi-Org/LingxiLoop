@@ -14,11 +14,12 @@ export async function buildDesignLayout() {
  * Keep source/archive bytes, native edit guards, throttles and CAS persistence. */
 export function adaptDesignLayout(source, host) {
   const changes = [
-    ['if(Zn&&Zn.type==="contentHull"){', 'if(Zn&&Zn.type==="flowSize"){if(i||c||l||!o||!Number.isFinite(Zn.w)||!Number.isFinite(Zn.h)||Zn.h<40||Zn.h>8000||Math.abs(Zn.w-o.w)>1)return;let bn=(0,e.normalizeArtboardMeasuredSize)(Zn);bn&&v?.(f,{...bn,flow:true});return}if(Zn&&Zn.type==="contentHull"){'],
-    ['if(!rt||!rt.frameless)return;', 'if(!rt||(!rt.frameless&&!be.flow))return;'],
-    ['if(!yr.current||!st){lv.current.set(ae,be);return}', 'if(!yr.current||(!st&&!be.flow)){lv.current.set(ae,be);return}'],
-    ['(yo.current.has(ae)||Ds===ae||yl===ae)&&U0(ae,be)', '(be.flow||yo.current.has(ae)||Ds===ae||yl===ae)&&U0(ae,be)'],
-    ['let Dt=kr((0,e.replaceDesignArtboards)(ga.current,ga.current.artboards.map(Pt=>Pt.file===ae?{...Pt,w:be.w,h:be.h}:Pt)));', 'let Dt=kr(be.flow?__lingxiDesignFlow.resizeFlowManifest(ga.current,ae,be,e.moveAnnotation):(0,e.replaceDesignArtboards)(ga.current,ga.current.artboards.map(Pt=>Pt.file===ae?{...Pt,w:be.w,h:be.h}:Pt)));if(Dt===ga.current)return;'],
+    // ArtboardFrame props in this pin: frameless l, expanded d, playing i, box r, onContentHull v, file f.
+    ['if(Sr&&Sr.type==="contentHull"){', 'if(Sr&&Sr.type==="flowSize"){if(l||d||i||!r||!Number.isFinite(Sr.w)||!Number.isFinite(Sr.h)||Sr.h<40||Sr.h>8000||Math.abs(Sr.w-r.w)>1)return;let Cn=(0,e.normalizeArtboardMeasuredSize)(Sr);Cn&&v?.(f,{...Cn,flow:true});return}if(Sr&&Sr.type==="contentHull"){'],
+    ['if(!at||!at.frameless)return;', 'if(!at||(!at.frameless&&!xe.flow))return;'],
+    ['if(!Vl.current||!ft){Id.current.set(ae,xe);return}', 'if(!Vl.current||(!ft&&!xe.flow)){Id.current.set(ae,xe);return}'],
+    ['(Ur.current.has(ae)||Zs===ae||jl===ae)&&ym(ae,xe)', '(xe.flow||Ur.current.has(ae)||Zs===ae||jl===ae)&&ym(ae,xe)'],
+    ['let Lt=No((0,e.replaceDesignArtboards)(Ka.current,Ka.current.artboards.map(It=>It.file===ae?{...It,w:xe.w,h:xe.h}:It)));', 'let Lt=No(xe.flow?__lingxiDesignFlow.resizeFlowManifest(Ka.current,ae,xe,e.moveAnnotation):(0,e.replaceDesignArtboards)(Ka.current,Ka.current.artboards.map(It=>It.file===ae?{...It,w:xe.w,h:xe.h}:It)));if(Lt===Ka.current)return;'],
   ]
   for (const [needle, replacement] of changes) {
     assert.equal(source.split(needle).length, 2, `pinned Design flow hook changed: ${needle}`)

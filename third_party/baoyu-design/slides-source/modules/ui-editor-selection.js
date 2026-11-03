@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiEditorSelection(runtime2) {
   var jsxForUiEditorSelection, SELECTION_METRICS, ALL_SELECTION_HANDLES, CORNER_SELECTION_HANDLES, EDGE_SELECTION_HANDLES, SELECTION_OUTLINE_CLASS, ROTATION_HANDLE_POSITION, initializeUiEditorSelection, reactForUiEditorSelection, jsxForUiEditorSelection2, AlignmentGuides, initializeUiEditorSelection2;

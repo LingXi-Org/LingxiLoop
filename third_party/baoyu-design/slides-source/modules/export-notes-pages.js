@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportNotesPages(runtime2) {
   var notesPageExports, NOTES_PAGE, NOTES_TEXT_TOP, NOTES_TEXT_HEIGHT, NOTES_TEXT_WIDTH, NOTES_LINES_PER_PAGE, NOTES_COLUMNS_PER_LINE, WIDE_GLYPH_PATTERN, notesGlyphWidth, NOTES_PICTURE_PLACEMENT, notesPictureAsset, initializeNotesPages;

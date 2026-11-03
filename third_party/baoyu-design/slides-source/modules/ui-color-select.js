@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiColorSelect(runtime2) {
-  var ColorSelectReact, ColorSelectJsx, symbolicColorPattern, unsafeColorPattern, swatchLabel, isEmptySwatch, swatchLabelIsColor, swatchPaletteColumns, emptySwatchValue, initializeColorSelect;
+  var ColorSelectReact, ColorSelectJsx, symbolicColorPattern, unsafeColorPattern, swatchLabel, isEmptySwatch, swatchLabelIsColor, swatchPaletteColumns, emptySwatchValue, revealPressedSwatch, EMPTY_SWATCH_LABEL, initializeColorSelect;
   function swatchPreviewStyle(input) {
     if (input === void 0)
       return;
@@ -166,7 +166,10 @@ function installUiColorSelect(runtime2) {
           className: value4 ? "mb-1" : void 0,
           ...runtime2.gradientStopKeyboardHandlers,
           children: ColorSelectJsx.jsx(runtime2.SegmentedControl, {
-            "aria-label": value3.label ?? "填充类型",
+            "aria-label": value3.label ?? (0, runtime2.formatMessage)({
+              defaultMessage: "填充类型",
+              id: "wxcOfwPORw"
+            }),
             fullWidth: !0,
             segments: value3.options.map((input) => ({
               ...(0, runtime2.fillModeOption)(input.value, input.label, value3.disabled === !0 || input.disabledReason !== void 0 ? !0 : void 0),
@@ -184,6 +187,7 @@ function installUiColorSelect(runtime2) {
       ]
     });
     return ColorSelectJsx.jsxs("div", {
+      ref: revealPressedSwatch,
       "data-kit": "color-selector",
       "data-search-scope": "",
       onKeyDown: (0, runtime2.createOptionListKeyHandler)("[data-swatch]"),
@@ -223,7 +227,7 @@ function installUiColorSelect(runtime2) {
       return value;
     let state = {
       name: emptySwatchValue,
-      label: "无",
+      label: EMPTY_SWATCH_LABEL,
       color: "transparent",
       empty: !0,
       group: value[0]?.group,
@@ -293,10 +297,17 @@ function installUiColorSelect(runtime2) {
     swatchPaletteColumns = value;
   }), bindRuntimeValue(runtime2, "emptySwatchValue", () => emptySwatchValue, (value) => {
     emptySwatchValue = value;
+  }), bindRuntimeValue(runtime2, "revealPressedSwatch", () => revealPressedSwatch, (value) => {
+    revealPressedSwatch = value;
+  }), bindRuntimeValue(runtime2, "EMPTY_SWATCH_LABEL", () => EMPTY_SWATCH_LABEL, (value) => {
+    EMPTY_SWATCH_LABEL = value;
   }), bindRuntimeValue(runtime2, "initializeColorSelect", () => initializeColorSelect, (value) => {
     initializeColorSelect = value;
   }), () => {
-    swatchLabel = (input) => input.label ?? input.name[0].toUpperCase() + input.name.slice(1), isEmptySwatch = (input) => input.empty === !0 || input.name === "default", swatchLabelIsColor = (input) => /^(#|rgba?\(|hsla?\()/i.test((input.label ?? input.name).trim()), swatchPaletteColumns = 12, emptySwatchValue = ":none", initializeColorSelect = (0, runtime2.initializeOnce)(() => {
+    swatchLabel = (input) => input.label ?? input.name[0].toUpperCase() + input.name.slice(1), isEmptySwatch = (input) => input.empty === !0 || input.name === "default", swatchLabelIsColor = (input) => /^(#|rgba?\(|hsla?\()/i.test((input.label ?? input.name).trim()), swatchPaletteColumns = 12, revealPressedSwatch = (input) => (0, runtime2.scrollIntoOverlayView)(input?.querySelector('[data-swatch][aria-pressed="true"]')), emptySwatchValue = ":none", EMPTY_SWATCH_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "无",
+      id: "dr35Pmd5FF"
+    }), initializeColorSelect = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiAnnouncements)(), (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeUiContrastControls)(), (0, runtime2.initializeUiColorPicker)(), (0, runtime2.initializeGradientEditor)(), (0, runtime2.initializeIconButton)(), (0, runtime2.initializeUiInspectorIcons)(), (0, runtime2.initializeUiPropertySearch)(), (0, runtime2.initializeUiPropertyRow3)(), (0, runtime2.initializeUiPropertyLabels)(), ColorSelectReact = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), ColorSelectJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), symbolicColorPattern = /^\s*(var|color-mix)\(/i, unsafeColorPattern = /url\s*\(|image(-set)?\s*\(|src\s*\(|cross-fade\s*\(|element\s*\(|\\/i;
     });
   };

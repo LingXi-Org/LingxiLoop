@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installModelTypography(runtime2) {
-  var emptyTypographyStyles, systemTypographyStylesCache, inferredBodyRolePriority, clampTypographyValue, initializeTypographyInference;
+  var emptyTypographyStyles, systemTypographyStylesCache, inferredBodyRolePriority, CUSTOM_TYPOGRAPHY_STYLE_ID, clampTypographyValue, initializeTypographyInference;
   function typeScaleForRole(role, theme) {
     return (theme === "neutral" ? runtime2.neutralTypeScale : runtime2.anthropicTypeScale)[role];
   }
@@ -138,9 +138,37 @@ function installModelTypography(runtime2) {
   function typographyStylesSignature(styles, theme) {
     return styles.map((input) => input.id + ":" + typographyComboKey(input, theme) + ":" + String(input.fontWeight) + (input.italic ? "i" : "")).join("|");
   }
-  function nodeTypographyLabel(node, theme) {
-    let value = nodeTypographyCombo(node, theme);
-    return (value.fontFamily !== void 0 ? fontFamilyLabel(value.fontFamily) : theme === "neutral" ? "System" : typeScaleForRole(node.role, theme).serifDisplay ? "Serif" : "Sans") + " · " + String(value.fontSize);
+  function nodeTypographyFace(node, theme) {
+    let combo = nodeTypographyCombo(node, theme), size4 = String (combo.fontSize), family = combo.fontFamily;
+    return family === void 0 ? {
+      face : theme === "neutral" ? "System" : typeScaleForRole(node.role, theme).serifDisplay ? "Serif" : "Sans",
+      word: !0,
+      size: size4
+    } : family === "sans" || family === "serif" || family === "mono" ? {
+      face: {
+        sans: "Sans",
+        serif: "Serif",
+        mono: "Mono"
+      }[family],
+      word: !0,
+      size: size4
+    } : {
+      face: fontFamilyLabel(family),
+      size: size4
+    };
+  }
+  function customTypographyStyle(node, match, styles, theme) {
+    if(match.style !== null || match.mixed || styles.length === 0)
+      return null;
+    let { face, size: size4 } = nodeTypographyFace(node, theme);
+    return {
+      ...nodeTypographyCombo(node, theme),
+      id: CUSTOM_TYPOGRAPHY_STYLE_ID,
+      name: face,
+      hint: size4,
+      count: 0,
+      source: "deck"
+    };
   }
   function defaultBodyTypographyStyle(styles) {
     let value = styles.filter((input) => input.count > 0), value2 = value.filter((input) => input.role === "lead" || input.role === "caption").sort((input, options) => options.count - input.count || input.fontSize - options.fontSize);
@@ -264,17 +292,20 @@ function installModelTypography(runtime2) {
     }
     return items;
   }
-  return bindRuntimeValue(runtime2, "typeScaleForRole", () => typeScaleForRole), bindRuntimeValue(runtime2, "typographyFontKey", () => typographyFontKey), bindRuntimeValue(runtime2, "typographyComboKey", () => typographyComboKey), bindRuntimeValue(runtime2, "nodeTypographyCombo", () => nodeTypographyCombo), bindRuntimeValue(runtime2, "systemTypographyStyles", () => systemTypographyStyles), bindRuntimeValue(runtime2, "iterateDeckTextNodes", () => iterateDeckTextNodes), bindRuntimeValue(runtime2, "typographyIsEmphasized", () => typographyIsEmphasized), bindRuntimeValue(runtime2, "inferTypographyRoles", () => inferTypographyRoles), bindRuntimeValue(runtime2, "mostFrequentValue", () => mostFrequentValue), bindRuntimeValue(runtime2, "dominantTypographyCombo", () => dominantTypographyCombo), bindRuntimeValue(runtime2, "compareTypographyComboKeys", () => compareTypographyComboKeys), bindRuntimeValue(runtime2, "inferDeckTypographyStyles", () => inferDeckTypographyStyles), bindRuntimeValue(runtime2, "fontFamilyLabel", () => fontFamilyLabel), bindRuntimeValue(runtime2, "typographyStylesSignature", () => typographyStylesSignature), bindRuntimeValue(runtime2, "nodeTypographyLabel", () => nodeTypographyLabel), bindRuntimeValue(runtime2, "defaultBodyTypographyStyle", () => defaultBodyTypographyStyle), bindRuntimeValue(runtime2, "typographyEmphasisMatches", () => typographyEmphasisMatches), bindRuntimeValue(runtime2, "findTypographyStyle", () => findTypographyStyle), bindRuntimeValue(runtime2, "findExactTypographyStyle", () => findExactTypographyStyle), bindRuntimeValue(runtime2, "matchingTypographyNodes", () => matchingTypographyNodes), bindRuntimeValue(runtime2, "clearTypographyOverrides", () => clearTypographyOverrides), bindRuntimeValue(runtime2, "typographyEmphasisVariant", () => typographyEmphasisVariant), bindRuntimeValue(runtime2, "resolveNodeTypographyStyle", () => resolveNodeTypographyStyle), bindRuntimeValue(runtime2, "resolveTypographyEmphasisVariant", () => resolveTypographyEmphasisVariant), bindRuntimeValue(runtime2, "typographyUsesSystemFont", () => typographyUsesSystemFont), bindRuntimeValue(runtime2, "applyTypographyStyle", () => applyTypographyStyle), bindRuntimeValue(runtime2, "collectDeckFontFamilies", () => collectDeckFontFamilies), bindRuntimeValue(runtime2, "modelFontFromDesignToken", () => modelFontFromDesignToken), bindRuntimeValue(runtime2, "designSystemTypographyStyles", () => designSystemTypographyStyles), bindRuntimeValue(runtime2, "emptyTypographyStyles", () => emptyTypographyStyles, (value) => {
+  return bindRuntimeValue(runtime2, "typeScaleForRole", () => typeScaleForRole), bindRuntimeValue(runtime2, "typographyFontKey", () => typographyFontKey), bindRuntimeValue(runtime2, "typographyComboKey", () => typographyComboKey), bindRuntimeValue(runtime2, "nodeTypographyCombo", () => nodeTypographyCombo), bindRuntimeValue(runtime2, "systemTypographyStyles", () => systemTypographyStyles), bindRuntimeValue(runtime2, "iterateDeckTextNodes", () => iterateDeckTextNodes), bindRuntimeValue(runtime2, "typographyIsEmphasized", () => typographyIsEmphasized), bindRuntimeValue(runtime2, "inferTypographyRoles", () => inferTypographyRoles), bindRuntimeValue(runtime2, "mostFrequentValue", () => mostFrequentValue), bindRuntimeValue(runtime2, "dominantTypographyCombo", () => dominantTypographyCombo), bindRuntimeValue(runtime2, "compareTypographyComboKeys", () => compareTypographyComboKeys), bindRuntimeValue(runtime2, "inferDeckTypographyStyles", () => inferDeckTypographyStyles), bindRuntimeValue(runtime2, "fontFamilyLabel", () => fontFamilyLabel), bindRuntimeValue(runtime2, "typographyStylesSignature", () => typographyStylesSignature), bindRuntimeValue(runtime2, "nodeTypographyFace", () => nodeTypographyFace), bindRuntimeValue(runtime2, "customTypographyStyle", () => customTypographyStyle), bindRuntimeValue(runtime2, "defaultBodyTypographyStyle", () => defaultBodyTypographyStyle), bindRuntimeValue(runtime2, "typographyEmphasisMatches", () => typographyEmphasisMatches), bindRuntimeValue(runtime2, "findTypographyStyle", () => findTypographyStyle), bindRuntimeValue(runtime2, "findExactTypographyStyle", () => findExactTypographyStyle), bindRuntimeValue(runtime2, "matchingTypographyNodes", () => matchingTypographyNodes), bindRuntimeValue(runtime2, "clearTypographyOverrides", () => clearTypographyOverrides), bindRuntimeValue(runtime2, "typographyEmphasisVariant", () => typographyEmphasisVariant), bindRuntimeValue(runtime2, "resolveNodeTypographyStyle", () => resolveNodeTypographyStyle), bindRuntimeValue(runtime2, "resolveTypographyEmphasisVariant", () => resolveTypographyEmphasisVariant), bindRuntimeValue(runtime2, "typographyUsesSystemFont", () => typographyUsesSystemFont), bindRuntimeValue(runtime2, "applyTypographyStyle", () => applyTypographyStyle), bindRuntimeValue(runtime2, "collectDeckFontFamilies", () => collectDeckFontFamilies), bindRuntimeValue(runtime2, "modelFontFromDesignToken", () => modelFontFromDesignToken), bindRuntimeValue(runtime2, "designSystemTypographyStyles", () => designSystemTypographyStyles), bindRuntimeValue(runtime2, "emptyTypographyStyles", () => emptyTypographyStyles, (value) => {
     emptyTypographyStyles = value;
   }), bindRuntimeValue(runtime2, "systemTypographyStylesCache", () => systemTypographyStylesCache, (value) => {
     systemTypographyStylesCache = value;
   }), bindRuntimeValue(runtime2, "inferredBodyRolePriority", () => inferredBodyRolePriority, (value) => {
     inferredBodyRolePriority = value;
+  }), bindRuntimeValue(runtime2, "CUSTOM_TYPOGRAPHY_STYLE_ID", () => CUSTOM_TYPOGRAPHY_STYLE_ID, (value) => {
+    CUSTOM_TYPOGRAPHY_STYLE_ID = value;
   }), bindRuntimeValue(runtime2, "clampTypographyValue", () => clampTypographyValue, (value) => {
     clampTypographyValue = value;
   }), bindRuntimeValue(runtime2, "initializeTypographyInference", () => initializeTypographyInference, (value) => {
     initializeTypographyInference = value;
   }), () => {
+    CUSTOM_TYPOGRAPHY_STYLE_ID = "custom",
     clampTypographyValue = (input, options, context) => Math.min(context, Math.max(options, input)), initializeTypographyInference = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeDesignTokenParser)(), (0, runtime2.initializeDesignSystemsStore)(), (0, runtime2.initializeStyleSchema)(), (0, runtime2.initializeSlideTypeScales)(), (0, runtime2.initializeHtmlCompiler)(), emptyTypographyStyles = [], systemTypographyStylesCache = /* @__PURE__ */ new Map(), inferredBodyRolePriority = ["h3", "eyebrow", "lead", "caption", "body"];
     });
