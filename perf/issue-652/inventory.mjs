@@ -44,6 +44,14 @@ scan(tree, node => {
   bindings.get(node.name.text).consumers.push({ function: functions.join('/'), expression: node.getText(tree), offset: node.getStart(tree) })
 })
 const runtime = ts.createSourceFile('runtime.js', await read('third_party/baoyu-design/slides-source/runtime.js'), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
+let designInitializers = []
+scan(tree, node => {
+  if (!ts.isArrayLiteralExpression(node) || node.elements.length < 100 || !node.elements.every(ts.isCallExpression)) return
+  let owner = node.parent
+  while (owner && !ts.isFunctionDeclaration(owner)) owner = owner.parent
+  if (owner?.name?.text === 'nW') designInitializers = node.elements.map(item => item.expression.getText(tree))
+})
+if (designInitializers.length !== 663) throw Error('Pinned Design initialization inventory changed')
 let initializers = []
 scan(runtime, node => {
   if (ts.isVariableDeclaration(node) && node.name.getText(runtime) === 'initializers' && ts.isArrayLiteralExpression(node.initializer)) {
@@ -52,8 +60,8 @@ scan(runtime, node => {
 })
 const report = {
   upstreamCommit: design.upstreamCommit,
-  design: { buildModel: 'One pinned monolithic entry plus synchronous runtime source strings; this is a consumer inventory, not a complete internal call graph.',
-    entry: design.entry, runtime: design.runtime, math: design.math, optionalPrograms: design.optionalPrograms ?? {}, programs: [...programs.values()].sort((a, b) => b.bytes - a.bytes),
+  design: { buildModel: 'Pinned entry behind an explicit four-program preparation boundary; three optional source programs at asynchronous consumers. This is a consumer/initializer inventory, not a complete internal call graph.',
+    entry: design.entry, runtime: design.runtime, math: design.math, startupPrograms: design.startupPrograms ?? {}, optionalPrograms: design.optionalPrograms ?? {}, initializers: designInitializers, programs: [...programs.values()].sort((a, b) => b.bytes - a.bytes),
     files: design.files, compressed: design.compressed },
   slides: { buildModel: 'Actual esbuild browser metafile; dynamic imports and eager edges are distinguished by kind.',
     initial: slides.initial, entry: slides.entry, compressed: slides.compressed, initializers,

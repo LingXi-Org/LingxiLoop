@@ -10,7 +10,7 @@ from bench import Trace
 pub=subprocess.check_output(['openssl','x509','-pubkey','-noout','-in','.codex-tmp/issue-652/tls/cert.pem']);spki=base64.b64encode(hashlib.sha256(subprocess.check_output(['openssl','pkey','-pubin','-outform','der'],input=pub)).digest()).decode()
 with sync_playwright() as pw:
     browser=pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--no-proxy-server','--host-resolver-rules=MAP *.lingxi-perf.cn 127.0.0.1','--ignore-certificate-errors-spki-list='+spki]);context=browser.new_context(viewport={'width':width,'height':1000});page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)));trace=Trace(context,page)
-    page.goto(f'https://app.lingxi-perf.cn:{port}/',wait_until='domcontentloaded');page.evaluate('fetch("/fixture/access",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({read:true,write:true,failPublish:false,shortGrants:false,reset:true})})');page.locator('#open-deck-a').click()
+    page.goto(f'https://app.lingxi-perf.cn:{port}/',wait_until='domcontentloaded');page.evaluate('fetch("/fixture/access",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({read:true,write:true,failPublish:true,shortGrants:false,reset:true})})');page.locator('#open-deck-a').click()
     deadline=time.monotonic()+35;frame=None
     while time.monotonic()<deadline:
         frame=next((f for f in page.frames if '/artifact-editor/slides/'in f.url),None)
@@ -18,12 +18,21 @@ with sync_playwright() as pw:
         if frame and frame.locator('[data-slides-editor] [data-text-path]').count():break
         page.wait_for_timeout(50)
     assert frame
+    state=lambda:page.evaluate('fetch("/fixture/state").then(r=>r.json())')
     heading=frame.locator('[data-slides-editor] [data-text-path]').filter(has_text='幻灯片 1').first;heading.dblclick();editable=frame.locator('[contenteditable="true"]').first;expect(editable).to_be_visible();editable.fill('Core text edit before properties');page.keyboard.press('Escape')
+    original_time=frame.evaluate('performance.timeOrigin')
+    page.keyboard.press('Control+s')
+    deadline=time.monotonic()+5
+    while time.monotonic()<deadline and state()['refusedPublishes']==0:page.wait_for_timeout(50)
+    assert state()['refusedPublishes']>0
+    assert 'Core text edit before properties'not in state()['files']['slides']['project/slides/slide-1.html']
     assert not any('/properties-'in row['url']for row in trace.requests.values()),'closed property pane downloaded its implementation'
     image=frame.locator('[data-slides-editor] img[src*="_blob/"]').first;image.click()
     toggle=frame.get_by_role('button',name='属性',exact=True).first;toggle.click()
     retry=frame.get_by_role('button',name='重试',exact=True);expect(retry).to_be_visible(timeout=10000);page.screenshot(path=str(destination/'properties-failure.png'));retry.click()
-    alt=frame.get_by_role('textbox',name='替代文本',exact=True);expect(alt).to_be_visible(timeout=15000);alt.fill('Native property changed');alt.press('Tab')
+    expect(frame.locator('[data-slides-editor] [data-text-path]').filter(has_text='Core text edit before properties').first).to_be_visible()
+    page.evaluate('fetch("/fixture/access",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({failPublish:false})})')
+    alt=frame.get_by_role('textbox',name='替代文本',exact=True);expect(alt).to_be_visible(timeout=15000);alt.fill('Native property changed');alt.press('Tab');page.keyboard.press('Control+s')
     state=lambda:page.evaluate('fetch("/fixture/state").then(r=>r.json())')
     deadline=time.monotonic()+15
     while time.monotonic()<deadline:
@@ -47,7 +56,9 @@ with sync_playwright() as pw:
         if row.get('type')=='Script'and row.get('status')==200 and row.get('bytes',0)>1024:successes[row['url']]=successes.get(row['url'],0)+1
     assert max(successes.values())==1,successes
     assert any('/properties-'in row['url']and row.get('status')==503 for row in trace.requests.values())
+    assert frame.evaluate('performance.timeOrigin')==original_time,'property feature failure replaced the native document'
+    assert 'Core text edit before properties'in state()['files']['slides']['project/slides/slide-1.html']
     assert not errors,errors
-    report={'scope':'Actual native Slides/Frame/gateway/CSP/CAS and HTTP cache with synthetic ACL, no interception. Core text edit works before properties; first failure/retry, image alt property edit, saved undo/redo and pane reopen.','browser':browser.version,'width':width,'errors':errors,'initialPropertyRequests':0,'coreTextEditingRemainsSynchronous':True,'firstFailureRecovered':True,'propertyEditUndoRedoSaved':True,'paneReopen':True,'oneSuccessfulScriptTransferPerUrl':True,'requests':list(trace.requests.values())}
+    report={'scope':'Actual native Slides/Frame/gateway/CSP/CAS and HTTP cache with synthetic ACL, no interception. Core text edit works before properties; first failure/retry, image alt property edit, saved undo/redo and pane reopen.','browser':browser.version,'width':width,'errors':errors,'initialPropertyRequests':0,'coreTextEditingRemainsSynchronous':True,'firstFailureRecovered':True,'propertyEditUndoRedoSaved':True,'paneReopen':True,'unsentTextSurvivesFeatureFailure':True,'sameNativeDocument':True,'oneSuccessfulScriptTransferPerUrl':True,'requests':list(trace.requests.values())}
     with gzip.GzipFile(str(destination/'browser.json.gz'),'wb',mtime=0)as f:f.write(json.dumps(report,ensure_ascii=False).encode())
     print(json.dumps({k:v for k,v in report.items()if k!='requests'},ensure_ascii=False));browser.close()

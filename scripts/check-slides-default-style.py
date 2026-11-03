@@ -143,7 +143,7 @@ def run(browser, legacy=False):
 
     view.get_by_role("button", name="属性", exact=True).click()
     view.get_by_role("tab", name="主题", exact=True).click()
-    expect(view.get_by_text("Slides 内置风格", exact=True).first).to_be_visible()
+    expect(view.get_by_text("Claude 经典", exact=True).first).to_be_visible()
     page.screenshot(path=str(evidence / "theme.png"))
     view.get_by_role("button", name="关闭面板", exact=True).click()
 

@@ -40,14 +40,36 @@ const imageId = '1234567890abcdef1234567890abcdef'
 const image = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="#426b46"/><circle cx="320" cy="180" r="120" fill="#b8d994"/></svg>')
 const mathFixture = process.env.PERF_MATH_FIXTURE === '1'
 const failedFeatures = new Set<string>()
-const failFeatures = (process.env.PERF_FAIL_FEATURES ?? '').split(',').filter(value => ['math', 'templates', 'presentation', 'exports', 'pptx-library', 'woff2-decoder'].includes(value))
-const order = Array.from({ length: mathFixture ? 3 : 20 }, (_, index) => `slide-${index + 1}`)
+const failFeatures = (process.env.PERF_FAIL_FEATURES ?? '').split(',').filter(value => ['math', 'templates', 'presentation', 'properties', 'exports', 'pptx-library', 'woff2-decoder'].includes(value))
+const order = Array.from({ length: mathFixture || process.env.PERF_FONT_FIXTURE === '1' ? 3 : 20 }, (_, index) => `slide-${index + 1}`)
 const documents = {
   design: new Map([['project/canvas.json', JSON.stringify(canvas)], ['project/Main.dc.html', board]]),
   slides: new Map<string, string>([
     ['project/deck.json', JSON.stringify({ v: 4, lists: 'css', title: '加载基准稿', order, sections: {}, faces: {}, designSystems: [] })],
     ...order.map((id, index): [string, string] => [`project/slides/${id}.html`, `<section id="${id}" style="background:#faf8f4;padding:80px;display:flex;flex-direction:column;gap:32px"><h1>幻灯片 ${index + 1}</h1><p>固定样稿，用于测量打开时间。</p>${mathFixture && index === 0 ? String.raw`<p>\(x^2\)</p>` : ''}<img src="/_blob/${imageId}" style="width:640px;height:360px"><aside>第 ${index + 1} 页讲者备注。</aside></section>`]),
   ]),
+}
+if (process.env.PERF_COMPONENT_FIXTURE === '1') {
+  const componentCanvas = structuredClone(canvas)
+  Object.assign(componentCanvas.boards, { 'Card.dc.html': { x: 900, y: 0, w: 360, h: 180 } })
+  componentCanvas.order.push('Card.dc.html')
+  documents.design.set('project/canvas.json', JSON.stringify(componentCanvas))
+  documents.design.set('project/Main.dc.html', board.replace('</div></x-dc>', '<dc-import name="Card" hint-size="360px,180px"></dc-import></div></x-dc>'))
+  documents.design.set('project/Card.dc.html', '<html><head><script src="./support.js"></script></head><body><x-dc><div style="width:360px;height:180px;background:#fef3c7;padding:16px"><h2>Reusable card original</h2><button onClick="{{ increment }}">Increment child</button><output>{{ count }}</output></div></x-dc><script type="text/x-dc" data-dc-script>class Component extends DCLogic { state = {count: 0}; renderVals() { return {count: this.state.count, increment: () => this.setState({count: this.state.count + 1})}; } }</script></body></html>')
+}
+if (process.env.PERF_THEME_FIXTURE === '1') {
+  const metadata = JSON.parse(documents.slides.get('project/deck.json')!)
+  const styled = ARTIFACT_KIND_DEFINITIONS.slides.initialIndex(metadata.title, '2026-11-03T00:00:00.000Z')
+  documents.slides.set('project/deck.json', JSON.stringify({ ...styled, order: metadata.order }))
+  for (const [path, tokens] of Object.entries(ARTIFACT_KIND_DEFINITIONS.slides.initialResources ?? {}))
+    documents.slides.set(path, JSON.stringify(tokens))
+}
+if (process.env.PERF_FONT_FIXTURE === '1') {
+  const metadata = JSON.parse(documents.slides.get('project/deck.json')!)
+  metadata.faces = { 'dm-sans': { family: 'DM Sans', href: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap' } }
+  documents.slides.set('project/deck.json', JSON.stringify(metadata))
+  for (const [path, text] of documents.slides)
+    if (path.startsWith('project/slides/')) documents.slides.set(path, text.replace(/<h1>[^<]+<\/h1>/, '<h1 style="font-family:\'DM Sans\',sans-serif;font-weight:400">Font export original 123</h1>'))
 }
 const grants = new Map<string, 'design' | 'slides'>()
 // Explicit, loopback-only recovery fixture. Ordinary performance documents keep
@@ -130,6 +152,15 @@ app.get(/^\/artifact-editor\/(design|slides)-assets\/([\w-]+\.(js|css|woff2))$/,
         failedFeatures.add(feature)
         res.set('Cache-Control', 'no-store').status(503).send('Synthetic first-use failure'); return
       }
+    }
+    if (kind === 'design' && (process.env.PERF_FAIL_DESIGN_PROGRAMS || process.env.PERF_DESIGN_PROGRAM_DELAY_MS)) {
+      const manifest = JSON.parse(await readFile(resolve(editors.design, 'manifest.json'), 'utf8'))
+      const program = Object.entries(manifest.startupPrograms ?? {}).find(([, value]) => (value as { file: string }).file === name)?.[0]
+      if (program && (process.env.PERF_FAIL_DESIGN_PROGRAMS ?? '').split(',').includes(program) && !failedFeatures.has('design:' + program)) {
+        failedFeatures.add('design:' + program);res.set('Cache-Control', 'no-store').status(503).send('Synthetic required-program failure');return
+      }
+      if (program === 'support' && Number(process.env.PERF_DESIGN_PROGRAM_DELAY_MS) > 0)
+        await new Promise(resolve => setTimeout(resolve, Number(process.env.PERF_DESIGN_PROGRAM_DELAY_MS)))
     }
     let file = resolve(editors[kind as 'design' | 'slides'], 'assets', name)
     if (!existsSync(file)) {
