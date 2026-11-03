@@ -112,7 +112,7 @@ exec node --input-type=module </dev/null
       const local = script.replaceAll('/opt/lingxiloop/editor-assets', f.cacheRoot)
       const result = spawnSync('bash', ['-s'], {
         input: `set -euo pipefail\n${local}\n`, encoding: 'utf8',
-        env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+        env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, FAKE_DOCKER_EMPTY: '0' },
       })
       assert.equal(result.status, 0, result.stderr)
       assert.match(result.stdout, /"copied":7/, 'retention helper must actually execute')
