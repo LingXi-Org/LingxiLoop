@@ -11,20 +11,25 @@ type NativeDocument = {
 }
 type Handoff = { closed: boolean; pending: number; epoch: number; wake: Set<() => void> }
 const handoffs = new WeakMap<object, Handoff>()
+const activeEdits = new WeakMap<() => void, Handoff>()
 
 /** Native async gestures register before their first await, then finish only
- * after their last possible model write. A handoff waits for them to drain. */
-export function beginArtifactRecoveryAsyncEdit(doc: object): (() => void) | null {
+ * after their last possible model write. An active batch may register its next
+ * item after new gestures close; the batch itself keeps the handoff pending. */
+export function beginArtifactRecoveryAsyncEdit(doc: object, parent?: () => void): (() => void) | null {
   const handoff = handoffs.get(doc)
   if (!handoff) return () => {}
-  if (handoff.closed) return null
+  if (handoff.closed && (!parent || activeEdits.get(parent) !== handoff)) return null
   handoff.pending++
   let done = false
-  return () => {
+  const finish = () => {
     if (done) return
     done = true
+    activeEdits.delete(finish)
     if (--handoff.pending === 0) { for (const wake of handoff.wake) wake();handoff.wake.clear() }
   }
+  activeEdits.set(finish, handoff)
+  return finish
 }
 type Package = { format: 'lingxi-editor-recovery-v1'; kind: 'design' | 'slides'; id: string; baseSha: string | null; state: State }
 const encode = (value: unknown) => new TextEncoder().encode(JSON.stringify(value, (_key, value) => value && typeof value === 'object' && !Array.isArray(value)
@@ -192,6 +197,7 @@ export function installArtifactRecovery(kind: 'design' | 'slides', doc: NativeDo
         }
         if (current?.activeElement instanceof HTMLElement) current.activeElement.blur()
         await new Promise(resolve => setTimeout(resolve, 0))
+        if (sequence !== requestSequence) return
         const snapshot = await recovery.handoffSnapshot();reply(snapshot.result, snapshot.bytes)
       } else {
         if (!(data.bytes instanceof ArrayBuffer)) throw Error('invalid recovery payload')

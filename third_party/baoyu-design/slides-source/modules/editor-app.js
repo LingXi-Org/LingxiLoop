@@ -1296,7 +1296,7 @@ function installEditorApp(runtime2) {
           canChangeSlide(value) && value3.restore();
         }
       });
-    }, insertImageFromInput = async (file, { at, byKey, nth: batch } = {}) => {
+    }, insertImageFromInput = async (file, { at, byKey, nth: batch, recoveryBatch } = {}) => {
       if (!file.type.startsWith("image/")) {
         runtime2.showToast("请选择图片文件。");
         return;
@@ -1305,7 +1305,7 @@ function installEditorApp(runtime2) {
       const before = getCurrentSlide();
       if (!before || currentSlideReadOnly || before.frames.length >= runtime2.maxSlideFrames || gridOpen && !(singleSelectedGridSlide && openGridSlideInEditor(before.id)))
         return;
-      const finishRecoveryEdit = beginArtifactRecoveryAsyncEdit(documentStore.doc);
+      const finishRecoveryEdit = beginArtifactRecoveryAsyncEdit(documentStore.doc, recoveryBatch);
       if (!finishRecoveryEdit) return runtime2.showToast("编辑器正在重新打开，请在新页面重试插入图片。");
       const generation = insertGestureSequenceRef.current;
       try {
@@ -1335,7 +1335,7 @@ function installEditorApp(runtime2) {
       if (!finishRecoveryBatch) return runtime2.showToast("编辑器正在重新打开，请在新页面重试插入图片。");
       try {
         for (let i = 0; i < images.length; i++)
-          await insertImageFromInput(images[i], { at: { x: x + i * 12, y: y + i * 12 } });
+          await insertImageFromInput(images[i], { at: { x: x + i * 12, y: y + i * 12 }, recoveryBatch: finishRecoveryBatch });
       } finally { finishRecoveryBatch(); }
     }, onDropInsert = (input, options, context) => {
       if (setInsertMenuOpen(!1), input === "text")

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { beginArtifactRecoveryAsyncEdit, createArtifactRecovery, MAX_ARTIFACT_RECOVERY_BYTES } from './artifact-recovery'
+import { beginArtifactRecoveryAsyncEdit, createArtifactRecovery, installArtifactRecovery, MAX_ARTIFACT_RECOVERY_BYTES } from './artifact-recovery'
 
 function native() {
   let content: unknown = { files: { 'Main.dc.html': 'confirmed' } }, title = 'Canvas', dirty = false, readonly = false, ack = true
@@ -145,4 +145,61 @@ test('a cancelled pending handoff cannot seal or cancel an immediate retry', asy
   assert.equal(old.doc.readOnly(), true)
   recovery.cancelHandoff()
   assert.equal(old.doc.readOnly(), false)
+})
+
+test('cancel during the native blur task prevents the old snapshot handler from sealing the editor', async t => {
+  const old = native(), replies: unknown[] = [], listeners = new Map<string, Set<(event: any) => void>>()
+  const parentWindow = { postMessage: (message: unknown) => replies.push(message) }
+  const windowMock = {
+    parent: parentWindow,
+    addEventListener(type: string, callback: (event: any) => void) { const callbacks = listeners.get(type) ?? new Set();callbacks.add(callback);listeners.set(type, callbacks) },
+    removeEventListener(type: string, callback: (event: any) => void) { listeners.get(type)?.delete(callback) },
+  }
+  const originals = ['window', 'parent', 'document', 'HTMLIFrameElement', 'HTMLElement', 'setTimeout'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const)
+  let finishBlur!: () => void
+  const nativeTimeout = setTimeout
+  Object.defineProperties(globalThis, {
+    window: { configurable: true, value: windowMock }, parent: { configurable: true, value: parentWindow },
+    document: { configurable: true, value: { activeElement: null } },
+    HTMLIFrameElement: { configurable: true, value: class {} }, HTMLElement: { configurable: true, value: class {} },
+    setTimeout: { configurable: true, value: (callback: () => void, ms?: number) => ms === 0 ? (finishBlur = callback, 1) : nativeTimeout(callback, ms) },
+  })
+  t.after(() => {
+    for (const callback of listeners.get('pagehide') ?? []) callback({})
+    for (const [key, value] of originals) { if (value) Object.defineProperty(globalThis, key, value);else Reflect.deleteProperty(globalThis, key) }
+  })
+  installArtifactRecovery('slides', old.doc, value => value)
+  const send = (command: string, requestId: string) => {
+    for (const callback of listeners.get('message') ?? []) callback({ source: parentWindow, data: { type: 'artifact:recovery-request', kind: 'slides', nonce: 'page', requestId, command } })
+  }
+  send('snapshot', 'original')
+  assert.ok(finishBlur, 'snapshot must pause for the native blur task')
+  send('cancel', 'cancel')
+  finishBlur()
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(old.doc.readOnly(), false, 'cancelled handler must not seal after the blur task')
+  assert.deepEqual(replies, [], 'a cancelled snapshot has no response')
+  send('status', 'retry')
+  assert.deepEqual(replies, [{ type: 'artifact:recovery-response', requestId: 'retry', nonce: 'page', result: 'ready', bytes: undefined }])
+})
+
+test('a multi-image gesture started before handoff completes all items before snapshot', async () => {
+  const old = native(), recovery = createArtifactRecovery('slides', old.doc, value => value)
+  const finishBatch = beginArtifactRecoveryAsyncEdit(old.doc)
+  assert.ok(finishBatch)
+  const finishFirst = beginArtifactRecoveryAsyncEdit(old.doc, finishBatch)
+  assert.ok(finishFirst)
+  const pending = recovery.handoffSnapshot()
+  old.edit({ files: { 'Main.dc.html': 'first image' } })
+  finishFirst()
+  const finishSecond = beginArtifactRecoveryAsyncEdit(old.doc, finishBatch)
+  assert.ok(finishSecond, 'an active batch may start its next item while new gestures are closed')
+  old.edit({ files: { 'Main.dc.html': 'first image; second image' } })
+  finishSecond()
+  finishBatch()
+  const packet = await pending
+  assert.equal(packet.result, 'snapshot')
+  assert.equal(JSON.parse(new TextDecoder().decode(packet.bytes)).state.content.files['Main.dc.html'], 'first image; second image')
+  assert.equal(beginArtifactRecoveryAsyncEdit(old.doc, finishBatch), null, 'a completed batch cannot reopen the sealed editor')
+  recovery.cancelHandoff()
 })
