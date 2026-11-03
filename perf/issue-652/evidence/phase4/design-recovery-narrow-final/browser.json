@@ -1,0 +1,25 @@
+{
+  "scope": "Actual native Design/Slides, actual ArtifactEditorFrame/gateway/CSP, synthetic current ACL and ifMatch backing store; not production ACL or persistent recovery across closing an unsaved tab.",
+  "cases": [
+    {
+      "kind": "design",
+      "scenario": "expiry",
+      "capturedBeforeReplacement": true,
+      "noAutomaticWrite": true,
+      "explicitRestoreAcknowledged": true,
+      "exactSnapshotAcknowledgement": true,
+      "refreshReadsSavedDraft": true
+    },
+    {
+      "kind": "design",
+      "scenario": "downgrade",
+      "readOnlyNewFrame": true,
+      "noUnauthorizedRestore": true,
+      "downloadContainsUnsentNativeContent": true,
+      "revocationClearsFrameAndCopy": true
+    }
+  ],
+  "errors": [],
+  "viewportWidth": 768,
+  "browser": "154.0.8037.57"
+}

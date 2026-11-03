@@ -1,0 +1,16 @@
+[
+  {
+    "attempt": 1,
+    "fonts": []
+  },
+  {
+    "attempt": 2,
+    "fonts": [
+      {
+        "path": "ppt/fonts/font1.fntdata",
+        "bytes": 33748,
+        "sha256": "98d13972abdcaaf5bb62e2da49e4bdd1173fe2a0448453a2e42694f4987e28cb"
+      }
+    ]
+  }
+]

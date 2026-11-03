@@ -1,0 +1,5 @@
+PASS: Design editable/save startup, math, no failed HTTP responses or unported routes
+PASS: Design read-only startup, math, no failed HTTP responses or unported routes
+PASS: Design plain first view defers math; first-use 503 retries without changing the document format
+PASS: Design HTML runs with zero external requests; PNG capture waits for formulas
+PASS: Design editable/save startup, math, no failed HTTP responses or unported routes

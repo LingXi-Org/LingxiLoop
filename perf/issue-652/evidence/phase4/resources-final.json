@@ -1,0 +1,101 @@
+{
+  "scope": "Actual cold encoded request bytes and counts, classified by URL extension so required Design source-data Fetch requests count as JavaScript. Counts include cache/empty responses recorded by CDP; not nominal bundle sizes or CPU attribution.",
+  "rows": [
+    {
+      "editor": "design",
+      "arm": "baseline",
+      "n": 10,
+      "coldP75": 5566.1,
+      "resourceP75": {
+        "js": {
+          "bytes": 1905444,
+          "requests": 1
+        },
+        "css": {
+          "bytes": 53295,
+          "requests": 1
+        },
+        "font": {
+          "bytes": 48339,
+          "requests": 1
+        },
+        "other": {
+          "bytes": 7063,
+          "requests": 8
+        }
+      }
+    },
+    {
+      "editor": "design",
+      "arm": "candidate",
+      "n": 10,
+      "coldP75": 4657.4,
+      "resourceP75": {
+        "js": {
+          "bytes": 1541834,
+          "requests": 5
+        },
+        "css": {
+          "bytes": 53295,
+          "requests": 1
+        },
+        "font": {
+          "bytes": 48339,
+          "requests": 1
+        },
+        "other": {
+          "bytes": 8595,
+          "requests": 8
+        }
+      }
+    },
+    {
+      "editor": "slides",
+      "arm": "baseline",
+      "n": 10,
+      "coldP75": 3570.7,
+      "resourceP75": {
+        "js": {
+          "bytes": 1018030,
+          "requests": 4
+        },
+        "css": {
+          "bytes": 56307,
+          "requests": 1
+        },
+        "font": {
+          "bytes": 88420,
+          "requests": 1
+        },
+        "other": {
+          "bytes": 20635,
+          "requests": 27
+        }
+      }
+    },
+    {
+      "editor": "slides",
+      "arm": "candidate",
+      "n": 10,
+      "coldP75": 3310.2,
+      "resourceP75": {
+        "js": {
+          "bytes": 927575,
+          "requests": 6
+        },
+        "css": {
+          "bytes": 53302,
+          "requests": 1
+        },
+        "font": {
+          "bytes": 88420,
+          "requests": 1
+        },
+        "other": {
+          "bytes": 20827,
+          "requests": 27
+        }
+      }
+    }
+  ]
+}

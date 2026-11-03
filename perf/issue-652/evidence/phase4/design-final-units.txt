@@ -1,0 +1,86 @@
+TAP version 13
+# Subtest: Design separates exact critical native source programs before entering synchronous consumers
+ok 1 - Design separates exact critical native source programs before entering synchronous consumers
+  ---
+  duration_ms: 5431.950361
+  type: 'test'
+  ...
+# Subtest: critical preparation coalesces, preserves successful code and retries before native initialization exactly once
+ok 2 - critical preparation coalesces, preserves successful code and retries before native initialization exactly once
+  ---
+  duration_ms: 2.100441
+  type: 'test'
+  ...
+# Subtest: viewport sizing admission checks descendants and inherited author values before computed px hide their units
+ok 3 - viewport sizing admission checks descendants and inherited author values before computed px hide their units
+  ---
+  duration_ms: 1.520669
+  type: 'test'
+  ...
+# Subtest: content height updates the model and moves later rows together, preserving pages and source objects
+ok 4 - content height updates the model and moves later rows together, preserving pages and source objects
+  ---
+  duration_ms: 0.467603
+  type: 'test'
+  ...
+# Subtest: rejects invalid/stale measurements, fixed interactions and existing layered compositions
+ok 5 - rejects invalid/stale measurements, fixed interactions and existing layered compositions
+  ---
+  duration_ms: 0.301663
+  type: 'test'
+  ...
+# Subtest: the pinned hook keeps the native message-source owner, read-only guard, throttle and model/CAS persistence
+ok 6 - the pinned hook keeps the native message-source owner, read-only guard, throttle and model/CAS persistence
+  ---
+  duration_ms: 86.190375
+  type: 'test'
+  ...
+# Subtest: Design omits direct agent requests and local design-system controls without disabling comments or themes
+ok 7 - Design omits direct agent requests and local design-system controls without disabling comments or themes
+  ---
+  duration_ms: 50.879024
+  type: 'test'
+  ...
+# Subtest: Design reuses its prepared embedded runtime before the external and inline fallbacks
+ok 8 - Design reuses its prepared embedded runtime before the external and inline fallbacks
+  ---
+  duration_ms: 36.188694
+  type: 'test'
+  ...
+# Subtest: only an acknowledged visible host skips the pinned presentation waits
+ok 9 - only an acknowledged visible host skips the pinned presentation waits
+  ---
+  duration_ms: 41.447387
+  type: 'test'
+  ...
+# Subtest: Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources
+not ok 10 - Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources
+  ---
+  duration_ms: 45867.597342
+  type: 'test'
+  location: '/workspace/LingxiLoop/scripts/design-editor.test.mjs:57:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/workspace/LingxiLoop/third_party/baoyu-design/upstream/claude-design/scripts/editor/assets/design-35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d.js'"
+  code: 'ENOENT'
+  stack: |-
+    async open (node:internal/fs/promises:639:25)
+    async readFile (node:internal/fs/promises:1252:14)
+    async TestContext.<anonymous> (file:///workspace/LingxiLoop/scripts/design-editor.test.mjs:85:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: unused capture, property-worker and offline-export programs leave the first-view source
+ok 11 - unused capture, property-worker and offline-export programs leave the first-view source
+  ---
+  duration_ms: 1547.271177
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 10
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 53642.317623

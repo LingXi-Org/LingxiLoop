@@ -1,0 +1,43 @@
+TAP version 13
+# Subtest: native downloads wait for a host prepared after DOM readiness and install once
+not ok 1 - native downloads wait for a host prepared after DOM readiness and install once
+  ---
+  duration_ms: 3.251953
+  type: 'test'
+  location: '/workspace/LingxiLoop/server/src/modules/artifacts/editor-downloads.test.ts:1:277'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted exception.
+    Actual message: "Cannot set properties of undefined (setting 'downloads')"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: "Cannot set properties of undefined (setting 'downloads')"
+  name: 'TypeError'
+  stack: |-
+    evalmachine.<anonymous>:2:54
+    <anonymous> (/workspace/LingxiLoop/server/src/modules/artifacts/editor-downloads.test.ts:16:65)
+    getActual (node:assert:609:5)
+    Function.doesNotThrow (node:assert:777:32)
+    TestContext.<anonymous> (/workspace/LingxiLoop/server/src/modules/artifacts/editor-downloads.test.ts:16:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  operator: 'doesNotThrow'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop/server/src/modules/artifacts/editor-downloads.test.ts:16:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 235.258666

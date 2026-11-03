@@ -1,0 +1,23 @@
+{
+  "scope": "Native exported HTML is stored losslessly gzip-compressed; original bytes/hash retained. Text logs normalize trailing whitespace. Font licence formatting is normalized without changing text; its original bytes are preserved in font/OFL.original.txt.gz. Other binary/native evidence is unchanged.",
+  "html": [
+    {
+      "original": "design-standard-final/design-offline.html",
+      "stored": "design-standard-final/design-offline.html.gz",
+      "uncompressedBytes": 786051,
+      "uncompressedSha256": "b147ced2f6d5ba0507e60dcec5b5e57211ddbdf93ac28c0d8d64da8cf89d42b4"
+    },
+    {
+      "original": "slides-style/sample.html",
+      "stored": "slides-style/sample.html.gz",
+      "uncompressedBytes": 448877,
+      "uncompressedSha256": "be79ddfbb5679673dedaaf4171afedee0b7277447df8dfc4dd539d5049b8d898"
+    },
+    {
+      "original": "wrapper-design-standard/design-offline.html",
+      "stored": "wrapper-design-standard/design-offline.html.gz",
+      "uncompressedBytes": 786051,
+      "uncompressedSha256": "0bd39c0c11867e588fc164ef3987ace77b8a63877e509957aee36c3b97af6f40"
+    }
+  ]
+}
