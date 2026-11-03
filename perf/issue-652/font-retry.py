@@ -35,7 +35,8 @@ with sync_playwright()as pw:
   with p.expect_download(timeout=90000)as download:f.get_by_role('menuitem',name='PowerPoint，保留当前字体（.pptx）',exact=True).click()
   path=destination/f'export-{attempt+1}.pptx';download.value.save_as(path)
   with zipfile.ZipFile(path)as z:
-   fonts=[n for n in z.namelist()if n.startswith('ppt/fonts/')]
+   fonts=[n for n in z.namelist()if n.startswith('ppt/fonts/')and n.endswith('.fntdata')]
+   assert all(len(z.read(n))>1024 for n in fonts),'embedded font entry is empty'
    assert any('Native font saved 456'in ''.join(t.text or ''for t in ET.fromstring(z.read(n)).iter()if t.tag.endswith('}t'))for n in z.namelist()if n.startswith('ppt/slides/slide')and n.endswith('.xml'))
    results.append({'attempt':attempt+1,'embedded':fonts,'bytes':path.stat().st_size})
   p.screenshot(path=str(destination/f'export-{attempt+1}.png'))
