@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { requestArtifactRecovery } from './artifact-recovery-handoff'
+import { cancelArtifactRecoveryHandoff, requestArtifactRecovery } from './artifact-recovery-handoff'
 import '../../../../shared/artifact-recovery.test'
 
 function fixture(t: { after(fn: () => void): void }) {
@@ -53,4 +53,12 @@ test('scope cancellation rejects and ignores a late child reply', async t => {
   controller.abort()
   f.reply({ type: 'artifact:recovery-response', requestId: request.requestId, nonce: 'nonce', result: 'clean' })
   await assert.rejects(pending)
+})
+
+test('an aborted handoff releases only the addressed old editor origin', t => {
+  const f = fixture(t)
+  cancelArtifactRecoveryHandoff(f.frame, 'https://one-artifact.test/artifact-editor/slides/grant/', 'slides', 'nonce')
+  assert.equal(f.sent.length, 1)
+  assert.equal(f.sent[0][1], 'https://one-artifact.test')
+  assert.deepEqual(f.sent[0][0], { type: 'artifact:recovery-request', kind: 'slides', nonce: 'nonce', requestId: (f.sent[0][0] as { requestId: string }).requestId, command: 'cancel' })
 })

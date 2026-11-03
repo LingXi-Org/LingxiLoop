@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createArtifactRecovery, MAX_ARTIFACT_RECOVERY_BYTES } from './artifact-recovery'
+import { beginArtifactRecoveryAsyncEdit, createArtifactRecovery, MAX_ARTIFACT_RECOVERY_BYTES } from './artifact-recovery'
 
 function native() {
   let content: unknown = { files: { 'Main.dc.html': 'confirmed' } }, title = 'Canvas', dirty = false, readonly = false, ack = true
@@ -88,4 +88,39 @@ for (const kind of ['design', 'slides'] as const) test(`${kind}: an edit arrivin
   const result = await pending
   assert.equal(result.result, 'snapshot', 'a late dirty edit must never be reported clean')
   assert.deepEqual(JSON.parse(new TextDecoder().decode(result.bytes)).state.content, old.doc.content())
+})
+
+test('handoff drains a native image edit before replying and fences the delayed parent message window', async () => {
+  const old = native(), recovery = createArtifactRecovery('slides', old.doc, value => value)
+  await recovery.confirm()
+  const finishImage = beginArtifactRecoveryAsyncEdit(old.doc)
+  assert.ok(finishImage)
+  let replied = false
+  const pending = recovery.handoffSnapshot().then(value => { replied = true;return value })
+  await Promise.resolve()
+  assert.equal(replied, false, 'image preparation must finish before snapshot reply')
+  old.edit({ files: { 'Main.dc.html': 'image inserted after async preparation' } })
+  finishImage()
+  const response = await pending
+  assert.equal(response.result, 'snapshot')
+  assert.equal(JSON.parse(new TextDecoder().decode(response.bytes)).state.content.files['Main.dc.html'], 'image inserted after async preparation')
+  // The parent has not received its posted response yet. A late native write
+  // must not alter the document represented by that response.
+  assert.equal(beginArtifactRecoveryAsyncEdit(old.doc), null, 'new async edits are refused after sealing')
+  assert.throws(() => old.edit({ files: { 'Main.dc.html': 'later write' } }), /交接/)
+  assert.equal(old.doc.readOnly(), true)
+  recovery.cancelHandoff()
+  assert.equal(old.doc.readOnly(), false, 'failed handoff restores the retained editor')
+})
+
+test('cancelling a handoff while a native edit is pending keeps the old document editable', async () => {
+  const old = native(), recovery = createArtifactRecovery('slides', old.doc, value => value)
+  const finishImage = beginArtifactRecoveryAsyncEdit(old.doc)
+  assert.ok(finishImage)
+  const pending = recovery.handoffSnapshot()
+  recovery.cancelHandoff()
+  await assert.rejects(pending, /取消/)
+  old.edit({ files: { 'Main.dc.html': 'still in original editor' } })
+  assert.equal(old.doc.readOnly(), false)
+  finishImage()
 })

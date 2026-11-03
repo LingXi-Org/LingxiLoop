@@ -8,7 +8,7 @@ import { userFacingError } from '@/lib/userFacingError'
 import { ARTIFACT_LABELS, type ArtifactKind, type ArtifactEditorGrant } from '../contracts'
 import { editorGrant } from '../editor-preload'
 import { subscribeDesignFrameReveal } from './design-frame-lifecycle'
-import { RecoveryHandoffError, requestArtifactRecovery } from './artifact-recovery-handoff'
+import { cancelArtifactRecoveryHandoff, RecoveryHandoffError, requestArtifactRecovery } from './artifact-recovery-handoff'
 
 const denied = (reason: unknown) => [401, 403, 404, 410].includes(Number(reason && typeof reason === 'object' && 'status' in reason ? reason.status : undefined))
 const releaseDownloads = (urls: Set<string>) => { for (const href of urls) URL.revokeObjectURL(href);urls.clear() }
@@ -73,13 +73,15 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
   // and its access mode matches; reauthorization never extends that grant.
   useLayoutEffect(() => {
     const controller = new AbortController()
+    let handoff: { frame: HTMLIFrameElement; url: string } | null = null, replacing = false
+    const cancelHandoff = () => { if (handoff && !replacing && handoff.frame.isConnected) cancelArtifactRecoveryHandoff(handoff.frame, handoff.url, kind, nonce) }
     lifecycle.current = controller
     if (copy.current && (copy.current.artifactId !== artifactId || copy.current.kind !== kind)) setRecoveryCopy(null)
     if (session.current && (session.current.id !== artifactId || session.current.kind !== kind)) releaseDownloads(downloadUrls.current)
     setAuthorized(false)
     setRecoveryBusy(false)
     setConfirmDiscard(null)
-    if (!visible) return () => controller.abort()
+    if (!visible) return () => { controller.abort();cancelHandoff() }
     setError('')
     const previous = session.current
     editorGrant(artifactId, attempt > 0 || previous !== null)
@@ -93,8 +95,9 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
             && (previous.grant.expiresAt <= Date.now() || previous.grant.write !== grant.write || confirmedReload.current === previous) && discard.current !== previous) {
             setHandoffBlocked(true)
             const previousUrl = (previous.grant.isolatedUrl ?? previous.grant.url) + (kind === 'slides' ? `#workspace=${nonce}` : '')
-            const snapshot = await requestArtifactRecovery(frame.current, previousUrl, kind, nonce, 'snapshot', controller.signal)
-            if (controller.signal.aborted) return
+            handoff = { frame: frame.current, url: previousUrl }
+            const snapshot = await requestArtifactRecovery(handoff.frame, previousUrl, kind, nonce, 'snapshot', controller.signal)
+            if (controller.signal.aborted) { cancelHandoff();return }
             if (snapshot.result === 'snapshot' && snapshot.bytes && snapshot.id) {
               if (copy.current) throw new RecoveryHandoffError('已有本地副本尚未处理。请先下载并移除该副本，再重试；原编辑器仍保留。')
               setRecoveryCopy({ artifactId, kind, id: snapshot.id, blob: new Blob([snapshot.bytes], { type: 'application/json' }) })
@@ -103,6 +106,7 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
           discard.current = null
           confirmedReload.current = null
           setGeneration(value => value + 1)
+          replacing = true
           setLoaded(false)
           setDesignInitialized(false)
           session.current = { id: artifactId, kind, grant, attempt }
@@ -112,11 +116,12 @@ export function ArtifactEditorFrame({ artifactId, kind, title, onEditorContext, 
         setAuthorized(true)
       })
       .catch(reason => {
+        cancelHandoff()
         if (controller.signal.aborted) return
         if (denied(reason)) { controller.abort();releaseDownloads(downloadUrls.current);session.current = null;setUrl(null);setRecoveryCopy(null);setHandoffBlocked(false) }
         setError(reason instanceof RecoveryHandoffError ? reason.message : userFacingError(reason, `${label}编辑器暂时无法打开，请重试。`))
       })
-    return () => controller.abort()
+    return () => { controller.abort();cancelHandoff() }
   }, [artifactId, attempt, kind, label, nonce, visible])
 
   // Recheck the original expiry before every reveal above. A background clock

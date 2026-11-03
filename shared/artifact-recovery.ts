@@ -6,7 +6,25 @@ type NativeDocument = {
   title(): string; content(): unknown; dirty(): boolean; readOnly(): boolean
   shown?(): boolean; loadState?(): string
   setContent(content: unknown): void; setTitle(title: string): void; save(): Promise<unknown>
+  updateContent?(update: (content: never) => unknown, options?: unknown): void
   subscribeSave(callback: () => void): () => void; subscribeLoad?(callback: () => void): () => void
+}
+type Handoff = { closed: boolean; pending: number; wake: Set<() => void> }
+const handoffs = new WeakMap<object, Handoff>()
+
+/** Native async gestures register before their first await, then finish only
+ * after their last possible model write. A handoff waits for them to drain. */
+export function beginArtifactRecoveryAsyncEdit(doc: object): (() => void) | null {
+  const handoff = handoffs.get(doc)
+  if (!handoff) return () => {}
+  if (handoff.closed) return null
+  handoff.pending++
+  let done = false
+  return () => {
+    if (done) return
+    done = true
+    if (--handoff.pending === 0) { for (const wake of handoff.wake) wake();handoff.wake.clear() }
+  }
 }
 type Package = { format: 'lingxi-editor-recovery-v1'; kind: 'design' | 'slides'; id: string; baseSha: string | null; state: State }
 const encode = (value: unknown) => new TextEncoder().encode(JSON.stringify(value, (_key, value) => value && typeof value === 'object' && !Array.isArray(value)
@@ -19,6 +37,8 @@ const digest = (state: State) => digestBytes(encode(state))
 const sameBytes = (left: Uint8Array, right: Uint8Array) => left.length === right.length && left.every((byte, index) => byte === right[index])
 
 export function createArtifactRecovery(kind: 'design' | 'slides', doc: NativeDocument, parse: (content: unknown) => unknown) {
+  const handoff: Handoff = { closed: false, pending: 0, wake: new Set() }
+  handoffs.set(doc, handoff)
   const read = (): State => ({ title: doc.title(), content: doc.content() })
   const live = () => doc.shown?.() ?? doc.loadState?.() === 'live'
   let baseSha: string | null = null, checkpoint = Promise.resolve(), generation = 0, restoredSha: string | null = null
@@ -37,6 +57,24 @@ export function createArtifactRecovery(kind: 'design' | 'slides', doc: NativeDoc
     return data
   }
   let validated: State | null = null
+  let releaseSeal: (() => void) | null = null, interrupted = false
+  const cancelHandoff = () => {
+    handoff.closed = false
+    releaseSeal?.();releaseSeal = null
+    for (const wake of handoff.wake) wake();handoff.wake.clear()
+  }
+  const seal = () => {
+    const readOnly = doc.readOnly, setContent = doc.setContent, setTitle = doc.setTitle, updateContent = doc.updateContent
+    const blocked = () => { interrupted = true;throw Error('编辑器交接期间出现新编辑，原编辑器已保留。') }
+    const undo = () => { doc.readOnly = readOnly;doc.setContent = setContent;doc.setTitle = setTitle;if (updateContent) doc.updateContent = updateContent }
+    try {
+      doc.readOnly = () => true
+      doc.setContent = blocked
+      doc.setTitle = blocked
+      if (updateContent) doc.updateContent = blocked
+    } catch (error) { undo();throw error }
+    releaseSeal = undo
+  }
   const unchanged = (state: State) => doc.content() === state.content && doc.title() === state.title
   async function inspect(bytes: ArrayBuffer) {
     validated = null
@@ -56,6 +94,20 @@ export function createArtifactRecovery(kind: 'design' | 'slides', doc: NativeDoc
   }
   return {
     confirm,
+    cancelHandoff,
+    async handoffSnapshot() {
+      if (handoff.closed) throw Error('编辑器交接正在进行。')
+      handoff.closed = true
+      interrupted = false
+      try {
+        if (handoff.pending) await new Promise<void>(resolve => handoff.wake.add(resolve))
+        if (!handoff.closed) throw Error('编辑器交接已取消。')
+        seal()
+        const result = await this.snapshot()
+        if (interrupted) throw Error('编辑器交接期间出现新编辑，原编辑器已保留。')
+        return result
+      } catch (error) { cancelHandoff();throw error }
+    },
     status: () => !live() ? 'loading' : doc.readOnly() ? 'readonly' : 'ready',
     async snapshot() {
       if (!live()) throw Error('编辑器尚未就绪，原页面已保留。')
@@ -119,7 +171,9 @@ export function installArtifactRecovery(kind: 'design' | 'slides', doc: NativeDo
     const data = event.data
     if (event.source !== parent || data?.type !== 'artifact:recovery-request' || data.kind !== kind
       || typeof data.nonce !== 'string' || data.nonce.length > 100 || typeof data.requestId !== 'string' || data.requestId.length > 100
-      || !['snapshot', 'status', 'inspect', 'restore'].includes(data.command) || pending) return
+      || !['snapshot', 'status', 'inspect', 'restore', 'cancel'].includes(data.command)) return
+    if (data.command === 'cancel') { recovery.cancelHandoff();return }
+    if (pending) return
     pending = true
     const reply = (result: string, bytes?: ArrayBuffer) => {
       if (active) parent.postMessage({ type: 'artifact:recovery-response', requestId: data.requestId, nonce: data.nonce, result, bytes }, '*', bytes ? [bytes] : [])
@@ -134,7 +188,7 @@ export function installArtifactRecovery(kind: 'design' | 'slides', doc: NativeDo
         }
         if (current?.activeElement instanceof HTMLElement) current.activeElement.blur()
         await new Promise(resolve => setTimeout(resolve, 0))
-        const snapshot = await recovery.snapshot();reply(snapshot.result, snapshot.bytes)
+        const snapshot = await recovery.handoffSnapshot();reply(snapshot.result, snapshot.bytes)
       } else {
         if (!(data.bytes instanceof ArrayBuffer)) throw Error('invalid recovery payload')
         if (data.command === 'restore') {
@@ -145,7 +199,7 @@ export function installArtifactRecovery(kind: 'design' | 'slides', doc: NativeDo
         reply(result)
         if (data.command === 'restore') { if (result === 'restored') acknowledgement = null;else void checkAcknowledgement().catch(() => {}) }
       }
-    } catch { acknowledgement = null;reply('unavailable') }
+    } catch { recovery.cancelHandoff();acknowledgement = null;reply('unavailable') }
     finally { pending = false }
   }
   window.addEventListener('message', receive)

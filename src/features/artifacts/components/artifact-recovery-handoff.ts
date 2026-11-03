@@ -2,6 +2,12 @@ import { MAX_ARTIFACT_RECOVERY_BYTES } from '../../../../shared/artifact-recover
 import type { ArtifactKind } from '../contracts'
 export class RecoveryHandoffError extends Error {}
 
+export function cancelArtifactRecoveryHandoff(frame: HTMLIFrameElement, url: string, kind: ArtifactKind, nonce: string) {
+  const origin = new URL(url, location.href).origin
+  frame.contentWindow?.postMessage({ type: 'artifact:recovery-request', kind, nonce, requestId: crypto.randomUUID(), command: 'cancel' },
+    origin === location.origin ? '*' : origin)
+}
+
 export function requestArtifactRecovery(frame: HTMLIFrameElement, url: string, kind: ArtifactKind, nonce: string, command: 'snapshot' | 'status' | 'inspect' | 'restore', signal: AbortSignal, bytes?: ArrayBuffer): Promise<{ result: string; bytes?: ArrayBuffer; id?: string }> {
   signal.throwIfAborted()
   const source = frame.contentWindow
