@@ -22,23 +22,30 @@ assertions and the complete installed product61 migration inventory.
 
 ## Transition and deterministic product checks
 
-Only the reviewed exact22→23 pair is added to the existing runtime provenance
-CAS. All existing drain/maintenance, retained-work, exclusive-client, fencing,
+The default reviewed production bridge is exact21→23 in one provenance CAS;
+it never starts an intermediate22 Worker. The existing reviewed22→23 store path
+remains available. A22 source plan must be chosen explicitly with
+`runtimePatchPlan(read, paths, { sourceRuntime: '3.8.22' })`; its ID differs from
+the21 source plan. Preflight never guesses or retries another source when the
+chosen source does not match. Other sources and incomplete inventories fail.
+
+All drain/maintenance, retained-work, exclusive-client, fencing,
 uncertain-COMMIT observation and read-only target startup checks remain active.
-No target DDL, seed, fresh install, product adoption, partial58/59/60 history or
-unreviewed21→23 skip is accepted.
+No target DDL, seed, fresh install, product adoption or partial58/59/60 history
+is accepted. The ordinary deployment entry defaults to the reviewed21 source;
+an operator already on22 must prepare the explicit22 plan rather than reuse a21
+intent. Source snapshots and pre-CAS recovery retain that same chosen source.
 
-The isolated test bootstrap starts from an actual formal22/product61 source and
-applies the ordinary22→23 CAS. Actual formal21 and formal22 archives separately
-run their original20→21 and21→22 owning qualifications. This does not use the
-source-candidate startup adapter from the earlier experiment.
+The isolated test bootstrap starts from an actual formal21/product61 source and
+applies the direct21→23 CAS. Five owning cases cover this bridge; another five
+retain22→23. Actual formal21 and formal22 archives separately retain the original
+20→21 and21→22 qualifications. Both direct paths change one provenance row over
+identical native14/protocol11 SQL and the exact complete product61 ledger.
 
-Local checks passed:26 deployment/CI-owner/bootstrap contracts;39 cases across
-9 owning integration files (three5-case CAS qualifications, shared ledger,
-public-text delayed ACK/seal rejection, authorized HTTP diagnostics,15 recovery
-cases, native authorization and provider pricing); server182/182; admin10/10;
-server typecheck/lint; admin build/lint; web typecheck. Final candidate CI and
-independent review are recorded in the PR.
+The bridge and synthetic-diagnostic checks are recorded in the PR. Earlier
+formal23 checks (39 owning cases, server182/admin10, types/lint/build) remain
+historical evidence; the new direct bridge and stream lifecycle cases require
+their own focused results and independent review.
 
 ## Formal-package real-provider gate
 
@@ -61,10 +68,23 @@ until the failure is diagnosed and real-provider qualification passes.
 
 ## Integration handoff
 
-The public main manifest was still pinned to3.8.21 when this integration was
-prepared. That is not proof of the deployed database version. The new plan
-requires confirmed installed22/product61 and refuses21→23. The designated sole
-integrator must establish the actual production source and a reviewed version
-handoff before merging or deploying. Production host single-writer status and
-health/configuration verification remain separate release gates. No production
-merge, configuration change, provenance write or rollout was performed here.
+The designated sole integrator must confirm the actual production source,
+matching formal archive/plan receipt and single-writer handoff before any merge
+or rollout. A fresh plan intent is bound to its chosen source and target; no
+runtime-source fallback is introduced. Production host state and health remain
+unverified here. No production merge, configuration change, provenance write or
+rollout was performed. The real-provider gate stays blocked until its incomplete
+stream is explained and requalification is separately authorized and passes.
+
+See [synthetic stream diagnosis](stream-failure-synthetic.md) for the precise
+limits of the retained evidence. No new paid model requests were made for that
+follow-up diagnosis or bridge validation.
+
+### Bridge follow-up validation
+
+The direct bridge follow-up passed27 deployment/owner/bootstrap contracts,
+7 wire-observer units,45 cases across10 owning integration files and the updated
+server183-case suite; server types/lint also passed. The actual fresh local DB
+bootstrap separately recorded `actual-formal21-to23-product61-cas`, `updated:1`.
+A second run recorded reuse of installed23 with no source preparation/CAS, then
+read-only startup verification. Reuse is not counted as another upgrade.

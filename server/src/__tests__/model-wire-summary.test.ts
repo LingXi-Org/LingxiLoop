@@ -30,6 +30,7 @@ test('wire observer forwards every original byte and non-provider request, then 
     const response = await fetch('https://provider.test/v1/chat/completions', { method: 'POST', body: JSON.stringify({ stream: true, tool_choice: 'required' }) })
     assert.deepEqual(new Uint8Array(await response.arrayBuffer()), wire)
     assert.equal(observer.records[0].response.contentBytes, 6)
+    assert.equal(observer.records[0].response.streamEnd, 'eof')
     await fetch('http://127.0.0.1/health')
     assert.equal(calls, 2); assert.equal(observer.records.length, 1)
     observer.restore(); assert.equal(globalThis.fetch, fixtureFetch)
@@ -96,4 +97,32 @@ test('one remaining candidate without a failed probe is never called isolated', 
     const result = await observer.matchedControls(true)
     assert.ok(!Array.isArray(result)); assert.equal(result.isolatedSingleTool, false)
   } finally { observer.restore(); globalThis.fetch = original }
+})
+
+test('wire lifecycle distinguishes transport failure from downstream cancellation without exporting its reason', async () => {
+  const original = globalThis.fetch
+  let cancelled = false
+  const chunk = new TextEncoder().encode('data: {"choices":[{"delta":{"tool_calls":[{"function":{"name":"public_answer","arguments":"PRIVATE_PARTIAL"}}]}}]}\n')
+  try {
+    globalThis.fetch = async () => { let read = false; return new Response(new ReadableStream({ pull(controller) {
+      if (!read) { read = true; controller.enqueue(chunk) }
+      else controller.error(Object.assign(new TypeError('PRIVATE_ERROR'), { cause: { code: 'UND_ERR_SOCKET' } }))
+    } }), { headers: { 'content-type': 'text/event-stream' } }) }
+    let observer = installModelWireSummary('https://provider.test/v1')
+    await assert.rejects((await fetch('https://provider.test/v1/chat/completions', { body: '{}' })).text())
+    assert.equal(observer.records[0].response.streamEnd, 'transport-error')
+    assert.equal(observer.records[0].response.transportSocket, true)
+    assert.equal(observer.records[0].response.toolCallParts, 1)
+    assert.doesNotMatch(JSON.stringify(observer.records), /PRIVATE_/)
+    observer.restore()
+    globalThis.fetch = async () => new Response(new ReadableStream({ start(controller) { controller.enqueue(chunk) }, cancel() { cancelled = true } }), { headers: { 'content-type': 'text/event-stream' } })
+    observer = installModelWireSummary('https://provider.test/v1')
+    const reader = (await fetch('https://provider.test/v1/chat/completions', { body: '{}' })).body!.getReader()
+    await reader.read(); await reader.cancel(new Error('PRIVATE_CALLBACK_REASON')); reader.releaseLock()
+    assert.equal(observer.records[0].response.streamEnd, 'consumer-cancelled')
+    assert.equal(observer.records[0].response.consumerReasonProvided, true)
+    assert.equal(cancelled, true)
+    assert.doesNotMatch(JSON.stringify(observer.records), /PRIVATE_/)
+    observer.restore()
+  } finally { globalThis.fetch = original }
 })

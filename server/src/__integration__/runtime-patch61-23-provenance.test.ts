@@ -40,7 +40,7 @@ test('preparation accepts only the exact61 descriptor and source22 cannot impers
   const {source,target}=await setup(db)
   assert.doesNotThrow(()=>parseRuntimePatchInput(JSON.stringify({source,target})))
   for(const runtime of ['3.8.19','3.8.20','3.8.24','4.0.0-slim.0'])assert.throws(()=>assertRuntimePatchDescriptors(source,{...target,runtime}))
-  for(const runtime of ['3.8.19','3.8.20','3.8.21'])assert.throws(()=>assertRuntimePatchDescriptors({...source,runtime},target))
+  for(const runtime of ['3.8.19','3.8.20'])assert.throws(()=>assertRuntimePatchDescriptors({...source,runtime},target))
   for(const count of [58,59,60])assert.throws(()=>assertRuntimePatchDescriptors({...source,productVersion:count},{...target,productVersion:count}))
   assert.throws(()=>assertRuntimePatchDescriptors(source,{...target,migrations:target.migrations.slice(1)}))
 

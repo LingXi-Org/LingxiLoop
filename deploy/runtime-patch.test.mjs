@@ -207,16 +207,28 @@ test('runtime22 accepts only exact21 to22 over the unchanged installed61 invento
   for(const count of [58,59,60])assert.throws(()=>runtimePatchPlan(f.read,f.paths.slice(0,count)))
 })
 
-test('runtime23 accepts only exact22 to23 over the unchanged installed61 inventory', () => {
+test('runtime23 deployment bridges exact21 to23 over the unchanged installed61 inventory', () => {
   const f=fixture('3.8.23')
   for(const name of ['0059_retire_presentation_generation','0060_native_artifacts','0061_slides_workspaces']) {
     const path=`server/src/db/migrations/${name}.sql`;f.paths.push(path);f.files[path]='-- unchanged installed61 fixture'
   }
   const plan=runtimePatchPlan(f.read,f.paths)
-  assert.equal(plan.source.runtime,'3.8.22');assert.equal(plan.target.runtime,'3.8.23')
+  assert.equal(plan.source.runtime,'3.8.21');assert.equal(plan.target.runtime,'3.8.23')
   assert.equal(plan.target.productVersion,61);assert.deepEqual(plan.source.migrations,plan.target.migrations)
   for(const command of ['up','servers'])assert.doesNotThrow(()=>assertRetirementReleaseAllowed(f.paths,command,undefined,plan))
   for(const source of ['3.8.19','3.8.20'])assert.throws(()=>assertRetirementReleaseAllowed(f.paths,'up',undefined,{...plan,source:{...plan.source,runtime:source}}))
   assert.throws(()=>assertRetirementReleaseAllowed(f.paths,'workers',undefined,plan))
   for(const count of [58,59,60])assert.throws(()=>runtimePatchPlan(f.read,f.paths.slice(0,count)))
+})
+
+test('runtime23 alternate22 source is explicit, plan-bound and never inferred from a failed preflight', () => {
+  const f=fixture('3.8.23')
+  for(const name of ['0059_retire_presentation_generation','0060_native_artifacts','0061_slides_workspaces']) {
+    const path=`server/src/db/migrations/${name}.sql`;f.paths.push(path);f.files[path]='-- unchanged installed61 fixture'
+  }
+  const direct=runtimePatchPlan(f.read,f.paths),from22=runtimePatchPlan(f.read,f.paths,{sourceRuntime:'3.8.22'})
+  assert.equal(direct.source.runtime,'3.8.21');assert.equal(from22.source.runtime,'3.8.22')
+  assert.notEqual(direct.id,from22.id)
+  assert.doesNotThrow(()=>assertRetirementReleaseAllowed(f.paths,'up',undefined,from22))
+  for(const sourceRuntime of ['3.8.19','3.8.20','3.8.23','3.8.24'])assert.throws(()=>runtimePatchPlan(f.read,f.paths,{sourceRuntime}),/unreviewed explicit runtime source/)
 })

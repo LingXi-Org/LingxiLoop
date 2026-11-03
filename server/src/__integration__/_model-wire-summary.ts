@@ -16,6 +16,7 @@ export function modelWireSummary(request: unknown) {
       contentFields: 0, contentBytes: 0, reasoningFields: 0, reasoningBytes: 0,
       toolCallFields: 0, toolCallParts: 0, publicAnswerNameParts: 0, otherNameParts: 0,
       argumentFields: 0, argumentBytes: 0, legacyFunctionFields: 0,
+      streamEnd: 'reading' as 'reading' | 'eof' | 'transport-error' | 'consumer-cancelled', transportAbort: false, transportSocket: false, consumerReasonProvided: false,
       finishStop: 0, finishTools: 0, finishLength: 0, finishOther: 0, oversizedLines: 0, otherDeltaFields: 0 },
   }
   let buffer = '', overflow = false
@@ -64,7 +65,8 @@ export function modelWireSummary(request: unknown) {
         if (fragment.endsWith('\n')) { if (!overflow) line(buffer.trimEnd()); buffer = ''; overflow = false }
       }
     },
-    finish() { if (!overflow && buffer) line(buffer.trimEnd()); buffer = '' },
+    finish() { if (record.response.streamEnd === 'reading') record.response.streamEnd = 'eof'; if (!overflow && buffer) line(buffer.trimEnd()); buffer = '' },
+    discard() { buffer = '' },
   }
 }
 
@@ -82,11 +84,35 @@ export function installModelWireSummary(base: string, controls = false) {
     records.push(observer.record)
     const response = await original(input, init)
     if (!response.body || !response.ok || !response.headers.get('content-type')?.includes('text/event-stream')) return response
-    const decoder = new TextDecoder()
-    const body = response.body.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
-      transform(chunk, controller) { observer.push(decoder.decode(chunk, { stream: true })); controller.enqueue(chunk) },
-      flush() { observer.push(decoder.decode()); observer.finish() },
-    }))
+    const decoder = new TextDecoder(), reader = response.body.getReader()
+    let settled = false, released = false
+    const release = () => { if (!released) { released = true; reader.releaseLock() } }
+    const body = new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        try {
+          const { value, done } = await reader.read()
+          if (settled) return
+          if (done) { settled = true; observer.push(decoder.decode()); observer.finish(); release(); controller.close() }
+          else { observer.push(decoder.decode(value, { stream: true })); controller.enqueue(value) }
+        } catch (error) {
+          if (settled) return
+          settled = true
+          observer.record.response.streamEnd = 'transport-error'
+          const reason = object(error), cause = object(reason.cause)
+          observer.record.response.transportAbort = reason.name === 'AbortError'
+          const code = typeof reason.code === 'string' ? reason.code : typeof cause.code === 'string' ? cause.code : ''
+          observer.record.response.transportSocket = ['ECONNRESET', 'UND_ERR_SOCKET'].includes(code)
+          observer.discard(); release(); controller.error(error)
+        }
+      },
+      async cancel(reason) {
+        settled = true
+        observer.record.response.streamEnd = 'consumer-cancelled'
+        observer.record.response.consumerReasonProvided = reason !== undefined
+        observer.discard()
+        try { await reader.cancel(reason) } finally { release() }
+      },
+    })
     return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers })
   }
   globalThis.fetch = scoped
