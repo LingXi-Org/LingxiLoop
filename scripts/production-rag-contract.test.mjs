@@ -182,10 +182,11 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   const stage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
     .find(part => /^.* AS spa-build\r?\n/.test(part))
   assert.ok(stage, 'SPA build stage exists')
-  const copied = stage.split(/\r?\n/).filter(line => /^COPY /.test(line)).flatMap(line => {
+  const copiesOf = stage => stage.split(/\r?\n/).filter(line => /^COPY /.test(line)).flatMap(line => {
     const [, ...args] = line.trim().split(/\s+/), destination = args.pop()
     return args.map(source => ({ source, destination: resolve(root, destination) }))
   })
+  const copied = copiesOf(stage)
   const patterns = read('server/docker/lingxiloop-server.Dockerfile.dockerignore')
     .split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'))
   const inContext = path => {
@@ -197,11 +198,20 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     }
     return included
   }
-  const packaged = path => inContext(path) && copied.some(({ source, destination }) => {
+  const packaged = (path, copies = copied) => inContext(path) && copies.some(({ source, destination }) => {
     if (path !== source && !path.startsWith(`${source}/`)) return false
     const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
     return resolve(destination, suffix) === resolve(root, path)
   })
+  for (const name of ['visualize-build', 'spa-build']) {
+    const editorStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
+      .find(part => part.split('\n')[0].endsWith(` AS ${name}`))
+    assert.ok(editorStage, `${name} exists`)
+    for (const path of ['scripts/design-copy.mjs', 'third_party/baoyu-design/host/design-zh-CN.json',
+      'third_party/baoyu-design/host/slides-zh-CN.json']) {
+      assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing Design translation input: ${path}`)
+    }
+  }
   for (const path of ['server/package.json', 'server/package-lock.json', 'server/build/web/package.json',
     'server/build/web/package-lock.json', 'server/scripts/check-packaged-startup.mjs']) {
     assert.ok(inContext(path), `Missing build/runtime input: ${path}`)
