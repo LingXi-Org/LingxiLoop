@@ -53,8 +53,8 @@ for (const name of ['slidesHost', 'designHost']) test(`${name} downloads the gen
   let ready: () => void = () => {}, cleanup: () => void = () => {}
   const link = { href: '', download: '', click() { saved.push([this.href, this.download]) }, remove() { saved.push('removed') } }
   runInNewContext(EDITOR_DOWNLOAD_SCRIPT, {
-    window: { [name]: host }, Blob, ArrayBuffer,
-    document: { addEventListener: (_: string, callback: () => void) => { ready = callback },
+    window: { [name]: host, addEventListener() {} }, Blob, ArrayBuffer,
+    document: { readyState: 'loading', addEventListener: (_: string, callback: () => void) => { ready = callback },
       createElement: () => link, body: { append() {} } },
     URL: { createObjectURL: (blob: Blob) => { saved.push(blob); return 'blob:download' }, revokeObjectURL: (url: string) => released.push(url) },
     setTimeout: (callback: () => void) => { cleanup = callback },
