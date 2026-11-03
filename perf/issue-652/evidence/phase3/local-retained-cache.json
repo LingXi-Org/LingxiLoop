@@ -1,0 +1,23 @@
+{
+  "root": ".codex-tmp/issue-652/release-7kWNHE",
+  "live": ".codex-tmp/issue-652/release-7kWNHE/live",
+  "cache": ".codex-tmp/issue-652/release-7kWNHE/cache",
+  "baseline": {
+    "copied": 57,
+    "sourceBytes": 24089385,
+    "retainedBytes": 24089385,
+    "pruned": 0
+  },
+  "candidate": {
+    "copied": 98,
+    "sourceBytes": 23508230,
+    "retainedBytes": 43957923,
+    "pruned": 0
+  },
+  "finalCandidate": {
+    "copied": 107,
+    "sourceBytes": 23523147,
+    "retainedBytes": 53391135,
+    "pruned": 0
+  }
+}

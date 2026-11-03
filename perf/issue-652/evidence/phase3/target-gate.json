@@ -1,0 +1,144 @@
+{
+  "rows": [
+    {
+      "kind": "design",
+      "scenario": "cold",
+      "baseline": {
+        "n": 10,
+        "p50": 5550.9,
+        "p75": 5568.6,
+        "p95": 5584.9,
+        "bytesP50": 2014052
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 4670,
+        "p75": 4686.9,
+        "p95": 4739.1,
+        "bytesP50": 1637187
+      }
+    },
+    {
+      "kind": "design",
+      "scenario": "warm-new-frame",
+      "baseline": {
+        "n": 10,
+        "p50": 1061.9,
+        "p75": 1079,
+        "p95": 1089.6,
+        "bytesP50": 6452
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 1067.1,
+        "p75": 1079.4,
+        "p95": 1290.6,
+        "bytesP50": 6442
+      }
+    },
+    {
+      "kind": "design",
+      "scenario": "switch",
+      "baseline": {
+        "n": 10,
+        "p50": 1204.6,
+        "p75": 1216.8,
+        "p95": 1224.2,
+        "bytesP50": 6974
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 1198.2,
+        "p75": 1212.1,
+        "p95": 1214.5,
+        "bytesP50": 6964
+      }
+    },
+    {
+      "kind": "slides",
+      "scenario": "cold",
+      "baseline": {
+        "n": 10,
+        "p50": 3511.9,
+        "p75": 3561.9,
+        "p95": 3573.8,
+        "bytesP50": 1183299
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 3290.7,
+        "p75": 3320.5,
+        "p95": 3489.2,
+        "bytesP50": 1109849
+      }
+    },
+    {
+      "kind": "slides",
+      "scenario": "warm-new-frame",
+      "baseline": {
+        "n": 10,
+        "p50": 836.6,
+        "p75": 878.8,
+        "p95": 918.4,
+        "bytesP50": 19508
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 789.1,
+        "p75": 804.2,
+        "p95": 808.5,
+        "bytesP50": 19677
+      }
+    },
+    {
+      "kind": "slides",
+      "scenario": "switch",
+      "baseline": {
+        "n": 10,
+        "p50": 918.6,
+        "p75": 928.6,
+        "p95": 953.9,
+        "bytesP50": 20542
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 867.5,
+        "p75": 923.2,
+        "p95": 937.2,
+        "bytesP50": 20711
+      }
+    }
+  ],
+  "retainedRows": [
+    {
+      "kind": "design",
+      "scenario": "retained",
+      "candidate": {
+        "n": 10,
+        "p50": 206.9,
+        "p75": 212.1,
+        "p95": 217.9
+      }
+    },
+    {
+      "kind": "slides",
+      "scenario": "retained",
+      "candidate": {
+        "n": 10,
+        "p50": 227.3,
+        "p75": 237.9,
+        "p95": 243
+      }
+    }
+  ],
+  "stagedGate": true,
+  "coldTargetMet": false,
+  "retainedTargetMet": true,
+  "remainingIssueGates": [
+    "complete functional splitting and dependency inventory",
+    "first-use failure/retry and exports",
+    "real retained-instance count/memory/background bounds",
+    "account/project/access/expiry cleanup",
+    "final independent review and release"
+  ]
+}

@@ -8,5 +8,5 @@
   "retainedEditableP75Ms": 300,
   "stagedChangeMaxColdRegressionRatio": 1.1,
   "minimumSamplesPerArm": 10,
-  "instanceAndBackgroundBudgets": "Phase 2: at most one Design and one Slides native frame within the current account/company/project. Replacement, deletion, explicit access denial or scope teardown releases frames. Hidden work is paused where supported and measured separately. No hard memory-byte cap or time eviction of unconfirmed drafts is claimed; grant expiry is checked before reveal. See PHASE2.md for PSS/CPU results and unresolved draft recovery."
+  "instanceAndBackgroundBudgets": "At most one Design and one Slides native frame within the current account/company/project; no idle eviction of unconfirmed drafts. Original grant expiry is rechecked before reveal. Grant replacement captures a bounded 16 MiB current-tab native backup or preserves the concealed old frame on failure. Explicit restore rechecks authorization and the confirmed base; read-only and changed bases permit download only. See PHASE3.md for measured PSS/CPU, limits and remaining gates."
 }
