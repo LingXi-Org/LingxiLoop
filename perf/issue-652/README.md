@@ -91,7 +91,7 @@ python perf/issue-652/bench.py 10 perf/issue-652/evidence/paired-open.json.gz ba
 python perf/issue-652/bench.py 10 perf/issue-652/evidence/paired-prewarm.json.gz baseline=4411 candidate=4412 --warm=true
 python perf/issue-652/bench.py 1 perf/issue-652/evidence/narrow.json.gz baseline=4411 candidate=4412 --width=768
 node perf/issue-652/assess.mjs perf/issue-652/evidence/paired-open.json.gz
-node perf/issue-652/inventory.mjs .codex-tmp/issue-652/slides-metafile.json perf/issue-652/evidence/inventory.json
+node perf/issue-652/inventory.mjs .codex-tmp/issue-652/slides-metafile.json perf/issue-652/evidence/inventory.json.gz
 ```
 
 Run timing pairs without concurrent builds or other benchmarks. Raw samples and
@@ -148,7 +148,7 @@ Build hashes and compressed byte counts of every generated editor file match
 the saved baseline exactly. Design's entry alone is 7,324,147 decoded /
 1,904,981 Brotli bytes. Slides' initial JS is 3,952,808 decoded bytes. The actual
 Slides browser metafile has 326 inputs / 7 outputs, and this v2.8 runtime installs
-292 initializers. `inventory.json` records those graph edges and Design's large
+292 initializers. `inventory.json.gz` records those graph edges and Design's large
 source-string bindings/consumer offsets. Design still has one monolithic entry;
 its inventory is explicitly not a complete internal function graph.
 

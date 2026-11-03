@@ -4,6 +4,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { gzipSync } from 'node:zlib'
 import ts from 'typescript'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
@@ -58,4 +59,5 @@ const report = {
     initial: slides.initial, entry: slides.entry, compressed: slides.compressed, initializers,
     inputs: slidesGraph.inputs, outputs: slidesGraph.outputs },
 }
-await writeFile(resolve(root, process.argv[3]), JSON.stringify(report, null, 2) + '\n')
+const file = resolve(root, process.argv[3]), bytes = Buffer.from(JSON.stringify(report, null, 2) + '\n')
+await writeFile(file, file.endsWith('.gz') ? gzipSync(bytes, { mtime: 0 }) : bytes)
