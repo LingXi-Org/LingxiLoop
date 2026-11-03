@@ -239,6 +239,7 @@ import { installUiScrollbarOverlay } from '../modules/ui-scrollbar-overlay.js'
 import { installEditorChildSizeModes } from '../modules/editor-child-size-modes.js'
 import { installUiInputActivation } from '../modules/ui-input-activation.js'
 import { installEditorContrastBackgrounds } from '../modules/editor-contrast-backgrounds.js'
+import { installEditorFillCore } from '../modules/editor-fill-core.js'
 import { installUiSelectionInspector } from '../modules/ui-selection-inspector.js'
 import { installEditorMediaCropSession } from '../modules/editor-media-crop-session.js'
 import { installEditorGrouping } from '../modules/editor-grouping.js'
@@ -561,6 +562,7 @@ function createSlidesRuntime(options = {}) {
     installEditorChildSizeModes(runtime2),
     installUiInputActivation(runtime2),
     installEditorContrastBackgrounds(runtime2),
+    installEditorFillCore(runtime2),
     installUiSelectionInspector(runtime2),
     installEditorMediaCropSession(runtime2),
     installEditorGrouping(runtime2),
@@ -689,6 +691,9 @@ function createSlidesRuntime(options = {}) {
     installFilesEarlySlides(runtime2),
     installBootstrap(runtime2)
   ];
+  runtime2.propertiesModulesReady = true;
+  bindRuntimeValue(runtime2, 'SelectionInspector', () => runtime2.LoadedSelectionInspector);
+  bindRuntimeValue(runtime2, 'ThemePanel', () => runtime2.LoadedThemePanel);
   runtime2.presentationModulesReady = true;
   bindRuntimeValue(runtime2, 'PresentationView', () => runtime2.LoadedPresentationView);
   for (let index4 = 0; index4 < initializers.length; index4++) {

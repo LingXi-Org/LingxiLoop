@@ -1,3 +1,4 @@
+import { installEditorFillCore } from './modules/editor-fill-core.js'
 import { prepareEditorFeature } from './feature-resources.js'
 // Reconstructed from JimLiu/baoyu-design 016b39d, MIT.
 // Published node/compiler.cjs preserves the named module implementation.
@@ -109,8 +110,6 @@ import { installUiSidePanels } from './modules/ui-side-panels.js'
 import { installUiContextMenuPopup } from './modules/ui-context-menu-popup.js'
 import { installUiCanvasFocus } from './modules/ui-canvas-focus.js'
 import { installUiPropertyRows } from './modules/ui-property-rows.js'
-import { installUiSegmentedProperty } from './modules/ui-segmented-property.js'
-import { installUiSidesProperty } from './modules/ui-sides-property.js'
 import { installEditorHitTesting } from './modules/editor-hit-testing.js'
 import { installEditorMediaCropOverlay } from './modules/editor-media-crop-overlay.js'
 import { installEditorMeasurementOverlay } from './modules/editor-measurement-overlay.js'
@@ -170,7 +169,6 @@ import { installUiScrollbarOverlay } from './modules/ui-scrollbar-overlay.js'
 import { installEditorChildSizeModes } from './modules/editor-child-size-modes.js'
 import { installUiInputActivation } from './modules/ui-input-activation.js'
 import { installEditorContrastBackgrounds } from './modules/editor-contrast-backgrounds.js'
-import { installUiSelectionInspector } from './modules/ui-selection-inspector.js'
 import { installEditorMediaCropSession } from './modules/editor-media-crop-session.js'
 import { installEditorGrouping } from './modules/editor-grouping.js'
 import { installLayoutSelectionGroups } from './modules/layout-selection-groups.js'
@@ -211,7 +209,6 @@ import { installDocumentsSlideCodec } from './modules/documents-slide-codec.js'
 import { installPresentationSpeakerStyles } from './modules/presentation-speaker-styles.js'
 import { installPresentationSpeakerSession } from './modules/presentation-speaker-session.js'
 import { installPresentationAnimationEngine } from './modules/presentation-animation-engine.js'
-import { installDesignSystemThemePanel } from './modules/design-system-theme-panel.js'
 import { installPresentationPlayer } from './modules/presentation-player.js'
 import { installCreationOverlay } from './modules/creation-overlay.js'
 import { installEditorSlideTicks } from './modules/editor-slide-ticks.js'
@@ -306,6 +303,10 @@ export function createSlidesRuntime(options = {}) {
   runtime2.loadPresentationModules = () => presentationReady ??= prepareEditorFeature('presentation').then(() => import('./presentation.js'))
     .then(module => { module.installPresentationModules(runtime2);runtime2.presentationModulesReady = true })
     .catch(error => { presentationReady = undefined;throw error });
+  let propertiesReady;
+  runtime2.loadPropertiesModules = () => propertiesReady ??= prepareEditorFeature('properties').then(() => import('./properties.js'))
+    .then(module => { module.installPropertyModules(runtime2);runtime2.propertiesModulesReady = true })
+    .catch(error => { propertiesReady = undefined;throw error });
   const initializers = [
     installModuleInterop(runtime2),
     // Upstream runs the i18n setup eagerly at load (no lazy wrapper); messages are formatted from module inits on, so it
@@ -416,8 +417,8 @@ export function createSlidesRuntime(options = {}) {
     installUiContextMenuPopup(runtime2),
     installUiCanvasFocus(runtime2),
     installUiPropertyRows(runtime2),
-    installUiSegmentedProperty(runtime2),
-    installUiSidesProperty(runtime2),
+
+
     installEditorHitTesting(runtime2),
     installEditorMediaCropOverlay(runtime2),
     installEditorMeasurementOverlay(runtime2),
@@ -477,7 +478,7 @@ export function createSlidesRuntime(options = {}) {
     installEditorChildSizeModes(runtime2),
     installUiInputActivation(runtime2),
     installEditorContrastBackgrounds(runtime2),
-    installUiSelectionInspector(runtime2),
+    installEditorFillCore(runtime2),
     installEditorMediaCropSession(runtime2),
     installEditorGrouping(runtime2),
     installLayoutSelectionGroups(runtime2),
@@ -518,7 +519,7 @@ export function createSlidesRuntime(options = {}) {
     installPresentationSpeakerStyles(runtime2),
     installPresentationSpeakerSession(runtime2),
     installPresentationAnimationEngine(runtime2),
-    installDesignSystemThemePanel(runtime2),
+
     installPresentationPlayer(runtime2),
     installCreationOverlay(runtime2),
     installEditorSlideTicks(runtime2),

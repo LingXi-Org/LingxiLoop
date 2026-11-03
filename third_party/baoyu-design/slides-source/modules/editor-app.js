@@ -4850,6 +4850,7 @@ function installEditorApp(runtime2) {
                                         id: "HJ6NQPAawd"
                                       })
                                     }) : themeTabEnabled && inspectorTab === "theme" ? SlidesAppJsx.jsx(runtime2.ThemePanel, {
+                                      active: inspectorOpen,
                                       restyle: deckRestyle,
                                       slide: currentSlide ?? void 0,
                                       assets: snapshot.assets,
@@ -4859,6 +4860,7 @@ function installEditorApp(runtime2) {
                                       fonts: snapshot.fonts,
                                       editsAreUndoSteps: textEdit === null
                                     }) : SlidesAppJsx.jsx(runtime2.SelectionInspector, {
+                                      active: inspectorOpen,
                                                 unasked: inspectorUnasked,
                                       editsAreUndoSteps: textEdit === null,
                                       designColors: designPalette,

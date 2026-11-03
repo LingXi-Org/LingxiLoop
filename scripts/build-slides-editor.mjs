@@ -129,7 +129,7 @@ export async function buildSlidesEditor({ metafilePath } = {}) {
   }
   addInitial(entry[0])
   const features = {}
-  const featureEntries = { math: '/math.js', templates: '/templates.js', presentation: '/presentation.js', exports: '/exports.js', pptx: '/vendor/pptx-library.js', woff2: '/vendor/woff2-decoder.js' }
+  const featureEntries = { math: '/math.js', templates: '/templates.js', presentation: '/presentation.js', properties: '/properties.js', exports: '/exports.js', pptx: '/vendor/pptx-library.js', woff2: '/vendor/woff2-decoder.js' }
   for (const [feature, suffix] of Object.entries(featureEntries)) {
     const entry = Object.entries(result.metafile.outputs).find(([, meta]) => meta.entryPoint?.endsWith(suffix))?.[0]
     assert.ok(entry, `Missing lazy Slides feature: ${feature}`)
