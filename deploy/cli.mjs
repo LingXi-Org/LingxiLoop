@@ -72,7 +72,7 @@ async function main(command, requested) {
       },
       workers: () => workers(),
       status: () => status(ssh),
-      plan: async () => { await pull(ssh, stacks, images); await plan(ssh, stacks, images) },
+      plan: async () => { await pull(ssh, stacks, images, { cleanup: false }); await plan(ssh, stacks, images) },
       up: async () => {
         await ensureImages(head, images)
         await pull(ssh, stacks, images)
@@ -217,12 +217,21 @@ async function runtimePatch(ssh, patch, images, convergeTarget) {
 }
 
 // ctr pulls from the accelerator directly; Docker's proxied pull measured >10x slower.
-async function pull(ssh, stacks, images) {
+async function pull(ssh, stacks, images, { cleanup = true } = {}) {
   const byHost = {}
   for (const stack of stacks) for (const name of stackImages(stack, images)) (byHost[STACK_HOST[stack]] ??= new Set()).add(imageRef(images[name]))
-  await Promise.all(Object.entries(byHost).map(([host, refs]) => ssh.run(host, `pull ${host}`, [...refs].map(ref =>
+  const cleanupScript = cleanup ? git('show', 'HEAD:deploy/image-cleanup.sh') : ''
+  await Promise.all(Object.entries(byHost).map(([host, refs]) => ssh.run(host, `pull ${host}`, [
+    'exec 9>/var/lock/lingxiloop-images.lock; flock -x 9',
+    ...cleanup ? [
+      `bash -s -- ${Object.values(images).map(imageRef).join(' ')} <<'IMAGE_CLEANUP_SH'\n${cleanupScript}\nIMAGE_CLEANUP_SH`,
+      'docker builder prune -f --filter until=168h --keep-storage 512MB',
+    ] : [],
+    ...[...refs].map(ref =>
     `docker image inspect ${ref} >/dev/null 2>&1 || { echo "pull ${ref}"; ctr -n moby images pull --platform linux/amd64 ${ref} >/dev/null || ctr -n moby images pull --platform linux/amd64 ${ref} >/dev/null; }`,
-  ).join('\n'))))
+    ),
+    'df -h /',
+  ].join('\n'))))
 }
 
 // The stack's .env holds exactly the Sigillo values its compose file references.
