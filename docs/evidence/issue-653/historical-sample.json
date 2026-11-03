@@ -1,0 +1,370 @@
+{
+  "observedAt": "2026-11-03T09:16:33.850546+00:00",
+  "method": "latest 100 run list, first 12 turn and first 12 non-turn, public operations first event page only, three concurrent read requests, no model executions",
+  "listStatuses": {
+    "leased": 3,
+    "succeeded": 76,
+    "partial": 8,
+    "failed": 13
+  },
+  "summaries": {
+    "interactive": {
+      "statuses": {
+        "partial": 4,
+        "failed": 2,
+        "succeeded": 5
+      },
+      "firstEligibleToStartedMs": {
+        "n": 11,
+        "p50": 186,
+        "p95": 151120,
+        "max": 151120
+      },
+      "finishedSingleAttemptExecutionMs": {
+        "n": 11,
+        "p50": 115429.898,
+        "p95": 223739.675,
+        "max": 223739.675
+      }
+    },
+    "unknown": {
+      "statuses": {
+        "unavailable": 1
+      },
+      "firstEligibleToStartedMs": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "finishedSingleAttemptExecutionMs": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      }
+    },
+    "background": {
+      "statuses": {
+        "succeeded": 12
+      },
+      "firstEligibleToStartedMs": {
+        "n": 12,
+        "p50": 173,
+        "p95": 21797,
+        "max": 21797
+      },
+      "finishedSingleAttemptExecutionMs": {
+        "n": 12,
+        "p50": 8287.986,
+        "p95": 18838.144,
+        "max": 18838.144
+      }
+    }
+  },
+  "samples": [
+    {
+      "sample": 1,
+      "status": "partial",
+      "kind": "turn",
+      "createdAt": "2026-11-03T09:08:57.945Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 148,
+      "attemptExecutionTotalMs": 115429.898,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": true,
+      "endToEndMs": null
+    },
+    {
+      "sample": 2,
+      "status": "failed",
+      "kind": "turn",
+      "createdAt": "2026-11-03T09:08:57.945Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 186,
+      "attemptExecutionTotalMs": 149509.051,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 3,
+      "status": "partial",
+      "kind": "turn",
+      "createdAt": "2026-11-03T09:08:57.945Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 753,
+      "attemptExecutionTotalMs": 223739.675,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 4,
+      "status": "succeeded",
+      "kind": "turn",
+      "createdAt": "2026-11-02T15:09:53.767Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 127,
+      "attemptExecutionTotalMs": 61327.377,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": true,
+      "endToEndMs": null
+    },
+    {
+      "sample": 5,
+      "status": "succeeded",
+      "kind": "turn",
+      "createdAt": "2026-11-02T15:07:59.867Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 140,
+      "attemptExecutionTotalMs": 111984.473,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": true,
+      "endToEndMs": null
+    },
+    {
+      "sample": 6,
+      "status": "succeeded",
+      "kind": "turn",
+      "createdAt": "2026-11-02T15:07:05.169Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 2379,
+      "attemptExecutionTotalMs": 187095.478,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 7,
+      "status": "partial",
+      "kind": "turn",
+      "createdAt": "2026-11-02T15:04:32.187Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 151120,
+      "attemptExecutionTotalMs": 55614.509,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 8,
+      "status": "partial",
+      "kind": "turn",
+      "createdAt": "2026-11-02T15:04:27.477Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 1861,
+      "attemptExecutionTotalMs": 154458.231,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 9,
+      "status": "succeeded",
+      "kind": "turn",
+      "createdAt": "2026-11-02T15:04:17.496Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 121,
+      "attemptExecutionTotalMs": 18316.948,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 10,
+      "status": "failed",
+      "kind": "turn",
+      "createdAt": "2026-11-02T15:00:36.860Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 5031,
+      "attemptExecutionTotalMs": 177060.303,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 11,
+      "status": "unavailable"
+    },
+    {
+      "sample": 12,
+      "status": "succeeded",
+      "kind": "turn",
+      "createdAt": "2026-11-02T14:58:59.778Z",
+      "attempts": 1,
+      "lane": "interactive",
+      "firstEligibleToStartedMs": 161,
+      "attemptExecutionTotalMs": 95497.416,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": true,
+      "endToEndMs": null
+    },
+    {
+      "sample": 13,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:19:22.221Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 103,
+      "attemptExecutionTotalMs": 544.658,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 14,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:19:14.495Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 124,
+      "attemptExecutionTotalMs": 509.555,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 15,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:19:03.019Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 173,
+      "attemptExecutionTotalMs": 18838.144,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 16,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:19:00.823Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 167,
+      "attemptExecutionTotalMs": 13390.005,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 17,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:18:51.694Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 331,
+      "attemptExecutionTotalMs": 10914.588,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 18,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:18:51.089Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 332,
+      "attemptExecutionTotalMs": 9315.357,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 19,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:18:36.391Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 208,
+      "attemptExecutionTotalMs": 14842.406,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 20,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:18:34.226Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 139,
+      "attemptExecutionTotalMs": 16380.12,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 21,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:18:27.676Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 180,
+      "attemptExecutionTotalMs": 6051.879,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 22,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:18:27.676Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 173,
+      "attemptExecutionTotalMs": 8287.986,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 23,
+      "status": "succeeded",
+      "kind": "memory_index",
+      "createdAt": "2026-11-02T15:15:26.259Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 661,
+      "attemptExecutionTotalMs": 422.893,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    },
+    {
+      "sample": 24,
+      "status": "succeeded",
+      "kind": "memory_synthesis",
+      "createdAt": "2026-11-02T15:14:58.619Z",
+      "attempts": 1,
+      "lane": "background",
+      "firstEligibleToStartedMs": 21797,
+      "attemptExecutionTotalMs": 3742.02,
+      "heartbeatAgeSeconds": null,
+      "eventPageFull": false,
+      "endToEndMs": null
+    }
+  ]
+}

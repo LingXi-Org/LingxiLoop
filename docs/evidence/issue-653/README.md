@@ -100,3 +100,92 @@ The last completed main CI/deploy at investigation start was
 for dd064748; its deploy job succeeded at 2026-11-03 08:38:48Z. Recheck current
 release and active writes before any later deployment. No safe single-writer
 handoff has been established for this contributor, so it must not merge or deploy.
+
+## Collected evidence and disposition
+
+[Historical sample](historical-sample.json): list the latest 100 runs (3 leased,
+76 succeeded, 8 partial, 13 failed at list time), then read the first 12 turns
+and first 12 non-turns through the existing public MCP operations tool, up to
+three reads concurrently. Only first-page lifecycle fields/numbers are retained;
+raw prompts, tools, identities, event bodies and run IDs are discarded. One of
+24 reads was unavailable; four returned full event pages. These are independent
+reads, not a consistent snapshot. Observed sample creation range:
+2026-11-02 14:58:59.778Z through 2026-11-03 09:08:57.945Z; reads finished at
+2026-11-03 09:16:33.850Z. No user runs were enqueued or replayed.
+
+Nearest-rank distributions of valid single-attempt/request/fence samples:
+
+| Observed lane | n | Eligible→started p50 / p95 / max | Attempt execution p50 / p95 / max |
+| --- | ---: | --- | --- |
+| Interactive | 11 | 186 / 151120 / 151120 ms | 115429.898 / 223739.675 / 223739.675 ms |
+| Background | 12 | 173 / 21797 / 21797 ms | 8287.986 / 18838.144 / 18838.144 ms |
+
+The 151120-ms sample was created on **November 2**, with 55614.509-ms attempt
+execution; it is not evidence of saturation in the November 3 snapshot. Sample
+statuses at inspection: 17 succeeded, 4 partial, 2 failed, 1 unavailable. This
+convenience cohort and its tiny lane counts cannot estimate current stationarity,
+arrival-rate capacity, all-tenant success rate or queue budgets. End-to-end,
+timeout/429/circuit denominators and retry/backoff histories remain unavailable.
+These values are not controlled-load or candidate-comparison results.
+
+[Production Worker observation](worker-capacity.json) succeeded in branch
+[Actions run 41609773919](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41609773919)
+for code `2ca99bdf`, without an image job or deployment. Observed at
+09:17:36.883Z (A) / 09:17:37.218Z (B), 2026-11-03:
+
+| Value | A | B |
+| --- | ---: | ---: |
+| Runtime | 3.8.21 | 3.8.21 |
+| Configured task / model concurrency | 2 / 2 | 2 / 2 |
+| Configured interactive reserved tasks | 1 | 1 |
+| Health-reported task capacity / active | 2 / 0 | 2 / 0 |
+| Ready / draining | true / false | true / false |
+| New-root calls / tokens / cost-micros / work-ms config | 512 / 8000000 / 50000000 / 7200000 | 512 / 8000000 / 50000000 / 7200000 |
+
+Thus two configured instances expose four task slots in aggregate; these are
+per-process limits, **not a global supplier cap or sustainable throughput**.
+Both are idle at this instant. Configuration before/after is identical: no
+configuration was changed. No new/frozen root budgets were mutated.
+
+The process-lifetime foreground model admission histograms report 22 samples /
+0.000180882 total seconds (A), 10 samples / 0.000139476 total seconds (B).
+Claim-recovery histograms report 5 / 0.292035007 seconds and 4 / 10.070157356
+seconds respectively. These are cumulative process samples with unmeasured
+restart/window bounds, not matched to the historical cohort or a controlled
+experiment. They do not establish the cause of the November 2 queue delay.
+
+Neither Worker endpoint supplied durable queue/oldest/stalled gauges in this
+observation. The separate filtered public queued/leased reader timed out at its
+40-second transport bound ([status](queue-snapshot.json)); it was not retried.
+Do not infer zero queue, healthy leases or absent backoff from missing data.
+Provider concurrent/RPM/TPM and all other consumers sharing that quota remain
+unknown. Per-run model-waiter/correction occupancy and exact lease expiry remain
+unavailable in the existing public interface. These are concrete blockers to a
+safe capacity correction and full #653 acceptance; **no capacity fix is claimed**.
+
+## Validation and review
+
+The environment initially had SDK3.8.16 installed despite the locked3.8.21
+manifest. Initial green tests were not treated as21 qualification. The actual
+formal3.8.21 registry archive was then fetched with the existing configured
+package identity, and SHA-512 exactly matched the root lock:
+`sha512-8/AZ1PWiPMF7b0dx6RQ7JHHNnJqDrGAonl4QAXPV6XJZK0ctj85nKG11gcDQHPSjs0wu3BFwxjO43Nv2JuS14w==`.
+An isolated local dependency view resolved that exact package without changing
+the shared install. No manifest/lock or SDK source changes.
+
+Independent read-only review identified dropped execution `lane` labels. The
+new real-label regression failed before the correction and passed after it;
+only the formal21 public WorkLane enum is allowed. Review of final code
+`2ca99bdf` found no remaining blocker or production-write path. The reviewer
+independently reran all29 focused tests against actual21. Node22 local rerun:
+29/29 passed; `git diff --check` passed. Owning CI for final code:
+[41609715325](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41609715325)
+passed deploy-contract and integration; deploy was skipped. Initial-code CI was
+cancelled by the updated PR head, not counted as a pass. Subsequent changes only
+add these evidence records; final PR-head CI must still be checked.
+
+Public GET probes returned HTTP200 for `/readyz` and the main web origin on
+2026-11-03. They verify current service availability, not deployment of this PR.
+The sole integrator must review/merge the prerequisite with `[skip deploy]`;
+this contributor has performed no merge, production configuration mutation,
+service drain/restart, image pull or deployment. #653 stays open.
