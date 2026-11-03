@@ -6,13 +6,15 @@ const require=createRequire(import.meta.url)
 const sha=text=>createHash('sha256').update(text).digest('hex')
 const turn=()=>new Promise(resolve=>setImmediate(resolve))
 
-export async function checkProgressiveFiles({write=true,narrowed=false,revoke=false,downgrade=false,concurrent=false,deleted=false,systems=false,changedTokens=false}={}) {
+export async function checkProgressiveFiles({write=true,narrowed=false,revoke=false,downgrade=false,concurrent=false,deleted=false,systems=false,changedTokens=false,changedFont=false}={}) {
   const r=require('../server/assets/slides-editor/node/compiler.cjs').runtime
   const first='<section id="a"><h1>First original</h1></section>',later='<section id="b"><h1>Later original</h1></section>'
   const files=new Map([['project/deck.json',JSON.stringify({v:4,lists:'css',title:'Progressive',order:['a','b'],sections:{},faces:{},designSystems:[]})],['project/slides/a.html',first],['project/slides/b.html',later]])
   let releaseTokens;const tokenGate=new Promise(resolve=>{releaseTokens=resolve})
   const tokenPath='project/ds/fixture/tokens.json',tokens=JSON.stringify(require('../third_party/baoyu-design/slides-source/builtin-style.json').tokens).replace('#141413','#123456')
   if(systems){const index=JSON.parse(files.get('project/deck.json'));index.designSystems=[{namespace:'fixture',title:'Fixture system',artifact:'fixture',version:'1',copiedAt:''}];files.set('project/deck.json',JSON.stringify(index));files.set(tokenPath,tokens)}
+  const fontPath='project/ds/fixture/fonts/Fixture.woff2'
+  if(changedFont)files.set(fontPath,'opaque base font bytes')  // This case tests dependency hashes, not font decoding.
   let release;const gate=new Promise(resolve=>{release=resolve}),published=[],notices=[]
   let fullReads=false,version='base'
   const port={canWrite:write,mayWrite:write,narrowed,
@@ -41,8 +43,9 @@ export async function checkProgressiveFiles({write=true,narrowed=false,revoke=fa
     if (concurrent) { files.set('project/slides/a.html','<section id="a"><h1>Their later edit</h1></section>');version='remote'; }
     if (deleted) { files.delete('project/slides/a.html');const metadata=JSON.parse(files.get('project/deck.json'));metadata.order=['b'];files.set('project/deck.json',JSON.stringify(metadata));version='remote'; }
     if(changedTokens){files.set(tokenPath,tokens.replace('#123456','#abcdef'));version='remote'}
+    if(changedFont){files.set(fontPath,'opaque replacement font bytes');version='remote'}
     release();await doc.ready();
-    if (concurrent || deleted || changedTokens) {assert.equal(doc.dirty(),true);assert.equal(doc.progressive(),true);assert.equal(published.length,0);if(concurrent)assert.match(files.get('project/slides/a.html'),/Their later edit/);if(deleted)assert.equal(files.has('project/slides/a.html'),false);if(changedTokens)assert.match(files.get(tokenPath),/#abcdef/);assert.ok([...r.iterateDeckTextNodes(Object.values(doc.content().slides))].some(node=>node.text==='First typed before other pages'));return}
+    if (concurrent || deleted || changedTokens || changedFont) {assert.equal(doc.dirty(),true);assert.equal(doc.progressive(),true);assert.equal(published.length,0);if(concurrent)assert.match(files.get('project/slides/a.html'),/Their later edit/);if(deleted)assert.equal(files.has('project/slides/a.html'),false);if(changedTokens)assert.match(files.get(tokenPath),/#abcdef/);if(changedFont)assert.equal(files.get(fontPath),'opaque replacement font bytes');assert.ok([...r.iterateDeckTextNodes(Object.values(doc.content().slides))].some(node=>node.text==='First typed before other pages'));return}
     if (downgrade) {assert.equal(doc.dirty(),true);assert.equal(doc.progressive(),true);assert.equal(doc.readOnly(),true);assert.equal(published.length,0);assert.ok([...r.iterateDeckTextNodes(Object.values(doc.content().slides))].some(node=>node.text==='First typed before other pages'));return}
     if (revoke) {assert.equal(doc.progressive(),false);assert.deepEqual(doc.content().order,[]);assert.equal(doc.shown(),false);assert.equal(published.length,0);return}
     assert.equal(doc.progressive(),false);assert.deepEqual(doc.content().order,['a','b'])

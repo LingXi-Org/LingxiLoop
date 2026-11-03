@@ -271,6 +271,9 @@ test('progressive themed deck waits for tokens and preserves their native model 
   const {checkProgressiveFiles} = await import('./slides-progressive.test.mjs')
   await checkProgressiveFiles({systems:true})
   await checkProgressiveFiles({systems:true,changedTokens:true})
+  await checkProgressiveFiles({systems:true,changedFont:true})
+  await checkProgressiveFiles({systems:true,write:false})
+  await checkProgressiveFiles({systems:true,narrowed:true})
 })
 
 test('progressive editing respects read-only, narrowed listings and revoked reads', async () => {
