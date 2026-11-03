@@ -254,8 +254,7 @@ import { installDocumentsDeckStore } from './modules/documents-deck-store.js'
 import { installDocumentsAssetUndo } from './modules/documents-asset-undo.js'
 import { installEditorCurrentSlide } from './modules/editor-current-slide.js'
 import { installBridgePlaceLinks } from './modules/bridge-place-links.js'
-import { installEditorTemplates } from './modules/editor-templates.js'
-import { installEditorTemplateRestyling } from './modules/editor-template-restyling.js'
+import { installRenderingMessages } from './modules/rendering-messages.js'
 import { installDeliveryDialog } from './modules/delivery-dialog.js'
 import { installEditorRailPlacement } from './modules/editor-rail-placement.js'
 import { installEditorRailPeek } from './modules/editor-rail-peek.js'
@@ -299,6 +298,10 @@ export function createSlidesRuntime(options = {}) {
   installLibraries(runtime2);
   let exportsReady;
   runtime2.loadExportModules = () => exportsReady ??= prepareEditorFeature("exports").then(() => import("./exports.js")).then(module => module.installExportModules(runtime2)).catch(error => { exportsReady = undefined; throw error; });
+  let templatesReady;
+  runtime2.loadTemplateModules = () => templatesReady ??= prepareEditorFeature('templates').then(() => import('./templates.js'))
+    .then(module => { module.installTemplateModules(runtime2);runtime2.templateModulesReady = true })
+    .catch(error => { templatesReady = undefined;throw error });
   const initializers = [
     installModuleInterop(runtime2),
     // Upstream runs the i18n setup eagerly at load (no lazy wrapper); messages are formatted from module inits on, so it
@@ -554,8 +557,7 @@ export function createSlidesRuntime(options = {}) {
     installDocumentsAssetUndo(runtime2),
     installEditorCurrentSlide(runtime2),
     installBridgePlaceLinks(runtime2),
-    installEditorTemplates(runtime2),
-    installEditorTemplateRestyling(runtime2),
+    installRenderingMessages(runtime2),
     installDeliveryDialog(runtime2),
     installEditorRailPlacement(runtime2),
     installEditorRailPeek(runtime2),

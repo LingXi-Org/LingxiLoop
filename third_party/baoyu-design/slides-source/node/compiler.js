@@ -323,6 +323,7 @@ import { installDocumentsAssetUndo } from '../modules/documents-asset-undo.js'
 import { installEditorCurrentSlide } from '../modules/editor-current-slide.js'
 import { installBridgePlaceLinks } from '../modules/bridge-place-links.js'
 import { installEditorTemplates } from '../modules/editor-templates.js'
+import { installRenderingMessages } from '../modules/rendering-messages.js'
 import { installEditorTemplateRestyling } from '../modules/editor-template-restyling.js'
 import { installDeliveryDialog } from '../modules/delivery-dialog.js'
 import { installEditorRailPlacement } from '../modules/editor-rail-placement.js'
@@ -641,6 +642,7 @@ function createSlidesRuntime(options = {}) {
     installDocumentsAssetUndo(runtime2),
     installEditorCurrentSlide(runtime2),
     installBridgePlaceLinks(runtime2),
+    installRenderingMessages(runtime2),
     installEditorTemplates(runtime2),
     installEditorTemplateRestyling(runtime2),
     installDeliveryDialog(runtime2),

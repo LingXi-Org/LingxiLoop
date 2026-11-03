@@ -40,7 +40,7 @@ const imageId = '1234567890abcdef1234567890abcdef'
 const image = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="#426b46"/><circle cx="320" cy="180" r="120" fill="#b8d994"/></svg>')
 const mathFixture = process.env.PERF_MATH_FIXTURE === '1'
 const failedFeatures = new Set<string>()
-const failFeatures = (process.env.PERF_FAIL_FEATURES ?? '').split(',').filter(value => ['math', 'exports', 'pptx-library', 'woff2-decoder'].includes(value))
+const failFeatures = (process.env.PERF_FAIL_FEATURES ?? '').split(',').filter(value => ['math', 'templates', 'exports', 'pptx-library', 'woff2-decoder'].includes(value))
 const order = Array.from({ length: mathFixture ? 3 : 20 }, (_, index) => `slide-${index + 1}`)
 const documents = {
   design: new Map([['project/canvas.json', JSON.stringify(canvas)], ['project/Main.dc.html', board]]),
@@ -109,6 +109,7 @@ if (recoveryFixture) {
     if (req.body.reset === true) {
       for (const kind of ['design', 'slides'] as const) { documents[kind].clear();for (const [name, text] of initialDocuments[kind]) documents[kind].set(name, text) }
       grants.clear();grantAccess.clear();publishes = 0;refusedPublishes = 0
+      failedFeatures.clear()
     }
     for (const key of ['read', 'write', 'failPublish', 'shortGrants'] as const) if (typeof req.body[key] === 'boolean') access[key] = req.body[key]
     res.json({ ...access })

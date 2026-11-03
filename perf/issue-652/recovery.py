@@ -6,13 +6,15 @@ import base64, hashlib, json, subprocess, sys, time
 from pathlib import Path
 from playwright.sync_api import expect, sync_playwright
 
-port, destination = sys.argv[1:]
+port, destination, *rest = sys.argv[1:]
+width = int(rest[0]) if rest else 1440
 destination = Path(destination);destination.mkdir(parents=True, exist_ok=True)
 public = subprocess.check_output(['openssl','x509','-pubkey','-noout','-in','.codex-tmp/issue-652/tls/cert.pem'])
 der = subprocess.check_output(['openssl','pkey','-pubin','-outform','der'], input=public)
 spki = base64.b64encode(hashlib.sha256(der).digest()).decode()
 origin = f'https://app.lingxi-perf.cn:{port}'
 report = {'scope':'Actual native Design/Slides, actual ArtifactEditorFrame/gateway/CSP, synthetic current ACL and ifMatch backing store; not production ACL or persistent recovery across closing an unsaved tab.','cases':[],'errors':[]}
+report['viewportWidth'] = width
 
 def native(page, kind):
     deadline=time.monotonic()+45
@@ -43,7 +45,7 @@ with sync_playwright() as pw:
     for kind,prefix,initial in [('design','board','Fixed performance board'),('slides','deck','幻灯片 1')]:
         for scenario in ['expiry','downgrade']:
             print('START',kind,scenario,flush=True)
-            context=browser.new_context(viewport={'width':1440,'height':1000})
+            context=browser.new_context(viewport={'width':width,'height':1000})
             context.add_init_script("window.recoveryEvents=[];addEventListener('message',e=>{if(String(e.data?.type).startsWith('artifact:recovery'))recoveryEvents.push({type:e.data.type,result:e.data.result,origin:e.origin})})")
             page=context.new_page();page.on('pageerror',lambda error:report['errors'].append(str(error)))
             page.goto(origin+'/?retain=true',wait_until='domcontentloaded')

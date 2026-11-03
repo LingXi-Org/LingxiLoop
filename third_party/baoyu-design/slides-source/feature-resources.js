@@ -1,4 +1,4 @@
-// Only the four existing lazy capabilities. Prime their immutable HTTP-cache
+// Only the five named lazy capabilities. Prime their immutable HTTP-cache
 // entries before import() so a transient fetch failure cannot poison the browser
 // module map. No document, grant or product state enters this cache.
 const prepared = new Map()

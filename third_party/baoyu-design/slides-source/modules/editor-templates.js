@@ -1,7 +1,7 @@
 // Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorTemplates(runtime2) {
-  var ReactSlideTemplates, leadingTemplatePlacement, centeredTemplatePlacement, SLIDE_TEMPLATES, SlideTemplatesJsx, SLIDE_RENDERER_MESSAGES;
+  var ReactSlideTemplates, leadingTemplatePlacement, centeredTemplatePlacement, SLIDE_TEMPLATES, SlideTemplatesJsx;
   function createTemplateFrame(input, options, context) {
     return {
       id: (0, runtime2.createModelId)(),
@@ -141,9 +141,7 @@ function installEditorTemplates(runtime2) {
     SLIDE_TEMPLATES = value;
   }), bindRuntimeValue(runtime2, "SlideTemplatesJsx", () => SlideTemplatesJsx, (value) => {
     SlideTemplatesJsx = value;
-  }), bindRuntimeValue(runtime2, "SlideTemplatePicker", () => SlideTemplatePicker), bindRuntimeValue(runtime2, "SlideTemplatePreview", () => SlideTemplatePreview), bindRuntimeValue(runtime2, "SLIDE_RENDERER_MESSAGES", () => SLIDE_RENDERER_MESSAGES, (value) => {
-    SLIDE_RENDERER_MESSAGES = value;
-  }), () => {
+  }), bindRuntimeValue(runtime2, "SlideTemplatePicker", () => SlideTemplatePicker), bindRuntimeValue(runtime2, "SlideTemplatePreview", () => SlideTemplatePreview), () => {
     (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeDesignSystemsStore)(), (0, runtime2.initializeTypographyInference)(), (0, runtime2.initializeUiInputs210)(), ReactSlideTemplates = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), (0, runtime2.initializeSlideModel)(), leadingTemplatePlacement = (input, options) => ({
       anchor: "leading",
       margin: input,
@@ -403,79 +401,7 @@ function installEditorTemplates(runtime2) {
           }), leadingTemplatePlacement(128, 1500), centeredTemplatePlacement(-40))
         ])
       }
-    ], (0, runtime2.initializeSlideRenderer)(), SlideTemplatesJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), SLIDE_RENDERER_MESSAGES = {
-      embed: (0, runtime2.formatMessage)({
-        defaultMessage: "网页嵌入内容",
-        id: "xayCilhvYm"
-      }),
-      embedTookFocus: (0, runtime2.formatMessage)({
-        defaultMessage: "网页嵌入内容已禁用：它尝试获取键盘焦点",
-        id: "u2yJI0yeHz"
-      }),
-      embedNavigated: (0, runtime2.formatMessage)({
-        defaultMessage: "网页嵌入内容已禁用：它跳转到了其他页面",
-        id: "xWQ5UwV1p7"
-      }),
-      embedFrame: (0, runtime2.formatMessage)({
-        defaultMessage: "嵌入网页内容（沙箱隔离）",
-        id: "+m2SEr/50b"
-      }),
-      video: (0, runtime2.formatMessage)({
-        defaultMessage: "视频",
-        id: "mmm4Aot3xj"
-      }),
-      videoControls: (alt) => alt ? (0, runtime2.formatMessage)({
-        defaultMessage: "视频控件：{alt}",
-        id: "O8juMLr6lg"
-      }, {
-        alt
-      }) : (0, runtime2.formatMessage)({
-        defaultMessage: "视频控制",
-        id: "Bwyv83g6zb"
-      }),
-      videoFailed: (0, runtime2.formatMessage)({
-        defaultMessage: "视频加载失败。",
-        id: "RstTzmSLCo"
-      }),
-      emptyImage: (0, runtime2.formatMessage)({
-        defaultMessage: "空白图片",
-        id: "J3cAjvvJGb"
-      }),
-      image: (0, runtime2.formatMessage)({
-        defaultMessage: "图片",
-        id: "H8UnyFy+9Z"
-      }),
-      imageUnavailable: (0, runtime2.formatMessage)({
-        defaultMessage: "此处无法显示图片",
-        id: "J0oVoThTQx"
-      }),
-      missingAsset: (asset) => (0, runtime2.formatMessage)({
-        defaultMessage: "缺少资源：{asset}",
-        id: "qXe3R9Hf6K"
-      }, {
-        asset
-      }),
-      editableName: runtime2.accessibleNodeKindName,
-      openLinkHint: (key) => (0, runtime2.formatMessage)({
-        defaultMessage: "{key}+点击打开：",
-        id: "bZ0rCO+6nT"
-      }, {
-        key
-      }),
-      selectBoxHint: (key) => (0, runtime2.formatMessage)({
-        defaultMessage: "{key}+点击选择文本框",
-        id: "NRaswYa4Yu"
-      }, {
-        key
-      }),
-      cellName: (cell) => (0, runtime2.formatMessage)({
-        defaultMessage: "第 {row} 行，第 {column} 列",
-        id: "jusA68ZCeY"
-      }, {
-        row: String(cell.r + 1),
-        column: String(cell.c + 1)
-      })
-    };
+    ], (0, runtime2.initializeSlideRenderer)(), SlideTemplatesJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1);
   };
 }
 export {

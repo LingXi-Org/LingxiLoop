@@ -566,8 +566,12 @@ function installEditorApp(runtime2) {
         live = !1;
       };
     }, []);
-    let phoneRemote = phoneRemoteFlag === !0 && host === void 0, [exportDelivery, setExportDelivery] = runtime2.reactd0.useState(null), [exportNotes, setExportNotes] = runtime2.reactd0.useState(null), [templatePickerOpen, setTemplatePickerOpen] = runtime2.reactd0.useState(!1), [templatePickerReturnFocus, setTemplatePickerReturnFocus] = runtime2.reactd0.useState(void 0), openTemplatePicker = (input) => {
-      setTemplatePickerReturnFocus(() => input?.returnFocus), setTemplatePickerOpen(!0);
+    let phoneRemote = phoneRemoteFlag === !0 && host === void 0, [exportDelivery, setExportDelivery] = runtime2.reactd0.useState(null), [exportNotes, setExportNotes] = runtime2.reactd0.useState(null), [templatePickerOpen, setTemplatePickerOpen] = runtime2.reactd0.useState(!1), [templatePickerReturnFocus, setTemplatePickerReturnFocus] = runtime2.reactd0.useState(void 0), [templateLoad, setTemplateLoad] = runtime2.reactd0.useState(runtime2.templateModulesReady ? 'ready' : 'idle'), loadTemplates = () => {
+      if (runtime2.templateModulesReady) { setTemplateLoad('ready');return; }
+      setTemplateLoad('loading');
+      void (runtime2.loadTemplateModules?.() ?? Promise.resolve()).then(() => setTemplateLoad('ready'), () => setTemplateLoad('failed'));
+    }, openTemplatePicker = (input) => {
+      setTemplatePickerReturnFocus(() => input?.returnFocus), setTemplatePickerOpen(!0);loadTemplates();
     }, [insertMenuOpen, setInsertMenuOpen] = runtime2.reactd0.useState(!1), [toolbarFolded, setToolbarFolded] = runtime2.reactd0.useState(!1), compactInsert = smallCoarsePointer || toolbarFolded, [focusInsertMenuOnOpen, setFocusInsertMenuOnOpen] = runtime2.reactd0.useState(!0), [insertOpenedByKey, setInsertOpenedByKey] = runtime2.reactd0.useState(!0);
     runtime2.reactd0.useEffect(() => {
       readOnly && (setTextEditState(null), setTemplatePickerOpen(!1), setInspectorOpen(!1));
@@ -758,7 +762,7 @@ function installEditorApp(runtime2) {
     runtime2.reactd0.useLayoutEffect(() => {
       (selection.length > 0 || textEdit !== null) && severalSlidesRef.current && collapseSlideSelection();
     }, [selection, textEdit, collapseSlideSelection]);
-    let templateRestyler = runtime2.reactd0.useMemo(() => templatePickerOpen ? (0, runtime2.createTemplateRestyler)({
+    let templateRestyler = runtime2.reactd0.useMemo(() => templatePickerOpen && templateLoad === 'ready' ? (0, runtime2.createTemplateRestyler)({
       current: currentSlide,
       slides,
       typeStyles: deckTypeStyles,
@@ -767,6 +771,7 @@ function installEditorApp(runtime2) {
       faces: snapshot.faces
     }) : void 0, [
       templatePickerOpen,
+      templateLoad,
       currentSlide,
       slides,
       deckTypeStyles,
@@ -4998,13 +5003,25 @@ function installEditorApp(runtime2) {
               }) : null
             ]
           }),
-          SlidesAppJsx.jsx(runtime2.SlideTemplatePicker, {
+          templatePickerOpen && templateLoad === 'ready' ? SlidesAppJsx.jsx(runtime2.SlideTemplatePicker, {
             open: templatePickerOpen,
             onClose: () => setTemplatePickerOpen(!1),
             onPick: pickSlideTemplate,
             restyle: templateRestyler,
             returnFocus: templatePickerReturnFocus
-          }),
+          }) : templatePickerOpen ? SlidesAppJsx.jsx(runtime2.DialogComponents.Root, {
+            open: true,
+            onOpenChange: open => setTemplatePickerOpen(open),
+            children: SlidesAppJsx.jsxs(runtime2.DialogComponents.Popup, {
+              size: 'md',
+              finalFocus: templatePickerReturnFocus ? () => templatePickerReturnFocus() ?? false : undefined,
+              children: [
+                SlidesAppJsx.jsx(runtime2.DialogComponents.Header, { showClose: true, children: '新建幻灯片' }),
+                SlidesAppJsx.jsx('p', { role: templateLoad === 'failed' ? 'alert' : 'status', className: 'my-4', children: templateLoad === 'failed' ? '模板暂时无法加载，请重试。' : '正在准备幻灯片模板…' }),
+                templateLoad === 'failed' ? SlidesAppJsx.jsx(runtime2.Button, { variant: 'secondary', onClick: loadTemplates, children: '重试' }) : null,
+              ],
+            }),
+          }) : null,
           SlidesAppJsx.jsx(runtime2.ExportDeliveryDialog, {
             delivery: exportDelivery,
             onClose: () => setExportDelivery(null)
