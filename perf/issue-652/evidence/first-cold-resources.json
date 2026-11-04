@@ -1,0 +1,159 @@
+{
+  "design": {
+    "Script": {
+      "requests": 1,
+      "encodedBytesIncludingHeaders": 1905444,
+      "resources": [
+        {
+          "url": "https://app.lingxi-perf.cn:4411/artifact-editor/design-assets/design-dd5973c46dcfa8272420cde886d04d025dc2cae5167165ea1d1fcc070495ce40.js",
+          "start": 1145.777041,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 3.9615939999998773,
+          "end": 1149.724745,
+          "bytes": 1905444
+        }
+      ]
+    },
+    "Stylesheet": {
+      "requests": 1,
+      "encodedBytesIncludingHeaders": 53295,
+      "resources": [
+        {
+          "url": "https://app.lingxi-perf.cn:4411/artifact-editor/design-assets/design-52ec8354cd148a435fe3cc0aa297f5657d6914604014f4ea998d2740fc8e9a02.css",
+          "start": 1145.777506,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.026832000000013068,
+          "end": 1146.013675,
+          "bytes": 53295
+        }
+      ]
+    },
+    "Font": {
+      "requests": 1,
+      "encodedBytesIncludingHeaders": 48339,
+      "resources": [
+        {
+          "url": "https://app.lingxi-perf.cn:4411/artifact-editor/design-assets/design-3b2802f4331409152b38402763d94a99520adca364f0dd65012f49f9b3383c33.woff2",
+          "start": 1150.217521,
+          "type": "Font",
+          "initiator": "parser",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.1574239999999918,
+          "end": 1150.372214,
+          "bytes": 48339
+        }
+      ]
+    }
+  },
+  "slides": {
+    "Script": {
+      "requests": 4,
+      "encodedBytesIncludingHeaders": 1018030,
+      "resources": [
+        {
+          "url": "https://app.lingxi-perf.cn:4411/artifact-editor/slides-assets/editor-QZZ3VPS5.js",
+          "start": 1155.023869,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 2.185656999999992,
+          "end": 1157.205242,
+          "bytes": 741454
+        },
+        {
+          "url": "https://app.lingxi-perf.cn:4411/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+          "start": 1155.0247,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 1.102151000000049,
+          "end": 1156.122331,
+          "bytes": 200930
+        },
+        {
+          "url": "https://app.lingxi-perf.cn:4411/artifact-editor/slides-assets/chunk-C3GEGKEX.js",
+          "start": 1155.024815,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.6057650000000194,
+          "end": 1155.6265,
+          "bytes": 75036
+        },
+        {
+          "url": "https://app.lingxi-perf.cn:4411/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+          "start": 1155.024888,
+          "type": "Script",
+          "initiator": "parser",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.04485100000010789,
+          "end": 1155.06934,
+          "bytes": 610
+        }
+      ]
+    },
+    "Stylesheet": {
+      "requests": 1,
+      "encodedBytesIncludingHeaders": 56307,
+      "resources": [
+        {
+          "url": "https://app.lingxi-perf.cn:4411/artifact-editor/slides-assets/editor-c57e555bd5768d8b.css",
+          "start": 1155.024582,
+          "type": "Stylesheet",
+          "initiator": "parser",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": "br",
+          "ttfb": 0.026646999999911714,
+          "end": 1155.491769,
+          "bytes": 56307
+        }
+      ]
+    },
+    "Font": {
+      "requests": 1,
+      "encodedBytesIncludingHeaders": 88420,
+      "resources": [
+        {
+          "url": "https://app.lingxi-perf.cn:4411/artifact-editor/slides-assets/anthropicons-fizzy-lake-D4byUNVq.woff2",
+          "start": 1157.549903,
+          "type": "Font",
+          "initiator": "parser",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.467911999999842,
+          "end": 1157.865042,
+          "bytes": 88420
+        }
+      ]
+    }
+  }
+}

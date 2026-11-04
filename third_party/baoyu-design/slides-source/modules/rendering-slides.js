@@ -1,6 +1,6 @@
 // Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
-import { slideMathRuns, isCodeText } from "../math.js";
+import { useSlideMath, isCodeText } from "../math-loading.js";
 function installRenderingSlides(runtime2) {
   var SlideRendererReact, SlideRendererReactDom, SlideRendererJsx, textFitScaleVariable, textFitFontSizeVariable, textFitClipVariable, DEFAULT_SLIDE_RENDERER_MESSAGES, slideRendererMessagesContext, SLIDE_CONTENT_LANGUAGE, slideEditorChromeContext, slideStructureEnabledContext, linkModifierKeyLabel, richTextDoubleTapWindowMs, renderedLinkOptions, pointerClickMovementTolerance, pointerPositionForMouse, pointerClickMoved, pointerHasLinkModifier, slideLinkContext, richTextEditingContext, listRenderingContext, mediaPlaceholderLabelCss, transparencyCheckerboardGradient, allowEmbedScripts, htmlEmbedMarkerAttribute, embedsDisabledEventName, slideEmbedGuardConfig, slideEmbedContentSecurityPolicy, shapeStyleElementId, shapeStylesCss, shapeClipPaths, slideFrameIdContext, supportsPlaintextContentEditable, linkDoublePressTimeoutMs, plaintextPasteFallback, preventDefaultInput, pasteRichTextPlaintext, listIndentFallback, editableFocusTimeoutMs, initializeSlideRenderer;
   function nodeInlineStyleCss(style, nodeKind) {
@@ -756,8 +756,9 @@ function installRenderingSlides(runtime2) {
       let current = ref2.current;
       current !== null && (ref2.current = null, clearTimeout(current.timer), current.doc.removeEventListener("pointerdown", callback, !0));
     }, []);
+    const math = useSlideMath(SlideRendererReact, runs, !editing && drawn === void 0 && allowMath);
     return SlideRendererReact.useEffect(() => callback, [callback]), SlideRendererJsx.jsx(SlideRendererJsx.Fragment, {
-      children: (!editing && drawn === void 0 && allowMath ? slideMathRuns(runs) : runs).map((input, options) => {
+      children: [math.failed && SlideRendererJsx.jsx("button", { type: "button", onClick: event => { event.stopPropagation(); math.retry(); }, children: "重试公式" }), ...math.runs.map((input, options) => {
         let text = input.mathHtml ? SlideRendererJsx.jsx(MathFormula, {
           html: input.mathHtml,
           display: input.mathDisplay
@@ -824,7 +825,7 @@ function installRenderingSlides(runtime2) {
         return SlideRendererJsx.jsx(SlideRendererJsx.Fragment, {
           children: text
         }, options);
-      })
+      })]
     });
   }
   function RichTextLines({ node, editing = !1 }) {

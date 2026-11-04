@@ -89,7 +89,7 @@ function installUiArtifactShell(runtime2) {
     (0, runtime2.useHostSaveState)(!value7 && (value6 || status === "readonly") ? status : null, () => void doc.save()), runtime2.reactd3.useEffect(() => {
       value5 !== "" && (document.title = value5);
     }, [value5]);
-    let value8 = value2.status === "loading" && !value4, callback = (input) => value8 && input != null ? jsxS6.jsx("fieldset", {
+    let value8 = (value2.status === "loading" || doc.progressive?.()) && !value4, callback = (input) => value8 && input != null ? jsxS6.jsx("fieldset", {
       disabled: !0,
       "aria-busy": "true",
       title: (0, runtime2.formatMessage)({

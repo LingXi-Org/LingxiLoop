@@ -1,0 +1,446 @@
+TAP version 13
+# Subtest: Slides exports fetch formula fonts from the public stylesheet while project fonts keep their grant paths
+ok 1 - Slides exports fetch formula fonts from the public stylesheet while project fonts keep their grant paths
+  ---
+  duration_ms: 14.073021
+  type: 'test'
+  ...
+# Subtest: Design preview math covers both external and inline runtime without changing archived bytes
+ok 2 - Design preview math covers both external and inline runtime without changing archived bytes
+  ---
+  duration_ms: 52.679222
+  type: 'test'
+  ...
+# Subtest: math injection preserves replacement tokens and minified dollar identifiers literally
+ok 3 - math injection preserves replacement tokens and minified dollar identifiers literally
+  ---
+  duration_ms: 0.387443
+  type: 'test'
+  ...
+# Subtest: the public Roadmap RNN and independent Attention samples are recognized as inline math
+ok 4 - the public Roadmap RNN and independent Attention samples are recognized as inline math
+  ---
+  duration_ms: 1.219377
+  type: 'test'
+  ...
+# Subtest: currency does not consume a subsequent formula delimiter
+ok 5 - currency does not consume a subsequent formula delimiter
+  ---
+  duration_ms: 0.895511
+  type: 'test'
+  ...
+# Subtest: backticks, escaped dollars and explicit math delimiters keep their source boundary
+ok 6 - backticks, escaped dollars and explicit math delimiters keep their source boundary
+  ---
+  duration_ms: 0.229719
+  type: 'test'
+  ...
+# Subtest: viewport sizing admission checks descendants and inherited author values before computed px hide their units
+ok 7 - viewport sizing admission checks descendants and inherited author values before computed px hide their units
+  ---
+  duration_ms: 3.066004
+  type: 'test'
+  ...
+# Subtest: content height updates the model and moves later rows together, preserving pages and source objects
+ok 8 - content height updates the model and moves later rows together, preserving pages and source objects
+  ---
+  duration_ms: 0.697262
+  type: 'test'
+  ...
+# Subtest: rejects invalid/stale measurements, fixed interactions and existing layered compositions
+ok 9 - rejects invalid/stale measurements, fixed interactions and existing layered compositions
+  ---
+  duration_ms: 0.333081
+  type: 'test'
+  ...
+# Subtest: the pinned hook keeps the native message-source owner, read-only guard, throttle and model/CAS persistence
+ok 10 - the pinned hook keeps the native message-source owner, read-only guard, throttle and model/CAS persistence
+  ---
+  duration_ms: 113.705216
+  type: 'test'
+  ...
+# Subtest: Design omits direct agent requests and local design-system controls without disabling comments or themes
+ok 11 - Design omits direct agent requests and local design-system controls without disabling comments or themes
+  ---
+  duration_ms: 71.599697
+  type: 'test'
+  ...
+# Subtest: Design reuses its prepared embedded runtime before the external and inline fallbacks
+ok 12 - Design reuses its prepared embedded runtime before the external and inline fallbacks
+  ---
+  duration_ms: 52.071901
+  type: 'test'
+  ...
+# Subtest: only an acknowledged visible host skips the pinned presentation waits
+ok 13 - only an acknowledged visible host skips the pinned presentation waits
+  ---
+  duration_ms: 46.328192
+  type: 'test'
+  ...
+# Subtest: Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources
+ok 14 - Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources
+  ---
+  duration_ms: 70133.846939
+  type: 'test'
+  ...
+# Subtest: unused capture, property-worker and offline-export programs leave the first-view source
+ok 15 - unused capture, property-worker and offline-export programs leave the first-view source
+  ---
+  duration_ms: 1623.40874
+  type: 'test'
+  ...
+# Subtest: viewport sizing admission checks descendants and inherited author values before computed px hide their units
+ok 16 - viewport sizing admission checks descendants and inherited author values before computed px hide their units
+  ---
+  duration_ms: 3.497449
+  type: 'test'
+  ...
+# Subtest: content height updates the model and moves later rows together, preserving pages and source objects
+ok 17 - content height updates the model and moves later rows together, preserving pages and source objects
+  ---
+  duration_ms: 0.79839
+  type: 'test'
+  ...
+# Subtest: rejects invalid/stale measurements, fixed interactions and existing layered compositions
+ok 18 - rejects invalid/stale measurements, fixed interactions and existing layered compositions
+  ---
+  duration_ms: 0.377284
+  type: 'test'
+  ...
+# Subtest: the pinned hook keeps the native message-source owner, read-only guard, throttle and model/CAS persistence
+ok 19 - the pinned hook keeps the native message-source owner, read-only guard, throttle and model/CAS persistence
+  ---
+  duration_ms: 114.948173
+  type: 'test'
+  ...
+# Subtest: retain the complete public graph including unused lazy resources, not project files or grants
+ok 20 - retain the complete public graph including unused lazy resources, not project files or grants
+  ---
+  duration_ms: 42.770184
+  type: 'test'
+  ...
+# Subtest: only older-than-retention code is pruned after source and target images are copied
+ok 21 - only older-than-retention code is pruned after source and target images are copied
+  ---
+  duration_ms: 15.594661
+  type: 'test'
+  ...
+# Subtest: a conflicting immutable URL or cache limit refuses preparation without evicting live code
+ok 22 - a conflicting immutable URL or cache limit refuses preparation without evicting live code
+  ---
+  duration_ms: 28.039743
+  type: 'test'
+  ...
+# Subtest: a source symlink or invalid compressed representation never enters the cache
+ok 23 - a source symlink or invalid compressed representation never enters the cache
+  ---
+  duration_ms: 28.583678
+  type: 'test'
+  ...
+# Subtest: a full staging area refuses new bytes before copying and interrupted copy leftovers are recoverable
+ok 24 - a full staging area refuses new bytes before copying and interrupted copy leftovers are recoverable
+  ---
+  duration_ms: 14.890215
+  type: 'test'
+  ...
+# Subtest: preparation captures both observed source images and target on both hosts before rollout
+ok 25 - preparation captures both observed source images and target on both hosts before rollout
+  ---
+  duration_ms: 1.032277
+  type: 'test'
+  ...
+# Subtest: PDF.js prune accepts pinned officeparser consumers and preserves its separate PDF runtime byte-for-byte
+ok 26 - PDF.js prune accepts pinned officeparser consumers and preserves its separate PDF runtime byte-for-byte
+  ---
+  duration_ms: 89.014351
+  type: 'test'
+  ...
+# Subtest: PDF.js prune rejects an unreviewed officeparser consumer before removing any file
+ok 27 - PDF.js prune rejects an unreviewed officeparser consumer before removing any file
+  ---
+  duration_ms: 55.913875
+  type: 'test'
+  ...
+# Subtest: PDF.js prune rejects officeparser falling back to the top-level runtime before trimming
+ok 28 - PDF.js prune rejects officeparser falling back to the top-level runtime before trimming
+  ---
+  duration_ms: 51.433813
+  type: 'test'
+  ...
+# Subtest: production stops both old workers before an application can enqueue new effect kinds
+ok 29 - production stops both old workers before an application can enqueue new effect kinds
+  ---
+  duration_ms: 0.843985
+  type: 'test'
+  ...
+# Subtest: server image includes the complete shared runtime import graph
+ok 30 - server image includes the complete shared runtime import graph
+  ---
+  duration_ms: 1278.098439
+  type: 'test'
+  ...
+# Subtest: server image ships only the required pinned ZCode runtime payload
+ok 31 - server image ships only the required pinned ZCode runtime payload
+  ---
+  duration_ms: 9.445984
+  type: 'test'
+  ...
+# Subtest: SPA image includes the transitive source graph and pinned vendor license
+ok 32 - SPA image includes the transitive source graph and pinned vendor license
+  ---
+  duration_ms: 8383.459753
+  type: 'test'
+  ...
+# Subtest: production Open Notebook receives only the explicit RAG environment
+ok 33 - production Open Notebook receives only the explicit RAG environment
+  ---
+  duration_ms: 0.388536
+  type: 'test'
+  ...
+# Subtest: packaged and published stacks select the RAG-only image
+ok 34 - packaged and published stacks select the RAG-only image
+  ---
+  duration_ms: 0.662988
+  type: 'test'
+  ...
+# Subtest: CI component matrix runs only checks enabled by the changed scope
+ok 35 - CI component matrix runs only checks enabled by the changed scope
+  ---
+  duration_ms: 0.901594
+  type: 'test'
+  ...
+# Subtest: the production image runs only the RAG API and worker
+ok 36 - the production image runs only the RAG API and worker
+  ---
+  duration_ms: 1.223746
+  type: 'test'
+  ...
+# Subtest: removed Open Notebook capabilities cannot be re-enabled by deployment configuration
+ok 37 - removed Open Notebook capabilities cannot be re-enabled by deployment configuration
+  ---
+  duration_ms: 0.275795
+  type: 'test'
+  ...
+# Subtest: knowledge services receive writable storage and the control plane URL
+ok 38 - knowledge services receive writable storage and the control plane URL
+  ---
+  duration_ms: 0.276255
+  type: 'test'
+  ...
+# Subtest: both app nodes run isolated workers on both app nodes with bounded drain and readiness
+ok 39 - both app nodes run isolated workers on both app nodes with bounded drain and readiness
+  ---
+  duration_ms: 0.484455
+  type: 'test'
+  ...
+# Subtest: the gateway uses the备案 ingress and the Worker uses its admin domain
+ok 40 - the gateway uses the备案 ingress and the Worker uses its admin domain
+  ---
+  duration_ms: 0.442717
+  type: 'test'
+  ...
+# Subtest: live chat streams balance independently across both nodes through unbuffered proxy hops
+ok 41 - live chat streams balance independently across both nodes through unbuffered proxy hops
+  ---
+  duration_ms: 0.463636
+  type: 'test'
+  ...
+# Subtest: ingress keeps management sockets private
+ok 42 - ingress keeps management sockets private
+  ---
+  duration_ms: 0.319587
+  type: 'test'
+  ...
+# Subtest: main deploys through the repo CLI with Sigillo as the only secret source
+ok 43 - main deploys through the repo CLI with Sigillo as the only secret source
+  ---
+  duration_ms: 0.850198
+  type: 'test'
+  ...
+# Subtest: all deployable LingxiLoop images use content-addressed tags from image-tag.mjs
+ok 44 - all deployable LingxiLoop images use content-addressed tags from image-tag.mjs
+  ---
+  duration_ms: 111.930515
+  type: 'test'
+  ...
+# Subtest: CI selects checks by component
+ok 45 - CI selects checks by component
+  ---
+  duration_ms: 0.57322
+  type: 'test'
+  ...
+# Subtest: test and CI changes select checks; heavy experiments require manual scope
+ok 46 - test and CI changes select checks; heavy experiments require manual scope
+  ---
+  duration_ms: 0.823378
+  type: 'test'
+  ...
+# Subtest: workflow path filters route real changed paths to their owning checks
+ok 47 - workflow path filters route real changed paths to their owning checks
+  ---
+  duration_ms: 135.334366
+  type: 'test'
+  ...
+# Subtest: actual workflow conditions block deployment after a failed or cancelled gate
+ok 48 - actual workflow conditions block deployment after a failed or cancelled gate
+  ---
+  duration_ms: 1.137585
+  type: 'test'
+  ...
+# Subtest: CI integration modes distinguish core smoke, explicit owners and manual full
+ok 49 - CI integration modes distinguish core smoke, explicit owners and manual full
+  ---
+  duration_ms: 1.036967
+  type: 'test'
+  ...
+# Subtest: workflow carries explicit integration mode and bounded ordinary budgets
+ok 50 - workflow carries explicit integration mode and bounded ordinary budgets
+  ---
+  duration_ms: 0.534489
+  type: 'test'
+  ...
+# Subtest: Slides renders delimited inline, display, matrix and aligned math with the installed KaTeX
+ok 51 - Slides renders delimited inline, display, matrix and aligned math with the installed KaTeX
+  ---
+  duration_ms: 15.238395
+  type: 'test'
+  ...
+# Subtest: math keeps original text and rich marks across a formula, including line breaks
+ok 52 - math keeps original text and rich marks across a formula, including line breaks
+  ---
+  duration_ms: 1.55314
+  type: 'test'
+  ...
+# Subtest: amounts, escaped delimiters, code and unmarked TeX stay literal
+ok 53 - amounts, escaped delimiters, code and unmarked TeX stay literal
+  ---
+  duration_ms: 1.309986
+  type: 'test'
+  ...
+# Subtest: an amount before explicit math cannot consume its delimiters
+ok 54 - an amount before explicit math cannot consume its delimiters
+  ---
+  duration_ms: 0.908947
+  type: 'test'
+  ...
+# Subtest: invalid math and untrusted commands stay readable without executing HTML
+ok 55 - invalid math and untrusted commands stay readable without executing HTML
+  ---
+  duration_ms: 2.155524
+  type: 'test'
+  ...
+# Subtest: existing monospace model values stay code and tables participate in formula export
+ok 56 - existing monospace model values stay code and tables participate in formula export
+  ---
+  duration_ms: 0.604409
+  type: 'test'
+  ...
+# Subtest: ordinary text does not request math; first use coalesces and a failed chunk can retry
+ok 57 - ordinary text does not request math; first use coalesces and a failed chunk can retry
+  ---
+  duration_ms: 101.329374
+  type: 'test'
+  ...
+# Subtest: feature dependency preparation coalesces and a failed fetch never starts a cached module failure
+ok 58 - feature dependency preparation coalesces and a failed fetch never starts a cached module failure
+  ---
+  duration_ms: 28.471598
+  type: 'test'
+  ...
+# Subtest: native copy translation preserves icon names, enums, shortcuts and document values
+ok 59 - native copy translation preserves icon names, enums, shortcuts and document values
+  ---
+  duration_ms: 21.145744
+  type: 'test'
+  ...
+# Subtest: every translated ICU message parses and formats using the bundled formatter
+ok 60 - every translated ICU message parses and formats using the bundled formatter
+  ---
+  duration_ms: 2285.563962
+  type: 'test'
+  ...
+# Subtest: native build keeps export libraries lazy and reduces initial JavaScript
+ok 61 - native build keeps export libraries lazy and reduces initial JavaScript
+  ---
+  duration_ms: 14949.82366
+  type: 'test'
+  ...
+# Subtest: complete upstream distributions retain every pinned byte and license
+ok 62 - complete upstream distributions retain every pinned byte and license
+  ---
+  duration_ms: 394.577332
+  type: 'test'
+  ...
+# Subtest: rebuilt compiler preserves pinned format behavior, ids, notes, tables, images and design-system includes
+ok 63 - rebuilt compiler preserves pinned format behavior, ids, notes, tables, images and design-system includes
+  ---
+  duration_ms: 822.651184
+  type: 'test'
+  ...
+# Subtest: Slides formula sources and monospace semantics survive existing-format save/reopen
+ok 64 - Slides formula sources and monospace semantics survive existing-format save/reopen
+  ---
+  duration_ms: 8.309379
+  type: 'test'
+  ...
+# Subtest: new deck templates use persisted source-derived style, including after a blank page
+ok 65 - new deck templates use persisted source-derived style, including after a blank page
+  ---
+  duration_ms: 43.611522
+  type: 'test'
+  ...
+# Subtest: built-in color and type data match the pinned Slides implementation
+ok 66 - built-in color and type data match the pinned Slides implementation
+  ---
+  duration_ms: 5.698013
+  type: 'test'
+  ...
+# Subtest: new pages inherit edited look memory and observed typography after a file roundtrip
+ok 67 - new pages inherit edited look memory and observed typography after a file roundtrip
+  ---
+  duration_ms: 9.731695
+  type: 'test'
+  ...
+# Subtest: legacy decks have no automatic default and saved HTML retains authored styles
+ok 68 - legacy decks have no automatic default and saved HTML retains authored styles
+  ---
+  duration_ms: 1.535989
+  type: 'test'
+  ...
+# Subtest: upstream theme variants parse and restyle slides
+ok 69 - upstream theme variants parse and restyle slides
+  ---
+  duration_ms: 42.118975
+  type: 'test'
+  ...
+# Subtest: a hidden retained Slides frame suspends its heartbeat and resumes the latest context only for its parent nonce
+ok 70 - a hidden retained Slides frame suspends its heartbeat and resumes the latest context only for its parent nonce
+  ---
+  duration_ms: 3.149833
+  type: 'test'
+  ...
+# Subtest: progressive first edit preserves unloaded files and native CAS
+ok 71 - progressive first edit preserves unloaded files and native CAS
+  ---
+  duration_ms: 19.005936
+  type: 'test'
+  ...
+# slides (files): load failed (access_revoked, BootReadError, HTTP 403)
+# slides (files): load failed (unbuildable, Error)
+# slides (files): load failed (unbuildable, Error)
+# slides (files): load failed (unbuildable, Error)
+# Subtest: progressive editing respects read-only, narrowed listings and revoked reads
+ok 72 - progressive editing respects read-only, narrowed listings and revoked reads
+  ---
+  duration_ms: 263.55907
+  type: 'test'
+  ...
+1..72
+# tests 72
+# suites 0
+# pass 72
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 72743.601628

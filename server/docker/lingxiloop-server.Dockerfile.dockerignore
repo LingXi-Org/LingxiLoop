@@ -33,6 +33,7 @@ shared/**
 !shared/artifact-math-source.ts
 !shared/design-flow-size.ts
 !shared/artifact-editor-origin.ts
+!shared/artifact-recovery.ts
 !shared/slides-editor-context.ts
 !public/**
 !index.html

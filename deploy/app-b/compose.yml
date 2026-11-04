@@ -90,6 +90,8 @@ services:
   lingxiloop:
     <<: *runtime
     environment: *runtime-environment
+    volumes:
+      - /opt/lingxiloop/editor-assets:/var/lib/lingxiloop/editor-assets:ro
     depends_on:
       db-migrate:
         condition: service_completed_successfully

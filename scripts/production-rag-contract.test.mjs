@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import ts from 'typescript'
 import { computeScope } from './ci-scope.mjs'
+import '../deploy/retain-editor-assets.test.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8').replaceAll('\r\n', '\n')
 
@@ -692,7 +693,7 @@ test('workflow carries explicit integration mode and bounded ordinary budgets', 
   const checks = workflow.match(/^  checks:\r?\n([\s\S]*?)(?=^  integration:)/m)?.[1]
   assert.match(checks, /timeout-minutes: 8/)
   const integration = workflow.match(/^  integration:\r?\n([\s\S]*?)(?=^  deploy:)/m)?.[1]
-  assert.match(integration, /timeout-minutes: \$\{\{ needs.changes.outputs.deep_integration == 'true' && 30 \|\| 8 \}\}/)
+  assert.match(integration, /timeout-minutes: \$\{\{ needs.changes.outputs.deep_integration == 'true' && 30 \|\| 12 \}\}/)
   assert.match(integration, /- if: always\(\)\r?\n\s+uses: actions\/upload-artifact@v4/)
   assert.match(integration, /path: artifacts\/ci-integration\/timings\.json/)
   assert.match(integration, /if-no-files-found: warn/)

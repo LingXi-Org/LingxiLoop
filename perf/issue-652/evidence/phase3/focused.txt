@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: an unused old public chunk survives image replacement without exposing grant/project paths
+ok 1 - an unused old public chunk survives image replacement without exposing grant/project paths
+  ---
+  duration_ms: 17.611452
+  type: 'test'
+  ...
+# Subtest: editor assets negotiate precompressed bytes, HEAD and identity without double compression
+ok 2 - editor assets negotiate precompressed bytes, HEAD and identity without double compression
+  ---
+  duration_ms: 47.751684
+  type: 'test'
+  ...
+# Subtest: design: unsent native content transfers to a freshly authorized unchanged document and waits for save acknowledgement
+ok 3 - design: unsent native content transfers to a freshly authorized unchanged document and waits for save acknowledgement
+  ---
+  duration_ms: 51.903558
+  type: 'test'
+  ...
+# Subtest: slides: unsent native content transfers to a freshly authorized unchanged document and waits for save acknowledgement
+ok 4 - slides: unsent native content transfers to a freshly authorized unchanged document and waits for save acknowledgement
+  ---
+  duration_ms: 3.996074
+  type: 'test'
+  ...
+# Subtest: write downgrade, changed remote base and normalization loss preserve the package without any write
+ok 5 - write downgrade, changed remote base and normalization loss preserve the package without any write
+  ---
+  duration_ms: 1.871585
+  type: 'test'
+  ...
+# Subtest: scope/kind, malformed or oversized packages never restore, and unknown bases stay download-only
+ok 6 - scope/kind, malformed or oversized packages never restore, and unknown bases stay download-only
+  ---
+  duration_ms: 150.8141
+  type: 'test'
+  ...
+# Subtest: a remote update during asynchronous hashing refuses restoration
+ok 7 - a remote update during asynchronous hashing refuses restoration
+  ---
+  duration_ms: 29.156214
+  type: 'test'
+  ...
+# Subtest: a recovery package requires the current frame, grant origin, nonce, request id and bounded valid payload
+ok 8 - a recovery package requires the current frame, grant origin, nonce, request id and bounded valid payload
+  ---
+  duration_ms: 2.646873
+  type: 'test'
+  ...
+# Subtest: opaque legacy frames may export their own data but never receive private restoration bytes through wildcard targeting
+ok 9 - opaque legacy frames may export their own data but never receive private restoration bytes through wildcard targeting
+  ---
+  duration_ms: 0.78737
+  type: 'test'
+  ...
+# Subtest: scope cancellation rejects and ignores a late child reply
+ok 10 - scope cancellation rejects and ignores a late child reply
+  ---
+  duration_ms: 0.609459
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 929.766778

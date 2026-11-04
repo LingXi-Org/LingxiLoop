@@ -17,7 +17,7 @@ const entry = `import React from 'react';import{createRoot}from'react-dom/client
 window.mounts=0;window.unmounts=0;window.rechecks=0;window.decks=['a','b'].map(id=>({id,title:id,updatedAt:'2026-10-31T00:00:00Z',fileCount:1}));
 const root=createRoot(document.getElementById('root'));root.render(<SlidesPage projectId="project-a"/>);
 const wait=async check=>{for(let i=0;i<100;i++){if(check())return;await new Promise(r=>setTimeout(r,20))}throw Error('UI condition timed out')};
-const click=s=>{const e=document.querySelector(s);if(!e)throw Error('Missing '+s);e.click()},visible=()=>!!document.querySelector('[data-workspace]')&&!document.querySelector('[data-workspace]').closest('[hidden]');
+const click=s=>{const e=document.querySelector(s);if(!e)throw Error('Missing '+s);e.click()},visible=()=>!!document.querySelector('[data-workspace]')&&document.querySelector('[data-workspace]').checkVisibility({visibilityProperty:true});
 const assert=(v,m)=>{if(!v)throw Error(m)};
 try{
  await wait(()=>document.querySelector('[data-artifact-open-trigger="a"]'));assert(!window.workspaceModuleLoads,'library loaded the workspace runtime before opening a deck');click('[data-artifact-open-trigger="a"]');await wait(visible);

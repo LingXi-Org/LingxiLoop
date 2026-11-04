@@ -1,0 +1,12 @@
+{
+  "baselineCommit": "9194a43613faf240a978b9f765bd38ff2295b56e",
+  "baselineEvidence": "evidence/baseline-9194a436-https.json.gz",
+  "coldEditableP75Ms": {
+    "design": 2786.25,
+    "slides": 1761.6
+  },
+  "retainedEditableP75Ms": 300,
+  "stagedChangeMaxColdRegressionRatio": 1.1,
+  "minimumSamplesPerArm": 10,
+  "instanceAndBackgroundBudgets": "At most one Design and one Slides native frame within the current account/company/project; no idle eviction of unconfirmed drafts. Original grant expiry is rechecked before reveal. Grant replacement captures a bounded 16 MiB current-tab native backup or preserves the concealed old frame on failure. Explicit restore rechecks authorization and the confirmed base; read-only and changed bases permit download only. See PHASE3.md for measured PSS/CPU, limits and remaining gates."
+}

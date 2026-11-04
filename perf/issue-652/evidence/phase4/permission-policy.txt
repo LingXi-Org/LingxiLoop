@@ -1,0 +1,89 @@
+TAP version 13
+# [access] permission resolution unavailable { action: 'unknown:action' }
+# Subtest: creator policies deny missing ownership facts instead of treating them as public
+ok 1 - creator policies deny missing ownership facts instead of treating them as public
+  ---
+  duration_ms: 1.24787
+  type: 'test'
+  ...
+# Subtest: public knowledge sources require course-teacher management even when a student created them
+ok 2 - public knowledge sources require course-teacher management even when a student created them
+  ---
+  duration_ms: 0.904299
+  type: 'test'
+  ...
+# Subtest: artifact files stay editable by room members whatever their workspace status
+ok 3 - artifact files stay editable by room members whatever their workspace status
+  ---
+  duration_ms: 0.20863
+  type: 'test'
+  ...
+# Subtest: platform administrators bypass tenant membership but not entitlements or resource state
+ok 4 - platform administrators bypass tenant membership but not entitlements or resource state
+  ---
+  duration_ms: 0.293829
+  type: 'test'
+  ...
+# Subtest: runtime failures and unregistered actions fail closed without a context
+ok 5 - runtime failures and unregistered actions fail closed without a context
+  ---
+  duration_ms: 1.326987
+  type: 'test'
+  ...
+# Subtest: ResourceAccessMode centralizes Project lifecycle restrictions
+ok 6 - ResourceAccessMode centralizes Project lifecycle restrictions
+  ---
+  duration_ms: 0.27331
+  type: 'test'
+  ...
+# Subtest: invalid Company and Project lifecycle contexts fail closed with their owning state denial
+ok 7 - invalid Company and Project lifecycle contexts fail closed with their owning state denial
+  ---
+  duration_ms: 0.300071
+  type: 'test'
+  ...
+# Subtest: close-out, transfer, read-only, and retention policies fail closed by action
+ok 8 - close-out, transfer, read-only, and retention policies fail closed by action
+  ---
+  duration_ms: 0.549826
+  type: 'test'
+  ...
+# Subtest: retention and archived institutional reads require a Company manager or Project owner
+ok 9 - retention and archived institutional reads require a Company manager or Project owner
+  ---
+  duration_ms: 0.399996
+  type: 'test'
+  ...
+# Subtest: ordinary teachers remain managers in MANAGER_ONLY Project contexts
+ok 10 - ordinary teachers remain managers in MANAGER_ONLY Project contexts
+  ---
+  duration_ms: 1.710794
+  type: 'test'
+  ...
+# Subtest: teachers cannot submit as students
+ok 11 - teachers cannot submit as students
+  ---
+  duration_ms: 0.137356
+  type: 'test'
+  ...
+# Subtest: Company and Project lifecycle restrictions are both enforced
+ok 12 - Company and Project lifecycle restrictions are both enforced
+  ---
+  duration_ms: 0.113703
+  type: 'test'
+  ...
+# Subtest: company administrators manage course groups but do not inherit private email or direct-message membership
+ok 13 - company administrators manage course groups but do not inherit private email or direct-message membership
+  ---
+  duration_ms: 0.143107
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 317.917842

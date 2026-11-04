@@ -1,6 +1,10 @@
 // Reconstructed from JimLiu/baoyu-design 016b39d, MIT.
 // Published node/compiler.cjs preserves the named module implementation.
+import { bindRuntimeValue } from '../module-helpers.js'
 import libraries from '../vendor/node-dependencies.cjs'
+import * as math from '../math.js'
+import { registerSlideMath } from '../math-loading.js'
+registerSlideMath(math)
 const { React263, ReactDOM15, jsxRuntime, ReactDOMClient, index_parts_exports, index_parts_exports2, index_parts_exports3, index_parts_exports4, index_parts_exports5, index_parts_exports6, index_parts_exports7, index_parts_exports8, index_parts_exports9, index_parts_exports10, index_parts_exports11, index_parts_exports12, RadioGroup, Button, useRender, mergeProps, LabelableProvider, index_parts_exports13, index_parts_exports14, index_parts_exports15, index_parts_exports16, Menubar, DirectionProvider, useDirection, index_parts_exports17, createChangeEventDetails, createGenericEventDetails, useFieldRootContext, useLabelableContext, cva, clsx, extendTailwindMerge, validators, import_pptxgenjs, init_woff2_decoder, woff2_decoder_exports } = libraries
 function installLibraries(runtime2) {
   runtime2.loadReactNamespace = () => React263;
@@ -235,6 +239,7 @@ import { installUiScrollbarOverlay } from '../modules/ui-scrollbar-overlay.js'
 import { installEditorChildSizeModes } from '../modules/editor-child-size-modes.js'
 import { installUiInputActivation } from '../modules/ui-input-activation.js'
 import { installEditorContrastBackgrounds } from '../modules/editor-contrast-backgrounds.js'
+import { installEditorFillCore } from '../modules/editor-fill-core.js'
 import { installUiSelectionInspector } from '../modules/ui-selection-inspector.js'
 import { installEditorMediaCropSession } from '../modules/editor-media-crop-session.js'
 import { installEditorGrouping } from '../modules/editor-grouping.js'
@@ -273,11 +278,13 @@ import { installDocumentsJsonRecords } from '../modules/documents-json-records.j
 import { installDocumentsCommentRecords } from '../modules/documents-comment-records.js'
 import { installDocumentsMigrationMarkers } from '../modules/documents-migration-markers.js'
 import { installDocumentsSlideCodec } from '../modules/documents-slide-codec.js'
+import { installPresentationSpeakerStyles } from '../modules/presentation-speaker-styles.js'
 import { installPresentationSpeakerPanel } from '../modules/presentation-speaker-panel.js'
 import { installPresentationSpeakerSession } from '../modules/presentation-speaker-session.js'
 import { installPresentationAnimationEngine } from '../modules/presentation-animation-engine.js'
 import { installDesignSystemThemePanel } from '../modules/design-system-theme-panel.js'
 import { installPresentationPlayer } from '../modules/presentation-player.js'
+import { installPresentationView } from '../modules/presentation-view.js'
 import { installCreationOverlay } from '../modules/creation-overlay.js'
 import { installEditorSlideTicks } from '../modules/editor-slide-ticks.js'
 import { installCreationController } from '../modules/creation-controller.js'
@@ -320,6 +327,7 @@ import { installDocumentsAssetUndo } from '../modules/documents-asset-undo.js'
 import { installEditorCurrentSlide } from '../modules/editor-current-slide.js'
 import { installBridgePlaceLinks } from '../modules/bridge-place-links.js'
 import { installEditorTemplates } from '../modules/editor-templates.js'
+import { installRenderingMessages } from '../modules/rendering-messages.js'
 import { installEditorTemplateRestyling } from '../modules/editor-template-restyling.js'
 import { installDeliveryDialog } from '../modules/delivery-dialog.js'
 import { installEditorRailPlacement } from '../modules/editor-rail-placement.js'
@@ -554,6 +562,7 @@ function createSlidesRuntime(options = {}) {
     installEditorChildSizeModes(runtime2),
     installUiInputActivation(runtime2),
     installEditorContrastBackgrounds(runtime2),
+    installEditorFillCore(runtime2),
     installUiSelectionInspector(runtime2),
     installEditorMediaCropSession(runtime2),
     installEditorGrouping(runtime2),
@@ -592,11 +601,13 @@ function createSlidesRuntime(options = {}) {
     installDocumentsCommentRecords(runtime2),
     installDocumentsMigrationMarkers(runtime2),
     installDocumentsSlideCodec(runtime2),
+    installPresentationSpeakerStyles(runtime2),
     installPresentationSpeakerPanel(runtime2),
     installPresentationSpeakerSession(runtime2),
     installPresentationAnimationEngine(runtime2),
     installDesignSystemThemePanel(runtime2),
     installPresentationPlayer(runtime2),
+    installPresentationView(runtime2),
     installCreationOverlay(runtime2),
     installEditorSlideTicks(runtime2),
     installCreationController(runtime2),
@@ -638,6 +649,7 @@ function createSlidesRuntime(options = {}) {
     installDocumentsAssetUndo(runtime2),
     installEditorCurrentSlide(runtime2),
     installBridgePlaceLinks(runtime2),
+    installRenderingMessages(runtime2),
     installEditorTemplates(runtime2),
     installEditorTemplateRestyling(runtime2),
     installDeliveryDialog(runtime2),
@@ -679,6 +691,11 @@ function createSlidesRuntime(options = {}) {
     installFilesEarlySlides(runtime2),
     installBootstrap(runtime2)
   ];
+  runtime2.propertiesModulesReady = true;
+  bindRuntimeValue(runtime2, 'SelectionInspector', () => runtime2.LoadedSelectionInspector);
+  bindRuntimeValue(runtime2, 'ThemePanel', () => runtime2.LoadedThemePanel);
+  runtime2.presentationModulesReady = true;
+  bindRuntimeValue(runtime2, 'PresentationView', () => runtime2.LoadedPresentationView);
   for (let index4 = 0; index4 < initializers.length; index4++) {
     if (options.boot === false && index4 === initializers.length - 1) continue;
     initializers[index4]();

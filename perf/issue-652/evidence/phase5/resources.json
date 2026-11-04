@@ -1,0 +1,41 @@
+{
+  "scope": "Cold open request/wire accounting; required UTF-8 source-data Fetch URLs count as JavaScript. Host assets loaded before clicking are excluded by bench.py. Includes response headers in CDP encodedDataLength. Ten opens/arm.",
+  "medians": {
+    "control": {
+      "js": {
+        "count": 5.0,
+        "wireBytes": 1541834.0
+      },
+      "css": {
+        "count": 1.0,
+        "wireBytes": 53295.0
+      },
+      "font": {
+        "count": 1.0,
+        "wireBytes": 48339.0
+      },
+      "other": {
+        "count": 10.0,
+        "wireBytes": 8593.0
+      }
+    },
+    "candidate": {
+      "js": {
+        "count": 5.0,
+        "wireBytes": 1488350.0
+      },
+      "css": {
+        "count": 1.0,
+        "wireBytes": 53295.0
+      },
+      "font": {
+        "count": 1.0,
+        "wireBytes": 48339.0
+      },
+      "other": {
+        "count": 10.0,
+        "wireBytes": 8595.0
+      }
+    }
+  }
+}

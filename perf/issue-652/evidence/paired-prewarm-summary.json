@@ -1,0 +1,50 @@
+{
+  "rows": [
+    {
+      "kind": "design",
+      "scenario": "inflight-prewarm",
+      "baseline": {
+        "n": 10,
+        "p50": 3843.9,
+        "p75": 3847.5,
+        "p95": 4068.7,
+        "bytesP50": 1912418
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 3722.3,
+        "p75": 3743.3,
+        "p95": 3752.7,
+        "bytesP50": 1912419
+      }
+    },
+    {
+      "kind": "slides",
+      "scenario": "inflight-prewarm",
+      "baseline": {
+        "n": 10,
+        "p50": 1836.4,
+        "p75": 1866.3,
+        "p95": 1921.9,
+        "bytesP50": 761996
+      },
+      "candidate": {
+        "n": 10,
+        "p50": 1731.8,
+        "p75": 1744.8,
+        "p95": 1805.5,
+        "bytesP50": 761996
+      }
+    }
+  ],
+  "stagedGate": true,
+  "coldTargetMet": false,
+  "retainedTargetMet": false,
+  "remainingIssueGates": [
+    "complete functional splitting and dependency inventory",
+    "first-use failure/retry and exports",
+    "real retained-instance count/memory/background bounds",
+    "account/project/access/expiry cleanup",
+    "final independent review and release"
+  ]
+}

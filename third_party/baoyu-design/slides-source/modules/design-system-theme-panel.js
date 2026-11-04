@@ -1,7 +1,7 @@
 // Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDesignSystemThemePanel(runtime2) {
-  var reactForThemePanel, jsxForThemePanel, reactForThemeTabFlag, SLOT_BACKGROUND_LABEL, SLOT_TEXT_LABEL, SLOT_MUTED_TEXT_LABEL, SLOT_ACCENT_LABEL, SLOT_OTHER_LABEL, ROLE_LABELS, INVERSE_GROUP_TITLES, INVERSE_SLOT_TITLES, STATUS_SLOT_LABELS, ORIGINAL_LOOK_TITLE, COLORS_TITLE, COLORS_POOR_CONTRAST_LABEL;
+  var reactForThemePanel, jsxForThemePanel, SLOT_BACKGROUND_LABEL, SLOT_TEXT_LABEL, SLOT_MUTED_TEXT_LABEL, SLOT_ACCENT_LABEL, SLOT_OTHER_LABEL, ROLE_LABELS, INVERSE_GROUP_TITLES, INVERSE_SLOT_TITLES, STATUS_SLOT_LABELS, ORIGINAL_LOOK_TITLE, COLORS_TITLE, COLORS_POOR_CONTRAST_LABEL;
   const isInverse = (slot) => slot.role.includes("inverse"), isPage = (slot) => (0, runtime2.isPageSlot)(slot.id), slotNumber = (id) => /-(\d+)$/.exec(id)?.[1], numberedTitle = (name, number) => number !== void 0 ?(0, runtime2.formatMessage)({
     defaultMessage: "{name}（{number}）",id: "A/lvplMuPR"
   }, { name, number }) : name, numberedName = (name, number) => number !== void 0 ?(0, runtime2.formatMessage)({
@@ -340,20 +340,8 @@ function installDesignSystemThemePanel(runtime2) {
       ]
     });
   }
-  const THEME_TAB_FLAG = "slides_theme_tab";
-  function useThemeTabEnabled() {
-    let [enabled, setEnabled] = reactForThemeTabFlag.useState(!1);
-    return reactForThemeTabFlag.useEffect(() => {
-      let live = !0;
-      return (0, runtime2.getFeatureFlagAsync)(THEME_TAB_FLAG, !1).then((value) => {
-        live && setEnabled(value);
-      }), () => {
-        live = !1;
-      };
-    }, []), enabled;
-  }
-  return bindRuntimeValue(runtime2, "reactForThemePanel", () => reactForThemePanel), bindRuntimeValue(runtime2, "jsxForThemePanel", () => jsxForThemePanel), bindRuntimeValue(runtime2, "ThemePanel", () => ThemePanel), bindRuntimeValue(runtime2, "reactForThemeTabFlag", () => reactForThemeTabFlag), bindRuntimeValue(runtime2, "useThemeTabEnabled", () => useThemeTabEnabled), () => {
-    (0, runtime2.initializeSlideRenderer)(), (0, runtime2.initializeRenderingTheme)(), jsxForThemePanel = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), reactForThemePanel = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), reactForThemeTabFlag = reactForThemePanel, SLOT_BACKGROUND_LABEL = (0, runtime2.formatMessage)({
+  return bindRuntimeValue(runtime2, "reactForThemePanel", () => reactForThemePanel), bindRuntimeValue(runtime2, "jsxForThemePanel", () => jsxForThemePanel), bindRuntimeValue(runtime2, "LoadedThemePanel", () => ThemePanel), () => {
+    (0, runtime2.initializeSlideRenderer)(), (0, runtime2.initializeRenderingTheme)(), jsxForThemePanel = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), reactForThemePanel = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), SLOT_BACKGROUND_LABEL = (0, runtime2.formatMessage)({
       defaultMessage: "背景",
       id: "sEAiImDhqd"
     }), SLOT_TEXT_LABEL = (0, runtime2.formatMessage)({

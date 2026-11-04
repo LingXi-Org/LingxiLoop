@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
 import { get } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -7,7 +7,23 @@ import { brotliCompressSync, brotliDecompressSync, gzipSync, gunzipSync } from '
 import test from 'node:test'
 import compression from 'compression'
 import express from 'express'
-import { sendEditorAsset } from './editor-static.js'
+import { retainedEditorAsset, sendEditorAsset } from './editor-static.js'
+
+test('an unused old public chunk survives image replacement without exposing grant/project paths', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'retained-public-code-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await mkdir(join(root, 'slides'))
+  const file = join(root, 'slides', 'exports-ABCDEFGH.js')
+  await writeFile(file, 'export const priorRelease = true;')
+  assert.equal(await retainedEditorAsset('slides', 'exports-ABCDEFGH.js', root), file)
+  for (const path of ['../private.js', 'project/Main.dc.html', 'grant/index.html', '%2e%2e/private.js', 'deck.json', 'exports-ABCDEFGH.js.br']) {
+    assert.equal(await retainedEditorAsset('slides', path, root), null)
+  }
+  await writeFile(join(root, 'private'), 'private')
+  await symlink(join(root, 'private'), join(root, 'slides', 'linked-ABCDEFGH.js'))
+  assert.equal(await retainedEditorAsset('slides', 'linked-ABCDEFGH.js', root), null)
+  assert.equal(await retainedEditorAsset('design', 'exports-ABCDEFGH.js', root), null)
+})
 
 test('editor assets negotiate precompressed bytes, HEAD and identity without double compression', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'slides-asset-'))

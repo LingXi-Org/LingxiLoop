@@ -1,0 +1,4 @@
+/workspace/LingxiLoop/.codex-tmp/issue-652/phase4/theme-native.py:7: SyntaxWarning: invalid escape sequence '\s'
+  view.get_by_label(re.compile(r'第\s*4\s*页.*对比')).click()
+START saved
+PASS native Latin font selection/save, original non-Latin protection and next-slide color inheritance {'background': 'rgb(227, 218, 204)', 'fonts': ['Georgia, ui-serif, Georgia, serif', 'ui-sans-serif, system-ui, sans-serif']}

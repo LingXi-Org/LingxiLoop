@@ -1,0 +1,88 @@
+TAP version 13
+# Subtest: Design separates exact critical native source programs before entering synchronous consumers
+ok 1 - Design separates exact critical native source programs before entering synchronous consumers
+  ---
+  duration_ms: 5416.852459
+  type: 'test'
+  ...
+# Subtest: critical preparation coalesces, preserves successful code and retries before native initialization exactly once
+ok 2 - critical preparation coalesces, preserves successful code and retries before native initialization exactly once
+  ---
+  duration_ms: 1.809598
+  type: 'test'
+  ...
+# Subtest: Design private namespace pruning retains native reads, setters and initialization order
+ok 3 - Design private namespace pruning retains native reads, setters and initialization order
+  ---
+  duration_ms: 54.882441
+  type: 'test'
+  ...
+# Subtest: Design refuses unreviewed private namespace and constructor access
+ok 4 - Design refuses unreviewed private namespace and constructor access
+  ---
+  duration_ms: 76.030934
+  type: 'test'
+  ...
+# Subtest: viewport sizing admission checks descendants and inherited author values before computed px hide their units
+ok 5 - viewport sizing admission checks descendants and inherited author values before computed px hide their units
+  ---
+  duration_ms: 1.475145
+  type: 'test'
+  ...
+# Subtest: content height updates the model and moves later rows together, preserving pages and source objects
+ok 6 - content height updates the model and moves later rows together, preserving pages and source objects
+  ---
+  duration_ms: 0.462755
+  type: 'test'
+  ...
+# Subtest: rejects invalid/stale measurements, fixed interactions and existing layered compositions
+ok 7 - rejects invalid/stale measurements, fixed interactions and existing layered compositions
+  ---
+  duration_ms: 0.36421
+  type: 'test'
+  ...
+# Subtest: the pinned hook keeps the native message-source owner, read-only guard, throttle and model/CAS persistence
+ok 8 - the pinned hook keeps the native message-source owner, read-only guard, throttle and model/CAS persistence
+  ---
+  duration_ms: 87.548386
+  type: 'test'
+  ...
+# Subtest: Design omits direct agent requests and local design-system controls without disabling comments or themes
+ok 9 - Design omits direct agent requests and local design-system controls without disabling comments or themes
+  ---
+  duration_ms: 56.714211
+  type: 'test'
+  ...
+# Subtest: Design reuses its prepared embedded runtime before the external and inline fallbacks
+ok 10 - Design reuses its prepared embedded runtime before the external and inline fallbacks
+  ---
+  duration_ms: 36.855636
+  type: 'test'
+  ...
+# Subtest: only an acknowledged visible host skips the pinned presentation waits
+ok 11 - only an acknowledged visible host skips the pinned presentation waits
+  ---
+  duration_ms: 40.463802
+  type: 'test'
+  ...
+# Subtest: Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources
+ok 12 - Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources
+  ---
+  duration_ms: 154747.535999
+  type: 'test'
+  ...
+# Subtest: unused capture, property-worker and offline-export programs leave the first-view source
+ok 13 - unused capture, property-worker and offline-export programs leave the first-view source
+  ---
+  duration_ms: 1786.002998
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 162887.683504
