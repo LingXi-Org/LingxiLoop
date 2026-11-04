@@ -2,7 +2,7 @@ import type { ContentDocument } from '@/features/content-editor'
 import type { ConversationEvidence, ForumAttachment } from '../forum/contracts'
 
 export interface HomeworkAnswer { text: string; editorDocument?: ContentDocument | null; links: string[]; attachments: ForumAttachment[] }
-export interface HomeworkCriterion { reviewRequired?: boolean; criterion: string; met: boolean; independent: boolean; feedback: string }
+export interface HomeworkCriterion { reviewRequired?: boolean; criterion: string; met: boolean; independent: boolean; feedback: string; evidence?: Array<{messageId:string;excerpt:string}> }
 export interface HomeworkValidationFinding {
   field: 'title' | 'instructions' | 'criteria'; severity: 'blocker' | 'suggestion' | 'teacher_review'
   excerpt: string; original: string; criterionIndex: number | null; reason: string; suggestion: string
@@ -35,6 +35,10 @@ export function canPublishHomeworkDraft(homework: Homework, dirty: boolean): boo
 export interface HomeworkReport {
   id: string
   answerRevision: number
+  generatedAt?: string
+  homeworkRevision?: number
+  inputHash?: string
+  generatorVersion?: string
   verification?: 'verified' | 'unverified'
   completion: string
   criteria: HomeworkCriterion[]
@@ -42,6 +46,7 @@ export interface HomeworkReport {
   independence: string
   weaknesses: string[]
   evidence: string[]
+  assistanceEvidence?: Array<{ messageId: string; excerpt: string }>
   evidenceSources?: Array<{ messageId: string; excerpt: string }>
   manualReview: { reason: string; remainingDoubts: string[] } | null
 }
@@ -94,7 +99,7 @@ export interface HomeworkLearner {
   manualReview: { evidence: string[]; sharedAt: string } | null
 }
 export const homeworkStatus = {
-  NOT_STARTED: '尚未开始', LEARNING: '学习中', MASTERED: '已掌握 · 未提交', PENDING: '待验收', PASSED: '已通过', RETURNED: '已退回',
+  NOT_STARTED: '尚未开始', LEARNING: '学习中', MASTERED: '系统观察达标 · 未提交', PENDING: '待验收', PASSED: '已通过', RETURNED: '已退回',
 } satisfies Record<HomeworkLearnerStatus, string>
 
 export function localDeadline(value: string | null): string {

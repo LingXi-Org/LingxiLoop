@@ -1,3 +1,4 @@
+import { preserveLearningOperators } from '@/features/learning/forum/learning-operators'
 import { renderToStaticMarkup } from 'react-dom/server'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -23,7 +24,7 @@ function nativeHtmlContent() {
 }
 
 export function legacyMarkdownHtml(value: string, format: 'forum' | 'markdown') {
-  return renderToStaticMarkup(<ReactMarkdown remarkPlugins={format === 'forum' ? [remarkCurrencySafeMath,...memoRemarkPlugins] : [remarkGfm]} rehypePlugins={[[rehypeKatex,{output:'mathml',trust:false}], nativeHtmlContent]} skipHtml={format === 'forum'}>{value}</ReactMarkdown>)
+  return renderToStaticMarkup(<ReactMarkdown remarkPlugins={format === 'forum' ? [remarkCurrencySafeMath,...memoRemarkPlugins] : [remarkGfm]} rehypePlugins={[[rehypeKatex,{output:'mathml',trust:false}], nativeHtmlContent]} skipHtml={format === 'forum'}>{format === 'forum' ? preserveLearningOperators(value) : value}</ReactMarkdown>)
 }
 
 /** Import adapter for existing course Markdown. Raw source is retained in the

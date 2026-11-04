@@ -85,12 +85,13 @@ function Learner({ learner, homework, canReview, onChanged }: { learner: Homewor
   return <MemoCard label={learner.learnerName} author={learner.learnerName} authorId={learner.learnerId} authorAvatarUrl={learner.learnerAvatarUrl} authorDetail={learner.learnerId} createdAt={submission?.submittedAt}
     disclosure={{ref:trigger,expanded:open,controls:`${id}-answer`,onToggle:()=>open?collapse():expand()}} actions={<span className="text-xs text-muted-foreground">{submission?`第 ${submission.version} 版`:'尚未提交'}</span>}>
     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-    <span>{submission?(submission.report.verification==='unverified'?'证据不足 / 无法判断':submission.report.criteria.some(c=>c.reviewRequired)?'待教师判断':submission.report.criteria.length>0&&submission.report.criteria.every(c=>c.met&&c.independent)?'已掌握':'尚需巩固'):homeworkStatus[learner.status]}</span>
+    <span>{homeworkStatus[submission?.reviewStatus ?? learner.status]}</span>
     {submission?.conversationReferences?.length?<a className="underline focus-visible:outline-2" href={`#${submission.id}-reference-0`} onClick={event=>{event.preventDefault();expand();setReference(true)}}>引用对话</a>:<span>未关联对话</span>}</div>
     {open&&<div id={`${id}-answer`} className="w-full space-y-3 pt-2">
     {learner.missingCriteria.length > 0 && <div className="space-y-1 text-sm"><p className="font-medium">待核实或待巩固</p><ul className="list-disc space-y-1 ps-5 text-muted-foreground">{learner.missingCriteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul></div>}
     {submission && <HomeworkSubmissionView submission={submission} framed={false} />}
     {submission && canReview && <form className="space-y-3" onSubmit={event => event.preventDefault()}>
+      <p className="text-xs text-muted-foreground">验收状态支持通过或退回。需要按四级量规评分时，请在验收意见中记录实际等级；AI 报告不代替教师评分。</p>
       <ForumContentFields label="验收意见" body={reason} editorDocument={reasonDocument} setBody={(value,document)=>{setReason(value);setReasonDocument(document ?? null)}} attachments={reasonFiles} setAttachments={setReasonFiles} links={reasonLinks} setLinks={setReasonLinks} onUploading={setUploading} disabled={busy || uploading} maxLength={4000} focusCanvas/>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" disabled={busy || uploading || reason.length > 4000 || !reason.trim() || submission.reviewStatus === 'RETURNED'} onClick={() => void act(() => homeworkApi.review(homework.courseId, homework.id, { learnerId: learner.learnerId, expectedSubmissionId: submission.id, decision: 'RETURNED', reason: reason.trim(), editorDocument:reasonDocument, attachments:reasonFiles, links:contentLinks(reasonLinks) }))}>退回</Button>
