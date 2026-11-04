@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assembleHarness, executionSnapshot, skillIndex, type TurnContext } from '@lyyzka/lingxios'
 import { createProductHarness } from '../agent-runtime/harness.js'
-import { ProductRuntimePolicy } from '../agent-runtime/context.js'
+import { DESIGN_INCOMPLETE_NOTICE, ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { productSkills } from '../agent-runtime/system-skills.js'
 import { createProductTools } from '../agent-runtime/tools.js'
 import { artifactReferencePages, readArtifactReference } from '../modules/artifacts/skills.js'
@@ -135,6 +135,40 @@ test('semantic planning is scoped, bounded, and selects only the exact current D
   assert.equal(policy.requiredTool(ctx),undefined)
 })
 
+test('a semantic canvas decision follows confirmed prerequisites through a bounded native save/check path', () => {
+  const ctx = context()
+  selected(ctx,true)
+  const receipt = (action:string,args:object,value:unknown={},ok=true) => ctx.executionSteps!.push({id:action,kind:action.replace('.','__'),requestVersion:1,artifacts:[],
+    input:{arguments:JSON.stringify(args)},output:JSON.stringify({receipts:[{action,result:{ok,value}}]})})
+  receipt('design.plan_explanation',{delivery:'canvas'},{delivery:'canvas'})
+  assert.equal(policy.requiredTool(ctx),'design__read_reference')
+  receipt('design.read_reference',{page:'format.md'},{})
+  ctx.executionSteps!.at(-1)!.output = JSON.stringify({truncated:true,observations:[{actionKey:'native-reference',sha256:'a'.repeat(64)}],preview:'untrusted text'})
+  assert.equal(policy.requiredTool(ctx),'design__current')
+  receipt('design.current',{},null)
+  assert.equal(policy.requiredTool(ctx),'design__ensure')
+  receipt('design.ensure',{}, {artifactId:'canvas'})
+  assert.equal(policy.requiredTool(ctx),'design__read_file')
+  receipt('design.read_file',{path:'project/canvas.json'})
+  assert.equal(policy.requiredTool(ctx),'design__read_file')
+  receipt('design.read_file',{path:'project/ds/slides-builtin/tokens.json'})
+  assert.equal(policy.requiredTool(ctx),'design__write_files')
+  receipt('design.write_files',{}, {},false)
+  assert.equal(policy.requiredTool(ctx),undefined,'failed native stages are not forced indefinitely')
+  receipt('design.write_files',{})
+  assert.equal(policy.requiredTool(ctx),'design__check')
+  receipt('design.check',{}, {problems:1})
+  assert.equal(policy.requiredTool(ctx),'design__write_files')
+  receipt('design.write_files',{})
+  receipt('design.check',{}, {problems:1})
+  assert.equal(policy.requiredTool(ctx),undefined,'three writes bound automatic checker repair')
+  receipt('design.check',{}, {problems:0})
+  assert.equal(policy.requiredTool(ctx),undefined)
+  assert.ok(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx),'zero-problem empty index does not deliver an explanatory artboard')
+  ctx.executionSteps!.at(-1)!.output = JSON.stringify({receipts:[{action:'design.check',result:{ok:true,value:{problems:0,boardCount:1}}}]})
+  assert.equal(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx),null)
+})
+
 test('DeepSeek uses the explicitly qualified formal20 native-v3 binding', () => {
   const model = runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', baseUrl: 'https://api.siliconflow.cn/v1', apiKey: 'unit-only' }, 90_000)
   assert.equal(model.publicAnswerTool, 'native-v3')
@@ -152,10 +186,15 @@ test('a Design write cannot declare satisfaction without a subsequent successful
   assert.ok(policy.validateCompletion('', assessment, ctx))
   ctx.executionSteps[1].output = JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 0 } } }] })
   assert.equal(policy.validateCompletion('', assessment, ctx), null)
+  assert.equal(policy.validateAssistantText('讲解画板已经保存，可以打开 Design 查看。',ctx),null)
+  assert.equal(policy.publicTextSafety({text:'画板已完成。',isFinal:false,approvedThrough:0},ctx).safeThrough,6)
   for (const output of [undefined, '{}', JSON.stringify({receipts:[{action:'design.write_files',result:{ok:false}}]}), JSON.stringify({receipts:[{action:'design.write_files',result:{ok:true,executionState:'unknown'}}]})]) {
     const original = ctx.executionSteps[0].output
     ctx.executionSteps[0].output = output
     assert.match(policy.validateCompletion('', assessment, ctx)!, /save was not confirmed/)
+    assert.match(policy.validateAssistantText('讲解画板已经保存，可以打开 Design 查看。',ctx)!, /No finished canvas/)
+    assert.equal(policy.publicTextSafety({text:'画板已完成。',isFinal:false,approvedThrough:0},ctx).safeThrough,0)
+    assert.equal(policy.validateAssistantText(DESIGN_INCOMPLETE_NOTICE+'保存失败，先解释方法。',ctx),null)
     ctx.executionSteps[0].output = original
   }
   ctx.executionSteps.push({ ...ctx.executionSteps[0], id: 'new-write' })

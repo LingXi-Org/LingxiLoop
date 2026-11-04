@@ -264,4 +264,3 @@ export function findMarkdownCodeRanges(content: string): AssistantTextRange[] {
 
   return mergeRanges(ranges);
 }
-

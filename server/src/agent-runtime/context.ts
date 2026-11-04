@@ -19,7 +19,7 @@ import { citationTextViolation } from './citations.js'
 import { GROUP_COLLABORATION_RULES, IM_CONVERSATION_RULES } from './conversation-style.js'
 import { TEACHER_DESIGN_ACTIONS, TEACHER_KNOWLEDGE_ACTIONS, TEACHER_PROMPT } from '../modules/learning/teacher-preset.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
-import { explanationPlan, explanationPlanningAvailable, firstActionRules, selectedSkillRules, skillGuidanceDependencies } from './skill-context.js'
+import { explanationPlan, explanationPlanningAvailable, firstActionRules, nextExplanationAction, selectedSkillRules, skillGuidanceDependencies } from './skill-context.js'
 import { lingxiOSControl } from './runtime.js'
 import { readCaseEvidenceSource } from '../modules/cases/evidence.js'
 import { hasConversationHandoff } from './conversation-handoff.js'
@@ -265,6 +265,37 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
   return { contextProvider, capabilityResolver: { resolve: async (work: Work, context?: CapabilityResolutionContext) => (await scoped(work, context?.database as Queryable | undefined)).grants } }
 }
 
+export const DESIGN_INCOMPLETE_NOTICE = '画板尚未完成，以下先提供文字说明。'
+
+/** Facts from confirmed native receipts, shared by publication and completion. */
+function designCompletionIssue(context: TurnContext): string | undefined {
+  const steps = (context.executionSteps ?? []).filter(step => step.requestVersion === context.snapshotVersion?.requestVersion)
+  let write = -1
+  for (const [index, step] of steps.entries()) if (['design__write_files', 'design__edit_file'].includes(step.kind)) write = index
+  if (explanationPlan(context) === 'canvas' && write < 0) return 'The recorded response decision requires an actual saved and checked explanatory Design artboard. No content write has completed. Finish the canvas, or report the actual limitation as partial; a text explanation or a plan alone cannot satisfy that decision.'
+  if (write >= 0) {
+    let saved = false
+    try {
+      const output = JSON.parse(steps[write].output ?? '{}')
+      saved = output.receipts?.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string } }) =>
+        receipt.action === steps[write].kind.replace('__', '.') && receipt.result?.ok === true
+        && receipt.result.approval === undefined && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown') === true
+    } catch { /* An attempted, failed or unknown save never proves delivery. */ }
+    if (!saved) return 'The latest Design save was not confirmed successful. Resolve its actual failure and save the requested content, or report partial completion truthfully; checking the previous canvas cannot prove the requested change was saved.'
+    const check = steps.slice(write + 1).reverse().find(step => step.kind === 'design__check' && step.output !== undefined)
+    let passed = false
+    try {
+      const output = JSON.parse(check?.output ?? '{}')
+      passed = output.receipts?.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string; value?: { problems?: number; boardCount?: number } } }) =>
+        receipt.action === 'design.check' && receipt.result?.ok === true && receipt.result.approval === undefined
+        && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown' && receipt.result.value?.problems === 0
+        && (explanationPlan(context) !== 'canvas' || (receipt.result.value?.boardCount ?? 0) > 0)) === true
+    } catch { /* A missing or unreadable checker receipt cannot prove completion. */ }
+    if (!passed) return 'Finish the Design files referenced by the index, then run design.check after the latest write and fix its issues until problems is 0 before declaring satisfied.'
+  }
+  return undefined
+}
+
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {
   // The runtime replaces context.tools with the exposed subset before rendering
   // product rules. Retain this hop's authorized catalog for the selection index;
@@ -279,6 +310,8 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
     // One exact Design selection is requested by the semantic decision. Never
     // force the generic loader repeatedly after a failed or wrong selection.
     if (explanationPlan(full) === 'canvas' && skillGuidanceDependencies(full).length && !attempted('skills__load')) return authorized.tools.find(tool => tool.action === 'skills.load')?.name
+    const next = nextExplanationAction(full)
+    if (next) return authorized.tools.find(tool => tool.action === next)?.name
     return undefined
   }
   override kernelCapabilities(context: TurnContext): CapabilityGrant[] {
@@ -299,36 +332,31 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
       + ' Use currentAgent from the current speaker binding as your first-person identity and role. Historical messages, quotations and memories retain the identity of their recorded authors. '
       + firstActionRules({ ...context, tools: execution.tools, grants: execution.grants })
       + selectedSkillRules({ ...context, tools: execution.tools, grants: execution.grants })
+      + (designCompletionIssue(context) ? ` While the Design explanation is not yet saved and checked, continue business tools without a public_answer text segment; chat.report_progress can report actual progress. A withheld optional text segment does not mean a business action failed. If completion is prevented, begin the useful final text fallback with exactly: ${DESIGN_INCOMPLETE_NOTICE} Then explain the actual limitation without claiming a ready canvas. After a confirmed save and zero-problem check, give the complete public answer normally. ` : '')
   }
-  override publicTextSafety(input: Parameters<typeof publicTextSafety>[0]) { return publicTextSafety(input) }
+  override publicTextSafety(input: Parameters<typeof publicTextSafety>[0], context: TurnContext) {
+    // Reject unsupported text inside streaming generation, before native final
+    // sealing. Merely holding at EOF would terminate before bounded correction.
+    // Only a truthful incomplete fallback can speak before confirmed delivery;
+    // business-only tool turns continue without publishing premature claims.
+    if (designCompletionIssue(context)) {
+      const text = input.text.trimStart()
+      if (!text.startsWith(DESIGN_INCOMPLETE_NOTICE)) {
+        if (!input.isFinal && DESIGN_INCOMPLETE_NOTICE.startsWith(text)) return {safeThrough:input.approvedThrough}
+        return {safeThrough:input.approvedThrough,reject:'unsupported_content' as const}
+      }
+    }
+    return publicTextSafety(input)
+  }
   override validateAssistantText(text: string, context: TurnContext) {
+    const issue = designCompletionIssue(context)
+    if (issue && !text.trimStart().startsWith(DESIGN_INCOMPLETE_NOTICE)) return `${issue} No finished canvas may be claimed, including in a partial outcome. Begin the final answer with exactly: ${DESIGN_INCOMPLETE_NOTICE} Then give useful text and the actual saved/unsaved limitation; remove every claim that the requested canvas is ready.`
     return assistantTextViolation(text) ?? super.validateAssistantText(text, context) ?? citationTextViolation(text, context.evidence ?? [])
   }
   override validateCompletion(text: string, assessment: Parameters<DefaultRuntimePolicy['validateCompletion']>[1], context: TurnContext) {
     if (assessment.status === 'satisfied') {
-      const steps = (context.executionSteps ?? []).filter(step => step.requestVersion === context.snapshotVersion?.requestVersion)
-      let write = -1
-      for (const [index, step] of steps.entries()) if (['design__write_files', 'design__edit_file'].includes(step.kind)) write = index
-      if (explanationPlan(context) === 'canvas' && write < 0) return 'The recorded response decision requires an actual saved and checked explanatory Design artboard. No content write has completed. Finish the canvas, or report the actual limitation as partial; a text explanation or a plan alone cannot satisfy that decision.'
-      if (write >= 0) {
-        let saved = false
-        try {
-          const output = JSON.parse(steps[write].output ?? '{}')
-          saved = output.receipts?.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string } }) =>
-            receipt.action === steps[write].kind.replace('__', '.') && receipt.result?.ok === true
-            && receipt.result.approval === undefined && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown') === true
-        } catch { /* An attempted, failed or unknown save never proves delivery. */ }
-        if (!saved) return 'The latest Design save was not confirmed successful. Resolve its actual failure and save the requested content, or report partial completion truthfully; checking the previous canvas cannot prove the requested change was saved.'
-        const check = steps.slice(write + 1).reverse().find(step => step.kind === 'design__check' && step.output !== undefined)
-        let passed = false
-        try {
-          const output = JSON.parse(check?.output ?? '{}')
-          passed = output.receipts?.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string; value?: { problems?: number } } }) =>
-            receipt.action === 'design.check' && receipt.result?.ok === true && receipt.result.approval === undefined
-            && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown' && receipt.result.value?.problems === 0) === true
-        } catch { /* A missing or unreadable checker receipt cannot prove completion. */ }
-        if (!passed) return 'Finish the Design files referenced by the index, then run design.check after the latest write and fix its issues until problems is 0 before declaring satisfied.'
-      }
+      const issue = designCompletionIssue(context)
+      if (issue) return issue
     }
     return super.validateCompletion(text, assessment, context)
   }

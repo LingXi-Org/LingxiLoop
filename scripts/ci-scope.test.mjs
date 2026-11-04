@@ -14,6 +14,14 @@ test('retired capability compatibility keeps its archive and authorization integ
     assert.ok(scope.integration_files.includes('retired-visualize.test.ts'), path)
   }
 })
+test('explanation routing and publication keep actual native generation and failed-write owners', () => {
+  for (const path of ['server/src/agent-runtime/context.ts','server/src/agent-runtime/skill-context.ts','server/src/modules/artifacts/agent-tools.ts',
+    'server/src/modules/artifacts/skills.ts','server/src/modules/learning/teacher-preset.ts']) {
+    const scope = computeScope(classifyPaths([path]))
+    assert.ok(scope.integration_files.includes('runtime-first-action-contracts.test.ts'),path)
+    assert.ok(scope.integration_files.includes('runtime-design-failure.test.ts'),path)
+  }
+})
 test('Design sizing sources retain their editor build and artifact integration owners', () => {
   for (const path of ['shared/design-flow-size.ts', 'scripts/build-design-layout.mjs', 'scripts/design-flow-size.test.mjs']) {
     const scope = computeScope(classifyPaths([path]))

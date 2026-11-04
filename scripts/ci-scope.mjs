@@ -11,6 +11,7 @@ const HISTORICAL_FILES = [
   'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts',
 ]
 const OWNERS = [
+  [/^server\/src\/(?:agent-runtime\/(?:context|skill-context)|modules\/artifacts\/(?:skills|agent-tools)|modules\/learning\/teacher-preset)\.ts$/, ['runtime-first-action-contracts.test.ts', 'runtime-design-failure.test.ts']],
   [/^server\/src\/(?:im\/(?:retired-visualize|visualize-router|interaction-admission)|agent-runtime\/retired-capabilities)\.ts$|^shared\/(?:retired-visualize|assistant-directive-parser)\.ts$/, ['retired-visualize.test.ts']],
   [/^server\/src\/(?:agent-runtime\/(?:model-observation-timing|runtime)\.ts|modules\/platform-operations\/model-stage-timing\.ts)$|^shared\/model-stage-timing\.ts$/, ['model-stage-ledger.test.ts', 'runtime-public-text-suspension.test.ts']],
   [/^server\/src\/modules\/platform-operations\/(?:agent-operations|agent-run-timing|model-stage-timing|company-router|router)\.ts$|^shared\/(?:agent-run-timing|model-stage-timing)\.ts$/, ['runtime-worker-diagnostics.test.ts']],

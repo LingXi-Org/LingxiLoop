@@ -33,12 +33,20 @@ failed/wrong selections never create a policy-forced load loop. The existing
 skill name is retained and its version/hash advances, so historical loads
 cannot unlock current guidance.
 
+After guidance a bounded native prerequisite sequence follows confirmed receipts:
+read format, `design.current`, initialize if null, read the listed canvas index and
+listed design tokens, write and check. Failed stages stop forced selection;
+wrong reference reads are bounded at2, file reads at4 and automatic checker
+repairs at3 writes. Native-truncated reads require a ledger-derived observation
+reference, never preview text, to establish completion.
+
 After guidance: read format and `design.current`; if no canvas exists, the
 explicit authorized `design.ensure` transaction initializes/reuses the one
 conversation canvas and returns actual files. Read current sha256s, preserve
 existing human work, save complete artboards and their index, then check.
 Satisfied completion requires a confirmed latest save and a subsequent
-successful zero-problem check. Failed/unknown saves cannot use an old canvas
+successful zero-problem check; a canvas explanation also requires a positive
+board count, so an empty index cannot qualify. Failed/unknown saves cannot use an old canvas
 check as proof. Canvas plans with no content write cannot declare satisfaction.
 Cancellation and genuine permission/tool failures retain partial content and
 must be reported truthfully.
@@ -72,6 +80,14 @@ Completed before final candidate:
 - Independent read-only retirement review: 10 tests passed. Design reviewers
   identified cold-start, failed-save and later-plan override gaps; all received
   focused fixes and regressions. No PR approval was submitted.
+- `archive-browser/result.json`: actual AnswerText/HTTP client and trusted
+  keyboard JSON download, no automatic export or old runtime, duplicate-send
+  guard and403 body/focus retention. Synthetic identity/HTTP fixture; real ACL
+  coverage is the separate database integration.
+- `model-snapshot-browser/result.json`: actual saved model source, AnswerText and
+  DesignWorkspace, trusted open/edit/CAS save, refresh/reopen,12 formulas intact.
+  Synthetic grant/CAS fixture; model generation and current authorization are
+  established by separate native/database evidence.
 - `design-math/result.json` and `reopened.png`: real compiled editor in Chromium
   CDP, 8 formulas, native keyboard edit, one CAS save, reopen, narrow keyboard
   focus. Fixture HTTP/CAS, not production authentication or browser export.
@@ -96,8 +112,19 @@ prompts or credentials are recorded.
   narrower `accepted` field described saved artifact delivery. The final metric
   also requires exact one-shot routing. This attempt motivated hiding the
   planner after its first attempt and binding the first confirmed decision.
-- Final `one-shot-*` matrix is still running. No final acceptance or production
-  success is claimed until its actual results and release gates are recorded.
+- `one-shot-introduction` passed on the one-shot routing implementation.
+  `one-shot-process` correctly routed to Design but had a provider protocol error
+  and an invalid write; its final partial body incorrectly claimed a ready board.
+  This concrete failure motivated the final streaming/answer delivery gate.
+- The final native failed-CAS regression now rejects unsupported text inside
+  streaming generation, before a false public delta or seal exists, then
+  delivers the exact incomplete notice plus useful text. Normal Design2/2 and
+  native suspension/rejection4/4 also pass. This corrects the earlier EOF-only
+  hold, which had prevented tools/correction, and the later final-only check,
+  which had allowed a transient rejected candidate before replacement.
+- Final `delivery-*` matrix is still running; its first process run began before
+  the last streaming gate and hit the finite240-second execution limit. No final
+  acceptance or production success is claimed until actual results are recorded.
 
 ## Release boundary
 
@@ -117,4 +144,17 @@ compatible committed deployment, with all retained data preserved. An old
 frontend's reappearance on rollback is a product-release decision, never an
 automatic data conversion.
 
+Draft PR: https://github.com/LingXi-Org/LingxiLoop/pull/672. Initial commit
+`011ad011` passed all component CI checks; its historical integration failed a
+current-preset7 versus immutable-historical6 assertion. The assertion was fixed
+to the actual historical value without changing migrationSQL. Official owning
+recheck passed current teacher5, current-runtime/product54CAS5 and historical
+3.8.2 migrations37; no skips.
+Later delivery-gate/browser changes require their own final exact-head CI.
+
+Real model qualification initially used a finite240-second Worker budget; one
+process run hit that bound. The explicit opt-in single-file live qualification
+now allows480 seconds per Worker /540 per test /600 per runner invocation.
+Ordinary CI, product budgets, provider credentials and retries are unchanged.
+This measures completion under a stated bounded budget, not a speed improvement.
 No merge, production deployment or double-host health result is claimed here.

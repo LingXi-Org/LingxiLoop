@@ -35,7 +35,7 @@ const sampleId = (process.env.DESIGN_EXPLANATION_SAMPLE ?? 'explicit') as keyof 
 assert.ok(Object.hasOwn(explanationSamples, sampleId), 'unknown Design explanation sample')
 const expectsCanvas = !live || !['greeting','fact','textOnly'].includes(sampleId)
 for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLength ? 'a recovered truncation never qualifies as zero-failure artifact delivery' : live ? `real provider completes ${sampleId} with ${expectsCanvas ? 'a checked cold Design canvas' : 'text only'}`
-  : 'native Worker loads guidance before reference, existing-file read, artboard write and check', { timeout: live ? 300_000 : 40_000 }, async () => {
+  : 'native Worker loads guidance before reference, existing-file read, artboard write and check', { timeout: live ? 540_000 : 40_000 }, async () => {
   if (live) {
     assert.equal(env.OPENAI_MODEL, 'deepseek-ai/DeepSeek-V4.1-Flash')
     assert.equal(new URL(env.OPENAI_BASE_URL).hostname, 'api.siliconflow.cn')
@@ -74,9 +74,9 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
   const provider = createServer(async (request, response) => {
     try {
       let raw = ''; for await (const chunk of request) raw += chunk
-      const input = JSON.parse(raw); observe(input); assert.ok(calls <= (recoveredLength ? 9 : 8))
+      const input = JSON.parse(raw); observe(input); assert.ok(calls <= (recoveredLength ? 10 : 9))
       const phase = calls - (lengthInjected ? 1 : 0) - 1
-      if (recoveredLength && !lengthInjected && phase === 5) {
+      if (recoveredLength && !lengthInjected && phase === 6) {
         lengthInjected = true
         response.writeHead(200, { 'content-type': 'text/event-stream' })
         response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'truncated-write', type: 'function', function: { name: 'design__write_files', arguments: '{"files":' } }] }, finish_reason: 'length' }], usage: { prompt_tokens: 10, completion_tokens: 16384 } })}\n\ndata: [DONE]\n\n`)
@@ -91,16 +91,17 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       }
       if (phase === 3) business.push({ name: 'design__current', args: {} })
       if (phase === 4) business.push({ name: 'design__read_file', args: { path: 'project/canvas.json' } })
-      if (phase === 5) {
+      if (phase === 5) business.push({ name: 'design__read_file', args: { path: 'project/ds/slides-builtin/tokens.json' } })
+      if (phase === 6) {
         const file = (await pool.query("SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path='project/canvas.json'", [seededCanvas!.id])).rows[0]
         const content = JSON.parse(file.body.toString('utf8'))
         content.boards['FlashAttention.dc.html'] = { x: 0, y: 0, w: 1200, h: 820, title: 'FlashAttention' }
         content.order = ['FlashAttention.dc.html']
         business.push({ name: 'design__write_files', args: { files: { 'project/canvas.json': { content: JSON.stringify(content), ifMatch: file.sha256 }, 'project/FlashAttention.dc.html': { content: fixture, ifMatch: null } } } })
       }
-      if (phase === 6) business.push({ name: 'design__check', args: {} })
-      const output = { index: 0, id: `answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: phase === 7 ? 'FlashAttention 讲解已写入画板，格式检查通过。' : ['FlashAttention 保持精确注意力并减少数据搬运。','\n计算按块处理 Q、K、V。','\n在线 softmax 重标定累积量。','\n避免写回完整 N×N 矩阵。','\nIO 优化减少显存读写。','\n计算量仍保持二次量级。'][phase - 1], commentary: '', outcome: phase === 7 ? { status: 'satisfied', gaps: [] } : null }) } }
-      const selecting = phase === 0 || phase === 1
+      if (phase === 7) business.push({ name: 'design__check', args: {} })
+      const output = { index: 0, id: `answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: phase === 8 ? 'FlashAttention 讲解已写入画板，格式检查通过。' : '', commentary: '', outcome: phase === 8 ? { status: 'satisfied', gaps: [] } : null }) } }
+      const selecting = phase !== 8
       const toolCalls = [...(selecting ? [] : [output]), ...business.map((item, index) => ({ index: index + (selecting ? 0 : 1), id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
       for (const call of toolCalls) assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === call.function.name), call.function.name)
       response.writeHead(200, { 'content-type': 'text/event-stream' })
@@ -215,7 +216,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, channelId)
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
     const model = runtimeModelConfiguration({ id: live ? env.OPENAI_MODEL : 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: live ? env.OPENAI_API_KEY : 'synthetic-only', baseUrl: live ? env.OPENAI_BASE_URL : 'https://api.siliconflow.cn/v1' }, live ? 180_000 : 90_000)
-    worker = createWorker({ modelBudget: { maxModelCalls: live ? 24 : recoveredLength ? 9 : 8, wallClockMs: live ? 240_000 : 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
+    worker = createWorker({ modelBudget: { maxModelCalls: live ? 24 : recoveredLength ? 10 : 9, wallClockMs: live ? 480_000 : 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
       model: live ? model : { ...model, baseUrl: `http://127.0.0.1:${address.port}/v1` }, worker: { id: 'issue593-artboard', concurrency: 1 } })
     const run = (await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version, messageId: 'question', version: 1, author: { id: userId, kind: 'human' }, text: live ? explanationSamples[sampleId] : explanationSamples.explicit, mentions: [agentId] }, { mode: 'execute', codeExecution: 'disabled', deliveryMode: 'auto', executionClass: 'conversation' })).runs[0]
     assert.ok(run); await bindProductRun(pool, run, channelId); await worker.runNext(); assert.equal(handlerError, undefined)
@@ -260,7 +261,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     assert.equal(failures.length, 0); assert.equal(protocolFailures, 0); assert.equal(modelFailures.length, 0)
     assert.equal(failedModelAttempts.length, recoveredLength ? 1 : 0); assert.equal(wireContractFailures.length, 0)
     assert.equal(evidence.accepted, !recoveredLength)
-    if (!live) assert.equal(calls, recoveredLength ? 9 : 8)
+    if (!live) assert.equal(calls, recoveredLength ? 10 : 9)
     assert.equal(receipts.filter(row => row.action === 'design.plan_explanation').length, 1)
     assert.equal(receipts.find(row => row.action === 'design.plan_explanation')?.args.delivery, expectsCanvas ? 'canvas' : 'text')
     assert.equal(receipts.filter(row => row.action === 'skills.load' && row.args.name === 'claude-design').length, expectsCanvas ? 1 : 0)
