@@ -430,3 +430,80 @@ test('[integration] keyed creation rolls back before commit and retries after a 
   await mkdir('artifacts/issue-327',{recursive:true})
   await writeFile('artifacts/issue-327/rollback-retry.json',JSON.stringify({passed:true,checks:['transaction-rollback-no-orphans','channel-outage-retains-binding','same-key-retry-one-conversation-one-binding']},null,2))
 })
+
+
+// #680 failure model: student creators cannot invite; invite opens private task
+// history; stale company membership admits a peer; removals leave a leader in
+// runtime policy; retries duplicate audit/history or erase existing messages.
+test('[integration] room creators stage agent/teacher additions and removals with durable versioned boundaries', async t => {
+  const scope = await seedCreationWorkspace()
+  const student = createServer(await buildApiTestApp(OTHER_USER_ID)).listen(0)
+  await new Promise<void>(resolve => student.once('listening', resolve))
+  t.after(() => new Promise<void>(resolve => student.close(() => resolve())))
+  const address = student.address() as { port: number }
+  const { id } = await conversationsApplication.create({ ...scope, userId: OTHER_USER_ID }, { participantIds: [ME_USER_ID, 'u-lin'] })
+  const headers = { 'content-type': 'application/json', 'x-company-id': scope.companyId, 'x-project-id': scope.projectId }
+  const url = `http://127.0.0.1:${address.port}/api/conversations/${id}/members`
+  const change = (member: string, method = 'POST') => fetch(method === 'DELETE' ? `${url}/${member}` : url, {
+    method, headers, ...(method === 'POST' ? { body: JSON.stringify({ id: member }) } : {}),
+  })
+  const view = await fetch(url, { headers })
+  assert.equal(view.status, 200)
+  const state = await view.json() as { canManage: boolean; historyVisibility: string; candidates: Array<{ id: string }> }
+  assert.equal(state.canManage, true)
+  assert.equal(state.historyVisibility, 'shared_conversation')
+  assert.ok(state.candidates.some(p => p.id === 'a-tutor'))
+  const posted: unknown[] = []
+  const publish = conversationInfrastructure.postMembershipMessage
+  conversationInfrastructure.postMembershipMessage = async input => { posted.push(input); return { queued: true } }
+  try {
+    for (let i = 0; i < 2; i++) assert.equal((await change('a-tutor')).status, 200)
+    await seedUserMembership('u-teacher', scope.companyId, { role: 'TEACHER', displayName: 'Teacher' })
+    await pool.query(`INSERT INTO project_memberships(company_id,project_id,user_id,role) VALUES($1,$2,'u-teacher','TEACHER')`, [scope.companyId, scope.projectId])
+    assert.equal((await change('u-teacher')).status, 200)
+    await pool.query(`UPDATE conversations SET leader_id='a-tutor' WHERE id=$1`, [id])
+    assert.equal((await change('a-tutor', 'DELETE')).status, 200)
+    assert.equal((await change('a-tutor', 'DELETE')).status, 200)
+    assert.equal((await change(OTHER_USER_ID, 'DELETE')).status, 400)
+    const row = (await pool.query(`SELECT c.members,c.leader_id,b.profile FROM conversations c JOIN im_channel_bindings b ON b.channel_id=c.id WHERE c.id=$1`, [id])).rows[0]
+    assert.deepEqual(row.members, [OTHER_USER_ID, ME_USER_ID, 'u-lin', 'u-teacher'])
+    assert.deepEqual(row.profile.members, row.members)
+    assert.equal(row.leader_id, null)
+    assert.equal(row.profile.leaderAgentId, undefined)
+    assert.equal(row.profile.membershipVersion, 3)
+    const audits = (await pool.query(`SELECT user_id,detail FROM audit_events WHERE kind='conversation.membership_changed' ORDER BY id`)).rows
+    assert.equal(audits.length, 3)
+    assert.deepEqual(audits.map(a => a.detail.version), [1,2,3])
+    assert.ok(audits.every(a => a.user_id === OTHER_USER_ID && a.detail.historyVisibility === 'shared_conversation' && a.detail.projectId === scope.projectId))
+    assert.equal(posted.length, 3)
+    const { syncConversationPolicy } = await import('../agent-runtime/conversations.js')
+    let policy: unknown
+    await syncConversationPolicy({ conversations: { sync: async (value: unknown) => { policy = value } } } as never, scope.companyId, id)
+    assert.ok(!(policy as { participants: Array<{ id: string }> }).participants.some(p => p.id === 'a-tutor'))
+  } finally { conversationInfrastructure.postMembershipMessage = publish }
+})
+
+test('[integration] room member mutation rejects non-managers, foreign/stale peers and managed private contexts', async t => {
+  const scope = await seedCreationWorkspace()
+  const { id } = await createConversation(scope, { participantIds: [OTHER_USER_ID, 'u-lin'] })
+  const headers = { 'content-type': 'application/json', 'x-company-id': scope.companyId, 'x-project-id': scope.projectId }
+  const url = `${baseUrl}/api/conversations/${id}/members`
+  const add = (participantId: string) => fetch(url, { method: 'POST', headers, body: JSON.stringify({ id: participantId }) })
+  const student = createServer(await buildApiTestApp(OTHER_USER_ID)).listen(0)
+  await new Promise<void>(resolve => student.once('listening', resolve))
+  t.after(() => new Promise<void>(resolve => student.close(() => resolve())))
+  const address = student.address() as { port: number }
+  assert.equal((await fetch(`http://127.0.0.1:${address.port}/api/conversations/${id}/members`, { method: 'POST', headers, body: JSON.stringify({ id: 'a-tutor' }) })).status, 403)
+  await pool.query(`UPDATE im_channel_bindings SET profile=profile-'createdByUserId' WHERE channel_id=$1`, [id])
+  // Established legacy rooms remain manageable by an active teacher already in the room.
+  await seedUserMembership('u-outsider', scope.companyId, { role: 'STUDENT' })
+  assert.equal((await add('u-outsider')).status, 400)
+  assert.equal((await add('not-in-company')).status, 400)
+  await pool.query(`UPDATE company_memberships SET status='SUSPENDED' WHERE company_id=$1 AND user_id=$2`, [scope.companyId, OTHER_USER_ID])
+  assert.equal((await add(OTHER_USER_ID)).status, 400)
+  await pool.query(`INSERT INTO context_threads(id,company_id,project_id,context_type,context_id,channel_id,created_by) VALUES('private-680',$1,$2,'CASE_DISCUSSION','private-680',$3,$4)`, [scope.companyId, scope.projectId, id, ME_USER_ID])
+  assert.equal((await add('a-tutor')).status, 403)
+  assert.equal((await fetch(`${url}/u-lin`, { method: 'DELETE', headers })).status, 403)
+  assert.equal((await pool.query(`SELECT 1 FROM audit_events WHERE kind='conversation.membership_changed'`)).rowCount, 0)
+  assert.deepEqual((await pool.query('SELECT members FROM conversations WHERE id=$1', [id])).rows[0].members, [ME_USER_ID, OTHER_USER_ID, 'u-lin'])
+})

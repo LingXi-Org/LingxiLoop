@@ -21,7 +21,9 @@ import {
   listEligibleConversationParticipants,
   listActiveConversationMutes,
   listParticipants,
-  participantAllowedInProject,
+  membershipContext,
+  listMembershipCandidates,
+  auditMembershipChange,
   markConversationReadNow,
   searchWorkspaceDirectory,
   setMute,
@@ -42,6 +44,8 @@ export type ConversationErrorCode =
   | 'not_member'
   | 'teacher_room_managed'
   | 'binding_missing'
+  | 'membership_denied'
+  | 'managed_context'
   | 'invalid_direct'
   | 'stale_title'
 
@@ -62,7 +66,7 @@ export interface ConversationInfrastructure {
     conversationId: string
     companyId: string
     actorId: string
-    kind: 'joined' | 'left'
+    kind: 'joined' | 'left' | 'kicked'
     participantId: string
   }): Promise<{ messageId: string; sequence: number } | { queued: true }>
   clearReplyHold(agentId: string, conversationId: string): Promise<void>
@@ -144,6 +148,7 @@ export class ConversationsApplication {
       if (!existing) await insertConversation(db, { companyId: scope.companyId, conversation })
       const binding = existing ? await findBindingForUpdate(db, scope.companyId, conversation.id) : null
       const profile = { ...profileFor(conversation), ...binding?.profile,
+        ...(!existing ? { createdByUserId: scope.userId, membershipVersion: 0 } : {}),
         ...(creationId ? { creationRequestHash: creationHash } : {}) } as ImChannelProfile
       // Older ordinary direct conversations may not have an IM binding yet.
       if (!binding) {
@@ -207,12 +212,12 @@ export class ConversationsApplication {
     return this.requireAgentContext(agentId, conversationId)
   }
 
-  async addAgentMember(agentId: string, conversationId: string, participantId: string) {
+  async addAgentMember(agentId: string, conversationId: string, participantId: string, principalId?: string) {
     const context = await this.requireAgentContext(agentId, conversationId)
     this.assertAgentWorkspaceWritable(context.projectStatus)
     if (!context.projectId) throw new ConversationApplicationError('not_found', 'conversation workspace is missing')
     const result = await this.addMember({
-      userId: agentId,
+      userId: principalId ?? agentId,
       companyId: context.companyId,
       projectId: context.projectId,
     }, conversationId, participantId)
@@ -378,48 +383,77 @@ export class ConversationsApplication {
     }
   }
 
+  async membership(scope: ConversationScope, conversationId: string, writable = true) {
+    return this.infrastructure.transaction(async db => {
+      const conversation = await findConversationForUpdate(db, scope.companyId, conversationId)
+      if (!conversation || conversation.project_id !== scope.projectId) throw new ConversationApplicationError('not_found', 'not found')
+      if (!conversation.members.includes(scope.userId)) throw new ConversationApplicationError('not_member', 'not a member')
+      const binding = await findBindingForUpdate(db, scope.companyId, conversationId)
+      const context = await membershipContext(db, scope, conversationId)
+      const managed = conversation.kind !== 'group' || context.managed
+      const canManage = writable && !managed && !!binding
+        && (binding.profile.createdByUserId === scope.userId || context.teacher)
+      return { members: await listParticipants(db, scope.companyId, conversation.members), canManage,
+        restriction: managed ? 'managed_context' : !writable ? 'read_only' : !canManage ? 'manager_required' : null,
+        historyVisibility: 'shared_conversation' as const,
+        version: Number(binding?.profile.membershipVersion ?? 0),
+        candidates: canManage ? (await listMembershipCandidates(db, scope)).filter(p => !conversation.members.includes(p.id)) : [] }
+    })
+  }
+
   async addMember(scope: ConversationScope, conversationId: string, participantId: string) {
-    if (await this.infrastructure.isTeacherRoom(scope.companyId, conversationId)) {
-      throw new ConversationApplicationError('teacher_room_managed', 'teacher-room membership follows course teacher membership')
-    }
-    if (!await participantAllowedInProject(this.db, {
-      participantId, companyId: scope.companyId, projectId: scope.projectId,
-    })) throw new ConversationApplicationError('invalid_members', `unknown participant: ${participantId}`)
-    if (await hasManagedPulse(this.db, scope.companyId, [participantId])) {
-      throw new ConversationApplicationError('managed_pulse', '望远 can only belong to its provisioned teacher room')
-    }
-    let alreadyIn = false
+    return this.changeMember(scope, conversationId, participantId, 'joined')
+  }
+
+  async removeMember(scope: ConversationScope, conversationId: string, participantId: string) {
+    if (participantId === scope.userId) throw new ConversationApplicationError('invalid_members', 'use leave to remove yourself')
+    return this.changeMember(scope, conversationId, participantId, 'kicked')
+  }
+
+  private async changeMember(scope: ConversationScope, conversationId: string, participantId: string, operation: 'joined' | 'kicked') {
+    let changed = false
     const profile = await this.mutate(scope, conversationId, async (db, conversation, binding) => {
-      if (conversation.kind !== 'group') {
-        throw new ConversationApplicationError('not_group', `cannot add to a ${conversation.kind} conversation`)
+      const context = await membershipContext(db, scope, conversationId)
+      if (conversation.kind !== 'group' || context.managed) {
+        throw new ConversationApplicationError('managed_context', 'task and teacher room members follow their original authorization; create a shared group instead')
       }
-      if (conversation.members.includes(participantId)) {
-        alreadyIn = true
-        return { ...binding.profile, channelId: conversationId, channelType: 2,
-          title: conversation.title, members: conversation.members } as ImChannelProfile
+      if (binding.profile.createdByUserId !== scope.userId && !context.teacher) {
+        throw new ConversationApplicationError('membership_denied', 'only the group creator or a course teacher in this group can manage members')
       }
-      const members = [...conversation.members, participantId]
-      await updateConversation(db, { id: conversationId, companyId: scope.companyId, members })
-      const next = { ...profileFor({ ...conversation, members }), ...binding.profile,
-        channelId: conversationId, members } as ImChannelProfile
-      await upsertBinding(db, scope.companyId, next, conversation.leader_id, binding.preset_key)
+      if (operation === 'joined') {
+        const eligible = await listEligibleConversationParticipants(db, { ...scope, ids: [participantId] })
+        if (!eligible.length) throw new ConversationApplicationError('invalid_members', 'participant must be active in this workspace')
+        if (!conversation.members.includes(participantId) && conversation.members.length >= 50) {
+          throw new ConversationApplicationError('invalid_members', 'group membership is limited to 50')
+        }
+      }
+      const present = conversation.members.includes(participantId)
+      if (present === (operation === 'joined')) return { ...binding.profile, channelId: conversationId,
+        channelType: 2, title: conversation.title, members: conversation.members } as ImChannelProfile
+      changed = true
+      const members = operation === 'joined' ? [...conversation.members, participantId] : conversation.members.filter(id => id !== participantId)
+      const leaderId = members.includes(conversation.leader_id ?? '') ? conversation.leader_id : null
+      const version = Number(binding.profile.membershipVersion ?? 0) + 1
+      await updateConversation(db, { id: conversationId, companyId: scope.companyId, members, leaderId })
+      const next = { ...profileFor({ ...conversation, members, leader_id: leaderId }), ...binding.profile,
+        channelId: conversationId, members, leaderAgentId: leaderId ?? undefined, membershipVersion: version } as ImChannelProfile
+      await upsertBinding(db, scope.companyId, next, leaderId, binding.preset_key)
+      await auditMembershipChange(db, { ...scope, conversationId, participantId, operation, version, members })
       return next
     })
-    await this.infrastructure.syncChannel(profile)
+    // The committed binding remains authoritative and the reconciliation worker
+    // retries channel/policy synchronization after a transient transport outage.
+    let publication: 'queued' | undefined
+    await this.afterMutation(scope, conversationId, profile, { members: profile.members, leaderId: profile.leaderAgentId ?? null })
+      .catch(() => { publication = 'queued' })
     let membershipMessage: { messageId: string; sequence: number } | { queued: true } | undefined
-    if (!alreadyIn) {
-      membershipMessage = await this.infrastructure.postMembershipMessage({
-        conversationId, companyId: scope.companyId, actorId: scope.userId,
-        kind: 'joined', participantId,
-      })
-    }
-    return {
-      ok: true as const,
-      members: profile.members,
+    if (changed) membershipMessage = await this.infrastructure.postMembershipMessage({
+      conversationId, companyId: scope.companyId, actorId: scope.userId, kind: operation, participantId,
+    }).catch(() => { publication = 'queued'; return undefined })
+    return { ok: true as const, members: profile.members, changed,
+      ...(!changed && operation === 'joined' ? { alreadyIn: true as const } : {}),
       ...(membershipMessage && 'messageId' in membershipMessage ? { systemMessageId: membershipMessage.messageId } : {}),
-      ...(membershipMessage && 'queued' in membershipMessage ? { publication: 'queued' as const } : {}),
-      ...(alreadyIn ? { alreadyIn: true as const } : {}),
-    }
+      ...(publication || (membershipMessage && 'queued' in membershipMessage) ? { publication: 'queued' as const } : {}) }
   }
 
   async leave(scope: ConversationScope, conversationId: string) {
@@ -438,10 +472,13 @@ export class ConversationsApplication {
     }
     const profile = await this.mutate(scope, conversationId, async (db, conversation, binding) => {
       if (conversation.kind === 'direct') throw new ConversationApplicationError('invalid_direct', 'cannot leave a direct conversation')
+      if ((await membershipContext(db, scope, conversationId)).managed) throw new ConversationApplicationError('managed_context', 'task room membership follows its original authorization')
       const members = conversation.members.filter((member) => member !== scope.userId)
+      const version = Number(binding.profile.membershipVersion ?? 0) + 1
+      await auditMembershipChange(db, { ...scope, conversationId, participantId: scope.userId, operation: 'left', version, members })
       await updateConversation(db, { id: conversationId, companyId: scope.companyId, members })
       const next = { ...profileFor({ ...conversation, members }), ...binding.profile,
-        channelId: conversationId, members } as ImChannelProfile
+        channelId: conversationId, members, membershipVersion: version } as ImChannelProfile
       await upsertBinding(db, scope.companyId, next, conversation.leader_id, binding.preset_key)
       return next
     })
