@@ -1,0 +1,7 @@
+START False
+EXPORT sample.pptx
+EXPORT sample.html
+EXPORT sample.pdf
+START False
+PASS actual HTML offline, PPTX packaged picture/notes, PDF rasterization
+{'mathCount': 8, 'errors': [], 'fullscreen': True, 'publishes': 1, 'sourcePreserved': True, 'fonts': ['Anthropicons-FizzyLake', 'KaTeX_Main', 'KaTeX_Math', 'KaTeX_Size2', 'KaTeX_Size3'], 'mathAttempts': 4, 'retryScenario': False, 'readOnlyPreview': {'readOnlyPreviewMathCount': 8, 'errors': []}, 'browser': '154.0.8037.57'}

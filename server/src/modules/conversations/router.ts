@@ -43,7 +43,7 @@ function mapApplicationError(error: unknown): never {
   if (!(error instanceof ConversationApplicationError)) throw error
   const status = error.code === 'not_found'
     ? 404
-    : error.code === 'not_member' || error.code === 'managed_pulse' || error.code === 'teacher_room_managed'
+    : ['membership_denied', 'managed_context'].includes(error.code) || error.code === 'not_member' || error.code === 'managed_pulse' || error.code === 'teacher_room_managed'
       ? 403
       : error.code === 'workspace_read_only' || error.code === 'binding_missing' || error.code === 'creation_conflict'
         ? 409
@@ -130,9 +130,25 @@ conversationsRouter.post('/conversations/:id/mute', safe(async (req, res) => {
   }
 }))
 
+conversationsRouter.get('/conversations/:id/members', safe(async (req, res) => {
+  const conversationId = String(req.params.id)
+  const scope = await requireConversationScope(req, conversationId)
+  const writable = (await permissionService.can({ actorUserId: scope.userId, companyId: scope.companyId,
+    action: 'conversation:write', resource: { type: 'conversation', id: conversationId } })).allowed
+  try { res.json(await conversationsApplication.membership(scope, conversationId, writable)) }
+  catch (error) { mapApplicationError(error) }
+}))
+
+conversationsRouter.delete('/conversations/:id/members/:participantId', safe(async (req, res) => {
+  const conversationId = String(req.params.id)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:write')
+  try { res.json(await conversationsApplication.removeMember(scope, conversationId, String(req.params.participantId))) }
+  catch (error) { mapApplicationError(error) }
+}))
+
 conversationsRouter.post('/conversations/:id/members', safe(async (req, res) => {
   const conversationId = String(req.params.id)
-  const scope = await requireConversationScope(req, conversationId, 'conversation:manage')
+  const scope = await requireConversationScope(req, conversationId, 'conversation:write')
   const input = parse(addMemberRequestSchema.safeParse(req.body ?? {}))
   try {
     res.json(await conversationsApplication.addMember(scope, conversationId, input.id))

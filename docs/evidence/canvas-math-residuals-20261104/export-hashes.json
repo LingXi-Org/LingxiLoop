@@ -1,0 +1,30 @@
+{
+  "currency": {
+    "html": {
+      "bytes": 894846,
+      "sha256": "94d341e8941ef1a053716ba2225765d6076ac1ecb80b4799dbd67ee5560f4300"
+    },
+    "pdf": {
+      "bytes": 434425,
+      "sha256": "999fe0235db212910e3cd6d1fcd7b4301a4a414868e84bb04767b93d19171d4d"
+    },
+    "pptx": {
+      "bytes": 559550,
+      "sha256": "6829003ead31eea2002d5c8d469903980aafcd9e9897a9e923c89ed9f98b155c"
+    }
+  },
+  "style": {
+    "html": {
+      "bytes": 448877,
+      "sha256": "b6339de1ff1c3ecd5112a8d3a681aa3bfba7936321db500d563bd07c1e08d8f5"
+    },
+    "pdf": {
+      "bytes": 223672,
+      "sha256": "8da1e949d0518d7beb01a08735993528fb65171357c0d1090b07bc569440f3d2"
+    },
+    "pptx": {
+      "bytes": 23147,
+      "sha256": "09ca9e2e8ebd9217d4adfaed09f90dc83e85fe9d89e684645b5b22e460e22a2c"
+    }
+  }
+}

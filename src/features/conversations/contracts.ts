@@ -56,3 +56,12 @@ export interface ConversationSearchResults {
     createdAt: string
   }>
 }
+
+export interface ConversationMembership {
+  members: Array<{ id: string; kind: 'human' | 'agent'; name: string; departed_at: string | null }>
+  candidates: Array<{ id: string; kind: 'human' | 'agent'; name: string; departed_at: string | null }>
+  canManage: boolean
+  restriction: 'managed_context' | 'read_only' | 'manager_required' | null
+  historyVisibility: 'shared_conversation'
+  version: number
+}
