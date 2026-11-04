@@ -87,6 +87,23 @@ test('production stops both old workers before an application can enqueue new ef
   assert.match(servers, /if \(index === 1\) await barrier/, 'both old Workers stop before slot A moves')
 })
 
+// Failure: a removed resource directory remains a COPY input; local generated
+// editor output masks the missing path until a clean production image build.
+test('server runtime image COPY inputs exist in the committed checkout', () => {
+  const root = fileURLToPath(new URL('../', import.meta.url))
+  const runtime = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
+    .find(part => /^.* AS runtime\r?\n/.test(part))
+  assert.ok(runtime, 'server runtime stage exists')
+  const files = spawnSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
+  assert.equal(files.status, 0, files.stderr)
+  const tracked = files.stdout.split('\0').filter(Boolean)
+  for (const source of runtime.split(/\r?\n/).filter(line => /^COPY (?!-)/.test(line))
+    .flatMap(line => line.trim().split(/\s+/).slice(1, -1))) {
+    assert.ok(tracked.some(path => path === source || path.startsWith(`${source}/`)),
+      `Runtime COPY input missing from committed checkout: ${source}`)
+  }
+})
+
 // Failure: development resolves shared imports that the production image never copies.
 test('server image includes the complete shared runtime import graph', () => {
   const root = fileURLToPath(new URL('../', import.meta.url))
@@ -94,7 +111,7 @@ test('server image includes the complete shared runtime import graph', () => {
   // Runtime provenance reads both manifests/locks; CI graphs and fixtures stay out.
   assert.deepEqual(runtime.split(/\r?\n/).filter(line => /^COPY server[ /]/.test(line))
     .flatMap(line => line.trim().split(/\s+/).slice(1, -1)), [
-      'server/src', 'server/assets', 'server/package.json', 'server/package-lock.json',
+      'server/src', 'server/package.json', 'server/package-lock.json',
       'server/scripts/check-packaged-startup.mjs',
     ])
   const copied = runtime.split(/\r?\n/)
