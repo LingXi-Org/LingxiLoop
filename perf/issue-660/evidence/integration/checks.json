@@ -1,0 +1,33 @@
+{
+  "base": "50a6e1c668410a678c5006fabb3e42502f44bb5c",
+  "scope": "Minimal conflict integration of #662 with already-merged #664; earlier performance claims remain historical",
+  "lint": {
+    "exit": 0,
+    "warnings": 46,
+    "infos": 2
+  },
+  "webTests": {
+    "exit": 0,
+    "passed": 171,
+    "failed": 0,
+    "owningSidebarTestsIncluded": 4
+  },
+  "typecheck": {
+    "exit": 0
+  },
+  "productionBuild": {
+    "exit": 0,
+    "includesNativeEditorPrebuild": true
+  },
+  "browserPersistence": {
+    "exit": 0,
+    "pageErrors": 0
+  },
+  "browserCollapseExpandReset": {
+    "exit": 0,
+    "pageErrors": 0
+  },
+  "performanceRerun": false,
+  "independentFinalReview": "pending sole integrator",
+  "productionDeployment": "not performed by contributor"
+}

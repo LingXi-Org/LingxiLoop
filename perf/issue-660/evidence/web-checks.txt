@@ -1,0 +1,10 @@
+Node v24.19.0
+npm run lint: exit 0 (46 warnings; 2 infos)
+npm run typecheck: exit 0
+npm test: 151 passed; 0 failed
+DesignWorkspace.test.tsx: 3 passed; 0 failed
+npm run build: exit 0; Vite built in 1m 2s
+Browser regression: right, left and CDP touch immediate-release passed
+Independent final candidate review: pending
+PR CI: pending at handoff preparation
+Production: no merge or deployment from this contributor
