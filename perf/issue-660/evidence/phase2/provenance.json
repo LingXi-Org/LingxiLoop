@@ -1,0 +1,37 @@
+{
+  "integratedMain": "abf69c48",
+  "loadControlMain": "584e11413930869825631d7d48353161d5ac3bec",
+  "phase1Control": "409208844d51a81d31a2937252d50f393f2e987f",
+  "sourceHashes": {
+    "src/components/ui/sidebar-resize-handle.tsx": "b8b294f2d63ffd0d192a813643e8d7a2032a8726ca24b25df657aafb53e60f30",
+    "src/components/ui/sidebar.tsx": "bde8e4885384d0e627bef5c8dd23a59f93bf57fe3522a1bd67663aa08a8e1bc0",
+    "src/desktop/DesktopApp.tsx": "53146197c4fb13d821815af51a92d89ebafd66eb38846b2d809d3bfed0c4d1eb",
+    "src/desktop/useSidebarWidth.ts": "106d72ea7adaba8148a68d1308f04151c37a93d091fcfc85c1cddb8b283c9eed",
+    "src/desktop/useSidebarWidth.test.tsx": "8190d6e0cfa72551a9e378b5248fe5931e92b80c593a0b2970616893338d9e8e",
+    "perf/editor-open/serve.ts": "8d26120ba84c66b9168f3eb12a8ae3168cfac0ca3aa11509fc8fc1fec2b448a1",
+    "perf/issue-660/workspace/fixture.tsx": "69f430818270f9f736eb6e3d06ffcb04c954aca02b5fea37c4d8e004938a0199",
+    "perf/issue-660/workspace/build.mjs": "571df4cc5d506d86ddb1d942825b0a34856f38c462e82f8195de48ccd5699970",
+    "perf/issue-660/workspace/browser.py": "2e9f9a1db2f933f24c9c5c73bf352b631099b9095551acb78f7b0b6572ae251c",
+    "perf/issue-660/drag.py": "d9f0963b7f02ca0184bf53714b78a2dae9180e91d8603d3f6311fdbc3bf9765d",
+    "perf/issue-660/profile-drag.py": "d0770e5e9b71e0cdfde49c0284670b0598c226bd69a8ba29fd8e4b71d01ac588",
+    "perf/issue-660/profile-summary.mjs": "023d7bb52ca9e4f322fcfd7c9549c1c550ad7a99081d4f5ebc1ededf56c6cb29"
+  },
+  "editorAssets": {
+    "design": "dfea524044cf17f1a0d48cc9d97db151e0cc5cef67b3bc0fccb1f2d61077919c",
+    "slides": "c4a65f6b70ad268cec8118969525c2c12c81639581548276a59394c8217cfc38"
+  },
+  "builds": {
+    "loadControl": "074617906ed238e06e8e66765c176ed374875f3eef7bd8ac0ecfb75f5f2c70e4",
+    "intermediateLoadCandidate": "d4ac8692a857acbccabb9bfcb9f0851d988cef92a29b0fcb540a030a127fdc3d",
+    "finalWorkspaceCandidate": "c5668e8428d43359647d28e488b56c3a5cca17678665a4cb15030c9ce102255d",
+    "profileControl": "8d2c036661fe4bd44805b522e40f2dd62f7ec3fcf8e9c12032037673b1af9ce5",
+    "profileCandidate": "41d3c33f6efa63195043a297719534763dd94bd850e6845ee292a647b7b2dcda"
+  },
+  "profile": "Chromium 154.0.8037.57; Linux x86_64; Node 24.19.0; 1440x1000. Load: 20ms/4Mbps recursive CDP; drag: loopback/no CPU throttling. Synthetic public fixture; no production login/IM/model.",
+  "redaction": "Deterministic test grant origins, grant path tokens and blob UUIDs replaced in real-editor load JSON. No browser routing in final measurements. Routed pilots excluded.",
+  "editorAssetsAfterProductionBuild": {
+    "design": "dfea524044cf17f1a0d48cc9d97db151e0cc5cef67b3bc0fccb1f2d61077919c",
+    "slides": "c4a65f6b70ad268cec8118969525c2c12c81639581548276a59394c8217cfc38"
+  },
+  "assetManifestUnchangedByFinalBuild": true
+}

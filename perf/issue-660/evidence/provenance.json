@@ -1,0 +1,22 @@
+{
+  "base": "afe539b9175e924a1ba95490bb838b99d68feb58",
+  "node": "v24.19.0",
+  "browser": "154.0.8037.57",
+  "viewport": [
+    1440,
+    1000
+  ],
+  "network": "loopback, no throttling",
+  "CPU": "no throttling",
+  "refreshBudgetMs": 16.666666666666668,
+  "baselineSource": "git archive of the named base src/ and tailwind.config.ts; both arms use the same fixture",
+  "profiling": "production react-dom/profiling; actual Profiler callbacks, synthetic contents",
+  "files": {
+    "src/components/ui/sidebar.tsx": "bde8e4885384d0e627bef5c8dd23a59f93bf57fe3522a1bd67663aa08a8e1bc0",
+    "src/components/ui/sidebar-resize-handle.tsx": "72c28ffa17c09031c50317aa73156c879852b06e6f77cfd48119cb2da6f5db65",
+    "perf/issue-660/fixture.tsx": "7998f3679239afcbc5a77dcb9b3ec6b8149cae81033bad1adee2efaba16a6469",
+    "perf/issue-660/build.mjs": "9c9f679426edf94c5052d18b4dd54accb560a29d7578670f34219adc53ce2397",
+    "perf/issue-660/drag.py": "d9f0963b7f02ca0184bf53714b78a2dae9180e91d8603d3f6311fdbc3bf9765d",
+    "perf/issue-660/regression.py": "bb8660e1f420dfb2c294921fa41a4bb7b0d42118ac2557ab525c90a11c59bece"
+  }
+}

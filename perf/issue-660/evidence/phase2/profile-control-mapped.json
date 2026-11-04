@@ -1,0 +1,3963 @@
+{
+  "scope": "Diagnostic samples with profiling overhead. CPU sample weights are approximate; nested trace category durations are inclusive and cannot be added.",
+  "rows": [
+    {
+      "trial": 0,
+      "geometry": false,
+      "observer": [],
+      "longAnimationFrames": [],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 2466.01
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1899.04
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 93.17
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 36.46
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 35.99
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 27.69
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 15.32
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 14.18
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 11.68
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2471:9 logComponentRender",
+          "ms": 5.8
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1312:9 updateTextarea",
+          "ms": 4.42
+        },
+        {
+          "source": "VM/injected sample",
+          "ms": 4.2
+        }
+      ]
+    },
+    {
+      "trial": 0,
+      "geometry": true,
+      "observer": [
+        {
+          "start": 3523.7999999998137,
+          "duration": 50
+        },
+        {
+          "start": 4555.5,
+          "duration": 73
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 1859.1000000000931,
+          "duration": 50.89999999990687,
+          "renderStart": 1872.5,
+          "styleAndLayoutStart": 1903.5,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 30.799999999813735,
+              "forcedStyleAndLayoutDuration": 30.6
+            }
+          ]
+        },
+        {
+          "start": 2124.899999999907,
+          "duration": 52.200000000186265,
+          "renderStart": 2139.2000000001863,
+          "styleAndLayoutStart": 2170.399999999907,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 31.09999999962747,
+              "forcedStyleAndLayoutDuration": 30.9
+            }
+          ]
+        },
+        {
+          "start": 3507.7000000001863,
+          "duration": 65.6999999997206,
+          "renderStart": 3571.7000000001863,
+          "styleAndLayoutStart": 3573,
+          "scripts": []
+        },
+        {
+          "start": 4542.799999999814,
+          "duration": 83.70000000018626,
+          "renderStart": 4555.799999999814,
+          "styleAndLayoutStart": 4621.899999999907,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 65.89999999990687,
+              "forcedStyleAndLayoutDuration": 65.7
+            }
+          ]
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3626823727,
+          "ms": 50.882,
+          "costs": {
+            "Layout": 0.51,
+            "UpdateLayoutTree": 0.38,
+            "Paint": 1.42,
+            "FunctionCall": 1.22,
+            "FireAnimationFrame": 1.16,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "9C1D0CCBD59EE0A27610582C6DA7E5F6",
+                "functionName": "F1",
+                "isolate": "16941492812767082709",
+                "lineNumber": 49,
+                "sampleTraceId": 6996055943211658,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "9C1D0CCBD59EE0A27610582C6DA7E5F6",
+                "functionName": "F1",
+                "isolate": "16941492812767082709",
+                "lineNumber": 49,
+                "sampleTraceId": 6996055943211659,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "9C1D0CCBD59EE0A27610582C6DA7E5F6",
+                "functionName": "sample",
+                "isolate": "16941492812767082709",
+                "lineNumber": 5,
+                "sampleTraceId": 6996055943211653,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "3D679FC024E1EAD77B03E45D750CC857",
+                "functionName": "sample",
+                "isolate": "16941492812767082709",
+                "lineNumber": 5,
+                "sampleTraceId": 6996055943211654,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 50.12
+            },
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": -1.05
+            }
+          ]
+        },
+        {
+          "at": 3627855505,
+          "ms": 73.088,
+          "costs": {
+            "Layout": 6.57,
+            "UpdateLayoutTree": 60.93,
+            "Paint": 3.48,
+            "FunctionCall": 66.03,
+            "FireAnimationFrame": 65.99,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "9C1D0CCBD59EE0A27610582C6DA7E5F6",
+                "functionName": "F1",
+                "isolate": "16941492812767082709",
+                "lineNumber": 49,
+                "sampleTraceId": 6996055943210059,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "9C1D0CCBD59EE0A27610582C6DA7E5F6",
+                "functionName": "F1",
+                "isolate": "16941492812767082709",
+                "lineNumber": 49,
+                "sampleTraceId": 6996055943210060,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "9C1D0CCBD59EE0A27610582C6DA7E5F6",
+                "functionName": "sample",
+                "isolate": "16941492812767082709",
+                "lineNumber": 5,
+                "sampleTraceId": 6996055943210049,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "3D679FC024E1EAD77B03E45D750CC857",
+                "functionName": "sample",
+                "isolate": "16941492812767082709",
+                "lineNumber": 5,
+                "sampleTraceId": 6996055943210072,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 62.9
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 10.91
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 1755.67
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1574.28
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 1188.43
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 111.82
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 38.88
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 20.51
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 17.39
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 13.54
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/perf/issue-660/fixture.tsx:22:170 ",
+          "ms": 10.28
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 9.15
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 9.12
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 7.83
+        }
+      ]
+    },
+    {
+      "trial": 1,
+      "geometry": false,
+      "observer": [
+        {
+          "start": 4216.699999999721,
+          "duration": 57
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 4201.399999999907,
+          "duration": 56.799999999813735,
+          "renderStart": 4218,
+          "styleAndLayoutStart": 4219.199999999721,
+          "scripts": []
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3645787918,
+          "ms": 57.224,
+          "costs": {
+            "Layout": 13.41,
+            "UpdateLayoutTree": 13.61,
+            "Paint": 26.5,
+            "FunctionCall": 0.35,
+            "FireAnimationFrame": 0.1,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "2E17F4D751CAC1BEB299D193B6D52801",
+                "functionName": "F1",
+                "isolate": "10704605828611948808",
+                "lineNumber": 49,
+                "sampleTraceId": 4322165932259155,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "2E17F4D751CAC1BEB299D193B6D52801",
+                "functionName": "F1",
+                "isolate": "10704605828611948808",
+                "lineNumber": 49,
+                "sampleTraceId": 4322165932259156,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "2E17F4D751CAC1BEB299D193B6D52801",
+                "functionName": "sample",
+                "isolate": "10704605828611948808",
+                "lineNumber": 5,
+                "sampleTraceId": 4322165932259161,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "0BF2882000A1A4FF423D8AC414C7CDB2",
+                "functionName": "sample",
+                "isolate": "10704605828611948808",
+                "lineNumber": 5,
+                "sampleTraceId": 4322165932259162,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 58.67
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 2570.36
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1707.23
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 100.15
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 41.36
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 35.96
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 15.36
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 11.96
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 10.56
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 8.04
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:7872:9 beginWork",
+          "ms": 6.45
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 5.03
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1312:9 updateTextarea",
+          "ms": 4.85
+        }
+      ]
+    },
+    {
+      "trial": 1,
+      "geometry": true,
+      "observer": [
+        {
+          "start": 3646.7000000001863,
+          "duration": 50
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 1945.3999999999069,
+          "duration": 55.89999999990687,
+          "renderStart": 1978.2000000001863,
+          "styleAndLayoutStart": 1996.7999999998137,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 18.200000000186265,
+              "forcedStyleAndLayoutDuration": 17.8
+            }
+          ]
+        },
+        {
+          "start": 3629.100000000093,
+          "duration": 64.60000000009313,
+          "renderStart": 3650.100000000093,
+          "styleAndLayoutStart": 3679.7999999998137,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 29.200000000186265,
+              "forcedStyleAndLayoutDuration": 28.5
+            }
+          ]
+        },
+        {
+          "start": 4313.600000000093,
+          "duration": 62.5,
+          "renderStart": 4374.100000000093,
+          "styleAndLayoutStart": 4375.600000000093,
+          "scripts": []
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3653724308,
+          "ms": 50.629,
+          "costs": {
+            "Layout": 17.19,
+            "UpdateLayoutTree": 21.24,
+            "Paint": 5.51,
+            "FunctionCall": 30.82,
+            "FireAnimationFrame": 29.45,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "594858B83F6D08C7A86836B7A5E3EED5",
+                "functionName": "F1",
+                "isolate": "8980554315182392639",
+                "lineNumber": 49,
+                "sampleTraceId": 1879285251179030,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "594858B83F6D08C7A86836B7A5E3EED5",
+                "functionName": "F1",
+                "isolate": "8980554315182392639",
+                "lineNumber": 49,
+                "sampleTraceId": 1879285251179031,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "594858B83F6D08C7A86836B7A5E3EED5",
+                "functionName": "sample",
+                "isolate": "8980554315182392639",
+                "lineNumber": 5,
+                "sampleTraceId": 1879285251179036,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "98D8911DD58B5F84937D8C6BE0663F02",
+                "functionName": "sample",
+                "isolate": "8980554315182392639",
+                "lineNumber": 5,
+                "sampleTraceId": 1879285251179035,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 27.44
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 24.52
+            },
+            {
+              "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1708:11 SyntheticBaseEvent",
+              "ms": -0.87
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1660.43
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1630.07
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 892.36
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 94.02
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:922:9 resolveUpdatePriority",
+          "ms": 48.43
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 41.39
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 34.28
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 16.32
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 14.91
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 12.5
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 8.15
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 6.86
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "geometry": false,
+      "observer": [],
+      "longAnimationFrames": [],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 2322.48
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1624.22
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 87.72
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 32.15
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 21.82
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 21.02
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 9.44
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 8.95
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 8.08
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 7.9
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:7872:9 beginWork",
+          "ms": 5.96
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12895:9 performUnitOfWork",
+          "ms": 5.44
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "geometry": true,
+      "observer": [
+        {
+          "start": 1489.4000000003725,
+          "duration": 61
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 1476.5,
+          "duration": 64.70000000018626,
+          "renderStart": 1489.7000000001863,
+          "styleAndLayoutStart": 1503.9000000003725,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 13.899999999906868,
+              "forcedStyleAndLayoutDuration": 13.8
+            }
+          ]
+        },
+        {
+          "start": 4241.800000000279,
+          "duration": 56.89999999990687,
+          "renderStart": 4279.100000000093,
+          "styleAndLayoutStart": 4294.300000000279,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 15,
+              "forcedStyleAndLayoutDuration": 14.9
+            }
+          ]
+        },
+        {
+          "start": 5623.100000000093,
+          "duration": 53,
+          "renderStart": 5640.5,
+          "styleAndLayoutStart": 5667.5,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 26.700000000186265,
+              "forcedStyleAndLayoutDuration": 25.7
+            }
+          ]
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3660137208,
+          "ms": 61.044,
+          "costs": {
+            "Layout": 8.25,
+            "UpdateLayoutTree": 9.36,
+            "Paint": 13.27,
+            "FunctionCall": 14.06,
+            "FireAnimationFrame": 13.98,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "2F05991B0B91327A516531FBB6A52826",
+                "functionName": "F1",
+                "isolate": "6899531138982094967",
+                "lineNumber": 49,
+                "sampleTraceId": 6963333677273567,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "2F05991B0B91327A516531FBB6A52826",
+                "functionName": "F1",
+                "isolate": "6899531138982094967",
+                "lineNumber": 49,
+                "sampleTraceId": 6963333677273566,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "2F05991B0B91327A516531FBB6A52826",
+                "functionName": "sample",
+                "isolate": "6899531138982094967",
+                "lineNumber": 5,
+                "sampleTraceId": 6963333677273537,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "BBB57C4AB4121EFE5BC71D0F7CABB533",
+                "functionName": "sample",
+                "isolate": "6899531138982094967",
+                "lineNumber": 5,
+                "sampleTraceId": 6963333677273543,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 48.06
+            },
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 12.77
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 1925.61
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1879.08
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 1010.9
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 131.09
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 48.26
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 31.76
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 18.22
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 15.34
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 13.37
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 12.63
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:4084:11 reconcileChildrenArray",
+          "ms": 7.8
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1312:9 updateTextarea",
+          "ms": 5.99
+        }
+      ]
+    },
+    {
+      "trial": 3,
+      "geometry": false,
+      "observer": [],
+      "longAnimationFrames": [
+        {
+          "start": 1368.3999999999069,
+          "duration": 78,
+          "renderStart": 1446.2000000001863,
+          "styleAndLayoutStart": 1446.2999999998137,
+          "scripts": []
+        }
+      ],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 2399.73
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1698.74
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 96.02
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 38.59
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 27.59
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 19.53
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 18.57
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 12.75
+        },
+        {
+          "source": "VM/injected setupDragListeners",
+          "ms": 5.99
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 5.91
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/scheduler/cjs/scheduler.production.js:63:25 t.unstable_now",
+          "ms": 5.62
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 5.53
+        }
+      ]
+    },
+    {
+      "trial": 3,
+      "geometry": true,
+      "observer": [
+        {
+          "start": 4561.700000000186,
+          "duration": 52
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 4546.200000000186,
+          "duration": 64,
+          "renderStart": 4572.300000000279,
+          "styleAndLayoutStart": 4604.800000000279,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 24.800000000279397,
+              "forcedStyleAndLayoutDuration": 24.4
+            }
+          ]
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3688355132,
+          "ms": 52.77,
+          "costs": {
+            "Layout": 7.09,
+            "UpdateLayoutTree": 19.49,
+            "Paint": 3.69,
+            "FunctionCall": 25.04,
+            "FireAnimationFrame": 31.84,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "A8F1948A9C462430B55CA5AC24E72319",
+                "functionName": "F1",
+                "isolate": "10033815333649355227",
+                "lineNumber": 49,
+                "sampleTraceId": 7363886326685332,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "A8F1948A9C462430B55CA5AC24E72319",
+                "functionName": "F1",
+                "isolate": "10033815333649355227",
+                "lineNumber": 49,
+                "sampleTraceId": 7363886326685333,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "A8F1948A9C462430B55CA5AC24E72319",
+                "functionName": "sample",
+                "isolate": "10033815333649355227",
+                "lineNumber": 5,
+                "sampleTraceId": 7363886326685326,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "63554A8516ABD3BD4B5DBA6B9AD5DF06",
+                "functionName": "sample",
+                "isolate": "10033815333649355227",
+                "lineNumber": 5,
+                "sampleTraceId": 7363886326685321,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 41.28
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 32.35
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 1664.13
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1580.04
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 971.79
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 94.25
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 35.59
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 34.87
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 22.27
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 16.78
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 11.98
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 11.14
+        },
+        {
+          "source": "VM/injected sample",
+          "ms": 6.77
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/perf/issue-660/fixture.tsx:19:9 Chat",
+          "ms": 4.72
+        }
+      ]
+    },
+    {
+      "trial": 4,
+      "geometry": false,
+      "observer": [
+        {
+          "start": 1319.5,
+          "duration": 63
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 1305.3000000002794,
+          "duration": 73.39999999990687,
+          "renderStart": 1320.2000000001863,
+          "styleAndLayoutStart": 1320.5,
+          "scripts": []
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3700985793,
+          "ms": 63.044,
+          "costs": {
+            "Layout": 13.84,
+            "UpdateLayoutTree": 39.83,
+            "Paint": 4.69,
+            "FunctionCall": 0.49,
+            "FireAnimationFrame": 0.22,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "AD5FF0D87A3E9F05883459EC06223819",
+                "functionName": "F1",
+                "isolate": "8324708656700071336",
+                "lineNumber": 49,
+                "sampleTraceId": 827391874401526,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "AD5FF0D87A3E9F05883459EC06223819",
+                "functionName": "F1",
+                "isolate": "8324708656700071336",
+                "lineNumber": 49,
+                "sampleTraceId": 827391874401527,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "AD5FF0D87A3E9F05883459EC06223819",
+                "functionName": "sample",
+                "isolate": "8324708656700071336",
+                "lineNumber": 5,
+                "sampleTraceId": 827391874401520,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "1D4C99E3619B2B742A2A8C395391639B",
+                "functionName": "sample",
+                "isolate": "8324708656700071336",
+                "lineNumber": 5,
+                "sampleTraceId": 827391874401521,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 65.02
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 2434.05
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1559.74
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 96.41
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 41.35
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 30.03
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 18.59
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 16.46
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 10.42
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 5.72
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 5.51
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/perf/issue-660/fixture.tsx:22:170 ",
+          "ms": 4.66
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react/cjs/react-jsx-runtime.production.js:14:9 jsxProd",
+          "ms": 4.48
+        }
+      ]
+    },
+    {
+      "trial": 4,
+      "geometry": true,
+      "observer": [
+        {
+          "start": 899,
+          "duration": 69
+        },
+        {
+          "start": 2948.899999999907,
+          "duration": 64
+        },
+        {
+          "start": 4048.8000000002794,
+          "duration": 50
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 602.8000000002794,
+          "duration": 78.79999999981374,
+          "renderStart": 681.3999999999069,
+          "styleAndLayoutStart": 681.6000000000931,
+          "scripts": []
+        },
+        {
+          "start": 885.5,
+          "duration": 79.20000000018626,
+          "renderStart": 899.3000000002794,
+          "styleAndLayoutStart": 956.8000000002794,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 56.89999999990687,
+              "forcedStyleAndLayoutDuration": 55.4
+            }
+          ]
+        },
+        {
+          "start": 2933.2000000001863,
+          "duration": 75.89999999990687,
+          "renderStart": 2949.2000000001863,
+          "styleAndLayoutStart": 3003.5,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 54,
+              "forcedStyleAndLayoutDuration": 53.2
+            }
+          ]
+        },
+        {
+          "start": 4044.5,
+          "duration": 53.10000000009313,
+          "renderStart": 4049.3000000002794,
+          "styleAndLayoutStart": 4093.3000000002794,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 43.89999999990687,
+              "forcedStyleAndLayoutDuration": 43.3
+            }
+          ]
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3692785864,
+          "ms": 69.506,
+          "costs": {
+            "Layout": 41.9,
+            "UpdateLayoutTree": 17.11,
+            "Paint": 4.99,
+            "FunctionCall": 57.22,
+            "FireAnimationFrame": 57.46,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "5F9D9C48491C86705BEF6337CD107085",
+                "functionName": "F1",
+                "isolate": "640253068332576966",
+                "lineNumber": 49,
+                "sampleTraceId": 6556049224920859,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "5F9D9C48491C86705BEF6337CD107085",
+                "functionName": "F1",
+                "isolate": "640253068332576966",
+                "lineNumber": 49,
+                "sampleTraceId": 6556049224920860,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "5F9D9C48491C86705BEF6337CD107085",
+                "functionName": "sample",
+                "isolate": "640253068332576966",
+                "lineNumber": 5,
+                "sampleTraceId": 6556049224921057,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "0493640D717D30475D33403B4B7023FE",
+                "functionName": "sample",
+                "isolate": "640253068332576966",
+                "lineNumber": 5,
+                "sampleTraceId": 6556049224921065,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 57.47
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 14.54
+            }
+          ]
+        },
+        {
+          "at": 3694835754,
+          "ms": 64.414,
+          "costs": {
+            "Layout": 18.87,
+            "UpdateLayoutTree": 36.53,
+            "Paint": 6.68,
+            "FunctionCall": 54.14,
+            "FireAnimationFrame": 54.29,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "5F9D9C48491C86705BEF6337CD107085",
+                "functionName": "F1",
+                "isolate": "640253068332576966",
+                "lineNumber": 49,
+                "sampleTraceId": 6556049224923450,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "5F9D9C48491C86705BEF6337CD107085",
+                "functionName": "F1",
+                "isolate": "640253068332576966",
+                "lineNumber": 49,
+                "sampleTraceId": 6556049224923451,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "5F9D9C48491C86705BEF6337CD107085",
+                "functionName": "sample",
+                "isolate": "640253068332576966",
+                "lineNumber": 5,
+                "sampleTraceId": 6556049224923455,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "0493640D717D30475D33403B4B7023FE",
+                "functionName": "sample",
+                "isolate": "640253068332576966",
+                "lineNumber": 5,
+                "sampleTraceId": 6556049224923399,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 51.27
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 14.77
+            }
+          ]
+        },
+        {
+          "at": 3695935754,
+          "ms": 50.539,
+          "costs": {
+            "Layout": 13.57,
+            "UpdateLayoutTree": 31.06,
+            "Paint": 2.78,
+            "FunctionCall": 44.02,
+            "FireAnimationFrame": 43.99,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "5F9D9C48491C86705BEF6337CD107085",
+                "functionName": "F1",
+                "isolate": "640253068332576966",
+                "lineNumber": 49,
+                "sampleTraceId": 6556049224921751,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "5F9D9C48491C86705BEF6337CD107085",
+                "functionName": "F1",
+                "isolate": "640253068332576966",
+                "lineNumber": 49,
+                "sampleTraceId": 6556049224921752,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "5F9D9C48491C86705BEF6337CD107085",
+                "functionName": "sample",
+                "isolate": "640253068332576966",
+                "lineNumber": 5,
+                "sampleTraceId": 6556049224921756,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "0493640D717D30475D33403B4B7023FE",
+                "functionName": "sample",
+                "isolate": "640253068332576966",
+                "lineNumber": 5,
+                "sampleTraceId": 6556049224921443,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 43.07
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 8.46
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1581.21
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1442.23
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 963.27
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 79.38
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 36.38
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 27.28
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 15.78
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 9.99
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:4084:11 reconcileChildrenArray",
+          "ms": 8.95
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 7.71
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 6.95
+        },
+        {
+          "source": "VM/injected evaluate",
+          "ms": 5.17
+        }
+      ]
+    },
+    {
+      "trial": 5,
+      "geometry": false,
+      "observer": [
+        {
+          "start": 1791.0999999996275,
+          "duration": 64
+        },
+        {
+          "start": 1986.2999999998137,
+          "duration": 93
+        },
+        {
+          "start": 3860.2999999998137,
+          "duration": 53
+        },
+        {
+          "start": 4652.799999999814,
+          "duration": 61
+        },
+        {
+          "start": 4752.799999999814,
+          "duration": 61
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 1775.0999999996275,
+          "duration": 78.3000000002794,
+          "renderStart": 1809.5999999996275,
+          "styleAndLayoutStart": 1811,
+          "scripts": []
+        },
+        {
+          "start": 1972.5,
+          "duration": 105.09999999962747,
+          "renderStart": 1986.6999999997206,
+          "styleAndLayoutStart": 1987,
+          "scripts": []
+        },
+        {
+          "start": 3836.5,
+          "duration": 72.89999999990687,
+          "renderStart": 3869.1999999997206,
+          "styleAndLayoutStart": 3869.899999999907,
+          "scripts": []
+        },
+        {
+          "start": 4637.199999999721,
+          "duration": 61.8000000002794,
+          "renderStart": 4655.5,
+          "styleAndLayoutStart": 4655.5999999996275,
+          "scripts": []
+        },
+        {
+          "start": 4743.5999999996275,
+          "duration": 65.70000000018626,
+          "renderStart": 4753.299999999814,
+          "styleAndLayoutStart": 4753.299999999814,
+          "scripts": []
+        },
+        {
+          "start": 4829.399999999907,
+          "duration": 50.299999999813735,
+          "renderStart": 4836.5,
+          "styleAndLayoutStart": 4836.699999999721,
+          "scripts": []
+        },
+        {
+          "start": 5006.5,
+          "duration": 50.1999999997206,
+          "renderStart": 5019.699999999721,
+          "styleAndLayoutStart": 5019.799999999814,
+          "scripts": []
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3709207844,
+          "ms": 63.822,
+          "costs": {
+            "Layout": 9.25,
+            "UpdateLayoutTree": 29.89,
+            "Paint": 3.27,
+            "FunctionCall": 3.88,
+            "FireAnimationFrame": 0.8,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782558332,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782558335,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782558330,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "853031DB765C02AC4B8D592F68897848",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782558213,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 66
+            },
+            {
+              "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1765:15 timeStamp",
+              "ms": 0.5
+            }
+          ]
+        },
+        {
+          "at": 3709401964,
+          "ms": 93.207,
+          "costs": {
+            "Layout": 5.91,
+            "UpdateLayoutTree": 81.88,
+            "Paint": 2.94,
+            "FunctionCall": 0.36,
+            "FireAnimationFrame": 0.09,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782558469,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782558468,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782558467,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "853031DB765C02AC4B8D592F68897848",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782558466,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 93.86
+            },
+            {
+              "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1708:11 SyntheticBaseEvent",
+              "ms": -0.27
+            }
+          ]
+        },
+        {
+          "at": 3711276543,
+          "ms": 52.695,
+          "costs": {
+            "Layout": 15.95,
+            "UpdateLayoutTree": 17.33,
+            "Paint": 5.36,
+            "FunctionCall": 3.4,
+            "FireAnimationFrame": 0.51,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782561859,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782561858,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782561865,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "853031DB765C02AC4B8D592F68897848",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782561864,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 52.45
+            },
+            {
+              "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1708:11 SyntheticBaseEvent",
+              "ms": 1.04
+            },
+            {
+              "source": "VM/injected sample",
+              "ms": -0.1
+            },
+            {
+              "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1587:9 batchedUpdates$2",
+              "ms": -0.32
+            }
+          ]
+        },
+        {
+          "at": 3712068565,
+          "ms": 60.764,
+          "costs": {
+            "Layout": 12.01,
+            "UpdateLayoutTree": 22.35,
+            "Paint": 10.26,
+            "FunctionCall": 0.24,
+            "FireAnimationFrame": 0.08,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782562965,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782562964,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782562963,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "853031DB765C02AC4B8D592F68897848",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782562962,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 61.06
+            }
+          ]
+        },
+        {
+          "at": 3712168490,
+          "ms": 61.351,
+          "costs": {
+            "Layout": 21.5,
+            "UpdateLayoutTree": 24.29,
+            "Paint": 3.42,
+            "FunctionCall": 0.32,
+            "FireAnimationFrame": 0.04,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782563178,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "F1",
+                "isolate": "6930997189240291569",
+                "lineNumber": 49,
+                "sampleTraceId": 227719782563189,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E6E8AF354F6F8D63E82D1AB94A415D6A",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782563185,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "853031DB765C02AC4B8D592F68897848",
+                "functionName": "sample",
+                "isolate": "6930997189240291569",
+                "lineNumber": 5,
+                "sampleTraceId": 227719782563184,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 58.38
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 2875.33
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1597.49
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 96.33
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 44.54
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 27.36
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 25.36
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 22.28
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 13.6
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12895:9 performUnitOfWork",
+          "ms": 8.27
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 7.01
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/perf/issue-660/fixture.tsx:22:170 ",
+          "ms": 5.55
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 5.29
+        }
+      ]
+    },
+    {
+      "trial": 5,
+      "geometry": true,
+      "observer": [],
+      "longAnimationFrames": [
+        {
+          "start": 1467.5999999996275,
+          "duration": 60.5,
+          "renderStart": 1487.8999999999069,
+          "styleAndLayoutStart": 1521.5999999996275,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 33.200000000186265,
+              "forcedStyleAndLayoutDuration": 32.6
+            }
+          ]
+        }
+      ],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1526.28
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1474.4
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 910.96
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 93.23
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 32.97
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 20.26
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 19.09
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 18.13
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 11.66
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 8.14
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 7.74
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:9403:9 commitHostUpdate",
+          "ms": 7.32
+        }
+      ]
+    },
+    {
+      "trial": 6,
+      "geometry": false,
+      "observer": [
+        {
+          "start": 2267,
+          "duration": 59
+        },
+        {
+          "start": 2351.7999999998137,
+          "duration": 67
+        },
+        {
+          "start": 2450.5,
+          "duration": 60
+        },
+        {
+          "start": 2550.399999999907,
+          "duration": 95
+        },
+        {
+          "start": 3751.6999999997206,
+          "duration": 51
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 2259.899999999907,
+          "duration": 64.5,
+          "renderStart": 2267.2999999998137,
+          "styleAndLayoutStart": 2267.399999999907,
+          "scripts": []
+        },
+        {
+          "start": 2339,
+          "duration": 71.39999999990687,
+          "renderStart": 2352.0999999996275,
+          "styleAndLayoutStart": 2352.1999999997206,
+          "scripts": []
+        },
+        {
+          "start": 2435.899999999907,
+          "duration": 73,
+          "renderStart": 2450.7999999998137,
+          "styleAndLayoutStart": 2450.7999999998137,
+          "scripts": []
+        },
+        {
+          "start": 2540.0999999996275,
+          "duration": 100.5,
+          "renderStart": 2552.5999999996275,
+          "styleAndLayoutStart": 2552.6999999997206,
+          "scripts": []
+        },
+        {
+          "start": 3109.6999999997206,
+          "duration": 74.89999999990687,
+          "renderStart": 3146.399999999907,
+          "styleAndLayoutStart": 3146.5,
+          "scripts": []
+        },
+        {
+          "start": 3207.2999999998137,
+          "duration": 66.70000000018626,
+          "renderStart": 3272.5,
+          "styleAndLayoutStart": 3272.6999999997206,
+          "scripts": []
+        },
+        {
+          "start": 3745,
+          "duration": 52.39999999990687,
+          "renderStart": 3752,
+          "styleAndLayoutStart": 3752.0999999996275,
+          "scripts": []
+        },
+        {
+          "start": 3844.5999999996275,
+          "duration": 52.200000000186265,
+          "renderStart": 3870.7999999998137,
+          "styleAndLayoutStart": 3870.899999999907,
+          "scripts": []
+        },
+        {
+          "start": 5784.299999999814,
+          "duration": 56.89999999990687,
+          "renderStart": 5800.5,
+          "styleAndLayoutStart": 5800.5999999996275,
+          "scripts": []
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3733434208,
+          "ms": 59.442,
+          "costs": {
+            "Layout": 18.61,
+            "UpdateLayoutTree": 27.55,
+            "Paint": 3.34,
+            "FunctionCall": 0.16,
+            "FireAnimationFrame": 0.04,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899436772,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899436775,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899436778,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E2A2317647BAFA706CE1BCF9E6A67925",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899436781,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 60.16
+            }
+          ]
+        },
+        {
+          "at": 3733519030,
+          "ms": 67.586,
+          "costs": {
+            "Layout": 16.59,
+            "UpdateLayoutTree": 35.45,
+            "Paint": 18.37,
+            "FunctionCall": 0.15,
+            "FireAnimationFrame": 0.04,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899436857,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899436856,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899436863,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E2A2317647BAFA706CE1BCF9E6A67925",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899436862,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 70.22
+            }
+          ]
+        },
+        {
+          "at": 3733617640,
+          "ms": 60.214,
+          "costs": {
+            "Layout": 23.34,
+            "UpdateLayoutTree": 22.29,
+            "Paint": 2.64,
+            "FunctionCall": 0.19,
+            "FireAnimationFrame": 0.06,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899436893,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899436892,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899436963,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E2A2317647BAFA706CE1BCF9E6A67925",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899436962,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 59.97
+            }
+          ]
+        },
+        {
+          "at": 3733717621,
+          "ms": 95.029,
+          "costs": {
+            "Layout": 49.76,
+            "UpdateLayoutTree": 31.76,
+            "Paint": 7.21,
+            "FunctionCall": 0.38,
+            "FireAnimationFrame": 0.06,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899437002,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899437005,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899437008,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E2A2317647BAFA706CE1BCF9E6A67925",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899437011,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 94.74
+            }
+          ]
+        },
+        {
+          "at": 3734918948,
+          "ms": 51.814,
+          "costs": {
+            "Layout": 19.5,
+            "UpdateLayoutTree": 18.37,
+            "Paint": 6.89,
+            "FunctionCall": 0.15,
+            "FireAnimationFrame": 0.04,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899430557,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "F1",
+                "isolate": "18399843095196273986",
+                "lineNumber": 49,
+                "sampleTraceId": 5817268899430556,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "C0780AB9F828A4CAAA39F9D298BD040B",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899430624,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "E2A2317647BAFA706CE1BCF9E6A67925",
+                "functionName": "sample",
+                "isolate": "18399843095196273986",
+                "lineNumber": 5,
+                "sampleTraceId": 5817268899430626,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 52.48
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 3349.33
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1837.11
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 137.74
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 50.03
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 24.34
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 24.16
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 21.74
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 19.74
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 17.02
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:3507:9 startProfilerTimer",
+          "ms": 12.91
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:4084:11 reconcileChildrenArray",
+          "ms": 9.21
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:8476:9 completeWork",
+          "ms": 7.99
+        }
+      ]
+    },
+    {
+      "trial": 6,
+      "geometry": true,
+      "observer": [],
+      "longAnimationFrames": [],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1540
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1488.08
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 827.11
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 75.48
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 29.96
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 27.83
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 12.14
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 8.5
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 7.67
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 7.54
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:4084:11 reconcileChildrenArray",
+          "ms": 6.57
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react/cjs/react-jsx-runtime.production.js:14:9 jsxProd",
+          "ms": 5.48
+        }
+      ]
+    },
+    {
+      "trial": 7,
+      "geometry": false,
+      "observer": [
+        {
+          "start": 3330.2999999998137,
+          "duration": 67
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 3320.5999999996275,
+          "duration": 74,
+          "renderStart": 3330.6999999997206,
+          "styleAndLayoutStart": 3330.7999999998137,
+          "scripts": []
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3744050496,
+          "ms": 67.452,
+          "costs": {
+            "Layout": 15.23,
+            "UpdateLayoutTree": 44.85,
+            "Paint": 4.46,
+            "FunctionCall": 0.27,
+            "FireAnimationFrame": 0.08,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "47BF8A7EE631CB3B2680BE11447DA5F6",
+                "functionName": "F1",
+                "isolate": "14448413794399226407",
+                "lineNumber": 49,
+                "sampleTraceId": 6000743365102232,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "47BF8A7EE631CB3B2680BE11447DA5F6",
+                "functionName": "F1",
+                "isolate": "14448413794399226407",
+                "lineNumber": 49,
+                "sampleTraceId": 6000743365102233,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "47BF8A7EE631CB3B2680BE11447DA5F6",
+                "functionName": "sample",
+                "isolate": "14448413794399226407",
+                "lineNumber": 5,
+                "sampleTraceId": 6000743365102238,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "31C2043B2B33ED1F2965D46462A02262",
+                "functionName": "sample",
+                "isolate": "14448413794399226407",
+                "lineNumber": 5,
+                "sampleTraceId": 6000743365102239,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 68.08
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 2228.22
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1455.46
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 80.89
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 30.54
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 21.32
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 19.81
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 13.17
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 9.96
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 7.53
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:7872:9 beginWork",
+          "ms": 6.48
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1312:9 updateTextarea",
+          "ms": 5.66
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:4255:11 reconcileChildFibersImpl",
+          "ms": 4.19
+        }
+      ]
+    },
+    {
+      "trial": 7,
+      "geometry": true,
+      "observer": [
+        {
+          "start": 2378.100000000093,
+          "duration": 67
+        },
+        {
+          "start": 3527.8000000002794,
+          "duration": 57
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 1673.5,
+          "duration": 52.39999999990687,
+          "renderStart": 1697.7000000001863,
+          "styleAndLayoutStart": 1721.8000000002794,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 24,
+              "forcedStyleAndLayoutDuration": 23.9
+            }
+          ]
+        },
+        {
+          "start": 2362,
+          "duration": 80.20000000018626,
+          "renderStart": 2379.3000000002794,
+          "styleAndLayoutStart": 2436.2000000001863,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 56,
+              "forcedStyleAndLayoutDuration": 54.8
+            }
+          ]
+        },
+        {
+          "start": 3514,
+          "duration": 69.60000000009313,
+          "renderStart": 3528.2000000001863,
+          "styleAndLayoutStart": 3579.600000000093,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 51.299999999813735,
+              "forcedStyleAndLayoutDuration": 51.1
+            }
+          ]
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3750234076,
+          "ms": 67.025,
+          "costs": {
+            "Layout": 10.22,
+            "UpdateLayoutTree": 47.35,
+            "Paint": 3.89,
+            "FunctionCall": 56.45,
+            "FireAnimationFrame": 56.58,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "9FA3B62BDD6ED55596D2C336B56E28C6",
+                "functionName": "F1",
+                "isolate": "12488881558251573209",
+                "lineNumber": 49,
+                "sampleTraceId": 1794099885996446,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "9FA3B62BDD6ED55596D2C336B56E28C6",
+                "functionName": "F1",
+                "isolate": "12488881558251573209",
+                "lineNumber": 49,
+                "sampleTraceId": 1794099885996447,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "9FA3B62BDD6ED55596D2C336B56E28C6",
+                "functionName": "sample",
+                "isolate": "12488881558251573209",
+                "lineNumber": 5,
+                "sampleTraceId": 1794099885996435,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "0B2E3FA86CCE3CC65357D258D51DC497",
+                "functionName": "sample",
+                "isolate": "12488881558251573209",
+                "lineNumber": 5,
+                "sampleTraceId": 1794099885996428,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 52.96
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 12.66
+            }
+          ]
+        },
+        {
+          "at": 3751383677,
+          "ms": 57.692,
+          "costs": {
+            "Layout": 5.87,
+            "UpdateLayoutTree": 46.61,
+            "Paint": 2.74,
+            "FunctionCall": 51.48,
+            "FireAnimationFrame": 51.37,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "9FA3B62BDD6ED55596D2C336B56E28C6",
+                "functionName": "F1",
+                "isolate": "12488881558251573209",
+                "lineNumber": 49,
+                "sampleTraceId": 1794099885990212,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "9FA3B62BDD6ED55596D2C336B56E28C6",
+                "functionName": "F1",
+                "isolate": "12488881558251573209",
+                "lineNumber": 49,
+                "sampleTraceId": 1794099885990213,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "9FA3B62BDD6ED55596D2C336B56E28C6",
+                "functionName": "sample",
+                "isolate": "12488881558251573209",
+                "lineNumber": 5,
+                "sampleTraceId": 1794099885990266,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "0B2E3FA86CCE3CC65357D258D51DC497",
+                "functionName": "sample",
+                "isolate": "12488881558251573209",
+                "lineNumber": 5,
+                "sampleTraceId": 1794099885990256,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 49.93
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 6.76
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1560.18
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1508.11
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 997.71
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 101.73
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 36.32
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 35.62
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:3507:9 startProfilerTimer",
+          "ms": 26.18
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 17.09
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 16.45
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 12.83
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2471:9 logComponentRender",
+          "ms": 9.03
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 6.33
+        }
+      ]
+    },
+    {
+      "trial": 8,
+      "geometry": false,
+      "observer": [
+        {
+          "start": 4542.600000000093,
+          "duration": 80
+        },
+        {
+          "start": 4725.9000000003725,
+          "duration": 53
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 1478.7000000001863,
+          "duration": 59.299999999813735,
+          "renderStart": 1493.5,
+          "styleAndLayoutStart": 1493.6000000000931,
+          "scripts": []
+        },
+        {
+          "start": 4527.5,
+          "duration": 92.10000000009313,
+          "renderStart": 4543,
+          "styleAndLayoutStart": 4543.700000000186,
+          "scripts": []
+        },
+        {
+          "start": 4709.9000000003725,
+          "duration": 63.6999999997206,
+          "renderStart": 4726.300000000279,
+          "styleAndLayoutStart": 4726.300000000279,
+          "scripts": []
+        },
+        {
+          "start": 4797.600000000093,
+          "duration": 54.5,
+          "renderStart": 4809.5,
+          "styleAndLayoutStart": 4809.600000000093,
+          "scripts": []
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3768332924,
+          "ms": 80.791,
+          "costs": {
+            "Layout": 15.55,
+            "UpdateLayoutTree": 15.66,
+            "Paint": 3.82,
+            "FunctionCall": 0.76,
+            "FireAnimationFrame": 0.64,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "BA09F4F4B95B187A5058266314CCC2E0",
+                "functionName": "F1",
+                "isolate": "11488185296172192045",
+                "lineNumber": 49,
+                "sampleTraceId": 3129456967451677,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "BA09F4F4B95B187A5058266314CCC2E0",
+                "functionName": "F1",
+                "isolate": "11488185296172192045",
+                "lineNumber": 49,
+                "sampleTraceId": 3129456967451674,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "BA09F4F4B95B187A5058266314CCC2E0",
+                "functionName": "sample",
+                "isolate": "11488185296172192045",
+                "lineNumber": 5,
+                "sampleTraceId": 3129456967451670,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "FA1A97562DE8510F19EFA05D57D9E86D",
+                "functionName": "sample",
+                "isolate": "11488185296172192045",
+                "lineNumber": 5,
+                "sampleTraceId": 3129456967451671,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 80.38
+            },
+            {
+              "source": "VM/injected requestAnimationFrame",
+              "ms": -0.08
+            }
+          ]
+        },
+        {
+          "at": 3768516268,
+          "ms": 53.605,
+          "costs": {
+            "Layout": 14.69,
+            "UpdateLayoutTree": 24.98,
+            "Paint": 2.8,
+            "FunctionCall": 0.16,
+            "FireAnimationFrame": 0.04,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "BA09F4F4B95B187A5058266314CCC2E0",
+                "functionName": "F1",
+                "isolate": "11488185296172192045",
+                "lineNumber": 49,
+                "sampleTraceId": 3129456967451986,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "BA09F4F4B95B187A5058266314CCC2E0",
+                "functionName": "F1",
+                "isolate": "11488185296172192045",
+                "lineNumber": 49,
+                "sampleTraceId": 3129456967451987,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "BA09F4F4B95B187A5058266314CCC2E0",
+                "functionName": "sample",
+                "isolate": "11488185296172192045",
+                "lineNumber": 5,
+                "sampleTraceId": 3129456967452012,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "FA1A97562DE8510F19EFA05D57D9E86D",
+                "functionName": "sample",
+                "isolate": "11488185296172192045",
+                "lineNumber": 5,
+                "sampleTraceId": 3129456967452013,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 52.21
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 2706.78
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1651.73
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 102.45
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 40.89
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 36.1
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 25.16
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 19.8
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react/cjs/react-jsx-runtime.production.js:14:9 jsxProd",
+          "ms": 18.83
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:3748:9 coerceRef",
+          "ms": 10
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 8.15
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 7.68
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 7.07
+        }
+      ]
+    },
+    {
+      "trial": 8,
+      "geometry": true,
+      "observer": [],
+      "longAnimationFrames": [
+        {
+          "start": 2605.5999999996275,
+          "duration": 61.90000000037253,
+          "renderStart": 2621.7999999998137,
+          "styleAndLayoutStart": 2660.2999999998137,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 37.799999999813735,
+              "forcedStyleAndLayoutDuration": 36.6
+            }
+          ]
+        }
+      ],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1550.04
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1409.09
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 862.53
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 77.01
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 31.26
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 27.57
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 12.82
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 11.59
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12895:9 performUnitOfWork",
+          "ms": 7.57
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:10235:9 commitMutationEffectsOnFiber",
+          "ms": 6.76
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 6.39
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 5.83
+        }
+      ]
+    },
+    {
+      "trial": 9,
+      "geometry": false,
+      "observer": [
+        {
+          "start": 823.3999999999069,
+          "duration": 80
+        },
+        {
+          "start": 4965.100000000093,
+          "duration": 52
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 801.5,
+          "duration": 99.39999999990687,
+          "renderStart": 828,
+          "styleAndLayoutStart": 842,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 10.100000000093132,
+              "forcedStyleAndLayoutDuration": 0
+            }
+          ]
+        },
+        {
+          "start": 3034.1999999997206,
+          "duration": 68.10000000009313,
+          "renderStart": 3049.7999999998137,
+          "styleAndLayoutStart": 3099,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 49,
+              "forcedStyleAndLayoutDuration": 0
+            }
+          ]
+        },
+        {
+          "start": 4948.799999999814,
+          "duration": 58.3000000002794,
+          "renderStart": 4965.399999999907,
+          "styleAndLayoutStart": 4965.600000000093,
+          "scripts": []
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3773157836,
+          "ms": 80.275,
+          "costs": {
+            "Layout": 9.77,
+            "UpdateLayoutTree": 44.64,
+            "Paint": 4.3,
+            "FunctionCall": 13.89,
+            "FireAnimationFrame": 12.92,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "B169EF0A9FCBA203A33245748E11F1BF",
+                "functionName": "F1",
+                "isolate": "17930301003032471445",
+                "lineNumber": 49,
+                "sampleTraceId": 4491516003043459,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "B169EF0A9FCBA203A33245748E11F1BF",
+                "functionName": "F1",
+                "isolate": "17930301003032471445",
+                "lineNumber": 49,
+                "sampleTraceId": 4491516003043458,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "B169EF0A9FCBA203A33245748E11F1BF",
+                "functionName": "sample",
+                "isolate": "17930301003032471445",
+                "lineNumber": 5,
+                "sampleTraceId": 4491516003043481,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "4C382A27E8462C44F945574F9345DD15",
+                "functionName": "sample",
+                "isolate": "17930301003032471445",
+                "lineNumber": 5,
+                "sampleTraceId": 4491516003043484,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 65.53
+            },
+            {
+              "source": "VM/injected requestAnimationFrame",
+              "ms": 10.71
+            },
+            {
+              "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1708:11 SyntheticBaseEvent",
+              "ms": 0.28
+            },
+            {
+              "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:43:9 getNearestMountedFiber",
+              "ms": 0.22
+            }
+          ]
+        },
+        {
+          "at": 3775383935,
+          "ms": 53.617,
+          "costs": {
+            "Layout": 1.37,
+            "UpdateLayoutTree": 0.31,
+            "Paint": 1.38,
+            "FunctionCall": 49.01,
+            "FireAnimationFrame": 49.06,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "B169EF0A9FCBA203A33245748E11F1BF",
+                "functionName": "sample",
+                "isolate": "17930301003032471445",
+                "lineNumber": 5,
+                "sampleTraceId": 4491516003049360,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "4C382A27E8462C44F945574F9345DD15",
+                "functionName": "sample",
+                "isolate": "17930301003032471445",
+                "lineNumber": 5,
+                "sampleTraceId": 4491516003049363,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected requestAnimationFrame",
+              "ms": 48.95
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 2.14
+            }
+          ]
+        },
+        {
+          "at": 3777299229,
+          "ms": 52.668,
+          "costs": {
+            "Layout": 11.51,
+            "UpdateLayoutTree": 13.52,
+            "Paint": 15.77,
+            "FunctionCall": 0.18,
+            "FireAnimationFrame": 0.09,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "B169EF0A9FCBA203A33245748E11F1BF",
+                "functionName": "F1",
+                "isolate": "17930301003032471445",
+                "lineNumber": 49,
+                "sampleTraceId": 4491516003046148,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "B169EF0A9FCBA203A33245748E11F1BF",
+                "functionName": "F1",
+                "isolate": "17930301003032471445",
+                "lineNumber": 49,
+                "sampleTraceId": 4491516003046151,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "B169EF0A9FCBA203A33245748E11F1BF",
+                "functionName": "sample",
+                "isolate": "17930301003032471445",
+                "lineNumber": 5,
+                "sampleTraceId": 4491516003046171,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "4C382A27E8462C44F945574F9345DD15",
+                "functionName": "sample",
+                "isolate": "17930301003032471445",
+                "lineNumber": 5,
+                "sampleTraceId": 4491516003046170,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected (program)",
+              "ms": 52.01
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 2542.34
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1647.45
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 100.56
+        },
+        {
+          "source": "VM/injected requestAnimationFrame",
+          "ms": 59.62
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 35.94
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 31.19
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 23.79
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 19.53
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 12.57
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 10.6
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 8.09
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2471:9 logComponentRender",
+          "ms": 3.38
+        }
+      ]
+    },
+    {
+      "trial": 9,
+      "geometry": true,
+      "observer": [
+        {
+          "start": 1642.8999999999069,
+          "duration": 58
+        },
+        {
+          "start": 3130.1999999997206,
+          "duration": 53
+        }
+      ],
+      "longAnimationFrames": [
+        {
+          "start": 1628.6999999997206,
+          "duration": 71.10000000009313,
+          "renderStart": 1643.5,
+          "styleAndLayoutStart": 1694.7999999998137,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 51.09999999962747,
+              "forcedStyleAndLayoutDuration": 50.9
+            }
+          ]
+        },
+        {
+          "start": 3111.399999999907,
+          "duration": 69.89999999990687,
+          "renderStart": 3130.5999999996275,
+          "styleAndLayoutStart": 3176.5999999996275,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 38.3000000002794,
+              "forcedStyleAndLayoutDuration": 27
+            }
+          ]
+        }
+      ],
+      "longTasks": [
+        {
+          "at": 3781932582,
+          "ms": 58.719,
+          "costs": {
+            "Layout": 6.5,
+            "UpdateLayoutTree": 46.27,
+            "Paint": 2.69,
+            "FunctionCall": 51.51,
+            "FireAnimationFrame": 51.21,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "59CFBC390E1422B0F449FF985BD30EE0",
+                "functionName": "F1",
+                "isolate": "7745699630975618576",
+                "lineNumber": 49,
+                "sampleTraceId": 5101306569141092,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "59CFBC390E1422B0F449FF985BD30EE0",
+                "functionName": "F1",
+                "isolate": "7745699630975618576",
+                "lineNumber": 49,
+                "sampleTraceId": 5101306569141093,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "59CFBC390E1422B0F449FF985BD30EE0",
+                "functionName": "sample",
+                "isolate": "7745699630975618576",
+                "lineNumber": 5,
+                "sampleTraceId": 5101306569141090,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "F51D8712FD0F72105E199FD4C01AB46B",
+                "functionName": "sample",
+                "isolate": "7745699630975618576",
+                "lineNumber": 5,
+                "sampleTraceId": 5101306569141098,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 49.67
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 7.12
+            },
+            {
+              "source": "../../../workspace/LingxiLoop/src/components/ui/sidebar-resize-handle.tsx:43:19 event",
+              "ms": -0.24
+            }
+          ]
+        },
+        {
+          "at": 3783419887,
+          "ms": 53.417,
+          "costs": {
+            "Layout": 8.12,
+            "UpdateLayoutTree": 21.14,
+            "Paint": 3.36,
+            "FunctionCall": 38.41,
+            "FireAnimationFrame": 39.48,
+            "MajorGC": 0,
+            "MinorGC": 0
+          },
+          "calls": [
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "59CFBC390E1422B0F449FF985BD30EE0",
+                "functionName": "F1",
+                "isolate": "7745699630975618576",
+                "lineNumber": 49,
+                "sampleTraceId": 5101306569142536,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 28941,
+                "frame": "59CFBC390E1422B0F449FF985BD30EE0",
+                "functionName": "F1",
+                "isolate": "7745699630975618576",
+                "lineNumber": 49,
+                "sampleTraceId": 5101306569142537,
+                "scriptId": "5",
+                "url": "http://127.0.0.1:4482/assets/index-VPxM8jk1.js"
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "59CFBC390E1422B0F449FF985BD30EE0",
+                "functionName": "sample",
+                "isolate": "7745699630975618576",
+                "lineNumber": 5,
+                "sampleTraceId": 5101306569142550,
+                "scriptId": "3",
+                "url": ""
+              }
+            },
+            {
+              "data": {
+                "columnNumber": 25,
+                "frame": "F51D8712FD0F72105E199FD4C01AB46B",
+                "functionName": "sample",
+                "isolate": "7745699630975618576",
+                "lineNumber": 5,
+                "sampleTraceId": 5101306569142558,
+                "scriptId": "3",
+                "url": ""
+              }
+            }
+          ],
+          "topCpuSamples": [
+            {
+              "source": "VM/injected getBoundingClientRect",
+              "ms": 29.94
+            },
+            {
+              "source": "VM/injected (program)",
+              "ms": 21.17
+            },
+            {
+              "source": "VM/injected sample",
+              "ms": 1.33
+            }
+          ]
+        }
+      ],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1673.92
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1579.84
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 943.19
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 92.36
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 36.04
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 20.73
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 19.82
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 17.93
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 10.92
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 9.5
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13497:9 flushPassiveEffects",
+          "ms": 7.01
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react/cjs/react-jsx-runtime.production.js:14:9 jsxProd",
+          "ms": 6.98
+        }
+      ]
+    }
+  ]
+}
