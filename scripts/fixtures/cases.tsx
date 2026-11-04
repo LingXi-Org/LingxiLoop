@@ -54,7 +54,7 @@ const samples = [
 const dates = ['2026-11-03', '2026-11-01', '2026-10-29', '2026-10-26', '2026-10-22', '2026-10-18', '2026-10-15']
 const records = (params.has('empty') ? [] : samples).map(([title, summary, authorName, cover, category], i) => ({
   id: `sample-${i}`, title, summary, authorName, authorId: `author-${i}`, authorAvatarUrl: null,
-  companyId, cover: `/scripts/fixtures/cases-assets/${cover}.png`, category, tags: i === 0 ? ['45 分钟 · 本科三年级'] : [], body: sourceBody,
+  companyId, coverText: cover === 'kv' ? 'KV' : cover === 'tool' ? 'ƒ(x)' : cover === 'sum' ? 'Σ' : 'softmax', coverColor: ['orange','blue','green','yellow'][i % 4], college: '计算机科学与技术学院', cover: `/scripts/fixtures/cases-assets/${cover}.png`, category, tags: i === 0 ? ['45 分钟 · 本科三年级'] : [], body: sourceBody,
   status: 'published', version: 1, publishedVersion: 1, hasUnpublishedChanges: false,
   canManage: manager, indexStatus: 'ready', indexError: null, publishedAt: dates[i], createdAt: dates[i], updatedAt: dates[i],
 }))
@@ -70,7 +70,16 @@ if (params.has('rich') && records[0]) {
 }
 const published = new Map(records.map(record => [record.id, structuredClone(record)]))
 const response = (record, view) => ({ ...structuredClone(view === 'reader' ? published.get(record.id) : record), view })
-let listReads = 0
+const optionKey = `case-editor-fixture-options:${companyId}`
+let fixtureOptions = JSON.parse(localStorage.getItem(optionKey) || 'null') || { categories: ['注意力机制', '推理优化', 'Agent 设计', '训练与微调', '课堂组织'], colleges: ['计算机科学与技术学院'] }
+casesApi.options = async () => { if (!manager) throw new Error('forbidden'); return structuredClone(fixtureOptions) }
+casesApi.createOption = async (kind, name) => {
+  if (!manager) throw new Error('forbidden')
+  const key = kind === 'category' ? 'categories' : 'colleges'
+  fixtureOptions = { ...fixtureOptions, [key]: [...new Set([...fixtureOptions[key], name])] }
+  localStorage.setItem(optionKey, JSON.stringify(fixtureOptions))
+  return structuredClone(fixtureOptions)
+}
 casesApi.list = async (q, category, view = 'reader') => {
   if (params.has('benchmark')) {
     document.documentElement.dataset.caseRequests = String(Number(document.documentElement.dataset.caseRequests || 0) + 1)
@@ -78,16 +87,12 @@ casesApi.list = async (q, category, view = 'reader') => {
   }
   if (params.has('error')) throw new Error('fixture read failure')
   const available = records.filter(record => record.companyId === useAuth.getState().activeCompanyId && (view === 'manage' || record.status === 'published'))
-  listReads += 1
   return { items: available.map(record => {
     const item = response(record, view)
-    if (params.has('pendingCover') && item.id === 'sample-4') item.generatedCover = {
-      schemaVersion: 1, status: listReads === 1 ? 'pending' : 'ready', fingerprint: 'fixture-cover', generation: 1,
-      alt: '相关案例封面已更新', previewUrl: listReads === 1 ? null : '/scripts/fixtures/cases-assets/sum.png', interactiveUrl: null, canRetry: false,
-    }
+
     return item
   }).filter(record => (!category || record.category === category) && (!q || `${record.title} ${record.summary}`.toLowerCase().includes(q.toLowerCase()))),
-    categories: ['注意力机制', '推理优化', 'Agent 设计', '训练与微调', '课堂组织'], canManage: manager, view }
+    categories: fixtureOptions.categories, canManage: manager, view }
 }
 casesApi.detail = async (id, view = 'reader') => {
   const record = records.find(item => item.id === id && item.companyId === useAuth.getState().activeCompanyId)
@@ -104,11 +109,13 @@ casesApi.save = async (input, article) => {
 casesApi.action = async (article, action) => {
   if (!manager) throw new Error('forbidden')
   const record = records.find(item => item.id === article.id)
+  if (action === 'publish' && params.has('publishError')) throw new Error('发布服务暂不可用')
+  if (action === 'publish' && params.has('publishError')) throw new Error('fixture publish failure')
   if (action === 'publish') { record.status = 'published'; record.hasUnpublishedChanges = false; published.set(record.id, structuredClone(record)) }
   if (action === 'unpublish') record.status = 'unpublished'
   return response(record, 'manage')
 }
-useAuth.setState({ user: { id: 'case-reader', name: 'Y', email: 'reader@example.invalid' }, authenticated: true, ready: true,
+useAuth.setState({ user: { id: 'case-reader', name: '王老师', email: 'reader@example.invalid' }, authenticated: true, ready: true,
   activeCompanyId: companyId, companies: [{ id: companyId, name: '验收组织', slug: companyId, role: manager ? 'teacher' : 'student', isAdmin: manager, status: 'ACTIVE' }] })
 useWorkspace.setState({ selectedId: params.has('noCourse') ? null : 'fixture-project', loaded: true, companyId,
   list: [{ id: 'fixture-project', name: 'agent基础', status: 'ACTIVE' }] })

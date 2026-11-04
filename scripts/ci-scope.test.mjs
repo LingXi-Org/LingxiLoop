@@ -31,7 +31,7 @@ test('Design sizing sources retain their editor build and artifact integration o
   }
 })
 test('real server imports and shared transitive helper changes check the server', () => {
-  for (const path of ['src/lib/runActivity.ts', 'src/lib/participantDisplayName.ts', 'src/features/cases/cover-vm/program.ts']) {
+  for (const path of ['src/lib/runActivity.ts', 'src/lib/participantDisplayName.ts']) {
     assert.equal(computeScope(classifyPaths([path])).server, true, path)
   }
 })

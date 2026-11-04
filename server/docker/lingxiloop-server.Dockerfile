@@ -137,12 +137,6 @@ COPY server/scripts/check-packaged-startup.mjs ./server/scripts/
 COPY src/types.ts ./src/types.ts
 COPY src/lib/conversationRunSummary.ts ./src/lib/
 COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/executionBudget.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
-# The renderer shares only these five dependency-light VM inputs with Web.
-COPY src/features/cases/cover-vm/runtime.ts ./src/features/cases/cover-vm/runtime.ts
-COPY src/features/cases/cover-vm/protocol.ts ./src/features/cases/cover-vm/protocol.ts
-COPY src/features/cases/cover-vm/program.ts ./src/features/cases/cover-vm/program.ts
-COPY src/features/cases/cover-vm/guest-source.ts ./src/features/cases/cover-vm/guest-source.ts
-COPY src/features/cases/cover-vm/svg.ts ./src/features/cases/cover-vm/svg.ts
 # Design and Slides serve the vendored editor pages and run the vendored checker unchanged.
 COPY third_party/baoyu-design ./third_party/baoyu-design
 COPY third_party/visualize-compat ./third_party/visualize-compat

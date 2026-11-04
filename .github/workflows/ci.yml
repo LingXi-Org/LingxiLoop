@@ -174,11 +174,6 @@ jobs:
               - 'src/lib/executionBudget.ts'
               - 'src/lib/traceCost.ts'
               - 'src/lib/memoryActivity.ts'
-              - 'src/features/cases/cover-vm/runtime.ts'
-              - 'src/features/cases/cover-vm/protocol.ts'
-              - 'src/features/cases/cover-vm/program.ts'
-              - 'src/features/cases/cover-vm/guest-source.ts'
-              - 'src/features/cases/cover-vm/svg.ts'
             integration_tests:
               - 'server/src/__integration__/*.test.ts'
             integration_runner:
