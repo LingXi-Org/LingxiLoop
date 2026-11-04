@@ -202,6 +202,8 @@ test('authenticated message reaches the formal worker, loads the Slides skill, e
     { name: 'slides__read_file', args: { artifactId: deck.id, path } },
     { name: 'slides__write_files', args: { artifactId: deck.id, files: { [path]: { content: revised, ifMatch: hash } } } },
     { name: 'slides__read_file', args: { artifactId: deck.id, path } },
+    { name: 'slides__current', args: { artifactId: deck.id } },
+    { name: 'task__check_resource', args: { action: 'slides.current', args: { artifactId: deck.id }, expected: { title: 'Model flow', slideCount: 0 } } },
     { name: 'public_answer', args: { operation: { kind: 'append', supersedes: [] }, commentary: '',
       answer: '已保存并重新读取选中页面的标题。', outcome: { status: 'satisfied', gaps: [] } } },
   ]
@@ -243,6 +245,11 @@ test('authenticated message reaches the formal worker, loads the Slides skill, e
     assert.deepEqual(providerErrors, [])
     assert.equal((await control.readRun(run))?.status, 'succeeded')
     assert.equal(issued, calls.length)
+    const current = await invoke(work(workspace.agentId, workspace.conversationId), 'current', { artifactId: deck.id }) as Record<string, unknown>
+    assert.equal(current.title, 'Model flow'); assert.equal(current.slideCount, 0)
+    assert.ok(current.deck && Array.isArray(current.decks) && current.editor)
+    const checks = await pool.query("SELECT result->'value' AS value FROM lingxios.agent_action_ledger ledger JOIN lingxios.agent_action_intents intent USING(idempotency_key) WHERE intent.intent->>'workId'=$1 AND intent.intent->'action'->>'action'='task.check_resource'", [run.runId])
+    assert.ok(checks.rows.length >= 1 && checks.rows.every(row => row.value.status === 'pass'))
     const deadline = AbortSignal.timeout(5000)
     while ((await control.readRunState(run))?.delivery !== 'delivered') { deadline.throwIfAborted(); await delay(20) }
     const saved = (await pool.query('SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [deck.id, path])).rows[0]
@@ -251,8 +258,7 @@ test('authenticated message reaches the formal worker, loads the Slides skill, e
     const replay = await request(`/im/channels/${workspace.conversationId}/agents/${workspace.agentId}/runs/${run.runId}`)
     assert.equal(replay.status, 200, await replay.clone().text())
     assert.match(await replay.text(), /已保存/)
-    // Memory retrieval can independently add an embedding receipt in a live
-    // configured environment. Count the five actual worker chat requests.
+    // Memory retrieval can independently add an embedding receipt; count the actual worker chat requests.
     const ledger = await pool.query("SELECT count(*)::int AS n FROM llm_calls WHERE run_id=$1 AND purpose='lingxios.agent-turn'", [run.runId])
     assert.equal(ledger.rows[0].n, calls.length)
     const duplicate = await receiveAgentRequest({ companyId, agentId: workspace.agentId, channelId: workspace.conversationId, clientMsgNo: clientNonce, authenticatedUserId: userId })
