@@ -33,3 +33,10 @@ test('runtime patch and deployment changes retain both product60 patch qualifica
     for (const file of ['runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts']) assert.ok(scope.integration_files.includes(file), path + ':' + file)
   }
 })
+
+test('run diagnostic readers retain their authorized HTTP integration owner', () => {
+  for (const path of ['agent-operations', 'agent-run-timing', 'router', 'company-router']) {
+    const scope = computeScope(classifyPaths([`server/src/modules/platform-operations/${path}.ts`]))
+    assert.ok(scope.integration_files.includes('runtime-worker-diagnostics.test.ts'), path)
+  }
+})

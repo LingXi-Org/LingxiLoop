@@ -1,3 +1,5 @@
+import { AgentRunTimingCard } from './agent-run-timing.js'
+import type { AgentRunTiming } from '../../shared/agent-run-timing.js'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createElement } from 'react'
@@ -60,4 +62,21 @@ test('workspace navigation preserves every resource under a business owner', asy
   assert.equal(recordPath('companies'), '/organizations')
   assert.equal(recordPath('knowledge-jobs'), '/projects/knowledge-jobs')
   assert.equal(listParameters(new URLSearchParams('tab=学习&search=示例&companyId=other&cursor=MjA&previous=-'), { companyId: 'owner' }).toString(), 'search=%E7%A4%BA%E4%BE%8B&companyId=owner&cursor=MjA')
+})
+
+
+test('run timing distinguishes unavailable from zero and never labels a lease as execution', async () => {
+  const { STATUS_LABELS, FIELD_LABELS } = await import('./record-presentation.js')
+  assert.equal(STATUS_LABELS.leased, '已领取')
+  assert.equal(FIELD_LABELS.executionMs, '累计执行耗时')
+  const timing: AgentRunTiming = { observedAt: '2026-11-03T12:00:00Z', queueState: 'delayed', eligibleQueueMs: null,
+    availableDelayMs: 30000, initialEligibleToStartedMs: null, attemptExecutionTotalMs: 0, modelPermitWaitMs: null,
+    ingressToEnqueueMs: null, endToEndMs: null, leaseValidity: 'not-leased', heartbeatAgeMs: null, leaseExpiresAt: null, eventHistory: 'unavailable' }
+  const html = renderToStaticMarkup(createElement(AgentRunTimingCard, { timing }))
+  assert.match(html, /尚未到可执行时间/)
+  assert.match(html, /30 秒/)
+  assert.match(html, /0 秒/)
+  assert.match(html, /未提供/)
+  assert.match(html, /不能相加作为端到端用时/)
+  assert.equal(renderToStaticMarkup(createElement(AgentRunTimingCard, {})), '')
 })
