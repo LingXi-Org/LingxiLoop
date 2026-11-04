@@ -208,7 +208,6 @@ function validateJudgment(value:unknown,hw:HomeworkRow,messages:CanonicalMessage
     const message=messages.find(item=>item.messageId===quote.messageId&&item.role==='user')
     if(!message||!message.text.includes(quote.excerpt)) throw new Error('评估引用未对应真实学生证据')
   }
-  if(!result.evidence.length&&result.criteria.some(item=>item.met||item.independent)) throw new Error('评估缺少可追溯的学生证据')
   for(const quote of result.assistanceEvidence??[]) {
     const message=messages.find(item=>item.messageId===quote.messageId&&item.role==='assistant')
     if(!message||!message.text.includes(quote.excerpt)) throw new Error('帮助引用未对应真实助手消息')
@@ -223,6 +222,7 @@ function validateJudgment(value:unknown,hw:HomeworkRow,messages:CanonicalMessage
       if(!result.evidence.some(existing=>existing.messageId===quote.messageId&&existing.excerpt===quote.excerpt))result.evidence.push(quote)
     }
   }
+  if(!result.evidence.length&&result.criteria.some(item=>item.met||item.independent)) throw new Error('评估缺少可追溯的学生证据')
   if(result.criteria.some(item=>item.reviewRequired)) {
     result.completion=`部分标准需要教师判断，尚未自动确认。AI 辅助观察：${result.completion}`.slice(0,4000)
     result.independence=`人工复核项的独立完成程度由教师判断。AI 辅助观察：${result.independence}`.slice(0,4000)

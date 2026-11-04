@@ -46,12 +46,16 @@ case or relax the styled/ambiguous paragraph guard.
 - Existing HomeworkDraftCard six tests pass.
 - Owning Postgres homework suite: 56/56 passed after the per-criterion citation,
   shared public assistance projection and ledger changes. The final three affected
-  database cases were rerun after strengthening the missing-per-criterion check. The local dedicated database is
+  database cases were rerun after strengthening the missing-per-criterion check and accepting valid row
+  citations when the optional global summary is empty. The local dedicated database is
   `lingxiloop_reports_test`; it was initialized by the repository's actual formal
   runtime bootstrap, with published 3.8.18→19→20→21→24 receipts and product62.
 - Web/server typechecks pass; production web build passes (large existing chunk
-  warnings). Web/server lint exits 0 (existing unrelated web warnings). Final-head
-  CI and independent delta review remain required before integration.
+  warnings). Web/server lint exits 0 (existing unrelated web warnings). The exact-head
+  CI remains required before integration. Independent review has verified the
+  corrected emphasis/grade/ownership cases and the shared-snapshot/ledger delta;
+  its last citation-union ordering finding was corrected with the affected DB
+  regression above. The final hash will be rechecked before handoff.
 - Actual Chromium 154 browser replay passed on 1280×1100 and 390×844. See
   `browser-result.json` and screenshots. It uses actual teacher/submission/report/
   reference components with synthetic authorized snapshots. It checks PENDING

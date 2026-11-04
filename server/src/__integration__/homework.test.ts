@@ -1948,7 +1948,9 @@ test('[integration] 674 explicit teacher grade criteria cannot be certified by a
   const rejected=(await homework.detail(student,courseId,task.id)).student!
   assert.equal(rejected.reportStatus,'INVALID')
   assert.equal(rejected.report,null)
-  const ready=await report(task.id,evidence.judgment)
+  const ready=await report(task.id,{...evidence.judgment,evidence:[]})
+  assert.ok(ready.report!.evidenceSources.length,'Validated per-criterion quotes populate the report summary even if global evidence was empty')
+  assert.equal(ready.report!.criteria[0].met,true)
   assert.equal(ready.report!.criteria[1].reviewRequired,true)
   const submitted=await homework.submit(student,courseId,task.id,{expectedAnswerRevision:ready.answerRevision,reportId:ready.report!.id,conversationReferences:currentReferences(),idempotencyKey:'674-teacher-boundary'})
   assert.equal(submitted.reviewStatus,'PENDING')
