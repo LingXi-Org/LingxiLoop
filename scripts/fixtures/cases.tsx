@@ -12,8 +12,10 @@ import { casesApi } from '/src/features/cases/api'
 import '@fontsource-variable/inter'
 import '/src/styles/app.css'
 import '/src/styles/experience.css'
+import { instrumentCases } from './cases-benchmark'
 
 const params = new URLSearchParams(location.search)
+if (params.has('benchmark')) instrumentCases()
 const manager = params.has('manager')
 const companyId = params.get('company') || 'case-fixture'
 const sourceBody = `这节课的目标很简单：学生离开教室时，能说清 FlashAttention 省的是什么、为什么数值结果不变。难点在于，大部分学生对“显存带宽”没有直觉。所以我没有从公式开始，而是从一道估算题开始。
@@ -70,6 +72,10 @@ const published = new Map(records.map(record => [record.id, structuredClone(reco
 const response = (record, view) => ({ ...structuredClone(view === 'reader' ? published.get(record.id) : record), view })
 let listReads = 0
 casesApi.list = async (q, category, view = 'reader') => {
+  if (params.has('benchmark')) {
+    document.documentElement.dataset.caseRequests = String(Number(document.documentElement.dataset.caseRequests || 0) + 1)
+    await new Promise(resolve => setTimeout(resolve, 100))
+  }
   if (params.has('error')) throw new Error('fixture read failure')
   const available = records.filter(record => record.companyId === useAuth.getState().activeCompanyId && (view === 'manage' || record.status === 'published'))
   listReads += 1
@@ -111,6 +117,6 @@ useApp.setState({ view: 'cases', selectedConversationId: null, navigationPending
 const space = { projectId: 'fixture-project', courseId: 'fixture-course', companyId, title: 'agent基础', perspective: 'learner', canManage: manager }
 const spaces = { spaces: params.has('noCourse') ? [] : [space], activeSpace: params.has('noCourse') ? undefined : space,
   loading: false, error: '', pending: false, reload: async () => {}, select: async () => {} }
-createRoot(document.getElementById('root')!).render(<ThemeProvider attribute={['class', 'data-theme']} forcedTheme={params.get('theme') || 'light'}><TooltipProvider><DesktopApp learningSpaces={spaces} />
+createRoot(document.getElementById('root')!).render(<ThemeProvider attribute={['class', 'data-theme']} defaultTheme={params.get('theme') || 'light'} storageKey={`case-fixture-${params.get('theme') || 'light'}`} enableSystem={false}><TooltipProvider><DesktopApp learningSpaces={spaces} />
   {params.has('switchCompany') && <button style={{ position: 'fixed', top: 12, right: 24, zIndex: 100 }} onClick={() => useAuth.setState({ activeCompanyId: 'case-fixture-other' })}>切换验收组织</button>}
 </TooltipProvider></ThemeProvider>)

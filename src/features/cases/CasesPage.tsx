@@ -71,7 +71,7 @@ export function CasesPage() {
   const currentView = useRef(view)
   currentView.current = view
   const articleUrl = (next?: string, nextView = view) => caseArticleUrl(window.location.search, companyId, next, nextView)
-  const catalogue = caseCatalogue(list.items, Boolean(search || category), visibleCount)
+  const catalogue = caseCatalogue(list.items, { search, category, visibleCount })
   useEffect(() => { setVisibleCount(6) }, [search, category, view, companyId, userId])
   useEffect(() => { pageRoot.current?.querySelector('[data-page-scroll]')?.scrollTo(0, 0) }, [id, view, editing])
   useEffect(() => {
@@ -113,12 +113,10 @@ export function CasesPage() {
     const requestedCompany = new URLSearchParams(window.location.search).get('company')
     if (requestedCompany && requestedCompany !== companyId) { setLoading(false); setArticle(null); setList({ items: [], categories: [], canManage: false, view: currentView.current }); setError('此案例属于其他组织，当前账号无权访问。'); return }
     setLoading(true); setError(''); if (!editing) setArticle(null)
-    const timer = window.setTimeout(() => {
-      const request = id ? casesApi.detail(id, view, abort.signal).then(value => { if (current() && value.view === view) setArticle(value) }) : casesApi.list(search, category, view, abort.signal).then(value => { if (current() && value.view === view) setList(value) })
-      void request.catch(reason => { if (current()) { setError(userFacingError(reason, '案例暂时无法加载，请重试。')); if (!id) setList(value => ({ ...value, items: [] })) } }).finally(() => { if (current()) setLoading(false) })
-    }, id ? 0 : 200)
-    return () => { abort.abort(); window.clearTimeout(timer) }
-  }, [id, view, search, category, revision, companyId, userId])
+    const request = id ? casesApi.detail(id, view, abort.signal).then(value => { if (current() && value.view === view) setArticle(value) }) : casesApi.list('', '', view, abort.signal).then(value => { if (current() && value.view === view) setList(value) })
+    void request.catch(reason => { if (current()) { setError(userFacingError(reason, '案例暂时无法加载，请重试。')); if (!id) setList(value => ({ ...value, items: [] })) } }).finally(() => { if (current()) setLoading(false) })
+    return () => abort.abort()
+  }, [id, view, revision, companyId, userId])
   useEffect(() => { if (skipFocus.current) { skipFocus.current = false; return }; heading.current?.focus({ preventScroll: true }) }, [id])
   const canManage = article?.canManage ?? list.canManage
   const managing = canManageCaseView(view, canManage)
@@ -221,9 +219,9 @@ export function CasesPage() {
   const coverScope = `${userId ?? ''}:${companyId ?? ''}:${view}`
   const coverSources = id || editing ? article ? [article] : [] : list.items
   const { resume: refreshCoverStatus } = useCaseCoverPolling<CaseArticle | CaseList>({
-    scopeKey: JSON.stringify([coverScope, id, search, category, coverSources.map(item => [item.id, caseCoverIdentity(item.generatedCover)])]),
+    scopeKey: JSON.stringify([coverScope, id, coverSources.map(item => [item.id, caseCoverIdentity(item.generatedCover)])]),
     pending: !loading && !busy && coverSources.some(item => caseCoverPending(item.generatedCover)),
-    refresh: signal => id ? casesApi.detail(id, view, signal) : casesApi.list(search, category, view, signal),
+    refresh: signal => id ? casesApi.detail(id, view, signal) : casesApi.list('', '', view, signal),
     receive: value => {
       if (value.view !== view || currentView.current !== view || useAuth.getState().activeCompanyId !== companyId || useAuth.getState().user?.id !== userId) return false
       if ('items' in value) {
@@ -374,7 +372,7 @@ export function CasesPage() {
       </CaseReader> : !id ? <>
         <div data-case-grid className="case-grid">{catalogue.items.map(item => card(item))}</div>
         {catalogue.hasMore && <div className="case-load-more"><Button variant="outline" onClick={() => setVisibleCount(value => value + 6)}>加载更多</Button></div>}
-        {!list.items.length && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '没有找到匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : managing ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
+        {!catalogue.items.length && (search || category || !catalogue.featured) && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '下方列表没有匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : managing ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
       </> : null}
     </PageBody>
     </PageLayout>
