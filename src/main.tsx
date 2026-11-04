@@ -1,11 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/inter'
-import '@fontsource-variable/geist'
 import 'katex/dist/katex.min.css'
 import { AppThemeProvider } from './components/AppThemeProvider'
 import { BootShellRelease } from './components/WorkspaceSkeleton'
-import './styles/globals.css'
+import './styles/app.css'
 
 const root = createRoot(document.getElementById('root')!)
 

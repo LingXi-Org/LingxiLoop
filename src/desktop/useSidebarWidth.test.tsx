@@ -18,7 +18,7 @@ function withStorage(read: () => string | null) {
 }
 
 test('missing storage restores the existing default pixel width', () => {
-  assert.equal(withStorage(() => null), '<output>300</output>')
+  assert.equal(withStorage(() => null), '<output>280</output>')
 })
 test('a saved width keeps pixels and clamps both native Panel bounds', () => {
   assert.equal(withStorage(() => '340'), '<output>340</output>')
@@ -26,8 +26,8 @@ test('a saved width keeps pixels and clamps both native Panel bounds', () => {
   assert.equal(withStorage(() => '900'), '<output>360</output>')
 })
 test('non-finite persisted widths cannot enter the native layout', () => {
-  for (const value of ['NaN', 'Infinity', '-Infinity', 'not-a-number']) assert.equal(withStorage(() => value), '<output>300</output>')
+  for (const value of ['NaN', 'Infinity', '-Infinity', 'not-a-number']) assert.equal(withStorage(() => value), '<output>280</output>')
 })
 test('denied storage does not prevent the shell from opening', () => {
-  assert.equal(withStorage(() => { throw new Error('storage denied') }), '<output>300</output>')
+  assert.equal(withStorage(() => { throw new Error('storage denied') }), '<output>280</output>')
 })

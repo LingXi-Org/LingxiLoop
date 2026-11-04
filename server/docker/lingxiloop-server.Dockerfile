@@ -63,14 +63,17 @@ COPY server/build/web/package.json server/build/web/package-lock.json .npmrc ./
 RUN --mount=type=secret,id=npm_token \
     --mount=type=cache,id=lingxiloop-web-npm,target=/root/.npm,sharing=locked \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
-# The runtime renderer has its own source-only build: a CSS change never
-# enters this graph. CI selects target runtime after the static ingress handoff.
+# The runtime renderer builds its isolated editor theme and local fonts.
+# CI selects target runtime after the static ingress handoff.
 FROM web-deps AS visualize-build
 COPY third_party/zcode ./third_party/zcode
 COPY scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs scripts/build-design-editor.mjs scripts/build-design-layout.mjs scripts/design-copy.mjs ./scripts/
 COPY shared/artifact-math.ts shared/artifact-math-source.ts shared/artifact-math-loader.ts shared/artifact-recovery.ts shared/design-flow-size.ts ./shared/
 COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
 COPY third_party/baoyu-design/host/design-zh-CN.json third_party/baoyu-design/host/slides-zh-CN.json ./third_party/baoyu-design/host/
+COPY third_party/baoyu-design/host/design-theme.css ./third_party/baoyu-design/host/
+COPY src/styles/fonts.css ./src/styles/
+COPY public/fonts/mingli ./public/fonts/mingli
 RUN node scripts/build-visualize-runtime.mjs
 
 FROM web-deps AS slides-build
@@ -99,6 +102,7 @@ COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs scri
 COPY shared/artifact-math.ts shared/artifact-math-source.ts shared/artifact-math-loader.ts shared/artifact-recovery.ts shared/design-flow-size.ts ./shared/
 COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
 COPY third_party/baoyu-design/host/design-zh-CN.json third_party/baoyu-design/host/slides-zh-CN.json ./third_party/baoyu-design/host/
+COPY third_party/baoyu-design/host/design-theme.css ./third_party/baoyu-design/host/
 RUN npm run build
 
 # ─── stage 3: runtime ───────────────────────────────────────────────

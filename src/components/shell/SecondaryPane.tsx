@@ -17,7 +17,7 @@ export function SecondaryPane({ label, header, children, footer }: {
   const isMobile = useIsMobile()
   return (
     <aside aria-label={label} data-slot="sidebar" data-secondary-pane className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
-      <div className={cn('select-none flex h-16 min-w-0 shrink-0 items-center gap-2', isMobile ? 'px-3' : 'px-2')}>{header}</div>
+      <div className={cn('select-none flex h-14 min-w-0 shrink-0 items-center gap-2', isMobile ? 'px-3' : 'px-2')}>{header}</div>
       <div className={cn('min-h-0 flex-1 overflow-y-auto pb-3', isMobile ? 'px-3' : 'px-2')}>{children}</div>
       {footer ? <div className={cn('shrink-0 border-t border-[var(--im-divider-weak)] py-2', isMobile ? 'px-3' : 'px-2')}>{footer}</div> : null}
     </aside>

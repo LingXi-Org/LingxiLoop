@@ -3,6 +3,7 @@ import { useConversations } from '@/features/conversations/store'
 import { ConversationAvatar } from '@/im/ConversationList'
 import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
+import { useShellNavTrigger } from '@/components/shell/ShellNav'
 
 export function ConversationHeader({
   conversationId,
@@ -15,6 +16,7 @@ export function ConversationHeader({
   onBack?: () => void
   actions?: ReactNode
 }) {
+  const navTrigger = useShellNavTrigger()
   const conversation = useConversations((state) => state.list.find((item) => item.id === conversationId))
   if (!conversation) return null
 
@@ -23,10 +25,11 @@ export function ConversationHeader({
   return (
     <header
       className={cn(
-        'im-conversation-header select-none z-20 flex shrink-0 items-center border-b border-[var(--im-divider-weak)] bg-sidebar text-sidebar-foreground',
-        mobile ? 'min-h-16 gap-2 px-2' : 'min-h-16 gap-3 px-6',
+        'im-conversation-header select-none z-20 flex min-h-14 min-w-0 shrink-0 items-center bg-background text-foreground',
+        mobile ? 'gap-2 px-2' : 'gap-2 px-2.5',
       )}
     >
+      {!mobile && navTrigger}
       {onBack && (
         <Button
           type="button"
@@ -42,8 +45,9 @@ export function ConversationHeader({
         </Button>
       )}
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
-        <ConversationAvatar conversation={conversation} size={28} />
-        <h1 className="truncate font-heading text-base font-semibold text-foreground">{conversation.title}</h1>
+        <ConversationAvatar conversation={conversation} size={22} />
+        <h1 className="truncate font-heading text-sm font-semibold text-foreground">{conversation.title}</h1>
+        {conversation.subtitle && <span className="truncate text-xs text-muted-foreground max-sm:hidden">{conversation.subtitle}</span>}
       </div>
       {actions && <div className="ms-auto flex items-center gap-1">{actions}</div>}
     </header>

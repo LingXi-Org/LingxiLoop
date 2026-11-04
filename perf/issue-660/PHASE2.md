@@ -1,6 +1,9 @@
 # #660 follow-up: native persistence, real editors, and style invalidation
 
-This extends the same draft PR #662. #660 stays open: cold loading has not met its
+Historical measurements on the pre-integration #662 candidate. See
+[INTEGRATION.md](./INTEGRATION.md) for the minimal #664 conflict resolution and
+release handoff. The user has since authorized merging and production release;
+#660 stays open: cold loading has not met its
 50% goal, and the measurements do not establish every production/stall-free gate.
 Production remains exclusively with the parent's designated integrator.
 

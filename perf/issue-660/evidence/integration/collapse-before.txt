@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/LingxiLoop/.codex-tmp/issue-660/paused-investigation/collapse.py", line 19, in <module>
+    assert after==saved and page.evaluate('sidebarWrites()')==writes,{'expanded':saved,'collapsedStored':after,'writes':page.evaluate('sidebarWrites()')}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'expanded': '340', 'collapsedStored': '260', 'writes': 2}

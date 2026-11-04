@@ -24,11 +24,11 @@ with sync_playwright() as pw:
  page.set_viewport_size({'width':1000,'height':1000});page.wait_for_timeout(100)
  assert page.evaluate('sidebarWrites()')==1,'container resize is not a user separator change'
  page.evaluate('(k)=>localStorage.setItem(k,"not-a-number")',key);page.reload();handle.wait_for()
- assert abs(panel.bounding_box()['width']-300)<1
+ assert abs(panel.bounding_box()['width']-280)<1
  # Denied storage keeps the usable layout and keyboard control; no token/settings change.
  page.evaluate('()=>{Storage.prototype.setItem=function(){throw new DOMException("denied","SecurityError")};return true}')
  handle.focus();page.keyboard.press('ArrowRight');page.wait_for_timeout(50)
- assert panel.bounding_box()['width']>300 and not errors,errors
+ assert panel.bounding_box()['width']>280 and not errors,errors
  page.screenshot(path=str(out/'persistence.png'));browser.close()
 (out/'persistence.json').write_text(json.dumps({'dragWrites':count,'savedWidth':float(stored),'reloadRestored':True,'keyboard':True,'resizeDoesNotWrite':True,'malformedStorage':True,'deniedStorage':True,'errors':errors},indent=2))
 print((out/'persistence.json').read_text())

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react'
 import { CommandPalette } from '@/components/CommandPalette'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -16,7 +16,8 @@ import { CourseNav } from '@/components/shell/CourseNav'
 import { SlidesSidebarLayout } from '@/components/shell/SlidesSidebarLayout'
 import { moduleForView, rememberCourseView } from '@/components/shell/modules'
 import { RightPanelHeader } from '@/components/shell/RightPanel'
-import { ShellNavContext } from '@/components/shell/ShellNav'
+import { ShellNavContext, ShellNavTriggerContext } from '@/components/shell/ShellNav'
+import { PanelLeft } from 'lucide-react'
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { ConversationsPane } from '@/features/conversations/components/ConversationsPane'
 import { useConversations } from '@/features/conversations/store'
@@ -70,7 +71,9 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   const navigationError = useApp((state) => state.navigationError)
   const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const { width: sidebarWidth, panelRef: sidebarPanelRef, onLayoutChanged: handleSidebarLayoutChanged } = useSidebarWidth()
+  const { width: sidebarWidth, panelRef: sidebarPanel, onLayoutChanged: handleSidebarLayoutChanged, resetWidth: resetSidebarWidth } = useSidebarWidth()
+  const designOpen = surface?.kind === 'design'
+  const [sidebarOpen, setSidebarOpen] = useState(!designOpen)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const pageRef = useEntrance(`${selectedWorkspaceId}:${view}`)
 
@@ -119,6 +122,12 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
 
   const dashboardOpen = view !== 'conversations'
   const shellModule = moduleForView(view)
+  useLayoutEffect(() => { setSidebarOpen(!designOpen) }, [designOpen, selectedConversationId])
+  useLayoutEffect(() => {
+    if (isMobile) return
+    if (shellModule === 'chat' && !sidebarOpen) sidebarPanel.current?.collapse()
+    else sidebarPanel.current?.expand()
+  }, [sidebarOpen, shellModule, isMobile, sidebarPanel])
   useEffect(() => { rememberCourseView(view) }, [view])
   useEffect(() => { if (!isMobile) setMobileNavOpen(false) }, [isMobile])
   const mobileNav = isMobile && shellModule !== 'chat' ? () => setMobileNavOpen(true) : null
@@ -185,6 +194,9 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
         {navigationError && <Alert variant="destructive" className="mb-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
         <div data-ui-page={view} data-shell-module={shellModule} aria-busy={navigationPending || undefined} className={`relative ${isMobile ? '' : 'mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
           <ShellNavContext.Provider value={mobileNav}>
+          <ShellNavTriggerContext.Provider value={!isMobile && shellModule === 'chat' ? <Button type="button" variant="ghost" size="icon"
+            aria-label={sidebarOpen ? '收起会话列表' : '展开会话列表'} aria-expanded={sidebarOpen} aria-controls="conversations"
+            onClick={() => setSidebarOpen(value => !value)} className="shrink-0 text-muted-foreground"><PanelLeft className="size-4" /></Button> : null}>
           <div key={`conversation:${scope}`} style={shellModule === 'slides' || directPage ? { position: 'absolute', inset: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined} inert={shellModule === 'slides' || directPage} aria-hidden={shellModule === 'slides' || directPage} className="h-full min-h-0 min-w-0">
           <ResizablePanelGroup
             id="desktop-conversation-layout"
@@ -193,12 +205,16 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
             data-mobile-conversation-page={isMobile ? mobileChatOpen ? 'chat' : 'list' : undefined}
             onLayoutChanged={handleSidebarLayoutChanged}
           >
-            <ResizablePanel id="conversations" panelRef={sidebarPanelRef} data-shell-panel-hidden={isMobile && mobileChatOpen} defaultSize={sidebarWidth} minSize={isMobile ? 0 : LEFT_COLUMN_MIN} maxSize={isMobile ? '100%' : LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
+            <ResizablePanel id="conversations" panelRef={sidebarPanel} collapsible={!isMobile && shellModule === 'chat'} collapsedSize={0}
+              onResize={size => { if (!isMobile && shellModule === 'chat') setSidebarOpen(size.inPixels > 0) }}
+              aria-hidden={!isMobile && shellModule === 'chat' && !sidebarOpen} inert={!isMobile && shellModule === 'chat' && !sidebarOpen}
+              data-shell-panel-hidden={isMobile && mobileChatOpen} defaultSize={sidebarWidth} minSize={isMobile ? 0 : LEFT_COLUMN_MIN} maxSize={isMobile ? '100%' : LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
               <div className="flex h-full min-h-0 flex-col bg-sidebar" data-secondary-sidebar={shellModule}>
                 {secondary}
               </div>
             </ResizablePanel>
-            <ResizableHandle data-shell-panel-hidden={isMobile} withHandle className="desktop-panel-resize-handle" aria-label="调整侧边栏宽度" title="拖动调整侧边栏宽度，双击恢复默认" />
+            <ResizableHandle data-shell-panel-hidden={isMobile || shellModule === 'chat' && !sidebarOpen} withHandle className="desktop-panel-resize-handle" aria-label="调整侧边栏宽度" title="拖动调整侧边栏宽度，双击恢复默认"
+              onDoubleClick={resetSidebarWidth} />
             <ResizablePanel id="conversation-workspace" data-shell-panel-hidden={isMobile && !mobileChatOpen} minSize={isMobile ? 0 : MIDDLE_COLUMN_MIN} className="relative min-h-0 min-w-0">
               <div style={!chatActive ? { position: 'absolute', inset: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined} aria-hidden={!chatActive} inert={!chatActive} className="h-full min-h-0 min-w-0">{chatPage}</div>
               {!chatActive && !directPage && animatedPage}
@@ -210,6 +226,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
           </div>}
           {shellModule === 'slides' && !slidesActive && animatedPage}
           {directPage && shellModule !== 'slides' && animatedPage}
+          </ShellNavTriggerContext.Provider>
           </ShellNavContext.Provider>
         </div>
       </div>

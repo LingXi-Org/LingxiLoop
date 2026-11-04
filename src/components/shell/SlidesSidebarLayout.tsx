@@ -9,7 +9,7 @@ function SlidesSidebarContent({ children, width, onResize, active }: { children:
   useEffect(() => { if (!active) setOpenMobile(false) }, [active, setOpenMobile])
   return <>
     <Sidebar side="left" className="md:absolute md:h-full" mobileTitle="演示文稿导航" mobileDescription="浏览当前工作区的演示文稿。">
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-3">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-3">
         <span className="text-sm font-medium">演示文稿</span>
         <SidebarTrigger aria-label="收起演示文稿导航" className="size-11" />
       </div>
@@ -26,7 +26,7 @@ function SlidesSidebarContent({ children, width, onResize, active }: { children:
 
 /** Mounted once per Slides entry/project. Content updates never reset a manual toggle. */
 export function SlidesSidebarLayout({ children, active = true }: { children: ReactNode; active?: boolean }) {
-  const [width, setWidth] = useState(300)
+  const [width, setWidth] = useState(280)
   return <SidebarProvider defaultOpen={false} className="relative h-full min-h-0 overflow-hidden" style={{ '--sidebar-width': `${width}px` } as React.CSSProperties}>
     <SlidesSidebarContent active={active} width={width} onResize={setWidth}>{children}</SlidesSidebarContent>
   </SidebarProvider>
