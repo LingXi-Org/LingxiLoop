@@ -184,7 +184,8 @@ test('a sent editor comment is delivered to the dedicated room through the real 
   assert.equal(snapshot.threads[0]?.agent?.status, 'delivered')
 })
 
-for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14→10→1→1→1 Slides writes and delivers once' : 'authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
+for (const mode of ['single','chained','conflict']) test(mode === 'conflict' ? 'formal25 worker receives actionable CAS refresh diagnostics without changing saved files' : mode === 'chained' ? 'formal25 worker verifies 14→10→1→1→1 Slides writes and delivers once' : 'authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
+  const chained = mode === 'chained'
   const created = await request(`/projects/${projectId}/slides`, 'POST', { title: 'Model flow' })
   assert.equal(created.status, 201)
   const deck = await created.json() as { id: string }
@@ -219,6 +220,7 @@ for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14�
     { name: 'skills__load', args: { name, version, hash: skillHash } },
     { name: 'slides__read_file', args: { artifactId: deck.id, path } },
     ...(chained ? [{name:'slides__read_file',args:{artifactId:deck.id,path:'project/deck.json'}}] : []),
+    ...(mode === 'conflict' ? [{name:'slides__write_files',args:{artifactId:deck.id,files:{[path]:{content:'Must not be saved',ifMatch:'0'.repeat(64)}}}}] : []),
     ...writes,
     { name: 'slides__read_file', args: { artifactId: deck.id, path } },
     { name: 'slides__current', args: { artifactId: deck.id } },
@@ -265,6 +267,14 @@ for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14�
     assert.deepEqual(providerErrors, [])
     assert.equal((await control.readRun(run))?.status, 'succeeded')
     assert.equal(issued, calls.length)
+    if(mode === 'conflict'){
+      const failed = await pool.query("SELECT result FROM lingxios.agent_action_ledger ledger JOIN lingxios.agent_action_intents intent USING(idempotency_key) WHERE intent.intent->>'workId'=$1 AND result->>'ok'='false'",[run.runId])
+      assert.equal(failed.rows.length,1)
+      assert.equal(failed.rows[0].result.code,'version_conflict')
+      assert.equal(failed.rows[0].result.executionState,'no_effect')
+      assert.equal(failed.rows[0].result.diagnostics.category,'version')
+      assert.equal(failed.rows[0].result.diagnostics.recovery,'refresh')
+    }
     if(chained){
       const receipts=await pool.query("SELECT (SELECT count(*)::int FROM jsonb_object_keys(intent.intent->'action'->'args'->'files')) AS count FROM lingxios.agent_action_intents intent WHERE intent.intent->>'workId'=$1 AND intent.intent->'action'->>'action'='slides.write_files' ORDER BY intent.recorded_at,intent.idempotency_key",[run.runId])
       assert.deepEqual(receipts.rows.map(row=>row.count),[14,10,1,1,1])

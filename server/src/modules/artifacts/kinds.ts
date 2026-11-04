@@ -58,6 +58,17 @@ const themeRecords = (at: string) => themes.map(theme => ({
   namespace: theme.namespace, title: theme.title, artifact: theme.source, version: theme.version, copiedAt: at,
 }))
 const themeResources = Object.fromEntries(themes.map(theme => [`project/ds/${theme.namespace}/tokens.json`, theme.tokens]))
+// The source style uses variable weight 430; editable Slides HTML accepts whole
+// hundreds. Project new Slides authoring resources to 400 at the host boundary.
+// Keep the pinned source, Design resources and already saved decks untouched.
+const slidesBuiltinTokens = structuredClone(slidesBuiltin.tokens)
+for (const group of slidesBuiltinTokens.type.groups) for (const style of group.styles) {
+  if (style.fontWeight === 430) style.fontWeight = 400
+}
+const slidesDefaultStyle = structuredClone(slidesBuiltin.style)
+for (const style of slidesDefaultStyle) style.text = style.text.replace(/,430,/g, ',400,')
+const slidesThemeResources = { ...themeResources, 'project/ds/slides-builtin/tokens.json': slidesBuiltinTokens }
+
 
 function isDesignFile(rel: string) {
   const parts = rel.split('/')
@@ -139,8 +150,8 @@ export const ARTIFACT_KIND_DEFINITIONS: Record<ArtifactKind, ArtifactKindDefinit
       return slideId && file && exists(file) ? { file, slide, slideId } : { file: 'project/deck.json', slide }
     },
     initialIndex: (title, at) => ({ v: 4, createdOnFiles: { v: 1, at }, lists: 'css', title, order: [],
-      sections: {}, faces: {}, style: structuredClone(slidesBuiltin.style), designSystems: themeRecords(at) }),
-    initialResources: themeResources,
+      sections: {}, faces: {}, style: structuredClone(slidesDefaultStyle), designSystems: themeRecords(at) }),
+    initialResources: slidesThemeResources,
   },
 }
 

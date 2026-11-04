@@ -117,7 +117,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
     const outcome = await native.api.publishArtifactFiles({ ...actor(context), artifactId: artifact.id, files })
     if (outcome.status !== 200) {
       throw new NoEffectError(outcome.body.message ?? `${outcome.body.code}: ${JSON.stringify(outcome.body.paths ?? [])}`,
-        outcome.status === 409 ? 'conflict' : outcome.status === 413 ? 'too_large' : 'invalid_input')
+        outcome.status === 409 ? 'version_conflict' : outcome.status === 413 ? 'too_large' : 'invalid_input')
     }
     return result(context, native, { version: outcome.body.version, seq: outcome.body.seq, shas: outcome.body.shas }, artifact)
   }
@@ -313,7 +313,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
       return { ok: true, value: { result: snapshot, artifactId: snapshot.id } }
     } }))
   if (kind === 'slides') tools.push(
-    nativeTool('slides.design_systems', agentArtifactSchemas.design_systems, { description: 'List this deck\'s installed design systems and their actual files. Use read_file to inspect tokens, styles and templates.', effect: 'read', approval: false, authorize,
+    nativeTool('slides.design_systems', agentArtifactSchemas.design_systems, { description: 'List this deck\'s installed design systems and their actual files. Requires an existing deck: call slides.current first and slides.create if none exists. Use read_file to inspect tokens, styles and templates.', effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await required(context, input), api = application(context).api
         const index = await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/deck.json')
@@ -325,13 +325,13 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
       async execute(context, input) {
         const artifact = await required(context, input), api = application(context).api
         const index = await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/deck.json')
-        if (!index || index.sha256 !== input.ifMatch) throw new NoEffectError('Read the current deck.json before installing a design system.', 'conflict')
+        if (!index || index.sha256 !== input.ifMatch) throw new NoEffectError('Read the current deck.json before installing a design system.', 'version_conflict')
         const metadata = JSON.parse(index.bytes.toString('utf8')) as Record<string, unknown>
         const systems = Array.isArray(metadata.designSystems) ? metadata.designSystems : Object.values((metadata.designSystems ?? {}) as object)
         const prefix = `project/ds/${input.namespace}/`
         const current = await listing(context.database as Queryable, artifact.id)
         if (systems.some(system => system?.namespace === input.namespace) || Object.keys(current.files).some(path => path.startsWith(prefix))) {
-          throw new NoEffectError('This namespace already exists; inspect and edit its files with ifMatch.', 'conflict')
+          throw new NoEffectError('This namespace already exists; inspect and edit its files with ifMatch.', 'version_conflict')
         }
         if (!input.files['tokens.json']) throw new NoEffectError('tokens.json is required; read_reference ds-format.md describes the format.', 'invalid_input')
         try { JSON.parse(input.files['tokens.json']) } catch { throw new NoEffectError('tokens.json must contain valid JSON.', 'invalid_input') }
