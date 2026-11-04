@@ -1,84 +1,115 @@
-# Visualize in LingxiLoop Web (#193)
+# Historical Visualize recovery (#670)
 
-The replacement for retired OpenUI uses ZCode `0a1fc56d279fd1001f78387bd81aec1c26767411`. LingxiLoop retains its chat shell, published LingxiOS runtime, durable IM, authorization and shared model ledger. This describes implemented wiring and required verification, not a claim that all acceptance gates have passed.
+Visualize is retired. New explanations use the editable Design canvas. The
+Visualize skill, native tools, guest iframe/bridge, HTML resources, interactive
+state writes and authoring/export runtime are removed. Old runtime routes and
+hashed resources return HTTP 410, including retained static hashes. No current
+message mounts or executes the old frontend.
 
-The complete 24-file skill is unchanged in [`third_party/zcode/skills/visualize`](../third_party/zcode/skills/visualize). The directory-external Tweak runtime, source archive, Apache-2.0 notice, vendor licenses and file hashes are described in the [provenance README](../third_party/zcode/README.md). All host adaptation is outside the skill directory. See also the [upstream architecture audit](../third_party/zcode/ARCHITECTURE-REVIEW.md) and [frontend port review](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/issue-193/FRONTEND-PORT-REVIEW.md).
+Historical messages keep their body and passive references. Their archived card
+explains that interactions are unavailable and offers an authenticated source
+archive. `GET /api/im/channels/:id/visualize/archive` requires the historical
+`path` and delivered `sourceMessageId`. It returns a JSON attachment, never an
+executable HTML page. The archive contains the original message body and source
+identity, document HTML as an inert JSON string with hash/version/provenance,
+the caller's own saved state and page metadata. Page metadata is bounded to
+1,000 entries with explicit truncation. Other users' state, page tokens and
+interaction grants are excluded.
 
-## Generate, save and reference
+Archive acquisition rechecks current company, conversation, project and teacher
+room access and the original assistant/run/literal-reference binding. A revoked
+or missing original source cannot be represented as a recoverable document.
+This export is source recovery for inspection and manual migration; it does not
+convert old interactions into an editable Design document or claim fidelity of
+an automatic migration.
 
-`server/src/agent-runtime/visualize-skill.ts` registers the original SKILL.md as a published LingxiOS `SkillDefinition`. The product supplies `visualize.read_reference`, `visualize.save`, `visualize.read` and `visualize.export` through its native tool registry. `skills.load` loads the complete original body; the reference tool reads an explicit skill-relative allowlist. No shell or arbitrary file-read capability is exposed. Product context supplies the authorized output directory and adaptation instructions; internal/canvas work does not acquire this chat capability.
+PostgreSQL `im_visualize_documents`, `im_visualize_states`, `im_visualize_pages`
+and `im_visualize_gestures` remain intact. Existing migrations, including
+`0046_visualize.sql`, are immutable; this retirement adds no deletion or DDL.
+Operations must preserve these tables and the underlying artwork in backups.
+Running old executables against the archive is not a supported recovery path.
+Rollback still follows [RELEASE.md](RELEASE.md); never roll back schema or erase
+persistent content to restore an older binary.
 
-The model saves literal HTML fragments and reads them back. Inline save/hosting accepts at most 5,000,000 UTF-8 bytes. The server checks current conversation authorization, principal/run/agent binding, author ownership and a lowercase hyphenated filename. The output directory derives from company and conversation under `AGENT_OS_HOMES_ROOT/visualize` (using the existing homes default when unset). Files are executor mirrors; PostgreSQL `im_visualize_documents` owns source HTML, hash and version. A model reference never grants arbitrary filesystem access.
+The only retained source adaptation is a passive directive parser under `shared/`.
+Its Apache-2.0 license and fixed-commit provenance live in
+[`third_party/visualize-compat`](../third_party/visualize-compat/README.md). The
+full original implementation remains available in Git history at
+[`91f0ba03`](https://github.com/LingXi-Org/LingxiLoop/tree/91f0ba03/third_party/zcode),
+not in production packages.
 
-For interactive packet windows, `visualize.sliding_window` supplies a bounded
-send/ack demo with next, autoplay, reset and size controls. One state produces
-packet colors, range text and the selected DOM elements. Its outline measures
-actual element edges in its own coordinate system; widths and gaps are not
-duplicated as arithmetic constants. The reusable explicit binding and contract
-are available through `visualize.read_reference` at `host/range-overlay.js` and
-`host/range-overlay.md`, outside the immutable upstream skill tree. The helper
-is embedded only when chosen; there is no arbitrary-HTML rewrite. Existing
-`visualize.chart` and `visualize.diagram` are static and do not cover this
-interaction. See the [failure model](visualize-range-failure-model.md).
+Shared formula rendering remains under `shared/artifact-math*` and the Design
+and Slides owners. `buildArtifactMath()` returns bytes to the owning editor;
+it no longer writes a Visualize directory. Design packages its offline renderer,
+installed KaTeX fonts and online math loader under its own hashed assets; Slides
+retains its separate formula compiler/export/font handling. Build Design directly
+with `npm run build:design-editor`; `npm run build` does that before the web SPA.
 
-This supported path does **not** modify historical saved fragments. A reported
-old component still needs its authorized original HTML and a targeted repair;
-passing synthetic geometry tests is not evidence that that old component was
-fixed. The browser regression is `e2e.visualize-window.config.ts` and stores
-independent packet/outline rectangle comparisons plus synthetic screenshots.
+Focused checks include the retained archive/parser/UI tests, production image
+and CI contracts, Worker retirement routing, Design/Slides editor packaging,
+shared math rendering and export tests. Historical browser evidence records the
+version it actually tested and does not qualify the current release. Use the
+current issue's evidence and [release procedure](RELEASE.md) for acceptance.
 
-Final assistant text uses the actual returned path:
+## In-flight runs and release gate
 
-```text
-::visualize{"path":"/authorized/output/chart.html","mode":"wide"}
+The native SDK pins each admitted run to its harness hash. This release changes
+that harness. A previously admitted run cannot transparently resume in the new
+Worker: the formal context loader rejects it with `harness version mismatch;
+resume with the pinned deployment or drain the old run`. Never rewrite the
+stored pin, add a compatibility executor, or delete historical records to pass
+this boundary.
+
+The designated sole production integrator must first stop new admission using
+the existing release controls and drain affected `queued`, `leased` and `waiting`
+runs on their pinned deployment. A waiting run requires its normal authorized
+continuation or an explicitly authorized cancellation; it must not be silently
+discarded. Because the public run projection does not expose harness hashes,
+the conservative gate is zero nonterminal runs across the deployment before
+cutover. Keep admission held until that zero inventory is recorded and the
+new compatible Web/API and Workers are ready. If draining cannot finish, the
+release remains blocked on the old compatible deployment.
+
+For a read-only inventory, sign into the existing **platform** administrator
+gateway and run this snippet in its browser console. It uses the current
+authenticated session, follows every page, emits counts and run IDs only, and
+makes no state changes. Do not substitute a company-scoped account or a 24-hour
+filter: both can omit affected runs. An HTTP error or pagination limit blocks
+the gate; never treat an incomplete inventory as zero.
+
+```js
+const inventory = { checkedAt: new Date().toISOString(), counts: {}, runs: [] }
+for (const status of ['queued', 'leased', 'waiting']) {
+  let cursor
+  inventory.counts[status] = 0
+  do {
+    const query = new URLSearchParams({ status, limit: '100', sort: 'id' })
+    if (cursor) query.set('cursor', cursor)
+    const response = await fetch(`/api/control/platform/resources/agent-runs?${query}`, {
+      credentials: 'include', headers: { accept: 'application/json' },
+    })
+    if (!response.ok) throw new Error(`Incomplete retirement inventory: HTTP ${response.status}`)
+    const page = await response.json()
+    if (!Array.isArray(page.data)) throw new Error('Invalid retirement inventory response')
+    for (const run of page.data) {
+      if (run.status !== status) throw new Error('Run inventory changed; repeat after admission is held')
+      inventory.runs.push({ id: run.id, status, requestVersion: run.requestVersion })
+      inventory.counts[status]++
+    }
+    cursor = page.nextCursor
+  } while (cursor)
+}
+inventory.clear = inventory.runs.length === 0
+console.log(JSON.stringify(inventory, null, 2))
 ```
 
-The upstream parser also accepts its Unicode and key=value forms. Code examples remain inert, incomplete/streaming messages do not mount a guest, and completed references retain their original offsets. Optional `wide` is preserved; at this pinned commit normal/wide cards both fill the conversation's content width. Citation spans cannot intersect the directive. `VisualizeText` inserts the upstream message renderer into the existing assistant-ui surface while ordinary text uses the current Markdown component.
-
-Page creation validates the delivered assistant message, matching reference, agent and run. The server issues random page ID/capability values and stores the capability hash with company, project, conversation, user, source message, document version, instance key and expiry. Rewriting a document invalidates older page versions; replacement of an instance revokes its predecessor. There is no conversion to OpenUI DSL or legacy message adapter.
-
-## Web host and presentation
-
-The port retains upstream card, Tweak panel, Dialog/Button/Textarea, parser, Tweak registry and retained-page manager. Import paths, product scope and host injection differ; the source review records these changes.
-
-`web/document.ts` builds an opaque-origin iframe with `sandbox="allow-scripts"`. Product credentials and authenticated page capabilities stay outside the guest. Authorized fixed resources are hash-checked and served no-store. `scripts/build-visualize-runtime.mjs` bundles unchanged desktop `genUi.ts`, shared protocol and Tweak into `server/assets/visualize-runtime/gen-ui.js` and records source/output hashes.
-
-Assembly preserves CSS/initial state/bridge before author scripts, and the full `visualize.html` inner kit after the fragment. Calendar is inserted when used. Fixed vendor scripts are replaced with bundled source; CSP constrains other resources and denies connections, nested frames, objects, forms and base-URL changes. D3 remains on demand. The Web host uses `Element.moveBefore` and a popover to retain the same iframe across inline/expanded anchors. Browser support for this retained-move mechanism is a real compatibility requirement.
-
-The inline toolbar is inset at the top right of a rounded, clipped card (#213/#217). The expanded toolbar and Dialog geometry remain, including focus return, Escape, backdrop and parameter panel below content. Owner state supplies grouped sliders/colors/toggles/selects, reset, original preview and submission. Carousel behavior comes from the unchanged inner kit: variants remain in the DOM and toggle `hidden`, preserving each variant's local inputs. After full guest eviction, only authored widgetState is durable; arbitrary DOM/JS state is not automatically restored.
-
-Theme tokens are scoped under `.zcode-visualize` so the chat shell stays LingxiLoop's. Root light/dark changes travel through the original HostContext mechanism. The extracted host CSS, fonts, sizes and portal tokens need independent comparison against complete upstream styles. No separate theme selector or export button is added.
-
-Copy image currently uses a private bootstrap channel, `html-to-image` and the browser Clipboard API. This is a necessary implementation difference from Electron native `capturePage`; exact image fidelity is not established by reusing the card. Crop, DPR, fonts, canvas/SVG and clipboard permission behavior need dedicated evidence. The bootstrap precedes author code and captures a private port/native event listeners; the page receives no generic capture or tool endpoint.
-
-## State, follow-up and authorization
-
-The public guest API remains `window.zcode.widgetState`, `setWidgetState`, `sendFollowUpMessage` and `openExternal({href})`. Widget state is an upstream-validated replacement snapshot `{modelContent, privateContent}` with a 16KiB JSON bound. PostgreSQL `im_visualize_states` isolates company/conversation/path/user rows and retains up to 100 paths per personal conversation scope. SQL selects only modelContent; `visualize-state-context.ts` uses the upstream builder for the path-sorted 100-entry/64KiB escaped untrusted context. No privateContent enters it. The Web host uses state revisions, scoped BroadcastChannel invalidation, authorized reads and focus/online/10-second visible-page refresh. Concurrent-tab/late-read/save ordering remains an execution gate.
-
-State saves do not start an Agent turn. Follow-up waits for saves, checks the active visible page and session binding, and requires a trusted gesture or the editable host confirmation dialog. The server mints expiring, one-use gesture tokens for live pages and consumes them transactionally. A guest boolean or fabricated public RPC frame is not a trusted gesture. Product/session/page credentials are never placed in the guest.
-
-Follow-up uses the existing durable `acceptUserMessage` path and shared runtime/ledger. An idempotency key yields a stable client nonce and acceptance record; uncertain delivery is reconciled rather than resent blindly. Agent targeting derives from persisted document provenance. External open accepts HTTP(S), validates page and gesture, and runs in the viewing browser; it is not a remote command or model request.
-
-Routes under `/api/im/channels/:id/visualize` check conversation permission, current human membership, teacher-room access and requested-project matching. Page methods additionally enforce company/user/project, source version, token hash, revocation and expiry. Resources/state/follow-up/external opening each revalidate their boundary. Generic IM ingress rejects forged Visualize follow-up metadata; signed callback checks remain in their existing owners.
-
-The retained-page manager keeps upstream limits of 30 tasks/64 active pages and five-minute hidden-page suspension. Visible/busy pages are not eviction candidates. The Web hook now clears owners on authentication/company/workspace changes, releases service-cache entries with owners and listens for task removal signaled by authorization/not-found refresh failures. These integrations, pending teardown and deleted conversations still require integrated tests. The server's additional 64-page per-company/user limit is distinct from the browser's window-level capacity.
-
-## Export and retained historical data
-
-When explicitly requested, `visualize.export` reads the authorized document and invokes original `render.py` with temporary input/output paths, cancellation, timeout and `PYTHONDONTWRITEBYTECODE=1`. The resulting standalone HTML is delivered through LingxiOS `createArtifact`. The unchanged exporter embeds vendor scripts; generated content with host-only follow-up/openExternal calls must follow the upstream export workflow. A canned export alone does not establish real-model delivery.
-
-Standalone export has a separate maximum of 1,000,000 input-fragment bytes, enforced by the unchanged upstream `render.py` and checked by the product adapter. Larger fragments that are valid for inline hosting must be simplified before export, as the tool description explains. This limit applies to the input fragment, not the final HTML containing embedded assets; it is not raised to the inline 5 MB limit.
-
-Additive `0046_visualize.sql` creates document, personal state, page and gesture tables. Existing `im_ui_*` rows remain intact; `0033_interactive_ui.sql` is unchanged. No old rows are converted or deleted. This source change does not authorize production deployment or establish that 0046 is applied anywhere. Historical reports remain in [`artifacts/interactive-ui`](../artifacts/interactive-ui); the [OpenUI ADR](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/adr/issue-111-openui-m0.md) remains a superseded historical record.
-
-## Verification
-
-Run `npm run verify:visualize`, `npm run build` and `npm run server:typecheck` for source and packaging changes. The verifier preserves pinned upstream file hashes and licenses.
-
-With a dedicated disposable test database and Redis, run the retained owning checks:
-
-```sh
-npm run test:integration -- --file visualize-delivery.test.ts --file visualize-quality-contract.test.ts
-```
-
-Historical browser fixtures and acceptance reports are archived in [the pre-cleanup tree](https://github.com/LingXi-Org/LingxiLoop/tree/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/e2e/visualize). Past results do not qualify the current release; deployment still requires the controller receipts and probes in [RELEASE.md](RELEASE.md).
+The native regression in
+`server/src/__integration__/runtime-retired-visualize.test.ts` persists a real
+historical metadata-only activation, disconnects before its acknowledgment is
+journaled, and reconnects the current control plane under the original fenced
+lease. It proves the harness mismatch blocks context loading and leaves body,
+source and saved state intact. A separate explicit trusted `HostPort` candidate
+verification proves the removed registry marks the activation unavailable;
+only an honest retirement notice can commit `unsupported` with a `partial`
+outcome. This is a native boundary test, not an automatic migration or resume
+feature. The production release gate remains the required drain above.

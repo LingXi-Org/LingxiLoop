@@ -73,16 +73,15 @@ jobs:
               - 'workers/web-static/**'
               - 'shared/artifact-editor-origin.ts'
               - 'shared/slides-editor-context.ts'
-              - 'shared/visualize-public-resources.ts'
+              - 'shared/retired-visualize.ts'
+              - 'shared/assistant-directive-parser.ts'
               - 'shared/artifact-math.ts'
               - 'shared/artifact-math-source.ts'
               - 'shared/design-flow-size.ts'
-              - 'third_party/zcode/**'
+              - 'third_party/visualize-compat/**'
               - 'third_party/assistant-ui/streaming-text/**'
               - 'third_party/assistant-ui-elements/**'
               - 'third_party/react-chat-elements/reply-message/**'
-              - 'scripts/verify-zcode-visualize.mjs'
-              - 'scripts/build-visualize-runtime.mjs'
               - 'scripts/build-artifact-math.mjs'
               - 'scripts/build-design-editor.mjs'
               - 'scripts/build-design-layout.mjs'
@@ -136,14 +135,13 @@ jobs:
               - 'public/fonts/mingli/**'
               - 'shared/artifact-editor-origin.ts'
               - 'shared/slides-editor-context.ts'
-              - 'shared/visualize-public-resources.ts'
+              - 'shared/retired-visualize.ts'
+              - 'shared/assistant-directive-parser.ts'
               - 'shared/artifact-math.ts'
               - 'shared/artifact-math-source.ts'
               - 'shared/design-flow-size.ts'
-              - 'third_party/zcode/**'
               - 'third_party/baoyu-design/**'
-              - 'scripts/verify-zcode-visualize.mjs'
-              - 'scripts/build-visualize-runtime.mjs'
+              - 'third_party/visualize-compat/**'
               - 'scripts/build-artifact-math.mjs'
               - 'scripts/artifact-math.test.mjs'
               - 'scripts/build-slides-editor.mjs'
@@ -181,9 +179,6 @@ jobs:
               - 'src/features/cases/cover-vm/program.ts'
               - 'src/features/cases/cover-vm/guest-source.ts'
               - 'src/features/cases/cover-vm/svg.ts'
-              - 'src/features/chat/visualize/zcode/shared/gen-ui/**'
-              - 'src/features/chat/visualize/zcode/gen-ui/domain/**'
-              - 'src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts'
             integration_tests:
               - 'server/src/__integration__/*.test.ts'
             integration_runner:
@@ -422,7 +417,7 @@ jobs:
       - run: node server/scripts/scoped-dependencies.mjs && node server/scripts/install-scoped-dependencies.mjs integration
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-      - run: npm run verify:visualize && npm run build:visualize-runtime && node --test scripts/slides-editor.test.mjs scripts/artifact-math.test.mjs scripts/design-editor.test.mjs
+      - run: npm run build:design-editor && node --test scripts/slides-editor.test.mjs scripts/artifact-math.test.mjs scripts/design-editor.test.mjs
       - run: node --test server/scripts/bootstrap-runtime-patch-test-db.test.mjs && node server/scripts/bootstrap-runtime-patch-test-db.mjs
         env:
           NODE_ENV: test

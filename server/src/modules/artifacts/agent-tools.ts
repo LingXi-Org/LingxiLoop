@@ -25,7 +25,7 @@ import { slideEditingContext } from './slides-workspace.js'
 type Control = Parameters<typeof createArtifactExecution>[0]
 const reportMethods = { submit_report: 'specialist', submit_verification: 'verifier' } as const
 /** Tools that read, or only change the files and comments any member may edit. */
-const READ_METHODS = new Set(['current', 'available_agents', 'read_file', 'check', 'read_reference', 'comments', 'design_systems'])
+const READ_METHODS = new Set(['plan_explanation', 'current', 'available_agents', 'read_file', 'check', 'read_reference', 'comments', 'design_systems'])
 const WORKSPACE_METHODS = new Set(['stop_workspace', 'stop_assignment', 'submit_report', 'submit_verification'])
 const DESIGN_FILE_JSON = ' Native arguments are JSON. Encode content as a JSON string: double quotes, backslashes and line breaks must be escaped so JSON decoding recovers the exact file text. Field-encoding example only: '
   + JSON.stringify({ content: '<div title="QK" data-demo="a\\b">\nQK\n</div>' })
@@ -171,6 +171,22 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
 
   const label = kind === 'design' ? 'Design canvas' : 'Slides deck'
   const tools: ToolDefinition[] = [
+    ...(kind === 'design' ? [nativeTool('design.plan_explanation', z.object({ delivery: z.enum(['canvas', 'text', 'other']) }).strict(), {
+      description: 'Choose the response surface from the meaning of the current human request before answering. Choose canvas for an introduction, connected concepts, mechanisms, processes, relationships, comparisons, or another broad/complex explanation that benefits from readable visual decomposition, even without canvas keywords. Choose text for greetings, direct facts or explicit text-only requests. Choose other when the person requested a different deliverable or an operation rather than an explanation. This records a semantic decision only: it neither creates content nor proves delivery.',
+      effect: 'read', approval: false, authorize,
+      async execute(context, input) {
+        await scope(context, {})
+        return { ok: true, value: { delivery: input.delivery } }
+      },
+    })] : []),
+    ...(kind === 'design' ? [nativeTool('design.ensure', agentArtifactSchemas.current, {
+      description: 'Initialize this conversation’s single editable Design canvas if design.current returned null; otherwise reuse its existing canvas without replacing files. Returns the actual artifact and project files with sha256. Requires current artifact write authorization.',
+      effect: 'transaction', approval: false, authorize,
+      async execute(context, input) {
+        const artifact = await required(context, input), native = application(context)
+        return result(context, native, await native.api.getArtifactSnapshot(context.work.tenantId, artifact.id), artifact)
+      }, verify,
+    })] : []),
     nativeTool(`${kind}.current`, agentArtifactSchemas.current, { description: `Read the ${label} of this conversation: title, project files with sha256, assignments and reports.${kind === 'slides' ? ' Lists every deck this conversation made.' : ''}`, effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await scope(context, input), api = application(context).api

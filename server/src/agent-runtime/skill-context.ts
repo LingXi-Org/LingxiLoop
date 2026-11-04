@@ -46,8 +46,7 @@ export function matchesSystemSkillSelection(step: NonNullable<TurnContext['execu
           ...(stage.quotes.language ? { languageQuote: stage.quotes.language.text } : {}) })
     } catch { return false }
   }
-  return step.kind === 'visualize__read_reference' && index.name === 'visualize'
-    && Object.keys(args).join(',') === 'path' && args.path === 'SKILL.md'
+  return false
 }
 
 export function selectedSkillRules(context: TurnContext, skills: readonly SkillDefinition[] = productSkills): string {
@@ -63,15 +62,13 @@ export function selectedSkillRules(context: TurnContext, skills: readonly SkillD
     && context.harness?.skills.some(entry => entry.name === index.name && entry.version === index.version && entry.hash === index.hash))
   const selected = new Set<string>()
   for (const step of context.executionSteps ?? []) {
-    if (!['skills__load', 'skills__activate', 'visualize__read_reference'].includes(step.kind)) continue
+    if (!['skills__load', 'skills__activate'].includes(step.kind)) continue
     // Activation is also an explicit selection of this exact authored contract.
     // Supply its complete registered guidance next turn without a redundant
     // load. This only selects rules: native activation owns the durable
     // obligation, authorization, cancellation and request-version checks.
-    const match = available.find(({ skill, index }) => step.kind === 'skills__load' || step.kind === 'skills__activate'
-      ? (step.kind === 'skills__activate' ? !!skill.delivery && permitted('skills.activate') : permitted('skills.load'))
-        && matchesSystemSkillSelection(step, index, context.snapshotVersion?.requestVersion, context)
-      : permitted('visualize.read_reference') && matchesSystemSkillSelection(step, index, context.snapshotVersion?.requestVersion))
+    const match = available.find(({ skill, index }) => (step.kind === 'skills__activate' ? !!skill.delivery && permitted('skills.activate') : permitted('skills.load'))
+      && matchesSystemSkillSelection(step, index, context.snapshotVersion?.requestVersion, context))
     if (match) selected.add(match.index.name)
   }
   const chosen = available.filter(({ index }) => selected.has(index.name))
@@ -118,6 +115,32 @@ export function skillGuidanceDependencies(context: TurnContext) {
     .filter(({ index }) => !loadedSystemSkill(context, index))
 }
 
+/** A model decision recorded through the native read tool, scoped by the
+ * current request and confirmed receipt. Never inferred from answer prose. */
+export function explanationPlan(context: TurnContext): 'canvas' | 'text' | 'other' | undefined {
+  const steps = context.executionSteps ?? []
+  for (const step of steps) {
+    if (step.kind !== 'design__plan_explanation' || step.requestVersion !== context.snapshotVersion?.requestVersion) continue
+    try {
+      const args = JSON.parse(String(step.input.arguments)), output = JSON.parse(step.output ?? '{}')
+      if (!['canvas', 'text', 'other'].includes(args.delivery)) continue
+      if (output.receipts?.some((receipt: {action?: string;result?: {ok?: boolean;approval?: unknown;directive?: unknown;executionState?: string;value?: {delivery?: string}}}) =>
+        receipt.action === 'design.plan_explanation' && receipt.result?.ok === true && receipt.result.approval === undefined
+        && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown' && receipt.result.value?.delivery === args.delivery)) return args.delivery
+    } catch { /* Failed, stale or unreadable decisions do not bind the response. */ }
+  }
+  return undefined
+}
+
+export function explanationPlanningAvailable(context: TurnContext): boolean {
+  const grants: CapabilityGrant[] = context.grants ?? context.capabilities.map(name => ({name}))
+  return context.work.kind === 'turn' && !context.work.conversation?.internal && !context.dynamic?.artifactRun
+    && availableSystemSkills(context).some(({skill}) => skill.actions.includes('design.write_files'))
+    && context.tools?.some(tool => tool.action === 'design.plan_explanation') === true
+    && grants.some(grant => grant.name === 'design'
+      && (!grant.methods || grant.methods.includes('plan_explanation')))
+}
+
 export function firstActionRules(context: TurnContext): string {
   const entries = availableSystemSkills(context)
   if (!entries.length) return ''
@@ -127,9 +150,28 @@ export function firstActionRules(context: TurnContext): string {
     explanation: index.workflow?.explanationBeforeAuthoring ? 'optional; only for the requested explanation-before-authoring workflow with directly supplied facts' : 'not supported',
   })))
     + '\nFor a skill with no delivery, use skills.load even when creating work. Copy name/version/hash exactly. Complete the load or activation in an earlier decision; its full guidance appears next. A missing delivery is not a missing explanation. '
+    + designExplanationRules(context)
     + 'Read only existing business files from the current authorized product file listing (or refresh with the corresponding current/list tool); never guess a path or resource ID. After guidance, read its real format entry before authoring, then write and check the actual result. '
     + 'After a Design write, finish every artboard referenced by the index and run design.check. A satisfied result requires the latest check after the latest write to report problems:0; a plan or a partially written index is not delivery. '
     + (blocked.size ? '\nGuidance-dependent tools below are authorized but become callable only after the corresponding skill is loaded successfully. Their exact current schemas and scope are provided now for planning; do not call them in the selection batch:\n'
       + JSON.stringify(context.tools?.filter(tool => blocked.has(tool.action)).map(({ name, action, description, parameters, effect, preconditions }) =>
         ({ name, action, description, parameters, effect, ...(preconditions ? { preconditions } : {}) }))) : '')
+}
+
+/** Semantic selection belongs to the model. No keyword heuristic or forced
+ * generic skills.load can decide which skill the human's task needs. */
+export function designExplanationRules(context: TurnContext): string {
+  const design = availableSystemSkills(context).find(({ skill }) => skill.actions.includes('design.write_files'))
+  const internal = context.work.conversation?.internal || context.work.kind !== 'turn'
+  if (internal) return ''
+  if (!design) return ' Design is unavailable in the current authorized skill directory. Give a useful text explanation when appropriate; disclose the limitation if a canvas was requested. Never claim a canvas was created or grant yourself a missing capability. '
+  const loaded = loadedSystemSkill(context, design.index)
+  const plan = explanationPlan(context)
+  return '\nUse the current conversation’s editable Design canvas proactively when an explanation has several connected ideas, needs decomposition, or is broad enough that a readable visual structure helps. Judge the meaning and complexity of the request, not the presence of any canvas keyword. Introductory teaching, mechanisms, relationships, processes, comparisons, tradeoffs and other explainable structures qualify even when the person never mentions Design. Do not ask permission each time. '
+    + (explanationPlanningAvailable(context) ? plan ? `The current request’s recorded response decision is ${plan}. `
+      : 'First call design.plan_explanation to choose canvas, text or another requested deliverable from the actual meaning of the request. This is a bounded semantic decision, not a keyword test and not delivery. Do not repeat the decision after a successful receipt. ' : '')
+    + 'Keep greetings and direct factual answers in text. Respect an explicit text-only request or another requested deliverable (for example Slides or an existing document). In homework and teacher contexts retain all current authorship, frozen teacher requirements and audience restrictions: explain methods and analogous examples, never turn a canvas into a copy-ready homework answer or proof of mastery. '
+    + (loaded ? 'The exact Design skill is already successfully loaded for this request; continue with its tools without reloading it. '
+      : `When this semantic decision calls for Design, your first Design action is skills.load with exactly ${JSON.stringify({ name: design.index.name, version: design.index.version, hash: design.index.hash })}. Loading a different skill does not select Design. Never repeat an identical failed load without a changed cause; provide useful text and the actual limitation if guidance is unavailable. `)
+    + 'Then read the real format reference and current canvas/files. If design.current returns null, call the authorized design.ensure to initialize this conversation’s one canvas and discover its actual files before reading them. Write complete explanatory content into this conversation’s canvas, preserve existing boards and human edits using their current sha256, and run design.check after the final write. Use a new artboard for an unrelated explanation rather than replacing existing work. A successful save plus a zero-problem check is required before saying the canvas is ready. In your final answer name the actual artboard and tell the person to open Design in this conversation; include a short substantive explanation. A plan, skill load, tool attempt or empty board is not delivery. On cancellation stop; on access denial or tool failure preserve saved content, state what actually completed, and give a useful text answer without claiming an unsaved or unchecked canvas is finished. '
 }

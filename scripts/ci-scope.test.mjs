@@ -7,6 +7,13 @@ test('pure CSS changes check and build only the web', () => {
   const scope = computeScope(classifyPaths(['src/styles.css']))
   assert.equal(scope.web_build, true); assert.equal(scope.server, false); assert.equal(scope.integration, false)
 })
+test('retired capability compatibility keeps its archive and authorization integration owner', () => {
+  for (const path of ['server/src/im/retired-visualize.ts', 'server/src/im/visualize-router.ts', 'server/src/im/interaction-admission.ts',
+    'server/src/agent-runtime/retired-capabilities.ts', 'shared/retired-visualize.ts', 'shared/assistant-directive-parser.ts']) {
+    const scope = computeScope({ serverSource: true, serverSourceFiles: [path] })
+    assert.ok(scope.integration_files.includes('retired-visualize.test.ts'), path)
+  }
+})
 test('Design sizing sources retain their editor build and artifact integration owners', () => {
   for (const path of ['shared/design-flow-size.ts', 'scripts/build-design-layout.mjs', 'scripts/design-flow-size.test.mjs']) {
     const scope = computeScope(classifyPaths([path]))

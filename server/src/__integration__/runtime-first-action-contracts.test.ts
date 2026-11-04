@@ -7,6 +7,7 @@ import { releaseVersions, skillIndex } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
+import { nativeText } from '../im/message-types.js'
 import { lingxiOSControl, runtimeModelConfiguration, stopLingxiOSControl } from '../agent-runtime/runtime.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
@@ -21,7 +22,19 @@ import { installRecordingWukong } from './_recording-wukong.js'
 after(async () => { await teardownAll() })
 
 const live = process.env.LINGXIOS_LIVE_ARTIFACTS === '1'
-for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLength ? 'a recovered truncation never qualifies as zero-failure artifact delivery' : live ? 'real provider creates and checks the FlashAttention canvas with zero contract failures'
+const explanationSamples = {
+  explicit: '为我在画板中讲解flashattention',
+  introduction: '我是零基础，请系统介绍概率分布：它是什么、为何需要、连续与离散有何关系，并用一个例子帮我理解。',
+  process: '浏览器输入一个网址后到看到网页，中间的 DNS、连接、服务器和渲染是怎样配合的？请拆开讲清全过程。',
+  comparison: '一个小团队要上线新产品，应该选自建数据库还是托管数据库？请比较成本、可靠性、运维责任和适用边界，帮我理解取舍。',
+  greeting: '你好！',
+  fact: '法国的首都是哪里？一句话回答即可。',
+  textOnly: '请只用纯文字解释概率分布是什么、连续和离散的区别，不要创建或修改画板或其他文件。',
+} as const
+const sampleId = (process.env.DESIGN_EXPLANATION_SAMPLE ?? 'explicit') as keyof typeof explanationSamples
+assert.ok(Object.hasOwn(explanationSamples, sampleId), 'unknown Design explanation sample')
+const expectsCanvas = !live || !['greeting','fact','textOnly'].includes(sampleId)
+for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLength ? 'a recovered truncation never qualifies as zero-failure artifact delivery' : live ? `real provider completes ${sampleId} with ${expectsCanvas ? 'a checked cold Design canvas' : 'text only'}`
   : 'native Worker loads guidance before reference, existing-file read, artboard write and check', { timeout: live ? 300_000 : 40_000 }, async () => {
   if (live) {
     assert.equal(env.OPENAI_MODEL, 'deepseek-ai/DeepSeek-V4.1-Flash')
@@ -35,7 +48,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
   await pool.query('UPDATE participants SET capabilities=$1 WHERE company_id=$2 AND id=$3', [JSON.stringify(['design']), companyId, agentId])
   await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','FlashAttention',$4::jsonb)", [channelId, companyId, projectId, JSON.stringify(members)])
   await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)', [channelId, companyId, JSON.stringify({ channelType: 2, members })])
-  const canvas = await ensureConversationDesign(companyId, channelId, userId)
+  const seededCanvas = live ? null : await ensureConversationDesign(companyId, channelId, userId)
   const fixture = await readFile(new URL('./fixtures/design/flashattention.dc.html', import.meta.url), 'utf8')
   const index = skillIndex(artifactSkills.find(skill => skill.name === 'claude-design')!)
   let calls = 0, lengthInjected = false, handlerError: unknown
@@ -54,14 +67,15 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       assert.equal(names.some(name => name.startsWith('design__') && index.actions.some(action => action.replace('.', '__') === name)), false)
       assert.ok(instructions.includes(index.hash)); assert.ok(instructions.includes('format.md'))
       assert.ok(instructions.includes('skills.load')); assert.ok(instructions.includes('no delivery'))
-      assert.equal(requiredTool, 'skills__load')
+      assert.equal(requiredTool, 'design__plan_explanation', 'semantic planning precedes exact skill selection')
+      assert.ok(instructions.includes('meaning and complexity'))
     }
   }
   const provider = createServer(async (request, response) => {
     try {
       let raw = ''; for await (const chunk of request) raw += chunk
-      const input = JSON.parse(raw); observe(input); assert.ok(calls <= (recoveredLength ? 8 : 7))
-      const phase = calls - (lengthInjected ? 1 : 0)
+      const input = JSON.parse(raw); observe(input); assert.ok(calls <= (recoveredLength ? 9 : 8))
+      const phase = calls - (lengthInjected ? 1 : 0) - 1
       if (recoveredLength && !lengthInjected && phase === 5) {
         lengthInjected = true
         response.writeHead(200, { 'content-type': 'text/event-stream' })
@@ -69,6 +83,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
         return
       }
       const business: Array<{ name: string; args: unknown }> = []
+      if (phase === 0) business.push({ name: 'design__plan_explanation', args: { delivery: 'canvas' } })
       if (phase === 1) business.push({ name: 'skills__load', args: { name: index.name, version: index.version, hash: index.hash } })
       if (phase === 2) {
         assert.equal(decisions.at(-1)!.fullGuidance, true); assert.equal(decisions.at(-1)!.referenceSchema, true)
@@ -77,7 +92,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       if (phase === 3) business.push({ name: 'design__current', args: {} })
       if (phase === 4) business.push({ name: 'design__read_file', args: { path: 'project/canvas.json' } })
       if (phase === 5) {
-        const file = (await pool.query("SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path='project/canvas.json'", [canvas.id])).rows[0]
+        const file = (await pool.query("SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path='project/canvas.json'", [seededCanvas!.id])).rows[0]
         const content = JSON.parse(file.body.toString('utf8'))
         content.boards['FlashAttention.dc.html'] = { x: 0, y: 0, w: 1200, h: 820, title: 'FlashAttention' }
         content.order = ['FlashAttention.dc.html']
@@ -85,7 +100,8 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       }
       if (phase === 6) business.push({ name: 'design__check', args: {} })
       const output = { index: 0, id: `answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: phase === 7 ? 'FlashAttention 讲解已写入画板，格式检查通过。' : ['FlashAttention 保持精确注意力并减少数据搬运。','\n计算按块处理 Q、K、V。','\n在线 softmax 重标定累积量。','\n避免写回完整 N×N 矩阵。','\nIO 优化减少显存读写。','\n计算量仍保持二次量级。'][phase - 1], commentary: '', outcome: phase === 7 ? { status: 'satisfied', gaps: [] } : null }) } }
-      const toolCalls = [...(phase === 1 ? [] : [output]), ...business.map((item, index) => ({ index: index + (phase === 1 ? 0 : 1), id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
+      const selecting = phase === 0 || phase === 1
+      const toolCalls = [...(selecting ? [] : [output]), ...business.map((item, index) => ({ index: index + (selecting ? 0 : 1), id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
       for (const call of toolCalls) assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === call.function.name), call.function.name)
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: toolCalls }, finish_reason: 'tool_calls' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
@@ -199,9 +215,9 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, channelId)
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
     const model = runtimeModelConfiguration({ id: live ? env.OPENAI_MODEL : 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: live ? env.OPENAI_API_KEY : 'synthetic-only', baseUrl: live ? env.OPENAI_BASE_URL : 'https://api.siliconflow.cn/v1' }, live ? 180_000 : 90_000)
-    worker = createWorker({ modelBudget: { maxModelCalls: live ? 24 : recoveredLength ? 8 : 7, wallClockMs: live ? 240_000 : 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
+    worker = createWorker({ modelBudget: { maxModelCalls: live ? 24 : recoveredLength ? 9 : 8, wallClockMs: live ? 240_000 : 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
       model: live ? model : { ...model, baseUrl: `http://127.0.0.1:${address.port}/v1` }, worker: { id: 'issue593-artboard', concurrency: 1 } })
-    const run = (await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version, messageId: 'question', version: 1, author: { id: userId, kind: 'human' }, text: '为我在画板中讲解flashattention', mentions: [agentId] }, { mode: 'execute', codeExecution: 'disabled', deliveryMode: 'auto', executionClass: 'conversation' })).runs[0]
+    const run = (await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version, messageId: 'question', version: 1, author: { id: userId, kind: 'human' }, text: live ? explanationSamples[sampleId] : explanationSamples.explicit, mentions: [agentId] }, { mode: 'execute', codeExecution: 'disabled', deliveryMode: 'auto', executionClass: 'conversation' })).runs[0]
     assert.ok(run); await bindProductRun(pool, run, channelId); await worker.runNext(); assert.equal(handlerError, undefined)
     const deadline = AbortSignal.timeout(5_000); let state = await api.readRunState(run)
     while (state?.delivery === 'pending') { deadline.throwIfAborted(); await delay(20); state = await api.readRunState(run) }
@@ -214,11 +230,17 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     const wireContractFailures = wire.flatMap(record => record.tools.filter(tool => record.finish.includes('length') || !tool.jsonValid || tool.parserValid === false).map(tool => ({ call: record.call, name: tool.name, truncated: record.finish.includes('length'), jsonValid: tool.jsonValid, issues: tool.issues })))
     const protocolFailures = steps.filter(step => step.output && (() => { try { return JSON.parse(step.output).protocolError === true } catch { return false } })())
       .length + modelFailures.filter(row => row.diagnostics?.kind === 'protocol').length
-    const files = (await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows
-    const checked = await checkArtifact(pool, { id: canvas.id, kind: 'design' }) as { problems: number }
-    const evidence = { qualification: recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool, maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
-      accepted: failures.length === 0 && modelFailures.length === 0 && failedModelAttempts.length === 0 && wireContractFailures.length === 0 && protocolFailures === 0 && checked.problems === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
-        && receipts.some(row => row.action === 'design.check') && files.some(row => row.path.endsWith('.dc.html')),
+    const canvas = (await pool.query("SELECT id FROM artifacts WHERE company_id=$1 AND conversation_id=$2 AND kind='design'", [companyId,channelId])).rows[0]
+    const files = canvas ? (await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows : []
+    const checked = canvas ? await checkArtifact(pool, { id: canvas.id, kind: 'design' }) as { problems: number } : {problems: -1}
+    const routing = receipts.filter(row => row.action === 'design.plan_explanation')
+    const correctRouting = routing.length === 1 && routing[0].args.delivery === (expectsCanvas ? 'canvas' : 'text')
+      && receipts.filter(row => row.action === 'skills.load' && row.args.name === 'claude-design').length === (expectsCanvas ? 1 : 0)
+      && !receipts.some(row => row.action.startsWith('visualize.') || row.args.name === 'visualize')
+    const evidence = { qualification: recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', coldCanvas: live, correctRouting, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool, maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
+      accepted: correctRouting && failures.length === 0 && modelFailures.length === 0 && failedModelAttempts.length === 0 && wireContractFailures.length === 0 && protocolFailures === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
+        && (expectsCanvas ? checked.problems === 0 && receipts.some(row => row.action === 'design.check') && files.some(row => row.path.endsWith('.dc.html'))
+          : !canvas && receipts.every(row => !row.action.startsWith('design.') || row.action === 'design.plan_explanation')),
       elapsedMs: Date.now() - started, decisions, wire, actions: receipts.map(row => ({ action: row.action, ok: row.result.ok, code: row.result.code ?? null, ...(row.action === 'design.read_reference' ? { page: row.args.page } : {}) })),
       contractFailures: failures.map(row => ({ action: row.action, code: row.result.code })), protocolFailures, providerFailures: modelFailures.filter(row => !row.budget && row.diagnostics?.kind !== 'protocol').length,
       budgetFailures: modelFailures.filter(row => row.budget).map(row => row.budget),
@@ -229,19 +251,32 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     if (process.env.ISSUE593_EVIDENCE_PATH) {
       const directory = process.env.ISSUE593_EVIDENCE_PATH; await mkdir(directory, { recursive: true })
       await writeFile(`${directory}/${live ? 'real-provider' : recoveredLength ? 'synthetic-recovered-length' : 'synthetic'}.json`, JSON.stringify(evidence, null, 2) + '\n')
-      if (live) for (const file of files) await writeFile(`${directory}/${file.path.replaceAll('/', '-')}`, file.body)
+      if (live) {
+        for (const file of files) await writeFile(`${directory}/${file.path.replaceAll('/', '-')}`, file.body)
+        await writeFile(`${directory}/public-answer.json`, JSON.stringify({sampleId, canvasId:canvas?.id ?? null,
+          text: im.messages.filter(message => message.payload.role === 'assistant').map(message => nativeText(message.payload)).filter(Boolean)},null,2)+'\n')
+      }
     }
     assert.equal(failures.length, 0); assert.equal(protocolFailures, 0); assert.equal(modelFailures.length, 0)
     assert.equal(failedModelAttempts.length, recoveredLength ? 1 : 0); assert.equal(wireContractFailures.length, 0)
     assert.equal(evidence.accepted, !recoveredLength)
-    if (!live) assert.equal(calls, recoveredLength ? 8 : 7)
-    assert.ok(receipts.some(row => row.action === 'skills.load' && row.args.name === 'claude-design'))
+    if (!live) assert.equal(calls, recoveredLength ? 9 : 8)
+    assert.equal(receipts.filter(row => row.action === 'design.plan_explanation').length, 1)
+    assert.equal(receipts.find(row => row.action === 'design.plan_explanation')?.args.delivery, expectsCanvas ? 'canvas' : 'text')
+    assert.equal(receipts.filter(row => row.action === 'skills.load' && row.args.name === 'claude-design').length, expectsCanvas ? 1 : 0)
+    assert.equal(receipts.some(row => row.action.startsWith('visualize.') || row.args.name === 'visualize'), false)
     assert.equal(receipts.some(row => row.action === 'skills.activate' && row.args.name === 'claude-design'), false)
-    assert.ok(receipts.some(row => row.action === 'design.read_reference' && row.args.page === 'format.md'))
-    assert.ok(receipts.some(row => row.action === 'design.read_file' && row.args.path === 'project/canvas.json'))
-    assert.ok(receipts.some(row => row.action === 'design.write_files')); assert.ok(receipts.some(row => row.action === 'design.check'))
-    assert.ok(files.some(row => row.path.endsWith('.dc.html') && /FlashAttention/i.test(row.body.toString('utf8'))))
-    assert.equal(checked.problems, 0); assert.equal(state?.run.status, 'succeeded'); assert.equal(state?.delivery, 'delivered')
+    if (expectsCanvas) {
+      assert.ok(receipts.some(row => row.action === 'design.read_reference' && row.args.page === 'format.md'))
+      assert.ok(receipts.some(row => row.action === 'design.read_file' && row.args.path === 'project/canvas.json'))
+      assert.ok(receipts.some(row => row.action === 'design.write_files')); assert.ok(receipts.some(row => row.action === 'design.check'))
+      assert.ok(files.some(row => row.path.endsWith('.dc.html') && (live ? row.body.byteLength > 100 : /FlashAttention/i.test(row.body.toString('utf8')))))
+      assert.equal(checked.problems, 0)
+    } else {
+      assert.equal(canvas, undefined)
+      assert.equal(receipts.some(row => row.action.startsWith('design.') && row.action !== 'design.plan_explanation'), false)
+    }
+    assert.equal(state?.run.status, 'succeeded'); assert.equal(state?.delivery, 'delivered')
   } finally {
     await persistWire
     globalThis.fetch = originalFetch; await worker?.stop(); await stopLingxiOSControl(); await im.close()

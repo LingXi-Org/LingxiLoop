@@ -28,7 +28,7 @@ test('Web profile cannot gain unrelated tool families through a transitive graph
   }
 })
 
-test('integration visualization builds retain the locked KaTeX renderer and stylesheet package', () => {
+test('integration artifact builds retain the locked KaTeX renderer and stylesheet package', () => {
   const files = new Map(generateProfiles())
   const manifest = JSON.parse(files.get('server/build/integration/package.json'))
   const lock = JSON.parse(files.get('server/build/integration/package-lock.json'))

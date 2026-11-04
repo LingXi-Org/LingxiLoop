@@ -136,45 +136,19 @@ test('server image includes the complete shared runtime import graph', () => {
   assert.deepEqual([...missing].sort(), [])
 })
 
-// Failures: the final image carries desktop/reference source, or slimming drops
-// the immutable skill, the one served upstream script, or license/provenance.
-test('server image ships only the required pinned ZCode runtime payload', () => {
-  const finalStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).find(part => /^.* AS runtime\r?\n/.test(part))
-  const root = fileURLToPath(new URL('../', import.meta.url))
-  const copied = finalStage.split(/\r?\n/).filter(line => /^COPY third_party\/zcode[ /]/.test(line))
-    .flatMap(line => {
-      const [, ...args] = line.trim().split(/\s+/), destination = args.pop()
-      return args.map(source => ({ source, destination: resolve(root, destination) }))
-    })
-  const packaged = path => copied.some(({ source, destination }) => {
-    if (path !== source && !path.startsWith(`${source}/`)) return false
-    const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
-    // COPY of one file to an exact filename does not append that filename.
-    const target = !ts.sys.directoryExists(resolve(root, source)) && destination === resolve(root, path)
-      ? destination : resolve(destination, suffix)
-    return target === resolve(root, path)
-  })
-  const manifest = JSON.parse(read('third_party/zcode/manifest.json'))
-  const runtimeScript = 'upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js'
-  for (const file of manifest.files.filter(file => file.kind === 'skill')) {
-    assert.ok(packaged(`third_party/zcode/${file.path}`), `Missing skill runtime file: ${file.path}`)
-  }
-  assert.ok(packaged(`third_party/zcode/${runtimeScript}`), 'Missing served tweak.js source')
-  for (const path of ['LICENSE', 'README.md', 'manifest.json']) {
-    assert.ok(packaged(`third_party/zcode/${path}`), `Missing license or provenance: ${path}`)
-  }
-  const shippedReferenceSource = manifest.files.filter(file => file.path.startsWith('upstream/')
-    && file.path !== runtimeScript && file.path !== 'upstream/LICENSE'
-    && packaged(`third_party/zcode/${file.path}`)).map(file => file.path)
-  assert.deepEqual(shippedReferenceSource, [], 'Reference/build source must stay out of the final runtime image')
-  const payloadBytes = ts.sys.readDirectory(resolve(root, 'third_party/zcode'), undefined)
-    .filter(file => packaged(relative(root, file).replaceAll('\\', '/')))
-    .reduce((bytes, file) => bytes + readFileSync(file).byteLength, 0)
-  assert.ok(payloadBytes <= 1_250_000, `Pinned ZCode runtime payload exceeds 1.25 MB: ${payloadBytes}`)
-  const spaStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
-    .find(part => /^.* AS spa-build\r?\n/.test(part))
-  assert.match(spaStage, /^COPY third_party\/zcode \.\/third_party\/zcode$/m,
-    'SPA build still requires the complete pinned upstream inputs')
+// Retired runtime code must not return through Docker context or old packaging hooks.
+test('server image excludes the retired visualization runtime and packages Design independently', () => {
+  const docker = read('server/docker/lingxiloop-server.Dockerfile')
+  assert.doesNotMatch(docker, /third_party\/zcode|visualize-runtime|chat\/visualize/)
+  assert.match(docker, /FROM web-deps AS design-build/)
+  assert.match(docker, /RUN node scripts\/build-design-editor\.mjs/)
+  assert.match(docker, /COPY --from=design-build \/app\/server\/assets\/design-editor \.\/server\/assets\/design-editor/)
+  const commands = JSON.parse(read('package.json')).scripts
+  assert.equal(commands['build:visualize-runtime'], undefined)
+  assert.equal(commands['verify:visualize'], undefined)
+  assert.equal(commands.prebuild, 'npm run build:design-editor')
+  assert.doesNotMatch(read('vite.config.ts'), /visualize-public-assets|visualize-public-resources/)
+  assert.equal(read('public/licenses/visualize-compat.txt'), read('third_party/visualize-compat/LICENSE.md'), 'Static Worker distribution retains the passive parser Apache license')
 })
 
 // Failure: checkout resolves frontend imports that COPY or the build context omits.
@@ -204,13 +178,28 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
     return resolve(destination, suffix) === resolve(root, path)
   })
-  for (const name of ['visualize-build', 'spa-build']) {
+  for (const name of ['design-build', 'spa-build']) {
     const editorStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
       .find(part => part.split('\n')[0].endsWith(` AS ${name}`))
     assert.ok(editorStage, `${name} exists`)
     for (const { source } of copiesOf(editorStage)) {
       if (ts.sys.fileExists(resolve(root, source))) {
         assert.ok(inContext(source), `${name} explicit COPY input excluded from Docker context: ${source}`)
+      }
+    }
+    // Follow the real builder's local import graph, including future helpers.
+    // A checkout can hide a missing Docker COPY for a transitive build module.
+    const pending = ['scripts/build-design-editor.mjs'], visited = new Set()
+    while (pending.length) {
+      const path = pending.pop()
+      if (visited.has(path)) continue
+      visited.add(path)
+      assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing transitive Design build input: ${path}`)
+      for (const item of ts.preProcessFile(read(path), true, true).importedFiles) {
+        if (!item.fileName.startsWith('.')) continue
+        const target = relative(root, resolve(root, path, '..', item.fileName)).replaceAll('\\', '/')
+        assert.ok(ts.sys.fileExists(resolve(root, target)), `Missing Design build module: ${target}`)
+        pending.push(target)
       }
     }
     for (const path of ['scripts/design-copy.mjs', 'third_party/baoyu-design/host/design-zh-CN.json',
@@ -261,10 +250,11 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   for (const [source, target] of [
     ['third_party/assistant-ui-elements/LICENSE', 'assistant-ui-elements.txt'],
     ['third_party/react-chat-elements/reply-message/LICENSE', 'react-chat-elements-reply-message.txt'],
+    ['third_party/visualize-compat/LICENSE.md', 'visualize-compat.txt'],
   ]) {
     assert.ok(inContext(source), `Distributed component license missing from build context: ${source}`)
     assert.ok(finalStage.includes(`COPY ${source} ./dist/licenses/${target}`), `Distributed component license missing from final image: ${source}`)
-    assert.match(read(source), /Permission is hereby granted/)
+    assert.match(read(source), source.includes('visualize-compat') ? /Apache License/ : /Permission is hereby granted/)
   }
 })
 
@@ -586,7 +576,6 @@ test('workflow path filters route real changed paths to their owning checks', ()
     ['src/lib/mentions.ts', 'integration', 'server'],
     ['src/lib/memoryActivity.ts', 'integration', 'server'],
     ...['runtime', 'protocol', 'program', 'guest-source', 'svg'].map(name => [`src/features/cases/cover-vm/${name}.ts`, 'integration', 'server']),
-    ['src/features/chat/visualize/zcode/shared/gen-ui/contract.ts', 'integration', 'server'],
     ['third_party/assistant-ui/streaming-text/upstream/utils/range.ts', 'web', 'server'],
     ['third_party/assistant-ui/streaming-text/LICENSE', 'web', 'server'],
     ['third_party/assistant-ui/streaming-text/SHA256SUMS', 'web', 'server'],
@@ -674,7 +663,7 @@ test('CI integration modes distinguish core smoke, explicit owners and manual fu
     ['server/src/agent-runtime/runtime.ts', 'runtime-chat-recovery.test.ts'],
     ['server/src/im/reconcile.ts', 'im-send-reconciliation.test.ts'],
     ['server/src/modules/learning/homework-application.ts', 'homework.test.ts'],
-    ['server/src/agent-runtime/visualize-delivery.ts', 'visualize-delivery.test.ts'],
+    ['server/src/modules/artifacts/tools.ts', 'artifact-app-boundary.test.ts'],
   ]
   for (const [path, file] of owners) {
     const selected = computeScope({ serverSource: true, serverSourceFiles: [path] })

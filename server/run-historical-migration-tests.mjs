@@ -23,6 +23,9 @@ const PROJECTION_FILES=[
  {path:'server/src/im/wukong.ts',sha256:'20854873ddb0fe3b8a05bf0fdee187fb727e84f6a0d269faf1e65cd5007e8e69'},
  {path:'server/src/im/message-types.ts',sha256:'d7acb44eac11489ed3e45bec7b61cb9a3e5b660f46e9c968909767ae2061443b'},
 ]
+// The archived projector imports this former product leaf. Supply only an
+// inert test dependency; the four historical source snapshots stay unchanged.
+const RETIRED_PROJECTION_SUPPORT={path:'server/src/agent-runtime/visualize-projection.ts',sha256:'49fbac5f0271221b3af39002a50ba3cbe15f2e6c51c9cad3aa50c7de056e609f'}
 // Freeze only the test fixture's real product54/57/58 prefix. Current production
 // migrations, package manifests/locks and the strict CAS inventory stay intact.
 export const copyProduct54FixtureSource=(root,fixture)=>copyProductFixtureSource(root,fixture,54)
@@ -50,7 +53,10 @@ export async function copyHistoricalFixtureSource(root,fixture){
  }))
  const product54=await copyProduct54FixtureSource(root,fixture)
  for(const row of snapshots)await writeFile(join(fixture,row.path),row.bytes)
- return {sourceCommit:PROJECTION_SOURCE,files:PROJECTION_FILES.map(row=>({...row})),product54}
+ const support=await readFile(join(root,'server/fixtures/historical-projection-3.8.2',RETIRED_PROJECTION_SUPPORT.path))
+ assert.equal(createHash('sha256').update(support).digest('hex'),RETIRED_PROJECTION_SUPPORT.sha256,'Inert historical projection support changed')
+ await writeFile(join(fixture,RETIRED_PROJECTION_SUPPORT.path),support)
+ return {sourceCommit:PROJECTION_SOURCE,files:PROJECTION_FILES.map(row=>({...row})),retiredSupport:{...RETIRED_PROJECTION_SUPPORT},product54}
 }
 export function partitionMigrationTests(files){
  const historical=files.filter(f=>HISTORICAL.has(f)),patch54=files.filter(f=>PATCH54.has(f)),patch57=files.filter(f=>PATCH57.has(f)),patch58=files.filter(f=>PATCH58.has(f)),current=files.filter(f=>!HISTORICAL.has(f)&&!PATCH54.has(f)&&!PATCH57.has(f)&&!PATCH58.has(f))

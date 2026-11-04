@@ -28,7 +28,8 @@ src/features/cases/cover-vm/**
 !src/features/cases/cover-vm/CaseCoverPreview.tsx
 !shared
 shared/**
-!shared/visualize-public-resources.ts
+!shared/retired-visualize.ts
+!shared/assistant-directive-parser.ts
 !shared/artifact-math.ts
 !shared/artifact-math-source.ts
 !shared/artifact-math-loader.ts
@@ -43,14 +44,12 @@ shared/**
 !tsconfig.node.json
 !postcss.config.js
 !tailwind.config.ts
-!third_party/zcode/**
 !third_party/baoyu-design/**
+!third_party/visualize-compat/**
 !third_party/assistant-ui/streaming-text/**
 !third_party/assistant-ui-elements/LICENSE
 !third_party/assistant-ui-with-artifacts/LICENSE
 !third_party/react-chat-elements/reply-message/LICENSE
-!scripts/verify-zcode-visualize.mjs
-!scripts/build-visualize-runtime.mjs
 !scripts/build-artifact-math.mjs
 !scripts/build-slides-editor.mjs
 !scripts/build-design-editor.mjs

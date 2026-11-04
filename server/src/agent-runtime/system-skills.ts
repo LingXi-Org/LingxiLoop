@@ -1,11 +1,9 @@
 import type { SkillDefinition } from '@lyyzka/lingxios'
-import { visualizeSkill } from './visualize-skill.js'
 import { GROUP_COLLABORATION_RULES } from './conversation-style.js'
 import { artifactSkills, cooperationSkill } from '../modules/artifacts/skills.js'
 import { PUBLIC_ANSWER_RULES, KNOWLEDGE_CITATION_RULES } from './public-answer-rules.js'
 
 export const productSkills: SkillDefinition[] = [
-  visualizeSkill,
   { name: 'public-task-progress', version: '4', description: 'Keep the user informed during multi-step tasks with public explanations and a real plan.',
     actions: ['chat.report_progress'], body: "Use chat.report_progress for a useful multi-step plan or material progress in the user's language. Report actual observations at meaningful transitions; preserve each public item id while updating its full text. Plans use stable step ids and activeIndex: advance after the result is confirmed, and mark completion when all steps are done. Keep public updates scoped to the task and supported evidence, with private reasoning, credentials and internal diagnostics kept private. Substantive answers follow the trusted model driver's public channel; routine tool activity is already shown by lifecycle events. " + PUBLIC_ANSWER_RULES },
   { name: 'document-edit', version: '1', description: 'Read, edit and verify a product document without losing peer changes.',
