@@ -149,7 +149,7 @@ export function ConversationListItemContent({
   return (
     <>
       <ItemMedia className="relative self-center! translate-y-0!">
-        <ConversationAvatar conversation={conversation} size={28} />
+        <ConversationAvatar conversation={conversation} size={32} />
       </ItemMedia>
       <ItemContent className="min-w-0 gap-0.5">
         <div className="flex min-w-0 items-center gap-1.5">

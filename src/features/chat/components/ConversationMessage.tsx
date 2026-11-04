@@ -273,7 +273,7 @@ export function ConversationMessage() {
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
         custom.continuedFromPrevious ? 'pt-1' : 'pt-3',
         custom.continuedToNext ? 'pb-0' : 'pb-3',
-        custom.senderKind === 'agent' ? 'grid-cols-[22px_minmax(0,1fr)]' : custom.isMine ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
+        custom.senderKind === 'agent' ? 'grid-cols-[28px_minmax(0,1fr)]' : custom.isMine ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
     >
       <ConversationMessageAvatar participant={participant} isMobile={isMobile} isMine={custom.isMine}
