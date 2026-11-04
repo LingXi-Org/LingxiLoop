@@ -127,7 +127,6 @@ COPY --from=deps /app/package.json /app/package-lock.json ./
 # Ship only runtime sources/resources and the exact provenance manifests.
 COPY server/src ./server/src
 COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts shared/retired-visualize.ts shared/assistant-directive-parser.ts ./shared/
-COPY server/assets ./server/assets
 COPY server/package.json server/package-lock.json ./server/
 COPY server/scripts/check-packaged-startup.mjs ./server/scripts/
 COPY shared/upload-mime.ts ./shared/
