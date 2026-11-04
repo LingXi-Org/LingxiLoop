@@ -1,3 +1,6 @@
+import type { Queryable } from '../../db/queryable.js'
+import { readAdminModelStageCalls, runStageTiming } from './model-stage-timing.js'
+import { pool } from '../../db/pool.js'
 import type { createLingxiOS } from '@lyyzka/lingxios'
 import { agentRunTiming } from './agent-run-timing.js'
 import { HttpError } from '../../http/errors.js'
@@ -12,17 +15,19 @@ export async function platformAgentRun(runtime: PlatformAgentRuntime, runId: str
   return run
 }
 
-export async function inspectPlatformAgentRun(runtime: PlatformAgentRuntime, runId: string, afterSeq = 0) {
+export async function inspectPlatformAgentRun(runtime: PlatformAgentRuntime, runId: string, afterSeq = 0, db: Queryable = pool) {
   const run = await platformAgentRun(runtime, runId)
-  const [state, diagnostics, events, usage] = await Promise.all([
+  const [state, diagnostics, events, usage, modelStages] = await Promise.all([
     runtime.readRunState(run.identity),
     runtime.readDiagnostics(run.identity),
     runtime.readEvents(run.identity, afterSeq),
     runtime.readUsage(run.identity),
+    readAdminModelStageCalls(db, run.identity, run.requestVersion).catch(() => null),
   ])
   return { run, state: state ? { run: state.run, delivery: state.delivery } : null, diagnostics,
     workerFailure: diagnostics?.runtimeFailure ?? null, ...events, usage,
-    timing: agentRunTiming(run, { events: events.events, afterSeq }) }
+    timing: agentRunTiming(run, { events: events.events, afterSeq }),
+    stages: runStageTiming(run.identity, run.requestVersion, modelStages, diagnostics) }
 }
 
 export async function revisePlatformAgentRun(runtime: PlatformAgentRuntime, runId: string, text: string) {

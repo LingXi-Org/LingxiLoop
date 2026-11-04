@@ -11,7 +11,7 @@ export function AgentRunTimingCard({ timing }: { timing?: AgentRunTiming }) {
   const values: Array<[string, number | null]> = [
     ['当前可执行排队', timing.eligibleQueueMs], ['距离可执行时间', timing.availableDelayMs],
     ['首次可执行至开始', timing.initialEligibleToStartedMs], ['各次尝试累计执行', timing.attemptExecutionTotalMs],
-    ['最近心跳距今', timing.heartbeatAgeMs], ['模型许可等待', timing.modelPermitWaitMs], ['端到端完成', timing.endToEndMs],
+    ['最近心跳距今', timing.heartbeatAgeMs], ['当前模型许可等待', timing.modelPermitWaitMs], ['端到端完成', timing.endToEndMs],
   ]
   return <Card aria-labelledby={headingId}><CardHeader><CardTitle id={headingId}>排队与执行</CardTitle><CardDescription>{queueLabels[timing.queueState]}</CardDescription></CardHeader>
     <CardContent className="space-y-4"><dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{values.map(([label, value]) => <div key={label}><dt className="text-sm text-muted-foreground">{label}</dt><dd className="mt-1 font-medium tabular-nums">{seconds(value)}</dd></div>)}</dl>

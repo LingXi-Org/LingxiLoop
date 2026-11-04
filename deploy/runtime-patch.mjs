@@ -2,12 +2,14 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 
 const PACKAGE = '@lyyzka/lingxios'
-const SOURCES = Object.freeze({ '3.8.17': '3.8.16', '3.8.18': '3.8.17', '3.8.19': '3.8.18', '3.8.20': '3.8.19', '3.8.21': '3.8.20' })
+const SOURCES = Object.freeze({ '3.8.17': '3.8.16', '3.8.18': '3.8.17', '3.8.19': '3.8.18', '3.8.20': '3.8.19', '3.8.21': '3.8.20', '3.8.22': '3.8.21', '3.8.23': '3.8.21', '3.8.24': '3.8.21' })
+const SOURCE_OPTIONS = Object.freeze({ '3.8.23': ['3.8.21','3.8.22'], '3.8.24': ['3.8.21','3.8.22','3.8.23'] })
+const reviewedSource = (target, source) => Object.hasOwn(SOURCES, target ?? '') && (SOURCE_OPTIONS[target] ?? [SOURCES[target]]).includes(source)
 const SCHEMA = 'c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f'
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 
 /** Only the reviewed exact transition is automatic; no generic version adoption. */
-export function runtimePatchPlan(read, migrationPaths) {
+export function runtimePatchPlan(read, migrationPaths, { sourceRuntime: selectedSource } = {}) {
   const json = path => JSON.parse(read(path))
   const manifest = json('package.json')
   const paths = migrationPaths.toSorted()
@@ -17,13 +19,14 @@ export function runtimePatchPlan(read, migrationPaths) {
     && (paths.length === 59 || paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql')
   const targetRuntime = manifest.dependencies?.[PACKAGE]
   const runtimeOnly60 = retirement && paths.length === 60 && ['3.8.19','3.8.20'].includes(targetRuntime)
-  const runtimeOnly61 = slides61 && targetRuntime === '3.8.21'
-  if (slides61) assert.ok(['3.8.20','3.8.21'].includes(targetRuntime), 'product61 requires exact formal20 or reviewed20 to21 runtime patch')
+  const runtimeOnly61 = slides61 && ['3.8.21','3.8.22','3.8.23','3.8.24'].includes(targetRuntime)
+  if (slides61) assert.ok(['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(targetRuntime), 'product61 requires exact formal20 or reviewed20 to21 or21 to22 or reviewed21 to23/24 production bridge runtime patch')
   if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly60 || slides61, 'product59 requires a verified exact runtime')
-  if (['3.8.19','3.8.20','3.8.21'].includes(targetRuntime)) assert.ok(runtimeOnly60 || slides61, 'unreviewed runtime transition; runtime patch requires installed product60')
+  if (['3.8.19','3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(targetRuntime)) assert.ok(runtimeOnly60 || slides61, 'unreviewed runtime transition; runtime patch requires installed product60')
   if (targetRuntime === '3.8.16') return null
-  assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or exact reviewed3.8.17/3.8.18/3.8.19/3.8.20/3.8.21 is supported')
-  const sourceRuntime = SOURCES[targetRuntime]
+  assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or exact reviewed3.8.17/3.8.18/3.8.19/3.8.20/3.8.21/3.8.22/3.8.23/3.8.24 is supported')
+  const sourceRuntime = selectedSource ?? SOURCES[targetRuntime]
+  assert.ok(reviewedSource(targetRuntime, sourceRuntime), 'unreviewed explicit runtime source')
   const server = json('server/package.json'), lock = json('package-lock.json'), serverLock = json('server/package-lock.json')
   const pkg = lock.packages?.[`node_modules/${PACKAGE}`], other = serverLock.packages?.[`node_modules/${PACKAGE}`]
   for (const value of [manifest, server, lock.packages?.[''], serverLock.packages?.['']]) assert.equal(value?.dependencies?.[PACKAGE], targetRuntime, 'exact root/server runtime pin required')
@@ -62,7 +65,7 @@ export function assertRetirementReleaseAllowed(paths, command, approval, patch) 
     && JSON.stringify(patch.source.migrations) === JSON.stringify(patch.target.migrations)
   const runtimeOnly61 = ['up', 'servers'].includes(command) && paths.length === 61
     && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql'
-    && patch?.source.runtime === '3.8.20' && patch?.target.runtime === '3.8.21'
+    && ['3.8.21','3.8.22','3.8.23','3.8.24'].includes(patch?.target.runtime) && reviewedSource(patch?.target.runtime, patch?.source.runtime)
     && [patch.source, patch.target].every(d => d.productVersion === 61 && d.schema === 14
       && d.protocol === 11 && d.schemaHash === SCHEMA && d.migrations.length === 61)
     && JSON.stringify(patch.source.migrations) === JSON.stringify(patch.target.migrations)

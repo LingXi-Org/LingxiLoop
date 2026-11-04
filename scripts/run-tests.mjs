@@ -10,6 +10,8 @@ const testsByScope = {
     'server/src/__tests__/document-collaboration.test.ts',
     'server/src/__tests__/admin-platform.test.ts',
     'server/src/__tests__/agent-run-timing.test.ts',
+    'server/src/__tests__/model-stage-timing.test.ts',
+    'server/src/__tests__/model-wire-summary.test.ts',
     'server/src/__tests__/queue-capacity-fixture.test.ts',
     'server/src/__tests__/coworker-activity-realtime.test.ts',
     'server/src/__tests__/domain-events.test.ts',
