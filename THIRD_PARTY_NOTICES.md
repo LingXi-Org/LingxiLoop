@@ -309,6 +309,15 @@ in [`public/licenses/open-claude-ui.txt`](public/licenses/open-claude-ui.txt),
 which Vite also ships in the SPA. Necessary integration adaptations and actual
 verification limits are recorded in [issue #568 evidence](docs/evidence/issue-568.md).
 
+## Case library typography
+
+The case reader uses unmodified Noto Serif SC 600 webfont subsets from Google
+Fonts, matching the supplied case-library design. Bundled subsets are retained
+from that design and missing Unicode subsets are supplied from the same
+`fonts.gstatic.com/s/notoserifsc/v36` distribution. The SIL Open Font License
+is included in `public/fonts/cases/OFL.txt`. Inter, Noto Sans SC and JetBrains
+Mono reuse the application's existing self-hosted fonts and licenses.
+
 ## Grilling skill
 
 The grilling skill in `.agents/skills/grilling` is from

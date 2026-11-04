@@ -160,11 +160,11 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   }, [sidebarOpen, shellModule, isMobile, sidebarPanel])
   useEffect(() => { rememberCourseView(view) }, [view])
   useEffect(() => { if (!isMobile) setMobileNavOpen(false) }, [isMobile])
-  const mobileNav = isMobile && shellModule !== 'chat' ? () => setMobileNavOpen(true) : null
+  const mobileNav = isMobile && shellModule === 'course' ? () => setMobileNavOpen(true) : null
   const chatReady = Boolean(selectedWorkspaceId) && !navigationPending
-  const directPage = isMobile && (shellModule !== 'chat' || !chatReady)
+  const directPage = shellModule === 'cases' || isMobile && (shellModule !== 'chat' || !chatReady)
   const secondary = shellModule === 'chat' ? <ConversationsPane />
-    : <CourseNav space={learningSpaces.activeSpace} />
+    : shellModule === 'course' ? <CourseNav space={learningSpaces.activeSpace} /> : null
   const chatActive = shellModule === 'chat' && chatReady
   const chatVisible = chatActive && (!isMobile || mobileConversationOpen)
   const slidesActive = shellModule === 'slides' && Boolean(selectedWorkspaceId) && !navigationPending
@@ -211,7 +211,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
     : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
   return (
-    <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
+    <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-cases-shell={shellModule === 'cases' || undefined} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
       {!mobileChatOpen && <WorkspaceRail
           {...learningSpaces}
           onSelect={(space) => void learningSpaces.select(space)}
@@ -260,7 +260,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
           </ShellNavContext.Provider>
         </div>
       </div>
-      {isMobile && shellModule !== 'chat' && shellModule !== 'slides' ? <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+      {isMobile && shellModule === 'course' ? <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent side="left" showCloseButton={false} className="gap-0 p-0 data-[side=left]:w-[min(20rem,calc(100vw-3rem))] motion-reduce:animate-none motion-reduce:transition-none" style={{ paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' }}>
           <SheetTitle className="sr-only">课程导航</SheetTitle>
           <SheetDescription className="sr-only">切换当前模块的页面</SheetDescription>

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type PointerEvent as ReactPointerEvent } from 'react'
 import { BookImage, LoaderCircle, RefreshCw, TriangleAlert } from 'lucide-react'
 import { coverPointerAt, type CoverPointer } from './cover-vm/geometry'
 import { http } from '@/api/core/http'
@@ -40,22 +40,23 @@ function useMedia(query: string) {
   return matches
 }
 
-export function CaseCover({ cover, fallbackUrl, title, scopeKey, className = '', onRetry, busy = false, onRefresh }: {
+export function CaseCover({ cover, fallbackUrl, title, scopeKey, className = '', onRetry, busy = false, onRefresh, coverLink }: {
   cover?: CaseCoverDescriptor | null
   fallbackUrl?: string | null
   title: string
   /** Includes authenticated user and organization; a change destroys old sandbox/fetches. */
   scopeKey: string
   className?: string
+  coverLink?: ReactNode
   busy?: boolean
   onRefresh?: () => void
   onRetry?: (cover: CaseCoverDescriptor) => Promise<unknown>
 }) {
   const identity = `${scopeKey}:${caseCoverIdentity(cover)}:${fallbackUrl ?? ''}`
-  return <ScopedCaseCover key={identity} {...{ cover, fallbackUrl, title, className, onRetry, busy, onRefresh }} scopeKey={identity} />
+  return <ScopedCaseCover key={identity} {...{ cover, fallbackUrl, title, className, onRetry, busy, onRefresh, coverLink }} scopeKey={identity} />
 }
 
-function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry, busy, onRefresh, scopeKey }: Parameters<typeof CaseCover>[0]) {
+function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry, busy, onRefresh, scopeKey, coverLink }: Parameters<typeof CaseCover>[0]) {
   const { theme } = useTheme()
   const reducedMotion = useMedia('(prefers-reduced-motion: reduce)')
   const finePointer = useMedia('(hover: hover) and (pointer: fine)')
@@ -144,6 +145,7 @@ function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry, busy, 
       {program && <Suspense fallback={null}><CaseCoverPreview program={program} altText={description} scopeKey={scopeKey}
         active={active} reducedMotion={reducedMotion} theme={theme} pointer={pointer} onReady={interactionReady} onFailure={interactionFailed}
         className={`absolute inset-0 h-full w-full pointer-events-none ${ready ? '' : 'opacity-0'}`} /></Suspense>}
+      {coverLink}
     </div>
     {caseCoverPending(cover) ? <div className={corner} role="status"><LoaderCircle aria-hidden="true" className="size-3 motion-safe:animate-spin"/><span>{cover?.status === 'pending' ? '等待生成' : '生成中'}</span>{onRefresh && <button type="button" aria-label="刷新封面状态" disabled={busy} onClick={onRefresh} className={control}><RefreshCw aria-hidden="true" className="size-3"/></button>}</div>
       : cover?.status === 'failed' && cover.canRetry && onRetry ? <div className={corner}><TriangleAlert aria-hidden="true" className="size-3"/><span>生成失败</span><button type="button" disabled={busy || retrying} onClick={() => void retry()} className={control}>{retrying ? '正在重试…' : '重试封面'}</button>{retryError && <span role="status">重试失败</span>}</div> : null}
