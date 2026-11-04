@@ -40,3 +40,9 @@ The 1440px layout uses 320px hero covers, 176px card covers, a 680px article col
 - Subsequent content-container CSS adjustment was checked in the three browser sizes. Final PR CI is the final candidate build gate.
 
 Production initially required sign-in in the browser. Authenticated production verification remains dependent on a user session; public readiness and release status are checked separately during deployment.
+
+## Clamped outline follow-up
+
+At 1440×900, both final headings reach the same maximum scroll position. The initial bottom-of-page rule wrongly highlighted the last heading when the previous heading was clicked. The reader now preserves the clicked heading until the scroll position actually changes, then resumes normal scroll tracking.
+
+With the fixture detail page open at 1440×900, import `scripts/fixtures/cases-outline-check.mjs` in the browser tool session and call `checkCaseOutline(tab)`. Its assertions check the first heading, each of the last two headings at the same scroll offset, focus, and automatic tracking after PageUp. `outline-regression.json` records the failure and corrected results; `outline-clamped-1440.jpg` shows the corrected penultimate-section highlight.

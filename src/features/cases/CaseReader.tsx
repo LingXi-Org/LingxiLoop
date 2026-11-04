@@ -22,6 +22,7 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
   const root = useRef<HTMLDivElement>(null)
   const body = useRef<HTMLDivElement>(null)
   const headings = useRef<HTMLElement[]>([])
+  const clickedSection = useRef<{ id: string; scrollTop: number } | null>(null)
   const [outline, setOutline] = useState<ReturnType<typeof caseOutline>>([])
   const [active, setActive] = useState('')
   const [related, setRelated] = useState<CaseArticle[]>([])
@@ -55,6 +56,12 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
     const scroll = root.current?.closest<HTMLElement>('[data-page-scroll]')
     if (!container || !scroll) return
     const updateActive = () => {
+      // A short final section may not reach the top when scrolling is clamped.
+      if (clickedSection.current?.scrollTop === scroll.scrollTop) {
+        setActive(clickedSection.current.id)
+        return
+      }
+      clickedSection.current = null
       const top = scroll.getBoundingClientRect().top + 32
       let selected = headings.current[0]?.id ?? ''
       for (const heading of headings.current) {
@@ -65,6 +72,7 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
       setActive(selected)
     }
     const readHeadings = () => {
+      clickedSection.current = null
       // Observe rendered headings so lazy rich-text readers and Markdown share anchors.
       const nodes = Array.from(container.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6'))
       const entries = caseOutline(nodes.map(node => node.textContent ?? ''))
@@ -90,6 +98,8 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
       const target = headings.current.find(node => node.id === entry.id)
       target?.scrollIntoView({ block: 'start', behavior: 'instant' })
       target?.focus({ preventScroll: true })
+      const scroll = root.current?.closest<HTMLElement>('[data-page-scroll]')
+      if (scroll) clickedSection.current = { id: entry.id, scrollTop: scroll.scrollTop }
       setActive(entry.id)
     }}>{entry.title}</a>)}</nav>
 
