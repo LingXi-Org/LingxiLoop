@@ -27,16 +27,15 @@ export function CaseCard({ article, href, onNavigate, scopeKey, featured = false
         className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRefresh={onRefresh} onRetry={onRetry} busy={busy}
         coverLink={<a href={href} onClick={open} className="case-cover-link" tabIndex={-1} aria-label={article.title} />} />
     </div>
-    <div className="case-card-copy">
-      <h2><a className="case-card-link" href={href} onClick={open}>{article.title}</a></h2>
+    <a className="case-card-copy case-card-link" href={href} onClick={open} aria-label={article.title}>
+      <h2>{article.title}</h2>
       <p>{markdownText(article.summary)}</p>
       <div className="case-card-meta">
         {featured && <Avatar><AvatarImage src={article.authorAvatarUrl ?? undefined} alt="" /><AvatarFallback>{article.authorName.slice(0, 1)}</AvatarFallback></Avatar>}
-        <span>{article.authorName}</span><span aria-hidden="true">·</span>
-        <time dateTime={article.publishedAt ?? article.createdAt}>{caseDate(article, true)}</time>
+        <span>{article.authorName} <span aria-hidden="true">·</span> <time dateTime={article.publishedAt ?? article.createdAt}>{caseDate(article, true)}</time></span>
         {article.view === 'manage' && article.status !== 'published' && <span>{article.status === 'draft' ? '草稿' : '已下架'}</span>}
       </div>
-    </div>
+    </a>
     {actions && <div className="case-card-actions">{actions}</div>}
   </article>
 }
