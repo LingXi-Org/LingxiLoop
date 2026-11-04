@@ -53,7 +53,10 @@ export function homeworkHelpPlan(input: {
 }
 
 export function homeworkHelpRules(plan: HomeworkHelpPlan | null | undefined): string {
-  if (!plan) return ''
+  // No grounded assessment means no evidence-backed depth recommendation.
+  // In particular, do not invent an "actual attempt" or add a generic clue
+  // workflow over the current teacher's objective. Task policy still applies.
+  if (!plan || plan.basis === 'unknown') return ''
   return 'Keep help within the frozen teacher requirements and current feedback, and honor the learner’s requested help style. '
     + (plan.defaultDepth === 'explanation'
       ? 'The default is an explanation of the recurring open criterion. '

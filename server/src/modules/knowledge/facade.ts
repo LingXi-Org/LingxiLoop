@@ -1,5 +1,10 @@
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
+import { storage } from '../../storage.js'
+import { createKnowledgeAgentApplication } from './agent-application.js'
+import { KnowledgeApplication } from './application.js'
+import { MAX_SOURCE_BYTES, openNotebookEnabled } from './policy.js'
+import { openNotebookClient } from './provider.js'
 import {
   deleteKnowledgeSource,
   ensureProjectNotebook,
@@ -7,11 +12,6 @@ import {
   retryKnowledgeSource,
   syncProjectNotebookMetadata,
 } from './runtime.js'
-import { storage } from '../../storage.js'
-import { createKnowledgeAgentApplication } from './agent-application.js'
-import { KnowledgeApplication } from './application.js'
-import { MAX_SOURCE_BYTES, openNotebookEnabled } from './policy.js'
-import { openNotebookClient } from './provider.js'
 import { KnowledgeSourceSearchApplication } from './source-search.js'
 
 export const knowledgeSourceSearchApplication = new KnowledgeSourceSearchApplication(pool, {
@@ -29,7 +29,7 @@ export const knowledgeApplication = new KnowledgeApplication(pool, {
   retrySource: retryKnowledgeSource,
   deleteSource: deleteKnowledgeSource,
   putObject: async (key, body, contentType) => { await storage.put(key, body, contentType) },
-  presignPut: (key, contentType, contentLength) => storage.presignPut(key, contentType, { contentLength }),
+  presignPut: (key, contentType, contentLength, checksumSHA256) => storage.presignPut(key, contentType, { contentLength, checksumSHA256 }),
   statObject: (key) => storage.statObject(key),
   readObjectBounded: (key, maxBytes) => storage.readObjectBounded(key, maxBytes),
   publicUrl: (key) => storage.publicUrl(key),

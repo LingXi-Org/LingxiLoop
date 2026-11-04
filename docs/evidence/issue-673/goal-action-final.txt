@@ -1,0 +1,42 @@
+(node:21593) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:21599) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:21599) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: live staged teaching covers T11 and the five T12/T15 learning states
+    # Subtest: t11-B
+        # Subtest: turn-1
+        ok 1 - turn-1
+          ---
+          duration_ms: 43538.487013
+          type: 'test'
+          ...
+        # Subtest: turn-2
+        ok 2 - turn-2
+          ---
+          duration_ms: 4101.343823
+          type: 'test'
+          ...
+        1..2
+    ok 1 - t11-B
+      ---
+      duration_ms: 47641.173579
+      type: 'test'
+      ...
+    1..1
+ok 1 - live staged teaching covers T11 and the five T12/T15 learning states
+  ---
+  duration_ms: 47644.858911
+  type: 'test'
+  ...
+1..1
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 51113.696144

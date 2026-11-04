@@ -19,6 +19,8 @@ const testsByScope = {
     'server/src/__tests__/entitlement-resolver.test.ts',
     'server/src/__tests__/llm-ledger.test.ts',
     'server/src/__tests__/llm-recovery.test.ts',
+    'server/src/__tests__/teaching-scaffold.test.ts',
+    'server/src/__tests__/teaching-scaffold-model.test.ts',
     'server/src/__tests__/agent-tool-registry.test.ts',
     'server/src/__tests__/artifact-tool-contracts.test.ts',
     'server/src/__tests__/first-action-contracts.test.ts',

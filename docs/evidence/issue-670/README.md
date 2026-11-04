@@ -201,3 +201,39 @@ recheck main, exact-head CI and independent final review; after deployment,
 verify both hosts and public readiness using the existing release owner.
 The final candidate CI URL and exact SHA are recorded in the PR check suite.
 A queued or cancelled check does not authorize reporting a completed release.
+
+
+## Main reconciliation after #691
+
+The next integration baseline is main `ab31390b` (merged uploads, homework
+reports and grounded teaching actions), following the previously qualified
+candidate `ffe1ee98`. Three conflicts were resolved in CI, the server Dockerfile
+and runtime context. Both SPA/runtime packaging retain `shared/upload-mime.ts`
+and runtime includes `src/lib/uploadError.ts`; Docker context allowlists and CI
+ownership retain the upload additions. Removed Visualize entries remain removed.
+The editor tests still own their complete prerequisite builds.
+
+Teaching context creation, grounded task rules, scaffold planning, final-answer
+checks and the separately budgeted authorized homework teaching item are retained.
+The single composed publication hook first preserves the shared global gate's
+reject/approval decision, then applies Design completion constraints and teaching
+withholding. None can clear a previous rejection or approve past the shared gate.
+Design prerequisite snapshots are computed only for an actual canvas decision;
+ordinary teaching context retains its supported minimal observation path.
+
+Local owning verification:29/29 policy/tool/teaching-context tests,52/52 image
+packaging/CI/Worker/scoped-dependency contracts, server typecheck/lint,21/21 native
+Worker/archive/editor/teaching regressions. The combined test covers premature
+Design claims, truthful-but-incomplete teaching fallback, valid final fallback,
+and preservation of a global rejection. Native teaching still explicitly records
+formal3.8.24's fail-closed publication behavior, not an invented correction.
+
+PR#688's owner is separately fixing the global publication gate and formal3.8.25
+bridge. This reconciliation does not modify `public-text-safety.ts`, upgrade the
+SDK, alter product62 migrations or bypass old harness pins. Final integration
+with that future head needs its own validation. Earlier real-model/browser
+matrices qualify their recorded source; this merge does not claim a fresh live
+model or production test of the combined teaching/Design path. The new head
+requires its own CI; the older green run41851272650 is historical evidence only.
+No production, admission or old-run termination action is performed in this
+reconciliation; the designated integrator retains the #691 recovery and release.

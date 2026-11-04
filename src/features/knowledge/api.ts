@@ -4,6 +4,8 @@ import { putPresignedFile } from '@/api/transport'
 import { uploadsApi } from '@/features/platform/api'
 import { projectLifecycleApi } from '@/features/projects/api'
 import type { WorkspaceSummary } from '@/types'
+import { canonicalUploadMime } from '../../../shared/upload-mime'
+import { uploadChecksum } from '../platform/upload-checksum'
 import type {
   ConversationSourceSelection,
   KnowledgeSource,
@@ -46,10 +48,12 @@ async function uploadSource(basePath: string, fingerprintScope: string, file: Fi
   bound?.assertIdentity()
   const caps = await uploadsApi.uploadCapabilities()
   bound?.assertIdentity()
-  const mime = bound?.mime ?? (file.type || 'text/plain')
+  const mime = bound?.mime ?? canonicalUploadMime(file.name, file.type)
   if (file.size > caps.maxBytes) throw new Error(`文件超过 ${Math.round(caps.maxBytes / 1024 / 1024)} MB 大小限制。`)
   if (!caps.allowedMimes.includes(mime)) throw new Error('文件格式暂不支持，请选择支持的文件。')
-  const fingerprint = JSON.stringify(['file', fingerprintScope, file.name, file.size, file.lastModified, mime])
+  const sha256 = await uploadChecksum(file)
+  bound?.assertIdentity()
+  const fingerprint = JSON.stringify(['file', fingerprintScope, file.name, file.size, file.lastModified, mime, sha256])
   const pending = sourceRequestKeys.get(fingerprint)
   if (pending?.uploaded && pending.sourceId) {
     bound?.assertIdentity()
@@ -58,7 +62,7 @@ async function uploadSource(basePath: string, fingerprintScope: string, file: Fi
     return
   }
   const signed = await http<{ id: string; uploadUrl: string; mime: string; size: number }>(`${basePath}/upload/presign`, {
-    method: 'POST', headers: bound?.headers, body: JSON.stringify({ idempotencyKey: sourceRequestKey(fingerprint), name: file.name, mime, size: file.size }),
+    method: 'POST', headers: bound?.headers, body: JSON.stringify({ idempotencyKey: sourceRequestKey(fingerprint), name: file.name, mime, size: file.size, sha256 }),
   })
   const request = sourceRequestKeys.get(fingerprint)
   if (request) request.sourceId = signed.id
@@ -89,7 +93,7 @@ export const knowledgeApi = {
     // Browser MIME aliases (especially Windows ZIP and Markdown) vary; the
     // server validates canonical format plus the actual original-file bytes.
     const mime = materialMimes[file.name.split('.').at(-1)?.toLowerCase() ?? '']
-      ?? (file.type || 'application/octet-stream')
+      ?? canonicalUploadMime(file.name, file.type)
     return uploadSource(`/projects/${encodeURIComponent(projectId)}/sources`,
       JSON.stringify([binding.companyId, binding.userId, projectId, binding.space]), file, undefined, {
         mime, headers: { 'x-company-id': binding.companyId, 'x-project-id': projectId },

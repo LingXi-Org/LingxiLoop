@@ -71,6 +71,35 @@ export function parseHomeworkValidation(value: unknown, draft: Pick<HomeworkDraf
 export function applyHomeworkReviewBoundary<T extends { criterion: string; met: boolean; independent: boolean; feedback: string }>(criteria: T[], findings: HomeworkValidationFinding[]): Array<T & { reviewRequired?: boolean }> {
   return criteria.map(item => {
     const manual = findings.find(finding => finding.severity === 'teacher_review' && finding.original === item.criterion)
-    return manual ? { ...item, met: false, independent: false, reviewRequired: true, feedback: `需要教师复核：${manual.teacherReview ?? manual.reason}。AI 辅助观察：${item.feedback}`.slice(0, 2000) } : item
+    return manual ? { ...item, met: false, independent: false, reviewRequired: true, feedback: `需要教师复核：${manual.teacherReview ?? manual.reason}`.slice(0, 2000) } : item
   })
+}
+
+/** Published requirements remain authoritative even if an earlier model omitted
+ * a teacher_review finding. Only explicit teacher grading language opts in. */
+export function teacherReviewFindings(hw: { instructions: string; criteria: string[]; validation_findings?: HomeworkValidationFinding[] }): HomeworkValidationFinding[] {
+  const findings = [...(hw.validation_findings ?? [])]
+  const reserved = /(?:教师|老师|teacher).{0,40}(?:评分|评定|评判|等级|量规|grade|rubric)|(?:评分|评定|等级|量规|grade|rubric).{0,40}(?:教师|老师|teacher)/i
+  const grading = /评分|评定|等级|量规|优秀档|grade|rubric/i
+  hw.criteria.forEach((criterion, criterionIndex) => {
+    if (!reserved.test(criterion.replace(/\s+/g,' ')) && !(reserved.test(hw.instructions.replace(/\s+/g,' ')) && grading.test(criterion))) return
+    if (findings.some(item => item.severity === 'teacher_review' && item.original === criterion)) return
+    findings.push({ field: 'criteria', severity: 'teacher_review', excerpt: criterion, original: criterion, criterionIndex,
+      reason: '此项评分或等级由教师确定。', teacherReview: '此项评分或等级由教师确定；AI 仅提供可追溯的学习证据。', suggestion: '请教师按作业量规在验收意见中记录实际等级。' })
+  })
+  return findings
+}
+
+/** Reject an affirmative grade assertion, not discussion of a future/negative
+ * teacher decision. Structured reviewRequired/met flags remain authoritative. */
+export function hasAssignedTeacherGrade(text:string):boolean {
+  const claims=/(?:已达成|达到|评为|评定为|评分为|等级为|属于|获得|认定为)[\s/“”"'：:]{0,8}(?:优秀|良好|合格|不合格|[ABCD][档级])(?:档|等级|等第|级)?/gi
+  for(const match of text.matchAll(claims)) {
+    const before=text.slice(Math.max(0,match.index-12),match.index)
+    const after=text.slice(match.index+match[0].length,match.index+match[0].length+24)
+    if(/(?:尚未|未能|没有|不能|未|是否|能否)\s*$/.test(before))continue
+    if(!match[0].startsWith('已')&&/^(?:与否)?由(?:教师|老师).{0,12}(?:判断|评定|确定)/.test(after))continue
+    return true
+  }
+  return false
 }

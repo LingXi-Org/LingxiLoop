@@ -86,7 +86,7 @@ WORKDIR /app
 # Preserve the Web and Design build entrypoints after the scoped install.
 COPY package.json ./
 COPY src ./src
-COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts shared/retired-visualize.ts shared/assistant-directive-parser.ts ./shared/
+COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts shared/retired-visualize.ts shared/assistant-directive-parser.ts shared/upload-mime.ts ./shared/
 COPY public ./public
 COPY index.html ./
 COPY vite.config.ts ./
@@ -130,13 +130,14 @@ COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts shared/ret
 COPY server/assets ./server/assets
 COPY server/package.json server/package-lock.json ./server/
 COPY server/scripts/check-packaged-startup.mjs ./server/scripts/
+COPY shared/upload-mime.ts ./shared/
 # The server deliberately shares these dependency-free domain helpers with
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into
 # this final stage).
 COPY src/types.ts ./src/types.ts
 COPY src/lib/conversationRunSummary.ts ./src/lib/
-COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/executionBudget.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
+COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/uploadError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/executionBudget.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
 # Design and Slides serve the vendored editor pages and run the vendored checker unchanged.
 COPY third_party/baoyu-design ./third_party/baoyu-design
 COPY third_party/visualize-compat ./third_party/visualize-compat

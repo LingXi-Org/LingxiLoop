@@ -46,7 +46,7 @@ export interface SubmissionVersion {
 }
 
 export interface ConversationReference { channelId: string; messageIds: string[] }
-export interface EvidenceMessage { id: string; role: 'user' | 'assistant'; text: string; sequence: number }
+export interface EvidenceMessage { id: string; role: 'user' | 'assistant'; text: string; sequence: number; timestamp?: number }
 export interface ConversationEvidence extends ConversationReference { title: string; capturedAt: string; messages: EvidenceMessage[] }
 export interface SubmissionAssessment {
   status: 'PENDING' | 'FAILED' | 'READY'; mastery?: 'MASTERED' | 'DEVELOPING' | 'INSUFFICIENT'; reason?: string

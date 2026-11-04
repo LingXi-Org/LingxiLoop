@@ -8,6 +8,7 @@ import { createProductTools } from '../agent-runtime/tools.js'
 import { artifactReferencePages, readArtifactReference } from '../modules/artifacts/skills.js'
 import { runtimeModelConfiguration } from '../agent-runtime/runtime.js'
 import { designExplanationRules } from '../agent-runtime/skill-context.js'
+import { decideScaffold } from '../modules/learning/teaching-scaffold.js'
 
 const tools = createProductTools(() => { throw new Error('not used') }).filter(tool => tool.action !== 'memory.summary')
 const harness = assembleHarness(createProductHarness(tools))
@@ -223,4 +224,27 @@ test('a Design write cannot declare satisfaction without a subsequent successful
   ctx.executionSteps.push({ ...ctx.executionSteps[0], id: 'new-write' })
   assert.ok(policy.validateCompletion('', assessment, ctx), 'a check before the newest write is stale')
   assert.equal(policy.validateCompletion('', { ...assessment, status: 'partial' }, ctx), null)
+})
+
+
+test('global, Design and teaching publication constraints compose without releasing rejected content', () => {
+  const ctx = context()
+  const scaffold = decideScaffold({ messages: [{ id: 'learner', text: '请帮我理解概念之间的关系' }], assessment: 'unknown' },
+    { goal: 'reasoning', goalQuote: '概念之间的关系', intent: 'check', attempts: [], fullDemonstrationQuote: '' })
+  ctx.dynamic = { teachingScaffold: scaffold }
+  ctx.executionSteps = [{ id: 'plan', kind: 'design__plan_explanation', artifacts: [], requestVersion: 1,
+    input: { arguments: JSON.stringify({ delivery: 'canvas' }) },
+    output: JSON.stringify({ receipts: [{ action: 'design.plan_explanation', result: { ok: true, value: { delivery: 'canvas' } } }] }) }]
+  const premature = policy.publicTextSafety({ text: '画板已经完成。', isFinal: true, approvedThrough: 0 }, ctx)
+  assert.equal(premature.safeThrough, 0)
+  assert.equal(premature.reject, 'unsupported_content', 'teaching withholding must not clear the Design rejection')
+  const fallback = `${DESIGN_INCOMPLETE_NOTICE}先区分这两个概念。\n\n${scaffold.nextStep}`
+  assert.equal(policy.publicTextSafety({ text: fallback, isFinal: false, approvedThrough: 0 }, ctx).safeThrough, 0)
+  assert.equal(policy.publicTextSafety({ text: fallback, isFinal: true, approvedThrough: 0 }, ctx).safeThrough, fallback.length)
+  const incompleteTeaching = `${DESIGN_INCOMPLETE_NOTICE}先区分这两个概念。`
+  assert.equal(policy.publicTextSafety({ text: incompleteTeaching, isFinal: true, approvedThrough: 0 }, ctx).safeThrough, 0,
+    'a truthful Design notice cannot bypass the independent teaching action')
+  const internal = `${DESIGN_INCOMPLETE_NOTICE}<analysis>private model planning</analysis>`
+  assert.ok(policy.publicTextSafety({ text: internal, isFinal: true, approvedThrough: 0 }, ctx).reject,
+    'neither local surface may clear the global publication reject')
 })

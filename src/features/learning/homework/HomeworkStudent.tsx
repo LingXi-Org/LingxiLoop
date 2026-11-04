@@ -37,7 +37,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
   const canSubmit = editable && !blocker
   const submissionGuidance = blocker && <div id={blockerId} role="status" className="space-y-2 text-sm text-muted-foreground">
     <p>{blocker}</p>
-    {report && (!references.length || student.report?.evidenceSources?.some(source => !references.some(ref => ref.messageIds.includes(source.messageId)))) && <Button type="button" variant="link" size="sm" disabled={disabled} onClick={() => { referenceArea.current?.scrollIntoView({ block: 'nearest' }); referenceArea.current?.focus({ preventScroll: true }) }}>选择引用片段</Button>}
+    {report && (!references.length || [...(student.report?.evidenceSources??[]),...(student.report?.assistanceEvidence??[])].some(source => !references.some(ref => ref.messageIds.includes(source.messageId)))) && <Button type="button" variant="link" size="sm" disabled={disabled} onClick={() => { referenceArea.current?.scrollIntoView({ block: 'nearest' }); referenceArea.current?.focus({ preventScroll: true }) }}>选择引用片段</Button>}
   </div>
   const act = async (work: () => Promise<void>) => {
     if (inFlight.current || disabled) return
@@ -70,7 +70,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
     {editable && <div ref={referenceArea} tabIndex={-1} aria-label="选择学习对话引用" className="rounded-sm focus-visible:outline-2 focus-visible:outline-ring"><ConversationReferencePicker courseId={homework.courseId} channelId={student.channelId} value={references} onChange={setReferences} disabled={disabled}/></div>}
     {editable && (preview && report ? <section aria-label="提交预览" className="space-y-5 rounded-xl border p-4">
       <h3 className="font-semibold">提交预览</h3><p className="text-sm text-muted-foreground">以下作答和学习报告将一起提交，仅你和本课程教师可见。</p>
-      <ForumBody content={answer.text} document={answer.editorDocument} /><ForumFiles links={answer.links} attachments={answer.attachments} /><HomeworkReport report={report} />
+      <ForumBody content={answer.text} document={answer.editorDocument} evidence /><ForumFiles links={answer.links} attachments={answer.attachments} /><HomeworkReport report={report} />
       {submissionGuidance}
       <div className="sticky bottom-0 flex flex-wrap gap-2 border-t bg-popover py-3">
         <Button variant="outline" disabled={disabled} onClick={() => setPreview(false)}>返回修改</Button>
@@ -84,7 +84,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
     </section> : <section aria-label="我的作答草稿" className="space-y-4">
       <div className="space-y-1"><h3 className="font-semibold">我的作答</h3><p className="text-sm text-muted-foreground">草稿仅自己可见。正式提交后，教师才能看到作答和报告。</p></div>
       <ForumContentFields label="我的作答" body={draft.body} editorDocument={draft.editorDocument} setBody={(body,editorDocument) => setDraft(previous => ({ ...previous, body,editorDocument }))} links={draft.links} setLinks={links => setDraft(previous => ({ ...previous, links }))} attachments={draft.attachments} setAttachments={attachments => setDraft(previous => ({ ...previous, attachments }))} disabled={disabled} onUploading={value => { setUploading(value); onUploading(value) }} />
-      <p className="text-xs text-muted-foreground">可核对文字、公开网页、含可提取文字的 PDF 和 Word 文档（.docx）。图片、扫描件、音视频需要补充文字说明；上传完成不代表已被阅读。</p>
+      <p className="text-xs text-muted-foreground">可核对文字、公开网页、含可提取文字的 PDF 和 Word 文档（.docx）。图片、扫描件、音视频需要补充文字说明；上传完成不代表已被阅读。代码请使用行内代码或代码块，保留运算符与缩进。</p>
       {storageError && <p role="alert" className="text-sm text-destructive">本地草稿无法保存，请先保存到课程或复制内容。</p>}
       {submissionGuidance}
       <div className="flex flex-wrap gap-2">
@@ -93,7 +93,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
           discard(); onUpdated(next); setNotice(next.reportStatus==='PENDING'?'作答已保存，正在自动生成学习报告。':'草稿已保存，请先完成与助手的对话。')
         })}>保存草稿</Button>
         <Button variant="outline" disabled={disabled || dirty || !student.hasLearningRecord || !student.canSubmit || student.reportStatus === 'PENDING' || !answer.text.trim() && !answer.links.length && !answer.attachments.length} onClick={() => void act(async () => {
-          onUpdated(await homeworkApi.report(homework.courseId, homework.id, student.answerRevision)); setNotice('正在更新学习报告。')
+          onUpdated(await homeworkApi.report(homework.courseId, homework.id, student.answerRevision)); setNotice('正在核对当前证据并更新报告；内容未变化时沿用已有报告。')
         })}>{student.reportStatus === 'PENDING' ? '报告更新中…' : '更新报告'}</Button>
         <Button aria-describedby={blocker ? blockerId : undefined} disabled={disabled || !canSubmit} onClick={() => setPreview(true)}>预览并提交</Button>
       </div>
