@@ -31,6 +31,7 @@ shared/**
 !shared/visualize-public-resources.ts
 !shared/artifact-math.ts
 !shared/artifact-math-source.ts
+!shared/artifact-math-loader.ts
 !shared/design-flow-size.ts
 !shared/artifact-editor-origin.ts
 !shared/artifact-recovery.ts

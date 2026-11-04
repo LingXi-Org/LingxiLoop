@@ -208,6 +208,11 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     const editorStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
       .find(part => part.split('\n')[0].endsWith(` AS ${name}`))
     assert.ok(editorStage, `${name} exists`)
+    for (const { source } of copiesOf(editorStage)) {
+      if (ts.sys.fileExists(resolve(root, source))) {
+        assert.ok(inContext(source), `${name} explicit COPY input excluded from Docker context: ${source}`)
+      }
+    }
     for (const path of ['scripts/design-copy.mjs', 'third_party/baoyu-design/host/design-zh-CN.json',
       'third_party/baoyu-design/host/slides-zh-CN.json']) {
       assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing Design translation input: ${path}`)
