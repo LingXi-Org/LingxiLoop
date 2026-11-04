@@ -11,7 +11,7 @@ const HISTORICAL_FILES = [
   'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts',
 ]
 const OWNERS = [
-  [/^server\/src\/(?:agent-runtime\/(?:context|skill-context)|modules\/artifacts\/(?:skills|agent-tools)|modules\/learning\/teacher-preset)\.ts$/, ['runtime-first-action-contracts.test.ts', 'runtime-design-failure.test.ts']],
+  [/^server\/src\/(?:agent-runtime\/(?:context|skill-context)|modules\/artifacts\/(?:skills|agent-tools)|modules\/learning\/teacher-preset)\.ts$/, ['runtime-first-action-contracts.test.ts', 'runtime-design-failure.test.ts', 'runtime-teaching-scaffold.test.ts']],
   [/^server\/src\/(?:im\/(?:retired-visualize|visualize-router|interaction-admission)|agent-runtime\/retired-capabilities)\.ts$|^shared\/(?:retired-visualize|assistant-directive-parser)\.ts$/, ['retired-visualize.test.ts']],
   [/^server\/src\/db\/(?:migrate\.ts|migrations\/0062_case_options\.sql)$|^server\/scripts\/bootstrap-runtime-patch-test-db\.mjs$/, ['case-options-migration.test.ts', 'cases.test.ts']],
   [/^server\/src\/(?:agent-runtime\/(?:model-observation-timing|runtime)\.ts|modules\/platform-operations\/model-stage-timing\.ts)$|^shared\/model-stage-timing\.ts$/, ['model-stage-ledger.test.ts', 'runtime-public-text-suspension.test.ts']],

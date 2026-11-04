@@ -20,6 +20,7 @@ test('explanation routing and publication keep actual native generation and fail
     const scope = computeScope(classifyPaths([path]))
     assert.ok(scope.integration_files.includes('runtime-first-action-contracts.test.ts'),path)
     assert.ok(scope.integration_files.includes('runtime-design-failure.test.ts'),path)
+    assert.ok(scope.integration_files.includes('runtime-teaching-scaffold.test.ts'),path)
   }
 })
 test('Design sizing sources retain their editor build and artifact integration owners', () => {
