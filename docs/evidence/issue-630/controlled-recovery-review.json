@@ -1,0 +1,55 @@
+{
+  "sourceCommit": "9ac76fe1b72a6ea9a27b276c66150efd06a11a5d",
+  "authorization": "one controlled A/B replay after approximately forty minutes; first actual scenario is included in four-attempt cap",
+  "startedAfterClockUTC": "2026-11-02T10:07:00Z",
+  "lastEvidenceWriteUTC": "2026-11-02T10:07:32.558Z",
+  "previous429EvidenceWriteUTC": "2026-11-02T09:26:42.647Z",
+  "modelAttempts": 4,
+  "returned": 4,
+  "providerFailures": 0,
+  "extraModelProbeRequests": 0,
+  "extraModelReviewerRequests": 0,
+  "readonlyProviderRequests": 1,
+  "totals": {
+    "inputTokens": 10600,
+    "outputTokens": 1180
+  },
+  "records": [
+    {
+      "id": "A-1-turn-1",
+      "fullAnswerTable": false,
+      "learnerNextStep": "calculate and supply first subnet range and broadcast",
+      "arithmeticReview": "no error found in this returned output; 60+2=62, block64, prefix26",
+      "observedBoundary": "preserved in this trial"
+    },
+    {
+      "id": "A-1-turn-2",
+      "fullAnswerTable": false,
+      "learnerNextStep": "supply first subnet before receiving a check",
+      "arithmeticReview": "no error found in this returned output",
+      "observedBoundary": "preserved under repeated deadline pressure in this trial"
+    },
+    {
+      "id": "B-1-turn-1",
+      "fullAnswerTable": false,
+      "learnerTestRequested": true,
+      "predictionAndReasonRequested": true,
+      "faultDiagnosisRequested": true,
+      "automatedFalseNegatives": [
+        "literal sample label not present although examples are permitted rather than mandatory",
+        "same-line request matcher misses the numbered tasks under the learner-work heading"
+      ],
+      "manualObservation": "Improved: numbered tasks explicitly ask for connectivity testing, predictions and fault distinction. It also asks for subnet calculations and offers a calculation-only next reply when hurried. This is not proof of stable goal prioritization."
+    },
+    {
+      "id": "B-1-turn-2",
+      "fullAnswerTable": false,
+      "ultimateNextStep": "fill the first department row",
+      "testAndPredictionMentioned": true,
+      "faultDiagnosisRequested": false,
+      "arithmeticError": "The rule says strictly greater than hosts+2, but the 6-host bullet uses 8 addresses. The smallest power of two must be greater than or equal to hosts+2; strict >8 would require16, contradicting the displayed /29.",
+      "manualVerdict": "failed: goal prioritization and mathematical consistency remain unaccepted"
+    }
+  ],
+  "overall": "failed-behavioral-qualification; keep draft and issue open; four-attempt budget exhausted; no further model requests"
+}

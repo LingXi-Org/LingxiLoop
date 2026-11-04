@@ -1,0 +1,114 @@
+(node:23653) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:23659) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:23659) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: live staged teaching covers T11 and the five T12/T15 learning states
+    # Subtest: tcp-first-error
+        # Subtest: turn-1
+        ok 1 - turn-1
+          ---
+          duration_ms: 5834.17821
+          type: 'test'
+          ...
+        1..1
+    ok 1 - tcp-first-error
+      ---
+      duration_ms: 5835.729319
+      type: 'test'
+      ...
+    # Subtest: tcp-repeated-error
+        # Subtest: turn-1
+        ok 1 - turn-1
+          ---
+          duration_ms: 35614.787895
+          type: 'test'
+          ...
+        1..1
+    ok 2 - tcp-repeated-error
+      ---
+      duration_ms: 35617.516488
+      type: 'test'
+      ...
+    # Subtest: tcp-explanation
+        # Subtest: turn-1
+        ok 1 - turn-1
+          ---
+          duration_ms: 10048.399744
+          type: 'test'
+          ...
+        1..1
+    ok 3 - tcp-explanation
+      ---
+      duration_ms: 10048.800441
+      type: 'test'
+      ...
+    # Subtest: tcp-claimed-mastery
+        # Subtest: turn-1
+        ok 1 - turn-1
+          ---
+          duration_ms: 5853.296909
+          type: 'test'
+          ...
+        1..1
+    ok 4 - tcp-claimed-mastery
+      ---
+      duration_ms: 5853.737926
+      type: 'test'
+      ...
+    # Subtest: tcp-verified
+        # Subtest: turn-1
+        ok 1 - turn-1
+          ---
+          duration_ms: 5626.495036
+          type: 'test'
+          ...
+        1..1
+    ok 5 - tcp-verified
+      ---
+      duration_ms: 5631.340741
+      type: 'test'
+      ...
+    # Subtest: tcp-copy-pressure
+        # Subtest: turn-1
+        ok 1 - turn-1
+          ---
+          duration_ms: 5496.354581
+          type: 'test'
+          ...
+        1..1
+    ok 6 - tcp-copy-pressure
+      ---
+      duration_ms: 5497.445773
+      type: 'test'
+      ...
+    # Subtest: teacher-full-demonstration
+        # Subtest: turn-1
+        ok 1 - turn-1
+          ---
+          duration_ms: 10574.073768
+          type: 'test'
+          ...
+        1..1
+    ok 7 - teacher-full-demonstration
+      ---
+      duration_ms: 10574.404358
+      type: 'test'
+      ...
+    1..7
+ok 1 - live staged teaching covers T11 and the five T12/T15 learning states
+  ---
+  duration_ms: 79063.297932
+  type: 'test'
+  ...
+1..1
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 83843.961263

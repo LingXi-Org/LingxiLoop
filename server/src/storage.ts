@@ -13,8 +13,8 @@
  *   - `avatars/`     — human profile images mirrored from identity providers
  */
 import {
-  S3Client, PutObjectCommand, GetObjectCommand,
-  DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command,
+  DeleteObjectCommand, GetObjectCommand,HeadObjectCommand, ListObjectsV2Command,PutObjectCommand,
+  S3Client,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { env } from './env.js'
@@ -104,6 +104,7 @@ export interface StorageObjectMetadata {
 export interface PresignPutOptions {
   ttlSeconds?: number
   contentLength?: number
+  checksumSHA256?: string
 }
 
 export class StorageObjectTooLargeError extends Error {
@@ -239,6 +240,7 @@ export async function readStorageBodyBounded(body: unknown, maxBytes: number, si
 class R2Storage implements Storage, BoundedStorageReader {
   mode = 'r2' as const
   private client: S3Client
+  private uploadSigner: S3Client
   private bucket: string
   private publicBase: string
 
@@ -249,7 +251,7 @@ class R2Storage implements Storage, BoundedStorageReader {
   }) {
     this.bucket = opts.bucket
     this.publicBase = opts.publicBase
-    this.client = new S3Client({
+    const configuration = {
       // R2 lives in a single region; the SDK still requires *some* value.
       // "auto" is the documented choice for R2.
       region: 'auto',
@@ -262,7 +264,11 @@ class R2Storage implements Storage, BoundedStorageReader {
       // the same code works whether the user is on the default subdomain
       // setup or a custom hostname.
       forcePathStyle: true,
-    })
+    }
+    this.client = new S3Client(configuration)
+    // This command has no Body: the SDK must not checksum an empty body on
+    // behalf of a later browser PUT. Explicit actual-file checksums are kept.
+    this.uploadSigner = new S3Client({ ...configuration, requestChecksumCalculation: 'WHEN_REQUIRED' })
   }
 
   async put(key: string, body: Buffer, mime: string): Promise<string> {
@@ -282,7 +288,7 @@ class R2Storage implements Storage, BoundedStorageReader {
     options: number | PresignPutOptions = {},
   ): Promise<{ uploadUrl: string; publicUrl: string }> {
     const normalized = requireStorageKey(key)
-    const { ttlSeconds = 300, contentLength } = typeof options === 'number'
+    const { ttlSeconds = 300, contentLength, checksumSHA256 } = typeof options === 'number'
       ? { ttlSeconds: options, contentLength: undefined }
       : options
     const cmd = new PutObjectCommand({
@@ -290,8 +296,9 @@ class R2Storage implements Storage, BoundedStorageReader {
       Key: normalized,
       ContentType: mime,
       ContentLength: contentLength,
+      ...(checksumSHA256 ? { ChecksumAlgorithm: 'SHA256' as const, ChecksumSHA256: checksumSHA256 } : {}),
     })
-    const uploadUrl = await getSignedUrl(this.client, cmd, { expiresIn: ttlSeconds })
+    const uploadUrl = await getSignedUrl(this.uploadSigner, cmd, { expiresIn: ttlSeconds, signableHeaders: new Set(['content-type']) })
     const publicUrl = await this.publicUrl(normalized)
     return { uploadUrl, publicUrl }
   }

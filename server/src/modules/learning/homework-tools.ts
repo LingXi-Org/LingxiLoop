@@ -46,7 +46,10 @@ export async function loadHomeworkTurnContext(work:AgentActionContext,db:Queryab
   const scope={companyId:work.companyId,userId:binding.learner_id},hw=await homeworkRow(db,scope,binding.course_id,binding.homework_id)
   const state=await homeworkState(db,hw,binding.learner_id),view=await studentHomeworkView(db,hw,state)
   const help=withHelp?await loadHomeworkHelpState(db,hw,state,materials=>homeworkEvidenceAvailable(db,scope,state,materials)):undefined
-  return {help,homework:{id:hw.id,title:hw.title,instructions:hw.instructions,criteria:hw.criteria,dueAt:hw.due_at,status:hw.status},
+  return {help,binding:{companyId:hw.company_id,projectId:hw.project_id,courseId:hw.course_id,homeworkId:hw.id,
+      learnerId:binding.learner_id,agentId:binding.agent_id,channelId:binding.channel_id,teacherId:hw.created_by,
+      homeworkRevision:hw.revision,requirementsHash:hw.visible_hash},
+    homework:{id:hw.id,title:hw.title,instructions:hw.instructions,criteria:hw.criteria,dueAt:hw.due_at,status:hw.status},
     materialReading:{available:Boolean(hw.links.length||hw.attachments.length),tool:'learning.get_homework',section:'materials',
       instruction:'Read the complete requirements and material text with learning.get_homework before tutoring about them. Follow nextOffset until null and keep sourceVersion consistent; file names alone are not material evidence.'},
     progress:{status:view.status,criteria:view.criteria,unlocked:view.unlocked,hasLearningRecord:view.hasLearningRecord,canSubmit:view.canSubmit,feedback:view.feedback},answerRevision:state.answer_revision,evidenceRevision:state.evidence_revision}
