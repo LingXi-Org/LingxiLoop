@@ -1,0 +1,38 @@
+✔ Slides renders delimited inline, display, matrix and aligned math with the installed KaTeX (15.070383ms)
+✔ math keeps original text and rich marks across a formula, including line breaks (1.73507ms)
+✔ amounts, escaped delimiters, code and unmarked TeX stay literal (1.431349ms)
+✔ an amount before explicit math cannot consume its delimiters (0.776968ms)
+✔ negative prices and prose stay literal without swallowing later Slides formulas (3.188583ms)
+✔ invalid math and untrusted commands stay readable without executing HTML (1.925649ms)
+✔ existing monospace model values stay code and tables participate in formula export (1.156062ms)
+✔ ordinary text does not request math; first use coalesces and a failed chunk can retry (78.328031ms)
+✔ feature dependency preparation coalesces and a failed fetch never starts a cached module failure (21.852547ms)
+✔ native copy translation preserves icon names, enums, shortcuts and document values (22.403308ms)
+✔ every translated ICU message parses and formats using the bundled formatter (1674.813917ms)
+✔ native build keeps export libraries lazy and reduces initial JavaScript (12470.310583ms)
+✔ complete upstream distributions retain every pinned byte and license (212.023203ms)
+✔ rebuilt compiler preserves pinned format behavior, ids, notes, tables, images and design-system includes (565.725709ms)
+✔ Slides formula sources and monospace semantics survive existing-format save/reopen (5.963479ms)
+✔ new deck templates use persisted source-derived style, including after a blank page (8.526253ms)
+✔ built-in color and type data match the pinned Slides implementation (2.156419ms)
+✔ new pages inherit edited look memory and observed typography after a file roundtrip (8.282083ms)
+✔ legacy decks have no automatic default and saved HTML retains authored styles (1.416907ms)
+✔ upstream theme variants parse and restyle slides (32.772834ms)
+✔ a hidden retained Slides frame suspends its heartbeat and resumes the latest context only for its parent nonce (3.495438ms)
+✔ progressive first edit preserves unloaded files and native CAS (16.603446ms)
+slides (files): load failed (unbuildable, Error)
+slides (files): load failed (unbuildable, Error)
+✔ progressive themed deck waits for tokens and preserves their native model and CAS (136.171214ms)
+slides (files): load failed (access_revoked, BootReadError, HTTP 403)
+slides (files): load failed (unbuildable, Error)
+slides (files): load failed (unbuildable, Error)
+slides (files): load failed (unbuildable, Error)
+✔ progressive editing respects read-only, narrowed listings and revoked reads (256.326233ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15975.933773
