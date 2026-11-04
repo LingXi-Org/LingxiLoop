@@ -1,5 +1,12 @@
-import { fromMarkdown } from 'mdast-util-from-markdown'
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import remarkGfm from 'remark-gfm'
 import { visit } from 'unist-util-visit'
+import { remarkCurrencySafeMath } from './memos/remark-currency-safe-math'
+
+// Match the learning renderer's math boundaries and GFM autolinks. Parsing with
+// plain CommonMark would mistake operators inside those nodes for prose.
+const parser = unified().use(remarkParse).use(remarkCurrencySafeMath).use(remarkGfm)
 
 /** Protect compact multiplication/exponent tokens in legacy learning prose.
  * Stored source is untouched. Native/code nodes and ordinary emphasis stay owned
@@ -11,10 +18,11 @@ export function preserveLearningOperators(source: string): string {
     const right=source.slice(offset+length).match(/^-?[A-Za-z0-9_]+/)?.[0]??''
     return Boolean(left&&right&&/\d/.test(left+right))
   }
-  visit(fromMarkdown(source), node => {
+  visit(parser.parse(source), node => {
     const start=node.position?.start.offset,end=node.position?.end.offset
     if(start===undefined||end===undefined)return
-    if(node.type==='code'||node.type==='inlineCode')protectedRanges.push([start,end])
+    if(node.type==='code'||node.type==='inlineCode'||node.type==='math'||node.type==='inlineMath'||node.type==='definition'
+      ||node.type==='link'&&source[start]!=='[')protectedRanges.push([start,end])
     if(node.type==='emphasis'||node.type==='strong') {
       const size=node.type==='strong'?2:1
       // Respect real Markdown delimiters. Only paired delimiters embedded in
@@ -30,7 +38,7 @@ export function preserveLearningOperators(source: string): string {
  * A historical recovery copy alone cannot prove what the learner last saved. */
 export function nativeOperatorMismatch(document: { blocks: unknown[] }, source: string): boolean {
   const visible:string[]=[]
-  visit(fromMarkdown(preserveLearningOperators(source)),node=>{
+  visit(parser.parse(preserveLearningOperators(source)),node=>{
     if(node.type==='text'||node.type==='code'||node.type==='inlineCode')visible.push(node.value)
   })
   const tokens=visible.join('\n').match(/[A-Za-z0-9_)]+\*{1,2}-?[A-Za-z0-9_(]+/g)??[]
