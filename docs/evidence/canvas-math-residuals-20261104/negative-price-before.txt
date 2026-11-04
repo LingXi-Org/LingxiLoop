@@ -1,0 +1,48 @@
+✔ Slides renders delimited inline, display, matrix and aligned math with the installed KaTeX (15.866389ms)
+✔ math keeps original text and rich marks across a formula, including line breaks (1.642139ms)
+✔ amounts, escaped delimiters, code and unmarked TeX stay literal (1.47137ms)
+✔ an amount before explicit math cannot consume its delimiters (1.010161ms)
+✖ negative prices and prose stay literal without swallowing later Slides formulas (1.892068ms)
+✔ invalid math and untrusted commands stay readable without executing HTML (2.413749ms)
+✔ existing monospace model values stay code and tables participate in formula export (0.571096ms)
+✔ ordinary text does not request math; first use coalesces and a failed chunk can retry (72.626458ms)
+✔ feature dependency preparation coalesces and a failed fetch never starts a cached module failure (23.192893ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 8
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 307.799766
+
+✖ failing tests:
+
+test at scripts/slides-math.test.mjs:46:1
+✖ negative prices and prose stay literal without swallowing later Slides formulas (1.892068ms)
+  AssertionError [ERR_ASSERTION]: $-5$
+  + actual - expected
+
+    [
+      {
+  +     mathDisplay: false,
+  +     mathHtml: '<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">-5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord">5</span></span></span></span>',
+        text: '$-5$'
+      }
+    ]
+
+      at TestContext.<anonymous> (file:///workspace/canvas-math-residuals/scripts/slides-math.test.mjs:48:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { text: '$-5$', mathHtml: '<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">-5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord">5</span></span></span></span>', mathDisplay: false } ],
+    expected: [ { text: '$-5$' } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

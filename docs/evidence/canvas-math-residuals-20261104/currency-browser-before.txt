@@ -1,0 +1,9 @@
+START False
+Traceback (most recent call last):
+  File "/workspace/canvas-math-residuals/scripts/check-slides-math.py", line 260, in <module>
+    result = run(browser, args.baseline, math_retry=args.math_retry, currency_regression=args.currency_regression)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/canvas-math-residuals/scripts/check-slides-math.py", line 133, in run
+    assert count == math_count, count
+           ^^^^^^^^^^^^^^^^^^^
+AssertionError: 7

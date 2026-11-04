@@ -1,0 +1,75 @@
+✔ Slides exports fetch formula fonts from the public stylesheet while project fonts keep their grant paths (124.413446ms)
+✔ Design preview math covers both external and inline runtime without changing archived bytes (341.055774ms)
+✔ math injection preserves replacement tokens and minified dollar identifiers literally (0.381238ms)
+✔ the public Roadmap RNN and independent Attention samples are recognized as inline math (1.640296ms)
+✔ currency does not consume a subsequent formula delimiter (0.723797ms)
+✔ backticks, escaped dollars and explicit math delimiters keep their source boundary (0.382209ms)
+✔ Design separates exact critical native source programs before entering synchronous consumers (11940.832256ms)
+✔ critical preparation coalesces, preserves successful code and retries before native initialization exactly once (2.166314ms)
+✔ Design private namespace pruning retains native reads, setters and initialization order (94.745399ms)
+✔ Design refuses unreviewed private namespace and constructor access (144.887417ms)
+✔ viewport sizing admission checks descendants and inherited author values before computed px hide their units (1.179779ms)
+✔ content height updates the model and moves later rows together, preserving pages and source objects (0.421088ms)
+✔ rejects invalid/stale measurements, fixed interactions and existing layered compositions (0.198942ms)
+✔ the pinned hook keeps the native message-source owner, read-only guard, throttle and model/CAS persistence (484.984175ms)
+✔ Design omits direct agent requests and local design-system controls without disabling comments or themes (186.586907ms)
+✔ Design reuses its prepared embedded runtime before the external and inline fallbacks (101.808946ms)
+✔ only an acknowledged visible host skips the pinned presentation waits (73.29083ms)
+✔ Design package preserves the agreed math runtime and optional executable bytes, extracts the exact fallback font and losslessly precompresses fixed resources (144584.021231ms)
+✔ unused capture, property-worker and offline-export programs leave the first-view source (1489.655316ms)
+✔ Slides renders delimited inline, display, matrix and aligned math with the installed KaTeX (11.629216ms)
+✔ math keeps original text and rich marks across a formula, including line breaks (1.314672ms)
+✔ amounts, escaped delimiters, code and unmarked TeX stay literal (1.351097ms)
+✔ an amount before explicit math cannot consume its delimiters (0.898112ms)
+✔ invalid math and untrusted commands stay readable without executing HTML (2.10457ms)
+✔ existing monospace model values stay code and tables participate in formula export (0.510354ms)
+✔ ordinary text does not request math; first use coalesces and a failed chunk can retry (77.047258ms)
+✔ feature dependency preparation coalesces and a failed fetch never starts a cached module failure (26.480427ms)
+✔ native copy translation preserves icon names, enums, shortcuts and document values (29.97319ms)
+✔ every translated ICU message parses and formats using the bundled formatter (3823.763333ms)
+✖ native build keeps export libraries lazy and reduces initial JavaScript (16861.89658ms)
+✔ complete upstream distributions retain every pinned byte and license (379.379188ms)
+✔ rebuilt compiler preserves pinned format behavior, ids, notes, tables, images and design-system includes (932.214129ms)
+✔ Slides formula sources and monospace semantics survive existing-format save/reopen (7.374137ms)
+✔ new deck templates use persisted source-derived style, including after a blank page (14.707152ms)
+✔ built-in color and type data match the pinned Slides implementation (2.182247ms)
+✔ new pages inherit edited look memory and observed typography after a file roundtrip (10.111266ms)
+✔ legacy decks have no automatic default and saved HTML retains authored styles (1.731965ms)
+✔ upstream theme variants parse and restyle slides (34.504038ms)
+✔ a hidden retained Slides frame suspends its heartbeat and resumes the latest context only for its parent nonce (4.029708ms)
+✔ progressive first edit preserves unloaded files and native CAS (24.068212ms)
+slides (files): load failed (unbuildable, Error)
+slides (files): load failed (unbuildable, Error)
+✔ progressive themed deck waits for tokens and preserves their native model and CAS (144.322349ms)
+slides (files): load failed (access_revoked, BootReadError, HTTP 403)
+slides (files): load failed (unbuildable, Error)
+slides (files): load failed (unbuildable, Error)
+slides (files): load failed (unbuildable, Error)
+✔ progressive editing respects read-only, narrowed listings and revoked reads (261.065926ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 41
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 160267.903175
+
+✖ failing tests:
+
+test at scripts/slides-editor.test.mjs:45:1
+✖ native build keeps export libraries lazy and reduces initial JavaScript (16861.89658ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+    assert.ok(report.inputs.every(path => path === 'shared/artifact-recovery.ts' || path.startsWith('third_party/baoyu-design/slides-source/') ||
+
+      at TestContext.<anonymous> (file:///workspace/canvas-math-residuals/scripts/slides-editor.test.mjs:49:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
