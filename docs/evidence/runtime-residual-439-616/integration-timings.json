@@ -1,0 +1,62 @@
+{
+  "mode": "selected",
+  "availableFiles": 63,
+  "selectedFiles": [
+    "runtime-native-correction.test.ts",
+    "runtime-chat-recovery.test.ts",
+    "runtime-issue560-delivery.test.ts",
+    "confidence-citations.test.ts",
+    "homework.test.ts"
+  ],
+  "executedFiles": [
+    "runtime-native-correction.test.ts",
+    "runtime-chat-recovery.test.ts",
+    "runtime-issue560-delivery.test.ts",
+    "confidence-citations.test.ts",
+    "homework.test.ts"
+  ],
+  "records": [
+    {
+      "files": [
+        "runtime-native-correction.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 9104,
+      "exitCode": 0
+    },
+    {
+      "files": [
+        "runtime-chat-recovery.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 30035,
+      "exitCode": 0
+    },
+    {
+      "files": [
+        "runtime-issue560-delivery.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 31218,
+      "exitCode": 0
+    },
+    {
+      "files": [
+        "confidence-citations.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 9030,
+      "exitCode": 0
+    },
+    {
+      "files": [
+        "homework.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 53213,
+      "exitCode": 0
+    }
+  ],
+  "durationMs": 132601,
+  "exitCode": 0
+}

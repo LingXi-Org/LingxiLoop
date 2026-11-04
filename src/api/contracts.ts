@@ -65,7 +65,7 @@ export type WsEvent =
     } }
   | { type: 'message.reactions'; conversationId: string; messageId: string; reactions: Array<{ emoji: string; count: number; mine?: boolean; users?: string[] }> }
   | { type: 'group.pulled'; conversationId: string; pulledById: string }
-  | { type: 'conversation.updated'; conversationId: string; patch: { topic?: string | null; title?: string; leaderId?: string | null } }
+  | { type: 'conversation.updated'; conversationId: string; patch: { topic?: string | null; title?: string; leaderId?: string | null; membershipChanged?: boolean } }
   | { type: 'convene'; sessionId: string; conversationId: string; kind: 'started' | 'transcript' | 'ended' | 'tile'; data?: unknown }
   | { type: 'doc.sync'; documentId: string; stateB64: string; originId: string }
   | { type: 'doc.update'; documentId: string; updateB64: string; originId: string }

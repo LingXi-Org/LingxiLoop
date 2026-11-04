@@ -348,27 +348,40 @@ export async function listActiveConversationMutes(
   return rows.map((row) => ({ id: row.id, title: row.title, mutedUntil: row.muted_until }))
 }
 
-export async function participantAllowedInProject(
-  db: Queryable,
-  args: { participantId: string; companyId: string; projectId: string },
-): Promise<boolean> {
-  const { rows } = await db.query(
-    `SELECT 1 FROM participants participant
-      WHERE participant.id=$1 AND participant.company_id=$2 AND participant.departed_at IS NULL
-        AND (
-          participant.kind='agent'
-          OR NOT EXISTS (SELECT 1 FROM courses WHERE company_id=$2 AND project_id=$3)
-          OR EXISTS (
-            SELECT 1 FROM courses course
-            JOIN project_memberships member
-              ON member.project_id=course.project_id AND member.company_id=course.company_id
-             AND member.status='ACTIVE'
-            WHERE course.company_id=$2 AND course.project_id=$3 AND member.user_id=participant.id
-          )
-        )`,
-    [args.participantId, args.companyId, args.projectId],
+/** Membership management is scoped to an ordinary, shared group. */
+export async function membershipContext(db: Queryable, scope: { companyId: string; projectId: string; userId: string }, conversationId: string) {
+  const { rows } = await db.query<{ managed: boolean; teacher: boolean }>(
+    `SELECT (
+       EXISTS(SELECT 1 FROM context_threads WHERE company_id=$1 AND channel_id=$4)
+       OR EXISTS(SELECT 1 FROM learning_course_teacher_rooms WHERE company_id=$1 AND conversation_id=$4)
+       OR EXISTS(SELECT 1 FROM slide_workspaces WHERE conversation_id=$4)
+     ) AS managed, EXISTS(
+       SELECT 1 FROM project_memberships p JOIN company_memberships c
+         ON c.company_id=p.company_id AND c.user_id=p.user_id AND c.period_id=p.company_period_id
+       WHERE p.company_id=$1 AND p.project_id=$2 AND p.user_id=$3
+         AND p.role='TEACHER' AND p.status='ACTIVE' AND c.status='ACTIVE' AND c.ended_at IS NULL
+     ) AS teacher`,
+    [scope.companyId, scope.projectId, scope.userId, conversationId],
   )
-  return Boolean(rows[0])
+  return rows[0]
+}
+
+export async function listMembershipCandidates(db: Queryable, scope: { companyId: string; projectId: string; userId: string }) {
+  const { rows } = await db.query<{ id: string }>(
+    'SELECT id FROM participants WHERE company_id=$1 AND departed_at IS NULL ORDER BY name,id', [scope.companyId],
+  )
+  return listEligibleConversationParticipants(db, { ...scope, ids: rows.map(row => row.id) })
+}
+
+export async function auditMembershipChange(db: Queryable, input: {
+  companyId: string; projectId: string; userId: string; conversationId: string
+  participantId: string; operation: 'joined' | 'left' | 'kicked'; version: number; members: string[]
+}) {
+  await db.query(`INSERT INTO audit_events(user_id,company_id,kind,detail)
+    VALUES($1,$2,'conversation.membership_changed',$3::jsonb)`,
+  [input.userId, input.companyId, JSON.stringify({ projectId: input.projectId, conversationId: input.conversationId,
+    participantId: input.participantId, operation: input.operation, version: input.version,
+    historyVisibility: 'shared_conversation', members: input.members })])
 }
 
 export async function searchWorkspaceDirectory(

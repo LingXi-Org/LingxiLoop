@@ -1,0 +1,14 @@
+{
+  "baseline": false,
+  "beaconCspBlocked": true,
+  "optionalNetworkFailureAfterEditIgnored": true,
+  "editPublished": true,
+  "reopenAndRefreshPreserveEdit": true,
+  "iframeCount": 1,
+  "criticalFailureRecovery": {
+    "accurateAfterDeadline": true,
+    "newGrant": true,
+    "iframeCount": 1,
+    "savedContentRetained": true
+  }
+}
