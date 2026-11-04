@@ -99,7 +99,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
         content.order = ['FlashAttention.dc.html']
         business.push({ name: 'design__write_files', args: { files: { 'project/canvas.json': { content: JSON.stringify(content), ifMatch: file.sha256 }, 'project/FlashAttention.dc.html': { content: fixture, ifMatch: null } } } })
       }
-      if (phase === 7) business.push({ name: 'design__check', args: {} })
+      if (phase === 7) business.push({ name: 'design__check', args: {paths:['project/FlashAttention.dc.html']} })
       const output = { index: 0, id: `answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: phase === 8 ? 'FlashAttention 讲解已写入画板，格式检查通过。' : '', commentary: '', outcome: phase === 8 ? { status: 'satisfied', gaps: [] } : null }) } }
       const selecting = phase !== 8
       const toolCalls = [...(selecting ? [] : [output]), ...business.map((item, index) => ({ index: index + (selecting ? 0 : 1), id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
@@ -238,11 +238,16 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     const correctRouting = routing.length === 1 && routing[0].args.delivery === (expectsCanvas ? 'canvas' : 'text')
       && receipts.filter(row => row.action === 'skills.load' && row.args.name === 'claude-design').length === (expectsCanvas ? 1 : 0)
       && !receipts.some(row => row.action.startsWith('visualize.') || row.args.name === 'visualize')
-    const evidence = { qualification: recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', coldCanvas: live, correctRouting, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool, maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
+    const deliveredOutcome = correctRouting && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
+      && (expectsCanvas ? checked.problems === 0 && files.some(row=>row.path.endsWith('.dc.html')) : !canvas)
+    const evidence = { qualification: recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', coldCanvas: live, correctRouting, deliveredOutcome, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool, maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
       accepted: correctRouting && failures.length === 0 && modelFailures.length === 0 && failedModelAttempts.length === 0 && wireContractFailures.length === 0 && protocolFailures === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
         && (expectsCanvas ? checked.problems === 0 && receipts.some(row => row.action === 'design.check') && files.some(row => row.path.endsWith('.dc.html'))
           : !canvas && receipts.every(row => !row.action.startsWith('design.') || row.action === 'design.plan_explanation')),
-      elapsedMs: Date.now() - started, decisions, wire, actions: receipts.map(row => ({ action: row.action, ok: row.result.ok, code: row.result.code ?? null, ...(row.action === 'design.read_reference' ? { page: row.args.page } : {}) })),
+      elapsedMs: Date.now() - started, decisions, wire, actions: receipts.map(row => ({ action: row.action, ok: row.result.ok, code: row.result.code ?? null,
+        ...(row.action === 'skills.load' ? {name:row.args.name} : {}),
+        ...(row.action === 'design.read_file' ? {path:row.args.path} : {}),
+        ...(row.action === 'design.read_reference' ? { page: row.args.page } : {}) })),
       contractFailures: failures.map(row => ({ action: row.action, code: row.result.code })), protocolFailures, providerFailures: modelFailures.filter(row => !row.budget && row.diagnostics?.kind !== 'protocol').length,
       budgetFailures: modelFailures.filter(row => row.budget).map(row => row.budget),
       modelAttempts, failedModelAttempts, wireContractFailures,

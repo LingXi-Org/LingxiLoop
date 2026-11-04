@@ -147,7 +147,7 @@ automatic data conversion.
 Draft PR: https://github.com/LingXi-Org/LingxiLoop/pull/672. Initial commit
 `011ad011` passed all component CI checks; its historical integration failed a
 current-preset7 versus immutable-historical6 assertion. The assertion was fixed
-to the actual historical value without changing migrationSQL. Official owning
+to the actual historical value without changing migration SQL. Official owning
 recheck passed current teacher5, current-runtime/product54CAS5 and historical
 3.8.2 migrations37; no skips.
 Later delivery-gate/browser changes require their own final exact-head CI.
@@ -158,3 +158,40 @@ now allows480 seconds per Worker /540 per test /600 per runner invocation.
 Ordinary CI, product budgets, provider credentials and retries are unchanged.
 This measures completion under a stated bounded budget, not a speed improvement.
 No merge, production deployment or double-host health result is claimed here.
+
+
+## Current integrated candidate
+
+The branch now includes main `8cc00fd8` / PR#682 and its product62 migration.
+Four shared CI/Docker conflicts were resolved by retaining both current case
+retirement and Visualize retirement, with both integration owner mappings.
+`#670` adds no migration, runtime-patch change or package version update relative
+to that main. Local isolated product61→62 applied only0062 in77ms; separate
+fresh qualification bootstrapped formal3.8.24/product61 and applied62/no-op.
+The old exact61 deployment is not a valid rollback after62: use a compatible62
+commit and the designated integrator's current rollout state.
+
+A final review caught authored-then-deleted/unreferenced board delivery. The
+current gate tracks effective successful .dc.html writes/edits minus later
+deletes. Design.check accepts up to32 optional authored paths and returns only
+those present, nonempty and indexed in the exact checker snapshot. Generic
+checks and Slides keep their existing output. This avoids exporting an unbounded
+old-canvas listing and prevents an old board from proving a new explanation.
+
+Final local source checks: server193 tests,19 focused policy/proof tests,
+server typecheck/lint; final product62 native/editor/archive batch20/20. Latest
+main-integrated CI41842877835 on d5c2d5da passed all checks/integration; later
+proof changes still need their own exact-head CI and independent review.
+
+Public pre-release probes at2026-11-04 13:57 UTC returned backend readyz with
+DB/Redis/control healthy and frontend HTTP200. This observes the existing
+production release only: it does not establish that #670 or product62 deployed,
+nor dual-host health. Main #682 CI41841662583 was still running at that read.
+
+The first real matrices inherited a local root cap12 despite the Worker cap24;
+several failures explicitly recorded budgetLimit/calls. A final isolated rerun
+sets root cap64 with Worker cap24 and480-second wall limit, within the repository's
+approved production root ceiling512. Production budgets and existing roots are
+not modified. Zero-failure qualification remains strict; deliveredOutcome is
+reported separately so recovered transport defects are not disguised as clean
+runs, and useful correct text is distinguished from canvas delivery.

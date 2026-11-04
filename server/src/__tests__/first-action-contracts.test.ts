@@ -118,6 +118,7 @@ test('semantic planning is scoped, bounded, and selects only the exact current D
   }
   assert.equal(policy.requiredTool(ctx), 'design__plan_explanation')
   planned('text'); assert.equal(policy.requiredTool(ctx), undefined)
+  assert.equal(permits(ctx,'design.available_agents'),false,'a text response does not start unrelated canvas collaboration')
   assert.equal(permits(ctx,'design.plan_explanation'),false,'an attempted planning call leaves the model catalog for this request')
   planned('other'); assert.equal(policy.requiredTool(ctx), undefined)
   planned('canvas'); assert.equal(policy.requiredTool(ctx), 'skills__load')
@@ -165,7 +166,7 @@ test('a semantic canvas decision follows confirmed prerequisites through a bound
   receipt('design.check',{}, {problems:0})
   assert.equal(policy.requiredTool(ctx),undefined)
   assert.ok(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx),'zero-problem empty index does not deliver an explanatory artboard')
-  ctx.executionSteps!.at(-1)!.output = JSON.stringify({receipts:[{action:'design.check',result:{ok:true,value:{problems:0,boardCount:1}}}]})
+  ctx.executionSteps!.at(-1)!.output = JSON.stringify({receipts:[{action:'design.check',result:{ok:true,value:{problems:0,boardCount:1,checkedBoardPaths:['project/Example.dc.html']}}}]})
   assert.equal(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx),null)
 })
 
@@ -180,10 +181,14 @@ test('existing canvases without design-system files skip absent prerequisites an
   receipt('design.read_file',{path:'project/canvas.json'})
   assert.equal(policy.requiredTool(ctx),'design__write_files','never invent a tokens file absent from the actual listing')
   receipt('design.write_files',{files:{'project/canvas.json':{content:'{"title":"New topic"}'}}})
-  receipt('design.check',{}, {problems:0,boardCount:1})
+  receipt('design.check',{}, {problems:0,boardCount:1,checkedBoardPaths:['project/Old.dc.html']})
   assert.match(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx)!,/artboard content has not been saved/)
+  receipt('design.write_files',{files:{'project/New.dc.html':{content:'<x-dc>A new explanation</x-dc>'}}})
+  receipt('design.write_files',{files:{'project/New.dc.html':{delete:true},'project/canvas.json':{content:'{"boards":{"Old.dc.html":{}}}'}}})
+  receipt('design.check',{paths:['project/New.dc.html']},{problems:0,boardCount:1,checkedBoardPaths:[]})
+  assert.match(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx)!,/subsequently deleted/)
   receipt('design.edit_file',{path:'project/Old.dc.html',newString:'<p>The actual requested explanation</p>'})
-  receipt('design.check',{}, {problems:0,boardCount:1})
+  receipt('design.check',{}, {problems:0,boardCount:1,checkedBoardPaths:['project/Old.dc.html']})
   assert.equal(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx),null)
 })
 

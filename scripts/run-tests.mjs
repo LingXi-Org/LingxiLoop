@@ -23,6 +23,7 @@ const testsByScope = {
     'server/src/__tests__/artifact-tool-contracts.test.ts',
     'server/src/__tests__/first-action-contracts.test.ts',
     'server/src/modules/artifacts/artifacts.test.ts',
+    'server/src/modules/artifacts/check.test.ts',
     'server/src/__tests__/assistant-text.test.ts',
     'server/src/__tests__/assistant-transport.test.ts',
     'server/src/__tests__/run-activity-projection.test.ts',

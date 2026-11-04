@@ -19,7 +19,7 @@ import { artifactKind, type ArtifactKind } from './kinds.js'
 import { publishArtifactProgress } from './progress.js'
 import { artifactById, conversationDesignId, conversationSlidesId, lockReportWork, type ArtifactRow } from './repository.js'
 import { artifactReferencePages, readArtifactReference } from './skills.js'
-import { listing, putBlob, sha256, type WireEntry } from './store.js'
+import { isProjectPath, listing, putBlob, sha256, type WireEntry } from './store.js'
 import { slideEditingContext } from './slides-workspace.js'
 
 type Control = Parameters<typeof createArtifactExecution>[0]
@@ -245,10 +245,11 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         const stored = await putBlob(db, definition, artifact.id, bytes, data.mime)
         return result(context, application(context), stored, artifact)
       } }),
-    nativeTool(`${kind}.check`, agentArtifactSchemas.check, { description: `Check the ${label}'s files with the format checker; fix what it names until problems is 0.`, effect: 'read', approval: false, authorize,
+    nativeTool(`${kind}.check`, kind === 'design' ? agentArtifactSchemas.check.extend({paths:z.array(z.string().max(512).refine(path=>isProjectPath(path)&&/^project\/.+\.dc\.html$/.test(path))).max(32).optional()}) : agentArtifactSchemas.check,
+      { description: `Check the ${label}'s files with the format checker; fix what it names until problems is 0.` + (kind === 'design' ? ' Pass the actual authored .dc.html paths to verify they still exist and are referenced in the checked canvas; checkedBoardPaths is authoritative for those files.' : ''), effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await required(context, input)
-        return { ok: true, value: await checkArtifact(context.database as Queryable, artifact, context.signal) }
+        return { ok: true, value: await checkArtifact(context.database as Queryable, artifact, context.signal,(input as {paths?:string[]}).paths) }
       } }),
     nativeTool(`${kind}.read_reference`, kind === 'design' ? agentArtifactSchemas.read_reference.extend({ page: z.enum(artifactReferencePages(kind) as [string, ...string[]]) }) : agentArtifactSchemas.read_reference, { description: kind === 'design' ? `Read a ${label} reference page. Start with format.md for the authoring format, after loading the registered skill. Valid pages from this deployment: ${artifactReferencePages(kind).join(', ')}. Use the skill's reference links for each page's purpose; never guess filenames.` : `Read a ${label} format reference page (artifact-type/reference/<page>).`, effect: 'read', approval: false, authorize,
       async execute(_context, input) {

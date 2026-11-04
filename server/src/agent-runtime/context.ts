@@ -19,7 +19,7 @@ import { citationTextViolation } from './citations.js'
 import { GROUP_COLLABORATION_RULES, IM_CONVERSATION_RULES } from './conversation-style.js'
 import { TEACHER_DESIGN_ACTIONS, TEACHER_KNOWLEDGE_ACTIONS, TEACHER_PROMPT } from '../modules/learning/teacher-preset.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
-import { explanationPlan, explanationPlanningAvailable, firstActionRules, nextExplanationAction, nextExplanationStep, selectedSkillRules, skillGuidanceDependencies } from './skill-context.js'
+import { authoredDesignPaths, explanationPlan, explanationPlanningAvailable, firstActionRules, nextExplanationAction, nextExplanationStep, selectedSkillRules, skillGuidanceDependencies } from './skill-context.js'
 import { lingxiOSControl } from './runtime.js'
 import { readCaseEvidenceSource } from '../modules/cases/evidence.js'
 import { hasConversationHandoff } from './conversation-handoff.js'
@@ -282,30 +282,17 @@ function designCompletionIssue(context: TurnContext): string | undefined {
         && receipt.result.approval === undefined && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown') === true
     } catch { /* An attempted, failed or unknown save never proves delivery. */ }
     if (!saved) return 'The latest Design save was not confirmed successful. Resolve its actual failure and save the requested content, or report partial completion truthfully; checking the previous canvas cannot prove the requested change was saved.'
-    if (explanationPlan(context) === 'canvas') {
-      const contentSaved = steps.some(step => {
-        if (!['design__write_files','design__edit_file'].includes(step.kind)) return false
-        try {
-          const args = JSON.parse(String(step.input.arguments)), output = JSON.parse(step.output ?? '{}')
-          const content = step.kind === 'design__edit_file'
-            ? typeof args.path === 'string' && /^project\/.+\.dc\.html$/.test(args.path) && typeof args.newString === 'string' && args.newString.trim().length > 0
-            : args.files && typeof args.files === 'object' && Object.entries(args.files).some(([path,entry]) => /^project\/.+\.dc\.html$/.test(path)
-              && entry && typeof entry === 'object' && 'content' in entry && typeof entry.content === 'string' && entry.content.trim().length > 0)
-          return content && output.receipts?.some((receipt: {action?:string;result?:{ok?:boolean;approval?:unknown;directive?:unknown;executionState?:string}}) =>
-            receipt.action === step.kind.replace('__','.') && receipt.result?.ok === true && receipt.result.approval === undefined
-            && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown') === true
-        } catch { return false }
-      })
-      if (!contentSaved) return 'The explanatory artboard content has not been saved for this request. An index or token edit and a check of existing boards cannot deliver the requested explanation. Save actual .dc.html content, then check it, or report incomplete delivery truthfully.'
-    }
+    const authored = authoredDesignPaths(context)
+    if (explanationPlan(context) === 'canvas' && !authored.length) return 'The explanatory artboard content has not been saved or was subsequently deleted. An index or token edit and a check of existing boards cannot deliver the requested explanation. Save actual .dc.html content, then check it, or report incomplete delivery truthfully.'
     const check = steps.slice(write + 1).reverse().find(step => step.kind === 'design__check' && step.output !== undefined)
     let passed = false
     try {
       const output = JSON.parse(check?.output ?? '{}')
-      passed = output.receipts?.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string; value?: { problems?: number; boardCount?: number } } }) =>
+      passed = output.receipts?.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string; value?: { problems?: number; boardCount?: number; checkedBoardPaths?:string[] } } }) =>
         receipt.action === 'design.check' && receipt.result?.ok === true && receipt.result.approval === undefined
         && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown' && receipt.result.value?.problems === 0
-        && (explanationPlan(context) !== 'canvas' || (receipt.result.value?.boardCount ?? 0) > 0)) === true
+        && (explanationPlan(context) !== 'canvas' || (receipt.result.value?.boardCount ?? 0) > 0
+          && Array.isArray(receipt.result.value.checkedBoardPaths) && receipt.result.value.checkedBoardPaths.some(path=>authored.includes(path)))) === true
     } catch { /* A missing or unreadable checker receipt cannot prove completion. */ }
     if (!passed) return 'Finish the Design files referenced by the index, then run design.check after the latest write and fix its issues until problems is 0 before declaring satisfied.'
   }
@@ -336,6 +323,7 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
     this.guidanceCatalog.set(context, authorized)
     const blocked = new Set(skillGuidanceDependencies({ ...context, tools: authorized.tools, grants: authorized.grants }).flatMap(({ skill }) => skill.actions))
     if (context.executionSteps?.some(step => step.kind === 'design__plan_explanation' && step.requestVersion === context.snapshotVersion?.requestVersion)) blocked.add('design.plan_explanation')
+    if (explanationPlan(context) === 'text') for (const method of ['available_agents','start_workspace','stop_workspace','stop_assignment','submit_report','submit_verification']) blocked.add(`design.${method}`)
     if (!blocked.size) return grants
     return grants.map(grant => ({ name: grant.name, methods: (grant.methods ?? context.tools?.filter(tool => tool.action.startsWith(grant.name + '.')).map(tool => tool.action.split('.')[1]) ?? [])
       .filter(method => !blocked.has(`${grant.name}.${method}`)) }))

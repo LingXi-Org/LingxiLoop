@@ -141,6 +141,28 @@ export function explanationPlanningAvailable(context: TurnContext): boolean {
       && (!grant.methods || grant.methods.includes('plan_explanation')))
 }
 
+/** Successful authored files still present after this request's later deletes. */
+export function authoredDesignPaths(context:TurnContext):string[] {
+  const paths = new Set<string>()
+  for (const step of context.executionSteps ?? []) {
+    if (step.requestVersion !== context.snapshotVersion?.requestVersion || !['design__write_files','design__edit_file'].includes(step.kind)) continue
+    try {
+      const output = JSON.parse(step.output ?? '{}'), args = JSON.parse(String(step.input.arguments))
+      if (!output.receipts?.some((receipt:{action?:string;result?:{ok?:boolean;approval?:unknown;directive?:unknown;executionState?:string}}) =>
+        receipt.action === step.kind.replace('__','.') && receipt.result?.ok === true && receipt.result.approval === undefined
+        && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown')) continue
+      if (step.kind === 'design__edit_file') {
+        if (typeof args.path === 'string' && /^project\/.+\.dc\.html$/.test(args.path) && typeof args.newString === 'string' && args.newString.trim()) paths.add(args.path)
+      } else if (args.files && typeof args.files === 'object') for (const [path,entry] of Object.entries(args.files)) {
+        if (!/^project\/.+\.dc\.html$/.test(path) || !entry || typeof entry !== 'object') continue
+        if ('delete' in entry && entry.delete === true || 'content' in entry && (typeof entry.content !== 'string' || !entry.content.trim())) paths.delete(path)
+        else if ('content' in entry && typeof entry.content === 'string') paths.add(path)
+      }
+    } catch { /* Failed or unknown effects never establish authored content. */ }
+  }
+  return [...paths]
+}
+
 /** Follow the semantic canvas decision through observable native prerequisites.
  * Each failed stage remains bounded and leaves truthful fallback available. */
 export function nextExplanationStep(context: TurnContext): {action:string;args?:Record<string,unknown>} | undefined {
@@ -191,10 +213,12 @@ export function nextExplanationStep(context: TurnContext): {action:string;args?:
   if (!writes.length) return {action:'design.write_files'}
   const last = writes.at(-1)!, action = last.kind.replace('__','.')
   if (!confirmed(last,action)) return undefined
+  const paths = authoredDesignPaths(context)
+  if (!paths.length) return writes.length < 3 ? {action:'design.write_files'} : undefined
   const after = steps.slice(steps.indexOf(last)+1), checks = after.filter(step => step.kind === 'design__check')
-  if (!checks.length) return {action:'design.check',args:{}}
+  if (!checks.length) return {action:'design.check',args:{paths:paths.slice(0,32)}}
   const checked = confirmed(checks.at(-1),'design.check')
-  return (checked?.value?.problems > 0 || checked?.value?.problems === 0 && checked.value.boardCount === 0) && writes.length < 3 ? {action:'design.write_files'} : undefined
+  return (checked?.value?.problems > 0 || checked?.value?.problems === 0 && !(checked.value.checkedBoardPaths as string[]|undefined)?.some(path=>paths.includes(path))) && writes.length < 3 ? {action:'design.write_files'} : undefined
 }
 
 export function nextExplanationAction(context:TurnContext):string|undefined { return nextExplanationStep(context)?.action }
