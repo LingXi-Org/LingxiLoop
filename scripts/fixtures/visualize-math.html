@@ -7,6 +7,7 @@ import { GenUiCard } from '/src/features/chat/visualize/zcode/gen-ui/components/
 import '/src/styles/globals.css'
 import '/src/features/chat/visualize/zcode.css'
 import fragment from '/scripts/fixtures/visualize-math-fragment.html?raw'
+import scrollbarFragment from '/scripts/fixtures/math-scrollbars-fragment.html?raw'
 
 import { useAuth } from '/src/stores/auth.ts'
 import { setWorkspaceSession } from '/src/lib/workspaceSession.ts'
@@ -40,7 +41,7 @@ window.fetch = async (input, init) => {
   if (req.headers.get('x-company-id') !== 'fixture-company' || req.headers.get('x-project-id') !== 'fixture-project') return new Response('', { status: 403 })
   if (req.method === 'POST' && url.pathname.endsWith('/pages')) {
     const id = 'page-' + ++counts.acquisitions, token = crypto.randomUUID(); pages.set(id, token)
-    return json({ pageId: id, initId: token, path: target.path, html: fragment, state, stateRevision: revision, resourceHashes: hashes })
+    return json({ pageId: id, initId: token, path: target.path, html: mode === 'dollar-dynamic' ? '<main id="math-fixture" style="min-height:240px"><p id="dynamic">Budget $5 and $10</p></main>' : mode === 'scrollbars' ? scrollbarFragment : fragment, state, stateRevision: revision, resourceHashes: hashes })
   }
   const id = url.pathname.split('/pages/')[1]?.split('/')[0]
   if (pages.get(id) !== req.headers.get('x-visualize-page-token')) return new Response('', { status: 403 })

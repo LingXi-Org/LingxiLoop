@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesSaveQueue(runtime2) {
   var FILE_SAVE_DEBOUNCE_POLICY, FILE_SAVE_RETRY_MIN_MS, FILE_SAVE_RETRY_MAX_MS, FILE_SAVE_BACKPRESSURE_DELAY_MS, FILE_SAVE_STUCK_TIMEOUT_MS, FILE_SAVE_SHARED_ACTIVITY_TIMEOUT_MS, FILE_SAVE_QUICK_RETRY_MS, FILE_SAVE_LONG_REQUEST_MS, FILE_SAVE_CONFLICT_RETRY_MS, FILE_SAVE_MAX_TRANSIENT_RETRIES, FILE_SAVE_TOTAL_RETRY_WINDOW_MS, FILE_SAVE_RECENT_PEER_WINDOW_MS, FILE_SAVE_MAX_CONFLICT_PATHS, FILE_SAVE_RECENT_ACTIVITY_WINDOW_MS, FILE_SAVE_MAX_CONFLICT_RETRIES, FILE_SAVE_MAX_BATCH_CONFLICTS, FILE_SAVE_RETRY_JITTER_MS, FILE_SAVE_CONFLICT_BACKOFF_MS, FILE_SAVE_READ_RETRY_DELAYS_MS, FILE_SAVE_TERMINAL_ERROR_CODES, isIndexFileSaveError;
@@ -56,7 +56,8 @@ function installFilesSaveQueue(runtime2) {
           unsendableStashed: !0
         } : {}
       } : {}
-    }), notifyState = () => {
+    }), leaveHold = (0, runtime2.createLeaveWarningHold)(), notifyState = () => {
+      leaveHold(!disposed && (stuckState !== void 0 && dirtyEntries.size > 0 && !stuckState.stashed && options.keptByCaller?.() !== !0 || unsendableEntries.size > 0 && !unsendableStashed && options.keptByCaller?.([...unsendableEntries.keys()]) !== !0));
       try {
         options.onState?.(getQueueState());
       } catch {
@@ -599,7 +600,7 @@ function installFilesSaveQueue(runtime2) {
       commit,
       settle,
       async dispose() {
-        flushNow(), await settle(), disposed = !0, unsubscribeRemoteChange(), unsubscribePeers?.(), maxWaitTimer !== void 0 && (timers.clearTimeout(maxWaitTimer), maxWaitTimer = void 0), commitTimer !== void 0 && (timers.clearTimeout(commitTimer), commitTimer = void 0), retryTimer !== void 0 && (timers.clearTimeout(retryTimer), retryTimer = void 0), stashResumeTimer !== void 0 && (timers.clearTimeout(stashResumeTimer), stashResumeTimer = void 0), stashWriteTimer !== void 0 && (timers.clearTimeout(stashWriteTimer), stashWriteTimer = void 0, writePendingStash()), wakeRetryWait?.();
+        flushNow(), await settle(), disposed = !0, leaveHold(!1), unsubscribeRemoteChange(), unsubscribePeers?.(), maxWaitTimer !== void 0 && (timers.clearTimeout(maxWaitTimer), maxWaitTimer = void 0), commitTimer !== void 0 && (timers.clearTimeout(commitTimer), commitTimer = void 0), retryTimer !== void 0 && (timers.clearTimeout(retryTimer), retryTimer = void 0), stashResumeTimer !== void 0 && (timers.clearTimeout(stashResumeTimer), stashResumeTimer = void 0), stashWriteTimer !== void 0 && (timers.clearTimeout(stashWriteTimer), stashWriteTimer = void 0, writePendingStash()), wakeRetryWait?.();
       },
       counters: counters2,
       state: getQueueState,

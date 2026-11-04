@@ -1,12 +1,8 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDesignSystemThemeLooks(runtime2) {
-  var reactForThemeLooks, jsxForThemeLooks, LookTile;
-  const GENERIC_LABELS = {
-    sans: "Sans-serif",
-    serif: "Serif",
-    mono: "Monospace"
-  }, NO_FORCED_COLORS = "forced-color-adjust-none", [MIN_PREVIEW_SIZE, MAX_PREVIEW_SIZE] = [12, 20], SECTION_MEMORY_KEY = "appifact-theme-sections:", [PEEK_DELAY, PEEK_MOVE_DELAY, PEEK_END_DELAY] = [120, 40, 90], frameQueue = [];
+  var reactForThemeLooks, jsxForThemeLooks, LookTile, GENERIC_LABELS;
+  const NO_FORCED_COLORS = "forced-color-adjust-none", [MIN_PREVIEW_SIZE, MAX_PREVIEW_SIZE] = [12, 20], SECTION_MEMORY_KEY = "appifact-theme-sections:", [PEEK_DELAY, PEEK_MOVE_DELAY, PEEK_END_DELAY] = [120, 40, 90], frameQueue = [];
   let frameRequest = 0;
   const lookFaceLabel = (face) => face === void 0 ? void 0 : face.name === "" || /^(ui-|system-ui$|-apple-|sans-serif$|serif$|monospace$)/i.test(face.name) ? GENERIC_LABELS[face.generic] : face.name;
   function lookTheme(theme) {
@@ -423,7 +419,20 @@ function installDesignSystemThemeLooks(runtime2) {
     });
   }
   return bindRuntimeValue(runtime2, "reactForThemeLooks", () => reactForThemeLooks), bindRuntimeValue(runtime2, "jsxForThemeLooks", () => jsxForThemeLooks), bindRuntimeValue(runtime2, "lookFaceLabel", () => lookFaceLabel), bindRuntimeValue(runtime2, "letterSpacingEm", () => letterSpacingEm), bindRuntimeValue(runtime2, "systemLook", () => systemLook), bindRuntimeValue(runtime2, "customLook", () => customLook), bindRuntimeValue(runtime2, "SwatchStrip", () => SwatchStrip), bindRuntimeValue(runtime2, "previewFontSizes", () => previewFontSizes), bindRuntimeValue(runtime2, "useSectionMemory", () => useSectionMemory), bindRuntimeValue(runtime2, "ThemeLookPicker", () => ThemeLookPicker), () => {
-    reactForThemeLooks = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxForThemeLooks = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), LookTile = reactForThemeLooks.memo(LookTileView);
+    reactForThemeLooks = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxForThemeLooks = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), LookTile = reactForThemeLooks.memo(LookTileView), GENERIC_LABELS = {
+      sans: (0, runtime2.formatMessage)({
+        defaultMessage: "无衬线字体",
+        id: "jwsNPDWhn4"
+      }),
+      serif: (0, runtime2.formatMessage)({
+        defaultMessage: "衬线字体",
+        id: "MSfaB0uPKr"
+      }),
+      mono: (0, runtime2.formatMessage)({
+        defaultMessage: "等宽字体",
+        id: "Hv9VdYg9zG"
+      })
+    };
   };
 }
 export {

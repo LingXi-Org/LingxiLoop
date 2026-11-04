@@ -1,0 +1,55 @@
+{
+  "sourceCommit": "6dc33353822d53ba8621db7002503c9f4d73b06e",
+  "validationCommit": "7228ea73af48433dbce72ed202dd2e622752f9c2",
+  "owning": {
+    "slides": 23,
+    "finalThemedCases": 5,
+    "designOtherUnaffected": 8,
+    "finalDesignStartup": 2,
+    "finalDesignPackaging": 1,
+    "downloadAndStatic": 3,
+    "affectedOriginalAndNewDownload": 3,
+    "permissionPolicy": 13,
+    "scopedLintExit": 0
+  },
+  "actualAuthorization": {
+    "run": 41684341322,
+    "job": 126086916760,
+    "artifactBoundary": 8,
+    "newCases": 2,
+    "bothEditors": true,
+    "fixtureIdentityRealPolicyAndPostgresRedis": true,
+    "productionIdentity": false
+  },
+  "browser": {
+    "finalDesignRequiredRetry": true,
+    "finalDesignComponents": true,
+    "finalDesignMathReadOnlyOfflineHtmlPng": true,
+    "finalDesignRecoveryCases": 4,
+    "unchangedSlidesRecoveryCases": 4,
+    "desktopAnd768PropertiesRetryUnsentDraft": true,
+    "threeInstalledSystemsProgressiveNoPartialPublish": true,
+    "realWoff2DecoderPptxRetry": true,
+    "styledDeckThemeFontInheritanceExports": true,
+    "actualEmbeddedFontFileBytes": 33748
+  },
+  "timing": {
+    "pairedSamples": 120,
+    "runsPerArmEditorScenario": 10,
+    "retainedSamples": 40,
+    "noConcurrentBuildsOrBrowsers": true,
+    "stagedGate": true,
+    "coldTargetMet": false,
+    "retainedTargetMet": true,
+    "fullTargetExit": 1,
+    "allOpenErrors": 0
+  },
+  "historicalFailures": {
+    "designPackageExpectedOriginalFileForExtractedResources": "corrected and affected packaging rerun passed",
+    "downloadMocksMissingWindowEventApi": "corrected and affected 3/3 passed",
+    "checkerLabelsAndCjkFontAssumption": "corrected against native labels and preserved non-Latin rule, with actual Latin edit/save and export inspection"
+  },
+  "finalIndependentReview": false,
+  "merged": false,
+  "deployed": false
+}

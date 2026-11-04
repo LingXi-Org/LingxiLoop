@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCommentsAnchors(runtime2) {
   var COMMENT_ANCHOR_VERSION, COMMENT_ANCHOR_SEGMENT_PATTERN, COMMENT_ANCHOR_HOST_SEGMENT_PATTERN, COMMENT_ANCHOR_NODE_SEGMENT_PATTERN, COMMENT_ANCHOR_POINT_SEGMENT_PATTERN, COMMENT_ANCHOR_AREA_SEGMENT_PATTERN, COMMENT_ANCHOR_HASH_CHARS, commentAnchorScope, hashScopedSlideId, encodeCommentAnchorFraction, decodeCommentAnchorFraction, quantizeCommentAnchorFraction, encodeCommentAnchorBox, decodeCommentAnchorBox, PROMOTED_FRAME_ID_PATTERN;

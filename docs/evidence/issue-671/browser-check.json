@@ -1,0 +1,13 @@
+{
+  "category": "分类验收1793799399763",
+  "college": "学院验收1793799399764",
+  "phone": {
+    "content": 316,
+    "frame": 326,
+    "width": 390
+  },
+  "saved": true,
+  "published": true,
+  "retainedOnFailure": true,
+  "studentControlsHidden": true
+}

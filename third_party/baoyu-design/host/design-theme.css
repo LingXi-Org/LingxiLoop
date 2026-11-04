@@ -1,0 +1,57 @@
+/* Product chrome only: authored artboard documents retain their own styles. */
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./inter-latin-wght-normal.woff2') format('woff2');
+}
+:root, .cds-root {
+  --mingli-canvas: #F2F2EF;
+  --mingli-dot: #D9D9D4;
+  --mingli-paper: #FFFFFF;
+  --cds-page-bg: #FFFFFF;
+  --cds-surface-0: #F6F6F4;
+  --cds-surface-1: #F1F1EE;
+  --cds-surface-2: #FFFFFF;
+  --cds-surface-3: #FFFFFF;
+  --cds-text-primary: #1A1A19;
+  --cds-text-secondary: #4B4B46;
+  --cds-text-muted: #6B6B66;
+  --cds-border: #E7E7E3;
+  --cds-border-strong: #D8D8D3;
+  --cds-fill-accent: #2E7D5B;
+  --cds-text-accent: #2E7D5B;
+  --cds-bg-accent: #EAF4EE;
+  --cds-font-sans: Inter, 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;
+  --cds-radius: 8px;
+  --om-bg-canvas: var(--mingli-canvas);
+}
+:root[data-theme='dark'], [data-mode='dark'] .cds-root:not([data-mode='light']):not([data-mode='system']), .cds-root[data-mode='dark'] {
+  --mingli-canvas: #18181A;
+  --mingli-dot: #2B2B2E;
+  --mingli-paper: #1E1E20;
+  --cds-page-bg: #141415;
+  --cds-surface-0: #0E0E0F;
+  --cds-surface-1: #232325;
+  --cds-surface-2: #1C1C1E;
+  --cds-surface-3: #1C1C1E;
+  --cds-text-primary: #ECECEA;
+  --cds-text-secondary: #C2C2BC;
+  --cds-text-muted: #9A9A95;
+  --cds-border: #262628;
+  --cds-border-strong: #343437;
+  --cds-fill-accent: #6CC59A;
+  --cds-text-accent: #6CC59A;
+  --cds-bg-accent: #172720;
+}
+.bg-om-bg-canvas {
+  background-color: var(--mingli-canvas);
+  background-image: radial-gradient(var(--mingli-dot) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+[data-mega-artboard] {
+  background-color: var(--mingli-paper);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%), 0 6px 20px rgb(0 0 0 / 5%);
+}

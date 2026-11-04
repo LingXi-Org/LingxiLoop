@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installModelDeckMetadata(runtime2) {
   var DECK_METADATA_PATH, DECK_METADATA_VERSION, SLIDE_FILE_DIRECTORY, SLIDE_FILE_ID_PATTERN, slideFilePath, isMetadataObject, conflictingUndoMessage;

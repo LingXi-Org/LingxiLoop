@@ -1,0 +1,146 @@
+{
+  "before": [
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 347.59999999962747,
+      "requests": 1,
+      "retainedHero": false
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 381.69999999925494,
+      "requests": 1,
+      "retainedHero": false
+    },
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 357.40000000037253,
+      "requests": 1,
+      "retainedHero": false
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 380.2999999988824,
+      "requests": 1,
+      "retainedHero": false
+    },
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 352.40000000037253,
+      "requests": 1,
+      "retainedHero": false
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 381.30000000074506,
+      "requests": 1,
+      "retainedHero": false
+    },
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 363.2000000011176,
+      "requests": 1,
+      "retainedHero": false
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 379.5999999996274,
+      "requests": 1,
+      "retainedHero": false
+    },
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 367.19999999925494,
+      "requests": 1,
+      "retainedHero": false
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 386.1000000014901,
+      "requests": 1,
+      "retainedHero": false
+    }
+  ],
+  "after": [
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 28.700000001117587,
+      "requests": 0,
+      "retainedHero": true
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 36.5,
+      "requests": 0,
+      "retainedHero": true
+    },
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 23.799999998882413,
+      "requests": 0,
+      "retainedHero": true
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 37,
+      "requests": 0,
+      "retainedHero": true
+    },
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 28.199999999254945,
+      "requests": 0,
+      "retainedHero": true
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 44.30000000074506,
+      "requests": 0,
+      "retainedHero": true
+    },
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 22.299999998882413,
+      "requests": 0,
+      "retainedHero": true
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 38,
+      "requests": 0,
+      "retainedHero": true
+    },
+    {
+      "cards": 2,
+      "label": "推理优化",
+      "ms": 24.200000001117587,
+      "requests": 0,
+      "retainedHero": true
+    },
+    {
+      "cards": 6,
+      "label": "全部",
+      "ms": 43.39999999850989,
+      "requests": 0,
+      "retainedHero": true
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorFrameComments(runtime2) {
   var ReactFrameComments, FrameCommentsJsx, FRAME_COMMENTS_MESSAGE_KEY, FRAME_COMMENTS_REQUEST_KEY, EMPTY_FRAME_COMMENTS_STATE, MAX_FRAME_COMMENT_COUNT, frameCommentsState, frameCommentsOrigin, frameCommentsListeners, clampFrameCommentCount, toggleFrameComments, FRAME_COMMENT_FOCUS_RETURN_MS, COMMENT_ICON2, COMMENT_FILLED_ICON, CommentButtonOnScreenContext;
@@ -11,7 +11,8 @@ function installEditorFrameComments(runtime2) {
       available: record.available === !0,
       on: record.on === !0,
       listOpen: record.listOpen === !0,
-      count: clampFrameCommentCount(record.count)
+      count: clampFrameCommentCount(record.count),
+      chatDraft: record.chatDraft === !0
     };
   }
   function setFrameCommentsState(state, origin) {
@@ -41,6 +42,9 @@ function installEditorFrameComments(runtime2) {
   }
   function useFrameCommentsOffered() {
     return ReactFrameComments.useSyncExternalStore(subscribeFrameComments, () => frameCommentsState.offered && frameCommentsState.available, () => !1);
+  }
+  function useFrameChatDraft() {
+    return ReactFrameComments.useSyncExternalStore(subscribeFrameComments, () => frameCommentsState.offered && frameCommentsState.chatDraft === !0, () => !1);
   }
   function useFrameComments() {
     return {
@@ -135,7 +139,7 @@ function installEditorFrameComments(runtime2) {
       ref,
       iconOnly: !0,
       icon: open4 ? icons?.open ?? COMMENT_FILLED_ICON : icons?.rest ?? COMMENT_ICON2,
-      label: "评论",
+      label: (0, runtime2.untranslatedMessage)("评论"),
       tipSide: "top",
       tipShut: returned,
       pressed: open4,
@@ -149,16 +153,6 @@ function installEditorFrameComments(runtime2) {
       "data-comment-pass": "",
       "data-uncommentable": ""
     }) : null;
-  }
-  function ToolbarCommentTools({ lastTool, onScreen = !0 }) {
-    return FrameCommentsJsx.jsxs(FrameCommentsJsx.Fragment, {
-      children: [
-        FrameCommentsJsx.jsx(FrameCommentButton, {
-          onScreen
-        }),
-        lastTool
-      ]
-    });
   }
   return bindRuntimeValue(runtime2, "ReactFrameComments", () => ReactFrameComments, (value) => {
     ReactFrameComments = value;
@@ -182,7 +176,7 @@ function installEditorFrameComments(runtime2) {
     clampFrameCommentCount = value;
   }), bindRuntimeValue(runtime2, "parseFrameCommentsMessage", () => parseFrameCommentsMessage), bindRuntimeValue(runtime2, "setFrameCommentsState", () => setFrameCommentsState), bindRuntimeValue(runtime2, "listenForFrameComments", () => listenForFrameComments), bindRuntimeValue(runtime2, "requestFrameCommentsShown", () => requestFrameCommentsShown), bindRuntimeValue(runtime2, "subscribeFrameComments", () => subscribeFrameComments), bindRuntimeValue(runtime2, "toggleFrameComments", () => toggleFrameComments, (value) => {
     toggleFrameComments = value;
-  }), bindRuntimeValue(runtime2, "useFrameCommentsOffered", () => useFrameCommentsOffered), bindRuntimeValue(runtime2, "useFrameComments", () => useFrameComments), bindRuntimeValue(runtime2, "useFrameCommentsFootReport", () => useFrameCommentsFootReport), bindRuntimeValue(runtime2, "FRAME_COMMENT_FOCUS_RETURN_MS", () => FRAME_COMMENT_FOCUS_RETURN_MS, (value) => {
+  }), bindRuntimeValue(runtime2, "useFrameCommentsOffered", () => useFrameCommentsOffered), bindRuntimeValue(runtime2, "useFrameChatDraft", () => useFrameChatDraft), bindRuntimeValue(runtime2, "useFrameComments", () => useFrameComments), bindRuntimeValue(runtime2, "useFrameCommentsFootReport", () => useFrameCommentsFootReport), bindRuntimeValue(runtime2, "FRAME_COMMENT_FOCUS_RETURN_MS", () => FRAME_COMMENT_FOCUS_RETURN_MS, (value) => {
     FRAME_COMMENT_FOCUS_RETURN_MS = value;
   }), bindRuntimeValue(runtime2, "useCommentButtonShown", () => useCommentButtonShown), bindRuntimeValue(runtime2, "useFocusReturnTip", () => useFocusReturnTip), bindRuntimeValue(runtime2, "COMMENT_ICON", () => COMMENT_ICON2, (value) => {
     COMMENT_ICON2 = value;
@@ -190,7 +184,7 @@ function installEditorFrameComments(runtime2) {
     COMMENT_FILLED_ICON = value;
   }), bindRuntimeValue(runtime2, "deferCommentFootPress", () => deferCommentFootPress), bindRuntimeValue(runtime2, "runAfterFootClick", () => runAfterFootClick), bindRuntimeValue(runtime2, "CommentButtonOnScreenContext", () => CommentButtonOnScreenContext, (value) => {
     CommentButtonOnScreenContext = value;
-  }), bindRuntimeValue(runtime2, "FrameCommentButton", () => FrameCommentButton), bindRuntimeValue(runtime2, "ToolbarCommentTools", () => ToolbarCommentTools), () => {
+  }), bindRuntimeValue(runtime2, "FrameCommentButton", () => FrameCommentButton), () => {
     ReactFrameComments = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), FRAME_COMMENTS_MESSAGE_KEY = "__frame_comments", FRAME_COMMENTS_REQUEST_KEY = "__frame_comments_request", EMPTY_FRAME_COMMENTS_STATE = {
       offered: !1,
       available: !1,

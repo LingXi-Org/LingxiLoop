@@ -1,10 +1,41 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesSlideOrderMerge(runtime2) {
-  var uniqueSlideOrder;
+  var uniqueSlideOrder, joinLostEditSentences, CRASH_STASH_RETENTION_VALUES, SAVE_REFUSAL_MESSAGES;
   function formatLostSlideEditsMessage(paths, options = {}) {
-    let basename = (input) => input.slice(input.lastIndexOf("/") + 1), firstPath = paths[0], single = paths.length === 1, retention = options.stashed === !0 ? "kept in this browser for up to " + runtime2.CRASH_STASH_RETENTION_LABEL : "kept only while this tab stays open", message = " Until then " + (single ? "it is" : "they are") + " not saved, and " + retention + ".";
-    return options.restSaved === !1 ? (single ? 'Also, "' + basename(firstPath.path) + '" cannot be saved as it is: ' : "Also, " + String(paths.length) + ' files cannot be saved as they are. The first, "' + basename(firstPath.path) + '": ') + firstPath.why + "." + message : (single ? 'Everything else is saved, but "' + basename(firstPath.path) + '" is not: ' : "Everything else is saved, but " + String(paths.length) + ' files are not. The first, "' + basename(firstPath.path) + '": ') + firstPath.why + "." + message;
+    let firstPath = paths[0], single = paths.length === 1, values = {
+      name: firstPath.path.slice(firstPath.path.lastIndexOf("/") + 1),
+      why: String( firstPath.why)
+    }, countValues = {
+      ...values,
+      n: paths.length,
+      count: String( paths.length)
+    }, untilSaved = options.stashed === !0 ? single ? (0, runtime2.formatMessage)({
+      defaultMessage: "在此之前它未保存，会在此浏览器中保留最多 {count} 天。",
+      id: "Ikm4d6U/VX"
+    }, CRASH_STASH_RETENTION_VALUES) : (0, runtime2.formatMessage) ({
+      defaultMessage: "在此之前它们未保存，会在此浏览器中保留最多 {count} 天。",
+      id: "qhlRFSh3DK"
+    }, CRASH_STASH_RETENTION_VALUES) :single ? (0, runtime2.formatMessage)({
+      defaultMessage: "在此之前它未保存，仅在此标签页保持打开时保留。",
+      id: "CuyyxuZ6x7"
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage: "在此之前它们未保存，仅在此标签页保持打开时保留。",
+      id : "q3xzpVFazX"
+    });
+    return options.restSaved === !1 ? joinLostEditSentences (single ?(0, runtime2.formatMessage)({
+      defaultMessage: "另外，“{name}”无法按原样保存：{why}。",
+      id: "Dp/5XDc2y4"
+    }, values) :(0, runtime2.formatMessage)({
+      defaultMessage: "另外，有 {count} 个文件无法按原样保存。第一个为“{name}”：{why}。",
+      id: "v0txWwQUWf"
+    }, countValues), untilSaved) : joinLostEditSentences (single ?(0, runtime2.formatMessage)({
+      defaultMessage: "其余内容均已保存，但“{name}”未保存：{why}。",
+      id: "8YbRhkI5qq"
+    }, values) :(0, runtime2.formatMessage)({
+      defaultMessage: "其余内容均已保存，但有 {count} 个文件未保存。第一个为“{name}”：{why}。",
+      id: "gfWTf60RmN"
+    }, countValues), untilSaved);
   }
   function mergeSlideOrderWithReplay(base, mine, theirs) {
     let order = (0, runtime2.mergeOrderedStringList)(base, mine, theirs), baseOrder = uniqueSlideOrder(base), mineOrder = uniqueSlideOrder(mine), theirOrder = uniqueSlideOrder(theirs);
@@ -46,9 +77,46 @@ function installFilesSlideOrderMerge(runtime2) {
       lost: value2
     };
   }
-  return bindRuntimeValue(runtime2, "formatLostSlideEditsMessage", () => formatLostSlideEditsMessage), bindRuntimeValue(runtime2, "uniqueSlideOrder", () => uniqueSlideOrder, (value) => {
+  return bindRuntimeValue(runtime2, "joinLostEditSentences", () => joinLostEditSentences, (value) => {
+    joinLostEditSentences = value;
+  }), bindRuntimeValue(runtime2, "CRASH_STASH_RETENTION_VALUES", () => CRASH_STASH_RETENTION_VALUES, (value) => {
+    CRASH_STASH_RETENTION_VALUES = value;
+  }), bindRuntimeValue(runtime2, "SAVE_REFUSAL_MESSAGES", () => SAVE_REFUSAL_MESSAGES, (value) => {
+    SAVE_REFUSAL_MESSAGES = value;
+  }), bindRuntimeValue(runtime2, "formatLostSlideEditsMessage", () => formatLostSlideEditsMessage), bindRuntimeValue(runtime2, "uniqueSlideOrder", () => uniqueSlideOrder, (value) => {
     uniqueSlideOrder = value;
   }), bindRuntimeValue(runtime2, "mergeSlideOrderWithReplay", () => mergeSlideOrderWithReplay), () => {
+    joinLostEditSentences = (first, next) => (0, runtime2.formatMessage)({
+      defaultMessage: "{first} {next}",
+      id: "NrLKGHrExs"
+    }, {
+      first,
+      next
+    }), CRASH_STASH_RETENTION_VALUES = {
+      n: runtime2.CRASH_STASH_MAX_AGE_MS / 864e5,
+      count: String(runtime2.CRASH_STASH_MAX_AGE_MS / 864e5)
+    }, SAVE_REFUSAL_MESSAGES = {
+      not_writer: (0, runtime2.formatMessage)({
+        defaultMessage: "未保存：你已不再拥有此处的编辑权限。请向所有者申请权限后重新加载，获得权限后即可保存你的编辑。",
+        id: "vcFwtZ5ncD"
+      }),
+      not_declared: (0, runtime2.formatMessage)({
+        defaultMessage: "未保存：此页面不支持保存。",
+        id: "hNSk7UgZLG"
+      }),
+      capability_disabled: (0, runtime2.formatMessage)({
+        defaultMessage: "未保存：此页面当前无法保存。请重新加载后重试。",
+        id: "1S+RIx1JXe"
+      }),
+      too_large: (0, runtime2.formatMessage)({
+        defaultMessage: "未保存：此更改过大，无法保存。请缩小后重试。",
+        id: "84c0YMjzJV"
+      }),
+      read_only_path: (0, runtime2.formatMessage)({
+        defaultMessage: "未保存：此文件属于编辑器本身，无法更改。",
+        id: "JNkFwbrqxz"
+      })
+    },
     uniqueSlideOrder = (input) => [...new Set(input)];
   };
 }

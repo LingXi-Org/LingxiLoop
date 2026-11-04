@@ -1,6 +1,7 @@
 import { assembleHarness, createLingxiOS, doctor, releaseVersions, type ModelCallObservation, type DeliveryContext } from '@lyyzka/lingxios'
 import { createWorker, type WorkerOptions } from '@lyyzka/lingxios/worker'
 import { execFileSync } from 'node:child_process'
+import { modelStageExtras } from './model-observation-timing.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { recordLlmCall } from '../llm-ledger.js'
@@ -30,6 +31,7 @@ import { readModelOperation } from '../../../src/lib/runTrace.js'
 import { visualizeSemanticReviewPolicy } from './visualize-workflow-review.js'
 import { createContextDiagnosticsLogger } from './context-diagnostics.js'
 import { recordContextFailure } from './context-diagnostic-store.js'
+import { runtimeExecutionBudget } from './model-budget.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -101,10 +103,7 @@ const common = () => {
   const pricing=providerPricing()
   return { database: pool,
     modelBudget: {
-      maxModelCalls: positiveInteger('AGENT_OS_MAX_MODEL_CALLS', 128),
-      maxTokens: positiveInteger('AGENT_OS_MAX_MODEL_TOKENS', 1_000_000),
-      ...(env.NODE_ENV === 'production' || process.env.AGENT_OS_MAX_MODEL_COST_MICROS?.trim() ? { maxCostMicros: positiveInteger('AGENT_OS_MAX_MODEL_COST_MICROS', 10_000_000) } : {}),
-      wallClockMs: positiveInteger('AGENT_OS_MAX_WORK_MS', 30 * 60_000),
+      ...runtimeExecutionBudget(),
       inputCostMicrosPerMillion: modelRate('AGENT_OS_INPUT_COST_MICROS_PER_MILLION',pricing ? Math.ceil(pricing.inputPerMillion*1_000_000/pricing.usdCny) : 0),
       outputCostMicrosPerMillion: modelRate('AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION',pricing ? Math.ceil(pricing.outputPerMillion*1_000_000/pricing.usdCny) : 0),
     },
@@ -187,6 +186,7 @@ export async function recordModelCall(observation: ModelCallObservation, context
         source: 'agent-os' as const,
         extras: { callId: observation.callId,apiKind: observation.purpose === 'embedding' ? 'embedding' : 'chat', pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
           ...(operation ? { operation } : {}),
+          ...modelStageExtras(observation),
           ...(observation.executionTiming ? { completedAt: observation.executionTiming.completedAt } : {}),
           ...(observation.logicalCallId ? { logicalCallId: observation.logicalCallId } : {}),
           ...(observation.attempt !== undefined ? { attempt: observation.attempt } : {}),

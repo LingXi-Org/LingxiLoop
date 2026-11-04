@@ -1,0 +1,1282 @@
+{
+ "baseline": {
+  "fast": [
+   {
+    "ready": 2822,
+    "fcp": 2904,
+    "commitsPerSec": 34.0,
+    "events": [
+     {
+      "t": 264,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 642,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 943,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1322,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1523,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1540,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2516,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2518,
+      "type": "fade-in-js",
+      "area": 0.73
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2149,
+    "fcp": 2028,
+    "commitsPerSec": 35.5,
+    "events": [
+     {
+      "t": 102,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 136,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 467,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 495,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 777,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 796,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1326,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1349,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1878,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 1880,
+      "type": "fade-in-js",
+      "area": 0.73
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2259,
+    "fcp": 2144,
+    "commitsPerSec": 33.0,
+    "events": [
+     {
+      "t": 110,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 144,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 469,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 494,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 783,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 812,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1349,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1379,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1993,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 1995,
+      "type": "fade-in-js",
+      "area": 0.73
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2689,
+    "fcp": 2536,
+    "commitsPerSec": 34.0,
+    "events": [
+     {
+      "t": 132,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 181,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 502,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 536,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 814,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 835,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1371,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1405,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2306,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2308,
+      "type": "fade-in-js",
+      "area": 0.73
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2652,
+    "fcp": 2472,
+    "commitsPerSec": 32.0,
+    "events": [
+     {
+      "t": 128,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 173,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 491,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 522,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 802,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 845,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1350,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1379,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2235,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2240,
+      "type": "fade-in-js",
+      "area": 0.73
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2638,
+    "fcp": 2420,
+    "commitsPerSec": 34.0,
+    "events": [
+     {
+      "t": 119,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 166,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 483,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 505,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 800,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 821,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1365,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1410,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2222,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2224,
+      "type": "fade-in-js",
+      "area": 0.73
+     }
+    ],
+    "errors": []
+   }
+  ],
+  "slow": [
+   {
+    "ready": null,
+    "fcp": 2944,
+    "commitsPerSec": 34.0,
+    "events": [
+     {
+      "t": 1040,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1079,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1430,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1461,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1740,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1762,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2533,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 2590,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2889,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2892,
+      "type": "fade-in-js",
+      "area": 0.73
+     },
+     {
+      "t": 2901,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     },
+     {
+      "t": 2941,
+      "type": "fade-in",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": null,
+    "fcp": 2920,
+    "commitsPerSec": 34.0,
+    "events": [
+     {
+      "t": 1049,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1089,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1432,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1455,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1745,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1770,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2529,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 2560,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2881,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2882,
+      "type": "fade-in-js",
+      "area": 0.73
+     },
+     {
+      "t": 2889,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     },
+     {
+      "t": 2941,
+      "type": "fade-in",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": null,
+    "fcp": 2960,
+    "commitsPerSec": 32.5,
+    "events": [
+     {
+      "t": 1046,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1096,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1445,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1476,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1759,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1792,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2575,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 2611,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2921,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2923,
+      "type": "fade-in-js",
+      "area": 0.73
+     },
+     {
+      "t": 2930,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     },
+     {
+      "t": 2980,
+      "type": "fade-in",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": null,
+    "fcp": 3036,
+    "commitsPerSec": 32.5,
+    "events": [
+     {
+      "t": 1052,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1091,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1455,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1487,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1770,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1804,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2601,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 2643,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2978,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2980,
+      "type": "fade-in-js",
+      "area": 0.73
+     },
+     {
+      "t": 2991,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     },
+     {
+      "t": 3053,
+      "type": "fade-in",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": null,
+    "fcp": 2936,
+    "commitsPerSec": 34.0,
+    "events": [
+     {
+      "t": 1013,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1057,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1393,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1421,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1705,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1738,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2525,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 2556,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2883,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2885,
+      "type": "fade-in-js",
+      "area": 0.73
+     },
+     {
+      "t": 2895,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     },
+     {
+      "t": 2949,
+      "type": "fade-in",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": null,
+    "fcp": 2944,
+    "commitsPerSec": 34.5,
+    "events": [
+     {
+      "t": 1037,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1079,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1434,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1460,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 1741,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 1759,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2549,
+      "type": "skeleton-mount",
+      "label": "正在打开工作台",
+      "area": 1
+     },
+     {
+      "t": 2578,
+      "type": "fade-in",
+      "area": 1
+     },
+     {
+      "t": 2903,
+      "type": "fade-in-js",
+      "area": 0.36
+     },
+     {
+      "t": 2905,
+      "type": "fade-in-js",
+      "area": 0.73
+     },
+     {
+      "t": 2912,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     },
+     {
+      "t": 2964,
+      "type": "fade-in",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   }
+  ]
+ },
+ "candidate": {
+  "fast": [
+   {
+    "ready": 2639,
+    "fcp": 2528,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 701,
+      "type": "shell-show"
+     },
+     {
+      "t": 701,
+      "type": "shell-show"
+     },
+     {
+      "t": 1007,
+      "type": "shell-show"
+     },
+     {
+      "t": 1007,
+      "type": "shell-show"
+     },
+     {
+      "t": 1557,
+      "type": "shell-show"
+     },
+     {
+      "t": 1557,
+      "type": "shell-show"
+     },
+     {
+      "t": 2443,
+      "type": "shell-hide"
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2451,
+    "fcp": 2372,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 578,
+      "type": "shell-show"
+     },
+     {
+      "t": 578,
+      "type": "shell-show"
+     },
+     {
+      "t": 889,
+      "type": "shell-show"
+     },
+     {
+      "t": 889,
+      "type": "shell-show"
+     },
+     {
+      "t": 1469,
+      "type": "shell-show"
+     },
+     {
+      "t": 1469,
+      "type": "shell-show"
+     },
+     {
+      "t": 2302,
+      "type": "shell-hide"
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2374,
+    "fcp": 2272,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 498,
+      "type": "shell-show"
+     },
+     {
+      "t": 499,
+      "type": "shell-show"
+     },
+     {
+      "t": 806,
+      "type": "shell-show"
+     },
+     {
+      "t": 806,
+      "type": "shell-show"
+     },
+     {
+      "t": 1328,
+      "type": "shell-show"
+     },
+     {
+      "t": 1328,
+      "type": "shell-show"
+     },
+     {
+      "t": 2170,
+      "type": "shell-hide"
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2451,
+    "fcp": 2288,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 500,
+      "type": "shell-show"
+     },
+     {
+      "t": 500,
+      "type": "shell-show"
+     },
+     {
+      "t": 803,
+      "type": "shell-show"
+     },
+     {
+      "t": 803,
+      "type": "shell-show"
+     },
+     {
+      "t": 1357,
+      "type": "shell-show"
+     },
+     {
+      "t": 1357,
+      "type": "shell-show"
+     },
+     {
+      "t": 2187,
+      "type": "shell-hide"
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2612,
+    "fcp": 2508,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 498,
+      "type": "shell-show"
+     },
+     {
+      "t": 498,
+      "type": "shell-show"
+     },
+     {
+      "t": 805,
+      "type": "shell-show"
+     },
+     {
+      "t": 805,
+      "type": "shell-show"
+     },
+     {
+      "t": 1350,
+      "type": "shell-show"
+     },
+     {
+      "t": 1350,
+      "type": "shell-show"
+     },
+     {
+      "t": 2428,
+      "type": "shell-hide"
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 2316,
+    "fcp": 2208,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 492,
+      "type": "shell-show"
+     },
+     {
+      "t": 492,
+      "type": "shell-show"
+     },
+     {
+      "t": 797,
+      "type": "shell-show"
+     },
+     {
+      "t": 797,
+      "type": "shell-show"
+     },
+     {
+      "t": 1328,
+      "type": "shell-show"
+     },
+     {
+      "t": 1328,
+      "type": "shell-show"
+     },
+     {
+      "t": 2102,
+      "type": "shell-hide"
+     }
+    ],
+    "errors": []
+   }
+  ],
+  "slow": [
+   {
+    "ready": 4926,
+    "fcp": 3020,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 1462,
+      "type": "shell-show"
+     },
+     {
+      "t": 1462,
+      "type": "shell-show"
+     },
+     {
+      "t": 2073,
+      "type": "shell-show"
+     },
+     {
+      "t": 2073,
+      "type": "shell-show"
+     },
+     {
+      "t": 2623,
+      "type": "shell-show"
+     },
+     {
+      "t": 2623,
+      "type": "shell-show"
+     },
+     {
+      "t": 2984,
+      "type": "shell-hide"
+     },
+     {
+      "t": 2984,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 4692,
+    "fcp": 3028,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 1442,
+      "type": "shell-show"
+     },
+     {
+      "t": 1442,
+      "type": "shell-show"
+     },
+     {
+      "t": 2039,
+      "type": "shell-show"
+     },
+     {
+      "t": 2039,
+      "type": "shell-show"
+     },
+     {
+      "t": 2610,
+      "type": "shell-show"
+     },
+     {
+      "t": 2610,
+      "type": "shell-show"
+     },
+     {
+      "t": 2989,
+      "type": "shell-hide"
+     },
+     {
+      "t": 2990,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 4975,
+    "fcp": 3072,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 1481,
+      "type": "shell-show"
+     },
+     {
+      "t": 1482,
+      "type": "shell-show"
+     },
+     {
+      "t": 2081,
+      "type": "shell-show"
+     },
+     {
+      "t": 2081,
+      "type": "shell-show"
+     },
+     {
+      "t": 2654,
+      "type": "shell-show"
+     },
+     {
+      "t": 2654,
+      "type": "shell-show"
+     },
+     {
+      "t": 3038,
+      "type": "shell-hide"
+     },
+     {
+      "t": 3038,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 4916,
+    "fcp": 3072,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 1487,
+      "type": "shell-show"
+     },
+     {
+      "t": 1487,
+      "type": "shell-show"
+     },
+     {
+      "t": 2067,
+      "type": "shell-show"
+     },
+     {
+      "t": 2067,
+      "type": "shell-show"
+     },
+     {
+      "t": 2647,
+      "type": "shell-show"
+     },
+     {
+      "t": 2647,
+      "type": "shell-show"
+     },
+     {
+      "t": 3034,
+      "type": "shell-hide"
+     },
+     {
+      "t": 3035,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 4930,
+    "fcp": 3120,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 1511,
+      "type": "shell-show"
+     },
+     {
+      "t": 1511,
+      "type": "shell-show"
+     },
+     {
+      "t": 2104,
+      "type": "shell-show"
+     },
+     {
+      "t": 2104,
+      "type": "shell-show"
+     },
+     {
+      "t": 2679,
+      "type": "shell-show"
+     },
+     {
+      "t": 2679,
+      "type": "shell-show"
+     },
+     {
+      "t": 3079,
+      "type": "shell-hide"
+     },
+     {
+      "t": 3080,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   },
+   {
+    "ready": 4994,
+    "fcp": 3124,
+    "commitsPerSec": 0.0,
+    "events": [
+     {
+      "t": 1504,
+      "type": "shell-show"
+     },
+     {
+      "t": 1504,
+      "type": "shell-show"
+     },
+     {
+      "t": 2098,
+      "type": "shell-show"
+     },
+     {
+      "t": 2098,
+      "type": "shell-show"
+     },
+     {
+      "t": 2687,
+      "type": "shell-show"
+     },
+     {
+      "t": 2688,
+      "type": "shell-show"
+     },
+     {
+      "t": 3077,
+      "type": "shell-hide"
+     },
+     {
+      "t": 3077,
+      "type": "skeleton-mount",
+      "label": "正在打开会话",
+      "area": 0.25
+     }
+    ],
+    "errors": []
+   }
+  ]
+ }
+}

@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorChangeAnnouncements(runtime2) {
-  var formatSlideCount, PRESENTATION_CHANGE_ANNOUNCEMENTS, slideAnnouncementFingerprintCache;
+  var PRESENTATION_CHANGE_ANNOUNCEMENTS, slideAnnouncementFingerprintCache;
   function createSlideAnnouncementFingerprints(content) {
     let fingerprints = /* @__PURE__ */ new Map();
     for (let value2 of content.order) {
@@ -40,17 +40,33 @@ function installEditorChangeAnnouncements(runtime2) {
       ]));
     });
   }
-  return bindRuntimeValue(runtime2, "formatSlideCount", () => formatSlideCount, (value) => {
-    formatSlideCount = value;
-  }), bindRuntimeValue(runtime2, "PRESENTATION_CHANGE_ANNOUNCEMENTS", () => PRESENTATION_CHANGE_ANNOUNCEMENTS, (value) => {
+  return bindRuntimeValue(runtime2, "PRESENTATION_CHANGE_ANNOUNCEMENTS", () => PRESENTATION_CHANGE_ANNOUNCEMENTS, (value) => {
     PRESENTATION_CHANGE_ANNOUNCEMENTS = value;
   }), bindRuntimeValue(runtime2, "slideAnnouncementFingerprintCache", () => slideAnnouncementFingerprintCache, (value) => {
     slideAnnouncementFingerprintCache = value;
   }), bindRuntimeValue(runtime2, "createSlideAnnouncementFingerprints", () => createSlideAnnouncementFingerprints), bindRuntimeValue(runtime2, "slideAnnouncementFingerprint", () => slideAnnouncementFingerprint), () => {
-    (0, runtime2.initializeHtmlWriter)(), formatSlideCount = (count) => String(count) + (count === 1 ? " slide" : " 页幻灯片"), PRESENTATION_CHANGE_ANNOUNCEMENTS = {
-      ready: (input) => "Presentation ready, " + formatSlideCount(input),
-      updated: (input) => formatSlideCount(input) + " updated",
-      changed: (input) => "Presentation updated, " + (input === 0 ? "no slides left" : formatSlideCount(input) + " in all")
+    (0, runtime2.initializeHtmlWriter)(), PRESENTATION_CHANGE_ANNOUNCEMENTS = {
+      ready: (input) =>(0, runtime2.formatMessage) ({
+        defaultMessage: "演示文稿已就绪，共 {count} 页",
+        id : "yeiww4KNy+"
+      }, {
+        n: input,
+        count: String (input)
+      }),
+      updated: (input) => (0, runtime2.formatMessage)({
+        defaultMessage: "已更新 {count} 页幻灯片",
+        id: "iV38ozgEHj"
+      }, {
+        n: input,
+        count: String(input)
+      }),
+      changed: (input) => (0, runtime2.formatMessage)({
+        defaultMessage: "{n, plural, =0 {演示文稿已更新，已无幻灯片} other {演示文稿已更新，共 {count} 页}}",
+        id: "+sEQcoZWI5"
+      }, {
+        n:input,
+        count : String(input)
+      })
     }, slideAnnouncementFingerprintCache = /* @__PURE__ */ new WeakMap();
   };
 }

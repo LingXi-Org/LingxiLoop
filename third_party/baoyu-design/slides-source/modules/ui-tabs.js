@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiTabs(runtime2) {
-  var checkedTabFlexDocuments, initializeUiTabs, reactForUiTabs, jsxForUiTabs, initializeUiTabs2, reactForUiTabs2, jsxForUiTabs2, FORM_SIZE_GAP_CLASSES, Form, initializeUiTabs3, reactForUiTabs3, jsxForUiTabs3, SWITCH_TRACK_CLASS, SWITCH_THUMB_CLASS, SWITCH_TRACK_SIZE_CLASS, SWITCH_THUMB_SIZE_CLASS, Switch, initializeUiTabs4, reactForUiTabs4, jsxForUiTabs4, RADIO_MARK_CLASS, RadioGroupItem, RADIO_ITEM_CLASS, RadioGroupCard, RadioGroupRoot, RADIO_CARD_CLASS, initializeUiTabs5, reactForUiTabs5, jsxForUiTabs5, RESIZE_HANDLE_DRAG_TOLERANCE, RESIZE_HANDLE_KEY_STEP, RESIZE_HANDLE_SHIFT_KEY_STEP, RESIZE_HANDLE_SIDE_CLASSES, RESIZE_HANDLE_RELEASE_GRACE_MS, RESIZE_PILL_CLASSES, RESIZE_LINE_CLASSES, ResizeHandle, initializeUiTabs6;
+  var checkedTabFlexDocuments, initializeUiTabs, reactForUiTabs, jsxForUiTabs, initializeUiTabs2, reactForUiTabs2, jsxForUiTabs2, FORM_SIZE_GAP_CLASSES, Form3, initializeUiTabs3, reactForUiTabs3, jsxForUiTabs3, SWITCH_TRACK_CLASS, SWITCH_THUMB_CLASS, SWITCH_TRACK_SIZE_CLASS, SWITCH_THUMB_SIZE_CLASS, Switch, initializeUiTabs4, reactForUiTabs4, jsxForUiTabs4, RADIO_MARK_CLASS, RadioGroupItem, RADIO_ITEM_CLASS, RadioGroupCard, RadioGroupRoot, RADIO_CARD_CLASS, initializeUiTabs5, reactForUiTabs5, jsxForUiTabs5, RESIZE_HANDLE_DRAG_TOLERANCE, RESIZE_HANDLE_KEY_STEP, RESIZE_HANDLE_SHIFT_KEY_STEP, RESIZE_HANDLE_SIDE_CLASSES, RESIZE_HANDLE_RELEASE_GRACE_MS, RESIZE_PILL_CLASSES, RESIZE_LINE_CLASSES, ResizeHandle, initializeUiTabs6;
   function isUnwrappedHorizontalFlex(input) {
     let value = getComputedStyle(input);
     return value.display.endsWith("flex") && !value.flexDirection.startsWith("column") && !value.flexWrap.startsWith("wrap");
@@ -255,8 +255,8 @@ function installUiTabs(runtime2) {
     jsxForUiTabs2 = value;
   }), bindRuntimeValue(runtime2, "FORM_SIZE_GAP_CLASSES", () => FORM_SIZE_GAP_CLASSES, (value) => {
     FORM_SIZE_GAP_CLASSES = value;
-  }), bindRuntimeValue(runtime2, "Form", () => Form, (value) => {
-    Form = value;
+  }), bindRuntimeValue(runtime2, "Form", () => Form3, (value) => {
+    Form3 = value;
   }), bindRuntimeValue(runtime2, "initializeUiTabs3", () => initializeUiTabs3, (value) => {
     initializeUiTabs3 = value;
   }), bindRuntimeValue(runtime2, "preventRepeatedSwitchEnter", () => preventRepeatedSwitchEnter), bindRuntimeValue(runtime2, "reactForUiTabs3", () => reactForUiTabs3, (value) => {
@@ -326,7 +326,7 @@ function installUiTabs(runtime2) {
         sm: "gap-sm",
         base: "gap-md",
         lg: "gap-lg"
-      }, Form = reactForUiTabs2.forwardRef(({ className, submitOnModEnter = !0, disabled: disabled2, size: size4, method, onSubmit, onKeyDown, ...props }, options) => jsxForUiTabs2.jsx(runtime2.baseFieldsetRoot, {
+      }, Form3 = reactForUiTabs2.forwardRef(({ className, submitOnModEnter = !0, disabled: disabled2, size: size4, method, onSubmit, onKeyDown, ...props }, options) => jsxForUiTabs2.jsx(runtime2.baseFieldsetRoot, {
         ref: options,
         "data-cds": "Form",
         "data-disabled": disabled2 ? "" : void 0,
@@ -344,7 +344,7 @@ function installUiTabs(runtime2) {
         onKeyDown: (event) => {
           onKeyDown?.(event), submitOnModEnter && !event.defaultPrevented && event.key === "Enter" && (event.metaKey || event.ctrlKey) && (0, runtime2.isDomNode)(event.target) && event.currentTarget.contains(event.target) && !event.nativeEvent.isComposing && (event.preventDefault(), disabled2 || event.currentTarget.requestSubmit());
         }
-      })), Form.displayName = "Form";
+      })), Form3.displayName = "Form";
     }), SWITCH_TRACK_CLASS = "cds-reset relative inline-flex shrink-0 rounded-full border-0 outline-none focus-visible:outline-hidden bg-[var(--cds-switch-track)] hover:bg-[var(--cds-switch-track-hover)] data-[checked]:bg-fill-accent data-[checked]:hover:bg-fill-accent-hover data-[disabled]:opacity-disabled data-[disabled]:hover:bg-[var(--cds-switch-track)] data-[checked]:data-[disabled]:hover:bg-fill-accent focus-visible:shadow-focus forced-colors:border forced-colors:border-solid forced-colors:border-[color:CanvasText] forced-colors:data-[checked]:border-[color:Highlight] forced-colors:data-[checked]:!bg-[color:Highlight]", SWITCH_THUMB_CLASS = "block rounded-full bg-[var(--cds-switch-knob)] shadow-sm transition-transform duration-snap ease-overshoot motion-reduce:transition-none forced-colors:bg-[color:CanvasText] forced-colors:data-[checked]:bg-[color:HighlightText]", SWITCH_TRACK_SIZE_CLASS = "h-[var(--cds-switch-h)] w-[calc(var(--cds-switch-h,1.25rem)*1.8)] p-[2px] forced-colors:p-px", SWITCH_THUMB_SIZE_CLASS = "size-[calc(var(--cds-switch-h,1.25rem)-4px)] data-[checked]:translate-x-[calc(var(--cds-switch-h,1.25rem)*0.8)] data-[checked]:[&:where(:root[dir=rtl]_:dir(rtl))]:-translate-x-[calc(var(--cds-switch-h,1.25rem)*0.8)]", initializeUiTabs4 = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeClassNames)(), (0, runtime2.initializeCdsRoot)(), (0, runtime2.initializeUiDisclosure)(), (0, runtime2.initializeTooltip)(), (0, runtime2.initializeNpmDependency)(), reactForUiTabs3 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxForUiTabs3 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), Switch = reactForUiTabs3.forwardRef(({ className, size: size4, disabledReason, disabledReasonSide, onKeyDown, onMouseDown, ...props }, options) => {
         let value = jsxForUiTabs3.jsx(runtime2.baseSwitch.Root, {

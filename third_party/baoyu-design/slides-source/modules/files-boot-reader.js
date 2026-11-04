@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesBootReader(runtime2) {
   var BootReadError, MAX_BOOT_EARLY_SLIDE_READS, errorHttpStatus, errorMessage;
@@ -134,7 +134,7 @@ function installFilesBootReader(runtime2) {
         ...entry !== void 0 ? [entry] : [],
         ...value9.filter((input) => input.path !== indexPath && wantsEarlySlide(input))
       ].filter((input) => entries2.get(input.path) !== input.sha256);
-      await Promise.all(value11.map(async (input) => {
+      const readEntry = async (input) => {
         let value12 = await value5(input.path, () => port.readText(input.path), callback3(input.path), (input2) => value4(input2, input.path));
         if (value12 === null) {
           callback({
@@ -144,7 +144,17 @@ function installFilesBootReader(runtime2) {
           return;
         }
         input.path === indexPath ? value8 = value12 : entries.set(input.path, value12), entries2.set(input.path, input.sha256);
-      })), value2();
+      };
+      // A caller with dependent theme/font metadata can prepare it before
+      // scheduling the remaining pages. Other native readers keep their
+      // original concurrent path.
+      if (options.beforeFiles !== void 0) {
+        const metadata = value11.find((input) => input.path === indexPath);
+        if (metadata !== void 0) await readEntry(metadata);
+        if (value8 !== void 0) await options.beforeFiles(value8, value9);
+        await Promise.all(value11.filter((input) => input.path !== indexPath).map(readEntry));
+      } else await Promise.all(value11.map(readEntry));
+      value2();
       let version22 = port.version().version;
       if (version22 === version2 || count >= value) {
         if (value8 === void 0)

@@ -9,6 +9,10 @@ const testsByScope = {
     'server/src/__tests__/gateway-auth.test.ts',
     'server/src/__tests__/document-collaboration.test.ts',
     'server/src/__tests__/admin-platform.test.ts',
+    'server/src/__tests__/agent-run-timing.test.ts',
+    'server/src/__tests__/model-stage-timing.test.ts',
+    'server/src/__tests__/model-wire-summary.test.ts',
+    'server/src/__tests__/queue-capacity-fixture.test.ts',
     'server/src/__tests__/coworker-activity-realtime.test.ts',
     'server/src/__tests__/domain-events.test.ts',
     'server/src/__tests__/entitlement-resolver.test.ts',
@@ -39,6 +43,7 @@ const testsByScope = {
   ],
   admin: ['admin/src/lingxilit-url.test.ts', 'admin/src/record-presentation.test.ts', 'admin/src/management-session.test.ts'],
   web: [
+    'src/features/artifacts/components/artifact-recovery-handoff.test.ts',
     'src/components/assistant-ui/markdown-text.test.tsx',
     'src/components/shell/modules.test.ts',
     'src/features/chat/components/ConversationMessage.test.tsx',

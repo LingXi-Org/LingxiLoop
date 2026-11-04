@@ -17,7 +17,8 @@ export async function loadRuntimePatchInventory(productVersion:54|57|58|60|61=54
  const root=new URL('./migrations/',import.meta.url),allFiles=(await readdir(root)).sort()
  // A recorded product60 transition still names exactly its original inventory.
  // The CAS separately rejects any applied ledger other than that exact prefix.
- const files=productVersion===60&&allFiles.length===61&&allFiles[60]==='0061_slides_workspaces.sql'?allFiles.slice(0,60):allFiles
+ const reviewedFiles=allFiles.length===62&&allFiles[61]==='0062_case_options.sql'?allFiles.slice(0,61):allFiles
+ const files=productVersion===60&&reviewedFiles.length===61&&reviewedFiles[60]==='0061_slides_workspaces.sql'?reviewedFiles.slice(0,60):reviewedFiles
  check(files.length===productVersion,`Runtime patch requires complete product${productVersion} inventory`)
  return Promise.all(files.map(async(file,index)=>{
   const match=/^(\d{4})_([a-z0-9_]+)\.sql$/.exec(file)
@@ -29,7 +30,7 @@ export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,targ
  check(source.productVersion===target.productVersion,'Runtime patch cannot change product schema')
  const product=target.productVersion
  check(product===54||product===57||product===58||product===60||product===61,'Unreviewed runtime patch product')
- if(product===61)check(source.runtime==='3.8.20'&&target.runtime==='3.8.21','Product61 runtime patch requires exact3.8.20 to3.8.21')
+ if(product===61)check(source.runtime==='3.8.20'&&target.runtime==='3.8.21'||source.runtime==='3.8.21'&&target.runtime==='3.8.22'||source.runtime==='3.8.22'&&target.runtime==='3.8.23'||source.runtime==='3.8.21'&&target.runtime==='3.8.23'||['3.8.21','3.8.22','3.8.23'].includes(source.runtime)&&target.runtime==='3.8.24','Product61 runtime patch requires exact3.8.20 to3.8.21 or3.8.21 to3.8.22 or3.8.22 to3.8.23 or reviewed3.8.21 to3.8.23 or explicit21/22/23 to3.8.24')
  if(product===60)check(source.runtime==='3.8.18'&&target.runtime==='3.8.19'||source.runtime==='3.8.19'&&target.runtime==='3.8.20','Product60 runtime patch requires exact3.8.18 to3.8.19 or3.8.19 to3.8.20')
  if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.14','Product57 runtime patch is restricted to exact3.8.12 to3.8.14')
  if(product===58)check(source.runtime==='3.8.14'&&target.runtime==='3.8.15'||source.runtime==='3.8.15'&&target.runtime==='3.8.16'||source.runtime==='3.8.16'&&target.runtime==='3.8.17'||source.runtime==='3.8.17'&&target.runtime==='3.8.18','Product58 runtime patch requires a reviewed exact3.8 maintenance pair')

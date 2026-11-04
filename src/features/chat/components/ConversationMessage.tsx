@@ -183,7 +183,7 @@ function MessageTextPart() {
       }}
       className={cn(
         'min-w-0 tracking-[-0.01em]',
-        isAgent ? 'text-[15px] leading-[1.7]' : 'text-[14.5px] leading-relaxed',
+        'text-[15px] leading-[1.75]',
         isHuman && ['px-4 py-3', bubbleRadius],
         !metadata.isMine && 'text-foreground',
         isHuman && metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
@@ -268,12 +268,12 @@ export function ConversationMessage() {
       className={cn(
         'group/message grid w-full shrink-0',
         custom.replyBranches && 'fade-in slide-in-from-bottom-1 animate-in duration-300 motion-reduce:animate-none',
-        'px-[clamp(1rem,3cqw,2.5rem)]',
+        'px-4 sm:px-7',
         isMobile ? 'gap-x-2' : 'gap-x-2.5',
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
         custom.continuedFromPrevious ? 'pt-1' : 'pt-3',
         custom.continuedToNext ? 'pb-0' : 'pb-3',
-        custom.isMine ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
+        custom.senderKind === 'agent' ? 'grid-cols-[28px_minmax(0,1fr)]' : custom.isMine ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
     >
       <ConversationMessageAvatar participant={participant} isMobile={isMobile} isMine={custom.isMine}
@@ -284,7 +284,7 @@ export function ConversationMessage() {
             <span className="font-medium">{participant ? participantDisplayName(participant) : custom.senderName}</span>
           </div>
         )}
-        <div data-chat-message-content data-sender-kind={custom.senderKind} className={cn('row-start-2 grid w-full max-w-[800px] min-w-0 gap-0.5', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>
+        <div data-chat-message-content data-sender-kind={custom.senderKind} className={cn('row-start-2 grid w-full max-w-[700px] min-w-0 gap-0.5', custom.senderKind === 'agent' && 'col-span-2 col-start-1! mt-2', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {custom.quote && (custom.senderKind !== 'human' || !quoteInsideText) && (
             <div className={cn('min-w-0 max-w-md', custom.isMine && 'w-full justify-self-end')}>

@@ -15,6 +15,7 @@ export function caseArticleUrl(search: string, companyId: string | null | undefi
   if (view === 'manage') query.set('caseView', view)
   else query.delete('caseView')
   query.delete('case')
+  query.delete('compose')
   query.delete('conversation')
   return `/cases${id ? `/${encodeURIComponent(id)}` : ''}?${query}`
 }

@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorCoverTitle(runtime2) {
   var ReactCoverTitle, UNTITLED_DECK_TITLE, TITLE_INVISIBLE_CHARACTERS, TITLE_KEPT_FORMAT_CHARACTERS, templateSampleTexts, COVER_TITLE_HOST;
@@ -35,15 +35,20 @@ function installEditorCoverTitle(runtime2) {
     function revertIfWordsLeft(slide) {
       applied?.left === !0 && (slide === void 0 || normalizeCoverTitleWords((0, runtime2.slideTitleTextAt)(slide)?.text) !== applied.words) && revert();
     }
-    function finish(session) {
-      if (doc.readOnly())
+    async function finish(session) {
+      if (disposed || doc.readOnly())
         return;
       let slide = coverSlide(session.slide);
       if (slide === void 0 || doc.slideRev(session.slide) !== session.rev || session.at !== void 0 && (0, runtime2.slideTextAtPath)(slide, session.at) === void 0)
         return revertIfWordsLeft(slide);
       let words = normalizeCoverTitleWords((0, runtime2.slideTitleTextAt)(slide)?.text), before = new Set(session.then.frames.flatMap((frame) => nodeTextRuns(frame.node)).map(normalizeCoverTitleWords));
-      if (words === "" || before.has(words) || isTemplateSampleText(words))
+      if (words === "" || before.has(words))
         return revertIfWordsLeft(slide);
+      // Sample-text recognition is a synchronous data consumer in the pin.
+      // Load its template group only when a changed heading reaches that rule.
+      try { await runtime2.loadTemplateModules?.(); } catch { return; }
+      if (disposed || doc.readOnly() || doc.slideRev(session.slide) !== session.rev) return;
+      if (isTemplateSampleText(words)) return revertIfWordsLeft(slide);
       let current = ++attempt, stillSays = () => {
         let latest = coverSlide(session.slide);
         return latest !== void 0 && normalizeCoverTitleWords((0, runtime2.slideTitleTextAt)(latest)?.text) === words;

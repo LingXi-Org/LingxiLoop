@@ -29,6 +29,12 @@ always deploys the committed `HEAD`. On GitHub the same commands are
 2. **pull** – each host fetches its missing images with `ctr` through
    `accel.way2api.fun` (Docker's own proxied pull measured >10× slower).
    Base images are pinned by digest, so code-only changes pull a few MB.
+   Before pulling, a per-host lock serializes cleanup and pulls. Cleanup removes
+   only obsolete LingxiLoop image tags (including old direct-GHCR tags), retaining
+   every container's image, the two newest tagged images per package and all
+   target images. It also prunes build cache unused for seven days, retaining
+   up to 512 MB. It never removes containers, volumes, backups or other apps'
+   images. Older rollback images remain in GHCR and are pulled again as needed.
 3. **servers** – writes `deploy/<stack>/` plus a `.env` (exactly the Sigillo
    values its compose file references) and `images.env` to
    `/opt/lingxiloop/<stack>/`, then `docker compose up -d --wait`. core-state,
@@ -225,3 +231,86 @@ success control, and verifies injected product-host seal refusal stays failed
 with no result. The specific in-flight-second-ACK race remains covered by the
 SDK's independent regression. These deterministic checks establish neither
 live-provider generation quality nor browser/teaching-content acceptance.
+
+
+### Independent read-only Notebook/run observation (#633)
+
+The existing `Deploy production` Actions workflow can run the fixed
+`knowledge-observe` command with its already configured `SIGILLO_TOKEN`.
+No login, new identity, secret change, extra Actions permission, token export or
+local production credentials are needed. After this observation-only change is
+reviewed and merged to `main`, the sole integrator can invoke:
+
+```sh
+gh workflow run deploy.yml --ref main -f command=knowledge-observe -f run_id='im:88655fc9ed2c99c17d6a980c071367d5867952b20a41e5a2a9f9c0d97cf765e5'
+```
+
+Keep **`[skip deploy]` in the merge commit message** for this observation-only
+PR. The existing push workflow would otherwise invoke `up` on every main merge.
+Do not use `up`, `servers`, `plan` or a runtime patch command to observe.
+The observer was extracted from draft #637 into #641, with transport negotiation
+fixed in #642; #637 now inherits both as one implementation. The user approved
+#637's numerical new-root limits at 11:58 UTC on 2026-11-02. Budget/retrieval
+changes now ship independently; the separate embedding route exception remains
+pending specific approval and is not included in #637.
+
+The Actions observation skips image builds and selects a separate, fixed CLI
+step. The run ID is passed via an environment variable as one quoted argument,
+validated before Sigillo or SSH access. `stacks` is ignored for this command.
+The CLI returns before image selection, pulls, runtime-patch plans or stack
+convergence. It does not stage host deployment files, drain/restart services,
+migrate, activate a generation, call a model/provider or retry a run.
+
+The bounded JSON output distinguishes retained `notebook.control` from
+`notebook.active`: stored model/endpoint/contract dimensions, aggregate chunk and
+invalid-dimension counts, a scalar dimension sample, generation metadata and
+pointer revision. `pointerStable=false` means the pointer changed while reading;
+these are independent metadata reads, not a transactional migration receipt.
+Notebook `configured` reflects Docker's environment, not resolved API state.
+`workerA`/`workerB` show four configured limits, not the old root's frozen budget.
+
+The fixed MCP read uses only the existing `LINGXILOOP_MCP_SERVICE_TOKEN` supplied
+by the same Sigillo run. A maximum event cursor excludes ordered tool/public-text
+events; additional diagnostics are discarded. Only run identity/state, the
+reported budget gap and aggregate counters are exported. The formal SDK has no
+public frozen-root budget or exact partial-run rejection/reservation reader, so
+both stay `unknown`; elapsed time never determines a budget dimension.
+Missing/denied existing identity is reported without fallback or new credentials.
+Existing authenticated-read auditing remains enabled.
+
+There is no source text, vector value, prompt, tenant content or credential in
+the output. Notebook metadata has a 30-second deadline; remote SSH processes are
+bounded to 20/45 seconds; the MCP read has a 20-second deadline and 256-KiB cap.
+Each view runs once. A failed view preserves the others, reports top-level
+`status=partial` and exits nonzero. Inspect each view's status in the Actions log.
+The developer task has not dispatched or executed this production observation.
+
+## Approved root budgets and retrieval degradation (#633 / #637)
+
+This release independently applies the user's approved new-root limits of
+512 model calls / 8M tokens / $50 / two hours (approved 2026-11-02 11:58 UTC).
+These are finite per-root limits, not a global spending cap. The public SDK
+retains old roots' frozen limits and native reservation/settlement accounting;
+this release neither migrates nor modifies old roots.
+
+Hybrid search settles text/vector requests independently, preserves successful
+results with a safe degraded status, honors cancellation and rechecks current
+reader/source authorization before returning citations. Saved artifacts survive
+partial budget completion and remain available for human continuation.
+
+Notebook compose, embedding endpoint, frontend access boundaries and deployment
+preflight are unchanged from main. The global Notebook preflight and endpoint
+configuration overrides have been removed from #637; there is no bypass flag.
+The existing #641/#642 read-only observation remains unchanged. The separate
+embedding failure does not block releasing these approved, independent fixes.
+
+Embedding remains unresolved: the active Pro/1024 generation's exact sealed
+endpoint is the frontend `/internal/open-notebook/v1/shadow`, which is denied.
+The proposed follow-up is only an exact main-site POST passthrough of
+`/internal/open-notebook/v1/shadow/embeddings` to the existing backend path,
+keeping all other internal paths and artifact origins denied and preserving
+backend authentication, company/model/input checks and ledger accounting.
+That changes the frontend access boundary and requires specific user approval.
+This release contains only its analysis/test plan, with no route exception,
+new token, endpoint relabelling or index migration. See
+[the evidence and separate route qualification plan](evidence/issue-633/README.md).

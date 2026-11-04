@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e, MIT.
+// Native live-binding helper for recovered baoyu-design modules (MIT); see README.md.
 // Published node/compiler.cjs preserves the named module implementation.
 export function bindRuntimeValue(runtime2, name, read, write) {
   Object.defineProperty(runtime2, name, {

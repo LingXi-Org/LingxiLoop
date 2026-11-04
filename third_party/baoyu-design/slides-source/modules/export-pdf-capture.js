@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportPdfCapture(runtime2) {
-  var pdfCaptureExports, PdfCaptureReact, PdfCaptureReactDomClient, pdfDefaultRasterScale, pdfDefaultJpegQuality, pdfCaptureQualityLadder, pdfMinimumCaptureTimeMs, pdfMaximumPageCaptureTimeMs, pdfFinalizationTimeReserveMs, pdfCaptureBudgetMultiplier, pdfFontsReadyTimeoutMs, pdfFontInliningBudget, maxFontFetchCacheEntries, fontFetchFallbackWarning, fontInliningBudgetWarning, localFontSourcePattern, fetchLocalFontDataUrl, uncapturedEmbedWarning, textRunBaselineDescentFactor, pdfMaximumTextRunFontSize, pdfMaximumTextCoordinate, maxCapturedSlideTextCharacters, maxCapturedTextRangeCharacters, ignoredTextCaptureElementNames, headingElementNames, pdfSlideWidthPoints, pdfSlideHeightPoints, initializePdfCapture;
+  var pdfCaptureExports, PdfCaptureReact, PdfCaptureReactDomClient, pdfDefaultRasterScale, pdfDefaultJpegQuality, pdfCaptureQualityLadder, pdfMinimumCaptureTimeMs, pdfMaximumPageCaptureTimeMs, pdfFinalizationTimeReserveMs, pdfCaptureBudgetMultiplier, pdfFontsReadyTimeoutMs, FIZZY_LAKE_SELECTOR_PREFIX, pdfFontInliningBudget, maxFontFetchCacheEntries, localFontSourcePattern, runtimeFontPathSource = "_runtime/[A-Za-z0-9_-]{1,64}\\.[0-9a-f]{16}\\.woff2", frameFontFallbackPattern, fetchLocalFontDataUrl, textRunBaselineDescentFactor, pdfMaximumTextRunFontSize, pdfMaximumTextCoordinate, maxCapturedSlideTextCharacters, maxCapturedTextRangeCharacters, ignoredTextCaptureElementNames, headingElementNames, pdfSlideWidthPoints, pdfSlideHeightPoints, initializePdfCapture;
   function notePageMissingFonts(findings, families, text) {
     if (families.length === 0)
       return;
@@ -72,6 +72,61 @@ function installExportPdfCapture(runtime2) {
         return;
       }
   }
+  function closingParenIndex(text, start) {
+    let depth = 0, quote = "";
+    for (let index4 = start; index4 < text.length; index4++) {
+      let char = text[index4];
+      if (char === "\\")
+        index4++;
+      else if (quote !== "")
+        quote = char === quote ? "" : quote;
+      else if (char === '"' || char === "'")
+        quote = char ?? "";
+      else if (char === "(")
+        depth++;
+      else if (char === ")" && --depth == 0)
+        return index4;
+    }
+    return text.length;
+  }
+  function scanCssSelector(selector, visit) {
+    let quote = "";
+    for (let index4 = 0; index4 < selector.length; index4++) {
+      let char = selector[index4];
+      char === "\\" ? index4++ : quote !== "" ? quote = char === quote ? "" : quote : char === '"' || char === "'" ? quote = char ?? "" : char === "(" ? index4 = closingParenIndex(selector, index4) : index4 = visit(index4) ?? index4;
+    }
+  }
+  function selectorTargetsFizzyLake(selector) {
+    let targets = !1;
+    return scanCssSelector(selector, (index4) => {
+      selector.startsWith(FIZZY_LAKE_SELECTOR_PREFIX, index4) && (targets = !0);
+      let match = /^:(?:is|where)\(/.exec(selector.slice(index4, index4 + 7));
+      if (match === null)
+        return;
+      let open4 = index4 + match[0].length - 1, close = closingParenIndex(selector, open4);
+      return selectorListTargetsFizzyLake(selector.slice(open4 + 1, close)) && (targets = !0), close;
+    }), targets;
+  }
+  function selectorListTargetsFizzyLake(selectorList) {
+    let selectors9 = [], start = 0;
+    return scanCssSelector(selectorList, (index4) => {
+      selectorList[index4] === "," && (selectors9.push(selectorList.slice(start, index4)), start = index4 + 1);
+    }), selectors9.push(selectorList.slice(start)), selectors9.every(selectorTargetsFizzyLake);
+  }
+  function cssRuleTextWithoutFizzyLake(rule) {
+    if ("selectorText" in rule)
+      return selectorListTargetsFizzyLake(rule.selectorText) ? "" : rule.cssText;
+    if (!("cssRules" in rule))
+      return rule.cssText;
+    let rules = Array.from(rule.cssRules), texts = rules.map(cssRuleTextWithoutFizzyLake);
+    if (texts.every((text, index4) => text === rules[index4]?.cssText))
+      return rule.cssText;
+    let kept = texts.filter((text) => text !== "");
+    return kept.length === 0 ? "" : rule.cssText.slice(0, rule.cssText.indexOf("{") + 1) + `
+` + kept.join(`
+`) + `
+}`;
+  }
   function documentStylesheetCss() {
     let css = [];
     for (let value of Array.from(document.styleSheets)) {
@@ -81,8 +136,11 @@ function installExportPdfCapture(runtime2) {
       } catch {
         continue;
       }
-      for (let value3 of Array.from(value2))
-        css.push(value3.cssText);
+      for (let value3 of Array.from(value2)) {
+        let text = cssRuleTextWithoutFizzyLake(value3);
+        text !== "" &&
+        css.push(text);
+    }
     }
     return css.join(`
 `);
@@ -111,7 +169,7 @@ function installExportPdfCapture(runtime2) {
     });
     if (result.requested && (state.webRequested = !0), result.css === "" && !result.unavailable && !result.overBudget && text.trim() !== "" && !localOnly)
       return inlineGoogleFontsFallback(css, warnings, fetchOptions.fetchText, fetchOptions.fetchDataUrl, fetchOptions.faceInUse, state, fetchOptions.familyNamed);
-    result.unavailable && (warnings.push(fontFetchFallbackWarning), state.missing = state.missingWebFetch = !0, (0, runtime2.noteWebFontFailures)(state, result.failures)), result.overBudget && (warnings.push(fontInliningBudgetWarning), state.overBudget = !0);
+    result.unavailable && (warnings.push((0, runtime2.exportNote)("fonts_unavailable")), state.missing = state.missingWebFetch = !0, (0, runtime2.noteWebFontFailures)(state, result.failures)), result.overBudget && (warnings.push((0, runtime2.exportNote)("fonts_over_budget_drawn")), state.overBudget = !0);
     let flag = !1;
     return css.replace(runtime2.googleFontsImportRegex, () => flag ? "" : (flag = !0, result.css));
   }
@@ -119,8 +177,8 @@ function installExportPdfCapture(runtime2) {
     let { hrefs, optional } = (0, runtime2.googleFontImports)(css);
     if (hrefs.length === 0)
       return css;
-    let inlinedSheets = new Map(hrefs.map((input) => [input, ""])), unavailable = /* @__PURE__ */ new Set(), overBudget = !1, failures = {}, noteFailure = (stage, error) => {
-      overBudget = failures[stage] = failures[(0, runtime2.fetchFailureKind)(error)] = !0;
+    let inlinedSheets = new Map(hrefs.map((input) => [input, ""])), unavailable = /* @__PURE__ */ new Set(), failed = !1, failures = {}, noteFailure = (stage, error) => {
+      failed = !0,(0, runtime2.noteFontFetchFailure)(failures, stage,error);
     };
     return await Promise.all([...inlinedSheets.keys()].map(async (input) => {
       if (optional.has(input) && !available(input) || !(0, runtime2.googleFontUrlFamilies)(input).some((input2) => used(input2.toLowerCase()))) {
@@ -134,7 +192,9 @@ function installExportPdfCapture(runtime2) {
           entries.set(value2[2], "");
         await Promise.all([...entries.keys()].map(async (input2) => {
           try {
-            entries.set(input2, await fetchDataUrl(input2));
+            let dataUrl = await fetchDataUrl(input2);
+            runtime2.embeddedFontFilePattern.test(dataUrl) ?
+            entries.set(input2, dataUrl) : failed = failures.badData = !0;
           } catch (error) {
             noteFailure("file", error);
           }
@@ -142,22 +202,28 @@ function installExportPdfCapture(runtime2) {
       } catch (error) {
         noteFailure("sheet", error);
       }
-    })), overBudget && (warnings.push("a linked web font could not be fetched; its text exports in the fallback font"), options.missing = options.missingWebFetch = !0, (0, runtime2.noteWebFontFailures)(options, failures)), css.replace(runtime2.googleFontsImportRegex, (input, options2, context) => inlinedSheets.get(context) || (optional.has(context) || unavailable.has(context) ? "" : input));
+    })), failed && (warnings.push((0, runtime2.exportNote)("linked_font_unfetched")), options.missing = options.missingWebFetch = !0, (0, runtime2.noteWebFontFailures)(options, failures)), css.replace(runtime2.googleFontsImportRegex, (input, options2, context) => inlinedSheets.get(context) || (optional.has(context) || unavailable.has(context) ? "" : input));
   }
   async function inlineLocalFonts(css, warnings, fetchDataUrl = fetchLocalFontDataUrl, options = {}, ignoredFamilies = []) {
-    let urls = /* @__PURE__ */ new Set();
-    for (let value of css.matchAll(localFontSourcePattern))
+    let source = css.replace(frameFontFallbackPattern, ""), urls = /* @__PURE__ */ new Set();
+    for (let value of source.matchAll(localFontSourcePattern))
       urls.add(value[3]);
     if (urls.size === 0)
-      return css;
-    let ignored = new Set(ignoredFamilies.map((input) => input.toLowerCase())), faces = css.match(/@font-face\s*\{[^}]*\}/g) ?? [], callback = (input) => /font-family\s*:\s*["']?([^"';}]+)/.exec(faces.find((input2) => input2.includes(input)) ?? "")?.[1]?.trim().toLowerCase(), entries = /* @__PURE__ */ new Map(), flag = !1;
+      return source;
+    let ignored = new Set(ignoredFamilies.map((input) => input.toLowerCase())), faces = source.match(/@font-face\s*\{[^}]*\}/g) ?? [], callback = (input) => /font-family\s*:\s*["']?([^"';}]+)/.exec(faces.find((input2) => input2.includes(input)) ?? "")?.[1]?.trim().toLowerCase(), entries = /* @__PURE__ */ new Map(), flag = !1;
     return await Promise.all([...urls].filter((input) => !ignored.has(callback(input) ?? "")).map(async (input) => {
       try {
-        entries.set(input, await fetchDataUrl(input));
+        let url = input;
+        // Shared formula fonts belong to the stylesheet's origin, not this grant.
+        if (input.startsWith("/artifact-editor/slides-assets/")) {
+          let sheet = Array.from(document.styleSheets).find((sheet) => sheet.href?.includes("/artifact-editor/slides-assets/"));
+          if (sheet) url = new URL(input, sheet.href).href;
+        }
+        entries.set(input, await fetchDataUrl(url));
       } catch {
         flag = !0;
       }
-    })), flag && (warnings.push("a typeface file could not be fetched; its text exports in the fallback font"), options.missing = options.missingFileFetch = !0), css.replace(localFontSourcePattern, (input, options2, context, value) => {
+    })), flag && (warnings.push((0, runtime2.exportNote)("typeface_file_unfetched")), options.missing = options.missingFileFetch = !0), source.replace(localFontSourcePattern, (input, options2, context, value) => {
       let entry = entries.get(value);
       return entry === void 0 ? input : 'url("' + entry + '")';
     });
@@ -165,7 +231,7 @@ function installExportPdfCapture(runtime2) {
   async function decodeExportImages(root) {
     let warnings = [], images = Array.from(root.querySelectorAll("img"));
     return await Promise.all(images.map((input) => input.decode().catch(() => {
-      warnings.push("an image failed to decode and may render blank in the export");
+      warnings.push((0, runtime2.exportNote)("image_undecoded"));
     }))), warnings;
   }
   function slideForeignObjectSvg(element, css, width, replacements) {
@@ -183,7 +249,7 @@ function installExportPdfCapture(runtime2) {
     let svg = slideForeignObjectSvg(element, css, width, replacements), dataUri = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
     return new Promise((input, options2) => {
       let value = new Image(), value2 = setTimeout(() => {
-        options2(Error("timed out rendering the slide"));
+        options2(new runtime2.CodedFailure("timed_out","timed out rendering the slide"));
       }, pdfFontsReadyTimeoutMs);
       value.onerror = () => {
         clearTimeout(value2);
@@ -193,7 +259,7 @@ function installExportPdfCapture(runtime2) {
           element2?.textContent != null && (text = ": " + element2.textContent.replace(/\s+/g, " ").slice(0, 200));
         } catch {
         }
-        options2(Error("the slide could not be rendered" + text));
+        options2(new runtime2.CodedFailure("unrendered","the slide could not be rendered" + text));
       }, value.onload = () => {
         clearTimeout(value2);
         try {
@@ -201,16 +267,18 @@ function installExportPdfCapture(runtime2) {
           value3.width = Math.round(runtime2.SLIDE_WIDTH * options.scale), value3.height = Math.round(runtime2.SLIDE_HEIGHT * options.scale);
           let value4 = value3.getContext("2d");
           if (value4 === null)
-            throw Error("no 2d canvas in this host");
+            throw new runtime2.CodedFailure("no_canvas","no 2d canvas in this host");
           value4.fillStyle = "#fff", value4.fillRect(0, 0, value3.width, value3.height), value4.drawImage(value, 0, 0, value3.width, value3.height);
           try {
             value4.getImageData(0, 0, 1, 1);
           } catch {
-            throw Error("the slide uses content that can't be exported (embedded web content)");
+            throw new runtime2.CodedFailure("embedded_content","the slide uses content that can't be exported (embedded web content)");
           }
           let value5 = canvasImageBytes(value3, options);
           if (value5 === void 0)
-            throw Error("this browser could not encode the slide as " + (options.mime === "image/png" ? "PNG" : "JPEG"));
+            throw new runtime2.CodedFailure("no_encoder","this browser could not encode the slide as " + (options.mime === "image/png" ? "PNG" : "JPEG"), {
+              detail: options.mime === "image/png" ? "PNG" : "JPEG"
+            });
           let value6 = options.lossless?.() ?? 0;
           if (!(value6 > 0)) {
             input({
@@ -234,35 +302,35 @@ function installExportPdfCapture(runtime2) {
       }, value.src = dataUri;
     });
   }
-  async function rasterizeEmbedFrames(host, slides, warnings) {
+  async function rasterizeEmbedFrames(host, slides, warnings, options = {}) {
     let captures = /* @__PURE__ */ new Map(), requests = [];
-    if (slides.forEach((input, options) => {
-      let value2 = host.querySelector('[data-pdf-slide="' + String(options) + '"]')?.firstElementChild;
+    if (slides.forEach((input, options2) => {
+      let value2 = host.querySelector('[data-pdf-slide="' + String(options2) + '"]')?.firstElementChild;
       if (value2)
         for (let value3 of input.frames) {
           if (value3.node.kind !== "html")
             continue;
           let value4 = value2.querySelector('[data-frame-id="' + value3.id + '"] [data-node-path=""]')?.getBoundingClientRect();
           if (value4 === void 0 || value3.node.html === "" || value4.width <= 0 || value4.height <= 0) {
-            warnings.push(uncapturedEmbedWarning);
+            warnings.push((0, runtime2.exportNote)("embed_placeholder"));
             continue;
           }
           requests.push({
-            key: String(options) + "/" + value3.id,
+            key: String(options2) + "/" + value3.id,
             html: value3.node.html,
             w: value4.width,
             h: value4.height,
-            slide: options,
+            slide: options2,
             frameId: value3.id
           });
         }
     }), requests.length === 0)
       return captures;
-    let value = await (0, runtime2.captureHtmlEmbeds)(requests);
+    let value = await (0, runtime2.captureHtmlEmbeds)(requests, options);
     for (let value2 of requests) {
       let entry = value.get(value2.key);
       if (entry === void 0) {
-        warnings.push(uncapturedEmbedWarning);
+        warnings.push((0, runtime2.exportNote)("embed_placeholder"));
         continue;
       }
       let entry2 = captures.get(value2.slide);
@@ -467,7 +535,7 @@ function installExportPdfCapture(runtime2) {
         continue;
       }
       let parentElement = value5.parentElement;
-      if (parentElement === null || ignoredTextCaptureElementNames.has(parentElement.tagName))
+      if (parentElement === null || ignoredTextCaptureElementNames.has(parentElement.tagName) || parentElement.closest(".katex-mathml"))
         continue;
       if (warnings !== void 0 && warnings.size > 0) {
         let entry2 = entries6.get(parentElement);
@@ -616,7 +684,7 @@ function installExportPdfCapture(runtime2) {
         surface(input) {
           let value9 = host.querySelector('[data-pdf-slide="' + String(input) + '"]')?.firstElementChild;
           if (!value9)
-            throw Error("slide " + String(input + 1) + " did not render");
+            throw new runtime2.CodedFailure("unrendered","slide " + String(input + 1) + " did not render");
           return value9;
         },
         warnings: value6,
@@ -634,7 +702,9 @@ function installExportPdfCapture(runtime2) {
       nameMissingFonts: options.nameMissingFonts
     });
     try {
-      let value = await rasterizeEmbedFrames(mounted.host, slides, mounted.warnings);
+      let value = await rasterizeEmbedFrames(mounted.host, slides, mounted.warnings, {
+        settlePictures: options.settleEmbeds === !0
+      });
       labelUncapturedEmbeds(mounted.host, slides, value);
       let callback = () => slides.map((input, options2) => mounted.surface(options2).textContent ?? "").join(`
 `), value2 = getComputedStyle(document.body).font || "16px system-ui, sans-serif", callback2 = () => slides.map((input, options2) => mounted.surface(options2).outerHTML).join(`
@@ -668,7 +738,7 @@ function installExportPdfCapture(runtime2) {
           mime: "image/png",
           scale
         })).bytes,
-        warnings: Array.from(new Set(capture.warnings)),
+        warnings: (0, runtime2.uniqueExportNotes)(capture.warnings),
         fontFindings: capture.fontFindings
       };
     } finally {
@@ -703,9 +773,13 @@ function installExportPdfCapture(runtime2) {
             let value7 = value5.frames.find((input2) => input2.id === input), value8 = options2.split(".").filter((input2) => input2 !== "").map(Number), value9 = value7 === void 0 || value8.some((input2) => !Number.isInteger(input2) || input2 < 0) ? void 0 : (0, runtime2.nodeAtPath)(value7.node, value8);
             return value9 !== void 0 && value9.kind === "table" && value9.header ? 1 : 0;
           }, entries);
-          items4 = value6.runs, items5 = value6.blocks, value6.truncated && warnings.push("slide " + String(index4 + 1) + ": text past 50,000 characters is in the image only and can't be selected, copied or searched.");
+          items4 = value6.runs, items5 = value6.blocks, value6.truncated && warnings.push((0, runtime2.exportNote)("text_past_limit", {
+            slide:index4 + 1
+          }));
         } catch {
-          warnings.push("slide " + String(index4 + 1) + ": its text could not be read, so that slide is an image only; nothing on it can be selected, copied or searched.");
+          warnings.push((0, runtime2.exportNote)("text_unread", {
+            slide:index4 + 1
+          }));
         }
         try {
           let index22 = 0, value5 = value3 && (() => value3.overSize ? (state.size++, 0) : (index22 = value3.limit(), index22 === 0 && state.time++, index22)), value6 = await capture.raster(index4, {
@@ -721,7 +795,9 @@ function installExportPdfCapture(runtime2) {
             links: items3
           });
         } catch (value5) {
-          throw Error("slide " + String(index4 + 1) + ": " + (value5 instanceof Error ? value5.message : String(value5)));
+          throw(0, runtime2.slideFailure)(value5 instanceof runtime2.CodedFailure ? value5 : new runtime2.CodedFailure ("other",value5 instanceof Error ? value5.message : String(value5), {
+            cause: value5
+          }), index4 + 1);
         }
       }
       let items2 = [];
@@ -731,7 +807,7 @@ function installExportPdfCapture(runtime2) {
       }
       return {
         pages: items,
-        warnings: Array.from(new Set(warnings)),
+        warnings: (0, runtime2.uniqueExportNotes)(warnings),
         fontFindings: capture.fontFindings,
         copyMs: value3?.copyMs ?? 0
       };
@@ -744,7 +820,7 @@ function installExportPdfCapture(runtime2) {
   }
   return bindRuntimeValue(runtime2, "pdfCaptureExports", () => pdfCaptureExports, (value) => {
     pdfCaptureExports = value;
-  }), bindRuntimeValue(runtime2, "missingFontsWarning", () => missingFontsWarning), bindRuntimeValue(runtime2, "missingGoogleFontFamilies", () => missingGoogleFontFamilies), bindRuntimeValue(runtime2, "waitForGoogleFontRegistration", () => waitForGoogleFontRegistration), bindRuntimeValue(runtime2, "throwIfExportAborted", () => throwIfExportAborted), bindRuntimeValue(runtime2, "remainingCaptureTimeBudget", () => remainingCaptureTimeBudget), bindRuntimeValue(runtime2, "createAdaptiveCaptureBudget", () => createAdaptiveCaptureBudget), bindRuntimeValue(runtime2, "canvasImageBytes", () => canvasImageBytes), bindRuntimeValue(runtime2, "documentStylesheetCss", () => documentStylesheetCss), bindRuntimeValue(runtime2, "captureFontCss", () => captureFontCss), bindRuntimeValue(runtime2, "captureInlineFontCss", () => captureInlineFontCss), bindRuntimeValue(runtime2, "inlineGoogleFontsFallback", () => inlineGoogleFontsFallback), bindRuntimeValue(runtime2, "inlineLocalFonts", () => inlineLocalFonts), bindRuntimeValue(runtime2, "decodeExportImages", () => decodeExportImages), bindRuntimeValue(runtime2, "slideForeignObjectSvg", () => slideForeignObjectSvg), bindRuntimeValue(runtime2, "rasterizeSlideSvg", () => rasterizeSlideSvg), bindRuntimeValue(runtime2, "rasterizeEmbedFrames", () => rasterizeEmbedFrames), bindRuntimeValue(runtime2, "labelUncapturedEmbeds", () => labelUncapturedEmbeds), bindRuntimeValue(runtime2, "replaceEmbedPlaceholders", () => replaceEmbedPlaceholders), bindRuntimeValue(runtime2, "capturedTextRunToPdf", () => capturedTextRunToPdf), bindRuntimeValue(runtime2, "runWithinPdfWriterLimits", () => runWithinPdfWriterLimits), bindRuntimeValue(runtime2, "isUtf16LowSurrogate", () => isUtf16LowSurrogate), bindRuntimeValue(runtime2, "renderedTextLineRanges", () => renderedTextLineRanges), bindRuntimeValue(runtime2, "collectRenderedTextRuns", () => collectRenderedTextRuns), bindRuntimeValue(runtime2, "renderedLinkToPdf", () => renderedLinkToPdf), bindRuntimeValue(runtime2, "renderedElementLink", () => renderedElementLink), bindRuntimeValue(runtime2, "collectRenderedLinksAndBlocks", () => collectRenderedLinksAndBlocks), bindRuntimeValue(runtime2, "mountSlidesOffscreen", () => mountSlidesOffscreen), bindRuntimeValue(runtime2, "prepareSlidesForCapture", () => prepareSlidesForCapture), bindRuntimeValue(runtime2, "exportSlidePng", () => exportSlidePng), bindRuntimeValue(runtime2, "exportSlidesPdf", () => exportSlidesPdf), bindRuntimeValue(runtime2, "pdfFilename", () => pdfFilename), bindRuntimeValue(runtime2, "PdfCaptureReact", () => PdfCaptureReact, (value) => {
+  }), bindRuntimeValue(runtime2, "missingFontsWarning", () => missingFontsWarning), bindRuntimeValue(runtime2, "missingGoogleFontFamilies", () => missingGoogleFontFamilies), bindRuntimeValue(runtime2, "waitForGoogleFontRegistration", () => waitForGoogleFontRegistration), bindRuntimeValue(runtime2, "throwIfExportAborted", () => throwIfExportAborted), bindRuntimeValue(runtime2, "remainingCaptureTimeBudget", () => remainingCaptureTimeBudget), bindRuntimeValue(runtime2, "createAdaptiveCaptureBudget", () => createAdaptiveCaptureBudget), bindRuntimeValue(runtime2, "canvasImageBytes", () => canvasImageBytes), bindRuntimeValue(runtime2, "closingParenIndex", () => closingParenIndex), bindRuntimeValue(runtime2, "scanCssSelector", () => scanCssSelector), bindRuntimeValue(runtime2, "selectorTargetsFizzyLake", () => selectorTargetsFizzyLake), bindRuntimeValue(runtime2, "selectorListTargetsFizzyLake", () => selectorListTargetsFizzyLake), bindRuntimeValue(runtime2, "cssRuleTextWithoutFizzyLake", () => cssRuleTextWithoutFizzyLake), bindRuntimeValue(runtime2, "documentStylesheetCss", () => documentStylesheetCss), bindRuntimeValue(runtime2, "captureFontCss", () => captureFontCss), bindRuntimeValue(runtime2, "captureInlineFontCss", () => captureInlineFontCss), bindRuntimeValue(runtime2, "inlineGoogleFontsFallback", () => inlineGoogleFontsFallback), bindRuntimeValue(runtime2, "inlineLocalFonts", () => inlineLocalFonts), bindRuntimeValue(runtime2, "decodeExportImages", () => decodeExportImages), bindRuntimeValue(runtime2, "slideForeignObjectSvg", () => slideForeignObjectSvg), bindRuntimeValue(runtime2, "rasterizeSlideSvg", () => rasterizeSlideSvg), bindRuntimeValue(runtime2, "rasterizeEmbedFrames", () => rasterizeEmbedFrames), bindRuntimeValue(runtime2, "labelUncapturedEmbeds", () => labelUncapturedEmbeds), bindRuntimeValue(runtime2, "replaceEmbedPlaceholders", () => replaceEmbedPlaceholders), bindRuntimeValue(runtime2, "capturedTextRunToPdf", () => capturedTextRunToPdf), bindRuntimeValue(runtime2, "runWithinPdfWriterLimits", () => runWithinPdfWriterLimits), bindRuntimeValue(runtime2, "isUtf16LowSurrogate", () => isUtf16LowSurrogate), bindRuntimeValue(runtime2, "renderedTextLineRanges", () => renderedTextLineRanges), bindRuntimeValue(runtime2, "collectRenderedTextRuns", () => collectRenderedTextRuns), bindRuntimeValue(runtime2, "renderedLinkToPdf", () => renderedLinkToPdf), bindRuntimeValue(runtime2, "renderedElementLink", () => renderedElementLink), bindRuntimeValue(runtime2, "collectRenderedLinksAndBlocks", () => collectRenderedLinksAndBlocks), bindRuntimeValue(runtime2, "mountSlidesOffscreen", () => mountSlidesOffscreen), bindRuntimeValue(runtime2, "prepareSlidesForCapture", () => prepareSlidesForCapture), bindRuntimeValue(runtime2, "exportSlidePng", () => exportSlidePng), bindRuntimeValue(runtime2, "exportSlidesPdf", () => exportSlidesPdf), bindRuntimeValue(runtime2, "pdfFilename", () => pdfFilename), bindRuntimeValue(runtime2, "PdfCaptureReact", () => PdfCaptureReact, (value) => {
     PdfCaptureReact = value;
   }), bindRuntimeValue(runtime2, "PdfCaptureReactDomClient", () => PdfCaptureReactDomClient, (value) => {
     PdfCaptureReactDomClient = value;
@@ -764,20 +840,16 @@ function installExportPdfCapture(runtime2) {
     pdfCaptureBudgetMultiplier = value;
   }), bindRuntimeValue(runtime2, "pdfFontsReadyTimeoutMs", () => pdfFontsReadyTimeoutMs, (value) => {
     pdfFontsReadyTimeoutMs = value;
+  }), bindRuntimeValue(runtime2, "FIZZY_LAKE_SELECTOR_PREFIX", () => FIZZY_LAKE_SELECTOR_PREFIX, (value) => {
+    FIZZY_LAKE_SELECTOR_PREFIX = value;
   }), bindRuntimeValue(runtime2, "pdfFontInliningBudget", () => pdfFontInliningBudget, (value) => {
     pdfFontInliningBudget = value;
   }), bindRuntimeValue(runtime2, "maxFontFetchCacheEntries", () => maxFontFetchCacheEntries, (value) => {
     maxFontFetchCacheEntries = value;
-  }), bindRuntimeValue(runtime2, "fontFetchFallbackWarning", () => fontFetchFallbackWarning, (value) => {
-    fontFetchFallbackWarning = value;
-  }), bindRuntimeValue(runtime2, "fontInliningBudgetWarning", () => fontInliningBudgetWarning, (value) => {
-    fontInliningBudgetWarning = value;
   }), bindRuntimeValue(runtime2, "localFontSourcePattern", () => localFontSourcePattern, (value) => {
     localFontSourcePattern = value;
   }), bindRuntimeValue(runtime2, "fetchLocalFontDataUrl", () => fetchLocalFontDataUrl, (value) => {
     fetchLocalFontDataUrl = value;
-  }), bindRuntimeValue(runtime2, "uncapturedEmbedWarning", () => uncapturedEmbedWarning, (value) => {
-    uncapturedEmbedWarning = value;
   }), bindRuntimeValue(runtime2, "textRunBaselineDescentFactor", () => textRunBaselineDescentFactor, (value) => {
     textRunBaselineDescentFactor = value;
   }), bindRuntimeValue(runtime2, "pdfMaximumTextRunFontSize", () => pdfMaximumTextRunFontSize, (value) => {
@@ -814,13 +886,13 @@ function installExportPdfCapture(runtime2) {
       PAGE_W_PT: () => pdfSlideWidthPoints,
       PAGE_H_PT: () => pdfSlideHeightPoints,
       CAPTURE_TIERS: () => pdfCaptureQualityLadder
-    }), pdfDefaultJpegQuality = 0.9, pdfMinimumCaptureTimeMs = 2e3, pdfMaximumPageCaptureTimeMs = 1e4, pdfFinalizationTimeReserveMs = 5e3, pdfCaptureBudgetMultiplier = 1.25, pdfFontsReadyTimeoutMs = 2e4, pdfFontInliningBudget = 16777216, maxFontFetchCacheEntries = 32, fontFetchFallbackWarning = "a web font could not be fetched; some text is in the fallback font", fontInliningBudgetWarning = "the web fonts the slides use are too large to include in full; some text is in the fallback font", fetchLocalFontDataUrl = (input) => runtime2.modelStoredBlobPattern.test(input) ? (0, runtime2.fetchWithSingleRetry)((input2) => (0, runtime2.fetchStoredBlob)(input, input2, {
+    }), pdfDefaultJpegQuality = 0.9, pdfMinimumCaptureTimeMs = 2e3, pdfMaximumPageCaptureTimeMs = 1e4, pdfFinalizationTimeReserveMs = 5e3, pdfCaptureBudgetMultiplier = 1.25, pdfFontsReadyTimeoutMs = 2e4, FIZZY_LAKE_SELECTOR_PREFIX = "[data-cds-fizzy-lake~=", pdfFontInliningBudget = 16777216, maxFontFetchCacheEntries = 32, fetchLocalFontDataUrl = (input) => runtime2.modelStoredBlobPattern.test(input) ? (0, runtime2.fetchWithSingleRetry)((input2) => (0, runtime2.fetchStoredBlob)(input, input2, {
       ignoreRecentFailure: !0
     }), runtime2.resourceFetchTimeoutMs, !0) : (0, runtime2.fetchResourceDataUrl)(input, runtime2.resourceFetchTimeoutMs, {
       credentials: "same-origin",
       retry: !0
-    }), uncapturedEmbedWarning = "a web embed could not be rendered and exported as a placeholder", textRunBaselineDescentFactor = 0.2555, pdfMaximumTextRunFontSize = 14400, maxCapturedSlideTextCharacters = 5e4, maxCapturedTextRangeCharacters = 2e3, initializePdfCapture = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeAssetStorage)(), (0, runtime2.initializePdfWriter)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeSlideRenderer)(), (0, runtime2.initializeEmbedCapture)(), (0, runtime2.initializeSynchronousReactRender)(), (0, runtime2.initializeFontFetching)(), (0, runtime2.initializeFontInlining)(), (0, runtime2.initializeCaptureFallback)(), PdfCaptureReact = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), PdfCaptureReactDomClient = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactDomClientNamespace)(), 1), pdfDefaultRasterScale = runtime2.embedCaptureScale, pdfCaptureQualityLadder = [
+    }), textRunBaselineDescentFactor = 0.2555, pdfMaximumTextRunFontSize = 14400, maxCapturedSlideTextCharacters = 5e4, maxCapturedTextRangeCharacters = 2e3, initializePdfCapture = (0, runtime2.initializeOnce)(() => {
+      (0, runtime2.initializeAssetStorage)(), (0, runtime2.initializePdfWriter)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeSlideRenderer)(), (0, runtime2.initializeEmbedCapture)(), (0, runtime2.initializeSynchronousReactRender)(), (0, runtime2.initializeFontFetching)(), (0, runtime2.initializeFontInlining)(), (0, runtime2.initializeCaptureFallback)(), (0, runtime2.initializeExportNotes)(), (0, runtime2.initializeCodedFailure)(), PdfCaptureReact = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), PdfCaptureReactDomClient = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactDomClientNamespace)(), 1), pdfDefaultRasterScale = runtime2.embedCaptureScale, pdfCaptureQualityLadder = [
         {
           scale: pdfDefaultRasterScale,
           quality: pdfDefaultJpegQuality
@@ -833,7 +905,7 @@ function installExportPdfCapture(runtime2) {
           scale: 1,
           quality: 0.8
         }
-      ], localFontSourcePattern = new RegExp(`url\\((["']?)([^"')\\s]*?(_blob/[0-9a-f]{32}|` + runtime2.designSystemFontPathSource + "))\\1\\)", "g"), pdfMaximumTextCoordinate = 4 * pdfMaximumTextRunFontSize, ignoredTextCaptureElementNames = /* @__PURE__ */ new Set([
+      ], localFontSourcePattern = new RegExp(`url\\((["']?)([^"')\\s]*?(_blob/[0-9a-f]{32}|` + runtime2.designSystemFontPathSource + "|/artifact-editor/slides-assets/KaTeX_[A-Za-z0-9_-]+\\.woff2))\\1\\)", "g"), frameFontFallbackPattern = new RegExp(`url\\((["']?)https://fonts\\.frame\\.claudeusercontent\\.com/` + runtimeFontPathSource + "\\1\\)(?:\\s*format\\([^)]*\\))?\\s*,\\s*", "g"), pdfMaximumTextCoordinate = 4 * pdfMaximumTextRunFontSize, ignoredTextCaptureElementNames = /* @__PURE__ */ new Set([
         "SCRIPT",
         "STYLE",
         "NOSCRIPT",

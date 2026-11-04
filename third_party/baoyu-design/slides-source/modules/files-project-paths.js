@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesProjectPaths(runtime2) {
   var PROJECT_INDEX_PATHS, LEGACY_PROJECT_INDEX_PATHS, isRuntimeInternalFilePath, isProjectIndexFilePath;

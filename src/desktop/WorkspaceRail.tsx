@@ -1,6 +1,6 @@
 import { BookOpen01Icon, BubbleChatIcon, Presentation01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeftRight } from 'lucide-react'
+import { ArrowLeftRight, BookOpen, ClipboardCheck } from 'lucide-react'
 import { BrandAvatar } from '@/components/BrandAvatar'
 import { BRAND_AVATAR_BASE_EXPRESSION } from '@/components/brand-avatar-controller'
 import { NavUser } from '@/components/nav-user'
@@ -35,14 +35,18 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
   const menu = [
     { module: 'chat' as const, view: 'conversations' as ViewKey['view'], label: '对话', icon: BubbleChatIcon },
     { module: 'course' as const, view: courseEntryView(Boolean(activeSpace)), label: '课程', icon: BookOpen01Icon },
+    { module: 'cases' as const, view: 'cases' as ViewKey['view'], label: '教学案例', icon: BookOpen01Icon },
     ...(activeSpace ? [{ module: 'slides' as const, view: 'slides' as ViewKey['view'], label: '演示文稿', icon: Presentation01Icon }] : []),
   ]
   const renderMenuItem = (item: typeof menu[number]) => {
     const selected = currentModule === item.module
     return <Tooltip key={item.module}>
       <TooltipTrigger asChild>
-        <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={item.label} data-workspace-view={item.view} data-workspace-module={item.module} aria-current={selected ? 'page' : undefined} onClick={() => { if (!selected) onNavigate(item.view) }} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', selected && 'bg-sidebar-accent text-sidebar-primary')}>
-          <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-6" />
+        <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={item.label} data-workspace-view={item.view} data-workspace-module={item.module} aria-current={selected ? 'page' : undefined} onClick={() => {
+          if (item.module === 'course' && !activeSpace) onWorkspacePickerOpenChange?.(true)
+          else if (!selected) onNavigate(item.view)
+        }} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', selected && 'bg-sidebar-accent text-sidebar-primary')}>
+          {item.module === 'cases' ? <BookOpen strokeWidth={1.5} className="size-5" /> : item.module === 'course' ? <ClipboardCheck strokeWidth={1.5} className="size-5" /> : <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-5" />}
         </Button>
       </TooltipTrigger>
       <TooltipContent side="right">{item.label}</TooltipContent>

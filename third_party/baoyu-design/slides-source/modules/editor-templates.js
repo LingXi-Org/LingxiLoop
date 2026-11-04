@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorTemplates(runtime2) {
   var ReactSlideTemplates, leadingTemplatePlacement, centeredTemplatePlacement, SLIDE_TEMPLATES, SlideTemplatesJsx;
@@ -79,7 +79,10 @@ function installEditorTemplates(runtime2) {
           }),
           SlideTemplatesJsx.jsx("div", {
             role: "group",
-            "aria-label": "布局",
+            "aria-label": (0, runtime2.formatMessage)({
+              defaultMessage: "布局",
+              id: "4N5XhGReFi"
+            }),
             onKeyDown: onGridKeyDown,
             className: "mt-3 grid max-h-[60vh] grid-cols-2 gap-3 overflow-y-auto pb-1 text-sm [scrollbar-gutter:stable]",
             children: current.map(({ t, sample }, index4) => SlideTemplatesJsx.jsxs("button", {
@@ -223,7 +226,7 @@ function installEditorTemplates(runtime2) {
         make: () => createTemplateSlide("white", [
           createTemplateFrame(createTemplateTextNode({
             role: "h2",
-            text: (0, runtime2.untranslatedMessage)("Heading")
+            text: (0, runtime2.untranslatedMessage)("标题")
           }), leadingTemplatePlacement(128, 1664), leadingTemplatePlacement(112)),
           createTemplateFrame(createTemplateTextNode({
             role: "body",
@@ -273,7 +276,7 @@ function installEditorTemplates(runtime2) {
         make: () => createTemplateSlide("white", [
           createTemplateFrame(createTemplateTextNode({
             role: "h2",
-            text: (0, runtime2.untranslatedMessage)("Compare")
+            text: (0, runtime2.untranslatedMessage)("对比")
           }), leadingTemplatePlacement(128, 1664), leadingTemplatePlacement(112)),
           createTemplateFrame({
             kind: "stack",
@@ -283,7 +286,7 @@ function installEditorTemplates(runtime2) {
             children: [
               createTemplateTextNode({
                 role: "h3",
-                text: (0, runtime2.untranslatedMessage)("Left")
+                text: (0, runtime2.untranslatedMessage)("左栏")
               }),
               createTemplateTextNode({
                 role: "body",
@@ -299,7 +302,7 @@ function installEditorTemplates(runtime2) {
             children: [
               createTemplateTextNode({
                 role: "h3",
-                text: (0, runtime2.untranslatedMessage)("Right")
+                text: (0, runtime2.untranslatedMessage)("右栏")
               }),
               createTemplateTextNode({
                 role: "body",
@@ -323,7 +326,7 @@ function installEditorTemplates(runtime2) {
         make: () => createTemplateSlide("white", [
           createTemplateFrame(createTemplateTextNode({
             role: "h2",
-            text: (0, runtime2.untranslatedMessage)("Summary")
+            text: (0, runtime2.untranslatedMessage)("概要")
           }), leadingTemplatePlacement(128, 1664), leadingTemplatePlacement(112)),
           createTemplateFrame({
             kind: "table",
@@ -331,9 +334,9 @@ function installEditorTemplates(runtime2) {
             header: !0,
             rows: [
               [
-                (0, runtime2.untranslatedMessage)("Item"),
-                (0, runtime2.untranslatedMessage)("Status"),
-                (0, runtime2.untranslatedMessage)("Owner")
+                (0, runtime2.untranslatedMessage)("项目"),
+                (0, runtime2.untranslatedMessage)("状态"),
+                (0, runtime2.untranslatedMessage)("负责人")
               ],
               ["", "", ""],
               ["", "", ""],

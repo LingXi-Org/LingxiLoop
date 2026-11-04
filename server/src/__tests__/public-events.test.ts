@@ -2,6 +2,18 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { RunEvent } from '@lyyzka/lingxios/ui'
 import { publicRunEvent, nativeRunEvents, publicToolValue } from '../agent-runtime/public-events.js'
+import { executionBudgetMessages } from '../../../src/lib/executionBudget.js'
+
+test('budget limits disclose only the structured dimension and never raw provider diagnostics', () => {
+  const event: RunEvent = { runId: 'run', seq: 2, kind: 'run.failed', stage: 'failed', visibility: 'user',
+    data: { error: 'PRIVATE', modelDiagnostics: { private: 'PRIVATE' } } }
+  for (const [dimension, text] of Object.entries(executionBudgetMessages)) {
+    assert.deepEqual(publicRunEvent({ ...event, data: { ...event.data, budgetLimit: { code: 'budget_limit', dimension, private: 'PRIVATE' } } }).data, { error: text })
+  }
+  for (const budgetLimit of [undefined, { code: 'budget_limit', dimension: 'PRIVATE' }, { code: 'PRIVATE', dimension: 'tokens' }]) {
+    assert.deepEqual(publicRunEvent({ ...event, data: { ...event.data, budgetLimit } }).data, { error: '这次任务未能完成，请稍后重试。' })
+  }
+})
 
 test('public tool projection strips private values before transport', async () => {
   const event: RunEvent = { runId:'run',seq:2,kind:'tool.completed',stage:'completed',visibility:'user',data:{toolCallId:'host:calendar',result:{status:'completed',value:{id:'event',title:'Study',startAt:'2026-09-26T10:00:00Z',allDay:false,privateNotes:'PRIVATE'}}} }

@@ -3,7 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Fragment, type ReactNode, type Ref } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useShellNav } from './ShellNav'
+import { useShellNav, useShellNavTrigger } from './ShellNav'
 
 export interface PageHeaderCrumb {
   label: string
@@ -22,15 +22,16 @@ export function PageHeader({ title, crumbs, leading, actions, className, titleRe
   children?: ReactNode
 }) {
   const openNav = useShellNav()
+  const navTrigger = useShellNavTrigger()
   return (
     <header
       data-page-header
       className={cn(
-        'select-none z-20 flex min-h-16 shrink-0 items-center gap-3 border-b border-[var(--im-divider-weak)] bg-sidebar px-6 text-sidebar-foreground max-md:gap-2 max-md:px-3',
+        'select-none z-20 flex min-h-14 shrink-0 items-center gap-3 border-b border-[var(--im-divider-weak)] bg-background px-6 text-sidebar-foreground max-md:gap-2 max-md:px-3',
         className,
       )}
     >
-      {leading ?? (openNav ? <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0 text-muted-foreground" aria-label="打开导航" onClick={openNav}>
+      {leading ?? navTrigger ?? (openNav ? <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0 text-muted-foreground" aria-label="打开导航" onClick={openNav}>
         <HugeiconsIcon icon={SidebarLeftIcon} strokeWidth={2} className="size-5" />
       </Button> : null)}
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -46,7 +47,7 @@ export function PageHeader({ title, crumbs, leading, actions, className, titleRe
             ))}
           </nav>
         ) : null}
-        <h1 ref={titleRef} tabIndex={titleRef ? -1 : undefined} className="min-w-0 truncate font-heading text-base font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring">{title}</h1>
+        <h1 ref={titleRef} tabIndex={titleRef ? -1 : undefined} className="min-w-0 truncate font-heading text-[26px] font-semibold tracking-tight max-md:text-xl text-foreground focus-visible:outline-2 focus-visible:outline-ring">{title}</h1>
         {children}
       </div>
       {actions ? <div className="ms-auto flex shrink-0 items-center gap-1">{actions}</div> : null}

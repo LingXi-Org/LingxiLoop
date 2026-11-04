@@ -63,17 +63,22 @@ COPY server/build/web/package.json server/build/web/package-lock.json .npmrc ./
 RUN --mount=type=secret,id=npm_token \
     --mount=type=cache,id=lingxiloop-web-npm,target=/root/.npm,sharing=locked \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
-# The runtime renderer has its own source-only build: a CSS change never
-# enters this graph. CI selects target runtime after the static ingress handoff.
+# The runtime renderer builds its isolated editor theme and local fonts.
+# CI selects target runtime after the static ingress handoff.
 FROM web-deps AS visualize-build
 COPY third_party/zcode ./third_party/zcode
-COPY scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs scripts/build-design-editor.mjs ./scripts/
-COPY shared/artifact-math.ts ./shared/
+COPY scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs scripts/build-design-editor.mjs scripts/build-design-layout.mjs scripts/design-copy.mjs ./scripts/
+COPY shared/artifact-math.ts shared/artifact-math-source.ts shared/artifact-math-loader.ts shared/artifact-recovery.ts shared/design-flow-size.ts ./shared/
 COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
+COPY third_party/baoyu-design/host/design-zh-CN.json third_party/baoyu-design/host/slides-zh-CN.json ./third_party/baoyu-design/host/
+COPY third_party/baoyu-design/host/design-theme.css ./third_party/baoyu-design/host/
+COPY src/styles/fonts.css ./src/styles/
+COPY public/fonts/mingli ./public/fonts/mingli
 RUN node scripts/build-visualize-runtime.mjs
 
 FROM web-deps AS slides-build
 COPY third_party/baoyu-design ./third_party/baoyu-design
+COPY shared/artifact-recovery.ts ./shared/
 COPY scripts/build-slides-editor.mjs ./scripts/
 RUN node scripts/build-slides-editor.mjs
 
@@ -93,9 +98,11 @@ COPY tailwind.config.ts ./
 COPY third_party/zcode ./third_party/zcode
 # StreamingText imports the pinned upstream range helper; include its license and provenance.
 COPY third_party/assistant-ui/streaming-text ./third_party/assistant-ui/streaming-text
-COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs scripts/build-design-editor.mjs ./scripts/
-COPY shared/artifact-math.ts ./shared/
+COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs scripts/build-artifact-math.mjs scripts/build-design-editor.mjs scripts/build-design-layout.mjs scripts/design-copy.mjs ./scripts/
+COPY shared/artifact-math.ts shared/artifact-math-source.ts shared/artifact-math-loader.ts shared/artifact-recovery.ts shared/design-flow-size.ts ./shared/
 COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
+COPY third_party/baoyu-design/host/design-zh-CN.json third_party/baoyu-design/host/slides-zh-CN.json ./third_party/baoyu-design/host/
+COPY third_party/baoyu-design/host/design-theme.css ./third_party/baoyu-design/host/
 RUN npm run build
 
 # ─── stage 3: runtime ───────────────────────────────────────────────
@@ -132,16 +139,11 @@ COPY shared/visualize-public-resources.ts ./shared/
 # this final stage).
 COPY src/types.ts ./src/types.ts
 COPY src/lib/conversationRunSummary.ts ./src/lib/
-COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
+COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/executionBudget.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
 COPY src/features/chat/visualize/zcode/shared/gen-ui ./src/features/chat/visualize/zcode/shared/gen-ui
 COPY src/features/chat/visualize/zcode/gen-ui/domain ./src/features/chat/visualize/zcode/gen-ui/domain
 COPY src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts ./src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts
 # The renderer shares only these five dependency-light VM inputs with Web.
-COPY src/features/cases/cover-vm/runtime.ts ./src/features/cases/cover-vm/runtime.ts
-COPY src/features/cases/cover-vm/protocol.ts ./src/features/cases/cover-vm/protocol.ts
-COPY src/features/cases/cover-vm/program.ts ./src/features/cases/cover-vm/program.ts
-COPY src/features/cases/cover-vm/guest-source.ts ./src/features/cases/cover-vm/guest-source.ts
-COPY src/features/cases/cover-vm/svg.ts ./src/features/cases/cover-vm/svg.ts
 # Keep the complete skill (including Python exports, vendor assets and licenses).
 # The full upstream source is a SPA build input; only this served script is read
 # by the server at runtime. Retain the pinned source inventory and attribution.

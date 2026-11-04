@@ -68,7 +68,7 @@ test('fixed visualize assets are anonymous immutable CORS resources, including r
 })
 import { artifactEditorOrigin } from '../../../shared/artifact-editor-origin.ts'
 
-test('executable Design origins are grant-bound and never proxy authenticated product requests', async () => {
+test('executable Design and Slides origins are grant-bound and never proxy authenticated product requests', async () => {
   const base = 'https://artifact.example.com', token = 'signed.grant'
   const origin = await artifactEditorOrigin(token, base)
   const isolated = { ...env, ARTIFACT_EDITOR_BASE: base }
@@ -86,11 +86,15 @@ test('executable Design origins are grant-bound and never proxy authenticated pr
   assert.equal(result.status, 200)
   assert.equal(result.headers.get('set-cookie'), null)
   assert.match(result.headers.get('content-security-policy'), /^sandbox allow-scripts allow-same-origin /)
-  for (const path of ['/api/auth/session', '/', '/assets/main.js', '/artifact-editor/design/other.grant/', '/artifact-editor/slides/signed.grant/']) {
+  for (const path of ['/api/auth/session', '/', '/assets/main.js', '/artifact-editor/design/other.grant/', '/artifact-editor/slides/other.grant/', '/artifact-editor/slides-assets/editor-ABCDEFGH.js']) {
     assert.equal((await handleRequest(new Request(origin + path), isolated, fetcher)).status, 404)
   }
   assert.equal((await handleRequest(new Request(`${origin}/artifact-editor/design/${token}/project/sw.js`, { headers: { 'service-worker': 'script' } }), isolated, fetcher)).status, 404)
   assert.equal(calls, 1)
+  // The signed token names its kind; the backend rejects it under the other kind.
+  const slides = await handleRequest(new Request(`${origin}/artifact-editor/slides/${token}/`, { headers: { cookie: 'session=private' } }), isolated, fetcher)
+  assert.match(slides.headers.get('content-security-policy'), /^sandbox allow-scripts allow-same-origin /)
+  assert.equal(calls, 2)
   const main = await handleRequest(new Request(`https://loop.example.com/artifact-editor/design/${token}/`), isolated,
     async () => new Response('editor', { headers: { 'content-security-policy': 'sandbox allow-scripts allow-downloads' } }))
   assert.doesNotMatch(main.headers.get('content-security-policy'), /allow-same-origin/)

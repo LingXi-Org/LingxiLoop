@@ -57,6 +57,9 @@ function SidebarProvider({
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
+  openMobile: openMobileProp,
+  onOpenMobileChange,
+  keyboardShortcut = true,
   className,
   style,
   children,
@@ -65,9 +68,17 @@ function SidebarProvider({
   defaultOpen?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  openMobile?: boolean
+  onOpenMobileChange?: (open: boolean) => void
+  keyboardShortcut?: boolean
 }) {
   const isMobile = useIsMobile()
-  const [openMobile, setOpenMobile] = React.useState(false)
+  const [_openMobile, _setOpenMobile] = React.useState(false)
+  const openMobile = openMobileProp ?? _openMobile
+  const setOpenMobile = React.useCallback((value: boolean | ((open: boolean) => boolean)) => {
+    if (onOpenMobileChange) onOpenMobileChange(typeof value === "function" ? value(openMobile) : value)
+    else _setOpenMobile(value)
+  }, [onOpenMobileChange, openMobile])
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -76,6 +87,13 @@ function SidebarProvider({
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
+      if (!openState && document.activeElement instanceof HTMLElement) {
+        const container = document.activeElement.closest('[data-slot="sidebar-container"]')
+        const wrapper = container?.closest('[data-slot="sidebar-wrapper"]')
+        const trigger = [...wrapper?.querySelectorAll<HTMLElement>('[data-sidebar="trigger"]') ?? []]
+          .find(element => !element.closest('[data-slot="sidebar-container"]') && element.checkVisibility())
+        trigger?.focus({ preventScroll: true })
+      }
       if (setOpenProp) {
         setOpenProp(openState)
       } else {
@@ -95,6 +113,7 @@ function SidebarProvider({
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
+    if (!keyboardShortcut) return
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
@@ -107,7 +126,7 @@ function SidebarProvider({
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [toggleSidebar])
+  }, [keyboardShortcut, toggleSidebar])
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
@@ -156,15 +175,63 @@ function Sidebar({
   className,
   children,
   dir,
+  mobileTitle = "主导航",
+  mobileDescription = "浏览工作区与功能。",
+  keepMobileMounted = false,
   ...props
 }: React.ComponentProps<"div"> & {
   side?: "left" | "right"
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
+  mobileTitle?: string
+  mobileDescription?: string
+  /** Nonmodal retained work surfaces keep their editor mounted when folded. */
+  keepMobileMounted?: boolean
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, state, setOpen, openMobile, setOpenMobile } = useSidebar()
   // Mobile controls live outside SheetTrigger, so the dialog cannot restore focus itself.
   const mobileReturnFocus = React.useRef<HTMLElement | null>(null)
+  const mobileOpenRef = React.useRef(openMobile)
+  mobileOpenRef.current = openMobile
+
+  // A work surface must keep the same iframe DOM even when the viewport crosses md.
+  // Use the native Sheet in place (nonmodal), and the native Sidebar gap/position
+  // transitions at md. Only the responsive placement changes; state stays controlled
+  // by the same provider. Navigation sidebars keep the default modal mobile branch.
+  if (keepMobileMounted) {
+    const visible = isMobile ? openMobile : state === "expanded"
+    return <Sheet open={visible} onOpenChange={isMobile ? setOpenMobile : setOpen} modal={false}>
+      <div className="group peer text-sidebar-foreground" data-state={state}
+        data-collapsible={state === "collapsed" ? collapsible : ""} data-variant={variant} data-side={side} data-slot="sidebar">
+        <div data-slot="sidebar-gap" className="relative hidden w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear group-data-[collapsible=offcanvas]:w-0 motion-reduce:transition-none md:block" />
+        <SheetContent {...props} portalled={false} forceMount side={side} showCloseButton={false}
+          role={isMobile ? "dialog" : undefined} inert={!visible} aria-hidden={!visible}
+          onOpenAutoFocus={event => event.preventDefault()}
+          onInteractOutside={event => event.preventDefault()}
+          onKeyDownCapture={event => {
+            // Sheet loops Tab by default. Desktop sidebars remain in the page's
+            // normal tab order, including the adjacent editable conversation.
+            if (isMobile || event.key !== "Tab" || event.defaultPrevented) return
+            const items = [...document.querySelectorAll<HTMLElement>('button, a[href], input, textarea, select, iframe, [tabindex]')]
+              .filter(element => element.tabIndex >= 0 && !element.matches(':disabled, [data-radix-focus-guard]') && !element.closest('[inert]') && element.checkVisibility())
+            const inside = items.filter(element => event.currentTarget.contains(element))
+            if (document.activeElement !== (event.shiftKey ? inside[0] : inside.at(-1))) return
+            const index = items.indexOf(document.activeElement as HTMLElement)
+            const target = items[(index + (event.shiftKey ? -1 : 1) + items.length) % items.length]
+            event.preventDefault()
+            target?.focus({ preventScroll: true })
+          }}
+          data-slot="sidebar-container" data-side={side} data-mobile={isMobile ? "true" : undefined}
+          style={{ width: "var(--sidebar-width)", maxWidth: "none", paddingBlock: isMobile ? "env(safe-area-inset-top) env(safe-area-inset-bottom)" : undefined }}
+          className={cn("fixed inset-y-0 z-10 flex h-full w-(--sidebar-width) max-w-none gap-0 bg-sidebar p-0 text-sidebar-foreground shadow-none md:absolute md:animate-none! md:transition-[left,right,width] md:duration-200 md:ease-linear motion-reduce:animate-none! motion-reduce:transition-none",
+            "data-[state=closed]:invisible [transition-property:visibility] [transition-duration:0s] data-[state=closed]:[transition-delay:200ms] md:data-[state=closed]:visible md:data-[state=closed]:delay-0 motion-reduce:delay-0!",
+            side === "right" ? "right-0 border-l md:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]" : "left-0 border-r md:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]", className)}>
+          <SheetHeader className="sr-only"><SheetTitle>{mobileTitle}</SheetTitle><SheetDescription>{mobileDescription}</SheetDescription></SheetHeader>
+          <div data-sidebar="sidebar" data-slot="sidebar-inner" className="flex size-full flex-col bg-sidebar">{children}</div>
+        </SheetContent>
+      </div>
+    </Sheet>
+  }
 
   if (collapsible === "none") {
     return (
@@ -183,30 +250,41 @@ function Sidebar({
 
   if (isMobile) {
     return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
         <SheetContent
-          onOpenAutoFocus={() => { mobileReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null }}
+          {...props}
+          onOpenAutoFocus={(event) => {
+            if (!openMobile) { event.preventDefault(); return }
+            mobileReturnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+          }}
           onCloseAutoFocus={(event) => {
+            if (mobileOpenRef.current) { event.preventDefault(); return }
             if (mobileReturnFocus.current?.isConnected) {
               event.preventDefault()
               mobileReturnFocus.current.focus()
             }
           }}
+          onInteractOutside={event => {
+            if (event.target instanceof HTMLElement && event.target.closest('[data-sidebar="trigger"]')) event.preventDefault()
+          }}
           dir={dir}
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          className={cn("z-[51] w-(--sidebar-width) max-w-[100vw] gap-0 bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden motion-reduce:animate-none! motion-reduce:transition-none", className)}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+              width: "var(--sidebar-width)",
+              maxWidth: "100vw",
+              paddingBlock: "env(safe-area-inset-top) env(safe-area-inset-bottom)",
             } as React.CSSProperties
           }
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>主导航</SheetTitle>
-            <SheetDescription>浏览工作区与功能。</SheetDescription>
+            <SheetTitle>{mobileTitle}</SheetTitle>
+            <SheetDescription>{mobileDescription}</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>
@@ -227,7 +305,7 @@ function Sidebar({
       <div
         data-slot="sidebar-gap"
         className={cn(
-          "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
+          "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear motion-reduce:transition-none group-data-[sidebar-resizing]/sidebar-wrapper:transition-none",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
@@ -238,8 +316,9 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         data-side={side}
+        inert={state === "collapsed" && collapsible === "offcanvas"}
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear motion-reduce:transition-none group-data-[sidebar-resizing]/sidebar-wrapper:transition-none data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
@@ -265,7 +344,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, isMobile, open, openMobile } = useSidebar()
 
   return (
     <Button
@@ -273,6 +352,7 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon-sm"
+      aria-expanded={isMobile ? openMobile : open}
       className={cn(className)}
       onClick={(event) => {
         onClick?.(event)

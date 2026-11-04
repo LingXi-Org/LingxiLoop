@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDocumentsDeckStore(runtime2) {
   var artifactDocumentOptions, artifactDocumentFactory, SlidesDocumentStore;
@@ -84,7 +84,7 @@ function installDocumentsDeckStore(runtime2) {
         order: [],
         slides: {}
       }),
-      defaultTitle: (0, runtime2.untranslatedMessage)("Untitled")
+      defaultTitle: (0, runtime2.untranslatedMessage)("未命名")
     };
   }
   function describeInvalidDeckHtml(content) {
@@ -107,7 +107,7 @@ function installDocumentsDeckStore(runtime2) {
   }), bindRuntimeValue(runtime2, "configureArtifactDocumentFactory", () => configureArtifactDocumentFactory), bindRuntimeValue(runtime2, "createSlidesArtifactDocumentOptions", () => createSlidesArtifactDocumentOptions), bindRuntimeValue(runtime2, "describeInvalidDeckHtml", () => describeInvalidDeckHtml), bindRuntimeValue(runtime2, "SlidesDocumentStore", () => SlidesDocumentStore, (value) => {
     SlidesDocumentStore = value;
   }), () => {
-    (0, runtime2.initializeHtmlCompiler)(), (0, runtime2.initializeHtmlWriter)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeTypographyInference)(), artifactDocumentOptions = {}, SlidesDocumentStore = class {
+    (0, runtime2.initializeHtmlCompiler)(), (0, runtime2.initializeHtmlWriter)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeTypographyInference)(), (0, runtime2.initializeCodedFailure)(), artifactDocumentOptions = {}, SlidesDocumentStore = class {
       doc;
       bootReport = {
         droppedStyles: 0
@@ -433,9 +433,9 @@ function installDocumentsDeckStore(runtime2) {
       }
       prepareAsset(input) {
         if (!(0, runtime2.isAllowedImageSource)(input))
-          throw Error("assets must be raster or SVG data: URIs");
+          throw new runtime2.CodedFailure("asset_type","assets must be raster or SVG data: URIs");
         if (Object.keys(this.content().assets).length >= runtime2.maxDeckAssets)
-          throw Error("asset limit reached (" + String(runtime2.maxDeckAssets) + ")");
+          throw new runtime2.CodedFailure("asset_limit","asset limit reached (" + String(runtime2.maxDeckAssets) + ")");
         return (0, runtime2.createModelId)();
       }
       setAssetEntry(input, options) {

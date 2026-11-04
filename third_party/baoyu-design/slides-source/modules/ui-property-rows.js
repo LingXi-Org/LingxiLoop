@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiPropertyRows(runtime2) {
   var reactK30, reactZ7, jsxmq, MAX_INLINE_CHOICE_OPTIONS, COLOR_CHIP_PATTERN, preventDefaultEvent;
@@ -65,8 +65,11 @@ function installUiPropertyRows(runtime2) {
         }),
         value6 ? jsxmq.jsx(runtime2.Select, {
           compact: !0,
-          "aria-label": label + "单位",
-          title: "单位",
+          "aria-label": (0, runtime2.formatMessage)({ defaultMessage: "{label}单位", id: "JXer5JX0Eu" }, { label }),
+          title: (0, runtime2.formatMessage)({
+            defaultMessage: "单位",
+            id: "Dp8kFZPhDB"
+          }),
           items: units.map((input) => ({
             value: input,
             label: input
@@ -278,7 +281,8 @@ function installUiPropertyRows(runtime2) {
       })
     });
   }
-  function SelectPropertyRow({ label, icon, hint, options, value, onChange, placeholder, popupAttrs, searchable, searchLabel, onOpenChange, trailing, onReset, disabled: disabled2, title, description }) {
+  function SelectPropertyRow({ label, icon, hint, options, value, onChange, placeholder,
+    mutedPlaceholder, popupAttrs, searchable, searchLabel, onOpenChange, trailing, onReset, disabled: disabled2, title, description }) {
     return jsxmq.jsx(runtime2.PropertyRow, {
       label,
       title,
@@ -295,6 +299,7 @@ function installUiPropertyRows(runtime2) {
         value,
         onChange,
         placeholder,
+        mutedPlaceholder,
         disabled: disabled2,
         popupAttrs,
         searchable,
@@ -364,7 +369,10 @@ function installUiPropertyRows(runtime2) {
         if (!(value26.a < 1) && (0, runtime2.hsvaToHexColor)(value26).toLowerCase() === value23)
           return typeof value24 != "string" && value24.label !== void 0 && value24.label.trim() !== "" ? value24.label : void 0;
       }
-    }, [value9, memo4, swatches, current, valueName]), value10 = value !== void 0 ? typeof valueName == "string" ? valueName : value9 && memo4 !== void 0 ? memo22 ?? memo4.solid.toUpperCase() : value : clearLabel ?? placeholder ?? "None", value11 = value9 && memo4 !== void 0 && memo4.alpha < 1 ? Math.round(memo4.alpha * 100) + "%" : void 0, value12 = mixed || chip !== void 0 ? void 0 : value ?? placeholder, value13 = useContrastResult(contrast, value12), memo32 = reactZ7.useMemo(() => value13 === void 0 ? void 0 : (0, runtime2.contrastDisplayInfo)(value13).sentence, [value13]), value14 = description !== void 0 && description !== "" ? memo32 !== void 0 ? description.replace(/\.?\s*$/, ". ") + memo32 : description : memo32, value15 = reactZ7.useId(), value16 = swatches !== void 0 && swatches.length > 0, value17 = headerTabs === void 0 || headerTabs.value === (headerTabs.colorTab ?? "color"), [value18, value19] = reactZ7.useState("system"), [value20, value21] = reactZ7.useState(value4);
+    }, [value9, memo4, swatches, current, valueName]), value10 = value !== void 0 ? typeof valueName == "string" ? valueName : value9 && memo4 !== void 0 ? memo22 ?? memo4.solid.toUpperCase() : value : clearLabel ?? placeholder ?? (0, runtime2.formatMessage)({
+      defaultMessage: "无",
+      id: "zFuGRYNckD"
+    }), value11 = value9 && memo4 !== void 0 && memo4.alpha < 1 ? Math.round(memo4.alpha * 100) + "%" : void 0, value12 = mixed || chip !== void 0 ? void 0 : value ?? placeholder, value13 = useContrastResult(contrast, value12), memo32 = reactZ7.useMemo(() => value13 === void 0 ? void 0 : (0, runtime2.contrastDisplayInfo)(value13).sentence, [value13]), value14 = description !== void 0 && description !== "" ? memo32 !== void 0 ? description.replace(/\.?\s*$/, ". ") + memo32 : description : memo32, value15 = reactZ7.useId(), spokenValue = mixed ? runtime2.MIXED_LABEL : chip !== void 0 ? chip.text : value !== void 0 ? value11 !== void 0 ? (0, runtime2.formatMessage)({ defaultMessage: "{color} {alpha}", id: "JMqJiT4H4r" }, { color: value10, alpha: value11 }) : value10 : clearLabel !== void 0 && /[\p{L}\p{N}]/u.test(clearLabel) ? clearLabel : void 0, accessibleName = spokenValue !== void 0 ? (0, runtime2.labelWithValue)(label, spokenValue) : clearLabel !== void 0 ? (0, runtime2.formatMessage)({ defaultMessage: "{label}：无", id: "0YOHjPdyO2" }, { label }) : (0, runtime2.formatMessage)({ defaultMessage: "{label}：未设置", id: "DBdMxdTuQf" }, { label }), value16 = swatches !== void 0 && swatches.length > 0, value17 = headerTabs === void 0 || headerTabs.value === (headerTabs.colorTab ?? "color"), [value18, value19] = reactZ7.useState("system"), [value20, value21] = reactZ7.useState(value4);
     value4 !== value20 && (value21(value4), value4 && (value19(value16 && value17 ? "system" : "custom"), value6(ref.current), ref.current = !1));
     let value22 = jsxmq.jsx(runtime2.ColorSelect, {
       testid: testid !== void 0 ? testid + "-menu" : void 0,
@@ -425,8 +433,9 @@ function installUiPropertyRows(runtime2) {
           onClose: () => callback(!1),
           trigger: jsxmq.jsx(runtime2.FieldButton, {
             "data-testid": testid,
+            "data-kit-name": label,
             title: disabled2 ? disabledReason ?? title : title,
-            "aria-label": label + ": " + (mixed ? runtime2.MIXED_LABEL : chip !== void 0 ? chip.text : value !== void 0 ? value10 + (value11 !== void 0 ? " " + value11 : "") : clearLabel !== void 0 && /[\p{L}\p{N}]/u.test(clearLabel) ? clearLabel : clearLabel !== void 0 ? "none" : "未设置"),
+            "aria-label": accessibleName,
             "aria-describedby": value14 !== void 0 ? value15 : void 0,
             disabled: disabled2,
             onClick: (input) => {

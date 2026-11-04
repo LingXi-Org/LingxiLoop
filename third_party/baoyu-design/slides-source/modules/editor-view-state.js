@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorViewState(runtime2) {
   var editorViewStateAdapter, deferredEditorViewState, captureEditorViewState, editorViewStateBusy, editorSaveHandoff, HOT_REVEAL_TIMEOUT_MS, hotRestoreRevealed, resolveHotRestoreRevealed, revealAfterHotRestore, HOT_REVEAL_STABLE_READS, HOT_REVEAL_POLL_MS, HOT_REVEAL_PAINT_FALLBACK_MS, ReactHotRestore;

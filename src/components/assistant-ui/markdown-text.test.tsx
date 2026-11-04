@@ -8,13 +8,21 @@ import { create } from 'zustand'
 import { load } from 'cheerio'
 
 mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })) } })
-const { confidenceCopyText, MarkdownText } = await import('./markdown-text')
+const { confidenceCopyText, MarkdownText, loadMathPlugin } = await import('./markdown-text')
 
 const renderMarkdown = renderToStaticMarkup
 
+test('prose renders without the math renderer; math syntax loads it on demand', async () => {
+  const text = '公式如下。\n\n$$\nx^2\n$$'
+  assert.equal(load(renderMarkdown(<Preview text={text} running={false} />))('.katex').length, 0)
+  await loadMathPlugin()
+  assert.equal(load(renderMarkdown(<Preview text={text} running={false} />))('.katex-display').length, 1)
+})
+
 const attention = String.raw`\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\left(\frac{QK^{\mathsf T}}{\sqrt{d_k}}\right)V`
 
-test('Agent math uses inline and display KaTeX through the actual text primitive', () => {
+test('Agent math uses inline and display KaTeX through the actual text primitive', async () => {
+  await loadMathPlugin()
   const text = `转置 $QK^{\\mathsf T}$，维度 $\\sqrt{d_k}$。\n\n$$\n${attention}\n$$`
   for (const running of [true, false]) {
     for (const inlineCitations of [true, false]) {

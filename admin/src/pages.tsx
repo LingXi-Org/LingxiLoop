@@ -1,3 +1,7 @@
+import { ModelStageTimingCard } from './model-stage-timing'
+import type { RunStageTiming } from '../../shared/model-stage-timing'
+import { AgentRunTimingCard } from './agent-run-timing'
+import type { AgentRunTiming } from '../../shared/agent-run-timing'
 import { WORKSPACES, recordPath } from './workspace-model'
 import { DetailSections } from './workspace-pages'
 import { CanAccess, useCustom, useGetIdentity, useInvalidate, useLogout, useOne } from '@refinedev/core'
@@ -224,6 +228,7 @@ export function ResourceDetailPage() {
     <PageHeading title={titleFor(record)} description={`${resource.label} · ${record.id}`} actions={availableCommands.map((command) => <CanAccess key={command.label} resource={resource.name} action={command.action}><Button variant={command.destructive ? 'destructive' : 'outline'} disabled={pending} onClick={() => void execute(command)}>{command.label}</Button></CanAccess>)} />
     <div className="flex flex-wrap items-center gap-4"><RecordAvatar record={record} />{(record.status != null || resource.name === 'users') && <StatusBadge value={resource.name === 'users' ? accountStatus(record) : record.status} />}{record.company_id != null && <FieldValue field="company_id" value={record.company_id} label={String(record.company_id_label ?? record.company_id)} />}{record.project_id != null && <FieldValue field="project_id" value={record.project_id} label={String(record.project_id_label ?? record.project_id)} />}</div>
     {detail.query.isError && <ErrorPanel message="详情刷新失败，当前显示上次加载的内容。" retry={() => void detail.query.refetch()} />}
+    {resource.name === 'agent-runs' && <><AgentRunTimingCard timing={record.timing as AgentRunTiming | undefined} /><ModelStageTimingCard stages={record.stages as RunStageTiming | undefined} /></>}
     <DetailSections key={`${resource.name}:${record.id}`} resource={resource.name} record={record} renderField={(key, value) => isChunkDescriptor(value) ? <ChunkedField key={value.contentUrl} descriptor={value} /> : <FieldValue value={value} field={key} />} />
     {resource.name === 'conversations' && <ConversationContent conversationId={record.id} />}
   </div>

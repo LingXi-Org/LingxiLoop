@@ -1,6 +1,7 @@
 import {
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -137,19 +138,36 @@ function useViewportVisibility() {
   return { ref, visible }
 }
 
-function Dot({ dot, ink }: { dot: DotRender; ink: string }) {
+const attribute = (value: string) => value.replace(/[&"<>]/g, character => `&#${character.charCodeAt(0)};`)
+
+function dotMarkup(dot: DotRender, ink: string) {
   const depthOpacity = dot.depth === undefined ? 1 : 0.35 + dot.depth * 0.65
-  const common = { fill: dot.color ?? ink, opacity: dot.opacity * depthOpacity }
-  if (dot.d) {
-    return (
-      <path
-        {...common}
-        d={dot.d}
-        transform={`translate(${dot.x} ${dot.y}) rotate(${dot.rot ?? 0}) scale(${RAYON})`}
-      />
-    )
-  }
-  return <circle {...common} cx={dot.x} cy={dot.y} r={dot.r} />
+  const common = `fill="${attribute(dot.color ?? ink)}" opacity="${dot.opacity * depthOpacity}"`
+  return dot.d
+    ? `<path ${common} d="${dot.d}" transform="translate(${dot.x} ${dot.y}) rotate(${dot.rot ?? 0}) scale(${RAYON})"/>`
+    : `<circle ${common} cx="${dot.x}" cy="${dot.y}" r="${dot.r}"/>`
+}
+
+/** One frame as SVG markup. Animation paints it straight into the avatar's own
+ * layer: a frame is pure geometry, so it never needs React reconciliation, and
+ * 20-60 fps avatars never schedule work that would delay the rest of the app. */
+export function frameMarkup(frame: BotFrame, { uid, ink, paper, size }: { uid: string; ink: string; paper: string; size: number }) {
+  const maskId = `${uid}-mask`
+  const dots = (size < 40 && frame.dots.length > 8 ? frame.dots.slice(0, 8) : frame.dots).map(dot => dotMarkup(dot, ink)).join('')
+  const box = `x="${-DEMI_VIEWBOX}" y="${-DEMI_VIEWBOX}" width="${DEMI_VIEWBOX * 2}" height="${DEMI_VIEWBOX * 2}"`
+  const arcs = (side: 'front' | 'back') => frame.arcs.map(arc => `<path d="${arc[side]}" stroke="url(#${uid}-${arc.id})" stroke-width="${arc.width}" opacity="${arc.opacity}"/>`).join('')
+  return `<defs><mask id="${maskId}" maskUnits="userSpaceOnUse" ${box}><path d="${frame.bodyPath}" fill="#fff"/>`
+    + frame.eyes.map(eye => `<path d="${eye.d}" transform="${eye.matrix}" opacity="${eye.alpha}" fill="#000"/>`).join('')
+    + (frame.notch ? `<circle cx="${frame.notch.x}" cy="${frame.notch.y}" r="${frame.notch.r}" fill="#000"/>` : '')
+    + '</mask>'
+    + frame.arcs.map(arc => `<linearGradient id="${uid}-${arc.id}" gradientUnits="userSpaceOnUse" x1="${arc.grad.x1}" y1="${arc.grad.y1}" x2="${arc.grad.x2}" y2="${arc.grad.y2}">`
+      + arc.grad.stops.map((color, index) => `<stop offset="${index / Math.max(1, arc.grad.stops.length - 1)}" stop-color="${attribute(color)}"/>`).join('') + '</linearGradient>').join('')
+    + `</defs><g transform="scale(${CHAT_AVATAR_SCALE})"><g fill="none" stroke-linecap="round">${arcs('back')}</g>`
+    + (frame.dotsBehind ? `<g>${dots}</g>` : '')
+    + `<g opacity="${frame.bodyAlpha}"><path d="${frame.bodyPath}" fill="${attribute(paper)}"/><g mask="url(#${maskId})"><rect ${box} fill="${attribute(ink)}"/></g></g>`
+    + (frame.dotsBehind ? '' : `<g>${dots}</g>`)
+    + (frame.notif ? `<circle cx="${frame.notif.x}" cy="${frame.notif.y}" r="${frame.notif.r}" fill="${NOTIF_BLUE}"/>` : '')
+    + `<g fill="none" stroke-linecap="round">${arcs('front')}</g></g>`
 }
 
 /** Native React renderer for Bloub's clock-free SVG morph engine. */
@@ -179,13 +197,17 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
     () => new BotEngine(RAYON, state, shape, expression),
     [participant.id, identity.shape, identity.expression],
   )
-  const [frame, setFrame] = useState<BotFrame>(() => engine.sample(phase))
   const lastMediumFrame = useRef(-1)
   const reactId = useId()
   const uid = useMemo(() => `bloub-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}`, [reactId])
-  const maskId = `${uid}-mask`
+  const layer = useRef<SVGGElement | null>(null)
+  const paint = useRef((_frame: BotFrame) => {})
+  paint.current = (frame: BotFrame) => {
+    if (layer.current) layer.current.innerHTML = frameMarkup(frame, { uid, ink, paper, size })
+  }
+  const setFrame = (frame: BotFrame) => paint.current(frame)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const now = getBloubClockTime()
     const localNow = now + motionOffset
     if (motionEnabled) {
@@ -194,7 +216,8 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
     } else {
       setFrame(sampleStaticPointerFrame(engine, state, phase, null))
     }
-  }, [engine, motionEnabled, motionOffset, phase, state, reducedMotion, visible])
+  // Appearance inputs repaint the current pose; the painter reads them by ref.
+  }, [engine, motionEnabled, motionOffset, phase, state, reducedMotion, visible, uid, ink, paper, size])
 
   useEffect(() => {
     if (!motionEnabled) return
@@ -227,8 +250,6 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
     else setFrame(sampleStaticPointerFrame(engine, state, phase, null))
   }
 
-  const dots = size < 40 && frame.dots.length > 8 ? frame.dots.slice(0, 8) : frame.dots
-  const renderDots = (prefix: string) => dots.map((dot, index) => <Dot key={`${prefix}-${index}`} dot={dot} ink={ink} />)
   const motionStyle = motionEnabled ? {
     '--bloub-float-delay': `${-motionOffset}s`,
     '--bloub-float-duration': `${3.1 + (participantHash % 9) * 0.13}s`,
@@ -252,52 +273,7 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
       onPointerMove={pointEyesAtPointer}
       onPointerLeave={releasePointerLook}
     >
-      <defs>
-        <mask id={maskId} maskUnits="userSpaceOnUse" x={-DEMI_VIEWBOX} y={-DEMI_VIEWBOX} width={DEMI_VIEWBOX * 2} height={DEMI_VIEWBOX * 2}>
-          <path d={frame.bodyPath} fill="#fff" />
-          {frame.eyes.map((eye, index) => (
-            <path key={index} d={eye.d} transform={eye.matrix} opacity={eye.alpha} fill="#000" />
-          ))}
-          {frame.notch && <circle cx={frame.notch.x} cy={frame.notch.y} r={frame.notch.r} fill="#000" />}
-        </mask>
-        {frame.arcs.map((arc) => (
-          <linearGradient
-            key={arc.id}
-            id={`${uid}-${arc.id}`}
-            gradientUnits="userSpaceOnUse"
-            x1={arc.grad.x1}
-            y1={arc.grad.y1}
-            x2={arc.grad.x2}
-            y2={arc.grad.y2}
-          >
-            {arc.grad.stops.map((color, index) => (
-              <stop key={`${color}-${index}`} offset={index / Math.max(1, arc.grad.stops.length - 1)} stopColor={color} />
-            ))}
-          </linearGradient>
-        ))}
-      </defs>
-
-      <g transform={`scale(${CHAT_AVATAR_SCALE})`}>
-        <g fill="none" strokeLinecap="round">
-          {frame.arcs.map((arc) => (
-            <path key={`back-${arc.id}`} d={arc.back} stroke={`url(#${uid}-${arc.id})`} strokeWidth={arc.width} opacity={arc.opacity} />
-          ))}
-        </g>
-        {frame.dotsBehind && <g>{renderDots('behind')}</g>}
-        <g opacity={frame.bodyAlpha}>
-          <path d={frame.bodyPath} fill={paper} />
-          <g mask={`url(#${maskId})`}>
-            <rect x={-DEMI_VIEWBOX} y={-DEMI_VIEWBOX} width={DEMI_VIEWBOX * 2} height={DEMI_VIEWBOX * 2} fill={ink} />
-          </g>
-        </g>
-        {!frame.dotsBehind && <g>{renderDots('front')}</g>}
-        {frame.notif && <circle cx={frame.notif.x} cy={frame.notif.y} r={frame.notif.r} fill={NOTIF_BLUE} />}
-        <g fill="none" strokeLinecap="round">
-          {frame.arcs.map((arc) => (
-            <path key={`front-${arc.id}`} d={arc.front} stroke={`url(#${uid}-${arc.id})`} strokeWidth={arc.width} opacity={arc.opacity} />
-          ))}
-        </g>
-      </g>
+      <g ref={layer} />
     </svg>
   )
 }

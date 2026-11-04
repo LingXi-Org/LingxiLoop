@@ -1,0 +1,138 @@
+[
+  {
+    "arm": "control",
+    "case": "right",
+    "runs": 10,
+    "frameP95": 16.8,
+    "lagP95px": 0.01,
+    "commitsP50": 2.0,
+    "changesP50": 1.0,
+    "writesP50": 0.0,
+    "longTasks": 3,
+    "costP50Ms": {
+      "LayoutDuration": 450.92,
+      "RecalcStyleDuration": 736.62,
+      "ScriptDuration": 74.53,
+      "TaskDuration": 1962.91
+    }
+  },
+  {
+    "arm": "control",
+    "case": "left",
+    "runs": 10,
+    "frameP95": 16.8,
+    "lagP95px": 0.02,
+    "commitsP50": 2.0,
+    "changesP50": 1.0,
+    "writesP50": 0.0,
+    "longTasks": 2,
+    "costP50Ms": {
+      "LayoutDuration": 589.74,
+      "RecalcStyleDuration": 1268.51,
+      "ScriptDuration": 63.06,
+      "TaskDuration": 2846.66
+    }
+  },
+  {
+    "arm": "control",
+    "case": "native",
+    "runs": 10,
+    "frameP95": 16.8,
+    "lagP95px": 0.01,
+    "commitsP50": 116.0,
+    "changesP50": 0.0,
+    "writesP50": 0.0,
+    "longTasks": 1,
+    "costP50Ms": {
+      "LayoutDuration": 633.35,
+      "RecalcStyleDuration": 97.92,
+      "ScriptDuration": 179.88,
+      "TaskDuration": 1771.38
+    }
+  },
+  {
+    "arm": "control",
+    "case": "right-stream",
+    "runs": 10,
+    "frameP95": 16.8,
+    "lagP95px": 0.01,
+    "commitsP50": 103.0,
+    "changesP50": 1.0,
+    "writesP50": 0.0,
+    "longTasks": 3,
+    "costP50Ms": {
+      "LayoutDuration": 476.01,
+      "RecalcStyleDuration": 728.01,
+      "ScriptDuration": 275.25,
+      "TaskDuration": 2229.04
+    }
+  },
+  {
+    "arm": "candidate",
+    "case": "right",
+    "runs": 10,
+    "frameP95": 16.8,
+    "lagP95px": 0.01,
+    "commitsP50": 2.0,
+    "changesP50": 1.0,
+    "writesP50": 0.0,
+    "longTasks": 1,
+    "costP50Ms": {
+      "LayoutDuration": 471.94,
+      "RecalcStyleDuration": 93.91,
+      "ScriptDuration": 66.69,
+      "TaskDuration": 1262.43
+    }
+  },
+  {
+    "arm": "candidate",
+    "case": "left",
+    "runs": 10,
+    "frameP95": 16.8,
+    "lagP95px": 0.02,
+    "commitsP50": 2.0,
+    "changesP50": 1.0,
+    "writesP50": 0.0,
+    "longTasks": 1,
+    "costP50Ms": {
+      "LayoutDuration": 564.44,
+      "RecalcStyleDuration": 393.24,
+      "ScriptDuration": 57.72,
+      "TaskDuration": 1856.87
+    }
+  },
+  {
+    "arm": "candidate",
+    "case": "native",
+    "runs": 10,
+    "frameP95": 16.8,
+    "lagP95px": 0.01,
+    "commitsP50": 116.0,
+    "changesP50": 0.0,
+    "writesP50": 0.0,
+    "longTasks": 0,
+    "costP50Ms": {
+      "LayoutDuration": 593.03,
+      "RecalcStyleDuration": 94.72,
+      "ScriptDuration": 176.49,
+      "TaskDuration": 1728.59
+    }
+  },
+  {
+    "arm": "candidate",
+    "case": "right-stream",
+    "runs": 10,
+    "frameP95": 16.8,
+    "lagP95px": 0.01,
+    "commitsP50": 90.5,
+    "changesP50": 1.0,
+    "writesP50": 0.0,
+    "longTasks": 0,
+    "costP50Ms": {
+      "LayoutDuration": 476.53,
+      "RecalcStyleDuration": 108.93,
+      "ScriptDuration": 247.31,
+      "TaskDuration": 1534.17
+    }
+  }
+]

@@ -1,0 +1,395 @@
+{
+  "scope": "Diagnostic samples with profiling overhead. CPU sample weights are approximate; nested trace category durations are inclusive and cannot be added.",
+  "rows": [
+    {
+      "trial": 0,
+      "geometry": false,
+      "observer": [],
+      "longAnimationFrames": [],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 1804.52
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1633.66
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 77.06
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 30.96
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 26.69
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 21.34
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 16.16
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 9.46
+        },
+        {
+          "source": "VM/injected evaluate",
+          "ms": 6.61
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2471:9 logComponentRender",
+          "ms": 5.06
+        },
+        {
+          "source": "VM/injected addEventListener",
+          "ms": 4.31
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react/cjs/react-jsx-runtime.production.js:14:9 jsxProd",
+          "ms": 3.93
+        }
+      ]
+    },
+    {
+      "trial": 0,
+      "geometry": true,
+      "observer": [],
+      "longAnimationFrames": [
+        {
+          "start": 3781.5,
+          "duration": 54,
+          "renderStart": 3801.2000000001863,
+          "styleAndLayoutStart": 3829.7999999998137,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 28.5,
+              "forcedStyleAndLayoutDuration": 27.9
+            }
+          ]
+        }
+      ],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1616.08
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1554.16
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 416.91
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 78.07
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 30.84
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 24.04
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 16.33
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 15.12
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 13.38
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/perf/issue-660/fixture.tsx:19:9 Chat",
+          "ms": 5.57
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:7872:9 beginWork",
+          "ms": 5.14
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 5.09
+        }
+      ]
+    },
+    {
+      "trial": 1,
+      "geometry": false,
+      "observer": [],
+      "longAnimationFrames": [],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 1772.23
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1597.27
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 75.4
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 29.71
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 28.71
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 25.32
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 13.47
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 8.33
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12895:9 performUnitOfWork",
+          "ms": 7.46
+        },
+        {
+          "source": "VM/injected removeEventListener",
+          "ms": 7.14
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 6.89
+        },
+        {
+          "source": "VM/injected setupDragListeners",
+          "ms": 6.76
+        }
+      ]
+    },
+    {
+      "trial": 1,
+      "geometry": true,
+      "observer": [],
+      "longAnimationFrames": [
+        {
+          "start": 2134,
+          "duration": 59.59999999962747,
+          "renderStart": 2150.0999999996275,
+          "styleAndLayoutStart": 2168.7999999998137,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 18.299999999813735,
+              "forcedStyleAndLayoutDuration": 17.9
+            }
+          ]
+        }
+      ],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1594.14
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1564.9
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 287
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 71.52
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 33.48
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 19.62
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 19.57
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 14.47
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 9.93
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 8.12
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:3507:9 startProfilerTimer",
+          "ms": 5.15
+        },
+        {
+          "source": "VM/injected addEventListener",
+          "ms": 4.46
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "geometry": false,
+      "observer": [],
+      "longAnimationFrames": [],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (program)",
+          "ms": 1867.77
+        },
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1709.43
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 78.57
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 34.87
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 29.98
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 29.25
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 20.75
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 11.61
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 7.01
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/scheduler/cjs/scheduler.production.js:63:25 t.unstable_now",
+          "ms": 5.4
+        },
+        {
+          "source": "VM/injected evaluate",
+          "ms": 5.33
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13007:9 completeUnitOfWork",
+          "ms": 4.44
+        }
+      ]
+    },
+    {
+      "trial": 2,
+      "geometry": true,
+      "observer": [],
+      "longAnimationFrames": [
+        {
+          "start": 3056.5,
+          "duration": 57,
+          "renderStart": 3094.899999999441,
+          "styleAndLayoutStart": 3108.0999999996275,
+          "scripts": [
+            {
+              "invoker": "FrameRequestCallback",
+              "sourceURL": "",
+              "sourceFunctionName": "",
+              "duration": 12.799999999813735,
+              "forcedStyleAndLayoutDuration": 12.3
+            }
+          ]
+        }
+      ],
+      "longTasks": [],
+      "topCpuSamples": [
+        {
+          "source": "VM/injected (idle)",
+          "ms": 1570.96
+        },
+        {
+          "source": "VM/injected (program)",
+          "ms": 1504.77
+        },
+        {
+          "source": "VM/injected getBoundingClientRect",
+          "ms": 293.12
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13066:9 commitRoot",
+          "ms": 84.38
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:13313:9 flushLayoutEffects",
+          "ms": 28.01
+        },
+        {
+          "source": "VM/injected ",
+          "ms": 22.71
+        },
+        {
+          "source": "VM/injected now",
+          "ms": 22
+        },
+        {
+          "source": "VM/injected (garbage collector)",
+          "ms": 18.19
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:12366:9 prepareFreshStack",
+          "ms": 11.29
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:2712:9 createWorkInProgress",
+          "ms": 9.58
+        },
+        {
+          "source": "../../../workspace/LingxiLoop/node_modules/react-dom/cjs/react-dom-profiling.profiling.js:1312:9 updateTextarea",
+          "ms": 7.99
+        },
+        {
+          "source": "VM/injected setupDragListeners",
+          "ms": 6.01
+        }
+      ]
+    }
+  ]
+}

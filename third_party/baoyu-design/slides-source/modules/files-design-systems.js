@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesDesignSystems(runtime2) {
   var DESIGN_SYSTEM_NAMESPACE_PATTERN, DesignSystemPathError, MAX_INSTALLED_DESIGN_SYSTEMS, DESIGN_SYSTEM_NAME_MAX_CHARS, DESIGN_SYSTEM_DESCRIPTION_MAX_CHARS, DESIGN_SYSTEM_REFERENCE_MAX_CHARS, DESIGN_SYSTEM_TOKENS_MAX_CHARS, DESIGN_SYSTEM_PATH_SEGMENT_PATTERN, DESIGN_SYSTEM_PATH_PATTERN, DESIGN_SYSTEM_UNSAFE_CONTROL_PATTERN, DESIGN_SYSTEM_DESCRIPTION_CONTROL_PATTERN, normalizeDesignSystemText, ARTIFACT_UUID_PATTERN, ARTIFACT_SHORT_ID_PATTERN, ARTIFACT_ID_PATTERN, DESIGN_SYSTEM_ARTIFACT_URL_PATTERN, DESIGN_SYSTEM_ALLOWED_HOSTS, DESIGN_SYSTEM_UNKNOWN_HOST_MESSAGE, ARTIFACT_REFERENCE_URL_PATTERN, DESIGN_SYSTEM_INSTALL_REJECTION_MESSAGES, DESIGN_SYSTEM_INSTALL_REQUEST_FILENAME, DESIGN_SYSTEM_INSTALL_COMMAND_HELP, DESIGN_SYSTEM_INSTALL_DETAILS;
@@ -60,7 +60,7 @@ function installFilesDesignSystems(runtime2) {
     };
   }
   function createInstalledDesignSystemTracker(port, getVersion, onChange) {
-    let refreshVersion = "", generation = 0, systems, currentFingerprint = "", fileCache = /* @__PURE__ */ new Map(), fontFiles = [], updateSystems = (input, options) => {
+    let refreshVersion = "", generation = 0, systems, pending = Promise.resolve(!0), currentFingerprint = "", fileCache = /* @__PURE__ */ new Map(), fontFiles = [], updateSystems = (input, options) => {
       if (options === currentFingerprint)
         return;
       currentFingerprint = options;
@@ -82,17 +82,17 @@ function installFilesDesignSystems(runtime2) {
       refresh(input) {
         let value = readInstalledDesignSystems(input), value2 = JSON.stringify(value), value3 = (value.length === 0 ? "" : getVersion()) + "|" + value2;
         if (value3 === refreshVersion)
-          return;
+          return pending;
         refreshVersion = value3;
         let value4 = ++generation;
         if (value.length === 0) {
           fileCache.clear(), systems !== void 0 && updateSystems(input, value2);
-          return;
+          return pending = Promise.resolve(!0);
         }
         let value5 = value.map((input2) => designSystemTokensPath(input2.namespace));
-        port.list().then(async (input2) => {
+        return pending = port.list().then(async (input2) => {
           if (value4 !== generation)
-            return;
+            return !1;
           let entries = new Map(input2.map((input3) => [
             input3.path,
             input3
@@ -100,16 +100,18 @@ function installFilesDesignSystems(runtime2) {
           fontFiles = input2.map((input3) => input3.path).filter((path) => runtime2.designSystemFontPathPattern.test(path));
           for (let value6 of value5) {
             let entry = entries.get(value6), entry2 = fileCache.get(value6);
-            if (entry === void 0 || entry.size > DESIGN_SYSTEM_TOKENS_MAX_CHARS)
+            if (entry === void 0 || entry.size > DESIGN_SYSTEM_TOKENS_MAX_CHARS) {
+              flag = !0;
               fileCache.set(value6, {
                 sha: entry?.sha256 ?? "",
                 text: void 0
               });
+            }
             else if (entry2 === void 0 || entry2.sha !== entry.sha256 || entry2.text === void 0) {
               let value7 = await port.readText(value6).then((input3) => input3.text, () => {
               });
               if (value4 !== generation)
-                return;
+                return !1;
               value7 !== void 0 ? fileCache.set(value6, {
                 sha: entry.sha256,
                 text: value7
@@ -122,8 +124,10 @@ function installFilesDesignSystems(runtime2) {
           for (let value6 of [...fileCache.keys()])
             value5.includes(value6) || fileCache.delete(value6);
           value4 === generation && (flag && (refreshVersion = ""), updateSystems(input, value2 + "|" + value5.map((input3) => (fileCache.get(input3)?.text === void 0 ? "!" : "") + (fileCache.get(input3)?.sha ?? "")).join(",") + "|" + fontFiles.join(",")));
+          return value4 === generation && !flag;
         }).catch(() => {
           value4 === generation && (refreshVersion = "");
+          return !1;
         });
       }
     };

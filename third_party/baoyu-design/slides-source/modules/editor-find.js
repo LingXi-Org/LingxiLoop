@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorFind(runtime2) {
   var SLIDES_FIND_SCOPE_SELECTOR, isSlidesFindScopeTarget, lastInteractionWasInSlidesFindScope, waitForFindHighlightFrame;
@@ -83,7 +83,12 @@ function installEditorFind(runtime2) {
       describe(input) {
         let value = host.slides().findIndex((input2) => input2.id === input.slideId);
         if (value !== -1)
-          return "幻灯片 " + String(value + 1);
+          return (0, runtime2.formatMessage)({
+            defaultMessage: "第 {slide} 页",
+            id: "mQtGq7FXln"
+          }, {
+            slide: String(value + 1)
+          });
       }
     };
   }

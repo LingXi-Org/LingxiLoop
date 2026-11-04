@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportImageShrinking(runtime2) {
   var INLINE_IMAGE_PATTERN, INLINE_IMAGE_PREFIX_PATTERN, IMAGE_ENCODING_ATTEMPTS, decodeExportImage, opaqueImageProbeCanvas, imageHasOpaquePixels, initializeImageShrinking;

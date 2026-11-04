@@ -1,0 +1,33 @@
+TAP version 13
+# Subtest: Design private namespace pruning retains native reads, setters and initialization order
+ok 1 - Design private namespace pruning retains native reads, setters and initialization order
+  ---
+  duration_ms: 74.566157
+  type: 'test'
+  ...
+# Subtest: Design refuses unreviewed private namespace and constructor access
+not ok 2 - Design refuses unreviewed private namespace and constructor access
+  ---
+  duration_ms: 72.514823
+  type: 'test'
+  location: '/workspace/LingxiLoop/scripts/design-browser-runtime.test.mjs:20:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'rejects'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/LingxiLoop/scripts/design-browser-runtime.test.mjs:23:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 1
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 598.985311

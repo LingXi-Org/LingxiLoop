@@ -46,6 +46,8 @@ import {
 } from './policy.js'
 import {
   fuseKnowledgeSearchHits,
+  knowledgeSearchFailure,
+  type KnowledgeSearchFailure,
   OpenNotebookError,
   type OpenNotebookSearchHit,
   type OpenNotebookSource,
@@ -450,9 +452,10 @@ interface KnowledgeRetrievalInput {
   searchTimeoutMs?: number
 }
 export interface KnowledgeRetrievalResult {
-  status: 'matched' | 'no_matches' | 'no_sources' | 'processing' | 'unavailable' | 'not_applicable'
+  status: 'matched' | 'degraded' | 'no_matches' | 'no_sources' | 'processing' | 'unavailable' | 'not_applicable'
   citations: KnowledgeCitation[]
   processingSources?: number
+  searchFailures?: KnowledgeSearchFailure[]
 }
 
 export async function retrieveKnowledge(args: KnowledgeRetrievalInput): Promise<KnowledgeCitation[]> {
@@ -514,15 +517,27 @@ export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Pro
   inc('knowledge.retrieval.queries')
   const searchStartedAt = Date.now()
   let rankedHits: OpenNotebookSearchHit[]
+  const searchFailures: KnowledgeSearchFailure[] = []
   try {
     const limit = Math.max(1, Math.min(8, args.limit ?? 8))
-    const batches = await Promise.all(groups.flatMap(({notebookId,sourceIds}) => [
-      openNotebookClient.search({ notebookId,sourceIds,query:args.query,limit,type:'text',minimumScore:0,
+    const searches = groups.flatMap(({notebookId,sourceIds}) => (['text', 'vector'] as const).map(type => ({ type,
+      request: openNotebookClient.search({ notebookId,sourceIds,
+        query: type === 'text' ? args.query : args.contextQuery?.trim() || args.query,limit,type,
+        minimumScore: type === 'text' ? 0 : Number(process.env.OPEN_NOTEBOOK_MINIMUM_SCORE ?? 0.2),
         companyId:args.companyId,signal:args.signal,timeoutMs:args.searchTimeoutMs }),
-      openNotebookClient.search({ notebookId,sourceIds,query:args.contextQuery?.trim() || args.query,limit,type:'vector',
-        minimumScore:Number(process.env.OPEN_NOTEBOOK_MINIMUM_SCORE ?? 0.2),companyId:args.companyId,
-        signal:args.signal,timeoutMs:args.searchTimeoutMs }),
-    ]))
+    })))
+    const settled = await Promise.allSettled(searches.map(search => search.request))
+    args.signal?.throwIfAborted()
+    const batches = settled.flatMap((result, index) => {
+      if (result.status === 'fulfilled') return [result.value]
+      // Product authorization errors and programming failures are never downgraded.
+      if (!(result.reason instanceof OpenNotebookError)) throw result.reason
+      const failure = knowledgeSearchFailure(searches[index].type, result.reason)
+      searchFailures.push(failure)
+      inc('knowledge.retrieval.errors')
+      return []
+    })
+    if (!batches.length) return { status: 'unavailable', citations: [], searchFailures }
     rankedHits = fuseKnowledgeSearchHits(batches, limit)
   } catch (error) {
     inc('knowledge.retrieval.errors')
@@ -531,6 +546,12 @@ export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Pro
     inc('knowledge.retrieval.latency_ms', undefined, Date.now() - searchStartedAt)
   }
   // Recheck after the external search: an old vector must not survive publication/removal or reader revocation.
+  for (const actorUserId of readers) {
+    await createPermissionService(pool).assertCan({ actorUserId, action: 'knowledge:read', companyId: args.companyId, projectId })
+    const visible = new Set((await listKnowledgeRetrievalSources(pool, { companyId: args.companyId, projectId,
+      conversationId: args.conversationId, authorizationUserId: actorUserId })).filter(source => !source.excluded).map(source => source.id))
+    sources = sources.filter(source => caseIds.has(source.id) || visible.has(source.id))
+  }
   const currentCaseIds = new Set((await canReadCases() ? await listCaseRetrievalSources(pool,args.companyId) : []).map(s => s.id))
   sources = sources.filter(source => !caseIds.has(source.id) || currentCaseIds.has(source.id))
   const byExternal = new Map(sources.map((source) => [source.externalSourceId, source]))
@@ -555,7 +576,8 @@ export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Pro
   }))
   if (markedCitations.length) inc('knowledge.retrieval.hits', undefined, markedCitations.length)
   else inc('knowledge.retrieval.miss')
-  return { status: markedCitations.length ? 'matched' : processingSources ? 'processing' : 'no_matches', citations: markedCitations, processingSources }
+  return { status: searchFailures.length ? 'degraded' : markedCitations.length ? 'matched' : processingSources ? 'processing' : 'no_matches',
+    citations: markedCitations, processingSources, ...(searchFailures.length ? { searchFailures } : {}) }
 }
 
 /** Insert an idempotent attachment ingestion and persist the deferred Agent wake. */

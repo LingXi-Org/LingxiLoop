@@ -1,0 +1,39 @@
+{
+  "coreCommit": "185d8213",
+  "coreOwningTests": {
+    "editorMathCompilerArchiveFlowDeploy": 72,
+    "web": 151,
+    "staticAndRecovery": 10,
+    "typescriptBothWebConfigs": true,
+    "vite": true,
+    "fixtureBuild": true,
+    "lintExit": 0,
+    "existingLintWarnings": 46,
+    "existingLintInfos": 2
+  },
+  "editorCommit": "68686983",
+  "noticeAffectedSlidesSuite": 22,
+  "deploymentGuardCommit": "b5f7176f",
+  "deploymentContractTests": 32,
+  "companionPr657OriginalTests": 25,
+  "nativeBrowsers": {
+    "progressiveEditThenFullSaveUndoRedoAndNotice": true,
+    "recoveryDesktopFourCases": true,
+    "recovery768FourCases": true,
+    "templatesRetryAddUndoRedoSave": true,
+    "presentationRetryFullscreenSpeaker": true,
+    "oldNativeFirstUseExportAfterReplacement": true,
+    "mathExportsHtmlPptxPdfReadOnly": true,
+    "designMathOfflineHtmlCapture": true,
+    "firstMathExportPptxFailuresCacheReuse": true
+  },
+  "desktopAndNarrowOwnership": true,
+  "libraryRetention": true,
+  "pairedOpens": 120,
+  "retainedOpens": 40,
+  "coldTargetMet": false,
+  "retainedTargetMet": true,
+  "independentReview": "required from parent designated integrator",
+  "production": "not inspected or changed; not deployed",
+  "formalSdkCI": "pending final pushed head"
+}

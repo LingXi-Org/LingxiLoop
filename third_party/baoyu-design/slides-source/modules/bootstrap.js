@@ -1,5 +1,6 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
+import { installArtifactRecovery } from '../../../../shared/artifact-recovery.ts';
 function installBootstrap(runtime2) {
   var BootstrapJsx, slidesBootStartedAt, slidesBootDebugger, getSlidesBootDebugger, FILES_PRESENTATION_READ_ONLY_MESSAGE, FILES_PRESENTATION_LOAD_FAILURE_MESSAGE, EMPTY_BOOT_PRESENTATION, SlidesRootApp, slidesWriteAccessPromise, getSlidesWriteAccess, filesBootPortOptions, createSlidesBootFilesPort, FILES_PRESENTATION_LOAD_FAILURE_TITLE, bootAllowsExternalUpdates, syncFailureToastId, SLIDES_BOOT_LOADING_NOTICE_DELAY_MS;
   function buildBootErrorPresentation(diagnostic) {
@@ -151,6 +152,7 @@ function installBootstrap(runtime2) {
         holdRemote: (input) => input === (0, runtime2.protectedSlideDocumentPath)(),
         inSlide: (input) => input === (0, runtime2.activeEditingDocumentPath)(),
         startEmpty: !0,
+        progressive: !0,
         paced: !0,
         early: runtime2.hotReloadBridge,
         firstSlide: {
@@ -168,6 +170,19 @@ function installBootstrap(runtime2) {
           }), (0, runtime2.showToast)(input);
         },
         onStashOffer: (input) => showStashedSlideRecovery(value2, input),
+        ...globalThis.slidesHost?.clashes !== void 0 ? {
+          askClash: (input) => input.kind === "edited" && input.theirsSha !== null,
+          onClashes: (input) => globalThis.slidesHost?.clashes?.show(input.map((input2) => ({
+            path: input2.path,
+            slideId: input2.slideId,
+            slideNo: input2.slideNo,
+            theirsSha: input2.theirsSha
+          })), (input2, options2) => value2.resolveConflict(input2, options2))
+        } : {},
+        ...typeof globalThis.slidesHost?.mergeText == "function" ? {
+          mergeText: (base, mine, theirs) => globalThis.slidesHost?.mergeText?.(base, mine, theirs) ?? null,
+          onMerged: (path, theirsSha) => globalThis.slidesHost?.saveMerged?.(path, theirsSha)
+        } : {},
         ...stash !== void 0 ? {
           stash
         } : {},
@@ -175,6 +190,7 @@ function installBootstrap(runtime2) {
           slidesBootDebugger?.event("doc-" + input, options2), value(input), input === "save-left-out" && (0, runtime2.showToast)(options2.message, 12e3);
         }
       });
+      installArtifactRecovery('slides', value2, options.parseContent);
       (0, runtime2.installUnloadSaveFlush)(value2, {
         report: (input) => slidesBootDebugger?.event("unload-flush-" + input.result, input)
       }), slidesBootDebugger?.provide({
@@ -320,7 +336,7 @@ function installBootstrap(runtime2) {
   }), bindRuntimeValue(runtime2, "showSyncFailureToast", () => showSyncFailureToast), bindRuntimeValue(runtime2, "bootThumbnailFromEarlyFiles", () => bootThumbnailFromEarlyFiles), bindRuntimeValue(runtime2, "SLIDES_BOOT_LOADING_NOTICE_DELAY_MS", () => SLIDES_BOOT_LOADING_NOTICE_DELAY_MS, (value) => {
     SLIDES_BOOT_LOADING_NOTICE_DELAY_MS = value;
   }), bindRuntimeValue(runtime2, "bootSlidesApplication", () => bootSlidesApplication), bindRuntimeValue(runtime2, "bootSlidesFilesMode", () => bootSlidesFilesMode), bindRuntimeValue(runtime2, "isFrameRevealedMessage", () => isFrameRevealedMessage), bindRuntimeValue(runtime2, "revealPlaceholderWhenShown", () => revealPlaceholderWhenShown), () => {
-    BootstrapJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), (0, runtime2.initializeDocumentColorMode)(document), slidesBootStartedAt = typeof performance < "u" ? performance.now() : 0, getSlidesBootDebugger = () => slidesBootDebugger ??= (0, runtime2.createFilesDebugger)({
+    BootstrapJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), (0, runtime2.initializeDocumentColorMode)(document), (0, runtime2.applyPageLanguage)(document), slidesBootStartedAt = typeof performance < "u" ? performance.now() : 0, getSlidesBootDebugger = () => slidesBootDebugger ??= (0, runtime2.createFilesDebugger)({
       product: "slides",
       hot: (0, runtime2.getHotCapability)(),
       bootStartedAt: slidesBootStartedAt

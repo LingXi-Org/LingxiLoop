@@ -1,3 +1,5 @@
+import { readAdminModelStageCalls, runStageTiming } from './model-stage-timing.js'
+import { agentRunTiming } from './agent-run-timing.js'
 import { Router } from 'express'
 import { z } from 'zod'
 import type { RunRecord } from '@lyyzka/lingxios'
@@ -109,9 +111,13 @@ companyAdminRouter.get('/resources/:resource', safe(async (req, res) => { res.js
 async function detail(admin: CompanyAdmin, resource: string, id: string): Promise<Record<string, unknown>> {
   if (resource === 'agent-runs') {
     const { run, runtime } = await readRun(admin, id)
-    const diagnostics = await runtime.readDiagnostics(run.identity)
+    const [diagnostics, events, modelStages] = await Promise.all([runtime.readDiagnostics(run.identity),
+      runtime.readEvents(run.identity, 0).catch(() => null),
+      readAdminModelStageCalls(pool, run.identity, run.requestVersion).catch(() => null)])
     const { runtimeFailure: _restrictedFailure, ...publicDiagnostics } = diagnostics ?? {}
     return { ...run, diagnostics: diagnostics ? publicDiagnostics : null,
+      timing: agentRunTiming(run, { events: events?.events, afterSeq: 0 }),
+      stages: runStageTiming(run.identity, run.requestVersion, modelStages, diagnostics),
       management_actions: await runAllowed(admin, run, 'agent_run:control') ? ['retry'] : [] }
   }
   const row = await companyResource(pool, admin, resource, id)

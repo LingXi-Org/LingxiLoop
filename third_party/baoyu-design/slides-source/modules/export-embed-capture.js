@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportEmbedCapture(runtime2) {
   var embedCaptureScale, maxEmbedCaptureEdge, embedCaptureTimeoutMs, embedCaptureSettleMs, embedCaptureDeadlineMs, embedCaptureBatchSize, initializeEmbedCapture;
@@ -9,19 +9,19 @@ function installExportEmbedCapture(runtime2) {
       h: Math.max(1, Math.round(height2 * scale))
     };
   }
-  async function captureHtmlEmbeds(requests) {
+  async function captureHtmlEmbeds(requests, options = {}) {
     let captures = /* @__PURE__ */ new Map(), validRequests = requests.filter((input) => input.html !== "" && input.w > 0 && input.h > 0);
     if (validRequests.length === 0 || typeof document > "u" || ((0, runtime2.installEmbedRuntimeGuard)(runtime2.slideEmbedGuardConfig), (0, runtime2.embedsDisabled)(runtime2.slideEmbedGuardConfig)))
       return captures;
     let captureLease = await !1;
     try {
-      captureLease.clear && await captureEmbedFramesOffscreen(captures, validRequests);
+      captureLease.clear && await captureEmbedFramesOffscreen(captures, validRequests, options.settlePictures === !0);
     } finally {
       captureLease.done();
     }
     return captures;
   }
-  async function captureEmbedFramesOffscreen(requests, captureLease) {
+  async function captureEmbedFramesOffscreen(requests, captureLease, settlePictures) {
     let value = document.createElement("div");
     value.style.cssText = "position:fixed;left:0;top:0;z-index:-1;opacity:0;pointer-events:none;", document.body.appendChild(value);
     let items = [], value2 = (0, runtime2.subscribeEmbedsDisabled)(runtime2.slideEmbedGuardConfig, () => {
@@ -51,17 +51,15 @@ function installExportEmbedCapture(runtime2) {
       try {
         if (input.failed || !input.mounted.host.ready)
           return;
-        let value3 = embedCaptureDimensions(input.req.w, input.req.h), value4 = await input.mounted.host.render(0, {}, value3.w, value3.h);
-        if (value4 === null || input.failed)
+        let value3 = embedCaptureDimensions(input.req.w, input.req.h), value4 = await input.mounted.host.render(0, {}, value3.w, value3.h, {
+          settlePictures
+        });
+        if (value4 === null || input.failed || settlePictures &&(0, runtime2.isBlankSnapshot)( value4))
           return;
-        let value5 = document.createElement("canvas");
-        value5.width = value4.width, value5.height = value4.height;
-        let value6 = value5.getContext("2d");
-        if (value6 === null)
-          return;
-        let value7 = value6.createImageData(value4.width, value4.height);
-        value7.data.set(value4.pixels), value6.putImageData(value7, 0, 0), requests.set(input.req.key, {
-          dataUri: value5.toDataURL("image/png"),
+        let dataUri =(0, runtime2.snapshotToDataUrl)(value4);
+        if(dataUri === void 0)
+          return; requests.set(input.req.key, {
+          dataUri,
           w: value4.width,
           h: value4.height
         });

@@ -11,7 +11,7 @@ import { createNativeMessage } from '@/lib/nativeMessage'
 import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
 import type { LingxiMessageMetadata } from '../runtime/model'
-import { terminalFailurePresentation } from '../runtime/terminal-presentation'
+import { terminalFailurePresentation, savedPartialWork, savedPartialWorkText } from '../runtime/terminal-presentation'
 import { chatTransport } from '../runtime/transport'
 import { copyMessageText, useMessageCopyText } from './MessageActions'
 
@@ -46,6 +46,7 @@ export function AssistantMessageActions() {
   const regenerating = pending === 'regenerate' || message.status?.type === 'running'
   const view = metadata.harness
   const failure = terminalFailurePresentation(message)
+  const savedWork = savedPartialWork(message)
   const outcome = view?.goalOutcome
   const incompleteOutcome = message.status?.type === 'incomplete' && message.status.reason === 'other'
     && view?.runId === metadata.runId && outcome?.requestVersion === view?.requestVersion
@@ -74,7 +75,9 @@ export function AssistantMessageActions() {
     inFlight.current = true
     setPending('regenerate')
     try {
-      const id = `temp-${crypto.randomUUID()}`, text = `@${metadata.senderId} ${regenerateOf ? '请重新生成这条回复。' : '请重试这条消息。'}`
+      const id = `temp-${crypto.randomUUID()}`, text = `@${metadata.senderId} ${savedWork
+        ? '请保留已保存的作品，继续本次请求中未完成的检查、修正和最终回复。先核对当前作品和已有操作结果，避免重复创建。'
+        : regenerateOf ? '请重新生成这条回复。' : '请重试这条消息。'}`
       const threadRoot = metadata.replyBranches ? metadata.replyBranches.threadRootId : metadata.threadRootId
       const payload = createNativeMessage({ id, role: 'user', content: [{ type: 'text', text }],
         custom: { replyToClientMsgNo: replyTo, mentionedIds: [metadata.senderId],
@@ -102,17 +105,17 @@ export function AssistantMessageActions() {
     <MessagePrimitive.Error>
       {failure && <ErrorState title={failure.title} detail={failure.detail}
         retrying={pending === 'regenerate' || pending === 'refresh'}
-        retryLabel={failure.recovery === 'refresh' ? '刷新进度' : '重新生成回复'}
+        retryLabel={failure.recovery === 'refresh' ? '刷新进度' : savedWork ? '继续未完成部分' : '重新生成回复'}
         retryingLabel={pending === 'refresh' ? '正在刷新进度' : '正在重新生成'}
         onRetry={failure.recovery === 'delivery' ? undefined : failure.recovery === 'refresh' ? () => void refresh() : () => void regenerate()}
         disabled={failure.recovery === 'refresh' ? pending !== null || !metadata.runId : retryDisabled} className="mt-2" />}
     </MessagePrimitive.Error>
-    {incompleteOutcome && <div data-run-outcome={incompleteOutcome} role="status" className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-      <span>{pending === 'regenerate' ? '正在重试' : '答复尚未完成'}</span>
+    {incompleteOutcome && <div data-run-outcome={incompleteOutcome} role="status" className="mt-3 flex flex-wrap items-center gap-2 rounded-[10px] bg-[var(--warning-surface)] px-3 py-2 text-xs text-warning">
+      <span className="min-w-0 flex-1">{pending === 'regenerate' ? '正在提交' : savedWork ? savedPartialWorkText : '答复尚未完成'}</span>
       <button type="button" disabled={retryDisabled} onClick={() => void regenerate()}
-        className={cn(ghostButton, 'rounded-md px-2 py-1 text-xs disabled:opacity-40 max-md:min-h-11')}>重试</button>
+        className="shrink-0 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40 max-md:min-h-11">{savedWork ? '继续未完成部分' : '重试'}</button>
     </div>}
-    {(message.content.length > 0 || metadata.replyBranches) && <ActionBarPrimitive.Root ref={root} data-slot="message-actions" role="toolbar" aria-label="智能助教回复操作" className="mt-1 flex flex-wrap items-center gap-1">
+    {(message.content.length > 0 || metadata.replyBranches) && <ActionBarPrimitive.Root ref={root} data-slot="message-actions" role="toolbar" aria-label="智能助教回复操作" className="mt-3 flex flex-wrap items-center gap-1">
     {metadata.replyBranches && <MessageBranches variants={metadata.replyBranches.ids} index={metadata.replyBranches.index}
       onIndexChange={index => {
         const branch = metadata.replyBranches!

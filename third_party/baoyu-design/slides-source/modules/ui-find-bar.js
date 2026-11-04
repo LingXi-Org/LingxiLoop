@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiFindBar(runtime2) {
   var reactsq, FIND_BAR_ATTRIBUTE, FIND_BAR_EDIT_SHORTCUTS, findBarKeyHandlers, findBarListenerWindows, NON_TEXT_FIND_INPUT_PATTERN, FIND_BAR_LABEL, FIND_PREVIOUS_LABEL, FIND_NEXT_LABEL, FIND_CLOSE_LABEL, FIND_PLACEHOLDER, FIND_NO_MATCHES_LABEL, jsxDY, FIND_BAR_STYLE, FIND_BAR_INPUT_STYLE, FIND_BAR_COUNT_STYLE, FIND_BAR_LIVE_REGION_STYLE;
@@ -94,7 +94,25 @@ function installUiFindBar(runtime2) {
     activeElement2 === null || activeElement2.closest("[" + FIND_BAR_ATTRIBUTE + "]") !== null || !isTextEditingElement(activeElement2) && (editSelector === void 0 || activeElement2.closest(editSelector) === null) || (keepSelector === void 0 || activeElement2.closest(keepSelector) === null) && activeElement2.blur();
   }
   function findCountAnnouncement(current, total, capped, label) {
-    return total === 0 ? "无匹配项" : String(current) + " / " + String(total) + (capped ? "或更多" : "") + (label === void 0 ? "" : ", " + label);
+    if ( total === 0)
+      return FIND_NO_MATCHES_LABEL;
+    let values = {
+      current : String(current),
+      total: String(total)
+    }, count =capped ? (0, runtime2.formatMessage)({
+      defaultMessage: "{current} / {total} 或更多",
+      id: "ECnZ1U3kOS"
+    }, values) : (0, runtime2.formatMessage) ({
+      defaultMessage: "{current} / {total}",
+      id: "H0Ptqc0S8D"
+    }, values);
+    return label === void 0 ? count : (0, runtime2.formatMessage)({
+      defaultMessage: "{count}，{place}",
+      id: "IaL7P9jwQH"
+    }, {
+      count,
+      place : label
+    });
   }
   function findCountReadout(status) {
     return status.query === "" || status.searching ? "" : String(status.current) + "/" + String(status.total) + (status.capped ? "+" : "");
@@ -237,7 +255,25 @@ function installUiFindBar(runtime2) {
   }), bindRuntimeValue(runtime2, "FIND_BAR_LIVE_REGION_STYLE", () => FIND_BAR_LIVE_REGION_STYLE, (value) => {
     FIND_BAR_LIVE_REGION_STYLE = value;
   }), bindRuntimeValue(runtime2, "findCountReadout", () => findCountReadout), bindRuntimeValue(runtime2, "FindBar", () => FindBar), bindRuntimeValue(runtime2, "preserveFindStatusWhileSearching", () => preserveFindStatusWhileSearching), bindRuntimeValue(runtime2, "OpenFindBar", () => OpenFindBar), () => {
-    (0, runtime2.initializeUiInputs210)(), reactsq = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), (0, runtime2.initializeUiPropertyFocus)(), FIND_BAR_ATTRIBUTE = "data-mc-find", FIND_BAR_EDIT_SHORTCUTS = ["x", "c", "v", "z", "y", "a", "d"], findBarKeyHandlers = /* @__PURE__ */ new WeakMap(), findBarListenerWindows = /* @__PURE__ */ new WeakSet(), typeof window < "u" && installFindBarEventGuards(window), NON_TEXT_FIND_INPUT_PATTERN = /^(range|checkbox|radio|button|submit|reset|color|file|image)$/, FIND_BAR_LABEL = "在页面中查找", FIND_PREVIOUS_LABEL = "上一个匹配项", FIND_NEXT_LABEL = "下一个匹配项", FIND_CLOSE_LABEL = "关闭查找栏", FIND_PLACEHOLDER = "输入以搜索", FIND_NO_MATCHES_LABEL = "无匹配项", jsxDY = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), FIND_BAR_STYLE = {
+    (0, runtime2.initializeUiInputs210)(), reactsq = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), (0, runtime2.initializeUiPropertyFocus)(), FIND_BAR_ATTRIBUTE = "data-mc-find", FIND_BAR_EDIT_SHORTCUTS = ["x", "c", "v", "z", "y", "a", "d"], findBarKeyHandlers = /* @__PURE__ */ new WeakMap(), findBarListenerWindows = /* @__PURE__ */ new WeakSet(), typeof window < "u" && installFindBarEventGuards(window), NON_TEXT_FIND_INPUT_PATTERN = /^(range|checkbox|radio|button|submit|reset|color|file|image)$/, FIND_BAR_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "在页面中查找",
+      id: "3eRTUd4piW"
+    }), FIND_PREVIOUS_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "上一个匹配项",
+      id: "GNAmtzK6G1"
+    }), FIND_NEXT_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "下一个匹配项",
+      id: "I14JxOaVWl"
+    }), FIND_CLOSE_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "关闭查找栏",
+      id: "EHxSZz2A7v"
+    }), FIND_PLACEHOLDER = (0, runtime2.formatMessage)({
+      defaultMessage: "输入以搜索",
+      id: "Cm/5pf1XR/"
+    }), FIND_NO_MATCHES_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "无匹配项",
+      id: "mYfwSFop3Y"
+    }), jsxDY = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), FIND_BAR_STYLE = {
       position: "absolute",
       top: "max(var(--tb-overlay-h, 0px), 8px)",
       insetInlineEnd: 12,

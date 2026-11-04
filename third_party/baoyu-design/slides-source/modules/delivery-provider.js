@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDeliveryProvider(runtime2) {
   var ReactExportProvider, MAX_EXPORT_INLINE_CHARS, DEFAULT_EXPORT_WINDOW_MS, INTERACTIVE_EXPORT_WINDOW_MS, ExportCancelledError, registeredExportEntries, registeredExportOptions, pendingExportRequests, runningExportRequests;

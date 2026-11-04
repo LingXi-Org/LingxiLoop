@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installCollaborationSlidePresence(runtime2) {
   var ReactSlidePresence, SlidePresenceJsx, MAX_PRESENCE_SLIDE_ID_CHARS, MAX_PRESENCE_NAME_CHARS, MAX_VISIBLE_SLIDE_PEERS, ANONYMOUS_PEER_NAME, MAX_LISTED_SLIDE_PEERS, subscribeNoSlidePresence, truncatePresenceName;
@@ -20,7 +20,8 @@ function installCollaborationSlidePresence(runtime2) {
           key: value4,
           by: value.by,
           name: typeof value3.n == "string" ? truncatePresenceName(value3.n) : "",
-          color: (0, runtime2.peerColorCssVariable)((0, runtime2.peerColorIndex)(value3.c, value.peer))
+          color: (0, runtime2.peerColor)(value3.c, value.by ?? value.peer),
+          ...value.agent ? { agent: !0 } : {}
         }
       ]), presenceBySlide.set(slideId, value5);
     }
@@ -68,9 +69,31 @@ function installCollaborationSlidePresence(runtime2) {
       return "";
     let names = presence.peers.map((input) => input.name).filter((input) => input !== "" && input !== ANONYMOUS_PEER_NAME), unnamedCount = presence.total - names.length;
     if (names.length === 0)
-      return String(unnamedCount) + " 人正在查看此页";
-    let value = unnamedCount > 0 ? String(unnamedCount) + (unnamedCount === 1 ? " other" : " others") : names.pop();
-    return (names.length > 0 ? names.join(", ") + " and " : "") + value + (presence.total === 1 ? " is" : " are") + "正在查看此页";
+      return (0, runtime2.formatMessage)({
+        defaultMessage: "此页有 {count} 人",
+        id: "+PJBIikFz2"
+      }, {
+        n: unnamedCount,
+        count: String(unnamedCount)
+      });
+    let others = unnamedCount > 0 ? [
+      (0, runtime2.formatMessage)({
+        defaultMessage: "另外 {count} 人",
+        id: "vt5CcS7fEV"
+      }, {
+        n: unnamedCount,
+        count: String(unnamedCount)
+      })
+    ] : [], list = new Intl.ListFormat((0, runtime2.intlLocale) ("ListFormat", "en-GB"), {
+      type : "conjunction"
+    }).format([...names, ...others]);
+    return ( 0, runtime2.formatMessage)({
+      defaultMessage: "{names} 在此页",
+      id: "amgVgPak64"
+    }, {
+      n :presence.total,
+      names : list
+    });
   }
   function SlidePresenceBadge({ on: presence, id, also }) {
     return presence === void 0 || presence.total === 0 ? null : SlidePresenceJsx.jsxs(SlidePresenceJsx.Fragment, {
@@ -80,7 +103,13 @@ function installCollaborationSlidePresence(runtime2) {
           "aria-hidden": "true",
           "data-mc-chrome": "",
           className: "pointer-events-none sr-only",
-          children: (also === void 0 ? "" : also + ". ") + formatSlidePresenceLabel(presence)
+          children:also === void 0 ? formatSlidePresenceLabel(presence) : (0, runtime2.formatMessage)({
+            defaultMessage: "{first}。{second}",
+            id: "2EoXPW9P2X"
+          }, {
+            first : also,
+            second: formatSlidePresenceLabel(presence)
+        })
         }),
         SlidePresenceJsx.jsx(runtime2.CdsRoot, {
           density: "compact",
@@ -100,9 +129,10 @@ function installCollaborationSlidePresence(runtime2) {
               tip: input.name,
               children: SlidePresenceJsx.jsx(runtime2.Avatar, {
                 name: input.name,
+                ...input.agent ? { variant: "claude" } : {},
                 style: {
                   backgroundColor: input.color,
-                  color: runtime2.designTokens.on.accent.cssVar
+                  color: (0, runtime2.peerInkColor)(input.color)
                 }
               })
             }, input.key))

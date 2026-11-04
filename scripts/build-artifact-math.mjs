@@ -32,3 +32,32 @@ export async function buildArtifactMath() {
   return { math, mathBytes: Buffer.byteLength(math) }
 }
 if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) console.log({mathBytes:(await buildArtifactMath()).mathBytes})
+
+/** Online resources never carry base64 fonts or the offline renderer in entry. */
+export async function buildDesignMathAssets() {
+  const { createHash } = await import('node:crypto')
+  const files = new Map()
+  const name = bytes => `design-${createHash('sha256').update(bytes).digest('hex')}`
+  const sri = bytes => `sha256-${createHash('sha256').update(bytes).digest('base64')}`
+  let css = await readFile(resolve(root, 'node_modules/katex/dist/katex.min.css'), 'utf8')
+  css = css.replace(/src:[^;}]+(?=[;}])/g, declaration => {
+    const match = /url\(fonts\/(KaTeX_[A-Za-z0-9-]+\.woff2)\)/.exec(declaration)
+    assert.ok(match, 'Expected installed KaTeX WOFF2 source')
+    return `src:url(__FONT_${match[1]}__) format("woff2")`
+  })
+  for (const [, font] of [...css.matchAll(/__FONT_(KaTeX_[A-Za-z0-9-]+\.woff2)__/g)]) {
+    const bytes = await readFile(resolve(root, 'node_modules/katex/dist/fonts', font))
+    const file = `${name(bytes)}.woff2`
+    files.set(file, bytes)
+    css = css.replaceAll(`__FONT_${font}__`, `__LINGXI_MATH_BASE__${file}`)
+  }
+  const online = (await build({ absWorkingDir: root, stdin: {
+    contents: `import {installArtifactMath} from './shared/artifact-math';installArtifactMath(${JSON.stringify(css)}.replaceAll('__LINGXI_MATH_BASE__',new URL('.',document.currentScript.src).href));`, resolveDir: root,
+  }, bundle: true, format: 'iife', platform: 'browser', target: ['chrome120','firefox120','safari17'], minify: true, legalComments: 'inline', write: false })).outputFiles[0].text
+  const onlineFile = `${name(online)}.js`
+  files.set(onlineFile, Buffer.from(online))
+  const loader = (await build({ absWorkingDir: root, stdin: {
+    contents: `import {installArtifactMathLoader} from './shared/artifact-math-loader';installArtifactMathLoader(assetOrigin+${JSON.stringify('/artifact-editor/design-assets/' + onlineFile)},${JSON.stringify(sri(online))});`, resolveDir: root,
+  }, bundle: true, format: 'iife', platform: 'browser', target: ['chrome120','firefox120','safari17'], minify: true, legalComments: 'inline', write: false })).outputFiles[0].text
+  return { files, onlineFile, onlineBytes: Buffer.byteLength(online), loader: `function(assetOrigin){${loader}}` }
+}

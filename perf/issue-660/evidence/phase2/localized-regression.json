@@ -1,0 +1,32 @@
+[
+  {
+    "side": "right",
+    "pointer": true,
+    "settledUpdates": 1,
+    "keyboard": true,
+    "visibleFocus": true,
+    "scrollPosition": true,
+    "reducedMotion": true,
+    "cancelCleanup": true,
+    "retainedDraftAndFrame": true,
+    "narrow": true
+  },
+  {
+    "side": "left",
+    "pointer": true,
+    "settledUpdates": 1,
+    "keyboard": true,
+    "visibleFocus": true,
+    "scrollPosition": true,
+    "reducedMotion": true,
+    "cancelCleanup": true,
+    "retainedDraftAndFrame": true,
+    "narrow": true
+  },
+  {
+    "touchViaCDP": true,
+    "immediateRelease": true,
+    "settledUpdates": 1,
+    "captureCleanup": true
+  }
+]

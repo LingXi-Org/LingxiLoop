@@ -1,9 +1,18 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiSidesProperty(runtime2) {
   var reactSl, jsxW9, SIDE_INPUT_ORDER, ALL_SIDE_INDICES, SIDE_ICON_NAMES, CORNER_ICON_NAMES;
-  function SidesPropertyRow({ label, kind = "side", values, placeholders, unit = "px", min: min2, max: max2, step, smallStep, mixed, disabled: disabled2, toggleDisabledReason, onSides, onScrubSides, onScrubEnd, onReset, title, description, icon, expandLabel, partLabels, "data-testid": dataTestid }) {
-    let value = expandLabel ?? (kind === "corner" ? runtime2.PER_CORNER_LABEL : runtime2.PER_SIDE_LABEL), value2 = partLabels ?? (kind === "corner" ? runtime2.CORNER_LABELS_rc0 : runtime2.SIDE_LABELS), value3 = icon ?? (kind === "corner" ? runtime2.INDIVIDUAL_CORNERS_ICON : runtime2.BORDER_SIDES_ICON), value4 = values.map((input, options) => input !== void 0 ? String(input) : placeholders?.[options] ?? ""), value5 = values.some((input) => input !== void 0) && values.every((input) => input !== void 0 && input === values[0]), value6 = value4.every((input) => input === value4[0]), value7 = !mixed && !value6 && !value5, [value8, value9] = reactSl.useState(value7);
+  function SidesPropertyRow({ label, kind = "side", values, placeholders, unit = "px", min: min2, max: max2, step, smallStep, mixed, disabled: disabled2, toggleDisabledReason, onSides, onScrubSides, onScrubEnd, onReset, title, description, icon, expandLabel, partLabels,
+    toggleNames,
+    partNames,
+    resetLabel,
+    partsDifferHint = runtime2.UNIFIED_VALUES_DISABLED_REASON, "data-testid": dataTestid }) {
+    let value = expandLabel ?? (0, runtime2.perPartsLabel)(kind), value2 = partLabels ?? (0, runtime2.boxPartLabels)(kind), fieldNames = partNames ?? (partLabels === void 0 ? (0, runtime2.labeledPartLabels)(kind, label) : [
+      (0, runtime2.labelPart)(label, partLabels[0]),
+      (0, runtime2.labelPart)(label, partLabels[1]),
+      (0, runtime2.labelPart)(label, partLabels[2]),
+      (0, runtime2.labelPart)(label, partLabels[3])
+    ]), value3 = icon ?? (kind === "corner" ? runtime2.INDIVIDUAL_CORNERS_ICON : runtime2.BORDER_SIDES_ICON), value4 = values.map((input, options) => input !== void 0 ? String(input) : placeholders?.[options] ?? ""), value5 = values.some((input) => input !== void 0) && values.every((input) => input !== void 0 && input === values[0]), value6 = value4.every((input) => input === value4[0]), value7 = !mixed && !value6 && !value5, [value8, value9] = reactSl.useState(value7);
     value7 && !value8 && value9(!0);
     let value10 = mixed || !value5 ? void 0 : values[0], value11 = mixed || value7 ? void 0 : value4[0], callback = (input) => {
       if (mixed)
@@ -11,13 +20,13 @@ function installUiSidesProperty(runtime2) {
       let value15 = input === void 0 || input.trim() === "" ? NaN : Number(input);
       if (Number.isFinite(value15))
         return value15;
-    }, value12 = label.toLowerCase(), ref = reactSl.useRef([]), value13 = onScrubSides && ((input) => {
+    }, ref = reactSl.useRef([]), value13 = onScrubSides && ((input) => {
       ref.current = input, onScrubSides(input);
     }), callback2 = () => {
       let current = ref.current;
       ref.current = [], onScrubEnd?.(current);
     }, value14 = jsxW9.jsx(runtime2.DisabledReasonTooltip, {
-      reason: toggleDisabledReason ?? (!disabled2 && value7 && value8 ? runtime2.UNIFIED_VALUES_DISABLED_REASON : void 0),
+      reason: toggleDisabledReason ?? (!disabled2 && value7 && value8 ? partsDifferHint : void 0),
       wrapperClassName: "shrink-0",
       children: jsxW9.jsx(runtime2.Button, {
         variant: "ghost",
@@ -25,7 +34,7 @@ function installUiSidesProperty(runtime2) {
         icon: jsxW9.jsx(runtime2.PropertyIcon, {
           icon: value3
         }),
-        "aria-label": (value8 ? runtime2.HIDE_LABEL : runtime2.EDIT_LABEL) + " " + value12 + " " + value.toLowerCase(),
+        "aria-label": toggleNames !== void 0 ? toggleNames[value8 ? "hide" : "edit"] : (0, runtime2.partsToggleLabel)(value8, kind, label, expandLabel),
         pressed: value8,
         disabled: disabled2 || value7 && value8 || toggleDisabledReason !== void 0,
         "data-testid": dataTestid ? dataTestid + "-toggle" : void 0,
@@ -40,6 +49,7 @@ function installUiSidesProperty(runtime2) {
           title,
           description,
           onReset,
+          resetLabel,
           disabled: disabled2,
           "data-testid": dataTestid,
           onPress: (element) => element.querySelector("input")?.focus(),
@@ -78,7 +88,7 @@ function installUiSidesProperty(runtime2) {
           children: jsxW9.jsx("div", {
             className: "grid min-w-0 flex-1 grid-cols-2 gap-2",
             children: SIDE_INPUT_ORDER[kind].map((input) => jsxW9.jsx(runtime2.PropertyNumberInput, {
-              "aria-label": label + " " + value2[input].toLowerCase(),
+              "aria-label": fieldNames[input],
               title: value2[input],
               prefix: jsxW9.jsx(SideOrCornerIcon, {
                 kind,

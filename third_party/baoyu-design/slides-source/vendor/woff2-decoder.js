@@ -1,4 +1,4 @@
-// Reconstructed from baoyu-design c15e76e (MIT). See ../README.md and source-map.json.
+// Verified unchanged in baoyu-design 016b39d (MIT); see ../README.md.
 import { g as IC, a as CC } from "../interop.js";
 var dA = { exports: {} };
 const gC = {}, BC = Object.freeze(Object.defineProperty({ __proto__: null, default: gC }, Symbol.toStringTag, { value: "Module" })), j = IC(BC);

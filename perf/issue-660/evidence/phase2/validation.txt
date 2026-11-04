@@ -1,0 +1,16 @@
+Final local checks after merging main abf69c48 (no UI/perf changes from 584e1141):
+Node v24.19.0; Chromium 154.0.8037.57
+npm run lint: exit 0 (46 existing warnings plus informational diagnostics)
+npm run typecheck: exit 0
+CI_TEST_FILES including useSidebarWidth.test.tsx and DesignWorkspace.test.tsx npm test: 175 passed; 0 failed
+npm run build: exit 0 including required prebuild and typecheck
+Python syntax compilation and profile-summary.mjs syntax check: exit 0
+Localized shared-component browser regression: left/right/CDP touch passed
+Final actual native Design/Slides interaction regression: 2 passed; 0 page errors
+Final production native width owner browser regression: passed (drag/reload/keyboard/resize/malformed/denied storage)
+Actual workspace load stage: 160 opens; 0 page errors; retained object/document identity passed
+Final executable cold stage: 40 opens; 0 page errors; 50% target failed
+Localized paired drag stage: 80 gestures; one candidate >100ms frame interval remains
+Production: no merge or deployment by this contributor
+Independent final-candidate review: pending
+Final PR CI: pending at evidence preparation

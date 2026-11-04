@@ -11,8 +11,11 @@ const HISTORICAL_FILES = [
   'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts',
 ]
 const OWNERS = [
-  [/^server\/src\/(?:db\/runtime-patch\.ts|runtime-patch-bin\.ts)$/, ['runtime-patch58-provenance.test.ts', 'runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts']],
-  [/^server\/src\/modules\/(?:cases|case-covers)\/|^src\/features\/cases\/cover-vm\/(?:runtime|protocol|program|guest-source|svg)\.ts$/, ['case-covers.test.ts']],
+  [/^server\/src\/db\/(?:migrate\.ts|migrations\/0062_case_options\.sql)$|^server\/scripts\/bootstrap-runtime-patch-test-db\.mjs$/, ['case-options-migration.test.ts', 'cases.test.ts']],
+  [/^server\/src\/(?:agent-runtime\/(?:model-observation-timing|runtime)\.ts|modules\/platform-operations\/model-stage-timing\.ts)$|^shared\/model-stage-timing\.ts$/, ['model-stage-ledger.test.ts', 'runtime-public-text-suspension.test.ts']],
+  [/^server\/src\/modules\/platform-operations\/(?:agent-operations|agent-run-timing|model-stage-timing|company-router|router)\.ts$|^shared\/(?:agent-run-timing|model-stage-timing)\.ts$/, ['runtime-worker-diagnostics.test.ts']],
+  [/^server\/src\/(?:db\/runtime-patch\.ts|runtime-patch-bin\.ts)$/, ['runtime-patch58-provenance.test.ts', 'runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts', 'runtime-patch61-22-provenance.test.ts', 'runtime-patch61-23-provenance.test.ts', 'runtime-patch61-23-from21-provenance.test.ts', 'runtime-patch61-24-provenance.test.ts']],
+  [/^server\/src\/modules\/cases\//, ['cases.test.ts']],
   [/^server\/(?:src\/db\/|src\/migrate-bin\.ts$|package(?:-lock)?\.json$|fixtures\/|run-historical-migration-tests\.mjs$)/, HISTORICAL_FILES],
   [/^server\/src\/(?:auth\.ts|tenant\.ts|http\/|domain\/(?:access|entitlement|identity|tenancy)\/|modules\/(?:access|identity|entitlements|trust)\/)/, ['trust-bff.test.ts']],
   [/^server\/src\/(?:agent-runtime\/|runtime\/|worker\.ts|bin\/worker\.ts)/, ['runtime-chat-recovery.test.ts', 'native-authorization-faults.test.ts']],
@@ -23,7 +26,7 @@ const OWNERS = [
   [/^server\/src\/modules\/(?:companies|enterprise)\//, ['companies-vertical-slice.test.ts', 'enterprise-governance.test.ts']],
   [/^server\/src\/(?:modules\/(?:knowledge|research|evidence)\/|knowledge)/, ['knowledge-vertical-slice.test.ts']],
   [/^server\/src\/modules\/memory\/|^server\/src\/agent-runtime\/memory-/, ['native-memory.test.ts']],
-  [/^server\/src\/modules\/artifacts\/|^third_party\/baoyu-design\/|^scripts\/(?:build-slides-editor|slides-editor\.test)\.mjs$/, ['artifact-app-boundary.test.ts', 'slides-workspace-flow.test.ts']],
+  [/^server\/src\/modules\/artifacts\/|^third_party\/baoyu-design\/|^shared\/design-flow-size\.ts$|^scripts\/(?:build-slides-editor|slides-editor\.test|build-design-layout|design-flow-size\.test)\.mjs$/, ['artifact-app-boundary.test.ts', 'slides-workspace-flow.test.ts']],
   [/^server\/src\/modules\/(?:documents|content-editor)\//, ['runtime-objects.test.ts']],
   [/^server\/src\/(?:llm-ledger|llm|llm-client)\.ts$|^server\/src\/agent-runtime\/pricing\.ts$/, ['model-pricing.test.ts', 'native-admission.test.ts']],
   [/^server\/src\/agent-runtime\/(?:visualize-|system-skills|skill-context)|^src\/features\/chat\/visualize\/|^shared\/visualize-public-resources\.ts$|^third_party\/zcode\/|^scripts\/(?:verify-zcode-visualize|build-visualize-runtime)\.mjs$/, ['visualize-delivery.test.ts', 'visualize-quality-contract.test.ts']],
@@ -47,7 +50,7 @@ function integrationScope(changed, { serverSource, deepIntegration, deployment }
   for (const [pattern, files] of OWNERS) if ([...sourcePaths, ...runnerPaths].some(path => pattern.test(path))) {
     for (const file of files) owners.add(file)
   }
-  if (deployment) { owners.add('runtime-patch-provenance.test.ts'); owners.add('runtime-patch58-provenance.test.ts'); owners.add('runtime-patch60-provenance.test.ts'); owners.add('runtime-patch60-20-provenance.test.ts'); owners.add('runtime-patch61-21-provenance.test.ts') }
+  if (deployment) { owners.add('runtime-patch-provenance.test.ts'); owners.add('runtime-patch58-provenance.test.ts'); owners.add('runtime-patch60-provenance.test.ts'); owners.add('runtime-patch60-20-provenance.test.ts'); owners.add('runtime-patch61-21-provenance.test.ts'); owners.add('runtime-patch61-22-provenance.test.ts'); owners.add('runtime-patch61-23-provenance.test.ts'); owners.add('runtime-patch61-23-from21-provenance.test.ts'); owners.add('runtime-patch61-24-provenance.test.ts') }
   const changedTests = requested.filter(existsSync).map(file => basename(file))
   // A pure test edit runs its surviving files. Deleted-only edits still verify
   // the core, rather than interpreting [] as a full-suite request.

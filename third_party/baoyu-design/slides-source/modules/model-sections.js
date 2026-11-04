@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installModelSections(runtime2) {
   var sectionIdPattern, isEmptySection, sectionHasDescription, sectionDescriptionFields, normalizeSectionDescription, emptySectionHasNoDescription, sectionDiffFields, initializeSections;

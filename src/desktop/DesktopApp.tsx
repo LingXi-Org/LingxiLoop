@@ -1,5 +1,4 @@
-import { Activity, lazy, Suspense, useEffect, useState } from 'react'
-import type { LayoutChangedMeta } from 'react-resizable-panels'
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react'
 import { CommandPalette } from '@/components/CommandPalette'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -14,10 +13,11 @@ import {
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { CourseNav } from '@/components/shell/CourseNav'
-import { DeckNav } from '@/components/shell/DeckNav'
+import { SlidesSidebarLayout } from '@/components/shell/SlidesSidebarLayout'
 import { moduleForView, rememberCourseView } from '@/components/shell/modules'
 import { RightPanelHeader } from '@/components/shell/RightPanel'
-import { ShellNavContext } from '@/components/shell/ShellNav'
+import { ShellNavContext, ShellNavTriggerContext } from '@/components/shell/ShellNav'
+import { PanelLeft } from 'lucide-react'
 import { SourceDetailOverlay } from '@/components/WorkspaceChrome'
 import { ConversationsPane } from '@/features/conversations/components/ConversationsPane'
 import { useConversations } from '@/features/conversations/store'
@@ -37,6 +37,7 @@ import type { Participant } from '@/types'
 import { useSurface } from '@/stores/surface'
 import { useUiCommands } from '@/stores/uiCommands'
 import { WorkspaceRail } from './WorkspaceRail'
+import { LEFT_COLUMN_MIN, LEFT_COLUMN_MAX, useSidebarWidth } from './useSidebarWidth'
 import type { useLearningSpaces } from './useLearningSpaces'
 
 const ChatPane = lazy(() => import('./ChatPane').then((module) => ({ default: module.ChatPane })))
@@ -47,32 +48,12 @@ const SlidesPage = lazy(() => import('@/features/slides/SlidesPage').then((modul
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
 const PersonalDashboard = lazy(() => import('./PersonalDashboard').then((module) => ({ default: module.PersonalDashboard })))
 
-const DESKTOP_SIDEBAR_WIDTH_KEY = 'lingxiloop:desktop-layout:sidebar-width:v1'
-const LEFT_COLUMN_DEFAULT = 300
-const LEFT_COLUMN_MIN = 260
-const LEFT_COLUMN_MAX = 360
 const MIDDLE_COLUMN_MIN = 320
-
-function loadSidebarWidth(): number {
-  if (typeof window === 'undefined') return LEFT_COLUMN_DEFAULT
-  try {
-    const stored = window.localStorage.getItem(DESKTOP_SIDEBAR_WIDTH_KEY)
-    const width = stored === null ? LEFT_COLUMN_DEFAULT : Number(stored)
-    return Number.isFinite(width) ? Math.min(LEFT_COLUMN_MAX, Math.max(LEFT_COLUMN_MIN, width)) : LEFT_COLUMN_DEFAULT
-  } catch {
-    return LEFT_COLUMN_DEFAULT
-  }
-}
-
-function persistSidebarWidth(width: number): void {
-  try {
-    window.localStorage.setItem(DESKTOP_SIDEBAR_WIDTH_KEY, String(width))
-  } catch { /* private browsing can deny storage access */ }
-}
 
 /** The desktop shell switches between the resizable IM workspace and the
  * personal dashboard. Compact object details continue to use the shared Drawer. */
 export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<typeof useLearningSpaces> }) {
+  const userId = useAuth(state => state.user?.id)
   const companyId = useAuth((state) => state.activeCompanyId)
   const companyRole = useAuth((state) => state.companies.find(company => company.id === state.activeCompanyId)?.role)
   const isMobile = useIsMobile()
@@ -90,7 +71,9 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   const navigationError = useApp((state) => state.navigationError)
   const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
+  const { width: sidebarWidth, panelRef: sidebarPanel, onLayoutChanged: handleSidebarLayoutChanged, resetWidth: resetSidebarWidth } = useSidebarWidth()
+  const designOpen = surface?.kind === 'design'
+  const [sidebarOpen, setSidebarOpen] = useState(!designOpen)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const pageRef = useEntrance(`${selectedWorkspaceId}:${view}`)
 
@@ -138,27 +121,32 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   }, [commandPaletteOpen, isMobile, selectedConversationId, view])
 
   const dashboardOpen = view !== 'conversations'
-  const handleSidebarLayoutChanged = (_layout: Record<string, number>, meta: LayoutChangedMeta) => {
-    if (!meta.isUserInteraction) return
-    const width = document.querySelector<HTMLElement>('[data-panel="conversations"]')?.getBoundingClientRect().width
-    if (!width) return
-    const clamped = Math.min(LEFT_COLUMN_MAX, Math.max(LEFT_COLUMN_MIN, Math.round(width)))
-    setSidebarWidth(clamped)
-    persistSidebarWidth(clamped)
-  }
   const shellModule = moduleForView(view)
+  useLayoutEffect(() => { setSidebarOpen(!designOpen) }, [designOpen, selectedConversationId])
+  useLayoutEffect(() => {
+    if (isMobile) return
+    if (shellModule === 'chat' && !sidebarOpen) sidebarPanel.current?.collapse()
+    else sidebarPanel.current?.expand()
+  }, [sidebarOpen, shellModule, isMobile, sidebarPanel])
   useEffect(() => { rememberCourseView(view) }, [view])
   useEffect(() => { if (!isMobile) setMobileNavOpen(false) }, [isMobile])
-  const mobileNav = isMobile && shellModule !== 'chat' ? () => setMobileNavOpen(true) : null
+  const mobileNav = isMobile && shellModule === 'course' ? () => setMobileNavOpen(true) : null
   const chatReady = Boolean(selectedWorkspaceId) && !navigationPending
-  const directPage = isMobile && (shellModule !== 'chat' || !chatReady)
+  const directPage = shellModule === 'cases' || isMobile && (shellModule !== 'chat' || !chatReady)
   const secondary = shellModule === 'chat' ? <ConversationsPane />
-    : shellModule === 'slides' && selectedWorkspaceId ? <DeckNav />
-    : <CourseNav space={learningSpaces.activeSpace} />
+    : shellModule === 'course' ? <CourseNav space={learningSpaces.activeSpace} /> : null
+  const chatActive = shellModule === 'chat' && chatReady
+  const chatVisible = chatActive && (!isMobile || mobileConversationOpen)
+  const slidesActive = shellModule === 'slides' && Boolean(selectedWorkspaceId) && !navigationPending
+  const scope = JSON.stringify([userId, companyId, selectedWorkspaceId, navigationPending])
+  const [retained, setRetained] = useState({ scope, chat: chatActive, slides: slidesActive })
+  const keepChat = !navigationPending && (chatActive || retained.scope === scope && retained.chat)
+  const keepSlides = !navigationPending && (slidesActive || retained.scope === scope && retained.slides)
+  if (retained.scope !== scope || retained.chat !== keepChat || retained.slides !== keepSlides) setRetained({ scope, chat: keepChat, slides: keepSlides })
+  const chatPage = keepChat ? <Suspense fallback={<ResourceSkeleton variant="detail" label="正在打开会话" />}><ChatPane visible={chatVisible} onChooseWorkspace={chooseWorkspace} onBackToConversations={isMobile ? () => useApp.getState().showConversationList() : undefined} /></Suspense> : null
   const page = navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" />
     : view === 'cases' ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载案例库" />}><CasesPage key={companyId} /></Suspense>
-    : view === 'slides' && selectedWorkspaceId ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载演示文稿" />}><SlidesPage key={selectedWorkspaceId} projectId={selectedWorkspaceId} /></Suspense>
-    : shellModule === 'chat' && selectedWorkspaceId ? <Suspense fallback={<ResourceSkeleton variant="detail" label="正在打开会话" />}><ChatPane onChooseWorkspace={chooseWorkspace} onBackToConversations={isMobile ? () => useApp.getState().showConversationList() : undefined} /></Suspense>
+    : chatActive || slidesActive ? null
     : <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
         <PersonalDashboard
           view={view}
@@ -171,7 +159,6 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
           onChooseWorkspace={chooseWorkspace}
         />
       </Suspense>
-  // Only the main page replays its entrance; the nested sidebar stays still across modules.
   const animatedPage = <div ref={pageRef} className="h-full min-h-0 min-w-0">{page}</div>
 
   const drawerOpen = Boolean(infoParticipantId || openThread || documentId)
@@ -194,7 +181,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
     : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
   return (
-    <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
+    <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-cases-shell={shellModule === 'cases' || undefined} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
       {!mobileChatOpen && <WorkspaceRail
           {...learningSpaces}
           onSelect={(space) => void learningSpaces.select(space)}
@@ -205,35 +192,49 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
         />}
       <div className={`flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)] ${isMobile ? '' : 'pe-2 pt-2'}`}>
         {navigationError && <Alert variant="destructive" className="mb-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
-        <div data-ui-page={view} data-shell-module={shellModule} aria-busy={navigationPending || undefined} className={`${isMobile ? '' : 'mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
+        <div data-ui-page={view} data-shell-module={shellModule} aria-busy={navigationPending || undefined} className={`relative ${isMobile ? '' : 'mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
           <ShellNavContext.Provider value={mobileNav}>
-          {directPage ? animatedPage : <ResizablePanelGroup
+          <ShellNavTriggerContext.Provider value={!isMobile && shellModule === 'chat' ? <Button type="button" variant="ghost" size="icon"
+            aria-label={sidebarOpen ? '收起会话列表' : '展开会话列表'} aria-expanded={sidebarOpen} aria-controls="conversations"
+            onClick={() => setSidebarOpen(value => !value)} className="shrink-0 text-muted-foreground"><PanelLeft className="size-4" /></Button> : null}>
+          <div key={`conversation:${scope}`} style={shellModule === 'slides' || directPage ? { position: 'absolute', inset: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined} inert={shellModule === 'slides' || directPage} aria-hidden={shellModule === 'slides' || directPage} className="h-full min-h-0 min-w-0">
+          <ResizablePanelGroup
             id="desktop-conversation-layout"
             orientation="horizontal"
             className="desktop-im-grid min-h-0 min-w-0"
             data-mobile-conversation-page={isMobile ? mobileChatOpen ? 'chat' : 'list' : undefined}
             onLayoutChanged={handleSidebarLayoutChanged}
           >
-            <ResizablePanel id="conversations" data-shell-panel-hidden={isMobile && mobileChatOpen} defaultSize={sidebarWidth} minSize={isMobile ? 0 : LEFT_COLUMN_MIN} maxSize={isMobile ? '100%' : LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
+            <ResizablePanel id="conversations" panelRef={sidebarPanel} collapsible={!isMobile && shellModule === 'chat'} collapsedSize={0}
+              onResize={size => { if (!isMobile && shellModule === 'chat') setSidebarOpen(size.inPixels > 0) }}
+              aria-hidden={!isMobile && shellModule === 'chat' && !sidebarOpen} inert={!isMobile && shellModule === 'chat' && !sidebarOpen}
+              data-shell-panel-hidden={isMobile && mobileChatOpen} defaultSize={sidebarWidth} minSize={isMobile ? 0 : LEFT_COLUMN_MIN} maxSize={isMobile ? '100%' : LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
               <div className="flex h-full min-h-0 flex-col bg-sidebar" data-secondary-sidebar={shellModule}>
                 {secondary}
               </div>
             </ResizablePanel>
-            <ResizableHandle data-shell-panel-hidden={isMobile} withHandle className="desktop-panel-resize-handle" aria-label="调整侧边栏宽度" title="拖动调整侧边栏宽度，双击恢复默认" />
-            <ResizablePanel id="conversation-workspace" data-shell-panel-hidden={isMobile && !mobileChatOpen} minSize={isMobile ? 0 : MIDDLE_COLUMN_MIN} className="min-h-0 min-w-0">
-              <Activity mode={isMobile && !mobileChatOpen ? 'hidden' : 'visible'}>
-                {animatedPage}
-              </Activity>
+            <ResizableHandle data-shell-panel-hidden={isMobile || shellModule === 'chat' && !sidebarOpen} withHandle className="desktop-panel-resize-handle" aria-label="调整侧边栏宽度" title="拖动调整侧边栏宽度，双击恢复默认"
+              onDoubleClick={resetSidebarWidth} />
+            <ResizablePanel id="conversation-workspace" data-shell-panel-hidden={isMobile && !mobileChatOpen} minSize={isMobile ? 0 : MIDDLE_COLUMN_MIN} className="relative min-h-0 min-w-0">
+              <div style={!chatActive ? { position: 'absolute', inset: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined} aria-hidden={!chatActive} inert={!chatActive} className="h-full min-h-0 min-w-0">{chatPage}</div>
+              {!chatActive && !directPage && animatedPage}
             </ResizablePanel>
-          </ResizablePanelGroup>}
+          </ResizablePanelGroup>
+          </div>
+          {keepSlides && selectedWorkspaceId && <div key={`slides:${scope}`} style={!slidesActive ? { position: 'absolute', inset: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined} aria-hidden={!slidesActive} inert={!slidesActive} className="h-full min-h-0 min-w-0">
+            <SlidesSidebarLayout active={slidesActive}><Suspense fallback={<ResourceSkeleton variant="list" label="正在加载演示文稿" />}><SlidesPage projectId={selectedWorkspaceId} active={slidesActive} /></Suspense></SlidesSidebarLayout>
+          </div>}
+          {shellModule === 'slides' && !slidesActive && animatedPage}
+          {directPage && shellModule !== 'slides' && animatedPage}
+          </ShellNavTriggerContext.Provider>
           </ShellNavContext.Provider>
         </div>
       </div>
-      {isMobile && shellModule !== 'chat' ? <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+      {isMobile && shellModule === 'course' ? <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent side="left" showCloseButton={false} className="gap-0 p-0 data-[side=left]:w-[min(20rem,calc(100vw-3rem))] motion-reduce:animate-none motion-reduce:transition-none" style={{ paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' }}>
-          <SheetTitle className="sr-only">{shellModule === 'slides' ? '演示文稿导航' : '课程导航'}</SheetTitle>
+          <SheetTitle className="sr-only">课程导航</SheetTitle>
           <SheetDescription className="sr-only">切换当前模块的页面</SheetDescription>
-          {shellModule === 'slides' ? <DeckNav onNavigate={() => setMobileNavOpen(false)} /> : <CourseNav space={learningSpaces.activeSpace} onNavigate={() => setMobileNavOpen(false)} />}
+          <CourseNav space={learningSpaces.activeSpace} onNavigate={() => setMobileNavOpen(false)} />
         </SheetContent>
       </Sheet> : null}
 

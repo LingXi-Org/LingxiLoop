@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDocumentsWriteAccess(runtime2) {
   var CONTENT_SIGN_IN_REQUIRED_MESSAGE, EDITING_UNAVAILABLE_MESSAGE, LIVE_READ_ONLY_MESSAGE, FILE_LIST_UNAVAILABLE_MESSAGE, unavailableStorageSlot, EMPTY_EMBEDDED_PAGE_PARTS;
@@ -66,7 +66,19 @@ function installDocumentsWriteAccess(runtime2) {
   }), bindRuntimeValue(runtime2, "constantReadOnlyReasonSlot", () => constantReadOnlyReasonSlot), bindRuntimeValue(runtime2, "EMPTY_EMBEDDED_PAGE_PARTS", () => EMPTY_EMBEDDED_PAGE_PARTS, (value) => {
     EMPTY_EMBEDDED_PAGE_PARTS = value;
   }), bindRuntimeValue(runtime2, "readOnlyEmbeddedDocumentOptions", () => readOnlyEmbeddedDocumentOptions), () => {
-    (0, runtime2.initializeCompiledPage)(), (0, runtime2.initializeAssetStorage)(), CONTENT_SIGN_IN_REQUIRED_MESSAGE = "You might not have access to this content. Reload the page to try again.", EDITING_UNAVAILABLE_MESSAGE = "Editing isn’t available in this view.", LIVE_READ_ONLY_MESSAGE = "Read-only. You can view live changes.", FILE_LIST_UNAVAILABLE_MESSAGE = "Couldn’t read the full file list. Reload to try again.", unavailableStorageSlot = {
+    (0, runtime2.initializeCompiledPage)(), (0, runtime2.initializeAssetStorage)(), CONTENT_SIGN_IN_REQUIRED_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "你可能无权访问此内容。请重新加载页面后重试。",
+      id: "BNC1wrrvvB"
+    }), EDITING_UNAVAILABLE_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "此视图不支持编辑。",
+      id: "H7kO2I/hnf"
+    }), LIVE_READ_ONLY_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "只读。你可以查看实时更改。",
+      id: "A5W/JC856P"
+    }), FILE_LIST_UNAVAILABLE_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "无法读取完整的文件列表。请重新加载后重试。",
+      id: "oEeTQxdmNU"
+    }), unavailableStorageSlot = {
       read: () => null,
       write: () => !1,
       clear() {

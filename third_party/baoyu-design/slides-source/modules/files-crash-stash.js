@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installFilesCrashStash(runtime2) {
-  var CRASH_STASH_MAX_AGE_MS, CRASH_STASH_RETENTION_LABEL, CRASH_STASH_MAX_ENTRIES, CRASH_STASH_MAX_ARTIFACT_CHARS, CRASH_STASH_MAX_TOTAL_CHARS, crashStashIdentityKey, crashStashEntrySize, stripArtifactScopeFragment, isCrashStashEntry, CRASH_STASH_DATABASE_NAME, CRASH_STASH_OBJECT_STORE, FRAME_SCOPE_PATH_PATTERN, CRASH_STASH_TAB_LOCK_PREFIX, getNavigatorLocks;
+  var CRASH_STASH_MAX_AGE_MS, CRASH_STASH_MAX_ENTRIES, CRASH_STASH_MAX_ARTIFACT_CHARS, CRASH_STASH_MAX_TOTAL_CHARS, crashStashIdentityKey, crashStashEntrySize, stripArtifactScopeFragment, isCrashStashEntry, CRASH_STASH_DATABASE_NAME, CRASH_STASH_OBJECT_STORE, FRAME_SCOPE_PATH_PATTERN, CRASH_STASH_TAB_LOCK_PREFIX, getNavigatorLocks;
   function createCrashStashKit(storage, artifactId, viewerId, tabId, now, liveTabs) {
     let value = crashStashIdentityKey(artifactId, viewerId, tabId), items = [], callback = async (input, options) => {
       try {
@@ -160,8 +160,6 @@ function installFilesCrashStash(runtime2) {
   }
   return bindRuntimeValue(runtime2, "CRASH_STASH_MAX_AGE_MS", () => CRASH_STASH_MAX_AGE_MS, (value) => {
     CRASH_STASH_MAX_AGE_MS = value;
-  }), bindRuntimeValue(runtime2, "CRASH_STASH_RETENTION_LABEL", () => CRASH_STASH_RETENTION_LABEL, (value) => {
-    CRASH_STASH_RETENTION_LABEL = value;
   }), bindRuntimeValue(runtime2, "CRASH_STASH_MAX_ENTRIES", () => CRASH_STASH_MAX_ENTRIES, (value) => {
     CRASH_STASH_MAX_ENTRIES = value;
   }), bindRuntimeValue(runtime2, "CRASH_STASH_MAX_ARTIFACT_CHARS", () => CRASH_STASH_MAX_ARTIFACT_CHARS, (value) => {
@@ -187,7 +185,7 @@ function installFilesCrashStash(runtime2) {
   }), bindRuntimeValue(runtime2, "getNavigatorLocks", () => getNavigatorLocks, (value) => {
     getNavigatorLocks = value;
   }), bindRuntimeValue(runtime2, "claimCrashStashTabLock", () => claimCrashStashTabLock), bindRuntimeValue(runtime2, "createIndexedDbCrashStashKit", () => createIndexedDbCrashStashKit), bindRuntimeValue(runtime2, "createCurrentArtifactCrashStash", () => createCurrentArtifactCrashStash), () => {
-    CRASH_STASH_MAX_AGE_MS = 2592e5, CRASH_STASH_RETENTION_LABEL = "3 days", CRASH_STASH_MAX_ENTRIES = 64, CRASH_STASH_MAX_ARTIFACT_CHARS = 1e6, CRASH_STASH_MAX_TOTAL_CHARS = 2e6, crashStashIdentityKey = (artifactId, viewerId, tabId) => [artifactId, viewerId, tabId].join("\0"), crashStashEntrySize = (entry) => entry.path.length + (entry.text?.length ?? 0), stripArtifactScopeFragment = (artifactId) => artifactId.split("#")[0], isCrashStashEntry = (entry) => typeof entry?.key == "string" && typeof entry.artifactId == "string" && typeof entry.viewerId == "string" && Number.isFinite(entry.createdAt) && Number.isFinite(entry.at) && Number.isFinite(entry.chars) && entry.chars >= 0 && Array.isArray(entry.edits) && entry.edits.every((input) => typeof input?.path == "string" && (typeof input.text == "string" || input.text === null) && (typeof input.base == "string" || input.base === null)), CRASH_STASH_DATABASE_NAME = "appifact-crash-stash", CRASH_STASH_OBJECT_STORE = "entries", FRAME_SCOPE_PATH_PATTERN = /(^|\/)_f\/[^/]+\//, CRASH_STASH_TAB_LOCK_PREFIX = "appifact-stash-tab:", getNavigatorLocks = () => {
+    CRASH_STASH_MAX_AGE_MS = 2592e5, CRASH_STASH_MAX_ENTRIES = 64, CRASH_STASH_MAX_ARTIFACT_CHARS = 1e6, CRASH_STASH_MAX_TOTAL_CHARS = 2e6, crashStashIdentityKey = (artifactId, viewerId, tabId) => [artifactId, viewerId, tabId].join("\0"), crashStashEntrySize = (entry) => entry.path.length + (entry.text?.length ?? 0), stripArtifactScopeFragment = (artifactId) => artifactId.split("#")[0], isCrashStashEntry = (entry) => typeof entry?.key == "string" && typeof entry.artifactId == "string" && typeof entry.viewerId == "string" && Number.isFinite(entry.createdAt) && Number.isFinite(entry.at) && Number.isFinite(entry.chars) && entry.chars >= 0 && Array.isArray(entry.edits) && entry.edits.every((input) => typeof input?.path == "string" && (typeof input.text == "string" || input.text === null) && (typeof input.base == "string" || input.base === null)), CRASH_STASH_DATABASE_NAME = "appifact-crash-stash", CRASH_STASH_OBJECT_STORE = "entries", FRAME_SCOPE_PATH_PATTERN = /(^|\/)_f\/[^/]+\//, CRASH_STASH_TAB_LOCK_PREFIX = "appifact-stash-tab:", getNavigatorLocks = () => {
       try {
         return globalThis.navigator?.locks;
       } catch {

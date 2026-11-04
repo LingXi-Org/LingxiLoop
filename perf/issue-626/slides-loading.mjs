@@ -18,7 +18,7 @@ const mocks = {
     slideWorkspace:()=>window.workspaceRequest(), editorContext:()=>window.contextRequest(),
     editorGrant:async()=>{window.grants++;window.grantStarted=performance.now();return {url:'/editor'}},revisions:async()=>({current:'one',revisions:[]})}`,
   '../api': `export {artifactsApi} from '@/features/artifacts/api'`,
-  '@/features/conversations/store': `export const useConversations=selector=>selector({list:[]});useConversations.getState=()=>({reload:()=>window.reloadRequest()})`,
+  '@/features/conversations/store': `export const useConversations=selector=>selector({list:[]});useConversations.getState=()=>({list:window.knownChannels??[],reload:()=>window.reloadRequest()})`,
   '@/features/agents/state': `export const useParticipants={getState:()=>({refresh:()=>window.rosterRequest()})}`,
   '@/features/chat/runtime': `export function ConversationRuntimeProvider({children,beforeSend}){window.beforeSend=beforeSend;return children}`,
   '@/features/chat/runtime/runtime': `export const useConversationPresence=()=>({activeAgentIds:[]})`,
@@ -61,6 +61,9 @@ try{
  workspace.resolve({conversationId:'retry-chat',sourceConversationId:null});reload.resolve();roster.resolve();await wait(()=>document.querySelector('[data-assistant]'));
  check(document.querySelector('iframe')===retained&&window.grants===2,'assistant retry remounted editor');
  result.checks.push('assistant failure and retry preserve live editor');
+ workspace=deferred();reload=deferred();window.knownChannels=[{id:'known-chat'}];render('known');await wait(()=>window.grants===3);
+ workspace.resolve({conversationId:'known-chat',sourceConversationId:null});await wait(()=>document.querySelector('[data-assistant]'));
+ reload.resolve();result.checks.push('an already authorized assistant channel opens without waiting for the list refresh');
  await fetch('/result',{method:'POST',body:JSON.stringify({...result,passed:true})});
 }catch(error){await fetch('/result',{method:'POST',body:JSON.stringify({...result,passed:false,error:error.message})})}`
 const measurement = `import React from 'react';import{createRoot}from'react-dom/client';import{SlidesWorkspace}from'./src/features/slides/SlidesWorkspace';

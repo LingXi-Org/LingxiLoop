@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiArtifactToolbar(runtime2) {
-  var reactA6, jsx_5, TOOLBAR_WIDE_BREAKPOINT, TOOLBAR_COMPACT_BREAKPOINT, TOOLBAR_FULL_BREAKPOINT, TOOLBAR_QUIET_SELECTOR, TOOLBAR_CONTENT_SELECTOR, TOOLBAR_LAYOUT_ROLES, isToolbarSaveIndicator, toggleAttributeIfChanged, TOOLBAR_WORD_LOCK_MARGIN, TOOLBAR_PADDLE_CLASS, TOOLBAR_FOCUSABLE_SELECTOR, TOOLBAR_REFIT_EVENT;
+  var reactA6, jsx_5, TOOLBAR_WIDE_BREAKPOINT, TOOLBAR_COMPACT_BREAKPOINT, TOOLBAR_FULL_BREAKPOINT, TOOLBAR_QUIET_SELECTOR, TOOLBAR_CONTENT_SELECTOR, TOOLBAR_LAYOUT_ROLES, isToolbarSaveIndicator, toggleAttributeIfChanged, TOOLBAR_WORD_LOCK_MARGIN, TOOLBAR_PADDLE_CLASS, TOOLBAR_FOCUSABLE_SELECTOR, TOOLBAR_PAGE_STOP_SELECTOR, TOOLBAR_PAGE_SLACK, CHAT_LABEL, CHAT_NEW_REPLY_LABEL, TOOLBAR_REFIT_EVENT;
   function hasVisibleToolbarContent(element, options = {}) {
     let attribute = element.getAttribute("role");
     if (options.skip?.(element) || options.pinFixed && element.classList.contains("tb-pin-scroll"))
@@ -88,8 +88,13 @@ function installUiArtifactToolbar(runtime2) {
     let value2 = element2 != null && element2.clientWidth < TOOLBAR_WORD_LOCK_MARGIN && element2.scrollWidth > element2.clientWidth;
     (element.scrollWidth > element.clientWidth + 1 || value2) && element.removeAttribute("data-tb-lock-words");
   }
-  function effectiveToolbarDensity(density = "compact") {
-    return (0, runtime2.useCoarsePointer)() ? "comfortable" : density;
+  function effectiveToolbarDensity(density) {
+    let bottomToolbar = (0, runtime2.useBottomToolbarChrome)();
+    return density ?? (bottomToolbar ? "comfortable" : "compact");
+  }
+  function effectiveToolbarTouchDensity(density) {
+    let value = effectiveToolbarDensity(density);
+    return (0, runtime2.useCoarsePointer)() ? "comfortable" : value;
   }
   function useToolbarInsets() {
     let [value, value2] = reactA6.useState(0), [value3, value4] = reactA6.useState(0), [value5, value6] = reactA6.useState(null);
@@ -129,7 +134,7 @@ function installUiArtifactToolbar(runtime2) {
   function ArtifactToolbarDivider() {
     return jsx_5.jsx("span", {
       "aria-hidden": "true",
-      className: "tb-divider mx-0.5 h-[18px] w-px shrink-0 self-center bg-border-line"
+      className: "tb-divider mx-0.5 h-[18px] w-px shrink-0 self-center bg-border-line has-[+[data-chat-slot-hidden]]:invisible"
     });
   }
   function SaveStatusDot({ state }) {
@@ -137,10 +142,19 @@ function installUiArtifactToolbar(runtime2) {
       return jsx_5.jsx(SaveProblemStatus, {
         state
       });
-    let value = state.status === "saving", value2 = state.status === "dirty";
+    let value = state.status === "saving", value2 = state.status === "dirty", savingLabel = (0, runtime2.formatMessage)({
+      defaultMessage: "正在保存…",
+      id: "EVcynp5jwN"
+    });
     return jsx_5.jsxs("span", {
       role: "status",
-      title: value ? "正在保存…" : value2 ? "编辑暂存在编辑器中，应用后保存" : "每次更改都会自动保存",
+      title: value ? savingLabel : value2 ? (0, runtime2.formatMessage)({
+        defaultMessage: "编辑暂存在编辑器中，应用后保存",
+        id: "R6IN6P8zDE"
+      }) : (0, runtime2.formatMessage)({
+        defaultMessage : "每次更改都会自动保存",
+        id: "Nr/mR5V0cZ"
+      }),
       className: "inline-flex shrink-0 items-center gap-1.5 text-xs whitespace-nowrap text-fg-muted",
       children: [
         jsx_5.jsx("span", {
@@ -148,7 +162,13 @@ function installUiArtifactToolbar(runtime2) {
         }),
         jsx_5.jsx("span", {
           className: "tb-status-text truncate",
-          children: value ? "正在保存…" : value2 ? "未保存的编辑" : "已自动保存"
+          children: value ? savingLabel : value2 ? (0, runtime2.formatMessage)({
+            defaultMessage: "未保存的编辑",
+            id: "NoRGrlKZew"
+          }) : (0, runtime2.formatMessage)({
+            defaultMessage : "已自动保存",
+            id: "cZ5EW2GzuP"
+          })
         })
       ]
     });
@@ -159,7 +179,16 @@ function installUiArtifactToolbar(runtime2) {
     let value10 = value3 || value5 || value7 && value9;
     if (value && (status !== "error" || value2) && !value10)
       return null;
-    let value11 = status === "loading" || status === "cached" ? "loading" : status === "error" ? "error" : status === "dirty" || status === "saving" ? "pending" : "synced", value12 = value11 === "synced" && !value10, value13 = state.message ?? (value11 === "pending" ? "Syncing…" : value11 === "error" ? "Couldn’t sync — click to retry" : "All changes synced"), value14 = status === "error" || status === "dirty";
+    let value11 = status === "loading" || status === "cached" ? "loading" : status === "error" ? "error" : status === "dirty" || status === "saving" ? "pending" : "synced", value12 = value11 === "synced" && !value10, value13 = state.message ?? (value11 === "pending" ? (0, runtime2.formatMessage)({
+      defaultMessage: "正在同步…",
+      id: "44pRpmiJTi"
+    }) : value11 === "error" ? (0, runtime2.formatMessage)({
+      defaultMessage: "同步失败，点击重试",
+      id: "r5RF3ZJB+K"
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage : "所有更改均已同步",
+      id: "PkWfXaQUYR"
+    })), value14 = status === "error" || status === "dirty";
     return jsx_5.jsx(runtime2.Tooltip, {
       content: value13,
       side: tipSide,
@@ -192,7 +221,10 @@ function installUiArtifactToolbar(runtime2) {
   function SaveProblemStatus({ state }) {
     let value = reactA6.useSyncExternalStore(runtime2.subscribeHostSaveChrome, runtime2.hostDrawsReadOnly, () => !1);
     if (state.status === "error") {
-      let value2 = state.message ?? "Couldn’t save";
+      let value2 = state.message ?? (0, runtime2.formatMessage)({
+        defaultMessage: "无法保存",
+        id: "diGj0tshPp"
+      });
       return jsx_5.jsxs("span", {
         role: "status",
         title: value2,
@@ -208,9 +240,16 @@ function installUiArtifactToolbar(runtime2) {
         ]
       });
     }
-    return state.status === "readonly" ? value ? null : jsx_5.jsxs("span", {
+    if ( state.status === "readonly") {
+      if ( value)
+        return null;
+      let readOnlyLabel = (0, runtime2.formatMessage)({
+        defaultMessage : "只读",
+        id: "igFGVgOxUM"
+      });
+      return jsx_5.jsxs("span", {
       role: "status",
-      title: state.message ?? "只读",
+      title: state.message ?? readOnlyLabel,
       className: "tb-lock inline-flex shrink-0 items-center gap-1.5 px-1 text-body whitespace-nowrap text-fg-muted",
       children: [
         jsx_5.jsx(runtime2.Icon, {
@@ -220,10 +259,19 @@ function installUiArtifactToolbar(runtime2) {
         }),
         jsx_5.jsx("span", {
           className: "tb-lock-words truncate",
-          children: "只读"
+          children: readOnlyLabel
         })
       ]
-    }) : null;
+    });
+    }
+    return null;
+  }
+  function toolbarControlPageTarget(direction, scrollLeft, viewportWidth, maxScroll, controls, paddleWidth, fadeWidth) {
+    let alignTo = (inset2, [start, end]) => end - start > viewportWidth - 2 * inset2 ? (start + end - viewportWidth) / 2 : direction === 1 ? end - viewportWidth + inset2 : start - inset2, isAhead = (control) => (Math.round(alignTo(paddleWidth, control)) - scrollLeft) * direction > 1, page = viewportWidth - 2 * paddleWidth, clampPage = (value) => direction === 1 ? Math.min(value, Math.floor(scrollLeft) + page) : Math.max(value, Math.ceil(scrollLeft) - page), next = direction === 1 ? controls.find(isAhead) : [...controls].reverse().find(isAhead);
+    if (!next)
+      return Math.min(maxScroll, Math.max(0, clampPage(direction === 1 ? maxScroll : 0)));
+    let inset = viewportWidth - 2 * (paddleWidth + fadeWidth) >= next[1] - next[0] ? paddleWidth + fadeWidth : paddleWidth, aligned = alignTo(inset, next), edge = next[1] - next[0] > viewportWidth - 2 * paddleWidth ? aligned : direction === 1 ? next[0] - paddleWidth : next[1] - viewportWidth + paddleWidth, rounded = direction === 1 ? Math.max(Math.round(aligned), Math.min(Math.ceil(scrollLeft) + TOOLBAR_PAGE_SLACK, Math.floor(edge))) : Math.min(Math.round(aligned), Math.max(Math.floor(scrollLeft) - TOOLBAR_PAGE_SLACK, Math.ceil(edge))), target = (direction === 1 ? next[0] < scrollLeft + viewportWidth - paddleWidth + TOOLBAR_PAGE_SLACK : next[1] > scrollLeft + paddleWidth - TOOLBAR_PAGE_SLACK) ? rounded : clampPage(rounded);
+    return direction === 1 ? target >= maxScroll || maxScroll - target <= inset && next[0] >= maxScroll + paddleWidth && maxScroll <= clampPage(maxScroll) ? maxScroll : target : target <= 0 || target <= inset && next[1] <= viewportWidth - paddleWidth && clampPage(0) <= 0 ? 0 : target;
   }
   function toolbarScrollPageTarget(direction, scrollLeft, viewportWidth, scrollWidth, margin) {
     let value = Math.max(0, scrollWidth - viewportWidth), value2 = Math.max(viewportWidth - 2 * margin, 48), value3 = scrollLeft + direction * value2;
@@ -237,7 +285,13 @@ function installUiArtifactToolbar(runtime2) {
     }
   }
   function ToolbarScrollPaddle({ dir, onPress, onLetGo }) {
-    let value = dir === -1 ? "Scroll toolbar left" : "Scroll toolbar right";
+    let value = dir === -1 ? (0, runtime2.formatMessage)({
+      defaultMessage: "向左滚动工具栏",
+      id: "aGT6te5gbF"
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage : "向右滚动工具栏",
+      id: "mnx6zfGmt8"
+    });
     return jsx_5.jsx("div", {
       "data-tb-paddle": "",
       onClick: (input) => onPress(input.detail === 0),
@@ -371,7 +425,17 @@ function installUiArtifactToolbar(runtime2) {
         return;
       let value6 = ref2.current?.querySelector(":scope > [data-tb-paddle]"), value7 = ref2.current?.querySelector(":scope > span[aria-hidden]"), value8 = (value6?.offsetWidth ?? 24) + (value7?.offsetWidth ?? 24), value9 = ref2.current?.clientWidth ?? current.clientWidth, value10 = current.clientWidth - value9;
       ref4.current = options;
-      let maxScroll = Math.max(0, current.scrollWidth - current.clientWidth), left = toolbarScrollPageTarget(input, current.scrollLeft, value9, current.scrollWidth - value10, value8);
+      let maxScroll = Math.max(0, current.scrollWidth - current.clientWidth), left;
+      if (value9 - 2 * value8 <= 48 && ref2.current) {
+        let origin = ref2.current.getBoundingClientRect().left - current.scrollLeft, controls = [
+          ...current.querySelectorAll(TOOLBAR_PAGE_STOP_SELECTOR)
+        ].map((element) => element.getBoundingClientRect()).filter((rect) => rect.width > 1).map((rect) => [
+          rect.left - origin,
+          rect.right - origin
+        ]).sort((first, second) => first[0] - second[0]), from = targetRef.current !== null && (targetRef.current - current.scrollLeft) * input > 0 ? targetRef.current : current.scrollLeft;
+        controls.length > 0 && (left = toolbarControlPageTarget(input, from, value9, maxScroll, controls, value6?.offsetWidth ?? 24, value7?.offsetWidth ?? 24));
+      }
+      left ??= toolbarScrollPageTarget(input, current.scrollLeft, value9, current.scrollWidth - value10, value8),
       !hasPagingRoom(value9) && left > 0 && left < maxScroll && (left = input === 1 ? maxScroll : 0), targetRef.current = left, current.scrollTo({
         left,
         behavior: "smooth"
@@ -429,7 +493,22 @@ function installUiArtifactToolbar(runtime2) {
     });
   }
   function ToolbarSaveControls({ saveState, saveMode = "manual", onSave, syncDot = !1, editing, onToggleEdit }) {
-    let value = saveState.status === "readonly", value2 = saveState.status === "dirty" || saveState.status === "error", value3 = !value2 || saveState.status === "saving", value4 = saveState.status === "saving", value5 = value4 ? "Saving…" : "Save", value6 = value4 ? value5 : value2 ? "Publish your changes — every open view updates" : "Everything is published", value7 = (0, runtime2.useDisabledButtonDescription)({
+    let value = saveState.status === "readonly", value2 = saveState.status === "dirty" || saveState.status === "error", value3 = !value2 || saveState.status === "saving", value4 = saveState.status === "saving", value5 = value4 ? (0, runtime2.formatMessage)({
+      defaultMessage: "正在保存…",
+      id: "0CBe/K32Ps"
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage : "保存",
+      id: "kQTHfX2Y5/"
+    }), value6 = value4 ? value5 : value2 ? (0, runtime2.formatMessage)({
+      defaultMessage: "发布你的更改，所有打开的视图都会更新",
+      id: "sro1Y3rHhl"
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage : "所有内容均已发布",
+      id: "i2GvxN3qc1"
+    }), editLabel = (0, runtime2.formatMessage)({
+      defaultMessage: "编辑",
+      id: "pMoR5AAP+W"
+    }), value7 = (0, runtime2.useDisabledButtonDescription)({
       disabled: value3,
       name: value5,
       reason: value6
@@ -438,8 +517,11 @@ function installUiArtifactToolbar(runtime2) {
       children: [
         !value && onToggleEdit ? jsx_5.jsx(runtime2.ToolbarButton, {
           icon: "Edit",
-          label: "编辑",
-          tip: editing ? "完成编辑，返回实时视图" : "编辑",
+          label: editLabel,
+          tip: editing ? (0, runtime2.formatMessage)({
+            defaultMessage: "完成编辑，返回实时视图",
+            id : "x3OLFiHzGk"
+          }) : editLabel,
           pressed: editing === !0,
           onClick: onToggleEdit,
           "data-testid": "dc-mode-edit"
@@ -484,10 +566,10 @@ function installUiArtifactToolbar(runtime2) {
       ...remainingProps
     });
   }
-  function ArtifactToolbar({ title, saveState, saveMode = "manual", syncDot = !1, onSave, undo, publishControls = !0, pinned, trailing, leading, afterUndo, undoButtons = !0, leadingFlat = !1, density = "compact", touchTargets, readOnly, quietReadOnlyReason, variant = "docked", children, extrasEnd }) {
+  function ArtifactToolbar({ title, saveState, saveMode = "manual", syncDot = !1, onSave, undo, publishControls = !0, pinned, trailing, leading, afterUndo, undoButtons = !0, leadingFlat = !1, density, touchTargets, readOnly, quietReadOnlyReason, variant = "docked", children, extrasEnd }) {
     let [, value] = reactA6.useState(0);
     reactA6.useEffect(() => undo?.subscribe(() => value((input) => input + 1)), [undo]);
-    let value2 = readOnly === !0 || saveState.status === "readonly", value3 = reactA6.useSyncExternalStore(runtime2.subscribeHostSaveChrome, runtime2.hostDrawsReadOnly, () => !1), value4 = effectiveToolbarDensity(density), value5 = touchTargets === "square" ? value4 : density, ref = reactA6.useRef(null), [value6, value7] = reactA6.useState(!1), [value8, value9] = reactA6.useState(!1), value10 = (0, runtime2.useCoarsePointer)(), value11 = variant === "floating";
+    let value2 = readOnly === !0 || saveState.status === "readonly", value3 = reactA6.useSyncExternalStore(runtime2.subscribeHostSaveChrome, runtime2.hostDrawsReadOnly, () => !1), value4 = effectiveToolbarDensity(density), touchDensity = effectiveToolbarTouchDensity(density), value5 = touchTargets === "square" ? touchDensity : value4, ref = reactA6.useRef(null), [value6, value7] = reactA6.useState(!1), [value8, value9] = reactA6.useState(!1), value10 = (0, runtime2.useCoarsePointer)(), value11 = variant === "floating";
     return reactA6.useLayoutEffect(() => {
       let current = ref.current;
       if (!current)
@@ -555,8 +637,14 @@ function installUiArtifactToolbar(runtime2) {
                           jsx_5.jsx(runtime2.ToolbarButton, {
                             iconOnly: !0,
                             icon: "ArrowCounterClockwise",
-                            label: "撤销",
-                            disabledTip: "暂无可撤销的操作",
+                            label: (0, runtime2.formatMessage)({
+                              defaultMessage: "撤销",
+                              id: "dSQL7LKwgJ"
+                            }),
+                            disabledTip: (0, runtime2.formatMessage)({
+                              defaultMessage: "暂无可撤销的操作",
+                              id: "xmYvmjGnzT"
+                            }),
                             shortcut: "cmd+z",
                             disabled: !undo.canUndo(),
                             onClick: () => undo.undo()
@@ -564,8 +652,14 @@ function installUiArtifactToolbar(runtime2) {
                           jsx_5.jsx(runtime2.ToolbarButton, {
                             iconOnly: !0,
                             icon: "ArrowClockwise",
-                            label: "重做",
-                            disabledTip: "暂无可重做的操作",
+                            label: (0, runtime2.formatMessage)({
+                              defaultMessage: "重做",
+                              id: "ozfRJMhYQZ"
+                            }),
+                            disabledTip: (0, runtime2.formatMessage)({
+                              defaultMessage: "暂无可重做的操作",
+                              id: "jgefvvYt0N"
+                            }),
                             shortcut: "shift+cmd+z",
                             disabled: !undo.canRedo(),
                             onClick: () => undo.redo()
@@ -633,8 +727,8 @@ function installUiArtifactToolbar(runtime2) {
       ref: chat.ref,
       iconOnly: !0,
       icon: chat.pressed ? "ChatsFilled" : "Chats",
-      label: chat.unread ? "对话，有新回复" : "对话",
-      tip: "对话",
+      label: chat.unread ? CHAT_NEW_REPLY_LABEL : CHAT_LABEL,
+      tip: CHAT_LABEL,
       tipSide: "top",
       tipShut: chat.tipShut,
       pressed: chat.pressed,
@@ -654,12 +748,12 @@ function installUiArtifactToolbar(runtime2) {
           variant: "ghost",
           pressed: chat.pressed,
           disabled: disabled2,
-          "aria-label": chat.unread ? "对话，有新回复" : "对话",
+          "aria-label": chat.unread ? CHAT_NEW_REPLY_LABEL : CHAT_LABEL,
           "data-chat-button": "",
           "data-comment-pass": "",
           "data-uncommentable": "",
           ...chat.handlers,
-          children: "对话"
+          children: CHAT_LABEL
         }),
         chat.unread ? jsx_5.jsx("span", {
           "aria-hidden": "true",
@@ -672,6 +766,7 @@ function installUiArtifactToolbar(runtime2) {
   function ChatToolbarGroup({ joins, gap = "gap-0.5", divider = !0, ...rest }) {
     let [value] = reactA6.useState(joins);
     return jsx_5.jsxs("span", {
+      "data-tb-foot-gap": "",
       className: (0, runtime2.joinClassNames)("flex shrink-0 items-center", gap, value),
       children: [
         divider ? jsx_5.jsx(ArtifactToolbarDivider, {}) : null,
@@ -699,6 +794,8 @@ function installUiArtifactToolbar(runtime2) {
     TOOLBAR_LAYOUT_ROLES = value;
   }), bindRuntimeValue(runtime2, "hasVisibleToolbarContent", () => hasVisibleToolbarContent), bindRuntimeValue(runtime2, "toolbarContentCount", () => toolbarContentCount), bindRuntimeValue(runtime2, "collectToolbarLeaves", () => collectToolbarLeaves), bindRuntimeValue(runtime2, "TOOLBAR_FOCUSABLE_SELECTOR", () => TOOLBAR_FOCUSABLE_SELECTOR, (value) => {
     TOOLBAR_FOCUSABLE_SELECTOR = value;
+  }), bindRuntimeValue(runtime2, "TOOLBAR_PAGE_STOP_SELECTOR", () => TOOLBAR_PAGE_STOP_SELECTOR, (value) => {
+    TOOLBAR_PAGE_STOP_SELECTOR = value;
   }), bindRuntimeValue(runtime2, "toolbarLeadFloor", () => toolbarLeadFloor), bindRuntimeValue(runtime2, "updateToolbarHug", () => updateToolbarHug), bindRuntimeValue(runtime2, "TOOLBAR_REFIT_EVENT", () => TOOLBAR_REFIT_EVENT, (value) => {
     TOOLBAR_REFIT_EVENT = value;
   }), bindRuntimeValue(runtime2, "isToolbarSaveIndicator", () => isToolbarSaveIndicator, (value) => {
@@ -707,9 +804,15 @@ function installUiArtifactToolbar(runtime2) {
     toggleAttributeIfChanged = value;
   }), bindRuntimeValue(runtime2, "updateToolbarEmptyState", () => updateToolbarEmptyState), bindRuntimeValue(runtime2, "TOOLBAR_WORD_LOCK_MARGIN", () => TOOLBAR_WORD_LOCK_MARGIN, (value) => {
     TOOLBAR_WORD_LOCK_MARGIN = value;
-  }), bindRuntimeValue(runtime2, "updateToolbarWordLock", () => updateToolbarWordLock), bindRuntimeValue(runtime2, "effectiveToolbarDensity", () => effectiveToolbarDensity), bindRuntimeValue(runtime2, "useToolbarInsets", () => useToolbarInsets), bindRuntimeValue(runtime2, "ArtifactToolbarDivider", () => ArtifactToolbarDivider), bindRuntimeValue(runtime2, "SaveStatusDot", () => SaveStatusDot), bindRuntimeValue(runtime2, "SaveStatusControl", () => SaveStatusControl), bindRuntimeValue(runtime2, "SaveProblemStatus", () => SaveProblemStatus), bindRuntimeValue(runtime2, "toolbarScrollPageTarget", () => toolbarScrollPageTarget), bindRuntimeValue(runtime2, "TOOLBAR_PADDLE_CLASS", () => TOOLBAR_PADDLE_CLASS, (value) => {
+  }), bindRuntimeValue(runtime2, "updateToolbarWordLock", () => updateToolbarWordLock), bindRuntimeValue(runtime2, "effectiveToolbarDensity", () => effectiveToolbarDensity), bindRuntimeValue(runtime2, "effectiveToolbarTouchDensity", () => effectiveToolbarTouchDensity), bindRuntimeValue(runtime2, "useToolbarInsets", () => useToolbarInsets), bindRuntimeValue(runtime2, "ArtifactToolbarDivider", () => ArtifactToolbarDivider), bindRuntimeValue(runtime2, "SaveStatusDot", () => SaveStatusDot), bindRuntimeValue(runtime2, "SaveStatusControl", () => SaveStatusControl), bindRuntimeValue(runtime2, "SaveProblemStatus", () => SaveProblemStatus), bindRuntimeValue(runtime2, "TOOLBAR_PAGE_SLACK", () => TOOLBAR_PAGE_SLACK, (value) => {
+    TOOLBAR_PAGE_SLACK = value;
+  }), bindRuntimeValue(runtime2, "toolbarControlPageTarget", () => toolbarControlPageTarget), bindRuntimeValue(runtime2, "toolbarScrollPageTarget", () => toolbarScrollPageTarget), bindRuntimeValue(runtime2, "TOOLBAR_PADDLE_CLASS", () => TOOLBAR_PADDLE_CLASS, (value) => {
     TOOLBAR_PADDLE_CLASS = value;
-  }), bindRuntimeValue(runtime2, "isFocusVisible", () => isFocusVisible), bindRuntimeValue(runtime2, "ToolbarScrollPaddle", () => ToolbarScrollPaddle), bindRuntimeValue(runtime2, "ToolbarScrollArea", () => ToolbarScrollArea), bindRuntimeValue(runtime2, "ToolbarSaveControls", () => ToolbarSaveControls), bindRuntimeValue(runtime2, "ToolbarSurface", () => ToolbarSurface), bindRuntimeValue(runtime2, "ArtifactToolbar", () => ArtifactToolbar), bindRuntimeValue(runtime2, "ChatToolbarButton", () => ChatToolbarButton), bindRuntimeValue(runtime2, "ChatWordButton", () => ChatWordButton), bindRuntimeValue(runtime2, "ChatToolbarGroup", () => ChatToolbarGroup), () => {
+  }), bindRuntimeValue(runtime2, "isFocusVisible", () => isFocusVisible), bindRuntimeValue(runtime2, "ToolbarScrollPaddle", () => ToolbarScrollPaddle), bindRuntimeValue(runtime2, "ToolbarScrollArea", () => ToolbarScrollArea), bindRuntimeValue(runtime2, "ToolbarSaveControls", () => ToolbarSaveControls), bindRuntimeValue(runtime2, "ToolbarSurface", () => ToolbarSurface), bindRuntimeValue(runtime2, "ArtifactToolbar", () => ArtifactToolbar), bindRuntimeValue(runtime2, "ChatToolbarButton", () => ChatToolbarButton), bindRuntimeValue(runtime2, "ChatWordButton", () => ChatWordButton), bindRuntimeValue(runtime2, "ChatToolbarGroup", () => ChatToolbarGroup), bindRuntimeValue(runtime2, "CHAT_LABEL", () => CHAT_LABEL, (value) => {
+    CHAT_LABEL = value;
+  }), bindRuntimeValue(runtime2, "CHAT_NEW_REPLY_LABEL", () => CHAT_NEW_REPLY_LABEL, (value) => {
+    CHAT_NEW_REPLY_LABEL = value;
+  }), () => {
     (0, runtime2.initializeUiPropertyRow3)(), (0, runtime2.initializeUiInputs210)(), reactA6 = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), (0, runtime2.initializeUiPropertyPopover2)(), (0, runtime2.initializeUiPointerMedia)(), jsx_5 = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), TOOLBAR_WIDE_BREAKPOINT = 1e3, TOOLBAR_COMPACT_BREAKPOINT = 896, TOOLBAR_FULL_BREAKPOINT = 1072, TOOLBAR_QUIET_SELECTOR = "[hidden], [aria-hidden='true'], [data-quiet], [data-tb-paddle], [data-tb-fade], .tb-divider", TOOLBAR_CONTENT_SELECTOR = "button, input, select, textarea, a[href], img, svg, video, canvas, [data-cds]:not([data-cds='Surface']), [data-tb-status], [data-tb-shows]", TOOLBAR_LAYOUT_ROLES = /* @__PURE__ */ new Set([
       "presentation",
       "none",
@@ -717,9 +820,9 @@ function installUiArtifactToolbar(runtime2) {
       "toolbar",
       "separator",
       "region"
-    ]), TOOLBAR_FOCUSABLE_SELECTOR = "button, a[href], input, select, textarea, [role='button']", TOOLBAR_REFIT_EVENT = "tb-refit", isToolbarSaveIndicator = (element) => element.matches(".tb-sync-dot, [data-tb-save]"), toggleAttributeIfChanged = (element, attribute, enabled) => {
+    ]), TOOLBAR_FOCUSABLE_SELECTOR = "button, a[href], input, select, textarea, [role='button']", TOOLBAR_PAGE_STOP_SELECTOR = `${TOOLBAR_FOCUSABLE_SELECTOR}, [role='radio'], [role='tab'], [role='switch'], [role='checkbox']`, TOOLBAR_REFIT_EVENT = "tb-refit", isToolbarSaveIndicator = (element) => element.matches(".tb-sync-dot, [data-tb-save]"), toggleAttributeIfChanged = (element, attribute, enabled) => {
       enabled !== element.hasAttribute(attribute) && element.toggleAttribute(attribute, enabled);
-    }, TOOLBAR_WORD_LOCK_MARGIN = 48, TOOLBAR_PADDLE_CLASS = "absolute inset-y-0 z-10 flex w-6 items-center justify-center pointer-coarse:w-10";
+    }, TOOLBAR_WORD_LOCK_MARGIN = 48, TOOLBAR_PAGE_SLACK = 8, TOOLBAR_PADDLE_CLASS = "absolute inset-y-0 z-10 flex w-6 items-center justify-center pointer-coarse:w-10", CHAT_LABEL = (0, runtime2.untranslatedMessage)("对话"), CHAT_NEW_REPLY_LABEL = (0, runtime2.untranslatedMessage)("对话，有新回复");
   };
 }
 export {

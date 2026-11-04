@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installDesignSystemSlideStyles(runtime2) {
   const THEME = "neutral", nonLatinPattern = /[^\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}]/u, noFamilies = /* @__PURE__ */ new Set(), seriesCache = /* @__PURE__ */ new WeakMap(), usesCache = /* @__PURE__ */ new WeakMap(), rgb = (color) => (0, runtime2.hexColorRgb)(color);

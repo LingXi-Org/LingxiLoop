@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import ts from 'typescript'
 import { computeScope } from './ci-scope.mjs'
+import '../deploy/retain-editor-assets.test.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8').replaceAll('\r\n', '\n')
 
@@ -98,9 +99,6 @@ test('server image includes the complete shared runtime import graph', () => {
     ])
   const copied = runtime.split(/\r?\n/)
     .filter(line => /^COPY (?:src|shared)[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
-  assert.deepEqual(copied.filter(path => path.startsWith('src/features/cases/cover-vm')), [
-    'runtime', 'protocol', 'program', 'guest-source', 'svg',
-  ].map(name => `src/features/cases/cover-vm/${name}.ts`), 'Server ships only the five shared VM sources')
   const pending = [
     ...ts.sys.readDirectory(resolve(root, 'server/src'), ['.ts'], ['**/*.test.ts', '**/__tests__/**', '**/__integration__/**']),
     ...copied.filter(path => path.endsWith('.ts')).map(path => resolve(root, path)),
@@ -182,10 +180,11 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   const stage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
     .find(part => /^.* AS spa-build\r?\n/.test(part))
   assert.ok(stage, 'SPA build stage exists')
-  const copied = stage.split(/\r?\n/).filter(line => /^COPY /.test(line)).flatMap(line => {
+  const copiesOf = stage => stage.split(/\r?\n/).filter(line => /^COPY /.test(line)).flatMap(line => {
     const [, ...args] = line.trim().split(/\s+/), destination = args.pop()
     return args.map(source => ({ source, destination: resolve(root, destination) }))
   })
+  const copied = copiesOf(stage)
   const patterns = read('server/docker/lingxiloop-server.Dockerfile.dockerignore')
     .split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'))
   const inContext = path => {
@@ -197,11 +196,26 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     }
     return included
   }
-  const packaged = path => inContext(path) && copied.some(({ source, destination }) => {
+  const packaged = (path, copies = copied) => inContext(path) && copies.some(({ source, destination }) => {
     if (path !== source && !path.startsWith(`${source}/`)) return false
     const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
     return resolve(destination, suffix) === resolve(root, path)
   })
+  for (const name of ['visualize-build', 'spa-build']) {
+    const editorStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
+      .find(part => part.split('\n')[0].endsWith(` AS ${name}`))
+    assert.ok(editorStage, `${name} exists`)
+    for (const { source } of copiesOf(editorStage)) {
+      if (ts.sys.fileExists(resolve(root, source))) {
+        assert.ok(inContext(source), `${name} explicit COPY input excluded from Docker context: ${source}`)
+      }
+    }
+    for (const path of ['scripts/design-copy.mjs', 'third_party/baoyu-design/host/design-zh-CN.json',
+      'third_party/baoyu-design/host/slides-zh-CN.json', 'third_party/baoyu-design/host/design-theme.css',
+      'src/styles/fonts.css', 'public/fonts/mingli/inter-OFL.txt']) {
+      assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing Design host input: ${path}`)
+    }
+  }
   for (const path of ['server/package.json', 'server/package-lock.json', 'server/build/web/package.json',
     'server/build/web/package-lock.json', 'server/scripts/check-packaged-startup.mjs']) {
     assert.ok(inContext(path), `Missing build/runtime input: ${path}`)
@@ -209,12 +223,6 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   for (const path of ['server/build/admin/package-lock.json', 'server/scripts/scoped-dependencies.mjs',
     'server/fixtures/historical-runtime-3.8.2.json', 'server/src/__tests__/gateway-auth.test.ts']) {
     assert.equal(inContext(path), false, `Non-runtime server content entered image context: ${path}`)
-  }
-  for (const name of ['runtime.ts', 'protocol.ts', 'program.ts', 'guest-source.ts', 'svg.ts', 'session.ts', 'worker.ts', 'CaseCoverPreview.tsx']) {
-    assert.ok(inContext(`src/features/cases/cover-vm/${name}`), `Missing cover source in SPA context: ${name}`)
-  }
-  for (const name of ['verify-package.mjs', 'guest.ts', 'guest-entry.ts', 'build-guest.mjs', 'guest.test.ts', 'session.test.ts']) {
-    assert.equal(inContext(`src/features/cases/cover-vm/${name}`), false, `Cover build/test input must stay out of image context: ${name}`)
   }
   const pathOf = file => relative(root, file).replaceAll('\\', '/')
   const options = { moduleResolution: ts.ModuleResolutionKind.Bundler, baseUrl: root, paths: { '@/*': ['src/*'] } }
@@ -568,7 +576,6 @@ test('workflow path filters route real changed paths to their owning checks', ()
     // Server runtime imports must not silently receive only Web checks.
     ['src/lib/mentions.ts', 'integration', 'server'],
     ['src/lib/memoryActivity.ts', 'integration', 'server'],
-    ...['runtime', 'protocol', 'program', 'guest-source', 'svg'].map(name => [`src/features/cases/cover-vm/${name}.ts`, 'integration', 'server']),
     ['src/features/chat/visualize/zcode/shared/gen-ui/contract.ts', 'integration', 'server'],
     ['third_party/assistant-ui/streaming-text/upstream/utils/range.ts', 'web', 'server'],
     ['third_party/assistant-ui/streaming-text/LICENSE', 'web', 'server'],
@@ -599,7 +606,6 @@ test('workflow path filters route real changed paths to their owning checks', ()
     assert.equal(scope.server, true, `server check missing for ${file}`)
     assert.equal(scope.integration, true, `integration missing for ${file}`)
     assert.notEqual(scope.integration_mode, 'full', `shared source must use bounded owning checks: ${file}`)
-    if (file.startsWith('src/features/cases/cover-vm/')) assert.ok(scope.integration_files.includes('case-covers.test.ts'), file)
   }
 })
 
@@ -682,7 +688,7 @@ test('workflow carries explicit integration mode and bounded ordinary budgets', 
   const checks = workflow.match(/^  checks:\r?\n([\s\S]*?)(?=^  integration:)/m)?.[1]
   assert.match(checks, /timeout-minutes: 8/)
   const integration = workflow.match(/^  integration:\r?\n([\s\S]*?)(?=^  deploy:)/m)?.[1]
-  assert.match(integration, /timeout-minutes: \$\{\{ needs.changes.outputs.deep_integration == 'true' && 30 \|\| 8 \}\}/)
+  assert.match(integration, /timeout-minutes: \$\{\{ needs.changes.outputs.deep_integration == 'true' && 30 \|\| 12 \}\}/)
   assert.match(integration, /- if: always\(\)\r?\n\s+uses: actions\/upload-artifact@v4/)
   assert.match(integration, /path: artifacts\/ci-integration\/timings\.json/)
   assert.match(integration, /if-no-files-found: warn/)

@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorCanvas(runtime2) {
-  var CanvasEditorJsx, EMPTY_EDITOR_TOOL_OPTIONS, placementSideToSnapLine, HORIZONTAL_GROUP_RESIZE_HANDLES, EDITOR_ENTER_KEY_HINTS, EDITOR_TEXT_ZOOM_BOTTOM_PADDING, EDITOR_TEXT_ZOOM_MIN_TEXT_PX, EDITOR_KEYBOARD_ZOOM, EDITOR_TEXT_ZOOM_TAP_GUARD_MS, TEXT_COLOR_LABEL, STYLE_DEFAULT_LABEL, SYSTEM_FONT_LABEL, THEME_DEFAULT_LABEL, SLIDE_FULL_MESSAGE;
+  var CanvasEditorJsx, EMPTY_EDITOR_TOOL_OPTIONS, placementSideToSnapLine, HORIZONTAL_GROUP_RESIZE_HANDLES, FAR_CORNER_RESIZE_HANDLES, EDITOR_ENTER_KEY_HINTS, EDITOR_TEXT_ZOOM_BOTTOM_PADDING, EDITOR_TEXT_ZOOM_MIN_TEXT_PX, EDITOR_KEYBOARD_ZOOM, EDITOR_TEXT_ZOOM_TAP_GUARD_MS, TEXT_COLOR_LABEL, STYLE_DEFAULT_LABEL, SYSTEM_FONT_LABEL, THEME_DEFAULT_LABEL, SLIDE_FULL_MESSAGE, TABLE_ROWS_LABEL, TABLE_COLUMNS_LABEL, LINK_REMOVED_MESSAGE;
   function editorVideoEnterHint(handle) {
     return handle?.openLabel !== void 0 ? "open" : handle !== void 0 && handle.pause === void 0 ? "playStop" : "play";
   }
@@ -56,7 +56,13 @@ function installEditorCanvas(runtime2) {
   }
   function linkChangeMessage(changes) {
     let changed = changes.filter(([before, after]) => before !== after);
-    return changed.length === 0 ? null : changed.every(([, after]) => after === "") ? "Link removed" : changed.every(([before]) => before === "") ? "Link added" : "Link updated";
+    return changed.length === 0 ? null : changed.every(([, after]) => after === "") ? LINK_REMOVED_MESSAGE : changed.every(([before]) => before === "") ? (0, runtime2.formatMessage)({
+      defaultMessage: "已添加链接",
+      id: "K4pwX0X+kC"
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage : "已更新链接",
+      id: "cvnuuIv1TJ"
+    });
   }
   function announceLinkChanges(changes) {
     let message = linkChangeMessage(changes);
@@ -66,13 +72,27 @@ function installEditorCanvas(runtime2) {
   function typeStylesToEditorOptions(typeStyles) {
     return typeStyles.map((input) => ({
       value: input.id,
-      text: input.name,
+      text: (0, runtime2.typographyStyleName)( input),
       label: CanvasEditorJsx.jsx("span", {
         className: "min-w-0 whitespace-nowrap",
         style: (0, runtime2.typographyStyleCss)(input),
-        children: input.name
+        children: input.id === runtime2.CUSTOM_TYPOGRAPHY_STYLE_ID ? CanvasEditorJsx.jsxs(CanvasEditorJsx.Fragment, {
+          children: [
+            CanvasEditorJsx.jsx("span", {
+              className: "sr-only",
+              children: (0, runtime2.customFaceLabel)((0, runtime2.typographyStyleName)(input))
+            }),
+            CanvasEditorJsx.jsx("span", {
+              "aria-hidden": "true",
+              children: (0, runtime2.typographyStyleName)(input)
+            })
+          ]
+        }) : (0, runtime2.typographyStyleName)(input)
       }),
       hint: input.hint,
+      ...input.id === runtime2.CUSTOM_TYPOGRAPHY_STYLE_ID ? {
+        unsearched: !0
+      } : {},
       ...input.title !== void 0 ? {
         title: input.title
       } : {},
@@ -858,7 +878,7 @@ function installEditorCanvas(runtime2) {
     let frame = (0, runtime2.frameById)(slide, unit.frameId), node = frame ? (0, runtime2.nodeAtPath)(frame.node, unit.path) : void 0, cell = unit.cell;
     return cell ? (0, runtime2.isTableNode)(node) && (0, runtime2.tableCellExists)(node, cell.r, cell.c) : (0, runtime2.isEditableTextNode)(node);
   }
-  function SlideCanvasEditor({ slide, lookPreview, slideNumber, slideName, busy, designColors, slideColors, assets, faces, facesFull, fonts, typeStyles, deckTypeStyles, onReplaceImage, pickImage, pending = [], covered, peerLayer, onPointerNorm, selection, onSelectionChange, onLiveChange, onGestureEnd, onMenu, dragLiveRef, textEdit, onTextEdit, onDropImage, onDropInsert, onCropStart, returnTakenHint, deckCellCount, withinStyleBudget, onOpenInspector, moreMenu, onDeleteSelection, selectionMenuHidden = !1, onChangeSlide, presenting, commenting = !1, commentStop = !0, zoomApiRef, onScaleChange, onStageMoved, startCamera, onCamera, bottomInset, topInset, sideInset, readOnly = !1, stageOverlay, surround }) {
+  function SlideCanvasEditor({ slide, lookPreview, slideNumber, slideName, busy, designColors, slideColors, assets, faces, facesFull, fonts, typeStyles, deckTypeStyles, onReplaceImage, pickImage, beginImageEdit, pending = [], covered, peerLayer, onPointerNorm, selection, onSelectionChange, onLiveChange, onGestureEnd, onMenu, dragLiveRef, textEdit, onTextEdit, onDropImage, onDropInsert, onCropStart, returnTakenHint, deckCellCount, withinStyleBudget, onOpenInspector, moreMenu, onDeleteSelection, selectionMenuHidden = !1, onChangeSlide, presenting, commenting = !1, commentStop = !0, zoomApiRef, onScaleChange, onStageMoved, startCamera, onCamera, bottomInset, topInset, sideInset, readOnly = !1, stageOverlay, surround }) {
     let stageRef = runtime2.reactK_.useRef(null), slideSurfaceRef = runtime2.reactK_.useRef(null), pointInsideSlide = runtime2.reactK_.useCallback((input, options) => {
       let value59 = slideSurfaceRef.current?.getBoundingClientRect();
       return value59 !== void 0 && input >= value59.left && input <= value59.right && options >= value59.top && options <= value59.bottom;
@@ -913,7 +933,13 @@ function installEditorCanvas(runtime2) {
         tree: input2,
         stops: [...input2].sort((input3, options) => callback77(input3) - callback77(options))
       }));
-    }, [keyboardTargets, slide.id, keyboardOrderGeneration]), slideNavigationUnits = runtime2.reactK_.useMemo(() => (0, runtime2.slideNavigationSelections)(slide), [slide]), slideKeyboardInstructions = returnTakenHint ?? (slideNavigationUnits.length === 0 ? "This slide has no objects." : "Press Enter to go into the slide. Inside, Tab and Shift+Tab move between its objects, Shift+Enter goes up a level, and Escape comes back here."), singleTransformTarget = resolveSingleUnitTransformTarget(slide, selection), singleStyleTarget = readOnly ? null : resolveSingleUnitStyleTarget(slide, selection), lastSelectedRect = selection.length > 0 ? selectionRects[selection.length - 1] ?? null : null, [measurementGeneration, refreshMeasurements] = runtime2.reactK_.useState(0), [rotationPreviewAngle, setRotationPreviewAngle] = runtime2.reactK_.useState(null), [endpointSnapPoint, setEndpointSnapPoint] = runtime2.reactK_.useState(null), [altPressed, setAltPressed] = runtime2.reactK_.useState(!1), altPressedRef = runtime2.reactK_.useRef(!1);
+    }, [keyboardTargets, slide.id, keyboardOrderGeneration]), slideNavigationUnits = runtime2.reactK_.useMemo(() => (0, runtime2.slideNavigationSelections)(slide), [slide]), slideKeyboardInstructions = returnTakenHint ?? (slideNavigationUnits.length === 0 ? (0, runtime2.formatMessage)({
+      defaultMessage: "此页没有对象。",
+      id: "5/PSDTdJca"
+    }) : (0, runtime2.formatMessage)({
+      defaultMessage : "按 Enter 进入幻灯片。在其中，Tab 和 Shift+Tab 在对象间移动，Shift+Enter 返回上一层，Esc 回到此处。",
+      id: "DR3tyC4Uxp"
+    })), singleTransformTarget = resolveSingleUnitTransformTarget(slide, selection), singleStyleTarget = readOnly ? null : resolveSingleUnitStyleTarget(slide, selection), lastSelectedRect = selection.length > 0 ? selectionRects[selection.length - 1] ?? null : null, [measurementGeneration, refreshMeasurements] = runtime2.reactK_.useState(0), [rotationPreviewAngle, setRotationPreviewAngle] = runtime2.reactK_.useState(null), [endpointSnapPoint, setEndpointSnapPoint] = runtime2.reactK_.useState(null), [altPressed, setAltPressed] = runtime2.reactK_.useState(!1), altPressedRef = runtime2.reactK_.useRef(!1);
     altPressedRef.current = altPressed;
     let lastPointerTargetRef = runtime2.reactK_.useRef(null), lastPointerSlideRef = runtime2.reactK_.useRef(null), [distanceHoverTarget, setDistanceHoverTarget] = runtime2.reactK_.useState(null), [hoverTarget, setHoverTarget] = runtime2.reactK_.useState(null), [hoverRect, setHoverRect] = runtime2.reactK_.useState(null), [textEditRect, setTextEditRect] = runtime2.reactK_.useState(null), [distanceMeasurements, setDistanceMeasurements] = runtime2.reactK_.useState(null);
     runtime2.reactK_.useLayoutEffect(() => {
@@ -1029,7 +1055,7 @@ function installEditorCanvas(runtime2) {
       topInset,
       sideInset
     ]);
-    let value7 = (0, runtime2.useCoarsePointer)(), value8 = (0, runtime2.useFrameBottomInset)(), value9 = textEdit !== null && value7 && surround === void 0 && Math.min(window.screen.width, window.screen.height) < EDITOR_TEXT_ZOOM_DURATION_MS ? (0, runtime2.selectionKey)((0, runtime2.createNodeSelection)(textEdit.frameId, textEdit.path)) : null, keyboardKeyRef = runtime2.reactK_.useRef(null), textZoomRotated = ref4.current?.key === value9 && ref4.current.w !== stageSize.w;
+    let value7 = (0, runtime2.useCoarsePointer)(), smallCoarsePointer = (0, runtime2.useSmallCoarsePointer)(), value8 = (0, runtime2.useFrameBottomInset)(), value9 = textEdit !== null && value7 && surround === void 0 && Math.min(window.screen.width, window.screen.height) < EDITOR_TEXT_ZOOM_DURATION_MS ? (0, runtime2.selectionKey)((0, runtime2.createNodeSelection)(textEdit.frameId, textEdit.path)) : null, keyboardKeyRef = runtime2.reactK_.useRef(null), textZoomRotated = ref4.current?.key === value9 && ref4.current.w !== stageSize.w;
     textZoomRotated ? keyboardKeyRef.current = null : (value8 > 0 || value9 === null) && (keyboardKeyRef.current = value9);
     let [, setKeyboardTick] = runtime2.reactK_.useState(0);
     runtime2.reactK_.useEffect(() => {
@@ -1150,7 +1176,7 @@ function installEditorCanvas(runtime2) {
       stageRef.current?.focus({
         preventScroll: !0
       });
-    }, []), value13 = runtime2.reactK_.useId(), value14 = value13 + "-slide-hint", value15 = value13 + "-object-hint", shownBeforeIdPrefix = value13 + "-object-before-", shownAfterIdPrefix = value13 + "-object-after-", selectedCountPrefix = (key) => key === lastSelectedUnitKey && selection.length > 1 ? String(selection.length) + " objects selected; " : "", value16 = value13 + "-slide-heading", ref28 = runtime2.reactK_.useRef(null), [value17, value18] = runtime2.reactK_.useState(!1), ref29 = runtime2.reactK_.useRef(0), [value19, value20] = runtime2.reactK_.useState(!1);
+    }, []), value13 = runtime2.reactK_.useId(), value14 = value13 + "-slide-hint", value15 = value13 + "-object-hint", shownBeforeIdPrefix = value13 + "-object-before-", shownAfterIdPrefix = value13 + "-object-after-", selectedCountLabel = (key, name) => key === lastSelectedUnitKey && selection.length > 1 ? (0, runtime2.selectedObjectsLabel)(selection.length, name) : name, value16 = value13 + "-slide-heading", ref28 = runtime2.reactK_.useRef(null), [value17, value18] = runtime2.reactK_.useState(!1), ref29 = runtime2.reactK_.useRef(0), [value19, value20] = runtime2.reactK_.useState(!1);
     runtime2.reactK_.useEffect(() => {
       value17 && value20(!0);
     }, [value17, selectionKey2]);
@@ -1279,7 +1305,37 @@ function installEditorCanvas(runtime2) {
         let entry = frameElementsRef.current.get(input.frameId), value59 = input.child === void 0 ? entry : entry?.querySelector('[data-node-path="' + (0, runtime2.selectionNodePath)(input).join(".") + '"]');
         return value59 != null && (0, runtime2.hasTextFitCssVariable)(value59);
       }
-    }), []), callback17 = () => {
+    }), []), scaleMode = (0, runtime2.useScaleMode)({
+      slide: () => slideRef.current,
+      selection: () => selectionRef.current,
+      rect: (input) => {
+        let value59 = memo4.rect(input), [value60, value61] = [
+          (0, runtime2.frameById)(slideRef.current, input.frameId)?.node,
+          (0, runtime2.selectionNodePath)(input)
+        ], value62 = value60 === void 0 || value61.every((input2, options) => (0, runtime2.nodeTransform)((0, runtime2.nodeAtPath)(value60, value61.slice(0, options))) === void 0) ? null : frameElementsRef.current.get(input.frameId)?.querySelector('[data-node-path="' + value61.join(".") + '"]');
+        if (value59 === void 0 || value62 == null)
+          return value59;
+        let [value63, value64] = "offsetWidth" in value62 ? [value62.offsetWidth, value62.offsetHeight] : [
+          parseFloat(getComputedStyle(value62).width),
+          parseFloat(getComputedStyle(value62).height)
+        ];
+        return Number.isFinite(value63) && Number.isFinite(value64) ? {
+          ...value59,
+          w: value63,
+          h: value64
+        } : value59;
+      },
+      camera: () => ref8.current.scale,
+      onLiveChange,
+      onGestureEnd,
+      remeasure: () => refreshMeasurements((input) => input + 1),
+      focusCanvas: callback8,
+      focusSelection: callback16,
+      setLive: (input) => {
+        dragLiveRef && (dragLiveRef.current = input);
+      },
+      off: readOnly || textEdit !== null || imageCropController.session !== null
+    }), callback17 = () => {
       let value59 = stageRef.current?.getBoundingClientRect(), value60 = slideSurfaceRef.current?.getBoundingClientRect();
       if (value59 === void 0 || value60 === void 0 || value60.width <= 0)
         return null;
@@ -1321,6 +1377,8 @@ function installEditorCanvas(runtime2) {
         };
       },
       groupMeasure: memo4,
+      armScale: scaleMode.arm,
+      scaleKey: scaleMode.onKey,
       menuPoint: callback17,
       canLinkSelection: () => elementLinkOpenerRef.current !== null,
       linkSelection: () => elementLinkOpenerRef.current?.(),
@@ -3748,7 +3806,10 @@ function installEditorCanvas(runtime2) {
       })));
     }, value40 = null;
     ref19.current = null;
-    let value41 = onOpenInspector ?? onChangeSlide ?? ((0, runtime2.commentsAvailable)() ? !0 : void 0), value42 = !readOnly && value41 !== void 0 && !selectionMenuHidden, value43 = textEdit !== null && textEdit.cell === void 0 && value39?.onRichInput !== void 0 && lastSelectedUnit !== void 0 && lastSelectedUnit.frameId === textEdit.frameId && (0, runtime2.nodePathsEqual)((0, runtime2.selectionNodePath)(lastSelectedUnit), textEdit.path), value44 = (0, runtime2.commonSelectedNodeKind)(slide, selection), value45 = lastSelectedUnit ? (0, runtime2.selectedNode)(slide, lastSelectedUnit) : void 0, selectedIsVideo = selection.length === 1 && value45?.kind === "img" && !1, selectedIsEmbeddableVideo = !1, value46 = selectedIsVideo ? "Video formatting" : EDITOR_FORMATTING_LABELS[value44 ?? "mixed"], value47 = (0, runtime2.createRovingKeyHandler)(callback16), value48 = onChangeSlide !== void 0 && value44 === "text" && value45?.kind === "text" ? value45 : null, callback73 = (input) => {
+    let value41 = onOpenInspector ?? onChangeSlide ?? ((0, runtime2.commentsAvailable)() ? !0 : void 0), value42 = !readOnly && value41 !== void 0 && !selectionMenuHidden, value43 = textEdit !== null && textEdit.cell === void 0 && value39?.onRichInput !== void 0 && lastSelectedUnit !== void 0 && lastSelectedUnit.frameId === textEdit.frameId && (0, runtime2.nodePathsEqual)((0, runtime2.selectionNodePath)(lastSelectedUnit), textEdit.path), value44 = (0, runtime2.commonSelectedNodeKind)(slide, selection), value45 = lastSelectedUnit ? (0, runtime2.selectedNode)(slide, lastSelectedUnit) : void 0, selectedIsVideo = selection.length === 1 && value45?.kind === "img" && !1, selectedIsEmbeddableVideo = !1, value46 = scaleMode.grips !== null ? scaleMode.stripName : selectedIsVideo ? (0, runtime2.formatMessage)({
+      defaultMessage: "视频格式",
+      id: "umk7GaaAMt"
+    }) : EDITOR_FORMATTING_LABELS[value44 ?? "mixed"], value47 = (0, runtime2.createRovingKeyHandler)(callback16), value48 = onChangeSlide !== void 0 && value44 === "text" && value45?.kind === "text" ? value45 : null, callback73 = (input) => {
       if (onChangeSlide === void 0)
         return;
       let value59 = value43 ? callback68() : slide;
@@ -3757,7 +3818,7 @@ function installEditorCanvas(runtime2) {
     if (value43 && value48 !== null && !readOnly && (callback69 = (input) => {
       let element = document.querySelector("[data-text-path][contenteditable]"), value59 = element !== null ? (0, runtime2.readRichTextSelection)(element, runtime2.resolveSlideColor) : null, [value60, value61, value62] = input === "bold" ? [value50, value55, callback74] : input === "italic" ? [value51, value56, callback75] : [value53, value53, callback76];
       input === "underline" && !value60 && (value48.style?.textDecorationLine === "line-through" || value59?.touchesLink === !0) || (value60 || value61 && value59?.[input] !== !0 ? value62() : (0, runtime2.executeRichTextCommand)(input));
-    }), lastSelectedRect !== null && (textEdit === null || value43) && dragSessionRef.current?.moved !== !0 && value2 === null && value41 !== void 0 && !selectionMenuHidden && !readOnly) {
+    }), lastSelectedRect !== null && (textEdit === null || value43) && dragSessionRef.current?.moved !== !0 && value2 === null && value41 !== void 0 && ( !selectionMenuHidden || scaleMode.grips !== null) && !readOnly) {
       let value59 = slideSurfaceRef.current?.getBoundingClientRect();
       if (value59) {
         let callback77 = function(input) {
@@ -3766,7 +3827,10 @@ function installEditorCanvas(runtime2) {
         }, value60 = onChangeSlide !== void 0 && selection.length === 1 && value45?.kind === "table" ? value45 : null, { style: value61, mixed: value62 } = value48 !== null ? (0, runtime2.matchingTypographyNodes)(value48, value52, resolvedTypeStyles, value49) : {
           style: null,
           mixed: !1
-        }, value63 = value48 !== null && value52.some((input) => input.color !== value48.color), value64 = value48 !== null && value52.some((input) => (input.align ?? "start") !== (value48.align ?? "start")), value65 = value48 !== null && value52.some((input) => input.lineLists !== void 0 || input.list !== value48.list), value66 = (() => {
+        }, customTypeStyle = value48 !== null ? (0, runtime2.customTypographyStyle)(value48, {
+          style: value61,
+          mixed: value62
+        }, resolvedTypeStyles, value49) : null, value63 = value48 !== null && value52.some((input) => input.color !== value48.color), value64 = value48 !== null && value52.some((input) => (input.align ?? "start") !== (value48.align ?? "start")), value65 = value48 !== null && value52.some((input) => input.lineLists !== void 0 || input.list !== value48.list), value66 = (() => {
           if (value45 === void 0 || onChangeSlide === void 0 || value44 === void 0)
             return null;
           let value102 = value45;
@@ -3864,7 +3928,7 @@ function installEditorCanvas(runtime2) {
         } : null, value68 = value48 !== null && selection.length === 1 && NODE_BACKGROUND_AND_PADDING_PROPERTIES.some((input) => value48.style?.[input] !== void 0), value69 = value67 !== null && (value44 === "stack" || value44 === "grid" || value44 === "overlay") ? value45 : void 0, value70 = value67 !== null && selection.length === 1 && value45?.kind === "img" ? value45 : null, value71 = value67 !== null && value44 === "shape" && value45?.kind === "shape" && value45.shape !== "connector" && value45.shape !== "line" ? value45 : null, value72 = value71 !== null && !selection.some((input) => {
           let value102 = (0, runtime2.selectedNode)(slide, input);
           return value102?.kind === "shape" && value102.shape !== "connector" && (0, runtime2.shapeHasOutline)(value102.style);
-        }) ? runtime2.BORDER_REQUIRED_REASON : void 0, value73 = value48?.align ?? "start", value74 = value7, value75 = getEditorViewportBounds(stageRef.current, topInset), value76 = value75.right - value75.left - 16, value77 = value48 !== null && value34 !== null, value78 = value48 ? value77 ? value7 ? 320 : 360 : (value7 ? 370 : 300) + (value7 ? 125 : 105) : 0, value79 = value7 ? 44 : 32, value80 = value66 !== null ? value7 ? 52 : 46 : 0, value81 = (value69 !== void 0 || value68 ? (value7 ? 52 : 46) + value79 * 3 + 16 : 0) + (value71 !== null ? (value7 ? 52 : 46) + value79 + 8 : 0) + (value70 !== null ? value79 * 3 + 8 : 0) + (value60 !== null ? value7 ? 200 : 150 : 0), value82 = ((0, runtime2.commentsAvailable)() ? 1 : 0) + (value7 && onDeleteSelection !== void 0 ? 1 : 0) + (onOpenInspector !== void 0 ? 1 : 0), value83 = value7 ? 0 : 8, value84 = (value48 && !value77 ? 12 + value83 : 0) + (value69 !== void 0 || value68 ? 4 + value83 : 0) + (value71 !== null ? 2 : 0) + (value70 !== null ? 2 : 0) + Math.max(0, value82 - 1) * 2 + (value82 > 0 && value60 === null ? value83 : 0) + value83, value85 = value78 + value80 + value81 + value82 * value79 + 16 - value84, value86 = !value74 && value85 > value76, value87 = Math.min(value85, value76), value88 = value7 ? 44 : 34, value89 = !value74 && value87 >= value76 ? value88 * 2 : value88, value90 = (0, runtime2.rotatedRectBounds_Rn)(lastSelectedRect), value91 = null, { top: value92, placed: value93, overlaps: value94 } = placeFloatingEditorToolbar({
+        }) ? runtime2.BORDER_REQUIRED_REASON : void 0, value73 = value48?.align ?? "start", bottomToolbar = !value7 && (0, runtime2.readBottomToolbarFlag)(), value74 = value7, foldToolbar = (0, runtime2.readBottomToolbarFlag)() && !smallCoarsePointer, value75 = getEditorViewportBounds(stageRef.current, topInset), value76 = value75.right - value75.left - 16, value77 = value48 !== null && value34 !== null, value78 = value48 ? value77 ? value7 ? 320 : bottomToolbar ? 376 : 360 : (value7 ? 370 : 300) + (value7 ? 125 : 105) + (bottomToolbar ? 64 : 0) : 0, value79 = value7 ? 44 : bottomToolbar ? 40 : 32, rowHeight = value7 ? 52 : bottomToolbar ? 54 : 46, value80 = value66 !== null ? rowHeight : 0, value81 = (value69 !== void 0 || value68 ? rowHeight + value79 * 3 + 16 : 0) + (value71 !== null ? rowHeight + value79 + 8 : 0) + (value70 !== null ? value79 * 3 + 8 : 0) + (value60 !== null ? value7 ? 200 : bottomToolbar ? 190 : 150 : 0), value82 = ((0, runtime2.commentsAvailable)() ? 1 : 0) + (value7 && onDeleteSelection !== void 0 ? 1 : 0) + (onOpenInspector !== void 0 ? 1 : 0), value83 = value7 ? 0 : 8, value84 = (value48 && !value77 ? 12 : 0) + (value69 !== void 0 || value68 ? 4 + value83 : 0) + (value71 !== null ? 2 : 0) + (value70 !== null ? 2 : 0) + Math.max(0, value82 - 1) * 2 + (value82 > 0 && value60 === null ? value83 : 0) + value83, value85 = value78 + value80 + value81 + value82 * value79 + 16 - value84, value86 = !foldToolbar && !value74 && value85 > value76, value87 = Math.min(value85, value76), value88 = value7 ? 44 : bottomToolbar ? 40 : 34, value89 = !foldToolbar && !value74 && value87 >= value76 ? value88 * 2 : value88, value90 = (0, runtime2.rotatedRectBounds_Rn)(lastSelectedRect), value91 = null, { top: value92, placed: value93, overlaps: value94 } = placeFloatingEditorToolbar({
           selTop: value59.top + value90.y * scale,
           selBottom: value59.top + (value90.y + value90.h) * scale,
           menuH: value89,
@@ -3983,19 +4047,33 @@ function installEditorCanvas(runtime2) {
           placed: value93,
           coversSelection: value94,
           wrap: !value74,
+          fold: foldToolbar,
+          foldKey: selectionKey2,
+          foldBand: {
+            top: value75.top,
+            bottom: constrainEditorBandBottom(value75.bottom - (bottomInset ?? 0), window.innerHeight, value8)
+          },
           style: {
             position: "fixed",
             left: value95,
             top: value92,
-            maxWidth: value76
+            maxWidth: foldToolbar ? value75.right - 8 - value95 : value76
           },
-          children: value48 !== null && value97 !== null ? CanvasEditorJsx.jsx(TextFormattingToolbar, {
+          children: scaleMode.grips !== null ? scaleMode.strip() : value48 !== null && value97 !== null ? CanvasEditorJsx.jsx(TextFormattingToolbar, {
             selKey: selectionKey2,
             compact: value86,
             oneRow: value74,
-            styleValue: value62 || value61 === null ? null : value61.id,
-            styleChip: value62 ? runtime2.MIXED_LABEL : value61 === null ? (0, runtime2.nodeTypographyLabel)(value48, value49) : void 0,
-            styleOptions: typeStyleOptions,
+            styleValue: value62 ? null : ( value61 ?? customTypeStyle)?.id ?? null,
+            styleChip: value62 ? runtime2.MIXED_LABEL : value61 === null ? (0, runtime2.typographyLabel)(value48, value49) : void 0,
+            styleOptions: customTypeStyle !== null ? [
+              ...typeStylesToEditorOptions([
+                {
+                  ...customTypeStyle,
+                  name: (0, runtime2.typographyFaceLabel)(value48, value49)
+                }
+              ]),
+              ...typeStyleOptions
+            ] : typeStyleOptions,
             onStyle: (input) => {
               let value102 = resolvedTypeStyles.find((input2) => input2.id === input);
               value102 !== void 0 && callback73((input2) => (0, runtime2.applyTypographyStyle)(input2, value102, value49));
@@ -4035,7 +4113,8 @@ function installEditorCanvas(runtime2) {
                 updateNodes: callback80,
                 liveUpdateNodes: callback77,
                 end: callback79,
-                pickImage
+                pickImage,
+                beginImageEdit
               }
             },
             bold: value50,
@@ -4153,7 +4232,16 @@ function installEditorCanvas(runtime2) {
                       null,
                       CanvasEditorJsx.jsx(runtime2.SessionImageReplaceButton, {
                         src: value70.asset !== void 0 ? assets.get(value70.asset) : value70.src,
-                        title: onReplaceImage === void 0 ? "此处不支持替换图片" : (0, runtime2.imageHasPoster)(value70) ? "替换图片…" : "添加图片…",
+                        title: onReplaceImage === void 0 ? (0, runtime2.formatMessage)({
+                          defaultMessage: "此处不支持替换图片",
+                          id: "otvXigSoSp"
+                        }) : (0, runtime2.imageHasPoster)(value70) ? (0, runtime2.formatMessage)({
+                          defaultMessage: "替换图片…",
+                          id: "W7MVs+FCyw"
+                        }) : (0, runtime2.formatMessage)({
+                          defaultMessage : "添加图片…",
+                          id: "UVfUc+8BwH"
+                        }),
                         disabled: onReplaceImage === void 0,
                         onClick: () => {
                           ref23.current = {
@@ -4168,8 +4256,17 @@ function installEditorCanvas(runtime2) {
                         icon: CanvasEditorJsx.jsx(runtime2.PropertyIcon, {
                           icon: runtime2.CROP_ICON
                         }),
-                        title: value101 ?? (imageCropController.session !== null ? "完成裁剪（或按 Enter）" : "裁剪（或双击图片）"),
-                        "aria-label": "裁剪",
+                        title: value101 ?? (imageCropController.session !== null ? (0, runtime2.formatMessage)({
+                          defaultMessage: "完成裁剪（或按 Enter）",
+                          id: "CBlPXh93kK"
+                        }) : (0, runtime2.formatMessage)({
+                          defaultMessage : "裁剪（或双击图片）",
+                          id: "yl7zji70XX"
+                        })),
+                        "aria-label": (0, runtime2.formatMessage)({
+                          defaultMessage: "裁剪",
+                          id: "q/EdnWeRDM"
+                        }),
                         "aria-pressed": imageCropController.session !== null,
                         disabled: value101 !== void 0,
                         onClick: () => imageCropController.session !== null ? imageCropController.end(!0) : callback29(value98)
@@ -4189,8 +4286,11 @@ function installEditorCanvas(runtime2) {
                   children: [
                     CanvasEditorJsx.jsx(runtime2.SessionNumberField, {
                       testid: "frame-table-rows",
-                      title: "行",
-                      label: "行",
+                      title: (0, runtime2.formatMessage)({
+                        defaultMessage: "行数。减少行数会删除最下方各行的文字（可撤销）",
+                        id: "NgQabSipLR"
+                      }),
+                      label: TABLE_ROWS_LABEL,
                       icon: runtime2.TABLE_ROWS_ICON,
                       value: value60.rows.length,
                       min: 1,
@@ -4198,14 +4298,16 @@ function installEditorCanvas(runtime2) {
                       maxReason: value60.rows.length >= runtime2.maxTableRows ? (0, runtime2.formatMessage)({
                         defaultMessage: "此表格的行数已达上限。",
                         id: "y22sp58AzJ"
-                      }) : callback32(value60.cols) ?? void 0,
-                      hint: "Fewer rows drop the bottom rows’ text (undoable)",
+                      }) : callback32(value60.cols) ?? TABLE_ROWS_LABEL,
                       onValue: (input) => callback34(slide, lastSelectedUnit.frameId, (0, runtime2.selectionNodePath)(lastSelectedUnit), (input2) => (0, runtime2.resizeTable)(input2, input, input2.cols))
                     }, "r:" + selectionKey2),
                     CanvasEditorJsx.jsx(runtime2.SessionNumberField, {
                       testid: "frame-table-cols",
-                      title: "列",
-                      label: "列",
+                      title: (0, runtime2.formatMessage)({
+                        defaultMessage: "列数。减少列数会删除最右侧各列的文字（可撤销）",
+                        id: "NziyEOVkU0"
+                      }),
+                      label: TABLE_COLUMNS_LABEL,
                       icon: runtime2.TABLE_COLUMNS_ICON,
                       value: value60.cols,
                       min: 1,
@@ -4213,8 +4315,7 @@ function installEditorCanvas(runtime2) {
                       maxReason: value60.cols >= runtime2.maxTableColumns ? (0, runtime2.formatMessage)({
                         defaultMessage: "此表格的列数已达上限。",
                         id: "E9+6yUP6uF"
-                      }) : callback32(Math.max(1, value60.rows.length)) ?? void 0,
-                      hint: "Fewer columns drop the rightmost columns’ text (undoable)",
+                      }) : callback32(Math.max(1, value60.rows.length)) ?? TABLE_COLUMNS_LABEL,
                       onValue: (input) => callback34(slide, lastSelectedUnit.frameId, (0, runtime2.selectionNodePath)(lastSelectedUnit), (input2) => (0, runtime2.resizeTable)(input2, input2.rows.length, input))
                     }, "c:" + selectionKey2)
                   ]
@@ -4222,7 +4323,10 @@ function installEditorCanvas(runtime2) {
               }),
               CanvasEditorJsx.jsx(runtime2.SelectionActionButtons, {
                 onComment: value96,
-                commentTitle: selectedIsEmbeddableVideo ? "Comment on this video" : void 0,
+                commentTitle: selectedIsEmbeddableVideo ? (0, runtime2.formatMessage)({
+                  defaultMessage: "评论此视频",
+                  id: "V+EC9x9MfC"
+                }) : void 0,
                 onDelete: value99,
                 deleteTitle: value100,
                 onOpenInspector,
@@ -4244,7 +4348,7 @@ function installEditorCanvas(runtime2) {
             path: value59.path,
             cell: options
           });
-        }, value65 = value7 ? 440 : 340, value66 = value7 ? 44 : 34, value67 = value62?.querySelector('[data-cell="' + String(cell) + "." + String(cell2) + '"]')?.getBoundingClientRect() ?? value63, value68 = getEditorViewportBounds(stageRef.current, topInset), value69 = value67.top - value66 - 8, value70 = value69 >= value68.top + 8, value71 = value70 ? value69 : Math.min(value68.bottom - value66 - 8, value67.bottom + 8), value72 = Math.max(value68.left + 8, Math.min(value67.left, value68.right - value65 - 8));
+        }, cellBottomToolbar = !value7 && (0, runtime2.readBottomToolbarFlag)(), value65 = value7 ? 440 : cellBottomToolbar ? 380 : 340, value66 = value7 ? 44 : cellBottomToolbar ? 40 : 34, value67 = value62?.querySelector('[data-cell="' + String(cell) + "." + String(cell2) + '"]')?.getBoundingClientRect() ?? value63, value68 = getEditorViewportBounds(stageRef.current, topInset), value69 = value67.top - value66 - 8, value70 = value69 >= value68.top + 8, value71 = value70 ? value69 : Math.min(value68.bottom - value66 - 8, value67.bottom + 8), value72 = Math.max(value68.left + 8, Math.min(value67.left, value68.right - value65 - 8));
         value57 = runtime2.FrameViewportReactDom.createPortal(CanvasEditorJsx.jsxs(FloatingTableCellToolbar, {
           left: value72,
           top: value71,
@@ -4437,14 +4541,19 @@ function installEditorCanvas(runtime2) {
         CanvasEditorJsx.jsx("span", {
           id: value15 + "-toolbar",
           hidden: !0,
-          children: "按 " + (0, runtime2.spokenShortcut)((0, runtime2.formatCommandShortcut)("F6")) + " 可跳转到格式工具栏。"
+          children: (0, runtime2.formatMessage)({
+            defaultMessage: "按 {keys} 移到其格式工具栏。",
+            id: "/ZUZPtQRTf"
+          }, {
+            keys: (0, runtime2.spokenShortcut)((0, runtime2.formatCommandShortcut)("F6"))
+          })
         }),
         keyboardTargets.map((input) => input.shown === void 0 ? null : CanvasEditorJsx.jsxs(runtime2.reactK_.Fragment, {
           children: [
             CanvasEditorJsx.jsx("span", {
               id: shownBeforeIdPrefix + input.key,
               hidden: !0,
-              children: selectedCountPrefix(input.key) + input.shown.before
+              children: selectedCountLabel(input.key, input.shown.before)
             }),
             CanvasEditorJsx.jsx("span", {
               id: shownAfterIdPrefix + input.key,
@@ -4537,7 +4646,12 @@ function installEditorCanvas(runtime2) {
                     CanvasEditorJsx.jsx("span", {
                       className: "sr-only",
                       role: "status",
-                      children: pending.length > 0 ? "正在上传 " + (pending[0]?.what ?? "image") : ""
+                      children: pending.length > 0 ? (0, runtime2.formatMessage)({
+                        defaultMessage: "{what, select, video {正在上传视频} other {正在上传图片}}",
+                        id: "anNq/OoiWG"
+                      }, {
+                        what:pending[0]?.what ?? "image"
+                      }) : ""
                     }),
                     pending.map((input) => CanvasEditorJsx.jsx("div", {
                       className: "absolute overflow-hidden",
@@ -4677,8 +4791,14 @@ function installEditorCanvas(runtime2) {
                     scale,
                     rotation: value59.rotation,
                     grips: !value60 || value65 ? "none" : value62 ? HORIZONTAL_GROUP_RESIZE_HANDLES : void 0,
-                    onResizeStart: callback59,
-                    onGripDoubleClick: (input2) => callback58(placementSideToSnapLine(input2.x), placementSideToSnapLine(input2.y)),
+                    ...scaleMode.grips === "none" ? {
+                      grips: "none"
+                    } : scaleMode.grips === "far" ? {
+                      grips: FAR_CORNER_RESIZE_HANDLES
+                    } : null,
+                    onResizeStart: scaleMode.grips !== null ? scaleMode.startDrag : callback59,
+                    edgeStrips: scaleMode.grips === null,
+                    onGripDoubleClick: (input2) => scaleMode.grips !== null ? void 0 : callback58(placementSideToSnapLine(input2.x), placementSideToSnapLine(input2.y)),
                     onRotateStart: value63 ? callback62 : void 0,
                     angleLabel: value63 && rotationPreviewAngle !== null ? String(rotationPreviewAngle) + "°" : void 0
                   }, (0, runtime2.selectionKey)(input));
@@ -4786,8 +4906,8 @@ function installEditorCanvas(runtime2) {
                     "data-object-cursor": value59 ? value17 ? "keys" : "pointer" : void 0,
                     tabIndex: -1,
                     role: "group",
-                    "aria-roledescription": "object",
-                    "aria-label": selectedCountPrefix(input2.key) + input2.name,
+                    "aria-roledescription": runtime2.OBJECT_WORD,
+                    "aria-label": selectedCountLabel(input2.key, input2.name),
                     "aria-labelledby": shownText === void 0 ? void 0 : [
                       shownBeforeIdPrefix + input2.key,
                       // Same id the slide renderer gives the text's words (cardWordsIds).
@@ -4940,7 +5060,7 @@ function installEditorCanvas(runtime2) {
       if (!element.contains(value31.startContainer) || !element.contains(value31.endContainer))
         return;
       let value32 = (0, runtime2.selectionAnchorElements)(element, value31);
-      value32 !== null && (value30.removeAllRanges(), value30.addRange(value32.range), (0, runtime2.executeRichTextCommand)("unlink"), (0, runtime2.unwrapAnchorElements)(value32.anchors), callback(), (0, runtime2.announceLiveMessage)("Link removed"));
+      value32 !== null && (value30.removeAllRanges(), value30.addRange(value32.range), (0, runtime2.executeRichTextCommand)("unlink"), (0, runtime2.unwrapAnchorElements)(value32.anchors), callback(), (0, runtime2.announceLiveMessage)(LINK_REMOVED_MESSAGE));
     }, value22 = value && value2?.href !== void 0, [value23, value24] = runtime2.reactK_.useState(null), elementLinkWrapRef = runtime2.reactK_.useRef(null), elementLinkAvailable = !value && extra == null;
     runtime2.reactK_.useEffect(() => {
       if (!(linkOpener === void 0 || !elementLinkAvailable))
@@ -5096,7 +5216,10 @@ function installEditorCanvas(runtime2) {
                 defaultMessage: "加粗（{shortcut}）",
                 id: "t50X/+obFg"
               }, { shortcut: (0, runtime2.formatCommandShortcut)("B") }),
-              "aria-label": "加粗",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "加粗",
+                id: "y0IZypMHm9"
+              }),
               "aria-pressed": value15,
               icon: "TextBold",
               onClick: () => value && !bold && (value2?.bold === !0 || !wholeBold) ? callback3("bold") : onBold()
@@ -5106,7 +5229,10 @@ function installEditorCanvas(runtime2) {
                 defaultMessage: "斜体（{shortcut}）",
                 id: "yFlLhHISEH"
               }, { shortcut: (0, runtime2.formatCommandShortcut)("I") }),
-              "aria-label": "斜体",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "斜体",
+                id: "EzaFnWRFka"
+              }),
               "aria-pressed": value16,
               icon: "TextItalics",
               onClick: () => value && !italic && (value2?.italic === !0 || !wholeItalic) ? callback3("italic") : onItalic()
@@ -5117,7 +5243,10 @@ function installEditorCanvas(runtime2) {
                 defaultMessage: "下划线（{shortcut}）",
                 id: "/z2gpT4L9k"
               }, { shortcut: (0, runtime2.formatCommandShortcut)("U") }),
-              "aria-label": "下划线",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "下划线",
+                id: "K8tGkaFn9b"
+              }),
               "aria-pressed": value28 !== null ? void 0 : value17,
               disabled: value28 !== null,
               onClick: () => value && !underline ? callback3("underline") : onUnderline()
@@ -5137,7 +5266,11 @@ function installEditorCanvas(runtime2) {
                 defaultMessage: "为整段文字添加链接，仅支持 http/https",
                 id: "nGAlW/tsVZ"
               }),
-              "aria-label": "链接",
+              "aria-label": (0, runtime2.formatMessage)({
+                defaultMessage: "链接",
+                id: "govrrWN/CT"
+              }),
+              "data-mc-keep": "",
               "aria-pressed": value ? value22 : elementLink !== void 0 || value23 !== null,
               disabled: value27 !== null,
               onClick: () => {
@@ -5203,6 +5336,8 @@ function installEditorCanvas(runtime2) {
     placementSideToSnapLine = value;
   }), bindRuntimeValue(runtime2, "HORIZONTAL_GROUP_RESIZE_HANDLES", () => HORIZONTAL_GROUP_RESIZE_HANDLES, (value) => {
     HORIZONTAL_GROUP_RESIZE_HANDLES = value;
+  }), bindRuntimeValue(runtime2, "FAR_CORNER_RESIZE_HANDLES", () => FAR_CORNER_RESIZE_HANDLES, (value) => {
+    FAR_CORNER_RESIZE_HANDLES = value;
   }), bindRuntimeValue(runtime2, "copySelectedUnitsToClipboard", () => copySelectedUnitsToClipboard), bindRuntimeValue(runtime2, "EDITOR_ENTER_KEY_HINTS", () => EDITOR_ENTER_KEY_HINTS, (value) => {
     EDITOR_ENTER_KEY_HINTS = value;
   }), bindRuntimeValue(runtime2, "editorRectsEqual", () => editorRectsEqual), bindRuntimeValue(runtime2, "editorVideoEnterHint", () => editorVideoEnterHint), bindRuntimeValue(runtime2, "EDITOR_TEXT_ZOOM_BOTTOM_PADDING", () => EDITOR_TEXT_ZOOM_BOTTOM_PADDING), bindRuntimeValue(runtime2, "EDITOR_TEXT_ZOOM_MIN_TEXT_PX", () => EDITOR_TEXT_ZOOM_MIN_TEXT_PX), bindRuntimeValue(runtime2, "EDITOR_KEYBOARD_ZOOM", () => EDITOR_KEYBOARD_ZOOM), bindRuntimeValue(runtime2, "EDITOR_TEXT_ZOOM_TAP_GUARD_MS", () => EDITOR_TEXT_ZOOM_TAP_GUARD_MS), bindRuntimeValue(runtime2, "fitTextEditingZoom", () => fitTextEditingZoom), bindRuntimeValue(runtime2, "unionRotatedRectBounds", () => unionRotatedRectBounds), bindRuntimeValue(runtime2, "FormattingToolbarTransition", () => FormattingToolbarTransition), bindRuntimeValue(runtime2, "describeTextLinks", () => describeTextLinks), bindRuntimeValue(runtime2, "selectionLinkValue", () => selectionLinkValue), bindRuntimeValue(runtime2, "linkChangeMessage", () => linkChangeMessage), bindRuntimeValue(runtime2, "announceLinkChanges", () => announceLinkChanges), bindRuntimeValue(runtime2, "EDITOR_VIEWPORT_PADDING", () => EDITOR_VIEWPORT_PADDING, (value) => {
@@ -5251,27 +5386,88 @@ function installEditorCanvas(runtime2) {
         x: "right",
         y: null
       }
+    ], FAR_CORNER_RESIZE_HANDLES = [
+      {
+        x: "right",
+        y: null
+      },
+      {
+        x: null,
+        y: "bottom"
+      },
+      {
+        x: "right",
+        y: "bottom"
+      }
     ], EDITOR_ENTER_KEY_HINTS = {
-      multi: "Press Enter to keep only this object selected.",
-      enter: "Press Enter to go into this group; Shift+Enter comes back up.",
-      text: "Press Enter to edit this text; Escape or Tab ends the edit and keeps your change.",
-      cell: "Press Enter to edit the table; inside it Tab and Enter move between cells; Escape finishes and keeps your change, as does Ctrl or Command with Enter.",
-      play: "Press Enter to play or pause this video. Escape stops it.",
-      playStop: "Press Enter to play this video. Enter or Escape stops it.",
-      open: "Press Enter to open this video on its site, in a new tab."
+      multi: (0, runtime2.formatMessage)({
+        defaultMessage: "按 Enter 仅保留选择此对象。",
+        id: "UbLyz96+TI"
+      }),
+      enter: (0, runtime2.formatMessage)({
+        defaultMessage: "按 Enter 进入此组合；Shift+Enter 返回上一层。",
+        id: "but+QdQIFL"
+      }),
+      text: (0, runtime2.formatMessage)({
+        defaultMessage: "按 Enter 编辑此文本；Esc 或 Tab 结束编辑并保留更改。",
+        id: "gIYI4a8/la"
+      }),
+      cell: (0, runtime2.formatMessage)({
+        defaultMessage: "按 Enter 编辑表格；在表格中，Tab 和 Enter 在单元格间移动；Esc 或 Ctrl/Command+Enter 结束编辑并保留更改。",
+        id: "aKPlTCyNx6"
+      }),
+      play: (0, runtime2.untranslatedMessage)( "按 Enter 播放或暂停视频，按 Escape 停止播放。"),
+      playStop: (0, runtime2.untranslatedMessage)( "按 Enter 播放视频，再按 Enter 或 Escape 停止播放。"),
+      open: (0, runtime2.untranslatedMessage)( "按 Enter 在新标签页中打开视频所在网站。")
     }, EDITOR_VIEWPORT_PADDING = 48, EDITOR_MIN_STAGE_HEIGHT = 200, EDITOR_STAGE_PADDING_FRACTION = 0.1, EDITOR_FALLBACK_STAGE_WIDTH = 320, EDITOR_FORMATTING_LABELS = {
-      text: "Text formatting",
-      img: "Image formatting",
-      icon: "Icon formatting",
-      shape: "Shape formatting",
-      stack: "Group formatting",
-      grid: "Grid formatting",
-      table: "Table formatting",
-      html: "Embed formatting",
-      spacer: "Spacer formatting",
-      overlay: "Overlay formatting",
-      mixed: "Formatting",
-      cell: "Table cell formatting"
+      text: (0, runtime2.formatMessage)({
+        defaultMessage: "文本格式",
+        id: "ARi6XqZEhR"
+      }),
+      img: (0, runtime2.formatMessage)({
+        defaultMessage: "图片格式",
+        id: "4NgR4IDFKG"
+      }),
+      icon: (0, runtime2.formatMessage)({
+        defaultMessage: "图标格式",
+        id: "5z0zXdurUc"
+      }),
+      shape: (0, runtime2.formatMessage)({
+        defaultMessage: "形状格式",
+        id: "/BybDjkw1r"
+      }),
+      stack: (0, runtime2.formatMessage)({
+        defaultMessage: "组合格式",
+        id: "wY7fypWOz1"
+      }),
+      grid: (0, runtime2.formatMessage)({
+        defaultMessage: "网格格式",
+        id: "KrTTIuWMTc"
+      }),
+      table: (0, runtime2.formatMessage)({
+        defaultMessage: "表格格式",
+        id: "94gy7BlbBm"
+      }),
+      html: (0, runtime2.formatMessage)({
+        defaultMessage: "嵌入格式",
+        id: "yeBVnh4J+X"
+      }),
+      spacer: (0, runtime2.formatMessage)({
+        defaultMessage: "间隔格式",
+        id: "7Tjs6TPprl"
+      }),
+      overlay: (0, runtime2.formatMessage)({
+        defaultMessage: "叠加层格式",
+        id: "BCsdLXUs85"
+      }),
+      mixed: (0, runtime2.formatMessage)({
+        defaultMessage: "格式",
+        id: "U/gFFxZQly"
+      }),
+      cell: (0, runtime2.formatMessage)({
+        defaultMessage: "单元格格式",
+        id: "0pLZbym4i2"
+      })
     }, centerViewportAxis = (input, options, context, value) => -(input - options * context) / (2 * context) - value / context, EDITOR_TEXT_ZOOM_DURATION_MS = 600, EDITOR_TEXT_ZOOM_SIDE_PADDING = 16, EDITOR_TEXT_ZOOM_TOP_PADDING = 76, EDITOR_TEXT_ZOOM_BOTTOM_PADDING = 8, EDITOR_TEXT_ZOOM_MIN_TEXT_PX = 14, EDITOR_KEYBOARD_ZOOM = {
       px: 380,
       share: 0.6,
@@ -5279,6 +5475,12 @@ function installEditorCanvas(runtime2) {
     }, EDITOR_TEXT_ZOOM_TAP_GUARD_MS = 500, SLIDE_FULL_MESSAGE = (0, runtime2.formatMessage)({
       defaultMessage: "此页已满，请先移除一个框架。",
       id: "sYhFBGWPpc"
+    }), TABLE_ROWS_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "行",
+      id: "u4bZKqaJsC"
+    }), TABLE_COLUMNS_LABEL = (0, runtime2.formatMessage)({
+      defaultMessage: "列",
+      id: "HnM7jzscAf"
     }), TEXT_COLOR_LABEL = (0, runtime2.formatMessage)({
       defaultMessage: "文字颜色",
       id: "mK2qZMtHUK"
@@ -5309,7 +5511,10 @@ function installEditorCanvas(runtime2) {
       "paddingRight",
       "paddingBottom",
       "paddingLeft"
-    ], TEXT_ALIGNMENT_LABELS = {
+    ], LINK_REMOVED_MESSAGE = (0, runtime2.formatMessage)({
+      defaultMessage: "已移除链接",
+      id: "JIgTLZHBnQ"
+    }), TEXT_ALIGNMENT_LABELS = {
       start: (0, runtime2.formatMessage)({
         defaultMessage: "左对齐",
         id: "PjxMeBfQCx"

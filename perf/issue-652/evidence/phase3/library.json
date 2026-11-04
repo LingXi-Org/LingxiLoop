@@ -1,0 +1,1 @@
+{"passed":true,"checks":["library defers workspace runtime","same iframe on re-open","authorization before visibility","revocation removes retained content","one retained deck","project switch releases workspace"],"mounts":4,"unmounts":4,"rechecks":2}

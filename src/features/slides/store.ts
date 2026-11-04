@@ -18,7 +18,7 @@ interface SlidesState {
   decks: ArtifactSummary[] | null
   error: string
   openId: string | null
-  /** One retained workspace avoids rebuilding its opaque iframe on a quick return to the library. */
+  /** One retained workspace avoids rebuilding its editor iframe on a quick return to the library. */
   retainedId: string | null
   reopening: boolean
   load(projectId: string, signal?: AbortSignal): Promise<void>

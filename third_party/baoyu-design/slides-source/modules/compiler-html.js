@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue, htmlNamedEntityTable } from "../module-helpers.js";
 function installCompilerHtml(runtime2) {
-  var HtmlSourceCursor, SlideHtmlCompiler, slideHtmlPrefixPattern, htmlVoidElementNames, htmlRawTextElementNames, htmlBlockElementNames, htmlOptionalClosingElementNames, htmlNamedEntities, HtmlParseError, cssBoxSideNames, cssBorderSideWidthFields, containerPaddingBounds, slideBoxShadowBounds, shapeStrokeBounds, diagnosticCssPropertyNames, diagnosticCssPropertyName, diagnosticHtmlTagLabel, connectorAttributeNames, videoAttributeNames, imageVideoAttributeNames, blockTextElementNames, cssAlignmentMap, cssJustificationMap, genericFontFallbackKinds, webSafeFontAliases, webSafeFallbackFaces, specialGenericFontFaces, supportedSlideHtmlElementNames, supportedInlineElementNames, inlineFormatElementNames, flattenableInlineElementNames, unsafeSvgMarkupRules, unsupportedSvgAnimationRules, nonRenderingSvgElementNames, forbiddenSvgElementNames, svgExternalResourceAttributes, svgTagTokenPattern, svgAttributeTokenPattern, svgNamespace, xlinkNamespace, htmlWindows1252CodePoints, isInvalidXmlCodePoint, htmlCompilerCounters, inheritedInlineStyles, elementInlineStyle, compileWarningCodes, estimatedGlyphWidthFactor, estimatedLongWordWidthFactor, importedHtmlTypeScale, htmlHeadingNames, slideHtmlIconNames, mediaHtmlElementNames, iconPlaceholderLabel, genericIconPlaceholderLabel, elementPlaceholderLabel, neutralHtmlShadowPresets, htmlTagTextRoles, simpleCssColorSource, transparentContainerBorderPattern, noBorderPattern, transparentContainerFillPattern, transparentContainerStylePatterns, fontFaceRulesPattern, initializeHtmlCompiler, textBoxLayoutStylePattern, dataRoleElementNames, plainCellStylePropertyPattern, cellColorDeclarationPattern;
+  var HtmlSourceCursor, SlideHtmlCompiler, slideHtmlPrefixPattern, htmlVoidElementNames, htmlRawTextElementNames, htmlBlockElementNames, htmlOptionalClosingElementNames, htmlNamedEntities, HtmlParseError, cssBoxSideNames, cssBorderSideWidthFields, containerPaddingBounds, slideBoxShadowBounds, shapeStrokeBounds, diagnosticCssPropertyNames, diagnosticCssPropertyName, diagnosticHtmlTagLabel, connectorAttributeNames, videoAttributeNames, imageVideoAttributeNames, blockTextElementNames, cssAlignmentMap, cssJustificationMap, genericFontFallbackKinds, webSafeFontAliases, webSafeFallbackFaces, specialGenericFontFaces, supportedSlideHtmlElementNames, supportedInlineElementNames, inlineFormatElementNames, flattenableInlineElementNames, unsafeSvgMarkupRules, unsupportedSvgAnimationRules, nonRenderingSvgElementNames, forbiddenSvgElementNames, svgExternalResourceAttributes, svgTagTokenPattern, svgAttributeTokenPattern, svgNamespace, xlinkNamespace, htmlWindows1252CodePoints, isInvalidXmlCodePoint, htmlCompilerCounters, inheritedInlineStyles, elementInlineStyle, PERCENT_HEALED_WARNING, percentBasisWarning, compileWarningCodes, estimatedGlyphWidthFactor, estimatedLongWordWidthFactor, importedHtmlTypeScale, htmlHeadingNames, slideHtmlIconNames, mediaHtmlElementNames, iconPlaceholderLabel, genericIconPlaceholderLabel, elementPlaceholderLabel, neutralHtmlShadowPresets, htmlTagTextRoles, simpleCssColorSource, transparentContainerBorderPattern, noBorderPattern, transparentContainerFillPattern, transparentContainerStylePatterns, fontFaceRulesPattern, initializeHtmlCompiler, textBoxLayoutStylePattern, dataRoleElementNames, plainCellStylePropertyPattern, cellColorDeclarationPattern;
   const isPlainInlineStyle = (style) => /^[A-Za-z0-9#(),.%:; \t\n\r\f-]*$/.test(style) && style.split("(").length === style.split(")").length, cssDeclarationName = (declaration) => declaration.slice(0, Math.max(declaration.indexOf(":"), 0)).trim().toLowerCase(), isPlainCellStyle = (style) => isPlainInlineStyle(style) && style.split(";").every((declaration) => declaration.trim() === "" || plainCellStylePropertyPattern.test(cssDeclarationName(declaration))), hasOnlyPlainInlineChildren = (element) => element.children.every((child) => child.kind === "text" || ["b", "i", "u", "strong", "em", "br", "span"].includes(child.tag) && Object.keys(child.attrs).length === 0 && hasOnlyPlainInlineChildren(child)), isFullWidthStyle = (style) => style.width !== void 0 && style.width !== "auto" && "pct" in style.width && style.width.pct === 100;
   function isListTextBoxDiv(element) {
     let indent = element.tag === "div" ? element.attrs["data-text"] : void 0;
@@ -1998,7 +1998,10 @@ function installCompilerHtml(runtime2) {
       values.add(value14);
     let value11, value12;
     if (items2.length > 0) {
-      let value14 = !value10 && value9.dir === "h" ? "h" : "v", state3 = {
+      let value14 = !value10 && value9.dir === "h" ? "h" : "v", sectionRoom = {
+        w: runtime2.SLIDE_WIDTH - (items4[1] ?? 0) - (items4[3] ?? 0),
+        h: runtime2.SLIDE_HEIGHT - (items4[0] ?? 0) - (items4[2] ?? 0)
+      }, state3 = {
         inh: value6,
         depth: 1,
         parentDir: value14,
@@ -2006,13 +2009,16 @@ function installCompilerHtml(runtime2) {
         inContainer: !0,
         parentAlign: inheritedContainerStretchSources(value10, value9),
         parentBlock: inlineStyleSuppressesFlowLayout(section.attrs.style),
-        flowCount: items2.length
+        flowCount: items2.length,
+        room: value9.wrap === !0 ? {
+          w: sectionRoom.w
+        } : sectionRoom
       }, items7 = [], items8 = [];
       for (let value16 of items2) {
         let value17 = compiler.node(value16, state3);
         value17 !== void 0 && (items7.push(value17), items8.push(value16));
       }
-      compiler.bareTableShare(items8, items7, value14, value9.wrap === !0), compiler.loneShareAfterDrops(items2, items8, items7, value14, value10), value12 = items8[0];
+      compiler.bareTableShare(items8, items7, value14, value9.wrap === !0) || compiler.percentShares( items8, items7, value14, value10, sectionRoom[value14 === "h" ? "w" : "h"], value9), value12 = items8[0];
       let value15;
       value10 ? (value15 = {
         kind: "grid",
@@ -2367,6 +2373,10 @@ function installCompilerHtml(runtime2) {
     inheritedInlineStyles = value;
   }), bindRuntimeValue(runtime2, "elementInlineStyle", () => elementInlineStyle, (value) => {
     elementInlineStyle = value;
+  }), bindRuntimeValue(runtime2, "PERCENT_HEALED_WARNING", () => PERCENT_HEALED_WARNING, (value) => {
+    PERCENT_HEALED_WARNING = value;
+  }), bindRuntimeValue(runtime2, "percentBasisWarning", () => percentBasisWarning, (value) => {
+    percentBasisWarning = value;
   }), bindRuntimeValue(runtime2, "compileWarningCodes", () => compileWarningCodes, (value) => {
     compileWarningCodes = value;
   }), bindRuntimeValue(runtime2, "estimatedGlyphWidthFactor", () => estimatedGlyphWidthFactor, (value) => {
@@ -3052,26 +3062,50 @@ function installCompilerHtml(runtime2) {
       notes() {
         return [...this.noteMap.values()];
       }
-      loneShareAfterDrops(items, options, items2, value, extra) {
-        if (extra || items.length < 2)
+      pctHealed = /* @__PURE__ */ new Map();
+      percentShares(elements, nodes, dir, isGrid, room, layout) {
+        if (isGrid)
           return;
-        let callback = (input) => input.place?.grow, value2 = items2.filter((input) => typeof callback(input) == "number" && callback(input) > 0);
-        if (value2.length !== 1)
+        let prop = dir === "h" ? "width" : "height", placeOf = (node) => node.place ?? {}, shareOf =(node) => {
+          let { grow, basis } = placeOf(node);
+          return !basis && typeof grow == "number" ? grow : 0;
+        }, pcts = elements.map((element) => this.pctHealed.get(element)?.pct);
+        if (pcts.every((pct) => pct === void 0))
           return;
-        let value3 = items2.indexOf(value2[0]), value4 = options[value3], value5 = value === "h" ? "width" : "height", value6 = parseInlineStyle(value4.attrs.style, () => {
-        }, () => {
-        })[value5];
-        if (value6 === void 0 || value6 === "auto" || !("pct" in value6) || value6.pct >= 100 || callback(value2[0]) !== value6.pct)
+        let grows = nodes.map((node, index4) => this.pctHealed.get(elements[index4])?.grow ?? shareOf(node)), sum = (values) => values.reduce((total, value) => total + (value ?? 0),0), free = Number((0, runtime2.formatFlexFactor)(Math.max(0, 100 - sum(pcts)))), growTotal = sum(grows), isLooseSpacer = (node) => node.kind === "spacer" && placeOf(node).basis === void 0 && placeOf(node)[dir === "h" ? "minW" : "minH"] === void 0, hasContentSibling = nodes.some((node, index4) => grows[index4] === 0 && pcts[index4] === void 0 && placeOf(node).basis !== 0 && !isLooseSpacer (node)), hasSizedGrower = nodes.some( (node, index4) => pcts[index4] === void 0 && grows[index4] > 0 && placeOf (node).basis === void 0 && nodeHasExplicitAxisSize(node, dir === "h" ? "x" : "y")), needsPx = (hasContentSibling || hasSizedGrower) && free > 0, isOpenTable = (node) => dir === "h" && node.kind === "table" && !placeOf(node).basis && (placeOf(node).minW === void 0 || placeOf(node).minW !== placeOf(node).maxW);
+        if (needsPx && room !== void 0 && !nodes.some((node, index4) => pcts[index4] === void 0 ? isOpenTable(node) : node.kind === "overlay")) {
+          pcts.forEach((pct, index4) => {
+            if (pct === void 0)
+              return;
+            let basis= Math.round(pct * room) / 100;
+            Object.assign(placeOf(nodes[index4]), {
+              grow: grows[index4],
+              basis
+            }), this.pctWarn(elements[index4], prop + ":" + String(pct) + "% is written as flex-basis " + String(basis) + "px: " + String(pct) + "% of the " + String(room) + "px inside its parent");
+          });
+        let [minKey, maxKey] = dir === "h" ? ["minW", "maxW"] : ["minH", "maxH"], fixedSize = (node) => placeOf(node)[minKey] === placeOf(node)[maxKey] ? Number(placeOf(node)[minKey] ?? 0) : 0, claimed = (node) => Math.max(Number(placeOf(node).basis ?? (typeof node[dir === "h" ? "w" : "h"] == "number" ? node[dir === "h" ? "w" : "h"] : 0)), Number(placeOf(node)[minKey] ?? 0)), needed = Math.round(100 * (layout.gap * (nodes.length - 1) + sum(nodes.map(claimed)))) / 100;
+          if (layout.wrap !== ! 0 && needed > room + 1 && nodes.some((node) => fixedSize(node) > 0 && placeOf(node).shrink !== 0)) {
+            let first = pcts.findIndex((pct) => pct !== void 0); this.warnAt(elements[first], prop + ":" + String(pcts[first]) + "% and its siblings need " + String(needed) + "px (gaps included), more than the " + String(room) + "px inside their parent: a browser may shrink the px " + prop + "s too, Slides keeps them whole; make them add up to " + String(room) + "px or less");
+          }
           return;
+        }
+        let shareAt = (index4) => free === 0 ? pcts[index4] ?? grows[index4] : ((pcts[index4] ?? 0) + free * grows[index4] / Math.max(1, growTotal)) / (growTotal < 1 && !hasContentSibling ? 100 : 1);
+        (growTotal > 0 || free > 0 && !hasContentSibling) && nodes.forEach((node, index4) => {
+          shareOf(node) > 0 && (placeOf(node).grow = Number((0, runtime2.formatFlexFactor)(shareAt(index4))));
+        }), !(!needsPx || growTotal >= 1 && nodes.filter((node, index4) => pcts[index4] !== void 0 || Number(placeOf(node).grow) > 0).length === 1) && pcts.forEach((pct, index4) => {
+          pct !== void 0 && this.pctWarn(elements[index4], prop + ":" + String(pct) + "% is read as its share of the " + prop + " its siblings leave free (alone, all of it), not " + String(pct) + "% of the parent; give it px");
+        });
+      }
+      pctWarn(input, options) {
         let entry = this.noteMap.get("percent-width");
-        entry !== void 0 && --entry.count === 0 && this.noteMap.delete("percent-width"), items2.length === 1 ? this.warnAt(value4, value5 + ":" + String(value6.pct) + "% is dropped and the child stretches to the FULL " + value5 + " of its parent (100%, not " + String(value6.pct) + "% — its siblings were dropped, so its share is the whole axis); give it px") : this.warnAt(value4, value5 + ":" + String(value6.pct) + "% is dropped and the child takes ALL the free " + value5 + " next to its siblings (not " + String(value6.pct) + "% of the parent — it is the only child that grows); give it px");
+        entry !== void 0 && --entry.count === 0 && this.noteMap.delete("percent-width"), this.warnAt(input, options);
       }
       bareTableShare(elements, nodes, dir, wrapped) {
         if (dir !== "h" || wrapped)
-          return;
+          return !1;
         let placeOf = (node) => node.place ?? {}, isBareTable = (node) => node.kind === "table" && ["grow", "shrink", "basis", "minW", "maxW", "minWFit"].every((key) => placeOf(node)[key] === void 0), tables = nodes.filter(isBareTable), shares = [];
         if (nodes.some(isInvisibleNode))
-          return;
+          return !1;
         for (let node of nodes) {
           if (tables.includes(node))
             continue;
@@ -3079,10 +3113,10 @@ function installCompilerHtml(runtime2) {
           if (typeof place.grow == "number" && place.grow > 0 && place.basis === 0)
             shares.push(place.grow);
           else if (!("w" in node && typeof node.w == "number" || typeof place.minW == "number" && place.minW === place.maxW))
-            return;
+            return !1;
         }
         if (tables.length === 0 || shares.length === 0)
-          return;
+          return !1;
         let share = Math.max(0.01, Math.round(shares.reduce((sum, grow) => sum + grow, 0) / shares.length * 100) / 100);
         for (let table of tables)
           table.place = {
@@ -3090,6 +3124,7 @@ function installCompilerHtml(runtime2) {
             grow: share,
             basis: 0
           }, this.warnAt(elements[nodes.indexOf(table)], "<table> with no width, in a row beside boxes that share it (flex:N, or a % width), is given flex:" + String(share) + ", a share like theirs — as wide as its container, as a table normally is, it would leave them no room; write a width or flex on the table to size it yourself");
+        return !0;
       }
       errorAt(input, options) {
         this.errors.length < 500 && this.errors.push({
@@ -3363,9 +3398,13 @@ function installCompilerHtml(runtime2) {
             if (options === "table" && options2 === "height")
               return this.warnAt(value, diagnosticHtmlTagLabel(value) + "height is ignored — a table is as tall as its rows"), !0;
             if (context2) {
-              if (state.grow === 0)
-                return this.warnAt(value, options2 + ":" + String(input2.pct) + "% is dropped (flex-grow is 0, so there is no share to take) — the box keeps its content size; give it px"), !0;
-              state.grow === void 0 && (state.grow = input2.pct), state.basis === void 0 && (state.basis = 0), context.flowCount === 1 && input2.pct < 100 ? this.warnAt(value, options2 + ":" + String(input2.pct) + "% is dropped and the child stretches to the FULL " + options2 + " of its parent (100%, not " + String(input2.pct) + "% — a lone child's share is the whole axis); give it px") : this.warnAt(value, options2 + ": % of the parent is not supported inside a div — healed to a proportional share (flex-grow " + String(input2.pct) + ")");
+              if (state.basis !== void 0)
+                return this.warnAt(value, percentBasisWarning( options2,input2.pct, state.basis)), !0;
+              this.pctHealed.set(value, {
+                pct: input2.pct,
+                grow: typeof state.grow == "number" ?
+              state.grow : 0
+              }), state.grow || (state.grow = input2.pct), state.basis = 0, this.warnAt(value, options2 + PERCENT_HEALED_WARNING);
             } else if (options === "table")
               options2 === "width" && input2.pct < 100 ? this.rejectAt(value, "<table> width:" + String(input2.pct) + "% — a table is always its container's width; give the table px, or wrap it in a div of that width") : this.warnAt(value, options2 + ": % of the parent is not supported inside a div — ignored (a table is " + (options2 === "width" ? "its container's width" : "as tall as its rows") + ")");
             else {
@@ -3853,7 +3892,10 @@ function installCompilerHtml(runtime2) {
         let value20 = this.place(options, "img", context, input, value);
         if (value16 !== void 0) {
           let { pct: value21, prop: value22 } = value16;
-          value20.grow === 0 ? this.warnAt(input, value22 + ":" + String(value21) + "% is dropped (flex-grow is 0, so there is no share to take) — the image keeps its own size; give it px") : (value20.grow === void 0 && (value20.grow = value21), value20.basis === void 0 && (value20.basis = 0), context.flowCount === 1 && value21 < 100 ? this.warnAt(input, value22 + ":" + String(value21) + "% is dropped and the image stretches to the FULL " + value22 + " of its parent (100%, not " + String(value21) + "% — a lone child's share is the whole axis); give it px") : this.warnAt(input, value22 + ": % of the parent is not supported inside a div — healed to a proportional share (flex-grow " + String(value21) + ")"));
+          value20.basis === void 0 ? ( this.pctHealed.set(input, {
+            pct:value21,
+            grow : typeof value20.grow == "number" ?value20.grow : 0
+          }), value20.grow || (value20.grow = value21), value20.basis = 0, this.warnAt(input, value22 + PERCENT_HEALED_WARNING)) : this.warnAt(input, percentBasisWarning( value22,value21, value20.basis));
         }
         return Object.keys(value20).length > 0 && (state.place = value20), this.leftovers(options, value, input, "<" + input.tag + ">"), state;
       }
@@ -4213,7 +4255,7 @@ function installCompilerHtml(runtime2) {
           this.errorAt(input, "<table> has no <tr> rows");
           return;
         }
-        let items3 = [], flag = !0, count = 1, entries = /* @__PURE__ */ new Map(), entries2 = /* @__PURE__ */ new Map(), state = {}, state2 = {}, items4 = [], value2, state3 = {
+        let items3 = [], count = 1, entries = /* @__PURE__ */ new Map(), entries2 = /* @__PURE__ */ new Map(), state = {}, state2 = {}, items4 = [], value2, state3 = {
           n: 0
         }, values = /* @__PURE__ */ new Set(), rowColorUsed = !1, bandRows = [], cellFontSizes = [], entries3 = /* @__PURE__ */ new Map(), flag2 = !1, entries4 = /* @__PURE__ */ new Map(), callback2 = (input2, options2) => {
           let entry = entries4.get(options2);
@@ -4255,8 +4297,7 @@ function installCompilerHtml(runtime2) {
             for (let value10 of value9)
               values.add(diagnosticCssPropertyName(value10));
             value9.length > 0 && callback2(input2, "tr-style");
-          }
-          options2 === 0 && !items5.every((input3) => input3.tag === "th") && (flag = !1), items5.forEach((input3, options3) => {
+          } items5.forEach((input3, options3) => {
             (input3.attrs.colspan !== void 0 || input3.attrs.rowspan !== void 0) && this.rejectAt(input3, "<" + input3.tag + "> colspan/rowspan are not in this format (the cell would be unmerged; split the table or repeat the text)");
             let value8 = this.warner(input3, "<" + input3.tag + "> "), value9 = parseInlineStyle(input3.attrs.style, value8, this.rejecter(input3, "<" + input3.tag + "> "));
             if (value9["text-align"] === "justify" ? value8("text-align: justify — table columns align left | center | right; kept left") : value9["text-align"] !== void 0 && (entries.has(options3) ? entries.get(options3) !== value9["text-align"] && value8("text-align differs from the first cell in this column (" + String(entries.get(options3)) + ") — alignment is per column; the first wins") : entries.set(options3, value9["text-align"])), value9.width !== void 0 && value9.width !== "auto" && options2 === 0 && entries2.set(options3, value9.width), input3.attrs.width !== void 0 && options2 === 0 && !entries2.has(options3)) {
@@ -4293,6 +4334,14 @@ function installCompilerHtml(runtime2) {
             value14.length > 0 && !flag2 && (flag2 = !0, this.warnAt(input3, "bold/italic/underline/links inside table cells are not kept (plain text) — emphasise a cell with color, or pull the row out as its own element")), this.textCaps(input3, value13, []), entries3.set(input3, value13);
           }), count = Math.max(count, items5.length), items3.push(items5);
         });
+        let headerCells = items3[0].filter((cell) => cell.tag === "th").length, laterHeaderCell = items3[0].slice(1).some((cell) => cell.tag === "th"), headerRow = headerCells === items3[0].length || laterHeaderCell && items3[0].every((cell) => cell.tag === "th" || entries3.get(cell).trim() === ""), strayHeaderCells = items3.flatMap((row, index4) => index4 === 0 && headerRow ? [] : row.filter((cell) => cell.tag === "th"));
+        if (strayHeaderCells.length > 0) {
+          let partialHeader = !headerRow && laterHeaderCell, rowLabels = !partialHeader || strayHeaderCells.length > headerCells, hints = [
+            partialHeader ? "for a header row make its other cells <th>, or leave them empty" : "",
+            rowLabels ? "write a row label as <td> (color can set it apart)" : ""
+          ].filter((hint) => hint !== "").join("; ");
+          this.warnAt(strayHeaderCells[0], "<th> outside a header row is read as <td>, not bold" + (strayHeaderCells.length > 1 ? " (×" + String(strayHeaderCells.length) + " cells in this table)" : "") + " — " + hints);
+        }
         let value3 = items4.find((input2) => input2.cell.tag === "td") ?? items4[0];
         if (value3 !== void 0 && (value3.x === 0 || value3.y === 0) && [...entries3.values()].some((input2) => input2.trim() !== "")) {
           let callback3 = (input2, options2) => input2 === void 0 ? options2 : input2 === 0 ? "0" : String(input2) + "px";
@@ -4310,7 +4359,7 @@ function installCompilerHtml(runtime2) {
           let value8 = items4.filter((input2) => input2.x !== value3.x || input2.y !== value3.y), value9 = (value3.y !== void 0 ? String(value3.y) + "px" : "0.35em") + " " + (value3.x !== void 0 ? String(value3.x) + "px" : "0.6em");
           value8.length > 0 && this.warnAt(value8[0].cell, "<" + value8[0].cell.tag + "> padding differs from the table's cell padding (" + value9 + ", one per table, from the first padded <" + value3.cell.tag + ">)" + (value8.length > 1 ? " (×" + String(value8.length) + " cells in this table)" : ""));
         }
-        state3.cell !== void 0 && flag && this.warnAt(state3.cell, "<th> font-weight differs from the first <th> (" + String(value2) + ") — one weight per header row" + (state3.n > 1 ? " (×" + String(state3.n) + " cells in this table)" : ""));
+        state3.cell !== void 0 && headerRow && this.warnAt(state3.cell, "<th> font-weight differs from the first <th> (" + String(value2) + ") — one weight per header row" + (state3.n > 1 ? " (×" + String(state3.n) + " cells in this table)" : ""));
         let tableFontSize = options["font-size"] === void 0 ? commonTableFontSize(cellFontSizes) : void 0;
         if (tableFontSize !== void 0) {
           entries4.delete("font-size");
@@ -4326,7 +4375,7 @@ function installCompilerHtml(runtime2) {
           items2.length > runtime2.maxTableRows ? String(items2.length) + " rows (a table shows at most " + String(runtime2.maxTableRows) + ")" : "",
           count > runtime2.maxTableColumns ? String(count) + " columns (a table shows at most " + String(runtime2.maxTableColumns) + ")" : ""
         ].filter((limit) => limit !== ""), fitsInSmallerTables = items2.length <= runtime2.maxTableRows && this.slideCells + items2.length * count <= runtime2.maxSlideTableCells;
-        overLimits.length > 0 && this.errorAt(input, "this table has " + overLimits.join(" and ") + " — all of its data fits " + (fitsInSmallerTables ? "in smaller tables" : "if it is split across slides") + (fitsInSmallerTables && items2.length <= runtime2.maxTableColumns && count <= runtime2.maxTableRows ? ", or with its rows and columns swapped" : "")), count = Math.min(runtime2.maxTableColumns, count), this.countCells(input, Math.min(items3.length, runtime2.maxTableRows) * count);
+        overLimits.length > 0 && this.errorAt(input, "this table has " + overLimits.join(" and ") + " — all of its data fits " + (fitsInSmallerTables ? "in smaller tables, over more slides if need be" : "if it is split across slides")), count = Math.min(runtime2.maxTableColumns, count), this.countCells(input, Math.min(items3.length, runtime2.maxTableRows) * count);
         for (let value8 of items3) {
           let items5 = [];
           for (let index4 = 0; index4 < count; index4++)
@@ -4337,7 +4386,7 @@ function installCompilerHtml(runtime2) {
           kind: "table",
           rows: items,
           cols: count,
-          header: flag
+          header: headerRow
         }, value5 = (0, runtime2.normalizeShapeVariant)(input.attrs["data-fit"]);
         value5 !== void 0 && (state4.fit = value5);
         let columnWidths = Array.from({
@@ -4354,7 +4403,7 @@ function installCompilerHtml(runtime2) {
           left: "start",
           center: "center",
           right: "end"
-        })[entries.get(options2) ?? "left"])), Object.keys(state).length > 0 && (state4.cellStyles = state), Object.keys(state2).length > 0 && (state4.rowStyles = state2), value4 !== void 0 && (state4.cellPadding = value4), value2 !== void 0 && flag && (state4.headerWeight = value2);
+        })[entries.get(options2) ?? "left"])), Object.keys(state).length > 0 && (state4.cellStyles = state), Object.keys(state2).length > 0 && (state4.rowStyles = state2), value4 !== void 0 && (state4.cellPadding = value4), value2 !== void 0 && headerRow && (state4.headerWeight = value2);
         let typeStyle = tableFontSize !== void 0 ? {
           ...options,
           "font-size": tableFontSize.px
@@ -4441,7 +4490,16 @@ function installCompilerHtml(runtime2) {
         } : {
           w: context.box?.w ?? callback(options.width),
           h: context.box?.h ?? callback(options.height)
-        }, callback2 = (input2, options2) => input2 !== void 0 && input2 !== "auto" && "pct" in input2 && context.parentGrid !== !0 && context.parentDir === options2 && (options["flex-grow"] === void 0 || options["flex-grow"] > 0), callback3 = (input2) => input2 !== void 0 && input2 !== "auto" && (!("px" in input2) || input2.px > 0), value12 = !context.inContainer || value11.w !== void 0 || value11.h !== void 0 || (options["flex-grow"] ?? 0) > 0 || callback3(options["min-height"]) || callback3(options["min-width"]) || options["min-width-fit"] !== void 0 || callback2(options.width, "h") || callback2(options.height, "v"), length = this.errors.length, items3 = [];
+        }, callback2 = (input2, options2) => input2 !== void 0 && input2 !== "auto" && "pct" in input2 && context.parentGrid !== !0 && context.parentDir === options2 && (options["flex-basis"] === void 0 || options["flex-basis"] === "auto"), callback3 = (input2) => input2 !== void 0 && input2 !== "auto" && (!("px" in input2) || input2.px > 0), value12 = !context.inContainer || value11.w !== void 0 || value11.h !== void 0 || (options["flex-grow"] ?? 0) > 0 || callback3(options["min-height"]) || callback3(options["min-width"]) || options["min-width-fit"] !== void 0 || callback2(options.width, "h") || callback2(options.height, "v"), roomInside = (axis, prop, start, end) => {
+          let inFlow = context.inContainer && context.parentGrid !== !0, alongParent = inFlow && context.parentDir === (axis === "w" ? "h" : "v");
+          if (options[`min-${prop}`] !== void 0 || options[`max-${prop}`] !== void 0 || options["aspect-ratio"] !== void 0 || axis === "w" && options["min-width-fit"] !== void 0 || (value11[axis] ?? 0) > (alongParent ? context.room?.[axis] ?? runtime2.maxModelCoordinate : runtime2.maxModelCoordinate) || alongParent && ((options["flex-grow"] ?? 0) > 0 || (options["flex-basis"] ?? "auto") !== "auto"))
+            return;
+          let size4 = options[prop], unstretched = nonStretchAxisExplanation(context, prop, options["align-self"], void 0) !== void 0, fullSize = size4 !== void 0 && size4 !== "auto" && "pct" in size4 && size4.pct === 100 && (!unstretched || axis === "w"), outer = value11[axis] ?? (inFlow && !alongParent && (fullSize || size4 === void 0 && !unstretched) ? context.room?.[axis] : void 0), borderWidth = (side2) => typeof value9.borderSides == "string" && !value9.borderSides.split(" ").includes(side2) ? 0 : Number(value9["border" + side2[0].toUpperCase() + side2.slice(1) + "Width"] ?? value9.borderWidth ?? 0);
+          return outer === void 0 ? void 0 : Math.max(0, outer - (options[`padding-${start}`] ?? 0) - (options[`padding-${end}`] ?? 0) - borderWidth(start) - borderWidth(end));
+        }, roomBox = items2.length > 0 && items.length === 1 && Object.keys(value9).length === 0 && !value5 && !value12 ? {} : {
+          w: roomInside("w", "width", "left", "right"),
+          h: roomInside("h", "height", "top", "bottom")
+        }, length = this.errors.length, items3 = [];
         for (let value17 of items2) {
           let state2 = {
             inh: value3,
@@ -4468,15 +4526,18 @@ function installCompilerHtml(runtime2) {
           parentAlign: inheritedContainerStretchSources(value5, value4),
           parentBlock: inlineStyleSuppressesFlowLayout(elementInlineStyle(input)),
           flowCount: items.length,
+          room: value4.wrap === !0 ? {
+            w: roomBox.w
+          } : roomBox,
           faded: value8
         }, items4 = [], items5 = [];
         for (let value17 of items) {
           let value18 = this.node(value17, state);
           value18 !== void 0 && (items4.push(value18), items5.push(value17));
         }
-        this.bareTableShare(items5, items4, value7, value4.wrap === !0), this.loneShareAfterDrops(items, items5, items4, value7, value5);
+        this.bareTableShare(items5, items4, value7, value4.wrap === !0) || this.percentShares( items5, items4, value7, value5, roomBox[value7 === "h" ? "w" : "h"], value4);
         let value14 = items2.length > 0 && context.layerGeom !== void 0, artifactAttr = input.attrs["data-artifact"], artifact = value5 || value13 || value14 || items4.length === 0 ? void 0 : (0, runtime2.parseArtifactAddress)(artifactAttr);
-        artifactAttr !== void 0 && artifact === void 0 && this.warnAt(input, 'data-artifact="' + (0, runtime2.compactDiagnosticValue)(artifactAttr) + `" dropped: it takes one artifact's address (https://claude.ai/artifact/…), on a <div> that holds something, is not a grid and has no position:absolute children`);
+        artifactAttr !== void 0 && artifact === void 0 && this.warnAt(input, 'data-artifact="' + (0, runtime2.compactDiagnosticValue)(artifactAttr) + `" dropped: it takes one Claude artifact's address (https://claude.ai/artifact/…), on a <div> that holds something, is not a grid and has no position:absolute children`);
         let value15, hasPositiveGrow = (place) => typeof place == "object" && place !== null && "grow" in place && typeof place.grow == "number" && place.grow > 0, isEmptyFiller = (node) => node.kind === "spacer" ? !hasPositiveGrow(node.place) : node.kind === "stack" && node.style === void 0 && Array.isArray(node.children) && node.children.every(isEmptyFiller);
         if ((items4.length === 0 || !context.inContainer && items4.every(isEmptyFiller)) && !value13 && !value14 && !value10) {
           let grows = (options["flex-grow"] ?? 0) > 0;
@@ -4528,7 +4589,11 @@ function installCompilerHtml(runtime2) {
           children: items4
         }, value4.justify !== void 0 && value4.justify !== "start" && (value15.justify = value4.justify), value4.wrap === !0 && value7 === "h" && (value15.wrap = !0), value4.reverse && items4.reverse()), value4.rowGap !== void 0 && (value15.rowGap = value4.rowGap), Object.keys(value9).length > 0 && (value15.style = value9), artifact !== void 0 && value15.kind === "stack" && (value15.artifact = artifact), value13 || value14) {
           let value17;
-          if (value13 && items4.length === 1 && Object.keys(value9).length === 0 && !value5 && !value12 && items4[0].kind !== "overlay" && items4[0].kind !== "spacer" ? (value17 = items4[0], (value4.gap !== 0 || value4.justify !== void 0) && value2("gap/justify on an overlay host with one child are ignored")) : (value17 = value15, items4.length === 0 && context.inContainer && value11.w === void 0 && value11.h === void 0 && (options["flex-grow"] ?? 0) === 0 && options["min-height"] === void 0 && value2("position:relative host with no flow child — the positioned children sit over an empty box; give the div width and height")), context.layerGeom === void 0)
+          if (value13 && items4.length === 1 && Object.keys(value9).length === 0 && !value5 && !value12 && items4[0].kind !== "overlay" && items4[0].kind !== "spacer") {value17 = items4[0], (value4.gap !== 0 || value4.justify !== void 0) && value2("gap/justify on an overlay host with one child are ignored");
+            let healed = this.pctHealed.get(items5[0]);
+            healed !== void 0 && healed.pct < 100 && healed.grow < 1 && this.pctWarn(items5[0], (value7 === "h" ? "width:" : "height:") + String (healed.pct) + "% is dropped: its parent, an unsized box holding only it and pinned children, takes its place; give it px");
+          } else value17 = value15, items4.length === 0 && context.inContainer && value11.w === void 0 && value11.h === void 0 && (options["flex-grow"] ?? 0) === 0 && options["min-height"] === void 0 && value2("position:relative host with no flow child — the positioned children sit over an empty box; give the div width and height");
+          if ( context.layerGeom === void 0)
             for (let value20 of items3)
               value20.node.kind === "table" && (value20.y = this.tableHeightHeal(value20.y, value11.h, value20.el));
           let value18 = typeof value9.opacity == "number" && value9.opacity <= 0.25;
@@ -4835,7 +4900,7 @@ function installCompilerHtml(runtime2) {
         let state = {};
         return value !== void 0 && (state.in = value), value2 !== void 0 && (state.out = value2), state;
       }
-    }, diagnosticCssPropertyName = (input) => diagnosticCssPropertyNames[input] ?? input, diagnosticHtmlTagLabel = (input) => "tag" in input && typeof input.tag == "string" ? "<" + String(input.tag) + "> " : "", svgTagTokenPattern = (input) => input ? /<(\/?)([A-Za-z][\w:.-]*)((?:\s+[A-Za-z_:][\w:.-]*(?:\s*=\s*(?:"[^"<]*"|'[^'<]*'|[^\s"'<>=`]+))?)*)\s*(\/?)>/y : /<(\/?)([A-Za-z][\w:.-]*)((?:\s+[A-Za-z_:][\w:.-]*(?:\s*=\s*(?:"[^"<>]*"|'[^'<>]*'|[^\s"'<>=`]+))?)*)\s*(\/?)>/y, svgAttributeTokenPattern = (input) => input ? /(\s+)([A-Za-z_:][\w:.-]*)(?:\s*=\s*(?:"([^"<]*)"|'([^'<]*)'|([^\s"'<>=`]+)))?/g : /(\s+)([A-Za-z_:][\w:.-]*)(?:\s*=\s*(?:"([^"<>]*)"|'([^'<>]*)'|([^\s"'<>=`]+)))?/g, svgNamespace = "http://www.w3.org/2000/svg", xlinkNamespace = "http://www.w3.org/1999/xlink", isInvalidXmlCodePoint = (input) => input < 32 ? input !== 9 && input !== 10 && input !== 13 : input === 65534 || input === 65535 || input >= 55296 && input <= 57343 || input > 1114111, elementInlineStyle = (input) => input.attrs.style ?? inheritedInlineStyles.get(input), estimatedGlyphWidthFactor = 0.5, estimatedLongWordWidthFactor = 0.55, iconPlaceholderLabel = (input) => "[icon: " + (0, runtime2.truncateUtf16Safely)(input, 40) + "]", genericIconPlaceholderLabel = "[icon]", elementPlaceholderLabel = (input) => input.tag === "x-shape" ? "[shape: " + ((0, runtime2.truncateUtf16Safely)((input.attrs.kind ?? "").trim(), 20) || "rect") + "]" : input.tag === "img" ? "[image]" : input.tag === "svg" ? "[drawing]" : input.tag === "x-connector" ? "[line]" : input.tag === "hr" ? "[rule]" : "[" + input.tag.replace(/^x-/, "") + "]", simpleCssColorSource = "(#[0-9a-f]{3,8}|rgba?\\([0-9., %]{1,40}\\)|[a-z]{3,24})", initializeHtmlCompiler = (0, runtime2.initializeOnce)(() => {
+    }, diagnosticCssPropertyName = (input) => diagnosticCssPropertyNames[input] ?? input, diagnosticHtmlTagLabel = (input) => "tag" in input && typeof input.tag == "string" ? "<" + String(input.tag) + "> " : "", svgTagTokenPattern = (input) => input ? /<(\/?)([A-Za-z][\w:.-]*)((?:\s+[A-Za-z_:][\w:.-]*(?:\s*=\s*(?:"[^"<]*"|'[^'<]*'|[^\s"'<>=`]+))?)*)\s*(\/?)>/y : /<(\/?)([A-Za-z][\w:.-]*)((?:\s+[A-Za-z_:][\w:.-]*(?:\s*=\s*(?:"[^"<>]*"|'[^'<>]*'|[^\s"'<>=`]+))?)*)\s*(\/?)>/y, svgAttributeTokenPattern = (input) => input ? /(\s+)([A-Za-z_:][\w:.-]*)(?:\s*=\s*(?:"([^"<]*)"|'([^'<]*)'|([^\s"'<>=`]+)))?/g : /(\s+)([A-Za-z_:][\w:.-]*)(?:\s*=\s*(?:"([^"<>]*)"|'([^'<>]*)'|([^\s"'<>=`]+)))?/g, svgNamespace = "http://www.w3.org/2000/svg", xlinkNamespace = "http://www.w3.org/1999/xlink", isInvalidXmlCodePoint = (input) => input < 32 ? input !== 9 && input !== 10 && input !== 13 : input === 65534 || input === 65535 || input >= 55296 && input <= 57343 || input > 1114111, elementInlineStyle = (input) => input.attrs.style ?? inheritedInlineStyles.get(input), PERCENT_HEALED_WARNING = ": % of the parent is not supported inside a div — healed to a flex share", percentBasisWarning = (prop, pct, basis) => prop + ":" + String(pct) + "% has no effect: this box's own flex-basis of " + String(basis) + "px comes first, as in a browser" + (basis === 0 ? " (flex:N sets flex-basis to 0)" : ""), estimatedGlyphWidthFactor = 0.5, estimatedLongWordWidthFactor = 0.55, iconPlaceholderLabel = (input) => "[icon: " + (0, runtime2.truncateUtf16Safely)(input, 40) + "]", genericIconPlaceholderLabel = "[icon]", elementPlaceholderLabel = (input) => input.tag === "x-shape" ? "[shape: " + ((0, runtime2.truncateUtf16Safely)((input.attrs.kind ?? "").trim(), 20) || "rect") + "]" : input.tag === "img" ? "[image]" : input.tag === "svg" ? "[drawing]" : input.tag === "x-connector" ? "[line]" : input.tag === "hr" ? "[rule]" : "[" + input.tag.replace(/^x-/, "") + "]", simpleCssColorSource = "(#[0-9a-f]{3,8}|rgba?\\([0-9., %]{1,40}\\)|[a-z]{3,24})", initializeHtmlCompiler = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeArtifactAddresses)(), (0, runtime2.initializeVideoLinks)(), (0, runtime2.initializeStyleSchema)(), (0, runtime2.initializeSlideTypeScales)(), (0, runtime2.initializeCssValueParser)(), slideHtmlPrefixPattern = /^\s*(?:<!doctype|<html|<section|<\!--)/i, htmlVoidElementNames = /* @__PURE__ */ new Set([
         "br",
         "img",
@@ -5398,6 +5463,8 @@ function installCompilerHtml(runtime2) {
         commentScans: 0
       }, inheritedInlineStyles = /* @__PURE__ */ new WeakMap(), dataRoleElementNames = /* @__PURE__ */ new Set(["div", "p", "h1", "h2", "h3", "ul", "ol"]), plainCellStylePropertyPattern = /^(background(-color)?|color|padding(-(top|right|bottom|left))?|text-align|vertical-align|width|height|font-(weight|size|style|family)|border(-(top|right|bottom|left))?(-(width|style|color))?|white-space|line-height|letter-spacing|text-transform)$/, cellColorDeclarationPattern = /(?:^|;)\s*color\s*:|fill-color/i, compileWarningCodes = [
         [/% of the parent is not supported inside a div/, "percent-width"],
+        [/% is written as flex-basis/, "percent-px"],
+        [/% has no effect: this box's own flex-basis/, "percent-basis"],
         [
           /width:100%.* kept as (align|justify)-self:stretch|<hr> width:100% is not stored/,
           "width-stretch"

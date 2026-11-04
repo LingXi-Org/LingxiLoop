@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installHostFrameBridge(runtime2) {
-  var react_z, SAVE_NOW_COMMAND, OPEN_FIND_COMMAND, EXPORT_FORMAT_PATTERN, validExportTimeout, MAX_HOST_EXPORT_FORMATS, HOST_DESTINATION_PATTERN, MAX_HOST_DESTINATIONS, HOST_REQUEST_ID_PATTERN, HOST_COMMAND_PATTERN, MAX_HOST_COMMANDS, MAX_HOST_FOOT_INSET, HOST_BACKGROUND_HEX_PATTERN, DEFAULT_HOST_ORIGINS, allowedHostOrigins, hostFrameBridge, hostFootState, hostFootInsets, CHAT_TOGGLE_COMMAND, HAND_OFF_CODE_COMMAND, MAX_HOST_ACTIONS, hostChatClaims, hostFootInset, hostFootInsetListeners, hostFootUpdateQueued;
+  var react_z, SAVE_NOW_COMMAND, OPEN_FIND_COMMAND, EXPORT_FORMAT_PATTERN, validExportTimeout, MAX_HOST_EXPORT_FORMATS, HOST_DESTINATION_PATTERN, MAX_HOST_DESTINATIONS, HOST_REQUEST_ID_PATTERN, HOST_COMMAND_PATTERN, MAX_HOST_COMMANDS, MAX_HOST_FOOT_INSET, HOST_BACKGROUND_HEX_PATTERN, DEFAULT_HOST_ORIGINS, allowedHostOrigins, hostFrameBridge, hostFootState, hostFootInsets, CHAT_TOGGLE_COMMAND, HAND_OFF_CODE_COMMAND, MAX_HOST_ACTIONS, hostChatClaims, chatSlotCovers, hostFootInset, hostFootInsetListeners, hostFootUpdateQueued;
   function normalizeHostBackgroundColor(color) {
     let value = color.trim(), value2 = /^rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})(?:\s*[,/]\s*(\d*\.?\d+%?))?\s*\)$/.exec(value), text = "(\\d*\\.?\\d+(?:e[-+]?\\d+)?%?)", value3 = value2 === null ? new RegExp("^color\\(\\s*srgb\\s+(\\d*\\.?\\d+(?:e[-+]?\\d+)?%?)\\s+(\\d*\\.?\\d+(?:e[-+]?\\d+)?%?)\\s+(\\d*\\.?\\d+(?:e[-+]?\\d+)?%?)(?:\\s*\\/\\s*(\\d*\\.?\\d+(?:e[-+]?\\d+)?%?))?\\s*\\)$").exec(value) : null, value4 = value2 ?? value3;
     if (value4 === null)
@@ -130,7 +130,7 @@ function installHostFrameBridge(runtime2) {
         }
       ] : []), index4 > 0 && (state.leaveLosesWork = !0);
       let value13 = value4?.filter((input) => input.handoff !== !0) ?? [], value14 = value4?.filter((input) => input.handoff === !0).map(({ handoff, ...props }) => props) ?? [];
-      return value13.length > 0 && (state.exports = value13), value14.length > 0 && (state.handoffs = value14), value5 !== null && (state.destinations = value5), value6?.footInset !== void 0 && (state.footInset = value6.footInset), value6?.ground !== void 0 && (state.ground = value6.ground), value6?.footCenter !== void 0 && (state.footCenter = value6.footCenter), value6?.footSlotX !== void 0 && value6.footSlotY !== void 0 && (state.footSlotX = value6.footSlotX, state.footSlotY = value6.footSlotY, value6.footSlotW !== void 0 && (state.footSlotW = value6.footSlotW)), value6?.ownChat === !0 && (state.ownChat = !0), state;
+      return value13.length > 0 && (state.exports = value13), value14.length > 0 && (state.handoffs = value14), value5 !== null && (state.destinations = value5), value6?.footInset !== void 0 && (state.footInset = value6.footInset), value6?.ground !== void 0 && (state.ground = value6.ground), value6?.footCenter !== void 0 && (state.footCenter = value6.footCenter), value6?.footSlotX !== void 0 && value6.footSlotY !== void 0 && (state.footSlotX = value6.footSlotX, state.footSlotY = value6.footSlotY, value6.footSlotW !== void 0 && (state.footSlotW = value6.footSlotW), value6.footSlotCovered !== void 0 && (state.footSlotCovered = value6.footSlotCovered)), value6?.ownChat === !0 && (state.ownChat = !0), state;
     }, callback8 = () => {
       let value13 = callback7(), value14 = value13 ?? {
         v: 1
@@ -244,7 +244,7 @@ function installHostFrameBridge(runtime2) {
         let value13 = typeof input?.ground == "string" ? input.ground.toLowerCase() : null;
         value13 !== null && HOST_BACKGROUND_HEX_PATTERN.test(value13) && (state.ground = value13), input !== null && typeof input.center == "number" && Number.isFinite(input.center) && (state.footCenter = Math.min(Math.max(0, Math.round(input.center)), MAX_HOST_FOOT_INSET));
         let slot = input?.slot;
-        slot && Number.isFinite(slot.x) && Number.isFinite(slot.y) && (state.footSlotX = Math.min(Math.max(0, Math.round(slot.x)), MAX_HOST_FOOT_INSET), state.footSlotY = Math.min(Math.max(0, Math.round(slot.y)), MAX_HOST_FOOT_INSET), typeof slot.width == "number" && Number.isFinite(slot.width) && (state.footSlotW = Math.min(Math.max(0, Math.round(slot.width)), MAX_HOST_FOOT_INSET))), input?.ownChat === !0 && (state.ownChat = !0), value6 = Object.keys(state).length === 0 ? null : state, callback8();
+        slot && Number.isFinite(slot.x) && Number.isFinite(slot.y) && (state.footSlotX = Math.min(Math.max(0, Math.round(slot.x)), MAX_HOST_FOOT_INSET), state.footSlotY = Math.min(Math.max(0, Math.round(slot.y)), MAX_HOST_FOOT_INSET), typeof slot.width == "number" && Number.isFinite(slot.width) && (state.footSlotW = Math.min(Math.max(0, Math.round(slot.width)), MAX_HOST_FOOT_INSET)), (input?.slotCovered === !0 || input?.slotCovered === "dimmed") && (state.footSlotCovered = input.slotCovered)), input?.ownChat === !0 && (state.ownChat = !0), value6 = Object.keys(state).length === 0 ? null : state, callback8();
       },
       setExports(input) {
         if (parentWindow === null)
@@ -372,6 +372,12 @@ function installHostFrameBridge(runtime2) {
       };
     }
   }
+  function createLeaveWarningHold() {
+    let release;
+    return (on) => {
+      on ? release ??= holdHostLeaveWarning() : (release?.(), release = void 0);
+    };
+  }
   function useHostDestinations(destinations, onPress) {
     let ref = react_z.useRef({
       rows: destinations,
@@ -419,6 +425,11 @@ function installHostFrameBridge(runtime2) {
       },
       ...hostFootState?.slot && {
         slot: hostFootState.slot
+      },
+      ...chatSlotCovers.solid > 0 ? {
+        slotCovered: !0
+      } : chatSlotCovers.dimmed > 0 && {
+        slotCovered: "dimmed"
       },
       ...hostChatClaims > 0 && {
         ownChat: !0
@@ -489,6 +500,12 @@ function installHostFrameBridge(runtime2) {
   function useHoldHostChatToggle() {
     react_z.useEffect(() => getHostFrameBridge().holdChatToggle(), []);
   }
+  function coverHostChatSlot(cover = !0) {
+    let kind = cover === !0 ? "solid" : "dimmed", released = !1;
+    return chatSlotCovers[kind] += 1, refreshHostFoot(), () => {
+      released || (released = !0, chatSlotCovers[kind] -= 1, refreshHostFoot());
+    };
+  }
   function useClaimHostChatToggle(claim) {
     react_z.useEffect(() => claim ? claimHostChatToggle() : void 0, [claim]);
   }
@@ -543,14 +560,19 @@ function installHostFrameBridge(runtime2) {
     HAND_OFF_CODE_COMMAND = value;
   }), bindRuntimeValue(runtime2, "MAX_HOST_ACTIONS", () => MAX_HOST_ACTIONS, (value) => {
     MAX_HOST_ACTIONS = value;
-  }), bindRuntimeValue(runtime2, "setHostFootInset", () => setHostFootInset), bindRuntimeValue(runtime2, "subscribeHostFootInset", () => subscribeHostFootInset), bindRuntimeValue(runtime2, "setHostFootSlotInset", () => setHostFootSlotInset), bindRuntimeValue(runtime2, "claimHostChatToggle", () => claimHostChatToggle), bindRuntimeValue(runtime2, "setHostActions", () => setHostActions), bindRuntimeValue(runtime2, "hostWords", () => hostWords), bindRuntimeValue(runtime2, "hostChromeWitnessed", () => hostChromeWitnessed), bindRuntimeValue(runtime2, "useHostOffersChatToggle", () => useHostOffersChatToggle), bindRuntimeValue(runtime2, "useHostMayOfferChatToggle", () => useHostMayOfferChatToggle), bindRuntimeValue(runtime2, "useHoldHostChatToggle", () => useHoldHostChatToggle), bindRuntimeValue(runtime2, "useClaimHostChatToggle", () => useClaimHostChatToggle), () => {
+  }), bindRuntimeValue(runtime2, "setHostFootInset", () => setHostFootInset), bindRuntimeValue(runtime2, "subscribeHostFootInset", () => subscribeHostFootInset), bindRuntimeValue(runtime2, "setHostFootSlotInset", () => setHostFootSlotInset), bindRuntimeValue(runtime2, "claimHostChatToggle", () => claimHostChatToggle), bindRuntimeValue(runtime2, "chatSlotCovers", () => chatSlotCovers, (value) => {
+    chatSlotCovers = value;
+  }), bindRuntimeValue(runtime2, "createLeaveWarningHold", () => createLeaveWarningHold), bindRuntimeValue(runtime2, "coverHostChatSlot", () => coverHostChatSlot), bindRuntimeValue(runtime2, "setHostActions", () => setHostActions), bindRuntimeValue(runtime2, "hostWords", () => hostWords), bindRuntimeValue(runtime2, "hostChromeWitnessed", () => hostChromeWitnessed), bindRuntimeValue(runtime2, "useHostOffersChatToggle", () => useHostOffersChatToggle), bindRuntimeValue(runtime2, "useHostMayOfferChatToggle", () => useHostMayOfferChatToggle), bindRuntimeValue(runtime2, "useHoldHostChatToggle", () => useHoldHostChatToggle), bindRuntimeValue(runtime2, "useClaimHostChatToggle", () => useClaimHostChatToggle), () => {
     react_z = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), SAVE_NOW_COMMAND = "save_now", OPEN_FIND_COMMAND = "open_find", CHAT_TOGGLE_COMMAND = "chat_toggle", HAND_OFF_CODE_COMMAND = "hand_off_code", EXPORT_FORMAT_PATTERN = /^[a-z0-9]{1,8}$/, validExportTimeout = (value) => typeof value == "number" && Number.isSafeInteger(value) && value > 5e3 && value <= 9e5 ? value : void 0, MAX_HOST_EXPORT_FORMATS = 8, HOST_DESTINATION_PATTERN = /^[a-z][a-z0-9_-]{0,31}$/, MAX_HOST_DESTINATIONS = 8, HOST_REQUEST_ID_PATTERN = /^[A-Za-z0-9_-]{16,64}$/, HOST_COMMAND_PATTERN = /^[a-z][a-z0-9_-]{0,31}$/, MAX_HOST_COMMANDS = 8, MAX_HOST_FOOT_INSET = 9999, MAX_HOST_ACTIONS = 8, HOST_BACKGROUND_HEX_PATTERN = /^#[0-9a-f]{6}$/, DEFAULT_HOST_ORIGINS = [], allowedHostOrigins = (() => {
       try {
         return typeof window == "object" ? hostOrigins(window) : DEFAULT_HOST_ORIGINS;
       } catch {
         return DEFAULT_HOST_ORIGINS;
       }
-    })(), hostFrameBridge = null, hostFootState = null, hostFootInsets = /* @__PURE__ */ new Map(), hostChatClaims = 0, hostFootInset = 0, hostFootInsetListeners = /* @__PURE__ */ new Set(), hostFootUpdateQueued = !1;
+    })(), hostFrameBridge = null, hostFootState = null, hostFootInsets = /* @__PURE__ */ new Map(), hostChatClaims = 0, chatSlotCovers = {
+      solid: 0,
+      dimmed: 0
+    }, hostFootInset = 0, hostFootInsetListeners = /* @__PURE__ */ new Set(), hostFootUpdateQueued = !1;
   };
 }
 export {

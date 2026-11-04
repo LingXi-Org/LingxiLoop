@@ -1,0 +1,1 @@
+{"passed":true,"mobile":"false","checks":["one Design and one Slides maximum","same DOM iframe and WindowProxy across views","reauthorize before visible","project and account purge","navigation and empty-workspace content stay visible","revocation releases content","expiry does not time-evict a concealed draft","expired reopen reauthorizes and replaces the old grant"],"grants":9}

@@ -1,5 +1,6 @@
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import type { LingxiMessageMetadata } from './model'
+import { executionBudgetMessages } from '../../../lib/executionBudget'
 
 /** chat.send messages can share a run ID without owning that run's preview or lifecycle. */
 export function isRunMessage(metadata: LingxiMessageMetadata): boolean {
@@ -35,6 +36,7 @@ export function harnessLabel(view: RunDisplayState): string {
 }
 
 export function harnessFailure(reason: string): string {
+  if (Object.values(executionBudgetMessages).includes(reason)) return reason
   const messages: Record<string, string> = {
     'Model call, token, cost or execution-time budget exhausted': '本次请求超出处理限制，请缩小范围后重试。',
     'Tool execution timed out': '操作超时，请重试。',

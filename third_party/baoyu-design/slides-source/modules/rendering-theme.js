@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installRenderingTheme(runtime2) {
   var ThemeReact, renderingNamedColors, renderingTheme, serifThemeFontStack, sansThemeFontStack, defaultThemeFontFamilies, googleFontImportPattern, neutralThemeFontStack, anthropicRenderedTypeScale, neutralRenderedTypeScale, defaultDeckColorNames, initializeRenderingTheme;
@@ -238,7 +238,7 @@ function installRenderingTheme(runtime2) {
     initializeRenderingTheme = value;
   }), () => {
     renderingTheme = "anthropic", serifThemeFontStack = "var(--deck-serif, Georgia), Georgia, 'Times New Roman', serif", sansThemeFontStack = "var(--deck-sans, system-ui), -apple-system, 'Helvetica Neue', sans-serif", neutralThemeFontStack = "system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif", initializeRenderingTheme = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeColorSelect)(), (0, runtime2.initializeUiPropertyLabels)(), (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeFontCatalog)(), (0, runtime2.initializeFontVariants)(), (0, runtime2.initializeDesignTokenParser)(), (0, runtime2.initializeDesignSystemsStore)(), (0, runtime2.initializeSlideTypeScales)(), (0, runtime2.initializeStyleSchema)(), ThemeReact = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), renderingNamedColors = {
+      (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeFontCatalog)(), (0, runtime2.initializeFontVariants)(), (0, runtime2.initializeSlideTypeScales)(), (0, runtime2.initializeStyleSchema)(), (0, runtime2.initializeColorSelect)(), (0, runtime2.initializeDesignTokenParser)(), (0, runtime2.initializeDesignSystemsStore)(), ThemeReact = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), renderingNamedColors = {
         ...runtime2.namedSlideColors
       }, defaultThemeFontFamilies = {
         serif: "Georgia",

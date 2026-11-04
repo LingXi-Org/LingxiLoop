@@ -14,26 +14,28 @@
 <meta name="apple-mobile-web-app-title" content="LingxiLoop" />
 <link rel="manifest" href="/manifest.webmanifest?v=rounded-20261024" />
 <title>LingxiLoop — 人与智能助教协作</title>
-<!-- The Electron notification panel loads this same bundle with the
-     `#notifications` hash. Its window is backed by NSVisualEffectView
-     (vibrancy) and must show the vibrant material straight through —
-     no white flash. Inline this BEFORE any stylesheet (including
-     globals.css) loads so the body never paints opaque at any point. -->
+<!-- Apply the stored theme before the first paint (next-themes would only do so after the app bundle runs). -->
 <script>
-  if (location.hash === '#notifications') {
-    document.documentElement.classList.add('lingxiloop-notif-window')
-  }
+  try {
+    var theme = localStorage.getItem('lingxiloop-theme') === 'light' ? 'light' : 'dark'
+    var root = document.documentElement
+    root.classList.add(theme)
+    root.setAttribute('data-theme', theme)
+    root.style.colorScheme = theme
+  } catch (_) { document.documentElement.classList.add('dark') }
 </script>
-<style>
-  html.lingxiloop-notif-window,
-  html.lingxiloop-notif-window body,
-  html.lingxiloop-notif-window #root {
-    background: transparent !important;
-  }
-</style>
 </head>
 <body>
 <div id="root"></div>
+<!-- One static shell paints with the stylesheet, before any script, and stays up
+     through every boot phase until the workspace renders (see BootShell). -->
+<div id="boot-shell" role="status" aria-label="正在打开工作台" class="fixed inset-0 z-[60] flex gap-2 bg-background p-2">
+  <div aria-hidden="true" class="flex w-12 shrink-0 flex-col items-center gap-6 py-4"><div data-slot="skeleton" class="size-9 animate-pulse rounded-full bg-muted"></div><div data-slot="skeleton" class="size-6 animate-pulse rounded-lg bg-muted"></div><div data-slot="skeleton" class="size-6 animate-pulse rounded-lg bg-muted"></div><div data-slot="skeleton" class="size-6 animate-pulse rounded-lg bg-muted"></div><div data-slot="skeleton" class="size-6 animate-pulse rounded-lg bg-muted"></div></div>
+  <div aria-hidden="true" class="flex min-w-0 flex-1 overflow-hidden rounded-xl border bg-card">
+    <div class="w-full space-y-5 border-e p-3 md:w-[280px] md:shrink-0"><div data-slot="skeleton" class="h-9 animate-pulse rounded-full bg-muted"></div><div class="flex items-center gap-3"><div data-slot="skeleton" class="size-10 shrink-0 animate-pulse rounded-xl bg-muted"></div><div class="flex-1 space-y-2"><div data-slot="skeleton" class="h-3.5 w-3/4 animate-pulse rounded-2xl bg-muted"></div><div data-slot="skeleton" class="h-3 w-1/2 animate-pulse rounded-2xl bg-muted"></div></div></div><div class="flex items-center gap-3"><div data-slot="skeleton" class="size-10 shrink-0 animate-pulse rounded-xl bg-muted"></div><div class="flex-1 space-y-2"><div data-slot="skeleton" class="h-3.5 w-3/4 animate-pulse rounded-2xl bg-muted"></div><div data-slot="skeleton" class="h-3 w-1/2 animate-pulse rounded-2xl bg-muted"></div></div></div><div class="flex items-center gap-3"><div data-slot="skeleton" class="size-10 shrink-0 animate-pulse rounded-xl bg-muted"></div><div class="flex-1 space-y-2"><div data-slot="skeleton" class="h-3.5 w-3/4 animate-pulse rounded-2xl bg-muted"></div><div data-slot="skeleton" class="h-3 w-1/2 animate-pulse rounded-2xl bg-muted"></div></div></div></div>
+    <div class="hidden min-w-0 flex-1 flex-col md:flex"><div class="border-b p-4"><div data-slot="skeleton" class="h-5 w-44 animate-pulse rounded-2xl bg-muted"></div></div><div class="flex-1"></div><div class="p-4"><div data-slot="skeleton" class="h-14 animate-pulse rounded-3xl bg-muted"></div></div></div>
+  </div>
+</div>
 <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

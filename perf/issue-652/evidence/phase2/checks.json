@@ -1,0 +1,93 @@
+{
+  "node": "22.23.4",
+  "web": {
+    "passed": 151,
+    "failed": 0
+  },
+  "focusedLifecycleAndWorkspace": {
+    "passed": 17,
+    "failed": 0
+  },
+  "editorCompilerArchiveAndDeployContracts": {
+    "passed": 60,
+    "failed": 0
+  },
+  "plainOpenSamples": 120,
+  "plainOpenPageErrors": 0,
+  "repeatedOver1KiBScriptTransfersPerRecordedOpen": [],
+  "ordinaryCandidateMathRequests": [],
+  "fullTimingTarget": {
+    "exitCode": 1,
+    "coldTargetMet": false,
+    "retainedTargetMet": true
+  },
+  "scope": "Synthetic documents/grants. Local installed SDK 3.8.16, required 3.8.21; formal SDK validation and independent final-head review are not claimed.",
+  "desktopOwnership": {
+    "passed": true,
+    "mobile": "false",
+    "checks": [
+      "one Design and one Slides maximum",
+      "same DOM iframe and WindowProxy across views",
+      "reauthorize before visible",
+      "project and account purge",
+      "navigation and empty-workspace content stay visible",
+      "revocation releases content",
+      "expiry does not time-evict a concealed draft",
+      "expired reopen reauthorizes and replaces the old grant"
+    ],
+    "grants": 9
+  },
+  "mobileOwnership": {
+    "passed": true,
+    "mobile": "true",
+    "checks": [
+      "one Design and one Slides maximum",
+      "same DOM iframe and WindowProxy across views",
+      "reauthorize before visible",
+      "project and account purge",
+      "navigation and empty-workspace content stay visible",
+      "revocation releases content",
+      "expiry does not time-evict a concealed draft",
+      "expired reopen reauthorizes and replaces the old grant"
+    ],
+    "grants": 9
+  },
+  "frameAuthorizationAndRetry": {
+    "passed": true,
+    "checks": [
+      "pending optional warm-up cannot block iframe mount",
+      "wrong source/nonce/schema rejected",
+      "valid child context reveals mounted editor before load",
+      "sandbox remains opaque",
+      "missing application handshake times out with retry",
+      "retry obtains a fresh grant",
+      "retained iframe waits for fresh authorization",
+      "reopen preserves actual frame",
+      "denial releases private content",
+      "temporary access-check failure keeps a concealed draft",
+      "access-check retry reuses the draft",
+      "deletion releases the frame"
+    ],
+    "received": 1
+  },
+  "libraryOwnership": {
+    "passed": true,
+    "checks": [
+      "library defers workspace runtime",
+      "same iframe on re-open",
+      "authorization before visibility",
+      "revocation removes retained content",
+      "one retained deck",
+      "project switch releases workspace"
+    ],
+    "mounts": 4,
+    "unmounts": 4,
+    "rechecks": 2
+  },
+  "companion657TransitiveBuildContract": {
+    "head": "2a9451259fc75809209e8187f519417d514ad299",
+    "passed": 25,
+    "failed": 0,
+    "scope": "Ran the exact companion contract test against this candidate checkout using a temporary same-directory copy, then removed it. #657 branch is unchanged."
+  }
+}

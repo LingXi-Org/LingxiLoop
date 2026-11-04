@@ -1,0 +1,10 @@
+{
+  "stylesheet": "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap",
+  "font": "https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAopxRSW32.woff2",
+  "fontSha256": "4ab51eb2cd7305d177187908d6397474d4520663f6c6e572feb0a64f4fa80006",
+  "licence": {
+    "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/dmsans/OFL.txt",
+    "downloadSha256": "9af36190332437f5ecd09974de43c1f7c77a310a996cdd8ceb25628b458840e1",
+    "storedLineEndings": "LF and trailing whitespace normalized; original bytes in OFL.original.txt.gz"
+  }
+}

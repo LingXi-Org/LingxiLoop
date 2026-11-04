@@ -4,6 +4,22 @@ import { terminalFeedbackScopeSchema, type TerminalScope } from '@/lib/terminalF
 import { harnessFailure } from './harness'
 import type { LingxiMessageMetadata } from './model'
 
+/** Only current durable artifacts or completed save receipts establish saved work.
+ * A public preview, old request or failed/unknown write cannot establish it. */
+export function savedPartialWork(message: ThreadMessage): boolean {
+  const value = message.metadata.custom as Partial<LingxiMessageMetadata>, view = value.harness
+  if (message.role !== 'assistant' || message.status?.type !== 'incomplete' || !view || value.runId !== view.runId
+    || view.goalOutcome?.requestVersion !== view.requestVersion || !['partial', 'blocked'].includes(view.goalOutcome.status)
+    || ['queued', 'leased', 'waiting'].includes(view.lifecycle ?? '')) return false
+  if (view.artifacts.length && view.resultId && view.messageFence === view.fence) return true
+  return message.content.some(part => part.type === 'tool-call' && !part.isError
+    && ['slides.write_files', 'slides.edit_file', 'design.write_files', 'design.edit_file'].includes(part.toolName.replaceAll('__', '.'))
+    && activityAnnotation(part)?.requestVersion === view.requestVersion
+    && part.result && typeof part.result === 'object' && Reflect.get(part.result, 'status') === 'completed')
+}
+
+export const savedPartialWorkText = '作品修改已保存，后续工作未完成。可以继续检查、修正和完成答复。'
+
 export function currentTerminalNotice(value: Partial<LingxiMessageMetadata>) {
   const notice = value.terminalNotice, view = value.harness
   return notice && view && value.runId === view.runId && notice.runId === view.runId
@@ -30,6 +46,7 @@ export function terminalFailurePresentation(message: ThreadMessage) {
     && (!activityAnnotation(part) || activityAnnotation(part)?.kind === 'answer'))
   const partial = view && value.runId === view.runId && view.goalOutcome?.requestVersion === view.requestVersion
     && ['partial', 'blocked'].includes(view.goalOutcome.status)
+  const saved = savedPartialWork(message)
   const titles: Record<TerminalScope, string> = {
     response: cancelled ? '回复已取消' : preview ? '回复未完成' : '回复生成失败',
     follow_up: cancelled ? '回答已生成，后续协作已取消' : '回答已生成，后续协作未完成',
@@ -40,9 +57,9 @@ export function terminalFailurePresentation(message: ThreadMessage) {
     delivery: '投递未完成', finalization: '收尾未完成', unknown: cancelled ? '已取消' : '执行未完成',
   }
   const publicText = matched && typeof Reflect.get(matched, 'text') === 'string' ? String(Reflect.get(matched, 'text')) : undefined
-  const title = !parsed.success && !view ? preview ? '回复未完成' : '回复生成失败' : partial && scope === 'unknown' ? '答复尚未完成' : titles[scope]
-  return { title, statusLabel: partial && scope === 'unknown' ? '答复尚未完成' : labels[scope],
-    detail: publicText ?? notice?.text ?? (value.harnessError ? harnessFailure(value.harnessError) : '本轮执行未完成。已完成的操作会保留，请先刷新进度核对结果。'),
+  const title = saved ? '作品已保存，后续工作未完成' : !parsed.success && !view ? preview ? '回复未完成' : '回复生成失败' : partial && scope === 'unknown' ? '答复尚未完成' : titles[scope]
+  return { title, statusLabel: saved ? '作品已保存，后续未完成' : partial && scope === 'unknown' ? '答复尚未完成' : labels[scope],
+    detail: saved ? `${savedPartialWorkText}${publicText ?? notice?.text ?? ''}` : publicText ?? notice?.text ?? (value.harnessError ? harnessFailure(value.harnessError) : '本轮执行未完成。已完成的操作会保留，请先刷新进度核对结果。'),
     recovery: scope === 'response' || !view || partial && scope === 'unknown' ? 'regenerate' as const
       : scope === 'delivery' ? 'delivery' as const : 'refresh' as const,
   }

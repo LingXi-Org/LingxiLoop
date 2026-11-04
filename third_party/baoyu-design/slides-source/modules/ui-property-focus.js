@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiPropertyFocus(runtime2) {
   var reactForUiPropertyFocus, OPEN_OVERLAY_SELECTOR, MENU_POPOVER_OPEN_SELECTORS, UNDO_STEPS_ATTRIBUTE, UNDO_STEPS_HELD_ATTRIBUTE, heldUndoPointerIds, pendingPopupFocusReturn, TEXT_EDITABLE_SELECTOR, popupPointerEvent, ToolbarTooltipSideContext, popupFocusReturnTimer, initializeUiPropertyFocus, nextHeldUndoId = -1, DOCUMENT_FOCUS_POLL_MS = 250, subscribeNothing = () => () => {

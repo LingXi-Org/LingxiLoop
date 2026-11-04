@@ -1,0 +1,8 @@
+Run https://github.com/LingXi-Org/LingxiLoop/actions/runs/41684341322
+Source 803cca665e19d0562886b091090a843935ab0bd5. Integration job 126086916760 succeeded.
+2026-11-03T17:31:55.9573609Z [integration selected] selected 14/56 file(s): identity-vertical-slice.test.ts, permission-resolver.test.ts, native-message-flow.test.ts, runtime-realtime.test.ts, public-activity-history.test.ts, public-run-activity.test.ts, basic-process-recovery.test.ts, artifact-app-boundary.test.ts, slides-workspace-flow.test.ts, runtime-patch-provenance.test.ts, runtime-patch58-provenance.test.ts, runtime-patch60-provenance.test.ts, runtime-patch60-20-provenance.test.ts, runtime-patch61-21-provenance.test.ts
+2026-11-03T17:32:45.9522339Z # Subtest: retained native grants follow current read/write policy without upgrading issued capabilities
+2026-11-03T17:32:45.9523754Z ok 7 - retained native grants follow current read/write policy without upgrading issued capabilities
+2026-11-03T17:32:46.0493309Z # Subtest: expired, cross-tenant, wrong-kind and revoked native grants cannot read or overwrite persisted files
+2026-11-03T17:32:46.0494612Z ok 8 - expired, cross-tenant, wrong-kind and revoked native grants cannot read or overwrite persisted files
+2026-11-03T17:32:46.1059846Z [integration file] artifact-app-boundary.test.ts duration_ms=5269 exit=0

@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installHostFrameComposer(runtime2) {
   var ReactFrameComposer, FrameComposerReactDom, FRAME_COMPOSER_COMMAND, composerState, composerOrigin, composerFirstHeardAt, footInset, composerListeners;
@@ -58,8 +58,14 @@ function installHostFrameComposer(runtime2) {
       composerListeners.delete(listener);
     };
   }
+  function useFrameChatAvailable() {
+    return ReactFrameComposer.useSyncExternalStore(subscribeFrameComposer, () => composerState?.available === !0, () => !1);
+  }
   function useFrameChatReleaseAt() {
     return ReactFrameComposer.useSyncExternalStore(subscribeFrameComposer, () => composerState !== null && !composerState.available && composerFirstHeardAt !== null ? composerFirstHeardAt + 1e3 : null, () => null);
+  }
+  function isFrameComposerVisible() {
+    return composerState?.visible === !0;
   }
   function useComposerFocusReturn({ button, onReturn, on }) {
     ReactFrameComposer.useEffect(() => {
@@ -153,7 +159,7 @@ function installHostFrameComposer(runtime2) {
   }
   return bindRuntimeValue(runtime2, "FRAME_COMPOSER_COMMAND", () => FRAME_COMPOSER_COMMAND, (value) => {
     FRAME_COMPOSER_COMMAND = value;
-  }), bindRuntimeValue(runtime2, "parseFrameComposerMessage", () => parseFrameComposerMessage), bindRuntimeValue(runtime2, "setFrameComposerState", () => setFrameComposerState), bindRuntimeValue(runtime2, "listenForFrameComposer", () => listenForFrameComposer), bindRuntimeValue(runtime2, "showFrameComposer", () => showFrameComposer), bindRuntimeValue(runtime2, "subscribeFrameComposer", () => subscribeFrameComposer), bindRuntimeValue(runtime2, "useFrameChatReleaseAt", () => useFrameChatReleaseAt), bindRuntimeValue(runtime2, "useFrameChat", () => useFrameChat), () => {
+  }), bindRuntimeValue(runtime2, "parseFrameComposerMessage", () => parseFrameComposerMessage), bindRuntimeValue(runtime2, "setFrameComposerState", () => setFrameComposerState), bindRuntimeValue(runtime2, "listenForFrameComposer", () => listenForFrameComposer), bindRuntimeValue(runtime2, "showFrameComposer", () => showFrameComposer), bindRuntimeValue(runtime2, "subscribeFrameComposer", () => subscribeFrameComposer), bindRuntimeValue(runtime2, "useFrameChatAvailable", () => useFrameChatAvailable), bindRuntimeValue(runtime2, "useFrameChatReleaseAt", () => useFrameChatReleaseAt), bindRuntimeValue(runtime2, "isFrameComposerVisible", () => isFrameComposerVisible), bindRuntimeValue(runtime2, "useFrameChat", () => useFrameChat), () => {
     ReactFrameComposer = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), FrameComposerReactDom = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactDomNamespace)(), 1), FRAME_COMPOSER_COMMAND = "__frame_composer", composerState = null, composerOrigin = null, composerFirstHeardAt = null, footInset = 0, composerListeners = /* @__PURE__ */ new Set(), typeof window < "u" && window.parent !== window && listenForFrameComposer(window), (0, runtime2.subscribeHostFootInset)((inset) => {
       footInset = inset, applyComposerInset();
     });

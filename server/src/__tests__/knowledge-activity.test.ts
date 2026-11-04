@@ -27,7 +27,7 @@ test('knowledge activity saves observed source outcomes and restores the same su
     assert.equal(restored.display.summary, expected)
   }
   try {
-    for (const status of ['matched', 'no_matches', 'no_sources', 'processing', 'not_applicable', 'unavailable', 'unexpected']) {
+    for (const status of ['matched', 'degraded', 'no_matches', 'no_sources', 'processing', 'not_applicable', 'unavailable', 'unexpected']) {
       const expected = knowledgeSearchLabels[status === 'unavailable' ? 'failed' : status === 'unexpected' ? 'unknown' : status as keyof typeof knowledgeSearchLabels]
       await check('knowledge.search', { ok: true, value: { status } }, expected)
     }

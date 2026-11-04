@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorDomTextSearch(runtime2) {
   var SPECIAL_SEARCH_LOWERCASE_PATTERN, SEARCH_CHARACTER_FOLDS, SEARCH_FOLDED_CHARACTER_PATTERN, normalizeSearchCharacter, SEARCH_BLOCK_TAGS, SEARCH_SKIPPED_TAGS, MAX_SEARCH_DOM_NODES, MAX_SEARCH_CHARACTERS, SEARCH_COLLAPSIBLE_WHITESPACE;

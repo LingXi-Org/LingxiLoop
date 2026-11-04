@@ -1,0 +1,12 @@
+START design-standard
+PASS design-standard
+START design-recovery-desktop
+PASS design-recovery-desktop
+START design-recovery-narrow
+PASS design-recovery-narrow
+START paired-design
+PASS paired-design
+START retained-desktop
+PASS retained-desktop
+START retained-narrow
+PASS retained-narrow

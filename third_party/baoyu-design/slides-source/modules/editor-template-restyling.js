@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installEditorTemplateRestyling(runtime2) {
   var HEADING_TEXT_ROLES, RESTYLE_ROLE_FALLBACKS, hexColorToRgbUnit, rgbUnitToHexColor, MIN_RESTYLE_TEXT_CONTRAST, isRestyleNodeTranslucent;

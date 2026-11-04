@@ -72,7 +72,7 @@ export function generateProfiles() {
     web: { dependencies: Object.fromEntries(Object.entries(full.dependencies).filter(([name]) => !excludedWeb.has(name))), devDependencies: pick(tools) },
     'server-ci': { dependencies: { ...server.dependencies, ...pick(['@assistant-ui/react', '@tiptap/y-tiptap']) },
       devDependencies: pick(['@biomejs/biome', 'typescript', '@types/react', '@types/react-dom', '@types/compression', '@types/express', '@types/pg', '@types/ws']) },
-    'deploy-contract': { dependencies: pick(['@lyyzka/lingxios', 'pg']), devDependencies: pick(['typescript']) },
+    'deploy-contract': { dependencies: pick(['@lyyzka/lingxios', '@modelcontextprotocol/sdk', 'pg']), devDependencies: pick(['typescript']) },
   }
   profiles['web-ci'] = { ...profiles.web, dependencies: { ...profiles.web.dependencies, ...pick(['dotenv', 'pg', 'ioredis']) } }
   profiles.admin = { ...profiles.web, dependencies: { ...profiles.web.dependencies, ...pick(['@refinedev/core', '@refinedev/react-router', 'react-router', '@openplait/core']) } }

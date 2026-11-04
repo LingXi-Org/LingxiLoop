@@ -1,7 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiColorPicker(runtime2) {
-  var reactForUiColorPicker, jsxForUiColorPicker, SLIDER_KEY_STEPS, HUE_NAME_STOPS, clampUnit = (input) => Math.max(0, Math.min(1, input)), toPercent = (input) => Math.round(input * 100), hueName = (hue) => HUE_NAME_STOPS.find(([limit]) => hue < limit)?.[1] ?? "red", COLOR_ALPHA_CHECKERBOARD, COLOR_SWATCH_BUTTON_CLASS, COLOR_PICKER_POPOVER_HEIGHT, COLOR_PICKER_POPOVER_CLASS, initializeUiColorPicker;
+  var reactForUiColorPicker, jsxForUiColorPicker, SLIDER_KEY_STEPS, HUE_RED, HUE_NAME_STOPS, clampUnit = (input) => Math.max(0, Math.min(1, input)), toPercent = (input) => Math.round(input * 100), hueName = (hue) => HUE_NAME_STOPS.find(([limit]) => hue < limit)?.[1] ?? HUE_RED, COLOR_ALPHA_CHECKERBOARD, COLOR_SWATCH_BUTTON_CLASS, COLOR_PICKER_POPOVER_HEIGHT, COLOR_PICKER_POPOVER_CLASS, initializeUiColorPicker;
   function joinPickerClasses(...input) {
     return input.filter(Boolean).join(" ");
   }
@@ -124,7 +124,7 @@ function installUiColorPicker(runtime2) {
     return jsxForUiColorPicker.jsx("div", {
       role,
       "aria-label": label,
-      className: joinPickerClasses("flex flex-col", scroll && "kit-scrollbar max-h-[min(18rem,max(6rem,calc(var(--available-height,100vh)_-_7.5rem)))] overflow-y-auto", className),
+      className: joinPickerClasses("flex flex-col", scroll && "kit-scrollbar max-h-[min(18rem,max(6rem,calc(var(--available-height,100vh)_-_7.5rem)))] overflow-y-auto [--cds-focus-shadow:inset_0_0_0_1px_var(--cds-fill-accent)] forced-colors:*:focus-visible:-outline-offset-2", className),
       children
     });
   }
@@ -202,18 +202,27 @@ function installUiColorPicker(runtime2) {
       value,
       onValueChange: (input) => callback(input),
       children: jsxForUiColorPicker.jsxs(runtime2.Tabs.List, {
-        "aria-label": "来源",
+        "aria-label": (0, runtime2.formatMessage)({
+          defaultMessage: "来源",
+          id: "hDZzvbeqg8"
+        }),
         "data-kit": "menu-tabs",
         className,
         onMouseDown: (event) => event.preventDefault(),
         children: [
           jsxForUiColorPicker.jsx(runtime2.Tabs.Tab, {
             value: "system",
-            children: "主题"
+            children: (0, runtime2.formatMessage)({
+              defaultMessage: "主题",
+              id: "fdx96PzLBE"
+            })
           }),
           jsxForUiColorPicker.jsx(runtime2.Tabs.Tab, {
             value: "custom",
-            children: "自定义"
+            children: (0, runtime2.formatMessage)({
+              defaultMessage: "自定义",
+              id: "MZFG4D1J9u"
+            })
           })
         ]
       })
@@ -370,17 +379,29 @@ function installUiColorPicker(runtime2) {
       memo32 !== void 0 && (callback6(parseCssColorToHsva(memo32.css)), callback8(input));
     }, callback17 = () => {
       ref13.current = !0;
-    }, value16 = reactForUiColorPicker.useId(), sliderHintId = reactForUiColorPicker.useId(), roundedHue = Math.round(value2.h), value17 = memo22 === void 0 ? void 0 : value16;
+    }, value16 = reactForUiColorPicker.useId(), sliderHintId = reactForUiColorPicker.useId(), roundedHue = Math.round(value2.h), eyeDropperLabel = (0, runtime2.formatMessage)({
+      defaultMessage: "从屏幕取色",
+      id: "9Tx6KqBx3D"
+    }), value17 = memo22 === void 0 ? void 0 : value16;
     return jsxForUiColorPicker.jsxs("div", {
       className: "flex w-full min-w-56 flex-col",
       children: [
         jsxForUiColorPicker.jsx("div", {
           ...sliderProps(nudgeSaturationBrightness),
-          "aria-label": "饱和度与亮度",
+          "aria-label": (0, runtime2.formatMessage)({
+            defaultMessage: "饱和度与亮度",
+            id: "ee74iaG1tr"
+          }),
           "aria-valuemin": 0,
           "aria-valuemax": 100,
           "aria-valuenow": toPercent(value2.s),
-          "aria-valuetext": `Saturation ${toPercent(value2.s)}%, brightness ${toPercent(value2.v)}%`,
+          "aria-valuetext": (0, runtime2.formatMessage)({
+            defaultMessage: "饱和度 {saturation}%，亮度 {brightness}%",
+            id: "qzMU3dYvY0"
+          }, {
+            saturation: String(toPercent(value2.s)),
+            brightness: String(toPercent(value2.v))
+          }),
           "aria-describedby": value17 === void 0 ? sliderHintId : sliderHintId + " " + value17,
           className: "relative aspect-[3/2] w-full touch-none rounded-md outline-none focus-visible:outline-hidden focus-visible:shadow-focus forced-colors:focus-visible:-outline-offset-2",
           style: {
@@ -399,15 +420,28 @@ function installUiColorPicker(runtime2) {
         jsxForUiColorPicker.jsx("span", {
           id: sliderHintId,
           hidden: !0,
-          children: "左右方向键调整饱和度，上下方向键调整亮度。"
+          children: (0, runtime2.formatMessage)({
+            defaultMessage: "左右方向键调整饱和度，上下方向键调整亮度。",
+            id: "/Js2FZwWAn"
+          })
         }),
         jsxForUiColorPicker.jsx("div", {
           ...sliderProps(nudgeHue),
-          "aria-label": "色相",
+          "aria-label": (0, runtime2.formatMessage)({
+            defaultMessage: "色相",
+            id: "J/H7AbKHuD"
+          }),
           "aria-valuemin": 0,
           "aria-valuemax": 360,
           "aria-valuenow": roundedHue,
-          "aria-valuetext": `${roundedHue} degree${roundedHue === 1 ? "" : "s"}, ${hueName(roundedHue)}`,
+          "aria-valuetext": (0, runtime2.formatMessage)({
+            defaultMessage: "{count} 度，{hue}",
+            id: "FFZpLX6YB/"
+          }, {
+            n:roundedHue || 0,
+            count: String(roundedHue),
+            hue :hueName(roundedHue)
+          }),
           "aria-describedby": value17,
           className: "group/slider relative touch-none pt-2 pb-1 outline-none focus-visible:outline-hidden forced-colors:focus-visible:-outline-offset-2 pointer-coarse:py-3.5",
           onPointerDown: callback11,
@@ -424,11 +458,19 @@ function installUiColorPicker(runtime2) {
         }),
         !opaque && jsxForUiColorPicker.jsx("div", {
           ...sliderProps(nudgeAlpha),
-          "aria-label": "透明度",
+          "aria-label": (0, runtime2.formatMessage)({
+            defaultMessage: "透明度",
+            id: "iTZ6iVLs6g"
+          }),
           "aria-valuemin": 0,
           "aria-valuemax": 100,
           "aria-valuenow": toPercent(value2.a),
-          "aria-valuetext": `${toPercent(value2.a)}% opaque`,
+          "aria-valuetext": (0, runtime2.formatMessage)({
+            defaultMessage: "不透明度 {percent}%",
+            id: "m491pTmbVC"
+          }, {
+            percent: String(toPercent(value2.a))
+          }),
           "aria-describedby": value17,
           className: "group/slider relative touch-none pt-1 pb-2 outline-none focus-visible:outline-hidden forced-colors:focus-visible:-outline-offset-2 pointer-coarse:py-3.5",
           onPointerDown: callback12,
@@ -451,8 +493,8 @@ function installUiColorPicker(runtime2) {
           children: [
             isEyeDropperAvailable() && jsxForUiColorPicker.jsx("button", {
               type: "button",
-              title: "从屏幕取色",
-              "aria-label": "从屏幕取色",
+              title: eyeDropperLabel,
+              "aria-label": eyeDropperLabel,
               onClick: callback13,
               className: "flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted outline-none hover:bg-alpha-1 hover:text-primary focus-visible:outline-hidden focus-visible:shadow-focus pointer-coarse:h-10 pointer-coarse:w-10",
               children: jsxForUiColorPicker.jsx(runtime2.Icon, {
@@ -469,7 +511,11 @@ function installUiColorPicker(runtime2) {
                   },
                   className: "h-full min-w-0 flex-1 bg-transparent px-1.5 font-mono text-[11px] text-primary outline-none focus-visible:outline-hidden",
                   value: value4,
-                  "aria-label": "十六进制颜色",
+                  "data-kit": runtime2.HEX_COLOR_FIELD_KIT,
+                  "aria-label": (0, runtime2.formatMessage)({
+                    defaultMessage: "十六进制颜色",
+                    id: "A9BKTrungH"
+                  }),
                   "aria-describedby": value17,
                   onChange: (event) => {
                     ref9.current = !0, value5(event.target.value);
@@ -500,7 +546,10 @@ function installUiColorPicker(runtime2) {
                       },
                       className: "h-full w-[34px] bg-transparent pl-1.5 pr-1 text-right font-mono text-[11px] text-primary outline-none focus-visible:outline-hidden pointer-coarse:w-[46px]",
                       value: value6,
-                      "aria-label": "不透明度百分比",
+                      "aria-label": (0, runtime2.formatMessage)({
+                        defaultMessage: "不透明度百分比",
+                        id: "LfGMtvQoWl"
+                      }),
                       "aria-describedby": value17,
                       onChange: (event) => value7(event.target.value),
                       onBlur: (input) => callback4(input, callback15()),
@@ -568,17 +617,52 @@ function installUiColorPicker(runtime2) {
       ["PageDown", [0, -10]],
       ["Home", [-1 / 0, 0]],
       ["End", [1 / 0, 0]]
-    ]), HUE_NAME_STOPS = [
-      [15, "red"],
-      [45, "orange"],
-      [80, "yellow"],
-      [165, "green"],
-      [195, "cyan"],
-      [265, "blue"],
-      [290, "purple"],
-      [320, "magenta"],
-      [345, "pink"],
-      [1 / 0, "red"]
+    ]), HUE_RED = (0, runtime2.formatMessage)({
+      defaultMessage: "红色",
+      id: "HwkICxRZSN"
+    }), HUE_NAME_STOPS = [
+      [15, HUE_RED],
+      [45,
+        (0, runtime2.formatMessage)({
+          defaultMessage: "橙色",
+          id: "dvo2zfC8sw"
+        })],
+      [80,
+        (0, runtime2.formatMessage)({
+          defaultMessage: "黄色",
+          id: "rtN9SqMhYg"
+        })],
+      [165,
+        (0, runtime2.formatMessage)({
+          defaultMessage: "绿色",
+          id: "iQWH/hbMYI"
+        })],
+      [195,
+        (0, runtime2.formatMessage)({
+          defaultMessage: "青色",
+          id: "T5bhZ/+bx9"
+        })],
+      [265,
+        (0, runtime2.formatMessage)({
+          defaultMessage: "蓝色",
+          id: "iomzJcvNp7"
+        })],
+      [290,
+        (0, runtime2.formatMessage)({
+          defaultMessage: "紫色",
+          id: "nhdtEDnwlr"
+        })],
+      [320,
+        (0, runtime2.formatMessage)({
+          defaultMessage: "品红色",
+          id: "qOU197OEjZ"
+        })],
+      [345,
+        (0, runtime2.formatMessage)({
+          defaultMessage: "粉色",
+          id: "jPYEDciPDW"
+        })],
+      [1 / 0, HUE_RED]
     ], COLOR_ALPHA_CHECKERBOARD = "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0 / 8px 8px", COLOR_SWATCH_BUTTON_CLASS = "flex h-8 w-full min-w-0 shrink-0 items-center gap-2 rounded-md px-2 text-left outline-none pointer-coarse:h-10", COLOR_PICKER_POPOVER_HEIGHT = 440, COLOR_PICKER_POPOVER_CLASS = "w-64 p-4", initializeUiColorPicker = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializeUiAnnouncements)(), (0, runtime2.initializeUiContrast)(), (0, runtime2.initializeUiContrastControls)(), (0, runtime2.initializeKitFieldUndo)(), (0, runtime2.initializeUiPropertyFocus)(), reactForUiColorPicker = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), jsxForUiColorPicker = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1);
     });

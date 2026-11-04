@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { GLIDE_HIDE_DURATION, GLIDE_MAX_OFFSET, DEFAULT_PREVIEW_CARD_DELAY, PREVIEW_CARD_SELECTOR, FIND_OMITTED_ATTRIBUTE, bindRuntimeValue } from "../module-helpers.js";
 function installUiPreviewCard(runtime2) {
   var PreviewCardReact, PreviewCardJsx, PreviewCard, initializePreviewCard, TABBABLE_SELECTOR, PREVIEW_CARD_MESSAGES, previewCardInsidePopupContext, previewCardContext, previewCardPopupClasses, previewCardPaddingClasses, activePreviewCard = void 0;

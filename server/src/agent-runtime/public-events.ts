@@ -5,6 +5,7 @@ import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { memoryActivity } from '../../../src/lib/memoryActivity.js'
 import { z } from 'zod'
+import { executionBudgetMessages, readExecutionBudgetDimension } from '../../../src/lib/executionBudget.js'
 
 const presentation = z.object({ purpose: z.enum(['process', 'result']) }).strict()
 const executionTiming = z.object({ version: z.literal(1),at: z.number().finite().nonnegative(),
@@ -43,8 +44,10 @@ export function publicToolValue(action: string, value: unknown): unknown {
 export function publicRunEvent(event: RunEvent, action = '', presentationVersion?: 1): RunEvent {
   action = canonicalToolName(action)
   if (event.visibility !== 'user') return { ...event, data: {} }
+  const budgetDimension = event.kind === 'run.failed' ? readExecutionBudgetDimension(event.data.budgetLimit) : undefined
   if (event.kind === 'run.failed' || event.kind === 'run.cancelled') return { ...event, data: {
-    ...(event.kind === 'run.failed' ? { error: userFacingError(event.data.error, '这次任务未能完成，请稍后重试。') } : {}),
+    ...(event.kind === 'run.failed' ? { error: budgetDimension ? executionBudgetMessages[budgetDimension]
+      : userFacingError(event.data.error, '这次任务未能完成，请稍后重试。') } : {}),
   } }
   const identity = { requestVersion: event.data.requestVersion,fence: event.data.fence,attemptId: event.data.attemptId }
   const parsedTiming = executionTiming.safeParse(event.data._executionTrace)

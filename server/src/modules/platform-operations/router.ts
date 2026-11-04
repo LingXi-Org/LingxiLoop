@@ -1,3 +1,4 @@
+import { readAdminModelStageCalls, runStageTiming } from './model-stage-timing.js'
 import { educationRouter } from '../education/router.js'
 import { Router } from 'express'
 import { z } from 'zod'
@@ -24,6 +25,7 @@ import {
   listAdminResources,
   type AdminListQuery,
 } from './resources.js'
+import { agentRunTiming } from './agent-run-timing.js'
 import { observabilityDashboard } from './observability-dashboard.js'
 import { changeUserLifecycle } from './user-lifecycle.js'
 import { platformLifecycleRouter } from './lifecycle.js'
@@ -59,8 +61,12 @@ async function readAgentRun(id: string) {
   const { items } = await runtime.listRuns({ id, limit: 1 })
   const run = items[0]
   if (!run) return null
-  const diagnostics = await runtime.readDiagnostics(run.identity)
-  return { data: { ...run, diagnostics, workerFailure: diagnostics?.runtimeFailure ?? null,
+  const [diagnostics, events, modelStages] = await Promise.all([runtime.readDiagnostics(run.identity),
+    runtime.readEvents(run.identity, 0).catch(() => null),
+    readAdminModelStageCalls(pool, run.identity, run.requestVersion).catch(() => null)])
+  return { data: { ...run, diagnostics, timing: agentRunTiming(run, { events: events?.events, afterSeq: 0 }),
+    stages: runStageTiming(run.identity, run.requestVersion, modelStages, diagnostics),
+    workerFailure: diagnostics?.runtimeFailure ?? null,
     contextFailures: await readContextFailures(pool, run.identity) } as Record<string, unknown>, sensitive: true }
 }
 

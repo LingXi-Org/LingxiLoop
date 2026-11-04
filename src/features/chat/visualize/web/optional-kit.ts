@@ -26,7 +26,7 @@ export function optionalKitBootstrap(assets: Record<string, PublicScript>, loade
       const text = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
       while (text.nextNode()) {
         if (text.currentNode.parentElement?.closest('script,noscript,style,textarea,pre,code,kbd,samp,option,svg,math,x-dc,template,.katex,.katex-display,.no-math')) continue
-        if (/\$\$|\\[([]|\\begin\s*\{/.test(text.currentNode.textContent ?? '')) { void load('math.js').catch(() => undefined); break }
+        if (/\$\$|\\[([]|\\begin\s*\{|\$(?=[A-Za-z\\])[^$\n]+\$|\$\d[^$\n]*[\\^_=+*<>][^$\n]*\$/.test(text.currentNode.textContent ?? '')) { void load('math.js').catch(() => undefined); break }
       }
     }
     for (const root of roots) {

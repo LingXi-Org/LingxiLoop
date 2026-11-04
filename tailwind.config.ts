@@ -100,16 +100,7 @@ const config: Config = {
         body: [
           'var(--font-sans)'
         ],
-        mono: [
-          'ui-monospace',
-          'SFMono-Regular',
-          'Menlo',
-          'Monaco',
-          'Consolas',
-          'Liberation Mono',
-          'Courier New',
-          'monospace'
-        ]
+        mono: ['var(--font-mono)']
       },
       boxShadow: {
         window: '0 50px 100px -20px color-mix(in srgb, var(--foreground) 25%, transparent), 0 30px 60px -30px color-mix(in srgb, var(--foreground) 30%, transparent), 0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent)',

@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiArtifactShell(runtime2) {
   var jsxS6, NARROW_TOUCH_QUERY, ArtifactErrorBoundary;
@@ -15,7 +15,7 @@ function installUiArtifactShell(runtime2) {
       className: "shrink-0",
       children: value ? jsxS6.jsx("div", {
         className: "px-md pt-md",
-        children: jsxS6.jsxs(runtime2.Callout, {
+        children: jsxS6.jsx(runtime2.Callout, {
           variant: "warning",
           role: "none",
           action: jsxS6.jsxs(jsxS6.Fragment, {
@@ -26,7 +26,10 @@ function installUiArtifactShell(runtime2) {
                   let value3 = doc.restoreStash();
                   value3 && undo && undo.seed(value3);
                 },
-                children: "恢复"
+                children: (0, runtime2.formatMessage)({
+                  defaultMessage: "恢复",
+                  id: "tzcON++KEw"
+                })
               }),
               jsxS6.jsx(runtime2.Button, {
                 variant: "ghost",
@@ -34,19 +37,37 @@ function installUiArtifactShell(runtime2) {
                   let value3 = !undo || undo.redoDepth() <= 1;
                   doc.discardStash(), undo && value3 && undo.clear();
                 },
-                children: "放弃"
+                children: (0, runtime2.formatMessage)({
+                  defaultMessage: "放弃",
+                  id: "Xs5sKaqZwM"
+                })
               })
             ]
           }),
-          children: [
-            "发现约 ",
-            value2,
-            " 分钟",
-            value2 === 1 ? "" : "s",
-            "前未保存的更改，来自上次刷新之前（可能是其他位置的保存或关闭了此标签页）。",
-            " ",
-            doc.readOnly() ? "恢复后可继续编辑，当前视图无法发布。" : doc.saveMode() === "auto" ? "恢复会覆盖当前版本并自动保存，可通过撤销还原。" : "恢复后点击保存即可发布。"
-          ]
+          children: (0, runtime2.formatMessage)({
+            defaultMessage: "{found}{advice}",
+            id: "6cxSQ0utdq"
+          }, {
+            found: (0, runtime2.formatMessage)({
+              defaultMessage: "在此页面发现约 {count} 分钟前未保存的更改，来自上次重新加载之前（其他地方的保存或关闭此标签页）。",
+              id: "Sibr/bGSXA"
+            }, {
+              n: Number.isFinite(
+            value2) ? value2 : 0,
+              count: String(value2)
+            }),
+            advice:
+            doc.readOnly() ? (0, runtime2.formatMessage)({
+              defaultMessage: "恢复后可继续编辑，当前视图无法发布。",
+              id: "cmD5kzuXVl"
+            }) : doc.saveMode() === "auto" ? (0, runtime2.formatMessage)({
+              defaultMessage: "恢复会覆盖当前版本并自动保存，可通过撤销还原。",
+              id: "4Mx3P/ynTh"
+            }) : (0, runtime2.formatMessage)({
+              defaultMessage : "恢复后点击保存即可发布。",
+              id: "aCPr4nl/jy"
+            })
+          })
         })
       }) : null
     });
@@ -68,18 +89,24 @@ function installUiArtifactShell(runtime2) {
     (0, runtime2.useHostSaveState)(!value7 && (value6 || status === "readonly") ? status : null, () => void doc.save()), runtime2.reactd3.useEffect(() => {
       value5 !== "" && (document.title = value5);
     }, [value5]);
-    let value8 = value2.status === "loading" && !value4, callback = (input) => value8 && input != null ? jsxS6.jsx("fieldset", {
+    let value8 = (value2.status === "loading" || doc.progressive?.()) && !value4, callback = (input) => value8 && input != null ? jsxS6.jsx("fieldset", {
       disabled: !0,
       "aria-busy": "true",
-      title: "正在加载最新内容…",
+      title: (0, runtime2.formatMessage)({
+        defaultMessage: "正在加载最新内容…",
+        id: "RXMZBTOm45"
+      }),
       className: "contents",
       children: input
     }) : input, value9 = tabs !== void 0 && tabs.length > 0 && tab !== void 0 && onTabChange ? jsxS6.jsx(runtime2.ToolbarTabs, {
       tabs,
       value: tab,
       onChange: onTabChange,
-      label: "编辑器模式"
-    }) : null, value10 = toolbarVariant === "floating" && value9 === null, footShown = toolbarFoot !== void 0 && !hideToolbar && (!value4 || toolbarFoot.showWhileReadOnly === !0), chat = (0, runtime2.useFrameChat)(), chatShown = chat.shown && footShown && !value4, sheetOpen = (0, runtime2.usePresentationSheetOpen)(), chatButtonShown = sheetOpen ? !1 : chatShown, chatSlotShown = (0, runtime2.useHostOffersChatToggle)() && footShown && !value4 && !chat.heard, commentWord = (0, runtime2.useCommentButtonShown)() && !value4, footBare = toolbarFoot?.controls === null && toolbarFoot.lastTool === void 0 && !commentWord, [footElement, setFootElement] = runtime2.reactd3.useState(null);
+      label: (0, runtime2.formatMessage)({
+        defaultMessage: "编辑器模式",
+        id: "vcbEvoJRSL"
+      })
+    }) : null, value10 = toolbarVariant === "floating" && value9 === null, footShown = toolbarFoot !== void 0 && !hideToolbar && (!value4 || toolbarFoot.showWhileReadOnly === !0), chat = (0, runtime2.useFrameChat)(), chatShown = chat.shown && footShown && !value4, sheetOpen = (0, runtime2.usePresentationSheetOpen)(), chatButtonShown = sheetOpen ? !1 : chatShown, chatSlotShown = (0, runtime2.useHostOffersChatToggle)() && footShown && !value4 && !chat.heard, commentWord = (0, runtime2.useCommentButtonShown)() && !value4, footBare = toolbarFoot?.controls === null && !commentWord, [footElement, setFootElement] = runtime2.reactd3.useState(null);
     (0, runtime2.usePlaceChatSlot)(footElement, chatSlotShown), (0, runtime2.usePlaceChatSlot)(footElement, chat.heard && footShown && !value4);
     let narrowTouch = (0, runtime2.useMediaQuery)(NARROW_TOUCH_QUERY), chatMayCome = (0, runtime2.useHostMayOfferChatToggle)(toolbarFoot?.chatWhenNarrow !== !0 || !narrowTouch) && !value4, chatReleaseAt = (0, runtime2.useFrameChatReleaseAt)(), footReveal = (0, runtime2.useFootToolbarReveal)({
       shown: footShown,
@@ -170,6 +197,7 @@ function installUiArtifactShell(runtime2) {
                   label: toolbarFoot.label,
                   density: "comfortable",
                   atFoot: !0,
+                  armedTool: toolbarFoot.armedTool,
                   "data-tb-foot": "",
                   className: (0, runtime2.joinClassNames)("flex max-w-full items-center gap-0.5 p-1 pointer-coarse:p-xs", footBare && "min-h-[calc(var(--cds-h-control)+0.5rem)] pointer-coarse:min-h-[calc(var(--cds-h-control)+2*var(--cds-pad-xs))]", footBare && !chatButtonShown && (!chatSlotShown || sheetOpen) && "invisible"),
                   children: [
@@ -177,8 +205,7 @@ function installUiArtifactShell(runtime2) {
                       value: value4,
                       children: [
                         footContent(toolbarFoot.controls),
-                        jsxS6.jsx(runtime2.ToolbarCommentTools, {
-                          lastTool: footContent(toolbarFoot.lastTool),
+                        jsxS6.jsx(runtime2.FrameCommentButton, {
                           onScreen: !footReveal.held
                         })
                       ]
@@ -235,7 +262,10 @@ function installUiArtifactShell(runtime2) {
           children: [
             jsxS6.jsx("p", {
               className: "font-semibold",
-              children: "演示文稿暂时无法显示。"
+              children: (0, runtime2.formatMessage)({
+                defaultMessage: "演示文稿暂时无法显示。",
+                id: "2ZJ2LWgq+S"
+              })
             }),
             jsxS6.jsx("p", {
               className: "mt-1 text-fg-muted",
@@ -243,7 +273,10 @@ function installUiArtifactShell(runtime2) {
             }),
             jsxS6.jsx("p", {
               className: "mt-2 text-fg-muted",
-              children: "请刷新页面重试；若问题仍然存在，请联系管理员。"
+              children: (0, runtime2.formatMessage)({
+                defaultMessage: "请刷新页面重试；若问题仍然存在，请联系管理员。",
+                id: "P0YrnI2QYC"
+              })
             })
           ]
         }) : this.props.children;

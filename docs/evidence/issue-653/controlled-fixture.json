@@ -1,0 +1,205 @@
+{
+  "runtime": "3.8.21",
+  "synthetic": true,
+  "realProviderCalls": 0,
+  "costs": "synthetic_no_billing",
+  "interactive": {
+    "maxActive": 2,
+    "maxModelActive": 2,
+    "durationMs": 122.33313699999985,
+    "samples": [
+      {
+        "lane": "interactive",
+        "queueMs": 4,
+        "executionMs": 42.18571800000018,
+        "endToEndMs": 44.83020499999998
+      },
+      {
+        "lane": "interactive",
+        "queueMs": 5,
+        "executionMs": 41.74556600000005,
+        "endToEndMs": 45.92713299999991
+      },
+      {
+        "lane": "interactive",
+        "queueMs": 45,
+        "executionMs": 37.92326000000003,
+        "endToEndMs": 82.92051700000002
+      },
+      {
+        "lane": "interactive",
+        "queueMs": 46,
+        "executionMs": 37.95356599999991,
+        "endToEndMs": 83.96513699999991
+      },
+      {
+        "lane": "interactive",
+        "queueMs": 83,
+        "executionMs": 37.32304900000008,
+        "endToEndMs": 120.33564799999999
+      },
+      {
+        "lane": "interactive",
+        "queueMs": 84,
+        "executionMs": 36.623784000000114,
+        "endToEndMs": 120.74694599999998
+      }
+    ],
+    "distributions": {
+      "queueMs": {
+        "n": 6,
+        "p50": 45,
+        "p95": 84,
+        "max": 84
+      },
+      "executionMs": {
+        "n": 6,
+        "p50": 37.92326000000003,
+        "p95": 42.18571800000018,
+        "max": 42.18571800000018
+      },
+      "endToEndMs": {
+        "n": 6,
+        "p50": 82.92051700000002,
+        "p95": 120.74694599999998,
+        "max": 120.74694599999998
+      }
+    }
+  },
+  "background": {
+    "maxActive": 1,
+    "maxModelActive": 1,
+    "durationMs": 221.1094760000001,
+    "samples": [
+      {
+        "lane": "background",
+        "queueMs": 0,
+        "executionMs": 35.818201000000045,
+        "endToEndMs": 36.26610700000015
+      },
+      {
+        "lane": "background",
+        "queueMs": 37,
+        "executionMs": 36.03851200000008,
+        "endToEndMs": 73.65628200000015
+      },
+      {
+        "lane": "background",
+        "queueMs": 74,
+        "executionMs": 37.10891000000015,
+        "endToEndMs": 110.90966100000014
+      },
+      {
+        "lane": "background",
+        "queueMs": 111,
+        "executionMs": 36.406870000000026,
+        "endToEndMs": 147.60608100000013
+      },
+      {
+        "lane": "background",
+        "queueMs": 148,
+        "executionMs": 36.1075800000001,
+        "endToEndMs": 183.82328600000005
+      },
+      {
+        "lane": "background",
+        "queueMs": 185,
+        "executionMs": 36.01135999999997,
+        "endToEndMs": 221.00914899999998
+      }
+    ],
+    "distributions": {
+      "queueMs": {
+        "n": 6,
+        "p50": 74,
+        "p95": 185,
+        "max": 185
+      },
+      "executionMs": {
+        "n": 6,
+        "p50": 36.03851200000008,
+        "p95": 37.10891000000015,
+        "max": 37.10891000000015
+      },
+      "endToEndMs": {
+        "n": 6,
+        "p50": 110.90966100000014,
+        "p95": 221.00914899999998,
+        "max": 221.00914899999998
+      }
+    }
+  },
+  "mixed": {
+    "maxActive": 2,
+    "maxModelActive": 2,
+    "durationMs": 111.03098799999998,
+    "samples": [
+      {
+        "lane": "background",
+        "queueMs": 1,
+        "executionMs": 36.52452799999992,
+        "endToEndMs": 36.80864900000006
+      },
+      {
+        "lane": "background",
+        "queueMs": 37,
+        "executionMs": 36.346506999999974,
+        "endToEndMs": 73.21747300000015
+      },
+      {
+        "lane": "interactive",
+        "queueMs": 1,
+        "executionMs": 37.13376599999992,
+        "endToEndMs": 37.50139200000012
+      },
+      {
+        "lane": "interactive",
+        "queueMs": 38,
+        "executionMs": 36.241671,
+        "endToEndMs": 73.79577200000017
+      },
+      {
+        "lane": "background",
+        "queueMs": 74,
+        "executionMs": 35.13159799999994,
+        "endToEndMs": 108.40577600000006
+      },
+      {
+        "lane": "interactive",
+        "queueMs": 74,
+        "executionMs": 35.901746,
+        "endToEndMs": 109.74445600000013
+      }
+    ],
+    "distributions": {
+      "queueMs": {
+        "n": 6,
+        "p50": 37,
+        "p95": 74,
+        "max": 74
+      },
+      "executionMs": {
+        "n": 6,
+        "p50": 36.241671,
+        "p95": 37.13376599999992,
+        "max": 37.13376599999992
+      },
+      "endToEndMs": {
+        "n": 6,
+        "p50": 73.21747300000015,
+        "p95": 109.74445600000013,
+        "max": 109.74445600000013
+      }
+    }
+  },
+  "configuration": {
+    "taskConcurrency": 2,
+    "modelConcurrency": 2,
+    "interactiveReserve": 1,
+    "injectedModelMs": 25,
+    "injectedProcessorMs": 10,
+    "arrival": "six tasks in one burst per scenario",
+    "provider": "synthetic ModelDriver, no HTTP",
+    "host": "in-memory fixture implementing public claim filters; not PostgreSQL or production leases"
+  }
+}

@@ -1,7 +1,8 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
+import { useSlideMath, isCodeText } from "../math-loading.js";
 function installRenderingSlides(runtime2) {
-  var SlideRendererReact, SlideRendererReactDom, SlideRendererJsx, textFitScaleVariable, textFitFontSizeVariable, textFitClipVariable, slideEditorChromeContext, slideStructureEnabledContext, linkModifierKeyLabel, linkModifierPressHint, richTextDoubleTapWindowMs, renderedLinkOptions, pointerClickMovementTolerance, pointerPositionForMouse, pointerClickMoved, pointerHasLinkModifier, slideLinkContext, richTextEditingContext, listRenderingContext, mediaPlaceholderLabelCss, transparencyCheckerboardGradient, allowEmbedScripts, htmlEmbedMarkerAttribute, embedsDisabledEventName, slideEmbedGuardConfig, slideEmbedContentSecurityPolicy, shapeStyleElementId, shapeStylesCss, shapeClipPaths, slideFrameIdContext, supportsPlaintextContentEditable, linkDoublePressTimeoutMs, plaintextPasteFallback, preventDefaultInput, pasteRichTextPlaintext, listIndentFallback, editableFocusTimeoutMs, initializeSlideRenderer;
+  var SlideRendererReact, SlideRendererReactDom, SlideRendererJsx, textFitScaleVariable, textFitFontSizeVariable, textFitClipVariable, DEFAULT_SLIDE_RENDERER_MESSAGES, slideRendererMessagesContext, SLIDE_CONTENT_LANGUAGE, slideEditorChromeContext, slideStructureEnabledContext, linkModifierKeyLabel, richTextDoubleTapWindowMs, renderedLinkOptions, pointerClickMovementTolerance, pointerPositionForMouse, pointerClickMoved, pointerHasLinkModifier, slideLinkContext, richTextEditingContext, listRenderingContext, mediaPlaceholderLabelCss, transparencyCheckerboardGradient, allowEmbedScripts, htmlEmbedMarkerAttribute, embedsDisabledEventName, slideEmbedGuardConfig, slideEmbedContentSecurityPolicy, shapeStyleElementId, shapeStylesCss, shapeClipPaths, slideFrameIdContext, supportsPlaintextContentEditable, linkDoublePressTimeoutMs, plaintextPasteFallback, preventDefaultInput, pasteRichTextPlaintext, listIndentFallback, editableFocusTimeoutMs, initializeSlideRenderer;
   function nodeInlineStyleCss(style, nodeKind) {
     return style ? (0, runtime2.styleBagToCss)(style, nodeKind) : {};
   }
@@ -188,6 +189,7 @@ function installRenderingSlides(runtime2) {
     });
   }
   function HtmlEmbedNode({ node, path, animate, selected, box }) {
+    let messages = SlideRendererReact.useContext(slideRendererMessagesContext);
     animate && (0, runtime2.installEmbedRuntimeGuard)(slideEmbedGuardConfig);
     let value = SlideRendererReact.useSyncExternalStore((input) => (0, runtime2.subscribeEmbedsDisabled)(slideEmbedGuardConfig, input), () => (0, runtime2.embedsDisabled)(slideEmbedGuardConfig), () => !1), [value2, value3] = SlideRendererReact.useState(!1), ref = SlideRendererReact.useRef(null), ref2 = SlideRendererReact.useRef(node.html);
     ref2.current !== node.html && (ref2.current = node.html, value2 && value3(!1));
@@ -219,13 +221,13 @@ function installRenderingSlides(runtime2) {
         }));
     }, [snapshotsOn, live, node.html, boxWidth, boxHeight, hostGeneration]), animate ? value6 && !value ? SlideRendererJsx.jsx(MediaPlaceholder, {
       path,
-      label: "视频播放器打开时暂停网页嵌入内容"
+      label: (0, runtime2.untranslatedMessage)( "视频播放器打开时暂停网页嵌入内容")
     }) : value ? SlideRendererJsx.jsx(MediaPlaceholder, {
       path,
-      label: "网页嵌入内容已禁用：它尝试获取键盘焦点"
+      label: messages.embedTookFocus
     }) : value2 ? SlideRendererJsx.jsx(MediaPlaceholder, {
       path,
-      label: "网页嵌入内容已禁用：它跳转到了其他页面"
+      label: messages.embedNavigated
     }) : SlideRendererJsx.jsx("div", {
       "data-node-path": path,
       style: {
@@ -239,7 +241,7 @@ function installRenderingSlides(runtime2) {
         html: node.html,
         allowScripts: allowEmbedScripts,
         markerAttr: htmlEmbedMarkerAttribute,
-        title: "嵌入网页内容（沙箱隔离）",
+        title: messages.embedFrame,
         onNavigated: () => value3(!0),
         onHost: (input) => {
           ref.current = input, input !== null && snapshotsOn && setHostGeneration((count) => count + 1), input?.update({
@@ -252,7 +254,7 @@ function installRenderingSlides(runtime2) {
       }, value4)
     }) : SlideRendererJsx.jsx(MediaPlaceholder, {
       path,
-      label: "网页嵌入内容",
+      label: messages.embed,
       still
     });
   }
@@ -472,6 +474,7 @@ function installRenderingSlides(runtime2) {
     });
   }
   function ImageNode({ node, assets, hostSized, inStack, parentAlign, parentJustify, path, animate, selected = !1 }) {
+    let messages = SlideRendererReact.useContext(slideRendererMessagesContext) ;
     const unsupportedMedia = Object.hasOwn(node, "video") || Object.hasOwn(node, "videoLink");
     let value = unsupportedMedia ? void 0 : resolveImageUrl(node, assets), value2 = inStack ? {
       width: node.w !== void 0 ? node.w : void 0,
@@ -494,7 +497,7 @@ function installRenderingSlides(runtime2) {
         "data-node-path": path,
         ...value7 ? {
           role: "img",
-          "aria-label": node.alt || "空白图片"
+          "aria-label": node.alt || messages.emptyImage
         } : {
           "aria-hidden": !0
         },
@@ -531,7 +534,7 @@ function installRenderingSlides(runtime2) {
         fontFamily: "system-ui, sans-serif",
         ...value3
       },
-      children: node.alt || (value ? "此处无法显示图片" : node.asset !== void 0 ? "缺少资源：" + node.asset : "image")
+      children: node.alt || (value ? messages.imageUnavailable : node.asset !== void 0 ? messages.missingAsset( node.asset) : messages.image)
     }) : node.crop !== void 0 && (0, runtime2.shouldPreserveMediaAspect)(node, hostSized, inStack) && !value.startsWith("data:image/svg+xml") ? SlideRendererJsx.jsx("div", {
       "data-img-path": path,
       "data-node-path": path,
@@ -573,7 +576,7 @@ function installRenderingSlides(runtime2) {
     return "rgba(" + String(value) + "," + String(value2) + "," + String(value3) + "," + String(alpha) + ")";
   }
   function TextNode({ node, slideBg, path, editing, inStack = !1, parentAlign, parentJustify, parentDir, fitBox }) {
-    let ref = SlideRendererReact.useRef(null), value = node.fit ?? runtime2.defaultTextFit, value2 = (0, runtime2.renderingTypeScaleForRole)(node.role ?? "body"), value3 = (0, runtime2.slideTextColor)(slideBg), value4 = "2px solid " + hexColorRgba(value3, 0.22), state = {
+    let messages = SlideRendererReact.useContext(slideRendererMessagesContext), ref = SlideRendererReact.useRef(null), value = node.fit ?? runtime2.defaultTextFit, value2 = (0, runtime2.renderingTypeScaleForRole)(node.role ?? "body"), value3 = (0, runtime2.slideTextColor)(slideBg), value4 = "2px solid " + hexColorRgba(value3, 0.22), state = {
       display: "grid",
       gridTemplateColumns: node.colWidths !== void 0 ? node.colWidths.map((input) => String(input) + "fr").join(" ") : "repeat(" + String(node.cols) + ", 1fr)",
       width: "100%",
@@ -627,7 +630,7 @@ function installRenderingSlides(runtime2) {
         };
         return editing != null && editing.cell !== void 0 && editing.cell.r === options && editing.cell.c === options2 ? SlideRendererJsx.jsx(EditableTableCell, {
           cellKey: value6,
-          name: (0, runtime2.accessibleTableCellLabel)({
+          name: messages.cellName({
             r: options,
             c: options2
           }),
@@ -636,7 +639,10 @@ function installRenderingSlides(runtime2) {
         }, value6) : SlideRendererJsx.jsx("div", {
           "data-cell": value6,
           style: state2,
-          children: input2
+          children: SlideRendererJsx.jsx(RichTextRuns, {
+            runs: [{ text: input2 }],
+            allowMath: !isCodeText(node)
+          })
         }, value6);
       }))
     });
@@ -721,14 +727,42 @@ function installRenderingSlides(runtime2) {
   function isLinkSelectShortcut(event) {
     return (event.key === "k" || event.key === "K") && !event.shiftKey && !event.altKey && ((0, runtime2.isApplePlatform)() ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey);
   }
-  function RichTextRuns({ runs, editing, drawn }) {
-    let { links: value, onLinkOpen: value2, plainPress: value3 } = SlideRendererReact.useContext(slideLinkContext), value4 = SlideRendererReact.useContext(richTextEditingContext), ref = SlideRendererReact.useRef(null), ref2 = SlideRendererReact.useRef(null), callback = SlideRendererReact.useCallback(() => {
+  function MathFormula({ html, display }) {
+    const ref = SlideRendererReact.useRef(null);
+    SlideRendererReact.useLayoutEffect(() => {
+      const element = ref.current, container = element?.closest("[data-text-path], [data-cell]");
+      if (!element || !container) return;
+      const fit = () => {
+        element.style.fontSize = "";
+        const rectangle = container.getBoundingClientRect(), css = getComputedStyle(container);
+        const zoom = container.offsetWidth > 0 ? rectangle.width / container.offsetWidth : 1;
+        const available = (container.clientWidth - (parseFloat(css.paddingLeft) || 0) - (parseFloat(css.paddingRight) || 0)) * zoom;
+        const content = element.querySelector(".katex-html");
+        if (!content || available <= 0) return;
+        const natural = Math.max(...Array.from(content.children).map(child => child.getBoundingClientRect().width), content.getBoundingClientRect().width);
+        if (natural > available + 1) element.style.fontSize = String(Math.max(1, available - 2) / natural) + "em";
+      };
+      fit();
+      const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(fit);
+      observer?.observe(container);
+      container.ownerDocument.fonts?.addEventListener("loadingdone", fit);
+      return () => { observer?.disconnect(); container.ownerDocument.fonts?.removeEventListener("loadingdone", fit); };
+    }, [html]);
+    return SlideRendererJsx.jsx("span", { ref, "data-slide-math": display ? "display" : "inline",
+      className: "slides-math", dangerouslySetInnerHTML: { __html: html } });
+  }
+  function RichTextRuns({ runs, editing, drawn, allowMath = !0 }) {
+    let { links: value, onLinkOpen: value2, plainPress: value3 } = SlideRendererReact.useContext(slideLinkContext), messages = SlideRendererReact.useContext(slideRendererMessagesContext), value4 = SlideRendererReact.useContext(richTextEditingContext), ref = SlideRendererReact.useRef(null), ref2 = SlideRendererReact.useRef(null), callback = SlideRendererReact.useCallback(() => {
       let current = ref2.current;
       current !== null && (ref2.current = null, clearTimeout(current.timer), current.doc.removeEventListener("pointerdown", callback, !0));
     }, []);
+    const math = useSlideMath(SlideRendererReact, runs, !editing && drawn === void 0 && allowMath);
     return SlideRendererReact.useEffect(() => callback, [callback]), SlideRendererJsx.jsx(SlideRendererJsx.Fragment, {
-      children: runs.map((input, options) => {
-        let text = drawn === void 0 ? input.text : SlideRendererJsx.jsx(runtime2.ArtifactCardText, {
+      children: [math.failed && SlideRendererJsx.jsx("button", { type: "button", onClick: event => { event.stopPropagation(); math.retry(); }, children: "重试公式" }), ...math.runs.map((input, options) => {
+        let text = input.mathHtml ? SlideRendererJsx.jsx(MathFormula, {
+          html: input.mathHtml,
+          display: input.mathDisplay
+        }) : drawn === void 0 ? input.text : SlideRendererJsx.jsx(runtime2.ArtifactCardText, {
           stored: input.text,
           ...drawn
         });
@@ -746,7 +780,7 @@ function installRenderingSlides(runtime2) {
           }
         }, text)), input.href !== void 0) {
           let value5 = editing || value !== void 0 ? classifyRenderedLink(input.href) : null, value6 = value5 !== null && !editing, value7 = !editing && (value === "view" || value === "edit"), value8 = SlideRendererJsx.jsx("a", {
-            title: value7 ? void 0 : (value5 !== null && editing ? linkModifierPressHint() : "") + input.href,
+            title: value7 ? void 0 :value5 !== null && editing ? messages.openLinkHint(linkModifierKeyLabel()) + " " + input.href : input.href,
             "aria-description": value7 ? input.href : void 0,
             "data-drag-surface": !editing && value === "edit" ? "" : void 0,
             style: {
@@ -780,7 +814,7 @@ function installRenderingSlides(runtime2) {
               style: mediaPlaceholderLabelCss,
               children: input.href
             }),
-            detail: value === "edit" && value5 !== null && !value4 ? linkModifierKeyLabel() + "-click to select the text box" : void 0,
+            detail: value === "edit" && value5 !== null && !value4 ? messages.selectBoxHint( linkModifierKeyLabel()) : void 0,
             side: "bottom",
             delay: 0,
             hoverable: !1,
@@ -791,13 +825,14 @@ function installRenderingSlides(runtime2) {
         return SlideRendererJsx.jsx(SlideRendererJsx.Fragment, {
           children: text
         }, options);
-      })
+      })]
     });
   }
   function RichTextLines({ node, editing = !1 }) {
     let listMode = SlideRendererReact.useContext(listRenderingContext), lineContent = (runs) => runs.length === 0 ? SlideRendererJsx.jsx("br", {}) : SlideRendererJsx.jsx(RichTextRuns, {
       runs,
-      editing
+      editing,
+      allowMath: !isCodeText(node)
     });
     return (0, runtime2.groupTextLinesByList)(node).flatMap((group, index4) => {
       if (group.list === null)
@@ -836,21 +871,11 @@ function installRenderingSlides(runtime2) {
       return SlideRendererJsx.jsx(RichTextLines, {
         node
       });
-    if (node.marks === void 0)
-      return SlideRendererJsx.jsx(SlideRendererJsx.Fragment, {
-        children: node.text
-      });
-    let lines = (0, runtime2.textLinesAsRuns)(node);
-    return SlideRendererJsx.jsx(SlideRendererJsx.Fragment, {
-      children: lines.map((input, options) => SlideRendererJsx.jsxs(SlideRendererReact.Fragment, {
-        children: [
-          options > 0 ? `
-` : null,
-          SlideRendererJsx.jsx(RichTextRuns, {
-            runs: input
-          })
-        ]
-      }, options))
+    // Parse the whole text, including marks and newlines inside matrix/aligned
+    // environments. Editing still uses raw RichTextLines below.
+    return SlideRendererJsx.jsx(RichTextRuns, {
+      runs: (0, runtime2.textRunsForRange)(node.text, node.marks ?? [], 0, node.text.length),
+      allowMath: !isCodeText(node)
     });
   }
   function renderedTextCss(node, background, inStack, parentDirection, fitBox, listMode) {
@@ -908,7 +933,7 @@ function installRenderingSlides(runtime2) {
     };
   }
   function EditableTextNode({ node, slideBg, path, session, inStack = !1, parentDir, fitBox }) {
-    let value = useEditableTextFocus(session.caret, session.reselect);
+    let messages = SlideRendererReact.useContext(slideRendererMessagesContext), value = useEditableTextFocus(session.caret, session.reselect);
     useEditableLinkPress(value);
     let ref = SlideRendererReact.useRef(null);
     useTextFit(value, {
@@ -947,7 +972,7 @@ function installRenderingSlides(runtime2) {
           "data-node-path": path,
           role: "textbox",
           "aria-multiline": "true",
-          "aria-label": (0, runtime2.accessibleNodeTypeLabel)(node),
+          "aria-label": messages.editableName(node),
           contentEditable: !value2 && supportsPlaintextContentEditable ? "plaintext-only" : !0,
           suppressContentEditableWarning: !0,
           style: {
@@ -1402,6 +1427,7 @@ function installRenderingSlides(runtime2) {
       cardWordsIds
     }), [links, onLinkOpen, value, cardWordsIds]), value2 = width / runtime2.SLIDE_WIDTH;
     return SlideRendererJsx.jsx("div", {
+      lang: SLIDE_CONTENT_LANGUAGE,
       ...interactive ? null : {
         "data-uncommentable": ""
       },
@@ -1456,6 +1482,7 @@ function installRenderingSlides(runtime2) {
       onLinkOpen
     }), [links, onLinkOpen]);
     return SlideRendererJsx.jsxs("div", {
+      lang: SLIDE_CONTENT_LANGUAGE,
       "data-uncommentable": "",
       style: {
         width: runtime2.SLIDE_WIDTH,
@@ -1502,14 +1529,18 @@ function installRenderingSlides(runtime2) {
     textFitFontSizeVariable = value;
   }), bindRuntimeValue(runtime2, "textFitClipVariable", () => textFitClipVariable, (value) => {
     textFitClipVariable = value;
+  }), bindRuntimeValue(runtime2, "DEFAULT_SLIDE_RENDERER_MESSAGES", () => DEFAULT_SLIDE_RENDERER_MESSAGES, (value) => {
+    DEFAULT_SLIDE_RENDERER_MESSAGES = value;
+  }), bindRuntimeValue(runtime2, "slideRendererMessagesContext", () => slideRendererMessagesContext, (value) => {
+    slideRendererMessagesContext = value;
+  }), bindRuntimeValue(runtime2, "SLIDE_CONTENT_LANGUAGE", () => SLIDE_CONTENT_LANGUAGE, (value) => {
+    SLIDE_CONTENT_LANGUAGE = value;
   }), bindRuntimeValue(runtime2, "slideEditorChromeContext", () => slideEditorChromeContext, (value) => {
     slideEditorChromeContext = value;
   }), bindRuntimeValue(runtime2, "slideStructureEnabledContext", () => slideStructureEnabledContext, (value) => {
     slideStructureEnabledContext = value;
   }), bindRuntimeValue(runtime2, "linkModifierKeyLabel", () => linkModifierKeyLabel, (value) => {
     linkModifierKeyLabel = value;
-  }), bindRuntimeValue(runtime2, "linkModifierPressHint", () => linkModifierPressHint, (value) => {
-    linkModifierPressHint = value;
   }), bindRuntimeValue(runtime2, "richTextDoubleTapWindowMs", () => richTextDoubleTapWindowMs, (value) => {
     richTextDoubleTapWindowMs = value;
   }), bindRuntimeValue(runtime2, "renderedLinkOptions", () => renderedLinkOptions, (value) => {
@@ -1567,7 +1598,7 @@ function installRenderingSlides(runtime2) {
   }), bindRuntimeValue(runtime2, "initializeSlideRenderer", () => initializeSlideRenderer, (value) => {
     initializeSlideRenderer = value;
   }), () => {
-    textFitScaleVariable = "--fit", textFitFontSizeVariable = "--fit-size", textFitClipVariable = "--fit-clip", linkModifierKeyLabel = () => (0, runtime2.isApplePlatform)() ? "⌘" : "Ctrl", linkModifierPressHint = () => linkModifierKeyLabel() + "-click to open: ", richTextDoubleTapWindowMs = 300, pointerClickMovementTolerance = 4, pointerPositionForMouse = (input) => input.pointerType === "touch" ? null : {
+    textFitScaleVariable = "--fit", textFitFontSizeVariable = "--fit-size", textFitClipVariable = "--fit-clip", SLIDE_CONTENT_LANGUAGE = "en", linkModifierKeyLabel = () => (0, runtime2.isApplePlatform)() ? (0, runtime2.literalMessage)( "⌘") : (0, runtime2.literalMessage)("Ctrl"), richTextDoubleTapWindowMs = 300, pointerClickMovementTolerance = 4, pointerPositionForMouse = (input) => input.pointerType === "touch" ? null : {
       x: input.clientX,
       y: input.clientY
     }, pointerClickMoved = (input, options) => options.detail !== 0 && input !== null && Math.hypot(options.clientX - input.x, options.clientY - input.y) > pointerClickMovementTolerance, pointerHasLinkModifier = (input) => input.metaKey || input.ctrlKey && !(0, runtime2.isApplePlatform)(), transparencyCheckerboardGradient = "repeating-conic-gradient(#d7d6d1 0 25%, #ffffff 0 50%)", allowEmbedScripts = !0, htmlEmbedMarkerAttribute = "data-embed-frame", embedsDisabledEventName = "slides-embeds-disabled", shapeStyleElementId = "mc-anthropicons", linkDoublePressTimeoutMs = 700, preventDefaultInput = (event) => {
@@ -1581,7 +1612,23 @@ function installRenderingSlides(runtime2) {
       }
       document.execCommand("insertText", !1, value);
     }, listIndentFallback = (node, lists) => node.lineLists !== void 0 ? (0, runtime2.listIndentCss)(node, lists) : lists === "css" ? 0 : "1.2em", editableFocusTimeoutMs = 500, initializeSlideRenderer = (0, runtime2.initializeOnce)(() => {
-      (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeRichTextDom)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeObjectNavigation)(), (0, runtime2.initializeModelSelection)(), (0, runtime2.initializeImageCrop)(), (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializePreloadSheets)(), (0, runtime2.initializeUiAnnouncements)(), (0, runtime2.initializeVideoLinks)(), (0, runtime2.initializeArtifactLinkCards)(), (0, runtime2.initializeArtifactLinkCardViews)(), (0, runtime2.initializeExternalLinks)(), (0, runtime2.initializeModelGeometry)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeModelSelection)(), (0, runtime2.initializeStyleSchema)(), (0, runtime2.initializeEmbeds)(), (0, runtime2.initializeIconFont)(), (0, runtime2.initializeSlideSnapshots)(), SlideRendererReact = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), SlideRendererReactDom = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactDomNamespace)(), 1), SlideRendererJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), slideEditorChromeContext = SlideRendererReact.createContext(!1), slideStructureEnabledContext = SlideRendererReact.createContext(!0), renderedLinkOptions = {
+      (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeRichTextDom)(), (0, runtime2.initializeModelEditing)(), (0, runtime2.initializeObjectNavigation)(), (0, runtime2.initializeModelSelection)(), (0, runtime2.initializeImageCrop)(), (0, runtime2.initializeUiInputs210)(), (0, runtime2.initializePreloadSheets)(), (0, runtime2.initializeUiAnnouncements)(), (0, runtime2.initializeVideoLinks)(), (0, runtime2.initializeArtifactLinkCards)(), (0, runtime2.initializeArtifactLinkCardViews)(), (0, runtime2.initializeExternalLinks)(), (0, runtime2.initializeModelGeometry)(), (0, runtime2.initializeRenderingTheme)(), (0, runtime2.initializeModelSelection)(), (0, runtime2.initializeStyleSchema)(), (0, runtime2.initializeEmbeds)(), (0, runtime2.initializeIconFont)(), (0, runtime2.initializeSlideSnapshots)(), SlideRendererReact = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactNamespace)(), 1), SlideRendererReactDom = (0, runtime2.toModuleNamespace)((0, runtime2.loadReactDomNamespace)(), 1), SlideRendererJsx = (0, runtime2.toModuleNamespace)((0, runtime2.loadJsxNamespace)(), 1), DEFAULT_SLIDE_RENDERER_MESSAGES = {
+        embed: (0, runtime2.untranslatedMessage)("网页嵌入内容"),
+        embedTookFocus: (0, runtime2.untranslatedMessage)("网页嵌入内容已禁用：它尝试获取键盘焦点"),
+        embedNavigated: (0, runtime2.untranslatedMessage)("网页嵌入内容已禁用：它跳转到了其他页面"),
+        embedFrame: (0, runtime2.untranslatedMessage)("嵌入网页内容（沙箱隔离）"),
+        video: (0, runtime2.untranslatedMessage)("视频"),
+        videoControls: (alt) => (0, runtime2.untranslatedMessage)("视频控制") + (alt ? ": " + alt : ""),
+        videoFailed: (0, runtime2.untranslatedMessage)("视频加载失败。"),
+        emptyImage: (0, runtime2.untranslatedMessage)("空白图片"),
+        image: (0, runtime2.untranslatedMessage)("图片"),
+        imageUnavailable: (0, runtime2.untranslatedMessage)("此处无法显示图片"),
+        missingAsset: (asset) => (0, runtime2.untranslatedMessage)("缺少资源：") + asset,
+        editableName: runtime2.accessibleNodeTypeLabel,
+        cellName: runtime2.accessibleTableCellLabel,
+        openLinkHint: (key) => key + (0, runtime2.untranslatedMessage)("+单击以打开："),
+        selectBoxHint: (key) => key + (0, runtime2.untranslatedMessage)("+单击以选择文本框")
+      }, slideRendererMessagesContext = SlideRendererReact.createContext(DEFAULT_SLIDE_RENDERER_MESSAGES), slideEditorChromeContext = SlideRendererReact.createContext(!1), slideStructureEnabledContext = SlideRendererReact.createContext(!0), renderedLinkOptions = {
         storedUrl: !0
       }, slideLinkContext = SlideRendererReact.createContext({}), richTextEditingContext = SlideRendererReact.createContext(!1), slideFrameIdContext = SlideRendererReact.createContext(""), listRenderingContext = SlideRendererReact.createContext(void 0), mediaPlaceholderLabelCss = {
         display: "-webkit-box",

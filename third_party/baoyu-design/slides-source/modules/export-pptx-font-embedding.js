@@ -1,31 +1,7 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installExportPptxFontEmbedding(runtime2) {
-  var embeddingDeadlineMs, embeddingBudgetBytes, embeddedFontStyle, subfamilyNames, cleanFontName, reservesFontName, pptxFontNoticePreamble, missingFamiliesNote, uprightFaces, italicFaces, sameBytes, fetchFontText, fetchFontBytes, initializePptxFontEmbedding;
-  function outcomeReason(outcome, single, afterOthers = !1) {
-    switch (outcome) {
-      case "heldBack":
-        return "for licensing reasons";
-      case "noLists":
-        return (single ? "its license" : "their licenses") + " could not be checked, which exporting again may fix";
-      case "budget":
-        return afterOthers ? "there was no room left for " + (single ? "it" : "them") + " after the fonts used by more of the text went in" : (single ? "it" : "they") + " would make the file too large";
-      case "send":
-        return "with " + (single ? "it" : "them") + ` inside, the file would be too large to export this way; "PowerPoint, current fonts" in the deck's Download menu keeps ` + (single ? "it" : "them");
-      case "licence":
-        return (single ? "its license does" : "their licenses do") + " not allow embedding";
-      case "variable":
-        return "Google Fonts serves " + (single ? "it as a variable font" : "them as variable fonts") + ", which this file cannot include";
-      case "format":
-        return (single ? "it is" : "they are") + " not in a format PowerPoint embeds";
-      case "unpack":
-        return (single ? "its file" : "their files") + " could not be read";
-      case "decoder":
-        return "this page could not start its font unpacker, which reloading the page may fix";
-      case "fetch":
-        return (single ? "it" : "they") + " could not be downloaded from Google Fonts";
-    }
-  }
+  var embeddingDeadlineMs, embeddingBudgetBytes, subsetCharacterLimit, embeddedFontStyle, subfamilyNames, cleanFontName, reservesFontName, pptxFontNoticePreamble, uprightFaces, italicFaces, sameBytes, fetchFontText, fetchFontBytes, initializePptxFontEmbedding;
   function familyOutcomeNotes(entries) {
     let groups = /* @__PURE__ */ new Map();
     for (let { family, outcome, afterOthers = !1 } of entries) {
@@ -36,7 +12,11 @@ function installExportPptxFontEmbedding(runtime2) {
       };
       group.families.push(family), groups.set(key, group);
     }
-    return [...groups.values()].map((group) => missingFamiliesNote(group.families, outcomeReason(group.outcome, group.families.length === 1, group.afterOthers) ?? ""));
+    return [...groups.values()].map((group) =>(0, runtime2.exportNote)("font_left_out", {
+      families:group.families,
+      why:group.outcome,
+      afterOthers: group.afterOthers
+    }));
   }
   function embeddingFaceStyles(family, italicUsed) {
     let known = (0, runtime2.knownFontVariants)(family), styles = [
@@ -100,6 +80,17 @@ function installExportPptxFontEmbedding(runtime2) {
         status: response.status
       });
     return response;
+  }
+  function mostUsedCodePoints(request) {
+    let wanted = [...request.codePoints];
+    if (wanted.length <= subsetCharacterLimit)
+      return wanted;
+    let uses = /* @__PURE__ */ new Map();
+    for (let character of request.text) {
+      let codePoint = character.codePointAt(0);
+      uses.set(codePoint, (uses.get(codePoint) ?? 0) + 1);
+    }
+    return wanted.sort((left, right) => (uses.get(right) ?? 0) - (uses.get(left) ?? 0)).slice(0, subsetCharacterLimit);
   }
   async function embedGoogleFontsForPptx(slides, faces, fonts, lists, options = {}) {
     let linked = (0, runtime2.carriedFontFamilyMap)(faces, fonts), requests = [
@@ -170,8 +161,13 @@ function installExportPptxFontEmbedding(runtime2) {
               network: !0
             }
           };
+        let wanted = picked.partial ? mostUsedCodePoints(request) : [], deckCharacters = picked.partial ? await getText((0, runtime2.googleFontStylesheetUrl)(request.google, face) + "&text=" + encodeURIComponent(String.fromCodePoint(...wanted))).then((css) => {
+          let declared = (0, runtime2.parseFontFaceDeclarations)(css);
+          return declared.length === 1 ? declared[0].files[0] : void 0;
+        }, () => {
+        }) : void 0;
         stage = "file";
-        let data = await getBytes(picked.block.files[0]), packed = (0, runtime2.readFontTables)(data);
+        let data = await getBytes(deckCharacters ??picked.block.files[0]), packed = (0, runtime2.readFontTables)(data);
         if (packed.flavor === "woff2") {
           if ((packed.extent ?? 0) > budget)
             return {
@@ -197,7 +193,8 @@ function installExportPptxFontEmbedding(runtime2) {
         } : fsTypeAllowsEmbedding(info.os2.fsType) ? {
           face,
           data,
-          partial: picked.partial,
+          partial: picked.partial && (deckCharacters === void 0 || wanted.length < request.codePoints.size),
+          deckCharacters: deckCharacters !== void 0 && wanted.length === request.codePoints.size,
           names: info.names
         } : {
           face,
@@ -270,12 +267,22 @@ function installExportPptxFontEmbedding(runtime2) {
           data
         });
       }
-      faces2.some((face) => face.partial) && notes.push("this file carries the font " + use.family + " for only some of the deck's characters; on a computer without " + use.family + " installed the rest show in a substitute font"), failed.length > 0 && notes.push("not every style of the font " + use.family + " is inside this file; on a computer without " + use.family + " installed, some of its text (bold or italic, say) may show in a substitute font");
+      faces2.some((face) => face.partial) && notes.push((0, runtime2.exportNote)("font_partly_carried", {
+        family: use.family
+      })), faces2.some((face) => face.deckCharacters) && notes.push((0, runtime2.exportNote)("font_only_deck_characters", {
+        family: use.family
+      })), failed.length > 0 && notes.push((0, runtime2.exportNote)("font_styles_missing", {family: use.family
+      }));
       let names = [...new Set(otherNames.filter((name) => name !== ""))];
-      names.length > 0 && notes.push("the font " + use.family + ' is inside this file under another name ("' + names[0] + '"), so PowerPoint may not use it for text set in ' + use.family + "; that text then shows in a substitute font");
+      names.length > 0 && notes.push((0, runtime2.exportNote)("font_other_name", {
+        family: use.family,
+        name: names[0]
+      }));
     }
-    let carriedGoogle = results.flatMap(({ use }) => outcomes.some((outcome) => outcome.family === use.family && outcome.outcome === "carried") ? [use.google] : []);
-    return {
+    let carriedGoogle = results.flatMap(({ use }) => outcomes.some((outcome) => outcome.family === use.family && outcome.outcome === "carried") ? [use.google] : []), unchecked5 = results.flatMap(({ use }) => lists.unchecked(use.google) && outcomes.some((outcome) => outcome.family === use.family && outcome.outcome === "carried") ? [use.family] : []);
+    return unchecked5.length > 0 && notes.unshift((0, runtime2.exportNote)("fonts_license_check", {
+      families: unchecked5
+    })), {
       fonts: carriedFonts,
       families: [...outcomes, ...heldBack],
       notes: [...familyOutcomeNotes([...missing2, ...heldBack]), ...notes],
@@ -304,7 +311,7 @@ function installExportPptxFontEmbedding(runtime2) {
   }), bindRuntimeValue(runtime2, "initializePptxFontEmbedding", () => initializePptxFontEmbedding, (value) => {
     initializePptxFontEmbedding = value;
   }), () => {
-    embeddingDeadlineMs = 1e4, embeddingBudgetBytes = 4194304, embeddedFontStyle = (face) => face.weight >= 600 ? face.italic ? "boldItalic" : "bold" : face.italic ? "italic" : "regular", cleanFontName = (name) => name.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, "").slice(0, 80), reservesFontName = (names) => /with\s+reserved\s+font\s+names?/i.test((names.copyright ?? "") + " " + (names.licence ?? "")), missingFamiliesNote = (families, reason) => families.length === 1 ? "the font " + families[0] + " is not inside this file (" + reason + "); on a computer without " + families[0] + " installed its text shows in a substitute font" : "the fonts " + (0, runtime2.formatFontNameList)(families) + " are not inside this file (" + reason + "); on a computer without them installed their text shows in a substitute font", sameBytes = (left, right) => left.byteLength === right.byteLength && left.every((value, index4) => value === right[index4]), fetchFontText = async (url, signal) => (await fetchGoogleFontResource(url, signal)).text(), fetchFontBytes = async (url, signal) => new Uint8Array(await (await fetchGoogleFontResource(url, signal)).arrayBuffer()), initializePptxFontEmbedding = (0, runtime2.initializeOnce)(() => {
+    embeddingDeadlineMs = 1e4, embeddingBudgetBytes = 16777216, subsetCharacterLimit = 800, embeddedFontStyle = (face) => face.weight >= 600 ? face.italic ? "boldItalic" : "bold" : face.italic ? "italic" : "regular", cleanFontName = (name) => name.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, "").slice(0, 80), reservesFontName = (names) => /with\s+reserved\s+font\s+names?/i.test((names.copyright ?? "") + " " + (names.licence ?? "")), sameBytes = (left, right) => left.byteLength === right.byteLength && left.every((value, index4) => value === right[index4]), fetchFontText = async (url, signal) => (await fetchGoogleFontResource(url, signal)).text(), fetchFontBytes = async (url, signal) => new Uint8Array(await (await fetchGoogleFontResource(url, signal)).arrayBuffer()), initializePptxFontEmbedding = (0, runtime2.initializeOnce)(() => {
       (0, runtime2.initializeSlideModel)(), (0, runtime2.initializeFontVariants)(), (0, runtime2.initializeGoogleFontLicences)(), (0, runtime2.initializeFontFetching)(), (0, runtime2.initializeFontFaceParser)(), (0, runtime2.initializeFontTables)(), (0, runtime2.initializeGoogleSlidesFonts)(), subfamilyNames = {
         regular: "Regular",
         bold: "Bold",

@@ -16,21 +16,15 @@
 !src/**
 # The SPA needs the preview/session/worker, crop geometry and shared VM inputs. Build
 # probes and the already-bundled guest sources are not image inputs.
-src/features/cases/cover-vm/**
-!src/features/cases/cover-vm/runtime.ts
-!src/features/cases/cover-vm/protocol.ts
-!src/features/cases/cover-vm/program.ts
-!src/features/cases/cover-vm/guest-source.ts
-!src/features/cases/cover-vm/svg.ts
-!src/features/cases/cover-vm/geometry.ts
-!src/features/cases/cover-vm/session.ts
-!src/features/cases/cover-vm/worker.ts
-!src/features/cases/cover-vm/CaseCoverPreview.tsx
 !shared
 shared/**
 !shared/visualize-public-resources.ts
 !shared/artifact-math.ts
+!shared/artifact-math-source.ts
+!shared/artifact-math-loader.ts
+!shared/design-flow-size.ts
 !shared/artifact-editor-origin.ts
+!shared/artifact-recovery.ts
 !shared/slides-editor-context.ts
 !public/**
 !index.html
@@ -50,6 +44,8 @@ shared/**
 !scripts/build-artifact-math.mjs
 !scripts/build-slides-editor.mjs
 !scripts/build-design-editor.mjs
+!scripts/build-design-layout.mjs
+!scripts/design-copy.mjs
 !scripts/prune-pdfjs-server-runtime.mjs
 !scripts/prune-glibc-canvas-runtime.mjs
 # Don't bake source maps / built assets / huge logs into the layer.

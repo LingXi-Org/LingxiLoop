@@ -3,7 +3,7 @@
 import express from 'express'
 import compression from 'compression'
 import { createHash, randomUUID } from 'node:crypto'
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import { resolve, extname } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { Readable } from 'node:stream'
@@ -25,6 +25,16 @@ const resources = Object.fromEntries(await Promise.all(VISUALIZE_PUBLIC_RESOURCE
 const hashes = Object.fromEntries(Object.entries(resources).map(([name, bytes]) => [name, sha(bytes as Buffer)]))
 const editor = process.env.PERF_DESIGN_DIST ? resolve(process.env.PERF_DESIGN_DIST) : resolve(root, 'third_party/baoyu-design/upstream/claude-design/scripts/editor')
 const files = new Map<string, string>([['project/canvas.json', JSON.stringify(canvas)], ['project/Main.dc.html', board]])
+// Optional local exported-project copy for focused artwork regressions (#612).
+// This fixture never reads a production artifact store.
+if (process.env.PERF_PROJECT_DIR) {
+  files.clear()
+  const directory = resolve(process.env.PERF_PROJECT_DIR)
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (entry.isFile()) files.set(`project/${entry.name}`, await readFile(resolve(directory, entry.name), 'utf8'))
+  }
+}
+const initialFiles = new Map(files)
 const states = new Map<string, { state: unknown; revision: number }>()
 const grants = new Map<string, string>()
 const documents = new Map<string, Map<string, string>>()
@@ -61,10 +71,11 @@ app.use((req, res, next) => {
 })
 app.use(compression({ filter: (req,res) => !String(res.getHeader('Content-Type')).includes('event-stream') && compression.filter(req,res) }))
 app.use(express.json({limit:'16mb'}))
-app.post('/__fixture/reset', (_req,res)=>{states.clear();grants.clear();documents.clear();vizSource=visualization;stallMath=false;mathStarted=0;files.set('project/canvas.json',JSON.stringify(canvas));files.set('project/Main.dc.html',board);res.json({ok:true})})
+app.post('/__fixture/reset', (_req,res)=>{states.clear();grants.clear();documents.clear();vizSource=visualization;stallMath=false;mathStarted=0;files.clear();for(const [name,text] of initialFiles)files.set(name,text);res.json({ok:true})})
+app.get('/__fixture/documents', (_req,res)=>res.json(Object.fromEntries([...documents].map(([id,entries])=>[id,Object.fromEntries(entries)]))))
 app.post('/__fixture/stall-math', (req,res)=>{stallMath=req.body.enabled===true;res.json({ok:true})})
 app.get('/__fixture/readers', (_req,res)=>res.json({pending:mathPending.size,started:mathStarted}))
-app.post('/__fixture/content', (req,res)=>{ if(req.body.canvas)files.set('project/canvas.json',JSON.stringify(req.body.canvas));if(typeof req.body.board==='string')files.set('project/Main.dc.html',req.body.board);if(typeof req.body.visualization==='string')vizSource=req.body.visualization;res.json({ok:true}) })
+app.post('/__fixture/content', (req,res)=>{ if(req.body.replaceFiles===true)files.clear();if(req.body.files)for(const [name,text] of Object.entries(req.body.files))if(typeof text==='string')files.set(name,text);if(req.body.canvas)files.set('project/canvas.json',JSON.stringify(req.body.canvas));if(typeof req.body.board==='string')files.set('project/Main.dc.html',req.body.board);if(typeof req.body.visualization==='string')vizSource=req.body.visualization;res.json({ok:true}) })
 app.use((req,res,next)=>{res.set({'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*'});if(req.method==='OPTIONS')res.sendStatus(204);else next()})
 app.post('/api/artifacts/:id/editor-grant', async (req,res)=>{
   const grant = randomUUID(); grants.set(grant,req.params.id)

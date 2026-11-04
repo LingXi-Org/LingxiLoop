@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installUiArtifactFind(runtime2) {
   var react_6, reactDOMSo0, EMPTY_FIND_STATUS, FIND_MODAL_SELECTOR;

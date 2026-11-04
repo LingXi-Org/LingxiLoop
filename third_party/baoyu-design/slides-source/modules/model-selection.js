@@ -1,4 +1,4 @@
-// Reconstructed from JimLiu/baoyu-design c15e76e (MIT); see ../README.md.
+// Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
 function installModelSelection(runtime2) {
   var objectContextIdPattern, overlayHasVisiblePaint, initializeModelSelection;
@@ -77,6 +77,30 @@ function installModelSelection(runtime2) {
       });
     }
     return items.filter((input, options) => items.findLastIndex((input2) => input2.id === input.id) === options).filter((input) => objectContextIdPattern.test(input.id));
+  }
+  function gridSlideContextItems(slides, ids) {
+    return ids.flatMap((id) => {
+      let slide = slides.find((input) => input.id === id);
+      return slide ? [
+        {
+          id,
+          kind: "slide",
+          label: (0, runtime2.slideDisplayLabel)(slide) ?? ""
+        }
+      ] : [];
+    });
+  }
+  function gridSectionContextItems(ids, groups) {
+    return ids.flatMap((id) => {
+      let index4 = groups.findIndex((input) => input.section?.id === id);
+      return index4 < 0 ? [] : [
+        {
+          id,
+          kind: "section",
+          label: groups[index4].section.description || (0, runtime2.untranslatedMessage)("章节 ") + String(index4 + 1)
+        }
+      ];
+    });
   }
   function parseObjectContextId(contextId) {
     if (!objectContextIdPattern.test(contextId))
@@ -246,7 +270,7 @@ function installModelSelection(runtime2) {
     }
     return value;
   }
-  return bindRuntimeValue(runtime2, "selectionNodePath", () => selectionNodePath), bindRuntimeValue(runtime2, "createNodeSelection", () => createNodeSelection), bindRuntimeValue(runtime2, "parentNodeSelection", () => parentNodeSelection), bindRuntimeValue(runtime2, "nodePathsEqual", () => nodePathsEqual), bindRuntimeValue(runtime2, "compareNodePaths", () => compareNodePaths), bindRuntimeValue(runtime2, "sortSelectionsInDocumentOrder", () => sortSelectionsInDocumentOrder), bindRuntimeValue(runtime2, "selectionsEqual", () => selectionsEqual), bindRuntimeValue(runtime2, "selectionKey", () => selectionKey), bindRuntimeValue(runtime2, "selectionsKey", () => selectionsKey), bindRuntimeValue(runtime2, "selectedObjectContextIds", () => selectedObjectContextIds), bindRuntimeValue(runtime2, "selectedObjectContext", () => selectedObjectContext), bindRuntimeValue(runtime2, "parseObjectContextId", () => parseObjectContextId), bindRuntimeValue(runtime2, "frameContextId", () => frameContextId), bindRuntimeValue(runtime2, "normalizeObjectContextIds", () => normalizeObjectContextIds), bindRuntimeValue(runtime2, "selectedNode", () => selectedNode), bindRuntimeValue(runtime2, "filterValidSelections", () => filterValidSelections), bindRuntimeValue(runtime2, "toggleNodeSelection", () => toggleNodeSelection), bindRuntimeValue(runtime2, "selectionContainsNode", () => selectionContainsNode), bindRuntimeValue(runtime2, "updateSelectedNode", () => updateSelectedNode), bindRuntimeValue(runtime2, "cssColorOpacity", () => cssColorOpacity), bindRuntimeValue(runtime2, "styleHasVisiblePaint", () => styleHasVisiblePaint), bindRuntimeValue(runtime2, "resolvePaintedSelection", () => resolvePaintedSelection), bindRuntimeValue(runtime2, "isEmptyGroupBase", () => isEmptyGroupBase), bindRuntimeValue(runtime2, "resolvePointerSelection", () => resolvePointerSelection), bindRuntimeValue(runtime2, "togglePointerSelection", () => togglePointerSelection), bindRuntimeValue(runtime2, "pointerSelectsGroup", () => pointerSelectsGroup), bindRuntimeValue(runtime2, "collectMarqueeSelection", () => collectMarqueeSelection), bindRuntimeValue(runtime2, "commonSelectedNodeKind", () => commonSelectedNodeKind), bindRuntimeValue(runtime2, "objectContextIdPattern", () => objectContextIdPattern, (value) => {
+  return bindRuntimeValue(runtime2, "selectionNodePath", () => selectionNodePath), bindRuntimeValue(runtime2, "createNodeSelection", () => createNodeSelection), bindRuntimeValue(runtime2, "parentNodeSelection", () => parentNodeSelection), bindRuntimeValue(runtime2, "nodePathsEqual", () => nodePathsEqual), bindRuntimeValue(runtime2, "compareNodePaths", () => compareNodePaths), bindRuntimeValue(runtime2, "sortSelectionsInDocumentOrder", () => sortSelectionsInDocumentOrder), bindRuntimeValue(runtime2, "selectionsEqual", () => selectionsEqual), bindRuntimeValue(runtime2, "selectionKey", () => selectionKey), bindRuntimeValue(runtime2, "selectionsKey", () => selectionsKey), bindRuntimeValue(runtime2, "selectedObjectContextIds", () => selectedObjectContextIds), bindRuntimeValue(runtime2, "selectedObjectContext", () => selectedObjectContext), bindRuntimeValue(runtime2, "gridSlideContextItems", () => gridSlideContextItems), bindRuntimeValue(runtime2, "gridSectionContextItems", () => gridSectionContextItems), bindRuntimeValue(runtime2, "parseObjectContextId", () => parseObjectContextId), bindRuntimeValue(runtime2, "frameContextId", () => frameContextId), bindRuntimeValue(runtime2, "normalizeObjectContextIds", () => normalizeObjectContextIds), bindRuntimeValue(runtime2, "selectedNode", () => selectedNode), bindRuntimeValue(runtime2, "filterValidSelections", () => filterValidSelections), bindRuntimeValue(runtime2, "toggleNodeSelection", () => toggleNodeSelection), bindRuntimeValue(runtime2, "selectionContainsNode", () => selectionContainsNode), bindRuntimeValue(runtime2, "updateSelectedNode", () => updateSelectedNode), bindRuntimeValue(runtime2, "cssColorOpacity", () => cssColorOpacity), bindRuntimeValue(runtime2, "styleHasVisiblePaint", () => styleHasVisiblePaint), bindRuntimeValue(runtime2, "resolvePaintedSelection", () => resolvePaintedSelection), bindRuntimeValue(runtime2, "isEmptyGroupBase", () => isEmptyGroupBase), bindRuntimeValue(runtime2, "resolvePointerSelection", () => resolvePointerSelection), bindRuntimeValue(runtime2, "togglePointerSelection", () => togglePointerSelection), bindRuntimeValue(runtime2, "pointerSelectsGroup", () => pointerSelectsGroup), bindRuntimeValue(runtime2, "collectMarqueeSelection", () => collectMarqueeSelection), bindRuntimeValue(runtime2, "commonSelectedNodeKind", () => commonSelectedNodeKind), bindRuntimeValue(runtime2, "objectContextIdPattern", () => objectContextIdPattern, (value) => {
     objectContextIdPattern = value;
   }), bindRuntimeValue(runtime2, "overlayHasVisiblePaint", () => overlayHasVisiblePaint, (value) => {
     overlayHasVisiblePaint = value;

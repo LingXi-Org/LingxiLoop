@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { after, before, test } from 'node:test'
 import { createServer, type Server } from 'node:http'
+import { artifactEditorOrigin } from '../../../shared/artifact-editor-origin.js'
 import { pool } from '../db/pool.js'
+import { env } from '../env.js'
 import { CH_ARTIFACTS, sub } from '../redis.js'
 import { publishArtifactEvent } from '../modules/artifacts/events.js'
 import { artifactBlobRouter, artifactEditorRouter } from '../modules/artifacts/index.js'
+import { GRANT_TTL_MS, issueGrant } from '../modules/artifacts/grants.js'
 import { inlineScriptHashes } from '../modules/artifacts/kinds.js'
 import { createSlides, publishArtifactFiles } from '../modules/artifacts/facade.js'
 import { permissionService } from '../modules/access/public.js'
@@ -47,12 +51,20 @@ const entry = (text: string, ifMatch?: string | null) => ({ base64: Buffer.from(
 
 test('old Slides gain independent durable native chats without rewriting source or bytes; source revocation still denies access', async () => {
   const old = await createSlides({ companyId, projectId, conversationId: 'artifact-room', title: 'Legacy', actorId: userId, origin: 'user' })
+  const created = (await pool.query('SELECT path,sha256,body FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [old.id])).rows
+  assert.deepEqual(created.map(row => row.path), ['project/deck.json', 'project/ds/baoyu-ember/tokens.json', 'project/ds/baoyu-seazar/tokens.json', 'project/ds/slides-builtin/tokens.json'])
+  const initialIndex = JSON.parse(created.find(row => row.path === 'project/deck.json').body.toString())
+  initialIndex.designSystems = initialIndex.designSystems.filter((system: { namespace: string }) => system.namespace === 'slides-builtin')
+  const legacyIndex = Buffer.from(JSON.stringify(initialIndex))
+  await pool.query('UPDATE artifact_files SET body=$2, sha256=$3, size=$4 WHERE artifact_id=$1 AND path=$5',
+    [old.id, legacyIndex, createHash('sha256').update(legacyIndex).digest('hex'), legacyIndex.length, 'project/deck.json'])
+  await pool.query('DELETE FROM artifact_files WHERE artifact_id=$1 AND path = ANY($2::text[])',
+    [old.id, ['project/ds/baoyu-ember/tokens.json', 'project/ds/baoyu-seazar/tokens.json']])
   const original = (await pool.query('SELECT path,sha256,body FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [old.id])).rows
   assert.deepEqual(original.map(row => row.path), ['project/deck.json', 'project/ds/slides-builtin/tokens.json'])
-  const initialIndex = JSON.parse(original[0].body.toString())
   assert.deepEqual(initialIndex.order, [])
   assert.equal(initialIndex.style[0].look, 'slides-builtin/light')
-  assert.equal(JSON.parse(original[1].body.toString()).name, 'Slides 内置风格')
+  assert.equal(JSON.parse(original.find(row => row.path === 'project/ds/slides-builtin/tokens.json').body.toString()).name, 'Slides 内置风格')
   const opens = await Promise.all([1, 2].map(() => api(`/artifacts/${old.id}/slides-workspace`, 'POST')))
   assert.deepEqual(opens.map(result => result.status), [200, 200])
   const first = await opens[0].json() as { conversationId: string; sourceConversationId: string; agentId: string }
@@ -121,8 +133,9 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   assert.ok(design.files['project/canvas.json'])
   assert.equal((await (await api('/conversations/artifact-room/design', 'POST')).json() as { id: string }).id, design.id)
 
-  const grant = await (await api(`/artifacts/${design.id}/editor-grant`, 'POST')).json() as { url: string; write: boolean }
+  const grant = await (await api(`/artifacts/${design.id}/editor-grant`, 'POST')).json() as { url: string; isolatedUrl: string; write: boolean }
   assert.match(grant.url, /^http:\/\/[a-f0-9]{32}-artifact\.localhost:5180\//)
+  assert.equal(grant.isolatedUrl, grant.url)
   grant.url = new URL(grant.url).pathname
   assert.equal(grant.write, true)
   assert.match(grant.url, /^\/artifact-editor\/design\/[^/]+\/$/)
@@ -136,7 +149,7 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   assert.equal(shared.status, 200)
   assert.match(shared.headers.get('content-type') ?? '', /javascript/)
   assert.equal(shared.headers.get('access-control-allow-origin'), '*')
-  assert.match(shared.headers.get('cache-control') ?? '', /immutable/)
+  assert.equal(shared.headers.get('cache-control'), 'public, max-age=31536000, immutable')
   assert.match(page.headers.get('content-security-policy') ?? '', /\/artifact-editor\/design-assets\//)
   assert.match(html, /integrity="sha256-/)
   for (const privatePath of ['project/canvas.json', 'index.html', 'artifact-type/dc-runtime.js']) {
@@ -152,7 +165,7 @@ test('a conversation Design opens in the editor with all-or-nothing saves and gr
   const readOnly = await save(grant.url, { 'project/assets/x.html': entry('x') })
   assert.equal(readOnly.status, 400)
   const listing = await (await fetch(`${origin}${grant.url}_files.json`)).json() as { files: Record<string, unknown> }
-  assert.deepEqual(Object.keys(listing.files).sort(), ['project/Main.dc.html', 'project/canvas.json'])
+  assert.deepEqual(Object.keys(listing.files).sort(), ['project/Main.dc.html', 'project/canvas.json', 'project/ds/baoyu-ember/tokens.json', 'project/ds/baoyu-seazar/tokens.json', 'project/ds/slides-builtin/tokens.json'])
   const file = await fetch(`${origin}${grant.url}project/Main.dc.html`)
   assert.match(file.headers.get('content-security-policy') ?? '', /^sandbox;/)
   const savedBody = await file.text()
@@ -183,20 +196,29 @@ test('project Slides decks are listed, created with their index, renamed and del
   assert.ok(deck.files['project/deck.json'])
   const listed = await (await api(`/projects/${projectId}/slides`)).json() as { id: string; title: string }[]
   assert.deepEqual(listed.map(item => item.id), [deck.id])
-  const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string }
-  const page = await fetch(origin + new URL(grant.url, origin).pathname)
+  const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string; isolatedUrl: string }
+  // Pages served before isolated Slides keep the main-site address.
+  assert.match(grant.url, /^\/artifact-editor\/slides\/[^/]+\/$/)
+  assert.equal(grant.isolatedUrl, `${await artifactEditorOrigin(grant.url.split('/')[3], env.ARTIFACT_EDITOR_BASE)}${grant.url}`)
+  const page = await fetch(origin + grant.url)
   assert.equal(page.status, 200)
   const html = await page.text()
   assert.match(html, /lang="zh-CN"/)
   const csp = page.headers.get('content-security-policy') ?? ''
   assert.match(csp, /^sandbox allow-scripts allow-downloads allow-popups allow-modals;/)
   for (const hash of inlineScriptHashes(html)) assert.ok(csp.includes(`'${hash}'`))
-  const assetPath = /src="(\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js)"/.exec(html)?.[1]
-  assert.ok(assetPath)
-  const asset = await fetch(origin + assetPath)
+  const assetUrl = /src="(https?:\/\/[^"]+\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js)"/.exec(html)?.[1]
+  assert.ok(assetUrl, 'every deck and grant origin shares one cached editor')
+  assert.match(csp, /script-src [^;]*\/artifact-editor\/slides-assets\//)
+  assert.match(csp, /connect-src [^;]*\/artifact-editor\/slides-assets\//, 'formula exports fetch public fonts from the isolated editor')
+  const asset = await fetch(origin + new URL(assetUrl).pathname)
   assert.equal(asset.status, 200)
-  assert.match(asset.headers.get('cache-control') ?? '', /max-age=31536000, immutable/)
+  assert.equal(asset.headers.get('cache-control'), 'public, max-age=31536000, immutable')
   assert.equal(asset.headers.get('access-control-allow-origin'), '*')
+  const preloads = await (await fetch(`${origin}/artifact-editor/preload.json`)).json() as Record<'design' | 'slides', string[]>
+  assert.ok(preloads.slides.includes(assetUrl))
+  assert.ok(preloads.design.some(url => /\/design-assets\/design-[a-f0-9]{64}\.js$/.test(url)))
+  assert.ok(!preloads.slides.some(url => url.includes('KaTeX_')), 'math fonts load only with math')
   for (const path of ['/artifact-editor/slides-assets/project/deck.json', '/artifact-editor/slides-assets/node/compiler.cjs', '/artifact-editor/slides/invalid/project/deck.json']) {
     assert.equal((await fetch(origin + path)).status, 404)
   }
@@ -246,4 +268,74 @@ test('assigning and steering work returns the artifact and persists the requeste
   assert.equal(reopened.id, design.id)
   assert.deepEqual((await pool.query('SELECT assignment,status FROM artifact_agent_assignments WHERE artifact_id=$1 AND agent_id=$2', [design.id, agentId])).rows, rows.rows,
     'reopening does not replace or cancel the existing creative assignment')
+})
+
+
+test('retained native grants follow current read/write policy without upgrading issued capabilities', async () => {
+  const status = (await pool.query<{ status: string }>('SELECT status FROM projects WHERE id=$1', [projectId])).rows[0].status
+  for (const kind of ['design', 'slides'] as const) {
+    const created = kind === 'design'
+      ? await api('/conversations/artifact-room/design', 'POST')
+      : await api(`/projects/${projectId}/slides`, 'POST', { title: 'Grant boundary' })
+    assert.ok([200, 201].includes(created.status))
+    const artifact = await created.json() as { id: string }
+    type Grant = { url: string; write: boolean }
+    const writer = await (await api(`/artifacts/${artifact.id}/editor-grant`, 'POST')).json() as Grant
+    assert.equal(writer.write, true)
+    const pathOf = (grant: Grant) => new URL(grant.url, origin).pathname
+    const writerPath = pathOf(writer), indexPath = kind === 'design' ? 'project/canvas.json' : 'project/deck.json'
+    const stored = (await pool.query<{ body: Buffer; sha256: string }>('SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0]
+    const files = { [indexPath]: { base64: stored.body.toString('base64'), contentType: 'application/json', ifMatch: stored.sha256 } }
+    assert.equal((await fetch(origin + writerPath + indexPath)).status, 200)
+    let reader: Grant | undefined
+    try {
+      await pool.query("UPDATE projects SET status='READ_ONLY' WHERE id=$1", [projectId])
+      const session = await fetch(origin + writerPath + '__deck/session')
+      assert.equal(session.status, 200)
+      assert.equal((await session.json() as { canEdit: boolean }).canEdit, false, 'old writer must not report stale write authority')
+      assert.equal((await fetch(origin + writerPath + indexPath)).status, 200, 'read permission survives write downgrade')
+      assert.equal((await save(writerPath, files)).status, 404)
+      reader = await (await api(`/artifacts/${artifact.id}/editor-grant`, 'POST')).json() as Grant
+      assert.equal(reader.write, false)
+      assert.equal((await fetch(origin + pathOf(reader) + indexPath)).status, 200)
+      assert.equal((await save(pathOf(reader), files)).status, 404)
+    } finally {
+      await pool.query('UPDATE projects SET status=$2 WHERE id=$1', [projectId, status])
+    }
+    assert.ok(reader)
+    assert.equal((await save(pathOf(reader), files)).status, 404, 'a read-only capability never gains write access when project permission returns')
+    assert.equal((await fetch(origin + writerPath + '__deck/session').then(r => r.json()) as { canEdit: boolean }).canEdit, true)
+    const fresh = await (await api(`/artifacts/${artifact.id}/editor-grant`, 'POST')).json() as Grant
+    assert.equal(fresh.write, true)
+    assert.equal((await save(pathOf(fresh), files)).status, 200)
+    assert.deepEqual((await pool.query('SELECT body FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0].body, stored.body)
+  }
+})
+
+test('expired, cross-tenant, wrong-kind and revoked native grants cannot read or overwrite persisted files', async () => {
+  for (const kind of ['design', 'slides'] as const) {
+    const artifact = await (await (kind === 'design'
+      ? api('/conversations/artifact-room/design', 'POST')
+      : api(`/projects/${projectId}/slides`, 'POST', { title: 'Expired grant boundary' }))).json() as { id: string }
+    const current = issueGrant({ artifactId: artifact.id, companyId, userId, kind, write: true })
+    const expired = issueGrant({ artifactId: artifact.id, companyId, userId, kind, write: true }, Date.now() - GRANT_TTL_MS - 1000)
+    const foreign = issueGrant({ artifactId: artifact.id, companyId: 'different-tenant', userId, kind, write: true })
+    const indexPath = kind === 'design' ? 'project/canvas.json' : 'project/deck.json'
+    const before = (await pool.query<{ body: Buffer; sha256: string }>('SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0]
+    const files = { [indexPath]: { base64: before.body.toString('base64'), contentType: 'application/json', ifMatch: before.sha256 } }
+    for (const [routeKind, token] of [[kind, expired.grant], [kind, foreign.grant], [kind === 'design' ? 'slides' : 'design', current.grant]]) {
+      const path = `/artifact-editor/${routeKind}/${token}/`
+      for (const route of ['_files.json', indexPath, '__deck/session']) assert.equal((await fetch(origin + path + route)).status, 404)
+      assert.equal((await save(path, files)).status, 404)
+    }
+    const path = `/artifact-editor/${kind}/${current.grant}/`
+    try {
+      await pool.query('DELETE FROM project_memberships WHERE project_id=$1 AND user_id=$2', [projectId, userId])
+      for (const route of ['_files.json', indexPath, '__deck/session']) assert.equal((await fetch(origin + path + route)).status, 404)
+      assert.equal((await save(path, files)).status, 404)
+    } finally {
+      await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')", [projectId, companyId, userId])
+    }
+    assert.deepEqual((await pool.query('SELECT body FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0].body, before.body)
+  }
 })
