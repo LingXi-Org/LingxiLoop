@@ -16,12 +16,12 @@ Teaching drafts are held until final deterministic checks accept them. Those che
 
 | Check | Observed result |
 | --- | --- |
-| Focused teaching/stage/model tests | 17 passed; `unit.log`. Ledger, bounded calls/cache, cancellation, invalid/provider fallback, actor evidence, teacher permission, depth and pre-publication rejection covered. |
-| Owning `homework.test.ts` integration | 55 passed; `integration.log`, isolated local `issue673_test` PostgreSQL + Redis15. Includes frozen A/B requirements, reopen, wrong learner/agent/tenant and revoked membership. |
-| New published Worker integration | Passed; `runtime-final.log`, actual LingxiOS 3.8.24 and recorded WuKong. Shared course Milo rejects a bad draft with zero leaked draft text; a new valid human turn delivers; both classifier calls reach the shared ledger; revoked course access is rejected. |
-| Server typecheck / lint after main integration | Passed; `types.log`, `lint.log`. |
-| Real provider final TCP/depth/demo matrix | 14 requests, 7 cases, **no repair**, no provider failure, 15 TAP nodes passed; `source-final.json` / `.log`. |
-| Real provider final B two-round pressure test | Exactly 4 requests, **no repair**, 4 TAP nodes passed; `goal-action-final.json` / `.log`. Both bodies preserve verification rather than first asking for original calculations. |
+| Focused teaching/stage/model tests | 17 passed; `unit.txt`. Ledger, bounded calls/cache, cancellation, invalid/provider fallback, actor evidence, teacher permission, depth and pre-publication rejection covered. |
+| Owning `homework.test.ts` integration | 55 passed; `integration.txt`, isolated local `issue673_test` PostgreSQL + Redis15. Includes frozen A/B requirements, reopen, wrong learner/agent/tenant and revoked membership. |
+| New published Worker integration | Passed; `runtime-final.txt`, actual LingxiOS 3.8.24 and recorded WuKong. Shared course Milo rejects a bad draft with zero leaked draft text; a new valid human turn delivers; both classifier calls reach the shared ledger; revoked course access is rejected. |
+| Server typecheck / lint after main integration | Passed; `types.txt`, `lint.txt`. |
+| Real provider final TCP/depth/demo matrix | 14 requests, 7 cases, **no repair**, no provider failure, 15 TAP nodes passed; `source-final.json` / `.txt`. |
+| Real provider final B two-round pressure test | Exactly 4 requests, **no repair**, 4 TAP nodes passed; `goal-action-final.json` / `.txt`. Both bodies preserve verification rather than first asking for original calculations. |
 
 All real calls used the already authorized `api.siliconflow.cn` / `deepseek-ai/DeepSeek-V4.1-Flash`, thinking disabled, bounded call caps, no new keys. The files contain only public synthetic assignments and synthetic learner messages. JSON `published` records admission by the product policy in the qualification fixture; it does **not** claim delivery to real IM. The live fixture uses the actual public prompt compiler and policy, but no business tools or production database. The separate Worker integration exercises actual publication with a scripted provider.
 

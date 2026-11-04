@@ -1,0 +1,23 @@
+[integration selected] selected 1/63 file(s): runtime-teaching-scaffold.test.ts
+TAP version 13
+# {"ts":"2026-11-04T14:41:21.729Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-cs3u8","healthPort":29093,"maxConcurrentRuns":2}
+# {"ts":"2026-11-04T14:41:23.938Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-cs3u8","timedOut":false}
+# {"ts":"2026-11-04T14:41:23.943Z","level":"error","msg":"control-plane request failed","code":"control_plane_request_failed","reason":"native_rejected","category":"unknown","retryable":false,"errorName":"Error","frames":[{"module":"server/agent-runtime/runtime.ts","line":224,"column":44},{"module":"server/agent-runtime/runtime.ts","line":306,"column":5}]}
+# {"ts":"2026-11-04T14:41:23.944Z","level":"error","msg":"control-plane request failed","code":"control_plane_request_failed","reason":"native_rejected","category":"unknown","retryable":false,"errorName":"Error","frames":[{"module":"server/agent-runtime/runtime.ts","line":224,"column":44},{"module":"server/agent-runtime/runtime.ts","line":306,"column":5}]}
+# Subtest: course Milo rejects unsafe drafts through the published Worker and preserves course authorization
+ok 1 - course Milo rejects unsafe drafts through the published Worker and preserves course authorization
+  ---
+  duration_ms: 3220.041842
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6250.231814
+[integration file] runtime-teaching-scaffold.test.ts duration_ms=6292 exit=0
+[integration result] mode=selected files=1 duration_ms=6292 exit=0
