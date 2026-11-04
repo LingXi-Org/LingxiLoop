@@ -90,8 +90,13 @@ production and pre-existing developer/test databases were not altered.
   found a current-preset7 versus immutable-preset6 assertion; fixed the test.
   Main-integrated CI41842877835 passed all jobs on d5c2d5da. Later607a90dd run
   41846138974 passed component checks and the integration test step, but the
-  integration job ended cancelled; it is not a green final run.
-- Independent source review607a90dd found no remaining P1/P2 after cold-start,
+  integration job ended cancelled at12m29 after the steps completed; it is
+  not a green final run. Its timeline showed standalone Design build followed
+  by the same complete build inside design-editor.test. The final CI removes
+  that redundant prebuild, retains all editor/math tests and their owning builds,
+  and keeps the existing12-minute job limit. Build/CI/Worker contracts again
+  passed52/52. Final exact-head CI remains the merge gate.
+- Independent source reviews607a90dd and2c421ef4 found no remaining P1/P2 after cold-start,
   failed-save, planning override and deleted/unindexed-board fixes. No PR
   Approve was submitted.
 

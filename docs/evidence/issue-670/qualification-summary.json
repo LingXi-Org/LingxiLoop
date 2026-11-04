@@ -6,7 +6,8 @@
     "server/src/agent-runtime/skill-context.ts": "192a559964ecb1001b5316633d8cef89725a35cbe319bbadb09be309dea4cd38",
     "server/src/modules/artifacts/agent-tools.ts": "04fc86c97929ed3c19b664710a70e4c1e3575374f485908d809bfbb7acd86c94",
     "server/src/__integration__/runtime-first-action-contracts.test.ts": "6341dc0d3ba7c2aa70507ad333891089c5bfd5ad16eff9e9621fc5ea23fc1cc1",
-    "scripts/check-design-snapshot.mjs": "ec0046de6b56892af4ef5505cb77e347e5c52bce368fde1aa40bd11c7291d75e"
+    "scripts/check-design-snapshot.mjs": "ec0046de6b56892af4ef5505cb77e347e5c52bce368fde1aa40bd11c7291d75e",
+    ".github/workflows/ci.yml": "961814dd93993d017436378af878539f8fae5bc3b1eb03fd8b0f804a6b2c6a82"
   },
   "boundary": "Representative successful runs plus all failed attempts retained; not a provider reliability estimate. Browser and ACL evidence are separate fixtures. No production deployment claimed.",
   "cases": [

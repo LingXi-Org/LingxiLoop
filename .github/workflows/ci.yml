@@ -412,7 +412,8 @@ jobs:
       - run: node server/scripts/scoped-dependencies.mjs && node server/scripts/install-scoped-dependencies.mjs integration
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-      - run: npm run build:design-editor && node --test scripts/slides-editor.test.mjs scripts/artifact-math.test.mjs scripts/design-editor.test.mjs
+      # Editor tests build and verify both retained editors before integration.
+      - run: node --test scripts/slides-editor.test.mjs scripts/artifact-math.test.mjs scripts/design-editor.test.mjs
       - run: node --test server/scripts/bootstrap-runtime-patch-test-db.test.mjs && node server/scripts/bootstrap-runtime-patch-test-db.mjs
         env:
           NODE_ENV: test
