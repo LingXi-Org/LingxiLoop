@@ -35,6 +35,15 @@ upstream changes do not alter the model/publication implementation exercised
 by those controls. The corrected final commit still requires exact-lock CI;
 the failed run is not qualification.
 
+The second combined CI (41869670901) passed all four suspension controls and
+the historical/current PostgreSQL runtime bridge suites, including the new
+product62 global queue gate. It then found the same missing formal25 branch in
+the chat recovery fixture: it expected `auto` instead of the existing required
+native output tool mode. Formal25 now uses that existing required-mode branch
+and executes its shared model-stage/publication assertions. Retry bounds,
+settlements, replay identities and delivered-body assertions are unchanged.
+This second fail-fast run does not qualify the later unexecuted files.
+
 Use one controlled formal24-to25 maintenance cutover for both harness changes.
 The reviewed gate must count every queued, leased and waiting item, even when
 no binding/checkpoint exists; recheck under the maintenance lock after both
