@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>概率分布：从直方图到密度曲线</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#FAF9F5;color:#141413;font-family:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#A94E2E}a:hover{color:#8A3E24}
+h1,h2,h3{margin:0}
+p{margin:0}
+</style>
+</helmet>
+<div style="box-sizing:border-box;width:100%;max-width:1180px;margin:0 auto;padding:72px 56px 88px;display:flex;flex-direction:column;gap:56px">
+
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="font-family:system-ui,sans-serif;font-size:13px;letter-spacing:.16em;color:#A94E2E;font-weight:600">零基础 · 概念讲解</div>
+<h1 style="font-family:Georgia,'Songti SC',serif;font-size:54px;line-height:1.18;font-weight:400;color:#141413">概率分布：<br>一张记录“可能性”的账本</h1>
+<p style="font-size:20px;line-height:1.7;color:#3D3D3A;max-width:760px">它是什么、为什么需要它，以及离散分布与连续分布是怎样连在一起的 —— 用一枚硬币讲清楚。</p>
+</div>
+
+<section style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-family:Georgia,serif;font-size:14px;color:#A94E2E;letter-spacing:.1em">01</span><h2 style="font-family:Georgia,'Songti SC',serif;font-size:32px;font-weight:400">它是什么</h2></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px">
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:12px;letter-spacing:.12em;color:#73726C;font-weight:600">步骤一</div>
+<p style="font-size:18px;line-height:1.6;color:#141413">列出所有可能的<b>结局</b></p>
+<p style="font-size:14px;line-height:1.65;color:#5C5B55">抛两枚硬币，正面朝上的次数只能是 0、1、2。</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:12px;letter-spacing:.12em;color:#73726C;font-weight:600">步骤二</div>
+<p style="font-size:18px;line-height:1.6;color:#141413">给每个结局标上<b>可能性</b></p>
+<p style="font-size:14px;line-height:1.65;color:#5C5B55">0 次 1/4，1 次 1/2，2 次 1/4。</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:12px;letter-spacing:.12em;color:#73726C;font-weight:600">步骤三</div>
+<p style="font-size:18px;line-height:1.6;color:#141413">总量必须是 <b>1</b></p>
+<p style="font-size:14px;line-height:1.65;color:#5C5B55">所有可能性加起来 = 1，因为某件事一定会发生。</p>
+</div>
+</div>
+<div style="background:#F5F4ED;border-left:4px solid #D97757;border-radius:0 12px 12px 0;padding:20px 24px">
+<p style="font-size:17px;line-height:1.7;color:#141413">一句话：<b>概率分布 = “取值 → 可能性”的完整对应表</b>。把这张表画成柱子，就是直方图；把它连成曲线，就是密度曲线。看到柱子或曲线，你看到的就是一个分布。</p>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-family:Georgia,serif;font-size:14px;color:#A94E2E;letter-spacing:.1em">02</span><h2 style="font-family:Georgia,'Songti SC',serif;font-size:32px;font-weight:400">为何需要</h2></div>
+<p style="font-size:17px;line-height:1.75;color:#3D3D3A;max-width:860px">因为现实几乎从不只给你一个确定答案。只记住一个平均值，会丢掉“有多大可能偏离”这一半的信息；分布把不确定性变成可以计算、比较、推断的对象。</p>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px">
+<div style="display:flex;flex-direction:column;gap:8px;border-top:2px solid #E3DACC;padding-top:14px">
+<div style="font-size:18px;font-weight:600;color:#141413">比较与决策</div>
+<p style="font-size:15px;line-height:1.7;color:#5C5B55">两家工厂平均都 30 天交货，一家几乎总是准时，另一家有一半概率拖到 60 天 —— 平均值相同，风险完全不同。</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;border-top:2px solid #E3DACC;padding-top:14px">
+<div style="font-size:18px;font-weight:600;color:#141413">推断</div>
+<p style="font-size:15px;line-height:1.7;color:#5C5B55">只观察一小部分样本，反推总体长什么样：置信区间、假设检验、贝叶斯更新的底层都是分布。</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;border-top:2px solid #E3DACC;padding-top:14px">
+<div style="font-size:18px;font-weight:600;color:#141413">预测与生成</div>
+<p style="font-size:15px;line-height:1.7;color:#5C5B55">分类器输出“各类别的概率”，聊天大模型每一步输出“下一个词的分布”，再从中采样。</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;border-top:2px solid #E3DACC;padding-top:14px">
+<div style="font-size:18px;font-weight:600;color:#141413">压缩描述</div>
+<p style="font-size:15px;line-height:1.7;color:#5C5B55">上千次实验的结果，常能被几个参数概括 —— 例如正态分布的均值 $\mu$ 与标准差 $\sigma$。</p>
+</div>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-family:Georgia,serif;font-size:14px;color:#A94E2E;letter-spacing:.1em">03</span><h2 style="font-family:Georgia,'Songti SC',serif;font-size:32px;font-weight:400">一个例子：抛两次硬币</h2></div>
+<p style="font-size:17px;line-height:1.75;color:#3D3D3A;max-width:860px">记 <b>X = 正面朝上的次数</b>。共有 4 种等可能结果（正正、正反、反正、反反），把它们按 X 归类，就得到下面的分布。</p>
+<div style="display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:36px;align-items:end">
+<figure style="margin:0;display:flex;flex-direction:column;gap:10px">
+<svg viewBox="0 0 420 220" role="img" aria-label="抛两次硬币的正面次数分布柱状图：0 次为四分之一，1 次为二分之一，2 次为四分之一" style="width:100%;height:auto">
+<line x1="40" y1="190" x2="400" y2="190" stroke="#141413" stroke-width="1.5"></line>
+<rect x="70" y="133" width="60" height="57" fill="#D97757" rx="4"></rect>
+<text x="100" y="122" text-anchor="middle" font-family="Georgia,serif" font-size="20" fill="#141413">1/4</text>
+<text x="100" y="212" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#3D3D3A">X = 0</text>
+<rect x="180" y="76" width="60" height="114" fill="#D97757" rx="4"></rect>
+<text x="210" y="65" text-anchor="middle" font-family="Georgia,serif" font-size="20" fill="#141413">1/2</text>
+<text x="210" y="212" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#3D3D3A">X = 1</text>
+<rect x="290" y="133" width="60" height="57" fill="#D97757" rx="4"></rect>
+<text x="320" y="122" text-anchor="middle" font-family="Georgia,serif" font-size="20" fill="#141413">1/4</text>
+<text x="320" y="212" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="#3D3D3A">X = 2</text>
+</svg>
+<figcaption style="font-size:14px;line-height:1.6;color:#73726C">柱高 = 该取值的概率；三根柱子的高度之和恰为 1。</figcaption>
+</figure>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:18px 20px;font-family:Georgia,'Songti SC',serif;font-size:19px;line-height:1.7;color:#141413">
+$$P(X=k)=\binom{2}{k}(0.5)^{2}$$
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;font-size:16px;color:#3D3D3A;padding:8px 0;border-bottom:1px solid #E3DACC"><span>四分之一 + 一半 + 四分之一</span><span style="font-family:Georgia,serif">= 1</span></div>
+<div style="display:flex;justify-content:space-between;font-size:16px;color:#3D3D3A;padding:8px 0;border-bottom:1px solid #E3DACC"><span>至少一次正面的概率</span><span style="font-family:Georgia,serif">1/2 + 1/4 = 3/4</span></div>
+<div style="display:flex;justify-content:space-between;font-size:16px;color:#3D3D3A;padding:8px 0"><span>期望（平均正面次数）</span><span style="font-family:Georgia,serif">0×¼ + 1×½ + 2×¼ = 1</span></div>
+</div>
+<p style="font-size:14px;line-height:1.65;color:#73726C">有了分布，“至少一次”这类问题只需把对应概率相加 —— 这就是分布最实用的地方。</p>
+</div>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-family:Georgia,serif;font-size:14px;color:#A94E2E;letter-spacing:.1em">04</span><h2 style="font-family:Georgia,'Songti SC',serif;font-size:32px;font-weight:400">离散与连续：同一件事的两种刻度</h2></div>
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #E3DACC;border-radius:14px;background:#FFFFFF">
+<table style="width:100%;border-collapse:collapse;min-width:560px;font-size:15px;line-height:1.6">
+<thead>
+<tr style="background:#F5F4ED">
+<th style="text-align:left;padding:14px 18px;font-weight:600;color:#141413;width:22%">对比项</th>
+<th style="text-align:left;padding:14px 18px;font-weight:600;color:#141413">离散分布</th>
+<th style="text-align:left;padding:14px 18px;font-weight:600;color:#141413">连续分布</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-top:1px solid #E3DACC"><td style="padding:13px 18px;color:#5C5B55">取什么值</td><td style="padding:13px 18px;color:#141413">可数、有间隔（0, 1, 2…）</td><td style="padding:13px 18px;color:#141413">不可数、无间隙（170.2, 170.213…）</td></tr>
+<tr style="border-top:1px solid #E3DACC"><td style="padding:13px 18px;color:#5C5B55">描述工具</td><td style="padding:13px 18px;color:#141413">概率质量 $P(X=x)$</td><td style="padding:13px 18px;color:#141413">概率密度 $f(x)$</td></tr>
+<tr style="border-top:1px solid #E3DACC"><td style="padding:13px 18px;color:#5C5B55">概率怎么读</td><td style="padding:13px 18px;color:#141413">柱子的<b>高度</b></td><td style="padding:13px 18px;color:#141413">区间下的<b>面积</b></td></tr>
+<tr style="border-top:1px solid #E3DACC"><td style="padding:13px 18px;color:#5C5B55">单个点</td><td style="padding:13px 18px;color:#141413">概率可以为正</td><td style="padding:13px 18px;color:#141413">概率恒为 0（应问区间）</td></tr>
+<tr style="border-top:1px solid #E3DACC"><td style="padding:13px 18px;color:#5C5B55">归一化</td><td style="padding:13px 18px;color:#141413;font-family:Georgia,serif">$\sum_x P(X=x)=1$</td><td style="padding:13px 18px;color:#141413;font-family:Georgia,serif">$\int f(x)\,dx=1$</td></tr>
+</tbody>
+</table>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="font-size:16px;font-weight:600;color:#141413">联系：连续是离散的极限</div>
+<p style="font-size:15px;line-height:1.75;color:#5C5B55">把取值范围切成宽 $\Delta x$ 的小格，每格概率为 $p_i$；格子越细，柱子越密、越平滑，柱顶轮廓收敛成密度曲线，柱子面积之和趋近积分。</p>
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:16px 20px;font-family:Georgia,serif;font-size:18px;color:#141413">$$f(x)\Delta x \approx p_i$$</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="font-size:16px;font-weight:600;color:#141413">提醒：密度不是概率</div>
+<p style="font-size:15px;line-height:1.75;color:#5C5B55">$f(x)$ 可以大于 1，只有乘上区间长度（求面积）才是概率。这是零基础学习时最常见的误解。</p>
+<div style="background:#F5F4ED;border-radius:12px;padding:16px 20px;font-family:Georgia,serif;font-size:18px;color:#141413">$$P(a\le X\le b)=\int_a^b f(x)\,dx$$</div>
+</div>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font-family:Georgia,serif;font-size:14px;color:#A94E2E;letter-spacing:.1em">05</span><h2 style="font-family:Georgia,'Songti SC',serif;font-size:32px;font-weight:400">自检 & 下一步</h2></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px">
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:16px;font-weight:600;color:#141413">问：日降雨量恰好 3.5 毫米的概率？</div>
+<p style="font-size:14px;line-height:1.65;color:#5C5B55">答：0。连续分布单点概率为零，应改问“落在 3 到 4 毫米之间”的概率。</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:8px">
+<div style="font-size:16px;font-weight:600;color:#141413">问：密度在某点为 2，概率是 2 吗？</div>
+<p style="font-size:14px;line-height:1.65;color:#5C5B55">答：不是。2 是密度值，需乘以区间长度才成为概率。</p>
+</div>
+</div>
+<div style="background:#141413;border-radius:14px;padding:24px 26px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:13px;letter-spacing:.14em;color:#E3DACC;font-weight:600">接下来可以学</div>
+<p style="font-size:17px;line-height:1.7;color:#FAF9F5">把抛掷次数从 2 加到 100、1000 —— 直方图会越来越像正态曲线（二项分布逼近正态）。或者看一张常见分布速查：均匀、二项、泊松、正态各自适用的场景。</p>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2350}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

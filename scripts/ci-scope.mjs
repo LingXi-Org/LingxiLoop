@@ -11,6 +11,8 @@ const HISTORICAL_FILES = [
   'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts',
 ]
 const OWNERS = [
+  [/^server\/src\/(?:agent-runtime\/(?:context|skill-context)|modules\/artifacts\/(?:skills|agent-tools)|modules\/learning\/teacher-preset)\.ts$/, ['runtime-first-action-contracts.test.ts', 'runtime-design-failure.test.ts']],
+  [/^server\/src\/(?:im\/(?:retired-visualize|visualize-router|interaction-admission)|agent-runtime\/retired-capabilities)\.ts$|^shared\/(?:retired-visualize|assistant-directive-parser)\.ts$/, ['retired-visualize.test.ts']],
   [/^server\/src\/db\/(?:migrate\.ts|migrations\/0062_case_options\.sql)$|^server\/scripts\/bootstrap-runtime-patch-test-db\.mjs$/, ['case-options-migration.test.ts', 'cases.test.ts']],
   [/^server\/src\/(?:agent-runtime\/(?:model-observation-timing|runtime)\.ts|modules\/platform-operations\/model-stage-timing\.ts)$|^shared\/model-stage-timing\.ts$/, ['model-stage-ledger.test.ts', 'runtime-public-text-suspension.test.ts']],
   [/^server\/src\/modules\/platform-operations\/(?:agent-operations|agent-run-timing|model-stage-timing|company-router|router)\.ts$|^shared\/(?:agent-run-timing|model-stage-timing)\.ts$/, ['runtime-worker-diagnostics.test.ts']],
@@ -26,10 +28,9 @@ const OWNERS = [
   [/^server\/src\/modules\/(?:companies|enterprise)\//, ['companies-vertical-slice.test.ts', 'enterprise-governance.test.ts']],
   [/^server\/src\/(?:modules\/(?:knowledge|research|evidence)\/|knowledge)/, ['knowledge-vertical-slice.test.ts']],
   [/^server\/src\/modules\/memory\/|^server\/src\/agent-runtime\/memory-/, ['native-memory.test.ts']],
-  [/^server\/src\/modules\/artifacts\/|^third_party\/baoyu-design\/|^shared\/design-flow-size\.ts$|^scripts\/(?:build-slides-editor|slides-editor\.test|build-design-layout|design-flow-size\.test)\.mjs$/, ['artifact-app-boundary.test.ts', 'slides-workspace-flow.test.ts']],
+  [/^server\/src\/modules\/artifacts\/|^third_party\/baoyu-design\/|^shared\/design-flow-size\.ts$|^scripts\/(?:build-slides-editor|slides-editor\.test|build-design-editor|build-artifact-math|artifact-math\.test|design-editor\.test|build-design-layout|design-flow-size\.test)\.mjs$/, ['artifact-app-boundary.test.ts', 'slides-workspace-flow.test.ts']],
   [/^server\/src\/modules\/(?:documents|content-editor)\//, ['runtime-objects.test.ts']],
   [/^server\/src\/(?:llm-ledger|llm|llm-client)\.ts$|^server\/src\/agent-runtime\/pricing\.ts$/, ['model-pricing.test.ts', 'native-admission.test.ts']],
-  [/^server\/src\/agent-runtime\/(?:visualize-|system-skills|skill-context)|^src\/features\/chat\/visualize\/|^shared\/visualize-public-resources\.ts$|^third_party\/zcode\/|^scripts\/(?:verify-zcode-visualize|build-visualize-runtime)\.mjs$/, ['visualize-delivery.test.ts', 'visualize-quality-contract.test.ts']],
 ]
 function paths(value, label) {
   if (!Array.isArray(value) || value.some(path => typeof path !== 'string' || !path ||

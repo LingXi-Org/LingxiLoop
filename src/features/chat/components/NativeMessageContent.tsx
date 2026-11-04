@@ -1,4 +1,4 @@
-import { VisualizeText } from '../visualize/VisualizeText'
+import { AnswerText } from './AnswerText'
 import { MessagePrimitive, MessagePartPrimitive, useAui, useAuiState, type SourceMessagePartProps, type TextMessagePartComponent } from '@assistant-ui/react'
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react'
 import { z } from 'zod'
@@ -93,7 +93,7 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: {
   const requestVersion = useAuiState(state => (state.message.metadata.custom.harness as RunDisplayState | undefined)?.requestVersion)
   let content: ReactNode
   switch (part.type) {
-    case 'text': content = <ProtectedFileLinks><VisualizeText part={part} Text={Text} readOnly={readOnly} /></ProtectedFileLinks>; break
+    case 'text': content = <ProtectedFileLinks><AnswerText part={part} Text={Text} readOnly={readOnly} /></ProtectedFileLinks>; break
     case 'reasoning': content = <ProtectedFileLinks><Reasoning streaming={part.status.type === 'running'}><MarkdownText agent /></Reasoning></ProtectedFileLinks>; break
     case 'source': content = <SourcePart {...part} />; break
     case 'image': content = <AttachmentCard filename={part.filename ?? '图片'} data={part.image} mimeType="image/*" sourceType="url" variant={userMessage ? 'thumbnail' : 'card'} />; break

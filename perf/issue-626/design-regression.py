@@ -16,7 +16,7 @@ runtime = json.loads(Path('server/assets/design-editor/manifest.json').read_text
 def api(route, value=None, port=4300):
     request = urllib.request.Request(f'https://127.0.0.1:{port}/' + route, data=None if value is None else json.dumps(value).encode(), headers={'content-type': 'application/json'})
     return urllib.request.urlopen(request, context=ssl._create_unverified_context()).read()
-fragment = Path('scripts/fixtures/visualize-math-fragment.html').read_text(encoding='utf-8').replace('<h1>', '<h2>').replace('</h1>', '</h2>')
+fragment = Path('scripts/fixtures/artifact-math-fragment.html').read_text(encoding='utf-8').replace('<h1>', '<h2>').replace('</h1>', '</h2>')
 board = '<!doctype html><html><head><script src="./support.js"></script></head><body><x-dc><h1>Fixed math board</h1>' + fragment + '</x-dc></body></html>'
 canvas = {'v': 3, 'title': 'Formula integration', 'launch': {'view': 'canvas'}, 'boards': {'Main.dc.html': {'x': 0, 'y': 0, 'w': 760, 'h': 850}}, 'order': ['Main.dc.html'], 'pages': [], 'notes': {}, 'designSystems': {}}
 reports = []

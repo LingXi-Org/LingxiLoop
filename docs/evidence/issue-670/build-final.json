@@ -1,0 +1,7 @@
+{
+  "command": "npm run build:design-editor",
+  "passed": true,
+  "source": "third_party/baoyu-design/upstream/claude-design/scripts/editor",
+  "upstreamCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "boundary": "Independent Design build on integrated main8102eb43; generated output is not committed."
+}

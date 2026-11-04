@@ -19,14 +19,14 @@ import { artifactKind, type ArtifactKind } from './kinds.js'
 import { publishArtifactProgress } from './progress.js'
 import { artifactById, conversationDesignId, conversationSlidesId, lockReportWork, type ArtifactRow } from './repository.js'
 import { artifactReferencePages, readArtifactReference } from './skills.js'
-import { listing, putBlob, sha256, type WireEntry } from './store.js'
+import { isProjectPath, listing, putBlob, sha256, type WireEntry } from './store.js'
 import { slidesSummary } from './slides-observation.js'
 import { slideEditingContext } from './slides-workspace.js'
 
 type Control = Parameters<typeof createArtifactExecution>[0]
 const reportMethods = { submit_report: 'specialist', submit_verification: 'verifier' } as const
 /** Tools that read, or only change the files and comments any member may edit. */
-const READ_METHODS = new Set(['current', 'available_agents', 'read_file', 'check', 'read_reference', 'comments', 'design_systems'])
+const READ_METHODS = new Set(['plan_explanation', 'current', 'available_agents', 'read_file', 'check', 'read_reference', 'comments', 'design_systems'])
 const WORKSPACE_METHODS = new Set(['stop_workspace', 'stop_assignment', 'submit_report', 'submit_verification'])
 const DESIGN_FILE_JSON = ' Native arguments are JSON. Encode content as a JSON string: double quotes, backslashes and line breaks must be escaped so JSON decoding recovers the exact file text. Field-encoding example only: '
   + JSON.stringify({ content: '<div title="QK" data-demo="a\\b">\nQK\n</div>' })
@@ -172,6 +172,22 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
 
   const label = kind === 'design' ? 'Design canvas' : 'Slides deck'
   const tools: ToolDefinition[] = [
+    ...(kind === 'design' ? [nativeTool('design.plan_explanation', z.object({ delivery: z.enum(['canvas', 'text', 'other']) }).strict(), {
+      description: 'Choose the response surface from the meaning of the current human request before answering. Choose canvas by default for an introduction, connected concepts, mechanisms, processes, relationships, multi-dimensional comparisons, tradeoffs or another broad/complex explanation, even without canvas keywords. A prose answer or Markdown comparison table accompanies the saved canvas for these requests. Reserve text for greetings, a single direct fact or explicit text-only requests. Choose other when the person requested a different deliverable or an operation rather than an explanation. This records a semantic decision only: it neither creates content nor proves delivery.',
+      effect: 'read', approval: false, authorize,
+      async execute(context, input) {
+        await scope(context, {})
+        return { ok: true, value: { delivery: input.delivery } }
+      },
+    })] : []),
+    ...(kind === 'design' ? [nativeTool('design.ensure', agentArtifactSchemas.current, {
+      description: 'Initialize this conversation’s single editable Design canvas if design.current returned null; otherwise reuse its existing canvas without replacing files. Returns the actual artifact and project files with sha256. Requires current artifact write authorization.',
+      effect: 'transaction', approval: false, authorize,
+      async execute(context, input) {
+        const artifact = await required(context, input), native = application(context)
+        return result(context, native, await native.api.getArtifactSnapshot(context.work.tenantId, artifact.id), artifact)
+      }, verify,
+    })] : []),
     nativeTool(`${kind}.current`, agentArtifactSchemas.current, { description: `Read the ${label} of this conversation: title, project files with sha256, assignments and reports.${kind === 'slides' ? ' Lists every deck this conversation made in { deck, decks, editor }; top-level title and slideCount observe the saved deck.json title and order length. Missing/malformed index fields are omitted. These summary fields do not verify slide contents or rendering.' : ''}`, effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await scope(context, input), api = application(context).api
@@ -232,10 +248,11 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         const stored = await putBlob(db, definition, artifact.id, bytes, data.mime)
         return result(context, application(context), stored, artifact)
       } }),
-    nativeTool(`${kind}.check`, agentArtifactSchemas.check, { description: `Check the ${label}'s files with the format checker; fix what it names until problems is 0. This verifies format, not content quality, visual rendering or export.`, effect: 'read', approval: false, authorize,
+    nativeTool(`${kind}.check`, kind === 'design' ? agentArtifactSchemas.check.extend({paths:z.array(z.string().max(512).refine(path=>isProjectPath(path)&&/^project\/.+\.dc\.html$/.test(path))).max(32).optional()}) : agentArtifactSchemas.check,
+      { description: `Check the ${label}'s files with the format checker; fix what it names until problems is 0. This verifies format, not content quality, visual rendering or export.` + (kind === 'design' ? ' Pass the actual authored .dc.html paths to verify they still exist and are referenced in the checked canvas; checkedBoardPaths is authoritative for those files.' : ''), effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await required(context, input)
-        return { ok: true, value: await checkArtifact(context.database as Queryable, artifact, context.signal) }
+        return { ok: true, value: await checkArtifact(context.database as Queryable, artifact, context.signal,(input as {paths?:string[]}).paths) }
       } }),
     nativeTool(`${kind}.read_reference`, kind === 'design' ? agentArtifactSchemas.read_reference.extend({ page: z.enum(artifactReferencePages(kind) as [string, ...string[]]) }) : agentArtifactSchemas.read_reference, { description: kind === 'design' ? `Read a ${label} reference page. Start with format.md for the authoring format, after loading the registered skill. Valid pages from this deployment: ${artifactReferencePages(kind).join(', ')}. Use the skill's reference links for each page's purpose; never guess filenames.` : `Read a ${label} format reference page (artifact-type/reference/<page>).`, effect: 'read', approval: false, authorize,
       async execute(_context, input) {

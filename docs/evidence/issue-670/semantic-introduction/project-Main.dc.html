@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>概率分布：是什么、为何需要、离散与连续</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap">
+<style>
+body{margin:0;background:#FAF9F5;font-family:system-ui,-apple-system,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:#141413}
+a{color:#B4552F}a:hover{color:#8A3E20}
+.t{font-family:'Noto Serif SC',Georgia,'Songti SC',serif}
+.card{background:#FFFFFF;border:1px solid #E7E2D8;border-radius:12px;padding:24px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.card p{margin:0;font-size:17px;line-height:1.85;color:#3D3D3A}
+.lbl{font-size:13px;letter-spacing:0.06em;color:#73726C;background:#F5F4ED;border-radius:6px;padding:3px 8px;align-self:flex-start}
+.d{display:flex;align-items:flex-start;gap:10px;font-size:17px;line-height:1.8;color:#3D3D3A}
+.d span{flex:none;width:18px;height:18px;margin-top:7px;border-radius:50%;background:#D97757;box-sizing:border-box}
+.box{border:1px solid #E7E2D8;border-radius:8px;padding:12px 16px;font-size:16px;color:#3D3D3A;background:#FAF9F5}
+</style>
+</helmet>
+<div style="width:1160px;box-sizing:border-box;padding:56px 64px;display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="font-size:14px;letter-spacing:0.12em;color:#73726C">概率论 · 零基础入门</div>
+    <div class="t" style="font-size:46px;line-height:1.3;font-weight:600">{{title}}</div>
+    <div style="font-size:18px;line-height:1.7;color:#3D3D3A;max-width:960px">概率分布就是把「每个结果各有多大可能」整理成一张完整的清单。先看它到底是什么，再看它为什么值得学，然后弄清离散与连续的关系，最后用一个例子把三件事串起来。</div>
+  </div>
+
+  <div style="border-top:1px solid #E7E2D8"></div>
+
+  <div style="display:flex;align-items:baseline;gap:14px">
+    <div style="width:32px;height:32px;border-radius:50%;background:#141413;color:#FAF9F5;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none">1</div>
+    <div class="t" style="font-size:28px;font-weight:600">它是什么：分三步给自己定义</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:20px">
+    <sc-for list="{{steps}}" as="s">
+      <div class="card">
+        <div class="lbl">{{s.n}}</div>
+        <div style="font-size:19px;font-weight:600;line-height:1.5">{{s.t}}</div>
+        <p>{{s.d}}</p>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;background:#F5F4ED;border-left:4px solid #D97757;border-radius:8px;padding:18px 22px">
+    <div style="font-size:16px;line-height:1.85;color:#3D3D3A"><strong style="color:#141413">一句话版本：</strong>{{oneline}}</div>
+  </div>
+
+  <div style="border-top:1px solid #E7E2D8"></div>
+
+  <div style="display:flex;align-items:baseline;gap:14px">
+    <div style="width:32px;height:32px;border-radius:50%;background:#141413;color:#FAF9F5;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none">2</div>
+    <div class="t" style="font-size:28px;font-weight:600">为何需要：三个具体用途</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <sc-for list="{{whys}}" as="w">
+      <div style="display:flex;gap:18px;align-items:flex-start">
+        <div style="flex:none;width:120px;font-size:17px;font-weight:600;color:#B4552F;line-height:1.6">{{w.k}}</div>
+        <div style="font-size:17px;line-height:1.85;color:#3D3D3A">{{w.d}}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="border-top:1px solid #E7E2D8"></div>
+
+  <div style="display:flex;align-items:baseline;gap:14px">
+    <div style="width:32px;height:32px;border-radius:50%;background:#141413;color:#FAF9F5;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none">3</div>
+    <div class="t" style="font-size:28px;font-weight:600">离散与连续：同一件事，两种记法</div>
+  </div>
+
+  <div style="font-size:17px;line-height:1.85;color:#3D3D3A;max-width:1000px">{{same}}</div>
+
+  <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:20px">
+    <div class="card">
+      <div style="font-size:20px;font-weight:600">离散型</div>
+      <div style="font-size:17px;line-height:1.85;color:#3D3D3A">{{discrete}}</div>
+      <div class="box">
+        <div style="font-size:15px;line-height:1.7;color:#141413">
+          <div>和：$\sum_i p(x_i)=1$</div>
+          <div style="margin-top:6px">概率：$P(X=x_i)=p(x_i)$</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:20px;font-weight:600">连续型</div>
+      <div style="font-size:17px;line-height:1.85;color:#3D3D3A">{{continuous}}</div>
+      <div class="box">
+        <div style="font-size:15px;line-height:1.7;color:#141413">
+          <div>和：$\int_{-\infty}^{+\infty} f(x)\,dx=1$</div>
+          <div style="margin-top:6px">概率：$P(a&lt;X\le b)=\int_a^b f(x)\,dx$</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;background:#FFFFFF;border:1px solid #E7E2D8;border-radius:8px;padding:18px 22px">
+    <div style="font-size:17px;line-height:1.85;color:#3D3D3A"><strong>怎么转换：</strong>{{convert}}</div>
+  </div>
+
+  <div style="border-top:1px solid #E7E2D8"></div>
+
+  <div style="display:flex;align-items:baseline;gap:14px">
+    <div style="width:32px;height:32px;border-radius:50%;background:#141413;color:#FAF9F5;font-size:15px;display:flex;align-items:center;justify-content:center;flex:none">4</div>
+    <div class="t" style="font-size:28px;font-weight:600">最容易混的两处</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <sc-for list="{{traps}}" as="t2">
+      <div style="display:flex;gap:14px;background:#FFFFFF;border:1px solid #E7E2D8;border-radius:10px;padding:18px 22px">
+        <div style="flex:none;width:9px;height:9px;border-radius:50%;background:#D97757;margin-top:10px"></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:17px;font-weight:600;line-height:1.6">{{t2.bad}}</div>
+          <div style="font-size:16px;line-height:1.8;color:#3D3D3A">{{t2.good}}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;background:#141413;border-radius:10px;padding:22px 26px">
+    <div style="font-size:17px;line-height:1.8;color:#FAF9F5">下一步：右侧<strong>「同一份信息，两种写法」</strong>把两列公式并排放在一起对照，再往右<strong>「一个例子走到底」</strong>用掷硬币把定义、期望和「重复很多次之后的形态」一次联系起来。</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"概率分布：是什么、为何需要、离散与连续"},"$preview":{"width":1160,"height":2580}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+  title: this.props.title ?? '概率分布：是什么、为何需要、离散与连续',
+  steps: [
+    { n: '第一步', t: '确定有哪些结果', d: '先写清楚这个随机试验可能出现的所有结果。比如掷一颗骰子，结果是 1、2、3、4、5、6，且两两互不重叠。' },
+    { n: '第二步', t: '给每个结果配一个概率', d: '每个结果的可能性有多大：$p(1)=p(2)=\\cdots=p(6)=1/6$。所有概率加起来必须正好等于 1，这是分布成立的前提。' },
+    { n: '第三步', t: '合起来就是分布', d: '把「结果 → 概率」这个对应关系统一写好，就得到这颗骰子的概率分布。它不是某一个概率，而是整张清单。' }
+  ],
+  oneline: '概率告诉你「某个结果多可能」；概率分布告诉你「所有结果各有多可能」——它是整张清单，不是单个格子。',
+  whys: [
+    { k: '算平均', d: '想知道长期平均会得到多少，就按概率加权求和，这就是期望 $E(X)=\\sum_i x_i\\,p(x_i)$。不用真的做实验，就能预先算出来。' },
+    { k: '算范围', d: '想知道「落在某个范围内的可能性」，就把范围内的概率加起来。例如评估风险时问「损失超过 100 万的概率是多少」。' },
+    { k: '做推断', d: '手头只有有限的几次观测，却想知道背后规律的形状和参数，就用一个分布去描述它，再从数据里估计。统计推断几乎都从这里开始。' }
+  ],
+  same: '离散与连续其实是同一件事：都是「给可能的取值指定一种可能性大小」。区别只在于取值是「一个一个点」还是「一整段区间」，所以一个用求和、一个用积分。求和就是离散版的积分，积分就是连续版的求和：$\\sum \\rightarrow \\int$，$p(x_i) \\rightarrow f(x)\\,dx$。',
+  discrete: '取值可以逐个列出来：掷骰子的点数、一天内接到几个电话、三枚硬币中正面出现的次数。概率是「跳到某个点上的那一段高度」。',
+  continuous: '取值铺满一段区间，单个点列不完：身高、等待时间、误差。这里用概率密度 $f(x)$，单个点的密度可以大于 1，它也不是概率；只有一段区间下的面积才是概率。',
+  convert: '把连续的量取整、分组，就得到离散分布：身高按厘米分组、时间按小时分组，落到某一组上的概率，正是那段区间上的面积。反过来，当分组的格子越切越细，离散的直方图就逐渐贴近连续的密度曲线。',
+  traps: [
+    { bad: '把密度值当成概率', good: '连续型里 $f(x)$ 不是概率。概率是区间下的面积 $\\int_a^b f(x)\\,dx$，所以单点概率是 $P(X=a)=0$，问「身高恰好 170.000… 厘米」是没有意义的，问「在 169–171 之间」才有。' },
+    { bad: '认为离散和连续毫无关系', good: '它们只是记法不同。连续取整就能变成离散，离散细分就能逼近连续；同一个「平均」两端都能算：离散是 $\\sum_i x_i p(x_i)$，连续是 $\\int x f(x)\\,dx$。' }
+  ],
+  $preview: { width: 1160, height: 2580 }
+};
+}
+}
+</script>
+</body>
+</html>

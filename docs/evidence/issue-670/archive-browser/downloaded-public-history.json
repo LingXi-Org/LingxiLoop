@@ -1,0 +1,17 @@
+{
+  "format": "lingxiloop.visualize-archive",
+  "schemaVersion": 1,
+  "retired": true,
+  "document": {
+    "path": "/work/public-lesson.html",
+    "html": "<h1>Public historic source</h1><script>window.retiredGuestRan=true</script>",
+    "version": 1
+  },
+  "userState": {
+    "state": {
+      "modelContent": {
+        "learnerChoice": "public-example"
+      }
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "qualification": "real-provider-native-product",
+  "sampleId": "comparison",
+  "coldCanvas": true,
+  "correctRouting": false,
+  "measurementComplete": true,
+  "runtime": "3.8.24",
+  "binding": "native-v3",
+  "maxOutputTokens": 16384,
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "runId": "im:18a87b0dd885702256b5bb93e00cc5dbab74153342eb837ee39e6c6eacdd54fd",
+  "accepted": false,
+  "elapsedMs": 183407,
+  "decisions": [
+    {
+      "call": 1,
+      "names": [
+        "design__plan_explanation",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": "design__plan_explanation"
+    },
+    {
+      "call": 2,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": "skills__load"
+    }
+  ],
+  "wire": [
+    {
+      "call": 1,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__plan_explanation",
+          "fields": [
+            "delivery"
+          ],
+          "argumentBytes": 21,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 2,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "skills__load",
+          "fields": [],
+          "argumentBytes": 80636,
+          "argumentType": null,
+          "jsonError": "object_separator",
+          "jsonErrorPosition": 80636,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": false,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [],
+      "closed": "failed"
+    }
+  ],
+  "actions": [
+    {
+      "action": "design.plan_explanation",
+      "ok": true,
+      "code": null
+    }
+  ],
+  "contractFailures": [],
+  "protocolFailures": 0,
+  "providerFailures": 1,
+  "budgetFailures": [],
+  "modelAttempts": [
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": "timeout"
+    }
+  ],
+  "failedModelAttempts": [
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": "timeout"
+    }
+  ],
+  "wireContractFailures": [
+    {
+      "call": 2,
+      "name": "skills__load",
+      "truncated": false,
+      "jsonValid": false,
+      "issues": []
+    }
+  ],
+  "protocolCodes": [],
+  "files": [],
+  "checkProblems": -1,
+  "status": "failed",
+  "verification": "inconclusive",
+  "delivery": null,
+  "deliveryTarget": "isolated-test-recording-im",
+  "browserValidated": false
+}

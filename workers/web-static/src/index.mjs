@@ -3,7 +3,8 @@
 import { isolatedEditor } from '../../../shared/artifact-editor-origin.ts'
 const dynamic = /^\/(?:api|uploads|runtime|ws|files|visualize|artifact-editor|_blob|webhooks|readyz|healthz)(?:\/|$)/i
 const internal = /^\/(?:internal)(?:\/|$)/i
-const visualizeAsset = /^\/assets\/visualize-[a-f0-9]{64}\.(js|css|txt)$/
+// Old entrypoints and retained executable hashes stay retired across rollouts.
+const retiredVisualize = /^\/(?:visualize(?:\/|$)|runtime\/visualize(?:\/|$)|assets\/visualize-[a-f0-9]{64}\.(?:js|css|txt)$)/i
 const immutable = /^\/assets\/[\w./-]+-[\w-]{8,}\.[\w.]+$/
 export { immutable }
 export function route(path) {
@@ -24,6 +25,7 @@ export async function handleRequest(request, env, fetcher = fetch) {
   let path
   try { path = decodeURIComponent(url.pathname) } catch { return new Response('Invalid path', { status: 400 }) }
   if (/[\\\x00-\x1f]/.test(path)) return new Response('Invalid path', { status: 400 })
+  if (retiredVisualize.test(path)) return new Response('This visualization runtime has retired. Open the conversation to recover its source.', { status: 410, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } })
   const target = route(path)
   if (target === 'deny') return new Response('Not found', { status: 404 })
   if (target !== 'asset') {
@@ -51,14 +53,12 @@ export async function handleRequest(request, env, fetcher = fetch) {
     if (object) {
       const headers = new Headers({ 'cache-control': 'public, max-age=31536000, immutable', etag: object.httpEtag })
       object.writeHttpMetadata(headers)
-      if (visualizeAsset.test(url.pathname)) { headers.set('access-control-allow-origin', '*'); headers.set('x-content-type-options', 'nosniff') }
       return new Response(request.method === 'HEAD' ? null : object.body, { headers })
     }
     return response
   }
   if (response.status !== 404) {
     const headers = new Headers(response.headers)
-    if (visualizeAsset.test(url.pathname)) { headers.set('access-control-allow-origin', '*'); headers.set('x-content-type-options', 'nosniff') }
     if (immutable.test(url.pathname)) headers.set('cache-control', 'public, max-age=31536000, immutable')
     else if (headers.get('content-type')?.includes('text/html')) headers.set('cache-control', 'no-store')
     return new Response(response.body, { status: response.status, headers })

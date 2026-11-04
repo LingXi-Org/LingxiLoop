@@ -71,7 +71,7 @@ with sync_playwright() as pw:
 
     # The same actual outer entry now checks #615's formulas, instead of its old
     # opaque same-origin mock host. All authored fixtures remain synthetic.
-    fragment=Path('scripts/fixtures/visualize-math-fragment.html').read_text().replace('<h1>','<h2>').replace('</h1>','</h2>')
+    fragment=Path('scripts/fixtures/artifact-math-fragment.html').read_text().replace('<h1>','<h2>').replace('</h1>','</h2>')
     board='<!doctype html><html><head><script src="./support.js"></script></head><body><x-dc><h1>Fixed math board</h1>'+fragment+'</x-dc></body></html>'
     api('__fixture/reset',{});api('__fixture/content',{'board':board,'canvas':{'v':3,'title':'Formula integration','launch':{'view':'canvas'},'boards':{'Main.dc.html':{'x':0,'y':0,'w':760,'h':850}},'order':['Main.dc.html'],'pages':[],'notes':{},'designSystems':[]}})
     context=browser.new_context(viewport={'width':1440,'height':1000});page=context.new_page();page.set_default_timeout(15000)

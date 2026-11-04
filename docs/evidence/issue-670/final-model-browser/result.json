@@ -1,0 +1,54 @@
+{
+  "browser": "Chromium via CDP",
+  "scope": "real AnswerText/DesignWorkspace/editor; unmodified initial saved real-model public files; local fixture grant/CAS only",
+  "snapshot": "/workspace/LingxiLoop/docs/evidence/issue-670/one-shot-introduction",
+  "inputFileHashes": {
+    "project/canvas.json": "b0d1bf2bb00499ff1f92d2f836d83f51a4fdf8a3f90a4d0c689e3c7d22efc493",
+    "project/ds/baoyu-ember/tokens.json": "68f5e58c19853bef9b4b84ae15dd3feee06ca7676ad0563690b7b6a949697146",
+    "project/ds/baoyu-seazar/tokens.json": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6",
+    "project/ds/slides-builtin/tokens.json": "612cda1e3e87333eb3c71e545f9d1d1cd175f9542fda38c3caef3159212b56f2",
+    "project/Main.dc.html": "7f3586db5a8f64f7b46c27bf26bec608e8624f96e56ee06a5486db5d6ff2e417"
+  },
+  "dialogs": [
+    {
+      "type": "beforeunload",
+      "acceptedAfterConfirmedSave": true
+    }
+  ],
+  "unverified": [
+    "production tenant authorization",
+    "model invocation during browser replay",
+    "browser export"
+  ],
+  "reports": [
+    {
+      "scenario": "conversation-finds-model-delivery",
+      "names": [
+        "概率分布：从直方图到密度曲线"
+      ],
+      "replyMentionsDesign": true,
+      "heading": "概率分布：一张记录“可能性”的账本",
+      "formulas": 12,
+      "display": 3,
+      "body": "零基础 · 概念讲解\n概率分布：\n一张记录“可能性”的账本\n\n它是什么、为什么需要它，以及离散分布与连续分布是怎样连在一起的 —— 用一枚硬币讲清楚。\n\n01\n它是什么\n步骤一\n\n列出所有可能的结局\n\n抛两枚硬币，正面朝上的次数只能是 0、1、2。\n\n步骤二\n\n给每个结局标上可能性\n\n0 次 1/4，1 次 1/2，2 次 1/4。\n\n步骤三\n\n总量必须是 1\n\n所有可能性加起来 = 1，因为某件事一定会发生。\n\n一句话：概率分布 = “取值 → 可能性”的完整对应表。把这张表画成柱子，就是直方",
+      "unsafeLinks": 0
+    },
+    {
+      "scenario": "native-heading-edit-saved-with-cas",
+      "writes": 1,
+      "heading": "Saved public distribution explanation",
+      "formulas": 12,
+      "display": 3,
+      "body": "零基础 · 概念讲解\nSaved public distribution explanation\n\n它是什么、为什么需要它，以及离散分布与连续分布是怎样连在一起的 —— 用一枚硬币讲清楚。\n\n01\n它是什么\n步骤一\n\n列出所有可能的结局\n\n抛两枚硬币，正面朝上的次数只能是 0、1、2。\n\n步骤二\n\n给每个结局标上可能性\n\n0 次 1/4，1 次 1/2，2 次 1/4。\n\n步骤三\n\n总量必须是 1\n\n所有可能性加起来 = 1，因为某件事一定会发生。\n\n一句话：概率分布 = “取值 → 可能性”的",
+      "unsafeLinks": 0
+    },
+    {
+      "scenario": "saved-reopened-and-found-from-conversation",
+      "heading": "Saved public distribution explanation",
+      "formulas": 12,
+      "display": 3,
+      "body": "零基础 · 概念讲解\nSaved public distribution explanation\n\n它是什么、为什么需要它，以及离散分布与连续分布是怎样连在一起的 —— 用一枚硬币讲清楚。\n\n01\n它是什么\n步骤一\n\n列出所有可能的结局\n\n抛两枚硬币，正面朝上的次数只能是 0、1、2。\n\n步骤二\n\n给每个结局标上可能性\n\n0 次 1/4，1 次 1/2，2 次 1/4。\n\n步骤三\n\n总量必须是 1\n\n所有可能性加起来 = 1，因为某件事一定会发生。\n\n一句话：概率分布 = “取值 → 可能性”的",
+      "unsafeLinks": 0
+    }
+  ]
+}

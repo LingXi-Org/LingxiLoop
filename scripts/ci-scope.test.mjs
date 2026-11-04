@@ -7,6 +7,21 @@ test('pure CSS changes check and build only the web', () => {
   const scope = computeScope(classifyPaths(['src/styles.css']))
   assert.equal(scope.web_build, true); assert.equal(scope.server, false); assert.equal(scope.integration, false)
 })
+test('retired capability compatibility keeps its archive and authorization integration owner', () => {
+  for (const path of ['server/src/im/retired-visualize.ts', 'server/src/im/visualize-router.ts', 'server/src/im/interaction-admission.ts',
+    'server/src/agent-runtime/retired-capabilities.ts', 'shared/retired-visualize.ts', 'shared/assistant-directive-parser.ts']) {
+    const scope = computeScope({ serverSource: true, serverSourceFiles: [path] })
+    assert.ok(scope.integration_files.includes('retired-visualize.test.ts'), path)
+  }
+})
+test('explanation routing and publication keep actual native generation and failed-write owners', () => {
+  for (const path of ['server/src/agent-runtime/context.ts','server/src/agent-runtime/skill-context.ts','server/src/modules/artifacts/agent-tools.ts',
+    'server/src/modules/artifacts/skills.ts','server/src/modules/learning/teacher-preset.ts']) {
+    const scope = computeScope(classifyPaths([path]))
+    assert.ok(scope.integration_files.includes('runtime-first-action-contracts.test.ts'),path)
+    assert.ok(scope.integration_files.includes('runtime-design-failure.test.ts'),path)
+  }
+})
 test('Design sizing sources retain their editor build and artifact integration owners', () => {
   for (const path of ['shared/design-flow-size.ts', 'scripts/build-design-layout.mjs', 'scripts/design-flow-size.test.mjs']) {
     const scope = computeScope(classifyPaths([path]))

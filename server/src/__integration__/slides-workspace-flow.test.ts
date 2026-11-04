@@ -215,6 +215,7 @@ for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14â
   const writes = chained ? updates.map(files=>({name:'slides__write_files',args:{artifactId:deck.id,files}}))
     : [{name:'slides__write_files',args:{artifactId:deck.id,files:{[path]:{content:revised,ifMatch:hash}}}}]
   const calls = [
+    { name: 'design__plan_explanation', args: { delivery: 'other' } },
     { name: 'skills__load', args: { name, version, hash: skillHash } },
     { name: 'slides__read_file', args: { artifactId: deck.id, path } },
     ...(chained ? [{name:'slides__read_file',args:{artifactId:deck.id,path:'project/deck.json'}}] : []),
@@ -232,11 +233,12 @@ for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14â
       let raw = ''; for await (const chunk of req) raw += chunk
       const input = JSON.parse(raw), step = calls[issued++]
       assert.ok(step, 'worker must stop after the verified public answer')
+      if (issued === 1) assert.equal(input.tool_choice?.function?.name, 'design__plan_explanation', 'the explicit Slides operation chooses another deliverable through the semantic decision')
       assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === step.name), `missing tool ${step.name}`)
       const prompt = JSON.stringify(input.messages)
       assert.ok(prompt.includes('Original title'), 'persisted editor selection/source must reach the actual model request')
-      if (issued === 3) assert.ok(prompt.includes(hash), 'the model must receive the preceding read receipt')
-      if (issued === 5) assert.ok(prompt.includes('Saved by the native Slides tool'), 'read-back must reach the model before completion')
+      if (issued === 4) assert.ok(prompt.includes(hash), 'the model must receive the preceding read receipt')
+      if (issued === 6) assert.ok(prompt.includes('Saved by the native Slides tool'), 'read-back must reach the model before completion')
       const call = { id: `slides-model-${issued}`, type: 'function', function: { name: step.name, arguments: JSON.stringify(step.args) } }
       const usage = { prompt_tokens: 10, completion_tokens: 12 }
       res.writeHead(200, { 'content-type': input.stream ? 'text/event-stream' : 'application/json' })

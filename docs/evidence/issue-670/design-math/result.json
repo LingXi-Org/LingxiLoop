@@ -1,0 +1,74 @@
+{
+  "browser": "Chromium via CDP",
+  "scope": "real compiled Design editor; public formula fixtures; local fixture CAS only",
+  "unverified": [
+    "product tenant authorization",
+    "live model selection",
+    "browser export"
+  ],
+  "reports": [
+    {
+      "scenario": "initial",
+      "formulas": 8,
+      "display": 3,
+      "matrix": 1,
+      "aligned": 1,
+      "attention": 1,
+      "rnn": "h_t = f(h_{t-1}, x_t)",
+      "ordinary": "Budget $5 and $10; ordinary text stays readable.",
+      "code": "`$h_t=f(x_t)$` stays literal.",
+      "invalid": "$\\unknowncommand{x}$",
+      "unsafeLinks": 0,
+      "fonts": 5
+    },
+    {
+      "scenario": "native-heading-edit-saved-with-cas",
+      "writes": 1,
+      "formulas": 8,
+      "display": 3,
+      "matrix": 1,
+      "aligned": 1,
+      "attention": 1,
+      "rnn": "h_t = f(h_{t-1}, x_t)",
+      "ordinary": "Budget $5 and $10; ordinary text stays readable.",
+      "code": "`$h_t=f(x_t)$` stays literal.",
+      "invalid": "$\\unknowncommand{x}$",
+      "unsafeLinks": 0,
+      "fonts": 5
+    },
+    {
+      "scenario": "narrow-formulas-keyboard-focusable",
+      "formulas": [
+        {
+          "width": 200,
+          "content": 354,
+          "tab": 0
+        },
+        {
+          "width": 200,
+          "content": 200,
+          "tab": 0
+        },
+        {
+          "width": 200,
+          "content": 200,
+          "tab": 0
+        }
+      ]
+    },
+    {
+      "scenario": "saved-reopened",
+      "formulas": 8,
+      "display": 3,
+      "matrix": 1,
+      "aligned": 1,
+      "attention": 1,
+      "rnn": "h_t = f(h_{t-1}, x_t)",
+      "ordinary": "Budget $5 and $10; ordinary text stays readable.",
+      "code": "`$h_t=f(x_t)$` stays literal.",
+      "invalid": "$\\unknowncommand{x}$",
+      "unsafeLinks": 0,
+      "fonts": 5
+    }
+  ]
+}

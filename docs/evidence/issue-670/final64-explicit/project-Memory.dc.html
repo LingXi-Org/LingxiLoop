@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>FlashAttention · 显存读写与反向传播</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:#F5F4ED;color:#141413}
+a{color:#8A5B3A}a:hover{color:#5C3A22}
+.kicker{font-size:13px;letter-spacing:.12em;font-weight:600;color:#8A5B3A;margin:0}
+h1{font-family:Georgia,'Songti SC',serif;font-weight:400;font-size:38px;line-height:1.2;margin:10px 0 0}
+h2{font-family:Georgia,'Songti SC',serif;font-weight:400;font-size:23px;line-height:1.25;margin:0}
+p{margin:0}
+.muted{color:#5C5B55}
+.card{background:#FAF9F5;border:1px solid #E3DACC;border-radius:14px;padding:22px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:#FFFFFF;color:#3D3D3A;border:1px solid #E3DACC}
+.formula{font-family:Georgia,serif;font-size:17px;line-height:1.5}
+.bar{height:26px;border-radius:6px;display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:600;color:#FFFFFF}
+</style>
+</helmet>
+<div style="width:1180px;min-height:1000px;box-sizing:border-box;padding:56px 64px 64px;display:flex;flex-direction:column;gap:28px">
+
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <p class="kicker">第二块板 · 收益从哪来</p>
+    <h1>省下的不是乘法，是显存搬运</h1>
+    <p class="muted" style="font-size:17px;line-height:1.6;margin-top:10px;max-width:920px">朴素注意力的实际耗时往往不在算术上，而在把中间矩阵写进显存、再读回来。FlashAttention 的贡献是改变访问顺序与中间数据的生命周期：分块内完成一个输出块的全部计算，只把小块输入搬进来、把最终结果写出去一次。</p>
+  </header>
+
+  <section class="card" style="display:flex;flex-direction:column;gap:16px">
+    <h2>IO 复杂度对比（$N$ 为序列长度，$d$ 为头维度）</h2>
+    <div style="display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:16px">
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px;background:#FFFFFF;border-radius:10px;border:1px solid #E3DACC">
+        <p class="pill">标准注意力</p>
+        <p class="formula" style="font-size:19px">$\\Theta(N^2 d)$</p>
+        <p class="muted" style="font-size:13px;line-height:1.6">整张 $N\\times N$ 分数与概率矩阵都要落在显存里，显存占用 $O(N^2)$。</p>
+        <div class="bar" style="background:#D97757;width:100%">高</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px;background:#FFFFFF;border-radius:10px;border:1px solid #E3DACC">
+        <p class="pill">FlashAttention</p>
+        <p class="formula" style="font-size:19px">$\\Theta(N^2 d^2 / M)$</p>
+        <p class="muted" style="font-size:13px;line-height:1.6">$M$ 是片上内存容量；中间矩阵不落地，显存占用降到 $O(N)$。</p>
+        <div class="bar" style="background:#4A6B8A;width:52%">低</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px;background:#FFFFFF;border-radius:10px;border:1px solid #E3DACC">
+        <p class="pill">理想下限</p>
+        <p class="formula" style="font-size:19px">$\\Theta(Nd)$</p>
+        <p class="muted" style="font-size:13px;line-height:1.6">只读输入、写输出所需的最少搬运量。$d^2/M$ 越小，越接近下限。</p>
+        <div class="bar" style="background:#C9BBA8;width:14%">下限</div>
+      </div>
+    </div>
+    <p class="muted" style="font-size:13px;line-height:1.6">条长为示意，非实测比例。</p>
+  </section>
+
+  <section style="display:flex;gap:20px;flex-wrap:wrap">
+    <div class="card" style="flex:1 1 480px;display:flex;flex-direction:column;gap:10px">
+      <h2>三个实际影响</h2>
+      <p class="muted" style="font-size:14px;line-height:1.65">• 长序列可训练：随 $N$ 线性增长的显存让更长的上下文变得可行。<br>• 速度提升随块大小与硬件变化，不是固定倍数；大模型长序列上通常更明显。<br>• 结果精确，但浮点求和顺序改变，与朴素实现不会逐位一致。</p>
+    </div>
+    <div class="card" style="flex:1 1 380px;display:flex;flex-direction:column;gap:10px">
+      <h2>反向传播：用重计算换显存</h2>
+      <p class="muted" style="font-size:14px;line-height:1.65">训练时若要存下完整的概率矩阵 $P$，显存又回到 $O(N^2)$。FlashAttention 在反向时用保存的 $(m,\\ell,o)$<strong style="font-weight:600">重新分块算一遍</strong>，按需得到 $P$ 的块，再加权求梯度：多付一点算术，换回大块显存。</p>
+      <p class="formula">$\\text{前向存：}Q,K,V,m,\\ell,o\\quad\\text{而非 }P$</p>
+    </div>
+  </section>
+
+  <section class="card" style="display:flex;flex-direction:column;gap:8px">
+    <h2>什么情况下收益变小</h2>
+    <p class="muted" style="font-size:14px;line-height:1.65">序列很短、块装不满片上内存，或硬件带宽已经很充裕时，分块的开销可能吃掉一部分收益；它与注意力本身的 $O(N^2)$ 算术无关——FlashAttention 并不降低计算量，只降低显存搬运与占用。</p>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1180,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

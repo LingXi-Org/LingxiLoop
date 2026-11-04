@@ -31,9 +31,7 @@
     "zod": "^4.4.3",
     "@assistant-ui/react": "0.15.31",
     "@tiptap/y-tiptap": "3.0.3",
-    "@modelcontextprotocol/ext-apps": "2.0.0",
     "esbuild": "0.21.5",
-    "html-to-image": "1.11.13",
     "katex": "0.16.47"
   },
   "devDependencies": {

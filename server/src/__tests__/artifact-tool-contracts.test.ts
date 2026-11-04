@@ -8,9 +8,19 @@ const report = { finding: 'Observed finding', evidenceRefs: [{ kind: 'file', id:
 
 test('Slides retains common native tools and adds deck creation and real design-system tools', () => {
   const methods = (tools: typeof design) => tools.map(tool => tool.action.split('.')[1])
-  assert.deepEqual(methods(slides).filter(method => !['create', 'design_systems', 'install_design_system'].includes(method)), methods(design))
+  assert.deepEqual(methods(slides).filter(method => !['create', 'design_systems', 'install_design_system'].includes(method)), methods(design).filter(method => !['ensure','plan_explanation'].includes(method)))
   assert.ok(methods(slides).includes('create'))
   for (const tool of [...design, ...slides]) assert.equal((tool.parameters as { additionalProperties: boolean }).additionalProperties, false)
+})
+
+test('cold Design initialization is an explicit authorized transaction with a strict schema', () => {
+  const initialize = design.find(tool => tool.action === 'design.ensure')!
+  assert.equal(initialize.effect, 'transaction')
+  assert.deepEqual(initialize.parse({}), {})
+  assert.throws(() => initialize.parse({ companyId: 'other', conversationId: 'other' }))
+  assert.ok(initialize.authorize)
+  assert.ok(initialize.verify)
+  assert.equal(slides.some(tool => tool.action === 'slides.ensure'), false)
 })
 
 test('design-system installation rejects traversal, missing preconditions and unbounded batches', () => {

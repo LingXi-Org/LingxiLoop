@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
@@ -26,9 +26,8 @@ export async function buildArtifactMath() {
   assert.ok(!css.includes('url(fonts/'),'all KaTeX font sources must be self-contained')
   const result = await build({absWorkingDir:root,stdin:{contents:`import {installArtifactMath} from './shared/artifact-math';installArtifactMath(${JSON.stringify(css)});`,resolveDir:root},bundle:true,format:'iife',platform:'browser',target:['chrome120','firefox120','safari17'],minify:true,legalComments:'inline',write:false})
   const math = result.outputFiles[0].text
-  const output = resolve(root,'server/assets/visualize-runtime')
-  await mkdir(output,{recursive:true})
-  await writeFile(resolve(output,'math.js'),math)
+  // The owning editor packages these bytes in its own hashed assets.
+  // Building shared math must not recreate the retired visualization runtime.
   return { math, mathBytes: Buffer.byteLength(math) }
 }
 if(process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) console.log({mathBytes:(await buildArtifactMath()).mathBytes})

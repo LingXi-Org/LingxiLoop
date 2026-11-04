@@ -109,14 +109,17 @@ export async function startWebProcess(): Promise<ServiceHandle> {
   const INDEX_HTML = join(DIST_DIR, 'index.html')
   const hasDist = env.NODE_ENV === 'production' && existsSync(INDEX_HTML)
   if (hasDist) {
+    // Old cached messages must never execute a retired guest or runtime bundle.
+    app.use((req, res, next) => {
+      if (/^\/(?:visualize|runtime\/visualize)(?:\/|$)/.test(req.path) || /^\/assets\/visualize-/.test(req.path)) {
+        res.status(410).type('text/plain').send('Visualize has been retired. Open the conversation to export an inert archive.'); return
+      }
+      next()
+    })
     app.use(express.static(DIST_DIR, {
       index: false,
       maxAge: '1h',
       setHeaders: (res, filePath) => {
-        if (/[/\\]assets[/\\]visualize-[a-f0-9]{64}\.(js|css|txt)$/.test(filePath)) {
-          res.setHeader('Access-Control-Allow-Origin', '*')
-          res.setHeader('X-Content-Type-Options', 'nosniff')
-        }
         if (filePath.endsWith('index.html')) {
           res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
         } else if (dirname(filePath) === join(DIST_DIR, 'assets') && /-[\w-]{8,}\.[^.]+$/.test(filePath)) {

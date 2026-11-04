@@ -5,7 +5,6 @@ import { publicAnswerSegments, responseSegments, type PublicTextPart, type RunEv
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
-import { assertVisualizeCitationSpans, projectVisualizeText } from './visualize-projection.js'
 import { publicActivitySchema, answerRevisionLabels, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
 export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; partIndex?: number; display?: ToolDisplay;
@@ -163,9 +162,8 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
       : publicTextId(part)
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
-    // Public text is an unverified archive, including candidates superseded by
-    // repair. Only the delivered answer may activate a renderer reference.
-    for (const text of projectVisualizeText(part.text, true)) {
+    // Keep exact public bytes during replay; historical references are inert.
+    for (const text of part.text ? [{ type: 'text' as const, text: part.text }] : []) {
       put(id,part.firstSeq,annotated({ ...text,status },{ id,kind: kind === 'revision' ? 'commentary' : kind,
         label: kind === 'answer' ? '答复' : kind !== 'revision' ? '公开说明' : currentPurpose === 'answer' ? answerRevisionLabels.current : part.acceptedResultId ? answerRevisionLabels.accepted
           : part.reason === 'failed' ? answerRevisionLabels.failed : part.reason === 'cancelled' ? answerRevisionLabels.cancelled : answerRevisionLabels.superseded,
@@ -217,7 +215,7 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
           ? { type: 'incomplete' as const,reason: 'other' as const }
         : view.lifecycle === 'cancelled' || view.lifecycle === 'failed' ? { type: 'incomplete' as const, reason: view.lifecycle === 'cancelled' ? 'cancelled' as const : 'error' as const }
         : view.lifecycle === 'succeeded' ? { type: 'incomplete' as const, reason: 'other' as const } : { type: 'running' as const }
-      const text = projectVisualizeText(entry.text, true).flatMap(part => part.type === 'text' ? [part.text] : []).join('')
+      const text = entry.text
       if (!text) continue
       put(id,seq, annotated({ type: entry.kind === 'reasoning' ? 'reasoning' : 'text', text, status,
         ...(entry.kind === 'reasoning' ? { unstable_summary: entry.label } : {}) }, { id, kind: 'commentary', label: entry.label, purpose: 'process', ...(taskId ? { taskId } : {}) }),eventSeq,activityIdentity?.requestVersion)
@@ -288,10 +286,9 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
     // the explicit committed source ID; no text comparison is involved.
     const publicCandidate = (view.publicTextParts ?? []).some(part => part.requestVersion === view.requestVersion
       && part.fence === view.fence && part.reason === 'completed' && part.purpose !== 'commentary' && !part.acceptedResultId)
-    return publicCandidate ? cards : [...answerParts(view, projectVisualizeText(view.draft, true)), ...cards]
+    return publicCandidate ? cards : [...answerParts(view, view.draft ? [{ type: 'text', text: view.draft }] : []), ...cards]
   }
   if (!view.message || view.message.envelope.requestVersion !== view.requestVersion || view.messageFence !== view.fence) return [...answer,...cards]
-  assertVisualizeCitationSpans(view.message.envelope.body, view.message.envelope.citations)
   const segments = responseSegments(view.message.envelope)
   const evidence = view.message.envelope.citationEvidence
   const parts: ThreadAssistantMessagePart[] = []
@@ -333,7 +330,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
         chunkIds: [...new Set([...(Array.isArray(previousChunks) ? previousChunks.filter((chunk): chunk is string => typeof chunk === 'string') : []),...source.chunkIds])] } } })
   }
   if (hasSegments) return [...answer,...answerParts(view,parts.filter(part=>part.type!=='text')),...cards,...sources.values()]
-  return [...answerParts(view, parts.flatMap(part => part.type === 'text' ? projectVisualizeText(part.text, view.delivery !== 'delivered') : [part])), ...cards, ...sources.values()]
+  return [...answerParts(view, parts), ...cards, ...sources.values()]
 
 }
 
