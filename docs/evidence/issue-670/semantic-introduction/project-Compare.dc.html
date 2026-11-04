@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>同一份信息，两种写法：离散与连续对照</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap">
+<style>
+body{margin:0;background:#FAF9F5;font-family:system-ui,-apple-system,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:#141413}
+a{color:#B4552F}a:hover{color:#8A3E20}
+.t{font-family:'Noto Serif SC',Georgia,'Songti SC',serif}
+.row{display:grid;grid-template-columns:200px repeat(2, minmax(0, 1fr));gap:16px;border-bottom:1px solid #E7E2D8;padding:16px 0;align-items:start}
+.row p{margin:0;font-size:16px;line-height:1.8;color:#3D3D3A}
+.term{font-size:16px;font-weight:600;line-height:1.6}
+</style>
+</helmet>
+<div style="width:1160px;box-sizing:border-box;padding:56px 64px;display:flex;flex-direction:column;gap:26px">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font-size:14px;letter-spacing:0.12em;color:#73726C">对照表</div>
+    <div class="t" style="font-size:42px;line-height:1.3;font-weight:600;max-width:900px">{{headline}}</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:200px repeat(2, minmax(0, 1fr));gap:16px;border-bottom:2px solid #141413;padding-bottom:14px;align-items:end">
+    <div style="font-size:14px;letter-spacing:0.08em;color:#73726C">看什么</div>
+    <div style="font-size:22px;font-weight:600">离散型</div>
+    <div style="font-size:22px;font-weight:600">连续型</div>
+  </div>
+
+  <sc-for list="{{rows}}" as="r">
+    <div class="row">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="term">{{r.term}}</div>
+        <div style="font-size:14px;line-height:1.6;color:#73726C">{{r.hint}}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <p>{{r.dis}}</p>
+        <div style="background:#F5F4ED;border-radius:6px;padding:8px 12px;font-size:15px;color:#3D3D3A">{{r.disF}}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <p>{{r.con}}</p>
+        <div style="background:#F5F4ED;border-radius:6px;padding:8px 12px;font-size:15px;color:#3D3D3A">{{r.conF}}</div>
+      </div>
+    </div>
+  </sc-for>
+
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:6px">
+    <div class="t" style="font-size:24px;font-weight:600">两个最容易踩的坑</div>
+    <sc-for list="{{traps}}" as="t2">
+      <div style="display:flex;gap:14px;background:#FFFFFF;border:1px solid #E7E2D8;border-radius:10px;padding:16px 20px">
+        <div style="flex:none;width:9px;height:9px;border-radius:50%;background:#D97757;margin-top:9px"></div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="font-size:16px;font-weight:600;line-height:1.6">{{t2.bad}}</div>
+          <div style="font-size:16px;line-height:1.8;color:#3D3D3A">{{t2.good}}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;background:#F5F4ED;border-left:4px solid #D97757;border-radius:8px;padding:18px 22px">
+    <div style="font-size:17px;line-height:1.85;color:#3D3D3A"><strong style="color:#141413">自检一句：</strong>{{check}}</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"headline":{"editor":"text","default":"同一份信息，两种写法"},"$preview":{"width":1160,"height":1980}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+  headline: this.props.headline ?? '同一份信息，两种写法',
+  rows: [
+    { term: '取值', hint: '能取哪些数', dis: '一个一个、可以数出来：0、1、2、3……', disF: '例：掷骰子的点数 1–6', con: '铺满一段区间，列不完、单独一个点概率为零：', conF: '例：在某个区间内任意取值的高度' },
+    { term: '描述工具', hint: '用什么表示可能性', dis: '每一点的高度 $p(x_i)$ 本身就是概率，$0\\le p\\le 1$。', disF: '$p(x_i)=P(X=x_i)$', con: '用概率密度 $f(x)$ 描述「单位长度上的概率」，密度值可以大于 1。', conF: '$f(x)$ 是密度，不是概率' },
+    { term: '求和 / 归一', hint: '所有可能性加起来是 1', dis: '所有点的概率相加为 1。', disF: '$\\sum_i p(x_i)=1$', con: '整条曲线下方的总面积是 1。', conF: '$\\int_{-\\infty}^{+\\infty} f(x)\\,dx=1$' },
+    { term: '某个范围', hint: '落在区间里的可能性', dis: '把区间内的点逐个加起来。', disF: '$P(a\\le X\\le b)=\\sum_{a\\le x_i\\le b} p(x_i)$', con: '求区间下的面积，即密度在这段上的积分。', conF: '$P(a&lt;X\\le b)=\\int_a^b f(x)\\,dx$' },
+    { term: '平均（期望）', hint: '长期平均会是多少', dis: '取值乘以各自概率，再全部相加。', disF: '$E(X)=\\sum_i x_i\\,p(x_i)$', con: '把求和换成积分。', conF: '$E(X)=\\int_{-\\infty}^{+\\infty} x\\,f(x)\\,dx$' },
+    { term: '分布函数', hint: '不超过某个值的累计概率', dis: '把所有不超过 $t$ 的概率累加。', disF: '$F(t)=P(X\\le t)=\\sum_{x_i\\le t} p(x_i)$', con: '从最左端累积到 $t$ 的面积。', conF: '$F(t)=P(X\\le t)=\\int_{-\\infty}^{t} f(x)\\,dx$' }
+  ],
+  traps: [
+    { bad: '坑一：把密度当成概率', good: '连续型里 $f(x)$ 不是概率，只有区间下的面积才是。所以 $P(X=a)=0$：问「恰好等于某个点」没有意义，要问「落在一个范围内」。' },
+    { bad: '坑二：把连续的量取整后直接套离散公式', good: '身高按厘米分组后就是离散分布，但某一组的概率是那一小段区间的面积，不是组中点上的密度值；分组越细，直方图就越接近原来的密度曲线。' }
+  ],
+  check: '看到一个分布，先问两句：取值是点还是区间？拿到的是概率 $p$ 还是密度 $f$？答对这两句，求和还是积分、取点还是取面积，就都不会错。',
+  $preview: { width: 1160, height: 1980 }
+};
+}
+}
+</script>
+</body>
+</html>

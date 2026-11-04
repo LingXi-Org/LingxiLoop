@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>数据库选型对比板</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FAF9F5;color:#141413;font-family:'Noto Sans SC',system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif}
+a{color:#B3512F}a:hover{color:#8C3D22}
+table{border-collapse:collapse}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1120px; box-sizing: border-box; padding: 56px 64px 48px; background: #FAF9F5; display: flex; flex-direction: column; gap: 28px">
+<header style="display: flex; flex-direction: column; gap: 10px">
+<p style="margin: 0; font-size: 12px; letter-spacing: 0.18em; color: #6B655D">决策对比板 · 面向数人规模的产品团队</p>
+<h1 style="margin: 0; font-family: 'Noto Serif SC', Georgia, serif; font-size: 44px; line-height: 1.2; font-weight: 700; color: #141413">自建数据库 vs 托管数据库</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.7; color: #4A463F; max-width: 900px">判断标准不是“哪个更先进”，而是：引擎层的运维要不要自己扛、团队的稀缺资源是钱还是时间。下面四列给对照，右侧是判断该翻转的边界。</p>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; align-items: start">
+
+<section style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: #FFFFFF; border: 1px solid #E5E1D8; border-radius: 10px">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 8px; height: 8px; border-radius: 50%; background: #B3512F"></span>
+<h2 style="margin: 0; font-family: 'Noto Serif SC', Georgia, serif; font-size: 19px; font-weight: 700">成本</h2>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.7; color: #4A463F">看账单是不够的，要把人力与故障损失算进来。</p>
+<dl style="margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; line-height: 1.65; color: #4A463F">
+<dt style="font-weight: 700; color: #141413">自建</dt>
+<dd style="margin: 0 0 0 10px">机器与存储便宜，但备份演练、监控值班、升级窗口都要自己出人。</dd>
+<dt style="font-weight: 700; color: #141413">托管</dt>
+<dd style="margin: 0 0 0 10px">单价高，把引擎层人力打包进费用；团队小的时候通常更划算。</dd>
+</dl>
+<div style="font-size: 12px; color: #6B655D; font-style: italic">先算工时，再比价格</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: #FFFFFF; border: 1px solid #E5E1D8; border-radius: 10px">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 8px; height: 8px; border-radius: 50%; background: #3E6FB0"></span>
+<h2 style="margin: 0; font-family: 'Noto Serif SC', Georgia, serif; font-size: 19px; font-weight: 700">可靠性</h2>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.7; color: #4A463F">托管保证的是机制，不是你的业务不出事。</p>
+<dl style="margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; line-height: 1.65; color: #4A463F">
+<dt style="font-weight: 700; color: #141413">自建</dt>
+<dd style="margin: 0 0 0 10px">故障切换、备份恢复全靠自己设计与演练。</dd>
+<dt style="font-weight: 700; color: #141413">托管</dt>
+<dd style="margin: 0 0 0 10px">高可用与备份看套餐；误删、慢查询、连接耗尽依旧归你。</dd>
+</dl>
+<div style="font-size: 12px; color: #6B655D; font-style: italic">无论哪种都留业务侧导出</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: #FFFFFF; border: 1px solid #E5E1D8; border-radius: 10px">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 8px; height: 8px; border-radius: 50%; background: #5E7A45"></span>
+<h2 style="margin: 0; font-family: 'Noto Serif SC', Georgia, serif; font-size: 19px; font-weight: 700">运维责任</h2>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.7; color: #4A463F">真正的分界线是“引擎层”归谁。</p>
+<table style="width: 100%; font-size: 12px; line-height: 1.55; color: #4A463F">
+<thead>
+<tr>
+<th style="text-align: left; padding: 6px 4px; border-bottom: 1px solid #E5E1D8; font-weight: 700; color: #141413">任务</th>
+<th style="text-align: left; padding: 6px 4px; border-bottom: 1px solid #E5E1D8; font-weight: 700; color: #141413">自建</th>
+<th style="text-align: left; padding: 6px 4px; border-bottom: 1px solid #E5E1D8; font-weight: 700; color: #141413">托管</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="padding: 6px 4px; border-bottom: 1px solid #F1EEE6">安装、补丁、切换</td>
+<td style="padding: 6px 4px; border-bottom: 1px solid #F1EEE6">你</td>
+<td style="padding: 6px 4px; border-bottom: 1px solid #F1EEE6">厂商</td>
+</tr>
+<tr>
+<td style="padding: 6px 4px; border-bottom: 1px solid #F1EEE6">表结构、索引、查询</td>
+<td style="padding: 6px 4px; border-bottom: 1px solid #F1EEE6">你</td>
+<td style="padding: 6px 4px; border-bottom: 1px solid #F1EEE6">你</td>
+</tr>
+<tr>
+<td style="padding: 6px 4px; border-bottom: 1px solid #F1EEE6">连接、权限、配额</td>
+<td style="padding: 6px 4px; border-bottom: 1px solid #F1EEE6">你</td>
+<td style="padding: 6px 4px; border-bottom: 1px solid #F1EEE6">你</td>
+</tr>
+<tr>
+<td style="padding: 6px 4px">容量与扩缩容</td>
+<td style="padding: 6px 4px">你</td>
+<td style="padding: 6px 4px">大多厂商</td>
+</tr>
+</tbody>
+</table>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 10px; padding: 20px; background: #FFFFFF; border: 1px solid #E5E1D8; border-radius: 10px">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 8px; height: 8px; border-radius: 50%; background: #7A5AA6"></span>
+<h2 style="margin: 0; font-family: 'Noto Serif SC', Georgia, serif; font-size: 19px; font-weight: 700">适用边界</h2>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.7; color: #4A463F">起步期产品形态还在变，托管通常是默认答案。</p>
+<dl style="margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; line-height: 1.65; color: #4A463F">
+<dt style="font-weight: 700; color: #141413">选自建，当…</dt>
+<dd style="margin: 0 0 0 10px">有合规或数据驻留硬要求；必须用特定扩展/版本；规模极大且成本模型清晰；团队本就有数据库专精。</dd>
+<dt style="font-weight: 700; color: #141413">选托管，当…</dt>
+<dd style="margin: 0 0 0 10px">增长不确定、无人值夜班、需要在几周内上线、没做过备份演练。</dd>
+</dl>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 12px; padding: 20px; background: #F3EFE6; border: 1px solid #DCD5C6; border-radius: 10px">
+<h2 style="margin: 0; font-family: 'Noto Serif SC', Georgia, serif; font-size: 19px; font-weight: 700; color: #141413">何时翻转判断</h2>
+<ol style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; line-height: 1.65; color: #4A463F">
+<li>托管账单占云支出比例明显上升，且访问模式已稳定</li>
+<li>出现法规、合同或客户明确的数据位置要求</li>
+<li>必须用托管不提供的引擎能力</li>
+<li>团队出现了真正的数据库工程能力</li>
+</ol>
+<div style="border-top: 1px solid #DCD5C6; padding-top: 12px; font-size: 12px; line-height: 1.65; color: #6B655D">
+<p style="margin: 0; font-weight: 700; color: #141413">三个自检问题</p>
+<p style="margin: 6px 0 0">明天数据库挂了，谁接手？上次验证恢复是什么时候？未来一年的数据量估算是多少？</p>
+<p style="margin: 6px 0 0">有一个答不上，就先别自建。</p>
+</div>
+</section>
+
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 4px">
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; background: #FFFFFF; border: 1px solid #E5E1D8; border-radius: 10px">
+<p style="margin: 0; font-size: 12px; letter-spacing: 0.12em; color: #6B655D">年度成本对比</p>
+<p style="margin: 0; font-size: 13px; line-height: 1.9; color: #4A463F">自建年成本 ≈ 机器与存储 + 人力工时 × 人力单价 + 故障与停机损失</p>
+<p style="margin: 0; font-size: 13px; line-height: 1.9; color: #4A463F">托管年成本 ≈ 实例费用 + 附加服务费 + 少量运维工时</p>
+<p style="margin: 0; font-size: 12px; color: #6B655D">团队越小，“工时”那一项越可能压过差价。</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; background: #FFFFFF; border: 1px solid #E5E1D8; border-radius: 10px">
+<p style="margin: 0; font-size: 12px; letter-spacing: 0.12em; color: #6B655D">推进方式</p>
+<ol style="margin: 0; padding-left: 16px; font-size: 13px; line-height: 1.85; color: #4A463F">
+<li>起步用托管，选满足高可用与备份的最小套餐</li>
+<li>把数据库访问收敛到一个访问层，保留迁移余地</li>
+<li>持续记录数据量、慢查询、账单构成、运维工时</li>
+<li>等这些数字成为真正的痛点，再评估自建</li>
+</ol>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; background: #FFFFFF; border: 1px solid #E5E1D8; border-radius: 10px">
+<p style="margin: 0; font-size: 12px; letter-spacing: 0.12em; color: #6B655D">讨论时怎么用</p>
+<p style="margin: 0; font-size: 13px; line-height: 1.85; color: #4A463F">先把你们真实的数据量估算、预算和上线日期填进成本一列；再看“何时翻转判断”的四条是否被触发。四条都没触发，就别把时间花在自建上。</p>
+<p style="margin: 0; font-size: 12px; color: #6B655D">版式取自 Claude 经典配色：象牙底、墨色字、陶土色强调。</p>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1120}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

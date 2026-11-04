@@ -19,8 +19,8 @@ const actual=String(releaseVersions.runtime),body='OK safe suffix'
 // Narrow the public preview only; final safety, real PostgreSQL authorization,
 // binding, prefix/hash checks and terminal persistence remain unchanged.
 class HeldPreviewPolicy extends ProductRuntimePolicy {
-  override publicTextSafety(input:Parameters<ProductRuntimePolicy['publicTextSafety']>[0]) {
-    const result=super.publicTextSafety(input)
+  override publicTextSafety(input:Parameters<ProductRuntimePolicy['publicTextSafety']>[0],context:Parameters<ProductRuntimePolicy['publicTextSafety']>[1]) {
+    const result=super.publicTextSafety(input,context)
     return input.isFinal?result:{...result,safeThrough:Math.min(3,result.safeThrough)}
   }
 }

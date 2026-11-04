@@ -24,7 +24,7 @@ const runtimeModules = new Set(['memory/semantic.js', 'memory/runtime.js', 'memo
 const productModules = new Set(['agent-runtime/context.ts', 'agent-runtime/identity.ts', 'agent-runtime/runtime.ts',
   'agent-runtime/attachments.ts', 'agents/tools.ts', 'modules/memory/public.ts', 'modules/memory/configuration.ts',
   'modules/memory/policy.ts', 'modules/learning/runtime.ts', 'modules/learning/homework-tools.ts',
-  'modules/learning/teacher-agent-application.ts', 'modules/access/application.ts', 'im/visualize.ts', 'im/wukong.ts',
+  'modules/learning/teacher-agent-application.ts', 'modules/access/application.ts', 'im/retired-visualize.ts', 'im/wukong.ts',
   'im/messages-application.ts', 'modules/knowledge/runtime.ts', 'modules/access/context-resolver.ts'])
 const runtimeSourceRoot = fileURLToPath(new URL('.', import.meta.resolve('@lyyzka/lingxios')))
 const productSourceRoot = fileURLToPath(new URL('../', import.meta.url))

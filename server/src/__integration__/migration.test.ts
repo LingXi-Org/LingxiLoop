@@ -10,7 +10,7 @@ import test from 'node:test'
 import { packageResources, releaseVersions } from '@lyyzka/lingxios'
 import { assertMigrationsCurrent, migrateDatabase } from '../db/migrate.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
-import { TEACHER_PROMPT, TEACHER_PRESET_VERSION } from '../modules/learning/teacher-preset.js'
+import { TEACHER_PROMPT } from '../modules/learning/teacher-preset.js'
 
 // Product54 predates the 0060 capability replacement.
 const historicalCapabilities = ['canvas','documents','files','knowledge','learning','routines','web']
@@ -501,7 +501,7 @@ test('collaboration upgrade preserves managed IDs, custom rooms and leaders whil
     assert.deepEqual((await database.query("SELECT name,initial,system_prompt FROM participants WHERE id='old-pulse'")).rows,
       [{ name: '望远',initial: '望',system_prompt: TEACHER_PROMPT }])
     assert.deepEqual((await database.query("SELECT preset_version FROM learning_project_teacher_agents WHERE agent_id='old-pulse'")).rows,
-      [{ preset_version: TEACHER_PRESET_VERSION }])
+      [{ preset_version: 6 }]) // Immutable historical migrations stop before current preset provisioning.
     for (const room of (await database.query(`SELECT room.id,room.members,room.leader_id,channel.profile->'members' AS im_members
       FROM conversations room JOIN im_channel_bindings channel ON channel.channel_id=room.id WHERE room.company_id='collab-upgrade'`)).rows) {
       assert.deepEqual(room.im_members,room.members)

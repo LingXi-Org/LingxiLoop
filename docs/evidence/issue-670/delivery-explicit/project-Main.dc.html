@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>FlashAttention 讲解</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#FAF9F5;font-family:Georgia,serif;color:#141413}
+a{color:#B4532F}a:hover{color:#8F3A1C}
+</style>
+</helmet>
+<div style="width: 1040px; box-sizing: border-box; padding: 72px 88px 80px; display: flex; flex-direction: column; gap: 40px; background: #FAF9F5; color: #141413">
+
+  <div style="display: flex; flex-direction: column; gap: 16px">
+    <div style="font-family: system-ui, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.14em; color: #B4532F">注意力机制 · 计算与显存</div>
+    <h1 style="margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 60px; line-height: 1.1; color: #141413">FlashAttention</h1>
+    <p style="margin: 0; font-family: system-ui, sans-serif; font-size: 21px; line-height: 1.55; color: #3D3D3A; max-width: 760px">一句话：它不改变注意力的数学结果，而是改变"怎么算"——把 $QK^{\mathsf T}$ 这样的大矩阵切块，边算边用，让显存访问成为瓶颈时不再被读写拖住。</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px; padding-top: 28px; border-top: 1px solid #E3DACC">
+    <div style="display: flex; gap: 16px; align-items: baseline">
+      <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: #73726C; width: 48px">01</div>
+      <h2 style="margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.25; color: #141413">先看清楚它在算哪一步</h2>
+    </div>
+    <p style="margin: 0 0 0 64px; font-family: system-ui, sans-serif; font-size: 17px; line-height: 1.7; color: #3D3D3A">标准注意力对每个 token 的查询向量，都要与序列中所有键比较，再对值做加权求和：</p>
+    <div style="margin-left: 64px; padding: 20px 24px; background: #F5F4ED; border-radius: 10px; font-family: Georgia, serif; font-size: 24px; color: #141413">\[ \operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\left(\frac{QK^{\mathsf T}}{\sqrt{d_k}}\right)V \]</div>
+    <p style="margin: 0 0 0 64px; font-family: system-ui, sans-serif; font-size: 17px; line-height: 1.7; color: #3D3D3A">式中有两个容易忽略的形状事实：第一，$\frac{QK^{\mathsf T}}{\sqrt{d_k}}$ 是 $N\times N$ 的分数矩阵，序列长度翻倍，它就变成四倍；第二，softmax 需要整行归一化——要对第 $i$ 行的全部分数求最大值和求和，才能确定权重。显式实现通常就把这个 $N\times N$ 矩阵写进显存并来回读几次，长序列下它就是显存与带宽的主要开销。</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px; padding-top: 28px; border-top: 1px solid #E3DACC">
+    <div style="display: flex; gap: 16px; align-items: baseline">
+      <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: #73726C; width: 48px">02</div>
+      <h2 style="margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.25; color: #141413">tiling：分块计算，全程只保留一个小矩阵</h2>
+    </div>
+    <p style="margin: 0 0 0 64px; font-family: system-ui, sans-serif; font-size: 17px; line-height: 1.7; color: #3D3D3A">把 $K$ 和 $V$ 按列切成块 $K_j$、$V_j$，对 $Q$ 的一块 $Q_i$ 逐个处理：取出一块，算出这一块对应的分数，立刻用它更新输出，然后丢弃，再拿下一块。整个过程只在片上留下 $Q_i$ 的块级输出和归一化所需的两个统计量，完整的 $N\times N$ 分数矩阵从未被完整写出。</p>
+    <div style="margin-left: 64px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+      <div style="padding: 18px 20px; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: #B4532F">块 1</div>
+        <div style="font-family: Georgia, serif; font-size: 19px; line-height: 1.4; color: #141413">载入 $K_1,V_1$</div>
+        <div style="font-family: system-ui, sans-serif; font-size: 15px; line-height: 1.6; color: #3D3D3A">算出块内分数，得到初版输出与统计量</div>
+      </div>
+      <div style="padding: 18px 20px; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: #B4532F">块 2</div>
+        <div style="font-family: Georgia, serif; font-size: 19px; line-height: 1.4; color: #141413">载入 $K_2,V_2$</div>
+        <div style="font-family: system-ui, sans-serif; font-size: 15px; line-height: 1.6; color: #3D3D3A">新的更大分数 → 旧输出按比例缩放后累加</div>
+      </div>
+      <div style="padding: 18px 20px; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; display: flex; flex-direction: column; gap: 8px">
+        <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: #B4532F">块 3</div>
+        <div style="font-family: Georgia, serif; font-size: 19px; line-height: 1.4; color: #141413">载入 $K_3,V_3$</div>
+        <div style="font-family: system-ui, sans-serif; font-size: 15px; line-height: 1.6; color: #3D3D3A">同理更新，最后除以总权重得到确切结果</div>
+      </div>
+    </div>
+    <p style="margin: 0 0 0 64px; font-family: system-ui, sans-serif; font-size: 17px; line-height: 1.7; color: #3D3D3A">难点在于第二步：新块可能带来更大的分数，而 softmax 的指数对最大值敏感。如果直接按旧最大值归一化，数值会溢出或失真。于是需要一个能"在线更新"的归一化方式。</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px; padding-top: 28px; border-top: 1px solid #E3DACC">
+    <div style="display: flex; gap: 16px; align-items: baseline">
+      <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: #73726C; width: 48px">03</div>
+      <h2 style="margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.25; color: #141413">在线 softmax：只带两个数走完全程</h2>
+    </div>
+    <p style="margin: 0 0 0 64px; font-family: system-ui, sans-serif; font-size: 17px; line-height: 1.7; color: #3D3D3A">对每一行，维护当前见过的最大值 $m$ 与指数和 $\ell$。处理到新的一批分数时：</p>
+    <div style="margin-left: 64px; padding: 22px 26px; background: #F5F4ED; border-radius: 10px; display: flex; flex-direction: column; gap: 14px; font-family: Georgia, serif; font-size: 22px; color: #141413">
+      <div>\[ m'=\max\!\left(m,\ \max_j s_j\right) \]</div>
+      <div>\[ \ell'=e^{\,m-m'}\,\ell+\sum_j e^{\,s_j-m'} \]</div>
+      <div>\[ O'=e^{\,m-m'}\,O+\sum_j e^{\,s_j-m'}\,V_j \]</div>
+      <div style="font-family: system-ui, sans-serif; font-size: 15px; line-height: 1.6; color: #3D3D3A">最后 $O=\dfrac{O'}{\ell'}$，即得到与一次性计算完全一致的输出。</div>
+    </div>
+    <p style="margin: 0 0 0 64px; font-family: system-ui, sans-serif; font-size: 17px; line-height: 1.7; color: #3D3D3A">每个块新算出的权重都要乘 $e^{\,m-m'}$ 与旧结果对齐尺度——这就是"重标定"。它保证无论块按什么顺序到达，最终都等于全局 softmax 的结果。代价是每处理一块都要做一点额外乘法，但相比省掉的显存读写，这笔账很划算。</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px; padding-top: 28px; border-top: 1px solid #E3DACC">
+    <div style="display: flex; gap: 16px; align-items: baseline">
+      <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: #73726C; width: 48px">04</div>
+      <h2 style="margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.25; color: #141413">为什么省的是显存带宽，不是乘法</h2>
+    </div>
+    <p style="margin: 0 0 0 64px; font-family: system-ui, sans-serif; font-size: 17px; line-height: 1.7; color: #3D3D3A">分块并没有减少必须做的乘加次数——依然是全部 $Q$ 与全部 $K$ 的比较。改变的是数据流：分数块在片上产生、消费、消失，不再写回显存、也不需读回来做 softmax 和再乘 $V$。当 GPU 的算术单元远快于显存带宽时，瓶颈就落在"搬数据"上；分块把搬运次数的数量级压下来，整体速度随之提升。</p>
+    <div style="margin-left: 64px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; gap: 12px; align-items: baseline">
+        <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; color: #73726C; min-width: 130px">显式注意力</div>
+        <div style="font-family: system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: #3D3D3A">写 $N\times N$ 分数 → 读回做 softmax → 再读权重乘 $V$，中间量进显存</div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: baseline">
+        <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; color: #B4532F; min-width: 130px">FlashAttention</div>
+        <div style="font-family: system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: #3D3D3A">分数在片上产生即用，只把 $Q$、$K$、$V$ 与最终输出放在显存，额外显存随序列长度线性增长</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px; padding-top: 28px; border-top: 1px solid #E3DACC">
+    <div style="display: flex; gap: 16px; align-items: baseline">
+      <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: #73726C; width: 48px">05</div>
+      <h2 style="margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.25; color: #141413">反向传播要重算，而不是存下来</h2>
+    </div>
+    <p style="margin: 0 0 0 64px; font-family: system-ui, sans-serif; font-size: 17px; line-height: 1.7; color: #3D3D3A">训练时需要梯度。常规做法会把前向的中间矩阵留给反向用；既然这些矩阵本来就不存，就换个思路：反向时重新分块走一遍前向，在片上重建需要的分数，再算梯度。额外的计算换来了显存占用的大幅下降，这正是长序列训练能装下更大 batch 的关键。</p>
+    <div style="margin-left: 64px; padding: 18px 22px; background: #FFEDD5; border-radius: 10px; font-family: system-ui, sans-serif; font-size: 16px; line-height: 1.65; color: #7A3410">记忆点：前向省显存；反向用重算换显存。两件事都建立在同一个前提上——分数块可以随时被重新生成。</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px; padding-top: 28px; border-top: 1px solid #E3DACC">
+    <div style="display: flex; gap: 16px; align-items: baseline">
+      <div style="font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: #73726C; width: 48px">06</div>
+      <h2 style="margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.25; color: #141413">代价与适用边界</h2>
+    </div>
+    <div style="margin-left: 64px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; gap: 12px; align-items: baseline">
+        <div style="font-family: system-ui, sans-serif; font-size: 15px; font-weight: 600; color: #141413; min-width: 96px">换来什么</div>
+        <div style="font-family: system-ui, sans-serif; font-size: 16px; line-height: 1.65; color: #3D3D3A">中间矩阵不再落显存；注意力计算更受限于算力而非带宽；结果与标准注意力数值上等价</div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: baseline">
+        <div style="font-family: system-ui, sans-serif; font-size: 15px; font-weight: 600; color: #141413; min-width: 96px">付出什么</div>
+        <div style="font-family: system-ui, sans-serif; font-size: 16px; line-height: 1.65; color: #3D3D3A">实现复杂（手写核函数、块大小调优）；反向多一次前向计算；需要硬件能高效做片上分块计算</div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: baseline">
+        <div style="font-family: system-ui, sans-serif; font-size: 15px; font-weight: 600; color: #141413; min-width: 96px">不解决什么</div>
+        <div style="font-family: system-ui, sans-serif; font-size: 16px; line-height: 1.65; color: #3D3D3A">算术量仍是 $O(N^2 d)$；它优化的是访存效率，若你的场景瓶颈不是显存带宽，收益会缩小</div>
+      </div>
+    </div>
+    <p style="margin: 0 0 0 64px; font-family: system-ui, sans-serif; font-size: 17px; line-height: 1.7; color: #3D3D3A">检验自己是否理解：给定块 1 得到 $m=2,\ \ell=3$，块 2 的最大分数为 $5$，那么重标定系数是 $e^{\,2-5}=e^{-3}$，旧输出与旧指数和都要乘上它——这一步正是"分块算"与"整行算"等价的桥梁。</p>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#B4532F"},"$preview":{"width":1040,"height":3020}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#B4532F' };
+}
+}
+</script>
+</body>
+</html>

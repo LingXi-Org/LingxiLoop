@@ -14,7 +14,16 @@ const MAX_CHECK_BLOB_BYTES = 128 * 1024 * 1024
  * The upstream checker (`scripts/artifact.mjs check <root>`) runs unchanged: the artifact is
  * written as the folder it expects, `<root>/project/…` with uploads under `project/assets/`.
  */
-export async function checkArtifact(db: Queryable, artifact: { id: string; kind: ArtifactKind }, signal?: AbortSignal): Promise<unknown> {
+export function checkedDesignBoardPaths(files:readonly {path:string;body:Buffer}[],requested:readonly string[]):string[] {
+  try {
+    const index = JSON.parse(files.find(file=>file.path === 'project/canvas.json')?.body.toString('utf8') ?? '{}')
+    const indexed = new Set(Object.keys(index.boards ?? {}).map(path=>`project/${path}`))
+    return requested.slice(0,32).filter(path=>isProjectPath(path) && /^project\/.+\.dc\.html$/.test(path) && indexed.has(path)
+      && files.some(file=>file.path === path && file.body.toString('utf8').trim().length > 0))
+  } catch { return [] }
+}
+
+export async function checkArtifact(db: Queryable, artifact: { id: string; kind: ArtifactKind }, signal?: AbortSignal, requestedPaths?:readonly string[]): Promise<unknown> {
   const definition = ARTIFACT_KIND_DEFINITIONS[artifact.kind]
   const script = resolve(BAOYU_DESIGN_ROOT, definition.skillDirectory, 'scripts', 'artifact.mjs')
   const root = await mkdtemp(join(tmpdir(), 'lingxiloop-artifact-'))
@@ -48,7 +57,10 @@ export async function checkArtifact(db: Queryable, artifact: { id: string; kind:
         else resolveRun(out)
       })
     })
-    return JSON.parse(stdout) as unknown
+    const report = JSON.parse(stdout)
+    // Membership is from the exact same snapshot the checker inspected. Limit
+    // the proof to requested authored paths so large old canvases stay bounded.
+    return artifact.kind === 'design' && requestedPaths ? {...report,checkedBoardPaths:checkedDesignBoardPaths(rows,requestedPaths)} : report
   } finally {
     await rm(root, { recursive: true, force: true })
   }

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>自建数据库 vs 托管数据库：取舍全景</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#FAF9F5;color:#141413;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif}
+a{color:#A5522F}a:hover{color:#D97757}
+.ds-page{width:100%;max-width:1320px;margin:0 auto;padding:56px 56px 80px;box-sizing:border-box;display:flex;flex-direction:column;gap:56px}
+.ds-h2{margin:0;font-size:30px;line-height:1.3;font-weight:430}
+.ds-lead{margin:0;font-size:17px;line-height:1.75;color:#3D3D3A}
+.ds-small{font-size:14px;line-height:1.7;color:#5C5B55}
+.ds-card{background:#FFFFFF;border:1px solid #E3DACC;border-radius:14px;padding:22px 24px}
+.ds-th{font-size:13px;font-weight:500;letter-spacing:.04em;color:#5C5B55;padding:12px 14px;border-bottom:1px solid #E3DACC;text-align:left}
+.ds-td{font-size:15px;line-height:1.75;padding:14px;border-bottom:1px solid #EFEAE0;vertical-align:top}
+.ds-eyebrow{font-size:13px;font-weight:500;letter-spacing:.08em;color:#A5522F;margin:0 0 8px}
+@media (max-width: 900px){.ds-page{padding:32px 20px 56px;gap:40px}.ds-h2{font-size:24px}.ds-card{padding:18px}}
+</style>
+</helmet>
+<div class="ds-page">
+  <header style="display:flex;flex-direction:column;gap:18px">
+    <p class="ds-eyebrow">技术选型 · 面向小团队的产品上线</p>
+    <h1 style="margin:0;font-family:Georgia,'Songti SC',serif;font-weight:400;font-size:52px;line-height:1.2">自建数据库，还是托管数据库？</h1>
+    <p class="ds-lead" style="max-width:820px">这不是“贵 vs 便宜”的单选题，而是<strong>把哪部分成本、风险和人力挪到哪张桌子上</strong>的取舍。自建把控制权留给自己，代价是你得为它常驻值班；托管用月费换时间，代价是控制范围被平台边界收窄。下面先给结论，再逐项拆开。</p>
+    <div style="display:flex;flex-wrap:wrap;gap:14px">
+      <div class="ds-card" style="flex:999 1 380px;min-width:0">
+        <p style="margin:0 0 8px;font-size:14px;font-weight:500;color:#A5522F">多数小团队上线的默认解</p>
+        <p style="margin:0;font-size:17px;line-height:1.75">先选<strong>托管数据库</strong>（含托管 PostgreSQL / MySQL，或按需选用托管 NoSQL 与无服务器数据库）。团队把稀缺的工程时间留在产品与业务逻辑上，等出现明确的、可量化的自建理由再迁移。</p>
+      </div>
+      <div class="ds-card" style="flex:999 1 380px;min-width:0">
+        <p style="margin:0 0 8px;font-size:14px;font-weight:500;color:#A5522F">什么情况下反过来</p>
+        <p style="margin:0;font-size:17px;line-height:1.75">你已经有<strong>熟练的数据库运维人手</strong>，且负载形态或合规要求让它必须深度定制（特殊扩展、特定版本与参数、数据不出境/不出内网的硬约束），自建可能更划算。</p>
+      </div>
+    </div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:18px">
+    <div>
+      <p class="ds-eyebrow">01 四个维度怎么比</p>
+      <h2 class="ds-h2">先认清每个维度“谁在承担”</h2>
+    </div>
+    <div style="overflow-x:auto;background:#FFFFFF;border:1px solid #E3DACC;border-radius:14px">
+      <table style="width:100%;min-width:880px;border-collapse:collapse">
+        <thead>
+          <tr style="background:#F5F4ED">
+            <th class="ds-th" style="width:16%">维度</th>
+            <th class="ds-th" style="width:42%">自建</th>
+            <th class="ds-th" style="width:42%">托管</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ds-td" style="font-weight:500">成本结构</td>
+            <td class="ds-td">账面上的软件成本低，但真实支出 = 服务器与存储 + 备份容灾副本 + <strong>人的时间</strong>。装机、调参、升级、排障都要占用工程师工时，且规模小时摊不薄。</td>
+            <td class="ds-td">单价看起来高，账单=算力 + 存储 + 备份 + 读写流量。可预测、随用量伸缩；真正的省钱在于省下的工程工时。注意出网与跨区复制的隐藏项。</td>
+          </tr>
+          <tr>
+            <td class="ds-td" style="font-weight:500">可靠性</td>
+            <td class="ds-td">上限由你的架构上限决定：做主从、多副本、跨可用区、定期演练，可靠性可以很高；但每个环节都要自己搭、自己验，漏掉一环就是一个单点。</td>
+            <td class="ds-td">平台已内置多副本、自动备份、故障切换。但“托管”不等于“无故障”：要自己看 SLA 条款、配好备份保留期与恢复演练，并接受维护窗口带来的短暂中断。</td>
+          </tr>
+          <tr>
+            <td class="ds-td" style="font-weight:500">运维责任</td>
+            <td class="ds-td">全程在团队：版本升级、补丁、容量规划、慢查询调优、监控告警、故障恢复、数据迁移。需要有人能<strong>半夜被叫起来也能处理</strong>。</td>
+            <td class="ds-td">平台负责底层硬件与引擎补丁；你的责任上移到 schema 设计、索引与查询优化、连接数、权限、备份策略与数据恢复验证。运维工作量显著下降但不会归零。</td>
+          </tr>
+          <tr>
+            <td class="ds-td" style="font-weight:500">适用边界</td>
+            <td class="ds-td">长期高负载、成本可优化空间大；必须用特定扩展或参数；数据必须留在自有网络与地域；团队本身就有 DBA 能力。</td>
+            <td class="ds-td">团队规模小、缺专职运维；上线节奏快、负载波动大；希望把精力投入产品；可接受平台提供的版本、扩展与所在地域范围。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="ds-small" style="margin:0">读这张表的技巧：把每一行的问题换成“这一项由谁负责、出问题谁第一个知道”。谁在值守，谁就承担了隐性成本。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:18px">
+    <div>
+      <p class="ds-eyebrow">02 决策规则</p>
+      <h2 class="ds-h2">四个问题，走一遍就有答案</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+      <div class="ds-card">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:500;color:#A5522F">问题一</p>
+        <p style="margin:0 0 8px;font-size:17px;font-weight:500;line-height:1.6">上线初期，数据库每月会占到团队总工时多少？</p>
+        <p class="ds-small" style="margin:0">如果答案是“说不好，也没人专门盯”，托管几乎是默认解——它把不确定的运维工作变成可预期的账单。</p>
+      </div>
+      <div class="ds-card">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:500;color:#A5522F">问题二</p>
+        <p style="margin:0 0 8px;font-size:17px;font-weight:500;line-height:1.6">有没有必须深度定制的硬需求？</p>
+        <p class="ds-small" style="margin:0">特殊数据库扩展、独占版本、特定内核参数、数据只能落在自有机房。若这些是<em>上线必需</em>而非“以后可能想要”，自建才有充分理由。</p>
+      </div>
+      <div class="ds-card">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:500;color:#A5522F">问题三</p>
+        <p style="margin:0 0 8px;font-size:17px;font-weight:500;line-height:1.6">负载是否长期稳定且足够高？</p>
+        <p class="ds-small" style="margin:0">只有规模稳定到能压出可观的单位成本差异时，自建的账单优势才显现；小体量时，人力成本轻松吃掉硬件差价。</p>
+      </div>
+      <div class="ds-card">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:500;color:#A5522F">问题四</p>
+        <p style="margin:0 0 8px;font-size:17px;font-weight:500;line-height:1.6">出故障时，谁能在一小时内恢复？</p>
+        <p class="ds-small" style="margin:0">自建意味着你要自己写恢复手册并演练；托管意味着你要确认平台 SLA、备份保留与自己的恢复步骤是否真的能跑通。</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:18px">
+    <div>
+      <p class="ds-eyebrow">03 一个常见误区</p>
+      <h2 class="ds-h2">“托管 = 不用管数据库”</h2>
+    </div>
+    <div class="ds-card" style="border-left:4px solid #D97757">
+      <p class="ds-lead" style="margin:0"><strong>托管只是把硬件与引擎的维保交出去。</strong> schema 与索引设计、慢查询、连接池、权限、备份策略、数据导出与迁移，仍然属于团队。选托管后真正要做的，是把这几项<em>写成清单并排上时间</em>，而不是默认它自动消失。</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+      <div class="ds-card" style="background:#F5F4ED">
+        <p style="margin:0 0 6px;font-size:14px;font-weight:500">托管后你仍然负责</p>
+        <ul style="margin:0;padding-left:20px;font-size:15px;line-height:1.9;color:#3D3D3A">
+          <li>表结构与索引设计，避免全表扫描</li>
+          <li>连接池上限与慢查询排查</li>
+          <li>账号权限与最小授权</li>
+          <li>备份保留期、恢复演练与数据导出</li>
+        </ul>
+      </div>
+      <div class="ds-card" style="background:#F5F4ED">
+        <p style="margin:0 0 6px;font-size:14px;font-weight:500">平台交出去的部分</p>
+        <ul style="margin:0;padding-left:20px;font-size:15px;line-height:1.9;color:#3D3D3A">
+          <li>底层硬件的故障与替换</li>
+          <li>数据库引擎的补丁与版本维保</li>
+          <li>多副本、故障切换等基础高可用</li>
+          <li>基础监控与告警的底层指标</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:18px">
+    <div>
+      <p class="ds-eyebrow">04 落地路线</p>
+      <h2 class="ds-h2">从托管起步，保留迁移的口子</h2>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:16px">
+      <div class="ds-card" style="flex:999 1 260px;min-width:0">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:500;color:#A5522F">第 1 步</p>
+        <p style="margin:0 0 8px;font-size:16px;font-weight:500">先托管上生产</p>
+        <p class="ds-small" style="margin:0">选主流引擎（如 PostgreSQL / MySQL）的托管版，把上线时间留给产品。</p>
+      </div>
+      <div class="ds-card" style="flex:999 1 260px;min-width:0">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:500;color:#A5522F">第 2 步</p>
+        <p style="margin:0 0 8px;font-size:16px;font-weight:500">写清运维清单</p>
+        <p class="ds-small" style="margin:0">把索引、连接数、权限、备份与恢复演练列成可执行清单，指定负责人。</p>
+      </div>
+      <div class="ds-card" style="flex:999 1 260px;min-width:0">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:500;color:#A5522F">第 3 步</p>
+        <p style="margin:0 0 8px;font-size:16px;font-weight:500">避开锁定</p>
+        <p class="ds-small" style="margin:0">尽量使用标准 SQL 与常规接口，敏感逻辑不依赖平台独有特性，数据可定期全量导出。</p>
+      </div>
+      <div class="ds-card" style="flex:999 1 260px;min-width:0">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:500;color:#A5522F">第 4 步</p>
+        <p style="margin:0 0 8px;font-size:16px;font-weight:500">按信号再评估</p>
+        <p class="ds-small" style="margin:0">当账单增长显著、出现硬需求或团队长出 DBA 能力时，再做自建的定量评估。</p>
+      </div>
+    </div>
+  </section>
+
+  <footer style="border-top:1px solid #E3DACC;padding-top:18px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between">
+    <p class="ds-small" style="margin:0">原则：谁值守、谁负责、谁出问题第一个知道，成本就落在谁身上。</p>
+    <p class="ds-small" style="margin:0">价格与 SLA 条款请以你所选平台的实际报价与合同为准。</p>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1320,"height":2050}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

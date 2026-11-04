@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>一个例子走到底：一次掷三枚硬币</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap">
+<style>
+body{margin:0;background:#FAF9F5;font-family:system-ui,-apple-system,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:#141413}
+a{color:#B4552F}a:hover{color:#8A3E20}
+.t{font-family:'Noto Serif SC',Georgia,'Songti SC',serif}
+.thead{display:grid;grid-template-columns:120px 200px 1fr;gap:18px;font-size:15px;color:#141413;background:#141413;padding:14px 20px;border-radius:8px 8px 0 0}
+.tr{display:grid;grid-template-columns:120px 200px 1fr;gap:18px;padding:16px 20px;background:#FFFFFF;border:1px solid #E7E2D8;border-top:0;align-items:start}
+.dot{flex:none;width:14px;height:14px;border-radius:50%;box-sizing:border-box}
+.step{display:flex;gap:16px;align-items:flex-start}
+.num{flex:none;width:28px;height:28px;border-radius:50%;background:#141413;color:#FAF9F5;font-size:14px;display:flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+<div style="width:1160px;box-sizing:border-box;padding:56px 64px;display:flex;flex-direction:column;gap:26px">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font-size:14px;letter-spacing:0.12em;color:#73726C">例子 · 掷三枚硬币</div>
+    <div class="t" style="font-size:42px;line-height:1.3;font-weight:600;max-width:940px">{{headline}}</div>
+    <div style="font-size:17px;line-height:1.8;color:#3D3D3A;max-width:980px">{{setup}}</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="t" style="font-size:24px;font-weight:600">第一步：写出分布</div>
+    <div class="thead">
+      <div>结果</div>
+      <div>出现的情况（共 8 种等可能）</div>
+      <div>概率</div>
+    </div>
+    <sc-for list="{{table}}" as="t2">
+      <div class="tr">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="display:flex;gap:4px">
+            <sc-for list="{{t2.dots}}" as="d">
+              <div v-bind:style="d.style" class="dot"></div>
+            </sc-for>
+          </div>
+          <div style="font-size:18px;font-weight:600">{{t2.k}}</div>
+        </div>
+        <div style="font-size:16px;line-height:1.7;color:#3D3D3A">{{t2.list}}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:17px;font-weight:600">{{t2.p}}</div>
+          <div style="height:10px;border-radius:5px;background:#D97757;width:{{t2.bar}}"></div>
+        </div>
+      </div>
+    </sc-for>
+    <div style="display:flex;justify-content:space-between;font-size:15px;color:#73726C;padding-top:4px">
+      <div>概率合计 $\\frac{1}{8}+\\frac{3}{8}+\\frac{3}{8}+\\frac{1}{8}=1$</div>
+      <div>条形长度 = 概率大小</div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E2D8"></div>
+
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="t" style="font-size:24px;font-weight:600">第二步：用分布回答三个问题</div>
+    <div class="step">
+      <div class="num">1</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="font-size:17px;font-weight:600;line-height:1.6">长期平均会得到几个正面？</div>
+        <div style="font-size:16px;line-height:1.8;color:#3D3D3A">{{expect}}</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="font-size:17px;font-weight:600;line-height:1.6">出现两个及以上正面的可能性有多大？</div>
+        <div style="font-size:16px;line-height:1.8;color:#3D3D3A">{{range}}</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="font-size:17px;font-weight:600;line-height:1.6">一次正面都没有的可能性有多大？</div>
+        <div style="font-size:16px;line-height:1.8;color:#3D3D3A">{{zero}}</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #E7E2D8"></div>
+
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="t" style="font-size:24px;font-weight:600">第三步：重复很多次之后，它会变成什么样</div>
+    <div style="font-size:17px;line-height:1.85;color:#3D3D3A;max-width:1000px">{{many}}</div>
+    <div style="display:flex;gap:18px;align-items:stretch">
+      <div style="flex:1 1 0;min-width:0;background:#FFFFFF;border:1px solid #E7E2D8;border-radius:10px;padding:18px 22px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:16px;font-weight:600">离散时：它是一张明细表</div>
+        <div style="font-size:16px;line-height:1.8;color:#3D3D3A">0、1、2、3 这四个结果各有概率，中间的值（比如两个半正面）根本不存在。</div>
+      </div>
+      <div style="flex:1 1 0;min-width:0;background:#FFFFFF;border:1px solid #E7E2D8;border-radius:10px;padding:18px 22px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:16px;font-weight:600">量变多时：它慢慢变成曲线</div>
+        <div style="font-size:16px;line-height:1.8;color:#3D3D3A">如果掷的不是 3 枚，而是 30 枚、300 枚，正面次数可能取的值越来越密，柱子的轮廓逐渐接近一条钟形的连续曲线——这就是正态分布常出现的由来。</div>
+      </div>
+      <div style="flex:1 1 0;min-width:0;background:#FFFFFF;border:1px solid #E7E2D8;border-radius:10px;padding:18px 22px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:16px;font-weight:600">实际用时：查曲线也算得准</div>
+        <div style="font-size:16px;line-height:1.8;color:#3D3D3A">次数很多时，逐项求和很麻烦；用那条连续曲线代替，误差很小，计算却简单得多。这就是连续分布实用价值的一个来源。</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:16px;background:#141413;border-radius:10px;padding:22px 26px">
+    <div style="font-size:17px;line-height:1.8;color:#FAF9F5"><strong>带走的结论：</strong>{{takeaway}}</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"headline":{"editor":"text","default":"从 8 种情况里，看出一个分布"},"$preview":{"width":1160,"height":2100}}'>
+class Component extends DCLogic {
+renderVals() {
+const on = 'background:#D97757;border:1px solid #D97757';
+const off = 'background:#FFFFFF;border:1px solid #CFC7B8';
+const mk = (n) => [0, 1, 2].map(i => ({ style: i < n ? on : off }));
+return {
+  headline: this.props.headline ?? '从 8 种情况里，看出一个分布',
+  setup: '掷三枚硬币，记 $X$ 为正面出现的次数。每枚硬币正反各占一半，所以 8 种组合（正正正、正正反……反反反）出现的可能性完全相同。',
+  table: [
+    { k: '0 个', dots: mk(0), list: '反反反 —— 只有 1 种', p: '$\\frac{1}{8}$（12.5%）', bar: '12.5%' },
+    { k: '1 个', dots: mk(1), list: '反正反、反反正、正反反 —— 3 种', p: '$\\frac{3}{8}$（37.5%）', bar: '37.5%' },
+    { k: '2 个', dots: mk(2), list: '正正反、正反正、反正正 —— 3 种', p: '$\\frac{3}{8}$（37.5%）', bar: '37.5%' },
+    { k: '3 个', dots: mk(3), list: '正正正 —— 只有 1 种', p: '$\\frac{1}{8}$（12.5%）', bar: '12.5%' }
+  ],
+  expect: '$E(X)=0\\times\\frac{1}{8}+1\\times\\frac{3}{8}+2\\times\\frac{3}{8}+3\\times\\frac{1}{8}=1.5$。含义不是「每次都能掷出 1.5 个正面」，而是重复很多次后，平均每次约为 1.5 个——概率分布让这个「长期平均」不用实验就能算出来。',
+  range: '把范围内的概率相加：$P(X\\ge 2)=\\frac{3}{8}+\\frac{1}{8}=\\frac{1}{2}$。这就是「算范围」的用途。',
+  zero: '$P(X=0)=\\frac{1}{8}=12.5\\%$，不是「不可能」。分布能告诉你罕见但不为零的事件具体有多罕见。',
+  many: '分布描述的是「一次试验的可能结果」，而不是某一次的结局。重复做很多次，正面次数的相对频率会逐渐稳定在 $\\frac{1}{8},\\frac{3}{8},\\frac{3}{8},\\frac{1}{8}$ 附近——这也正是概率的直观含义。',
+  takeaway: '一张分布表同时满足了三个需求：算平均（期望）、算范围（区间概率）、看形态（形状与集中程度）。它没有告诉你下一次会掷出什么，但它把「所有可能性各自的份量」一次写清楚了。',
+  $preview: { width: 1160, height: 2100 }
+};
+}
+}
+</script>
+</body>
+</html>

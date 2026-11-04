@@ -45,8 +45,7 @@ electron-package/
 # Runtime-generated user content (AI portraits + image uploads)
 server/uploads/
 
-# Rebuilt from the pinned ZCode source during prebuild.
-/server/assets/visualize-runtime/
+# Rebuilt from the pinned Design and Slides source.
 /server/assets/slides-editor/
 /server/assets/design-editor/
 

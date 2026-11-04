@@ -1,6 +1,6 @@
 "use client"
 
-import { TextOffsetContext } from '@/features/chat/visualize/TextOffsetContext'
+import { TextOffsetContext } from '@/features/chat/components/TextOffsetContext'
 
 import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
 import { code } from '@streamdown/code'
