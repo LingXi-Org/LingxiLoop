@@ -117,6 +117,6 @@ useApp.setState({ view: 'cases', selectedConversationId: null, navigationPending
 const space = { projectId: 'fixture-project', courseId: 'fixture-course', companyId, title: 'agent基础', perspective: 'learner', canManage: manager }
 const spaces = { spaces: params.has('noCourse') ? [] : [space], activeSpace: params.has('noCourse') ? undefined : space,
   loading: false, error: '', pending: false, reload: async () => {}, select: async () => {} }
-createRoot(document.getElementById('root')!).render(<ThemeProvider attribute={['class', 'data-theme']} forcedTheme={params.get('theme') || 'light'}><TooltipProvider><DesktopApp learningSpaces={spaces} />
+createRoot(document.getElementById('root')!).render(<ThemeProvider attribute={['class', 'data-theme']} defaultTheme={params.get('theme') || 'light'} storageKey={`case-fixture-${params.get('theme') || 'light'}`} enableSystem={false}><TooltipProvider><DesktopApp learningSpaces={spaces} />
   {params.has('switchCompany') && <button style={{ position: 'fixed', top: 12, right: 24, zIndex: 100 }} onClick={() => useAuth.setState({ activeCompanyId: 'case-fixture-other' })}>切换验收组织</button>}
 </TooltipProvider></ThemeProvider>)

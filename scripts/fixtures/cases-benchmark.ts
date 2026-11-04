@@ -3,6 +3,7 @@ export function instrumentCases() {
   const metrics = document.documentElement.dataset
   let clicked: { start: number; label: string; cards: number; requests: number; hero: Element | null } | null = null
   let scheduled = false
+  let opened = false
   const samples: unknown[] = []
   const ready = () => document.querySelector('[data-case-grid]') && !Array.from(document.querySelectorAll('[role=status]')).some(node => node.textContent?.includes('正在加载案例'))
   document.addEventListener('click', event => {
@@ -15,7 +16,16 @@ export function instrumentCases() {
   }, true)
   const observer = new MutationObserver(() => {
     if (scheduled || !ready()) return
-    if (!metrics.caseReadyMs) metrics.caseReadyMs = String(performance.now())
+    if (!opened) {
+      opened = true
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        metrics.caseReadyMs = String(performance.now())
+        metrics.caseResources = JSON.stringify(performance.getEntriesByType('resource').map(entry => {
+          const resource = entry as PerformanceResourceTiming
+          return { path: new URL(resource.name).pathname, bytes: resource.encodedBodySize, end: resource.responseEnd }
+        }).sort((a, b) => b.end - a.end).slice(0, 12))
+      }))
+    }
     if (!clicked || document.querySelector('.case-categories [aria-pressed=true]')?.textContent !== clicked.label) return
     scheduled = true
     requestAnimationFrame(() => requestAnimationFrame(() => {

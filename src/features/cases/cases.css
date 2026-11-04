@@ -1,6 +1,6 @@
 @import './case-fonts.css';
 
-[data-cases-shell] { --workspace-chrome-surface: #f6f6f4; --im-navigation-row-height: 44px; }
+[data-cases-shell] { --workspace-chrome-surface: #f6f6f4; }
 .dark [data-cases-shell] { --workspace-chrome-surface: var(--sidebar); }
 [data-shell-module=cases] { border-radius: 14px; }
 [data-cases-shell] [data-workspace-module][aria-current=page] { background: #eaf4ee; color: #2e7d5b; }
@@ -66,6 +66,9 @@
 .case-reader .case-body :is(h1,h2) { font-size: 21px; line-height: 1.5; letter-spacing: -.005em; margin-block: 34px 18px; }
 .case-reader .case-body h3 { font-size: 18px; }
 .case-reader .case-body .bn-editor { padding: 0; background: transparent; font-family: inherit; color: inherit; font-size: inherit; line-height: inherit; min-height: 0; }
+.case-reader .bn-editor > .bn-block-group { display: flex; flex-direction: column; gap: 18px; }
+.case-reader .bn-block-content { padding-block: 0; }
+.case-reader .case-body .bn-editor :is(h1,h2) { margin-block: 16px 0; }
 .case-reader .case-body [data-content-type=heading] { --level: 21px; }
 .case-reader .case-body blockquote { margin-block: 22px; padding: 4px 0 4px 20px; font-family: 'Noto Serif SC', serif; font-size: 18px; line-height: 1.8; color: var(--foreground); border-inline-start: 2px solid var(--case-outline); }
 .case-reader .case-markdown > * { margin-block: 0; }
