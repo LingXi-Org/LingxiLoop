@@ -377,7 +377,7 @@ jobs:
           node --experimental-test-module-mocks --test scripts/knowledge-shadow-pg-*.test.mjs
           node --check deploy/cli.mjs
           node --test deploy/image-cleanup.test.mjs deploy/retain-editor-assets.test.mjs
-          node --test deploy/runtime-patch.test.mjs deploy/knowledge-observation.test.mjs
+          node --test deploy/runtime-patch.test.mjs deploy/knowledge-observation.test.mjs deploy/worker-capacity-observe.test.mjs
           python3 deploy/notebook-observation.test.py
           node scripts/image-tag.mjs env
       - if: matrix.component == 'release'

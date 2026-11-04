@@ -1,3 +1,5 @@
+import { installModelWireSummary } from './_model-wire-summary.js'
+import { env } from '../env.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
 import type { RunStreamEvent } from '@lyyzka/lingxios/ui'
 import assert from 'node:assert/strict'
@@ -18,6 +20,8 @@ import { installRecordingWukong } from './_recording-wukong.js'
 test('live provider delivers full learning help and native cards with measured first text and total time', {skip:process.env.LINGXIOS_LIVE_PROTOCOL !== '1',timeout:1200000}, async ()=>{
   await ensureSchemaOnce(); await resetAllTables()
   const im=await installRecordingWukong()
+  if (process.env.LINGXIOS_LIVE_WIRE_SUMMARY === '1') assert.notEqual(process.env.LINGXIOS_LIVE_CAPTURE, '1', 'wire summary forbids raw preview capture')
+  const wire = process.env.LINGXIOS_LIVE_WIRE_SUMMARY === '1' ? installModelWireSummary(env.OPENAI_BASE_URL, ['1', 'schema'].includes(process.env.LINGXIOS_LIVE_WIRE_CONTROLS ?? '')) : undefined
   let worker:Awaited<ReturnType<typeof startLingxiOSWorker>>|undefined
   try {
     const {companyId,projectId,agentId}=await seedCompanyWithAgent()
@@ -25,7 +29,9 @@ test('live provider delivers full learning help and native cards with measured f
     await pool.query('UPDATE participants SET capabilities=$1 WHERE company_id=$2 AND id=$3',[JSON.stringify(DEFAULT_AGENT_CAPABILITIES),companyId,agentId])
     process.env.LINGXIOS_SERVICE_TOKEN='live-protocol-local-test-service-token'
     process.env.AGENT_OS_WORKER_PORT='52994'
-    process.env.AGENT_OS_MAX_MODEL_CALLS='12'
+    const maxCalls = Number(process.env.LINGXIOS_LIVE_MAX_MODEL_CALLS ?? '12')
+    assert.ok(Number.isSafeInteger(maxCalls) && maxCalls >= 1 && maxCalls <= 12, 'live fixture call cap must be between1 and12')
+    process.env.AGENT_OS_MAX_MODEL_CALLS=String(maxCalls)
     process.env.AGENT_OS_MAX_WORK_MS='240000'
     const api=await lingxiOSControl()
     const port=await api.listenControlPlane({serviceToken:process.env.LINGXIOS_SERVICE_TOKEN,port:0})
@@ -116,10 +122,18 @@ test('live provider delivers full learning help and native cards with measured f
         }catch{artifactRead=false} // Public reads reject missing, corrupt or inaccessible bytes; never persist their content.
       }
       const checks={streamValid,nonthinking:calls.rows[0].reasoning_tokens===0,delivered:state?.delivery==='delivered',accepted:outcome?.status==='satisfied'||expectedPartial,bodyValid:validBody(body),coverage:scenario.terms.every(term=>term.test(coverageText)),artifactRead,artifactValid,encoding:!body.includes('\\n\\n'),brief:scenario.id!=='brief'||body.length<180,cards:scenario.id!=='practice'||actions.includes('chat.recommend')&&actions.includes('files.create'),course:scenario.id!=='course'||actions.some(action=>action.startsWith('knowledge.'))}
-      const modelCalls=await pool.query("SELECT purpose,latency_ms,input_tokens,cached_input_tokens,output_tokens,extras->>'firstContentMs' AS first_content_ms FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at",[companyId,run.runId])
+      const modelCalls=await pool.query("SELECT purpose,status,extras->>'operation' AS operation,latency_ms,input_tokens,cached_input_tokens,output_tokens,extras->>'firstContentMs' AS first_content_ms FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at",[companyId,run.runId])
       console.info(JSON.stringify({scenario:scenario.id,repeat,firstTextMs,totalMs:Date.now()-started,calls:calls.rows[0].n,modelCalls:modelCalls.rows,characters:body.length,actions,checks,...(artifactEvidence?{artifact:artifactEvidence}:{}),status:state?.run.status}))
       if(Object.values(checks).some(value=>!value))failures.push(scenario.id)
     }
     assert.deepEqual(failures,[],'real provider regressions must not be reported as passed')
-  }finally{await worker?.stop();await teardownAll();await im.close()}
+  } finally {
+    const cleanup = async () => {
+      await worker?.stop()
+      if (wire && ['1', 'schema'].includes(process.env.LINGXIOS_LIVE_WIRE_CONTROLS ?? '')) console.info(JSON.stringify({ wireControls: await wire.matchedControls(process.env.LINGXIOS_LIVE_WIRE_CONTROLS === 'schema') }))
+      await teardownAll(); await im.close()
+    }
+    try { if (wire) await wire.close(cleanup); else await cleanup() }
+    finally { if (wire) console.info(JSON.stringify({ wireSummary: wire.records })) }
+  }
 })

@@ -33,6 +33,20 @@ const PULL_REGISTRY = 'accel.way2api.fun/ghcr.io/lingxi-org'
 const shell = process.platform === 'win32'
 
 async function main(command, requested) {
+  if (command === 'capacity-observe') {
+    const ssh = sshSession()
+    try {
+      const script = git('show', 'HEAD:deploy/worker-capacity-observe.mjs')
+      const results = await Promise.allSettled(['a', 'b'].map(slot => ssh.run(STACK_HOST[`app-${slot}`], `worker ${slot} capacity observation`,
+        `docker exec -i lingxiloop-app-${slot}-worker-1 node --input-type=module <<'CAPACITY_OBSERVE_JS'\n${script}\nCAPACITY_OBSERVE_JS`, true, 20_000).then(JSON.parse)))
+      const observations = Object.fromEntries(results.map((result, index) => [index ? 'workerB' : 'workerA',
+        result.status === 'fulfilled' ? result.value : { status: 'unavailable', code: 'observation_unavailable' }]))
+      const complete = Object.values(observations).every(value => value.status === 'observed')
+      console.log(JSON.stringify({ format: 'worker-capacity-readonly/v1', observationOnly: true, status: complete ? 'observed' : 'partial', ...observations }))
+      if (!complete) process.exitCode = 1
+    } finally { ssh.close() }
+    return
+  }
   if (command === 'knowledge-observe') {
     const runId = knowledgeObservationRunId(requested), ssh = sshSession()
     try {
@@ -90,7 +104,7 @@ async function main(command, requested) {
         else await Promise.all([deployServers(), workers()])
       },
     }
-    if (!steps[command]) throw new Error(`unknown command ${command}; use up|images|pull|plan|servers|workers|status|runtime-preflight|runtime-observe|knowledge-observe`)
+    if (!steps[command]) throw new Error(`unknown command ${command}; use up|images|pull|plan|servers|workers|status|runtime-preflight|runtime-observe|knowledge-observe|capacity-observe`)
     await steps[command]()
   } finally { ssh.close() }
 }
@@ -359,7 +373,9 @@ async function status(ssh) {
 }
 
 // Refuse the automatic rollout before obtaining Sigillo credentials or SSH.
-if (process.argv[2] === 'knowledge-observe') knowledgeObservationRunId(process.argv.slice(3))
+if (process.argv[2] === 'capacity-observe') {
+  if (process.argv.length !== 3) throw new Error('capacity-observe accepts no arguments')
+} else if (process.argv[2] === 'knowledge-observe') knowledgeObservationRunId(process.argv.slice(3))
 else {
   const committedMigrations = git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean)
   assertRetirementReleaseAllowed(committedMigrations, process.argv[2] ?? 'up', process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED,
@@ -375,9 +391,10 @@ if (!process.env.DEPLOY_SSH_KEY) {
 } else {
   const [command = 'up', ...stacks] = process.argv.slice(2)
   const started = Date.now()
-  const label = command === 'knowledge-observe' ? 'read-only observation' : 'deploy'
+  const observationOnly = command === 'knowledge-observe' || command === 'capacity-observe'
+  const label = observationOnly ? 'read-only observation' : 'deploy'
   main(command, stacks).then(
-    () => { if (command !== 'knowledge-observe') console.log(`${label} ${command} done in ${Math.round((Date.now() - started) / 1000)}s`) },
+    () => { if (!observationOnly) console.log(`${label} ${command} done in ${Math.round((Date.now() - started) / 1000)}s`) },
     error => { console.error(`${label} ${command} failed: ${error.message}`); process.exit(1) },
   )
 }

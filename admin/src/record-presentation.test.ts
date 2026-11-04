@@ -1,3 +1,7 @@
+import { ModelStageTimingCard } from './model-stage-timing.js'
+import type { RunStageTiming } from '../../shared/model-stage-timing.js'
+import { AgentRunTimingCard } from './agent-run-timing.js'
+import type { AgentRunTiming } from '../../shared/agent-run-timing.js'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createElement } from 'react'
@@ -60,4 +64,47 @@ test('workspace navigation preserves every resource under a business owner', asy
   assert.equal(recordPath('companies'), '/organizations')
   assert.equal(recordPath('knowledge-jobs'), '/projects/knowledge-jobs')
   assert.equal(listParameters(new URLSearchParams('tab=学习&search=示例&companyId=other&cursor=MjA&previous=-'), { companyId: 'owner' }).toString(), 'search=%E7%A4%BA%E4%BE%8B&companyId=owner&cursor=MjA')
+})
+
+
+test('run timing distinguishes unavailable from zero and never labels a lease as execution', async () => {
+  const { STATUS_LABELS, FIELD_LABELS } = await import('./record-presentation.js')
+  assert.equal(STATUS_LABELS.leased, '已领取')
+  assert.equal(FIELD_LABELS.executionMs, '累计执行耗时')
+  const timing: AgentRunTiming = { observedAt: '2026-11-03T12:00:00Z', queueState: 'delayed', eligibleQueueMs: null,
+    availableDelayMs: 30000, initialEligibleToStartedMs: null, attemptExecutionTotalMs: 0, modelPermitWaitMs: null,
+    ingressToEnqueueMs: null, endToEndMs: null, leaseValidity: 'not-leased', heartbeatAgeMs: null, leaseExpiresAt: null, eventHistory: 'unavailable' }
+  const html = renderToStaticMarkup(createElement(AgentRunTimingCard, { timing }))
+  assert.match(html, /尚未到可执行时间/)
+  assert.match(html, /30 秒/)
+  assert.match(html, /0 秒/)
+  assert.match(html, /未提供/)
+  assert.match(html, /不能相加作为端到端用时/)
+  assert.equal(renderToStaticMarkup(createElement(AgentRunTimingCard, {})), '')
+})
+
+
+test('stage card distinguishes settled correction, missing first content and publication failure without provider-time fiction', () => {
+  const stages: RunStageTiming = { calls: [{ callId: 'call<script>', requestVersion: 1, fence: 1, operation: 'correction', status: 'failed',
+    stages: { version: 1, clock: 'monotonic', providerTime: 'unavailable', totalMs: 100, modelPermitWaitMs: 0, observedStreamMs: 80, outputCallbackWaitMs: 60, streamCompleted: false } }],
+    modelCallsAvailable: true, callsTruncated: false, publicationTimings: [{ version: 1, clock: 'monotonic', callId: 'call<script>', requestVersion: 1, fence: 1, revision: 2,
+      publicationTotalMs: 70, publicationWaitMs: 60, publicationCount: 3, acknowledgedCount: 2, failure: { stage: 'seal', code: 'persistence_rejected' } }],
+    publicationMeasurementsAvailable: true, publicationsTruncated: true, providerTime: 'unavailable', unattributedRunMs: null }
+  const html = renderToStaticMarkup(createElement(ModelStageTimingCard, { stages }))
+  assert.match(html, /协议纠正/); assert.match(html, /0 ms/); assert.match(html, /未提供/)
+  assert.match(html, /修订 2/); assert.match(html, /最终封存：持久化确认被拒绝/)
+  assert.match(html, /不能相加或相减推算供应商纯推理时间/)
+  assert.match(html, /call&lt;script&gt;/); assert.doesNotMatch(html, /<script>/)
+})
+
+test('stage card reports only the provided local output origin and preserves unknown historical failures', () => {
+  const timing = { version: 1, clock: 'monotonic', providerTime: 'unavailable', totalMs: 1 } as const
+  const stages: RunStageTiming = { calls: [
+    { callId: 'local', fence: 1, requestVersion: 1, operation: 'generation', status: 'failed', stages: timing, failureAttribution: { kind: 'output', outputCallback: 'operation' } },
+    { callId: 'legacy', fence: 1, requestVersion: 1, operation: 'generation', status: 'failed', stages: timing },
+  ], modelCallsAvailable: true, callsTruncated: false, publicationTimings: [], publicationMeasurementsAvailable: true, publicationsTruncated: false, providerTime: 'unavailable', unattributedRunMs: null }
+  const html = renderToStaticMarkup(createElement(ModelStageTimingCard, { stages }))
+  assert.match(html, /失败来源：本地输出；输出操作回调/)
+  assert.match(html, /失败来源：未提供/)
+  assert.doesNotMatch(html, /失败来源：供应商/)
 })

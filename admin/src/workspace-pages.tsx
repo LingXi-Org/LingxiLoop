@@ -109,7 +109,7 @@ export function DetailSections({ resource, record, renderField }: { resource: st
   const primary = ['users', 'companies', 'projects'].includes(resource)
   const summary = useCustom<{ metrics: Array<{ label: string; value: number; resource: string }> }>({ url: `${API_URL}/control/platform/resources/${resource}/${encodeURIComponent(record.id)}/summary`, method: 'get', queryOptions: { enabled: primary && tab === '概览', placeholderData: undefined } })
   const basics = [...new Set(['email', 'description', 'type', 'kind', 'company_id', 'project_id', 'user_id', 'created_at', 'updated_at', ...recordColumns([], resource)])].filter(key => record[key] != null && typeof record[key] !== 'object')
-  const secondary = Object.entries(record).filter(([key]) => !basics.includes(key) && !['id', 'name', 'display_name', 'title', 'management_actions'].includes(key) && !key.endsWith('_label'))
+  const secondary = Object.entries(record).filter(([key]) => !basics.includes(key) && !['id', 'name', 'display_name', 'title', 'management_actions'].includes(key) && !(resource === 'agent-runs' && ['timing', 'stages'].includes(key)) && !key.endsWith('_label'))
   return <div className="space-y-6"><nav className="admin-workspace-tabs" aria-label="详情分区">{['概览', ...Object.keys(groups)].map(value => <Button key={value} variant={tab === value ? 'secondary' : 'ghost'} aria-current={tab === value ? 'page' : undefined} onClick={() => setParams({ tab: value })}>{value}</Button>)}</nav>
     {tab === '概览' ? <>
       {primary && summary.query.isError && summary.query.data && <ErrorPanel message="摘要刷新失败，显示上次加载的数据。" retry={() => void summary.query.refetch()} />}

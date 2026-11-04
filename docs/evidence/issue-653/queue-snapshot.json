@@ -1,0 +1,10 @@
+{
+  "status": "unavailable",
+  "source": "existing public MCP admin resource list with fixed queued/leased filters, limit 100",
+  "failure": "transport timeout: curl exit 28 at 40-second deadline",
+  "automaticRetries": 0,
+  "queueDepth": null,
+  "oldestEligibleWaitMs": null,
+  "leaseExpiry": null,
+  "note": "No complete snapshot retained. Missing queue metrics on Worker endpoints are not zero depth. No mutations were requested."
+}

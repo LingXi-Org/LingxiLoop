@@ -1,6 +1,7 @@
 import { assembleHarness, createLingxiOS, doctor, releaseVersions, type ModelCallObservation, type DeliveryContext } from '@lyyzka/lingxios'
 import { createWorker, type WorkerOptions } from '@lyyzka/lingxios/worker'
 import { execFileSync } from 'node:child_process'
+import { modelStageExtras } from './model-observation-timing.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { recordLlmCall } from '../llm-ledger.js'
@@ -185,6 +186,7 @@ export async function recordModelCall(observation: ModelCallObservation, context
         source: 'agent-os' as const,
         extras: { callId: observation.callId,apiKind: observation.purpose === 'embedding' ? 'embedding' : 'chat', pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
           ...(operation ? { operation } : {}),
+          ...modelStageExtras(observation),
           ...(observation.executionTiming ? { completedAt: observation.executionTiming.completedAt } : {}),
           ...(observation.logicalCallId ? { logicalCallId: observation.logicalCallId } : {}),
           ...(observation.attempt !== undefined ? { attempt: observation.attempt } : {}),

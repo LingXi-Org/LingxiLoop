@@ -9,7 +9,7 @@ on:
       command:
         description: Deployment or read-only diagnostic command
         type: choice
-        options: [up, servers, workers, pull, plan, status, runtime-preflight, runtime-observe, knowledge-observe]
+        options: [up, servers, workers, pull, plan, status, runtime-preflight, runtime-observe, capacity-observe, knowledge-observe]
         default: up
       stacks:
         description: Space-separated server stacks (empty = all)
@@ -45,10 +45,13 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: server/build/admin-control/package-lock.json
-      - if: inputs.command != 'knowledge-observe'
+      - if: inputs.command != 'knowledge-observe' && inputs.command != 'capacity-observe'
         run: node deploy/cli.mjs ${{ inputs.command }} ${{ inputs.stacks }}
       - name: Read-only knowledge observation
         if: inputs.command == 'knowledge-observe'
         env:
           OBSERVATION_RUN_ID: ${{ inputs.run_id }}
         run: node deploy/cli.mjs knowledge-observe "$OBSERVATION_RUN_ID"
+      - name: Read-only Worker capacity observation
+        if: inputs.command == 'capacity-observe'
+        run: node deploy/cli.mjs capacity-observe

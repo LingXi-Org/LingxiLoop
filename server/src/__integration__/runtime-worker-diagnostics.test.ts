@@ -1,3 +1,5 @@
+import type { RunStageTiming } from '../../../shared/model-stage-timing.js'
+import type { AgentRunTiming } from '../../../shared/agent-run-timing.js'
 import assert from 'node:assert/strict'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { createServer, type Server } from 'node:http'
@@ -214,8 +216,17 @@ test('native Worker persists distinct restore and binding-save failures behind t
     for (const path of [`/platform/resources/agent-runs/${runPath}`, `/platform/agent-runs/${runPath}/operations`]) {
       const response = await fetch(`${base}${path}`, { headers: { 'x-test-platform': 'true' } })
       assert.equal(response.status, 200)
-      const body = await response.json() as { workerFailure: RuntimeFailureDiagnostic }
+      const body = await response.json() as { workerFailure: RuntimeFailureDiagnostic; timing: AgentRunTiming; stages: RunStageTiming }
       assert.deepEqual(body.workerFailure, diagnostic)
+      assert.equal(body.timing.queueState, 'not-queued')
+      assert.equal(typeof body.timing.initialEligibleToStartedMs, 'number')
+      assert.equal(typeof body.timing.attemptExecutionTotalMs, 'number')
+      assert.equal(body.timing.endToEndMs, null)
+      assert.equal(body.timing.modelPermitWaitMs, null)
+      assert.equal(body.stages.modelCallsAvailable, true)
+      assert.deepEqual(body.stages.calls, [])
+      assert.equal(body.stages.providerTime, 'unavailable')
+      assert.equal(body.stages.unattributedRunMs, null)
       assertPrivate(body)
     }
     const content = await fetch(`${base}/platform/resources/agent-runs/${runPath}/content/workerFailure`, { headers: { 'x-test-platform': 'true' } })
@@ -223,10 +234,17 @@ test('native Worker persists distinct restore and binding-save failures behind t
     assert.deepEqual(JSON.parse((await content.json() as { data: string }).data), diagnostic)
     const company = await fetch(`${base}/company/resources/agent-runs/${runPath}`)
     assert.equal(company.status, 200)
-    const companyBody = await company.json() as { diagnostics: Record<string, unknown> }
+    const companyBody = await company.json() as { diagnostics: Record<string, unknown>; timing: AgentRunTiming; stages: RunStageTiming }
     assert.equal(Object.hasOwn(companyBody, 'workerFailure'), false)
+    assert.equal(companyBody.timing.queueState, 'not-queued')
+    assert.equal(typeof companyBody.timing.initialEligibleToStartedMs, 'number')
+    assert.equal(companyBody.timing.leaseValidity, 'not-leased')
+    assert.equal(companyBody.timing.endToEndMs, null)
     assert.equal(Object.hasOwn(companyBody.diagnostics, 'runtimeFailure'), false)
     assert.equal(JSON.stringify(companyBody).includes(diagnostic.correlationId), false)
+    assert.equal(companyBody.stages.modelCallsAvailable, true)
+    assert.deepEqual(companyBody.stages.calls, [])
+    assert.equal(companyBody.stages.providerTime, 'unavailable')
     assertPrivate(companyBody)
     assert.equal((await fetch(`${base}/company/resources/agent-runs/${runPath}/content/workerFailure`)).status, 404)
     const companyDiagnostics = await fetch(`${base}/company/resources/agent-runs/${runPath}/content/diagnostics`)

@@ -1,0 +1,871 @@
+{
+  "format": "worker-capacity-readonly/v1",
+  "observationOnly": true,
+  "status": "observed",
+  "workerA": {
+    "observationOnly": true,
+    "runtime": "3.8.21",
+    "observedAt": "2026-11-03T09:17:36.883Z",
+    "configuration": {
+      "AGENT_OS_MAX_CONCURRENT_RUNS": 2,
+      "AGENT_OS_RESERVED_INTERACTIVE_RUNS": 1,
+      "AGENT_OS_MODEL_CONCURRENCY": 2,
+      "AGENT_OS_MAX_MODEL_CALLS": 512,
+      "AGENT_OS_MAX_MODEL_TOKENS": 8000000,
+      "AGENT_OS_MAX_MODEL_COST_MICROS": 50000000,
+      "AGENT_OS_MAX_WORK_MS": 7200000
+    },
+    "configurationScope": "container_environment_not_frozen_root_limits",
+    "providerLimits": "unknown",
+    "perRunModelPermitWait": "unknown",
+    "leaseExpiry": "unknown",
+    "generationCorrectionOccupancy": "unknown",
+    "status": "observed",
+    "health": {
+      "ok": true,
+      "draining": false,
+      "activeRuns": 0,
+      "maxConcurrentRuns": 2
+    },
+    "metrics": [
+      {
+        "name": "agentos_worker_active_runs",
+        "labels": {},
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.01"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.025"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.05"
+        },
+        "value": 2
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.1"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.2"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.5"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "1"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "2"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "5"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "15"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "60"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "120"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "300"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "900"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "+Inf"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_sum",
+        "labels": {},
+        "value": 0.2920350070013665
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_count",
+        "labels": {},
+        "value": 5
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.01"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.025"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.05"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.1"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.2"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.5"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "1"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "2"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "5"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "15"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "60"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "120"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "300"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "900"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "+Inf"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_sum",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model"
+        },
+        "value": 0.00018088199943304062
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_count",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model"
+        },
+        "value": 22
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.01"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.025"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.05"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.1"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.2"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.5"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "1"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "2"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "5"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "15"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "60"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "120"
+        },
+        "value": 1
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "300"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "900"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "+Inf"
+        },
+        "value": 5
+      },
+      {
+        "name": "agentos_run_seconds_sum",
+        "labels": {
+          "lane": "interactive"
+        },
+        "value": 746.9003489530007
+      },
+      {
+        "name": "agentos_run_seconds_count",
+        "labels": {
+          "lane": "interactive"
+        },
+        "value": 5
+      }
+    ]
+  },
+  "workerB": {
+    "observationOnly": true,
+    "runtime": "3.8.21",
+    "observedAt": "2026-11-03T09:17:37.218Z",
+    "configuration": {
+      "AGENT_OS_MAX_CONCURRENT_RUNS": 2,
+      "AGENT_OS_RESERVED_INTERACTIVE_RUNS": 1,
+      "AGENT_OS_MODEL_CONCURRENCY": 2,
+      "AGENT_OS_MAX_MODEL_CALLS": 512,
+      "AGENT_OS_MAX_MODEL_TOKENS": 8000000,
+      "AGENT_OS_MAX_MODEL_COST_MICROS": 50000000,
+      "AGENT_OS_MAX_WORK_MS": 7200000
+    },
+    "configurationScope": "container_environment_not_frozen_root_limits",
+    "providerLimits": "unknown",
+    "perRunModelPermitWait": "unknown",
+    "leaseExpiry": "unknown",
+    "generationCorrectionOccupancy": "unknown",
+    "status": "observed",
+    "health": {
+      "ok": true,
+      "draining": false,
+      "activeRuns": 0,
+      "maxConcurrentRuns": 2
+    },
+    "metrics": [
+      {
+        "name": "agentos_worker_active_runs",
+        "labels": {},
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.01"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.025"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.05"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.1"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.2"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "0.5"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "1"
+        },
+        "value": 1
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "2"
+        },
+        "value": 2
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "5"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "15"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "60"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "120"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "300"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "900"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_bucket",
+        "labels": {
+          "le": "+Inf"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_sum",
+        "labels": {},
+        "value": 10.07015735600004
+      },
+      {
+        "name": "agentos_claim_recovery_seconds_count",
+        "labels": {},
+        "value": 4
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.01"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.025"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.05"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.1"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.2"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "0.5"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "1"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "2"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "5"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "15"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "60"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "120"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "300"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "900"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_bucket",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model",
+          "le": "+Inf"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_sum",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model"
+        },
+        "value": 0.0001394760007970035
+      },
+      {
+        "name": "agentos_resource_queue_wait_seconds_count",
+        "labels": {
+          "priority": "foreground",
+          "resource": "model"
+        },
+        "value": 10
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.01"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.025"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.05"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.1"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.2"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "0.5"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "1"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "2"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "5"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "15"
+        },
+        "value": 0
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "60"
+        },
+        "value": 2
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "120"
+        },
+        "value": 2
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "300"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "900"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_run_seconds_bucket",
+        "labels": {
+          "lane": "interactive",
+          "le": "+Inf"
+        },
+        "value": 4
+      },
+      {
+        "name": "agentos_run_seconds_sum",
+        "labels": {
+          "lane": "interactive"
+        },
+        "value": 440.49628842400017
+      },
+      {
+        "name": "agentos_run_seconds_count",
+        "labels": {
+          "lane": "interactive"
+        },
+        "value": 4
+      }
+    ]
+  }
+}
