@@ -1,0 +1,53 @@
+{
+  "browser": "154.0.8037.57",
+  "base": "bb1186f4",
+  "scope": "Actual CasesPage + casesRouter/CasesApplication + PostgreSQL owning-case schema slice; synthetic session identity and recording storage; not full runtime bootstrap or production acceptance.",
+  "results": [
+    {
+      "kind": "plain",
+      "id": "case-c9f80e25-bf2c-49be-804d-1dcfc5d829af",
+      "savedVersion": 3,
+      "publishedVersion": 5,
+      "initialReaderCodeBlocks": 1,
+      "finalReaderCodeBlocks": 1,
+      "explicitCodeViewAvailable": false,
+      "explicitViewCodeBlocks": null,
+      "viewSwitchDoesNotWrite": null,
+      "staleSaveRejected": true,
+      "snapshotStayedUnchangedUntilPublish": true,
+      "nativeFormatPreserved": true,
+      "serverSaveReloadPublishRead": true
+    },
+    {
+      "kind": "styled",
+      "id": "case-630d2aec-fe3d-44f9-9ddf-6121a8db546c",
+      "savedVersion": 3,
+      "publishedVersion": 5,
+      "initialReaderCodeBlocks": 0,
+      "finalReaderCodeBlocks": 0,
+      "explicitCodeViewAvailable": true,
+      "explicitViewCodeBlocks": 1,
+      "viewSwitchDoesNotWrite": true,
+      "staleSaveRejected": true,
+      "snapshotStayedUnchangedUntilPublish": true,
+      "nativeFormatPreserved": true,
+      "serverSaveReloadPublishRead": true
+    },
+    {
+      "kind": "escaped",
+      "id": "case-f164911c-6792-48ef-af14-20700c53c8d8",
+      "savedVersion": 3,
+      "publishedVersion": 5,
+      "initialReaderCodeBlocks": 0,
+      "finalReaderCodeBlocks": 0,
+      "explicitCodeViewAvailable": false,
+      "explicitViewCodeBlocks": null,
+      "viewSwitchDoesNotWrite": null,
+      "staleSaveRejected": true,
+      "snapshotStayedUnchangedUntilPublish": true,
+      "nativeFormatPreserved": true,
+      "serverSaveReloadPublishRead": true
+    }
+  ],
+  "errors": []
+}
