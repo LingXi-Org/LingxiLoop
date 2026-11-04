@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>概率分布：一张图看懂</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,sans-serif}
+a{color:#8c4530}a:hover{color:#6d3424}
+b{font-weight:600}
+</style>
+</helmet>
+<div style="width:1120px;padding:64px 72px 56px;box-sizing:border-box;background:#FAF9F5;color:#141413;display:flex;flex-direction:column;gap:40px">
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="font-size:15px;font-weight:600;letter-spacing:.12em;color:#8c4530">概率 · 零基础入门</div>
+<h1 style="margin:0;font-family:Georgia,serif;font-weight:300;font-size:52px;line-height:1.18;color:#141413">概率分布：把「不确定」画成一张图</h1>
+<p style="margin:0;font-size:19px;line-height:1.6;color:#3D3D3A;max-width:860px">一句话：概率分布告诉你<b>所有可能的结果</b>，以及每个结果<b>有多大的机会发生</b>。把结果排成横轴、把机会画成高度，一张图就讲完了。</p>
+</div>
+
+<hr style="border:0;border-top:1px solid #E3DACC;margin:0">
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:baseline;gap:12px">
+<span style="font-family:Georgia,serif;font-size:30px;color:#D97757">01</span>
+<h2 style="margin:0;font-size:26px;font-weight:600">它是什么：两条规则就够了</h2>
+</div>
+<div style="display:flex;gap:24px;flex-wrap:wrap">
+<div style="flex:1 1 480px;min-width:0;background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:24px 26px;display:flex;flex-direction:column;gap:14px">
+<div style="font-size:16px;color:#3D3D3A;line-height:1.8">每个可能结果 $x$ 都配一个概率 $P(x)$，并且必须同时满足：</div>
+<div style="display:flex;gap:12px;align-items:flex-start"><span style="font-family:Georgia,serif;font-size:20px;color:#D97757;line-height:1.2">①</span><div style="font-size:17px;line-height:1.7">非负：每个概率都 $\ge 0$，不会出现「负的机会」。</div></div>
+<div style="display:flex;gap:12px;align-items:flex-start"><span style="font-family:Georgia,serif;font-size:20px;color:#D97757;line-height:1.2">②</span><div style="font-size:17px;line-height:1.7">合计为 1：所有结果的机会加起来正好 $=1$，因为「总会发生点什么」。</div></div>
+<div style="font-size:15.5px;line-height:1.7;color:#3D3D3A;background:#F5F4ED;border-radius:8px;padding:14px 16px">写成公式：$\sum_{x} P(x)=1$。这就是分布的全部内核，其余都是怎么去算它、怎么用它。</div>
+</div>
+<div style="flex:1 1 400px;min-width:0;background:#F5F4ED;border-radius:12px;padding:24px 26px;display:flex;flex-direction:column;gap:12px">
+<div style="font-size:15px;font-weight:600;letter-spacing:.08em;color:#8c4530">和「概率」的区别</div>
+<div style="font-size:16.5px;line-height:1.75">单个概率回答「<b>这件事</b>有多可能」；分布回答「<b>所有事</b>各自有多可能」，是一整张清单或一整条曲线。</div>
+<div style="font-size:16.5px;line-height:1.75">打个比方：一张地图上标着每座城市的人口——分布就是这张标满数字的地图，单个概率只是其中一座城市的数。</div>
+</div>
+</div>
+<div style="font-size:15px;line-height:1.7;color:#3D3D3A">常用词：<b>随机变量</b> = 结果的那个数（如「掷两次的正面向上的次数」）；<b>取值</b> = 它可能等于哪些数；<b>分布</b> = 取值与对应概率的对应关系。</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:baseline;gap:12px">
+<span style="font-family:Georgia,serif;font-size:30px;color:#D97757">02</span>
+<h2 style="margin:0;font-size:26px;font-weight:600">为何需要：从「猜」变成「算」</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:20px">
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:17px;font-weight:600">应对不确定</div>
+<div style="font-size:15.5px;line-height:1.7;color:#3D3D3A">现实中很少能确定结果。光说「可能下雨」没用，分布能说「70% 有雨」，可以据此带伞。</div>
+<div style="font-size:14.5px;line-height:1.6;color:#5c5b56">场景：天气预报、保险定价</div>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:17px;font-weight:600">比较与选择</div>
+<div style="font-size:15.5px;line-height:1.7;color:#3D3D3A">两种方案的「平均表现」和「波动大小」都能从分布读出，选哪个不再靠感觉。</div>
+<div style="font-size:14.5px;line-height:1.6;color:#5c5b56">关键量：期望值、方差</div>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px">
+<div style="font-size:17px;font-weight:600">作为推理的起点</div>
+<div style="font-size:15.5px;line-height:1.7;color:#3D3D3A">知道数据的分布，才能做统计推断、检验假设、训练会「打分」的模型。</div>
+<div style="font-size:14.5px;line-height:1.6;color:#5c5b56">场景：A/B 测试、机器学习</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:baseline;gap:12px">
+<span style="font-family:Georgia,serif;font-size:30px;color:#D97757">03</span>
+<h2 style="margin:0;font-size:26px;font-weight:600">离散与连续：同一件事的两种画法</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:20px">
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font-size:12.5px;font-weight:600;letter-spacing:.08em;color:#FAF9F5;background:#141413;border-radius:999px;padding:4px 10px">离散</span><span style="font-size:17px;font-weight:600">结果是可数的、分开的</span></div>
+<div style="font-size:15.5px;line-height:1.7;color:#3D3D3A">例如次数、个数、名次。工具用<b>概率质量</b> $P(x)$：直接是那一块的概率，所有柱子的高度加起来 $=1$。</div>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font-size:12.5px;font-weight:600;letter-spacing:.08em;color:#FAF9F5;background:#D97757;border-radius:999px;padding:4px 10px">连续</span><span style="font-size:17px;font-weight:600">结果可以取任意值</span></div>
+<div style="font-size:15.5px;line-height:1.7;color:#3D3D3A">例如身高、时间、温度。工具用<b>概率密度</b> $f(x)$：它<b>不是概率</b>，只有<b>面积</b>才是概率，总面积为 1。</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;background:#F5F4ED;border-radius:12px;padding:22px 24px">
+<div style="font-size:16px;font-weight:600">用区间来连接两者</div>
+<div style="font-size:15.5px;line-height:1.8;color:#3D3D3A">离散：把几根柱子的高度加起来。连续：把这条细长区间下面的面积加起来。</div>
+<div style="font-size:15.5px;line-height:1.8;color:#3D3D3A">所以「柱子的高度」和「曲线的高度」并不是同一种东西——柱子高 = 概率；曲线高 = 密度，要乘上宽度才是概率。</div>
+</div>
+<div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:22px 24px;display:flex;flex-direction:column;gap:12px">
+<div style="font-size:15px;font-weight:600;letter-spacing:.08em;color:#8c4530">关键提示</div>
+<div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:Georgia,serif;font-size:18px;color:#D97757;line-height:1.3">·</span><div style="font-size:15.5px;line-height:1.75">连续分布里，单点概率为 0：$P(a\le X\le a)=\int_{a}^{a} f(x)\,dx=0$。所以问「刚好 170.0000 厘米」没意义，要问「在 168~172 厘米之间」。</div></div>
+<div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:Georgia,serif;font-size:18px;color:#D97757;line-height:1.3">·</span><div style="font-size:15.5px;line-height:1.75">密度可以大于 1，没关系，只要总面积仍为 1；概率永远不会超过 1，密度只是「单位宽度里的密度」。</div></div>
+<div style="display:flex;gap:10px;align-items:flex-start"><span style="font-family:Georgia,serif;font-size:18px;color:#D97757;line-height:1.3">·</span><div style="font-size:15.5px;line-height:1.75">两者能互相过渡：把区间切得足够细、把分布看作许多细小的离散块，就是积分的思路；反过来，把连续分布切成许多窄区间，也能用柱子近似它。</div></div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:baseline;gap:12px">
+<span style="font-family:Georgia,serif;font-size:30px;color:#D97757">04</span>
+<h2 style="margin:0;font-size:26px;font-weight:600">一个例子：掷两枚硬币，数正面</h2>
+</div>
+<div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end">
+<div style="flex:1 1 560px;min-width:0;background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:26px 26px 18px">
+<div style="font-size:16.5px;line-height:1.75;color:#3D3D3A;margin-bottom:18px">设 $X$ = 两枚硬币中出现正面的次数，可能值为 0、1、2。每枚硬币的正反面各占一半、彼此独立，共 $2\times2=4$ 种等可能的结果。</div>
+<div style="display:flex;align-items:flex-end;gap:36px;height:240px;padding:0 18px;border-bottom:2px solid #141413">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px">
+<div style="font-size:14px;color:#3D3D3A">25%</div>
+<div style="width:100%;max-width:120px;height:64px;background:#8F8B80;border-radius:4px 4px 0 0"></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px">
+<div style="font-size:14px;color:#3D3D3A">50%</div>
+<div style="width:100%;max-width:120px;height:128px;background:#D97757;border-radius:4px 4px 0 0"></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px">
+<div style="font-size:14px;color:#3D3D3A">25%</div>
+<div style="width:100%;max-width:120px;height:64px;background:#8F8B80;border-radius:4px 4px 0 0"></div>
+</div>
+</div>
+<div style="display:flex;gap:36px;padding:10px 18px 0">
+<div style="flex:1;text-align:center;font-size:15px;color:#141413">$x=0$<span style="color:#3D3D3A">（反反）</span></div>
+<div style="flex:1;text-align:center;font-size:15px;color:#141413">$x=1$<span style="color:#3D3D3A">（正反 / 反正）</span></div>
+<div style="flex:1;text-align:center;font-size:15px;color:#141413">$x=2$<span style="color:#3D3D3A">（正正）</span></div>
+</div>
+<div style="font-size:15px;line-height:1.7;color:#3D3D3A;margin-top:14px">三根柱子的高度加起来：$0.25+0.5+0.25=1$ ✓ —— 这就检验了「非负」与「合计为 1」两条规则。</div>
+</div>
+<div style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:14px">
+<div style="background:#F5F4ED;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:14px;font-weight:600;letter-spacing:.08em;color:#8c4530">读图</div>
+<div style="font-size:15.5px;line-height:1.7">中间最高：1 个正面有<b>两种</b>走法（正反、反正），所以机会是两边的两倍。</div>
+</div>
+<div style="background:#F5F4ED;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:14px;font-weight:600;letter-spacing:.08em;color:#8c4530">算平均</div>
+<div style="font-size:15.5px;line-height:1.7">期望值 $E[X]=\sum x\,P(x)=0\times0.25+1\times0.5+2\times0.25=1$（个正面），与直觉一致。</div>
+</div>
+<div style="background:#F5F4ED;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:14px;font-weight:600;letter-spacing:.08em;color:#8c4530">算问题</div>
+<div style="font-size:15.5px;line-height:1.7">「至少一个正面」= $P(X\ge1)=0.5+0.25=0.75$：加高度，而不是乘。</div>
+</div>
+</div>
+</div>
+<div style="font-size:15px;line-height:1.7;color:#3D3D3A;background:#FFFFFF;border:1px solid #E3DACC;border-radius:10px;padding:16px 20px">换个视角看连续版：把 $X$ 从「掷两枚」变成「掷一万枚」，横轴几乎填满 0 到 10000，柱子密到连成一条<b>钟形曲线</b>；这时问「正好 5000 个正面」的概率趋近 0，只能问「4950~5050 个之间」并算面积。离散与连续就这样接上了。</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:baseline;gap:12px">
+<span style="font-family:Georgia,serif;font-size:30px;color:#D97757">05</span>
+<h2 style="margin:0;font-size:26px;font-weight:600">怎么开始读一张分布</h2>
+</div>
+<div style="font-size:16.5px;line-height:1.75;color:#3D3D3A">遇到任何一个题目或图表，按这四步问自己：</div>
+<div style="display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:14px">
+<div style="display:flex;flex-direction:column;gap:8px;background:#FAF9F5;border:1px solid #E3DACC;border-radius:10px;padding:16px"><div style="font-family:Georgia,serif;font-size:22px;color:#D97757">1</div><div style="font-size:15px;line-height:1.65">结果是<b>数得清</b>还是<b>能任意小</b>？决定离散/连续。</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#FAF9F5;border:1px solid #E3DACC;border-radius:10px;padding:16px"><div style="font-family:Georgia,serif;font-size:22px;color:#D97757">2</div><div style="font-size:15px;line-height:1.65">是求<b>一个点</b>（读高度/密度）还是<b>一段区间</b>（加和/求面积）？</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#FAF9F5;border:1px solid #E3DACC;border-radius:10px;padding:16px"><div style="font-family:Georgia,serif;font-size:22px;color:#D97757">3</div><div style="font-size:15px;line-height:1.65">算完检查：概率是否在 0~1、合计是否为 1？</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;background:#FAF9F5;border:1px solid #E3DACC;border-radius:10px;padding:16px"><div style="font-family:Georgia,serif;font-size:22px;color:#D97757">4</div><div style="font-size:15px;line-height:1.65">说出<b>中心在哪、有多分散</b>（期望值、方差），一句话概括形状。</div></div>
+</div>
+</div>
+
+<div style="border-top:1px solid #E3DACC;padding-top:20px;font-size:16px;line-height:1.7;color:#3D3D3A">一句话记住：<b>分布 = 取值 × 概率的地图</b>；离散逐点加高度，连续按区间算面积；两者是同一件事在「数得清」与「连续变化」两种世界里的写法。</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1120,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

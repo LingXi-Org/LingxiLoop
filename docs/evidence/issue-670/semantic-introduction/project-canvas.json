@@ -1,0 +1,53 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-04T13:09:06.844Z"
+  },
+  "title": "概率分布：从掷骰子到正态曲线",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1160, "h": 2580 },
+    "Compare.dc.html": { "x": 1240, "y": 0, "w": 1160, "h": 1980 },
+    "Example.dc.html": { "x": 2480, "y": 0, "w": 1160, "h": 2100 }
+  },
+  "order": ["Main.dc.html", "Compare.dc.html", "Example.dc.html"],
+  "notes": {
+    "dist": {
+      "x": 0,
+      "y": -300,
+      "text": "概率分布：是什么 · 为何需要 · 离散与连续 · 一个例子",
+      "kind": "title1",
+      "maxW": 3640
+    },
+    "left": { "x": 0, "y": 2640, "text": "这一栏读概念：分布的定义、三个用途、离散与连续的「同一件事、两种记法」，以及最容易混的两处。", "w": 380, "fill": "blue", "size": "m" },
+    "mid": { "x": 1240, "y": 2040, "text": "这一栏读对比：同一份信息的两列写法，加上「连续没有逐点概率」和「把连续取整成离散」两块易错点。", "w": 380, "fill": "teal", "size": "m" },
+    "right": { "x": 2480, "y": 2160, "text": "这一栏走一遍例子：一次掷三枚硬币，算分布、算期望、算区间概率，最后看到它在重复很多次后的形态。", "w": 380, "fill": "orange", "size": "m" }
+  },
+  "designSystems": [
+    {
+      "namespace": "slides-builtin",
+      "title": "Claude 经典",
+      "artifact": "https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-slides",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "copiedAt": "2026-11-04T13:09:06.844Z"
+    },
+    {
+      "namespace": "baoyu-ember",
+      "title": "Ember",
+      "artifact": "https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-design-system/artifact-type/demo.json",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "copiedAt": "2026-11-04T13:09:06.844Z"
+    },
+    {
+      "namespace": "baoyu-seazar",
+      "title": "Seazar",
+      "artifact": "https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "copiedAt": "2026-11-04T13:09:06.844Z"
+    }
+  ]
+}

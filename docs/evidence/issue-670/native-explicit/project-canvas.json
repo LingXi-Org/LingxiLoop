@@ -1,0 +1,48 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-04T13:51:30.707Z"
+  },
+  "title": "FlashAttention",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 880,
+      "h": 1460,
+      "title": "FlashAttention 在做什么"
+    }
+  },
+  "order": [
+    "Main.dc.html"
+  ],
+  "notes": {},
+  "designSystems": [
+    {
+      "namespace": "slides-builtin",
+      "title": "Claude 经典",
+      "artifact": "https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-slides",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "copiedAt": "2026-11-04T13:51:30.707Z"
+    },
+    {
+      "namespace": "baoyu-ember",
+      "title": "Ember",
+      "artifact": "https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-design-system/artifact-type/demo.json",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "copiedAt": "2026-11-04T13:51:30.707Z"
+    },
+    {
+      "namespace": "baoyu-seazar",
+      "title": "Seazar",
+      "artifact": "https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "copiedAt": "2026-11-04T13:51:30.707Z"
+    }
+  ]
+}

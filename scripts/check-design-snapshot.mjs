@@ -6,15 +6,25 @@ import react from '@vitejs/plugin-react'
 import { createServer } from 'node:http'
 import { createHash } from 'node:crypto'
 import { spawn } from 'node:child_process'
-import { readFile, readdir, mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { readFile, mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { resolve, join, extname } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 const snapshotDirectory = resolve(process.argv[2] ?? 'docs/evidence/issue-670/one-shot-introduction')
 const output = resolve(process.argv[3] ?? 'artifacts/issue-670/model-snapshot-browser'), editor = resolve('server/assets/design-editor')
 const publicAnswer = JSON.parse(await readFile(join(snapshotDirectory, 'public-answer.json'), 'utf8'))
+const snapshotEvidence = JSON.parse(await readFile(join(snapshotDirectory, 'real-provider.json'), 'utf8'))
 const files = new Map()
-for (const name of await readdir(snapshotDirectory)) if (/^project-.*\.(?:json|html|css|js)$/.test(name)) files.set('project/' + name.slice('project-'.length), await readFile(join(snapshotDirectory, name), 'utf8'))
+const encodedPaths = new Set()
+for (const { path, sha256 } of snapshotEvidence.files) {
+  assert.ok(/^project\/(?!.*(?:^|\/)\.\.(?:\/|$))[^\\]+$/.test(path))
+  const name = path.replaceAll('/', '-')
+  assert.ok(!encodedPaths.has(name), 'snapshot file encoding must be unambiguous')
+  encodedPaths.add(name)
+  const body = await readFile(join(snapshotDirectory, name), 'utf8')
+  assert.equal(createHash('sha256').update(body).digest('hex'), sha256)
+  files.set(path, body)
+}
 const canvas = JSON.parse(files.get('project/canvas.json'))
 const titles = Object.values(canvas.boards).map(board => board.title).filter(Boolean)
 const title = titles[0] ?? canvas.title

@@ -1,0 +1,242 @@
+{
+  "qualification": "real-provider-native-product",
+  "sampleId": "comparison",
+  "coldCanvas": true,
+  "correctRouting": false,
+  "measurementComplete": true,
+  "runtime": "3.8.24",
+  "binding": "native-v3",
+  "maxOutputTokens": 16384,
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "runId": "im:be119d06587abbed8d6749d094bb511d7006dd8103ac38a2b1945a66629fab80",
+  "accepted": false,
+  "elapsedMs": 13649,
+  "decisions": [
+    {
+      "call": 1,
+      "names": [
+        "design__plan_explanation",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": "design__plan_explanation"
+    },
+    {
+      "call": 2,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": "skills__load"
+    },
+    {
+      "call": 3,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": null
+    },
+    {
+      "call": 4,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": null
+    }
+  ],
+  "wire": [
+    {
+      "call": 1,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__plan_explanation",
+          "fields": [
+            "delivery"
+          ],
+          "argumentBytes": 28,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 2,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "skills__load",
+          "fields": [
+            "name",
+            "version",
+            "hash"
+          ],
+          "argumentBytes": 74,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 3,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "public_answer",
+          "fields": [
+            "operation",
+            "answer",
+            "outcome"
+          ],
+          "argumentBytes": 88,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 4,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "public_answer",
+          "fields": [],
+          "argumentBytes": 59,
+          "argumentType": null,
+          "jsonError": "incomplete_json",
+          "jsonErrorPosition": 59,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": false,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [],
+      "closed": "cancelled"
+    }
+  ],
+  "actions": [
+    {
+      "action": "design.plan_explanation",
+      "ok": true,
+      "code": null
+    }
+  ],
+  "contractFailures": [],
+  "protocolFailures": 2,
+  "providerFailures": 0,
+  "budgetFailures": [],
+  "modelAttempts": [
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": "protocol"
+    },
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": "protocol"
+    }
+  ],
+  "failedModelAttempts": [
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": "protocol"
+    },
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": "protocol"
+    }
+  ],
+  "wireContractFailures": [
+    {
+      "call": 4,
+      "name": "public_answer",
+      "truncated": false,
+      "jsonValid": false,
+      "issues": []
+    }
+  ],
+  "protocolCodes": [
+    "public_text_invalid",
+    null
+  ],
+  "files": [],
+  "checkProblems": -1,
+  "status": "failed",
+  "verification": "inconclusive",
+  "delivery": null,
+  "deliveryTarget": "isolated-test-recording-im",
+  "browserValidated": false
+}

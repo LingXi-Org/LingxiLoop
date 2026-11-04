@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>从输入网址到看见网页：完整链路</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#B85C3C}a:hover{color:#8F4429}
+</style>
+</helmet>
+<div style="box-sizing:border-box; width:100%; min-height:100%; background:#FAF9F5; color:#141413; font-family:system-ui, sans-serif; padding: 72px 0 96px">
+<div style="max-width: 1100px; margin: 0 auto; padding: 0 48px; display: flex; flex-direction: column; gap: 56px">
+
+<header style="display: flex; flex-direction: column; gap: 20px; border-bottom: 1px solid #E3DACC; padding-bottom: 36px">
+<p style="margin: 0; font-size: 14px; letter-spacing: 0.14em; color: #6E6D66; font-weight: 600">输入网址后的完整链路</p>
+<h1 style="margin: 0; font-family: Georgia, serif; font-weight: 300; font-size: 56px; line-height: 1.15">从按下回车，到看见网页</h1>
+<p style="margin: 0; font-size: 21px; line-height: 1.7; color: #3D3D3A; max-width: 820px">
+一次网页打开，是一串环环相扣的接力：先把域名翻译成服务器的数字地址，再找到通往那台机器的路并建立连接，
+把请求安全送到进程、等着应用生成 HTML，然后让浏览器边解析边按需索取样式、脚本、字体和图片，最后排版、绘制并合成出屏幕上的像素。
+下面按发生顺序拆成七段，每段讲清「谁在做、怎么做、卡在哪里」。
+</p>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<sc-for list="{{overview}}" as="step">
+<span style="display: inline-flex; align-items: baseline; gap: 8px; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 999px; padding: 8px 16px; font-size: 15px">
+<span style="font-weight: 700; color: #B85C3C">{{step.no}}</span><span style="color: #141413">{{step.name}}</span>
+</span>
+</sc-for>
+</div>
+</header>
+
+<section style="display: flex; flex-direction: column; gap: 18px">
+<h2 style="margin: 0; font-family: Georgia, serif; font-weight: 300; font-size: 34px">总览：谁在什么时候交棒</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch">
+<sc-for list="{{chain}}" as="node">
+<div style="flex: 1 1 150px; min-width: 0; display: flex; flex-direction: column; gap: 8px; background: #FFFFFF; border-radius: 12px; padding: 16px 16px 18px; border-top: 3px solid #D97757">
+<span style="font-size: 13px; font-weight: 700; color: #B85C3C; letter-spacing: 0.08em">{{node.no}}</span>
+<span style="font-size: 17px; font-weight: 650; line-height: 1.35">{{node.title}}</span>
+<span style="font-size: 14px; line-height: 1.6; color: #3D3D3A">{{node.who}}</span>
+<span style="font-size: 13px; line-height: 1.6; color: #6E6D66">{{node.out}}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.75; color: #3D3D3A">
+前面几步（域名解析、连接建立、请求送达）像寄快递：先查地址、再找路、再送到收件人手里；
+后面几步（响应生成、资源收割、排版绘制）像收到一堆零件后先把结构搭起来，边搭边补件，最后刷漆上色。
+关键点：这些步骤并非严格串行，DNS 结果会被缓存，连接可以复用或预建，HTML 还没下载完浏览器就已经开始解析并边解析边请求资源。
+</p>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-family: Georgia, serif; font-weight: 300; font-size: 34px">拆开讲：七段环节</h2>
+<p style="margin: 0; font-size: 15px; color: #6E6D66">每段给出一个具体输入、具体动作与具体产出，方便你对号入座。</p>
+<sc-for list="{{steps}}" as="s">
+<article style="display: flex; gap: 20px; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 14px; padding: 26px 28px">
+<div style="flex: 0 0 64px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<span style="font-family: Georgia, serif; font-size: 34px; line-height: 1; color: #D97757">{{s.no}}</span>
+<span style="width: 2px; flex: 1 1 auto; min-height: 24px; background: #E3DACC; border-radius: 2px"></span>
+</div>
+<div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<h3 style="margin: 0; font-size: 22px; font-weight: 650; line-height: 1.35">{{s.title}}</h3>
+<p style="margin: 0; font-size: 16px; line-height: 1.75; color: #3D3D3A">{{s.body}}</p>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<div style="background: #F5F4ED; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #6E6D66">具体例子</span>
+<span style="font-size: 14px; line-height: 1.65; color: #141413">{{s.example}}</span>
+</div>
+<div style="background: #F5F4ED; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #6E6D66">常见卡点</span>
+<span style="font-size: 14px; line-height: 1.65; color: #141413">{{s.pitfall}}</span>
+</div>
+</div>
+</div>
+</article>
+</sc-for>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 16px; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 16px; padding: 30px 32px">
+<h2 style="margin: 0; font-family: Georgia, serif; font-weight: 300; font-size: 30px">并行与流水线：哪些步骤其实在同时发生</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{parallels}}" as="p">
+<div style="display: flex; flex-direction: column; gap: 6px; border-left: 3px solid #E3DACC; padding-left: 14px">
+<span style="font-size: 16px; font-weight: 650; line-height: 1.4">{{p.title}}</span>
+<span style="font-size: 14px; line-height: 1.7; color: #3D3D3A">{{p.body}}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin: 0; font-size: 15px; line-height: 1.75; color: #3D3D3A">
+理解这条流水线的实用意义：能并行的就先并行（多路 DNS、连接复用、提前预连接、资源预加载），
+会让渲染停下的就先别挡路（脚本按需加载、图片声明尺寸、首屏关键样式内联）；把慢的先处理，剩下的才有时间被完成。
+</p>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-family: Georgia, serif; font-weight: 300; font-size: 30px">自检：判断卡在哪一段</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{checks}}" as="c">
+<div style="display: flex; flex-direction: column; gap: 8px; background: #F5F4ED; border-radius: 12px; padding: 18px 18px 20px">
+<span style="font-size: 15px; font-weight: 650; line-height: 1.45">{{c.symptom}}</span>
+<span style="font-size: 14px; line-height: 1.7; color: #3D3D3A">{{c.answer}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px; border-top: 1px solid #E3DACC; padding-top: 28px">
+<h2 style="margin: 0; font-family: Georgia, serif; font-weight: 300; font-size: 28px">需要记住的边界条件</h2>
+<ul style="margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.75; color: #3D3D3A">
+<sc-for list="{{boundaries}}" as="b">
+<li>{{b}}</li>
+</sc-for>
+</ul>
+<p style="margin: 8px 0 0; font-size: 14px; line-height: 1.7; color: #6E6D66">
+本页是概念流程讲解，不针对某个具体网站或某次实测数据；真实站点的耗时分布会因网络、地理位置、服务端实现和浏览器版本而不同。
+</p>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":2060}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+overview: [
+{ no: '①', name: '域名解析' },
+{ no: '②', name: '建立连接' },
+{ no: '③', name: '发送请求' },
+{ no: '④', name: '服务器生成响应' },
+{ no: '⑤', name: '边解析边取资源' },
+{ no: '⑥', name: '排版与绘制' },
+{ no: '⑦', name: '合成上屏' }
+],
+chain: [
+{ no: '①', title: '域名 → IP', who: '浏览器缓存、操作系统、递归 DNS 解析器', out: '得到服务器的 IP 地址' },
+{ no: '②', title: '打通链路', who: 'TCP/UDP 握手、TLS 握手', out: '一条可加密传输的通道' },
+{ no: '③', title: '发出请求', who: '浏览器按 HTTP 语义组装请求', out: '方法、路径、请求头到达服务端' },
+{ no: '④', title: '应用响应', who: '反向代理、应用服务、数据库等', out: '状态码 + HTML 等响应内容' },
+{ no: '⑤', title: '解析取件', who: '浏览器解析 HTML，遇资源再请求', out: 'DOM、CSSOM 与各类资源' },
+{ no: '⑥', title: '布局绘制', who: '渲染引擎计算位置并画出图层', out: '各图层位图' },
+{ no: '⑦', title: '合成显示', who: '合成器线程与 GPU', out: '屏幕上的完整一帧' }
+],
+steps: [
+{
+no: '01',
+  title: 'DNS 解析：把域名翻译成 IP 地址',
+  body: '浏览器先查自己的 DNS 缓存，再问操作系统缓存和 hosts 文件；都没有命中，系统把查询发给配置的递归解析器。解析器逐级询问：根服务器指向顶级域（如 .com），顶级域指向该域名的权威服务器，权威服务器给出最终记录。拿到 A（IPv4）或 AAAA（IPv6）记录后才能开始连网。',
+  example: '输入 example.com，最终得到类似 93.184.216.34 的地址；刚访问过的域名往往在 TTL 内直接命中缓存，几步查询全部省掉。',
+  pitfall: '解析器响应慢、域名记录配错或 TTL 过长换了 IP 还没生效，导致「连不上」或「连到了旧机器」。'
+},
+{
+no: '02',
+  title: '建立连接：TCP 握手与 TLS 握手',
+  body: '有了 IP 还要有可靠通道。TCP 通过三次握手确认双方可收发、协商初始序号；HTTP/2 与 HTTP/3 可以在一条连接上承载多个请求。网址是 https 时，接着做 TLS 握手：用证书链验证服务器身份，双方协商加密算法与密钥材料，此后应用层数据都被加密。',
+  example: 'HTTP/3 跑在 QUIC（基于 UDP）之上，把传输与加密握手合并进行，首次连接通常比 TCP+TLS 少一个往返。',
+  pitfall: '握手要多个往返，跨洲高延迟下尤其明显；证书链不完整、过期或信任链错误会直接让 TLS 失败；中间设备拦截也会拖慢。'
+},
+{
+no: '03',
+  title: '发送 HTTP 请求：请求头里有足够多的信息',
+  body: '浏览器沿连接发出请求行（方法 + 路径 + 协议版本）与请求头：Host 说明要哪个站点，Cookie 带上会话状态，Accept 系列声明能接受的类型，User-Agent 描述客户端。若是同站后续资源请求，还能复用连接、压缩头部，避免重复握手。',
+  example: '打开首页时的第一个请求大致是：GET / HTTP/2，附带 Host、Cookie、Accept、Accept-Encoding、User-Agent 等头部。',
+  pitfall: '请求头过大、Cookie 过多会挤占带宽并触发服务端限制；错误的缓存头或重复请求会让页面多跑一轮往返。'
+},
+{
+no: '04',
+  title: '服务器处理：从进程到应用，生成响应',
+  body: '请求先抵达机房入口（负载均衡或 CDN 边缘），再转发到某台服务器上监听端口的进程。应用框架解析路径与参数，读缓存或数据库，渲染或拼接出响应：状态码、响应头（内容类型、缓存策略、压缩方式、安全头）和响应体。',
+  example: '一次首页请求返回 200 与 text/html，响应头写明 Content-Encoding: gzip/br、Cache-Control 和 Set-Cookie。',
+  pitfall: '应用处理慢（慢查询、串行调用）、服务端排队、响应体过大，都会让「等待第一字节」的时间变长。'
+},
+{
+no: '05',
+  title: '浏览器解析 HTML，边解析边索取资源',
+  body: '收到响应字节流后，浏览器的 HTML 解析器边下边解析，逐步构建 DOM 树；遇到样式表就请求并构建 CSSOM，遇到脚本就按规则执行（普通脚本可能阻塞解析，带 defer/async 的则改变时机），遇到图片、字体、媒体继续发起请求。渲染阻塞资源（未完成的 CSS、同步脚本）决定了首次能画到多完整。',
+  example: 'HTML 里一个 <link rel="stylesheet"> 会阻塞首次绘制，一张未声明尺寸的 <img> 则会在加载后引起布局跳动。',
+  pitfall: '关键 CSS 迟迟不返回、同步脚本在前部阻塞、字体加载导致的文字闪烁或延迟显示。'
+},
+{
+no: '06',
+  title: '样式计算、布局与绘制：从树到图层',
+  body: '渲染引擎把 DOM 与 CSSOM 结合成渲染树，跳过不参与布局的节点；然后为每个元素计算样式，按盒模型和排版规则算出位置与尺寸（布局/回流），再把文字、背景、边框、阴影等转换成绘制指令，光栅化成图层位图。',
+  example: '长列表里某元素尺寸变化会触发局部重新布局；改颜色一般只触发重绘，改动会引出新的图层则需要重新光栅化。',
+  pitfall: '频繁的回流或重绘、复杂选择器与动画属性选择不当，造成卡顿和掉帧。'
+},
+{
+no: '07',
+  title: '合成与显示：最后一步上屏',
+  body: '各图层交给合成器线程，按位置拼成完整画面并上传到 GPU，显示器按刷新节奏取帧显示。此后页面上的交互、脚本动画、滚动会持续触发新的绘制与合成，这一环决定了动画是否顺滑。',
+  example: '用 transform 与 opacity 做动画可以只交给合成线程处理，通常比改布局属性更细腻流畅。',
+  pitfall: '图层过多占用显存、动画中改动触发布局或重绘，导致掉帧与发热。'
+}
+],
+parallels: [
+{ title: 'DNS 与连接复用可以省', body: '已缓存的域名不需要再次逐级查询；同一站点的多个资源可共用一条已建好的连接，不必各自握手。' },
+{ title: '解析与下载是重叠的', body: 'HTML 不需要下完才开始解析，浏览器边收边解析，HTML 前半段里的资源请求与后半段的下载同时进行。' },
+{ title: '预连接与预解析', body: '页面可提示浏览器提前解析某些域名或预先建连，把未来的往返提前摊到当前时间线里。' },
+{ title: '首字节与首屏是两件事', body: '服务器返回第一个字节后，页面仍要等渲染阻塞资源到位才画出首屏；两段耗时需要分别衡量。' }
+],
+checks: [
+{ symptom: '一直「正在连接」或提示找不到服务器', answer: '多半停在 DNS 或连接阶段：先确认域名能否解析出地址，再确认目标端口与网络是否可达。' },
+{ symptom: '连上了但浏览器警告证书不安全', answer: '进到了 TLS 阶段但验证失败：证书链、有效期或域名匹配有误，与页面内容无关。' },
+{ symptom: '白屏很久才突然出现完整页面', answer: '请求已通、内容已回，卡在渲染阻塞资源：关键样式或同步脚本把首次绘制挡在后面。' },
+{ symptom: '内容出来了但图片、字体陆续跳出', answer: '资源在边解析边收割：未声明尺寸的图片会引起跳版，字体晚到会先显示替代字形。' },
+{ symptom: '滚动或动画不流畅', answer: '问题在排版、绘制与合成环节：动画属性引发了反复布局或重绘，占用主线程与合成资源。' },
+{ symptom: '第二次打开明显更快', answer: '缓存与连接复用在起作用：DNS、TLS、资源都可能命中已有结果，省去大量往返。' }
+],
+boundaries: [
+'真实顺序并非严格串行：缓存命中会跳过 DNS 与握手，多路并发让多个资源请求交织进行。',
+'具体协议细节随 HTTP 版本、浏览器实现和服务端架构变化，本页只讲通用骨架。',
+'CDN 边缘可能直接返回缓存内容，此时上游应用与数据库参与度很低，但浏览器侧的解析与渲染流程不变。',
+'HTTPS 下密文在传输中不可被中间设备读取，排障要靠浏览器开发者工具与服务器日志。'
+]
+};
+}
+}
+</script>
+</body>
+</html>

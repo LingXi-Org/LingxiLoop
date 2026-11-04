@@ -1,0 +1,125 @@
+{
+  "qualification": "real-provider-native-product",
+  "sampleId": "introduction",
+  "measurementComplete": true,
+  "runtime": "3.8.24",
+  "binding": "native-v3",
+  "maxOutputTokens": 16384,
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "runId": "im:84c8de3dde38d98632a2a3089a671fb9936e35d8f403dcc762feffeba78297db",
+  "accepted": false,
+  "elapsedMs": 17634,
+  "decisions": [
+    {
+      "call": 1,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": null
+    },
+    {
+      "call": 2,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": null
+    },
+    {
+      "call": 3,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": null
+    }
+  ],
+  "wire": [],
+  "actions": [],
+  "contractFailures": [],
+  "protocolFailures": 0,
+  "providerFailures": 1,
+  "budgetFailures": [],
+  "modelAttempts": [
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": "network"
+    },
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "2",
+      "category": "network"
+    },
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "3",
+      "category": "network"
+    }
+  ],
+  "failedModelAttempts": [
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": "network"
+    },
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "2",
+      "category": "network"
+    },
+    {
+      "status": "failed",
+      "purpose": "agent-turn",
+      "attempt": "3",
+      "category": "network"
+    }
+  ],
+  "wireContractFailures": [],
+  "protocolCodes": [],
+  "files": [
+    {
+      "path": "project/canvas.json",
+      "sha256": "7a449ee4e2140d4909b1db5a76cb2b1809c8b332c1e5a0f2b7adcb71e029d123"
+    },
+    {
+      "path": "project/ds/baoyu-ember/tokens.json",
+      "sha256": "68f5e58c19853bef9b4b84ae15dd3feee06ca7676ad0563690b7b6a949697146"
+    },
+    {
+      "path": "project/ds/baoyu-seazar/tokens.json",
+      "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6"
+    },
+    {
+      "path": "project/ds/slides-builtin/tokens.json",
+      "sha256": "612cda1e3e87333eb3c71e545f9d1d1cd175f9542fda38c3caef3159212b56f2"
+    }
+  ],
+  "checkProblems": 0,
+  "status": "failed",
+  "verification": "inconclusive",
+  "delivery": null,
+  "deliveryTarget": "isolated-test-recording-im",
+  "browserValidated": false
+}

@@ -1,0 +1,46 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-04T14:29:26.077Z"
+  },
+  "title": "FlashAttention",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {},
+  "order": [],
+  "notes": {
+    "intro": {
+      "x": 0,
+      "y": -200,
+      "text": "自建还是托管数据库：小团队上线前的取舍",
+      "kind": "title1",
+      "maxW": 1760
+    }
+  },
+  "designSystems": [
+    {
+      "namespace": "slides-builtin",
+      "title": "Claude 经典",
+      "artifact": "https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-slides",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "copiedAt": "2026-11-04T14:29:26.077Z"
+    },
+    {
+      "namespace": "baoyu-ember",
+      "title": "Ember",
+      "artifact": "https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-design-system/artifact-type/demo.json",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "copiedAt": "2026-11-04T14:29:26.077Z"
+    },
+    {
+      "namespace": "baoyu-seazar",
+      "title": "Seazar",
+      "artifact": "https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "copiedAt": "2026-11-04T14:29:26.077Z"
+    }
+  ]
+}

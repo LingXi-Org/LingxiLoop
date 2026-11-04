@@ -1,0 +1,114 @@
+{
+  "name": "Slides 内置风格",
+  "color": {
+    "themes": [
+      {
+        "id": "light",
+        "name": "浅色"
+      }
+    ],
+    "tokens": [
+      {
+        "name": "slate",
+        "value": "#141413"
+      },
+      {
+        "name": "ivory",
+        "value": "#FAF9F5"
+      },
+      {
+        "name": "ivory-warm",
+        "value": "#F5F4ED"
+      },
+      {
+        "name": "clay",
+        "value": "#D97757"
+      },
+      {
+        "name": "oat",
+        "value": "#E3DACC"
+      },
+      {
+        "name": "white",
+        "value": "#FFFFFF"
+      },
+      {
+        "name": "text-secondary",
+        "value": "#3D3D3A"
+      },
+      {
+        "name": "text-tertiary",
+        "value": "#73726C"
+      }
+    ]
+  },
+  "type": {
+    "families": {
+      "serif": "Georgia, serif",
+      "sans": "system-ui, sans-serif"
+    },
+    "groups": [
+      {
+        "name": "Slides",
+        "styles": [
+          {
+            "name": "display",
+            "family": "serif",
+            "fontSize": 128,
+            "fontWeight": 300,
+            "lineHeight": 1.15
+          },
+          {
+            "name": "h1",
+            "family": "serif",
+            "fontSize": 112,
+            "fontWeight": 300,
+            "lineHeight": 1.2
+          },
+          {
+            "name": "h2",
+            "family": "serif",
+            "fontSize": 96,
+            "fontWeight": 300,
+            "lineHeight": 1.2
+          },
+          {
+            "name": "h3",
+            "family": "serif",
+            "fontSize": 72,
+            "fontWeight": 300,
+            "lineHeight": 1.2
+          },
+          {
+            "name": "lead",
+            "family": "sans",
+            "fontSize": 44,
+            "fontWeight": 430,
+            "lineHeight": 1.4
+          },
+          {
+            "name": "eyebrow",
+            "family": "sans",
+            "fontSize": 36,
+            "fontWeight": 500,
+            "lineHeight": 1.2
+          },
+          {
+            "name": "body",
+            "family": "sans",
+            "fontSize": 32,
+            "fontWeight": 430,
+            "lineHeight": 1.4
+          },
+          {
+            "name": "caption",
+            "family": "sans",
+            "fontSize": 24,
+            "fontWeight": 430,
+            "lineHeight": 1.4
+          }
+        ]
+      }
+    ]
+  }
+}

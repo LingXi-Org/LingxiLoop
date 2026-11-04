@@ -1,9 +1,13 @@
 # #670 — Visualize retirement and semantic Design explanations
 
-Baseline: `91f0ba03` (`origin/main`, 2026-11-04). Isolated branch:
-`issue/670-design-explanations`. Scope is issue #670 only; #663 remains the
-user's independent work. Related #582/#605/#606/#613/#652 are not closed by
-retiring their former consumers.
+Draft PR: https://github.com/LingXi-Org/LingxiLoop/pull/672
+
+Branch `issue/670-design-explanations` began at `91f0ba03`, integrated
+`8cc00fd8` (#682/product62), then `8102eb43` (current main at final qualification).
+The first merge resolved four shared CI/Docker conflicts by preserving both
+case and Visualize retirement and both integration owner mappings. The second
+merge was clean. No migration, runtime patch or dependency version upgrade is
+introduced relative to current main. #663 remains the user's independent work.
 
 ## Consumer inventory and resulting ownership
 
@@ -22,176 +26,173 @@ retiring their former consumers.
 
 ## New Design path
 
-An ordinary authorized turn first makes one native read decision,
-`design.plan_explanation {delivery: canvas|text|other}`. The model evaluates
-meaning and complexity, not a host keyword list. Greetings, direct facts,
-explicit text-only requests and other requested deliverables retain their
-appropriate response surface. The first confirmed current-request decision is
-binding; the planner leaves the exposed catalog after its first attempt.
-A canvas decision requests at most one exact current `claude-design` load;
-failed/wrong selections never create a policy-forced load loop. The existing
-skill name is retained and its version/hash advances, so historical loads
-cannot unlock current guidance.
+The model first makes one native semantic decision with
+`design.plan_explanation {delivery: canvas|text|other}`. There is no host keyword
+classifier. Greetings, simple facts and explicit text-only requests stay text.
+The first confirmed decision controls bounded prerequisites and cannot be
+replaced by a later planning call; the planner leaves the catalog after its
+first attempt. A canvas decision requests at most one exact current
+`claude-design` load. An initially text decision can still voluntarily use
+Design, so final qualification measures actual tools, saved files and delivery,
+not only the advisory initial label.
 
-After guidance a bounded native prerequisite sequence follows confirmed receipts:
-read format, `design.current`, initialize if null, read the listed canvas index and
-listed design tokens, write and check. Failed stages stop forced selection;
-wrong reference reads are bounded at2, file reads at4 and automatic checker
-repairs at3 writes. Native-truncated reads require a ledger-derived observation
-reference, never preview text, to establish completion.
+The receipt-driven sequence reads the format and current canvas, explicitly
+initializes a cold canvas through authorized `design.ensure`, reads actual
+listed files and tokens, writes and checks. Reference reads are bounded at two,
+file reads at four and automatic checker repairs at three writes. Failed stages
+stop forced selection. Native truncated reads require a ledger-derived
+observation reference; preview text never proves completion. Dynamic exact
+arguments remain data observations, rather than trusted policy instructions.
 
-After guidance: read format and `design.current`; if no canvas exists, the
-explicit authorized `design.ensure` transaction initializes/reuses the one
-conversation canvas and returns actual files. Read current sha256s, preserve
-existing human work, save complete artboards and their index, then check.
-Satisfied completion requires a confirmed latest save and a subsequent
-successful zero-problem check; a canvas explanation also requires a positive
-board count, so an empty index cannot qualify. Failed/unknown saves cannot use an old canvas
-check as proof. Canvas plans with no content write cannot declare satisfaction.
-Cancellation and genuine permission/tool failures retain partial content and
-must be reported truthfully.
+Delivery requires a latest confirmed save, a subsequent zero-problem check and,
+for a canvas plan, actual retained authored content. Successful deletes/empty
+overwrite remove prior proof. `design.check` accepts at most32 authored paths
+and reports only those present, nonempty and indexed in the exact checker
+snapshot. An empty index, old unrelated board or newly unreferenced file cannot
+prove the explanation. Default checks and Slides remain compatible. Until this
+proof exists, streaming rejects unsupported completion claims before any public
+delta/seal; truthful fallback starts with the explicit incomplete notice.
+Cancellation, revocation and failed saves retain existing human work.
 
-Maintained teacher presets add Design through the existing provisioning owner;
-both context and native action authorization share an explicit method set.
-Teachers retain live course/room/teacher/audience checks and cannot start
-artifact workspaces. Learning/homework instructions retain frozen requirements,
-student authorship and the distinction between generated explanation and
-learning evidence. Revoked/custom missing capabilities are never inferred from
-a skill selection.
+Maintained teacher presets add an explicit Design method set through the
+existing provisioning owner. Live course/room/teacher/audience checks remain;
+teachers cannot start workspaces. Revoked or custom missing grants are not
+inferred from skill selection. Learning guidance preserves frozen requirements,
+student authorship and the distinction between explanation and learning proof.
 
-## Verification record
+## Verification
 
-Environment: managed Linux, Node 22.22.0, exact published LingxiOS 3.8.24.
-Dependency install used existing configured authentication. New isolated local
-`issue670_test` was prepared by the existing formal version bootstrap;
-production and the pre-existing developer/test databases were not altered.
-No migration or credential/security-setting change is part of this PR.
+Managed Linux, Node22.22.0, exact published LingxiOS3.8.24. Existing configured
+package/model authentication was reused without exposing credentials. New
+isolated local databases use the official formal bootstrap and product62;
+production and pre-existing developer/test databases were not altered.
 
-Completed before final candidate:
+- Web smoke166/166; typecheck and production build. Archive focus regression7/7.
+- Final source server193/193, server typecheck/lint; independent policy and
+  retained-board proof19/19. Independent retirement review10/10.
+- Build/CI/Worker/scoped-dependency contracts52/52; retained Design/Slides/math
+  contracts43/43 and independent Design build, before the last main merge. After that merge, the expanded retained
+  Design/Slides/math suite passed52/52 on Node22 and standalone Design build
+  passed. The final two-line semantic default also passed typecheck/lint,
+  policy/tool/check19/19 and native normal/failure3/3.
+- Product62 native batch20/20: normal delivery2, failed-CAS truthful
+  fallback1, streaming/rejection4, archive/teacher5, editor boundary8. The failure
+  regression proves zero temporary false public deltas/seals, useful incomplete
+  text delivered and original files retained.
+- After latest main8102eb43: both typechecks/lint passed; native combined23/23
+  including first-action, failed-CAS, streaming, archive/teacher, editor and new
+  native correction. Independent incremental review20/20, no new P1/P2.
+- Current teacher5, current runtime/product54 CAS5 and actual archived3.8.2
+  migration37:47/47, no skips. The four frozen historical display files and all
+  immutable SQL remain unchanged. A pinned inert test-only dependency resolves
+  an archived import without restoring product rendering.
+- Initial CI41837165228 component checks passed, but historical integration
+  found a current-preset7 versus immutable-preset6 assertion; fixed the test.
+  Main-integrated CI41842877835 passed all jobs on d5c2d5da. Later607a90dd run
+  41846138974 passed component checks and the integration test step, but the
+  integration job ended cancelled; it is not a green final run.
+- Independent source review607a90dd found no remaining P1/P2 after cold-start,
+  failed-save, planning override and deleted/unindexed-board fixes. No PR
+  Approve was submitted.
 
-- Web smoke: 166/166; web typecheck and production build.
-- Server smoke after planner introduction: 189/189; server typecheck.
-- Build/CI/Worker/dependency contracts: 50/50; retained Design/Slides/math
-  contracts: 43/43; CI ownership regression: 8/8.
-- Native first-action synthetic integration: 2/2, including deliberately
-  truncated/recovered output which is correctly not qualified as a clean run.
-- Archive HTTP/current ACL/tenant-project/user-state/revocation, former routes,
-  committed-only echo and teacher method authorization: 5/5.
-- Independent read-only retirement review: 10 tests passed. Design reviewers
-  identified cold-start, failed-save and later-plan override gaps; all received
-  focused fixes and regressions. No PR approval was submitted.
-- `archive-browser/result.json`: actual AnswerText/HTTP client and trusted
-  keyboard JSON download, no automatic export or old runtime, duplicate-send
-  guard and403 body/focus retention. Synthetic identity/HTTP fixture; real ACL
-  coverage is the separate database integration.
-- `model-snapshot-browser/result.json`: actual saved model source, AnswerText and
-  DesignWorkspace, trusted open/edit/CAS save, refresh/reopen,12 formulas intact.
-  Synthetic grant/CAS fixture; model generation and current authorization are
-  established by separate native/database evidence.
-- `design-math/result.json` and `reopened.png`: real compiled editor in Chromium
-  CDP, 8 formulas, native keyboard edit, one CAS save, reopen, narrow keyboard
-  focus. Fixture HTTP/CAS, not production authentication or browser export.
+### Browser evidence and boundaries
 
-### Real-model attempts and limits
+`archive-browser/result.json` exercises actual AnswerText and HTTP client with
+trusted keyboard JSON download, duplicate-send prevention and403 body/focus
+retention. No automatic export or old runtime. Its identity/HTTP are synthetic;
+current ACL and user-state isolation are covered separately in native DB tests.
 
-All samples use public synthetic questions and the actual native product
-Worker/tools, a dedicated PostgreSQL database, recorded local IM delivery and
-DeepSeek-V4.1-Flash via the configured provider. Diagnostic files contain
-catalog/schema metadata and public generated fixture artifacts; no private
-prompts or credentials are recorded.
+`model-snapshot-browser/result.json` replays the real saved
+`one-shot-introduction` source through actual AnswerText, DesignWorkspace and
+compiled editor: native open/edit/CAS save/refresh/reopen,12 formulas retained.
+`design-math/result.json` exercises eight formulas, keyboard editing, CAS save,
+reopen and narrow-screen focus. The final main-integrated replay in `final-model-browser/result.json` repeats
+open/edit/save/reopen with all12 formulas. Its fixture reconstructs exact
+authorized snapshot paths from the retained native file manifest and verifies
+sha256, including nested token paths. These use local grant/HTTP/CAS fixtures; they do
+not claim production authentication, browser export or model generation.
+Reproduce with `node scripts/check-retired-visualize.mjs`,
+`node scripts/check-design-snapshot.mjs` and `node scripts/check-design-math.mjs`
+after `npm run build:design-editor`. The snapshot script accepts input/output
+directories and retains the original public fixture files.
 
-- `introduction-network-failure`: first attempt omitted Node's environment
-  proxy switch; provider network failures, no tool call. Not accepted.
-- `introduction`: prompt-only semantic selection successfully created a cold
-  canvas and checked it; this preceded the final transactional ensure fix.
-- `final-introduction`: prompt-only repeat chose text and no canvas; not
-  accepted. This concrete failure motivated explicit semantic planning.
-- `semantic-introduction`: generated and checked three actual artboards and
-  gave the user their names and Design location, but called the planner twice.
-  Overall test failed its one-shot assertion, even though that earlier file's
-  narrower `accepted` field described saved artifact delivery. The final metric
-  also requires exact one-shot routing. This attempt motivated hiding the
-  planner after its first attempt and binding the first confirmed decision.
-- `one-shot-introduction` passed on the one-shot routing implementation.
-  `one-shot-process` correctly routed to Design but had a provider protocol error
-  and an invalid write; its final partial body incorrectly claimed a ready board.
-  This concrete failure motivated the final streaming/answer delivery gate.
-- The final native failed-CAS regression now rejects unsupported text inside
-  streaming generation, before a false public delta or seal exists, then
-  delivers the exact incomplete notice plus useful text. Normal Design2/2 and
-  native suspension/rejection4/4 also pass. This corrects the earlier EOF-only
-  hold, which had prevented tools/correction, and the later final-only check,
-  which had allowed a transient rejected candidate before replacement.
-- Final `delivery-*` matrix is still running; its first process run began before
-  the last streaming gate and hit the finite240-second execution limit. No final
-  acceptance or production success is claimed until actual results are recorded.
+### Real-model matrix and retained failures
 
-## Release boundary
+Actual native product Worker/tools, isolated PostgreSQL, recorded local IM,
+DeepSeek-V4.1-Flash through the configured provider. All questions and generated
+artifacts are public synthetic fixtures. Diagnostic catalogs/schema metadata
+contain no credentials or private prompts. Clean qualification requires no
+failed tools, provider/model attempts, protocol or budget errors, plus actual
+saved/check0 output for canvas cases and no canvas writes for text cases.
 
-Only the parent thread's designated sole integrator may merge/release. The
-existing integration task is `01a19a90-dfc4-77f7-9803-e9035c481026`; do not
-start a competing production writer. Main automatically deploys after CI.
-The final candidate must be independently reviewed and green on exact-head CI.
+The final isolated budget is root64 calls, Worker24 calls/480seconds,
+test540seconds/runner600seconds. Earlier runs inherited a local root cap12 even
+with Worker24; their budget failures remain recorded. Production budgets,
+credentials, retries and ordinary CI timing were not changed. Node's inherited
+environment proxy requires `NODE_USE_ENV_PROXY=1`.
 
-The public SDK pins in-flight work to its immutable harness hash. This change
-alters that hash; resuming an old run on the new worker is deliberately rejected.
-Before rollout, the integrator must inspect and drain affected nonterminal work
-under the pinned old deployment, or explicitly stop it while preserving its
-body, receipt and artifacts. A new runtime must not bypass the hash or pretend
-legacy interaction was delivered. Read-only inventory and observed restart
-coverage belong in the recovery guide / final test record. Rollback is a known
-compatible committed deployment, with all retained data preserved. An old
-frontend's reappearance on rollback is a product-release decision, never an
-automatic data conversion.
+| Case | Evidence directory | Observed result |
+| --- | --- | --- |
+| Broad introduction without canvas keywords | final-observed-introduction | Clean success, actual canvas/check0,92578ms |
+| Process/mechanism without canvas keywords | final64-process | Clean success, actual canvas/check0,99612ms |
+| Comparison/tradeoffs without canvas keywords | semantic-default-comparison | Clean canvas decision, saved/check0 success,92537ms |
+| Explicit Design request | final64-explicit | Clean success, actual canvas/check0,98804ms |
+| Greeting | semantic-default-greeting | Clean text, no artifact,7417ms |
+| Simple fact | semantic-default-fact | Clean text, no artifact,13640ms |
+| Explicit text-only | semantic-default-textOnly | Clean text, no artifact,22278ms |
 
-Draft PR: https://github.com/LingXi-Org/LingxiLoop/pull/672. Initial commit
-`011ad011` passed all component CI checks; its historical integration failed a
-current-preset7 versus immutable-historical6 assertion. The assertion was fixed
-to the actual historical value without changing migration SQL. Official owning
-recheck passed current teacher5, current-runtime/product54CAS5 and historical
-3.8.2 migrations37; no skips.
-Later delivery-gate/browser changes require their own final exact-head CI.
+All attempted runs remain in their named directories, including unsuccessful
+ones; no failed evidence is rewritten as accepted. `introduction-network-failure`
+omitted the proxy switch. Prompt-only `final-introduction` selected text and
+motivated explicit semantic planning; `semantic-introduction` created three
+boards but repeated the planner. `one-shot-process` had an invalid write and a
+false partial claim, motivating the streaming completion gate. `delivery-*`,
+`native-*` and `qualified-*` retain the evolving implementation and root12
+calibration failures; some useful text responses were not clean qualification.
 
-Real model qualification initially used a finite240-second Worker budget; one
-process run hit that bound. The explicit opt-in single-file live qualification
-now allows480 seconds per Worker /540 per test /600 per runner invocation.
-Ordinary CI, product budgets, provider credentials and retries are unchanged.
-This measures completion under a stated bounded budget, not a speed improvement.
-No merge, production deployment or double-host health result is claimed here.
+On final source607a90dd, `final64-comparison` actually succeeded, saved a canvas
+and check0 without provider/protocol/tool errors, but its old test failed an
+overstrict initial planner-enum assertion (text followed by voluntary Design).
+The committed test correction records the initial label separately and judges
+actual tools/files. Its original failed result is preserved. The next
+`final-observed-comparison` failed at the upstream provider after saving, with
+no false success claim. `final-qualified-comparison` likewise timed out in a
+provider write stream with incomplete JSON, before a board was saved. These
+are failed qualification attempts. `final-repeat-comparison` then delivered
+text only (plan=text, no canvas) despite its multiple comparison dimensions.
+That concrete failure tightened the semantic default in both tool description
+and product guidance: multi-dimensional explanations use canvas, with prose or
+Markdown tables as companion text. This adds no host keyword classification,
+new authority or retries. Independent incremental review found the two-line change appropriate. Focused
+policy/tool/check tests19/19 and fresh negative checks all passed using the updated
+guidance (`semantic-default-greeting`, `semantic-default-fact`,
+`semantic-default-textOnly`). The corrected comparison then passed cleanly in
+92537ms, planned canvas, saved the actual comparison artboard, checked0 and
+gave its title and current conversation Design location in the final reply.
+Its diagnostics and complete public generated source are retained in
+`semantic-default-comparison`. `final64-introduction` also retains a provider protocol
+failure before its later clean retry. This matrix demonstrates tested behavior,
+not a measured provider reliability rate or speed improvement.
 
+## Release handoff
 
-## Current integrated candidate
+Only the parent's designated sole integrator task
+`01a19a90-dfc4-77f7-9803-e9035c481026` merges and releases. Main deploys after CI;
+there must be one production writer. No #670 merge/deploy or dual-host health
+claim is made by this development branch.
 
-The branch now includes main `8cc00fd8` / PR#682 and its product62 migration.
-Four shared CI/Docker conflicts were resolved by retaining both current case
-retirement and Visualize retirement, with both integration owner mappings.
-`#670` adds no migration, runtime-patch change or package version update relative
-to that main. Local isolated product61→62 applied only0062 in77ms; separate
-fresh qualification bootstrapped formal3.8.24/product61 and applied62/no-op.
-The old exact61 deployment is not a valid rollback after62: use a compatible62
-commit and the designated integrator's current rollout state.
+The SDK harness hash changes. Before rollout, inspect and drain affected
+nonterminal old-pinned runs under the old deployment, or explicitly stop them
+while preserving body, receipts and artifacts. `docs/visualize.md` includes the
+paginated read-only inventory. A native restart regression confirms old pins
+are rejected; never bypass the hash or imply legacy interaction was delivered.
+Existing persisted obligations resolve honestly as unsupported/partial only.
 
-A final review caught authored-then-deleted/unreferenced board delivery. The
-current gate tracks effective successful .dc.html writes/edits minus later
-deletes. Design.check accepts up to32 optional authored paths and returns only
-those present, nonempty and indexed in the exact checker snapshot. Generic
-checks and Slides keep their existing output. This avoids exporting an unbounded
-old-canvas listing and prevents an old board from proving a new explanation.
-
-Final local source checks: server193 tests,19 focused policy/proof tests,
-server typecheck/lint; final product62 native/editor/archive batch20/20. Latest
-main-integrated CI41842877835 on d5c2d5da passed all checks/integration; later
-proof changes still need their own exact-head CI and independent review.
-
-Public pre-release probes at2026-11-04 13:57 UTC returned backend readyz with
-DB/Redis/control healthy and frontend HTTP200. This observes the existing
-production release only: it does not establish that #670 or product62 deployed,
-nor dual-host health. Main #682 CI41841662583 was still running at that read.
-
-The first real matrices inherited a local root cap12 despite the Worker cap24;
-several failures explicitly recorded budgetLimit/calls. A final isolated rerun
-sets root cap64 with Worker cap24 and480-second wall limit, within the repository's
-approved production root ceiling512. Production budgets and existing roots are
-not modified. Zero-failure qualification remains strict; deliveredOutcome is
-reported separately so recovered transport defects are not disguised as clean
-runs, and useful correct text is distinguished from canvas delivery.
+Main #682 adds product62. Local isolated61→62 applied only0062; fresh official
+bootstrap and repeated migrate/no-op also passed. After62, an exact61 deployment
+is not a valid rollback: use a known compatible62 commit and the integrator's
+current production state. Durable historical rows are preserved. Before merge,
+recheck main, exact-head CI and independent final review; after deployment,
+verify both hosts and public readiness using the existing release owner.
+The final candidate CI URL and exact SHA are recorded in the PR check suite.
+A queued or cancelled check does not authorize reporting a completed release.
