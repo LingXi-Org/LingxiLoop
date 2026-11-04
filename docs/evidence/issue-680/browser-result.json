@@ -1,0 +1,50 @@
+{
+  "passed": true,
+  "environment": "Chromium headless, Vite, synthetic API, real product components/stores/http",
+  "manager": {
+    "members": [
+      "student",
+      "peer",
+      "teacher"
+    ],
+    "version": 3,
+    "operations": [
+      "POST:reviewer",
+      "POST:teacher",
+      "DELETE:reviewer"
+    ],
+    "listMembers": [
+      "student",
+      "peer",
+      "teacher"
+    ]
+  },
+  "mobileBounds": {
+    "left": 0,
+    "right": 390,
+    "top": 181,
+    "bottom": 663,
+    "width": 390,
+    "height": 844
+  },
+  "checks": [
+    "header-member-entry",
+    "explicit-shared-history-copy",
+    "add-review-agent",
+    "add-course-teacher",
+    "keyboard-remove-agent",
+    "no-self-removal",
+    "390px-dialog-bounds",
+    "remote-member-event-refresh",
+    "remote-self-removal-revokes-list",
+    "nonmanager-restriction",
+    "managed-context-restriction",
+    "keyboard-new-conversation-alternative"
+  ],
+  "runtimeExceptions": [],
+  "exclusions": [
+    "real backend/IM authorization",
+    "live-model execution",
+    "original T16 production session"
+  ]
+}

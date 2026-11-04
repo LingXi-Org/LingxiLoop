@@ -17,13 +17,13 @@ export function SidebarResizeHandle({ side, label, min, max, onResize, ...props 
     const pixels = (bound: number | `${number}%`) => typeof bound === 'number' ? bound : available * Number.parseFloat(bound) / 100
     return { min: pixels(min), max: pixels(max) }
   }
-  const finish = () => {
+  const finish = (commit: boolean) => {
     const current = drag.current
     if (!current) return
     drag.current = null
     current.sidebar.style.removeProperty('--sidebar-width')
     current.wrapper.removeAttribute('data-sidebar-resizing')
-    if (current.value !== current.initial) onResize(current.value)
+    if (commit && current.value !== current.initial) onResize(current.value)
   }
   useEffect(() => () => {
     drag.current?.sidebar.style.removeProperty('--sidebar-width')
@@ -54,11 +54,11 @@ export function SidebarResizeHandle({ side, label, min, max, onResize, ...props 
     }}
     onPointerUp={event => {
       if (drag.current?.pointerId !== event.pointerId) return
-      finish()
+      finish(true)
       if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
     }}
-    onPointerCancel={event => { if (drag.current?.pointerId === event.pointerId) finish() }}
-    onLostPointerCapture={event => { if (drag.current?.pointerId === event.pointerId) finish() }}
+    onPointerCancel={event => { if (drag.current?.pointerId === event.pointerId) finish(false) }}
+    onLostPointerCapture={event => { if (drag.current?.pointerId === event.pointerId) finish(false) }}
     onKeyDown={event => {
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
       const wrapper = event.currentTarget.closest<HTMLElement>('[data-slot="sidebar-wrapper"]')

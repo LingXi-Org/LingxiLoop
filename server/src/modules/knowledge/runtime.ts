@@ -60,6 +60,9 @@ const LEASE_MS = 2 * 60_000
 const MAX_ATTEMPTS = 5
 const POLL_MS = 5_000
 const DEFAULT_WAKE_TIMEOUT_MS = 10 * 60_000
+// Native knowledge.search must have the same bounded search as context prefetch;
+// otherwise an unavailable vector mode retains a Worker slot for the client's 90s default.
+const DEFAULT_SEARCH_TIMEOUT_MS = 5_000
 
 interface IngestionLease {
   sourceId: string
@@ -524,7 +527,7 @@ export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Pro
       request: openNotebookClient.search({ notebookId,sourceIds,
         query: type === 'text' ? args.query : args.contextQuery?.trim() || args.query,limit,type,
         minimumScore: type === 'text' ? 0 : Number(process.env.OPEN_NOTEBOOK_MINIMUM_SCORE ?? 0.2),
-        companyId:args.companyId,signal:args.signal,timeoutMs:args.searchTimeoutMs }),
+        companyId:args.companyId,signal:args.signal,timeoutMs:args.searchTimeoutMs ?? DEFAULT_SEARCH_TIMEOUT_MS }),
     })))
     const settled = await Promise.allSettled(searches.map(search => search.request))
     args.signal?.throwIfAborted()

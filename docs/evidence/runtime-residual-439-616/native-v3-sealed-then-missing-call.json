@@ -1,0 +1,29 @@
+{
+  "scenario": "sealed-then-missing-call",
+  "runtime": "3.8.24",
+  "syntheticProvider": true,
+  "calls": 3,
+  "toolChoices": [
+    "required",
+    "required",
+    "required"
+  ],
+  "status": "succeeded",
+  "protocolCode": "public_text_answer_required",
+  "protocolDetail": "native_call_missing",
+  "ledgerStatuses": [
+    "succeeded",
+    "failed",
+    "succeeded"
+  ],
+  "operations": [
+    "generation",
+    "generation",
+    "correction"
+  ],
+  "deliveredBodies": 1,
+  "sealedBodyPreserved": true,
+  "authenticatedReplayMatched": true,
+  "crossTenantRejected": true,
+  "replayExtraCalls": 0
+}

@@ -67,7 +67,7 @@ app.use((req,res,next)=>{res.set({'Access-Control-Allow-Origin':'*','Access-Cont
 app.post('/api/artifacts/:id/editor-grant', async (req,res)=>{
   const grant = randomUUID(); grants.set(grant,req.params.id)
   if(!documents.has(req.params.id))documents.set(req.params.id,new Map(files))
-  res.json({url: `${await artifactEditorOrigin(grant, editorBase)}/artifact-editor/design/${grant}/`, write:true})
+  res.json({url: `${await artifactEditorOrigin(grant, editorBase)}/artifact-editor/design/${grant}/`, write:true, expiresAt:Date.now()+60*60*1000})
 })
 app.get(/^\/artifact-editor\/design-assets\/(design-[a-f0-9]{64}\.(?:js|css|woff2))$/, async (req,res,next)=>{
   try {
@@ -104,7 +104,7 @@ app.use('/artifact-editor/design/:grant', (req,res,next)=>{
         const {designPageAssets}=await import(pathToFileURL(resolve(root,'server/src/modules/artifacts/design-page.ts')).href)
         const page=designPageAssets(html,appOrigin);html=page.html;assetSource=page.source
       }
-      res.set({'Content-Security-Policy':`sandbox allow-scripts allow-downloads allow-popups allow-modals; default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ${assetSource}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${assetSource}; font-src 'self' data: https://fonts.gstatic.com ${assetSource}; img-src 'self' data: blob:; connect-src 'self' data: blob: https://fonts.googleapis.com https://fonts.gstatic.com; frame-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'none'`,'Cache-Control':'no-cache'})
+      res.set({'Content-Security-Policy':`sandbox allow-scripts allow-downloads allow-popups allow-modals; default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ${assetSource}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${assetSource}; font-src 'self' data: https://fonts.gstatic.com ${assetSource}; img-src 'self' data: blob:; connect-src 'self' data: blob: https://fonts.googleapis.com https://fonts.gstatic.com ${assetSource}; frame-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'none'`,'Cache-Control':'no-cache'})
       if (process.env.PERF624_OPTIONAL_BEACON === '1') html = html.replace('</head>', '<script>setTimeout(function(){var s=document.createElement("script");s.src="https://static.cloudflareinsights.com/beacon.min.js";document.head.appendChild(s)},1000)</script></head>')
       res.type('html').send(html);return
     }

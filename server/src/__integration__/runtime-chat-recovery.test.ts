@@ -293,7 +293,7 @@ for (const binding of ['native-v1', 'native-v2', 'native-v3'] as const) for (con
     assert.equal(calls, expectedCalls)
     const output = process.env.RUNTIME_ACCEPTANCE_OUTPUT_DIR || `artifacts/runtime-acceptance/${Date.now()}-${process.pid}`
     await mkdir(output, { recursive: true })
-    await writeFile(`${output}/public-answer-${scenario}.json`, JSON.stringify({ scenario, runtime: releaseVersions.runtime,
+    await writeFile(`${output}/public-answer-${binding}-${scenario}.json`, JSON.stringify({ scenario, binding, runtime: releaseVersions.runtime,
       syntheticProvider: true, calls, ledgerStatuses: ledger.map(call => call.status), deliveredBodies: sent.length,
       body, failedDraftInDeliveryOrReplay: false, replayExtraCalls: 0 }, null, 2) + '\n', { flag: 'wx' })
   } finally {

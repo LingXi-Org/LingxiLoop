@@ -1,6 +1,6 @@
 
 import { http } from '@/api/core/http'
-import type { ApiConversation, ConversationSearchResults } from './contracts'
+import type { ApiConversation, ConversationSearchResults, ConversationMembership } from './contracts'
 
 export const conversationsApi = {
   create: (projectId: string, input: { participantIds: string[]; title?: string; requestId?: string }) =>
@@ -47,6 +47,10 @@ export const conversationsApi = {
         body: JSON.stringify({ mute, until: until ?? null }),
       },
     ),
+  membership: (conversationId: string, signal?: AbortSignal) =>
+    http<ConversationMembership>(`/conversations/${encodeURIComponent(conversationId)}/members`, { signal }),
+  removeMember: (conversationId: string, participantId: string) =>
+    http<{ ok: boolean; members: string[] }>(`/conversations/${encodeURIComponent(conversationId)}/members/${encodeURIComponent(participantId)}`, { method: 'DELETE' }),
   addMember: (conversationId: string, participantId: string) =>
     http<{ ok: boolean; members: string[]; alreadyIn?: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/members`, {
       method: 'POST',
