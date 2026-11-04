@@ -9,12 +9,13 @@ import {promisify} from 'node:util'
 const execute=promisify(execFile)
 
 export const withFormal19TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.19',run)
+export const withFormal24TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.24',run)
 export const withFormal23TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.23',run)
 export const withFormal22TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.22',run)
 export const withFormal21TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.21',run)
 export const withFormal20TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.20',run)
 async function withFormalRuntimeTestFixture(root,env,version,run){
- assert.ok(['3.8.19','3.8.20','3.8.21','3.8.22','3.8.23'].includes(version))
+ assert.ok(['3.8.19','3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(version))
  const userconfig=env.LINGXILOOP_TEST_PACKAGE_USERCONFIG??join(root,'.npmrc')
  const url=new URL(env.INTEGRATION_DATABASE_URL??'')
  assert.equal(env.NODE_ENV,'test')
@@ -36,7 +37,7 @@ async function withFormalRuntimeTestFixture(root,env,version,run){
   assert.equal('sha512-'+createHash('sha512').update(await readFile(archive)).digest('base64'),record.integrity,`formal${version} source archive integrity changed`)
   for(const path of ['server/src','src','shared','server/scripts','server/fixtures'])await cp(join(root,path),join(fixture,path),{recursive:true})
   // Formal source fixtures retain their reviewed product60/61 inventory.
-  await rm(join(fixture,'server/src/db/migrations/0062_case_options.sql'),{force:true})
+  if(version!=='3.8.24')await rm(join(fixture,'server/src/db/migrations/0062_case_options.sql'),{force:true})
   // Historical formal19 fixtures contain the exact product60 source inventory.
   if(version==='3.8.19')await rm(join(fixture,'server/src/db/migrations/0061_slides_workspaces.sql'),{force:true})
   const modules=join(fixture,'node_modules'),sdk=join(modules,'@lyyzka/lingxios');await mkdir(sdk,{recursive:true})

@@ -1,0 +1,98 @@
+import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
+import test from 'node:test'
+import { Pool } from 'pg'
+import { packageResources, releaseVersions } from '@lyyzka/lingxios'
+import { assertMigrationsCurrent, migrateDatabase } from '../db/migrate.js'
+import { applyPublishedRuntimePatch, assertRuntimePatchDescriptors, loadRuntimePatchInventory,
+  observePublishedRuntimePatch, preflightPublishedRuntimePatch, readRuntimePatchBarrier } from '../db/runtime-patch.js'
+import { loadLockedRuntimePackage, PUBLIC_PURPOSE_SCHEMA_HASH } from '../db/runtime-profile.js'
+import { parseRuntimePatchInput } from '../runtime-patch-bin.js'
+
+const actual=String(releaseVersions.runtime)
+const formal25={skip:actual==='3.8.25'?false:'PENDING: requires actual formal3.8.25 registry archive and exact root/server locks; source rejection is not qualification'}
+async function isolated(run:(db:Pool)=>Promise<void>){
+  const url=new URL(process.env.DATABASE_URL??'')
+  assert.ok(['127.0.0.1','localhost','postgres'].includes(url.hostname));assert.match(url.pathname,/(?:^|_)test(?:_|$)/)
+  assert.doesNotMatch(url.pathname,/(?:^|[_-])(prod|production|main|live)(?:$|[_-])/i)
+  const admin=new Pool({connectionString:url.toString(),max:1}),name='runtime_patch62_'+randomUUID().replaceAll('-','')+'_test'
+  await admin.query(`CREATE DATABASE "${name}"`);url.pathname='/'+name
+  const db=new Pool({connectionString:url.toString(),max:1})
+  try{await run(db)}finally{await db.end();await admin.query(`DROP DATABASE "${name}"`);await admin.end()}
+}
+async function setup(db:Pool,sourceRuntime:string){
+  const locked=await loadLockedRuntimePackage()
+  await db.query(await readFile(packageResources().schema,'utf8'))
+  await db.query(`CREATE TABLE public.schema_migrations(version integer PRIMARY KEY,name text NOT NULL,checksum text NOT NULL);
+    CREATE TABLE public.lingxios_installation(singleton boolean PRIMARY KEY DEFAULT true CHECK(singleton),runtime_version text NOT NULL,schema_version integer NOT NULL,protocol_version integer NOT NULL,schema_sha256 text NOT NULL,installed_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE public.business_fixture(id integer PRIMARY KEY,value text);INSERT INTO public.business_fixture VALUES(1,'preserve');`)
+  const migrations=await loadRuntimePatchInventory(62)
+  for(const m of migrations)await db.query('INSERT INTO public.schema_migrations VALUES($1,$2,$3)',[m.version,m.name,m.checksum])
+  const source={runtime:sourceRuntime,schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:62,migrations}
+  const target={...source,runtime:'3.8.25',integrity:locked.integrity,
+    tarball:actual==='3.8.25'?locked.tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.25/'+'a'.repeat(40)}
+  await db.query('INSERT INTO public.lingxios_installation(runtime_version,schema_version,protocol_version,schema_sha256) VALUES($1,14,11,$2)',[source.runtime,source.schemaHash])
+  return {source,target}
+}
+for(const sourceRuntime of ['3.8.24']){
+test(`${sourceRuntime} preparation accepts only the exact62 descriptor and source cannot impersonate the exact formal25 target`,async()=>isolated(async db=>{
+  assert.equal(actual,'3.8.25')
+  const {source,target}=await setup(db,sourceRuntime)
+  assert.doesNotThrow(()=>parseRuntimePatchInput(JSON.stringify({source,target})))
+  for(const runtime of ['3.8.23','3.8.24','3.8.26','4.0.0-slim.0'])assert.throws(()=>assertRuntimePatchDescriptors(source,{...target,runtime}))
+  for(const runtime of ['3.8.20','3.8.21','3.8.22','3.8.23','3.8.25'])assert.throws(()=>assertRuntimePatchDescriptors({...source,runtime},target))
+  for(const count of [58,59,60,61])assert.throws(()=>assertRuntimePatchDescriptors({...source,productVersion:count},{...target,productVersion:count}))
+  assert.throws(()=>assertRuntimePatchDescriptors(source,{...target,migrations:target.migrations.slice(1)}))
+
+}))
+test(`${sourceRuntime} preparation barrier counts retained Slides jobs and native live work without rewriting them`,async()=>isolated(async db=>{
+  await setup(db,sourceRuntime)
+  assert.ok(Object.values(await readRuntimePatchBarrier(db,false,true)).every(n=>n===0))
+  await db.query("INSERT INTO lingxios.agent_work_items(id,tenant_id,agent_id,session_id,kind,lane,trigger_ref,status) VALUES('slides-job','t','a','s','slides_workspace','interactive','fixture','waiting')")
+  await db.query("INSERT INTO lingxios.agent_steps(work_id,step_id,request_version,kind,input_hash,input) VALUES('slides-job','checkpoint',1,'runtime.checkpoint','hash','{}')")
+  const before=(await db.query("SELECT * FROM lingxios.agent_work_items WHERE id='slides-job'")).rows
+  assert.equal((await readRuntimePatchBarrier(db,false,true)).incompatibleRuns,1)
+  assert.deepEqual((await db.query("SELECT * FROM lingxios.agent_work_items WHERE id='slides-job'")).rows,before)
+}))
+test(`${sourceRuntime} formal25 reviewed product62 bridge CAS changes only provenance and exact62 startup performs no DDL or product writes`,formal25,async()=>isolated(async db=>{
+  const {source,target}=await setup(db,sourceRuntime),ledger=(await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows
+  await assert.rejects(migrateDatabase(db),/installed LingxiOS package\/schema mismatch/)
+  const other=new Pool({connectionString:db.options.connectionString,max:1})
+  try{await other.query('SELECT 1');assert.equal((await preflightPublishedRuntimePatch(db,source,target)).state,'source');await assert.rejects(applyPublishedRuntimePatch(db,source,target),/no other database clients/)}finally{await other.end()}
+  await db.query(`CREATE FUNCTION forbid_patch62_ddl() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'unexpected DDL'; END $$;
+    CREATE EVENT TRIGGER forbid_patch62_ddl ON ddl_command_start EXECUTE FUNCTION forbid_patch62_ddl()`)
+  assert.equal((await applyPublishedRuntimePatch(db,source,target)).updated,1)
+  await assert.rejects(applyPublishedRuntimePatch(db,source,target),/source provenance changed/)
+  assert.equal((await observePublishedRuntimePatch(db,source,target)).state,'target')
+  const installed=(await db.query('SELECT * FROM public.lingxios_installation')).rows
+  assert.deepEqual(await migrateDatabase(db),[]);await assertMigrationsCurrent(db)
+  assert.deepEqual((await db.query('SELECT * FROM public.lingxios_installation')).rows,installed)
+  assert.deepEqual((await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows,ledger)
+  assert.deepEqual((await db.query('SELECT * FROM public.business_fixture')).rows,[{id:1,value:'preserve'}])
+}))
+test(`${sourceRuntime} formal25 rejects fresh and partial61/60/59/58 history without adoption or migration`,formal25,async()=>{
+  await isolated(async db=>{await assert.rejects(migrateDatabase(db),/already installed product62/);assert.equal((await db.query("SELECT to_regclass('public.schema_migrations') AS name")).rows[0].name,null)})
+  for(const count of [58,59,60,61])await isolated(async db=>{
+    await setup(db,sourceRuntime);await db.query('DELETE FROM public.schema_migrations WHERE version>$1',[count])
+    const before=(await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows
+    await assert.rejects(migrateDatabase(db),/already installed product62/)
+    assert.deepEqual((await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows,before)
+    assert.equal((await db.query('SELECT runtime_version FROM public.lingxios_installation')).rows[0].runtime_version,sourceRuntime)
+  })
+})
+test(`${sourceRuntime} formal25 retains Slides checkpoints and uncertain-COMMIT observation before any retry`,formal25,async()=>isolated(async db=>{
+  const {source,target}=await setup(db,sourceRuntime)
+  await db.query("INSERT INTO lingxios.agent_work_items(id,tenant_id,agent_id,session_id,kind,lane,trigger_ref,status) VALUES('slides-job','t','a','s','slides_workspace','interactive','fixture','waiting')")
+  await db.query("INSERT INTO lingxios.agent_steps(work_id,step_id,request_version,kind,input_hash,input) VALUES('slides-job','checkpoint',1,'runtime.checkpoint','hash','{}')")
+  await assert.rejects(preflightPublishedRuntimePatch(db,source,target),/incompatible resumable/)
+  await db.query("DELETE FROM lingxios.agent_work_items WHERE id='slides-job'")
+  const lost={connect:async()=>{const client=await db.connect();return new Proxy(client,{get(owner,key){
+    if(key==='query')return async(...args:unknown[])=>{const result=await Reflect.apply(owner.query,owner,args);if(args[0]==='COMMIT')throw Error('lost commit');return result}
+    if(key==='release')return owner.release.bind(owner);return Reflect.get(owner,key,owner)
+  }})}} as unknown as Pool
+  await assert.rejects(applyPublishedRuntimePatch(lost,source,target),error=>(error as {uncertain?:boolean}).uncertain===true)
+  assert.equal((await observePublishedRuntimePatch(db,source,target)).complete,true)
+}))
+
+}

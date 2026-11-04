@@ -12,12 +12,12 @@ export interface RuntimePatchDescriptor {runtime:string;schema:number;protocol:n
 export type PublishedRuntimePatchDescriptor=RuntimePatchDescriptor&{integrity:string;tarball:string}
 const check=(value:unknown,message:string):void=>{if(!value)throw Error(message)}
 const hash=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex')
-export async function loadRuntimePatchInventory(productVersion:54|57|58|60|61=54):Promise<Migration[]>{
- check(productVersion===54||productVersion===57||productVersion===58||productVersion===60||productVersion===61,'Unreviewed runtime patch product')
+export async function loadRuntimePatchInventory(productVersion:54|57|58|60|61|62=54):Promise<Migration[]>{
+ check(productVersion===54||productVersion===57||productVersion===58||productVersion===60||productVersion===61||productVersion===62,'Unreviewed runtime patch product')
  const root=new URL('./migrations/',import.meta.url),allFiles=(await readdir(root)).sort()
  // A recorded product60 transition still names exactly its original inventory.
  // The CAS separately rejects any applied ledger other than that exact prefix.
- const reviewedFiles=allFiles.length===62&&allFiles[61]==='0062_case_options.sql'?allFiles.slice(0,61):allFiles
+ const reviewedFiles=productVersion!==62&&allFiles.length===62&&allFiles[61]==='0062_case_options.sql'?allFiles.slice(0,61):allFiles
  const files=productVersion===60&&reviewedFiles.length===61&&reviewedFiles[60]==='0061_slides_workspaces.sql'?reviewedFiles.slice(0,60):reviewedFiles
  check(files.length===productVersion,`Runtime patch requires complete product${productVersion} inventory`)
  return Promise.all(files.map(async(file,index)=>{
@@ -29,7 +29,8 @@ export async function loadRuntimePatchInventory(productVersion:54|57|58|60|61=54
 export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,target:RuntimePatchDescriptor):void{
  check(source.productVersion===target.productVersion,'Runtime patch cannot change product schema')
  const product=target.productVersion
- check(product===54||product===57||product===58||product===60||product===61,'Unreviewed runtime patch product')
+ check(product===54||product===57||product===58||product===60||product===61||product===62,'Unreviewed runtime patch product')
+ if(product===62)check(source.runtime==='3.8.24'&&target.runtime==='3.8.25','Product62 runtime patch requires exact3.8.24 to3.8.25')
  if(product===61)check(source.runtime==='3.8.20'&&target.runtime==='3.8.21'||source.runtime==='3.8.21'&&target.runtime==='3.8.22'||source.runtime==='3.8.22'&&target.runtime==='3.8.23'||source.runtime==='3.8.21'&&target.runtime==='3.8.23'||['3.8.21','3.8.22','3.8.23'].includes(source.runtime)&&target.runtime==='3.8.24','Product61 runtime patch requires exact3.8.20 to3.8.21 or3.8.21 to3.8.22 or3.8.22 to3.8.23 or reviewed3.8.21 to3.8.23 or explicit21/22/23 to3.8.24')
  if(product===60)check(source.runtime==='3.8.18'&&target.runtime==='3.8.19'||source.runtime==='3.8.19'&&target.runtime==='3.8.20','Product60 runtime patch requires exact3.8.18 to3.8.19 or3.8.19 to3.8.20')
  if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.14','Product57 runtime patch is restricted to exact3.8.12 to3.8.14')
@@ -76,7 +77,7 @@ export function runtimePatchPlanHash(source:RuntimePatchDescriptor,target:Publis
 }
 async function patchResources(source:RuntimePatchDescriptor,target:RuntimePatchDescriptor){
  assertRuntimePatchDescriptors(source,target)
- check(equal(await loadRuntimePatchInventory(target.productVersion as 54|57|58|60|61),target.migrations),'Committed inventory differs from runtime patch')
+ check(equal(await loadRuntimePatchInventory(target.productVersion as 54|57|58|60|61|62),target.migrations),'Committed inventory differs from runtime patch')
  const schema=await readFile(packageResources().schema,'utf8')
  check(hash(schema)===target.schemaHash,'Executing native schema bytes changed')
  if(target.productVersion>=57){
@@ -161,7 +162,7 @@ export async function preflightPublishedRuntimePatch(database:Pool,source:Runtim
  * A matching target proves the requested state, not which process committed it.
  * Source or unknown states never authorize replay of the same CAS intent. */
 export async function observePublishedRuntimePatch(database:Pool,source:RuntimePatchDescriptor,target:PublishedRuntimePatchDescriptor){
- check([57,58,60,61].includes(source.productVersion)&&source.productVersion===target.productVersion,'Observation entrypoint supports only reviewed product57/58/60/61')
+ check([57,58,60,61,62].includes(source.productVersion)&&source.productVersion===target.productVersion,'Observation entrypoint supports only reviewed product57/58/60/61/62')
  await assertPublishedPatch(target)
  const tables=await patchResources(source,target),client=await database.connect()
  try{

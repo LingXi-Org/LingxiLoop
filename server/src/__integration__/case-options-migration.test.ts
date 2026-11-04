@@ -17,6 +17,10 @@ test('formal24 product61 upgrades atomically to62, preserves data, and repeats a
   url.pathname = `/${name}`
   const db = new Pool({ connectionString: url.toString(), max: 1 })
   try {
+    // This cloned test fixture may originate from an upgraded formal25 template.
+    // The owning test runs with the actual formal24 package; construct its prior
+    // provenance only inside the disposable clone before capturing preservation.
+    await db.query("UPDATE lingxios_installation SET runtime_version='3.8.24'")
     // Derive the exact prior product fixture from the verified, dedicated test schema.
     await db.query('DROP TABLE organization_case_options; DELETE FROM schema_migrations WHERE version=62')
     const plan = await ensureEducationPlan(db)

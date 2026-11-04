@@ -1,0 +1,39 @@
+{
+  "runtime": "3.8.25",
+  "source": "actual published 3.8.24 / product62 bootstrap",
+  "target": "actual published 3.8.25 / product62 CAS",
+  "tests": 29,
+  "failures": 0,
+  "skipped": 0,
+  "execution": "real PostgreSQL and published SDK; scripted provider and recording IM",
+  "files": [
+    {
+      "file": "runtime-patch62-25-provenance.test.ts",
+      "durationMs": 4030,
+      "exitCode": 0
+    },
+    {
+      "file": "slides-workspace-flow.test.ts",
+      "durationMs": 15685,
+      "exitCode": 0
+    },
+    {
+      "file": "case-options-migration.test.ts",
+      "durationMs": 4715,
+      "exitCode": 0
+    },
+    {
+      "file": "runtime-patch61-24-provenance.test.ts",
+      "durationMs": 12127,
+      "exitCode": 0
+    },
+    {
+      "file": "runtime-native-correction.test.ts",
+      "durationMs": 8145,
+      "exitCode": 0
+    }
+  ],
+  "browser": "not_run",
+  "realProviderBenchmark": "not_run",
+  "deployment": "not_performed"
+}
