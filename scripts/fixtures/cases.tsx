@@ -67,10 +67,19 @@ if (params.has('rich') && records[0]) {
 }
 const published = new Map(records.map(record => [record.id, structuredClone(record)]))
 const response = (record, view) => ({ ...structuredClone(view === 'reader' ? published.get(record.id) : record), view })
+let listReads = 0
 casesApi.list = async (q, category, view = 'reader') => {
   if (params.has('error')) throw new Error('fixture read failure')
   const available = records.filter(record => view === 'manage' || record.status === 'published')
-  return { items: available.map(record => response(record, view)).filter(record => (!category || record.category === category) && (!q || `${record.title} ${record.summary}`.toLowerCase().includes(q.toLowerCase()))),
+  listReads += 1
+  return { items: available.map(record => {
+    const item = response(record, view)
+    if (params.has('pendingCover') && item.id === 'sample-4') item.generatedCover = {
+      schemaVersion: 1, status: listReads === 1 ? 'pending' : 'ready', fingerprint: 'fixture-cover', generation: 1,
+      alt: '相关案例封面已更新', previewUrl: listReads === 1 ? null : '/scripts/fixtures/cases-assets/sum.png', interactiveUrl: null, canRetry: false,
+    }
+    return item
+  }).filter(record => (!category || record.category === category) && (!q || `${record.title} ${record.summary}`.toLowerCase().includes(q.toLowerCase()))),
     categories: ['注意力机制', '推理优化', 'Agent 设计', '训练与微调', '课堂组织'], canManage: manager, view }
 }
 casesApi.detail = async (id, view = 'reader') => {

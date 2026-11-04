@@ -3,7 +3,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { casesApi, type CaseArticle } from './api'
 import { CaseCard } from './CaseCard'
-import { CaseCover } from './CaseCover'
+import { CaseCover, caseCoverIdentity, caseCoverPending } from './CaseCover'
+import { mergeCaseCoverMetadata } from './cover/polling'
+import { useCaseCoverPolling } from './cover/useCaseCoverPolling'
 import { caseDate, caseOutline, relatedCases } from './presentation'
 
 export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate, onRefresh, onRetry, busy, notice }: {
@@ -35,6 +37,19 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
     return () => abort.abort()
   }, [article.id, article.companyId, article.category, scopeKey, retry])
 
+  const { resume: refreshRelatedCovers } = useCaseCoverPolling({
+    scopeKey: JSON.stringify([scopeKey, article.id, related.map(item => [item.id, caseCoverIdentity(item.generatedCover)])]),
+    pending: related.some(item => caseCoverPending(item.generatedCover)),
+    refresh: signal => casesApi.list('', '', 'reader', signal),
+    receive: value => {
+      if (value.view !== 'reader') return false
+      const incoming = new Map(value.items.filter(item => item.companyId === article.companyId).map(item => [item.id, item]))
+      const merge = (items: CaseArticle[]) => items.map(item => incoming.has(item.id) ? mergeCaseCoverMetadata(item, incoming.get(item.id)!) : item)
+      setRelated(merge)
+      return merge(related).some(item => caseCoverPending(item.generatedCover))
+    },
+  })
+
   useEffect(() => {
     const container = body.current
     const scroll = root.current?.closest<HTMLElement>('[data-page-scroll]')
@@ -46,6 +61,7 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
         if (heading.getBoundingClientRect().top > top) break
         selected = heading.id
       }
+      if (scroll.scrollTop > 0 && scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 2) selected = headings.current.at(-1)?.id ?? selected
       setActive(selected)
     }
     const readHeadings = () => {
@@ -98,7 +114,7 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
       {outline.length > 0 && <aside className="case-outline"><p>本文目录</p>{links}</aside>}
     </div>
     {related.length > 0 && <section className="case-related" aria-label="相关案例"><h2>相关案例</h2><div className="case-grid">{related.map(item =>
-      <CaseCard key={item.id} article={item} href={articleUrl(item.id)} onNavigate={() => onNavigate(item.id)} scopeKey={scopeKey} />
+      <CaseCard key={item.id} article={item} href={articleUrl(item.id)} onNavigate={() => onNavigate(item.id)} scopeKey={scopeKey} onRefresh={refreshRelatedCovers} />
     )}</div></section>}
     {relatedError && <div className="case-related-error" role="status">相关案例暂时无法加载。<Button variant="ghost" size="sm" onClick={() => setRetry(value => value + 1)}>重试</Button></div>}
   </div>

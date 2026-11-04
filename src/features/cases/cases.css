@@ -40,8 +40,8 @@
 .case-search { display: flex; flex: 0 1 220px; height: 30px; align-items: center; gap: 6px; margin-inline-start: auto; padding: 0 12px; border: 1px solid var(--case-outline); border-radius: 15px; color: var(--case-muted); }
 .case-search:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
 .case-search > svg { width: 14px; height: 14px; flex-shrink: 0; }
-.cases-page .case-search [data-slot=input] { width: 100%; min-width: 0; height: auto; padding: 0; border: 0; background: transparent; font-family: inherit; font-size: 13px; box-shadow: none; outline: none; border-radius: 0; }
-.cases-page .case-search [data-slot=input]:focus-visible { box-shadow: none; outline: none; }
+:root .cases-page .case-search [data-slot=input] { width: 100%; min-width: 0; height: auto; padding: 0; border: 0; background: transparent; font-family: inherit; font-size: 13px; box-shadow: none; outline: none; border-radius: 0; }
+:root .cases-page .case-search [data-slot=input]:focus-visible { box-shadow: none; outline: none; }
 .case-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 44px 28px; padding-bottom: 56px; }
 .case-card { position: relative; display: flex; min-width: 0; flex-direction: column; gap: 12px; }
 .case-card .case-card-copy { display: flex; flex-direction: column; gap: 6px; padding-inline: 2px; }
@@ -80,7 +80,7 @@
 .case-related-error { padding-block: 24px; color: var(--case-muted); font-size: 13px; }
 .cases-page[data-case-editing] .case-page-content { max-width: 880px; padding-block: 24px; }
 .cases-page[data-case-editing] .case-page-header { flex-wrap: wrap; padding-block: 8px; }
-.cases-page:not([data-case-editing]) .case-page-header nav { display: flex; }
+.cases-page:not([data-case-editing]) .case-page-header nav { display: flex; flex-shrink: 0; }
 
 @container cases (width < 960px) {
   .case-featured { grid-template-columns: minmax(0,1fr); gap: 24px; }
