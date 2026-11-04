@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/LingxiLoop/perf/issue-660/regression.py", line 26, in <module>
+    assert abs(measured-expected)<2,{'case':'pointer must track within two pixels after two 60Hz frames','side':side,'measured':measured,'expected':expected}
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'case': 'pointer must track within two pixels after two 60Hz frames', 'side': 'right', 'measured': 691.65625, 'expected': 700}
