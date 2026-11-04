@@ -4,7 +4,6 @@ import { useChatThreadStore } from '@/features/chat/runtime/store'
 import { conversationRunStatus } from '@/features/chat/runtime/conversation-status'
 import { NotificationOff01Icon, PinIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Badge } from '@/components/ui/badge'
 import { ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item'
 import { useEffect } from 'react'
 import { Avatar } from '@/components/Avatar'
@@ -15,6 +14,9 @@ import { isMuted } from '@/features/conversations/store'
 import { useConversationPresence } from '@/features/chat/runtime'
 import { useParticipants } from '@/features/agents/state'
 import type { Conversation, Participant } from '@/types'
+import type { PinnedMode } from '@/features/conversations/components/PinnedConversations'
+import { stableParticipantHash } from '@/lib/agentVisualState'
+import { COLOR_BY_ID } from '@/lib/bloub/skins'
 
 let lastRosterBackfillAt = 0
 function backfillRosterOnce() {
@@ -50,17 +52,19 @@ export function ConversationAvatar({
       return <span className={cn('grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground', avatarMotion)} style={{ width: size, height: size }}>群</span>
     }
     if (members.length === 1) return <Avatar p={members[0]} size={size} ringColor="var(--sidebar)" mode="chat" className={avatarMotion} />
-    const portraitSize = Math.round(size * 0.64)
-    const remaining = members.length - 2
+    const clustered = members.length >= 3
+    const portraitSize = Math.round(size * (clustered ? 0.58 : 0.68))
+    const remaining = members.length > 3 ? members.length - 2 : 0
+    const positions = clustered ? ['start-[21%] top-0', 'start-0 bottom-0', 'end-0 bottom-0'] : ['start-0 top-0', 'end-0 bottom-0']
     return (
       <span className={cn('relative block shrink-0', avatarMotion)} style={{ width: size, height: size }}>
-        {members.slice(0, 2).map((person, index) => (
-          <span key={person.id} className={cn('absolute flex rounded-full ring-1 ring-sidebar', index === 0 ? 'start-0 top-0' : 'end-0 bottom-0')}>
-            <Avatar p={person} size={portraitSize} ringColor="var(--sidebar)" mode="chat" />
+        {members.slice(0, remaining ? 2 : 3).map((person, index) => (
+          <span key={person.id} className={cn('absolute flex', positions[index])}>
+            <Avatar p={person} size={portraitSize} ringColor="transparent" mode="chat" />
           </span>
         ))}
         {remaining > 0 && (
-          <span className="absolute bottom-0 start-0 rounded-full bg-sidebar px-0.5 text-xs font-medium leading-none tabular-nums text-muted-foreground" aria-label={`${remaining} 位其他成员`} title={`${remaining} 位其他成员`}>
+          <span className="absolute bottom-0 end-0 grid place-items-center rounded-full bg-accent font-medium tabular-nums text-muted-foreground" style={{ width: portraitSize, height: portraitSize, fontSize: Math.max(8, Math.round(size * 0.25)) }} aria-label={`${remaining} 位其他成员`} title={`${remaining} 位其他成员`}>
             {remaining > 99 ? '99+' : `+${remaining}`}
           </span>
         )}
@@ -75,6 +79,39 @@ export function ConversationAvatar({
       {conversation.kind === 'email' ? '邮' : conversation.title.charAt(0).toUpperCase()}
     </span>
   )
+}
+
+export function ConversationUnread({ conversation }: { conversation: Conversation }) {
+  if (!conversation.unread) return null
+  return isMuted(conversation)
+    ? <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground/50" aria-label={`${conversation.unread} 条未读消息，已静音`} />
+    : <span className="inline-flex min-w-4 shrink-0 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-medium leading-4 tabular-nums text-brand-foreground" aria-label={`${conversation.unread} 条未读消息`}>
+      {conversation.unread > 99 ? '99+' : conversation.unread}
+    </span>
+}
+
+const pinnedColors = ['bleu', 'violet', 'turquoise', 'orange', 'rose', 'vert', 'ambre', 'rouge'].map(id => COLOR_BY_ID.get(id)!.hex)
+
+export function PinnedConversationContent({ conversation, mode }: { conversation: Conversation; mode: PinnedMode }) {
+  const byId = useParticipants(state => state.byId)
+  const meId = useMe()
+  const members = conversation.members.filter(id => id !== meId).map(id => byId[id]).filter((person): person is Participant => Boolean(person))
+  const tint = pinnedColors[stableParticipantHash(conversation.id) % pinnedColors.length]
+  return <>
+    <span aria-hidden className="pointer-events-none absolute inset-0 opacity-[.13] dark:opacity-[.16]" style={{ backgroundColor: tint }} />
+    {mode === 'tile' ? <>
+      <ConversationAvatar conversation={conversation} size={28} />
+      <span className="relative w-full truncate text-center text-xs">{conversation.title}</span>
+    </> : <>
+      <span className="relative w-full truncate pe-4 text-[13px] font-medium">{conversation.title}</span>
+      <span className="relative w-full truncate text-xs text-muted-foreground"><PreviewText body={conversation.preview || '还没有消息'} /></span>
+      <span className="relative mt-auto flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground"><span className="size-1.5 rounded-full" style={{ backgroundColor: tint }} />{conversation.lastAt}</span>
+      <span aria-hidden className="pointer-events-none absolute -bottom-3 -end-1 flex items-end -space-x-5">
+        {members.slice(0, 3).map(person => <Avatar key={person.id} p={person} size={mode === 'compact' ? 40 : 48} animated={false} ringColor="transparent" />)}
+      </span>
+    </>}
+    <span className="absolute end-1.5 top-1.5"><ConversationUnread conversation={conversation} /></span>
+  </>
 }
 
 /** Shared native Item content for conversation rows. */
@@ -111,29 +148,24 @@ export function ConversationListItemContent({
   const secondaryText = 'text-muted-foreground'
   return (
     <>
-      <ItemMedia className="relative">
-        <ConversationAvatar conversation={conversation} size={40} />
-        {!selected && muted && (conversation.unread ?? 0) > 0 && <span className="absolute -end-0.5 -top-0.5 size-2.5 rounded-full bg-destructive" aria-label={`${conversation.unread} 条未读消息`} />}
-        {!selected && (conversation.unread ?? 0) > 0 && !muted && (
-          <Badge className="absolute -end-1 -top-1 min-w-5 bg-[var(--unread)] px-1.5 text-xs font-semibold tabular-nums text-[var(--unread-foreground)] ring-2 ring-sidebar" aria-label={`${conversation.unread} 条未读消息`}>
-            {conversation.unread! > 99 ? '99+' : conversation.unread}
-          </Badge>
-        )}
+      <ItemMedia className="relative self-center! translate-y-0!">
+        <ConversationAvatar conversation={conversation} size={32} />
       </ItemMedia>
-      <ItemContent className="min-w-0">
+      <ItemContent className="min-w-0 gap-0.5">
         <div className="flex min-w-0 items-center gap-1.5">
-          <ItemTitle className={cn('block min-w-0 flex-1 truncate leading-5', conversation.pinned && 'font-semibold')}>{conversation.title}</ItemTitle>
-          <span className={cn('flex shrink-0 items-center gap-1 whitespace-nowrap', secondaryText)}>
+          <ItemTitle className="block min-w-0 flex-1 truncate text-sm font-medium leading-5">{conversation.title}</ItemTitle>
+          <span className={cn('flex shrink-0 items-center gap-1 whitespace-nowrap', !muted && conversation.unread ? 'text-brand' : secondaryText)}>
             <span className="text-xs tabular-nums">{conversation.lastAt}</span>
           </span>
         </div>
-        <ItemDescription className={cn('line-clamp-none flex min-w-0 items-center gap-1.5 leading-5', !selected && typingNames.length > 0 && 'text-primary')}>
+        <ItemDescription className={cn('line-clamp-none flex min-w-0 items-center gap-1.5 text-xs leading-4', !selected && typingNames.length > 0 && 'text-brand')}>
           <span className="min-w-0 flex-1 truncate">
             {runStatus && <><span className="text-muted-foreground" aria-label={`任务状态：${runStatus}`}>{runStatus}</span><span aria-hidden> · </span></>}
             {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}
           </span>
           {conversation.pinned && <span className="inline-flex size-4 shrink-0 items-center justify-center" aria-label="已置顶" title="已置顶"><HugeiconsIcon icon={PinIcon} strokeWidth={2} className="size-3.5" /></span>}
           {muted && <span className="inline-flex size-4 shrink-0 items-center justify-center" aria-label="已静音" title="已静音"><HugeiconsIcon icon={NotificationOff01Icon} strokeWidth={2} className="size-3.5" /></span>}
+          <ConversationUnread conversation={conversation} />
         </ItemDescription>
       </ItemContent>
     </>

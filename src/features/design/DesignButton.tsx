@@ -1,5 +1,4 @@
-import { CanvasIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
+import { PanelRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -33,8 +32,8 @@ export function DesignButton({ conversationId }: { conversationId: string }) {
       setPending(false)
     }
   }
-  return <Button type="button" variant="ghost" size="icon-lg" className="size-11 text-muted-foreground" aria-label="打开设计" title="设计"
+  return <Button type="button" variant="outline" size="sm" className="text-foreground max-md:min-h-11" aria-label={expanded ? '关闭画板' : '打开画板'} title="画板"
     aria-controls="conversation-design-panel" aria-expanded={expanded} aria-busy={pending || undefined} aria-disabled={pending || undefined} onPointerEnter={warm} onFocus={warm} onClick={event => void open(event.currentTarget)} data-design-open-trigger>
-    <HugeiconsIcon icon={CanvasIcon} strokeWidth={1.8} className="size-5" />
+    <PanelRight className="size-4" />画板
   </Button>
 }

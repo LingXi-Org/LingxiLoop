@@ -20,7 +20,6 @@ export function ArtifactChatCard({ artifactId, kind, title, description }: { art
     title={title}
     meta={description ? `${label} · ${description}` : label}
     icon={kind === 'slides' ? <PresentationIcon /> : <PanelsTopLeftIcon />}
-    preview={<p className="grid h-full place-items-center px-4 text-center text-xs text-muted-foreground">打开{label}查看和编辑</p>}
     onOpen={() => openArtifact(kind, artifactId, title)}
     onPointerEnter={() => prefetchEditor(kind, artifactId)}
     onFocus={() => prefetchEditor(kind, artifactId)}

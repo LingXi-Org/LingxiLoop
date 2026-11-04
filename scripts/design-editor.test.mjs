@@ -99,8 +99,13 @@ test('Design package preserves the agreed math runtime and optional executable b
   const font = /data:font\/woff2;base64,([A-Za-z0-9+/=]+)/.exec(originalCss)
   assert.deepEqual(await readFile(resolve(output, manifest.styles.fallbackFont)), Buffer.from(font[1], 'base64'))
   const css = await readFile(resolve(output, manifest.styles.file), 'utf8')
+  const productTheme = await readFile('third_party/baoyu-design/host/design-theme.css', 'utf8')
+  const productFonts = (await readFile('src/styles/fonts.css', 'utf8')).replaceAll('/fonts/mingli/', './')
   assert.equal(css.replace(`./${manifest.styles.fallbackFont.split('/').at(-1)}`, font[0])
-    .replace(`./${manifest.styles.icons.split('/').at(-1)}`, `./${manifest.styles.originalIcons}`), originalCss)
+    .replace(`./${manifest.styles.icons.split('/').at(-1)}`, `./${manifest.styles.originalIcons}`), originalCss + '\n' + productFonts + '\n' + productTheme)
+  for (const [, file] of (productFonts + productTheme).matchAll(/url\(['"]?\.\/([^'"\s)]+)/g)) {
+    assert.ok(manifest.files[`assets/${file}`], `host font ${file} must be available offline`)
+  }
   assert.ok(manifest.styles.bytes < manifest.styles.originalBytes)
   const html = await readFile(resolve(output, 'index.html'), 'utf8')
   assert.equal(html.split('data-lingxi-design-critical').length - 1, 2, 'only entry and blocking stylesheet own shell failure')

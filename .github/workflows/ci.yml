@@ -132,6 +132,8 @@ jobs:
               - '!server/src/__integration__/**'
             # Include shared sources loaded by the server runtime and copied by its image.
             server_source:
+              - 'src/styles/fonts.css'
+              - 'public/fonts/mingli/**'
               - 'shared/artifact-editor-origin.ts'
               - 'shared/slides-editor-context.ts'
               - 'shared/visualize-public-resources.ts'

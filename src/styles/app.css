@@ -1,0 +1,124 @@
+@import "./globals.css";
+@import "./fonts.css";
+
+/* User application theme. Admin keeps the shared base and its own preset. */
+:root {
+  --avail: var(--brand);
+  --paper: #FFFFFF;
+  --reading-line-height: 1.75;
+  --background: #FFFFFF;
+  --foreground: #1A1A19;
+  --border: #E7E7E3;
+  --input: #D8D8D3;
+  --ring: var(--brand);
+  --primary: #1A1A19;
+  --primary-foreground: #FAFAF8;
+  --secondary: #EDEDE9;
+  --secondary-foreground: var(--foreground);
+  --muted: #F1F1EE;
+  --muted-foreground: #6B6B66;
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --accent-foreground: var(--foreground);
+  --success: var(--brand);
+  --warning: #8A5300;
+  --sidebar: #F6F6F4;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--brand);
+  --radius: 0.5rem;
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
+  --sidebar-accent: #EAF4EE;
+  --sidebar-accent-foreground: var(--brand);
+  --card: #FFFFFF;
+  --accent: #EDEDE9;
+  --aui-success: var(--brand);
+  --aui-warning: var(--warning);
+  --brand: #2E7D5B;
+  --brand-foreground: #FFFFFF;
+  --canvas: #F2F2EF;
+  --canvas-dot: #D9D9D4;
+  --bubble: #F1F1EE;
+  --warning-surface: #FBF3E4;
+  --surface-shadow: 0 1px 2px rgb(20 20 18 / 4%), 0 6px 20px rgb(20 20 18 / 5%);
+}
+
+[data-density='comfortable'] {
+  --reading-line-height: 1.75;
+}
+
+.desktop-openmaus {
+  --im-navigation-row-height: 56px;
+  --workspace-chrome-surface: var(--sidebar);
+  --unread: var(--brand);
+  --unread-foreground: var(--brand-foreground);
+  --im-conversation-selected: var(--accent);
+  --im-divider: var(--border);
+  --im-divider-weak: var(--border);
+}
+
+.desktop-openmaus .im-conversations-sidebar {
+  background: var(--background);
+}
+
+.desktop-openmaus .im-conversation-header {
+  border-color: transparent;
+  background: var(--background);
+}
+
+.dark {
+  --background: #141415;
+  --foreground: #ECECEA;
+  --card: #1C1C1E;
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: #ECECEA;
+  --primary-foreground: #141415;
+  --secondary: #232325;
+  --secondary-foreground: var(--foreground);
+  --muted: #232325;
+  --muted-foreground: #9A9A95;
+  --accent: #232325;
+  --accent-foreground: var(--foreground);
+  --success: var(--brand);
+  --warning: #E5B565;
+  --border: #262628;
+  --input: #343437;
+  --ring: var(--brand);
+  --sidebar: #0E0E0F;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
+  --sidebar-accent: #172720;
+  --sidebar-accent-foreground: var(--brand);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--brand);
+  --paper: #1E1E20;
+  --brand: #6CC59A;
+  --brand-foreground: #0E1A14;
+  --canvas: #18181A;
+  --canvas-dot: #2B2B2E;
+  --bubble: #232325;
+  --warning-surface: #262017;
+  --surface-shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 10px 28px rgb(0 0 0 / 35%);
+  --radius: 0.5rem;
+  --reading-line-height: 1.75;
+  --avail: var(--brand);
+  --aui-success: var(--brand);
+  --aui-warning: var(--warning);
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-canvas: var(--canvas);
+  --color-bubble: var(--bubble);
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
+}

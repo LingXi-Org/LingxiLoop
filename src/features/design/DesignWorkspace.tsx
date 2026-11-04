@@ -42,7 +42,7 @@ export function DesignWorkspace({ children, design, onClose, visible = true }: {
 
   return <div data-design-workspace data-design-open={open} className="relative h-full min-h-0 min-w-0 overflow-hidden">
     <SidebarProvider open={open} openMobile={open} onOpenChange={value => { if (!value) close() }} onOpenMobileChange={value => { if (!value) close() }} keyboardShortcut={open}
-      className="relative h-full min-h-0 overflow-hidden" style={{ '--sidebar-width': width === null ? '50cqw' : `clamp(35cqw, ${width}px, 65cqw)` } as React.CSSProperties}>
+      className="relative h-full min-h-0 overflow-hidden" style={{ '--sidebar-width': width === null ? 'min(620px, 50cqw)' : `clamp(35cqw, ${width}px, 65cqw)` } as React.CSSProperties}>
       <div className="h-full min-h-0 min-w-0 flex-1 overflow-hidden">{children}</div>
       <Sidebar side="right" data-design-pane aria-hidden={!open} inert={!open} keepMobileMounted
         mobileTitle="设计画板" mobileDescription="编辑当前会话的设计画板。" className="max-md:w-screen max-md:max-w-none md:absolute md:h-full">
