@@ -35,5 +35,16 @@
   ],
   "browser": "not_run",
   "realProviderBenchmark": "not_run",
-  "deployment": "not_performed"
+  "deployment": "not_performed",
+  "globalBarrierFollowup": {
+    "baseline": "five new PostgreSQL regressions failed against 93bfcfb9; original five passed",
+    "postgresTests": 25,
+    "deployTests": 24,
+    "skipped": 0,
+    "typecheck": "passed",
+    "lint": "passed",
+    "productionContainers": "not_touched",
+    "sourceRecovery": "read-only known source with retained queue; other maintenance counters and clients remain zero",
+    "scope": "product62 patch entrypoints; historical product61 semantics retained"
+  }
 }

@@ -96,3 +96,44 @@ test(`${sourceRuntime} formal25 retains Slides checkpoints and uncertain-COMMIT 
 }))
 
 }
+
+for(const status of ['queued','waiting','leased'])test(`product62 blocks ${status} pinned work before any binding/checkpoint and preserves it`,formal25,async()=>isolated(async db=>{
+  const {source,target}=await setup(db,'3.8.24')
+  await db.query(`INSERT INTO lingxios.agent_work_items(id,tenant_id,agent_id,session_id,kind,lane,trigger_ref,status,meta)
+    VALUES('not-started','t','a','s','slides_workspace','interactive','fixture',$1,$2::jsonb)`,[status,JSON.stringify({harnessHash:'old-pinned-harness'})])
+  const rows=(await db.query('SELECT * FROM lingxios.agent_work_items')).rows
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM lingxios.agent_steps')).rows[0].n,0)
+  assert.equal((await readRuntimePatchBarrier(db,false,true,true)).incompatibleRuns,1)
+  await assert.rejects(preflightPublishedRuntimePatch(db,source,target),/incompatible resumable/)
+  await assert.rejects(applyPublishedRuntimePatch(db,source,target),/incompatible resumable/)
+  assert.deepEqual((await db.query('SELECT * FROM lingxios.agent_work_items')).rows,rows)
+  assert.equal((await db.query('SELECT runtime_version FROM public.lingxios_installation')).rows[0].runtime_version,'3.8.24')
+}))
+
+test('product62 source recovery preserves work that arrived after preflight, without replaying CAS',formal25,async()=>isolated(async db=>{
+  const {source,target}=await setup(db,'3.8.24')
+  assert.equal((await preflightPublishedRuntimePatch(db,source,target)).state,'source')
+  await db.query(`INSERT INTO lingxios.agent_work_items(id,tenant_id,agent_id,session_id,kind,lane,trigger_ref,status,meta)
+    VALUES('late-work','t','a','s','turn','interactive','fixture','queued','{"harnessHash":"source"}')`)
+  const before=(await db.query('SELECT * FROM lingxios.agent_work_items')).rows
+  await assert.rejects(applyPublishedRuntimePatch(db,source,target),/incompatible resumable/)
+  const observed=await observePublishedRuntimePatch(db,source,target)
+  assert.equal(observed.state,'source');assert.equal(observed.complete,false)
+  assert.deepEqual((await db.query('SELECT * FROM lingxios.agent_work_items')).rows,before)
+  const other=new Pool({connectionString:db.options.connectionString,max:1})
+  try{await other.query('SELECT 1');await assert.rejects(observePublishedRuntimePatch(db,source,target),/no other database clients/)}finally{await other.end()}
+  await db.query("UPDATE lingxios.agent_work_items SET status='leased',lease_expires_at=now()+interval '1 minute' WHERE id='late-work'")
+  await assert.rejects(observePublishedRuntimePatch(db,source,target),/maintenance barrier/)
+}))
+
+test('product62 target observation cannot certify retained unstarted work or unknown provenance',formal25,async()=>isolated(async db=>{
+  const {source,target}=await setup(db,'3.8.24')
+  await applyPublishedRuntimePatch(db,source,target)
+  await db.query(`INSERT INTO lingxios.agent_work_items(id,tenant_id,agent_id,session_id,kind,lane,trigger_ref,status,meta)
+    VALUES('old-work','t','a','s','turn','interactive','fixture','waiting','{"harnessHash":"old"}')`)
+  await assert.rejects(observePublishedRuntimePatch(db,source,target),/maintenance barrier/)
+  await db.query("UPDATE lingxios.agent_work_items SET status='failed' WHERE id='old-work'")
+  assert.equal((await observePublishedRuntimePatch(db,source,target)).state,'target')
+  await db.query("UPDATE public.lingxios_installation SET runtime_version='unknown'")
+  await assert.rejects(observePublishedRuntimePatch(db,source,target),/unknown provenance/)
+}))

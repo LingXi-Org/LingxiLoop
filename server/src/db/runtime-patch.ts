@@ -56,11 +56,13 @@ const BARRIER_SQL=`SELECT
   (SELECT count(*)::int FROM lingxios.agent_model_budget_calls WHERE delivered_at IS NULL AND claim_token IS NOT NULL AND available_at>NOW())+
   (SELECT count(*)::int FROM lingxios.agent_terminal_outbox WHERE delivered_at IS NULL AND claim_token IS NOT NULL AND available_at>NOW())) AS "liveOutbox",
  (SELECT count(*)::int FROM lingxios.agent_work_items w WHERE w.status IN ('queued','leased','waiting')
-  AND ($1::boolean OR w.kind IN ('turn','resume','routine','teacher_digest')) AND EXISTS(SELECT 1 FROM lingxios.agent_steps s
-   WHERE s.work_id=w.id AND s.kind IN ('runtime.binding','runtime.checkpoint'))) AS "incompatibleRuns"`
-export async function readRuntimePatchBarrier(database:Pick<PoolClient,'query'>,exclusiveClients=false,allKinds=exclusiveClients){
- // Product57 also covers bound native job kinds beyond the historical IM list.
- const result=(await database.query(BARRIER_SQL,[allKinds])).rows[0] as Record<string,unknown>
+  AND ($1::boolean OR w.kind IN ('turn','resume','routine','teacher_digest'))
+  AND ($2::boolean OR EXISTS(SELECT 1 FROM lingxios.agent_steps s
+   WHERE s.work_id=w.id AND s.kind IN ('runtime.binding','runtime.checkpoint')))) AS "incompatibleRuns"`
+export async function readRuntimePatchBarrier(database:Pick<PoolClient,'query'>,exclusiveClients=false,allKinds=exclusiveClients,allNonterminal=false){
+ // Product62 drains every nonterminal item, including pinned work with no runtime step.
+ // Historical bridges retain their original bound-work semantics.
+ const result=(await database.query(BARRIER_SQL,[allKinds,allNonterminal])).rows[0] as Record<string,unknown>
  check(result?.visible===true,'Runtime patch lease visibility unavailable')
  const counters=['prepared','liveWork','liveSession','liveAttempts','liveCapture','liveOutbox','incompatibleRuns'] as const
  check(counters.every(k=>Number.isSafeInteger(result[k])&&Number(result[k])>=0),'Runtime patch barrier unavailable')
@@ -111,7 +113,7 @@ export async function compareAndSwapRuntimeProvenance(database:Pool,source:Runti
    lingxios.agent_memory_capture,lingxios.agent_delivery_outbox,lingxios.agent_run_events,
    lingxios.agent_model_budget_calls,lingxios.agent_terminal_outbox IN SHARE ROW EXCLUSIVE MODE`)
   check(await installedPatchState(client,target,tables)===source.runtime,'Runtime patch source provenance changed; observe instead of replay')
-  const barrier=await readRuntimePatchBarrier(client,target.productVersion>=57)
+  const barrier=await readRuntimePatchBarrier(client,target.productVersion>=57,target.productVersion>=57,target.productVersion===62)
   check(Object.values(barrier).every(n=>n===0),'Runtime patch requires zero live leases and no incompatible resumable runs')
   writeAttempted=true
   const result=await client.query(`UPDATE public.lingxios_installation SET runtime_version=$1,installed_at=NOW()
@@ -150,7 +152,7 @@ export async function preflightPublishedRuntimePatch(database:Pool,source:Runtim
   const runtime=await installedPatchState(client,target,tables)
   check(runtime===source.runtime||runtime===target.runtime,'Runtime patch preflight found unknown provenance')
   if(runtime===source.runtime){
-   const barrier=await readRuntimePatchBarrier(client,false,true)
+   const barrier=await readRuntimePatchBarrier(client,false,true,target.productVersion===62)
    check(Object.values(barrier).every(n=>n===0),'Runtime patch preflight requires no live or incompatible resumable work')
   }
   await client.query('COMMIT')
@@ -170,8 +172,12 @@ export async function observePublishedRuntimePatch(database:Pool,source:RuntimeP
   await client.query("SET LOCAL statement_timeout='10s'; SET LOCAL lock_timeout='5s'; SET LOCAL idle_in_transaction_session_timeout='15s'")
   const runtime=await installedPatchState(client,target,tables)
   check(runtime===source.runtime||runtime===target.runtime,'Runtime patch observation found unknown provenance')
-  const barrier=await readRuntimePatchBarrier(client,true)
-  check(Object.values(barrier).every(n=>n===0),'Runtime patch observation requires the complete maintenance barrier')
+  const barrier=await readRuntimePatchBarrier(client,true,true,target.productVersion===62)
+  // A known, unchanged source may resume its retained queue after a refused CAS.
+  // No live effect/lease, other client or prepared transaction may remain. The
+  // target never inherits this exception, and observation never authorizes CAS replay.
+  const sourceRecovery=target.productVersion===62&&runtime===source.runtime
+  check(Object.entries(barrier).every(([name,n])=>n===0||sourceRecovery&&name==='incompatibleRuns'),'Runtime patch observation requires the complete maintenance barrier')
   await client.query('COMMIT')
   return {complete:runtime===target.runtime,state:runtime===target.runtime?'target':'source',source:source.runtime,target:target.runtime,schema:14,product:target.productVersion,
    planHash:runtimePatchPlanHash(source,target),observationOnly:true}

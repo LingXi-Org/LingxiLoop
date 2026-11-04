@@ -290,3 +290,14 @@ test('product62 plans only the exact formal24 to25 runtime-only bridge', () => {
   for(const count of [58,59,60,61])assert.throws(()=>runtimePatchPlan(f.read,f.paths.slice(0,count)))
   assert.throws(()=>runtimePatchPlan(f.read,[...f.paths.slice(0,-1),'server/src/db/migrations/0062_unknown.sql']))
 })
+
+test('a retained source queue after preflight restores the known source without replay or target startup',async()=>{
+  const {calls,error}=await run(['apply'],{complete:false,state:'source',observationOnly:true})
+  assert.match(error.message,/source restored/)
+  assert.equal(calls.filter(call=>call==='apply').length,1)
+  assert.equal(calls.filter(call=>call==='observe').length,1)
+  assert.equal(calls.at(-1),'restoreSource')
+  assert.ok(!calls.includes('convergeTarget'))
+  const unconfirmed=await run(['apply','observe'])
+  assert.ok(!unconfirmed.calls.includes('restoreSource'))
+})
