@@ -1,4 +1,5 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import { canonicalUploadMime } from '../../../../shared/upload-mime.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { Storage } from '../../storage.js'
 import { normalizeStorageKey } from '../../storage.js'
@@ -87,12 +88,16 @@ export class PlatformApplication {
     }
   }
 
-  async presignUpload(companyId: string, userId: string, input: { name: string; mime: string; size: number; documentId?: string }) {
+  async presignUpload(companyId: string, userId: string, input: { name: string; mime: string; size: number; documentId?: string; sha256?: string; idempotencyKey?: string }) {
+    input = { ...input, mime: canonicalUploadMime(input.name, input.mime) }
     const policy = MIME_POLICY[input.mime]
     if (!policy) throw new PlatformApplicationError('mime_not_allowed', `mime not allowed: ${input.mime}`)
-    const id = randomUUID().replaceAll('-', '')
+    const id = input.sha256 && input.idempotencyKey
+      ? createHash('sha256').update(JSON.stringify([companyId, userId, input.documentId ?? null, input.name, input.mime, input.size, input.sha256, input.idempotencyKey])).digest('hex')
+      : randomUUID().replaceAll('-', '')
     const key = `attachments/${companyId}/${id}.${policy.ext}`
-    const signed = await this.infrastructure.storage.presignPut(key, input.mime, { contentLength: input.size })
+    const signed = await this.infrastructure.storage.presignPut(key, input.mime, { contentLength: input.size,
+      ...(input.sha256 ? { checksumSHA256: Buffer.from(input.sha256, 'hex').toString('base64') } : {}) })
     await registerUploadedFile(this.infrastructure.db, companyId, userId, key, input.documentId ?? null)
     return { ...signed, key, ...input, kind: policy.kind }
   }

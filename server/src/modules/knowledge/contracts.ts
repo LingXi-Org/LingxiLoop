@@ -30,6 +30,7 @@ export const presignSourceRequestSchema = z.object({
     'image/jpeg', 'image/png', 'application/zip',
   ]),
   size: z.coerce.number().int().positive(),
+  sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
 }).strict()
 
 export const updateSourceRequestSchema = z.object({

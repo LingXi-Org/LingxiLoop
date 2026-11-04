@@ -1,18 +1,18 @@
 import { ArrowDownIcon, ArrowUpIcon, ImagePlusIcon, PaperclipIcon } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
+import { ProtectedFileLinks } from '@/components/retab/ui/protected-file-links'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { type ContentDocument, ContentEditor, type ContentEditorHandle } from '@/features/content-editor'
 import { uploadsApi } from '@/features/platform/api'
-import { useAuth } from '@/stores/auth'
 import { userFacingError } from '@/lib/userFacingError'
+import { useAuth } from '@/stores/auth'
 import type { ForumAttachment } from './contracts'
 import { attachmentKind, ForumAttachments, ForumFileOpen, forumFileUrl } from './ForumAttachments'
-import { ContentEditor, type ContentDocument, type ContentEditorHandle } from '@/features/content-editor'
 import { ForumMaterials } from './ForumMaterials'
-import { ProtectedFileLinks } from '@/components/retab/ui/protected-file-links'
 
 
 export function ForumContentFields({ body, editorDocument, legacyParagraphs, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, compact = false, focusCanvas = false, nativeOnly = false, onFocus, editorRef }: {
@@ -95,7 +95,7 @@ export function ForumContentFields({ body, editorDocument, legacyParagraphs, set
     {focusCanvas && uploadName && <p role="status" className="forum-focus-status flex items-center gap-2"><Spinner className="shrink-0 motion-reduce:animate-none" />正在上传 {uploadName}</p>}
     {error && <p role="alert" className={focusCanvas ? "forum-focus-status text-destructive" : "text-sm text-destructive"}>{error}{failed.length > 0 && <Button type="button" variant="link" disabled={disabled} onClick={() => void upload(failed)}>重试上传</Button>}</p>}
     </div>
-    {nativeOnly && error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    {nativeOnly && error && <p role="alert" className="text-sm text-destructive">{error}{failed.length > 0 && <Button type="button" variant="link" disabled={disabled} onClick={() => void upload(failed)}>重试上传</Button>}</p>}
   </div>
 }
 
