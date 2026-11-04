@@ -25,6 +25,16 @@ qualification. The combined commit must pass exact-lock CI, including the
 product62 PostgreSQL queue/recovery and affected native Worker cases, before
 independent final review and production integration.
 
+The first combined CI (41868217168) passed web, control, server, admin,
+deployment-contract and the native Design/teaching cases, then failed before
+the public-text suspension behavior ran: its explicit supported-version list
+ended at 3.8.24. Formal25 now runs all four existing suspension controls,
+including invalid replacement rejection and formal24-style output callback
+failure attribution, timing/ledger and publication assertions. The formal25
+upstream changes do not alter the model/publication implementation exercised
+by those controls. The corrected final commit still requires exact-lock CI;
+the failed run is not qualification.
+
 Use one controlled formal24-to25 maintenance cutover for both harness changes.
 The reviewed gate must count every queued, leased and waiting item, even when
 no binding/checkpoint exists; recheck under the maintenance lock after both
