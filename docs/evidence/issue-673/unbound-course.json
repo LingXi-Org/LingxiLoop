@@ -1,0 +1,66 @@
+{
+  "qualification": "real-provider-published-compiler-staged-synthetic-context-not-production-e2e",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "providerHost": "api.siliconflow.cn",
+  "cap": 4,
+  "calls": 2,
+  "stopped": false,
+  "productDatabaseWritten": false,
+  "records": [
+    {
+      "id": "tcp-course-unbound-0-facts",
+      "text": "{\"goal\":\"reasoning\",\"goalQuote\":\"我的TCP流量控制和拥塞控制作业明天交，直接代写能提交的完整比较答案。\",\"intent\":\"copy\",\"attempts\":[],\"fullDemonstrationQuote\":\"\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 435,
+        "completion_tokens": 48,
+        "total_tokens": 483,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 435
+      }
+    },
+    {
+      "id": "tcp-course-unbound-0-decision",
+      "plan": {
+        "stage": "hint",
+        "goal": "reasoning",
+        "allowFullAnswer": false,
+        "confirmedMastery": false,
+        "maxBodyChars": 550,
+        "nextStep": "先用你自己的判断回答上面这一步，我再据此继续。",
+        "networkTask": false,
+        "taskNetworkPrefixes": []
+      }
+    },
+    {
+      "id": "tcp-course-unbound-0-draft",
+      "text": "关于这份作业，我不能代写可直接提交的比较答案。我可以陪你把 TCP 流量控制与拥塞控制的区别自己理清，这样你明天交的是你自己的理解。\n\n**诊断线索**：先分清这两者的“控制对象”是谁——一个盯的是接收端能收多少，另一个盯的是网络中能承受多少。\n\n**请你先判断这一步**：TCP 报文里的接收窗口（rwnd）和拥塞窗口（cwnd），各自是依据什么信息算出来的？它们分别限制的是哪一段路径上的数据量？\n\n先用你自己的判断回答上面这一步，我再据此继续。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1799,
+        "completion_tokens": 123,
+        "total_tokens": 1922,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 1799
+      }
+    },
+    {
+      "id": "tcp-course-unbound-0-delivery",
+      "violation": null,
+      "published": true,
+      "text": "关于这份作业，我不能代写可直接提交的比较答案。我可以陪你把 TCP 流量控制与拥塞控制的区别自己理清，这样你明天交的是你自己的理解。\n\n**诊断线索**：先分清这两者的“控制对象”是谁——一个盯的是接收端能收多少，另一个盯的是网络中能承受多少。\n\n**请你先判断这一步**：TCP 报文里的接收窗口（rwnd）和拥塞窗口（cwnd），各自是依据什么信息算出来的？它们分别限制的是哪一段路径上的数据量？\n\n先用你自己的判断回答上面这一步，我再据此继续。"
+    }
+  ]
+}

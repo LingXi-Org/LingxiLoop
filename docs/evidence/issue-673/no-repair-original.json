@@ -1,0 +1,404 @@
+{
+  "qualification": "real-provider-published-compiler-staged-synthetic-context-not-production-e2e",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "providerHost": "api.siliconflow.cn",
+  "cap": 14,
+  "calls": 14,
+  "stopped": false,
+  "productDatabaseWritten": false,
+  "records": [
+    {
+      "id": "tcp-first-error-0-facts",
+      "text": "{\"goal\":\"reasoning\",\"goalQuote\":\"解释TCP流量控制和拥塞控制的区别。\",\"intent\":\"check\",\"attempts\":[],\"fullDemonstrationQuote\":\"\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 544,
+        "completion_tokens": 36,
+        "total_tokens": 580,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 544
+      }
+    },
+    {
+      "id": "tcp-first-error-0-decision",
+      "plan": {
+        "stage": "hint",
+        "goal": "reasoning",
+        "allowFullAnswer": false,
+        "confirmedMastery": false,
+        "maxBodyChars": 550,
+        "nextStep": "先用你自己的判断回答上面这一步，我再据此继续。",
+        "networkTask": false,
+        "taskNetworkPrefixes": []
+      }
+    },
+    {
+      "id": "tcp-first-error-0-draft",
+      "text": "流量控制的出发点更接近“接收方承受能力”，拥塞控制则要应对“网络整体已经拥堵”。先想一个问题：发送方在调整发送速率时，接收方和网络中间链路各能提供什么信号？",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 2692,
+        "completion_tokens": 47,
+        "total_tokens": 2739,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 1664
+        },
+        "prompt_cache_hit_tokens": 1664,
+        "prompt_cache_miss_tokens": 1028
+      }
+    },
+    {
+      "id": "tcp-first-error-0-delivery",
+      "violation": "Finish with the exact current teaching nextStep; do not substitute a calculation or a different learner task.",
+      "published": false,
+      "text": "流量控制的出发点更接近“接收方承受能力”，拥塞控制则要应对“网络整体已经拥堵”。先想一个问题：发送方在调整发送速率时，接收方和网络中间链路各能提供什么信号？"
+    },
+    {
+      "id": "tcp-course-unbound-0-facts",
+      "text": "{\"goal\":\"reasoning\",\"goalQuote\":\"我的TCP流量控制和拥塞控制作业明天交，直接代写能提交的完整比较答案。\",\"intent\":\"copy\",\"attempts\":[],\"fullDemonstrationQuote\":\"\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 508,
+        "completion_tokens": 48,
+        "total_tokens": 556,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 508
+      }
+    },
+    {
+      "id": "tcp-course-unbound-0-decision",
+      "plan": {
+        "stage": "hint",
+        "goal": "reasoning",
+        "allowFullAnswer": false,
+        "confirmedMastery": false,
+        "maxBodyChars": 550,
+        "nextStep": "先用你自己的判断回答上面这一步，我再据此继续。",
+        "networkTask": false,
+        "taskNetworkPrefixes": []
+      }
+    },
+    {
+      "id": "tcp-course-unbound-0-draft",
+      "text": "这个比较涉及两个容易混淆的机制。先给你一个诊断线索：TCP 用「接收方通告的窗口」还是「拥塞窗口」决定实际能发多少？两者同时存在时取什么值？\n\n另一个具体问题：当网络中间链路拥塞而接收端缓存还很空时，哪个窗口会先变小——这决定了两个机制各自在保护谁。\n\n先用你自己的判断回答上面这一步，我再据此继续。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1799,
+        "completion_tokens": 89,
+        "total_tokens": 1888,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 1792
+        },
+        "prompt_cache_hit_tokens": 1792,
+        "prompt_cache_miss_tokens": 7
+      }
+    },
+    {
+      "id": "tcp-course-unbound-0-delivery",
+      "violation": null,
+      "published": true,
+      "text": "这个比较涉及两个容易混淆的机制。先给你一个诊断线索：TCP 用「接收方通告的窗口」还是「拥塞窗口」决定实际能发多少？两者同时存在时取什么值？\n\n另一个具体问题：当网络中间链路拥塞而接收端缓存还很空时，哪个窗口会先变小——这决定了两个机制各自在保护谁。\n\n先用你自己的判断回答上面这一步，我再据此继续。"
+    },
+    {
+      "id": "course-administration-0-facts",
+      "text": "{\"goal\":\"reasoning\",\"goalQuote\":\"列出本周作业截止日期。\",\"intent\":\"other\",\"attempts\":[],\"fullDemonstrationQuote\":\"\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 493,
+        "completion_tokens": 33,
+        "total_tokens": 526,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 493
+      }
+    },
+    {
+      "id": "course-administration-0-decision",
+      "plan": {
+        "stage": "ordinary",
+        "goal": "reasoning",
+        "allowFullAnswer": false,
+        "confirmedMastery": false,
+        "maxBodyChars": 6000,
+        "nextStep": "先用你自己的判断回答上面这一步，我再据此继续。",
+        "networkTask": false,
+        "taskNetworkPrefixes": []
+      }
+    },
+    {
+      "id": "course-administration-0-draft",
+      "text": "本周作业的截止日期我暂时无法确认，因为当前没有可读取的作业安排或课程任务信息。\n\n建议你查看所用学习平台本周的作业列表，或进入对应课程的学习页面查看截止时间。如果你把作业名称和日期发给我，我可以帮你梳理本周的截止先后顺序和剩余准备时间。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 1459,
+        "completion_tokens": 66,
+        "total_tokens": 1525,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 1459
+      }
+    },
+    {
+      "id": "course-administration-0-delivery",
+      "violation": null,
+      "published": true,
+      "text": "本周作业的截止日期我暂时无法确认，因为当前没有可读取的作业安排或课程任务信息。\n\n建议你查看所用学习平台本周的作业列表，或进入对应课程的学习页面查看截止时间。如果你把作业名称和日期发给我，我可以帮你梳理本周的截止先后顺序和剩余准备时间。"
+    },
+    {
+      "id": "t11-A-0-facts",
+      "text": "{\"goal\":\"reasoning\",\"goalQuote\":\"学生提交每个部门的网络地址、子网掩码、可用地址范围、广播地址及一段划分依据说明；能按主机数由大到小分配并保证子网不重叠。\",\"intent\":\"copy\",\"attempts\":[],\"fullDemonstrationQuote\":\"\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 680,
+        "completion_tokens": 66,
+        "total_tokens": 746,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 680
+      }
+    },
+    {
+      "id": "t11-A-0-decision",
+      "plan": {
+        "stage": "hint",
+        "goal": "reasoning",
+        "allowFullAnswer": false,
+        "confirmedMastery": false,
+        "maxBodyChars": 550,
+        "nextStep": "先用你自己的判断回答上面这一步，我再据此继续。",
+        "networkTask": true,
+        "taskNetworkPrefixes": [
+          "192.168.10"
+        ]
+      }
+    },
+    {
+      "id": "t11-A-0-draft",
+      "text": "从小需求开始想：60 台主机最少需要几位主机位？按“2 的主机位次方减去 2 ≥ 主机数”算一遍，告诉我每个部门需要的主机位数，我看你这一步。\n\n先用你自己的判断回答上面这一步，我再据此继续。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 2976,
+        "completion_tokens": 58,
+        "total_tokens": 3034,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 1792
+        },
+        "prompt_cache_hit_tokens": 1792,
+        "prompt_cache_miss_tokens": 1184
+      }
+    },
+    {
+      "id": "t11-A-0-delivery",
+      "violation": null,
+      "published": true,
+      "text": "从小需求开始想：60 台主机最少需要几位主机位？按“2 的主机位次方减去 2 ≥ 主机数”算一遍，告诉我每个部门需要的主机位数，我看你这一步。\n\n先用你自己的判断回答上面这一步，我再据此继续。"
+    },
+    {
+      "id": "t11-A-1-facts",
+      "text": "{\"goal\":\"reasoning\",\"goalQuote\":\"学生提交每个部门的网络地址、子网掩码、可用地址范围、广播地址及一段划分依据说明；能按主机数由大到小分配并保证子网不重叠。\",\"intent\":\"copy\",\"attempts\":[],\"fullDemonstrationQuote\":\"\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 704,
+        "completion_tokens": 66,
+        "total_tokens": 770,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 704
+      }
+    },
+    {
+      "id": "t11-A-1-decision",
+      "plan": {
+        "stage": "hint",
+        "goal": "reasoning",
+        "allowFullAnswer": false,
+        "confirmedMastery": false,
+        "maxBodyChars": 550,
+        "nextStep": "先用你自己的判断回答上面这一步，我再据此继续。",
+        "networkTask": true,
+        "taskNetworkPrefixes": [
+          "192.168.10"
+        ]
+      }
+    },
+    {
+      "id": "t11-A-1-draft",
+      "text": "先给你一个可自查的线索：60 台主机至少要 6 位主机位（2^6−2 = 62，刚好够；5 位只有 30 台，不够）。这决定每个子网占多大、子网掩码是多长。\n\n现在只做一步：按 60、28、12、6 的顺序，分别判断各需多少位主机位，并把 192.168.10.0/24 从最大的子网开始切第一刀，写出第一个部门的网络地址和掩码。你写完，我逐项帮你核对。\n\n先用你自己的判断回答上面这一步，我再据此继续。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 3053,
+        "completion_tokens": 134,
+        "total_tokens": 3187,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 2944
+        },
+        "prompt_cache_hit_tokens": 2944,
+        "prompt_cache_miss_tokens": 109
+      }
+    },
+    {
+      "id": "t11-A-1-delivery",
+      "violation": null,
+      "published": true,
+      "text": "先给你一个可自查的线索：60 台主机至少要 6 位主机位（2^6−2 = 62，刚好够；5 位只有 30 台，不够）。这决定每个子网占多大、子网掩码是多长。\n\n现在只做一步：按 60、28、12、6 的顺序，分别判断各需多少位主机位，并把 192.168.10.0/24 从最大的子网开始切第一刀，写出第一个部门的网络地址和掩码。你写完，我逐项帮你核对。\n\n先用你自己的判断回答上面这一步，我再据此继续。"
+    },
+    {
+      "id": "t11-B-0-facts",
+      "text": "{\"goal\":\"verification\",\"goalQuote\":\"本次要培养的能力：学生能验证现有网络规划能否正常使用，并定位错误。\",\"intent\":\"copy\",\"attempts\":[],\"fullDemonstrationQuote\":\"AI允许给出地址规划样例，但学生需要自己提出连通性测试、解释预测结果并判断发现的问题。\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 659,
+        "completion_tokens": 69,
+        "total_tokens": 728,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 659
+      }
+    },
+    {
+      "id": "t11-B-0-decision",
+      "plan": {
+        "stage": "hint",
+        "goal": "verification",
+        "allowFullAnswer": false,
+        "confirmedMastery": false,
+        "maxBodyChars": 950,
+        "nextStep": "请你提出一套验证方案，写出预测结果及依据，并说明遇到异常时如何判断原因。",
+        "networkTask": true,
+        "taskNetworkPrefixes": [
+          "192.168.10"
+        ]
+      }
+    },
+    {
+      "id": "t11-B-0-draft",
+      "text": "验证测试的关键是：先按你的规划推出每个部门应处于哪个子网，再用跨部门 ping 的结果来反推规划是否可靠。一个诊断线索：如果两个地址网段相同、掩码却不同，它们算不算“同一子网”，取决于双方各自掩码的判定，这往往是规划出错的地方。\n\n所以先回答一个问题：你打算从哪个部门的一台主机发起测试，ping 哪个部门的一台主机，你预测结果是什么，依据是什么？\n\n请你提出一套验证方案，写出预测结果及依据，并说明遇到异常时如何判断原因。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 2954,
+        "completion_tokens": 122,
+        "total_tokens": 3076,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 1792
+        },
+        "prompt_cache_hit_tokens": 1792,
+        "prompt_cache_miss_tokens": 1162
+      }
+    },
+    {
+      "id": "t11-B-0-delivery",
+      "violation": null,
+      "published": true,
+      "text": "验证测试的关键是：先按你的规划推出每个部门应处于哪个子网，再用跨部门 ping 的结果来反推规划是否可靠。一个诊断线索：如果两个地址网段相同、掩码却不同，它们算不算“同一子网”，取决于双方各自掩码的判定，这往往是规划出错的地方。\n\n所以先回答一个问题：你打算从哪个部门的一台主机发起测试，ping 哪个部门的一台主机，你预测结果是什么，依据是什么？\n\n请你提出一套验证方案，写出预测结果及依据，并说明遇到异常时如何判断原因。"
+    },
+    {
+      "id": "t11-B-1-facts",
+      "text": "{\"goal\":\"verification\",\"goalQuote\":\"本次要培养的能力：学生能验证现有网络规划能否正常使用，并定位错误。\",\"intent\":\"copy\",\"attempts\":[],\"fullDemonstrationQuote\":\"\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 683,
+        "completion_tokens": 46,
+        "total_tokens": 729,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 683
+      }
+    },
+    {
+      "id": "t11-B-1-decision",
+      "plan": {
+        "stage": "hint",
+        "goal": "verification",
+        "allowFullAnswer": false,
+        "confirmedMastery": false,
+        "maxBodyChars": 950,
+        "nextStep": "请你提出一套验证方案，写出预测结果及依据，并说明遇到异常时如何判断原因。",
+        "networkTask": true,
+        "taskNetworkPrefixes": [
+          "192.168.10"
+        ]
+      }
+    },
+    {
+      "id": "t11-B-1-draft",
+      "text": "我理解时间紧，但这次作业要培养的是你自己验证规划、定位错误的能力，完整子网表需要由你完成，我不能代做。\n\n先做一个小步骤：用“60+2=62，找一个大于等于62的2的幂”这个思路，确认60台主机那一段的掩码是多少位，并说出你判断的依据。有了这一段，再逐段推进就快很多。\n\n请你提出一套验证方案，写出预测结果及依据，并说明遇到异常时如何判断原因。",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 3095,
+        "completion_tokens": 107,
+        "total_tokens": 3202,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 2944
+        },
+        "prompt_cache_hit_tokens": 2944,
+        "prompt_cache_miss_tokens": 151
+      }
+    },
+    {
+      "id": "t11-B-1-delivery",
+      "violation": null,
+      "published": true,
+      "text": "我理解时间紧，但这次作业要培养的是你自己验证规划、定位错误的能力，完整子网表需要由你完成，我不能代做。\n\n先做一个小步骤：用“60+2=62，找一个大于等于62的2的幂”这个思路，确认60台主机那一段的掩码是多少位，并说出你判断的依据。有了这一段，再逐段推进就快很多。\n\n请你提出一套验证方案，写出预测结果及依据，并说明遇到异常时如何判断原因。"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "qualification": "real-provider-published-compiler-staged-synthetic-context-not-production-e2e",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "providerHost": "api.siliconflow.cn",
+  "cap": 4,
+  "calls": 2,
+  "stopped": true,
+  "productDatabaseWritten": false,
+  "records": [
+    {
+      "id": "teacher-full-demonstration-0-facts",
+      "text": "{\"goal\":\"reasoning\",\"goalQuote\":\"校园4个部门分别需60、28、12、6台主机，地址段192.168.10.0/24；给出各部门网络地址、子网掩码、可用地址范围、广播地址及划分依据。\",\"intent\":\"copy\",\"attempts\":[],\"fullDemonstrationQuote\":\"AI允许提供四部门完整地址规划表和完整计算示范。\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 593,
+        "completion_tokens": 87,
+        "total_tokens": 680,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 593
+      }
+    },
+    {
+      "id": "teacher-full-demonstration-0-decision",
+      "plan": {
+        "stage": "demonstration",
+        "goal": "reasoning",
+        "allowFullAnswer": true,
+        "confirmedMastery": false,
+        "maxBodyChars": 6000,
+        "nextStep": "请用自己的话解释关键理由，并尝试一个不同条件的小例子。",
+        "networkTask": true,
+        "taskNetworkPrefixes": [
+          "192.168.10"
+        ]
+      }
+    },
+    {
+      "id": "teacher-full-demonstration-0-draft",
+      "failure": {
+        "httpStatus": "unavailable",
+        "category": "connection",
+        "observedAt": "2026-11-04T14:31:57.105Z",
+        "retryAfterMs": null,
+        "retryNotBefore": null,
+        "limitRequests": null,
+        "remainingRequests": null,
+        "limitTokens": null,
+        "remainingTokens": null,
+        "rateLimited": false,
+        "recovery": null
+      }
+    }
+  ]
+}
