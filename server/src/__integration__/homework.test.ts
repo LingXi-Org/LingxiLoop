@@ -245,7 +245,7 @@ test('[integration] each homework learner resumes one private thread and renewed
 })
 
 function evidenceJudgment(criteria: string[], messageId: string, text: string, met: boolean) {
-  return { criteria: criteria.map(criterion => ({ criterion, met, independent: met, feedback: met ? 'Explained and transferred independently.' : 'Explain the relationship in your own words.' })),
+  return { criteria: criteria.map(criterion => ({ criterion, met, independent: met, feedback: met ? 'Explained and transferred independently.' : 'Explain the relationship in your own words.', evidence: text?[{messageId,excerpt:text}]:[] })),
     completion: met ? 'All requirements demonstrated.' : 'More evidence needed.', assistance: 'A similar example was discussed.', independence: met ? 'New example solved independently.' : 'Independence remains unverified.',
     weaknesses: met ? [] : ['Explain the factor one half.'], evidence: [{ messageId, excerpt: text }] }
 }
@@ -488,6 +488,11 @@ test('[integration] 675 invalid model output is a generation failure; retry reco
   assert.match(failedCall.extras.reportInputHash,/^[a-f0-9]{64}$/)
   assert.deepEqual(failed.answer, saved!.answer)
   assert.equal((await homework.learners(teacher,courseId,task.id)).items[0].latestSubmission,null)
+  await homework.requestReport(student,courseId,task.id,{expectedAnswerRevision:failed.answerRevision})
+  const unsupported=evidenceJudgment(task.criteria,message.clientMsgNo,message.text,true)
+  modelReplies.push({...unsupported,criteria:unsupported.criteria.map(item=>({...item,evidence:[]}))})
+  await runLearningEffects()
+  assert.equal((await homework.detail(student,courseId,task.id)).student!.reportStatus,'INVALID','One global quote cannot certify every criterion')
   const judgment=evidenceJudgment(task.criteria,message.clientMsgNo,message.text,false)
   const recovered=await report(task.id,judgment)
   assert.equal(recovered.report!.verification,'verified')

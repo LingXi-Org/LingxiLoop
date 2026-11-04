@@ -24,7 +24,7 @@ with sync_playwright() as pw:
     assert page.locator('#fixture-submission-reference-0').evaluate('(el)=>el.open')
     assert page.evaluate('document.activeElement.id')=='fixture-submission-message-assistant-stable-4'
     assert '消息 4' in page.locator('#fixture-submission-message-assistant-stable-4').inner_text()
-    page.get_by_role('link',name='定位原消息 · student-stable-2').click()
+    page.get_by_role('link',name='定位原消息 · student-stable-2').first.click()
     assert page.evaluate('document.activeElement.id')=='fixture-submission-message-student-stable-2'
     page.screenshot(path=str(out/'citation-desktop.png'),full_page=True)
     page.get_by_text('核对保存的作答原文',exact=True).click()

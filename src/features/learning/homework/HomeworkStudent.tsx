@@ -84,7 +84,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
     </section> : <section aria-label="我的作答草稿" className="space-y-4">
       <div className="space-y-1"><h3 className="font-semibold">我的作答</h3><p className="text-sm text-muted-foreground">草稿仅自己可见。正式提交后，教师才能看到作答和报告。</p></div>
       <ForumContentFields label="我的作答" body={draft.body} editorDocument={draft.editorDocument} setBody={(body,editorDocument) => setDraft(previous => ({ ...previous, body,editorDocument }))} links={draft.links} setLinks={links => setDraft(previous => ({ ...previous, links }))} attachments={draft.attachments} setAttachments={attachments => setDraft(previous => ({ ...previous, attachments }))} disabled={disabled} onUploading={value => { setUploading(value); onUploading(value) }} />
-      <p className="text-xs text-muted-foreground">可核对文字、公开网页、含可提取文字的 PDF 和 Word 文档（.docx）。图片、扫描件、音视频需要补充文字说明；上传完成不代表已被阅读。</p>
+      <p className="text-xs text-muted-foreground">可核对文字、公开网页、含可提取文字的 PDF 和 Word 文档（.docx）。图片、扫描件、音视频需要补充文字说明；上传完成不代表已被阅读。代码请使用行内代码或代码块，保留运算符与缩进。</p>
       {storageError && <p role="alert" className="text-sm text-destructive">本地草稿无法保存，请先保存到课程或复制内容。</p>}
       {submissionGuidance}
       <div className="flex flex-wrap gap-2">

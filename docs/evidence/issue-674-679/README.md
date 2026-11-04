@@ -22,13 +22,18 @@ case or relax the styled/ambiguous paragraph guard.
   request. Changed evidence, answer/task version, return epoch, model or protocol
   regenerate it. New reports include time, revisions, input hash and generator
   version; report attempt/validation metadata joins the existing LLM ledger.
-- Student and assistant quotes are separately checked against exact public text
-  parts. Assistant reasoning/process parts are excluded. Citations resolve only
+- Every positive criterion requires its own validated student quote; a global
+  excerpt cannot certify all criteria. Student and assistant quotes are separately
+  checked against exact public text parts. Published commentary/explanations remain
+  evidence of help; unannotated reasoning and synthetic progress are excluded. Citations resolve only
   inside the student's shared immutable submission snapshots; teachers receive no
   additional private conversation access. Missing/changed sources have no link.
   Snapshots show message ID, sequence and (for new captures) message time.
-- Compact multiplication/exponent operators in legacy learning prose are escaped
-  only for rendering/import. Code nodes, ordinary emphasis and lists keep their
+- Compact numeric multiplication/exponent operators in legacy learning prose are
+  escaped only for rendering/import, while actual Markdown emphasis ranges are
+  respected. Alphabetic prose such as `a*b and c*d` is ambiguous with intentional
+  emphasis and keeps CommonMark semantics; inline/fenced code and the saved-source
+  view preserve it literally. The mixed reported operator fixture is covered. Code nodes, ordinary emphasis and lists keep their
   parser semantics. The saved evidence used by reports remains unchanged. A native
   display disagreement falls back to the current saved text and is labelled.
   The submission exposes saved source for checking; damaged originals are never
@@ -36,16 +41,17 @@ case or relax the styled/ambiguous paragraph guard.
 
 ## Recorded checks
 
-- 14 focused source regressions pass, covering teacher boundaries, exact source
+- 16 focused source regressions pass, covering teacher boundaries, exact source
   resolution, operator fidelity, italics/code/lists and #604 conservative recovery.
 - Existing HomeworkDraftCard six tests pass.
-- Owning Postgres homework suite: 56/56 passed before the final ledger metadata
-  addition. Final affected database rerun, final CI and independent review pending
-  at this initial candidate. The local dedicated database is
+- Owning Postgres homework suite: 56/56 passed after the per-criterion citation,
+  shared public assistance projection and ledger changes. The final three affected
+  database cases were rerun after strengthening the missing-per-criterion check. The local dedicated database is
   `lingxiloop_reports_test`; it was initialized by the repository's actual formal
   runtime bootstrap, with published 3.8.18→19→20→21→24 receipts and product62.
-- Web/server typechecks passed before the final test-only fixture typing correction;
-  final checks pending. Web/server lint exits 0 (existing unrelated web warnings).
+- Web/server typechecks pass; production web build passes (large existing chunk
+  warnings). Web/server lint exits 0 (existing unrelated web warnings). Final-head
+  CI and independent delta review remain required before integration.
 - Actual Chromium 154 browser replay passed on 1280×1100 and 390×844. See
   `browser-result.json` and screenshots. It uses actual teacher/submission/report/
   reference components with synthetic authorized snapshots. It checks PENDING
@@ -82,6 +88,10 @@ that all existing issues proceed without waiting for additional evidence.
 Initial setup failures were retained in task logs: services initially stopped;
 empty database requires formal bootstrap (ordinary migrate correctly refused);
 npm's default cache was not writable (configured workspace cache fixed it).
-The first browser fixture lacked its CSS path/TooltipProvider; those fixture
+A full intermediate database run caught that nativeText omitted explicitly
+published assistant explanations; the common public projection now includes
+those and excludes unannotated reasoning. Independent review caught adjacent
+emphasis rewriting, grade-negation false positives and multiline ownership;
+regressions were added before corrections. The first browser fixture lacked its CSS path/TooltipProvider; those fixture
 errors were corrected before the recorded successful replay. These are not
 claimed product failures.

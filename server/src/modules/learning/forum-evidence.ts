@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import type { Queryable } from '../../db/queryable.js'
 import { getAgentChannelHistory } from '../../im/public.js'
-import { nativeAttachments, nativeText } from '../../im/message-types.js'
+import { activityAnnotation } from '../../../../src/lib/runActivity.js'
+import { nativeAttachments, nativeText, type NativeMessage } from '../../im/message-types.js'
 import type { LearningScope } from './contracts.js'
 import { createPermissionService } from '../access/public.js'
 import { LearningApplicationError } from './errors.js'
@@ -12,6 +13,17 @@ export const conversationReferencesSchema = z.array(conversationReferenceSchema)
 export type ConversationReference = z.infer<typeof conversationReferenceSchema>
 export interface EvidenceMessage { id: string; role: 'user' | 'assistant'; text: string; sequence: number; timestamp?: number }
 export interface ConversationEvidence extends ConversationReference { title: string; capturedAt: string; messages: EvidenceMessage[] }
+
+/** Public body and explicitly published help, never unannotated reasoning.
+ * Use one projection for assessment and the learner-selected shared snapshot. */
+export function learningEvidenceText(payload:NativeMessage):string {
+  if(payload.role!=='assistant')return nativeText(payload)
+  return payload.content.flatMap(part=>{
+    const annotation=activityAnnotation(part)
+    if(annotation?.kind==='commentary'&&/^observed-progress:\d+:\d+$/.test(annotation.id))return []
+    return part.type==='text'||part.type==='reasoning'&&(annotation?.kind==='commentary'||annotation?.purpose==='result')?[part.text]:[]
+  }).join('\n')
+}
 
 // Only the student's personal course conversation is selectable. Sharing a frozen
 // excerpt never grants the teacher conversation:read or access to private files.
@@ -39,7 +51,7 @@ export async function evidenceMessages(db: Queryable, scope: LearningScope, proj
   }
   const messages: EvidenceMessage[] = history.flatMap(message => {
     const role: 'user' | 'assistant' | null = message.fromUid===scope.userId ? 'user' : message.fromUid===room.agentId ? 'assistant' : null
-    const text = nativeText(message.payload).trim() || (nativeAttachments(message.payload).length ? '[附件消息：仅引用文件名，附件内容未共享] '+nativeAttachments(message.payload).map(file=>file.name).join('、') : '')
+    const text = learningEvidenceText(message.payload).trim() || (nativeAttachments(message.payload).length ? '[附件消息：仅引用文件名，附件内容未共享] '+nativeAttachments(message.payload).map(file=>file.name).join('、') : '')
     return role && message.payload.role===role && text ? [{id:message.clientMsgNo,role:role as 'user'|'assistant',text,sequence:message.messageSeq,timestamp:message.timestamp}] : []
   }).sort((a,b)=>a.sequence-b.sequence)
   const next = history.length===200 ? Math.min(...history.map(message=>message.messageSeq)) : null

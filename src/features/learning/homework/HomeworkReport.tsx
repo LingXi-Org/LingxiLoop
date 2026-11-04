@@ -6,10 +6,12 @@ import { MemoCard } from '../forum/memos/MemoCard'
 import { ForumFiles } from '../forum/ForumContentFields'
 import { type HomeworkCriterion, type HomeworkSubmission, homeworkStatus, type HomeworkReport as Report } from './contracts'
 
-export function HomeworkCriteria({ criteria, unverified = false }: { criteria: HomeworkCriterion[]; unverified?: boolean }) {
+export function HomeworkCriteria({ criteria, unverified = false, references = [], sourceId }: { criteria: HomeworkCriterion[]; unverified?: boolean; references?: ConversationEvidence[]; sourceId?: string }) {
   return <ul className="space-y-3">{criteria.map((item, index) => <li key={index} className="space-y-1 border-s-2 ps-3 text-sm">
     <div className="flex flex-wrap items-start gap-2"><span className="min-w-0 flex-1 font-medium">{item.criterion}</span><span className="text-xs text-muted-foreground">{item.reviewRequired ? '待教师判断' : unverified ? '未核实' : item.met && item.independent ? '已达成' : '待验证'}</span></div>
     {item.feedback && <p className="text-muted-foreground">{item.feedback}</p>}
+    {item.evidence?.map((source,index)=><div key={index} className="space-y-1"><blockquote className="whitespace-pre-wrap border-s-2 ps-3 text-muted-foreground">{source.excerpt}</blockquote><ReportCitation source={source} references={references} sourceId={sourceId}/></div>)}
+    {sourceId&&!item.evidence?.length&&<p className="text-xs text-muted-foreground">此项未记录单独的证据引用，请结合共享片段核对。</p>}
   </li>)}</ul>
 }
 
@@ -26,7 +28,7 @@ export function HomeworkReport({ report, references = [], sourceId }: { report: 
     <p className="text-xs text-muted-foreground">AI 辅助观察，最终评分与验收由教师确定。{report.generatedAt && `生成于 ${new Date(report.generatedAt).toLocaleString()} · 作答版本 ${report.answerRevision} · 作业版本 ${report.homeworkRevision ?? "未知"}`}</p>
     {report.verification === 'unverified' && <p role="status" className="text-muted-foreground">本次未能核实学习情况，掌握程度和独立完成情况仍待核实。</p>}
     <div className="space-y-1"><h4 className="font-medium">完成情况</h4><p className="whitespace-pre-wrap">{report.completion}</p></div>
-    <HomeworkCriteria criteria={report.criteria} unverified={report.verification === 'unverified'} />
+    <HomeworkCriteria criteria={report.criteria} unverified={report.verification === 'unverified'} references={references} sourceId={sourceId} />
     <div className="space-y-1"><h4 className="font-medium">获得的帮助</h4><p className="whitespace-pre-wrap">{report.assistance}</p>{report.assistanceEvidence?.map(source=><div key={source.messageId} className="space-y-1"><blockquote className="whitespace-pre-wrap border-s-2 ps-3 text-muted-foreground">{source.excerpt}</blockquote><ReportCitation source={source} references={references} sourceId={sourceId}/></div>)}</div>
     <div className="space-y-1"><h4 className="font-medium">独立完成情况</h4><p className="whitespace-pre-wrap">{report.independence}</p></div>
     <div className="space-y-1"><h4 className="font-medium">{report.verification === 'unverified' ? '仍待核实' : '仍需巩固'}</h4>{report.weaknesses.length ? <ul className="list-disc space-y-1 ps-5">{report.weaknesses.map((text, index) => <li key={index}>{text}</li>)}</ul> : <p className="text-muted-foreground">本次报告没有列出待巩固内容。</p>}</div>

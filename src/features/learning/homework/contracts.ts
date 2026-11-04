@@ -2,7 +2,7 @@ import type { ContentDocument } from '@/features/content-editor'
 import type { ConversationEvidence, ForumAttachment } from '../forum/contracts'
 
 export interface HomeworkAnswer { text: string; editorDocument?: ContentDocument | null; links: string[]; attachments: ForumAttachment[] }
-export interface HomeworkCriterion { reviewRequired?: boolean; criterion: string; met: boolean; independent: boolean; feedback: string }
+export interface HomeworkCriterion { reviewRequired?: boolean; criterion: string; met: boolean; independent: boolean; feedback: string; evidence?: Array<{messageId:string;excerpt:string}> }
 export interface HomeworkValidationFinding {
   field: 'title' | 'instructions' | 'criteria'; severity: 'blocker' | 'suggestion' | 'teacher_review'
   excerpt: string; original: string; criterionIndex: number | null; reason: string; suggestion: string

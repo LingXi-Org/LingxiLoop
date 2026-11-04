@@ -22,7 +22,7 @@ export const homeworkShareSchema = z.object({ expectedEvidenceRevision: revision
 export const homeworkUnlockSchema = homeworkShareSchema.extend({ learnerId: id, reason: z.string().trim().min(1).max(4000) })
 export const homeworkReviewSchema = z.object({ ...learningContentFields, learnerId: id, expectedSubmissionId: id, decision: z.enum(['PASSED','RETURNED']), reason: z.string().trim().min(1).max(4000) }).strict().refine(value => matchesProjection(value.editorDocument, value.reason), 'native reason and text must be saved together')
 export const homeworkAssessmentSchema = z.object({ messageIds: z.array(id).min(1).max(20).refine(ids => new Set(ids).size === ids.length, 'message IDs must be unique') }).strict()
-export const homeworkCriterionSchema = z.object({ criterion: z.string(), met: z.boolean(), independent: z.boolean(), feedback: z.string().max(2000) }).strict()
+export const homeworkCriterionSchema = z.object({ criterion: z.string(), met: z.boolean(), independent: z.boolean(), feedback: z.string().max(2000), evidence: z.array(z.object({ messageId: id, excerpt: z.string().min(1).max(1000) }).strict()).max(5).optional() }).strict()
 export const homeworkJudgmentSchema = z.object({
   criteria: z.array(homeworkCriterionSchema).min(1).max(20), completion: z.string().max(4000), assistance: z.string().max(4000),
   independence: z.string().max(4000), weaknesses: z.array(z.string().max(2000)).max(20),
