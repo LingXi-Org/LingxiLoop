@@ -285,7 +285,7 @@ import { installFilesDocumentMerge } from './modules/files-document-merge.js'
 import { installFilesIndexStore } from './modules/files-index-store.js'
 import { installFilesBootRecovery } from './modules/files-boot-recovery.js'
 import { installFilesSaveQueue } from './modules/files-save-queue.js'
-import { installFilesDebugPanel } from './modules/files-debug-panel.js'
+import { installFilesDebugCore } from './modules/files-debug-core.js'
 import { installFilesSlideOrderMerge } from './modules/files-slide-order-merge.js'
 import { installFilesSlidesDocument } from './modules/files-slides-document.js'
 import { installFilesEarlySlides } from './modules/files-early-slides.js'
@@ -596,7 +596,7 @@ export function createSlidesRuntime(options = {}) {
     installFilesIndexStore(runtime2),
     installFilesBootRecovery(runtime2),
     installFilesSaveQueue(runtime2),
-    installFilesDebugPanel(runtime2),
+    (options.installFilesDebugPanel ?? installFilesDebugCore)(runtime2),
     installFilesSlideOrderMerge(runtime2),
     installFilesSlidesDocument(runtime2),
     installFilesEarlySlides(runtime2),
