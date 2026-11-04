@@ -331,7 +331,6 @@ export async function buildDesignEditor() {
   await mkdir(output, { recursive: true })
   await cp(source, output, { recursive: true })
   await cp(resolve(root, 'public/fonts/mingli'), resolve(output, 'assets'), { recursive: true })
-  await cp(resolve(root, 'node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2'), resolve(output, 'assets/inter-latin-wght-normal.woff2'))
   await writeFile(resolve(output, 'assets', fontName), font)
   await writeFile(resolve(output, 'assets', iconName), icon)
   await writeFile(resolve(output, 'assets', scriptName), script)
