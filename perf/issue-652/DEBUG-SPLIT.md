@@ -13,7 +13,7 @@ Paired static builds from the same local dependencies:
 | First-view JS | Base | Candidate |
 | --- | ---: | ---: |
 | Raw bytes | 3,557,140 | 3,526,416 |
-| gzip (manifest initial graph) | 1,154,510 | 1,143,275 |
+| gzip (manifest initial graph) | 1,154,510 | 1,143,271 |
 | Brotli (entry plus modulepreloads) | 925,536 | 916,407 |
 
 The 9,129-byte Brotli saving is about 1%. This is resource-graph evidence, not
@@ -23,7 +23,7 @@ Design's core is unchanged.
 
 Validation: `node --test scripts/slides-editor.test.mjs` passes 26 tests,
 including core/noop/file publishing contracts and graph exclusion. Chromium
-154.0.8037.57, Linux, 1440x1000/default viewport and loopback, no throttling:
+154.0.8037.57, Linux, 1440x1000 viewport and loopback, no throttling:
 the actual built editor reaches `slides:runtime-ready` with zero page errors
 when debug is off (zero panel requests), on (one hashed panel request), or its
 optional panel request returns 503 (warning plus successful core boot). These
