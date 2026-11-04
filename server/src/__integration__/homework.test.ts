@@ -1,20 +1,20 @@
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
-import { createServer, type Server } from 'node:http'
+import { createHash, randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
+import { createServer, type Server } from 'node:http'
 import { after, afterEach, before, beforeEach, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import type OpenAI from 'openai'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
-import { HomeworkApplication } from '../modules/learning/homework-application.js'
-import type { LearningAttachment } from '../modules/learning/forum-contracts.js'
-import { runLearningEffects as runLearningEffectsOnce } from '../modules/learning/worker.js'
-import { createHomeworkThread } from '../modules/context-threads/public.js'
-import { __setLlmClientOverrideForTesting } from '../llm.js'
 import { createNativeMessage } from '../im/message-types.js'
-import { installRecordingWukong } from './_recording-wukong.js'
+import { __setLlmClientOverrideForTesting } from '../llm.js'
+import { createHomeworkThread } from '../modules/context-threads/public.js'
+import type { LearningAttachment } from '../modules/learning/forum-contracts.js'
+import { HomeworkApplication } from '../modules/learning/homework-application.js'
+import { runLearningEffects as runLearningEffectsOnce } from '../modules/learning/worker.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
+import { installRecordingWukong } from './_recording-wukong.js'
 
 // Real material fixtures live beside the owning integration suite.
 // These cases exercise persisted business boundaries, not a browser-only hidden-field check.
@@ -1975,6 +1975,55 @@ test('[integration] 519 retaining manual criteria requires owner confirmation an
   assert.match(studentReport.report!.completion, /需要教师判断/)
   const submitted = await homework.submit(student, courseId, draft.id, { expectedAnswerRevision: studentReport.answerRevision, reportId: studentReport.report!.id, conversationReferences: currentReferences(), idempotencyKey: '519-manual-submit' })
   assert.equal(submitted.report.criteria[0]!.reviewRequired, true)
+})
+
+
+test('[integration] student code/image/document uploads retry once by immutable identity and teachers read only submitted evidence', async () => {
+  const { storage } = await import('../storage.js')
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a4NQAAAAASUVORK5CYII=', 'base64')
+  const files = [
+    { name: 'answer.py', mime: 'text/x-python', bytes: Buffer.from('print("evidence")\n') },
+    { name: 'run.png', mime: 'image/png', bytes: png },
+    ...await Promise.all([['triangle-reference.pdf','application/pdf'], ['triangle-answer.docx','application/zip']].map(async ([name,mime]) => ({
+      name, mime, bytes: await readFile(new URL(`./fixtures/homework/${name}`, import.meta.url)),
+    }))),
+  ]
+  const attachments: LearningAttachment[] = []
+  for (const file of files) {
+    const input = { name: file.name, mime: file.mime, size: file.bytes.length,
+      sha256: createHash('sha256').update(file.bytes).digest('hex'), idempotencyKey: randomUUID() }
+    const first = await call(student, '/uploads/presign', 'POST', input)
+    assert.equal(first.status, 200)
+    const signed = await first.json() as { key: string; mime: string }
+    await storage.put(signed.key, file.bytes, signed.mime)
+    const retry = await call(student, '/uploads/presign', 'POST', input)
+    assert.equal(retry.status, 200)
+    assert.equal((await retry.json() as { key: string }).key, signed.key)
+    const own = await call(student, `/files?key=${encodeURIComponent(signed.key)}`)
+    assert.equal(own.status, 200)
+    assert.equal(createHash('sha256').update(Buffer.from(await own.arrayBuffer())).digest('hex'), input.sha256)
+    assert.equal((await call(teacher, `/files?key=${encodeURIComponent(signed.key)}`)).status, 404)
+    attachments.push({ key: signed.key, name: file.name })
+  }
+  assert.equal((await pool.query('SELECT count(*)::int AS n FROM uploaded_files WHERE owner_user_id=$1', [student.userId])).rows[0].n, 4)
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const message = commitLearnerEvidence(thread, 'I tested my answer and attached original evidence; I still need feedback.')
+  await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: message.text, links: [], attachments })
+  assert.equal((await call(teacher, `/files?key=${encodeURIComponent(attachments[0].key)}`)).status, 404, 'private draft is not teacher evidence')
+  const ready = await report(task.id, evidenceJudgment(task.criteria, message.clientMsgNo, message.text, false))
+  await homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id,
+    conversationReferences: currentReferences(), idempotencyKey: 'upload-original-evidence' })
+  for (let index = 0; index < attachments.length; index++) {
+    const path = `/files?key=${encodeURIComponent(attachments[index].key)}`
+    const actual = await call(teacher, path)
+    assert.equal(actual.status, 200)
+    assert.equal(createHash('sha256').update(Buffer.from(await actual.arrayBuffer())).digest('hex'), createHash('sha256').update(files[index].bytes).digest('hex'))
+    assert.equal((await call(peer, path)).status, 404)
+    assert.equal((await call(outsider, path)).status, 404)
+  }
+  await pool.query(`UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id=$2 AND user_id=$3`, [companyId, projectId, teacher.userId])
+  assert.equal((await call(teacher, `/files?key=${encodeURIComponent(attachments[0].key)}`)).status, 404)
 })
 
 test('[integration] 674 explicit teacher grade criteria cannot be certified by a missing validator finding or model prose', async () => {

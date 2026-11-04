@@ -1,3 +1,5 @@
+import { UploadFailure } from './uploadError'
+
 const STATUS_MESSAGES: ReadonlyArray<[RegExp, string]> = [
   [/\b401\b/, '登录状态已失效，请重新登录。'],
   [/\b403\b/, '你没有执行此操作的权限。'],
@@ -12,6 +14,7 @@ export function userFacingError(
   error: unknown,
   fallback = '操作未完成，请稍后重试。',
 ): string {
+  if (error instanceof UploadFailure) return error.message
   const detail = error instanceof Error ? error.message : String(error ?? '')
   for (const [pattern, message] of STATUS_MESSAGES) {
     if (pattern.test(detail)) return message

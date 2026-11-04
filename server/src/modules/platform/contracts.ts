@@ -8,7 +8,10 @@ export const presignUploadRequestSchema = z.object({
   mime: z.string().trim().min(1).transform((value) => value.toLowerCase()),
   documentId: z.string().min(1).optional(),
   size: z.number().finite().positive().max(MAX_UPLOAD_BYTES),
+  sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  idempotencyKey: z.string().uuid().optional(),
 }).strict()
+  .refine(value => Boolean(value.sha256) === Boolean(value.idempotencyKey), 'upload checksum and identity must be supplied together')
 
 export const refreshUploadUrlRequestSchema = z.object({
   key: z.string().trim().min(1),

@@ -26,6 +26,7 @@ shared/**
 !shared/artifact-editor-origin.ts
 !shared/artifact-recovery.ts
 !shared/slides-editor-context.ts
+!shared/upload-mime.ts
 !public/**
 !index.html
 !vite.config.ts

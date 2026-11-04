@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { decodeSourceText, extractDocumentText } from '@lyyzka/lingxios'
+import { canonicalUploadMime } from '../../../../shared/upload-mime.js'
 import type { Queryable } from '../../db/queryable.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
@@ -36,7 +37,7 @@ function materialFeedback(label:string,status:NonNullable<HomeworkMaterial['cont
   }
 }
 
-export async function readHomeworkMaterials(db:Queryable,scope:LearningScope,content:Pick<HomeworkAnswer,'links'|'attachments'>,signal:AbortSignal,purpose:'requirements'|'answer'='requirements'):Promise<HomeworkMaterial[]> {
+export async function readHomeworkMaterials(db:Queryable,scope:LearningScope,content:Pick<HomeworkAnswer,'links'|'attachments'>,signal:AbortSignal,purpose:'requirements'|'answer'|'read'='requirements'):Promise<HomeworkMaterial[]> {
   for(const file of content.attachments) if(await canReadLearningFile(db,file.key,scope.userId)!==true) {
     throw new HomeworkMaterialError(`附件「${file.name}」目前无法访问。请重新上传该文件，或将其从草稿中移除后再检查。`)
   }
@@ -59,7 +60,7 @@ export async function readHomeworkMaterials(db:Queryable,scope:LearningScope,con
     let metadata:Awaited<ReturnType<typeof storage.statObject>>
     try { metadata=await storage.statObject(file.key) }
     catch { throw new HomeworkMaterialError(`${label}暂时无法读取。请重试检查；若仍失败，请重新上传该文件。`,'ERROR') }
-    const mime=metadata.contentType?.split(';')[0].trim().toLowerCase()??''
+    const mime=canonicalUploadMime(file.name,metadata.contentType??'')
     if(metadata.sizeBytes>16*1024*1024) {
       if(purpose==='requirements') throw new HomeworkMaterialError(materialFeedback(label,'too_large'))
       if(!metadata.etag&&metadata.lastModifiedMs===null) throw new Error('材料缺少可验证的存储版本')

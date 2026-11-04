@@ -1,7 +1,6 @@
 import { createHash, } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService, knowledgeSourceCapabilities, knowledgeSourceVisibilityScope } from '../access/public.js'
-import { KNOWLEDGE_ATTACHMENT_MIMES, SOURCE_FILE_EXTENSIONS, sourceFileSignatureMatches } from './policy.js'
 import type {
   CreateSourceInput,
   KnowledgeScope,
@@ -10,6 +9,7 @@ import type {
   ProjectPatch,
   UpdateSourceInput,
 } from './contracts.js'
+import { KNOWLEDGE_ATTACHMENT_MIMES, SOURCE_FILE_EXTENSIONS, sourceFileSignatureMatches } from './policy.js'
 import {
   enqueueSourceJob,
   findSource,
@@ -48,7 +48,7 @@ export interface KnowledgeInfrastructure {
   retrySource(sourceId: string, companyId: string, projectId: string, userId: string): Promise<void>
   deleteSource(sourceId: string, companyId: string, projectId: string, userId: string): Promise<void>
   putObject(key: string, body: Buffer, contentType: string): Promise<void>
-  presignPut(key: string, contentType: string, contentLength: number): Promise<{ uploadUrl: string }>
+  presignPut(key: string, contentType: string, contentLength: number, checksumSHA256?: string): Promise<{ uploadUrl: string }>
   statObject(key: string): Promise<{ sizeBytes: number; contentType: string | null }>
   readObjectBounded(key: string, maxBytes: number): Promise<Buffer>
   publicUrl(key: string): Promise<string>
@@ -199,11 +199,11 @@ export class KnowledgeApplication {
         || replay.mimeType !== input.mime || replay.sizeBytes !== input.size || replay.title !== input.name) {
         throw new KnowledgeApplicationError('invalid_upload', 'upload key was already used; start a new upload')
       }
-      const signed = await this.infrastructure.presignPut(replay.storageKey, input.mime, input.size)
+      const signed = await this.infrastructure.presignPut(replay.storageKey, input.mime, input.size, input.sha256 && Buffer.from(input.sha256, 'hex').toString('base64'))
       return { id, uploadUrl: signed.uploadUrl, mime: input.mime, size: input.size }
     }
     const key = `knowledge-sources/${scope.companyId}/${scope.projectId}/${id}.${SOURCE_FILE_EXTENSIONS[input.mime]}`
-    const signed = await this.infrastructure.presignPut(key, input.mime, input.size)
+    const signed = await this.infrastructure.presignPut(key, input.mime, input.size, input.sha256 && Buffer.from(input.sha256, 'hex').toString('base64'))
     await this.infrastructure.transaction(async (db) => {
       const access = await createPermissionService(db, { lockDependencies: true }).assertCan({
         actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId,
