@@ -274,3 +274,30 @@ test('runtime24 sources are explicitly reviewed and produce distinct intents', (
   for(const plan of plans)assert.doesNotThrow(()=>assertRetirementReleaseAllowed(f.paths,'up',undefined,plan))
   for(const sourceRuntime of ['3.8.19','3.8.20','3.8.24','3.8.25'])assert.throws(()=>runtimePatchPlan(f.read,f.paths,{sourceRuntime}),/unreviewed explicit runtime source/)
 })
+
+test('product62 plans only the exact formal24 to25 runtime-only bridge', () => {
+  const f=fixture('3.8.25')
+  for(const name of ['0059_retire_presentation_generation','0060_native_artifacts','0061_slides_workspaces','0062_case_options']){
+    const path=`server/src/db/migrations/${name}.sql`;f.paths.push(path);f.files[path]='-- immutable fixture'
+  }
+  const plan=runtimePatchPlan(f.read,f.paths)
+  assert.equal(plan.source.runtime,'3.8.24');assert.equal(plan.target.runtime,'3.8.25')
+  assert.equal(plan.source.productVersion,62);assert.equal(plan.target.migrations.length,62)
+  assert.deepEqual(plan.source.migrations,plan.target.migrations)
+  for(const command of ['up','servers'])assert.doesNotThrow(()=>assertRetirementReleaseAllowed(f.paths,command,undefined,plan))
+  assert.throws(()=>assertRetirementReleaseAllowed(f.paths,'workers',undefined,plan),/approval/)
+  for(const sourceRuntime of ['3.8.21','3.8.22','3.8.23','3.8.25'])assert.throws(()=>runtimePatchPlan(f.read,f.paths,{sourceRuntime}))
+  for(const count of [58,59,60,61])assert.throws(()=>runtimePatchPlan(f.read,f.paths.slice(0,count)))
+  assert.throws(()=>runtimePatchPlan(f.read,[...f.paths.slice(0,-1),'server/src/db/migrations/0062_unknown.sql']))
+})
+
+test('a retained source queue after preflight restores the known source without replay or target startup',async()=>{
+  const {calls,error}=await run(['apply'],{complete:false,state:'source',observationOnly:true})
+  assert.match(error.message,/source restored/)
+  assert.equal(calls.filter(call=>call==='apply').length,1)
+  assert.equal(calls.filter(call=>call==='observe').length,1)
+  assert.equal(calls.at(-1),'restoreSource')
+  assert.ok(!calls.includes('convergeTarget'))
+  const unconfirmed=await run(['apply','observe'])
+  assert.ok(!unconfirmed.calls.includes('restoreSource'))
+})

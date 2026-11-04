@@ -20,6 +20,7 @@ import { publishArtifactProgress } from './progress.js'
 import { artifactById, conversationDesignId, conversationSlidesId, lockReportWork, type ArtifactRow } from './repository.js'
 import { artifactReferencePages, readArtifactReference } from './skills.js'
 import { isProjectPath, listing, putBlob, sha256, type WireEntry } from './store.js'
+import { slidesSummary } from './slides-observation.js'
 import { slideEditingContext } from './slides-workspace.js'
 
 type Control = Parameters<typeof createArtifactExecution>[0]
@@ -187,7 +188,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         return result(context, native, await native.api.getArtifactSnapshot(context.work.tenantId, artifact.id), artifact)
       }, verify,
     })] : []),
-    nativeTool(`${kind}.current`, agentArtifactSchemas.current, { description: `Read the ${label} of this conversation: title, project files with sha256, assignments and reports.${kind === 'slides' ? ' Lists every deck this conversation made.' : ''}`, effect: 'read', approval: false, authorize,
+    nativeTool(`${kind}.current`, agentArtifactSchemas.current, { description: `Read the ${label} of this conversation: title, project files with sha256, assignments and reports.${kind === 'slides' ? ' Lists every deck this conversation made in { deck, decks, editor }; top-level title and slideCount observe the saved deck.json title and order length. Missing/malformed index fields are omitted. These summary fields do not verify slide contents or rendering.' : ''}`, effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await scope(context, input), api = application(context).api
         const value = artifact ? await api.getArtifactSnapshot(context.work.tenantId, artifact.id) : null
@@ -195,7 +196,9 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         const project = (await (context.database as Queryable).query<{ project_id: string }>('SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2', [conversation(context), context.work.tenantId])).rows[0]
         const decks = project ? await api.listArtifacts({ companyId: context.work.tenantId, projectId: project.project_id, kind: 'slides',
           readerId: context.work.principalId!, conversationId: conversation(context) }) : []
-        return { ok: true, value: { deck: value, decks, ...(artifact ? { editor: await slideEditingContext(context.database as Queryable, artifact.id, context.work.principalId!) } : {}) } }
+        const index = artifact ? await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/deck.json') : null
+        return { ok: true, value: { deck: value, decks, ...slidesSummary(index?.bytes.toString('utf8')),
+          ...(artifact ? { editor: await slideEditingContext(context.database as Queryable, artifact.id, context.work.principalId!) } : {}) } }
       } }),
     nativeTool(`${kind}.read_file`, agentArtifactSchemas.read_file, { description: `Read one project file of the ${label} and its sha256. Read right before you edit: people edit in the editor too.`, effect: 'read', approval: false, authorize,
       async execute(context, input) {
@@ -246,7 +249,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         return result(context, application(context), stored, artifact)
       } }),
     nativeTool(`${kind}.check`, kind === 'design' ? agentArtifactSchemas.check.extend({paths:z.array(z.string().max(512).refine(path=>isProjectPath(path)&&/^project\/.+\.dc\.html$/.test(path))).max(32).optional()}) : agentArtifactSchemas.check,
-      { description: `Check the ${label}'s files with the format checker; fix what it names until problems is 0.` + (kind === 'design' ? ' Pass the actual authored .dc.html paths to verify they still exist and are referenced in the checked canvas; checkedBoardPaths is authoritative for those files.' : ''), effect: 'read', approval: false, authorize,
+      { description: `Check the ${label}'s files with the format checker; fix what it names until problems is 0. This verifies format, not content quality, visual rendering or export.` + (kind === 'design' ? ' Pass the actual authored .dc.html paths to verify they still exist and are referenced in the checked canvas; checkedBoardPaths is authoritative for those files.' : ''), effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await required(context, input)
         return { ok: true, value: await checkArtifact(context.database as Queryable, artifact, context.signal,(input as {paths?:string[]}).paths) }

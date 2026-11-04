@@ -20,6 +20,7 @@ test('explanation routing and publication keep actual native generation and fail
     const scope = computeScope(classifyPaths([path]))
     assert.ok(scope.integration_files.includes('runtime-first-action-contracts.test.ts'),path)
     assert.ok(scope.integration_files.includes('runtime-design-failure.test.ts'),path)
+    assert.ok(scope.integration_files.includes('runtime-teaching-scaffold.test.ts'),path)
   }
 })
 test('Design sizing sources retain their editor build and artifact integration owners', () => {
@@ -45,7 +46,7 @@ test('runtime patch and deployment changes retain both product60 patch qualifica
   for (const path of ['server/src/db/runtime-patch.ts', 'deploy/runtime-patch.mjs']) {
     const scope = computeScope(classifyPaths([path]))
     assert.equal(scope.integration_mode, 'selected')
-    for (const file of ['runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts', 'runtime-patch61-22-provenance.test.ts', 'runtime-patch61-23-provenance.test.ts', 'runtime-patch61-23-from21-provenance.test.ts', 'runtime-patch61-24-provenance.test.ts']) assert.ok(scope.integration_files.includes(file), path + ':' + file)
+    for (const file of ['runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts', 'runtime-patch61-22-provenance.test.ts', 'runtime-patch61-23-provenance.test.ts', 'runtime-patch61-23-from21-provenance.test.ts', 'runtime-patch61-24-provenance.test.ts', 'runtime-patch62-25-provenance.test.ts']) assert.ok(scope.integration_files.includes(file), path + ':' + file)
   }
 })
 
