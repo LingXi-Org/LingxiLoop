@@ -507,3 +507,45 @@ test('[integration] room member mutation rejects non-managers, foreign/stale pee
   assert.equal((await pool.query(`SELECT 1 FROM audit_events WHERE kind='conversation.membership_changed'`)).rowCount, 0)
   assert.deepEqual((await pool.query('SELECT members FROM conversations WHERE id=$1', [id])).rows[0].members, [ME_USER_ID, OTHER_USER_ID, 'u-lin'])
 })
+
+test('[integration] a teacher updates legacy shared groups without rewriting history and removed humans lose access', async t => {
+  const scope = await seedCreationWorkspace()
+  const { id } = await createConversation(scope, { participantIds: [OTHER_USER_ID, 'a-tutor'] })
+  await pool.query(`UPDATE im_channel_bindings SET profile=profile-'createdByUserId' WHERE channel_id=$1`, [id])
+  const payload = Buffer.from(JSON.stringify({ type: 1001, ...createNativeMessage({ id: 'original-evidence-680', role: 'user',
+    content: [{ type: 'text', text: 'original student analysis' }] }) })).toString('base64')
+  const im = createServer((_request, response) => {
+    response.setHeader('content-type', 'application/json')
+    response.end(JSON.stringify({ messages: [{ message_seq: 1, channel_id: id, from_uid: OTHER_USER_ID,
+      message_idstr: 'retained-680', client_msg_no: 'retained-680', timestamp: 1, payload }] }))
+  }).listen(0)
+  await new Promise<void>(resolve => im.once('listening', resolve))
+  const imAddress = im.address() as { port: number }
+  _setWukongClientForTests(new WukongClient({ apiUrl: `http://127.0.0.1:${imAddress.port}`, wsUrl: 'ws://unused', apiToken: 'fixture', webhookSecret: 'fixture' }))
+  const sync = conversationInfrastructure.syncChannel, publish = conversationInfrastructure.postMembershipMessage
+  conversationInfrastructure.syncChannel = async () => undefined
+  conversationInfrastructure.postMembershipMessage = async () => ({ queued: true })
+  t.after(async () => { conversationInfrastructure.syncChannel = sync; conversationInfrastructure.postMembershipMessage = publish; installFakeWukong(); await new Promise<void>(resolve => im.close(() => resolve())) })
+  const headers = { 'content-type': 'application/json', 'x-company-id': scope.companyId, 'x-project-id': scope.projectId }
+  const historyUrl = `${baseUrl}/api/im/channels/${id}/messages`
+  const beforeHistory = await fetch(historyUrl, { headers })
+  assert.equal(beforeHistory.status, 200)
+  const original = await beforeHistory.json()
+  assert.equal((await fetch(`${baseUrl}/api/conversations/${id}/members`, { method: 'POST', headers, body: JSON.stringify({ id: 'u-lin' }) })).status, 200)
+  assert.equal((await fetch(`${baseUrl}/api/conversations/${id}/members/${OTHER_USER_ID}`, { method: 'DELETE', headers })).status, 200)
+  const afterHistory = await fetch(historyUrl, { headers })
+  assert.equal(afterHistory.status, 200)
+  assert.deepEqual(await afterHistory.json(), original)
+  assert.equal((original as unknown[]).length, 1)
+  const removed = createServer(await buildApiTestApp(OTHER_USER_ID)).listen(0)
+  await new Promise<void>(resolve => removed.once('listening', resolve))
+  t.after(() => new Promise<void>(resolve => removed.close(() => resolve())))
+  const address = removed.address() as { port: number }
+  assert.equal((await fetch(`http://127.0.0.1:${address.port}/api/im/channels/${id}/messages`, { headers })).status, 404)
+  assert.equal((await fetch(`http://127.0.0.1:${address.port}/api/conversations/${id}/members`, { headers })).status, 404)
+  await pool.query(`UPDATE projects SET status='READ_ONLY' WHERE id=$1`, [scope.projectId])
+  assert.equal((await fetch(`${baseUrl}/api/conversations/${id}/members`, { method: 'POST', headers, body: JSON.stringify({ id: OTHER_USER_ID }) })).status, 403)
+  const readOnlyView = await fetch(`${baseUrl}/api/conversations/${id}/members`, { headers })
+  assert.equal(readOnlyView.status, 200)
+  assert.equal((await readOnlyView.json() as { canManage: boolean }).canManage, false)
+})

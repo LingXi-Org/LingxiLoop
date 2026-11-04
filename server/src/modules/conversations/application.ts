@@ -212,12 +212,12 @@ export class ConversationsApplication {
     return this.requireAgentContext(agentId, conversationId)
   }
 
-  async addAgentMember(agentId: string, conversationId: string, participantId: string, principalId?: string) {
+  async addAgentMember(agentId: string, conversationId: string, participantId: string, principalId: string) {
     const context = await this.requireAgentContext(agentId, conversationId)
     this.assertAgentWorkspaceWritable(context.projectStatus)
     if (!context.projectId) throw new ConversationApplicationError('not_found', 'conversation workspace is missing')
     const result = await this.addMember({
-      userId: principalId ?? agentId,
+      userId: principalId,
       companyId: context.companyId,
       projectId: context.projectId,
     }, conversationId, participantId)
