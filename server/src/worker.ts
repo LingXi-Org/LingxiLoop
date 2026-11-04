@@ -1,4 +1,3 @@
-import { startCaseCoverWorker } from './modules/cases/cover-runtime.js'
 import { closeDatabasePools } from './db/pool.js'
 import { startDbGcWorker } from './db-gc.js'
 import { env } from './env.js'
@@ -33,7 +32,6 @@ export const productionWorkerTasks: readonly WorkerTaskDefinition[] = [
   { name: 'database-gc', concurrency: 'idempotent', start: () => startDbGcWorker() },
   { name: 'knowledge-ingestion', concurrency: 'queue-claim', start: () => startKnowledgeWorker() },
   { name: 'knowledge-storage-gc', concurrency: 'idempotent', start: () => startKnowledgeStorageGc() },
-  { name: 'case-cover-generation', concurrency: 'queue-claim', start: () => startCaseCoverWorker() },
   { name: 'poll-expiration', concurrency: 'database-lock', start: () => startPollExpirationSweeper(env.POLL_SWEEP_INTERVAL_MS) },
 ]
 

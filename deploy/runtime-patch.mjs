@@ -13,16 +13,18 @@ export function runtimePatchPlan(read, migrationPaths, { sourceRuntime: selected
   const json = path => JSON.parse(read(path))
   const manifest = json('package.json')
   const paths = migrationPaths.toSorted()
+  const cases62 = paths.length === 62 && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql' && paths[61] === 'server/src/db/migrations/0062_case_options.sql'
   const slides61 = paths.length === 61 && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql'
-  const retirement = [59, 60, 61].includes(paths.length)
+  const retirement = [59, 60, 61, 62].includes(paths.length)
     && paths[58] === 'server/src/db/migrations/0059_retire_presentation_generation.sql'
     && (paths.length === 59 || paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql')
   const targetRuntime = manifest.dependencies?.[PACKAGE]
+  if (cases62) assert.equal(targetRuntime, '3.8.24', 'product62 requires exact formal3.8.24')
   const runtimeOnly60 = retirement && paths.length === 60 && ['3.8.19','3.8.20'].includes(targetRuntime)
   const runtimeOnly61 = slides61 && ['3.8.21','3.8.22','3.8.23','3.8.24'].includes(targetRuntime)
   if (slides61) assert.ok(['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(targetRuntime), 'product61 requires exact formal20 or reviewed20 to21 or21 to22 or reviewed21 to23/24 production bridge runtime patch')
-  if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly60 || slides61, 'product59 requires a verified exact runtime')
-  if (['3.8.19','3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(targetRuntime)) assert.ok(runtimeOnly60 || slides61, 'unreviewed runtime transition; runtime patch requires installed product60')
+  if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly60 || slides61 || cases62, 'product59 requires a verified exact runtime')
+  if (['3.8.19','3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(targetRuntime)) assert.ok(runtimeOnly60 || slides61 || cases62, 'unreviewed runtime transition; runtime patch requires installed product60')
   if (targetRuntime === '3.8.16') return null
   assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or exact reviewed3.8.17/3.8.18/3.8.19/3.8.20/3.8.21/3.8.22/3.8.23/3.8.24 is supported')
   const sourceRuntime = selectedSource ?? SOURCES[targetRuntime]
@@ -42,6 +44,8 @@ export function runtimePatchPlan(read, migrationPaths, { sourceRuntime: selected
     assert.ok(match && Number(match[1]) === index + 1, 'ordered migration inventory required')
     return { version: index + 1, name: match[2], checksum: hash(read(path)) }
   })
+  // The case options migration accepts installed formal24 only; no runtime CAS.
+  if (cases62) return null
   // Product61 changes only product state; migrate.ts requires installed formal20/product60.
   if (slides61 && !runtimeOnly61) return null
   // Retirement uses the installed SDK; migrations verify its exact provenance.
@@ -55,6 +59,10 @@ export function runtimePatchPlan(read, migrationPaths, { sourceRuntime: selected
 
 /** The product59 retirement is staged manually after confirmed cleanup. */
 export function assertRetirementReleaseAllowed(paths, command, approval, patch) {
+  const cases62 = patch === null && paths.length === 62
+    && paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql'
+    && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql'
+    && paths[61] === 'server/src/db/migrations/0062_case_options.sql'
   const slides61 = patch === null && paths.length === 61
     && paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql'
     && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql'
@@ -70,7 +78,7 @@ export function assertRetirementReleaseAllowed(paths, command, approval, patch) 
       && d.protocol === 11 && d.schemaHash === SCHEMA && d.migrations.length === 61)
     && JSON.stringify(patch.source.migrations) === JSON.stringify(patch.target.migrations)
   if (paths.includes('server/src/db/migrations/0059_retire_presentation_generation.sql')
-    && ['up','servers','workers'].includes(command) && approval !== 'true' && !runtimeOnly60 && !runtimeOnly61 && !slides61) {
+    && ['up','servers','workers'].includes(command) && approval !== 'true' && !runtimeOnly60 && !runtimeOnly61 && !slides61 && !cases62) {
     throw new Error('product59 retirement requires explicit maintenance release approval')
   }
 }

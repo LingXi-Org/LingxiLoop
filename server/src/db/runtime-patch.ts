@@ -17,7 +17,8 @@ export async function loadRuntimePatchInventory(productVersion:54|57|58|60|61=54
  const root=new URL('./migrations/',import.meta.url),allFiles=(await readdir(root)).sort()
  // A recorded product60 transition still names exactly its original inventory.
  // The CAS separately rejects any applied ledger other than that exact prefix.
- const files=productVersion===60&&allFiles.length===61&&allFiles[60]==='0061_slides_workspaces.sql'?allFiles.slice(0,60):allFiles
+ const reviewedFiles=allFiles.length===62&&allFiles[61]==='0062_case_options.sql'?allFiles.slice(0,61):allFiles
+ const files=productVersion===60&&reviewedFiles.length===61&&reviewedFiles[60]==='0061_slides_workspaces.sql'?reviewedFiles.slice(0,60):reviewedFiles
  check(files.length===productVersion,`Runtime patch requires complete product${productVersion} inventory`)
  return Promise.all(files.map(async(file,index)=>{
   const match=/^(\d{4})_([a-z0-9_]+)\.sql$/.exec(file)
