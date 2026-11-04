@@ -1,0 +1,31 @@
+{
+  "browser": "154.0.8037.57",
+  "node": "22.23.4",
+  "desktop": [
+    1280,
+    1000
+  ],
+  "mobile": [
+    390,
+    844
+  ],
+  "operatorText": true,
+  "mathSourceRoundtrip": [
+    "2*3*4",
+    "x**2 + 2*3*4"
+  ],
+  "linkRoundtrip": [
+    "https://example.invalid/2*3*4",
+    "https://example.invalid/2*3*4"
+  ],
+  "italicRoundtrip": [
+    "保留斜体"
+  ],
+  "codeRoundtrip": [
+    "x = 2*3*4"
+  ],
+  "sixParagraphStyledSourcePreserved": true,
+  "sixParagraphPlainSourceRecovers": true,
+  "errors": [],
+  "scope": "Actual MemoContent, ContentEditor, ContentDocumentView with synthetic local JSON save/reopen; no production data, server persistence, live model or historical-case acceptance."
+}

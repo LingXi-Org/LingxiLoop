@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: six-paragraph unlabelled fence recovers exact code only when native text has no authored style
+ok 1 - six-paragraph unlabelled fence recovers exact code only when native text has no authored style
+  ---
+  duration_ms: 12.013928
+  type: 'test'
+  ...
+# Subtest: six-paragraph styled or escaped source remains intact instead of losing italic content
+ok 2 - six-paragraph styled or escaped source remains intact instead of losing italic content
+  ---
+  duration_ms: 5.577354
+  type: 'test'
+  ...
+# Subtest: formula source and native math keep their literal operators through learning rendering and import
+ok 3 - formula source and native math keep their literal operators through learning rendering and import
+  ---
+  duration_ms: 63.424711
+  type: 'test'
+  ...
+# Subtest: explicit and GFM automatic link destinations stay unchanged while arithmetic labels remain literal
+ok 4 - explicit and GFM automatic link destinations stay unchanged while arithmetic labels remain literal
+  ---
+  duration_ms: 20.510183
+  type: 'test'
+  ...
+# Subtest: mixed learning prose preserves operators, emphasis, code and currency boundaries
+ok 5 - mixed learning prose preserves operators, emphasis, code and currency boundaries
+  ---
+  duration_ms: 7.470635
+  type: 'test'
+  ...
+# Subtest: 679 operator symbols survive Markdown while intentional italics, lists and fenced code retain semantics
+ok 6 - 679 operator symbols survive Markdown while intentional italics, lists and fenced code retain semantics
+  ---
+  duration_ms: 30.981681
+  type: 'test'
+  ...
+# Subtest: 679 recoverable native operator disagreement is explicit; historical recovery copies are not substituted
+ok 7 - 679 recoverable native operator disagreement is explicit; historical recovery copies are not substituted
+  ---
+  duration_ms: 20.184942
+  type: 'test'
+  ...
+# Subtest: 679 intentional adjacent and intraword emphasis stays intact during legacy import/render
+ok 8 - 679 intentional adjacent and intraword emphasis stays intact during legacy import/render
+  ---
+  duration_ms: 36.796565
+  type: 'test'
+  ...
+# Subtest: 604 current exact-fence recovery preserves surrounding authored italic and code operators
+ok 9 - 604 current exact-fence recovery preserves surrounding authored italic and code operators
+  ---
+  duration_ms: 4.949377
+  type: 'test'
+  ...
+# Subtest: 604 styled or ambiguous native paragraphs and stale recovery source are never destructively converted
+ok 10 - 604 styled or ambiguous native paragraphs and stale recovery source are never destructively converted
+  ---
+  duration_ms: 2.42917
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1389.054197
