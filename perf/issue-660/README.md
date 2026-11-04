@@ -1,5 +1,8 @@
 # #660: shared Sidebar drag candidate (partial)
 
+This is the frozen Phase 1 record (`40920884`). See [PHASE2.md](PHASE2.md) for
+the resumed native persistence fix, real-editor measurements and style diagnosis.
+
 This branch addresses the measured drag hot path only. Keep #660 open and this
 PR draft until the workspace/loading/native-Resizable gates below are completed.
 No production merge or deployment is performed by this contributor.

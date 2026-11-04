@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-type Drag = { pointerId: number; x: number; initial: number; value: number; min: number; max: number; wrapper: HTMLElement }
+type Drag = { pointerId: number; x: number; initial: number; value: number; min: number; max: number; wrapper: HTMLElement; sidebar: HTMLElement }
 
 /** Width adjustment only; Sidebar owns its offcanvas state, gap and motion. */
 export function SidebarResizeHandle({ side, label, min, max, onResize, ...props }: {
@@ -21,10 +21,12 @@ export function SidebarResizeHandle({ side, label, min, max, onResize, ...props 
     const current = drag.current
     if (!current) return
     drag.current = null
+    current.sidebar.style.removeProperty('--sidebar-width')
     current.wrapper.removeAttribute('data-sidebar-resizing')
     if (current.value !== current.initial) onResize(current.value)
   }
   useEffect(() => () => {
+    drag.current?.sidebar.style.removeProperty('--sidebar-width')
     drag.current?.wrapper.removeAttribute('data-sidebar-resizing')
     drag.current = null
   }, [])
@@ -33,9 +35,10 @@ export function SidebarResizeHandle({ side, label, min, max, onResize, ...props 
     onPointerDown={event => {
       if (event.button !== 0 || drag.current) return
       const wrapper = event.currentTarget.closest<HTMLElement>('[data-slot="sidebar-wrapper"]')
-      if (!wrapper) return
+      const sidebar = event.currentTarget.closest<HTMLElement>('[data-slot="sidebar"]')
+      if (!wrapper || !sidebar) return
       const initial = width(event.currentTarget)
-      drag.current = { pointerId: event.pointerId, x: event.clientX, initial, value: initial, ...bounds(wrapper), wrapper }
+      drag.current = { pointerId: event.pointerId, x: event.clientX, initial, value: initial, ...bounds(wrapper), wrapper, sidebar }
       wrapper.setAttribute('data-sidebar-resizing', '')
       event.currentTarget.setPointerCapture(event.pointerId)
       event.preventDefault()
@@ -45,9 +48,9 @@ export function SidebarResizeHandle({ side, label, min, max, onResize, ...props 
       if (!current || event.pointerId !== current.pointerId) return
       const value = Math.min(current.max, Math.max(current.min, current.initial + (event.clientX - current.x) * (side === 'left' ? 1 : -1)))
       current.value = value
-      // Sidebar already uses this variable for its panel and gap. Continuous
-      // geometry stays local; the owner receives one settled width on release.
-      current.wrapper.style.setProperty('--sidebar-width', `${value}px`)
+      // Both native Sidebar gap and container inherit from this Sidebar. Keep
+      // the hot variable out of the conversation subtree; commit its owner once.
+      current.sidebar.style.setProperty('--sidebar-width', `${value}px`)
     }}
     onPointerUp={event => {
       if (drag.current?.pointerId !== event.pointerId) return

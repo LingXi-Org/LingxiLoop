@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/LingxiLoop/perf/issue-660/regression.py", line 28, in <module>
+    assert page.locator('main').evaluate('(el)=>getComputedStyle(el).getPropertyValue("--sidebar-width")')==inherited,'pointer width must stay out of conversation style inheritance'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: pointer width must stay out of conversation style inheritance

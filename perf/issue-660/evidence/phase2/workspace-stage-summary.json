@@ -1,0 +1,146 @@
+[
+  {
+    "arm": "control",
+    "kind": "design",
+    "scenario": "cold",
+    "runs": 10,
+    "p50": 4898.2,
+    "p75": 4936.7,
+    "p95": 5142.8
+  },
+  {
+    "arm": "control",
+    "kind": "design",
+    "scenario": "retained",
+    "runs": 10,
+    "p50": 189.4,
+    "p75": 216.1,
+    "p95": 278.2
+  },
+  {
+    "arm": "control",
+    "kind": "design",
+    "scenario": "warm-scope",
+    "runs": 10,
+    "p50": 1104.6,
+    "p75": 1137.9,
+    "p95": 1329.3
+  },
+  {
+    "arm": "control",
+    "kind": "design",
+    "scenario": "refresh",
+    "runs": 10,
+    "p50": 1389.7,
+    "p75": 1499.0,
+    "p95": 2163.1
+  },
+  {
+    "arm": "control",
+    "kind": "slides",
+    "scenario": "cold",
+    "runs": 10,
+    "p50": 4626.3,
+    "p75": 4699.9,
+    "p95": 6315.0
+  },
+  {
+    "arm": "control",
+    "kind": "slides",
+    "scenario": "retained",
+    "runs": 10,
+    "p50": 308.8,
+    "p75": 340.4,
+    "p95": 526.1
+  },
+  {
+    "arm": "control",
+    "kind": "slides",
+    "scenario": "warm-scope",
+    "runs": 10,
+    "p50": 1016.6,
+    "p75": 1053.7,
+    "p95": 1801.3
+  },
+  {
+    "arm": "control",
+    "kind": "slides",
+    "scenario": "refresh",
+    "runs": 10,
+    "p50": 1285.9,
+    "p75": 1401.9,
+    "p95": 2531.7
+  },
+  {
+    "arm": "candidate",
+    "kind": "design",
+    "scenario": "cold",
+    "runs": 10,
+    "p50": 4919.4,
+    "p75": 4997.7,
+    "p95": 5164.6
+  },
+  {
+    "arm": "candidate",
+    "kind": "design",
+    "scenario": "retained",
+    "runs": 10,
+    "p50": 192.6,
+    "p75": 201.7,
+    "p95": 373.2
+  },
+  {
+    "arm": "candidate",
+    "kind": "design",
+    "scenario": "warm-scope",
+    "runs": 10,
+    "p50": 1107.5,
+    "p75": 1117.1,
+    "p95": 1472.3
+  },
+  {
+    "arm": "candidate",
+    "kind": "design",
+    "scenario": "refresh",
+    "runs": 10,
+    "p50": 1452.2,
+    "p75": 1561.9,
+    "p95": 2300.3
+  },
+  {
+    "arm": "candidate",
+    "kind": "slides",
+    "scenario": "cold",
+    "runs": 10,
+    "p50": 4681.2,
+    "p75": 4749.3,
+    "p95": 5360.8
+  },
+  {
+    "arm": "candidate",
+    "kind": "slides",
+    "scenario": "retained",
+    "runs": 10,
+    "p50": 281.4,
+    "p75": 339.8,
+    "p95": 388.9
+  },
+  {
+    "arm": "candidate",
+    "kind": "slides",
+    "scenario": "warm-scope",
+    "runs": 10,
+    "p50": 989.6,
+    "p75": 1052.1,
+    "p95": 1208.5
+  },
+  {
+    "arm": "candidate",
+    "kind": "slides",
+    "scenario": "refresh",
+    "runs": 10,
+    "p50": 1327.6,
+    "p75": 1438.6,
+    "p95": 1481.7
+  }
+]

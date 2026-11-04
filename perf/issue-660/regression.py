@@ -18,15 +18,18 @@ with sync_playwright() as pw:
    assert page.frame_locator('iframe').locator('img').evaluate_all('(els)=>els.length===80 && els.every(el=>el.complete && el.naturalWidth===320)')
   box=handle.bounding_box();x=box['x']+box['width']/2;y=box['y']+100
   initial=page.locator('[data-slot="sidebar-container"]').bounding_box()['width']
+  inherited=page.locator('main').evaluate('(el)=>getComputedStyle(el).getPropertyValue("--sidebar-width")')
   page.mouse.move(x,y);page.mouse.down();page.evaluate('reset()')
   page.mouse.move(x+(40 if side=='left' else -100),y)
   page.wait_for_timeout(32)
   measured=page.locator('[data-slot="sidebar-container"]').bounding_box()['width']
   expected=initial+(40 if side=='left' else 100)
   assert abs(measured-expected)<2,{'case':'pointer must track within two pixels after two 60Hz frames','side':side,'measured':measured,'expected':expected}
+  assert page.locator('main').evaluate('(el)=>getComputedStyle(el).getPropertyValue("--sidebar-width")')==inherited,'pointer width must stay out of conversation style inheritance'
   assert page.evaluate('measurements.changes')==0,'parent must not rerender on every pointer move'
   page.mouse.up();page.wait_for_timeout(50)
   assert page.evaluate('measurements.changes')==1,'one settled owner update'
+  assert page.locator('[data-slot="sidebar"]').evaluate('(el)=>el.style.getPropertyValue("--sidebar-width")')==''
   assert page.evaluate('document.querySelector("[data-sidebar-resizing]")===null')
   assert abs(page.locator('main').evaluate('(el)=>el.scrollTop')-400)<2
   handle.focus();page.keyboard.press('ArrowRight');page.wait_for_timeout(240)

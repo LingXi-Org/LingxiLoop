@@ -123,6 +123,22 @@ app.use(/^\/(artifact-editor|_blob)/, (req, res, next) => {
   res.set({ 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'content-type,last-event-id', 'Cross-Origin-Resource-Policy': 'cross-origin' })
   if (req.method === 'OPTIONS') res.sendStatus(204); else next()
 })
+// Optional #660 workspace host: serve public synthetic IM/API replies here.
+// Browser request interception disables Chromium HTTP caching and cannot be used
+// for cold/warm/refresh acceptance. Editor grants and assets still use the real
+// fixture gateway below; this switch is never enabled by the product server.
+if (process.env.PERF_WORKSPACE_FIXTURE === '1') app.use('/api', express.json({ limit: '128kb' }), (req, res, next) => {
+  const path = req.path
+  if (path.endsWith('/editor-grant')) { next();return }
+  if (path.endsWith('/slides-workspace')) { res.json({ artifactId: path.split('/')[2], conversationId: 'perf-conversation', agentId: 'perf-agent', sourceConversationId: null });return }
+  if (path.endsWith('/editor-context')) { res.json(req.body);return }
+  if (path.endsWith('/im/channels')) { res.json([{ id: 'perf-conversation', kind: 'group', title: '公共会话', members: ['perf-user'], pinned: false, muted: false, lastMessage: null, updatedAt: '2026-11-04T00:00:00Z', unreadCount: 0, readOnly: false }]);return }
+  if (['/messages', '/participants', '/runs', '/coworker/activity'].some(suffix => path.endsWith(suffix))) { res.json([]);return }
+  if (path.endsWith('/im/bootstrap')) { res.status(503).json({ error: 'IM is outside this deterministic editor fixture' });return }
+  if (path.endsWith('/read')) { res.json({ ok: true, latestSeq: 0 });return }
+  if (path.endsWith('/revisions')) { res.json({ current: 'public', revisions: [] });return }
+  res.status(404).json({ error: `No synthetic fixture for ${path}` })
+})
 app.post('/api/artifacts/:id/editor-grant', async (req, res) => {
   if (recoveryFixture && !access.read) { res.status(403).json({ code: 'forbidden' });return }
   const kind = kindOf(req.params.id), grant = `g${++issued}`

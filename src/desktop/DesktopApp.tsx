@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import type { LayoutChangedMeta } from 'react-resizable-panels'
 import { CommandPalette } from '@/components/CommandPalette'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -37,6 +36,7 @@ import type { Participant } from '@/types'
 import { useSurface } from '@/stores/surface'
 import { useUiCommands } from '@/stores/uiCommands'
 import { WorkspaceRail } from './WorkspaceRail'
+import { LEFT_COLUMN_MIN, LEFT_COLUMN_MAX, useSidebarWidth } from './useSidebarWidth'
 import type { useLearningSpaces } from './useLearningSpaces'
 
 const ChatPane = lazy(() => import('./ChatPane').then((module) => ({ default: module.ChatPane })))
@@ -47,28 +47,7 @@ const SlidesPage = lazy(() => import('@/features/slides/SlidesPage').then((modul
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
 const PersonalDashboard = lazy(() => import('./PersonalDashboard').then((module) => ({ default: module.PersonalDashboard })))
 
-const DESKTOP_SIDEBAR_WIDTH_KEY = 'lingxiloop:desktop-layout:sidebar-width:v1'
-const LEFT_COLUMN_DEFAULT = 300
-const LEFT_COLUMN_MIN = 260
-const LEFT_COLUMN_MAX = 360
 const MIDDLE_COLUMN_MIN = 320
-
-function loadSidebarWidth(): number {
-  if (typeof window === 'undefined') return LEFT_COLUMN_DEFAULT
-  try {
-    const stored = window.localStorage.getItem(DESKTOP_SIDEBAR_WIDTH_KEY)
-    const width = stored === null ? LEFT_COLUMN_DEFAULT : Number(stored)
-    return Number.isFinite(width) ? Math.min(LEFT_COLUMN_MAX, Math.max(LEFT_COLUMN_MIN, width)) : LEFT_COLUMN_DEFAULT
-  } catch {
-    return LEFT_COLUMN_DEFAULT
-  }
-}
-
-function persistSidebarWidth(width: number): void {
-  try {
-    window.localStorage.setItem(DESKTOP_SIDEBAR_WIDTH_KEY, String(width))
-  } catch { /* private browsing can deny storage access */ }
-}
 
 /** The desktop shell switches between the resizable IM workspace and the
  * personal dashboard. Compact object details continue to use the shared Drawer. */
@@ -91,7 +70,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   const navigationError = useApp((state) => state.navigationError)
   const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
-  const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
+  const { width: sidebarWidth, panelRef: sidebarPanelRef, onLayoutChanged: handleSidebarLayoutChanged } = useSidebarWidth()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const pageRef = useEntrance(`${selectedWorkspaceId}:${view}`)
 
@@ -139,14 +118,6 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   }, [commandPaletteOpen, isMobile, selectedConversationId, view])
 
   const dashboardOpen = view !== 'conversations'
-  const handleSidebarLayoutChanged = (_layout: Record<string, number>, meta: LayoutChangedMeta) => {
-    if (!meta.isUserInteraction) return
-    const width = document.querySelector<HTMLElement>('[data-panel="conversations"]')?.getBoundingClientRect().width
-    if (!width) return
-    const clamped = Math.min(LEFT_COLUMN_MAX, Math.max(LEFT_COLUMN_MIN, Math.round(width)))
-    setSidebarWidth(clamped)
-    persistSidebarWidth(clamped)
-  }
   const shellModule = moduleForView(view)
   useEffect(() => { rememberCourseView(view) }, [view])
   useEffect(() => { if (!isMobile) setMobileNavOpen(false) }, [isMobile])
@@ -222,7 +193,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
             data-mobile-conversation-page={isMobile ? mobileChatOpen ? 'chat' : 'list' : undefined}
             onLayoutChanged={handleSidebarLayoutChanged}
           >
-            <ResizablePanel id="conversations" data-shell-panel-hidden={isMobile && mobileChatOpen} defaultSize={sidebarWidth} minSize={isMobile ? 0 : LEFT_COLUMN_MIN} maxSize={isMobile ? '100%' : LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
+            <ResizablePanel id="conversations" panelRef={sidebarPanelRef} data-shell-panel-hidden={isMobile && mobileChatOpen} defaultSize={sidebarWidth} minSize={isMobile ? 0 : LEFT_COLUMN_MIN} maxSize={isMobile ? '100%' : LEFT_COLUMN_MAX} groupResizeBehavior="preserve-pixel-size" className="min-h-0 min-w-0">
               <div className="flex h-full min-h-0 flex-col bg-sidebar" data-secondary-sidebar={shellModule}>
                 {secondary}
               </div>

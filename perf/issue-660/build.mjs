@@ -4,4 +4,4 @@ import react from '@vitejs/plugin-react'
 const source = resolve(process.argv[2] ?? '.')
 await build({ configFile: false, root: resolve('perf/issue-660'), plugins: [react()], logLevel: 'warn',
   resolve: { alias: { '@': resolve(source, 'src'), 'react-dom/client': 'react-dom/profiling' } },
-  build: { outDir: resolve(process.argv[3]), emptyOutDir: true } })
+  build: { outDir: resolve(process.argv[3]), emptyOutDir: true, sourcemap: process.env.PERF_PROFILE === '1' } })
