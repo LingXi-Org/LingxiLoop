@@ -444,7 +444,7 @@ export class ConversationsApplication {
     // The committed binding remains authoritative and the reconciliation worker
     // retries channel/policy synchronization after a transient transport outage.
     let publication: 'queued' | undefined
-    await this.afterMutation(scope, conversationId, profile, { members: profile.members, leaderId: profile.leaderAgentId ?? null })
+    await this.afterMutation(scope, conversationId, profile, { membershipChanged: true })
       .catch(() => { publication = 'queued' })
     let membershipMessage: { messageId: string; sequence: number } | { queued: true } | undefined
     if (changed) membershipMessage = await this.infrastructure.postMembershipMessage({
@@ -476,17 +476,18 @@ export class ConversationsApplication {
       const members = conversation.members.filter((member) => member !== scope.userId)
       const version = Number(binding.profile.membershipVersion ?? 0) + 1
       await auditMembershipChange(db, { ...scope, conversationId, participantId: scope.userId, operation: 'left', version, members })
-      await updateConversation(db, { id: conversationId, companyId: scope.companyId, members })
-      const next = { ...profileFor({ ...conversation, members }), ...binding.profile,
-        channelId: conversationId, members, membershipVersion: version } as ImChannelProfile
-      await upsertBinding(db, scope.companyId, next, conversation.leader_id, binding.preset_key)
+      const leaderId = members.includes(conversation.leader_id ?? '') ? conversation.leader_id : null
+      await updateConversation(db, { id: conversationId, companyId: scope.companyId, members, leaderId })
+      const next = { ...profileFor({ ...conversation, members, leader_id: leaderId }), ...binding.profile,
+        channelId: conversationId, members, leaderAgentId: leaderId ?? undefined, membershipVersion: version } as ImChannelProfile
+      await upsertBinding(db, scope.companyId, next, leaderId, binding.preset_key)
       return next
     })
     const membershipMessage = await this.infrastructure.postMembershipMessage({
         conversationId, companyId: scope.companyId, actorId: scope.userId,
         kind: 'left', participantId: scope.userId,
       }).catch(() => undefined)
-    await this.infrastructure.syncChannel(profile)
+    await this.afterMutation(scope, conversationId, profile, { membershipChanged: true })
     return {
       ok: true as const,
       members: profile.members,

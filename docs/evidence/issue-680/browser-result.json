@@ -12,6 +12,11 @@
       "POST:reviewer",
       "POST:teacher",
       "DELETE:reviewer"
+    ],
+    "listMembers": [
+      "student",
+      "peer",
+      "teacher"
     ]
   },
   "mobileBounds": {
@@ -30,6 +35,8 @@
     "keyboard-remove-agent",
     "no-self-removal",
     "390px-dialog-bounds",
+    "remote-member-event-refresh",
+    "remote-self-removal-revokes-list",
     "nonmanager-restriction",
     "managed-context-restriction",
     "keyboard-new-conversation-alternative"

@@ -3,7 +3,9 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { ConversationMembersButton } from '../../../src/features/conversations/components/ConversationMembersDialog'
 import { useAuth } from '../../../src/stores/auth'
-import { useConversations } from '../../../src/features/conversations/store'
+import { ws } from '../../../src/api/core/realtime'
+import type { WsEvent } from '../../../src/api/contracts'
+import { bootConversations, useConversations } from '../../../src/features/conversations/store'
 import { setWorkspaceSession } from '../../../src/lib/workspaceSession'
 import '../../../src/styles/globals.css'
 
@@ -37,10 +39,15 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
       candidates: mode === 'manager' ? people.filter(p => !members.includes(p.id)) : [],
       canManage: mode === 'manager', restriction: mode === 'managed' ? 'managed_context' : mode === 'denied' ? 'manager_required' : null,
       historyVisibility: 'shared_conversation', version }
-  } else if (url === '/api/im/channels') value = [{ ...conversation, members, subtitle: null, leaderId: null, pinned: false, muted: false,
-    topic: null, tag: null, pulledBy: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), lastMessage: null, unreadCount: 0 }]
+  } else if (url === '/api/im/channels') value = members.includes('student') ? [{ ...conversation, members, subtitle: null, leaderId: null, pinned: false, muted: false,
+    topic: null, tag: null, pulledBy: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), lastMessage: null, unreadCount: 0 }] : []
   else value = []
   return Response.json(value)
 }) as typeof fetch
-Object.assign(window, { fixture: () => ({ members, version, operations }) })
+let receive: ((event: WsEvent) => void) | undefined
+ws.connect = async () => undefined
+ws.on = handler => { receive = handler; return () => { receive = undefined } }
+bootConversations(false)
+Object.assign(window, { fixture: () => ({ members, version, operations, listMembers: useConversations.getState().list[0]?.members ?? [] }),
+  remoteMembers: (next: string[]) => { members = next; receive?.({ type: 'conversation.updated', conversationId: conversation.id, patch: { membershipChanged: true } } as WsEvent) } })
 createRoot(document.getElementById('root')!).render(<main className="min-h-screen bg-background p-5 text-foreground"><h1>T16 分阶段协作</h1><p>原始学生分析记录保留</p><ConversationMembersButton conversation={conversation} /></main>)

@@ -453,7 +453,9 @@ test('[integration] room creators stage agent/teacher additions and removals wit
   assert.equal(state.canManage, true)
   assert.equal(state.historyVisibility, 'shared_conversation')
   assert.ok(state.candidates.some(p => p.id === 'a-tutor'))
-  const posted: unknown[] = []
+  const posted: unknown[] = [], updates: unknown[] = []
+  const publishUpdated = conversationInfrastructure.publishUpdated
+  conversationInfrastructure.publishUpdated = async event => { updates.push(event.patch) }
   const publish = conversationInfrastructure.postMembershipMessage
   conversationInfrastructure.postMembershipMessage = async input => { posted.push(input); return { queued: true } }
   try {
@@ -476,11 +478,12 @@ test('[integration] room creators stage agent/teacher additions and removals wit
     assert.deepEqual(audits.map(a => a.detail.version), [1,2,3])
     assert.ok(audits.every(a => a.user_id === OTHER_USER_ID && a.detail.historyVisibility === 'shared_conversation' && a.detail.projectId === scope.projectId))
     assert.equal(posted.length, 3)
+    assert.deepEqual(updates, Array.from({ length: 5 }, () => ({ membershipChanged: true })))
     const { syncConversationPolicy } = await import('../agent-runtime/conversations.js')
     let policy: unknown
     await syncConversationPolicy({ conversations: { sync: async (value: unknown) => { policy = value } } } as never, scope.companyId, id)
     assert.ok(!(policy as { participants: Array<{ id: string }> }).participants.some(p => p.id === 'a-tutor'))
-  } finally { conversationInfrastructure.postMembershipMessage = publish }
+  } finally { conversationInfrastructure.postMembershipMessage = publish; conversationInfrastructure.publishUpdated = publishUpdated }
 })
 
 test('[integration] room member mutation rejects non-managers, foreign/stale peers and managed private contexts', async t => {

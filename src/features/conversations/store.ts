@@ -404,6 +404,12 @@ export function bootConversations(load = true) {
         void useConversations.getState().reload()
       }
     } else if (e.type === 'conversation.updated') {
+      if (e.patch.membershipChanged === true) {
+        // Re-read current authorization: a newly invited member may not have
+        // this room yet, and a removed member must lose the selected view.
+        void useConversations.getState().reload()
+        return
+      }
       // Surgical patch — apply patch fields to the matching conversation in
       // place without a full network reload.
       useConversations.setState((s) => ({
