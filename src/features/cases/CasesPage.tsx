@@ -4,6 +4,9 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import './cases.css'
 import { CaseCodeBlock } from './CaseCodeBlock'
+import { CaseCard } from './CaseCard'
+import { CaseReader } from './CaseReader'
+import { caseCatalogue } from './presentation'
 import { ImagePlus, LockKeyhole, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { markdownText, usableDocument } from '@/features/content-editor/document'
+import { usableDocument } from '@/features/content-editor/document'
 import { ContentEditor, ContentDocumentView } from '@/features/content-editor'
 import { useAuth } from '@/stores/auth'
 import { userFacingError } from '@/lib/userFacingError'
@@ -44,6 +47,7 @@ export function CasesPage() {
   const [article, setArticle] = useState<CaseArticle | null>(null)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
+  const [visibleCount, setVisibleCount] = useState(6)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -56,6 +60,7 @@ export function CasesPage() {
   const [deleteTarget, setDeleteTarget] = useState<CaseArticle | null>(null)
   const [deleteError, setDeleteError] = useState('')
   const heading = useRef<HTMLHeadingElement>(null)
+  const pageRoot = useRef<HTMLElement>(null)
   const coverUpload = useRef<HTMLInputElement>(null)
   const operationEpoch = useRef(0)
   const mutationPending = useRef(false)
@@ -66,6 +71,9 @@ export function CasesPage() {
   const currentView = useRef(view)
   currentView.current = view
   const articleUrl = (next?: string, nextView = view) => caseArticleUrl(window.location.search, companyId, next, nextView)
+  const catalogue = caseCatalogue(list.items, Boolean(search || category), visibleCount)
+  useEffect(() => { setVisibleCount(6) }, [search, category, view, companyId, userId])
+  useEffect(() => { pageRoot.current?.querySelector('[data-page-scroll]')?.scrollTo(0, 0) }, [id, view, editing])
   useEffect(() => {
     currentScope.current = companyId
     mutationPending.current = false; setBusy(false); setEditing(false); setPreview(false); setInput(empty)
@@ -294,16 +302,20 @@ export function CasesPage() {
       </div>}
     </div>
   </div>
+  const managementMenu = canManage && <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label="案例管理" disabled={busy}><MoreHorizontal /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
+    {view === 'reader' ? <DropdownMenuItem onSelect={() => navigate(id ?? undefined, 'manage')}>管理案例</DropdownMenuItem> : <>
+      <DropdownMenuItem onSelect={() => navigate(article?.status === 'published' ? id ?? undefined : undefined, 'reader')}>阅读案例</DropdownMenuItem>
+      {!detail && <DropdownMenuItem onSelect={beginEdit}><Plus className="size-4" />新建案例</DropdownMenuItem>}
+    </>}
+  </DropdownMenuContent></DropdownMenu>
   const header = !detail
-    ? <PageHeader title="案例库" titleRef={heading} actions={<>
-        {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(undefined, 'manage')}>管理案例</Button> : <Button variant="outline" disabled={busy} onClick={() => navigate(undefined, 'reader')}>阅读案例</Button>}
-        {managing && <Button disabled={busy} onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>}
-      </>} />
+    ? <PageHeader className="case-page-header" title="教学案例" titleRef={heading} actions={managementMenu} />
     : <PageHeader title={editing ? (input.title.trim() || '新建案例') : article?.title ?? '案例'} titleRef={heading}
-        crumbs={[{ label: '案例库', onSelect: busy ? undefined : () => navigate() }]}
+        className="case-page-header"
+        crumbs={[{ label: '教学案例', onSelect: busy ? undefined : () => navigate() }]}
         leading={<PanelCloseButton back label="返回案例库" onClick={() => { if (!busy) navigate() }} className="-ms-2" />}
         actions={<div className="flex flex-wrap items-center justify-end gap-2">
-          {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(id ?? undefined, 'manage')}>管理案例</Button> : !editing && <Button variant="outline" disabled={busy} onClick={() => navigate(article?.status === 'published' ? id ?? undefined : undefined, 'reader')}>阅读案例</Button>}
+          {!editing && managementMenu}
           {editing && managing ? <>
             <span className="text-sm text-muted-foreground">草稿</span>
             <Button type="submit" form="case-edit-form" name="intent" value="draft" variant="outline" disabled={invalid}>{submissionStage === 'saving' ? '正在保存…' : '保存草稿'}</Button>
@@ -322,15 +334,23 @@ export function CasesPage() {
             </DropdownMenuContent></DropdownMenu>
           </>}
         </div>} />
-  return <main aria-label="组织案例库" className="cases-page h-full min-h-0">
+  const card = (item: CaseArticle, featured = false) => <CaseCard key={item.id} article={item} href={articleUrl(item.id)}
+    onNavigate={() => navigate(item.id)} featured={featured} scopeKey={coverScope} busy={busy} onRefresh={refreshCoverStatus}
+    onRetry={managing && item.view === 'manage' && item.canManage ? () => retryCover(item) : undefined}
+    actions={managing && item.view === 'manage' && item.canManage ? <DropdownMenu>
+      <DropdownMenuTrigger asChild><Button type="button" variant="ghost" size="icon-sm" aria-label={`更多案例操作：${item.title}`} disabled={busy}><MoreHorizontal /></Button></DropdownMenuTrigger>
+      <DropdownMenuContent align="end"><DropdownMenuItem variant="destructive" onSelect={() => requestDelete(item)}><Trash2 aria-hidden="true" />删除案例</DropdownMenuItem></DropdownMenuContent>
+    </DropdownMenu> : undefined} />
+  return <main ref={pageRoot} aria-label="组织案例库" className="cases-page h-full min-h-0" data-case-editing={editing || undefined}>
     <PageLayout header={header} scrollProps={{ className: 'cases-scroll' }}>
-    <PageBody className={detail ? 'case-detail-shell' : undefined}>
+    <PageBody className="case-page-content">
       {error && <div role="alert" className="case-notice text-destructive">{error}{!editing && <Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button>}</div>}
       {notice && <p role="status" className="case-notice">{notice}</p>}
       {!detail && <>
-        <PageToolbar>
-        <div role="group" aria-label="案例分类" className="flex flex-wrap gap-1">{['', ...list.categories].map(value => <Button key={value || 'all'} size="sm" variant={category === value ? 'secondary' : 'ghost'} aria-pressed={category === value} onClick={() => setCategory(value)}>{value || '全部'}</Button>)}</div>
-        <label className="relative ms-auto w-full min-w-0 sm:w-72"><span className="sr-only">关键词搜索</span><Search aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
+        {!loading && !error && catalogue.featured && card(catalogue.featured, true)}
+        <PageToolbar className="case-filters">
+        <div role="group" aria-label="案例分类" className="case-categories">{['', ...list.categories].map(value => <Button key={value || 'all'} size="sm" variant="outline" aria-pressed={category === value} onClick={() => setCategory(value)}>{value || '全部'}</Button>)}</div>
+        <label className="case-search"><span className="sr-only">搜索案例</span><Search aria-hidden="true"/><Input type="search" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
         {(search || category) && <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setCategory('') }}>清除筛选</Button>}
         </PageToolbar>
       </>}
@@ -346,26 +366,14 @@ export function CasesPage() {
             </div></div>
           </section>
         </fieldset>
-      </form> : loading ? <p role="status" className="case-notice py-8">正在加载案例…</p> : article ? <article>
-        {hero}
-        {managing && article.hasUnpublishedChanges && <p className="case-notice">{article.status === 'published' ? '当前显示管理草稿；阅读视图仍显示上次发布版本。' : '当前为未发布草稿，仅案例管理者可见。'}</p>}
-        <div className="case-body-divider"><div data-case-body className="case-body">{body(article)}</div></div>
-      </article> : !id ? <>
-        <div data-case-grid className="case-grid">{list.items.map(item => <article key={item.id}>
-          <div className="case-grid-cover relative"><CaseCover cover={item.generatedCover} fallbackUrl={item.cover} title={item.title} scopeKey={`${coverScope}:${item.id}`}
-            className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" busy={busy} onRefresh={refreshCoverStatus}
-            onRetry={managing && item.view === 'manage' && item.canManage ? () => retryCover(item) : undefined}/></div>
-          <div className="flex items-start gap-2">
-            <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="case-grid-link min-w-0 flex-1">
-              <div className="case-grid-meta"><time dateTime={item.publishedAt ?? item.createdAt ?? item.updatedAt}>{date(item)}</time><span>·</span><span>{item.category || '未分类'}</span>{managing && item.status !== 'published' && <span>{statusLabels[item.status]}</span>}</div>
-              <h2>{item.title}</h2><p>{markdownText(item.summary)}</p>
-            </a>
-            {managing && item.view === 'manage' && item.canManage && <DropdownMenu>
-              <DropdownMenuTrigger asChild><Button type="button" className="mt-2" variant="ghost" size="icon-sm" aria-label={`更多案例操作：${item.title}`} disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger>
-              <DropdownMenuContent align="end"><DropdownMenuItem variant="destructive" onSelect={() => requestDelete(item)}><Trash2 aria-hidden="true"/>删除案例</DropdownMenuItem></DropdownMenuContent>
-            </DropdownMenu>}
-          </div>
-        </article>)}</div>
+      </form> : loading ? <p role="status" className="case-notice py-8">正在加载案例…</p> : article ? <CaseReader key={`${coverScope}:${article.id}`} article={article} scopeKey={coverScope}
+        articleUrl={next => articleUrl(next, 'reader')} onNavigate={next => navigate(next, 'reader')} onRefresh={refreshCoverStatus}
+        onRetry={managing && article.view === 'manage' ? () => retryCover(article) : undefined} busy={busy}
+        notice={managing && article.hasUnpublishedChanges ? <p className="case-notice">{article.status === 'published' ? '当前显示管理草稿；阅读视图仍显示上次发布版本。' : '当前为未发布草稿，仅案例管理者可见。'}</p> : undefined}>
+        {body(article)}
+      </CaseReader> : !id ? <>
+        <div data-case-grid className="case-grid">{catalogue.items.map(item => card(item))}</div>
+        {catalogue.hasMore && <div className="case-load-more"><Button variant="outline" onClick={() => setVisibleCount(value => value + 6)}>加载更多</Button></div>}
         {!list.items.length && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '没有找到匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : managing ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
       </> : null}
     </PageBody>
