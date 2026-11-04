@@ -1,0 +1,25 @@
+{
+  "browser": "154.0.8037.57",
+  "viewport": [
+    1280,
+    1100
+  ],
+  "mobile": [
+    390,
+    844
+  ],
+  "operatorTokens": [
+    "2+3*4",
+    "3*-2",
+    "a*b",
+    "x**2"
+  ],
+  "italic": true,
+  "fencedCode": true,
+  "pendingIsNotMastered": true,
+  "studentAndAssistantMessageFocus": true,
+  "missingSourceDoesNotLink": true,
+  "horizontalOverflow": false,
+  "errors": [],
+  "scope": "Synthetic authorized snapshots through actual HomeworkTeacher, HomeworkSubmissionView, ForumBody and ConversationReferences components; no production session or live model."
+}
