@@ -1,3 +1,4 @@
+import { ConversationMembersButton } from '@/features/conversations/components/ConversationMembersDialog'
 import { Button } from '@/components/ui/button'
 import { useConversations } from '@/features/conversations/store'
 import { ConversationAvatar } from '@/im/ConversationList'
@@ -49,6 +50,7 @@ export function ConversationHeader({
         <h1 className="truncate font-heading text-sm font-semibold text-foreground">{conversation.title}</h1>
         {conversation.subtitle && <span className="truncate text-xs text-muted-foreground max-sm:hidden">{conversation.subtitle}</span>}
       </div>
+      {conversation.kind === 'group' && <ConversationMembersButton conversation={conversation} />}
       {actions && <div className="ms-auto flex items-center gap-1">{actions}</div>}
     </header>
   )
