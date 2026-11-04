@@ -15,7 +15,7 @@ import { useConversationPresence } from '@/features/chat/runtime'
 import { useParticipants } from '@/features/agents/state'
 import type { Conversation, Participant } from '@/types'
 import type { PinnedMode } from '@/features/conversations/components/PinnedConversations'
-import { getBloubIdentity } from '@/lib/agentVisualState'
+import { stableParticipantHash } from '@/lib/agentVisualState'
 import { COLOR_BY_ID } from '@/lib/bloub/skins'
 
 let lastRosterBackfillAt = 0
@@ -59,12 +59,12 @@ export function ConversationAvatar({
     return (
       <span className={cn('relative block shrink-0', avatarMotion)} style={{ width: size, height: size }}>
         {members.slice(0, remaining ? 2 : 3).map((person, index) => (
-          <span key={person.id} className={cn('absolute flex rounded-full ring-1 ring-background', positions[index])}>
-            <Avatar p={person} size={portraitSize} ringColor="var(--background)" mode="chat" />
+          <span key={person.id} className={cn('absolute flex', positions[index])}>
+            <Avatar p={person} size={portraitSize} ringColor="transparent" mode="chat" />
           </span>
         ))}
         {remaining > 0 && (
-          <span className="absolute bottom-0 end-0 grid place-items-center rounded-full bg-accent font-medium tabular-nums text-muted-foreground ring-1 ring-background" style={{ width: portraitSize, height: portraitSize, fontSize: Math.max(8, Math.round(size * 0.25)) }} aria-label={`${remaining} 位其他成员`} title={`${remaining} 位其他成员`}>
+          <span className="absolute bottom-0 end-0 grid place-items-center rounded-full bg-accent font-medium tabular-nums text-muted-foreground" style={{ width: portraitSize, height: portraitSize, fontSize: Math.max(8, Math.round(size * 0.25)) }} aria-label={`${remaining} 位其他成员`} title={`${remaining} 位其他成员`}>
             {remaining > 99 ? '99+' : `+${remaining}`}
           </span>
         )}
@@ -90,21 +90,22 @@ export function ConversationUnread({ conversation }: { conversation: Conversatio
     </span>
 }
 
+const pinnedColors = ['bleu', 'violet', 'turquoise', 'orange', 'rose', 'vert', 'ambre', 'rouge'].map(id => COLOR_BY_ID.get(id)!.hex)
+
 export function PinnedConversationContent({ conversation, mode }: { conversation: Conversation; mode: PinnedMode }) {
   const byId = useParticipants(state => state.byId)
   const meId = useMe()
   const members = conversation.members.filter(id => id !== meId).map(id => byId[id]).filter((person): person is Participant => Boolean(person))
-  const first = members[0]
-  const tint = first?.kind === 'agent' ? COLOR_BY_ID.get(getBloubIdentity(first, first.personalAvatar && 'seed' in first.personalAvatar ? first.personalAvatar.seed : undefined).color)?.hex : first?.avatarBg
+  const tint = pinnedColors[stableParticipantHash(conversation.id) % pinnedColors.length]
   return <>
-    <span aria-hidden className="pointer-events-none absolute inset-0 opacity-[.13] dark:opacity-[.16]" style={{ backgroundColor: tint || 'var(--brand)' }} />
+    <span aria-hidden className="pointer-events-none absolute inset-0 opacity-[.13] dark:opacity-[.16]" style={{ backgroundColor: tint }} />
     {mode === 'tile' ? <>
       <ConversationAvatar conversation={conversation} size={28} />
       <span className="relative w-full truncate text-center text-xs">{conversation.title}</span>
     </> : <>
       <span className="relative w-full truncate pe-4 text-[13px] font-medium">{conversation.title}</span>
       <span className="relative w-full truncate text-xs text-muted-foreground"><PreviewText body={conversation.preview || '还没有消息'} /></span>
-      <span className="relative mt-auto flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground"><span className="size-1.5 rounded-full" style={{ backgroundColor: tint || 'var(--brand)' }} />{conversation.lastAt}</span>
+      <span className="relative mt-auto flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground"><span className="size-1.5 rounded-full" style={{ backgroundColor: tint }} />{conversation.lastAt}</span>
       <span aria-hidden className="pointer-events-none absolute -bottom-3 -end-1 flex items-end -space-x-5">
         {members.slice(0, 3).map(person => <Avatar key={person.id} p={person} size={mode === 'compact' ? 40 : 48} animated={false} ringColor="transparent" />)}
       </span>
