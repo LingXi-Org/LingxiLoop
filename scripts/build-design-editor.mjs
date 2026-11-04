@@ -305,7 +305,9 @@ export async function buildDesignEditor() {
   assert.ok(iconPath, 'Expected the pinned icon font')
   const icon = await readFile(resolve(source, 'assets', iconPath))
   const iconName = `design-${sha(icon)}.woff2`
-  const css = originalCss.replace(embedded[0], `./${fontName}`).replace(`./${iconPath}`, `./${iconName}`)
+  const productTheme = await readFile(resolve(root, 'third_party/baoyu-design/host/design-theme.css'), 'utf8')
+  const productFonts = (await readFile(resolve(root, 'src/styles/fonts.css'), 'utf8')).replaceAll('/fonts/mingli/', './')
+  const css = originalCss.replace(embedded[0], `./${fontName}`).replace(`./${iconPath}`, `./${iconName}`) + '\n' + productFonts + '\n' + productTheme
   const cssName = `design-${sha(css)}.css`
   const scriptPath = /src="\.\/(assets\/[^"/]+\.js)"/.exec(originalHtml)?.[1]
   assert.ok(scriptPath, 'Expected the pinned editor entry')
@@ -328,6 +330,8 @@ export async function buildDesignEditor() {
   await rm(output, { recursive: true, force: true })
   await mkdir(output, { recursive: true })
   await cp(source, output, { recursive: true })
+  await cp(resolve(root, 'public/fonts/mingli'), resolve(output, 'assets'), { recursive: true })
+  await cp(resolve(root, 'node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2'), resolve(output, 'assets/inter-latin-wght-normal.woff2'))
   await writeFile(resolve(output, 'assets', fontName), font)
   await writeFile(resolve(output, 'assets', iconName), icon)
   await writeFile(resolve(output, 'assets', scriptName), script)

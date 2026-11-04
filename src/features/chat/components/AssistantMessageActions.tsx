@@ -110,12 +110,12 @@ export function AssistantMessageActions() {
         onRetry={failure.recovery === 'delivery' ? undefined : failure.recovery === 'refresh' ? () => void refresh() : () => void regenerate()}
         disabled={failure.recovery === 'refresh' ? pending !== null || !metadata.runId : retryDisabled} className="mt-2" />}
     </MessagePrimitive.Error>
-    {incompleteOutcome && <div data-run-outcome={incompleteOutcome} role="status" className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-      <span>{pending === 'regenerate' ? '正在提交' : savedWork ? savedPartialWorkText : '答复尚未完成'}</span>
+    {incompleteOutcome && <div data-run-outcome={incompleteOutcome} role="status" className="mt-3 flex flex-wrap items-center gap-2 rounded-[10px] bg-[var(--warning-surface)] px-3 py-2 text-xs text-warning">
+      <span className="min-w-0 flex-1">{pending === 'regenerate' ? '正在提交' : savedWork ? savedPartialWorkText : '答复尚未完成'}</span>
       <button type="button" disabled={retryDisabled} onClick={() => void regenerate()}
-        className={cn(ghostButton, 'rounded-md px-2 py-1 text-xs disabled:opacity-40 max-md:min-h-11')}>{savedWork ? '继续未完成部分' : '重试'}</button>
+        className="shrink-0 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40 max-md:min-h-11">{savedWork ? '继续未完成部分' : '重试'}</button>
     </div>}
-    {(message.content.length > 0 || metadata.replyBranches) && <ActionBarPrimitive.Root ref={root} data-slot="message-actions" role="toolbar" aria-label="智能助教回复操作" className="mt-1 flex flex-wrap items-center gap-1">
+    {(message.content.length > 0 || metadata.replyBranches) && <ActionBarPrimitive.Root ref={root} data-slot="message-actions" role="toolbar" aria-label="智能助教回复操作" className="mt-3 flex flex-wrap items-center gap-1">
     {metadata.replyBranches && <MessageBranches variants={metadata.replyBranches.ids} index={metadata.replyBranches.index}
       onIndexChange={index => {
         const branch = metadata.replyBranches!

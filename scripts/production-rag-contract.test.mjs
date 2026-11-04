@@ -214,8 +214,9 @@ test('SPA image includes the transitive source graph and pinned vendor license',
       }
     }
     for (const path of ['scripts/design-copy.mjs', 'third_party/baoyu-design/host/design-zh-CN.json',
-      'third_party/baoyu-design/host/slides-zh-CN.json']) {
-      assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing Design translation input: ${path}`)
+      'third_party/baoyu-design/host/slides-zh-CN.json', 'third_party/baoyu-design/host/design-theme.css',
+      'src/styles/fonts.css', 'public/fonts/mingli/inter-OFL.txt']) {
+      assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing Design host input: ${path}`)
     }
   }
   for (const path of ['server/package.json', 'server/package-lock.json', 'server/build/web/package.json',

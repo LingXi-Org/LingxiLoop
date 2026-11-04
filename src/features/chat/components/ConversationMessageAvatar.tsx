@@ -35,15 +35,16 @@ export const ConversationMessageAvatar = memo(function ConversationMessageAvatar
   const animated = useAuiState(state => showAvatar && participant?.kind === 'agent'
     && isMessageAvatarActive(state.thread.messages, state.message.index))
   return <div data-message-avatar className={cn(
-    'row-start-2 flex',
+    'flex',
+    participant?.kind === 'agent' ? 'row-start-1' : 'row-start-2',
     participant?.kind === 'agent' ? 'self-start' : 'self-center',
-    isMobile ? 'w-8' : 'w-10',
+    participant?.kind === 'agent' ? 'w-[22px]' : isMobile ? 'w-8' : 'w-10',
     isMine ? 'col-start-2' : 'col-start-1',
     groupStart && participant?.kind === 'agent' && 'chat-message-avatar',
     groupStart && animated && participant?.status === 'thinking' && 'bloub-activity-thinking',
     groupStart && animated && participant?.status === 'working' && 'bloub-activity-working',
   )}>
-    {showAvatar && participant && <Avatar p={participant} size={isMobile ? 32 : 38} ringColor="var(--background)"
+    {showAvatar && participant && <Avatar p={participant} size={participant.kind === 'agent' ? 22 : isMobile ? 32 : 38} ringColor="var(--background)"
       animated={Boolean(animated)} mode="chat" className="transition-[width,height] duration-200" />}
   </div>
 })

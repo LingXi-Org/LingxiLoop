@@ -42,7 +42,7 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
     return <Tooltip key={item.module}>
       <TooltipTrigger asChild>
         <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={item.label} data-workspace-view={item.view} data-workspace-module={item.module} aria-current={selected ? 'page' : undefined} onClick={() => { if (!selected) onNavigate(item.view) }} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', selected && 'bg-sidebar-accent text-sidebar-primary')}>
-          <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-6" />
+          <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-5" />
         </Button>
       </TooltipTrigger>
       <TooltipContent side="right">{item.label}</TooltipContent>
