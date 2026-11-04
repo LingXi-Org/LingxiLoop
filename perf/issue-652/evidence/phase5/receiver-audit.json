@@ -1,0 +1,118 @@
+{
+  "scope": "Eight direct receiver calls in pinned browser source: resolve native functions or initializer arrows and inspect their receiver use. Mutable alias setters are not a general future-source proof; final review must verify actual writers. Original source/functions are unchanged.",
+  "entry": "assets/design-cd0ebee7009d9029a1418641ea09f9b1744f25740a037d5848930b657c5d0288.js",
+  "bindings": [
+    {
+      "key": "sheetFrameHeight",
+      "expression": "m",
+      "targets": [
+        {
+          "kind": "FunctionDeclaration",
+          "bytes": 145,
+          "sha256": "f28e88d9f917e89e1ce7daa2619910469ecab7396e8f2897ad1b6bac178fbb6a",
+          "thisCount": 0,
+          "evalCalls": 0,
+          "source": "function m(d,o,c){if(d!==null)return d.detent===\"tall\"&&o!==void 0?Math.round((0,e.getSheetViewportHeight)(o,c)*e.SheetsLayoutConstant):d.height}"
+        }
+      ]
+    },
+    {
+      "key": "npm_useLabelableContext_xl",
+      "expression": "ku",
+      "targets": [
+        {
+          "kind": "FunctionDeclaration",
+          "bytes": 39,
+          "sha256": "7464a63fb61d2963c8456f973616612449e0f6ad5813c3a5d76e2d5d1c738b82",
+          "thisCount": 0,
+          "evalCalls": 0,
+          "source": "function ku(){return Be.useContext(pE)}"
+        }
+      ]
+    },
+    {
+      "key": "buildCaptureTemplate",
+      "expression": "zO",
+      "targets": [
+        {
+          "kind": "FunctionDeclaration",
+          "bytes": 684,
+          "sha256": "0f7500f4336faf1e1dbc3b40a17008f252b4301a2fa1544d22547a0dcbdecf92",
+          "thisCount": 0,
+          "evalCalls": 0,
+          "source": "function zO(e){const n=\"{\"+Object.entries({__LAYOUT__:\"layout\",__VP__:\"viewport\",__SEL__:\"selection\",__FRAME__:\"frame\",__PAGES__:\"pages\",__SELROOT__:\"selectionRoot\",__CROP__:\"crop\",__MATTE__:\"matte\",__SCALE__:\"scale\",__MAX__:\"maxDimension\",__SELBG__:\"selectionBackground\",__SELVIS__:\"selectionVisibleOnly\",__MARKUP__:\"markup\",__SETTLE__:\"settleFrozen\",__FREEZE__:\"freeze\",__TEXT__:\"textLayer\",__OVERLAY__:\"overlay\",__FMT__:\"format\",__Q__:\"quality\",__CAP__:\"byteCap\"}).map(([b,p])=>JSON.stringify(p)+\":\"+b).join(\",\")+\"}\",u=\"{\"+Object.entries(e).map(([b,p])=>JSON.stringify(b)+\":\"+(typeof p==\"number\"?String(p):\"(\"+String(p)+\")\")).join(\",\")+\"}\";return\"(\"+HO.toString()+\")(\"+n+\",\"+u+\")\"}"
+        }
+      ]
+    },
+    {
+      "key": "toPercent",
+      "expression": "b",
+      "targets": [
+        {
+          "kind": "ArrowFunction",
+          "bytes": 20,
+          "sha256": "d025eb6a767ce5fe716afb1f587e2c89b02a59f59d2dfd3d9f4562d1b60a8c21",
+          "thisCount": 0,
+          "evalCalls": 0,
+          "source": "_=>Math.round(_*100)"
+        }
+      ]
+    },
+    {
+      "key": "hueName",
+      "expression": "m",
+      "targets": [
+        {
+          "kind": "ArrowFunction",
+          "bytes": 29,
+          "sha256": "18a8987600a5f6856941238bca1a1b927f82390d5b64702162fcb0170b07f062",
+          "thisCount": 0,
+          "evalCalls": 0,
+          "source": "_=>f.find(([R])=>_<R)?.[1]??p"
+        }
+      ]
+    },
+    {
+      "key": "isOpenLinkClick",
+      "expression": "f",
+      "targets": [
+        {
+          "kind": "ArrowFunction",
+          "bytes": 75,
+          "sha256": "fe8704abd7c5d16e1dc8a8c4b0b97718f29ca9326b201be99e8e137a9dcf4ffb",
+          "thisCount": 0,
+          "evalCalls": 0,
+          "source": "E=>(E.metaKey||E.ctrlKey&&!(0,e.isApplePlatform)())&&!E.shiftKey&&!E.altKey"
+        }
+      ]
+    },
+    {
+      "key": "artifactLinkFromAnnotation",
+      "expression": "b",
+      "targets": [
+        {
+          "kind": "ArrowFunction",
+          "bytes": 101,
+          "sha256": "ba1c17334f1ad30418926be26f64294505ee731b81d90c8a6c27d9c36d0f60e1",
+          "thisCount": 0,
+          "evalCalls": 0,
+          "source": "E=>({href:E.href,...E.title!==void 0?{title:E.title}:{},...E.linkKind!==void 0?{kind:E.linkKind}:{}})"
+        }
+      ]
+    },
+    {
+      "key": "finiteProbeNumber",
+      "expression": "o",
+      "targets": [
+        {
+          "kind": "ArrowFunction",
+          "bytes": 64,
+          "sha256": "8c06d86515cf9cf3bb1c800e5586d334a6bc7b54ca36ee6b072a10984650e8c7",
+          "thisCount": 0,
+          "evalCalls": 0,
+          "source": "A=>typeof A==\"number\"&&Number.isFinite(A)&&Math.abs(A)<1e7?A:NaN"
+        }
+      ]
+    }
+  ]
+}

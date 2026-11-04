@@ -141,9 +141,19 @@ def run(browser, legacy=False):
     evidence.joinpath("saved-files.json").write_text(json.dumps({p:v.decode() for p,v in files.items()}, ensure_ascii=False, indent=2))
     page.screenshot(path=str(evidence / "reopened.png"))
 
-    view.get_by_role("button", name="属性", exact=True).click()
+    # Native restyling deliberately keeps existing non-Latin text families.
+    # Exercise an actual Latin heading for the font change, while retaining
+    # the Chinese template/inheritance checks below.
+    view.get_by_label(re.compile(r"第\s*4\s*页.*对比")).click()
+    heading = view.locator('[data-slides-editor] [data-text-path]').first
+    heading.dblclick()
+    editable = view.locator('[contenteditable="true"]').first
+    expect(editable).to_be_visible()
+    editable.fill('Native styled heading')
+    page.keyboard.press('Escape')
+    view.get_by_role("button", name="属性", exact=True).first.click()
     view.get_by_role("tab", name="主题", exact=True).click()
-    expect(view.get_by_text("Slides 内置风格", exact=True).first).to_be_visible()
+    expect(view.get_by_text("Claude 经典", exact=True).first).to_be_visible()
     page.screenshot(path=str(evidence / "theme.png"))
     view.get_by_role("button", name="关闭面板", exact=True).click()
 
@@ -157,20 +167,22 @@ def run(browser, legacy=False):
                 view.get_by_test_id("pdf-options-dialog").get_by_role("button", name="下载", exact=True).click()
         download_event.value.save_as(evidence / filename)
         page.wait_for_timeout(300)
-    view.get_by_role("button", name="属性", exact=True).click()
+    view.get_by_role("button", name="属性", exact=True).first.click()
     view.get_by_role("tab", name="主题", exact=True).click()
-    view.get_by_text("标题", exact=True).click()
-    view.get_by_role("button", name="字体: Georgia", exact=True).click()
+    view.get_by_role("button", name="标题, Georgia", exact=True).click()
+    view.get_by_role("button", name="字体：Georgia", exact=True).click()
     view.get_by_role("menuitemradio", name="Helvetica", exact=True).click()
     view.get_by_text("颜色", exact=True).click()
-    view.get_by_role("button", name=re.compile(r"^Background:")).click()
+    view.get_by_role("button", name=re.compile(r"^背景：")).click()
     view.get_by_role("button", name="oat", exact=True).click()
     page.keyboard.press("Escape")
     view.get_by_role("button", name="关闭面板", exact=True).click()
+    expect(view.get_by_text('Native styled heading',exact=True).last).to_have_css('font-family',re.compile('Helvetica'))
     add(3)
+    assert 'Helvetica' in json.loads(files['project/deck.json'])['style'][0]['fonts']
     current = surface.evaluate("""el => ({background:getComputedStyle(el).backgroundColor,fonts:[...el.querySelectorAll('[style]')].filter(n=>n.style.fontFamily).map(n=>getComputedStyle(n).fontFamily)})""")
     assert current["background"] == "rgb(227, 218, 204)", current
-    assert any("Helvetica" in family for family in current["fonts"]), current
+    assert any("Georgia" in family for family in current["fonts"]), current  # native non-Latin family protection
     page.screenshot(path=str(evidence / "edited-inheritance.png"))
     changed = dict(files)
     page.reload(wait_until="domcontentloaded")

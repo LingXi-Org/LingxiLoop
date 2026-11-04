@@ -21,3 +21,16 @@
     display: none;
   }
 }
+
+/* Keep an inactive mobile conversation's editor viewport laid out. Its owner
+   also marks it inert and invisible; the list remains in normal flow. */
+.desktop-im-grid > #conversation-workspace[data-shell-panel-hidden="true"] {
+  display: block !important;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}

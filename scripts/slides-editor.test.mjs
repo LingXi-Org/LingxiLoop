@@ -46,7 +46,7 @@ test('native build keeps export libraries lazy and reduces initial JavaScript', 
   const report = await buildSlidesEditor()
   assert.equal(report.messageCount, 1446)
   assert.equal(report.modules + report.removedModules.length, 332)
-  assert.ok(report.inputs.every(path => path.startsWith('third_party/baoyu-design/slides-source/') ||
+  assert.ok(report.inputs.every(path => path === 'shared/artifact-recovery.ts' || path.startsWith('third_party/baoyu-design/slides-source/') ||
     ['node_modules/katex/dist/katex.mjs', 'node_modules/katex/contrib/auto-render/splitAtDelimiters.ts'].includes(path)))
   assert.ok(report.inputs.some(path => path.endsWith('/modules/editor-app.js')))
   assert.ok(report.inputs.some(path => path.endsWith('/modules/compiler-html.js')))
@@ -63,9 +63,20 @@ test('native build keeps export libraries lazy and reduces initial JavaScript', 
   assert.match(html, /\/artifact-editor\/slides-assets\/editor-[A-Z0-9]+\.js/)
   assert.doesNotMatch(html, /index-kN-1njux/)
   assert.ok(html.includes(report.styles.file))
+  assert.deepEqual(Object.keys(report.features).sort(), ['exports', 'math', 'pptx', 'presentation', 'properties', 'templates', 'woff2'])
+  assert.ok(report.features.properties.some(file => file.startsWith('properties-')))
+  assert.ok(!report.initial.inputs.some(path => /\/(?:ui-selection-inspector|design-system-theme-panel|ui-segmented-property|ui-sides-property)\.js$/.test(path)), 'closed property panels stay out of first view')
+  assert.ok(report.features.presentation.some(file => file.startsWith('presentation-')))
+  assert.ok(!report.initial.inputs.some(path => /\/(?:presentation-view|presentation-speaker-panel)\.js$/.test(path)), 'presentation view stays out of first view')
+  assert.ok(report.features.templates.some(file => file.startsWith('templates-')))
+  assert.ok(!report.initial.inputs.some(path => /\/(?:editor-templates|editor-template-restyling)\.js$/.test(path)), 'template data/picker/restyling stay out of first view')
+  assert.ok(report.features.math.some(file => file.startsWith('math-')))
+  assert.ok(!report.features.exports.some(file => file.startsWith('math-')), 'plain exports do not load the TeX renderer')
+  assert.match(html, /name="lingxi-editor-features"/)
   const css = await readFile(resolve('server/assets/slides-editor/assets', report.styles.file), 'utf8')
-  assert.equal((css.match(/@font-face\{[^}]*font-family:["']?KaTeX_/g) ?? []).length, 20)
-  assert.match(css, /\.katex\{font:normal 1\.21em KaTeX_Main/)
+  assert.doesNotMatch(css, /KaTeX_|\.katex\{/, 'ordinary decks do not download formula CSS')
+  assert.ok(!report.initial.inputs.some(path => path.includes('katex/dist/katex')), 'TeX renderer stays outside the first view')
+  assert.ok(Object.keys(report.files).some(name => name.startsWith('math-')), 'first formula has a separate hashed module')
   assert.ok(css.includes(report.styles.fallbackFont))
   assert.doesNotMatch(css, /data:font\/woff2;base64/)
   const originalCss = await readFile(resolve('third_party/baoyu-design/slides-source/editor.css'), 'utf8')
@@ -226,4 +237,51 @@ test('upstream theme variants parse and restyle slides', async () => {
     }
     assert.equal(slide.bg, 'white')
   }
+})
+
+test('a hidden retained Slides frame suspends its heartbeat and resumes the latest context only for its parent nonce', async () => {
+  const { connectWorkspace } = await import('../third_party/baoyu-design/slides-source/workspace-bridge.js')
+  const listeners = new Map(), sent = [], timers = new Set()
+  const parent = { postMessage: message => sent.push(message) }
+  const runtime = {}
+  const window = { parent, getSelection: () => null, addEventListener: (type, callback) => listeners.set(type, callback), dispatchEvent() {} }
+  const document = { documentElement: { dataset: {} } }
+  runInNewContext(`(${connectWorkspace.toString()})(runtime)`, { runtime, window, parent, document, location: { hash: '#workspace=trusted' }, URLSearchParams,
+    setInterval: callback => { timers.add(callback); return callback }, clearInterval: callback => timers.delete(callback) })
+  runtime.reportNativeEditorContext({ slideId: 'one', mode: 'edit', dirty: false })
+  assert.equal(sent.length, 1)
+  const receive = listeners.get('message')
+  receive({ source: parent, data: { type: 'slides:visibility', nonce: 'wrong', visible: false } })
+  assert.equal(timers.size, 1)
+  receive({ source: parent, data: { type: 'slides:visibility', nonce: 'trusted', visible: false } })
+  assert.equal(timers.size, 0)
+  runtime.reportNativeEditorContext({ slideId: 'two', mode: 'edit', dirty: true })
+  assert.equal(sent.length, 1)
+  receive({ source: parent, data: { type: 'slides:visibility', nonce: 'trusted', visible: true } })
+  assert.equal(timers.size, 1)
+  assert.equal(sent.at(-1).context.slideId, 'two')
+})
+
+test('progressive first edit preserves unloaded files and native CAS', async () => {
+  const {checkProgressiveFiles} = await import('./slides-progressive.test.mjs')
+  await checkProgressiveFiles()
+})
+
+test('progressive themed deck waits for tokens and preserves their native model and CAS', async () => {
+  const {checkProgressiveFiles} = await import('./slides-progressive.test.mjs')
+  await checkProgressiveFiles({systems:true})
+  await checkProgressiveFiles({systems:true,changedTokens:true})
+  await checkProgressiveFiles({systems:true,changedFont:true})
+  await checkProgressiveFiles({systems:true,write:false})
+  await checkProgressiveFiles({systems:true,narrowed:true})
+})
+
+test('progressive editing respects read-only, narrowed listings and revoked reads', async () => {
+  const {checkProgressiveFiles} = await import('./slides-progressive.test.mjs')
+  await checkProgressiveFiles({write:false})
+  await checkProgressiveFiles({narrowed:true})
+  await checkProgressiveFiles({revoke:true})
+  await checkProgressiveFiles({downgrade:true})
+  await checkProgressiveFiles({concurrent:true})
+  await checkProgressiveFiles({deleted:true})
 })

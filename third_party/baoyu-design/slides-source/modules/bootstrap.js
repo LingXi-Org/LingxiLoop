@@ -1,5 +1,6 @@
 // Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
+import { installArtifactRecovery } from '../../../../shared/artifact-recovery.ts';
 function installBootstrap(runtime2) {
   var BootstrapJsx, slidesBootStartedAt, slidesBootDebugger, getSlidesBootDebugger, FILES_PRESENTATION_READ_ONLY_MESSAGE, FILES_PRESENTATION_LOAD_FAILURE_MESSAGE, EMPTY_BOOT_PRESENTATION, SlidesRootApp, slidesWriteAccessPromise, getSlidesWriteAccess, filesBootPortOptions, createSlidesBootFilesPort, FILES_PRESENTATION_LOAD_FAILURE_TITLE, bootAllowsExternalUpdates, syncFailureToastId, SLIDES_BOOT_LOADING_NOTICE_DELAY_MS;
   function buildBootErrorPresentation(diagnostic) {
@@ -151,6 +152,7 @@ function installBootstrap(runtime2) {
         holdRemote: (input) => input === (0, runtime2.protectedSlideDocumentPath)(),
         inSlide: (input) => input === (0, runtime2.activeEditingDocumentPath)(),
         startEmpty: !0,
+        progressive: !0,
         paced: !0,
         early: runtime2.hotReloadBridge,
         firstSlide: {
@@ -188,6 +190,7 @@ function installBootstrap(runtime2) {
           slidesBootDebugger?.event("doc-" + input, options2), value(input), input === "save-left-out" && (0, runtime2.showToast)(options2.message, 12e3);
         }
       });
+      installArtifactRecovery('slides', value2, options.parseContent);
       (0, runtime2.installUnloadSaveFlush)(value2, {
         report: (input) => slidesBootDebugger?.event("unload-flush-" + input.result, input)
       }), slidesBootDebugger?.provide({

@@ -17,18 +17,21 @@ from playwright.sync_api import expect, sync_playwright
 ROOT = Path(__file__).resolve().parent.parent
 ORIGIN = "https://slides.test"
 BASE = "/artifact-editor/slides/test-grant/"
+EVIDENCE = ROOT / "docs/evidence/issue-631"
 
 
-def run(browser, baseline=False, read_only=False):
+def run(browser, baseline=False, read_only=False, math_retry=False):
     upstream = mobile = legacy = False
-    evidence = ROOT / "docs/evidence/issue-631"
+    evidence = EVIDENCE
     evidence.mkdir(parents=True, exist_ok=True)
     editor = Path("/tmp/lingxi631-baseline/server/assets/slides-editor") if baseline else ROOT / "server/assets/slides-editor"
     matrix = r'\[\begin{pmatrix}' + r'\\'.join('&amp;'.join(f'a_{{{r}{c}}}' for c in range(1,5)) for r in range(1,5)) + r'\end{pmatrix}\]'
     long_html = '<section id="long"><p style="position:absolute;left:100px;top:100px;width:350px;height:800px;font-size:44px">'+r'\['+'+'.join(['x_i^2']*20)+r'\]</p><p style="position:absolute;left:600px;top:100px;width:350px;height:500px;font-size:44px">'+matrix+'</p><table style="position:absolute;left:1100px;top:100px;width:350px;font-size:44px"><tr><td>'+matrix+'</td></tr></table></section>'
-    initial = {"project/deck.json": json.dumps(dict(v=4, lists="css", title="Slides math synthetic", order=["math", "plain", "long"], sections={}, faces={}, designSystems=[])), "project/slides/math.html": (evidence / "fixture.html").read_text(), "project/slides/plain.html": '<section id="plain"><h1>Plain native text</h1><p>No math here</p></section>', "project/slides/long.html": long_html}
+    initial = {"project/deck.json": json.dumps(dict(v=4, lists="css", title="Slides math synthetic", order=["math", "plain", "long"], sections={}, faces={}, designSystems=[])), "project/slides/math.html": (ROOT / "docs/evidence/issue-631/fixture.html").read_text(), "project/slides/plain.html": '<section id="plain"><h1>Plain native text</h1><p>No math here</p></section>', "project/slides/long.html": long_html}
     files = {path: value.encode() for path, value in initial.items()}
     requests, errors, publishes = [], [], []
+    math_attempts = 0
+    math_enabled = not math_retry
     page = browser.new_page(viewport={"width": 1280, "height": 900})
     page.set_default_timeout(15000)
     page.on("pageerror", lambda error: errors.append(str(error)))
@@ -38,10 +41,18 @@ def run(browser, baseline=False, read_only=False):
         return hashlib.sha256(data).hexdigest()
 
     def route(request):
+        nonlocal math_attempts, math_enabled
         path = request.request.url.split(ORIGIN, 1)[1].split("?", 1)[0]
         requests.append(path)
+        if re.match(r"/artifact-editor/slides-assets/math-[A-Z0-9]+\.js$", path):
+            math_attempts += 1
+            if math_retry and not math_enabled:
+                request.fulfill(status=503, body="temporary formula failure", headers={"Access-Control-Allow-Origin":"*", "Cache-Control":"no-store"})
+                return
         relative = path.removeprefix(BASE)
         headers = {"Access-Control-Allow-Origin": "*"}
+        if "/slides-assets/" in path:
+            headers["Cache-Control"] = "public, max-age=31536000, immutable"
         if path == "/host":
             request.fulfill(body=f'<iframe title="演示文稿编辑器" sandbox="allow-scripts allow-downloads allow-popups allow-modals" allow="fullscreen" src="{BASE}" style="position:fixed;inset:0;width:100%;height:100%;border:0"></iframe>', content_type="text/html")
             return
@@ -90,6 +101,16 @@ def run(browser, baseline=False, read_only=False):
 
     surface = view.locator('[data-slides-editor] [style*="width: 1920px"][style*="background:"]').first
     expect(surface).to_be_visible()
+    if math_retry:
+        retry = view.get_by_role("button", name="重试公式", exact=True).first
+        expect(retry).to_be_visible()
+        assert surface.locator('[data-slide-math]').count() == 0
+        math_enabled = True
+        retry.click()
+        expect(surface.locator('[data-slide-math]')).to_have_count(7)
+        assert math_attempts >= 2, math_attempts
+        expect(view.get_by_role("button", name="重试公式", exact=True)).to_have_count(0)
+        print("PASS Slides: one retry recovers every formula without remounting or rewriting source", flush=True)
     page.wait_for_timeout(900)
     page.screenshot(path=str(evidence / ("before.png" if baseline else "readonly-preview.png" if read_only else "editor.png")))
     fonts = [] if baseline else surface.evaluate("""async el => {
@@ -166,10 +187,10 @@ def run(browser, baseline=False, read_only=False):
     assert not errors, errors
     evidence.joinpath("saved-files.json").write_text(json.dumps({p:v.decode() for p,v in files.items()}, ensure_ascii=False, indent=2))
     page.close()
-    return {"mathCount":count,"errors":errors,"fullscreen":fullscreen,"bounds":bounds,"publishes":len(publishes),"sourcePreserved":True,"fonts":fonts,"requests":requests}
+    return {"mathCount":count,"errors":errors,"fullscreen":fullscreen,"bounds":bounds,"publishes":len(publishes),"sourcePreserved":True,"fonts":fonts,"requests":requests,"mathAttempts":math_attempts,"retryScenario":math_retry}
 
 def inspect_exports(browser):
-    evidence = ROOT / "docs/evidence/issue-631"
+    evidence = EVIDENCE
     html = evidence.joinpath("sample.html").read_text()
     assert 'data-slide-math' in html
     assert 'data:font/' in html or 'data:application/' in html
@@ -212,16 +233,20 @@ def inspect_exports(browser):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", action="store_true")
+    parser.add_argument("--math-retry", action="store_true")
+    parser.add_argument("--evidence-dir", default="docs/evidence/issue-631")
     args = parser.parse_args()
+    EVIDENCE = ROOT / args.evidence_dir
+    EVIDENCE.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path="/usr/bin/chromium", headless=True, args=["--no-sandbox"])
         try:
-            result = run(browser, args.baseline)
+            result = run(browser, args.baseline, math_retry=args.math_retry)
             if not args.baseline:
                 result["readOnlyPreview"] = run(browser, read_only=True)
                 inspect_exports(browser)
             result["browser"] = browser.version
-            (ROOT / "docs/evidence/issue-631" / ("baseline.json" if args.baseline else "browser.json")).write_text(json.dumps(result,ensure_ascii=False,indent=2))
+            (EVIDENCE / ("baseline.json" if args.baseline else "browser.json")).write_text(json.dumps(result,ensure_ascii=False,indent=2))
             print({k:v for k,v in result.items() if k not in ["requests", "bounds"]})
         finally:
             browser.close()

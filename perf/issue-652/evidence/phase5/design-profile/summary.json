@@ -1,0 +1,845 @@
+{
+  "scope": "Diagnostic CPU profiles/traces across host and all attached native/guest targets. Profiling overhead is present; not timing acceptance. Synthetic fixture, actual native editing.",
+  "selfCpuByUrl": [
+    [
+      "(idle)",
+      3641.7829999999967
+    ],
+    [
+      "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+      765.2040000000005
+    ],
+    [
+      "(program)",
+      489.43099999999623
+    ],
+    [
+      "https://app.lingxi-perf.cn:4412/assets/index-CWVincpI.js",
+      56.038999999999994
+    ],
+    [
+      "(garbage collector)",
+      24.102
+    ],
+    [
+      "blob:https://711430f6164e93803d93428bc1fab80f-artifact.lingxi-perf.cn:4412/46138299-8529-4c4b-a2d1-493e6bcc1f36",
+      23.769
+    ],
+    [
+      "about:srcdoc",
+      16.358
+    ],
+    [
+      "",
+      11.215
+    ],
+    [
+      "query",
+      10.733000000000002
+    ],
+    [
+      "InjectedScript",
+      8.763
+    ],
+    [
+      "querySelectorAll",
+      7.525
+    ],
+    [
+      "https://711430f6164e93803d93428bc1fab80f-artifact.lingxi-perf.cn:4412/artifact-editor/design/g1/",
+      4.401999999999999
+    ],
+    [
+      "evaluate",
+      4.193
+    ],
+    [
+      "appendChild",
+      3.564
+    ],
+    [
+      "postMessage",
+      3.2649999999999997
+    ]
+  ],
+  "selfCpuFunctions": [
+    {
+      "key": [
+        "",
+        "(idle)",
+        -1,
+        -1
+      ],
+      "ms": 3641.7829999999967
+    },
+    {
+      "key": [
+        "",
+        "(program)",
+        -1,
+        -1
+      ],
+      "ms": 489.43099999999623
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "nW",
+        3027,
+        3448
+      ],
+      "ms": 120.64599999999993
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "md",
+        12,
+        51088
+      ],
+      "ms": 57.32500000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "V",
+        2031,
+        67561
+      ],
+      "ms": 49.512
+    },
+    {
+      "key": [
+        "",
+        "(garbage collector)",
+        -1,
+        -1
+      ],
+      "ms": 24.102
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "s",
+        2049,
+        130205
+      ],
+      "ms": 16.396
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "Nh",
+        12,
+        98971
+      ],
+      "ms": 15.363
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "",
+        2049,
+        24842
+      ],
+      "ms": 14.682
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "",
+        1271,
+        8802
+      ],
+      "ms": 13.532999999999998
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "",
+        2031,
+        58722
+      ],
+      "ms": 13.300999999999998
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "st",
+        2207,
+        46043
+      ],
+      "ms": 11.460999999999999
+    },
+    {
+      "key": [
+        "about:srcdoc",
+        "",
+        355,
+        14
+      ],
+      "ms": 10.928
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/assets/index-CWVincpI.js",
+        "",
+        0,
+        0
+      ],
+      "ms": 10.274000000000001
+    },
+    {
+      "key": [
+        "",
+        "query",
+        5597,
+        20
+      ],
+      "ms": 9.646
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "useMemo",
+        12,
+        64246
+      ],
+      "ms": 9.269000000000002
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "C",
+        2031,
+        46947
+      ],
+      "ms": 8.876000000000001
+    },
+    {
+      "key": [
+        "",
+        "InjectedScript",
+        6713,
+        13
+      ],
+      "ms": 8.763
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "",
+        2207,
+        70376
+      ],
+      "ms": 7.782999999999999
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "",
+        1708,
+        186069
+      ],
+      "ms": 7.698999999999999
+    }
+  ],
+  "inclusiveCpuFunctions": [
+    {
+      "key": [
+        "",
+        "(root)",
+        -1,
+        -1
+      ],
+      "ms": 5116.928000000052
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "Z0",
+        12,
+        109001
+      ],
+      "ms": 4376.99100000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "qu",
+        12,
+        120751
+      ],
+      "ms": 4268.885000000006
+    },
+    {
+      "key": [
+        "",
+        "(idle)",
+        -1,
+        -1
+      ],
+      "ms": 3641.7829999999967
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "mb",
+        12,
+        123252
+      ],
+      "ms": 2675.809000000013
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "sd",
+        12,
+        123106
+      ],
+      "ms": 2617.920000000013
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "Xf",
+        12,
+        113983
+      ],
+      "ms": 898.9870000000079
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "Wo",
+        12,
+        113467
+      ],
+      "ms": 887.4710000000076
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "cu",
+        12,
+        128637
+      ],
+      "ms": 606.0779999999999
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "N",
+        5,
+        10724
+      ],
+      "ms": 507.67599999999993
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "Kg",
+        12,
+        142003
+      ],
+      "ms": 507.23999999999995
+    },
+    {
+      "key": [
+        "",
+        "(program)",
+        -1,
+        -1
+      ],
+      "ms": 489.43099999999623
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "am",
+        12,
+        133764
+      ],
+      "ms": 319.02800000000013
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "yb",
+        12,
+        132770
+      ],
+      "ms": 319.02800000000013
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "Dd",
+        12,
+        132270
+      ],
+      "ms": 319.02800000000013
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "$0",
+        12,
+        85823
+      ],
+      "ms": 302.1880000000001
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "Hx",
+        12,
+        135322
+      ],
+      "ms": 287.05
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "zg",
+        12,
+        135067
+      ],
+      "ms": 287.05
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "eh",
+        12,
+        129825
+      ],
+      "ms": 287.05
+    },
+    {
+      "key": [
+        "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js",
+        "md",
+        12,
+        51088
+      ],
+      "ms": 280.2080000000001
+    }
+  ],
+  "timelineInclusiveByName": [
+    [
+      "v8.parseOnBackgroundParsing",
+      6856.020999999999,
+      1256
+    ],
+    [
+      "v8.parseOnBackground",
+      3496.7740000000003,
+      266
+    ],
+    [
+      "BackgroundJSStreamManager::RunScriptStreamingTask",
+      3405.595,
+      4
+    ],
+    [
+      "v8.parseOnBackgroundWaiting",
+      3125.164999999998,
+      990
+    ],
+    [
+      "v8.callFunction",
+      920.0330000000081,
+      1855
+    ],
+    [
+      "FunctionCall",
+      722.9960000000025,
+      1741
+    ],
+    [
+      "V8.CompileCode",
+      507.006999999993,
+      9293
+    ],
+    [
+      "V8.ParseFunction",
+      224.94999999999246,
+      9208
+    ],
+    [
+      "v8.evaluateModule",
+      148.115,
+      4
+    ],
+    [
+      "UpdateLayoutTree",
+      134.42700000000002,
+      100
+    ],
+    [
+      "V8.PreParse",
+      123.15700000000116,
+      7703
+    ],
+    [
+      "V8.CompileIgnition",
+      99.89200000000122,
+      9660
+    ],
+    [
+      "V8.MaglevTask",
+      86.12100000000007,
+      392
+    ],
+    [
+      "BackgroundCompileTask::Run",
+      83.55299999999995,
+      266
+    ],
+    [
+      "V8.MaglevBackground",
+      76.14400000000002,
+      236
+    ],
+    [
+      "EventDispatch",
+      68.87099999999998,
+      180
+    ],
+    [
+      "Layout",
+      64.11399999999998,
+      59
+    ],
+    [
+      "V8.GC_SCAVENGER_BACKGROUND_SCAVENGE_PARALLEL",
+      62.35600000000001,
+      38
+    ],
+    [
+      "HandlePostMessage",
+      60.683,
+      87
+    ],
+    [
+      "V8.GC_MC_BACKGROUND_MARKING",
+      60.461,
+      12
+    ],
+    [
+      "V8.ParseProgram",
+      42.399000000000015,
+      89
+    ],
+    [
+      "V8.Maglev.GraphBuilding",
+      37.86300000000002,
+      236
+    ],
+    [
+      "V8.CompileIgnitionFinalization",
+      32.3580000000032,
+      9098
+    ],
+    [
+      "MinorGC",
+      31.467,
+      14
+    ],
+    [
+      "V8.GCScavenger",
+      30.656000000000002,
+      14
+    ],
+    [
+      "V8.GC_SCAVENGER",
+      30.380000000000003,
+      14
+    ],
+    [
+      "V8.GC_SCAVENGER_SCAVENGE",
+      30.118,
+      14
+    ],
+    [
+      "v8.streamingCompile.complete",
+      28.373000000000015,
+      282
+    ],
+    [
+      "V8.GC_SCAVENGER_SCAVENGE_PARALLEL_PHASE",
+      26.191999999999997,
+      14
+    ],
+    [
+      "LocalWindowProxy::Initialize",
+      25.427999999999997,
+      10
+    ]
+  ],
+  "longCompileEvents": [
+    {
+      "name": "v8.parseOnBackground",
+      "ms": 340.236,
+      "pid": 46480,
+      "args": {
+        "data": {
+          "requestId": "46480.2",
+          "url": "https://app.lingxi-perf.cn:4412/assets/index-CWVincpI.js"
+        }
+      }
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 340.196,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 18.021,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 24.032,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 59.673,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 42.202,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 26.445,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 17.673,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 30.816,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 13.375,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackground",
+      "ms": 3056.992,
+      "pid": 46480,
+      "args": {
+        "data": {
+          "requestId": "46480.13",
+          "url": "https://app.lingxi-perf.cn:4412/artifact-editor/design-assets/design-ae58b3b3cf4c37b42b1a2863360f6e52a4c4d744a88fe342fb4ed3885efd858e.js"
+        }
+      }
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 3056.985,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 14.788,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 387.993,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 14.701,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 14.658,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 14.853,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 14.721,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 14.344,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 12.098,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 12.289,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 10.804,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 13.258,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 10.659,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.564,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 12.406,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.44,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.241,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 12.208,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 11.29,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundWaiting",
+      "ms": 14.94,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 45.697,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 66.058,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 15.79,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 45.509,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 27.416,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 2295.269,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 20.885,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "v8.parseOnBackgroundParsing",
+      "ms": 15.529,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "V8.CompileCode",
+      "ms": 18.126,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "V8.ParseFunction",
+      "ms": 15.24,
+      "pid": 46480,
+      "args": {}
+    },
+    {
+      "name": "V8.CompileCode",
+      "ms": 10.354,
+      "pid": 46480,
+      "args": {}
+    }
+  ]
+}

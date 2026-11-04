@@ -1,0 +1,1042 @@
+{
+  "scope": "Actual ArtifactEditorFrame, actual Design/Slides, synthetic grants/documents. App owner lifecycle has a separate DesktopApp regression. Memory is Linux PSS of this Chromium process family, not a browser-enforced byte cap.",
+  "profile": {
+    "width": 1440,
+    "height": 1000,
+    "downloadMbps": 4,
+    "latencyMs": 20,
+    "recursiveOopifThrottle": true
+  },
+  "samples": [
+    {
+      "trial": 0,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 171.3,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6077.479093,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025016999999934342,
+          "end": 6077.503812,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    },
+    {
+      "trial": 0,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 232.8,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6077.86259,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.0251140000000305,
+          "end": 6077.88741,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 1,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 226.5,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6078.431092,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02383300000019517,
+          "end": 6078.45464,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 1,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 200.5,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6078.879004,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02567399999952613,
+          "end": 6078.904351,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    },
+    {
+      "trial": 2,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 176.4,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6079.229616,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02418500000021595,
+          "end": 6079.253193,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    },
+    {
+      "trial": 2,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 245.4,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6079.563174,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025811000000430795,
+          "end": 6079.58867,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 3,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 204.3,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6080.046302,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.022875000000567525,
+          "end": 6080.068983,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 3,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 197.3,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6080.462713,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.023337999999966996,
+          "end": 6080.485915,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    },
+    {
+      "trial": 4,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 164.9,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6080.811736,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02550599999995029,
+          "end": 6080.837106,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    },
+    {
+      "trial": 4,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 212.5,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6081.145035,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024878000000171596,
+          "end": 6081.169661,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 5,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 200.4,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6081.561772,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02547099999992497,
+          "end": 6081.587079,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 5,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 183.9,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6081.978345,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025073999999221996,
+          "end": 6082.00326,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    },
+    {
+      "trial": 6,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 192.3,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6082.328691,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026265000000421423,
+          "end": 6082.354501,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    },
+    {
+      "trial": 6,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 215.1,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6082.678812,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.024158999999599473,
+          "end": 6082.702508,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 7,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 204.4,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6083.095934,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.023905000000013388,
+          "end": 6083.119618,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 7,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 158.9,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6083.528333,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.023153999999522057,
+          "end": 6083.551302,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    },
+    {
+      "trial": 8,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 165.0,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6083.861619,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.02322699999967881,
+          "end": 6083.884351,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    },
+    {
+      "trial": 8,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 209.9,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6084.195166,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025686999999379623,
+          "end": 6084.220466,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 9,
+      "arm": "candidate",
+      "kind": "slides",
+      "scenario": "retained",
+      "editableMs": 217.4,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/deck-a/editor-grant",
+          "start": 6084.612255,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.026160000000345462,
+          "end": 6084.63812,
+          "bytes": 454
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 454,
+      "errors": []
+    },
+    {
+      "trial": 9,
+      "arm": "candidate",
+      "kind": "design",
+      "scenario": "retained",
+      "editableMs": 168.0,
+      "sameIframe": true,
+      "sameDocument": true,
+      "requests": [
+        {
+          "url": "https://app.lingxi-perf.cn:4412/api/artifacts/board-a/editor-grant",
+          "start": 6085.044933,
+          "type": "Fetch",
+          "initiator": "script",
+          "target": "",
+          "status": 200,
+          "cache": false,
+          "encoding": null,
+          "ttfb": 0.025437999999667227,
+          "end": 6085.070154,
+          "bytes": 524
+        }
+      ],
+      "scriptTransfers": 0,
+      "bytes": 524,
+      "errors": []
+    }
+  ],
+  "memory": [
+    {
+      "label": "host only",
+      "pssMiB": 286.49,
+      "processes": [
+        {
+          "pid": 14047,
+          "pss": 94586880,
+          "cpu": 0.48
+        },
+        {
+          "pid": 14064,
+          "pss": 16458752,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14065,
+          "pss": 12000256,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14093,
+          "pss": 32173056,
+          "cpu": 0.08
+        },
+        {
+          "pid": 14110,
+          "pss": 6079488,
+          "cpu": 0.0
+        },
+        {
+          "pid": 14128,
+          "pss": 59795456,
+          "cpu": 0.67
+        },
+        {
+          "pid": 14137,
+          "pss": 12156928,
+          "cpu": 0.01
+        },
+        {
+          "pid": 14138,
+          "pss": 40713216,
+          "cpu": 0.17
+        },
+        {
+          "pid": 14085,
+          "pss": 26446848,
+          "cpu": 0.03
+        }
+      ]
+    },
+    {
+      "label": "initialized design",
+      "pssMiB": 390.32,
+      "processes": [
+        {
+          "pid": 14047,
+          "pss": 96237568,
+          "cpu": 1.57
+        },
+        {
+          "pid": 14064,
+          "pss": 16451584,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14065,
+          "pss": 11994112,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14093,
+          "pss": 34369536,
+          "cpu": 0.28
+        },
+        {
+          "pid": 14110,
+          "pss": 6107136,
+          "cpu": 0.0
+        },
+        {
+          "pid": 14128,
+          "pss": 57962496,
+          "cpu": 0.67
+        },
+        {
+          "pid": 14137,
+          "pss": 12151808,
+          "cpu": 0.01
+        },
+        {
+          "pid": 14138,
+          "pss": 141529088,
+          "cpu": 3.1900000000000004
+        },
+        {
+          "pid": 14085,
+          "pss": 32476160,
+          "cpu": 0.61
+        }
+      ]
+    },
+    {
+      "label": "initialized slides",
+      "pssMiB": 467.72,
+      "processes": [
+        {
+          "pid": 14047,
+          "pss": 97832960,
+          "cpu": 2.34
+        },
+        {
+          "pid": 14064,
+          "pss": 16450560,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14065,
+          "pss": 11992064,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14093,
+          "pss": 36612096,
+          "cpu": 0.44
+        },
+        {
+          "pid": 14110,
+          "pss": 6301696,
+          "cpu": 0.0
+        },
+        {
+          "pid": 14128,
+          "pss": 57742336,
+          "cpu": 0.67
+        },
+        {
+          "pid": 14137,
+          "pss": 12150784,
+          "cpu": 0.01
+        },
+        {
+          "pid": 14138,
+          "pss": 216651776,
+          "cpu": 5.66
+        },
+        {
+          "pid": 14085,
+          "pss": 34706432,
+          "cpu": 1.09
+        }
+      ]
+    },
+    {
+      "label": "both hidden start",
+      "pssMiB": 604.61,
+      "processes": [
+        {
+          "pid": 14047,
+          "pss": 96969728,
+          "cpu": 3.24
+        },
+        {
+          "pid": 14064,
+          "pss": 16450560,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14065,
+          "pss": 11992064,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14093,
+          "pss": 36602880,
+          "cpu": 0.48
+        },
+        {
+          "pid": 14110,
+          "pss": 6301696,
+          "cpu": 0.0
+        },
+        {
+          "pid": 14128,
+          "pss": 55599104,
+          "cpu": 0.67
+        },
+        {
+          "pid": 14137,
+          "pss": 11774976,
+          "cpu": 0.01
+        },
+        {
+          "pid": 14138,
+          "pss": 362027008,
+          "cpu": 11.68
+        },
+        {
+          "pid": 14085,
+          "pss": 36258816,
+          "cpu": 1.4400000000000002
+        }
+      ]
+    },
+    {
+      "label": "both hidden end",
+      "pssMiB": 602.81,
+      "processes": [
+        {
+          "pid": 14047,
+          "pss": 96973824,
+          "cpu": 3.24
+        },
+        {
+          "pid": 14064,
+          "pss": 16450560,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14065,
+          "pss": 11992064,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14093,
+          "pss": 36602880,
+          "cpu": 0.48
+        },
+        {
+          "pid": 14110,
+          "pss": 6301696,
+          "cpu": 0.0
+        },
+        {
+          "pid": 14128,
+          "pss": 55599104,
+          "cpu": 0.67
+        },
+        {
+          "pid": 14137,
+          "pss": 11774976,
+          "cpu": 0.01
+        },
+        {
+          "pid": 14138,
+          "pss": 352643072,
+          "cpu": 11.72
+        },
+        {
+          "pid": 14085,
+          "pss": 43758592,
+          "cpu": 1.4400000000000002
+        }
+      ]
+    },
+    {
+      "label": "Slides visible start",
+      "pssMiB": 600.71,
+      "processes": [
+        {
+          "pid": 14047,
+          "pss": 96936960,
+          "cpu": 3.27
+        },
+        {
+          "pid": 14064,
+          "pss": 16452608,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14065,
+          "pss": 11992064,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14093,
+          "pss": 36602880,
+          "cpu": 0.48
+        },
+        {
+          "pid": 14110,
+          "pss": 6301696,
+          "cpu": 0.0
+        },
+        {
+          "pid": 14128,
+          "pss": 55599104,
+          "cpu": 0.67
+        },
+        {
+          "pid": 14137,
+          "pss": 11774976,
+          "cpu": 0.01
+        },
+        {
+          "pid": 14138,
+          "pss": 363755520,
+          "cpu": 12.02
+        },
+        {
+          "pid": 14085,
+          "pss": 30469120,
+          "cpu": 1.4700000000000002
+        }
+      ]
+    },
+    {
+      "label": "Slides visible end",
+      "pssMiB": 601.23,
+      "processes": [
+        {
+          "pid": 14047,
+          "pss": 96936960,
+          "cpu": 3.27
+        },
+        {
+          "pid": 14064,
+          "pss": 16452608,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14065,
+          "pss": 11992064,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14093,
+          "pss": 36602880,
+          "cpu": 0.48
+        },
+        {
+          "pid": 14110,
+          "pss": 6301696,
+          "cpu": 0.0
+        },
+        {
+          "pid": 14128,
+          "pss": 55599104,
+          "cpu": 0.67
+        },
+        {
+          "pid": 14137,
+          "pss": 11774976,
+          "cpu": 0.01
+        },
+        {
+          "pid": 14138,
+          "pss": 363259904,
+          "cpu": 12.12
+        },
+        {
+          "pid": 14085,
+          "pss": 31517696,
+          "cpu": 1.48
+        }
+      ]
+    },
+    {
+      "label": "after releasing both frames",
+      "pssMiB": 598.79,
+      "processes": [
+        {
+          "pid": 14047,
+          "pss": 96386048,
+          "cpu": 3.2800000000000002
+        },
+        {
+          "pid": 14064,
+          "pss": 16452608,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14065,
+          "pss": 11992064,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14093,
+          "pss": 36421632,
+          "cpu": 0.48
+        },
+        {
+          "pid": 14110,
+          "pss": 6305792,
+          "cpu": 0.0
+        },
+        {
+          "pid": 14128,
+          "pss": 55599104,
+          "cpu": 0.67
+        },
+        {
+          "pid": 14137,
+          "pss": 11774976,
+          "cpu": 0.01
+        },
+        {
+          "pid": 14138,
+          "pss": 363264000,
+          "cpu": 12.16
+        },
+        {
+          "pid": 14085,
+          "pss": 29682688,
+          "cpu": 1.48
+        }
+      ]
+    },
+    {
+      "label": "after host GC without test references",
+      "pssMiB": 363.11,
+      "processes": [
+        {
+          "pid": 14047,
+          "pss": 95976448,
+          "cpu": 3.2800000000000002
+        },
+        {
+          "pid": 14064,
+          "pss": 16452608,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14065,
+          "pss": 11992064,
+          "cpu": 0.03
+        },
+        {
+          "pid": 14093,
+          "pss": 36421632,
+          "cpu": 0.48
+        },
+        {
+          "pid": 14110,
+          "pss": 6305792,
+          "cpu": 0.0
+        },
+        {
+          "pid": 14128,
+          "pss": 55595008,
+          "cpu": 0.67
+        },
+        {
+          "pid": 14137,
+          "pss": 11774976,
+          "cpu": 0.01
+        },
+        {
+          "pid": 14138,
+          "pss": 116545536,
+          "cpu": 12.42
+        },
+        {
+          "pid": 14085,
+          "pss": 29682688,
+          "cpu": 1.48
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "browser": "154.0.8037.57",
+  "background": [
+    {
+      "label": "both hidden",
+      "seconds": 5,
+      "processCpuSeconds": 0.04,
+      "sameProcessSet": true
+    },
+    {
+      "label": "Slides visible",
+      "seconds": 5,
+      "processCpuSeconds": 0.11,
+      "sameProcessSet": true
+    }
+  ],
+  "evictionReopen": true,
+  "summary": {
+    "design": {
+      "p50": 171.3,
+      "p75": 192.3,
+      "p95": 200.5
+    },
+    "slides": {
+      "p50": 212.5,
+      "p75": 226.5,
+      "p95": 245.4
+    }
+  }
+}

@@ -1,0 +1,132 @@
+{"trial": 0, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5336.9, "bytes": 2014141, "errors": []}
+{"trial": 0, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1048.5, "bytes": 6541, "errors": []}
+{"trial": 0, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1193.6, "bytes": 7063, "errors": []}
+{"trial": 0, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3498.8, "bytes": 1183392, "errors": []}
+{"trial": 0, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 785.4, "bytes": 19601, "errors": []}
+{"trial": 0, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 931.2, "bytes": 20635, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4652.9, "bytes": 1652508, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1067.5, "bytes": 8071, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1178.7, "bytes": 8593, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3279.1, "bytes": 1090122, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 781.6, "bytes": 19791, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 935.3, "bytes": 20825, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4657.4, "bytes": 1652061, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1046.3, "bytes": 8071, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1191.3, "bytes": 8595, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3310.2, "bytes": 1090124, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 852.3, "bytes": 19791, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 904.6, "bytes": 20827, "errors": []}
+{"trial": 1, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5583.0, "bytes": 2014141, "errors": []}
+{"trial": 1, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1073.8, "bytes": 6541, "errors": []}
+{"trial": 1, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1176.2, "bytes": 7063, "errors": []}
+{"trial": 1, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3443.2, "bytes": 1183392, "errors": []}
+{"trial": 1, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 767.9, "bytes": 19601, "errors": []}
+{"trial": 1, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 924.1, "bytes": 20635, "errors": []}
+{"trial": 2, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5562.4, "bytes": 2014141, "errors": []}
+{"trial": 2, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1058.8, "bytes": 6541, "errors": []}
+{"trial": 2, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1215.7, "bytes": 7063, "errors": []}
+{"trial": 2, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3584.8, "bytes": 1183392, "errors": []}
+{"trial": 2, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 835.4, "bytes": 19601, "errors": []}
+{"trial": 2, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 923.1, "bytes": 20635, "errors": []}
+{"trial": 2, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4653.0, "bytes": 1652063, "errors": []}
+{"trial": 2, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1050.0, "bytes": 8071, "errors": []}
+{"trial": 2, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1179.8, "bytes": 8595, "errors": []}
+{"trial": 2, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3260.3, "bytes": 1090124, "errors": []}
+{"trial": 2, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 804.9, "bytes": 19791, "errors": []}
+{"trial": 2, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 818.0, "bytes": 20827, "errors": []}
+{"trial": 3, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4613.3, "bytes": 1652063, "errors": []}
+{"trial": 3, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1083.4, "bytes": 8071, "errors": []}
+{"trial": 3, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1183.1, "bytes": 8595, "errors": []}
+{"trial": 3, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3292.6, "bytes": 1090124, "errors": []}
+{"trial": 3, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 798.2, "bytes": 19791, "errors": []}
+{"trial": 3, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 830.2, "bytes": 20827, "errors": []}
+{"trial": 3, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5363.4, "bytes": 2014141, "errors": []}
+{"trial": 3, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1274.0, "bytes": 6541, "errors": []}
+{"trial": 3, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1188.5, "bytes": 7063, "errors": []}
+{"trial": 3, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3528.5, "bytes": 1183392, "errors": []}
+{"trial": 3, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 742.1, "bytes": 19601, "errors": []}
+{"trial": 3, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 925.4, "bytes": 20635, "errors": []}
+{"trial": 4, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5330.2, "bytes": 2014141, "errors": []}
+{"trial": 4, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1075.8, "bytes": 6541, "errors": []}
+{"trial": 4, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1200.7, "bytes": 7063, "errors": []}
+{"trial": 4, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3524.6, "bytes": 1183392, "errors": []}
+{"trial": 4, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 853.7, "bytes": 19601, "errors": []}
+{"trial": 4, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 910.9, "bytes": 20635, "errors": []}
+{"trial": 4, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4655.1, "bytes": 1652063, "errors": []}
+{"trial": 4, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1054.4, "bytes": 8071, "errors": []}
+{"trial": 4, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1166.6, "bytes": 8595, "errors": []}
+{"trial": 4, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3283.4, "bytes": 1090124, "errors": []}
+{"trial": 4, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 782.6, "bytes": 19791, "errors": []}
+{"trial": 4, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 933.7, "bytes": 20827, "errors": []}
+{"trial": 5, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4649.6, "bytes": 1652063, "errors": []}
+{"trial": 5, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1084.5, "bytes": 8071, "errors": []}
+{"trial": 5, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1202.9, "bytes": 8595, "errors": []}
+{"trial": 5, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3327.8, "bytes": 1090124, "errors": []}
+{"trial": 5, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 820.7, "bytes": 19791, "errors": []}
+{"trial": 5, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 929.2, "bytes": 20827, "errors": []}
+{"trial": 5, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5558.9, "bytes": 2014141, "errors": []}
+{"trial": 5, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1076.8, "bytes": 6541, "errors": []}
+{"trial": 5, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1197.2, "bytes": 7063, "errors": []}
+{"trial": 5, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3570.7, "bytes": 1183392, "errors": []}
+{"trial": 5, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 814.9, "bytes": 19601, "errors": []}
+{"trial": 5, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 921.3, "bytes": 20635, "errors": []}
+{"trial": 6, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5576.2, "bytes": 2014141, "errors": []}
+{"trial": 6, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1059.6, "bytes": 6541, "errors": []}
+{"trial": 6, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1190.2, "bytes": 7063, "errors": []}
+{"trial": 6, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3580.6, "bytes": 1183392, "errors": []}
+{"trial": 6, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 804.0, "bytes": 19601, "errors": []}
+{"trial": 6, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 932.5, "bytes": 20635, "errors": []}
+{"trial": 6, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4652.4, "bytes": 1652063, "errors": []}
+{"trial": 6, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1049.6, "bytes": 8071, "errors": []}
+{"trial": 6, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1193.8, "bytes": 8595, "errors": []}
+{"trial": 6, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3257.2, "bytes": 1090124, "errors": []}
+{"trial": 6, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 780.9, "bytes": 19791, "errors": []}
+{"trial": 6, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 854.0, "bytes": 20827, "errors": []}
+{"trial": 7, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4651.1, "bytes": 1652063, "errors": []}
+{"trial": 7, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1068.0, "bytes": 8071, "errors": []}
+{"trial": 7, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1191.3, "bytes": 8595, "errors": []}
+{"trial": 7, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3322.6, "bytes": 1090124, "errors": []}
+{"trial": 7, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 804.2, "bytes": 19791, "errors": []}
+{"trial": 7, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 845.0, "bytes": 20827, "errors": []}
+{"trial": 7, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5325.6, "bytes": 2014141, "errors": []}
+{"trial": 7, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1094.1, "bytes": 6541, "errors": []}
+{"trial": 7, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1195.8, "bytes": 7063, "errors": []}
+{"trial": 7, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3414.1, "bytes": 1183392, "errors": []}
+{"trial": 7, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 799.6, "bytes": 19601, "errors": []}
+{"trial": 7, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 988.6, "bytes": 20635, "errors": []}
+{"trial": 8, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5566.1, "bytes": 2014141, "errors": []}
+{"trial": 8, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1053.4, "bytes": 6541, "errors": []}
+{"trial": 8, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1203.4, "bytes": 7063, "errors": []}
+{"trial": 8, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3473.0, "bytes": 1183392, "errors": []}
+{"trial": 8, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 784.2, "bytes": 19601, "errors": []}
+{"trial": 8, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 911.2, "bytes": 20635, "errors": []}
+{"trial": 8, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4687.8, "bytes": 1652063, "errors": []}
+{"trial": 8, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1047.0, "bytes": 8071, "errors": []}
+{"trial": 8, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1190.6, "bytes": 8595, "errors": []}
+{"trial": 8, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3276.3, "bytes": 1090124, "errors": []}
+{"trial": 8, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 796.0, "bytes": 19791, "errors": []}
+{"trial": 8, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 908.7, "bytes": 20827, "errors": []}
+{"trial": 9, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4835.0, "bytes": 1652063, "errors": []}
+{"trial": 9, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1058.4, "bytes": 8071, "errors": []}
+{"trial": 9, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1204.2, "bytes": 8595, "errors": []}
+{"trial": 9, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3280.5, "bytes": 1090124, "errors": []}
+{"trial": 9, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 797.5, "bytes": 19791, "errors": []}
+{"trial": 9, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 878.2, "bytes": 20827, "errors": []}
+{"trial": 9, "arm": "baseline", "kind": "design", "scenario": "cold", "editableMs": 5341.0, "bytes": 2014141, "errors": []}
+{"trial": 9, "arm": "baseline", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1052.2, "bytes": 6541, "errors": []}
+{"trial": 9, "arm": "baseline", "kind": "design", "scenario": "switch", "editableMs": 1217.1, "bytes": 7063, "errors": []}
+{"trial": 9, "arm": "baseline", "kind": "slides", "scenario": "cold", "editableMs": 3425.6, "bytes": 1183392, "errors": []}
+{"trial": 9, "arm": "baseline", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 823.9, "bytes": 19601, "errors": []}
+{"trial": 9, "arm": "baseline", "kind": "slides", "scenario": "switch", "editableMs": 922.6, "bytes": 20635, "errors": []}
+design cold baseline {'p50': 5363.4, 'p75': 5566.1, 'p95': 5583.0}
+design cold candidate {'p50': 4652.9, 'p75': 4657.4, 'p95': 4835.0}
+design warm-new-frame baseline {'p50': 1059.6, 'p75': 1076.8, 'p95': 1274.0}
+design warm-new-frame candidate {'p50': 1054.4, 'p75': 1068.0, 'p95': 1084.5}
+design switch baseline {'p50': 1195.8, 'p75': 1203.4, 'p95': 1217.1}
+design switch candidate {'p50': 1190.6, 'p75': 1193.8, 'p95': 1204.2}
+slides cold baseline {'p50': 3498.8, 'p75': 3570.7, 'p95': 3584.8}
+slides cold candidate {'p50': 3280.5, 'p75': 3310.2, 'p95': 3327.8}
+slides warm-new-frame baseline {'p50': 799.6, 'p75': 823.9, 'p95': 853.7}
+slides warm-new-frame candidate {'p50': 797.5, 'p75': 804.9, 'p95': 852.3}
+slides switch baseline {'p50': 923.1, 'p75': 931.2, 'p95': 988.6}
+slides switch candidate {'p50': 878.2, 'p75': 929.2, 'p95': 935.3}

@@ -1,5 +1,6 @@
 // Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { pointInRect, TEXT_TOOL_TOUCH_DRAG, TEXT_TOOL_MOUSE_DRAG, bindRuntimeValue } from "../module-helpers.js";
+import { beginArtifactRecoveryAsyncEdit } from '../../../../shared/artifact-recovery.ts';
 function installEditorApp(runtime2) {
   var SlidesAppJsx, EMPTY_SLIDE_GRID_SELECTION, ZOOM_KEYBOARD_SHORTCUT_LABEL, QUICK_INSERT_SHAPES, QUICK_INSERT_LINE_SHAPES, SHAPE_INSERT_SHORTCUTS, TEXT_INSERT_SHORTCUT_KEY, disabledInsertControlProps, isLocalEmbeddableResource, DAMAGED_SLIDE_ACTION_MESSAGE, LOADING_PRESENTATION_PASTE_MESSAGE, presentationCapacityMessage, SPEAKER_NOTES_POPOUT_FALLBACK_MESSAGE, ALL_SLIDES_SKIPPED_EXPORT_MESSAGE, PRESENTATION_BUILDING_MESSAGE, PRESENTATION_BUILDING_SENTENCE, formatPresentationBuildProgress, PRESENTATION_EXPORT_ALL_SLIDES_ARRIVED_MESSAGE, EXTRA_EXPORT_FORMATS_META_NAME, EMPTY_EXTRA_EXPORT_FORMATS, SHELL_EXPORT_IMAGE_REDUCTION_NOTE, GOOGLE_SLIDES_BUILD_TIMEOUT_MS, MAX_BROWSER_EXPORT_BYTES, BROWSER_EXPORT_IMAGE_REDUCTION_NOTE, exportFormatSupportsNotes, EXPORT_FORMAT_MIME_AND_EXTENSION, getActiveSlideSurfaceRect, ACTIVE_SLIDE_SURFACE_SELECTOR, GRID_LEAVE_REVEAL_MS, GRID_LEAVE_LANDING_LEAD_MS, GRID_COMMENT_SLIDE_TARGET_SELECTOR, findActiveCommentSlideTarget, EDITOR_TAB_TARGET_SELECTOR, isCanvasEditorFocusTarget, ACTIVE_SLIDES_VIEW_SWITCH_SELECTOR, VIDEO_UPLOAD_TIMEOUT_MS, ignoreGlobalFileDrop, COPIED_VIDEO_OMISSION_MESSAGE, jpegReplacementUploadInput, editorHasBlockingOverlay, AGENT_CURSOR_OFFSET, AGENT_CURSOR_LABEL, DEFAULT_TEXT_INSERT_WIDTH, TOOLBAR_FOLD_SLACK_PX, MIN_TEXT_INSERT_WIDTH, PROPERTY_PANEL_TABS, EXPORT_FONT_DEADLINE_MS, MAX_IMAGES_PLACED_AT_ONCE, INSERT_STAGGER_STEP, UPLOAD_TIMEOUT_PER_FILE_MS, FONT_LICENCE_LISTS_TIMEOUT_MS, PHONE_REMOTE_FLAG, RAIL_FOCUSABLE_OPTION_SELECTOR, LAST_SLIDE_DELETE_MESSAGE, DAMAGED_SLIDES_DELETE_MESSAGE, SLIDE_FULL_MESSAGE, TABLE_CELLS_FULL_MESSAGE, presentationSlideCapacityMessage, exportFailedMessage, slidesCopiedMessage, EXPORTING_MESSAGE, PRESENT_FROM_CURRENT_LABEL, PRESENT_LABEL, PROPERTIES_LABEL, INSERT_TEXT_LABEL, IMAGE_OR_VIDEO_LABEL, INSERT_TABLE_LABEL, SHAPES_LABEL, INSERT_LABEL, UPLOAD_VIDEO_LABEL, EMBED_VIDEO_LINK_LABEL, ADD_SLIDE_LABEL, SHOW_SLIDE_THUMBNAILS_LABEL, PHONE_SIDEWAYS_NOTES_MESSAGE, NO_DECK_SPEAKER_NOTES_MESSAGE, NO_SPEAKER_NOTES_YET_MESSAGE, CANVAS_VIEW_NO_THUMBNAILS_MESSAGE, CANVAS_VIEW_NO_THUMBNAIL_PANEL_MESSAGE, CANVAS_EDIT_NO_THUMBNAIL_PANEL_MESSAGE, TEXT_INPUT_TYPES;
   class ImageReadError extends Error {
@@ -566,8 +567,12 @@ function installEditorApp(runtime2) {
         live = !1;
       };
     }, []);
-    let phoneRemote = phoneRemoteFlag === !0 && host === void 0, [exportDelivery, setExportDelivery] = runtime2.reactd0.useState(null), [exportNotes, setExportNotes] = runtime2.reactd0.useState(null), [templatePickerOpen, setTemplatePickerOpen] = runtime2.reactd0.useState(!1), [templatePickerReturnFocus, setTemplatePickerReturnFocus] = runtime2.reactd0.useState(void 0), openTemplatePicker = (input) => {
-      setTemplatePickerReturnFocus(() => input?.returnFocus), setTemplatePickerOpen(!0);
+    let phoneRemote = phoneRemoteFlag === !0 && host === void 0, [exportDelivery, setExportDelivery] = runtime2.reactd0.useState(null), [exportNotes, setExportNotes] = runtime2.reactd0.useState(null), [templatePickerOpen, setTemplatePickerOpen] = runtime2.reactd0.useState(!1), [templatePickerReturnFocus, setTemplatePickerReturnFocus] = runtime2.reactd0.useState(void 0), [templateLoad, setTemplateLoad] = runtime2.reactd0.useState(runtime2.templateModulesReady ? 'ready' : 'idle'), loadTemplates = () => {
+      if (runtime2.templateModulesReady) { setTemplateLoad('ready');return; }
+      setTemplateLoad('loading');
+      void (runtime2.loadTemplateModules?.() ?? Promise.resolve()).then(() => setTemplateLoad('ready'), () => setTemplateLoad('failed'));
+    }, openTemplatePicker = (input) => {
+      setTemplatePickerReturnFocus(() => input?.returnFocus), setTemplatePickerOpen(!0);loadTemplates();
     }, [insertMenuOpen, setInsertMenuOpen] = runtime2.reactd0.useState(!1), [toolbarFolded, setToolbarFolded] = runtime2.reactd0.useState(!1), compactInsert = smallCoarsePointer || toolbarFolded, [focusInsertMenuOnOpen, setFocusInsertMenuOnOpen] = runtime2.reactd0.useState(!0), [insertOpenedByKey, setInsertOpenedByKey] = runtime2.reactd0.useState(!0);
     runtime2.reactd0.useEffect(() => {
       readOnly && (setTextEditState(null), setTemplatePickerOpen(!1), setInspectorOpen(!1));
@@ -758,7 +763,7 @@ function installEditorApp(runtime2) {
     runtime2.reactd0.useLayoutEffect(() => {
       (selection.length > 0 || textEdit !== null) && severalSlidesRef.current && collapseSlideSelection();
     }, [selection, textEdit, collapseSlideSelection]);
-    let templateRestyler = runtime2.reactd0.useMemo(() => templatePickerOpen ? (0, runtime2.createTemplateRestyler)({
+    let templateRestyler = runtime2.reactd0.useMemo(() => templatePickerOpen && templateLoad === 'ready' ? (0, runtime2.createTemplateRestyler)({
       current: currentSlide,
       slides,
       typeStyles: deckTypeStyles,
@@ -767,6 +772,7 @@ function installEditorApp(runtime2) {
       faces: snapshot.faces
     }) : void 0, [
       templatePickerOpen,
+      templateLoad,
       currentSlide,
       slides,
       deckTypeStyles,
@@ -1240,7 +1246,9 @@ function installEditorApp(runtime2) {
       if (!slideId || currentSlideReadOnly)
         return;
       const before = documentStore.getSlide(slideId), frame = before && runtime2.frameById(before, frameId), previous = frame && runtime2.nodeAtPath(frame.node, path);
-      if (previous?.kind === "img")
+      if (previous?.kind === "img") {
+        const finishRecoveryEdit = beginArtifactRecoveryAsyncEdit(documentStore.doc);
+        if (!finishRecoveryEdit) return runtime2.showToast("编辑器正在重新打开，请在新页面重试替换图片。");
         try {
           const { src } = await prepareImageAsset(file);
           if (!mountedRef.current)
@@ -1260,7 +1268,8 @@ function installEditorApp(runtime2) {
           } });
         } catch {
           runtime2.showToast("图片替换失败，请重试。");
-        }
+        } finally { finishRecoveryEdit(); }
+      }
     }, uploadAndInsertImageRef = runtime2.reactd0.useRef(uploadAndInsertImage);
     uploadAndInsertImageRef.current = uploadAndInsertImage;
     let removeSelectedImages = (input, poster = !1) => {
@@ -1287,7 +1296,7 @@ function installEditorApp(runtime2) {
           canChangeSlide(value) && value3.restore();
         }
       });
-    }, insertImageFromInput = async (file, { at, byKey, nth: batch } = {}) => {
+    }, insertImageFromInput = async (file, { at, byKey, nth: batch, recoveryBatch } = {}) => {
       if (!file.type.startsWith("image/")) {
         runtime2.showToast("请选择图片文件。");
         return;
@@ -1296,6 +1305,8 @@ function installEditorApp(runtime2) {
       const before = getCurrentSlide();
       if (!before || currentSlideReadOnly || before.frames.length >= runtime2.maxSlideFrames || gridOpen && !(singleSelectedGridSlide && openGridSlideInEditor(before.id)))
         return;
+      const finishRecoveryEdit = beginArtifactRecoveryAsyncEdit(documentStore.doc, recoveryBatch);
+      if (!finishRecoveryEdit) return runtime2.showToast("编辑器正在重新打开，请在新页面重试插入图片。");
       const generation = insertGestureSequenceRef.current;
       try {
         const { src } = await prepareImageAsset(file), dimensions = await loadImageDimensions(src), live = documentStore.getSlide(before.id);
@@ -1313,14 +1324,19 @@ function installEditorApp(runtime2) {
         } }), batch?.landed.set(batch.i, frame.id), currentSlideRef.current?.id === live.id && (setSelection([{ frameId: frame.id }]), byKey && generation === insertGestureSequenceRef.current && editorZoomApiRef.current?.landOnCreated(frame.id)), frame.id;
       } catch {
         runtime2.showToast("图片无法读取，请检查文件后重试。");
-      }
+      } finally { finishRecoveryEdit(); }
     }, insertImageFromInputRef = runtime2.reactd0.useRef(insertImageFromInput);
     insertImageFromInputRef.current = insertImageFromInput;
     let dropFilesOnSlide = async (files, x, y) => {
       const images = files.filter(runtime2.isImageFile);
       images.length !== files.length && runtime2.showToast("仅支持图片，其他文件已跳过。");
-      for (let i = 0; i < images.length; i++)
-        await insertImageFromInput(images[i], { at: { x: x + i * 12, y: y + i * 12 } });
+      if (!images.length) return;
+      const finishRecoveryBatch = beginArtifactRecoveryAsyncEdit(documentStore.doc);
+      if (!finishRecoveryBatch) return runtime2.showToast("编辑器正在重新打开，请在新页面重试插入图片。");
+      try {
+        for (let i = 0; i < images.length; i++)
+          await insertImageFromInput(images[i], { at: { x: x + i * 12, y: y + i * 12 }, recoveryBatch: finishRecoveryBatch });
+      } finally { finishRecoveryBatch(); }
     }, onDropInsert = (input, options, context) => {
       if (setInsertMenuOpen(!1), input === "text")
         insertText({
@@ -4219,6 +4235,12 @@ function installEditorApp(runtime2) {
           SlidesAppJsx.jsx("style", {
             children: runtime2.SLIDES_PRINT_STYLES
           }),
+          documentStore.doc.progressive?.() ? SlidesAppJsx.jsx("div", {
+            role: "status", "data-progressive-slide": "",
+            className: "rounded-lg bg-panel px-4 py-2 text-center text-xs text-fg-muted shadow-sm",
+            style: {position:"absolute",top:8,left:16,right:16,zIndex:60,pointerEvents:"none"},
+            children: saveMessage
+          }) : null,
           SlidesAppJsx.jsx(runtime2.HotRestoreRevealGate, {
             box: currentSlide === void 0 ? null : () => (slideSurface() ?? editorElementRef.current ?? gridViewElementRef.current?.querySelector("[data-grid-surface]"))?.getBoundingClientRect()
           }),
@@ -4567,6 +4589,7 @@ function installEditorApp(runtime2) {
                                       designColors: designPalette,
                                       slideColors: slidePalette,
                                       pickImage: currentSlideReadOnly ? void 0 : async (input) => (await prepareImageAsset(input)).src,
+                                      beginImageEdit: () => beginArtifactRecoveryAsyncEdit(documentStore.doc),
                                       slide: currentSlide,
                                                 lookPreview: pendingLook?.(currentSlide),
                                       slideNumber: slides.indexOf(currentSlide) + 1,
@@ -4839,6 +4862,7 @@ function installEditorApp(runtime2) {
                                         id: "HJ6NQPAawd"
                                       })
                                     }) : themeTabEnabled && inspectorTab === "theme" ? SlidesAppJsx.jsx(runtime2.ThemePanel, {
+                                      active: inspectorOpen,
                                       restyle: deckRestyle,
                                       slide: currentSlide ?? void 0,
                                       assets: snapshot.assets,
@@ -4848,6 +4872,7 @@ function installEditorApp(runtime2) {
                                       fonts: snapshot.fonts,
                                       editsAreUndoSteps: textEdit === null
                                     }) : SlidesAppJsx.jsx(runtime2.SelectionInspector, {
+                                      active: inspectorOpen,
                                                 unasked: inspectorUnasked,
                                       editsAreUndoSteps: textEdit === null,
                                       designColors: designPalette,
@@ -4872,7 +4897,8 @@ function installEditorApp(runtime2) {
                                         input
                                       ]),
                                       measure: (input) => editorZoomApiRef.current?.measureUnit(input),
-                                      pickImage: currentSlideReadOnly ? void 0 : async (input) => (await prepareImageAsset(input)).src
+                                      pickImage: currentSlideReadOnly ? void 0 : async (input) => (await prepareImageAsset(input)).src,
+                                      beginImageEdit: () => beginArtifactRecoveryAsyncEdit(documentStore.doc)
                                     })
                                   })
                                 })
@@ -4998,13 +5024,25 @@ function installEditorApp(runtime2) {
               }) : null
             ]
           }),
-          SlidesAppJsx.jsx(runtime2.SlideTemplatePicker, {
+          templatePickerOpen && templateLoad === 'ready' ? SlidesAppJsx.jsx(runtime2.SlideTemplatePicker, {
             open: templatePickerOpen,
             onClose: () => setTemplatePickerOpen(!1),
             onPick: pickSlideTemplate,
             restyle: templateRestyler,
             returnFocus: templatePickerReturnFocus
-          }),
+          }) : templatePickerOpen ? SlidesAppJsx.jsx(runtime2.DialogComponents.Root, {
+            open: true,
+            onOpenChange: open => setTemplatePickerOpen(open),
+            children: SlidesAppJsx.jsxs(runtime2.DialogComponents.Popup, {
+              size: 'md',
+              finalFocus: templatePickerReturnFocus ? () => templatePickerReturnFocus() ?? false : undefined,
+              children: [
+                SlidesAppJsx.jsx(runtime2.DialogComponents.Header, { showClose: true, children: '新建幻灯片' }),
+                SlidesAppJsx.jsx('p', { role: templateLoad === 'failed' ? 'alert' : 'status', className: 'my-4', children: templateLoad === 'failed' ? '模板暂时无法加载，请重试。' : '正在准备幻灯片模板…' }),
+                templateLoad === 'failed' ? SlidesAppJsx.jsx(runtime2.Button, { variant: 'secondary', onClick: loadTemplates, children: '重试' }) : null,
+              ],
+            }),
+          }) : null,
           SlidesAppJsx.jsx(runtime2.ExportDeliveryDialog, {
             delivery: exportDelivery,
             onClose: () => setExportDelivery(null)

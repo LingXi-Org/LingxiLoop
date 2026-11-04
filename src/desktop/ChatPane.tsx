@@ -42,9 +42,11 @@ function EmptyConversation({ onChooseWorkspace }: { onChooseWorkspace?: () => vo
 export function ChatPane({
   onBackToConversations,
   onChooseWorkspace,
+  visible = true,
 }: {
   onBackToConversations?: () => void
   onChooseWorkspace?: () => void
+  visible?: boolean
 } = {}) {
   const conversationId = useApp((state) => state.selectedConversationId)
   const userId = useAuth(state => state.user?.id)
@@ -65,7 +67,7 @@ export function ChatPane({
 
   if (!conversationId || !conversation) return <EmptyConversation onChooseWorkspace={onChooseWorkspace} />
   return (
-    <DesignWorkspace key={JSON.stringify([userId, companyId, projectId, conversationId])} design={design} onClose={() => useSurface.getState().closeDesign()}>
+    <DesignWorkspace key={JSON.stringify([userId, companyId, projectId, conversationId])} visible={visible} design={design} onClose={() => useSurface.getState().closeDesign()}>
     <ConversationRuntimeProvider key={conversationId} conversationId={conversationId}>
       <main ref={rootRef} className="chat-surface chat-pane grid h-full min-h-0 min-w-0 grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden bg-background">
         <ConversationHeader

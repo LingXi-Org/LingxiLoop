@@ -1,0 +1,7 @@
+START False
+ADD False 0
+ADD False 1
+ADD False 3
+ADD False 5
+ADD False 3
+PASS styled native deck, Latin font change, original non-Latin family protection, theme inheritance, reload, actual HTML/PPTX/PDF export and output inspection

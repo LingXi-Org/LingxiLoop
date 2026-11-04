@@ -6,7 +6,7 @@ import { ArtifactEditorFrame } from './ArtifactEditorFrame'
 
 /** One artifact's editor with the host's own title bar; the editor below it is the upstream page.
  * `back` shows it as a full page (PageHeader); otherwise it is a right panel (RightPanelHeader). */
-export function ArtifactView({ artifactId, kind, title, onClose, closeLabel, back = false, actions, crumbs }: {
+export function ArtifactView({ artifactId, kind, title, onClose, closeLabel, back = false, actions, crumbs, visible = true }: {
   artifactId: string
   kind: ArtifactKind
   title: string
@@ -14,6 +14,7 @@ export function ArtifactView({ artifactId, kind, title, onClose, closeLabel, bac
   closeLabel?: string
   back?: boolean
   actions?: ReactNode
+  visible?: boolean
   crumbs?: PageHeaderCrumb[]
 }) {
   const label = ARTIFACT_LABELS[kind]
@@ -22,7 +23,7 @@ export function ArtifactView({ artifactId, kind, title, onClose, closeLabel, bac
       ? <PageHeader title={title} crumbs={crumbs} actions={actions} leading={<PanelCloseButton back label={closeLabel ?? '返回'} onClick={onClose} className="-ms-2" />} />
       : <RightPanelHeader eyebrow={label} title={title} actions={actions} onClose={onClose} closeLabel={closeLabel ?? `关闭${label}`} />}
     <div className="min-h-0 flex-1">
-      <ArtifactEditorFrame artifactId={artifactId} kind={kind} title={title} />
+      <ArtifactEditorFrame artifactId={artifactId} kind={kind} title={title} visible={visible} />
     </div>
   </div>
 }

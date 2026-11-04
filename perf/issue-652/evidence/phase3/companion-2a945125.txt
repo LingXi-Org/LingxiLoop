@@ -1,0 +1,160 @@
+TAP version 13
+# Subtest: PDF.js prune accepts pinned officeparser consumers and preserves its separate PDF runtime byte-for-byte
+ok 1 - PDF.js prune accepts pinned officeparser consumers and preserves its separate PDF runtime byte-for-byte
+  ---
+  duration_ms: 72.013801
+  type: 'test'
+  ...
+# Subtest: PDF.js prune rejects an unreviewed officeparser consumer before removing any file
+ok 2 - PDF.js prune rejects an unreviewed officeparser consumer before removing any file
+  ---
+  duration_ms: 46.851968
+  type: 'test'
+  ...
+# Subtest: PDF.js prune rejects officeparser falling back to the top-level runtime before trimming
+ok 3 - PDF.js prune rejects officeparser falling back to the top-level runtime before trimming
+  ---
+  duration_ms: 46.335183
+  type: 'test'
+  ...
+# Subtest: production stops both old workers before an application can enqueue new effect kinds
+ok 4 - production stops both old workers before an application can enqueue new effect kinds
+  ---
+  duration_ms: 0.539227
+  type: 'test'
+  ...
+# Subtest: server image includes the complete shared runtime import graph
+ok 5 - server image includes the complete shared runtime import graph
+  ---
+  duration_ms: 759.357365
+  type: 'test'
+  ...
+# Subtest: server image ships only the required pinned ZCode runtime payload
+ok 6 - server image ships only the required pinned ZCode runtime payload
+  ---
+  duration_ms: 8.909685
+  type: 'test'
+  ...
+# Subtest: SPA image includes the transitive source graph and pinned vendor license
+ok 7 - SPA image includes the transitive source graph and pinned vendor license
+  ---
+  duration_ms: 7564.026629
+  type: 'test'
+  ...
+# Subtest: production Open Notebook receives only the explicit RAG environment
+ok 8 - production Open Notebook receives only the explicit RAG environment
+  ---
+  duration_ms: 0.507117
+  type: 'test'
+  ...
+# Subtest: packaged and published stacks select the RAG-only image
+ok 9 - packaged and published stacks select the RAG-only image
+  ---
+  duration_ms: 0.744931
+  type: 'test'
+  ...
+# Subtest: CI component matrix runs only checks enabled by the changed scope
+ok 10 - CI component matrix runs only checks enabled by the changed scope
+  ---
+  duration_ms: 0.990019
+  type: 'test'
+  ...
+# Subtest: the production image runs only the RAG API and worker
+ok 11 - the production image runs only the RAG API and worker
+  ---
+  duration_ms: 1.230117
+  type: 'test'
+  ...
+# Subtest: removed Open Notebook capabilities cannot be re-enabled by deployment configuration
+ok 12 - removed Open Notebook capabilities cannot be re-enabled by deployment configuration
+  ---
+  duration_ms: 0.324385
+  type: 'test'
+  ...
+# Subtest: knowledge services receive writable storage and the control plane URL
+ok 13 - knowledge services receive writable storage and the control plane URL
+  ---
+  duration_ms: 0.250487
+  type: 'test'
+  ...
+# Subtest: both app nodes run isolated workers on both app nodes with bounded drain and readiness
+ok 14 - both app nodes run isolated workers on both app nodes with bounded drain and readiness
+  ---
+  duration_ms: 0.435954
+  type: 'test'
+  ...
+# Subtest: the gateway uses the备案 ingress and the Worker uses its admin domain
+ok 15 - the gateway uses the备案 ingress and the Worker uses its admin domain
+  ---
+  duration_ms: 0.457444
+  type: 'test'
+  ...
+# Subtest: live chat streams balance independently across both nodes through unbuffered proxy hops
+ok 16 - live chat streams balance independently across both nodes through unbuffered proxy hops
+  ---
+  duration_ms: 0.519539
+  type: 'test'
+  ...
+# Subtest: ingress keeps management sockets private
+ok 17 - ingress keeps management sockets private
+  ---
+  duration_ms: 0.332661
+  type: 'test'
+  ...
+# Subtest: main deploys through the repo CLI with Sigillo as the only secret source
+ok 18 - main deploys through the repo CLI with Sigillo as the only secret source
+  ---
+  duration_ms: 0.859685
+  type: 'test'
+  ...
+# Subtest: all deployable LingxiLoop images use content-addressed tags from image-tag.mjs
+ok 19 - all deployable LingxiLoop images use content-addressed tags from image-tag.mjs
+  ---
+  duration_ms: 87.313102
+  type: 'test'
+  ...
+# Subtest: CI selects checks by component
+ok 20 - CI selects checks by component
+  ---
+  duration_ms: 0.715757
+  type: 'test'
+  ...
+# Subtest: test and CI changes select checks; heavy experiments require manual scope
+ok 21 - test and CI changes select checks; heavy experiments require manual scope
+  ---
+  duration_ms: 1.082591
+  type: 'test'
+  ...
+# Subtest: workflow path filters route real changed paths to their owning checks
+ok 22 - workflow path filters route real changed paths to their owning checks
+  ---
+  duration_ms: 134.523238
+  type: 'test'
+  ...
+# Subtest: actual workflow conditions block deployment after a failed or cancelled gate
+ok 23 - actual workflow conditions block deployment after a failed or cancelled gate
+  ---
+  duration_ms: 1.054319
+  type: 'test'
+  ...
+# Subtest: CI integration modes distinguish core smoke, explicit owners and manual full
+ok 24 - CI integration modes distinguish core smoke, explicit owners and manual full
+  ---
+  duration_ms: 0.830049
+  type: 'test'
+  ...
+# Subtest: workflow carries explicit integration mode and bounded ordinary budgets
+ok 25 - workflow carries explicit integration mode and bounded ordinary budgets
+  ---
+  duration_ms: 0.511295
+  type: 'test'
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 25
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9157.539712

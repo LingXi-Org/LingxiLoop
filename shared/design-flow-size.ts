@@ -124,3 +124,25 @@ export function installDesignFlowSize() {
   window.addEventListener('lingxi:math-ready', schedule)
   window.addEventListener('pagehide', () => { mutations.disconnect(); resize.disconnect() }, { once: true })
 }
+
+
+/** A parent visibility signal changes only presentation work, never access. */
+export function installDesignFrameVisibility() {
+  if (window.parent === window || document.querySelector('[data-lingxi-frame-visibility]')) return
+  const style = document.createElement('style')
+  style.dataset.lingxiFrameVisibility = ''
+  style.textContent = 'html[data-lingxi-hidden="true"] *{animation-play-state:paused!important}'
+  document.head.append(style)
+  let visible = true
+  const send = (frame: HTMLIFrameElement) => frame.contentWindow?.postMessage({ __lingxi_editor_visibility: true, visible }, '*')
+  const receive = (event: MessageEvent) => {
+    if (event.source !== parent || event.data?.__lingxi_editor_visibility !== true || typeof event.data.visible !== 'boolean') return
+    visible = event.data.visible
+    document.documentElement.dataset.lingxiHidden = visible ? 'false' : 'true'
+    for (const frame of document.querySelectorAll('iframe')) send(frame)
+  }
+  const loaded = (event: Event) => { if (event.target instanceof HTMLIFrameElement) send(event.target) }
+  window.addEventListener('message', receive)
+  document.addEventListener('load', loaded, true)
+  window.addEventListener('pagehide', () => { window.removeEventListener('message', receive); document.removeEventListener('load', loaded, true) }, { once: true })
+}

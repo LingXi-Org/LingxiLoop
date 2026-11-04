@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: Design separates exact critical native source programs before entering synchronous consumers
+ok 1 - Design separates exact critical native source programs before entering synchronous consumers
+  ---
+  duration_ms: 5729.924865
+  type: 'test'
+  ...
+# Subtest: critical preparation coalesces, preserves successful code and retries before native initialization exactly once
+ok 2 - critical preparation coalesces, preserves successful code and retries before native initialization exactly once
+  ---
+  duration_ms: 1.960552
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6258.12856

@@ -1,0 +1,36 @@
+{"trial": 0, "arm": "wrapper", "kind": "design", "scenario": "cold", "editableMs": 4933.9, "bytes": 1651678, "errors": []}
+{"trial": 0, "arm": "wrapper", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1075.0, "bytes": 8109, "errors": []}
+{"trial": 0, "arm": "wrapper", "kind": "design", "scenario": "switch", "editableMs": 1178.3, "bytes": 8629, "errors": []}
+{"trial": 0, "arm": "wrapper", "kind": "slides", "scenario": "cold", "editableMs": 3329.6, "bytes": 1090120, "errors": []}
+{"trial": 0, "arm": "wrapper", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 801.2, "bytes": 19791, "errors": []}
+{"trial": 0, "arm": "wrapper", "kind": "slides", "scenario": "switch", "editableMs": 920.8, "bytes": 20823, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4684.2, "bytes": 1652061, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1055.9, "bytes": 8071, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1204.9, "bytes": 8593, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3293.4, "bytes": 1090122, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 798.7, "bytes": 19791, "errors": []}
+{"trial": 0, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 899.8, "bytes": 20825, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "design", "scenario": "cold", "editableMs": 4658.8, "bytes": 1652061, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1053.3, "bytes": 8071, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "design", "scenario": "switch", "editableMs": 1188.1, "bytes": 8593, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "slides", "scenario": "cold", "editableMs": 3250.9, "bytes": 1090122, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 725.3, "bytes": 19791, "errors": []}
+{"trial": 1, "arm": "candidate", "kind": "slides", "scenario": "switch", "editableMs": 928.4, "bytes": 20825, "errors": []}
+{"trial": 1, "arm": "wrapper", "kind": "design", "scenario": "cold", "editableMs": 4884.5, "bytes": 1651678, "errors": []}
+{"trial": 1, "arm": "wrapper", "kind": "design", "scenario": "warm-new-frame", "editableMs": 1087.4, "bytes": 8109, "errors": []}
+{"trial": 1, "arm": "wrapper", "kind": "design", "scenario": "switch", "editableMs": 1203.4, "bytes": 8629, "errors": []}
+{"trial": 1, "arm": "wrapper", "kind": "slides", "scenario": "cold", "editableMs": 3306.8, "bytes": 1090120, "errors": []}
+{"trial": 1, "arm": "wrapper", "kind": "slides", "scenario": "warm-new-frame", "editableMs": 778.5, "bytes": 19791, "errors": []}
+{"trial": 1, "arm": "wrapper", "kind": "slides", "scenario": "switch", "editableMs": 902.7, "bytes": 20823, "errors": []}
+design cold wrapper {'p50': 4884.5, 'p75': 4933.9, 'p95': 4933.9}
+design cold candidate {'p50': 4658.8, 'p75': 4684.2, 'p95': 4684.2}
+design warm-new-frame wrapper {'p50': 1075.0, 'p75': 1087.4, 'p95': 1087.4}
+design warm-new-frame candidate {'p50': 1053.3, 'p75': 1055.9, 'p95': 1055.9}
+design switch wrapper {'p50': 1178.3, 'p75': 1203.4, 'p95': 1203.4}
+design switch candidate {'p50': 1188.1, 'p75': 1204.9, 'p95': 1204.9}
+slides cold wrapper {'p50': 3306.8, 'p75': 3329.6, 'p95': 3329.6}
+slides cold candidate {'p50': 3250.9, 'p75': 3293.4, 'p95': 3293.4}
+slides warm-new-frame wrapper {'p50': 778.5, 'p75': 801.2, 'p95': 801.2}
+slides warm-new-frame candidate {'p50': 725.3, 'p75': 798.7, 'p95': 798.7}
+slides switch wrapper {'p50': 902.7, 'p75': 920.8, 'p95': 920.8}
+slides switch candidate {'p50': 899.8, 'p75': 928.4, 'p95': 928.4}

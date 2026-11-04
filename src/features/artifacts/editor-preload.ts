@@ -7,7 +7,6 @@ import type { ArtifactEditorGrant, ArtifactKind } from './contracts'
 // here, they are in the HTTP cache every editor frame reads from.
 let preloads: Promise<Record<ArtifactKind, string[]>> | undefined
 const warmed = new Map<string, Promise<void>>()
-const warming = new Map<ArtifactKind, Promise<void>>()
 const idle = new Set<ArtifactKind>()
 
 /** Fetches an editor's blocking code, styles and first-view fonts into the HTTP cache. */
@@ -30,17 +29,7 @@ export function warmEditor(kind: ArtifactKind, priority: RequestPriority = 'high
     }
     return pending
   }))).then(() => undefined)
-  warming.set(kind, result)
-  const done = () => { if (warming.get(kind) === result) warming.delete(kind) }
-  result.then(done, done)
   return result
-}
-
-/** An editor opened while its assets are still downloading waits for that
- * download (bounded) instead of fetching the same bytes a second time. */
-export function editorWarming(kind: ArtifactKind): Promise<void> {
-  const pending = warming.get(kind)
-  return pending ? Promise.race([pending.catch(() => {}), new Promise<void>(done => setTimeout(done, 15_000))]) : Promise.resolve()
 }
 
 /** Warms an editor once the page is idle, unless the connection asks to save data. */

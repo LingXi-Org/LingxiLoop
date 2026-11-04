@@ -8,6 +8,7 @@ import { env } from '../env.js'
 import { CH_ARTIFACTS, sub } from '../redis.js'
 import { publishArtifactEvent } from '../modules/artifacts/events.js'
 import { artifactBlobRouter, artifactEditorRouter } from '../modules/artifacts/index.js'
+import { GRANT_TTL_MS, issueGrant } from '../modules/artifacts/grants.js'
 import { inlineScriptHashes } from '../modules/artifacts/kinds.js'
 import { createSlides, publishArtifactFiles } from '../modules/artifacts/facade.js'
 import { permissionService } from '../modules/access/public.js'
@@ -267,4 +268,74 @@ test('assigning and steering work returns the artifact and persists the requeste
   assert.equal(reopened.id, design.id)
   assert.deepEqual((await pool.query('SELECT assignment,status FROM artifact_agent_assignments WHERE artifact_id=$1 AND agent_id=$2', [design.id, agentId])).rows, rows.rows,
     'reopening does not replace or cancel the existing creative assignment')
+})
+
+
+test('retained native grants follow current read/write policy without upgrading issued capabilities', async () => {
+  const status = (await pool.query<{ status: string }>('SELECT status FROM projects WHERE id=$1', [projectId])).rows[0].status
+  for (const kind of ['design', 'slides'] as const) {
+    const created = kind === 'design'
+      ? await api('/conversations/artifact-room/design', 'POST')
+      : await api(`/projects/${projectId}/slides`, 'POST', { title: 'Grant boundary' })
+    assert.ok([200, 201].includes(created.status))
+    const artifact = await created.json() as { id: string }
+    type Grant = { url: string; write: boolean }
+    const writer = await (await api(`/artifacts/${artifact.id}/editor-grant`, 'POST')).json() as Grant
+    assert.equal(writer.write, true)
+    const pathOf = (grant: Grant) => new URL(grant.url, origin).pathname
+    const writerPath = pathOf(writer), indexPath = kind === 'design' ? 'project/canvas.json' : 'project/deck.json'
+    const stored = (await pool.query<{ body: Buffer; sha256: string }>('SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0]
+    const files = { [indexPath]: { base64: stored.body.toString('base64'), contentType: 'application/json', ifMatch: stored.sha256 } }
+    assert.equal((await fetch(origin + writerPath + indexPath)).status, 200)
+    let reader: Grant | undefined
+    try {
+      await pool.query("UPDATE projects SET status='READ_ONLY' WHERE id=$1", [projectId])
+      const session = await fetch(origin + writerPath + '__deck/session')
+      assert.equal(session.status, 200)
+      assert.equal((await session.json() as { canEdit: boolean }).canEdit, false, 'old writer must not report stale write authority')
+      assert.equal((await fetch(origin + writerPath + indexPath)).status, 200, 'read permission survives write downgrade')
+      assert.equal((await save(writerPath, files)).status, 404)
+      reader = await (await api(`/artifacts/${artifact.id}/editor-grant`, 'POST')).json() as Grant
+      assert.equal(reader.write, false)
+      assert.equal((await fetch(origin + pathOf(reader) + indexPath)).status, 200)
+      assert.equal((await save(pathOf(reader), files)).status, 404)
+    } finally {
+      await pool.query('UPDATE projects SET status=$2 WHERE id=$1', [projectId, status])
+    }
+    assert.ok(reader)
+    assert.equal((await save(pathOf(reader), files)).status, 404, 'a read-only capability never gains write access when project permission returns')
+    assert.equal((await fetch(origin + writerPath + '__deck/session').then(r => r.json()) as { canEdit: boolean }).canEdit, true)
+    const fresh = await (await api(`/artifacts/${artifact.id}/editor-grant`, 'POST')).json() as Grant
+    assert.equal(fresh.write, true)
+    assert.equal((await save(pathOf(fresh), files)).status, 200)
+    assert.deepEqual((await pool.query('SELECT body FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0].body, stored.body)
+  }
+})
+
+test('expired, cross-tenant, wrong-kind and revoked native grants cannot read or overwrite persisted files', async () => {
+  for (const kind of ['design', 'slides'] as const) {
+    const artifact = await (await (kind === 'design'
+      ? api('/conversations/artifact-room/design', 'POST')
+      : api(`/projects/${projectId}/slides`, 'POST', { title: 'Expired grant boundary' }))).json() as { id: string }
+    const current = issueGrant({ artifactId: artifact.id, companyId, userId, kind, write: true })
+    const expired = issueGrant({ artifactId: artifact.id, companyId, userId, kind, write: true }, Date.now() - GRANT_TTL_MS - 1000)
+    const foreign = issueGrant({ artifactId: artifact.id, companyId: 'different-tenant', userId, kind, write: true })
+    const indexPath = kind === 'design' ? 'project/canvas.json' : 'project/deck.json'
+    const before = (await pool.query<{ body: Buffer; sha256: string }>('SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0]
+    const files = { [indexPath]: { base64: before.body.toString('base64'), contentType: 'application/json', ifMatch: before.sha256 } }
+    for (const [routeKind, token] of [[kind, expired.grant], [kind, foreign.grant], [kind === 'design' ? 'slides' : 'design', current.grant]]) {
+      const path = `/artifact-editor/${routeKind}/${token}/`
+      for (const route of ['_files.json', indexPath, '__deck/session']) assert.equal((await fetch(origin + path + route)).status, 404)
+      assert.equal((await save(path, files)).status, 404)
+    }
+    const path = `/artifact-editor/${kind}/${current.grant}/`
+    try {
+      await pool.query('DELETE FROM project_memberships WHERE project_id=$1 AND user_id=$2', [projectId, userId])
+      for (const route of ['_files.json', indexPath, '__deck/session']) assert.equal((await fetch(origin + path + route)).status, 404)
+      assert.equal((await save(path, files)).status, 404)
+    } finally {
+      await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')", [projectId, companyId, userId])
+    }
+    assert.deepEqual((await pool.query('SELECT body FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0].body, before.body)
+  }
 })

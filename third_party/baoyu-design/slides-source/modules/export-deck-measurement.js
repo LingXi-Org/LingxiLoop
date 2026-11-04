@@ -1,6 +1,7 @@
 // Reconstructed from JimLiu/baoyu-design 016b39d (MIT); see ../README.md.
 import { bindRuntimeValue } from "../module-helpers.js";
-import { slideHasMath } from "../math.js";
+import { slideHasMathSource } from "../math-source.js";
+import { loadSlideMath } from "../math-loading.js";
 function installExportDeckMeasurement(runtime2) {
   var deckMeasurementExports, reactForExportDeckMeasurement, reactDOMClientForExportDeckMeasurement, IDENTITY_TRANSFORM, ZERO_CORNER_RADII, MEASUREMENT_TOLERANCE, CANVAS_FONT_STYLE_KEYS, initializeDeckMeasurement;
   function textHorizontalHold(stack, childIndex, parentPath) {
@@ -915,6 +916,8 @@ function installExportDeckMeasurement(runtime2) {
       // Native PPTX text cannot represent KaTeX layout. Preserve the rendered
       // page using the existing capture path, with notes and other pages intact.
       for (let index = 0; index < assets.length; index++) {
+        if (!slideHasMathSource(assets[index])) continue;
+        const { slideHasMath } = await loadSlideMath();
         if (!slideHasMath(assets[index])) continue;
         runtime2.initializePdfCapture();
         const capture = await runtime2.exportSlidePng(assets[index], faces, 2, options);

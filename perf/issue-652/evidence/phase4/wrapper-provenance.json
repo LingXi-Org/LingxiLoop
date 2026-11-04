@@ -1,0 +1,1543 @@
+{
+  "sourceCommit": "803cca665e19d0562886b091090a843935ab0bd5",
+  "validationCommit": "9a1009c98f63ea8b32923d6ed9b4eaf92ba0d6bd",
+  "baselineGeneratedSource": "b7c9f54a",
+  "node": "22.23.4",
+  "chromium": "154.0.8037.57",
+  "sdk": {
+    "required": "3.8.21",
+    "localInstalled": "3.8.16",
+    "localAccess": "ordinary metadata E401; credentials unchanged",
+    "authorizedValidation": "GitHub Actions 41684341322 integration succeeded including actual artifact-app-boundary tests; server job failed only two outdated download window mocks, since corrected locally"
+  },
+  "sources": {
+    "perf/editor-open/serve.ts": "dc8c0b84788a3c4eede7f69724e05cf0bc13b6cd6a406ca9a48fb64a3769be6f",
+    "perf/issue-652/components.py": "d51ea2c12f43fe468869aee9a9c70246d3f1be9ad9b19a215c5f011ea539b6a9",
+    "perf/issue-652/design-startup.py": "57b8e54910b7dd3e8713d6a182d0b84848fd9b87a8046f3a93c795f29fa5c9bb",
+    "perf/issue-652/font-retry.py": "f63012d57059e4e80e116575b84c521c4ce70aea8da5d85c5e71edbbc6990cce",
+    "perf/issue-652/inventory.mjs": "91429647c317a25e8b545a656f4384e238f2cd9f95ac245306504fec53e294c0",
+    "perf/issue-652/properties.py": "e0986651d20a2fa087d679c834ebc0e83255b07a291bb4f3947778fdca9dc7ed",
+    "scripts/build-design-editor.mjs": "15f87ea8c93a4170a369dfd34cddcdc2b13ce9029db1f57c1a3bd8c220d2bd48",
+    "scripts/build-slides-editor.mjs": "67314fc73d3896d04941b2eac3c3c91e1f2e7d23ab1483b5df32d8e72a8821c7",
+    "scripts/check-slides-default-style.py": "a205b00d5270974b79a189962653261e4c90ac20a7b01ed1c32f1f5202e20dc8",
+    "scripts/design-editor.test.mjs": "17de2eeadcaf42a21d612eb8406af4bd77b9ea47920c1b7dd036926eccd43e7a",
+    "scripts/design-startup.test.mjs": "4aba78e7a8aa9a291b1540ba2d406208417c6ef7b776bf4617e6a9962a719bb4",
+    "scripts/slides-editor.test.mjs": "3baabc38ef62788f03b06a21f3aa7fecc47957a78fb1d9a72f2ef518c6e5cfda",
+    "scripts/slides-progressive.test.mjs": "9a108ebd860c79d75b1e5605f7fb0f8169ae551adabd570cae81cb16bd0af7bb",
+    "server/src/__integration__/artifact-app-boundary.test.ts": "ba37d7ce9f4bf4c581755307f9a2123ee25afaeee759bae92e92a70509fc23ba",
+    "server/src/modules/artifacts/artifacts.test.ts": "acd6becd6a180ca4e4109e806a9b990c4cbb9af00483f7b5d5c6a02aa9fd49f4",
+    "server/src/modules/artifacts/editor-downloads.test.ts": "8e3e544393aaf6729625410eb99c5f4e12e5cb3c47e13646d48be9c169e7438b",
+    "server/src/modules/artifacts/editor-downloads.ts": "eb1c2e3854f97c864fc2d6e766e2750a7e6ab302568b5c3bbf5340cf01b65db7",
+    "server/src/modules/artifacts/editor-router.ts": "c0f02a119cf3a7b3141acc0ad987db3257b69bb03e9183d63ebeec7627a5cc73",
+    "third_party/baoyu-design/slides-source/feature-resources.js": "c23bf2d46cd38e7511dd1297389b0fd2305e1e9a8b3623204971bd62a9ac5fce",
+    "third_party/baoyu-design/slides-source/modules/design-system-theme-panel.js": "3639e579050075b8b43751545e77522325713ed33acc7fd9aa714bda14d7ce58",
+    "third_party/baoyu-design/slides-source/modules/editor-app.js": "7480b68295a819940cdede47ad4b74b8a491a6a5b768626fcad7e15ddc159ce0",
+    "third_party/baoyu-design/slides-source/modules/editor-fill-core.js": "9cd6c3de80ef285d5e70957ba3c25dad8aa6bcb27967297500e42fc373eec9d1",
+    "third_party/baoyu-design/slides-source/modules/files-boot-reader.js": "26582d81a514f5e26fe67723a80771b2a7cbd4c7e23377e961ccdcb1ac50598c",
+    "third_party/baoyu-design/slides-source/modules/files-design-systems.js": "a4e35ddf61b9f30f0b77c8d27ec484e1c9e720079be6bef82d496e1a51848311",
+    "third_party/baoyu-design/slides-source/modules/files-slides-document.js": "166c94262578d5fa772089064c87045d5c6a6cdc593c4be69360340c42219b43",
+    "third_party/baoyu-design/slides-source/modules/ui-selection-inspector.js": "5b1b23ee362cee6df164c6190d170c3f20282940e789eb2151c1854ad50a0e97",
+    "third_party/baoyu-design/slides-source/node/compiler.js": "94ef18ff6f0d9902d6fa8cc35045a27fe6a461777e1afa153e82f13fe74e8655",
+    "third_party/baoyu-design/slides-source/properties.js": "a665ce92a40cd6fb55ebfae9535520e867b4514358576e9f2418273bc678a3e3",
+    "third_party/baoyu-design/slides-source/runtime.js": "244b0b5870b109b7428ae492e8887f926ac0ca2a6da3d96672a2aa04a502cbc1"
+  },
+  "buildManifests": {
+    "design": {
+      "source": "third_party/baoyu-design/upstream/claude-design/scripts/editor",
+      "upstreamCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "startupPrograms": {
+        "picker": {
+          "file": "design-c30e902bc1cfbc704db6acaa7cd5e991ff219f60cd632feac0b37abe8a963f12.js",
+          "bytes": 624740,
+          "sha256": "c30e902bc1cfbc704db6acaa7cd5e991ff219f60cd632feac0b37abe8a963f12",
+          "integrity": "sha256-ww6QK8HPvHBNtqyqfNXpkf8hn2DNYy/qwLN6voqWPxI="
+        },
+        "react": {
+          "file": "design-d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd.js",
+          "bytes": 10751,
+          "sha256": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+          "integrity": "sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0="
+        },
+        "reactDom": {
+          "file": "design-35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d.js",
+          "bytes": 131835,
+          "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+          "integrity": "sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0="
+        },
+        "support": {
+          "file": "design-983913fafac2c1fc09c33123390406e51224015e51eeba22211669b4a6e892bb.js",
+          "bytes": 97256,
+          "sha256": "983913fafac2c1fc09c33123390406e51224015e51eeba22211669b4a6e892bb",
+          "integrity": "sha256-mDkT+vrCwfwJwzEjOQQG5RIkAV5R7roiIRZptKbokrs="
+        }
+      },
+      "optionalPrograms": {
+        "svgCapture": {
+          "file": "design-7402dc46605ece8de2aaa04676777a8a4c8558ab805f7244b53136429af85045.js",
+          "bytes": 250336,
+          "sha256": "7402dc46605ece8de2aaa04676777a8a4c8558ab805f7244b53136429af85045",
+          "integrity": "sha256-dALcRmBezo3iqqBGdnd6ikyFWKuAX3JEtTE2Qpr4UEU="
+        },
+        "standaloneExport": {
+          "file": "design-b151b87b89573e5ed383523f0964ede4e79c2699e8c857cd5dc7d18ae21e5d2b.js",
+          "bytes": 19928,
+          "sha256": "b151b87b89573e5ed383523f0964ede4e79c2699e8c857cd5dc7d18ae21e5d2b",
+          "integrity": "sha256-sVG4e4lXPl7Tg1I/CWTt5OecJpnoyFfNXcfRiuIeXSs="
+        },
+        "propertyScrubber": {
+          "file": "design-c3b9328f00269ae4f6f11ac441d821b4c32b5801416c6c9628146b7e15340791.js",
+          "bytes": 36043,
+          "sha256": "c3b9328f00269ae4f6f11ac441d821b4c32b5801416c6c9628146b7e15340791",
+          "integrity": "sha256-w7kyjwAmmuT28RrEQdghtMMrWAFBbGyWKBRrfhU0B5E="
+        }
+      },
+      "math": {
+        "sha256": "5fc5567fbff12f516e2bad4dd8b560afb88cc57640904be7d1b28611e3a62d36",
+        "bytes": 641962,
+        "offlineFile": "design-5fc5567fbff12f516e2bad4dd8b560afb88cc57640904be7d1b28611e3a62d36.js",
+        "onlineFile": "design-f521fb8113296b5afa1c075defc8c4b62e185328b4639d057e121fc6fff28645.js",
+        "onlineBytes": 297110,
+        "loaderBytes": 3584
+      },
+      "layout": {
+        "guestBytes": 3742,
+        "hostBytes": 6794
+      },
+      "entry": {
+        "file": "assets/design-a88124181dd318b7d61dc01c977f39cf0824efa8fc7ebc25c06be9a49e97f44a.js",
+        "original": "assets/index-CYLuwRoc.js"
+      },
+      "runtime": {
+        "file": "assets/design-d377a32caa20028e672f88550ddabbc579a965fadda49abcd96cde977f6dfa2c.js",
+        "original": "artifact-type/dc-runtime.js"
+      },
+      "styles": {
+        "file": "assets/design-52ec8354cd148a435fe3cc0aa297f5657d6914604014f4ea998d2740fc8e9a02.css",
+        "fallbackFont": "assets/design-72caa7e5fd04db487298679dc298679f020e1d36b0034e8a52826188aa01ed33.woff2",
+        "icons": "assets/design-3b2802f4331409152b38402763d94a99520adca364f0dd65012f49f9b3383c33.woff2",
+        "originalIcons": "anthropicons-fizzy-lake-CfC2JIbf.woff2",
+        "originalBytes": 644571,
+        "bytes": 507922
+      },
+      "files": {
+        "artifact-type/babel.min.js": {
+          "bytes": 3137752,
+          "sha256": "2623a9e22809915ce789b4461154e277ddce520d5a4320c14d44332a5d0dcea0"
+        },
+        "artifact-type/fast-edit-worker.js": {
+          "bytes": 2401938,
+          "sha256": "005a173a50191e48252089e36d65c5003d2f2a8f0303f003a8891158e26a64b0"
+        },
+        "artifact-type/reference/google-fonts-families.json": {
+          "bytes": 26440,
+          "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c"
+        },
+        "artifact-type/reference/google-fonts-notices.json": {
+          "bytes": 60582,
+          "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64"
+        },
+        "artifact-type/reference/google-fonts-reserved.json": {
+          "bytes": 7403,
+          "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be"
+        },
+        "assets/design-00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a.woff2": {
+          "bytes": 12028,
+          "sha256": "00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a"
+        },
+        "assets/design-036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b.woff2": {
+          "bytes": 9644,
+          "sha256": "036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b"
+        },
+        "assets/design-0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308.woff2": {
+          "bytes": 28076,
+          "sha256": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308"
+        },
+        "assets/design-0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021.woff2": {
+          "bytes": 25324,
+          "sha256": "0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021"
+        },
+        "assets/design-35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d.js": {
+          "bytes": 131835,
+          "sha256": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
+        },
+        "assets/design-3b2802f4331409152b38402763d94a99520adca364f0dd65012f49f9b3383c33.woff2": {
+          "bytes": 47932,
+          "sha256": "3b2802f4331409152b38402763d94a99520adca364f0dd65012f49f9b3383c33"
+        },
+        "assets/design-51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc.woff2": {
+          "bytes": 11316,
+          "sha256": "51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc"
+        },
+        "assets/design-52ec8354cd148a435fe3cc0aa297f5657d6914604014f4ea998d2740fc8e9a02.css": {
+          "bytes": 507922,
+          "sha256": "52ec8354cd148a435fe3cc0aa297f5657d6914604014f4ea998d2740fc8e9a02"
+        },
+        "assets/design-5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b.woff2": {
+          "bytes": 6908,
+          "sha256": "5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b"
+        },
+        "assets/design-5fc5567fbff12f516e2bad4dd8b560afb88cc57640904be7d1b28611e3a62d36.js": {
+          "bytes": 641962,
+          "sha256": "5fc5567fbff12f516e2bad4dd8b560afb88cc57640904be7d1b28611e3a62d36"
+        },
+        "assets/design-68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342.woff2": {
+          "bytes": 10344,
+          "sha256": "68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342"
+        },
+        "assets/design-6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe.woff2": {
+          "bytes": 5468,
+          "sha256": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe"
+        },
+        "assets/design-71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b.woff2": {
+          "bytes": 13568,
+          "sha256": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b"
+        },
+        "assets/design-72caa7e5fd04db487298679dc298679f020e1d36b0034e8a52826188aa01ed33.woff2": {
+          "bytes": 102556,
+          "sha256": "72caa7e5fd04db487298679dc298679f020e1d36b0034e8a52826188aa01ed33"
+        },
+        "assets/design-73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995.woff2": {
+          "bytes": 3624,
+          "sha256": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995"
+        },
+        "assets/design-7402dc46605ece8de2aaa04676777a8a4c8558ab805f7244b53136429af85045.js": {
+          "bytes": 250336,
+          "sha256": "7402dc46605ece8de2aaa04676777a8a4c8558ab805f7244b53136429af85045"
+        },
+        "assets/design-74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f.woff2": {
+          "bytes": 11348,
+          "sha256": "74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f"
+        },
+        "assets/design-7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264.woff2": {
+          "bytes": 16440,
+          "sha256": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264"
+        },
+        "assets/design-97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267.woff2": {
+          "bytes": 16988,
+          "sha256": "97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267"
+        },
+        "assets/design-983913fafac2c1fc09c33123390406e51224015e51eeba22211669b4a6e892bb.js": {
+          "bytes": 97256,
+          "sha256": "983913fafac2c1fc09c33123390406e51224015e51eeba22211669b4a6e892bb"
+        },
+        "assets/design-99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b.woff2": {
+          "bytes": 16780,
+          "sha256": "99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b"
+        },
+        "assets/design-a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0.woff2": {
+          "bytes": 4928,
+          "sha256": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0"
+        },
+        "assets/design-a88124181dd318b7d61dc01c977f39cf0824efa8fc7ebc25c06be9a49e97f44a.js": {
+          "bytes": 5503977,
+          "sha256": "a88124181dd318b7d61dc01c977f39cf0824efa8fc7ebc25c06be9a49e97f44a"
+        },
+        "assets/design-b151b87b89573e5ed383523f0964ede4e79c2699e8c857cd5dc7d18ae21e5d2b.js": {
+          "bytes": 19928,
+          "sha256": "b151b87b89573e5ed383523f0964ede4e79c2699e8c857cd5dc7d18ae21e5d2b"
+        },
+        "assets/design-c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866.woff2": {
+          "bytes": 26272,
+          "sha256": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866"
+        },
+        "assets/design-c30e902bc1cfbc704db6acaa7cd5e991ff219f60cd632feac0b37abe8a963f12.js": {
+          "bytes": 624740,
+          "sha256": "c30e902bc1cfbc704db6acaa7cd5e991ff219f60cd632feac0b37abe8a963f12"
+        },
+        "assets/design-c3b9328f00269ae4f6f11ac441d821b4c32b5801416c6c9628146b7e15340791.js": {
+          "bytes": 36043,
+          "sha256": "c3b9328f00269ae4f6f11ac441d821b4c32b5801416c6c9628146b7e15340791"
+        },
+        "assets/design-d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd.woff2": {
+          "bytes": 5208,
+          "sha256": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd"
+        },
+        "assets/design-d377a32caa20028e672f88550ddabbc579a965fadda49abcd96cde977f6dfa2c.js": {
+          "bytes": 1163497,
+          "sha256": "d377a32caa20028e672f88550ddabbc579a965fadda49abcd96cde977f6dfa2c"
+        },
+        "assets/design-d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd.js": {
+          "bytes": 10751,
+          "sha256": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd"
+        },
+        "assets/design-dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1.woff2": {
+          "bytes": 16400,
+          "sha256": "dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1"
+        },
+        "assets/design-de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c.woff2": {
+          "bytes": 6912,
+          "sha256": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c"
+        },
+        "assets/design-e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62.woff2": {
+          "bytes": 12216,
+          "sha256": "e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62"
+        },
+        "assets/design-f521fb8113296b5afa1c075defc8c4b62e185328b4639d057e121fc6fff28645.js": {
+          "bytes": 297110,
+          "sha256": "f521fb8113296b5afa1c075defc8c4b62e185328b4639d057e121fc6fff28645"
+        },
+        "index.html": {
+          "bytes": 7032,
+          "sha256": "028a5a78407936c158792e198aa67129a8e2bae976edabe3335957bf95486fac"
+        },
+        "third-party-licenses.txt": {
+          "bytes": 49458,
+          "sha256": "d38544a9159219a0d3caad0fcb8b2f6720894343dc9443f2ce5c397c3c462d80"
+        }
+      },
+      "compressed": {
+        "artifact-type/babel.min.js": {
+          "br": 418989,
+          "gzip": 655353
+        },
+        "artifact-type/fast-edit-worker.js": {
+          "br": 289830,
+          "gzip": 395749
+        },
+        "assets/design-35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d.js": {
+          "br": 37180,
+          "gzip": 43022
+        },
+        "assets/design-52ec8354cd148a435fe3cc0aa297f5657d6914604014f4ea998d2740fc8e9a02.css": {
+          "br": 52841,
+          "gzip": 70847
+        },
+        "assets/design-5fc5567fbff12f516e2bad4dd8b560afb88cc57640904be7d1b28611e3a62d36.js": {
+          "br": 327812,
+          "gzip": 344552
+        },
+        "assets/design-7402dc46605ece8de2aaa04676777a8a4c8558ab805f7244b53136429af85045.js": {
+          "br": 41370,
+          "gzip": 48355
+        },
+        "assets/design-983913fafac2c1fc09c33123390406e51224015e51eeba22211669b4a6e892bb.js": {
+          "br": 21169,
+          "gzip": 24528
+        },
+        "assets/design-a88124181dd318b7d61dc01c977f39cf0824efa8fc7ebc25c06be9a49e97f44a.js": {
+          "br": 1380846,
+          "gzip": 1786117
+        },
+        "assets/design-b151b87b89573e5ed383523f0964ede4e79c2699e8c857cd5dc7d18ae21e5d2b.js": {
+          "br": 4074,
+          "gzip": 4672
+        },
+        "assets/design-c30e902bc1cfbc704db6acaa7cd5e991ff219f60cd632feac0b37abe8a963f12.js": {
+          "br": 96151,
+          "gzip": 124429
+        },
+        "assets/design-c3b9328f00269ae4f6f11ac441d821b4c32b5801416c6c9628146b7e15340791.js": {
+          "br": 6748,
+          "gzip": 7648
+        },
+        "assets/design-d377a32caa20028e672f88550ddabbc579a965fadda49abcd96cde977f6dfa2c.js": {
+          "br": 144193,
+          "gzip": 186993
+        },
+        "assets/design-d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd.js": {
+          "br": 3763,
+          "gzip": 4269
+        },
+        "assets/design-f521fb8113296b5afa1c075defc8c4b62e185328b4639d057e121fc6fff28645.js": {
+          "br": 69166,
+          "gzip": 83717
+        }
+      }
+    },
+    "slides": {
+      "upstreamCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "source": "third_party/baoyu-design/slides-source",
+      "modules": 313,
+      "removedModules": [
+        {
+          "file": "modules/media-video-assets.js",
+          "install": "installMediaVideoAssets",
+          "exports": [
+            "videoMimeType",
+            "fetchVideoStillFile",
+            "videoPlaybackAttributes",
+            "isVideoFile",
+            "videoFileRefusalReason",
+            "sniffQuickTimeContainer",
+            "identifyVideoContainer",
+            "probeVideoFile_Ql0",
+            "withLoadedVideoElement",
+            "readVideoMetadata",
+            "probeVideoMetadata",
+            "videoFrameBrightness",
+            "captureVideoPoster",
+            "storeVideoAsset",
+            "videoRefusalMessage",
+            "supportedVideoMimeTypes",
+            "maxVideoUploadBytes",
+            "quickTimeMimeType",
+            "videoFileAccept",
+            "minimumVideoPosterBrightness",
+            "videoPlaybackDefaults",
+            "initializeVideoAssets"
+          ],
+          "upstreamLine": 110991,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-controller.js",
+          "install": "installMediaVideoController",
+          "exports": [
+            "formatPlaybackTime",
+            "createVideoController",
+            "playbackActionLabels",
+            "videoPlaybackOptionLabels",
+            "playbackActionIcons",
+            "videoControllerEvents",
+            "videoControllerSeekEvents",
+            "initializeVideoController"
+          ],
+          "upstreamLine": 142458,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-link-player.js",
+          "install": "installMediaVideoLinkPlayer",
+          "exports": [
+            "createObservedStore",
+            "blurToFocusableParent",
+            "recordVideoCspViolation",
+            "clearBlockedVideosOnReturn",
+            "bumpBlockedVideos",
+            "useVideoLinkBlocked",
+            "releasePlayerFocus",
+            "claimVideoPlayer",
+            "releaseVideoPlayer",
+            "usePlayerHasFocus",
+            "beginPlayerCapture",
+            "focusVideoPlayerElement",
+            "VideoLinkPlayer",
+            "VideoLinkPlayerReact",
+            "VideoLinkPlayerJsx",
+            "playerTabBlurWindowMs",
+            "playerBlurReleaseDelayMs",
+            "playerHoverLoadDelayMs",
+            "playerHoverUnloadDelayMs",
+            "videoLinkKey",
+            "currentVideoPlayer",
+            "currentVideoPlayerStore",
+            "blockedVideos",
+            "blockedVideosVersion",
+            "blockedVideosStore",
+            "playerHasFocus",
+            "playerFocusStore",
+            "playerFocusRetryCount",
+            "playerCaptureCount",
+            "playerCaptureStore",
+            "playerCaptureFocusTimeoutMs",
+            "playerBeforeAttribute",
+            "playerFocusedFrames",
+            "playerBoxAttribute",
+            "videoPlayerLabelRoom",
+            "initializeVideoLinkPlayer"
+          ],
+          "upstreamLine": 143002,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-sound.js",
+          "install": "installMediaVideoSound",
+          "exports": [
+            "isVideoSilent",
+            "createVideoSoundController",
+            "videoSoundEvents",
+            "initializeVideoSound"
+          ],
+          "upstreamLine": 146887,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-play-button.js",
+          "install": "installMediaVideoPlayButton",
+          "exports": [
+            "VideoPlayButton",
+            "VideoPlayButtonReact",
+            "VideoPlayButtonJsx",
+            "videoPlayButtonAttribute",
+            "videoTapToggleDelayMs",
+            "videoPlayButtonLargeFrom",
+            "videoPlayButtonLargeHeight",
+            "videoPlayButtonSizeTiers",
+            "videoPlayButtonCoarseFrom",
+            "videoPlayButtonBusyDelayMs",
+            "initializeVideoPlayButton"
+          ],
+          "upstreamLine": 147458,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-control-icons.js",
+          "install": "installMediaVideoControlIcons",
+          "exports": [
+            "VideoControlIcon",
+            "VideoControlIconJsx",
+            "buildVideoControlIcon",
+            "videoControlIconSizes",
+            "videoSoundWavesSmall",
+            "videoSoundWavesMedium",
+            "videoControlIcons",
+            "initializeVideoControlIcons"
+          ],
+          "upstreamLine": 147720,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-controls.js",
+          "install": "installMediaVideoControls",
+          "exports": [
+            "showVideoControls",
+            "videoControlsLayout",
+            "handleVideoControlKey",
+            "registerVideoControlKeys",
+            "VideoControls",
+            "VideoControlsReact",
+            "VideoControlsJsx",
+            "videoControlsTimeouts",
+            "videoHoldsTapAttribute",
+            "videoControlShowEvent",
+            "videoControlKeyTargets",
+            "initializeVideoControls"
+          ],
+          "upstreamLine": 147923,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-thumbnails.js",
+          "install": "installMediaVideoThumbnails",
+          "exports": [
+            "canFetchVideoThumbnail",
+            "fetchVideoThumbnail",
+            "fetchOembedThumbnailUrls",
+            "thumbnailUrlUnder",
+            "loadImageAsJpeg",
+            "videoThumbnailTimeoutMs",
+            "videoThumbnailOembedMaxBytes",
+            "videoThumbnailMaxWidth",
+            "videoThumbnailMaxPixels",
+            "videoThumbnailMinWidth",
+            "videoThumbnailSources",
+            "initializeVideoThumbnails"
+          ],
+          "upstreamLine": 148324,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-stills.js",
+          "install": "installMediaVideoStills",
+          "exports": [
+            "useVideoStills",
+            "VideoStillsReact",
+            "videoStillsSelectedLimit",
+            "videoStillsDeckLimit",
+            "videoStillsAloneMs",
+            "videoStillsClock",
+            "videoStillKey",
+            "videoStillsContext",
+            "initializeVideoStills"
+          ],
+          "upstreamLine": 148546,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-encoding-plans.js",
+          "install": "installMediaVideoEncodingPlans",
+          "exports": [
+            "VIDEO_TARGET_BYTES",
+            "VIDEO_ENCODE_MAX_ATTEMPTS",
+            "VIDEO_AUDIO_BITRATE",
+            "VIDEO_ENCODE_FPS",
+            "VIDEO_ENCODING_RUNGS",
+            "evenVideoDimension",
+            "videoPlanForRung",
+            "initialVideoEncodingPlan",
+            "reducedVideoEncodingPlan",
+            "VIDEO_LIMIT_MEGABYTES",
+            "videoShrinkFailureMessage"
+          ],
+          "upstreamLine": 191827,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-worker.js",
+          "install": "installMediaVideoWorker",
+          "exports": [
+            "videoWorkerSource",
+            "VIDEO_WORKER_STALL_MS",
+            "loadVideoWorkerSource",
+            "canShrinkVideo",
+            "createVideoWorker",
+            "runVideoWorkerRequest",
+            "probeVideoFile",
+            "videoWorkerEncoder"
+          ],
+          "upstreamLine": 192027,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-video-shrink-queue.js",
+          "install": "installMediaVideoShrinkQueue",
+          "exports": [
+            "videoShrinkJobs",
+            "videoShrinkJobSnapshots",
+            "nextVideoShrinkJobId",
+            "videoShrinkSubscribers",
+            "videoShrinkLeaveHold",
+            "preventLeaveDuringVideoShrink",
+            "holdVideoShrinkLock",
+            "publishVideoShrinkJobs",
+            "finishVideoShrinkJob",
+            "processVideoShrinkJob",
+            "startNextVideoShrinkJob",
+            "enqueueVideoShrink",
+            "cancelVideoShrink",
+            "getVideoShrinkJobs",
+            "hasVideoShrinkJobs",
+            "subscribeVideoShrinkJobs"
+          ],
+          "upstreamLine": 192491,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/ui-video-shrink-progress.js",
+          "install": "installUiVideoShrinkProgress",
+          "exports": [
+            "reactwF",
+            "jsxtq0",
+            "VideoProgressBar",
+            "jsxCW",
+            "primaryVideoShrinkJob",
+            "VideoShrinkProgress",
+            "CancelVideoShrinkButton",
+            "VideoShrinkToastBridge"
+          ],
+          "upstreamLine": 193636,
+          "reason": "User explicitly removed all video functionality"
+        },
+        {
+          "file": "modules/media-clip-registry.js",
+          "install": "installMediaClipRegistry",
+          "exports": [
+            "registerClipController",
+            "registerClipHandle",
+            "toggleClipHandle",
+            "useClipHandle",
+            "registerLiveClip",
+            "useClipIsLive",
+            "useClipController",
+            "useClipPaused",
+            "useClipPlaybackState",
+            "ClipRegistryReact",
+            "clipControllers",
+            "clipRegistrySubscribers",
+            "notifyClipRegistry",
+            "clipRegistryKey",
+            "clipControllerByKey",
+            "liveClipKeys",
+            "clipHandles",
+            "clipHandleByKey",
+            "subscribeClipRegistry",
+            "initializeClipRegistry"
+          ],
+          "upstreamLine": 142625,
+          "reason": "User requested removal of video playback infrastructure"
+        },
+        {
+          "file": "modules/media-clip-badge.js",
+          "install": "installMediaClipBadge",
+          "exports": [
+            "ClipBadge",
+            "ClipBadgeJsx",
+            "initializeClipBadge"
+          ],
+          "upstreamLine": 142943,
+          "reason": "User requested removal of video playback infrastructure"
+        },
+        {
+          "file": "modules/media-autoplay-candidates.js",
+          "install": "installMediaAutoplayCandidates",
+          "exports": [
+            "autoplayCandidates",
+            "registerAutoplayCandidate",
+            "playNextAutoplayCandidate",
+            "initializeAutoplayCandidates"
+          ],
+          "upstreamLine": 146828,
+          "reason": "User requested removal of video playback infrastructure"
+        },
+        {
+          "file": "modules/media-embedded-player-api.js",
+          "install": "installMediaEmbeddedPlayerApi",
+          "exports": [
+            "hasEmbeddedPlayerApi",
+            "parseEmbeddedPlayerMessage",
+            "connectEmbeddedPlayer",
+            "embeddedPlayerPlayRetryMs",
+            "embeddedPlayerPlayRetryStepMs",
+            "embeddedPlayerSilentAfterLoadMs",
+            "embeddedPlayerSilentBeforeLoadMs",
+            "embeddedPlayerHelloIntervalMs",
+            "embeddedPlayerHelloAttempts",
+            "youtubePlayerCommand",
+            "youtubePlayerStates",
+            "vimeoPlayerEvents",
+            "readPlayerField",
+            "embeddedPlayerApis",
+            "initializeEmbeddedPlayerApi"
+          ],
+          "upstreamLine": 147140,
+          "reason": "User requested removal of video playback infrastructure"
+        },
+        {
+          "file": "modules/media-playback-turn.js",
+          "install": "installMediaPlaybackTurn",
+          "exports": [
+            "usePlaybackTurn",
+            "PlaybackTurnReact",
+            "PlaybackTurnReactDom",
+            "PlaybackTurnJsx",
+            "PlaybackTurnContext",
+            "initializePlaybackTurn"
+          ],
+          "upstreamLine": 146965,
+          "reason": "Unused video player coordination and embed capability probing removed with video features"
+        },
+        {
+          "file": "modules/media-embedded-player-support.js",
+          "install": "installMediaEmbeddedPlayerSupport",
+          "exports": [
+            "embeddedPlayerSupportCache",
+            "pageAllowsEmbed",
+            "serverTimingAllows",
+            "pageCspAllows",
+            "cspAllows",
+            "canEmbedAnyVideoProvider",
+            "initializeEmbeddedPlayerSupport"
+          ],
+          "upstreamLine": 192818,
+          "reason": "Unused video player coordination and embed capability probing removed with video features"
+        }
+      ],
+      "messageCount": 1446,
+      "unusedBrowserBindings": 4542,
+      "features": {
+        "math": [
+          "math-FKCJER6Q.js"
+        ],
+        "templates": [
+          "templates-X5QGTGCC.js"
+        ],
+        "presentation": [
+          "presentation-YCFN6SYD.js"
+        ],
+        "properties": [
+          "properties-XRBFW6YT.js"
+        ],
+        "exports": [
+          "exports-LQ22L55S.js"
+        ],
+        "pptx": [
+          "pptx-library-M6DMK4BU.js"
+        ],
+        "woff2": [
+          "woff2-decoder-7WMMEAZP.js"
+        ]
+      },
+      "compressed": {
+        "chunk-4U4M4XSS.js": {
+          "bytes": 1528,
+          "br": 771,
+          "gzip": 864
+        },
+        "chunk-I7AUKTXE.js": {
+          "bytes": 265,
+          "br": 151,
+          "gzip": 190
+        },
+        "chunk-JV5WIUZU.js": {
+          "bytes": 27174,
+          "br": 9995,
+          "gzip": 11432
+        },
+        "chunk-QC32QTJR.js": {
+          "bytes": 821198,
+          "br": 200468,
+          "gzip": 240640
+        },
+        "chunk-XOEDTAYB.js": {
+          "bytes": 2551,
+          "br": 1177,
+          "gzip": 1277
+        },
+        "editor-00c9d314277a0a28.css": {
+          "bytes": 519266,
+          "br": 52848,
+          "gzip": 70404
+        },
+        "editor-PNYI7CRY.js": {
+          "bytes": 2701716,
+          "br": 712251,
+          "gzip": 897330
+        },
+        "exports-LQ22L55S.js": {
+          "bytes": 233591,
+          "br": 74245,
+          "gzip": 86834
+        },
+        "math-FKCJER6Q.js": {
+          "bytes": 291369,
+          "br": 67033,
+          "gzip": 81236
+        },
+        "pptx-library-M6DMK4BU.js": {
+          "bytes": 388356,
+          "br": 116594,
+          "gzip": 130378
+        },
+        "presentation-YCFN6SYD.js": {
+          "bytes": 35390,
+          "br": 10777,
+          "gzip": 11942
+        },
+        "properties-XRBFW6YT.js": {
+          "bytes": 95701,
+          "br": 25134,
+          "gzip": 28558
+        },
+        "templates-X5QGTGCC.js": {
+          "bytes": 13565,
+          "br": 4694,
+          "gzip": 5240
+        },
+        "woff2-decoder-7WMMEAZP.js": {
+          "bytes": 305632,
+          "br": 109979,
+          "gzip": 131055
+        }
+      },
+      "styles": {
+        "file": "editor-00c9d314277a0a28.css",
+        "fallbackFont": "anthropicons-variable-38cfcaa5e7a74bd6.woff2",
+        "fallbackFontBytes": 64884
+      },
+      "original": {
+        "bytes": 4943004,
+        "gzip": 1591657
+      },
+      "entry": {
+        "file": "editor-PNYI7CRY.js",
+        "bytes": 2701716,
+        "gzip": 898632
+      },
+      "initial": {
+        "inputs": [
+          "third_party/baoyu-design/slides-source/modules/editor-fill-core.js",
+          "third_party/baoyu-design/slides-source/modules/dependencies-e4.js",
+          "third_party/baoyu-design/slides-source/modules/module-interop.js",
+          "third_party/baoyu-design/slides-source/modules/environment-i18n.js",
+          "third_party/baoyu-design/slides-source/modules/ui-foundation.js",
+          "third_party/baoyu-design/slides-source/modules/ui-interactions.js",
+          "third_party/baoyu-design/slides-source/modules/ui-overlays.js",
+          "third_party/baoyu-design/slides-source/modules/ui-editor-tokens.js",
+          "third_party/baoyu-design/slides-source/modules/ui-editor-selection.js",
+          "third_party/baoyu-design/slides-source/modules/ui-avatars.js",
+          "third_party/baoyu-design/slides-source/modules/ui-avatar-stack.js",
+          "third_party/baoyu-design/slides-source/modules/ui-disclosure.js",
+          "third_party/baoyu-design/slides-source/modules/ui-menu.js",
+          "third_party/baoyu-design/slides-source/modules/ui-inputs.js",
+          "third_party/baoyu-design/slides-source/modules/ui-dialog.js",
+          "third_party/baoyu-design/slides-source/modules/ui-tabs.js",
+          "third_party/baoyu-design/slides-source/modules/ui-dialog2.js",
+          "third_party/baoyu-design/slides-source/modules/ui-table.js",
+          "third_party/baoyu-design/slides-source/modules/ui-scroll-pager.js",
+          "third_party/baoyu-design/slides-source/modules/ui-tabs2.js",
+          "third_party/baoyu-design/slides-source/modules/ui-toast.js",
+          "third_party/baoyu-design/slides-source/modules/ui-preview-card.js",
+          "third_party/baoyu-design/slides-source/modules/ui-pulse.js",
+          "third_party/baoyu-design/slides-source/modules/ui-inputs2.js",
+          "third_party/baoyu-design/slides-source/modules/ui-property-focus.js",
+          "third_party/baoyu-design/slides-source/modules/ui-property-icons.js",
+          "third_party/baoyu-design/slides-source/modules/ui-announcements.js",
+          "third_party/baoyu-design/slides-source/modules/ui-contrast.js",
+          "third_party/baoyu-design/slides-source/modules/ui-property-labels.js",
+          "third_party/baoyu-design/slides-source/modules/ui-contrast-controls.js",
+          "third_party/baoyu-design/slides-source/modules/ui-kit-field-undo.js",
+          "third_party/baoyu-design/slides-source/modules/ui-color-picker.js",
+          "third_party/baoyu-design/slides-source/modules/editor-shape-icon-paths.js",
+          "third_party/baoyu-design/slides-source/modules/ui-inspector-icons.js",
+          "third_party/baoyu-design/slides-source/modules/ui-number-controls.js",
+          "third_party/baoyu-design/slides-source/modules/ui-property-row.js",
+          "third_party/baoyu-design/slides-source/modules/ui-scrim-press-through.js",
+          "third_party/baoyu-design/slides-source/modules/ui-property-popover.js",
+          "third_party/baoyu-design/slides-source/modules/ui-property-search.js",
+          "third_party/baoyu-design/slides-source/modules/ui-pointer-media.js",
+          "third_party/baoyu-design/slides-source/modules/ui-select.js",
+          "third_party/baoyu-design/slides-source/modules/ui-gradient-editor.js",
+          "third_party/baoyu-design/slides-source/modules/ui-tooltip-wrapper.js",
+          "third_party/baoyu-design/slides-source/modules/ui-icon-button.js",
+          "third_party/baoyu-design/slides-source/modules/ui-color-select.js",
+          "third_party/baoyu-design/slides-source/modules/environment-color-mode.js",
+          "third_party/baoyu-design/slides-source/modules/environment-platform-shortcuts.js",
+          "third_party/baoyu-design/slides-source/modules/media-image-crop.js",
+          "third_party/baoyu-design/slides-source/modules/media-image-downsampling.js",
+          "third_party/baoyu-design/slides-source/modules/environment-links.js",
+          "third_party/baoyu-design/slides-source/modules/environment-host-capabilities.js",
+          "third_party/baoyu-design/slides-source/modules/environment-compiled-page.js",
+          "third_party/baoyu-design/slides-source/modules/environment-emulator.js",
+          "third_party/baoyu-design/slides-source/modules/media-assets.js",
+          "third_party/baoyu-design/slides-source/modules/legacy-media-metadata.js",
+          "third_party/baoyu-design/slides-source/modules/model-sections.js",
+          "third_party/baoyu-design/slides-source/modules/model-type-scales.js",
+          "third_party/baoyu-design/slides-source/modules/model-style-schema.js",
+          "third_party/baoyu-design/slides-source/modules/model-artifact-links.js",
+          "third_party/baoyu-design/slides-source/modules/model-deck.js",
+          "third_party/baoyu-design/slides-source/modules/design-system-tokens.js",
+          "third_party/baoyu-design/slides-source/modules/design-system-store.js",
+          "third_party/baoyu-design/slides-source/modules/compiler-css-values.js",
+          "third_party/baoyu-design/slides-source/modules/compiler-html.js",
+          "third_party/baoyu-design/slides-source/modules/model-typography.js",
+          "third_party/baoyu-design/slides-source/modules/model-geometry.js",
+          "third_party/baoyu-design/slides-source/modules/model-rich-text-dom.js",
+          "third_party/baoyu-design/slides-source/modules/serialization-html.js",
+          "third_party/baoyu-design/slides-source/modules/model-editing.js",
+          "third_party/baoyu-design/slides-source/modules/model-selection.js",
+          "third_party/baoyu-design/slides-source/modules/fonts-catalog.js",
+          "third_party/baoyu-design/slides-source/modules/fonts-variants.js",
+          "third_party/baoyu-design/slides-source/modules/rendering-theme.js",
+          "third_party/baoyu-design/slides-source/modules/rendering-artifact-link-cards.js",
+          "third_party/baoyu-design/slides-source/modules/model-navigation.js",
+          "third_party/baoyu-design/slides-source/modules/export-coded-failure.js",
+          "third_party/baoyu-design/slides-source/modules/model-rich-text-commands.js",
+          "third_party/baoyu-design/slides-source/modules/embeds-sanitizer.js",
+          "third_party/baoyu-design/slides-source/modules/embeds-runtime-bridge.js",
+          "third_party/baoyu-design/slides-source/modules/embeds-document.js",
+          "third_party/baoyu-design/slides-source/modules/embeds-frame-host.js",
+          "third_party/baoyu-design/slides-source/modules/embeds-react-frame.js",
+          "third_party/baoyu-design/slides-source/modules/rendering-icon-font.js",
+          "third_party/baoyu-design/slides-source/modules/rendering-artifact-link-card-views.js",
+          "third_party/baoyu-design/slides-source/modules/rendering-slide-snapshots.js",
+          "third_party/baoyu-design/slides-source/modules/rendering-slides.js",
+          "third_party/baoyu-design/slides-source/modules/fonts-fetch.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-build-effects.js",
+          "third_party/baoyu-design/slides-source/modules/export-export-notes.js",
+          "third_party/baoyu-design/slides-source/modules/fonts-readiness.js",
+          "third_party/baoyu-design/slides-source/modules/fonts-google-font-licences.js",
+          "third_party/baoyu-design/slides-source/modules/export-filenames.js",
+          "third_party/baoyu-design/slides-source/modules/fonts-face-parser.js",
+          "third_party/baoyu-design/slides-source/modules/fonts-inlining.js",
+          "third_party/baoyu-design/slides-source/modules/host-hot-reload.js",
+          "third_party/baoyu-design/slides-source/modules/host-feature-flags.js",
+          "third_party/baoyu-design/slides-source/modules/host-agent-activity.js",
+          "third_party/baoyu-design/slides-source/modules/ui-editor-bootstrap-imports.js",
+          "third_party/baoyu-design/slides-source/modules/host-frame-bridge.js",
+          "third_party/baoyu-design/slides-source/modules/host-frame-composer.js",
+          "third_party/baoyu-design/slides-source/modules/ui-undo-keys.js",
+          "third_party/baoyu-design/slides-source/modules/ui-collaborator-tints.js",
+          "third_party/baoyu-design/slides-source/modules/ui-viewport-gestures.js",
+          "third_party/baoyu-design/slides-source/modules/ui-design-provider.js",
+          "third_party/baoyu-design/slides-source/modules/ui-commit-text-input.js",
+          "third_party/baoyu-design/slides-source/modules/ui-side-panels.js",
+          "third_party/baoyu-design/slides-source/modules/ui-context-menu-popup.js",
+          "third_party/baoyu-design/slides-source/modules/ui-canvas-focus.js",
+          "third_party/baoyu-design/slides-source/modules/ui-property-rows.js",
+          "third_party/baoyu-design/slides-source/modules/editor-hit-testing.js",
+          "third_party/baoyu-design/slides-source/modules/editor-media-crop-overlay.js",
+          "third_party/baoyu-design/slides-source/modules/editor-measurement-overlay.js",
+          "third_party/baoyu-design/slides-source/modules/editor-drag-geometry.js",
+          "third_party/baoyu-design/slides-source/modules/ui-toolbar-fold.js",
+          "third_party/baoyu-design/slides-source/modules/ui-toolbar-controls.js",
+          "third_party/baoyu-design/slides-source/modules/ui-toolbar-tabs.js",
+          "third_party/baoyu-design/slides-source/modules/ui-artifact-load-boundary.js",
+          "third_party/baoyu-design/slides-source/modules/ui-agent-cursor.js",
+          "third_party/baoyu-design/slides-source/modules/ui-file-drop.js",
+          "third_party/baoyu-design/slides-source/modules/ui-toast-f6-visit.js",
+          "third_party/baoyu-design/slides-source/modules/ui-toasts.js",
+          "third_party/baoyu-design/slides-source/modules/ui-toolbar-popover.js",
+          "third_party/baoyu-design/slides-source/modules/ui-property-popover2.js",
+          "third_party/baoyu-design/slides-source/modules/ui-artifact-toolbar.js",
+          "third_party/baoyu-design/slides-source/modules/ui-toolbar-foot.js",
+          "third_party/baoyu-design/slides-source/modules/ui-artifact-shell.js",
+          "third_party/baoyu-design/slides-source/modules/host-artifact-text.js",
+          "third_party/baoyu-design/slides-source/modules/host-clipboard-text.js",
+          "third_party/baoyu-design/slides-source/modules/host-room-presence.js",
+          "third_party/baoyu-design/slides-source/modules/editor-frame-comments.js",
+          "third_party/baoyu-design/slides-source/modules/host-agent-session.js",
+          "third_party/baoyu-design/slides-source/modules/host-handoff-preference.js",
+          "third_party/baoyu-design/slides-source/modules/host-busy-holds.js",
+          "third_party/baoyu-design/slides-source/modules/host-artifact-clipboard.js",
+          "third_party/baoyu-design/slides-source/modules/model-comments.js",
+          "third_party/baoyu-design/slides-source/modules/host-artifact-edit-count.js",
+          "third_party/baoyu-design/slides-source/modules/host-artifact-presence.js",
+          "third_party/baoyu-design/slides-source/modules/host-user-api.js",
+          "third_party/baoyu-design/slides-source/modules/ui-peer-cursors.js",
+          "third_party/baoyu-design/slides-source/modules/ui-remote-change-announcer.js",
+          "third_party/baoyu-design/slides-source/modules/editor-command-history.js",
+          "third_party/baoyu-design/slides-source/modules/export-failure-messages.js",
+          "third_party/baoyu-design/slides-source/modules/model-deck-metadata.js",
+          "third_party/baoyu-design/slides-source/modules/editor-deck-command-history.js",
+          "third_party/baoyu-design/slides-source/modules/editor-slide-gesture-history.js",
+          "third_party/baoyu-design/slides-source/modules/design-system-color-analysis.js",
+          "third_party/baoyu-design/slides-source/modules/ui-zoom-control.js",
+          "third_party/baoyu-design/slides-source/modules/ui-find-bar.js",
+          "third_party/baoyu-design/slides-source/modules/design-system-theme-looks.js",
+          "third_party/baoyu-design/slides-source/modules/ui-artifact-find.js",
+          "third_party/baoyu-design/slides-source/modules/editor-dom-text-search.js",
+          "third_party/baoyu-design/slides-source/modules/ui-find-highlights.js",
+          "third_party/baoyu-design/slides-source/modules/ui-find-result-icons.js",
+          "third_party/baoyu-design/slides-source/modules/model-artifact-store-records.js",
+          "third_party/baoyu-design/slides-source/modules/editor-font-face-choices.js",
+          "third_party/baoyu-design/slides-source/modules/editor-gesture-cursor.js",
+          "third_party/baoyu-design/slides-source/modules/editor-slide-generation.js",
+          "third_party/baoyu-design/slides-source/modules/ui-session-properties.js",
+          "third_party/baoyu-design/slides-source/modules/ui-style-inspector.js",
+          "third_party/baoyu-design/slides-source/modules/ui-box-quick-panels.js",
+          "third_party/baoyu-design/slides-source/modules/ui-box-style-toolbar.js",
+          "third_party/baoyu-design/slides-source/modules/ui-selection-actions.js",
+          "third_party/baoyu-design/slides-source/modules/ui-edit-context-menu.js",
+          "third_party/baoyu-design/slides-source/modules/ui-roving-focus.js",
+          "third_party/baoyu-design/slides-source/modules/ui-scrollbar-overlay.js",
+          "third_party/baoyu-design/slides-source/modules/editor-child-size-modes.js",
+          "third_party/baoyu-design/slides-source/modules/ui-input-activation.js",
+          "third_party/baoyu-design/slides-source/modules/editor-contrast-backgrounds.js",
+          "third_party/baoyu-design/slides-source/modules/editor-media-crop-session.js",
+          "third_party/baoyu-design/slides-source/modules/editor-grouping.js",
+          "third_party/baoyu-design/slides-source/modules/layout-selection-groups.js",
+          "third_party/baoyu-design/slides-source/modules/layout-snapping.js",
+          "third_party/baoyu-design/slides-source/modules/creation-timing.js",
+          "third_party/baoyu-design/slides-source/modules/collaboration-slide-presence.js",
+          "third_party/baoyu-design/slides-source/modules/editor-slide-selection.js",
+          "third_party/baoyu-design/slides-source/modules/editor-slide-rail-marquee.js",
+          "third_party/baoyu-design/slides-source/modules/editor-slide-rail-layout.js",
+          "third_party/baoyu-design/slides-source/modules/editor-slide-messages.js",
+          "third_party/baoyu-design/slides-source/modules/editor-slide-rail.js",
+          "third_party/baoyu-design/slides-source/modules/editor-slide-grid.js",
+          "third_party/baoyu-design/slides-source/modules/bridge-frame-viewport.js",
+          "third_party/baoyu-design/slides-source/modules/comments-capability.js",
+          "third_party/baoyu-design/slides-source/modules/comments-anchors.js",
+          "third_party/baoyu-design/slides-source/modules/comments-composer.js",
+          "third_party/baoyu-design/slides-source/modules/comments-labels.js",
+          "third_party/baoyu-design/slides-source/modules/editor-touch-long-press.js",
+          "third_party/baoyu-design/slides-source/modules/editor-scale-geometry.js",
+          "third_party/baoyu-design/slides-source/modules/editor-scale-mode.js",
+          "third_party/baoyu-design/slides-source/modules/editor-canvas.js",
+          "third_party/baoyu-design/slides-source/modules/editor-speaker-notes.js",
+          "third_party/baoyu-design/slides-source/modules/editor-shape-icons.js",
+          "third_party/baoyu-design/slides-source/modules/editor-damaged-slide.js",
+          "third_party/baoyu-design/slides-source/modules/editor-palette.js",
+          "third_party/baoyu-design/slides-source/modules/editor-context-menu.js",
+          "third_party/baoyu-design/slides-source/modules/editor-clipboard.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-fullscreen.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-slide-index.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-announcements.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-speaker-protocol.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-phone-remote.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-popouts.js",
+          "third_party/baoyu-design/slides-source/modules/documents-json-records.js",
+          "third_party/baoyu-design/slides-source/modules/documents-comment-records.js",
+          "third_party/baoyu-design/slides-source/modules/documents-migration-markers.js",
+          "third_party/baoyu-design/slides-source/modules/documents-slide-codec.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-speaker-styles.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-speaker-session.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-animation-engine.js",
+          "third_party/baoyu-design/slides-source/modules/presentation-player.js",
+          "third_party/baoyu-design/slides-source/modules/creation-overlay.js",
+          "third_party/baoyu-design/slides-source/modules/editor-slide-ticks.js",
+          "third_party/baoyu-design/slides-source/modules/creation-controller.js",
+          "third_party/baoyu-design/slides-source/modules/editor-early-slide.js",
+          "third_party/baoyu-design/slides-source/modules/editor-focus-regions.js",
+          "third_party/baoyu-design/slides-source/modules/editor-find.js",
+          "third_party/baoyu-design/slides-source/modules/editor-change-announcements.js",
+          "third_party/baoyu-design/slides-source/modules/comments-area-selection.js",
+          "third_party/baoyu-design/slides-source/modules/comments-area-geometry.js",
+          "third_party/baoyu-design/slides-source/modules/comments-pin-geometry.js",
+          "third_party/baoyu-design/slides-source/modules/comments-hit-testing.js",
+          "third_party/baoyu-design/slides-source/modules/comments-pin.js",
+          "third_party/baoyu-design/slides-source/modules/comments-highlights.js",
+          "third_party/baoyu-design/slides-source/modules/comments-pin-occlusion.js",
+          "third_party/baoyu-design/slides-source/modules/design-system-deck-restyle.js",
+          "third_party/baoyu-design/slides-source/modules/comments-keyboard.js",
+          "third_party/baoyu-design/slides-source/modules/comments-slide-layer.js",
+          "third_party/baoyu-design/slides-source/modules/comments-grid-layer.js",
+          "third_party/baoyu-design/slides-source/modules/editor-grid-notes-click.js",
+          "third_party/baoyu-design/slides-source/modules/collaboration-grid-cursors.js",
+          "third_party/baoyu-design/slides-source/modules/collaboration-selection-rings.js",
+          "third_party/baoyu-design/slides-source/modules/collaboration-slide-selection.js",
+          "third_party/baoyu-design/slides-source/modules/delivery-shell-downloads.js",
+          "third_party/baoyu-design/slides-source/modules/delivery-provider.js",
+          "third_party/baoyu-design/slides-source/modules/delivery-labels.js",
+          "third_party/baoyu-design/slides-source/modules/delivery-browser-download.js",
+          "third_party/baoyu-design/slides-source/modules/delivery-pdf-options.js",
+          "third_party/baoyu-design/slides-source/modules/delivery-notes-dialog.js",
+          "third_party/baoyu-design/slides-source/modules/delivery-export-note-messages.js",
+          "third_party/baoyu-design/slides-source/modules/delivery-font-substitution.js",
+          "third_party/baoyu-design/slides-source/modules/bridge-page-occlusion.js",
+          "third_party/baoyu-design/slides-source/modules/editor-dialogs.js",
+          "third_party/baoyu-design/slides-source/modules/documents-edit-protection.js",
+          "third_party/baoyu-design/slides-source/modules/editor-view-state.js",
+          "third_party/baoyu-design/slides-source/modules/documents-self-publish.js",
+          "third_party/baoyu-design/slides-source/modules/documents-artifact-document.js",
+          "third_party/baoyu-design/slides-source/modules/documents-removed-slides.js",
+          "third_party/baoyu-design/slides-source/modules/documents-deck-store.js",
+          "third_party/baoyu-design/slides-source/modules/documents-asset-undo.js",
+          "third_party/baoyu-design/slides-source/modules/editor-current-slide.js",
+          "third_party/baoyu-design/slides-source/modules/bridge-place-links.js",
+          "third_party/baoyu-design/slides-source/modules/rendering-messages.js",
+          "third_party/baoyu-design/slides-source/modules/delivery-dialog.js",
+          "third_party/baoyu-design/slides-source/modules/editor-rail-placement.js",
+          "third_party/baoyu-design/slides-source/modules/editor-rail-peek.js",
+          "third_party/baoyu-design/slides-source/modules/bridge-bottom-toolbar.js",
+          "third_party/baoyu-design/slides-source/modules/editor-app.js",
+          "third_party/baoyu-design/slides-source/modules/documents-write-access.js",
+          "third_party/baoyu-design/slides-source/modules/boot-thumbnail-capture.js",
+          "third_party/baoyu-design/slides-source/modules/boot-state-file.js",
+          "third_party/baoyu-design/slides-source/modules/boot-legacy-html.js",
+          "third_party/baoyu-design/slides-source/modules/editor-thumbnail-app.js",
+          "third_party/baoyu-design/slides-source/modules/editor-cover-title.js",
+          "third_party/baoyu-design/slides-source/modules/documents-stash-recovery-message.js",
+          "third_party/baoyu-design/slides-source/modules/files-slide-codec.js",
+          "third_party/baoyu-design/slides-source/modules/design-system-system-fonts.js",
+          "third_party/baoyu-design/slides-source/modules/design-system-slide-styles.js",
+          "third_party/baoyu-design/slides-source/modules/files-crash-stash.js",
+          "third_party/baoyu-design/slides-source/modules/files-unsaved-slides.js",
+          "third_party/baoyu-design/slides-source/modules/files-unload-flush.js",
+          "third_party/baoyu-design/slides-source/modules/files-sync-error-notifier.js",
+          "third_party/baoyu-design/slides-source/modules/files-design-systems.js",
+          "third_party/baoyu-design/slides-source/modules/design-system-restyle.js",
+          "third_party/baoyu-design/slides-source/modules/files-project-paths.js",
+          "third_party/baoyu-design/slides-source/modules/files-sha256.js",
+          "third_party/baoyu-design/slides-source/modules/files-publish-inputs.js",
+          "third_party/baoyu-design/slides-source/modules/files-read-retries.js",
+          "third_party/baoyu-design/slides-source/modules/files-hot-updates.js",
+          "third_party/baoyu-design/slides-source/modules/files-boot-reader.js",
+          "third_party/baoyu-design/slides-source/modules/files-sequence-merge.js",
+          "third_party/baoyu-design/slides-source/modules/files-browser-port.js",
+          "third_party/baoyu-design/slides-source/modules/files-document-merge.js",
+          "third_party/baoyu-design/slides-source/modules/files-index-store.js",
+          "third_party/baoyu-design/slides-source/modules/files-boot-recovery.js",
+          "third_party/baoyu-design/slides-source/modules/files-save-queue.js",
+          "third_party/baoyu-design/slides-source/modules/files-debug-panel.js",
+          "third_party/baoyu-design/slides-source/modules/files-slide-order-merge.js",
+          "third_party/baoyu-design/slides-source/modules/files-slides-document.js",
+          "third_party/baoyu-design/slides-source/modules/files-early-slides.js",
+          "shared/artifact-recovery.ts",
+          "third_party/baoyu-design/slides-source/modules/bootstrap.js",
+          "third_party/baoyu-design/slides-source/runtime.js",
+          "third_party/baoyu-design/slides-source/workspace-bridge.js",
+          "third_party/baoyu-design/slides-source/main.js",
+          "third_party/baoyu-design/slides-source/support.js",
+          "third_party/baoyu-design/slides-source/feature-resources.js",
+          "third_party/baoyu-design/slides-source/math-loading.js",
+          "node_modules/katex/contrib/auto-render/splitAtDelimiters.ts",
+          "third_party/baoyu-design/slides-source/math-source.js",
+          "third_party/baoyu-design/slides-source/module-helpers.js"
+        ],
+        "bytes": 3554432,
+        "gzip": 1153633
+      },
+      "inputs": [
+        "third_party/baoyu-design/slides-source/module-helpers.js",
+        "third_party/baoyu-design/slides-source/modules/editor-fill-core.js",
+        "third_party/baoyu-design/slides-source/feature-resources.js",
+        "third_party/baoyu-design/slides-source/support.js",
+        "third_party/baoyu-design/slides-source/vendor/pptx-library.js",
+        "third_party/baoyu-design/slides-source/interop.js",
+        "third_party/baoyu-design/slides-source/vendor/woff2-decoder.js",
+        "third_party/baoyu-design/slides-source/modules/dependencies-e4.js",
+        "third_party/baoyu-design/slides-source/modules/module-interop.js",
+        "third_party/baoyu-design/slides-source/modules/environment-i18n.js",
+        "third_party/baoyu-design/slides-source/modules/ui-foundation.js",
+        "third_party/baoyu-design/slides-source/modules/ui-interactions.js",
+        "third_party/baoyu-design/slides-source/modules/ui-overlays.js",
+        "third_party/baoyu-design/slides-source/modules/ui-editor-tokens.js",
+        "third_party/baoyu-design/slides-source/modules/ui-editor-selection.js",
+        "third_party/baoyu-design/slides-source/modules/ui-avatars.js",
+        "third_party/baoyu-design/slides-source/modules/ui-avatar-stack.js",
+        "third_party/baoyu-design/slides-source/modules/ui-disclosure.js",
+        "third_party/baoyu-design/slides-source/modules/ui-menu.js",
+        "third_party/baoyu-design/slides-source/modules/ui-inputs.js",
+        "third_party/baoyu-design/slides-source/modules/ui-dialog.js",
+        "third_party/baoyu-design/slides-source/modules/ui-tabs.js",
+        "third_party/baoyu-design/slides-source/modules/ui-dialog2.js",
+        "third_party/baoyu-design/slides-source/modules/ui-table.js",
+        "third_party/baoyu-design/slides-source/modules/ui-scroll-pager.js",
+        "third_party/baoyu-design/slides-source/modules/ui-tabs2.js",
+        "third_party/baoyu-design/slides-source/modules/ui-toast.js",
+        "third_party/baoyu-design/slides-source/modules/ui-preview-card.js",
+        "third_party/baoyu-design/slides-source/modules/ui-pulse.js",
+        "third_party/baoyu-design/slides-source/modules/ui-inputs2.js",
+        "third_party/baoyu-design/slides-source/modules/ui-property-focus.js",
+        "third_party/baoyu-design/slides-source/modules/ui-property-icons.js",
+        "third_party/baoyu-design/slides-source/modules/ui-announcements.js",
+        "third_party/baoyu-design/slides-source/modules/ui-contrast.js",
+        "third_party/baoyu-design/slides-source/modules/ui-property-labels.js",
+        "third_party/baoyu-design/slides-source/modules/ui-contrast-controls.js",
+        "third_party/baoyu-design/slides-source/modules/ui-kit-field-undo.js",
+        "third_party/baoyu-design/slides-source/modules/ui-color-picker.js",
+        "third_party/baoyu-design/slides-source/modules/editor-shape-icon-paths.js",
+        "third_party/baoyu-design/slides-source/modules/ui-inspector-icons.js",
+        "third_party/baoyu-design/slides-source/modules/ui-number-controls.js",
+        "third_party/baoyu-design/slides-source/modules/ui-property-row.js",
+        "third_party/baoyu-design/slides-source/modules/ui-scrim-press-through.js",
+        "third_party/baoyu-design/slides-source/modules/ui-property-popover.js",
+        "third_party/baoyu-design/slides-source/modules/ui-property-search.js",
+        "third_party/baoyu-design/slides-source/modules/ui-pointer-media.js",
+        "third_party/baoyu-design/slides-source/modules/ui-select.js",
+        "third_party/baoyu-design/slides-source/modules/ui-gradient-editor.js",
+        "third_party/baoyu-design/slides-source/modules/ui-tooltip-wrapper.js",
+        "third_party/baoyu-design/slides-source/modules/ui-icon-button.js",
+        "third_party/baoyu-design/slides-source/modules/ui-color-select.js",
+        "third_party/baoyu-design/slides-source/modules/environment-color-mode.js",
+        "third_party/baoyu-design/slides-source/modules/environment-platform-shortcuts.js",
+        "third_party/baoyu-design/slides-source/modules/media-image-crop.js",
+        "third_party/baoyu-design/slides-source/modules/media-image-downsampling.js",
+        "third_party/baoyu-design/slides-source/modules/environment-links.js",
+        "third_party/baoyu-design/slides-source/modules/environment-host-capabilities.js",
+        "third_party/baoyu-design/slides-source/modules/environment-compiled-page.js",
+        "third_party/baoyu-design/slides-source/modules/environment-emulator.js",
+        "third_party/baoyu-design/slides-source/modules/media-assets.js",
+        "third_party/baoyu-design/slides-source/modules/legacy-media-metadata.js",
+        "third_party/baoyu-design/slides-source/modules/model-sections.js",
+        "third_party/baoyu-design/slides-source/modules/model-type-scales.js",
+        "third_party/baoyu-design/slides-source/modules/model-style-schema.js",
+        "third_party/baoyu-design/slides-source/modules/model-artifact-links.js",
+        "third_party/baoyu-design/slides-source/modules/model-deck.js",
+        "third_party/baoyu-design/slides-source/modules/design-system-tokens.js",
+        "third_party/baoyu-design/slides-source/modules/design-system-store.js",
+        "third_party/baoyu-design/slides-source/modules/compiler-css-values.js",
+        "third_party/baoyu-design/slides-source/modules/compiler-html.js",
+        "third_party/baoyu-design/slides-source/modules/model-typography.js",
+        "third_party/baoyu-design/slides-source/modules/model-geometry.js",
+        "third_party/baoyu-design/slides-source/modules/model-rich-text-dom.js",
+        "third_party/baoyu-design/slides-source/modules/serialization-html.js",
+        "third_party/baoyu-design/slides-source/modules/model-editing.js",
+        "third_party/baoyu-design/slides-source/modules/model-selection.js",
+        "third_party/baoyu-design/slides-source/modules/fonts-catalog.js",
+        "third_party/baoyu-design/slides-source/modules/fonts-variants.js",
+        "third_party/baoyu-design/slides-source/modules/rendering-theme.js",
+        "third_party/baoyu-design/slides-source/modules/rendering-artifact-link-cards.js",
+        "third_party/baoyu-design/slides-source/modules/model-navigation.js",
+        "third_party/baoyu-design/slides-source/modules/export-coded-failure.js",
+        "third_party/baoyu-design/slides-source/modules/model-rich-text-commands.js",
+        "third_party/baoyu-design/slides-source/modules/embeds-sanitizer.js",
+        "third_party/baoyu-design/slides-source/modules/embeds-runtime-bridge.js",
+        "third_party/baoyu-design/slides-source/modules/embeds-document.js",
+        "third_party/baoyu-design/slides-source/modules/embeds-frame-host.js",
+        "third_party/baoyu-design/slides-source/modules/embeds-react-frame.js",
+        "third_party/baoyu-design/slides-source/modules/rendering-icon-font.js",
+        "third_party/baoyu-design/slides-source/modules/rendering-artifact-link-card-views.js",
+        "third_party/baoyu-design/slides-source/modules/rendering-slide-snapshots.js",
+        "node_modules/katex/contrib/auto-render/splitAtDelimiters.ts",
+        "third_party/baoyu-design/slides-source/math-source.js",
+        "node_modules/katex/dist/katex.mjs",
+        "third_party/baoyu-design/slides-source/math.js",
+        "third_party/baoyu-design/slides-source/math-loading.js",
+        "third_party/baoyu-design/slides-source/modules/rendering-slides.js",
+        "third_party/baoyu-design/slides-source/modules/fonts-fetch.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-build-effects.js",
+        "third_party/baoyu-design/slides-source/modules/export-export-notes.js",
+        "third_party/baoyu-design/slides-source/modules/fonts-readiness.js",
+        "third_party/baoyu-design/slides-source/modules/fonts-google-font-licences.js",
+        "third_party/baoyu-design/slides-source/modules/export-filenames.js",
+        "third_party/baoyu-design/slides-source/modules/fonts-face-parser.js",
+        "third_party/baoyu-design/slides-source/modules/fonts-inlining.js",
+        "third_party/baoyu-design/slides-source/modules/host-hot-reload.js",
+        "third_party/baoyu-design/slides-source/modules/host-feature-flags.js",
+        "third_party/baoyu-design/slides-source/modules/host-agent-activity.js",
+        "third_party/baoyu-design/slides-source/modules/ui-editor-bootstrap-imports.js",
+        "third_party/baoyu-design/slides-source/modules/host-frame-bridge.js",
+        "third_party/baoyu-design/slides-source/modules/host-frame-composer.js",
+        "third_party/baoyu-design/slides-source/modules/ui-undo-keys.js",
+        "third_party/baoyu-design/slides-source/modules/ui-collaborator-tints.js",
+        "third_party/baoyu-design/slides-source/modules/ui-viewport-gestures.js",
+        "third_party/baoyu-design/slides-source/modules/ui-design-provider.js",
+        "third_party/baoyu-design/slides-source/modules/ui-commit-text-input.js",
+        "third_party/baoyu-design/slides-source/modules/ui-side-panels.js",
+        "third_party/baoyu-design/slides-source/modules/ui-context-menu-popup.js",
+        "third_party/baoyu-design/slides-source/modules/ui-canvas-focus.js",
+        "third_party/baoyu-design/slides-source/modules/ui-property-rows.js",
+        "third_party/baoyu-design/slides-source/modules/editor-hit-testing.js",
+        "third_party/baoyu-design/slides-source/modules/editor-media-crop-overlay.js",
+        "third_party/baoyu-design/slides-source/modules/editor-measurement-overlay.js",
+        "third_party/baoyu-design/slides-source/modules/editor-drag-geometry.js",
+        "third_party/baoyu-design/slides-source/modules/ui-toolbar-fold.js",
+        "third_party/baoyu-design/slides-source/modules/ui-toolbar-controls.js",
+        "third_party/baoyu-design/slides-source/modules/ui-toolbar-tabs.js",
+        "third_party/baoyu-design/slides-source/modules/ui-artifact-load-boundary.js",
+        "third_party/baoyu-design/slides-source/modules/ui-agent-cursor.js",
+        "third_party/baoyu-design/slides-source/modules/ui-file-drop.js",
+        "third_party/baoyu-design/slides-source/modules/ui-toast-f6-visit.js",
+        "third_party/baoyu-design/slides-source/modules/ui-toasts.js",
+        "third_party/baoyu-design/slides-source/modules/ui-toolbar-popover.js",
+        "third_party/baoyu-design/slides-source/modules/ui-property-popover2.js",
+        "third_party/baoyu-design/slides-source/modules/ui-artifact-toolbar.js",
+        "third_party/baoyu-design/slides-source/modules/ui-toolbar-foot.js",
+        "third_party/baoyu-design/slides-source/modules/ui-artifact-shell.js",
+        "third_party/baoyu-design/slides-source/modules/host-artifact-text.js",
+        "third_party/baoyu-design/slides-source/modules/host-clipboard-text.js",
+        "third_party/baoyu-design/slides-source/modules/host-room-presence.js",
+        "third_party/baoyu-design/slides-source/modules/editor-frame-comments.js",
+        "third_party/baoyu-design/slides-source/modules/host-agent-session.js",
+        "third_party/baoyu-design/slides-source/modules/host-handoff-preference.js",
+        "third_party/baoyu-design/slides-source/modules/host-busy-holds.js",
+        "third_party/baoyu-design/slides-source/modules/host-artifact-clipboard.js",
+        "third_party/baoyu-design/slides-source/modules/model-comments.js",
+        "third_party/baoyu-design/slides-source/modules/host-artifact-edit-count.js",
+        "third_party/baoyu-design/slides-source/modules/host-artifact-presence.js",
+        "third_party/baoyu-design/slides-source/modules/host-user-api.js",
+        "third_party/baoyu-design/slides-source/modules/ui-peer-cursors.js",
+        "third_party/baoyu-design/slides-source/modules/ui-remote-change-announcer.js",
+        "third_party/baoyu-design/slides-source/modules/editor-command-history.js",
+        "third_party/baoyu-design/slides-source/modules/export-failure-messages.js",
+        "third_party/baoyu-design/slides-source/modules/model-deck-metadata.js",
+        "third_party/baoyu-design/slides-source/modules/editor-deck-command-history.js",
+        "third_party/baoyu-design/slides-source/modules/editor-slide-gesture-history.js",
+        "third_party/baoyu-design/slides-source/modules/design-system-color-analysis.js",
+        "third_party/baoyu-design/slides-source/modules/ui-zoom-control.js",
+        "third_party/baoyu-design/slides-source/modules/ui-find-bar.js",
+        "third_party/baoyu-design/slides-source/modules/design-system-theme-looks.js",
+        "third_party/baoyu-design/slides-source/modules/ui-artifact-find.js",
+        "third_party/baoyu-design/slides-source/modules/editor-dom-text-search.js",
+        "third_party/baoyu-design/slides-source/modules/ui-find-highlights.js",
+        "third_party/baoyu-design/slides-source/modules/ui-find-result-icons.js",
+        "third_party/baoyu-design/slides-source/modules/model-artifact-store-records.js",
+        "third_party/baoyu-design/slides-source/modules/editor-font-face-choices.js",
+        "third_party/baoyu-design/slides-source/modules/editor-gesture-cursor.js",
+        "third_party/baoyu-design/slides-source/modules/editor-slide-generation.js",
+        "third_party/baoyu-design/slides-source/modules/ui-session-properties.js",
+        "third_party/baoyu-design/slides-source/modules/ui-style-inspector.js",
+        "third_party/baoyu-design/slides-source/modules/ui-box-quick-panels.js",
+        "third_party/baoyu-design/slides-source/modules/ui-box-style-toolbar.js",
+        "third_party/baoyu-design/slides-source/modules/ui-selection-actions.js",
+        "third_party/baoyu-design/slides-source/modules/ui-edit-context-menu.js",
+        "third_party/baoyu-design/slides-source/modules/ui-roving-focus.js",
+        "third_party/baoyu-design/slides-source/modules/ui-scrollbar-overlay.js",
+        "third_party/baoyu-design/slides-source/modules/editor-child-size-modes.js",
+        "third_party/baoyu-design/slides-source/modules/ui-input-activation.js",
+        "third_party/baoyu-design/slides-source/modules/editor-contrast-backgrounds.js",
+        "third_party/baoyu-design/slides-source/modules/editor-media-crop-session.js",
+        "third_party/baoyu-design/slides-source/modules/editor-grouping.js",
+        "third_party/baoyu-design/slides-source/modules/layout-selection-groups.js",
+        "third_party/baoyu-design/slides-source/modules/layout-snapping.js",
+        "third_party/baoyu-design/slides-source/modules/creation-timing.js",
+        "third_party/baoyu-design/slides-source/modules/collaboration-slide-presence.js",
+        "third_party/baoyu-design/slides-source/modules/editor-slide-selection.js",
+        "third_party/baoyu-design/slides-source/modules/editor-slide-rail-marquee.js",
+        "third_party/baoyu-design/slides-source/modules/editor-slide-rail-layout.js",
+        "third_party/baoyu-design/slides-source/modules/editor-slide-messages.js",
+        "third_party/baoyu-design/slides-source/modules/editor-slide-rail.js",
+        "third_party/baoyu-design/slides-source/modules/editor-slide-grid.js",
+        "third_party/baoyu-design/slides-source/modules/bridge-frame-viewport.js",
+        "third_party/baoyu-design/slides-source/modules/comments-capability.js",
+        "third_party/baoyu-design/slides-source/modules/comments-anchors.js",
+        "third_party/baoyu-design/slides-source/modules/comments-composer.js",
+        "third_party/baoyu-design/slides-source/modules/comments-labels.js",
+        "third_party/baoyu-design/slides-source/modules/editor-touch-long-press.js",
+        "third_party/baoyu-design/slides-source/modules/editor-scale-geometry.js",
+        "third_party/baoyu-design/slides-source/modules/editor-scale-mode.js",
+        "third_party/baoyu-design/slides-source/modules/editor-canvas.js",
+        "third_party/baoyu-design/slides-source/modules/editor-speaker-notes.js",
+        "third_party/baoyu-design/slides-source/modules/editor-shape-icons.js",
+        "third_party/baoyu-design/slides-source/modules/editor-damaged-slide.js",
+        "third_party/baoyu-design/slides-source/modules/editor-palette.js",
+        "third_party/baoyu-design/slides-source/modules/editor-context-menu.js",
+        "third_party/baoyu-design/slides-source/modules/editor-clipboard.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-fullscreen.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-slide-index.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-announcements.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-speaker-protocol.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-phone-remote.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-popouts.js",
+        "third_party/baoyu-design/slides-source/modules/documents-json-records.js",
+        "third_party/baoyu-design/slides-source/modules/documents-comment-records.js",
+        "third_party/baoyu-design/slides-source/modules/documents-migration-markers.js",
+        "third_party/baoyu-design/slides-source/modules/documents-slide-codec.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-speaker-styles.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-speaker-session.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-animation-engine.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-player.js",
+        "third_party/baoyu-design/slides-source/modules/creation-overlay.js",
+        "third_party/baoyu-design/slides-source/modules/editor-slide-ticks.js",
+        "third_party/baoyu-design/slides-source/modules/creation-controller.js",
+        "third_party/baoyu-design/slides-source/modules/editor-early-slide.js",
+        "third_party/baoyu-design/slides-source/modules/editor-focus-regions.js",
+        "third_party/baoyu-design/slides-source/modules/editor-find.js",
+        "third_party/baoyu-design/slides-source/modules/editor-change-announcements.js",
+        "third_party/baoyu-design/slides-source/modules/comments-area-selection.js",
+        "third_party/baoyu-design/slides-source/modules/comments-area-geometry.js",
+        "third_party/baoyu-design/slides-source/modules/comments-pin-geometry.js",
+        "third_party/baoyu-design/slides-source/modules/comments-hit-testing.js",
+        "third_party/baoyu-design/slides-source/modules/comments-pin.js",
+        "third_party/baoyu-design/slides-source/modules/comments-highlights.js",
+        "third_party/baoyu-design/slides-source/modules/comments-pin-occlusion.js",
+        "third_party/baoyu-design/slides-source/modules/design-system-deck-restyle.js",
+        "third_party/baoyu-design/slides-source/modules/comments-keyboard.js",
+        "third_party/baoyu-design/slides-source/modules/comments-slide-layer.js",
+        "third_party/baoyu-design/slides-source/modules/comments-grid-layer.js",
+        "third_party/baoyu-design/slides-source/modules/editor-grid-notes-click.js",
+        "third_party/baoyu-design/slides-source/modules/collaboration-grid-cursors.js",
+        "third_party/baoyu-design/slides-source/modules/collaboration-selection-rings.js",
+        "third_party/baoyu-design/slides-source/modules/collaboration-slide-selection.js",
+        "third_party/baoyu-design/slides-source/modules/delivery-shell-downloads.js",
+        "third_party/baoyu-design/slides-source/modules/delivery-provider.js",
+        "third_party/baoyu-design/slides-source/modules/delivery-labels.js",
+        "third_party/baoyu-design/slides-source/modules/delivery-browser-download.js",
+        "third_party/baoyu-design/slides-source/modules/delivery-pdf-options.js",
+        "third_party/baoyu-design/slides-source/modules/delivery-notes-dialog.js",
+        "third_party/baoyu-design/slides-source/modules/delivery-export-note-messages.js",
+        "third_party/baoyu-design/slides-source/modules/delivery-font-substitution.js",
+        "third_party/baoyu-design/slides-source/modules/bridge-page-occlusion.js",
+        "third_party/baoyu-design/slides-source/modules/editor-dialogs.js",
+        "third_party/baoyu-design/slides-source/modules/documents-edit-protection.js",
+        "third_party/baoyu-design/slides-source/modules/editor-view-state.js",
+        "third_party/baoyu-design/slides-source/modules/documents-self-publish.js",
+        "third_party/baoyu-design/slides-source/modules/documents-artifact-document.js",
+        "third_party/baoyu-design/slides-source/modules/documents-removed-slides.js",
+        "third_party/baoyu-design/slides-source/modules/documents-deck-store.js",
+        "third_party/baoyu-design/slides-source/modules/documents-asset-undo.js",
+        "third_party/baoyu-design/slides-source/modules/editor-current-slide.js",
+        "third_party/baoyu-design/slides-source/modules/bridge-place-links.js",
+        "third_party/baoyu-design/slides-source/modules/rendering-messages.js",
+        "third_party/baoyu-design/slides-source/modules/delivery-dialog.js",
+        "third_party/baoyu-design/slides-source/modules/editor-rail-placement.js",
+        "third_party/baoyu-design/slides-source/modules/editor-rail-peek.js",
+        "third_party/baoyu-design/slides-source/modules/bridge-bottom-toolbar.js",
+        "third_party/baoyu-design/slides-source/modules/editor-app.js",
+        "third_party/baoyu-design/slides-source/modules/documents-write-access.js",
+        "third_party/baoyu-design/slides-source/modules/boot-thumbnail-capture.js",
+        "third_party/baoyu-design/slides-source/modules/boot-state-file.js",
+        "third_party/baoyu-design/slides-source/modules/boot-legacy-html.js",
+        "third_party/baoyu-design/slides-source/modules/editor-thumbnail-app.js",
+        "third_party/baoyu-design/slides-source/modules/editor-cover-title.js",
+        "third_party/baoyu-design/slides-source/modules/documents-stash-recovery-message.js",
+        "third_party/baoyu-design/slides-source/modules/files-slide-codec.js",
+        "third_party/baoyu-design/slides-source/modules/design-system-system-fonts.js",
+        "third_party/baoyu-design/slides-source/modules/design-system-slide-styles.js",
+        "third_party/baoyu-design/slides-source/modules/files-crash-stash.js",
+        "third_party/baoyu-design/slides-source/modules/files-unsaved-slides.js",
+        "third_party/baoyu-design/slides-source/modules/files-unload-flush.js",
+        "third_party/baoyu-design/slides-source/modules/files-sync-error-notifier.js",
+        "third_party/baoyu-design/slides-source/modules/files-design-systems.js",
+        "third_party/baoyu-design/slides-source/modules/design-system-restyle.js",
+        "third_party/baoyu-design/slides-source/modules/files-project-paths.js",
+        "third_party/baoyu-design/slides-source/modules/files-sha256.js",
+        "third_party/baoyu-design/slides-source/modules/files-publish-inputs.js",
+        "third_party/baoyu-design/slides-source/modules/files-read-retries.js",
+        "third_party/baoyu-design/slides-source/modules/files-hot-updates.js",
+        "third_party/baoyu-design/slides-source/modules/files-boot-reader.js",
+        "third_party/baoyu-design/slides-source/modules/files-sequence-merge.js",
+        "third_party/baoyu-design/slides-source/modules/files-browser-port.js",
+        "third_party/baoyu-design/slides-source/modules/files-document-merge.js",
+        "third_party/baoyu-design/slides-source/modules/files-index-store.js",
+        "third_party/baoyu-design/slides-source/modules/files-boot-recovery.js",
+        "third_party/baoyu-design/slides-source/modules/files-save-queue.js",
+        "third_party/baoyu-design/slides-source/modules/files-debug-panel.js",
+        "third_party/baoyu-design/slides-source/modules/files-slide-order-merge.js",
+        "third_party/baoyu-design/slides-source/modules/files-slides-document.js",
+        "third_party/baoyu-design/slides-source/modules/files-early-slides.js",
+        "shared/artifact-recovery.ts",
+        "third_party/baoyu-design/slides-source/modules/bootstrap.js",
+        "third_party/baoyu-design/slides-source/modules/export-embed-capture.js",
+        "third_party/baoyu-design/slides-source/modules/export-react-capture.js",
+        "third_party/baoyu-design/slides-source/modules/export-font-tables.js",
+        "third_party/baoyu-design/slides-source/modules/export-pptx.js",
+        "third_party/baoyu-design/slides-source/modules/export-pdf-writer.js",
+        "third_party/baoyu-design/slides-source/modules/export-rendered-semantics.js",
+        "third_party/baoyu-design/slides-source/modules/export-pdf-capture.js",
+        "third_party/baoyu-design/slides-source/modules/export-png.js",
+        "third_party/baoyu-design/slides-source/modules/export-background.js",
+        "third_party/baoyu-design/slides-source/modules/export-background-pictures-tail.js",
+        "third_party/baoyu-design/slides-source/modules/export-deck-measurement.js",
+        "third_party/baoyu-design/slides-source/modules/export-font-substitution.js",
+        "third_party/baoyu-design/slides-source/modules/export-google-font-catalog.js",
+        "third_party/baoyu-design/slides-source/modules/export-google-slides-fonts.js",
+        "third_party/baoyu-design/slides-source/modules/export-current-fonts.js",
+        "third_party/baoyu-design/slides-source/modules/export-pptx-font-embedding.js",
+        "third_party/baoyu-design/slides-source/modules/export-notes-pages.js",
+        "third_party/baoyu-design/slides-source/modules/export-picture-pptx.js",
+        "third_party/baoyu-design/slides-source/modules/export-page-runtime.js",
+        "third_party/baoyu-design/slides-source/modules/export-image-shrinking.js",
+        "third_party/baoyu-design/slides-source/modules/export-deck-html.js",
+        "third_party/baoyu-design/slides-source/exports.js",
+        "third_party/baoyu-design/slides-source/modules/editor-templates.js",
+        "third_party/baoyu-design/slides-source/modules/editor-template-restyling.js",
+        "third_party/baoyu-design/slides-source/templates.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-speaker-panel.js",
+        "third_party/baoyu-design/slides-source/modules/presentation-view.js",
+        "third_party/baoyu-design/slides-source/presentation.js",
+        "third_party/baoyu-design/slides-source/modules/ui-segmented-property.js",
+        "third_party/baoyu-design/slides-source/modules/ui-sides-property.js",
+        "third_party/baoyu-design/slides-source/modules/ui-selection-inspector.js",
+        "third_party/baoyu-design/slides-source/modules/design-system-theme-panel.js",
+        "third_party/baoyu-design/slides-source/properties.js",
+        "third_party/baoyu-design/slides-source/runtime.js",
+        "third_party/baoyu-design/slides-source/workspace-bridge.js",
+        "third_party/baoyu-design/slides-source/main.js"
+      ],
+      "files": {
+        "editor-PNYI7CRY.js": {
+          "bytes": 2701716,
+          "sha256": "f09c6f535e2e8312adc187b335bd2be3fd66d7de6834c48ad91b36032921f9a2"
+        },
+        "pptx-library-M6DMK4BU.js": {
+          "bytes": 388356,
+          "sha256": "f4adeb9f5e6d693ee6267021ec2977fd12c811c1a502b36b095f4048c0efca79"
+        },
+        "woff2-decoder-7WMMEAZP.js": {
+          "bytes": 305632,
+          "sha256": "e55d71fe3bfca99bc6d3ce79e2f74316c8109f359f17c24bb86ba80e701874eb"
+        },
+        "chunk-QC32QTJR.js": {
+          "bytes": 821198,
+          "sha256": "569dc8887b230497af6e2031ea202e77e697aabd28c6a24776aa3970023a7509"
+        },
+        "math-FKCJER6Q.js": {
+          "bytes": 291369,
+          "sha256": "175e7526b16302cf4b24dcf83b874261774d10e2fb9c24c6d9e2985b2ed97b5b"
+        },
+        "exports-LQ22L55S.js": {
+          "bytes": 233591,
+          "sha256": "4e05623551dc2ddc17709dcb7af34e69457a755112a8f0dcbd9633ed3c135156"
+        },
+        "chunk-4U4M4XSS.js": {
+          "bytes": 1528,
+          "sha256": "1786c5951ef3036bf74358de9e06c6bffa953ce94031b8759543f1d1eea17d65"
+        },
+        "chunk-XOEDTAYB.js": {
+          "bytes": 2551,
+          "sha256": "7df5bead79eb7c72742e18917c48337b6d18cfd9f65f70bc32feec04c1d44a3b"
+        },
+        "templates-X5QGTGCC.js": {
+          "bytes": 13565,
+          "sha256": "7386d64841d62f7944648172605f5c9184f66473f3a80623c3d02e766fd7d2f0"
+        },
+        "presentation-YCFN6SYD.js": {
+          "bytes": 35390,
+          "sha256": "73e8f5bf3d2ea589027c98c94b1bc2348acd89e9e2e2900bf0ca23c2e3e0fbb2"
+        },
+        "properties-XRBFW6YT.js": {
+          "bytes": 95701,
+          "sha256": "42cb42eadc71d8c703d8608d1f8c69f3e2052793342a6ae2c214faf018523999"
+        },
+        "chunk-JV5WIUZU.js": {
+          "bytes": 27174,
+          "sha256": "6379884df160fe526da17e485c6ae066e182961ccc4202a49e41e3df2531c686"
+        },
+        "chunk-I7AUKTXE.js": {
+          "bytes": 265,
+          "sha256": "53457cdbb6153caba9a7d263672db2fa94b2eed2043c3c92d62a42036c072aab"
+        }
+      }
+    }
+  },
+  "host": {
+    ".codex-tmp/issue-652/host-final/index.html": "1b402c83cc8cce94185f0bfa80f225710f4b465a9579f4ca635a6a406730ba3f",
+    ".codex-tmp/issue-652/host-final/assets/avatarCache-DYwy7sgz.js": "e11e36b875564d9a091f13e2ebe0446011ec47e10e4ce838c945c83e9d593cde",
+    ".codex-tmp/issue-652/host-final/assets/index-BQa_ayH6.css": "e6dadffba234ca90ae8580effaab0952e5d6f0e313ba5012d375cf4f87cf97f1",
+    ".codex-tmp/issue-652/host-final/assets/index-CWVincpI.js": "1f752112d2084b7f8924feaab321cb1bdce27a4d3e830c45ac8ade31751f1a82",
+    ".codex-tmp/issue-652/host-final/assets/state-BPOtVs8P.js": "b66369c1c2556281aad9da7c382470bbfea04f1de6600e159a8eeface923f5d6"
+  }
+}

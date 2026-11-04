@@ -43,3 +43,11 @@ test('a closed Canvas uses the native offcanvas state and gap', async () => {
   assert.equal($('[data-slot=sidebar][data-side=right]').attr('data-collapsible'), 'offcanvas')
   assert.equal($('[data-slot=sidebar-gap]').length, 1)
 })
+
+
+test('a retained Canvas in an inactive app view keeps its surface folded and inert', async () => {
+  const $ = await render(<DesignWorkspace design={{ artifactId: 'board', title: '当前画板' }} visible={false} onClose={() => {}}><textarea aria-label="消息" /></DesignWorkspace>)
+  assert.equal($('[data-design-workspace]').attr('data-design-open'), 'false')
+  assert.equal($('[data-design-pane]').attr('aria-hidden'), 'true')
+  assert.equal($('[data-design-pane][inert]').length, 1)
+})

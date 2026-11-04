@@ -1,0 +1,30 @@
+scripts/build-design-editor.mjs:167:7 lint/suspicious/noTemplateCurlyInString ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected template string placeholder.
+  
+    165 │     ['let X=e.injected_svgCapture;', 'let X=await __lingxiDesignSource("svgCapture");'],
+    166 │     ['let k=(0,e.componentTypeCandidates)(v);x=h()?await i', 'let k=(0,e.componentTypeCandidates)(v);if(h()){try{e.propertyScrubberSource=await __lingxiDesignSource("propertyScrubber")}catch{return []}}x=h()?await i'],
+  > 167 │     ['${e.standaloneExportBootstrapScript}', '${await __lingxiDesignSource("standaloneExport")}'],
+        │       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    168 │   ]
+    169 │   for (const [needle, value] of changes) {
+  
+  i Turn the string into a template string.
+  
+
+scripts/build-design-editor.mjs:167:47 lint/suspicious/noTemplateCurlyInString ━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected template string placeholder.
+  
+    165 │     ['let X=e.injected_svgCapture;', 'let X=await __lingxiDesignSource("svgCapture");'],
+    166 │     ['let k=(0,e.componentTypeCandidates)(v);x=h()?await i', 'let k=(0,e.componentTypeCandidates)(v);if(h()){try{e.propertyScrubberSource=await __lingxiDesignSource("propertyScrubber")}catch{return []}}x=h()?await i'],
+  > 167 │     ['${e.standaloneExportBootstrapScript}', '${await __lingxiDesignSource("standaloneExport")}'],
+        │                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    168 │   ]
+    169 │   for (const [needle, value] of changes) {
+  
+  i Turn the string into a template string.
+  
+
+Checked 5 files in 35ms. No fixes applied.
+Found 2 warnings.
