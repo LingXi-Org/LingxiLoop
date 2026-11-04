@@ -10,6 +10,8 @@ import { applyPublishedRuntimePatch, assertRuntimePatchDescriptors, loadRuntimeP
 import { loadLockedRuntimePackage, PUBLIC_PURPOSE_SCHEMA_HASH } from '../db/runtime-profile.js'
 import { parseRuntimePatchInput } from '../runtime-patch-bin.js'
 
+import { migrationHistoryThrough } from './_migration-history.js'
+const history61=await migrationHistoryThrough(61)
 const actual=String(releaseVersions.runtime)
 const formal24={skip:actual==='3.8.24'?false:'PENDING: requires actual formal3.8.24 registry archive and exact root/server locks; source rejection is not qualification'}
 async function isolated(run:(db:Pool)=>Promise<void>){
@@ -57,7 +59,7 @@ test(`${sourceRuntime} preparation barrier counts retained Slides jobs and nativ
 }))
 test(`${sourceRuntime} formal24 reviewed bridge CAS changes only provenance and exact61 startup performs no DDL or product writes`,formal24,async()=>isolated(async db=>{
   const {source,target}=await setup(db,sourceRuntime),ledger=(await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows
-  await assert.rejects(migrateDatabase(db),/installed LingxiOS package\/schema mismatch/)
+  await assert.rejects(migrateDatabase(db,history61),/installed LingxiOS package\/schema mismatch/)
   const other=new Pool({connectionString:db.options.connectionString,max:1})
   try{await other.query('SELECT 1');assert.equal((await preflightPublishedRuntimePatch(db,source,target)).state,'source');await assert.rejects(applyPublishedRuntimePatch(db,source,target),/no other database clients/)}finally{await other.end()}
   await db.query(`CREATE FUNCTION forbid_patch61_ddl() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'unexpected DDL'; END $$;
@@ -66,17 +68,17 @@ test(`${sourceRuntime} formal24 reviewed bridge CAS changes only provenance and 
   await assert.rejects(applyPublishedRuntimePatch(db,source,target),/source provenance changed/)
   assert.equal((await observePublishedRuntimePatch(db,source,target)).state,'target')
   const installed=(await db.query('SELECT * FROM public.lingxios_installation')).rows
-  assert.deepEqual(await migrateDatabase(db),[]);await assertMigrationsCurrent(db)
+  assert.deepEqual(await migrateDatabase(db,history61),[]);await assertMigrationsCurrent(db,history61)
   assert.deepEqual((await db.query('SELECT * FROM public.lingxios_installation')).rows,installed)
   assert.deepEqual((await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows,ledger)
   assert.deepEqual((await db.query('SELECT * FROM public.business_fixture')).rows,[{id:1,value:'preserve'}])
 }))
 test(`${sourceRuntime} formal24 rejects fresh and partial60/59/58 history without adoption or migration`,formal24,async()=>{
-  await isolated(async db=>{await assert.rejects(migrateDatabase(db),/already installed product61/);assert.equal((await db.query("SELECT to_regclass('public.schema_migrations') AS name")).rows[0].name,null)})
+  await isolated(async db=>{await assert.rejects(migrateDatabase(db,history61),/already installed product61/);assert.equal((await db.query("SELECT to_regclass('public.schema_migrations') AS name")).rows[0].name,null)})
   for(const count of [58,59,60])await isolated(async db=>{
     await setup(db,sourceRuntime);await db.query('DELETE FROM public.schema_migrations WHERE version>$1',[count])
     const before=(await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows
-    await assert.rejects(migrateDatabase(db),/already installed product61/)
+    await assert.rejects(migrateDatabase(db,history61),/already installed product61/)
     assert.deepEqual((await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows,before)
     assert.equal((await db.query('SELECT runtime_version FROM public.lingxios_installation')).rows[0].runtime_version,sourceRuntime)
   })

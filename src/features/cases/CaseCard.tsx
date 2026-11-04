@@ -5,16 +5,12 @@ import type { CaseArticle } from './api'
 import { CaseCover } from './CaseCover'
 import { caseDate } from './presentation'
 
-export function CaseCard({ article, href, onNavigate, scopeKey, featured = false, actions, onRefresh, onRetry, busy }: {
+export function CaseCard({ article, href, onNavigate, featured = false, actions }: {
   article: CaseArticle
   href: string
   onNavigate(): void
-  scopeKey: string
   featured?: boolean
   actions?: ReactNode
-  onRefresh?(): void
-  onRetry?(): Promise<void>
-  busy?: boolean
 }) {
   const open = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
@@ -23,8 +19,8 @@ export function CaseCard({ article, href, onNavigate, scopeKey, featured = false
   }
   return <article className={featured ? 'case-featured' : 'case-card'}>
     <div className="case-card-cover">
-      <CaseCover cover={article.generatedCover} fallbackUrl={article.cover} title={article.title} scopeKey={`${scopeKey}:${article.id}`}
-        className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRefresh={onRefresh} onRetry={onRetry} busy={busy}
+      <CaseCover title={article.title} coverText={article.coverText} coverColor={article.coverColor}
+        className="h-full"
         coverLink={<a href={href} onClick={open} className="case-cover-link" tabIndex={-1} aria-label={article.title} />} />
     </div>
     <a className="case-card-copy case-card-link" href={href} onClick={open} aria-label={article.title}>

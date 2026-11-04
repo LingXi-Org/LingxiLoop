@@ -200,13 +200,15 @@ export async function migrateDatabase(
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
-  const full61=migrations.length===61&&migrations[60]?.name==='slides_workspaces'
+  const full62=migrations.length===62&&migrations[61]?.name==='case_options'
+  if(full62&&(String(releaseVersions.runtime)!=='3.8.24'||developmentQualification!==undefined))throw new Error('product62 requires exact formal3.8.24 and installed product61')
+  const full61=(migrations.length===61||full62)&&migrations[60]?.name==='slides_workspaces'
   if(full61&&!['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime)))throw new Error('product61 requires exact formal20 or reviewed formal21/22/23/24 runtime')
-  const runtimeOnly61=full61&&['3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime))
+  const runtimeOnly61=full61&&!full62&&['3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime))
   const full60=(migrations.length===60||full61)&&migrations[59]?.name==='native_artifacts'
   const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
   const runtimeOnly60=full60&&['3.8.19','3.8.20'].includes(String(releaseVersions.runtime))
-  if (full59&&!runtimeOnly60&&!runtimeOnly61) assertRetirementRuntimeVersion(releaseVersions.runtime)
+  if (full59&&!runtimeOnly60&&!runtimeOnly61&&!full62) assertRetirementRuntimeVersion(releaseVersions.runtime)
   const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'
@@ -220,7 +222,7 @@ export async function migrateDatabase(
   try {
     await client.query('SELECT pg_advisory_lock($1)', [LOCK_KEY])
     const tracked = await migrationTableExists(client)
-    if (runtimeOnly61&&!tracked) throw new Error(`runtime${releaseVersions.runtime} requires already installed product61; it cannot run product migrations`)
+    if ((runtimeOnly61||full62)&&!tracked) throw new Error(`runtime${releaseVersions.runtime} requires already installed product61; it cannot run product migrations`)
     if (runtimeOnly60&&!tracked) throw new Error(`runtime${releaseVersions.runtime} requires already installed product60; it cannot run product migrations`)
     if (!tracked) {
       const existingRelations = await publicRelationCount(client)
@@ -241,6 +243,21 @@ export async function migrateDatabase(
 
     const applied = await appliedMigrations(client)
     validateApplied(migrations, applied)
+    if(full62){
+      if(applied.length!==61&&applied.length!==62)throw new Error('product62 requires already installed product61 on exact formal3.8.24')
+      await assertRuntimeCurrent(client,14,'3.8.24')
+      if(applied.length===62)return appliedNow
+      const migration=migrations[61]!
+      await client.query('BEGIN')
+      try {
+        await client.query("SET LOCAL lock_timeout='5s'")
+        await client.query('SET LOCAL search_path TO public')
+        await client.query(migration.sql)
+        await client.query('INSERT INTO public.schema_migrations(version,name,checksum) VALUES($1,$2,$3)',[migration.version,migration.name,migration.checksum])
+        await client.query('COMMIT')
+      } catch(error) { await client.query('ROLLBACK');throw new Error('migration 62_case_options failed',{cause:error}) }
+      return ['0062_case_options']
+    }
     if(runtimeOnly61){
       if(applied.length!==61)throw new Error(`runtime${releaseVersions.runtime} requires already installed product61; it cannot run product migrations`)
       await assertRuntimeCurrent(client,14,releaseVersions.runtime)
@@ -381,13 +398,15 @@ export async function assertMigrationsCurrent(
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
-  const full61=migrations.length===61&&migrations[60]?.name==='slides_workspaces'
+  const full62=migrations.length===62&&migrations[61]?.name==='case_options'
+  if(full62&&(String(releaseVersions.runtime)!=='3.8.24'||developmentQualification!==undefined))throw new Error('product62 requires exact formal3.8.24 and installed product61')
+  const full61=(migrations.length===61||full62)&&migrations[60]?.name==='slides_workspaces'
   if(full61&&!['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime)))throw new Error('product61 requires exact formal20 or reviewed formal21/22/23/24 runtime')
-  const runtimeOnly61=full61&&['3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime))
+  const runtimeOnly61=full61&&!full62&&['3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime))
   const full60=(migrations.length===60||full61)&&migrations[59]?.name==='native_artifacts'
   const full59=(migrations.length===59||full60)&&migrations[58]?.name==='retire_presentation_generation'
   const runtimeOnly60=full60&&['3.8.19','3.8.20'].includes(String(releaseVersions.runtime))
-  if (full59&&!runtimeOnly60&&!runtimeOnly61) assertRetirementRuntimeVersion(releaseVersions.runtime)
+  if (full59&&!runtimeOnly60&&!runtimeOnly61&&!full62) assertRetirementRuntimeVersion(releaseVersions.runtime)
   const full58=(migrations.length===58||full59)&&migrations[57]?.name==='homework_validation_findings'
   const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'

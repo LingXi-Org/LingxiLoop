@@ -11,6 +11,21 @@ const fixture = (version = '3.8.17') => {
   for (const path of paths) files[path] = 'BEGIN; SELECT 1; COMMIT;'
   return { files, paths, read: path => files[path] }
 }
+
+test('case options use only formal24 and exact product62 without a runtime CAS', () => {
+  const f = fixture('3.8.24')
+  for (const name of ['0059_retire_presentation_generation', '0060_native_artifacts', '0061_slides_workspaces', '0062_case_options']) {
+    const path = `server/src/db/migrations/${name}.sql`; f.paths.push(path); f.files[path] = '-- additive fixture'
+  }
+  assert.equal(runtimePatchPlan(f.read, f.paths), null)
+  for (const command of ['up', 'servers', 'workers']) assert.doesNotThrow(() => assertRetirementReleaseAllowed(f.paths, command, undefined, null))
+  assert.throws(() => runtimePatchPlan(f.read, [...f.paths.slice(0, -1), 'server/src/db/migrations/0062_unknown.sql']))
+  f.files['package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '3.8.23' } })
+  assert.throws(() => runtimePatchPlan(f.read, f.paths))
+  f.files['package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '3.8.24' } })
+  f.files['server/package-lock.json'] = f.files['server/package-lock.json'].replace('sha512-', 'sha256-')
+  assert.throws(() => runtimePatchPlan(f.read, f.paths))
+})
 test('CAS plan requires exact formal receipts and complete immutable inventory', () => {
   const f = fixture(), plan = runtimePatchPlan(f.read, f.paths)
   assert.equal(plan.source.runtime, '3.8.16'); assert.equal(plan.target.runtime, '3.8.17')

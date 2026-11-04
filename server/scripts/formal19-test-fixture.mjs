@@ -35,6 +35,8 @@ async function withFormalRuntimeTestFixture(root,env,version,run){
   }
   assert.equal('sha512-'+createHash('sha512').update(await readFile(archive)).digest('base64'),record.integrity,`formal${version} source archive integrity changed`)
   for(const path of ['server/src','src','shared','server/scripts','server/fixtures'])await cp(join(root,path),join(fixture,path),{recursive:true})
+  // Formal source fixtures retain their reviewed product60/61 inventory.
+  await rm(join(fixture,'server/src/db/migrations/0062_case_options.sql'),{force:true})
   // Historical formal19 fixtures contain the exact product60 source inventory.
   if(version==='3.8.19')await rm(join(fixture,'server/src/db/migrations/0061_slides_workspaces.sql'),{force:true})
   const modules=join(fixture,'node_modules'),sdk=join(modules,'@lyyzka/lingxios');await mkdir(sdk,{recursive:true})
