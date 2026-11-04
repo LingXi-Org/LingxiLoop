@@ -30,8 +30,8 @@ function page<T>(base: object, rows: T[], offset: number) {
 }
 
 function visibleReport(report:HomeworkReport) {
-  return {completion:report.completion,criteria:report.criteria,assistance:report.assistance,independence:report.independence,
-    weaknesses:report.weaknesses,evidence:report.evidenceSources,manualReview:report.manualReview,verification:report.verification??'verified',coverage:report.coverage}
+  return {id:report.id,generatedAt:report.generatedAt,homeworkRevision:report.homeworkRevision,answerRevision:report.answerRevision,inputHash:report.inputHash,generatorVersion:report.generatorVersion,completion:report.completion,criteria:report.criteria,assistance:report.assistance,independence:report.independence,
+    weaknesses:report.weaknesses,assistanceEvidence:report.assistanceEvidence,evidence:report.evidenceSources,manualReview:report.manualReview,verification:report.verification??'verified',coverage:report.coverage}
 }
 
 function textPage(base:object,content:unknown,offset:number) {

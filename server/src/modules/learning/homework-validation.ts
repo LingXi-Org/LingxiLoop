@@ -71,6 +71,21 @@ export function parseHomeworkValidation(value: unknown, draft: Pick<HomeworkDraf
 export function applyHomeworkReviewBoundary<T extends { criterion: string; met: boolean; independent: boolean; feedback: string }>(criteria: T[], findings: HomeworkValidationFinding[]): Array<T & { reviewRequired?: boolean }> {
   return criteria.map(item => {
     const manual = findings.find(finding => finding.severity === 'teacher_review' && finding.original === item.criterion)
-    return manual ? { ...item, met: false, independent: false, reviewRequired: true, feedback: `需要教师复核：${manual.teacherReview ?? manual.reason}。AI 辅助观察：${item.feedback}`.slice(0, 2000) } : item
+    return manual ? { ...item, met: false, independent: false, reviewRequired: true, feedback: `需要教师复核：${manual.teacherReview ?? manual.reason}`.slice(0, 2000) } : item
   })
+}
+
+/** Published requirements remain authoritative even if an earlier model omitted
+ * a teacher_review finding. Only explicit teacher grading language opts in. */
+export function teacherReviewFindings(hw: { instructions: string; criteria: string[]; validation_findings?: HomeworkValidationFinding[] }): HomeworkValidationFinding[] {
+  const findings = [...(hw.validation_findings ?? [])]
+  const reserved = /(?:教师|老师|teacher).{0,40}(?:评分|评定|评判|等级|量规|grade|rubric)|(?:评分|评定|等级|量规|grade|rubric).{0,40}(?:教师|老师|teacher)/i
+  const grading = /评分|评定|等级|量规|优秀档|grade|rubric/i
+  hw.criteria.forEach((criterion, criterionIndex) => {
+    if (!reserved.test(criterion) && !(reserved.test(hw.instructions) && grading.test(criterion))) return
+    if (findings.some(item => item.severity === 'teacher_review' && item.original === criterion)) return
+    findings.push({ field: 'criteria', severity: 'teacher_review', excerpt: criterion, original: criterion, criterionIndex,
+      reason: '此项评分或等级由教师确定。', teacherReview: '此项评分或等级由教师确定；AI 仅提供可追溯的学习证据。', suggestion: '请教师按作业量规在验收意见中记录实际等级。' })
+  })
+  return findings
 }

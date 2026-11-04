@@ -121,7 +121,7 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
         <ForumContentFields label="作业要求" body={instructions} editorDocument={editorDocument} setBody={(value,document) => edited(() => {setInstructions(value);setEditorDocument(document ?? null)})} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} />
         <section className="space-y-2"><h4 className="text-sm font-medium">验收标准</h4>
           <ForumContentFields editorRef={criteriaEditor} label="验收标准" body={criteria} editorDocument={criteriaDocument} legacyParagraphs={criteriaItems} setBody={(value,document,sections) => edited(() => {setCriteria(value);setCriteriaDocument(document ?? null);setCriteriaItems(sections ?? value.split('\n').filter(Boolean))})} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} nativeOnly maxLength={10000}/>
-          <p className="text-xs text-muted-foreground">每段一条标准，最多 20 条；保存后按标准核验作答。</p>
+          <p className="text-xs text-muted-foreground">每段一条标准，最多 20 条；保存后按标准核验作答。系统支持通过或退回；四级量规的实际等级请由教师记入验收意见。</p>
         </section>
         <div className="space-y-2"><Label htmlFor={`${id}-due`}>截止时间</Label><Input id={`${id}-due`} className="max-w-xs" type="datetime-local" value={dueAt} disabled={disabled} onChange={event => edited(() => setDueAt(event.target.value))} /></div>
         <HomeworkSuggestions key={homework.revision} findings={homework.validation.findings ?? []} criteria={criteriaItems} busy={disabled}

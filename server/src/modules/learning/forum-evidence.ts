@@ -10,7 +10,7 @@ const id = z.string().trim().min(1).max(200)
 export const conversationReferenceSchema = z.object({ channelId: id, messageIds: z.array(id).min(2).max(80) }).strict()
 export const conversationReferencesSchema = z.array(conversationReferenceSchema).min(1, '请关联至少一段有本人作答和助手回复的对话').max(20)
 export type ConversationReference = z.infer<typeof conversationReferenceSchema>
-export interface EvidenceMessage { id: string; role: 'user' | 'assistant'; text: string; sequence: number }
+export interface EvidenceMessage { id: string; role: 'user' | 'assistant'; text: string; sequence: number; timestamp?: number }
 export interface ConversationEvidence extends ConversationReference { title: string; capturedAt: string; messages: EvidenceMessage[] }
 
 // Only the student's personal course conversation is selectable. Sharing a frozen
@@ -40,7 +40,7 @@ export async function evidenceMessages(db: Queryable, scope: LearningScope, proj
   const messages: EvidenceMessage[] = history.flatMap(message => {
     const role: 'user' | 'assistant' | null = message.fromUid===scope.userId ? 'user' : message.fromUid===room.agentId ? 'assistant' : null
     const text = nativeText(message.payload).trim() || (nativeAttachments(message.payload).length ? '[附件消息：仅引用文件名，附件内容未共享] '+nativeAttachments(message.payload).map(file=>file.name).join('、') : '')
-    return role && message.payload.role===role && text ? [{id:message.clientMsgNo,role:role as 'user'|'assistant',text,sequence:message.messageSeq}] : []
+    return role && message.payload.role===role && text ? [{id:message.clientMsgNo,role:role as 'user'|'assistant',text,sequence:message.messageSeq,timestamp:message.timestamp}] : []
   }).sort((a,b)=>a.sequence-b.sequence)
   const next = history.length===200 ? Math.min(...history.map(message=>message.messageSeq)) : null
   return { ...room,messages,nextBefore:next && next>1 ? next : null }

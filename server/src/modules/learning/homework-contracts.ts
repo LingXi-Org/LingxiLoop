@@ -27,6 +27,7 @@ export const homeworkJudgmentSchema = z.object({
   criteria: z.array(homeworkCriterionSchema).min(1).max(20), completion: z.string().max(4000), assistance: z.string().max(4000),
   independence: z.string().max(4000), weaknesses: z.array(z.string().max(2000)).max(20),
   evidence: z.array(z.object({ messageId: id, excerpt: z.string().min(1).max(1000) }).strict()).max(20),
+  assistanceEvidence: z.array(z.object({ messageId: id, excerpt: z.string().min(1).max(1000) }).strict()).max(20).optional(),
 }).strict()
 export type HomeworkDraft = z.input<typeof homeworkDraftSchema>
 export type HomeworkAnswer = z.output<typeof homeworkAnswerSchema>
@@ -35,6 +36,7 @@ export type HomeworkJudgment = Omit<z.output<typeof homeworkJudgmentSchema>, 'cr
 }
 export type HomeworkReport = Omit<HomeworkJudgment,'evidence'> & {
   id: string; answerRevision: number; homeworkRevision: number; answerHash: string; evidenceRevision: number; returnEpoch: number;
+  generatedAt?: string; inputHash?: string; generatorVersion?: string;
   evidenceHash: string; conversationSequence: number; verification?: 'verified'|'unverified'; coverage?: { messageCount:number; truncated:boolean };
   materialHashes: string[]; evidence: string[]; evidenceSources: Array<{messageId:string;excerpt:string}>;
   manualReview: { reason: string; remainingDoubts: string[] } | null

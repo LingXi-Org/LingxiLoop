@@ -64,7 +64,7 @@ function ReferencePicker({courseId,channelId,value,onChange,disabled}:PickerProp
       const ids=turn.map(m=>m.id),checked=value.some(ref=>ref.channelId===selected && ref.messageIds[0]===ids[0])
       return <details key={ids[0]} data-conversation-reference className="py-2">
         <summary className="cursor-pointer truncate text-sm focus-visible:outline-2">{turn[0].text.slice(0,100)}</summary>
-        <div className="mt-3 space-y-3">{turn.map(message=><div key={message.id}><p className="text-xs text-muted-foreground">{message.role==='user'?'我的作答':'助手回复'}</p><MemoContent content={message.text}/></div>)}
+        <div className="mt-3 space-y-3">{turn.map(message=><div key={message.id}><p className="text-xs text-muted-foreground">{message.role==='user'?'我的作答':'助手回复'}</p><MemoContent content={message.text} literalOperators/></div>)}
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={checked} disabled={disabled||!checked&&value.length>=20} onChange={event=>onChange(event.target.checked?[...value,{channelId:selected,messageIds:ids}]:value.filter(ref=>ref.messageIds[0]!==ids[0]||ref.channelId!==selected))}/>引用这段对话</label>
         </div>
       </details>
@@ -80,11 +80,18 @@ export function ConversationReferences({references,id}:{references:ConversationE
   return <section aria-label="引用的对话" className="space-y-2">{references.map((reference,index)=><details id={`${id}-reference-${index}`} key={index} className="py-2" tabIndex={-1}>
     <summary className="cursor-pointer text-sm focus-visible:outline-2">引用对话：{reference.title} · 片段 {index+1}</summary>
     <p className="my-2 text-xs text-muted-foreground">提交时引用的文字快照 · {new Date(reference.capturedAt).toLocaleString()}</p>
-    <div className="space-y-3">{reference.messages.map(message=><div key={message.id} id={`${id}-message-${message.id}`}><p className="text-xs text-muted-foreground">{message.role==='user'?'学生作答':'助手回复'}</p><MemoContent content={message.text}/></div>)}</div>
+    <div className="space-y-3">{reference.messages.map(message=><div key={message.id} id={`${id}-message-${message.id}`} tabIndex={-1} className="rounded-sm focus-visible:outline-2 focus-visible:outline-ring"><p className="text-xs text-muted-foreground">{message.role==='user'?'学生作答':'助手回复'} · 消息 {message.sequence} · {message.id}{message.timestamp ? ` · ${new Date(message.timestamp * 1000).toLocaleString()}` : ''}</p><MemoContent content={message.text} literalOperators/></div>)}</div>
   </details>)}</section>
 }
 
 export function openReference(id:string,index=0) {
   const target=document.getElementById(`${id}-reference-${index}`)
   if(target instanceof HTMLDetailsElement){target.open=true;target.scrollIntoView({block:'nearest'});target.focus({preventScroll:true})}
+}
+
+export function openEvidenceMessage(id:string,index:number,messageId:string) {
+  openReference(id,index)
+  const target=document.getElementById(`${id}-message-${messageId}`)
+  target?.scrollIntoView({block:'nearest'})
+  target?.focus({preventScroll:true})
 }

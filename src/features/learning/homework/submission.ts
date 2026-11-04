@@ -15,7 +15,7 @@ export function homeworkSubmissionBlocker({ student, answer, dirty, uploading, r
   if (student.reportStatus === 'PENDING') return '学习报告正在生成，完成后可预览提交。'
   if (student.reportStatus !== 'READY' || !student.report || student.report.answerRevision !== student.answerRevision) return '请先点击“更新报告”，为当前作答生成学习报告。'
   if (!references.length) return '请先选择学习对话，并勾选至少一段本人作答和助手回复。'
-  if (student.report.evidenceSources?.some(source => !references.some(ref => ref.channelId === student.channelId && ref.messageIds.includes(source.messageId)))) {
+  if ([...(student.report.evidenceSources??[]),...(student.report.assistanceEvidence??[])].some(source => !references.some(ref => ref.channelId === student.channelId && ref.messageIds.includes(source.messageId)))) {
     return '请选择包含学习报告依据的对话片段，再预览提交。'
   }
   return ''
