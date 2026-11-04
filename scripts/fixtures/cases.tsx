@@ -57,6 +57,7 @@ const records = (params.has('empty') ? [] : samples).map(([title, summary, autho
   canManage: manager, indexStatus: 'ready', indexError: null, publishedAt: dates[i], createdAt: dates[i], updatedAt: dates[i],
 }))
 if (params.has('more')) records.push(...records.slice(1).map((record, i) => ({ ...record, id: `extra-${i}`, publishedAt: '2026-10-01' })))
+if (params.has('switchCompany')) records.push({ ...records[0], id: 'other-company', title: '第二组织专属案例', companyId: 'case-fixture-other' })
 if (params.has('rich') && records[0]) {
   records[0].editorDocument = { schemaVersion: 1, blocks: [
     { id: 'intro', type: 'paragraph', content: [{ type: 'text', text: '富文本正文，核对目录与重复标题。', styles: {} }] },
@@ -70,7 +71,7 @@ const response = (record, view) => ({ ...structuredClone(view === 'reader' ? pub
 let listReads = 0
 casesApi.list = async (q, category, view = 'reader') => {
   if (params.has('error')) throw new Error('fixture read failure')
-  const available = records.filter(record => view === 'manage' || record.status === 'published')
+  const available = records.filter(record => record.companyId === useAuth.getState().activeCompanyId && (view === 'manage' || record.status === 'published'))
   listReads += 1
   return { items: available.map(record => {
     const item = response(record, view)
@@ -83,7 +84,7 @@ casesApi.list = async (q, category, view = 'reader') => {
     categories: ['注意力机制', '推理优化', 'Agent 设计', '训练与微调', '课堂组织'], canManage: manager, view }
 }
 casesApi.detail = async (id, view = 'reader') => {
-  const record = records.find(item => item.id === id)
+  const record = records.find(item => item.id === id && item.companyId === useAuth.getState().activeCompanyId)
   if (!record || view === 'reader' && record.status !== 'published') throw new Error('not found')
   return { ...response(record, view), ...(id === 'sample-0' ? { cover: '/scripts/fixtures/cases-assets/softmax-detail.png' } : {}) }
 }
@@ -110,4 +111,6 @@ useApp.setState({ view: 'cases', selectedConversationId: null, navigationPending
 const space = { projectId: 'fixture-project', courseId: 'fixture-course', companyId, title: 'agent基础', perspective: 'learner', canManage: manager }
 const spaces = { spaces: params.has('noCourse') ? [] : [space], activeSpace: params.has('noCourse') ? undefined : space,
   loading: false, error: '', pending: false, reload: async () => {}, select: async () => {} }
-createRoot(document.getElementById('root')!).render(<ThemeProvider attribute={['class', 'data-theme']} forcedTheme={params.get('theme') || 'light'}><TooltipProvider><DesktopApp learningSpaces={spaces} /></TooltipProvider></ThemeProvider>)
+createRoot(document.getElementById('root')!).render(<ThemeProvider attribute={['class', 'data-theme']} forcedTheme={params.get('theme') || 'light'}><TooltipProvider><DesktopApp learningSpaces={spaces} />
+  {params.has('switchCompany') && <button style={{ position: 'fixed', top: 12, right: 24, zIndex: 100 }} onClick={() => useAuth.setState({ activeCompanyId: 'case-fixture-other' })}>切换验收组织</button>}
+</TooltipProvider></ThemeProvider>)

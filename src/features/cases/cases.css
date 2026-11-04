@@ -14,7 +14,7 @@
 .cases-page .case-page-header h1 { font-family: inherit; font-size: 13.5px; font-weight: 500; letter-spacing: normal; }
 .cases-page .case-page-header nav { font-size: 13px; }
 .cases-page:not([data-case-editing]) .case-page-header > button { display: none; }
-.cases-page .case-page-content { max-width: 1160px; padding: 0 40px; }
+.cases-page .case-page-content { container: cases / inline-size; max-width: 1160px; padding: 0 40px; }
 .cases-page .cases-scroll { scrollbar-gutter: auto; scrollbar-width: auto; }
 .cases-page .cases-scroll::-webkit-scrollbar { width: 15px; }
 .case-featured { position: relative; display: grid; grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); gap: 40px; align-items: center; padding-block: 24px 40px; border-bottom: 1px solid var(--border); }
