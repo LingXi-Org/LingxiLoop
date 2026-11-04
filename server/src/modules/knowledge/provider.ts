@@ -55,7 +55,7 @@ export interface OpenNotebookSearchHit {
 }
 
 export class OpenNotebookError extends Error {
-  constructor(message: string, readonly status?: number) {
+  constructor(message: string, readonly status?: number, readonly code?: 'search_timeout') {
     super(message)
     this.name = 'OpenNotebookError'
   }
@@ -63,13 +63,14 @@ export class OpenNotebookError extends Error {
 
 export interface KnowledgeSearchFailure {
   type: 'text' | 'vector'
-  code: 'embedding_endpoint' | 'embedding_configuration' | 'index_contract' | 'authentication' | 'notebook_unavailable'
+  code: 'embedding_endpoint' | 'embedding_configuration' | 'index_contract' | 'authentication' | 'notebook_unavailable' | 'search_timeout'
   status?: number
 }
 
 /** Classify bounded operator evidence without publishing provider response text. */
 export function knowledgeSearchFailure(type: KnowledgeSearchFailure['type'], error: OpenNotebookError): KnowledgeSearchFailure {
-  const code = /embedding.*(?:contract|dimensions|model.*changed)/i.test(error.message) ? 'index_contract'
+  const code = error.code === 'search_timeout' ? 'search_timeout'
+    : /embedding.*(?:contract|dimensions|model.*changed)/i.test(error.message) ? 'index_contract'
     : /Embedding provider returned HTTP 404\b/i.test(error.message) ? 'embedding_endpoint'
       : /Embedding provider returned HTTP 400\b/i.test(error.message) ? 'embedding_configuration'
         : error.status === 401 || error.status === 403 ? 'authentication' : 'notebook_unavailable'
@@ -290,7 +291,7 @@ export class OpenNotebookClient {
       input.signal?.throwIfAborted()
     } catch (error) {
       input.signal?.throwIfAborted()
-      if (deadline.aborted) throw new OpenNotebookError('Open Notebook search timed out')
+      if (deadline.aborted) throw new OpenNotebookError('Open Notebook search timed out', undefined, 'search_timeout')
       throw error
     }
     // Fail closed even if an older upstream ignored the scope fields.
