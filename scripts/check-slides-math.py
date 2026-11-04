@@ -20,7 +20,7 @@ BASE = "/artifact-editor/slides/test-grant/"
 EVIDENCE = ROOT / "docs/evidence/issue-631"
 
 
-def run(browser, baseline=False, read_only=False, math_retry=False):
+def run(browser, baseline=False, read_only=False, math_retry=False, currency_regression=False):
     upstream = mobile = legacy = False
     evidence = EVIDENCE
     evidence.mkdir(parents=True, exist_ok=True)
@@ -28,6 +28,10 @@ def run(browser, baseline=False, read_only=False, math_retry=False):
     matrix = r'\[\begin{pmatrix}' + r'\\'.join('&amp;'.join(f'a_{{{r}{c}}}' for c in range(1,5)) for r in range(1,5)) + r'\end{pmatrix}\]'
     long_html = '<section id="long"><p style="position:absolute;left:100px;top:100px;width:350px;height:800px;font-size:44px">'+r'\['+'+'.join(['x_i^2']*20)+r'\]</p><p style="position:absolute;left:600px;top:100px;width:350px;height:500px;font-size:44px">'+matrix+'</p><table style="position:absolute;left:1100px;top:100px;width:350px;font-size:44px"><tr><td>'+matrix+'</td></tr></table></section>'
     initial = {"project/deck.json": json.dumps(dict(v=4, lists="css", title="Slides math synthetic", order=["math", "plain", "long"], sections={}, faces={}, designSystems=[])), "project/slides/math.html": (ROOT / "docs/evidence/issue-631/fixture.html").read_text(), "project/slides/plain.html": '<section id="plain"><h1>Plain native text</h1><p>No math here</p></section>', "project/slides/long.html": long_html}
+    math_count = 8 if currency_regression else 7
+    if currency_regression:
+        initial["project/slides/math.html"] = initial["project/slides/math.html"].replace(
+            "Literal: $5 and $10,", "Literal: $5 and $10; budget $-5; formula $x^2$; $-10.00$; $hello world$,")
     files = {path: value.encode() for path, value in initial.items()}
     requests, errors, publishes = [], [], []
     math_attempts = 0
@@ -107,7 +111,7 @@ def run(browser, baseline=False, read_only=False, math_retry=False):
         assert surface.locator('[data-slide-math]').count() == 0
         math_enabled = True
         retry.click()
-        expect(surface.locator('[data-slide-math]')).to_have_count(7)
+        expect(surface.locator('[data-slide-math]')).to_have_count(math_count)
         assert math_attempts >= 2, math_attempts
         expect(view.get_by_role("button", name="重试公式", exact=True)).to_have_count(0)
         print("PASS Slides: one retry recovers every formula without remounting or rewriting source", flush=True)
@@ -126,7 +130,13 @@ def run(browser, baseline=False, read_only=False, math_retry=False):
         assert "\\frac" in surface.inner_text()
         page.close()
         return {"baselineMathCount": count, "rawSourceVisible": True, "errors":errors}
-    assert count == 7, count
+    assert count == math_count, count
+    if currency_regression:
+        literal = surface.locator('[data-text-path]').filter(has_text="Literal:").first
+        for text in ["budget $-5; formula", "$-10.00$", "$hello world$"]:
+            assert text in literal.inner_text(), literal.inner_text()
+        expect(literal.locator('[data-slide-math]')).to_have_count(1)
+        assert literal.locator('annotation').text_content() == "x^2"
     assert len(publishes) == 0, "opening rewrote saved source"
     if read_only:
         assert not view.locator("[contenteditable=\"true\"]").count()
@@ -159,7 +169,7 @@ def run(browser, baseline=False, read_only=False, math_retry=False):
     assert "class=\"katex" not in saved
     before = dict(files)
     page.reload(wait_until="domcontentloaded")
-    expect(surface.locator('[data-slide-math]')).to_have_count(7)
+    expect(surface.locator('[data-slide-math]')).to_have_count(math_count)
     page.wait_for_timeout(500)
     assert files == before, "reopening changed source"
     page.screenshot(path=str(evidence / "reopened.png"))
@@ -170,7 +180,7 @@ def run(browser, baseline=False, read_only=False, math_retry=False):
     frame = page.frames[1]
     fullscreen = frame.evaluate("!!document.fullscreenElement")
     assert fullscreen, "presentation did not enter actual fullscreen"
-    assert view.locator('[data-slide-math]:visible').count() >= 7
+    assert view.locator('[data-slide-math]:visible').count() >= math_count
     page.keyboard.press("Escape")
     page.wait_for_timeout(500)
     for label, filename in [("PowerPoint，保留当前字体（.pptx）", "sample.pptx"), ("网页（.html）", "sample.html"), ("PDF（.pdf）", "sample.pdf")]:
@@ -189,7 +199,7 @@ def run(browser, baseline=False, read_only=False, math_retry=False):
     page.close()
     return {"mathCount":count,"errors":errors,"fullscreen":fullscreen,"bounds":bounds,"publishes":len(publishes),"sourcePreserved":True,"fonts":fonts,"requests":requests,"mathAttempts":math_attempts,"retryScenario":math_retry}
 
-def inspect_exports(browser):
+def inspect_exports(browser, currency_regression=False):
     evidence = EVIDENCE
     html = evidence.joinpath("sample.html").read_text()
     assert 'data-slide-math' in html
@@ -199,7 +209,12 @@ def inspect_exports(browser):
     remote = []
     page.route("**/*", lambda route: route.fulfill(body=html, content_type="text/html") if route.request.url == "https://export.test/sample.html" else (remote.append(route.request.url), route.abort()))
     page.goto("https://export.test/sample.html", wait_until="domcontentloaded")
-    expect(page.locator('[data-slide-math]')).to_have_count(10)
+    expect(page.locator('[data-slide-math]')).to_have_count(11 if currency_regression else 10)
+    if currency_regression:
+        literal = page.locator('.deck-slide').first.locator('[data-text-path]').filter(has_text="Literal:").first
+        for text in ["budget $-5; formula", "$-10.00$", "$hello world$"]:
+            assert text in literal.inner_text(), literal.inner_text()
+        expect(literal.locator('[data-slide-math]')).to_have_count(1)
     page.wait_for_timeout(600)
     page.screenshot(path=str(evidence / "html.png"))
     page.keyboard.press("ArrowRight")
@@ -234,6 +249,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", action="store_true")
     parser.add_argument("--math-retry", action="store_true")
+    parser.add_argument("--currency-regression", action="store_true")
     parser.add_argument("--evidence-dir", default="docs/evidence/issue-631")
     args = parser.parse_args()
     EVIDENCE = ROOT / args.evidence_dir
@@ -241,10 +257,10 @@ if __name__ == "__main__":
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path="/usr/bin/chromium", headless=True, args=["--no-sandbox"])
         try:
-            result = run(browser, args.baseline, math_retry=args.math_retry)
+            result = run(browser, args.baseline, math_retry=args.math_retry, currency_regression=args.currency_regression)
             if not args.baseline:
-                result["readOnlyPreview"] = run(browser, read_only=True)
-                inspect_exports(browser)
+                result["readOnlyPreview"] = run(browser, read_only=True, currency_regression=args.currency_regression)
+                inspect_exports(browser, currency_regression=args.currency_regression)
             result["browser"] = browser.version
             (EVIDENCE / ("baseline.json" if args.baseline else "browser.json")).write_text(json.dumps(result,ensure_ascii=False,indent=2))
             print({k:v for k,v in result.items() if k not in ["requests", "bounds"]})

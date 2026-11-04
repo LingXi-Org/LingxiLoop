@@ -244,6 +244,46 @@ test('[integration] each homework learner resumes one private thread and renewed
   await assert.rejects(createHomeworkThread(scope, input))
 })
 
+test('[integration] T11 teacher criteria persist and reload only for the authorized homework on every turn', async () => {
+  const { t11Instructions, t11Criteria } = await import('../__tests__/fixtures/homework-teaching.js')
+  const { loadHomeworkTurnContext } = await import('../modules/learning/homework-tools.js')
+  const { homeworkHelpRules } = await import('../modules/learning/homework-help.js')
+  const { ProductRuntimePolicy } = await import('../agent-runtime/context.js')
+  const tasks = []
+  for (const group of ['A', 'B'] as const) {
+    const detail = await published({ title: `T11-${group}`, instructions: t11Instructions, criteria: [t11Criteria[group as 'A' | 'B']] })
+    tasks.push({ task: detail.homework, thread: await homework.start(student, courseId, detail.homework.id) })
+  }
+  const policy = new ProductRuntimePolicy()
+  for (const { task, thread } of tasks) {
+    const work = { id: 'synthetic-turn', companyId, authorizationUserId: student.userId, agentId: thread.agentId,
+      channelId: thread.channelId, triggerClientMsgNo: 'synthetic-question', reason: 'message' as const }
+    for (let turn = 1; turn <= 2; turn++) {
+      const context = await loadHomeworkTurnContext(work, pool, true)
+      assert.ok(context)
+      assert.equal(context.help?.basis, 'unknown')
+      assert.equal(homeworkHelpRules(context.help), '', 'an unassessed task has no invented attempt-specific help override')
+      assert.deepEqual(context.homework.criteria, task.criteria)
+      assert.equal(context.homework.instructions, t11Instructions)
+      assert.deepEqual(context.binding, { companyId, projectId, courseId, homeworkId: task.id, learnerId: student.userId,
+        agentId: thread.agentId, channelId: thread.channelId, teacherId: teacher.userId,
+        homeworkRevision: task.revision, requirementsHash: task.visibleHash })
+      const items = policy.dynamicContextItems({ work: { agentId: thread.agentId }, persona: { name: 'Tutor', role: 'assistant' },
+        messages: [], dynamic: { homeworkContext: context } } as unknown as import('@lyyzka/lingxios').TurnContext)
+      assert.ok(items.some(item => 'content' in item && typeof item.content === 'string' && item.content.includes(JSON.stringify(task.criteria))))
+    }
+    assert.equal((await homework.start(student, courseId, task.id)).channelId, thread.channelId, 'reopen retains the task binding')
+    await assert.rejects(loadHomeworkTurnContext({ ...work, authorizationUserId: peer.userId }, pool))
+    await assert.rejects(loadHomeworkTurnContext({ ...work, agentId: 'homework-other-agent' }, pool))
+    assert.equal(await loadHomeworkTurnContext({ ...work, companyId: 'another-tenant' }, pool), null)
+    assert.equal(await loadHomeworkTurnContext({ ...work, channelId: 'homework-study-room' }, pool), null,
+      'a general study room must not infer a homework from matching text')
+    await pool.query(`UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id=$2 AND user_id=$3`, [companyId, projectId, student.userId])
+    await assert.rejects(loadHomeworkTurnContext(work, pool))
+    await pool.query(`UPDATE project_memberships SET status='ACTIVE' WHERE company_id=$1 AND project_id=$2 AND user_id=$3`, [companyId, projectId, student.userId])
+  }
+})
+
 function evidenceJudgment(criteria: string[], messageId: string, text: string, met: boolean) {
   return { criteria: criteria.map(criterion => ({ criterion, met, independent: met, feedback: met ? 'Explained and transferred independently.' : 'Explain the relationship in your own words.', evidence: text?[{messageId,excerpt:text}]:[] })),
     completion: met ? 'All requirements demonstrated.' : 'More evidence needed.', assistance: 'A similar example was discussed.', independence: met ? 'New example solved independently.' : 'Independence remains unverified.',

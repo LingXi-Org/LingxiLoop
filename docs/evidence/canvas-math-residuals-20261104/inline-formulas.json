@@ -1,0 +1,58 @@
+{
+  "browser": "cloud Chromium via CDP; no CSP override",
+  "scope": "real GenUiCard/opaque frames; independent public samples; no original Roadmap file or production artwork writes",
+  "reports": [
+    {
+      "scenario": "initial",
+      "matrix": 1,
+      "aligned": 1,
+      "attention": 1,
+      "dollarAttention": 1,
+      "count": 8,
+      "rnn": "h_t = f(h_{t-1}, x_t)",
+      "price": "Budget $5 and $10; ordinary text stays readable.",
+      "code": "`$h_t=f(x_t)$` stays literal.",
+      "font": "19.36px"
+    },
+    {
+      "scenario": "single-dollar-update",
+      "matrix": 1,
+      "aligned": 1,
+      "attention": 1,
+      "dollarAttention": 1,
+      "count": 8,
+      "rnn": "h_{t+1} = f(h_t, x_{t+1})",
+      "price": "Budget $5 and $10; ordinary text stays readable.",
+      "code": "`$h_t=f(x_t)$` stays literal.",
+      "font": "19.36px"
+    },
+    {
+      "scenario": "narrow-240px",
+      "formulas": [
+        {
+          "width": 200,
+          "content": 354,
+          "tab": 0
+        },
+        {
+          "width": 200,
+          "content": 200,
+          "tab": 0
+        },
+        {
+          "width": 200,
+          "content": 200,
+          "tab": 0
+        }
+      ]
+    },
+    {
+      "scenario": "expand-collapse-reopen-refresh",
+      "passed": true
+    },
+    {
+      "scenario": "single-dollar-after-price-only-mount",
+      "passed": true
+    }
+  ]
+}

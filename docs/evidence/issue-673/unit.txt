@@ -1,0 +1,130 @@
+(node:23696) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:23702) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:23702) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: retained A arithmetic failure and B goal failure are distinct from a full-table disclosure
+ok 1 - retained A arithmetic failure and B goal failure are distinct from a full-table disclosure
+  ---
+  duration_ms: 14.652583
+  type: 'test'
+  ...
+# Subtest: rate-limit diagnostics preserve only safe actual reset/quota metadata and never invent a cooldown
+ok 2 - rate-limit diagnostics preserve only safe actual reset/quota metadata and never invent a cooldown
+  ---
+  duration_ms: 2.268656
+  type: 'test'
+  ...
+# Subtest: the minimum A/B replay requires four explicitly budgeted calls and never silently expands to the full suite
+ok 3 - the minimum A/B replay requires four explicitly budgeted calls and never silently expands to the full suite
+  ---
+  duration_ms: 0.657896
+  type: 'test'
+  ...
+# (node:23703) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:23703) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: authorized homework requirements survive the general observation budget and task changes
+ok 4 - authorized homework requirements survive the general observation budget and task changes
+  ---
+  duration_ms: 10.586384
+  type: 'test'
+  ...
+# Subtest: ordinary chat has no invented homework teaching context
+ok 5 - ordinary chat has no invented homework teaching context
+  ---
+  duration_ms: 4.643483
+  type: 'test'
+  ...
+# Subtest: an unknown assessment does not invent an actual learner attempt or override the teacher objective
+ok 6 - an unknown assessment does not invent an actual learner attempt or override the teacher objective
+  ---
+  duration_ms: 0.407607
+  type: 'test'
+  ...
+# Subtest: only the authorized teacher policy fields enter product instructions, independently of persona and student pressure
+ok 7 - only the authorized teacher policy fields enter product instructions, independently of persona and student pressure
+  ---
+  duration_ms: 9.326557
+  type: 'test'
+  ...
+# (node:23704) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:23704) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: teaching extraction is bounded, deduplicated per authorized input and recorded in the shared ledger
+ok 8 - teaching extraction is bounded, deduplicated per authorized input and recorded in the shared ledger
+  ---
+  duration_ms: 6.434086
+  type: 'test'
+  ...
+# Subtest: invalid or truncated extraction cannot invent permission, attempts, mastery or a teacher goal
+ok 9 - invalid or truncated extraction cannot invent permission, attempts, mastery or a teacher goal
+  ---
+  duration_ms: 1.010421
+  type: 'test'
+  ...
+# Subtest: provider failure uses an unknown-goal hint after one recorded request, without hidden retries
+ok 10 - provider failure uses an unknown-goal hint after one recorded request, without hidden retries
+  ---
+  duration_ms: 2.11275
+  type: 'test'
+  ...
+# (node:23745) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:23745) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: first error, repeated evidenced errors, explanation, verified work and pressure select distinct teaching actions
+ok 11 - first error, repeated evidenced errors, explanation, verified work and pressure select distinct teaching actions
+  ---
+  duration_ms: 6.134011
+  type: 'test'
+  ...
+# Subtest: teacher verification goal survives pressure; student text cannot authorize full demonstrations
+ok 12 - teacher verification goal survives pressure; student text cannot authorize full demonstrations
+  ---
+  duration_ms: 3.157022
+  type: 'test'
+  ...
+# Subtest: unverified teaching drafts publish no prefix and known math failures publish no final bytes
+ok 13 - unverified teaching drafts publish no prefix and known math failures publish no final bytes
+  ---
+  duration_ms: 1.902201
+  type: 'test'
+  ...
+# Subtest: unverified mathematical drafts and missing independent next steps are withheld
+ok 14 - unverified mathematical drafts and missing independent next steps are withheld
+  ---
+  duration_ms: 0.355308
+  type: 'test'
+  ...
+# Subtest: claimed mastery is not affirmed and repeated-error explanation cannot collapse back into clues
+ok 15 - claimed mastery is not affirmed and repeated-error explanation cannot collapse back into clues
+  ---
+  duration_ms: 0.376751
+  type: 'test'
+  ...
+# Subtest: unbound administrative conversation retains ordinary delivery; a teacher-bound task cannot be bypassed as other
+ok 16 - unbound administrative conversation retains ordinary delivery; a teacher-bound task cannot be bypassed as other
+  ---
+  duration_ms: 0.391013
+  type: 'test'
+  ...
+# Subtest: a substantive first-error diagnostic question itself supplies the required independent action
+ok 17 - a substantive first-error diagnostic question itself supplies the required independent action
+  ---
+  duration_ms: 0.387247
+  type: 'test'
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5517.162582
