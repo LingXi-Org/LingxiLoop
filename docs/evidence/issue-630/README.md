@@ -1,5 +1,7 @@
 # #630 — scoped teacher requirements, behavior gate still open
 
+2026-11-04 follow-up: [#630/#673 teaching-action implementation and bounded real-model results](../issue-673/README.md). The failures below remain historical failures; the follow-up separately records the new successful cases, native publication limit and unverified production scope.
+
 **Draft engineering fix; not a successful T11 behavioral acceptance or a production release.**
 
 ## Confirmed code findings
