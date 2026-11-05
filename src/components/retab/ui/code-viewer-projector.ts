@@ -880,10 +880,10 @@ function patchCodeRowContent({
     row.contentSpan.dataset.codeLineTruncated = "";
     row.contentSpan.setAttribute(
       "aria-label",
-      `${text.length} character line preview; ${renderText.omittedCharacterCount} middle characters omitted.`,
+      `此行共 ${text.length} 个字符，预览已省略中间 ${renderText.omittedCharacterCount} 个字符。`,
     );
     row.contentSpan.title =
-      "Long line preview. Copying the selected row copies the complete line.";
+      "当前为长行预览，复制所选行会复制完整内容。";
   } else {
     delete row.row.dataset.codeLineTruncated;
     delete row.contentSpan.dataset.codeLineTruncated;

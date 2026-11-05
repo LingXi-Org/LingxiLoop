@@ -1808,7 +1808,7 @@ function buildImageBlock({
   sourceStartLine: number;
   token: Tokens.Image;
 }): PreparedImageTextBlock {
-  const alt = token.text?.trim() || token.href || "Markdown image";
+  const alt = token.text?.trim() || token.href || "Markdown 图片";
   return {
     ...createBlockBase(ctx, sourceStartLine, sourceEndLine),
     alt,

@@ -327,7 +327,7 @@ function toCsvPreviewError(error: unknown): Error {
   if (isAbortError(error)) {
     return new ResourceError({
       kind: "aborted",
-      message: "Loading was cancelled.",
+      message: "加载已取消。",
       cause: error,
     });
   }

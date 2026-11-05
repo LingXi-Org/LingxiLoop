@@ -16,7 +16,7 @@ import { useAuth } from '@/stores/auth'
 import { useApp } from '@/stores/app'
 import { useConversations } from '@/features/conversations/store'
 
-const sourceLabels = { STUDENT_ORIGINAL: '学生原创',AGENT_RELAY: 'Agent 代交',AGENT_GENERATED: 'Agent 生成' }
+const sourceLabels = { STUDENT_ORIGINAL: '学生原创',AGENT_RELAY: '智能体代交',AGENT_GENERATED: '智能体生成' }
 export function Version({ submission, framed = true }: { submission: SubmissionVersion; framed?: boolean }) {
   const content = <div className="w-full space-y-3">
     <p className="text-xs text-muted-foreground">{sourceLabels[submission.source]}{submission.late && ' · 迟交'}</p>
@@ -27,7 +27,7 @@ export function Version({ submission, framed = true }: { submission: SubmissionV
     <ConversationReferences references={submission.conversationReferences} id={submission.id}/>
     <p className="text-xs text-muted-foreground">学习评价供教师参考，不等同于正式成绩。</p>
     <ForumFiles links={submission.links} attachments={submission.attachments} />
-    {submission.feedback?.map(feedback => <div key={feedback.id} className="border-s-2 ps-3"><p className="mb-2 text-xs text-muted-foreground">{feedback.kind === 'TEACHER' ? '教师反馈' : '历史 Agent 评价'}{feedback.status !== 'ACCEPTED' ? ` · ${feedback.status === 'PENDING' ? '待审核' : '未采纳'}` : ''} · {new Date(feedback.createdAt).toLocaleString()}</p><ForumBody content={feedback.body} document={feedback.editorDocument} /><ForumFiles attachments={feedback.attachments ?? []} links={feedback.links ?? []}/></div>)}
+    {submission.feedback?.map(feedback => <div key={feedback.id} className="border-s-2 ps-3"><p className="mb-2 text-xs text-muted-foreground">{feedback.kind === 'TEACHER' ? '教师反馈' : '历史智能体评价'}{feedback.status !== 'ACCEPTED' ? ` · ${feedback.status === 'PENDING' ? '待审核' : '未采纳'}` : ''} · {new Date(feedback.createdAt).toLocaleString()}</p><ForumBody content={feedback.body} document={feedback.editorDocument} /><ForumFiles attachments={feedback.attachments ?? []} links={feedback.links ?? []}/></div>)}
   </div>
   return framed ? <MemoCard label={`第 ${submission.version} 版提交`} author={submission.learnerName} authorId={submission.learnerId} authorAvatarUrl={submission.learnerAvatarUrl} createdAt={submission.submittedAt} actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>{content}</MemoCard> : content
 }

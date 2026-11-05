@@ -34,7 +34,7 @@ export async function triggerViewerDownload(
     throw new ViewerDownloadError({
       actionId: action.id,
       kind: "disabled",
-      message: "This download is disabled.",
+      message: "此文件暂不支持下载。",
     });
   }
 
@@ -46,14 +46,14 @@ export async function triggerViewerDownload(
       throw new ViewerDownloadError({
         actionId: action.id,
         kind: "aborted",
-        message: "Download was cancelled.",
+        message: "下载已取消。",
         cause: error,
       });
     }
     throw new ViewerDownloadError({
       actionId: action.id,
       kind: "payload_failed",
-      message: "Could not prepare this download.",
+      message: "无法准备下载，请重试。",
       cause: error,
     });
   }
@@ -66,7 +66,7 @@ export async function triggerViewerDownload(
       throw new ViewerDownloadError({
         actionId: action.id,
         kind: "unsupported",
-        message: "Could not start this download.",
+        message: "无法开始下载，请重试。",
         cause: error,
       });
     }
@@ -90,7 +90,7 @@ export async function triggerViewerDownload(
     throw new ViewerDownloadError({
       actionId: action.id,
       kind: "unsupported",
-      message: "Could not start this download.",
+      message: "无法开始下载，请重试。",
       cause: error,
     });
   }
@@ -226,7 +226,7 @@ export function ViewerDownloadButton({
   onError,
 }: ViewerDownloadButtonProps) {
   const href = useViewerDownloadHref(action);
-  const label = action?.label ?? "Download";
+  const label = action?.label ?? "下载";
   const disabled = !action || action.isDisabled;
   const hasDownloadHref = Boolean(href);
   const { pendingActionId, triggerDownload } = useViewerDownloadTrigger({
@@ -285,7 +285,7 @@ export function ViewerDownloadMenu({
   onError,
 }: ViewerDownloadMenuProps) {
   const actionSetKey = actions.map((action) => action.id).join("\u0000");
-  const label = "Download";
+  const label = "下载";
   const { pendingActionId, triggerDownload } = useViewerDownloadTrigger({
     onError,
     resetKey: actionSetKey,

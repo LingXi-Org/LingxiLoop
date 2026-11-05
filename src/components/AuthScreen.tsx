@@ -147,7 +147,7 @@ export function AuthScreen() {
           <CardHeader>
             <div className="mb-4 flex items-center gap-3 font-heading font-medium">
               <ProductLogo size={36} rounded />
-              <span>LingxiLoop</span>
+              <span>灵犀</span>
             </div>
             <CardTitle className="text-xl">{copy[0]}</CardTitle>
             <CardDescription>{copy[1]}</CardDescription>

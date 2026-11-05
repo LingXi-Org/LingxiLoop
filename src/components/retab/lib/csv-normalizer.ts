@@ -26,7 +26,7 @@ export function createCsvNormalizer(
   let sawFirstRecord = false;
 
   function makeColumnName(index: number): string {
-    return "Column " + (index + 1);
+    return "列 " + (index + 1);
   }
 
   function copyAndPad(row: string[], nextWidth: number): string[] {

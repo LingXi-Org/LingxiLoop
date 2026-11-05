@@ -273,7 +273,7 @@ export function toViewerErrorInfo(
       message: error.message,
       isRetryable: retryable(context, false),
       isDownloadUseful: canDownload,
-      userMessage: "This file cannot be previewed here.",
+      userMessage: "此文件暂不支持预览。",
       cause: error.cause,
     };
   }
@@ -283,10 +283,10 @@ export function toViewerErrorInfo(
       domain: "resource",
       format: context.format,
       kind: "aborted",
-      message: "Loading was cancelled.",
+      message: "加载已取消。",
       isRetryable: retryable(context, false),
       isDownloadUseful: false,
-      userMessage: "Loading was cancelled.",
+      userMessage: "加载已取消。",
       cause: error,
     };
   }
@@ -354,24 +354,24 @@ function unknownErrorDefaultRetry(context: ViewerErrorContext) {
 function resourceErrorUserMessage(error: ResourceError) {
   if (error.kind === "http_error") {
     return error.status
-      ? `Failed to load file: ${error.status}.`
-      : "Couldn't load this file.";
+      ? `无法加载文件（状态码 ${error.status}），请稍后重试。`
+      : "无法加载文件，请重试。";
   }
-  if (error.kind === "fetch_failed") return "Couldn't load this file.";
-  if (error.kind === "aborted") return "Loading was cancelled.";
-  if (error.kind === "invalid_range") return "This source range is invalid.";
+  if (error.kind === "fetch_failed") return "无法加载文件，请重试。";
+  if (error.kind === "aborted") return "加载已取消。";
+  if (error.kind === "invalid_range") return "文件读取范围无效。";
   if (error.kind === "too_large") {
     return error.tooLargeReason === "lines"
-      ? "This file has too many lines to preview."
-      : "This file is too large to preview.";
+      ? "文件行数过多，无法预览。"
+      : "文件过大，无法预览。";
   }
   if (error.kind === "partial_content") {
-    return "This source returned partial content and cannot be previewed here.";
+    return "文件内容不完整，无法预览。";
   }
   if (error.kind === "unsupported_capability") {
-    return "This source cannot be previewed here.";
+    return "此内容暂不支持预览。";
   }
-  return "Couldn't load this file.";
+  return "无法加载文件，请重试。";
 }
 
 function formatErrorUserMessage(
@@ -379,57 +379,57 @@ function formatErrorUserMessage(
   kind: string,
   error?: unknown,
 ) {
-  if (format === "pdf") return "Couldn't load this PDF.";
+  if (format === "pdf") return "无法加载 PDF，请重试。";
   if (format === "image") {
     if (kind === "index_out_of_range")
-      return "This image page is out of range.";
-    if (kind === "decode_failed") return "Couldn't decode this image.";
-    return "Couldn't load this image.";
+      return "图片页码超出范围。";
+    if (kind === "decode_failed") return "无法读取图片内容。";
+    return "无法加载图片，请重试。";
   }
   if (format === "text") {
-    if (kind === "render_failed") return "Couldn't render this text file.";
+    if (kind === "render_failed") return "无法显示文本文件。";
     if (kind === "bounds") {
       const boundsError = error as {
         reason?: unknown;
         boundName?: unknown;
       };
       if (boundsError.reason === "lines") {
-        return "This text file has too many lines to preview.";
+        return "文本文件行数过多，无法预览。";
       }
       if (boundsError.reason === "bytes") {
-        return "This text file is too large to preview.";
+        return "文本文件过大，无法预览。";
       }
       if (typeof boundsError.boundName === "string") {
-        return "Text viewer bounds are invalid.";
+        return "文本预览范围无效。";
       }
     }
-    return "Couldn't load this text file.";
+    return "无法加载文本文件，请重试。";
   }
-  if (format === "csv") return "Couldn't parse this table.";
-  if (format === "docx") return "Couldn't render this document.";
-  if (format === "xlsx") return "Couldn't parse this spreadsheet.";
+  if (format === "csv") return "无法读取表格内容。";
+  if (format === "docx") return "无法显示文档。";
+  if (format === "xlsx") return "无法读取电子表格。";
   if (format === "pptx") {
-    if (kind === "render_failed") return "Couldn't render this slide.";
-    return "Couldn't load this presentation.";
+    if (kind === "render_failed") return "无法显示幻灯片。";
+    return "无法加载演示文稿，请重试。";
   }
-  return "Couldn't load this file.";
+  return "无法加载文件，请重试。";
 }
 
 function stateErrorUserMessage(kind: ViewerStateErrorKind) {
-  if (kind === "invalid_bounds") return "Viewer bounds are invalid.";
-  if (kind === "invalid_target") return "The requested target is invalid.";
-  if (kind === "out_of_range") return "The requested item is out of range.";
-  if (kind === "stale_resource") return "This viewer state is no longer valid.";
-  return "Couldn't load this file.";
+  if (kind === "invalid_bounds") return "预览范围无效。";
+  if (kind === "invalid_target") return "请求的目标无效。";
+  if (kind === "out_of_range") return "请求的项目超出范围。";
+  if (kind === "stale_resource") return "预览已失效，请重新打开。";
+  return "无法加载文件，请重试。";
 }
 
 function fallbackUserMessage(format: ViewerFormat | undefined) {
-  if (format === "pdf") return "Couldn't load this PDF.";
-  if (format === "image") return "Couldn't load this image.";
-  if (format === "text") return "Couldn't load this text file.";
-  if (format === "csv") return "Couldn't parse this table.";
-  if (format === "docx") return "Couldn't load this document.";
-  if (format === "xlsx") return "Couldn't load this spreadsheet.";
-  if (format === "pptx") return "Couldn't load this presentation.";
-  return "Couldn't load this file.";
+  if (format === "pdf") return "无法加载 PDF，请重试。";
+  if (format === "image") return "无法加载图片，请重试。";
+  if (format === "text") return "无法加载文本文件，请重试。";
+  if (format === "csv") return "无法读取表格内容。";
+  if (format === "docx") return "无法加载文档，请重试。";
+  if (format === "xlsx") return "无法加载电子表格，请重试。";
+  if (format === "pptx") return "无法加载演示文稿，请重试。";
+  return "无法加载文件，请重试。";
 }

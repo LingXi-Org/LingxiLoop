@@ -54,6 +54,7 @@ const testsByScope = {
   ],
   admin: ['admin/src/lingxilit-url.test.ts', 'admin/src/record-presentation.test.ts', 'admin/src/management-session.test.ts'],
   web: [
+    'src/components/product-language.test.tsx',
     'shared/artifact-operations.test.ts',
     'shared/artifact-editor-actions.test.ts',
     'shared/artifact-comment-anchor.test.ts',

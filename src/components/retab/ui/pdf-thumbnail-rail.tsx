@@ -89,7 +89,7 @@ export function PdfThumbnailRailViewport({
     <nav
       ref={viewportRef}
       data-slot="pdf-viewer-thumbnails"
-      aria-label="PDF pages"
+      aria-label="PDF 页面"
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onPointerEnter={onPointerEnter}

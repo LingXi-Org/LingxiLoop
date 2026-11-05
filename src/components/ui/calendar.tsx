@@ -1,6 +1,7 @@
 // Adapted from shadcn/ui Calendar (MIT): https://ui.shadcn.com/docs/components/radix/calendar
 
 import * as React from "react"
+import { zhCN } from "react-day-picker/locale"
 import { cn } from "@/lib/utils"
 import {
   ChevronDownIcon,
@@ -22,6 +23,7 @@ function Calendar({
   captionLayout = "label",
   buttonVariant = "ghost",
   formatters,
+  locale = zhCN,
   components,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
@@ -31,6 +33,7 @@ function Calendar({
 
   return (
     <DayPicker
+      locale={locale}
       showOutsideDays={showOutsideDays}
       className={cn(
         "group/calendar bg-background p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
@@ -41,7 +44,7 @@ function Calendar({
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+          date.toLocaleString("zh-CN", { month: "long" }),
         ...formatters,
       }}
       classNames={{

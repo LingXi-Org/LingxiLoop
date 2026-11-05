@@ -2,7 +2,7 @@ export function ProductLogo({ size = 22, rounded = false }: { size?: number; rou
   return (
     <img
       src="/logo.svg"
-      alt="LingxiLoop"
+      alt="灵犀"
       draggable={false}
       width={size}
       height={size}

@@ -179,7 +179,7 @@ function plainTextViewerBoundaryError(error: unknown) {
   return new ViewerFormatError({
     format: "text",
     kind: "render_failed",
-    message: "Failed to render text.",
+    message: "无法显示文本。",
     cause: error,
   });
 }

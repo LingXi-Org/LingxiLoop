@@ -45,7 +45,7 @@ self.onmessage = (event: MessageEvent<MarkdownDocumentWorkerRequest>) => {
       failure: "parse_failed",
       id,
       message:
-        error instanceof Error ? error.message : "Could not parse Markdown.",
+        error instanceof Error ? error.message : "无法读取 Markdown 文档。",
     });
     return;
   }
