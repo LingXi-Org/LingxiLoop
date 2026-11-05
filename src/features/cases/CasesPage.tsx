@@ -7,6 +7,7 @@ import { CaseCodeBlock } from './CaseCodeBlock'
 import { CaseCard } from './CaseCard'
 import { CaseReader } from './CaseReader'
 import { CaseEditor } from './CaseEditor'
+import { CaseDetailSkeleton, CaseListSkeleton } from './CaseSkeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { caseCatalogue } from './presentation'
 import { ArrowLeft, Eye, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react'
@@ -269,7 +270,7 @@ export function CasesPage() {
   </DropdownMenuContent></DropdownMenu>
   const header = !detail
     ? <PageHeader className="case-page-header" title="教学案例" titleRef={heading} actions={<>{canManage && <Button className="case-new-button" onClick={beginNew}><Plus aria-hidden="true"/>新增案例</Button>}{managementMenu}</>} />
-    : <PageHeader title={editing ? (preview ? '预览' : article ? '编辑案例' : '新增案例') : article?.title ?? '案例'} titleRef={heading}
+    : <PageHeader title={editing ? (preview ? '预览' : article ? '编辑案例' : '新增案例') : loading ? <><span className="sr-only">案例</span><span aria-hidden="true" className="inline-block h-[13px] w-[220px] max-w-[30vw] animate-pulse rounded-md bg-muted motion-reduce:animate-none" /></> : article?.title ?? '案例'} titleRef={heading}
         className="case-page-header"
         crumbs={[{ label: '教学案例', onSelect: busy ? undefined : () => navigate(undefined, 'reader') }, ...(editing && preview ? [{ label: article ? '编辑案例' : '新增案例', onSelect: () => setPreview(false) }] : [])]}
         leading={editing ? false : <PanelCloseButton back label="返回案例库" onClick={() => { if (!busy) navigate() }} className="-ms-2" />}
@@ -306,7 +307,7 @@ export function CasesPage() {
     </form> : <PageBody className="case-page-content">
       {error && <div role="alert" className="case-notice text-destructive">{error}{!editing && <Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button>}</div>}
       {notice && <p role="status" className="case-notice">{notice}</p>}
-      {!detail && <>
+      {!detail && !loading && <>
         {!loading && !error && catalogue.featured && card(catalogue.featured, true)}
         <PageToolbar className="case-filters">
         <div role="group" aria-label="案例分类" className="case-categories">{['', ...list.categories].map(value => <Button key={value || 'all'} size="sm" variant="outline" aria-pressed={category === value} onClick={() => setCategory(value)}>{value || '全部'}</Button>)}{canManage && <Button type="button" variant="ghost" size="icon-sm" aria-label="添加分类" onClick={() => { setCategoryName(''); setOptionError(''); setCategoryOpen(true) }}><Plus aria-hidden="true"/></Button>}</div>
@@ -314,7 +315,7 @@ export function CasesPage() {
         {(search || category) && <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setCategory('') }}>清除筛选</Button>}
         </PageToolbar>
       </>}
-      {loading ? <p role="status" className="case-notice py-8">正在加载案例…</p> : article ? <CaseReader key={`${caseScope}:${article.id}`} article={article} scopeKey={caseScope}
+      {loading ? (detail ? <CaseDetailSkeleton /> : <CaseListSkeleton featured={view === 'reader'} />) : article ? <CaseReader key={`${caseScope}:${article.id}`} article={article} scopeKey={caseScope}
         articleUrl={next => articleUrl(next, 'reader')} onNavigate={next => navigate(next, 'reader')}
         notice={managing && article.hasUnpublishedChanges ? <p className="case-notice">{article.status === 'published' ? '当前显示管理草稿；阅读视图仍显示上次发布版本。' : '当前为未发布草稿，仅案例管理者可见。'}</p> : undefined}>
         {body(article)}
