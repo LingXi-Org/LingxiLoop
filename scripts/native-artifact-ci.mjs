@@ -1,4 +1,4 @@
-import {checkedServiceFailure}from'./native-artifact-failure.mjs'
+import {checkedServiceFailure,measurementFailure}from'./native-artifact-failure.mjs'
 /** CI-only real product orchestration. No API mocks, runtime substitutions or model calls.
  * Cookies, TLS keys, downloads and raw service output stay in RUNNER_TEMP. The
  * artifact projection below is deliberately an allowlist, not a log redactor. */
@@ -173,6 +173,7 @@ export function compactReceipt(safe) {
   return { schemaVersion: safe.schemaVersion, phase: safe.phase, baselineCommit: safe.baselineCommit, candidateCommit: safe.candidateCommit,
     environment: { ...safe.executionEnvironment, ...safe.measurement?.environment },
     diagnosticPassed: safe.diagnosticPassed, qualified: safe.qualified, checkpoint: safe.checkpoint,
+    ...(safe.measurementFault?{measurementFault:safe.measurementFault}:{}),
     ...(safe.measurement?.setupFailure ? { setupFailure: safe.measurement.setupFailure } : {}),
     summary: safe.measurement?.summary ?? {}, gates: safe.measurement?.gates ?? [],
     samples: (safe.measurement?.samples ?? []).map(sample => ({ ...Object.fromEntries(fields.filter(key => sample[key] !== undefined).map(key => [key, sample[key]])),
@@ -274,6 +275,7 @@ async function measure(config) {
 async function summarize(config) {
   await mkdir(config.publicRoot, { recursive: true })
   const report = await readFile(join(config.privateRoot, 'measurement/report.json'), 'utf8').then(JSON.parse).catch(() => null)
+  const measurementFault=report?undefined:measurementFailure(await readFile(join(config.privateRoot,'measurement.log'),'utf8').catch(()=>''))
   const phase = await readFile(join(config.privateRoot, 'phase.json'), 'utf8').then(JSON.parse).catch(() => ({ phase: 'guard', status: 'failed' }))
   const servicePhases = {}
   for (const arm of ['baseline', 'candidate']) {
@@ -284,7 +286,7 @@ async function summarize(config) {
     candidateCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
     executionEnvironment: await executionEnvironment(config),
     checkpoint: { phase: phases.has(phase.phase) ? phase.phase : 'guard', status: phase.status === 'passed' ? 'passed' : 'failed', ...(phase.status === 'failed' ? { code: safeCode(phase) } : {}) },
-    servicePhases, diagnosticPassed: report?.diagnosticPassed === true, qualified: config.phase === 'paired' && report?.qualified === true,
+    servicePhases, ...(measurementFault?{measurementFault}:{}), diagnosticPassed: report?.diagnosticPassed === true, qualified: config.phase === 'paired' && report?.qualified === true,
     ...(report ? { measurement: publicEvidence(report) } : {}) }
   await writeFile(join(config.publicRoot, 'results.json'), JSON.stringify(safe, null, 2) + '\n')
   // This is the same approved public projection, bounded to aggregate/sample

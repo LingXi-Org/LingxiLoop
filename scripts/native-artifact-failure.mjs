@@ -12,3 +12,12 @@ export function checkedServiceFailure(value) {
     settings:(Array.isArray(value?.settings)?value.settings:[]).filter(name=>typeof name==='string'&&/^(?:LINGXIOS|AGENT_OS|R2|WUKONG|SILICONFLOW)_[A-Z0-9_]{1,64}$/.test(name)).slice(0,4),
   }
 }
+
+/** A fatal runner error can precede its JSON receipt. Never publish its message
+ * or raw traceback; only our fixed script filename/line and a known class. */
+export function measurementFailure(log) {
+  const sources=Array.from(new Set(Array.from(String(log).matchAll(/File "[^"\n]*\/scripts\/(native-artifact-benchmark\.py)", line ([1-9][0-9]{0,6})/g),match=>`${match[1]}:${match[2]}`))).slice(-4)
+  const exceptions=new Set(['TypeError','NameError','KeyError','ValueError','RuntimeError','AttributeError','ImportError','ModuleNotFoundError','OSError','PermissionError','FileNotFoundError','TimeoutError'])
+  const exception=Array.from(String(log).matchAll(/^([A-Za-z]+Error):/gm),match=>match[1]).filter(name=>exceptions.has(name)).at(-1)
+  return {sources,...(exception?{exception}:{})}
+}
