@@ -135,8 +135,8 @@ test('table headers remain semantic and editable in export without promoting old
   const table={...createNode('table','table'),tableHeader:true,cells:[['列标题','第二列'],['正文','数据']]}
   page.nodes.table=table;page.nodeOrder.push('table')
   const html=await renderPageHtml(page,new ExportResources(document,{format:'html'}))
-  assert.match(html,/<th scope="col">列标题<\/th>/)
-  assert.match(html,/<td>正文<\/td>/)
+  assert.match(html,/<th scope="col"[^>]*>列标题<\/th>/)
+  assert.match(html,/<td[^>]*>正文<\/td>/)
   const plain={...page,nodes:{...page.nodes,table:{...table,tableHeader:undefined}}}
   const original=await renderPageHtml(plain,new ExportResources(document,{format:'html'}))
   assert.doesNotMatch(original,/<th[ >]/)

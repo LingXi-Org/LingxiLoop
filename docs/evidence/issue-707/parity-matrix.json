@@ -1606,7 +1606,7 @@
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/table-slides.json",
-        "scope": "实际 React 与共享操作链路，验证插入、中文单元格、共享撤销重做、重开和标题行；真实 API 新增回归待 CI"
+        "scope": "真实 API 表格保存及字段冲突在 5b65246c owning CI 通过；实际 React 中文插入/单元格/撤销重做/重开与远端标题变更保留草稿已局部验证；完整状态仍未通过"
       }
     },
     {
@@ -5558,7 +5558,11 @@
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/table-slides.json",
-        "scope": "共享模型与 Slides 表格插入/编辑；Design 独立表格入口与完整状态未验收"
+        "scope": "共享模型与 Slides 表格插入/编辑；Design 独立表格入口与完整状态未验收",
+        "additionalReceipts": [
+          "functional/table-stability-design.json",
+          "functional/table-exports.json"
+        ]
       }
     },
     {
@@ -5651,7 +5655,11 @@
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/table-slides.json",
-        "scope": "共享模型与 Slides 表格插入/编辑；Design 独立表格入口与完整状态未验收"
+        "scope": "共享模型与 Slides 表格插入/编辑；Design 独立表格入口与完整状态未验收",
+        "additionalReceipts": [
+          "functional/table-stability-slides.json",
+          "functional/table-exports.json"
+        ]
       }
     },
     {

@@ -9,8 +9,8 @@
       "image": "design-1920-light.png",
       "width": 1920,
       "height": 1200,
-      "differentPixels": 20053,
-      "rawDifferentRatio": 0.008703559027777778,
+      "differentPixels": 19171,
+      "rawDifferentRatio": 0.008320746527777778,
       "conservativePixelPass": false
     },
     {
@@ -41,8 +41,8 @@
       "image": "design-768-light.png",
       "width": 768,
       "height": 1024,
-      "differentPixels": 30879,
-      "rawDifferentRatio": 0.039264678955078125,
+      "differentPixels": 31169,
+      "rawDifferentRatio": 0.03963343302408854,
       "conservativePixelPass": false
     },
     {
@@ -57,8 +57,8 @@
       "image": "design-390-light.png",
       "width": 390,
       "height": 844,
-      "differentPixels": 14651,
-      "rawDifferentRatio": 0.04451026856240126,
+      "differentPixels": 14668,
+      "rawDifferentRatio": 0.044561915178028925,
       "conservativePixelPass": false
     },
     {

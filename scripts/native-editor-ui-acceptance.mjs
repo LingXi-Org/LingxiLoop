@@ -17,6 +17,7 @@ import react from '@vitejs/plugin-react'
 import { createFixture } from './native-artifact-fixture.mjs'
 import { createVisualFixture } from './native-editor-visual-fixture.mjs'
 import { applyOperations, prepareBatch } from '../shared/artifact-operations.ts'
+import { createTableNode } from '../shared/artifact-tables.ts'
 import {decodeCommentAnchor}from'../shared/artifact-comment-anchor.ts'
 
 const require = createRequire(import.meta.url)
@@ -68,8 +69,12 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const fixture = ['parity','table'].includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
+  const fixture = ['parity','table','table-stability'].includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
+  if(options.checks==='table-stability'){
+    const page=document.pages['page-1'],table={...createTableNode('stable-table',page),tableHeader:false,cells:[['甲','乙'],['丙'],['丁','戊']]}
+    page.nodes[table.id]=table;page.nodeOrder.push(table.id)
+  }
   if(options.checks==='legacy-colors')document.pages['page-1'].background='#f00'
   if(options.checks==='color-cas')document.pages['page-1'].background='#ff0000'
   const historical=structuredClone(document),historyNode=Object.values(historical.pages['page-1'].nodes).find(node=>node.type==='text')
@@ -164,7 +169,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   })
   const ready = async index => {
     const canvas = page.locator(`[data-page-id="page-${index}"]`)
-    if(!['parity','table'].includes(options.checks)) await canvas.locator('[data-formula-ready=true]').waitFor()
+    if(!['parity','table','table-stability'].includes(options.checks)) await canvas.locator('[data-formula-ready=true]').waitFor()
     await canvas.locator('[data-node-type=image] img').waitFor()
     await page.waitForFunction(index => {
       const image = window.document.querySelector(`[data-page-id="page-${index}"] [data-node-type=image] img`)
@@ -236,6 +241,34 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual(errors,[])
       return {kind:'isolated-narrow-editor-diagnostic',mode:kind,singleToolbarRow:true,floatingPageNavigation:kind==='slides',scope:'390×844 container and real editor through controlled HTTP fixture',consoleOrPageErrors:errors}
     }
+    if(options.checks==='table-stability') {
+      const table=page.locator('[data-node-id="stable-table"] table'),cell=table.locator('td').first()
+      await cell.dblclick();await cell.fill('甲草稿')
+      const remoteSeq=String(document.seq+1)
+      document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'stable-table',patch:{tableHeader:true}}])).document
+      await page.waitForRequest(request=>request.method()==='PUT'&&request.url().includes('/editor-context')&&request.postDataJSON()?.version===remoteSeq)
+      assert.equal(await table.locator('td,th').first().textContent(),'甲草稿','remote header change must retain the active unsubmitted draft')
+      assert.equal(await table.locator('td,th').first().evaluate(e=>document.activeElement===e),true,'remote header change must retain editing focus')
+      await page.keyboard.press('End');await page.keyboard.insertText('续写');await page.keyboard.press('Control+s')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      assert.equal(document.pages['page-1'].nodes['stable-table'].cells[0][0],'甲草稿续写')
+      assert.equal(document.pages['page-1'].nodes['stable-table'].tableHeader,true)
+      const assertRows=async locator=>{
+        const rects=await locator.locator('td,th').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y}}))
+        assert.ok(rects[3].y>rects[2].y,'a short row must not pull the next row into its remaining grid track')
+        assert.ok(Math.abs(rects[3].y-rects[4].y)<.1,'the final row must keep both cells together')
+        return rects
+      }
+      const nativeRows=await assertRows(table)
+      const {renderPageHtml,EXPORT_PAGE_CSS}=await import('../src/features/artifacts/native/export/render.ts')
+      const {ExportResources}=await import('../src/features/artifacts/native/export/common.ts')
+      const source=document.pages['page-1'],slim={...source,nodeOrder:['stable-table'],nodes:{'stable-table':source.nodes['stable-table']}}
+      const html=await renderPageHtml(slim,new ExportResources(document,{format:'html'})),exportPage=await browser.newPage()
+      let exportedRows
+      try{await exportPage.setContent(`<style>${EXPORT_PAGE_CSS}</style>${html}`);exportedRows=await assertRows(exportPage.locator('table'))}finally{await exportPage.close()}
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-table-stability-diagnostic',mode:kind,remoteHeaderPreservesDraftAndFocus:true,continuedDraftSaved:true,raggedRows:{native:nativeRows,html:exportedRows},scope:'actual React editing, shared reducer and HTML export; controlled HTTP fixture',consoleOrPageErrors:errors}
+    }
     if(options.checks==='table') {
       assert.equal(kind,'slides')
       const waitSaved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
@@ -246,20 +279,20 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       const tableNode=Object.values(document.pages['page-1'].nodes).find(node=>!before.has(node.id)&&node.type==='table');assert.ok(tableNode)
       assert.equal(tableNode.tableHeader,true);assert.deepEqual(tableNode.cells,[['列标题','列标题','列标题'],['','',''],['','','']])
       const table=page.locator(`[data-node-id="${tableNode.id}"] table`)
-      assert.equal(await table.locator('th').count(),3);assert.equal(await table.locator('td').count(),6)
+      assert.equal(await table.locator('[role=columnheader]').count(),3);assert.equal(await table.locator('[role=cell]').count(),6)
       const geometry=await page.locator(`[data-node-id="${tableNode.id}"]`).evaluate(e=>{const r=e.getBoundingClientRect(),paper=e.closest('[data-page-id]').getBoundingClientRect(),scale=paper.width/1920;return {x:(r.x-paper.x)/scale,y:(r.y-paper.y)/scale,width:r.width/scale,height:r.height/scale}})
       assert.ok(Math.abs(geometry.x-128)<.1&&Math.abs(geometry.width-900)<.1&&Math.abs(geometry.y+geometry.height/2-540)<.1)
-      const appearance=await table.evaluate(e=>{const cell=e.querySelector('th'),s=getComputedStyle(cell);return {display:getComputedStyle(e).display,fontWeight:s.fontWeight,fontSize:s.fontSize,lineHeight:s.lineHeight,padding:s.padding,background:s.backgroundColor,border:getComputedStyle(e).borderTopWidth}})
+      const appearance=await table.evaluate(e=>{const cell=e.querySelector('[role=columnheader]'),s=getComputedStyle(cell);return {display:getComputedStyle(e).display,fontWeight:s.fontWeight,fontSize:s.fontSize,lineHeight:s.lineHeight,padding:s.padding,background:s.backgroundColor,border:getComputedStyle(e).borderTopWidth}})
       assert.deepEqual(appearance,{display:'grid',fontWeight:'600',fontSize:'32px',lineHeight:'44.8px',padding:'11.2px 19.2px',background:'color(srgb 0.0784314 0.0784314 0.0745098 / 0.08)',border:'2px'})
       await page.mouse.click(1000,700);await page.screenshot({path:join(output,'slides-table-inserted.png')})
-      await table.locator('th').first().dblclick();await table.locator('th').first().fill('中文标题');await table.locator('th').first().press('Tab');await waitSaved()
+      await table.locator('[role=columnheader]').first().dblclick();await table.locator('[role=columnheader]').first().fill('中文标题');await table.locator('[role=columnheader]').first().press('Tab');await waitSaved()
       assert.equal(document.pages['page-1'].nodes[tableNode.id].cells[0][0],'中文标题')
-      await page.mouse.click(1000,700);await page.keyboard.press('Control+z');await page.waitForFunction(id=>document.querySelector(`[data-node-id="${id}"] th`)?.textContent==='列标题',tableNode.id);await waitSaved();assert.equal(document.pages['page-1'].nodes[tableNode.id].cells[0][0],'列标题')
-      await page.keyboard.press('Control+y');await page.waitForFunction(id=>document.querySelector(`[data-node-id="${id}"] th`)?.textContent==='中文标题',tableNode.id);await waitSaved();assert.equal(document.pages['page-1'].nodes[tableNode.id].cells[0][0],'中文标题')
-      await page.reload();await ready(1);assert.equal(await table.locator('th').first().textContent(),'中文标题')
-      await table.locator('th').first().click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
-      const header=page.getByRole('checkbox',{name:'标题行',exact:true});await header.uncheck();await waitSaved();assert.equal(document.pages['page-1'].nodes[tableNode.id].tableHeader,false);assert.equal(await table.locator('th').count(),0)
-      await header.check();await waitSaved();assert.equal(await table.locator('th').count(),3)
+      await page.mouse.click(1000,700);await page.keyboard.press('Control+z');await page.waitForFunction(id=>document.querySelector(`[data-node-id="${id}"] [role=columnheader]`)?.textContent==='列标题',tableNode.id);await waitSaved();assert.equal(document.pages['page-1'].nodes[tableNode.id].cells[0][0],'列标题')
+      await page.keyboard.press('Control+y');await page.waitForFunction(id=>document.querySelector(`[data-node-id="${id}"] [role=columnheader]`)?.textContent==='中文标题',tableNode.id);await waitSaved();assert.equal(document.pages['page-1'].nodes[tableNode.id].cells[0][0],'中文标题')
+      await page.reload();await ready(1);assert.equal(await table.locator('[role=columnheader]').first().textContent(),'中文标题')
+      await table.locator('[role=columnheader]').first().click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      const header=page.getByRole('checkbox',{name:'标题行',exact:true});await header.uncheck();await waitSaved();assert.equal(document.pages['page-1'].nodes[tableNode.id].tableHeader,false);assert.equal(await table.locator('[role=columnheader]').count(),0)
+      await header.check();await waitSaved();assert.equal(await table.locator('[role=columnheader]').count(),3)
       await page.screenshot({path:join(output,'slides-table-inspector.png')})
       assert.deepEqual(errors,[])
       return {kind:'isolated-table-editor-diagnostic',mode:kind,immediateThreeByThree:true,chineseDefaultHeadings:true,headerSavedAndReopened:true,cellSharedUndoRedo:true,headerToggle:true,geometry,appearance,scope:'actual React editor with controlled HTTP reducer; not real API or full source table parity',consoleOrPageErrors:errors}

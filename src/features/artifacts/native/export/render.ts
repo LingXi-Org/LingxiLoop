@@ -89,7 +89,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
       }
       case 'table': {
         const columns=Math.max(1,...(node.cells??[]).map(row=>row.length))
-        content=`<table style="grid-template-columns:repeat(${columns},minmax(0,1fr))"><tbody>${(await Promise.all((node.cells??[]).map(async(row,index)=>`<tr>${(await Promise.all(row.map(async cell=>{const tag=node.tableHeader&&index===0?'th':'td';return `<${tag}${tag==='th'?' scope="col"':''}>${await sourceText(cell,resources)}</${tag}>`}))).join('')}</tr>`))).join('')}</tbody></table>`
+        content=`<table style="grid-template-columns:repeat(${columns},minmax(0,1fr))"><tbody>${(await Promise.all((node.cells??[]).map(async(row,index)=>`<tr>${(await Promise.all(row.map(async(cell,column)=>{const tag=node.tableHeader&&index===0?'th':'td';return `<${tag}${tag==='th'?' scope="col"':''} style="grid-row:${index+1};grid-column:${column+1}">${await sourceText(cell,resources)}</${tag}>`}))).join('')}</tr>`))).join('')}</tbody></table>`
         break
       }
       case 'svg': {
