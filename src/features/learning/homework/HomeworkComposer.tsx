@@ -40,7 +40,7 @@ export function HomeworkComposer({ courseId,onClose,onPublished,onBusyChange }: 
     }}>
       <p className="text-sm text-muted-foreground">填写要求与验收标准，保存后检查草稿并确认发布。学生仅能看到已发布的作业。</p>
       <div className="space-y-2"><Label htmlFor={`${id}-title`}>作业标题</Label><Input ref={titleInput} id={`${id}-title`} value={draft.title} required maxLength={200} disabled={disabled} onChange={event=>setDraft(previous=>({...previous,title:event.target.value}))}/></div>
-      <ForumContentFields label="作业要求" body={draft.body} editorDocument={draft.editorDocument} setBody={(body,editorDocument)=>setDraft(previous=>({...previous,body,editorDocument}))}
+      <ForumContentFields purpose="homework" label="作业要求" body={draft.body} editorDocument={draft.editorDocument} setBody={(body,editorDocument)=>setDraft(previous=>({...previous,body,editorDocument}))}
         links={draft.links} setLinks={links=>setDraft(previous=>({...previous,links}))} attachments={draft.attachments} setAttachments={attachments=>setDraft(previous=>({...previous,attachments}))} disabled={disabled} onUploading={setUploading}/>
       <div className="space-y-2"><Label htmlFor={`${id}-criteria`}>验收标准</Label><Textarea id={`${id}-criteria`} className="min-h-24" value={draft.criteria} required maxLength={10000} disabled={disabled} onChange={event=>setDraft(previous=>({...previous,criteria:event.target.value}))}/><p className="text-xs text-muted-foreground">每行一条标准，最多 20 条。</p></div>
       <div className="space-y-2"><Label htmlFor={`${id}-due`}>截止时间（可选）</Label><Input id={`${id}-due`} className="max-w-xs" type="datetime-local" value={draft.dueAt} disabled={disabled} onChange={event=>setDraft(previous=>({...previous,dueAt:event.target.value}))}/></div>

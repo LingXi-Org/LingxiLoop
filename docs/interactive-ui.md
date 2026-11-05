@@ -1,11 +1,9 @@
-# OpenUI interactive lessons: retired
+# Interactive visualizations: retired
 
-Issue [#193](https://github.com/LingXi-Org/LingxiLoop/issues/193) supersedes the experimental OpenUI implementation from issue #111. The active replacement is documented in [Visualize in LingxiLoop Web](visualize.md). Its fixed upstream skill and Gen UI source use HTML fragments and completed `::visualize` references; there is no OpenUI dual mode, DSL conversion, or legacy interactive-message adapter.
+Issue [#700](https://github.com/LingXi-Org/LingxiLoop/issues/700) retires the ZCode/Visualize renderer, Agent tools and skill, authoring/delivery policies, state/follow-up APIs, runtime assets and build pipeline. It does not install a replacement interactive-HTML capability. Ordinary Markdown, code, formulas, Mermaid, questionnaires, Design and Slides keep their existing owners.
 
-The OpenUI-specific renderer, catalog/schema, generation/projection path, state/action routes, dedicated dependencies and experimental test entrypoints are retired by this change. Shared conversation authorization, durable IM delivery, questionnaires, runtime ledger and unrelated features remain their existing owners.
+Archived visualization references in assistant messages show a retirement notice. They never execute the old content or expose its internal path. Literal code examples and user-authored messages remain literal. Previously exported standalone files remain normal artifacts.
 
-Historical evidence remains under [`artifacts/interactive-ui`](../artifacts/interactive-ui), including previous failed, skipped and disabled-mode results. The [issue #111 M0 ADR](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/adr/issue-111-openui-m0.md) is retained as a superseded historical record; its old commands and dependency decisions are not current setup instructions or acceptance for Visualize.
+Applied migrations and historical OpenUI/Visualize records remain unchanged. This source change neither deletes stored data nor implies a production deployment. Older evidence and commands describe their historical commits, not the current supported workflow.
 
-Existing OpenUI data is retained. The committed `0033_interactive_ui.sql` migration is unchanged; additive `0046_visualize.sql` creates replacement tables without dropping or converting legacy `im_ui_*` rows. This source change does not imply that migration 0046 has been applied to any environment or that production has been deployed.
-
-Current checks and evidence limits are listed in [the Visualize documentation](visualize.md#repeatable-checks-and-evidence-boundaries) and [issue #193 acceptance](https://github.com/LingXi-Org/LingxiLoop/blob/351e895a315bb46b9061c8628b20d9b9fa5ffa1e/docs/evidence/issue-193/ACCEPTANCE.md). Historical OpenUI results do not establish that the new visual, security or real-model E2E gates have passed.
+Current implementation, checks and remaining limits are recorded in [issue #700 evidence](evidence/issue-700/README.md).

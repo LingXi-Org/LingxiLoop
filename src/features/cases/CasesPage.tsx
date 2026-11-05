@@ -265,7 +265,7 @@ export function CasesPage() {
   const detail = Boolean(id || editing)
   const invalid = busy || !input.title.trim() || input.body.length > 200000 || input.summary.length > 2000
   const date = (value: CaseArticle) => new Date(value.publishedAt ?? value.createdAt ?? value.updatedAt).toLocaleDateString('zh-CN').replaceAll('/', '.')
-  const body = (value: CaseInput) => <ProtectedFileLinks>{usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument} legacyFormat="markdown"/> : <Markdown body={value.body}/>}</ProtectedFileLinks>
+  const body = (value: CaseInput) => <div data-content-typography="case"><ProtectedFileLinks>{usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument} legacyFormat="markdown"/> : <Markdown body={value.body}/>}</ProtectedFileLinks></div>
   const hero = content && <div data-case-hero className="case-hero">
     <div className="case-cover">
       <CaseCover cover={article?.generatedCover} fallbackUrl={content.cover} title={content.title} scopeKey={`${coverScope}:${article?.id ?? 'new'}`}
@@ -284,9 +284,9 @@ export function CasesPage() {
     <div className="case-hero-copy">
       {editing && <div hidden={preview}>
         <label><span className="sr-only">标题</span><Textarea required maxLength={200} disabled={busy} className="case-title-input" placeholder="案例标题" rows={1} value={input.title} onChange={event => editInput(value => ({...value, title: event.target.value}))}/></label>
-        <div className="case-summary case-inline-editor"><span className="case-editor-label" aria-hidden="true">摘要</span><ContentEditor legacyFormat="markdown" label="摘要" compact value={input.summary} document={input.summaryDocument} maxLength={2000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(summary, summaryDocument) => editInput(value => ({...value, summary, summaryDocument}))}/></div>
+        <div data-content-typography="case" className="case-summary case-inline-editor"><span className="case-editor-label" aria-hidden="true">摘要</span><ContentEditor legacyFormat="markdown" label="摘要" compact value={input.summary} document={input.summaryDocument} maxLength={2000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(summary, summaryDocument) => editInput(value => ({...value, summary, summaryDocument}))}/></div>
       </div>}
-      {(!editing || preview) && <div><p className="case-eyebrow">{content.category || '未分类'}</p><h2 className="case-title">{content.title}</h2><div className="case-summary">{usableDocument(content.summaryDocument, content.summary) ? <ContentDocumentView document={content.summaryDocument}/> : <p>{content.summary}</p>}</div></div>}
+      {(!editing || preview) && <div><p className="case-eyebrow">{content.category || '未分类'}</p><h2 className="case-title">{content.title}</h2><div data-content-typography="case" className="case-summary">{usableDocument(content.summaryDocument, content.summary) ? <ContentDocumentView document={content.summaryDocument}/> : <p>{content.summary}</p>}</div></div>}
       {editing && !preview ? <div className="case-edit-metadata">
         <label className="flex items-center gap-2 text-sm"><span>分类</span><Input list="case-categories" aria-label="分类" maxLength={80} className="w-28" value={input.category} onChange={event => editInput(value => ({...value, category: event.target.value}))}/></label>
         <datalist id="case-categories">{list.categories.map(value => <option key={value} value={value}/>)}</datalist>

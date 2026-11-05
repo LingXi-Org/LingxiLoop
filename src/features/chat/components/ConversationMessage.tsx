@@ -129,19 +129,6 @@ function MessageTextPart() {
   const groupPosition = metadata.groupStart
     ? metadata.groupEnd ? 'single' : 'start'
     : metadata.groupEnd ? 'end' : 'middle'
-  const bubbleRadius = groupPosition === 'single'
-    ? 'rounded-[18px]'
-    : metadata.isMine
-      ? groupPosition === 'start'
-        ? 'rounded-[18px_18px_4px_18px]'
-        : groupPosition === 'end'
-          ? 'rounded-[18px_4px_18px_18px]'
-          : 'rounded-[18px_4px_4px_18px]'
-      : groupPosition === 'start'
-        ? 'rounded-[18px_18px_18px_4px]'
-        : groupPosition === 'end'
-          ? 'rounded-[4px_18px_18px_18px]'
-          : 'rounded-[4px_18px_18px_4px]'
   const cancelLongPress = () => {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
     longPressTimer.current = null
@@ -182,11 +169,9 @@ function MessageTextPart() {
         setMobileActionsOpen(true)
       }}
       className={cn(
-        'min-w-0 tracking-[-0.01em]',
-        'text-[15px] leading-[1.75]',
-        isHuman && ['px-4 py-3', bubbleRadius],
+        'min-w-0 conversation-message-body',
         !metadata.isMine && 'text-foreground',
-        isHuman && metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
+        isHuman && metadata.delivery === 'failed' && 'ring-1 ring-destructive/50',
       )}
     >
       {isHuman && ownsQuote && metadata.quote && <MessageQuotePreview quote={metadata.quote} />}
@@ -268,23 +253,23 @@ export function ConversationMessage() {
       className={cn(
         'group/message grid w-full shrink-0',
         custom.replyBranches && 'fade-in slide-in-from-bottom-1 animate-in duration-300 motion-reduce:animate-none',
-        'px-4 sm:px-7',
+        'px-4',
         isMobile ? 'gap-x-2' : 'gap-x-2.5',
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
         custom.continuedFromPrevious ? 'pt-1' : 'pt-3',
         custom.continuedToNext ? 'pb-0' : 'pb-3',
-        custom.senderKind === 'agent' ? 'grid-cols-[28px_minmax(0,1fr)]' : custom.isMine ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
+        custom.senderKind === 'agent' ? 'grid-cols-[28px_minmax(0,1fr)]' : custom.isMine ? 'grid-cols-1' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
     >
-      <ConversationMessageAvatar participant={participant} isMobile={isMobile} isMine={custom.isMine}
-        groupStart={custom.groupStart} groupEnd={custom.groupEnd} />
+      {!custom.isMine && <ConversationMessageAvatar participant={participant} isMobile={isMobile} isMine={custom.isMine}
+        groupStart={custom.groupStart} groupEnd={custom.groupEnd} />}
       <div className={cn('contents', custom.isMine ? '[&>div]:col-start-1' : '[&>div]:col-start-2')}>
         {custom.groupStart && !custom.isMine && (
           <div className="row-start-1 mb-1 flex items-center gap-2 px-1 text-xs text-muted-foreground">
             <span className="font-medium">{participant ? participantDisplayName(participant) : custom.senderName}</span>
           </div>
         )}
-        <div data-chat-message-content data-sender-kind={custom.senderKind} className={cn('row-start-2 grid w-full max-w-[700px] min-w-0 gap-0.5', custom.senderKind === 'agent' && 'col-span-2 col-start-1! mt-2', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>
+        <div data-chat-message-content data-sender-kind={custom.senderKind} className={cn('row-start-2 grid w-full min-w-0 gap-0.5', custom.senderKind === 'agent' ? 'max-w-2xl col-span-2 col-start-1! mt-2' : custom.isMine ? 'max-w-full' : 'max-w-[700px]', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {custom.quote && (custom.senderKind !== 'human' || !quoteInsideText) && (
             <div className={cn('min-w-0 max-w-md', custom.isMine && 'w-full justify-self-end')}>

@@ -114,10 +114,10 @@ export async function receiveAgentRequest(input: AgentRequest) {
   }
   const members = (await pool.query<{ id: string; name: string; kind: 'human' | 'agent' }>(
     'SELECT id,name,kind FROM participants WHERE company_id=$1 AND id=ANY($2::text[])', [input.companyId,policy.participants.map(member => member.id)])).rows
-  const parsed = custom.visualizeFollowUp || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(message.payload),members)
+  const parsed = custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(message.payload),members)
   const mentions = parsed.mentionAll
     ? policy.participants.filter(member => member.kind === 'agent').map(member => member.id)
-    : custom.visualizeFollowUp && Array.isArray(custom.mentionedIds) ? custom.mentionedIds.map(String) : parsed.mentionedIds
+    : parsed.mentionedIds
   const accepted = await api.conversations.ingest({ tenantId: input.companyId, conversationId: input.channelId,
     policyVersion: policy.version, messageId: input.clientMsgNo, version: 1, author: { id: message.fromUid, kind: 'human' },
     text, mentions, attachments: files, ...(threadId ? { threadId } : {}) }, { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation' })

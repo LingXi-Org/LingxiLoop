@@ -1,14 +1,14 @@
-/* OpenMausBot-inspired conversation skin. These classes deliberately sit on
+/* open-claude-ui conversation skin. These classes deliberately sit on
  * existing LingxiLoop components: message schema, parsers and send flow stay
  * untouched while semantic surfaces switch cleanly between light and dark. */
-.chat-surface { background: var(--im-chat-surface, var(--panel)); color: var(--ink); }
+.chat-surface { background: var(--chat-canvas); color: var(--ink); }
 .chat-composer-shell { background: var(--panel); border-color: var(--hairline); }
 
 /* Message metrics adapted from open-claude-ui ChatMessageBubbles.tsx and
- * cds-theme.css at c1f923ae0051a871941b98a0e2e3183a545e6a85 (MIT).
+ * cds-theme.css at 2d56ab417f888e8c77f5d5090f53c1f65a05ab0b (MIT).
  * LingxiLoop's semantic brand tokens supply both light and dark surfaces. */
 [data-lingxi-assistant-thread] {
-  --cds-assistant-message-text-inset: 0px;
+  --cds-assistant-message-text-inset: 4px;
   --cds-assistant-message-text-stop: 0px;
 }
 [data-chat-message-column] {
@@ -19,11 +19,11 @@
 [data-message-bubble] {
   background: var(--panel);
   color: var(--ink);
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
 }
 [data-message-bubble='user'] {
-  background: var(--bubble);
-  color: var(--brand-bubble-ink);
+  background: var(--chat-user-surface);
+  color: var(--foreground);
 }
 [data-agent-body] {
   padding-inline-start: var(--cds-assistant-message-text-inset, 4px);
@@ -140,21 +140,11 @@
   gap: var(--reading-gap, 0.75rem);
   color: inherit;
   font: inherit;
-  line-height: var(--reading-line-height, 1.7);
+  line-height: inherit;
   overflow-wrap: anywhere;
 }
 .im-markdown-host { min-width: 0; max-width: 100%; }
 .im-markdown > * { margin-block: 0 !important; }
-.im-markdown :where(h1, h2, h3, h4, h5, h6) {
-  margin: 0;
-  color: inherit;
-  font: inherit;
-  font-weight: 650;
-  line-height: 1.3;
-}
-.im-markdown :where(h1) { font-size: 1.3em; }
-.im-markdown :where(h2) { font-size: 1.18em; }
-.im-markdown :where(h3, h4, h5, h6) { font-size: 1.05em; }
 .im-markdown :where(p, ul, ol, blockquote, pre, table) { margin-block: 0; }
 .im-markdown :where(ul, ol) { padding-inline-start: 1.35em; }
 .im-markdown :where(li + li) { margin-block-start: 0.3em; }
@@ -179,20 +169,25 @@
   padding: 0.1em 0.32em;
   font-size: 0.88em;
 }
-.im-markdown [data-streamdown='code-block'],
 .im-markdown [data-streamdown='mermaid-block'] {
   margin-block: 0;
   border-color: color-mix(in oklch, var(--border) 78%, transparent);
   background: color-mix(in oklch, var(--background) 88%, var(--muted));
   box-shadow: none;
 }
+.im-markdown [data-streamdown='code-block'] {
+  margin-block: 0;
+  border-color: var(--border);
+  border-radius: 12px;
+  background: var(--code-background);
+  color: var(--code-foreground);
+  overflow: hidden;
+}
+.im-markdown [data-streamdown='code-block'] > div { background: transparent; color: inherit; }
 .im-markdown :where(table) { font-size: 0.92em; }
 .im-markdown :where(th, td) { border-color: var(--border); }
-.im-markdown-agent { gap: var(--reading-gap, 0.75rem); line-height: var(--reading-line-height, 1.7); }
+.im-markdown-agent { gap: var(--reading-gap, 0.75rem); line-height: inherit; }
 .im-markdown-agent :where(li + li) { margin-block-start: 0.2em; }
-.im-markdown-agent :where(h1) { font-size: 1.18em; }
-.im-markdown-agent :where(h2) { font-size: 1.1em; }
-.im-markdown-agent :where(h3, h4, h5, h6) { font-size: 1em; }
 .im-markdown-agent :where(pre, table) { max-width: 100%; overflow-x: auto; }
 .im-markdown .katex-display {
   max-inline-size: 100%;
@@ -563,3 +558,7 @@ input:focus, textarea:focus, button:focus { outline: none; }
 .chat-question-index-button:hover { background: var(--accent); color: var(--foreground); }
 .chat-question-index-button:focus-visible { outline: 2px solid var(--ring); outline-offset: -3px; }
 .chat-question-index-button:disabled { opacity: .5; cursor: wait; }
+
+.conversation-message-body { font-family: var(--font-sans); line-height: 1.625; }
+[data-message-bubble] { font-size: var(--chat-user-size); padding: var(--chat-bubble-pad-y) var(--chat-bubble-pad-x); border-radius: var(--chat-bubble-radius); }
+[data-agent-body] { max-inline-size: 42rem; font-size: var(--chat-assistant-size); }

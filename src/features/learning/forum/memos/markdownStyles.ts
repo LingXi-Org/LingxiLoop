@@ -61,13 +61,13 @@ const headingClasses: Record<HeadingLevel, string> = {
  * These are static string literals so Tailwind's JIT scanner detects them.
  */
 export const markdownStyles = {
-  paragraph: "my-0 mb-2 leading-6",
+  paragraph: "my-0 mb-2",
   // No italic: synthesized obliques render poorly for CJK text.
   blockquote: "my-0 mb-2 border-s-3 border-muted-foreground/25 ps-3 text-muted-foreground",
   // Direct-child selectors keep each nested disclosure's indicator independent.
   details: "my-0 mb-2 min-w-0 ps-5 [&[open]>summary]:mb-1 [&[open]>summary>svg]:rotate-90 [&>*:last-child]:mb-0",
   summary:
-    "relative -ms-5 block cursor-pointer list-none rounded-sm ps-5 pe-1 font-normal leading-6 [overflow-wrap:anywhere] transition-colors hover:bg-muted/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none [&::-webkit-details-marker]:hidden",
+    "relative -ms-5 block cursor-pointer list-none rounded-sm ps-5 pe-1 font-normal [overflow-wrap:anywhere] transition-colors hover:bg-muted/50 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none [&::-webkit-details-marker]:hidden",
   disclosureIcon:
     "pointer-events-none absolute start-0.5 top-1.25 size-3.5 text-muted-foreground transition-transform duration-150 motion-reduce:transition-none rtl:rotate-180",
   bulletList: "my-0 mb-2 list-outside ps-6 list-disc marker:text-muted-foreground",
@@ -76,10 +76,10 @@ export const markdownStyles = {
   taskList: "my-0 mb-2 list-outside list-none",
   // Trimming the last child keeps nested lists and loose-item paragraphs from
   // adding a gap before the next sibling item.
-  listItem: "mt-0.5 leading-6 [&>*:last-child]:mb-0",
+  listItem: "mt-0.5 [&>*:last-child]:mb-0",
   // Shared by the read-only task item (MemoContent/markdown/List.tsx) and the
   // editor so the checkbox + text grid stays identical in both.
-  taskListItem: "mt-0.5 min-w-0 leading-6 list-none grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 [&>[data-slot=checkbox]]:mt-1",
+  taskListItem: "mt-0.5 min-w-0 list-none grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 [&>[data-slot=checkbox]]:mt-1",
   taskItemContent: "min-w-0 [overflow-wrap:anywhere] [&>*:last-child]:mb-0",
   // Relative size so code inside headings scales with the heading.
   inlineCode: "font-mono text-[0.875em] bg-muted px-1 py-0.5 rounded-md",

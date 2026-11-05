@@ -12,7 +12,7 @@ import type { Participant } from '@/types'
 import { load } from 'cheerio'
 import { TooltipProvider } from '@/components/ui/tooltip'
 mock.module('../../artifacts/components/ArtifactChatCard', { namedExports: { ArtifactChatCard: () => null, openArtifact: () => undefined } })
-mock.module('../visualize/VisualizeText', { namedExports: { VisualizeText: ({ Text }: { Text: React.ComponentType }) => <Text /> } })
+mock.module('./AnswerText', { namedExports: { AnswerText: ({ Text }: { Text: React.ComponentType }) => <Text /> } })
 mock.module('./ConversationComposer', { namedExports: { ConversationComposer: () => null } })
 mock.module('../runtime/transport', { namedExports: { ChatTransport: class {}, chatTransport: {}, filterThreadMessages: (messages: ThreadMessage[]) => messages } })
 mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })), getMeId: () => null, getActiveCompanyId: () => null } })
@@ -326,10 +326,11 @@ test('sender kind owns bubble chrome and agent avatars align at the top', () => 
     const $ = load(renderToStaticMarkup(<Preview messages={[message('1', sender)]} />))
     assert.equal($('[data-message-bubble]').length, sender === 'agent' ? 0 : 1)
     assert.equal($('[data-agent-body]').length, sender === 'agent' ? 1 : 0)
+    assert.equal($('[data-message-avatar]').length, sender === 'me' ? 0 : 1)
     if (sender === 'agent') {
       assert.match($('[data-message-avatar]').attr('class') ?? '', /self-start/)
       assert.doesNotMatch($('[data-agent-body]').attr('class') ?? '', /bg-|rounded-|border-/)
-      assert.match($('[data-agent-body]').attr('class') ?? '', /text-\[15px\]/)
+      assert.match($('[data-agent-body]').attr('class') ?? '', /conversation-message-body/)
     }
   }
 })

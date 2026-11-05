@@ -3,6 +3,6 @@ import { ContentDocumentView, type ContentDocument } from '@/features/content-ed
 import { ProtectedFileLinks } from '@/components/retab/ui/protected-file-links'
 import { MemoContent } from './memos/MemoContent'
 
-export function ForumBody({ content, document }: { content: string; document?: ContentDocument | null }) {
-  return <ProtectedFileLinks>{usableDocument(document, content) ? <ContentDocumentView document={document} /> : <MemoContent content={content} />}</ProtectedFileLinks>
+export function ForumBody({ content, document, purpose = 'forum' }: { content: string; document?: ContentDocument | null; purpose?: 'forum' | 'homework' }) {
+  return <div data-content-typography={purpose}><ProtectedFileLinks>{usableDocument(document, content) ? <ContentDocumentView document={document} /> : <MemoContent content={content} />}</ProtectedFileLinks></div>
 }

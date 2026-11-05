@@ -50,14 +50,12 @@ test('failed, stale, changed and revoked selections never unlock guidance-depend
   assert.doesNotMatch(policy.productRules({} as never, ctx), /Complete registered system skill.*claude-design/)
 })
 
-test('the first directory survives runtime exposure narrowing and preserves registered delivery workflows', () => {
+test('the current skill directory survives runtime exposure narrowing', () => {
   const ctx = context(), snapshot = executionSnapshot(ctx, policy)
   ctx.tools = snapshot.tools
   const rules = policy.productRules({} as never, ctx)
   assert.ok(rules.includes(skillIndex(productSkills.find(skill => skill.name === 'claude-design')!).hash))
   assert.match(rules, /"selectionAction":"skills.load"/)
-  assert.match(rules, /"selectionAction":"skills.activate"/)
-  assert.match(rules, /explanationBeforeAuthoring/)
   assert.match(rules, /"required":\["page"\]/)
 })
 

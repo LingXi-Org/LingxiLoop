@@ -1,12 +1,12 @@
 "use client"
 
-import { TextOffsetContext } from '@/features/chat/visualize/TextOffsetContext'
+import { TextOffsetContext } from './text-offset-context'
 
-import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@assistant-ui/react-streamdown'
-import { code } from '@streamdown/code'
-import type { MathPlugin } from 'streamdown'
+import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps, type SyntaxHighlighterProps } from '@assistant-ui/react-streamdown'
+import { CodeBlock } from '@/components/CodeBlock'
 import { mermaid } from './markdown-mermaid'
-import { Block, type BlockProps, StreamdownContext, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
+import type { MathPlugin } from 'streamdown'
+import { Streamdown, Block, type BlockProps, StreamdownContext, defaultRehypePlugins, parseMarkdownIntoBlocks, useIsCodeFenceIncomplete } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'
 import { createContext, memo, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import type { Root, ElementContent } from 'hast'
@@ -44,14 +44,15 @@ export function loadMathPlugin(): Promise<MathPlugin> {
 }
 const subscribeMath = (listener: () => void) => { mathListeners.add(listener); return () => { mathListeners.delete(listener) } }
 const readMath = () => mathPlugin
-const proseOnly = { code, mermaid }
-let withMath: { code: typeof code; mermaid: typeof mermaid; math: MathPlugin } | undefined
+const proseOnly = {}
+const diagramPlugins = { mermaid }
+let withMath: { math: MathPlugin } | undefined
 function useMarkdownPlugins(text: string) {
   const math = useSyncExternalStore(subscribeMath, readMath, readMath)
   const needsMath = MATH_SYNTAX.test(text)
   useEffect(() => { if (needsMath && !math) void loadMathPlugin().catch(() => {}) }, [needsMath, math])
   if (!math) return proseOnly
-  withMath ??= { code, mermaid, math }
+  withMath ??= { math }
   return withMath
 }
 const smooth = { minCommitMs: 32 }
@@ -73,6 +74,7 @@ const translations = {
   resetView: '重置视图', tableFormatCsv: 'CSV 表格', tableFormatMarkdown: 'Markdown 表格', tableFormatTsv: 'TSV 表格',
   viewFullscreen: '全屏查看', zoomIn: '放大', zoomOut: '缩小',
 }
+
 const mermaidOptions = { config: { securityLevel: 'strict', startOnLoad: false }, errorComponent: ({ chart }: { chart: string }) => <div>
   <p role="status">图表暂时无法显示。</p><details><summary>查看图表源代码</summary><pre className="overflow-auto">{chart}</pre></details>
 </div> }
@@ -106,7 +108,13 @@ const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['s
   }
   return claim && node?.properties['data-citation-start'] === undefined ? marker : <span {...props}>{marker}</span>
 }
-const confidenceComponents = { span: ConfidenceSpan }
+function ChatCodeBlock({ code = '', language = 'text' }: Partial<SyntaxHighlighterProps>) {
+  const incomplete = useIsCodeFenceIncomplete()
+  const { status } = useMessagePartText()
+  return language === 'mermaid' && !incomplete && status.type !== 'running'
+    ? <Streamdown plugins={diagramPlugins} mermaid={mermaidOptions} translations={translations} controls>{`\`\`\`mermaid\n${code}\n\`\`\``}</Streamdown> : <CodeBlock language={language} codeContent={code} />
+}
+const confidenceComponents = { span: ConfidenceSpan, SyntaxHighlighter: ChatCodeBlock }
 const emptyClaims: readonly MarkdownConfidenceClaim[] = []
 const emptyMentionTargets: readonly Participant[] = []
 const emptyCitationOffsets: number[] = []
@@ -282,7 +290,6 @@ const MarkdownTextImpl = ({
           containerClassName="im-markdown-host"
           plugins={plugins}
           translations={translations}
-          mermaid={mermaidOptions}
           rehypePlugins={rehypePlugins}
           components={confidenceComponents}
           controls

@@ -12,12 +12,11 @@ test('Windows autocrlf checkout preserves pinned seed, migration and vendor byte
  const root=resolve(dirname(fileURLToPath(import.meta.url)),'..')
  const directory=await mkdtemp(join(tmpdir(),'lingxiloop-checkout-bytes-'))
  const fixture=join(directory,'repo'),output=join(directory,'checkout')
- const vendor=JSON.parse(await readFile(join(root,'third_party/zcode/manifest.json'),'utf8'))
  const migrations=(await readdir(join(root,'server/src/db/migrations'))).filter(x=>x.endsWith('.sql'))
  const paths=['src/styles/vendor/shadcn/tailwind.css',
   'server/fixtures/historical-projection-3.8.2/server/src/agent-runtime/message-projection.ts',
   'server/fixtures/historical-projection-3.8.2/src/lib/nativeMessage.ts',
-  ...migrations.map(x=>'server/src/db/migrations/'+x),...vendor.files.map(x=>'third_party/zcode/'+x.path)]
+  ...migrations.map(x=>'server/src/db/migrations/'+x)]
  const git=args=>execFileSync('git',args,{cwd:fixture,stdio:['ignore','pipe','pipe']})
  try{
   await mkdir(fixture);await mkdir(output)

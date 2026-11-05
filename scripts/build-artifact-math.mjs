@@ -26,7 +26,7 @@ export async function buildArtifactMath() {
   assert.ok(!css.includes('url(fonts/'),'all KaTeX font sources must be self-contained')
   const result = await build({absWorkingDir:root,stdin:{contents:`import {installArtifactMath} from './shared/artifact-math';installArtifactMath(${JSON.stringify(css)});`,resolveDir:root},bundle:true,format:'iife',platform:'browser',target:['chrome120','firefox120','safari17'],minify:true,legalComments:'inline',write:false})
   const math = result.outputFiles[0].text
-  const output = resolve(root,'server/assets/visualize-runtime')
+  const output = resolve(root,'server/assets/artifact-math')
   await mkdir(output,{recursive:true})
   await writeFile(resolve(output,'math.js'),math)
   return { math, mathBytes: Buffer.byteLength(math) }

@@ -15,10 +15,10 @@ const CHUNK_PADDING_X = 32;
 const DOCUMENT_PADDING_TOP = CHUNK_PADDING_X;
 const DOCUMENT_PADDING_BOTTOM = CHUNK_PADDING_X;
 const MIN_CHUNK_HEIGHT = 64;
-// Tuned to the rendered typography (15.5px body at leading-relaxed ≈ 25px,
+// Tuned to the rendered typography (15px body at leading-relaxed ≈ 25px,
 // 14px mono code at leading-5 = 20px) so estimates track measured heights and
 // scroll correction stays minimal.
-const BODY_LINE_HEIGHT = 25;
+const BODY_LINE_HEIGHT = 24.375;
 const MONO_LINE_HEIGHT = 20;
 const APPROX_BODY_CHAR_WIDTH = 7.9;
 const APPROX_MONO_CHAR_WIDTH = 7.8;

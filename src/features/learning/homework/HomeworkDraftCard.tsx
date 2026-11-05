@@ -94,8 +94,8 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
           <Button type="button" variant="outline" className="h-auto max-w-full whitespace-normal py-2" onClick={() => onViewForum ? onViewForum() : useApp.getState().setView('forum')}>在论坛查看作业</Button>
         </div>
         <CollapsibleContent id={`${id}-published`} className="min-w-0 space-y-4">
-          <section className="space-y-2"><h4 className="text-sm font-medium">作业要求</h4><ForumBody content={publishedSummary.instructions} document={publishedSummary.editorDocument} /></section>
-          <section className="space-y-2"><h4 className="text-sm font-medium">验收标准</h4>{publishedSummary.criteriaDocument ? <ForumBody content={criteriaSource(publishedSummary.criteria, publishedSummary.criteriaDocument)} document={publishedSummary.criteriaDocument} /> : <ul className="list-disc space-y-1 ps-5 text-sm">{publishedSummary.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul>}</section>
+          <section className="space-y-2"><h4 className="text-sm font-medium">作业要求</h4><ForumBody purpose="homework" content={publishedSummary.instructions} document={publishedSummary.editorDocument} /></section>
+          <section className="space-y-2"><h4 className="text-sm font-medium">验收标准</h4>{publishedSummary.criteriaDocument ? <ForumBody purpose="homework" content={criteriaSource(publishedSummary.criteria, publishedSummary.criteriaDocument)} document={publishedSummary.criteriaDocument} /> : <ul className="list-disc space-y-1 ps-5 text-sm">{publishedSummary.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul>}</section>
           <ForumFiles links={publishedSummary.links} attachments={publishedSummary.attachments} />
         </CollapsibleContent>
       </CardContent>
@@ -106,7 +106,7 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
       {error && <p role="alert" className="text-sm text-destructive">{error}{!dirty && <Button variant="link" disabled={busy || uploading} onClick={() => void load()}>重新加载草稿</Button>}</p>}
       {homework && homework.status !== 'DRAFT' ? <>
         <Badge variant="secondary">{homework.status === 'CLOSED' ? '已关闭' : '已发布'}</Badge><h3 className="font-medium">{homework.title}</h3>
-        <ForumBody content={homework.instructions} document={homework.editorDocument} />{homework.criteriaDocument ? <ForumBody content={criteriaSource(homework.criteria,homework.criteriaDocument)} document={homework.criteriaDocument}/> : <ul className="list-disc space-y-1 ps-5 text-sm">{homework.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul>}
+        <ForumBody purpose="homework" content={homework.instructions} document={homework.editorDocument} />{homework.criteriaDocument ? <ForumBody purpose="homework" content={criteriaSource(homework.criteria,homework.criteriaDocument)} document={homework.criteriaDocument}/> : <ul className="list-disc space-y-1 ps-5 text-sm">{homework.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul>}
         <ForumFiles links={homework.links} attachments={homework.attachments} /><Button variant="outline" onClick={() => onViewForum ? onViewForum() : useApp.getState().setView('forum')}>在论坛查看作业</Button>
       </> : homework && <form className="space-y-4" onSubmit={async event => {
         event.preventDefault()
@@ -118,9 +118,9 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
       }}>
         {preparing && <p role="status" className="text-sm text-muted-foreground">助手正在整理草稿，回复结束后可以编辑并确认发布。</p>}
         <div className="space-y-2"><Label htmlFor={`${id}-title`}>作业标题</Label><Input id={`${id}-title`} value={title} maxLength={200} required disabled={disabled} onChange={event => edited(() => setTitle(event.target.value))} /></div>
-        <ForumContentFields label="作业要求" body={instructions} editorDocument={editorDocument} setBody={(value,document) => edited(() => {setInstructions(value);setEditorDocument(document ?? null)})} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} />
+        <ForumContentFields purpose="homework" label="作业要求" body={instructions} editorDocument={editorDocument} setBody={(value,document) => edited(() => {setInstructions(value);setEditorDocument(document ?? null)})} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} />
         <section className="space-y-2"><h4 className="text-sm font-medium">验收标准</h4>
-          <ForumContentFields editorRef={criteriaEditor} label="验收标准" body={criteria} editorDocument={criteriaDocument} legacyParagraphs={criteriaItems} setBody={(value,document,sections) => edited(() => {setCriteria(value);setCriteriaDocument(document ?? null);setCriteriaItems(sections ?? value.split('\n').filter(Boolean))})} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} nativeOnly maxLength={10000}/>
+          <ForumContentFields purpose="homework" editorRef={criteriaEditor} label="验收标准" body={criteria} editorDocument={criteriaDocument} legacyParagraphs={criteriaItems} setBody={(value,document,sections) => edited(() => {setCriteria(value);setCriteriaDocument(document ?? null);setCriteriaItems(sections ?? value.split('\n').filter(Boolean))})} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} nativeOnly maxLength={10000}/>
           <p className="text-xs text-muted-foreground">每段一条标准，最多 20 条；保存后按标准核验作答。</p>
         </section>
         <div className="space-y-2"><Label htmlFor={`${id}-due`}>截止时间</Label><Input id={`${id}-due`} className="max-w-xs" type="datetime-local" value={dueAt} disabled={disabled} onChange={event => edited(() => setDueAt(event.target.value))} /></div>

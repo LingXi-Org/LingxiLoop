@@ -46,8 +46,7 @@ export function matchesSystemSkillSelection(step: NonNullable<TurnContext['execu
           ...(stage.quotes.language ? { languageQuote: stage.quotes.language.text } : {}) })
     } catch { return false }
   }
-  return step.kind === 'visualize__read_reference' && index.name === 'visualize'
-    && Object.keys(args).join(',') === 'path' && args.path === 'SKILL.md'
+  return false
 }
 
 export function selectedSkillRules(context: TurnContext, skills: readonly SkillDefinition[] = productSkills): string {
@@ -63,15 +62,13 @@ export function selectedSkillRules(context: TurnContext, skills: readonly SkillD
     && context.harness?.skills.some(entry => entry.name === index.name && entry.version === index.version && entry.hash === index.hash))
   const selected = new Set<string>()
   for (const step of context.executionSteps ?? []) {
-    if (!['skills__load', 'skills__activate', 'visualize__read_reference'].includes(step.kind)) continue
+    if (!['skills__load', 'skills__activate'].includes(step.kind)) continue
     // Activation is also an explicit selection of this exact authored contract.
     // Supply its complete registered guidance next turn without a redundant
     // load. This only selects rules: native activation owns the durable
     // obligation, authorization, cancellation and request-version checks.
-    const match = available.find(({ skill, index }) => step.kind === 'skills__load' || step.kind === 'skills__activate'
-      ? (step.kind === 'skills__activate' ? !!skill.delivery && permitted('skills.activate') : permitted('skills.load'))
-        && matchesSystemSkillSelection(step, index, context.snapshotVersion?.requestVersion, context)
-      : permitted('visualize.read_reference') && matchesSystemSkillSelection(step, index, context.snapshotVersion?.requestVersion))
+    const match = available.find(({ skill, index }) => (step.kind === 'skills__activate' ? !!skill.delivery && permitted('skills.activate') : permitted('skills.load'))
+        && matchesSystemSkillSelection(step, index, context.snapshotVersion?.requestVersion, context))
     if (match) selected.add(match.index.name)
   }
   const chosen = available.filter(({ index }) => selected.has(index.name))

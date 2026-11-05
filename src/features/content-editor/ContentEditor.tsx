@@ -1,4 +1,3 @@
-import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
 import './content-editor.css'
 import { syntaxHighlighter } from '@blocknote/code-block'
@@ -21,13 +20,13 @@ export interface ContentEditorHandle {
 
 /** Business adapter only: all blocks, menus, toolbars and interactions are upstream defaults. */
 export const ContentEditor = forwardRef<ContentEditorHandle, {
-  value: string; document?: ContentDocument | null; label: string
+  value: string; document?: ContentDocument | null; label: string; purpose?: 'forum' | 'homework' | 'case'
   /** Legacy structured plain-text items must not merge through Markdown parsing. */
   legacyParagraphs?: string[]
   onChange(value: string, document: ContentDocument, sections: string[]): void
   uploadFile?(file: File): Promise<string>
   disabled?: boolean; compact?: boolean; maxLength?: number; legacyFormat?: 'forum' | 'markdown'; onFocus?(): void
-}>(({ value, document, legacyParagraphs, label, onChange, uploadFile, disabled = false, compact = false, maxLength = 20000, legacyFormat = 'forum', onFocus }, ref) => {
+}>(({ value, document, legacyParagraphs, label, purpose, onChange, uploadFile, disabled = false, compact = false, maxLength = 20000, legacyFormat = 'forum', onFocus }, ref) => {
   const { resolvedTheme } = useTheme()
   const current = useRef({ onChange, uploadFile })
   current.current = { onChange, uploadFile }
@@ -95,7 +94,7 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
       if (ids.length) editor.removeBlocks(ids)
     },
   }), [editor, disabled, document, value, legacyParagraphs])
-  return <div data-content-editor className={`content-editor ${compact ? 'content-editor-compact' : ''}`} onFocusCapture={onFocus}
+  return <div data-content-typography={purpose ?? (legacyFormat === 'markdown' ? 'case' : 'forum')} data-content-editor className={`content-editor ${compact ? 'content-editor-compact' : ''}`} onFocusCapture={onFocus}
     onSubmit={event => event.stopPropagation()}>
     <NativeView editor={editor} editable={!disabled} theme={resolvedTheme === 'dark' ? 'dark' : 'light'} onChange={() => {
       if (syncing.current) return

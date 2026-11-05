@@ -17,7 +17,6 @@ import { imAccessApplication } from './access-facade.js'
 import { imChannelsApplication } from './channels-facade.js'
 import { imMessagesApplication } from './messages-facade.js'
 import { imSessionApplication } from './session-facade.js'
-import { visualizeRouter } from './visualize-router.js'
 import { runHistoryCursor, runHistoryQuerySchema } from './run-history.js'
 import { getQuestionnaireState, submitQuestionnaire } from './questionnaires.js'
 import {
@@ -359,7 +358,6 @@ async function questionnaireCaller(req: Request & AuthedRequest, action: 'conver
   return { companyId: access.companyId, userId: access.userId, channelId }
 }
 
-imRouter.use('/channels/:id/visualize', visualizeRouter)
 
 imRouter.get('/channels/:id/questionnaires/:questionId', safe(async (req, res) => {
   const caller = await questionnaireCaller(req, 'conversation:read')

@@ -1,0 +1,131 @@
+/* Adapted from Caho1/open-claude-ui 2d56ab4 (MIT; third_party/open-claude-ui/LICENSE).
+ * The reference's component metrics win over conflicting prose/token examples. */
+:root {
+  --content-size: 15px;
+  --content-leading: 1.625;
+  --content-code-size: 13px;
+  --code-background: #f6f8fa;
+  --code-foreground: #24292e;
+  --content-flow: 1em;
+  --chat-user-size: 14.5px;
+  --chat-assistant-size: 15px;
+  --chat-composer-size: 15px;
+  --chat-rem-scale: calc(16 / 17);
+  --chat-bubble-radius: calc(.75rem * var(--chat-rem-scale));
+  --chat-bubble-pad-x: calc(1rem * var(--chat-rem-scale));
+  --chat-bubble-pad-y: calc(.75rem * var(--chat-rem-scale));
+  --chat-canvas: #fcfcfb;
+  --chat-user-surface: #f0f4f8;
+  --chat-composer-surface: #fff;
+  --chat-outline: rgb(11 11 11 / 10%);
+  --chat-composer-shadow: 0 4px 20px rgb(0 0 0 / 3.5%);
+}
+.dark {
+  --code-background: #0d0d0c;
+  --code-foreground: #e5e5e5;
+  --chat-canvas: #151515;
+  --chat-user-surface: rgb(255 255 255 / 6%);
+  --chat-composer-surface: #1a1a19;
+  --chat-outline: rgb(255 255 255 / 10%);
+  --chat-composer-shadow: 0 4px 20px rgb(0 0 0 / 40%);
+}
+
+/* Each purpose has one owner, shared by Markdown and native document engines. */
+[data-content-typography='forum'] { --content-heading-font: var(--font-sans); }
+[data-content-typography='homework'] { --content-heading-font: var(--font-sans); }
+[data-content-typography='case'] { --content-heading-font: var(--font-serif); }
+[data-content-typography='preview'],
+[data-content-typography='chat'] { --content-heading-font: var(--font-sans); }
+:root [data-content-typography] {
+  font-family: var(--font-sans);
+  font-size: var(--content-size);
+  line-height: var(--content-leading);
+  overflow-wrap: anywhere;
+}
+:root [data-content-typography] :is([data-memo-content], .bn-container, .bn-editor, .bn-block-outer, .bn-block-content, .case-markdown) {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+:is(:root [data-content-typography], .im-markdown) :is(h1,h2,h3,h4,h5,h6) {
+  font-family: var(--content-heading-font, var(--font-sans));
+  font-weight: 600;
+  line-height: 1.35;
+  margin-block: 1.25em .5em;
+  color: inherit;
+}
+:is(:root [data-content-typography], .im-markdown) h1 { font-size: 1.55em; }
+:is(:root [data-content-typography], .im-markdown) h2 { font-size: 1.3em; }
+:is(:root [data-content-typography], .im-markdown) h3 { font-size: 1.1em; }
+:is(:root [data-content-typography], .im-markdown) :is(h4,h5,h6) { font-size: 1em; }
+[data-content-typography] :is(p,li,blockquote) { line-height: inherit; }
+[data-content-typography] :is(p,ul,ol,blockquote) { margin-block: 0 var(--content-flow); }
+[data-content-typography] :is(code,kbd,samp,pre) { font-family: var(--font-mono); }
+:is(:root [data-content-typography], .im-markdown) pre {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  background: var(--code-background);
+  color: var(--code-foreground);
+  font-size: var(--content-code-size);
+  line-height: 1.625;
+}
+:is(:root [data-content-typography], .im-markdown) pre code { font-size: inherit; }
+[data-content-typography] :not(pre) > code { font-size: .875em; }
+[data-content-typography] blockquote {
+  border-inline-start: 2px solid var(--border);
+  padding-inline-start: 1em;
+  color: var(--muted-foreground);
+  font-family: inherit;
+  font-size: inherit;
+}
+[data-content-typography] :is(table,.katex-display) { max-inline-size: 100%; overflow-x: auto; }
+[data-content-typography] :is(th,td) { border-block-end: 1px solid var(--border); padding: .5em .75em; }
+[data-content-typography] a { color: var(--brand); text-underline-offset: .2em; }
+[data-content-typography] .bn-editor { --bn-font-family: var(--font-sans); }
+[data-content-typography] .bn-block-content { padding-block: 0; }
+[data-content-typography] .bn-block-content[data-content-type='heading'] { --level: inherit; }
+
+.chat-composer-column { margin-inline: auto; inline-size: 100%; max-inline-size: 48rem; padding: .5rem 1rem 1rem; }
+.chat-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--chat-composer-surface);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  box-shadow: var(--chat-composer-shadow), inset 0 0 0 1px var(--chat-outline);
+  transition: box-shadow 200ms;
+}
+.chat-composer:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
+.chat-composer-input {
+  position: relative;
+  min-inline-size: 0;
+  min-block-size: 48px;
+  max-block-size: 384px;
+  overflow-y: auto;
+  padding-inline: 6px 0;
+  font-family: inherit;
+  font-size: var(--chat-composer-size);
+  line-height: 1.4;
+  outline: none;
+}
+.chat-composer-input .aui-lexical-input { min-block-size: 48px; outline: none; }
+.chat-composer-input .aui-lexical-placeholder { position: absolute; inset-block-start: 0; pointer-events: none; color: var(--muted-foreground); }
+.chat-composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-block-start: 4px; }
+.chat-composer-control { inline-size: 32px; block-size: 32px; border-radius: 8px; }
+.chat-composer-send { background: var(--brand); color: var(--brand-foreground); }
+.chat-composer-send:hover { background: color-mix(in srgb, var(--brand) 90%, var(--foreground)); }
+@media (prefers-reduced-motion: reduce) { .chat-composer { transition: none; } }
+
+/* Code surfaces follow the active mode, including editable native blocks. */
+[data-content-typography] :is([data-content-code-block], [data-rehype-pretty-code-figure], [data-content-type='codeBlock']) {
+  background: var(--code-background);
+  color: var(--code-foreground);
+  border-color: var(--border);
+  border-radius: 12px;
+}
+[data-content-typography] [data-rehype-pretty-code-figure] figcaption { background: transparent; }

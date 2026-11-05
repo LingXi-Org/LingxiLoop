@@ -25,10 +25,8 @@
 .forum-document-title { font-family: var(--font-heading); font-size: 26px; line-height: 1.35; font-weight: 600; letter-spacing: -.01em; overflow-wrap: anywhere; margin-bottom: 12px; }
 .forum-document-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; color: var(--muted-foreground); font-size: 13px; }
 .forum-document-meta [data-slot=avatar] { margin-top: 0; }
-.forum-document-body { margin-top: 20px; font-size: 16px; line-height: 1.75; }
+.forum-document-body { margin-top: 20px; font-size: var(--content-size); line-height: var(--content-leading); }
 .forum-document-body [data-memo-content], .forum-document-body .bn-editor { font-size: inherit; line-height: inherit; }
-.forum-document-body h2 { font-size: 20px; line-height: 1.4; margin-top: 24px; margin-bottom: 8px; }
-.forum-document-body h3 { font-size: 17px; line-height: 1.4; }
 .forum-document-body pre { max-width: 100%; overflow-x: auto; }
 .forum-workflow, .forum-document-discussion { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); scroll-margin-top: 84px; }
 .forum-mobile-header { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); padding: 4px 12px; }
@@ -36,5 +34,5 @@
   .forum-tools > div:first-child { flex-basis: 100%; max-width: none; }
   .forum-feed .forum-list > [data-memo-card] { padding: 14px 16px; }
   .forum-document-title { font-size: 20px; }
-  .forum-document-body { font-size: 15px; }
+
 }

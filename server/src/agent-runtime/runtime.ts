@@ -22,13 +22,10 @@ import { loadRuntimeBinding } from './context.js'
 import { isSiliconFlowModel, siliconFlowCost, siliconFlowPricingForModel } from './pricing.js'
 import { createRealtimeStore } from './realtime-store.js'
 import { createRuntimeObjectStore } from './object-store.js'
-import { verifyVisualizeDelivery, verifyVisualizeAuthoringCandidate } from './visualize-delivery.js'
-import { verifyVisualizeCandidate } from './visualize-tools.js'
 import { runProductCallback } from './product-callbacks.js'
 import type { Queryable } from '../db/queryable.js'
 import { publicTextDeployment, publicTextModelOptions } from './public-text-deployment.js'
 import { readModelOperation } from '../../../src/lib/runTrace.js'
-import { visualizeSemanticReviewPolicy } from './visualize-workflow-review.js'
 import { createContextDiagnosticsLogger } from './context-diagnostics.js'
 import { recordContextFailure } from './context-diagnostic-store.js'
 import { runtimeExecutionBudget } from './model-budget.js'
@@ -130,7 +127,6 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
     const harness = createProductHarness(createProductTools(lingxiOSControl), lingxiOSControl)
     const { tools } = assembleHarness(harness)
     control = createLingxiOS({ ...common(), logger: contextDiagnostics.logger, harness, responsePolicy: 'deep', ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
-      semanticReviewPolicy: visualizeSemanticReviewPolicy,
       background: { role: backgroundRole },
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
       ...(objectStore ? { objects: objectStore, workspace: {} } : {}),
@@ -154,9 +150,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
         reflection: { afterInteractions: 5, idleMs: 600000 },
         evolution: { benchmarkId: nativeEvolutionBenchmark.id, benchmark: nativeEvolutionBenchmark },
         resolveScopes: resolveMemoryScopes, embeddings: memoryEmbeddings(), writePolicy: memoryWritePolicy,
-      }, verifyRun: async context => [...await createArtifactRuntime(lingxiOSControl).verify(context),
-        ...await verifyVisualizeCandidate(context), ...await verifyVisualizeAuthoringCandidate(context)],
-      verifySkillDelivery: verifyVisualizeDelivery,
+      }, verifyRun: context => createArtifactRuntime(lingxiOSControl).verify(context),
       homesRoot: process.env.AGENT_OS_HOMES_ROOT?.trim() || '.agent-os/homes' }).catch(error => {
         previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined; control = undefined
         throw error

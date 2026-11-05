@@ -11,8 +11,8 @@ const env = {
   } },
   RETAINED_ASSETS: { get: async () => null },
 }
-test('API, protected files, dynamic visualize, artifact editor and WebSocket routes never become HTML', async () => {
-  for (const path of ['/api', '/api/a', '/uploads/private', '/runtime/visualize/x', '/visualize/x', '/artifact-editor/design/grant/', '/_blob/0123456789abcdef0123456789abcdef', '/ws', '/files/x', '/webhooks/wukong', '/readyz', '/healthz']) {
+test('API, protected files, artifact editor and WebSocket routes never become HTML', async () => {
+  for (const path of ['/api', '/api/a', '/uploads/private', '/runtime/x', '/artifact-editor/design/grant/', '/_blob/0123456789abcdef0123456789abcdef', '/ws', '/files/x', '/webhooks/wukong', '/readyz', '/healthz']) {
     assert.notEqual(route(path), 'asset')
     let called
     const request = new Request(`https://loop.example.com${path}?a=1`, { headers: { cookie: 'session=secret', authorization: 'Bearer user', 'x-lingxiloop-gateway': 'old.signature', 'last-event-id': '42' } })
@@ -52,20 +52,6 @@ test('auth service binding keeps the public request origin for password and sign
   assert.equal(await response.text(), 'auth')
 })
 
-test('fixed visualize assets are anonymous immutable CORS resources, including retained old hashes', async () => {
-  const path=`/assets/visualize-${'a'.repeat(64)}.js`
-  for (const retained of [false,true]) {
-    const fixture={...env,
-      ASSETS:{fetch:async()=>retained ? new Response('missing',{status:404}) : new Response('public renderer',{headers:{'content-type':'text/javascript'}})},
-      RETAINED_ASSETS:{get:async key=>{assert.equal(key,`chunks${path}`);return {body:'public renderer',httpEtag:'"hash"',writeHttpMetadata:headers=>headers.set('content-type','text/javascript')}}}}
-    const response=await handleRequest(new Request(`https://loop.example.com${path}`,{headers:{origin:'null'}}),fixture)
-    assert.equal(response.status,200)
-    assert.equal(response.headers.get('cache-control'),'public, max-age=31536000, immutable')
-    assert.equal(response.headers.get('access-control-allow-origin'),'*')
-    assert.equal(response.headers.get('x-content-type-options'),'nosniff')
-    assert.equal(await response.text(),'public renderer')
-  }
-})
 import { artifactEditorOrigin } from '../../../shared/artifact-editor-origin.ts'
 
 test('executable Design and Slides origins are grant-bound and never proxy authenticated product requests', async () => {
