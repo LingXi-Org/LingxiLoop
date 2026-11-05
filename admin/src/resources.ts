@@ -10,7 +10,7 @@ export interface AdminResource {
 export const GROUP_LABELS: Record<ResourceGroup, string> = {
   identity: '身份与组织',
   learning: '学习业务',
-  collaboration: '智能体 与协作',
+  collaboration: '智能体与协作',
   operations: '运维与审计',
 }
 
@@ -25,17 +25,17 @@ const learning = [
   ['project-transfers', '项目转移'], ['courses', '课程'], ['evidence-records', '证据'], ['trust-snapshots', '信任快照'],
 ] as const
 const collaboration = [
-  ['participants', '参与者与 智能体'], ['agent-runs', '智能体 运行'],
-  ['agent-routines', '智能体 例程'],
+  ['participants', '参与者与智能体'], ['agent-runs', '智能体运行'],
+  ['agent-routines', '智能体例程'],
   ['conversations', '会话'],
   ['documents', '文档'], ['artifacts', '设计与演示文稿'],
   ['notification-deliveries', '通知投递'],
   ['knowledge-sources', '知识源'], ['knowledge-jobs', '知识任务'],
 ] as const
 const operations = [
-  ['agent-deliveries', '智能体 待处理投递'],
-  ['llm-calls', 'LLM 调用'], ['audit-events', '审计事件'],
-  ['webhook-receipts', 'Webhook 收据'],
+  ['agent-deliveries', '智能体待处理投递'],
+  ['llm-calls', '大语言模型调用'], ['audit-events', '审计事件'],
+  ['webhook-receipts', '回调收据'],
 ] as const
 
 export const ADMIN_RESOURCES: AdminResource[] = [
