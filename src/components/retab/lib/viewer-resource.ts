@@ -369,7 +369,7 @@ function createUrlResource(
   const content = internUrlResourceContent(source, keys);
   const originalDownload = createHrefDownloadAction({
     id: "download-original",
-    label: "Download",
+    label: "下载",
     href: source.downloadUrl ?? source.url,
     fileName: descriptor.fileName,
   });
@@ -483,13 +483,13 @@ function createBlobResource(
   const originalDownload = source.downloadUrl
     ? createHrefDownloadAction({
         id: "download-original",
-        label: "Download",
+        label: "下载",
         href: source.downloadUrl,
         fileName: descriptor.fileName,
       })
     : createBlobDownloadAction({
         id: "download-original",
-        label: "Download",
+        label: "下载",
         blob,
         fileName: descriptor.fileName,
       });
@@ -547,7 +547,7 @@ function createTextResource(
   const content = internTextResourceContent(source, keys);
   const originalDownload = createTextDownloadAction({
     id: "download-original",
-    label: "Download",
+    label: "下载",
     text: source.text,
     fileName: descriptor.fileName,
     mimeType: descriptor.mimeType,
@@ -650,7 +650,7 @@ async function fetchResource(
     if (isAbortError(error)) {
       throw new ResourceError({
         kind: "aborted",
-        message: "Loading was cancelled.",
+        message: "加载已取消。",
         cause: error,
       });
     }
@@ -792,7 +792,7 @@ function resourceReadError(error: unknown) {
   if (isAbortError(error)) {
     return new ResourceError({
       kind: "aborted",
-      message: "Loading was cancelled.",
+      message: "加载已取消。",
       cause: error,
     });
   }

@@ -445,7 +445,7 @@ function toImageDecodeError(error: unknown): ViewerFormatError {
     ? error
     : toImageFormatError(error, {
         kind: "decode_failed",
-        message: "Image decode failed",
+        message: "无法读取图片内容",
       });
 }
 

@@ -226,7 +226,7 @@ function startMarkdownDocumentFallback(entry: MarkdownDocumentEntry) {
         error:
           error instanceof Error
             ? error
-            : new Error("Could not parse Markdown."),
+            : new Error("无法读取 Markdown 文档。"),
         status: "failed",
       });
     }

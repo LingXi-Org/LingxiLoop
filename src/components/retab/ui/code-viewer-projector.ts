@@ -883,7 +883,7 @@ function patchCodeRowContent({
       `${text.length} character line preview; ${renderText.omittedCharacterCount} middle characters omitted.`,
     );
     row.contentSpan.title =
-      "Long line preview. Copying the selected row copies the complete line.";
+      "当前为长行预览，复制所选行会复制完整内容。";
   } else {
     delete row.row.dataset.codeLineTruncated;
     delete row.contentSpan.dataset.codeLineTruncated;

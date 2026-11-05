@@ -345,7 +345,7 @@ export function XlsxSheetTabs({
     <div
       data-slot="xlsx-viewer-tabs"
       role="tablist"
-      aria-label="Workbook sheets"
+      aria-label="工作簿中的工作表"
       data-can-scroll-left={scrollState.canScrollLeft}
       data-can-scroll-right={scrollState.canScrollRight}
       data-overflowing={scrollState.isOverflowing}

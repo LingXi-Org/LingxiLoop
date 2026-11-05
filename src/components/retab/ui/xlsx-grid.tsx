@@ -233,7 +233,7 @@ export function XlsxGrid({
         role="status"
         aria-label={`${sheetName} is empty`}
       >
-        Empty sheet
+        工作表为空
       </div>
     );
   }

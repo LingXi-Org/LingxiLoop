@@ -127,7 +127,7 @@ export function commitDocxRender({
     throw new ViewerFormatError({
       format: "docx",
       kind: "render_failed",
-      message: "DOCX render produced no pages.",
+      message: "DOCX 文档没有可显示的页面。",
     });
   }
   const pages = Array.from(
@@ -137,7 +137,7 @@ export function commitDocxRender({
     throw new ViewerFormatError({
       format: "docx",
       kind: "render_failed",
-      message: "DOCX render produced no pages.",
+      message: "DOCX 文档没有可显示的页面。",
     });
   }
   const z = scale || 1;

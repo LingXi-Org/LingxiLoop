@@ -524,7 +524,7 @@ function PptxSlideCanvas({
       />
       {renderState === "failed" ? (
         <div className="bg-muted text-muted-foreground absolute inset-0 flex items-center justify-center p-4 text-center text-xs">
-          Couldn&apos;t render slide {slideIndex + 1}.
+          无法显示幻灯片 {slideIndex + 1}.
         </div>
       ) : null}
       {renderState !== "rendered" && renderState !== "failed" ? (

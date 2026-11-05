@@ -34,7 +34,7 @@ function InlineForumFile({ url, fileName, onClose }: { url: string; fileName: st
     const a = useAuth.subscribe(check), b = useApp.subscribe(check)
     window.addEventListener('lingxiloop-workspace-changed', check)
     void fetch(url, { signal: controller.signal, credentials: 'include' }).then(response => {
-      if (!response.ok) throw new Error('file unavailable')
+      if (!response.ok) throw new Error('文件无法访问')
       return response.blob()
     }).then(blob => { if (!controller.signal.aborted && current()) setSource({ kind: 'blob', blob, fileName, mimeType: blob.type, identityKey: crypto.randomUUID() }) })
       .catch(() => { if (!controller.signal.aborted) setError(true) })

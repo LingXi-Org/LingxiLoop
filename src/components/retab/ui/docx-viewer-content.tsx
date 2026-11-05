@@ -490,7 +490,7 @@ export function DocxViewerContent({
                 ? err
                 : toDocxFormatError(err, {
                     kind: "render_failed",
-                    message: "Failed to render DOCX.",
+                    message: "无法显示 DOCX 文档。",
                   }),
             );
           }

@@ -79,7 +79,7 @@ export function ConversationMap({
     <nav
       data-slot="conversation-map"
       ref={railRef}
-      aria-label="Conversation map"
+      aria-label="对话导航"
       onKeyDown={handleKeyDown}
       className={cn(
         "group/rail flex h-full w-6 flex-col justify-center",

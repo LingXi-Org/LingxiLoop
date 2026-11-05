@@ -302,9 +302,9 @@ async function loadMermaidDiagram(source: string): Promise<DiagramState> {
       svg: sanitizeSvg(result.svg),
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Invalid diagram";
+    const message = error instanceof Error ? error.message : "图表无效";
     if (!/getBBox|layout|force-basic-fallback/i.test(message)) {
-      return { status: "failed", message };
+      return { status: "failed", message: "无法显示图表，请检查图表源码。" };
     }
     return renderBasicMermaidDiagram(source);
   }
@@ -466,7 +466,7 @@ function renderBasicMermaidDiagram(source: string): ReadyDiagramState {
   return {
     renderer: "basic",
     status: "ready",
-    svg: `<svg role="img" aria-label="Mermaid diagram" data-pretext-basic-mermaid="${kind}" viewBox="0 0 720 160" width="100%" height="160" xmlns="http://www.w3.org/2000/svg"><rect width="720" height="160" rx="8" fill="currentColor" opacity="0.05"/>${piePaths}<text x="24" y="82" fill="currentColor" font-family="monospace" font-size="16">${escaped}</text></svg>`,
+    svg: `<svg role="img" aria-label="Mermaid 图表" data-pretext-basic-mermaid="${kind}" viewBox="0 0 720 160" width="100%" height="160" xmlns="http://www.w3.org/2000/svg"><rect width="720" height="160" rx="8" fill="currentColor" opacity="0.05"/>${piePaths}<text x="24" y="82" fill="currentColor" font-family="monospace" font-size="16">${escaped}</text></svg>`,
   };
 }
 
@@ -482,7 +482,7 @@ function sanitizeSvg(svg: string) {
 
   root.setAttribute("role", "img");
   if (!root.getAttribute("aria-label")) {
-    root.setAttribute("aria-label", "Mermaid diagram");
+    root.setAttribute("aria-label", "Mermaid 图表");
   }
   root.setAttribute("data-pretext-sanitized-mermaid", "");
 
@@ -562,10 +562,10 @@ function isSafeSvgReference(value: string) {
 
 export function readDiagramLimitMessage(source: string) {
   if (source.length > MERMAID_MAX_SOURCE_LENGTH) {
-    return "Mermaid diagram too large to render safely. Copy the source and render it in a dedicated diagram tool.";
+    return "图表过大，暂时无法显示。请复制源码，使用图表工具打开。";
   }
   if (source.split(/\r\n|[\n\r\u2028\u2029]/).length > MERMAID_MAX_LINES) {
-    return "Mermaid diagram has too many lines to render safely. Copy the source and render it in a dedicated diagram tool.";
+    return "图表行数过多，暂时无法显示。请复制源码，使用图表工具打开。";
   }
   return null;
 }
@@ -577,7 +577,7 @@ export function describeDiagram(source: string) {
     const direction = lines[0]
       ?.match(/\b(?:graph|flowchart)\s+([A-Z]{2})\b/i)?.[1]
       ?.toUpperCase();
-    const directionText = direction === "LR" ? "left to right" : "top down";
+    const directionText = direction === "LR" ? "从左到右" : "从上到下";
     const edges = lines.filter((line) => /-->|---|-.->|==>/.test(line)).length;
     const nodes = new Set<string>();
     for (const line of lines) {
@@ -590,7 +590,7 @@ export function describeDiagram(source: string) {
         }
       }
     }
-    return `Mermaid graph diagram flowing ${directionText}, with ${nodes.size} nodes and ${edges} edge${edges === 1 ? "" : "s"}.`;
+    return `Mermaid 流程图，方向为${directionText}，包含 ${nodes.size} 个节点和 ${edges} 条边。`;
   }
   if (kind === "sequence") {
     const messages = lines.filter((line) =>
@@ -606,7 +606,7 @@ export function describeDiagram(source: string) {
         if (name && !/^sequenceDiagram/i.test(name)) participants.add(name);
       }
     }
-    return `Mermaid sequence diagram with ${participants.size} participants and ${messages} message${messages === 1 ? "" : "s"}.`;
+    return `Mermaid 时序图，包含 ${participants.size} 位参与者和 ${messages} 条消息。`;
   }
   if (kind === "state") {
     const transitions = lines.filter((line) => /-->/.test(line)).length;
@@ -628,7 +628,7 @@ export function describeDiagram(source: string) {
         }
       }
     }
-    return `Mermaid state diagram with ${states.size} states and ${transitions} transitions.`;
+    return `Mermaid 状态图，包含 ${states.size} 个状态和 ${transitions} 次转换。`;
   }
   if (kind === "class") {
     const relationships = lines.filter((line) =>
@@ -639,7 +639,7 @@ export function describeDiagram(source: string) {
       for (const match of line.matchAll(/\b([A-Z][A-Za-z0-9_]*)\b/g))
         classes.add(match[1]!);
     }
-    return `Mermaid class diagram with ${classes.size} classes and ${relationships} relationship${relationships === 1 ? "" : "s"}.`;
+    return `Mermaid 类图，包含 ${classes.size} 个类和 ${relationships} 条关系。`;
   }
   if (kind === "er") {
     const relationships = lines.filter((line) =>
@@ -651,29 +651,29 @@ export function describeDiagram(source: string) {
         if (!["ERDIAGRAM"].includes(match[1]!)) entities.add(match[1]!);
       }
     }
-    return `Mermaid entity relationship diagram with ${entities.size} entities and ${relationships} relationships.`;
+    return `Mermaid 实体关系图，包含 ${entities.size} 个实体和 ${relationships} 条关系。`;
   }
   if (kind === "journey")
-    return `Mermaid journey diagram with ${countLinesStarting(lines, "section ")} sections and ${lines.filter((line) => /:\s*\d+\s*:/.test(line)).length} tasks.`;
+    return `Mermaid 旅程图，包含 ${countLinesStarting(lines, "section ")} 个分区和 ${lines.filter((line) => /:\s*\d+\s*:/.test(line)).length} 项任务。`;
   if (kind === "gantt")
-    return `Mermaid Gantt chart with ${countLinesStarting(lines, "section ")} sections and ${lines.filter((line) => /:/.test(line) && !/^dateFormat/i.test(line) && !/^title\b/i.test(line)).length} tasks.`;
+    return `Mermaid 甘特图，包含 ${countLinesStarting(lines, "section ")} 个分区和 ${lines.filter((line) => /:/.test(line) && !/^dateFormat/i.test(line) && !/^title\b/i.test(line)).length} 项任务。`;
   if (kind === "gitGraph")
-    return `Mermaid Git graph with ${countLinesStarting(lines, "branch ")} branch, ${countExact(lines, "commit")} commits, and ${countLinesStarting(lines, "merge ")} merge.`;
+    return `Mermaid Git 关系图，包含 ${countLinesStarting(lines, "branch ")} 个分支、${countExact(lines, "commit")} 次提交和 ${countLinesStarting(lines, "merge ")} 次合并。`;
   if (kind === "timeline")
-    return `Mermaid timeline with ${countLinesStarting(lines, "section ")} sections and ${lines.filter((line) => /^\d/.test(line)).length} events.`;
+    return `Mermaid 时间线，包含 ${countLinesStarting(lines, "section ")} 个分区和 ${lines.filter((line) => /^\d/.test(line)).length} 个事件。`;
   if (kind === "mindmap")
-    return `Mermaid mind map with ${Math.max(0, lines.length - 1)} nodes.`;
+    return `Mermaid 思维导图，包含 ${Math.max(0, lines.length - 1)} 个节点。`;
   if (kind === "quadrantChart")
-    return `Mermaid quadrant chart with ${lines.filter((line) => /:\s*\[[^\]]+\]/.test(line)).length} points.`;
+    return `Mermaid 象限图，包含 ${lines.filter((line) => /:\s*\[[^\]]+\]/.test(line)).length} 个点。`;
   if (kind === "requirementDiagram")
-    return `Mermaid requirement diagram with ${countLinesStarting(lines, "requirement ")} requirement, ${countLinesStarting(lines, "element ")} element, and ${lines.filter((line) => /-\s*\w+\s*->/.test(line)).length} relationship.`;
+    return `Mermaid 需求图，包含 ${countLinesStarting(lines, "requirement ")} 项需求、${countLinesStarting(lines, "element ")} 个元素和 ${lines.filter((line) => /-\s*\w+\s*->/.test(line)).length} 条关系。`;
   if (kind === "xychart") {
     const series = lines.filter((line) => /^(bar|line)\s+\[/.test(line));
     const values = series.reduce(
       (sum, line) => sum + (line.match(/-?\d+(?:\.\d+)?/g)?.length ?? 0),
       0,
     );
-    return `Mermaid XY chart with ${series.length} series and ${values} values.`;
+    return `Mermaid 坐标图，包含 ${series.length} 组数据和 ${values} 个数值。`;
   }
   if (kind === "sankey") {
     const flows = lines.filter((line) => line.includes(","));
@@ -685,18 +685,18 @@ export function describeDiagram(source: string) {
           .map((item) => item.trim()),
       ),
     );
-    return `Mermaid Sankey diagram with ${nodes.size} nodes and ${flows.length} flows.`;
+    return `Mermaid 桑基图，包含 ${nodes.size} 个节点和 ${flows.length} 条流向。`;
   }
   if (kind === "c4")
-    return `Mermaid C4 diagram with ${lines.filter((line) => /^(Person|System)\(/.test(line)).length} nodes and ${countLinesStarting(lines, "Rel(")} relationship.`;
+    return `Mermaid C4 图，包含 ${lines.filter((line) => /^(Person|System)\(/.test(line)).length} 个节点和 ${countLinesStarting(lines, "Rel(")} 条关系。`;
   if (kind === "pie") {
     const values = lines
       .flatMap((line) => line.match(/:\s*(\d+(?:\.\d+)?)/)?.[1] ?? [])
       .map(Number);
     const total = values.reduce((sum, value) => sum + value, 0);
-    return `Mermaid pie chart with ${values.length} slices and total value ${total}.`;
+    return `Mermaid 饼图，包含 ${values.length} 个扇区，总计 ${total}.`;
   }
-  return "Mermaid diagram";
+  return "Mermaid 图表";
 }
 
 export function estimateDiagramBodyHeight(source: string) {

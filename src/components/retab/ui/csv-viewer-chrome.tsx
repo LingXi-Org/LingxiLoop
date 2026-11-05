@@ -71,7 +71,7 @@ export function CsvViewerHeader({
         onZoomOut: () => onZoomChange(clampCsvZoom(zoom / 1.2)),
         onZoomIn: () => onZoomChange(clampCsvZoom(zoom * 1.2)),
         onFit: () => onZoomChange(1),
-        fitLabel: "Reset zoom",
+        fitLabel: "重置缩放",
       }}
       downloads={downloadActions}
     />
@@ -111,7 +111,7 @@ export function csvViewerStatusNode({
   if (rowCount === 0 && resourceState.status !== "loading") {
     return (
       <div className="text-muted-foreground flex h-24 items-center justify-center text-xs">
-        No rows
+        暂无数据行
       </div>
     );
   }

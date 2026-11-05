@@ -595,7 +595,7 @@ function normalizeRendererError(error: unknown) {
   if (error instanceof PptxRendererError) return error;
   return new PptxRendererError(
     "render_failed",
-    "Failed to render slide.",
+    "无法显示幻灯片。",
     error,
   );
 }

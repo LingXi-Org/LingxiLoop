@@ -127,9 +127,9 @@ function FileViewerStateFrame({
 
 export function FileViewerLoadingState({
   children,
-  description = "Preparing the preview.",
+  description = "正在准备预览。",
   icon = <Loader2 className="size-5 animate-spin" />,
-  title = "Loading file",
+  title = "正在加载文件",
   ...props
 }: FileViewerStateProps) {
   return (
@@ -156,9 +156,9 @@ export function FileViewerLoadingState({
 }
 
 export function FileViewerUnavailableState({
-  description = "The file is not available right now.",
+  description = "文件暂时无法访问，请稍后重试。",
   icon = <WifiOff className="size-5" />,
-  title = "File unavailable",
+  title = "文件无法访问",
   ...props
 }: FileViewerStateProps) {
   return (
@@ -174,9 +174,9 @@ export function FileViewerUnavailableState({
 }
 
 export function FileViewerEmptyState({
-  description = "Choose a file to preview.",
+  description = "请选择要预览的文件。",
   icon = <Inbox className="size-5" />,
-  title = "No file selected",
+  title = "尚未选择文件",
   ...props
 }: FileViewerStateProps) {
   return (
@@ -224,7 +224,7 @@ export function FileViewerErrorState({
       <>
         {showRetry ? (
           <Button variant="outline" size="sm" onClick={onRetry}>
-            Retry
+            重试
           </Button>
         ) : null}
         {showDownload && download ? (
@@ -252,7 +252,7 @@ export function FileViewerErrorState({
       icon={icon}
       kind="error"
       role="alert"
-      title={title ?? "Could not preview file"}
+      title={title ?? "无法预览文件"}
       {...props}
     />
   );
@@ -270,8 +270,8 @@ export function FileViewerUnsupportedState({
   const resolvedDescription =
     description ??
     (fileName
-      ? `No preview is available for ${fileName}.`
-      : "No preview is available for this file.");
+      ? `暂时无法预览“${fileName}”。`
+      : "此文件暂不支持预览。");
 
   return (
     <FileViewerStateFrame

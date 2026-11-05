@@ -4,7 +4,7 @@ export function toPdfRenderFailedError(error: unknown) {
   return new ViewerFormatError({
     format: "pdf",
     kind: "render_failed",
-    message: "Failed to render PDF page.",
+    message: "无法显示 PDF 页面。",
     cause: error,
   });
 }

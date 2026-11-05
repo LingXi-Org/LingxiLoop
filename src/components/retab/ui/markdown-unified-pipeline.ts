@@ -116,11 +116,11 @@ type MarkdownComponent = {
 };
 
 const GITHUB_ALERT_LABELS = {
-  caution: "Caution",
-  important: "Important",
-  note: "Note",
-  tip: "Tip",
-  warning: "Warning",
+  caution: "小心",
+  important: "重要",
+  note: "说明",
+  tip: "提示",
+  warning: "警告",
 } as const;
 
 const MARKDOWN_KATEX_OPTIONS = {
@@ -1937,13 +1937,13 @@ function calloutKind(value: string) {
 
 function calloutTitle(kind: string) {
   const titles: Record<string, string> = {
-    caution: "Caution",
-    important: "Important",
-    note: "Note",
-    tip: "Tip",
-    warning: "Warning",
+    caution: "小心",
+    important: "重要",
+    note: "说明",
+    tip: "提示",
+    warning: "警告",
   };
-  return titles[kind] ?? "Note";
+  return titles[kind] ?? "说明";
 }
 
 function directiveSourceForUnsafeComponent(node: MarkdownMdastNode) {
