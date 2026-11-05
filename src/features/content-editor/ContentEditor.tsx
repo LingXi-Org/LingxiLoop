@@ -7,6 +7,7 @@ import { contentSchema, contentDictionary } from './schema'
 import { importLegacy } from './legacy'
 import { recoverFencedCode } from './fenced-code'
 import { pasteContent } from './paste'
+import { markdownInput } from './markdown-input'
 import { useCreateBlockNote } from '@blocknote/react'
 import { forwardRef, useImperativeHandle, useLayoutEffect, useRef } from 'react'
 import { useTheme } from 'next-themes'
@@ -36,7 +37,7 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
   const last = useRef<{ value: string; document?: ContentDocument | null; legacyParagraphKey?: string } | null>(null)
   const original = useRef(document?.legacyMarkdown ?? value)
   const editor = useCreateBlockNote({
-    schema: contentSchema, dictionary: contentDictionary, extensions: [syntaxHighlighter], pasteHandler: context => pasteContent(context, legacyFormat),
+    schema: contentSchema, dictionary: contentDictionary, extensions: [syntaxHighlighter, ...(legacyFormat === 'markdown' ? [markdownInput] : [])], pasteHandler: context => pasteContent(context, legacyFormat),
     domAttributes: { editor: { 'aria-label': label, role: 'textbox', 'aria-multiline': 'true' } },
     uploadFile: async file => {
       if (!current.current.uploadFile) throw new Error('此内容不支持上传附件，请使用链接。')
