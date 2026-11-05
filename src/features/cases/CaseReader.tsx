@@ -57,7 +57,7 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
       clickedSection.current = null
       // Observe rendered headings so lazy rich-text readers and Markdown share anchors.
       const nodes = Array.from(container.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6'))
-      const entries = caseOutline(nodes.map(node => node.textContent ?? ''))
+      const entries = caseOutline(nodes.map(node => ({ title: node.textContent ?? '', level: Number(node.tagName.slice(1)) })))
       headings.current = entries.map(entry => {
         const node = nodes[entry.index]
         node.id = entry.id
@@ -75,6 +75,7 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
   }, [article.id, article.body, article.editorDocument])
 
   const links = <nav aria-label="本文目录">{outline.map(entry => <a key={entry.id} href={`#${entry.id}`}
+    style={{ paddingInlineStart: 12 + entry.depth * 12 }}
     aria-current={active === entry.id ? 'location' : undefined} onClick={event => {
       event.preventDefault()
       const target = headings.current.find(node => node.id === entry.id)
