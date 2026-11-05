@@ -91,6 +91,8 @@ jobs:
           python -m playwright install --with-deps chromium
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends postgresql-client poppler-utils
+      - name: Verify real worker script accounting before production measurements
+        run: python scripts/native-artifact-trace-check.py
       - name: Build both production applications before any measurements
         run: |
           if [ "$NATIVE_ARTIFACT_PROFILE" != fidelity ]; then

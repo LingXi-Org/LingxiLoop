@@ -49,7 +49,7 @@ console.log(JSON.stringify({referenceCommit:inventory.referenceCommit,screenshot
 async function capture(page,kind,state,width,height,theme) {
   await page.waitForTimeout(120)
   const filename=`${kind}-${state}.png`;await page.screenshot({path:join(output,filename)})
-  const metrics=await page.locator('button,[role=button],[role=tab],input,select,textarea,[role=menuitem],summary').evaluateAll(elements=>elements.filter(e=>e.getBoundingClientRect().width&&e.getBoundingClientRect().height&&getComputedStyle(e).visibility!=='hidden').map(e=>{
+  const metrics=await page.locator('button,[role=button],[role=tab],input,select,textarea,[role=menuitem],summary').evaluateAll(elements=>elements.filter(e=>{const r=e.getBoundingClientRect();return r.width>1&&r.height>1&&r.right>0&&r.bottom>0&&r.x<innerWidth&&r.y<innerHeight&&e.checkVisibility({opacityProperty:true,visibilityProperty:true})}).map(e=>{
     const s=getComputedStyle(e),r=e.getBoundingClientRect()
     return {label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent?.slice(0,100),role:e.getAttribute('role')??e.tagName.toLowerCase(),rect:{x:r.x,y:r.y,width:r.width,height:r.height},fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,color:s.color,background:s.backgroundColor,border:s.border,shadow:s.boxShadow,radius:s.borderRadius,cursor:s.cursor,transition:s.transition}
   }))

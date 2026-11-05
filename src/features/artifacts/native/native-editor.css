@@ -44,3 +44,15 @@
 .native-comments-composing{overflow:visible}.native-comment-composer-avatar{position:absolute;left:-42px;top:2px;width:36px;height:36px;border-radius:50%;border:6px solid var(--native-accent);background:var(--native-panel);color:var(--native-fg);display:grid;place-items:center;font-size:10px;line-height:12px}
 .native-split-tool{display:inline-flex;align-items:center;gap:2px;flex:none}.native-shape-split{margin-left:2px}.native-kind-design .native-split-tool>.native-menu>summary{width:14px;min-width:14px;padding:0}
 .native-editor[data-tool=comment] .native-page-shell:hover{outline:1px solid #ce8a00;border-radius:4px}
+
+/* Measured v2.8.0 paper elevation; Design shadows scale with document space. */
+.native-editor{--native-paper-shadow:rgba(11,11,11,.08)}
+.dark .native-editor,.native-editor[data-theme=dark]{--native-fg:rgba(255,255,255,.93);--native-paper-shadow:rgba(0,0,0,.24)}
+.native-kind-slides .native-page-shell{box-shadow:0 4px 8px rgba(11,11,11,.08),0 12px 28px -2px var(--native-paper-shadow)}
+.native-kind-design .native-page-shell{box-shadow:none}
+.native-kind-design .native-page-scaled{--native-artboard-ring:rgba(0,0,0,.08);box-shadow:0 0 0 1px var(--native-artboard-ring),0 2px 4px rgba(11,11,11,.07),0 6px 16px var(--native-paper-shadow)}
+.dark .native-kind-design .native-page-scaled,.native-kind-design[data-theme=dark] .native-page-scaled{--native-artboard-ring:rgba(255,255,255,.04)}
+.native-kind-design .native-page-shell[data-current=true] .native-page-scaled{--native-artboard-ring:oklab(0.591645 -0.0448253 -0.164977 / .5)}
+.native-kind-design .native-workspace{padding-inline-end:0}
+
+.native-editor[data-compact=true][data-compact-rail-open=false].native-kind-slides:not(.native-presenting) .native-page-shell{top:1px}

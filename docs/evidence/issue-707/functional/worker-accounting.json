@@ -1,0 +1,23 @@
+{
+  "check": "worker-entry-network-accounting",
+  "results": [
+    {
+      "encoding": "identity",
+      "workerTransferBytes": 1000203,
+      "workerDecodedBytes": 1000054,
+      "importDurationMs": 2021.4,
+      "scriptRequests": 2,
+      "inflight": 0
+    },
+    {
+      "encoding": "gzip",
+      "workerTransferBytes": 1230,
+      "workerDecodedBytes": 1000054,
+      "importDurationMs": 2021.4,
+      "scriptRequests": 2,
+      "inflight": 0
+    }
+  ],
+  "performanceSamples": 0,
+  "qualified": false
+}

@@ -467,7 +467,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.getByLabel('历史记录',{exact:true}).click();await page.keyboard.press('ArrowDown');await page.keyboard.press('ArrowDown');await page.keyboard.press('Escape')
       assert.equal(document.pages['page-1'].nodes['page-1-shape'].y,y,'menu navigation must not move an object')
       const image=page.locator('[data-node-id="page-1-image"]');await image.dblclick()
-      const handle=page.getByLabel('裁剪边缘 se',{exact:true});await handle.waitFor();const edge=await handle.boundingBox();assert.ok(edge)
+      const handle=page.getByLabel('裁剪右下角',{exact:true});await handle.waitFor();const edge=await handle.boundingBox();assert.ok(edge)
       await page.mouse.move(edge.x+edge.width/2,edge.y+edge.height/2);await page.mouse.down();await page.mouse.move(edge.x-60,edge.y-30,{steps:5});await page.mouse.up()
       await page.getByRole('button',{name:'完成裁剪',exact:true}).click();await waitSaved()
       assert.ok(document.pages['page-1'].nodes['page-1-image'].crop.width<1)
@@ -643,13 +643,13 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await select(25)
     await page.locator('[data-node-id="page-25-formula"]').click()
     const formula = '\\frac{25}{2}+x^{3}'
-    const formulaSource = page.getByLabel('LaTeX 公式源码', { exact: true })
+    const formulaSource = page.getByLabel('公式排版源码', { exact: true })
     await formulaSource.fill(formula); await formulaSource.press('Control+s'); await waitSaved(); await ready(25)
     assert.equal(document.pages['page-25'].nodes['page-25-formula'].source, formula)
     await select(50)
     await page.locator('[data-node-id="page-50-image"]').click()
     await page.locator('.native-property-disclosure>summary').filter({hasText:'高级'}).click()
-    for (const [label, value] of [['width', '0.75'], ['x', '0.1']]) { const control = page.getByLabel(`裁剪 ${label}`, { exact: true }); await control.fill(value); await control.press('Control+s'); await waitSaved() }
+    for (const [label, value] of [['宽度', '0.75'], ['横坐标', '0.1']]) { const control = page.getByLabel(`裁剪${label}`, { exact: true }); await control.fill(value); await control.press('Control+s'); await waitSaved() }
     assert.deepEqual(document.pages['page-50'].nodes['page-50-image'].crop, { x: .1, y: 0, width: .75, height: 1 })
     await select(1)
     await page.getByRole('button',{name:'主题',exact:true}).click()

@@ -84,3 +84,12 @@ test('fidelity profile pins the native baseline while retirement retains its ori
   assert.equal(configuration({...env,NATIVE_ARTIFACT_PROFILE:'fidelity'}).fidelity,true)
   assert.throws(()=>configuration({...env,NATIVE_ARTIFACT_PROFILE:'custom'}))
 })
+
+test('worker completion receipts retain measured bytes and strip request details', () => {
+  const receipt = publicEvidence({failureObservations:{inflightRequests:[{url:'https://secret.example/worker.js?token=secret',type:'Script',network:true,scriptPath:true,headers:{authorization:'secret'},observedResponseHeadersBytes:149,transferredBytes:1230,decodedBytes:1000054,transferPending:false,transferredBytesSource:'PlaywrightHeaders+PerformanceResourceTiming'}]},failureCleanup:{pageNumber:1,originalHeadingRestored:true,saveAcknowledged:true}})
+  assert.equal(receipt.failureObservations.inflightRequests[0].transferredBytes,1230)
+  assert.equal(receipt.failureObservations.inflightRequests[0].observedResponseHeadersBytes,149)
+  assert.equal(receipt.failureObservations.inflightRequests[0].transferredBytesSource,'PlaywrightHeaders+PerformanceResourceTiming')
+  assert.equal(receipt.failureCleanup.originalHeadingRestored,true)
+  assert.doesNotMatch(JSON.stringify(receipt),/secret|authorization|worker\.js/)
+})

@@ -80,6 +80,7 @@ def script_totals(rows):
     return {"transferredBytes": sum(row.get("transferredBytes", 0) for row in scripts),
             "decodedBytes": sum(row.get("decodedBytes", 0) for row in scripts),
             "requests": len(scripts), "inflight": sum(not row.get("finished") for row in scripts),
+            "missingTransfer": sum(bool(row.get("transferPending")) for row in scripts),
             "missingDecoded": sum(bool(row.get("finished")) and not row.get("decodedObserved")
                                   and 200 <= row.get("status", 0) < 300 and row.get("declaredEncodedBodyBytes") != 0 for row in scripts)}
 
@@ -96,6 +97,9 @@ class Trace:
         self.requests, self.targets, self.errors, self.pending = {}, {}, [], {}
         self.sequence = 0
         self.request_sequence = 0
+        self.finished_requests = []
+        self.unaccounted_script_resources = []
+        context.on("requestfinished", self.record_finished)
         for method in ("requestWillBeSent", "responseReceived", "dataReceived", "loadingFinished", "loadingFailed"):
             self.cdp.on("Network." + method, lambda params, name=method: self.event("", name, params))
         self.cdp.on("Target.attachedToTarget", lambda value: self.attach("", value))
@@ -120,7 +124,8 @@ class Trace:
             ("Network.emulateNetworkConditions", {"offline": False, "latency": 20,
              "downloadThroughput": 500000, "uploadThroughput": 375000}),
         ):
-            self.send(route, method, params)
+            if method != "Network.emulateNetworkConditions" or not route or self.targets[route]["type"] in ("page", "iframe"):
+                self.send(route, method, params)
         if not route or self.targets[route]["type"] in ("page", "iframe"):
             self.send(route, "Emulation.setCPUThrottlingRate", {"rate": 1})
         self.send(route, "Target.setAutoAttach", {"autoAttach": True, "waitForDebuggerOnStart": True, "flatten": False})
@@ -163,6 +168,13 @@ class Trace:
                 self.requests[key + ":redirect:" + str(len(self.requests))] = old
             url = urlsplit(value["request"]["url"])
             self.request_sequence += 1
+            prior = [(old_key, row) for old_key,row in self.requests.items() if row.get('fromPlaywright') and row['url'] == safe_url(value['request']['url']) and abs(row['startEpochMs'] - value.get('wallTime',0)*1000) < 100]
+            if len(prior) == 1:
+                old_key, row = prior[0]
+                del self.requests[old_key]
+                self.requests[key] = row
+                row.update(start=value['timestamp'], targetType=self.targets.get(route,{}).get('type','page'))
+                return
             self.requests[key] = {"url": safe_url(value["request"]["url"]), "type": value.get("type"),
                 "start": value["timestamp"], "startEpochMs": value.get("wallTime", 0) * 1000, "requestOrdinal": self.request_sequence, "targetType": self.targets.get(route, {}).get("type", "page"),
                 "network": url.scheme in ("http", "https"), "scriptPath": bool(re.search(r"\.(?:m?js|cjs)$", url.path)),
@@ -188,26 +200,68 @@ class Trace:
             elif method == "loadingFailed":
                 row.update(finished=True, failed=True, canceled=value.get("canceled", False))
 
+    def record_finished(self, request):
+        # Chromium omits the worker entry's CDP response/body/finished events.
+        # Playwright still observes its actual completion and response headers.
+        try:
+            response = request.response()
+            if response is None: return
+            sizes = request.sizes()
+            try: target_type = 'page' if request.frame == request.frame.page.main_frame else 'iframe'
+            except Exception: target_type = 'worker'
+            self.finished_requests.append({"url": safe_url(request.url), "epochMs": request.timing["startTime"],
+                "status": response.status, "targetType": target_type, "headersBytes": sizes["responseHeadersSize"],
+                "bodyBytes": sizes["responseBodySize"], "finishedEpochMs": time.time() * 1000,
+                "type": {"script":"Script","document":"Document","fetch":"Fetch","xhr":"XHR","image":"Image","font":"Font","stylesheet":"Stylesheet"}.get(request.resource_type,"Other"),
+                "network": urlsplit(request.url).scheme in ("http","https"),
+                "scriptPath": bool(re.search(r"\.(?:m?js|cjs)$", urlsplit(request.url).path))})
+        except Exception: pass
+
+    def reconcile_finished(self):
+        # A worker can resolve a static import before its target emits any CDP
+        # request event. Retain the actual Playwright completion instead of
+        # silently dropping that script from the accounting.
+        for entry in self.finished_requests:
+            candidates = [row for row in self.requests.values() if entry['url'] == row['url'] and abs(entry['epochMs'] - row['startEpochMs']) < 100]
+            if not candidates:
+                self.request_sequence += 1
+                self.requests['playwright:' + str(self.request_sequence)] = {'url':entry['url'],'startEpochMs':entry['epochMs'], 'requestOrdinal':self.request_sequence,
+                    'type':entry['type'],'network':entry['network'],'scriptPath':entry['scriptPath'],'targetType':entry['targetType'],'fromPlaywright':True}
+        for row in self.requests.values():
+            if row.get("finished"): continue
+            matches = [entry for entry in self.finished_requests if entry["url"] == row["url"] and abs(entry["epochMs"] - row["startEpochMs"]) < 100]
+            if len(matches) != 1: continue
+            entry = matches[0]
+            row.update(finished=True, status=entry["status"], finishedEpochMs=entry["finishedEpochMs"],
+                observedResponseHeadersBytes=entry["headersBytes"], transferredBytes=entry["headersBytes"] + entry["bodyBytes"],
+                transferPending=entry["bodyBytes"] == 0, transferredBytesSource="PlaywrightRequestSizes")
+
     def snapshot(self):
+        self.reconcile_finished()
         return [dict(row) for row in self.requests.values()]
 
     def inflight(self):
+        self.reconcile_finished()
         return [row for row in self.requests.values() if row["network"] and not row.get("finished")
                 and row.get("type") not in ("WebSocket", "EventSource") and row.get("mime") != "text/event-stream"]
 
     def reconcile_decoded(self, page):
+        self.reconcile_finished()
         # Cached requests can omit dataReceived. Use measured ResourceTiming,
         # never Content-Length/gzip estimates or downloaded source bodies.
         entries = []
-        for frame in page.frames:
+        for frame in [*page.frames, *page.workers]:
             try:
-                entries.extend(frame.evaluate("() => performance.getEntriesByType('resource').filter(row=>row.decodedBodySize>0).map(row=>({url:row.name,epochMs:performance.timeOrigin+row.startTime,decodedBytes:row.decodedBodySize}))"))
+                entries.extend(frame.evaluate("() => performance.getEntriesByType('resource').filter(row=>row.decodedBodySize>0).map(row=>({url:row.name,epochMs:performance.timeOrigin+row.startTime,decodedBytes:row.decodedBodySize,encodedBytes:row.encodedBodySize}))"))
             except Exception: pass
+        self.unaccounted_script_resources = [entry for entry in entries if re.search(r"\.(?:m?js|cjs)$", urlsplit(entry['url']).path) and not any(row['url'] == safe_url(entry['url']) and abs(row['startEpochMs'] - entry['epochMs']) < 100 for row in self.requests.values())]
         for row in self.requests.values():
-            if not script_request(row) or row.get('decodedObserved') or not row.get('finished'): continue
+            if not script_request(row) or (row.get('decodedObserved') and not row.get('transferPending')) or not row.get('finished'): continue
             matches = [entry for entry in entries if safe_url(entry['url']) == row['url'] and abs(entry['epochMs'] - row['startEpochMs']) < 100]
             if len(matches) == 1:
                 row.update(decodedBytes=matches[0]['decodedBytes'], decodedObserved=True, decodedBytesSource='PerformanceResourceTiming')
+                if row.get('transferPending'):
+                    row.update(transferredBytes=row['observedResponseHeadersBytes'] + matches[0]['encodedBytes'], transferPending=False, transferredBytesSource='PlaywrightHeaders+PerformanceResourceTiming')
 
     def reconcile_snapshot(self, snapshot):
         current = {row['requestOrdinal']: row for row in self.requests.values()}
@@ -215,6 +269,8 @@ class Trace:
             observed = current.get(row['requestOrdinal'], {})
             if row.get('finished') and not row.get('decodedObserved') and observed.get('decodedObserved'):
                 row.update(decodedBytes=observed['decodedBytes'], decodedObserved=True, decodedBytesSource=observed['decodedBytesSource'])
+            if row.get('finished') and row.get('transferPending') and not observed.get('transferPending', True):
+                row.update(transferredBytes=observed['transferredBytes'], transferredBytesSource=observed['transferredBytesSource'], transferPending=False)
 
     def forced_gc(self, page):
         before = len(self.errors)
@@ -336,7 +392,7 @@ def wait_quiet(page, trace, minimum_ms, timeout_ms=120000):
             if time.monotonic() - quiet >= .8: return
         else: quiet = None
         page.wait_for_timeout(100)
-    raise MeasurementFailure("network_did_not_settle")
+    raise MeasurementFailure("network_did_not_settle", {"inflightRequests": trace.inflight()[:12], "inflightCount": len(trace.inflight()), "pendingCommands": len(trace.pending), "activeTargets": sum(target.get("active", False) for target in trace.targets.values())})
 
 
 def pss_observations(page, pid, count=5):
@@ -887,7 +943,7 @@ def self_check():
     # An in-flight request has no finished key yet; it must stay observable
     # without crashing the failure receipt or being counted as decoded.
     pending_script = {'network': True, 'type': 'Script'}
-    assert script_totals([pending_script]) == {'transferredBytes': 0, 'decodedBytes': 0, 'requests': 1, 'inflight': 1, 'missingDecoded': 0}
+    assert script_totals([pending_script]) == {'transferredBytes': 0, 'decodedBytes': 0, 'requests': 1, 'inflight': 1, 'missingTransfer': 0, 'missingDecoded': 0}
     assert script_totals([{**pending_script, 'finished': True, 'status': 200}])['missingDecoded'] == 1
     report = {'samples': [], 'requestedRuns': 1}
     summarize(report, KINDS, ['baseline', 'candidate'], True)
@@ -965,6 +1021,7 @@ def main():
                     for mode in MODES:
                         sample = {'run': run + 1, 'arm': arm, 'kind': kind, 'mode': mode, 'status': 'failed', 'phase': 'host', 'pageErrors': 0}
                         resources = trace = None
+                        pending_undo = None
                         try:
                             if host_failure: raise MeasurementFailure(host_failure)
                             sample['hostOnlyPss'] = host; sample['phase'] = 'launch'
@@ -997,6 +1054,7 @@ def main():
                             frame, heading, proof = ready_heading(page, kind, 1)
                             sample['readiness'] = [proof]; sample['phase'] = 'firstInput'
                             input_proof, requests_at_editable = edit_heading(page, frame, heading, trace, config['artifactIds'][kind], 1)
+                            pending_undo = 1
                             sample.update(firstInputMs=input_proof['ms'], saveAfterPaintMs=input_proof['saveAfterPaintMs'],
                                 editableMs=round(input_proof['editableEpochMs'] - started_ms, 1), inputProofs=[input_proof],
                                 inputSamplesMs=[input_proof['ms']], requestsAtEditable=requests_at_editable, firstEditablePss=process_pss(process.pid))
@@ -1006,12 +1064,13 @@ def main():
                             wait_quiet(page, trace, max(0, args.idle_ms - (time.time() * 1000 - input_proof['editableEpochMs'])))
                             sample['idleObservedAfterEditableMs'] = round(time.time() * 1000 - input_proof['editableEpochMs'])
                             trace.reconcile_decoded(page); trace.reconcile_snapshot(requests_at_editable)
-                            sample['scriptDecodedBytes'] = script_delta(preopen, requests_at_editable)['decodedBytes']
+                            reconciled = script_delta(preopen, requests_at_editable)
+                            sample.update(scriptTransferBytes=reconciled['transferredBytes'], scriptDecodedBytes=reconciled['decodedBytes'])
                             stable = trace.snapshot(); sample['requestsAtStable'] = stable
                             idle_delta = script_delta(requests_at_editable, stable)
                             sample.update(idleScriptTransferBytes=idle_delta['transferredBytes'], idleScriptDecodedBytes=idle_delta['decodedBytes'])
-                            sample['scriptAccounting'] = script_totals(stable)
-                            sample['phase'] = 'undo'; sample['undoProofs'] = [undo_edit(page, kind, 1, config['artifactIds'][kind])]
+                            sample['scriptAccounting'] = {**script_totals(stable), 'unaccountedResources':len(trace.unaccounted_script_resources)}
+                            sample['phase'] = 'undo'; sample['undoProofs'] = [undo_edit(page, kind, 1, config['artifactIds'][kind])]; pending_undo = None
                             sample['visitedPages'] = [1]; sample['navigation'] = []
                             if args.skip_traversal: raise MeasurementFailure('traversal_intentionally_unverified')
                             sample['phase'] = 'traversal'
@@ -1021,8 +1080,9 @@ def main():
                                 sample['readiness'].append(proof); sample['visitedPages'].append(number)
                                 if number in (25, 50):
                                     proof, _ = edit_heading(page, frame, heading, trace, config['artifactIds'][kind], number)
+                                    pending_undo = number
                                     sample['inputProofs'].append(proof); sample['inputSamplesMs'].append(proof['ms'])
-                                    sample['undoProofs'].append(undo_edit(page, kind, number, config['artifactIds'][kind]))
+                                    sample['undoProofs'].append(undo_edit(page, kind, number, config['artifactIds'][kind])); pending_undo = None
                             page.wait_for_timeout(1000)
                             sample['afterTraversalPss'] = pss_observations(page, process.pid)
                             sample['pssDeltaBytes'] = sample['afterTraversalPss']['bytes'] - host['bytes']
@@ -1040,7 +1100,7 @@ def main():
                             if sample['failedRequests']: raise MeasurementFailure('network_failure_observed')
                             if sample['cdpErrors']: raise MeasurementFailure('cdp_setup_failed')
                             if sample['retiredRequests']: raise MeasurementFailure('retired_editor_loaded')
-                            if sample['scriptAccounting']['missingDecoded']: raise MeasurementFailure('decoded_script_accounting_incomplete')
+                            if sample['scriptAccounting']['missingDecoded'] or sample['scriptAccounting']['missingTransfer'] or sample['scriptAccounting']['unaccountedResources']: raise MeasurementFailure('decoded_script_accounting_incomplete')
                             if any(row['status'] == 'failed' for row in sample.get('exports', [])): raise MeasurementFailure('export_diagnostic_incomplete')
                             sample['status'] = 'passed'; sample['phase'] = 'complete'
                         except Exception as error:
@@ -1050,6 +1110,11 @@ def main():
                                 try: sample['failureScreenshot'] = safe_screenshot(resources[2], kind, output.parent / f'{arm}-{kind}-{run+1}-{mode}-failure.png')
                                 except Exception: sample['failureScreenshot'] = False
                         finally:
+                            if resources and pending_undo is not None:
+                                try:
+                                    sample['failureCleanup'] = undo_edit(resources[2], kind, pending_undo, config['artifactIds'][kind])
+                                except Exception as cleanup_error:
+                                    sample['failureCleanup'] = {'status': 'failed', 'failureCode': failure_code(cleanup_error)}
                             if trace:
                                 rows = trace.snapshot()
                                 sample['networkObservations'] = {'requests': len(rows), 'scripts': script_totals(rows), 'inflight': len(trace.inflight()),

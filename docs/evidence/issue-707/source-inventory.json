@@ -118,7 +118,8 @@
           },
           {
             "name": "Pen",
-            "characterOffset": 154058
+            "characterOffset": 4592758,
+            "matchedBy": "exact defaultMessage from TypeScript AST; previous first substring was a PDF font symbol"
           },
           {
             "name": "Note actions",
