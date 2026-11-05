@@ -119,7 +119,7 @@ export const artifactNodeSchema = z.object({
   assetId: artifactIdSchema.optional(),
   posterAssetId: artifactIdSchema.optional(),
   crop: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), width: z.number().min(0).max(1), height: z.number().min(0).max(1) }).strict().optional(),
-  shape: z.enum(['rect', 'ellipse', 'triangle', 'diamond', 'arrow']).optional(),
+  shape: z.enum(['rect', 'ellipse', 'triangle', 'diamond', 'arrow', 'arrow-right', 'arrow-left', 'arrow-up', 'arrow-down']).optional(),
   points: z.array(z.object({ x: finite, y: finite }).strict()).max(10_000).optional(),
   cells: z.array(z.array(z.string().max(10_000)).max(100)).max(100).optional(),
   svg: z.string().refine(isSafeArtifactSvg, 'unsupported or unsafe SVG').optional(),

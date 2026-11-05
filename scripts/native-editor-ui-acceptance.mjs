@@ -176,15 +176,17 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         const board=await page.locator('[data-page-id="page-1"]').boundingBox();assert.ok(Math.abs(board.width-374)<=1)
         await page.getByRole('navigation',{name:'页面切换',exact:true}).getByRole('button',{name:'下一页',exact:true}).click();await ready(2)
         await page.getByRole('navigation',{name:'页面切换',exact:true}).getByRole('button',{name:'上一页',exact:true}).click();await ready(1)
-        await page.getByRole('navigation',{name:'页面切换',exact:true}).getByRole('button',{name:'显示页面缩略图',exact:true}).click()
+        await page.getByRole('navigation',{name:'页面切换',exact:true}).getByRole('button',{name:'显示页面缩略图',exact:true}).focus();await page.keyboard.press('Enter')
         await page.locator('.native-page-list').waitFor()
+        assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'隐藏页面缩略图','expanded navigation must retain keyboard focus')
         assert.equal(await page.locator('.native-presenting').count(),0,'the compact thumbnails action must remain in the editor')
         assert.equal(await page.getByRole('navigation',{name:'页面切换',exact:true}).count(),0)
         const expanded=await page.locator('[data-page-id="page-1"]').boundingBox()
         const footer=await page.locator('.native-footer').boundingBox()
         assert.ok(expanded.y+expanded.height<=footer.y,'expanded thumbnails must reserve stage space')
-        await page.getByRole('button',{name:'隐藏页面缩略图',exact:true}).click()
+        await page.keyboard.press('Enter')
         await page.getByRole('navigation',{name:'页面切换',exact:true}).waitFor()
+        assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'显示页面缩略图','collapsed navigation must retain keyboard focus')
         assert.equal(await page.locator('.native-footer').count(),0)
         document=applyOperations(document,prepareBatch(document,[{type:'page.patch',pageId:'page-1',patch:{background:'#ff0000',section:'验收章节'},unset:['themeBackground']}])).document;history.version=document.seq
         await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-page-id="page-1"] [data-content-layer]')).backgroundColor==='rgb(255, 0, 0)')
@@ -201,6 +203,27 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.keyboard.press('Escape')
       assert.deepEqual(errors,[])
       return {kind:'isolated-narrow-editor-diagnostic',mode:kind,singleToolbarRow:true,floatingPageNavigation:kind==='slides',scope:'390×844 container and real editor through controlled HTTP fixture',consoleOrPageErrors:errors}
+    }
+    if(options.checks==='shapes') {
+      if(kind==='slides') {
+        for(const [label,shape]of [['右箭头','arrow-right'],['左箭头','arrow-left'],['上箭头','arrow-up'],['下箭头','arrow-down']]){
+          await page.getByLabel('插入图形',{exact:true}).click();await page.getByRole('button',{name:label,exact:true}).click()
+          await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+          const node=Object.values(document.pages['page-1'].nodes).find(node=>node.shape===shape);assert.ok(node)
+          assert.equal(await page.locator(`[data-node-id="${node.id}"] polygon`).count(),1)
+        }
+        await page.reload();await ready(1)
+        for(const shape of ['arrow-right','arrow-left','arrow-up','arrow-down'])assert.ok(Object.values(document.pages['page-1'].nodes).some(node=>node.shape===shape))
+      } else {
+        await page.getByLabel('插入图形',{exact:true}).click();await page.getByRole('button',{name:/^箭头/}).click()
+        await select(1)
+        const box=await page.locator('[data-page-id="page-1"]').boundingBox(),before=Object.keys(document.pages['page-1'].nodes)
+        await page.mouse.move(box.x+150,box.y+120);await page.mouse.down();await page.mouse.move(box.x+270,box.y+160,{steps:6});await page.mouse.up()
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+        const node=Object.values(document.pages['page-1'].nodes).find(node=>!before.includes(node.id));assert.equal(node?.type,'line');assert.equal(node.lineEnd,'arrow')
+      }
+      assert.deepEqual(errors,[])
+      return {kind:'isolated-shape-roundtrip-diagnostic',mode:kind,directionalArrows:kind==='slides',drawnArrow:kind==='design',consoleOrPageErrors:errors}
     }
     if(options.checks==='export-ink') {
       const ink=await page.evaluate(async root=>{

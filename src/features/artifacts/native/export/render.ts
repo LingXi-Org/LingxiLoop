@@ -1,3 +1,4 @@
+import { artifactShapeGeometry } from '../../../../../shared/artifact-shapes'
 import type { ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../../shared/artifact-document'
 import { isSafeArtifactSvg } from '../../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../../shared/artifact-themes'
@@ -107,8 +108,9 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         const gradientDefinition = gradient ? `<defs><${gradient.type === 'radial' ? 'radialGradient' : 'linearGradient'} id="${gradientId}"${gradient.type === 'linear' ? ` x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(${gradient.angle-90} .5 .5)"` : ''}>${gradient.stops.map(stop => `<stop offset="${stop.offset}" stop-color="${escapeHtml(stop.color)}"/>`).join('')}</${gradient.type === 'radial' ? 'radialGradient' : 'linearGradient'}></defs>` : ''
         css += ';background:none'
         const fill = gradient ? `url(#${gradientId})` : escapeHtml(style.fill ?? '#d97757'), stroke = escapeHtml(style.stroke ?? 'none')
-        const shape = node.shape === 'ellipse' ? '<ellipse cx="50" cy="50" rx="49" ry="49"/>' : node.shape === 'triangle' ? '<polygon points="50,1 99,99 1,99"/>' : node.shape === 'diamond' ? '<polygon points="50,1 99,50 50,99 1,50"/>' : node.shape === 'arrow' ? '<polygon points="0,25 65,25 65,0 100,50 65,100 65,75 0,75"/>' : `<rect x="0" y="0" width="100" height="100" rx="${Math.min(50, (style.borderRadius ?? 0) / Math.max(1, node.width) * 100)}"/>`
-        content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" fill="${fill}" stroke="${stroke}" stroke-width="${style.strokeWidth ?? 0}">${gradientDefinition}${shape}</svg>`
+        const geometry=artifactShapeGeometry(node.shape,node.width,node.height,style.borderRadius)
+        const shape=`<${geometry.tag} ${Object.entries(geometry.attributes).map(([key,value])=>`${key}="${value}"`).join(' ')}/>`
+        content = `<svg xmlns="http://www.w3.org/2000/svg" style="overflow:visible" viewBox="0 0 ${node.width} ${node.height}" fill="${fill}" stroke="${stroke}" stroke-width="${style.strokeWidth ?? 0}">${gradientDefinition}${shape}</svg>`
         break
       }
       case 'embed': {

@@ -47,9 +47,9 @@ export function duplicatePages(document: ArtifactDocument, selected: string[], n
   }
   return ops
 }
-export function drawingNode(id: string, points: Array<{ x: number; y: number }>, tool: 'pencil' | 'pen' | 'arrow'): ArtifactNode {
+export function drawingNode(id: string, points: Array<{ x: number; y: number }>, tool: 'pencil' | 'pen' | 'arrow' | 'line'): ArtifactNode {
   const x = Math.min(...points.map(p => p.x)), y = Math.min(...points.map(p => p.y))
-  return { ...createNode(tool === 'arrow' ? 'line' : 'drawing', id), x, y,
+  return { ...createNode(tool === 'arrow' || tool === 'line' ? 'line' : 'drawing', id), x, y,
     width: Math.max(1, Math.max(...points.map(p => p.x)) - x), height: Math.max(1, Math.max(...points.map(p => p.y)) - y),
     points: points.map(p => ({ x: p.x - x, y: p.y - y })), lineEnd: tool === 'arrow' ? 'arrow' : 'none',
     style: { stroke: '#141413', strokeWidth: tool === 'pencil' ? 2 : 3 },

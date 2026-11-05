@@ -103,7 +103,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
               color: color(style.color), bold: (style.fontWeight ?? 400) >= 600, italic: style.fontStyle === 'italic', align: style.textAlign ?? 'left',
               margin: (style.padding??0)*.75*scale, ...(node.type==='note' && style.fill ? {fill:{color:color(style.fill,'FFF3B0')}} : {}), breakLine: false, valign: 'top', rotate: rotation, transparency: (1 - (style.opacity ?? 1)) * 100 })
           } else if (node.type === 'shape') {
-            const shape = ({ rect: style.borderRadius ? 'roundRect' : 'rect', ellipse: 'ellipse', triangle: 'triangle', diamond: 'diamond', arrow: 'rightArrow' } as const)[node.shape ?? 'rect']
+            const shape = ({ rect: style.borderRadius ? 'roundRect' : 'rect', ellipse: 'ellipse', triangle: 'triangle', diamond: 'diamond', arrow: 'rightArrow', 'arrow-right':'rightArrow','arrow-left':'leftArrow','arrow-up':'upArrow','arrow-down':'downArrow' } as const)[node.shape ?? 'rect']
             slide.addShape(shape, { ...box, rectRadius: Math.min(.5, (style.borderRadius ?? 0) / Math.min(node.width, node.height)), rotate: rotation, fill: { color: color(style.fill, 'D97757'), transparency: (1 - (style.opacity ?? 1)) * 100 }, line: style.stroke && style.strokeWidth ? { color: color(style.stroke), width: style.strokeWidth * .75 } : { transparency: 100 } })
           } else if (node.type === 'table' && !nodeHasMath(node)) {
             slide.addTable((node.cells ?? []).map(row => row.map(text => ({ text }))), { ...box, fontSize, color: color(style.color), border: { type: 'solid', color: color(style.stroke, '73726C'), pt: 1 }, margin: 4, autoPage: false })

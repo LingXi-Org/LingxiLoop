@@ -1,3 +1,4 @@
+import { artifactShapeGeometry } from '../../../../shared/artifact-shapes'
 import { memo, useEffect, useState, type ReactNode } from 'react'
 import { isSafeArtifactSvg, type ArtifactAsset, type ArtifactDocument, type ArtifactNode, type ArtifactPage, type ArtifactRichText, type ArtifactTheme, type ArtifactStyle } from '../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
@@ -204,11 +205,7 @@ function PreviewShape({ node, document, loaded }: { node: PreviewNode; document:
   if (node.type === 'image' || node.type === 'video' && node.imageKey || node.type === 'embed' && node.imageKey) content = <ThumbnailImage node={node} document={document} loaded={loaded} />
   else if (node.type === 'svg' && node.svg) content = <image href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(node.svg)}`} width={w} height={h} />
   else if ((node.type === 'line' || node.type === 'drawing')) content = <polyline points={node.points} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} />
-  else if (node.type === 'shape') content = node.shape === 'ellipse' ? <ellipse cx={w / 2} cy={h / 2} rx={w / 2} ry={h / 2} {...paint} />
-    : node.shape === 'triangle' ? <polygon points={`${w / 2},0 ${w},${h} 0,${h}`} {...paint} />
-      : node.shape === 'diamond' ? <polygon points={`${w / 2},0 ${w},${h / 2} ${w / 2},${h} 0,${h / 2}`} {...paint} />
-        : node.shape === 'arrow' ? <polygon points={`0,${h * .3} ${w * .65},${h * .3} ${w * .65},0 ${w},${h / 2} ${w * .65},${h} ${w * .65},${h * .7} 0,${h * .7}`} {...paint} />
-          : <rect width={w} height={h} rx={node.radius} {...paint} />
+  else if (node.type === 'shape') {const {tag:Shape,attributes}=artifactShapeGeometry(node.shape,w,h,node.radius);content=<Shape {...attributes} {...paint} />}
   else if (node.type === 'table') {
     const rows = node.cells ?? [], cols = Math.max(1, ...rows.map(row => row.length)), rowHeight = h / Math.max(1, rows.length), columnWidth = w / cols
     content = rows.map((row, rowIndex) => row.map((cell, colIndex) => <g key={`${rowIndex}-${colIndex}`} transform={`translate(${colIndex * columnWidth} ${rowIndex * rowHeight})`}>
