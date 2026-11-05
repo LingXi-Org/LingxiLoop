@@ -176,11 +176,15 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         const board=await page.locator('[data-page-id="page-1"]').boundingBox();assert.ok(Math.abs(board.width-374)<=1)
         await page.getByRole('navigation',{name:'页面切换',exact:true}).getByRole('button',{name:'下一页',exact:true}).click();await ready(2)
         await page.getByRole('navigation',{name:'页面切换',exact:true}).getByRole('button',{name:'上一页',exact:true}).click();await ready(1)
+        document=applyOperations(document,prepareBatch(document,[{type:'page.patch',pageId:'page-1',patch:{background:'#ff0000',section:'验收章节'},unset:['themeBackground']}])).document;history.version=document.seq
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-page-id="page-1"] [data-content-layer]')).backgroundColor==='rgb(255, 0, 0)')
         await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:/^添加页面/}).click()
         await page.getByRole('dialog',{name:'版式',exact:true}).waitFor();await page.getByRole('button',{name:'空白',exact:true}).click()
         await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
         assert.equal(document.pageOrder.length,51)
         assert.equal(document.pages[document.pageOrder[1]].width,1920,'new layouts retain the current slide dimensions')
+        assert.equal(await page.locator(`[data-page-id="${document.pageOrder[1]}"] [data-content-layer]`).evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(255, 0, 0)','a new slide must retain an explicitly overridden background with the theme enabled')
+        assert.equal(document.pages[document.pageOrder[1]].section,'验收章节')
       }
       await page.getByLabel('插入图形',{exact:true}).click()
       const menu=await page.getByRole('group',{name:'插入图形选项',exact:true}).boundingBox();assert.ok(menu&&menu.x>=0&&menu.x+menu.width<=390,'overflow menus must fit the narrow editor')
