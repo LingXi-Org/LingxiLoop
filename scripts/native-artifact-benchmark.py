@@ -70,6 +70,26 @@ def failure_code(error):
     return "browser_or_measurement_error"
 
 
+
+def resource_key(raw):
+    # Internal identity includes the query; never serialize the original URL.
+    return hashlib.sha256(urlsplit(raw)._replace(fragment='').geturl().encode()).hexdigest()
+
+
+def pair_observations(left, right):
+    """One-to-one time/resource matches. Ambiguous observations fail closed."""
+    remaining_left, remaining_right = set(range(len(left))), set(range(len(right)))
+    pairs = []
+    for tolerance in (.01, 100):
+        candidates = {i: [j for j in remaining_right if left[i]['_resourceKey'] == right[j]['_resourceKey'] and abs(left[i]['startEpochMs'] - right[j]['startEpochMs']) < tolerance] for i in remaining_left}
+        reverse = {j: [i for i, matches in candidates.items() if j in matches] for j in remaining_right}
+        matched = [(i, matches[0]) for i,matches in candidates.items() if len(matches) == 1 and len(reverse[matches[0]]) == 1]
+        for i,j in matched:
+            pairs.append((i,j)); remaining_left.remove(i); remaining_right.remove(j)
+    ambiguous = {j for j in remaining_right if any(left[i]['_resourceKey'] == right[j]['_resourceKey'] and abs(left[i]['startEpochMs'] - right[j]['startEpochMs']) < 100 for i in remaining_left)}
+    return pairs, remaining_left, remaining_right, ambiguous
+
+
 def script_request(row):
     return bool(row.get("network") and (row.get("type") == "Script" or row.get("scriptPath")
                 or re.search(r"(?:java|ecma)script", row.get("mime") or "", re.I)))
@@ -99,6 +119,7 @@ class Trace:
         self.request_sequence = 0
         self.finished_requests = []
         self.unaccounted_script_resources = []
+        self.ambiguous_requests = 0
         context.on("requestfinished", self.record_finished)
         for method in ("requestWillBeSent", "responseReceived", "dataReceived", "loadingFinished", "loadingFailed"):
             self.cdp.on("Network." + method, lambda params, name=method: self.event("", name, params))
@@ -168,14 +189,17 @@ class Trace:
                 self.requests[key + ":redirect:" + str(len(self.requests))] = old
             url = urlsplit(value["request"]["url"])
             self.request_sequence += 1
-            prior = [(old_key, row) for old_key,row in self.requests.items() if row.get('fromPlaywright') and row['url'] == safe_url(value['request']['url']) and abs(row['startEpochMs'] - value.get('wallTime',0)*1000) < 100]
+            prior = [(old_key, row) for old_key,row in self.requests.items() if row.get('fromPlaywright') and row['_resourceKey'] == resource_key(value['request']['url']) and abs(row['startEpochMs'] - value.get('wallTime',0)*1000) < 100]
+            exact = [(k,r) for k,r in prior if abs(r['startEpochMs'] - value.get('wallTime',0)*1000) < .01]
+            if len(exact) == 1: prior = exact
+            if len(prior) > 1: self.ambiguous_requests += 1
             if len(prior) == 1:
                 old_key, row = prior[0]
                 del self.requests[old_key]
                 self.requests[key] = row
                 row.update(start=value['timestamp'], targetType=self.targets.get(route,{}).get('type','page'))
                 return
-            self.requests[key] = {"url": safe_url(value["request"]["url"]), "type": value.get("type"),
+            self.requests[key] = {"url": safe_url(value["request"]["url"]), "_resourceKey": resource_key(value["request"]["url"]), "type": value.get("type"),
                 "start": value["timestamp"], "startEpochMs": value.get("wallTime", 0) * 1000, "requestOrdinal": self.request_sequence, "targetType": self.targets.get(route, {}).get("type", "page"),
                 "network": url.scheme in ("http", "https"), "scriptPath": bool(re.search(r"\.(?:m?js|cjs)$", url.path)),
                 "sourcePayload": bool(re.search(r"/artifact-editor/(?:design|slides)/[^/]+/project/.*\.(?:html|jsx)$", url.path)),
@@ -209,7 +233,7 @@ class Trace:
             sizes = request.sizes()
             try: target_type = 'page' if request.frame == request.frame.page.main_frame else 'iframe'
             except Exception: target_type = 'worker'
-            self.finished_requests.append({"url": safe_url(request.url), "epochMs": request.timing["startTime"],
+            self.finished_requests.append({"url": safe_url(request.url), "_resourceKey":resource_key(request.url), "_requestIdentity":len(self.finished_requests), "startEpochMs": request.timing["startTime"],
                 "status": response.status, "targetType": target_type, "headersBytes": sizes["responseHeadersSize"],
                 "bodyBytes": sizes["responseBodySize"], "finishedEpochMs": time.time() * 1000,
                 "type": {"script":"Script","document":"Document","fetch":"Fetch","xhr":"XHR","image":"Image","font":"Font","stylesheet":"Stylesheet"}.get(request.resource_type,"Other"),
@@ -221,20 +245,24 @@ class Trace:
         # A worker can resolve a static import before its target emits any CDP
         # request event. Retain the actual Playwright completion instead of
         # silently dropping that script from the accounting.
-        for entry in self.finished_requests:
-            candidates = [row for row in self.requests.values() if entry['url'] == row['url'] and abs(entry['epochMs'] - row['startEpochMs']) < 100]
-            if not candidates:
-                self.request_sequence += 1
-                self.requests['playwright:' + str(self.request_sequence)] = {'url':entry['url'],'startEpochMs':entry['epochMs'], 'requestOrdinal':self.request_sequence,
-                    'type':entry['type'],'network':entry['network'],'scriptPath':entry['scriptPath'],'targetType':entry['targetType'],'fromPlaywright':True}
+        assigned = {row['_playwrightKey'] for row in self.requests.values() if '_playwrightKey' in row}
+        entries = [entry for entry in self.finished_requests if entry['_requestIdentity'] not in assigned]
+        rows = [row for row in self.requests.values() if '_playwrightKey' not in row]
+        pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries)
+        self.ambiguous_requests = max(self.ambiguous_requests, len(ambiguous))
+        for i,j in pairs: rows[i]['_playwrightKey'] = entries[j]['_requestIdentity']
+        for j in unmatched - ambiguous:
+            entry = entries[j]
+            self.request_sequence += 1
+            self.requests['playwright:' + str(self.request_sequence)] = {'url':entry['url'],'_resourceKey':entry['_resourceKey'],'startEpochMs':entry['startEpochMs'], 'requestOrdinal':self.request_sequence,
+                'type':entry['type'],'network':entry['network'],'scriptPath':entry['scriptPath'],'targetType':entry['targetType'],'fromPlaywright':True,'_playwrightKey':entry['_requestIdentity']}
+        by_identity = {entry['_requestIdentity']:entry for entry in self.finished_requests}
         for row in self.requests.values():
-            if row.get("finished"): continue
-            matches = [entry for entry in self.finished_requests if entry["url"] == row["url"] and abs(entry["epochMs"] - row["startEpochMs"]) < 100]
-            if len(matches) != 1: continue
-            entry = matches[0]
-            row.update(finished=True, status=entry["status"], finishedEpochMs=entry["finishedEpochMs"],
-                observedResponseHeadersBytes=entry["headersBytes"], transferredBytes=entry["headersBytes"] + entry["bodyBytes"],
-                transferPending=entry["bodyBytes"] == 0, transferredBytesSource="PlaywrightRequestSizes")
+            if row.get('finished') or '_playwrightKey' not in row: continue
+            entry = by_identity[row['_playwrightKey']]
+            row.update(finished=True, status=entry['status'], finishedEpochMs=entry['finishedEpochMs'],
+                observedResponseHeadersBytes=entry['headersBytes'], transferredBytes=entry['headersBytes'] + entry['bodyBytes'],
+                transferPending=entry['bodyBytes'] == 0, transferredBytesSource='PlaywrightRequestSizes')
 
     def snapshot(self):
         self.reconcile_finished()
@@ -252,16 +280,19 @@ class Trace:
         entries = []
         for frame in [*page.frames, *page.workers]:
             try:
-                entries.extend(frame.evaluate("() => performance.getEntriesByType('resource').filter(row=>row.decodedBodySize>0).map(row=>({url:row.name,epochMs:performance.timeOrigin+row.startTime,decodedBytes:row.decodedBodySize,encodedBytes:row.encodedBodySize}))"))
+                entries.extend(frame.evaluate("() => performance.getEntriesByType('resource').filter(row=>row.decodedBodySize>0).map(row=>({url:row.name,startEpochMs:performance.timeOrigin+row.startTime,decodedBytes:row.decodedBodySize,encodedBytes:row.encodedBodySize}))"))
             except Exception: pass
-        self.unaccounted_script_resources = [entry for entry in entries if re.search(r"\.(?:m?js|cjs)$", urlsplit(entry['url']).path) and not any(row['url'] == safe_url(entry['url']) and abs(row['startEpochMs'] - entry['epochMs']) < 100 for row in self.requests.values())]
-        for row in self.requests.values():
-            if not script_request(row) or (row.get('decodedObserved') and not row.get('transferPending')) or not row.get('finished'): continue
-            matches = [entry for entry in entries if safe_url(entry['url']) == row['url'] and abs(entry['epochMs'] - row['startEpochMs']) < 100]
-            if len(matches) == 1:
-                row.update(decodedBytes=matches[0]['decodedBytes'], decodedObserved=True, decodedBytesSource='PerformanceResourceTiming')
-                if row.get('transferPending'):
-                    row.update(transferredBytes=row['observedResponseHeadersBytes'] + matches[0]['encodedBytes'], transferPending=False, transferredBytesSource='PlaywrightHeaders+PerformanceResourceTiming')
+        for entry in entries: entry['_resourceKey'] = resource_key(entry['url'])
+        rows = [row for row in self.requests.values() if script_request(row) and row.get('finished')]
+        pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries)
+        self.ambiguous_requests = max(self.ambiguous_requests, len(ambiguous))
+        self.unaccounted_script_resources = [entries[j] for j in unmatched if re.search(r"\.(?:m?js|cjs)$", urlsplit(entries[j]['url']).path)]
+        for i,j in pairs:
+            row, entry = rows[i], entries[j]
+            if not row.get('decodedObserved'):
+                row.update(decodedBytes=entry['decodedBytes'], decodedObserved=True, decodedBytesSource='PerformanceResourceTiming')
+            if row.get('transferPending'):
+                row.update(transferredBytes=row['observedResponseHeadersBytes'] + entry['encodedBytes'], transferPending=False, transferredBytesSource='PlaywrightHeaders+PerformanceResourceTiming')
 
     def reconcile_snapshot(self, snapshot):
         current = {row['requestOrdinal']: row for row in self.requests.values()}
@@ -609,6 +640,7 @@ def legacy_save_prefix(frame):
 
 def edit_heading(page, frame, heading, trace, artifact_id, number):
     saves = []; input_step = 0
+    frame.evaluate("number=>{window.__nativeArtifactInputAttempt={number,attempted:false}}", number)
     prefix = legacy_save_prefix(frame)
     listener = lambda response: saves.append({"status": response.status, "epochMs": time.time() * 1000, "requests": trace.snapshot()}) if save_request_matches(response, artifact_id, MARKER.strip(), prefix) else None
     page.on("response", listener)
@@ -622,6 +654,7 @@ def edit_heading(page, frame, heading, trace, artifact_id, number):
         frame.evaluate(r"""({number,marker}) => {
           window.__nativeArtifactInput=null;
           document.addEventListener('beforeinput', event=>{
+            window.__nativeArtifactInputAttempt={number,attempted:true};
             const target=event.target,start=performance.now(),before=target.textContent;
             requestAnimationFrame(()=>requestAnimationFrame(()=>{
               const text=target.textContent,painted=performance.now();
@@ -659,6 +692,30 @@ def edit_heading(page, frame, heading, trace, artifact_id, number):
         except Exception: pass
         raise MeasurementFailure(failure_code(error), observations) from None
     finally: page.remove_listener("response", listener)
+
+
+
+def edit_restore_state(text, number, attempted):
+    original = f'验收页面 {number}'
+    if text == original + MARKER: return 'undo'
+    if text == original and not attempted: return 'unchanged'
+    return 'unknown'
+
+
+def cleanup_edit(page, kind, number, artifact_id):
+    # Never blindly undo when input/paint/ACK verification has thrown.
+    for frame in page.frames:
+        targets = heading_candidates(frame,kind,number)
+        for index in range(targets.count()):
+            target = targets.nth(index)
+            if not target.is_visible(): continue
+            value = target.evaluate("(e,number)=>({text:(e.querySelector('[data-native-text-editor],.native-text-content')??e).textContent.trim(),attempted:window.__nativeArtifactInputAttempt?.number===number&&window.__nativeArtifactInputAttempt.attempted})",number)
+            state = edit_restore_state(value['text'],number,value['attempted'])
+            if state == 'unchanged': return {'status':'passed','pageNumber':number,'originalHeadingRestored':True,'inputAttempted':False}
+            if state == 'undo':
+                page.keyboard.press('Escape')
+                return {'status':'passed',**undo_edit(page,kind,number,artifact_id)}
+    raise MeasurementFailure('fixture_restore_unconfirmed')
 
 
 def undo_edit(page, kind, number, artifact_id):
@@ -933,11 +990,36 @@ def summarize(report, kinds, arms, diagnostic):
 
 
 def self_check():
+
+    # Independent-review counterexample: one observed CDP request must not
+    # consume two actual Worker completions/resource timing entries.
+    from types import SimpleNamespace
+    raw = 'https://fixture.invalid/shared.js'
+    key = resource_key(raw)
+    def reconciliation_fixture(starts):
+        trace = Trace.__new__(Trace)
+        trace.requests = {'cdp':{'url':safe_url(raw),'_resourceKey':key,'startEpochMs':1000,'type':'Script','network':True,'scriptPath':True,'requestOrdinal':1,'finished':True,'status':200,'transferredBytes':1000120,'decodedBytes':1000000,'decodedObserved':True}}
+        trace.finished_requests = [{'url':safe_url(raw),'_resourceKey':key,'_requestIdentity':i,'startEpochMs':start,'finishedEpochMs':start+2000,'headersBytes':120,'bodyBytes':1000000,'status':200,'type':'Script','network':True,'scriptPath':True,'targetType':'worker'} for i,start in enumerate(starts)]
+        trace.request_sequence = 1; trace.ambiguous_requests = 0
+        frame = SimpleNamespace(evaluate=lambda _script:[{'url':raw,'startEpochMs':start,'encodedBytes':1000000,'decodedBytes':1000000} for start in starts])
+        trace.reconcile_decoded(SimpleNamespace(frames=[frame],workers=[]))
+        return trace
+    trace = reconciliation_fixture([1000,1050])
+    assert len(trace.snapshot()) == 2 and script_totals(trace.snapshot())['transferredBytes'] == 2000240
+    assert not trace.ambiguous_requests and not trace.unaccounted_script_resources
+    assert not script_totals(trace.snapshot())['missingDecoded']
+    ambiguous = reconciliation_fixture([1000,1000])
+    assert ambiguous.ambiguous_requests > 0, 'indistinguishable requests cannot qualify'
+    assert safe_url(raw+'?v=1') == safe_url(raw+'?v=2') and resource_key(raw+'?v=1') != resource_key(raw+'?v=2')
     assert safe_url('https://token-artifact.localhost/artifact-editor/design/secret-grant/?cookie=secret') == safe_url('https://other/artifact-editor/design/secret-grant/?other=value')
     for url in ('blob:https://secret/token', 'data:text/javascript,secret', 'https://u:secret@h/_blob/secret', 'https://h/artifact-editor/slides/secret'):
         assert 'secret' not in safe_url(url)
     assert script_request({'network': True, 'type': 'Fetch', 'mime': 'application/javascript'})
     assert not script_request({'network': False, 'type': 'Script', 'mime': 'application/javascript'})
+    assert edit_restore_state('验收页面 1'+MARKER,1,True) == 'undo'
+    assert edit_restore_state('验收页面 1',1,False) == 'unchanged'
+    assert edit_restore_state('验收页面 1',1,True) == 'unknown'
+    assert edit_restore_state('other',1,True) == 'unknown'
     assert percentile([], 75) is None
     assert script_totals([])['decodedBytes'] == 0
     # An in-flight request has no finished key yet; it must stay observable
@@ -1053,8 +1135,8 @@ def main():
                                         sample['viewNormalization'] = normalize_native_view(page, native_frame, kind); break
                             frame, heading, proof = ready_heading(page, kind, 1)
                             sample['readiness'] = [proof]; sample['phase'] = 'firstInput'
-                            input_proof, requests_at_editable = edit_heading(page, frame, heading, trace, config['artifactIds'][kind], 1)
                             pending_undo = 1
+                            input_proof, requests_at_editable = edit_heading(page, frame, heading, trace, config['artifactIds'][kind], 1)
                             sample.update(firstInputMs=input_proof['ms'], saveAfterPaintMs=input_proof['saveAfterPaintMs'],
                                 editableMs=round(input_proof['editableEpochMs'] - started_ms, 1), inputProofs=[input_proof],
                                 inputSamplesMs=[input_proof['ms']], requestsAtEditable=requests_at_editable, firstEditablePss=process_pss(process.pid))
@@ -1069,7 +1151,7 @@ def main():
                             stable = trace.snapshot(); sample['requestsAtStable'] = stable
                             idle_delta = script_delta(requests_at_editable, stable)
                             sample.update(idleScriptTransferBytes=idle_delta['transferredBytes'], idleScriptDecodedBytes=idle_delta['decodedBytes'])
-                            sample['scriptAccounting'] = {**script_totals(stable), 'unaccountedResources':len(trace.unaccounted_script_resources)}
+                            sample['scriptAccounting'] = {**script_totals(stable), 'unaccountedResources':len(trace.unaccounted_script_resources), 'ambiguousRequests':trace.ambiguous_requests}
                             sample['phase'] = 'undo'; sample['undoProofs'] = [undo_edit(page, kind, 1, config['artifactIds'][kind])]; pending_undo = None
                             sample['visitedPages'] = [1]; sample['navigation'] = []
                             if args.skip_traversal: raise MeasurementFailure('traversal_intentionally_unverified')
@@ -1079,8 +1161,8 @@ def main():
                                 frame, heading, proof = ready_heading(page, kind, number, timeout=30)
                                 sample['readiness'].append(proof); sample['visitedPages'].append(number)
                                 if number in (25, 50):
-                                    proof, _ = edit_heading(page, frame, heading, trace, config['artifactIds'][kind], number)
                                     pending_undo = number
+                                    proof, _ = edit_heading(page, frame, heading, trace, config['artifactIds'][kind], number)
                                     sample['inputProofs'].append(proof); sample['inputSamplesMs'].append(proof['ms'])
                                     sample['undoProofs'].append(undo_edit(page, kind, number, config['artifactIds'][kind])); pending_undo = None
                             page.wait_for_timeout(1000)
@@ -1100,7 +1182,7 @@ def main():
                             if sample['failedRequests']: raise MeasurementFailure('network_failure_observed')
                             if sample['cdpErrors']: raise MeasurementFailure('cdp_setup_failed')
                             if sample['retiredRequests']: raise MeasurementFailure('retired_editor_loaded')
-                            if sample['scriptAccounting']['missingDecoded'] or sample['scriptAccounting']['missingTransfer'] or sample['scriptAccounting']['unaccountedResources']: raise MeasurementFailure('decoded_script_accounting_incomplete')
+                            if sample['scriptAccounting']['missingDecoded'] or sample['scriptAccounting']['missingTransfer'] or sample['scriptAccounting']['unaccountedResources'] or sample['scriptAccounting']['ambiguousRequests']: raise MeasurementFailure('decoded_script_accounting_incomplete')
                             if any(row['status'] == 'failed' for row in sample.get('exports', [])): raise MeasurementFailure('export_diagnostic_incomplete')
                             sample['status'] = 'passed'; sample['phase'] = 'complete'
                         except Exception as error:
@@ -1112,7 +1194,7 @@ def main():
                         finally:
                             if resources and pending_undo is not None:
                                 try:
-                                    sample['failureCleanup'] = undo_edit(resources[2], kind, pending_undo, config['artifactIds'][kind])
+                                    sample['failureCleanup'] = cleanup_edit(resources[2], kind, pending_undo, config['artifactIds'][kind])
                                 except Exception as cleanup_error:
                                     sample['failureCleanup'] = {'status': 'failed', 'failureCode': failure_code(cleanup_error)}
                             if trace:
@@ -1124,7 +1206,7 @@ def main():
                                 sample.setdefault('cdpErrors', trace.errors[:32])
                             report['samples'].append(sample); persist(); close(resources)
                             print(json.dumps({key: sample[key] for key in ('run', 'arm', 'kind', 'mode', 'status', 'failureStage', 'failureCode', 'editableMs', 'scriptTransferBytes', 'scriptDecodedBytes', 'pssDeltaBytes') if key in sample}), flush=True)
-                        if sample['status'] == 'failed' and not args.keep_going: aborted = True; break
+                        if sample['status'] == 'failed' and (not args.keep_going or sample.get('failureCleanup',{}).get('status') == 'failed'): aborted = True; break
                     if aborted: break
                 if aborted: break
             if aborted: break

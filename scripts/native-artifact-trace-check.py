@@ -22,7 +22,7 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_args): pass
     def do_GET(self):
         path = self.path.split('?')[0]
-        body = assets.get(path, b'<script>new Worker(location.hash.slice(1),{type:"module"}).onmessage=()=>document.documentElement.dataset.ready="yes";</script>')
+        body = assets.get(path, b'<script>const urls=location.hash==="#concurrent"?["/plain-worker.js?one","/plain-worker.js?two"]:[location.hash.slice(1)];let ready=0;for(const url of urls)new Worker(url,{type:"module"}).onmessage=()=>{if(++ready===urls.length)document.documentElement.dataset.ready="yes"};</script>')
         self.send_response(200)
         self.send_header('Content-Type', 'text/javascript' if path.endswith('.js') else 'text/html')
         if path == '/gzip-worker.js': self.send_header('Content-Encoding', 'gzip')
@@ -60,6 +60,26 @@ try:
             assert not totals(rows)['missingDecoded'] and not totals(rows)['missingTransfer']
             results.append({'encoding': 'gzip' if 'gzip' in path else 'identity', 'workerTransferBytes': entry['transferredBytes'], 'workerDecodedBytes': entry['decodedBytes'], 'importDurationMs': round(import_ms, 1), 'scriptRequests': totals(rows)['requests'], 'inflight': len(trace.inflight())})
             context.close()
+        context = browser.new_context()
+        page = context.new_page()
+        trace = Trace(context,page)
+        page.goto(f'http://127.0.0.1:{server.server_port}/#concurrent',wait_until='domcontentloaded')
+        page.wait_for_function('document.documentElement.dataset.ready==="yes"',timeout=30000)
+        page.wait_for_timeout(100)
+        trace.reconcile_decoded(page)
+        rows = trace.snapshot()
+        assert not trace.inflight()
+        if trace.ambiguous_requests:
+            # Timings that cannot identify a unique request must reject the
+            # real measurement; they cannot become a smaller successful total.
+            results.append({'encoding':'concurrent','refusedAsAmbiguous':True,'ambiguousRequests':trace.ambiguous_requests})
+        else:
+            assert not trace.unaccounted_script_resources
+            assert totals(rows)['requests'] == 4, 'two worker entries plus two shared imports must be retained'
+            assert totals(rows)['decodedBytes'] == 2 * (len(source) + len(dependency))
+            assert not totals(rows)['missingDecoded'] and not totals(rows)['missingTransfer']
+            results.append({'encoding':'concurrent','scriptRequests':totals(rows)['requests'],'scriptDecodedBytes':totals(rows)['decodedBytes'],'ambiguousRequests':0})
+        context.close()
         browser.close()
 finally:
     server.shutdown()

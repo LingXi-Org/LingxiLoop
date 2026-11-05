@@ -5,7 +5,7 @@
       "encoding": "identity",
       "workerTransferBytes": 1000203,
       "workerDecodedBytes": 1000054,
-      "importDurationMs": 2021.4,
+      "importDurationMs": 2025.1,
       "scriptRequests": 2,
       "inflight": 0
     },
@@ -13,11 +13,17 @@
       "encoding": "gzip",
       "workerTransferBytes": 1230,
       "workerDecodedBytes": 1000054,
-      "importDurationMs": 2021.4,
+      "importDurationMs": 2023.4,
       "scriptRequests": 2,
       "inflight": 0
+    },
+    {
+      "encoding": "concurrent",
+      "refusedAsAmbiguous": true,
+      "ambiguousRequests": 2
     }
   ],
   "performanceSamples": 0,
-  "qualified": false
+  "qualified": false,
+  "scope": "两项单 Worker 精确计数通过；并发同资源的真实浏览器状态无法唯一对账时拒绝资格。另有合成回归证明一个 CDP 行加两次完成事件必须记录两次或拒绝，不得少计通过。"
 }

@@ -275,7 +275,25 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
       assert.equal(changed.status,200,await changed.clone().text())
       assert.equal((await changed.json() as {thread:{status:string}}).thread.status,status)
     }
-    for(const scope of [{companyId:'another-company'},{projectId:'another-project'}])assert.ok([403,404].includes((await authenticated(base,'GET',undefined,scope)).status))
+    // Authorization follows the artifact's actual project, not a caller's
+    // project header. Exercise real resources the signed-in user cannot access.
+    const foreign = await seedCompanyWithAgent()
+    const isolatedProjectId = `isolated-${randomUUID()}`
+    const owner = (await pool.query<{created_by:string}>('SELECT created_by FROM projects WHERE id=$1',[projectId])).rows[0].created_by
+    await pool.query(`INSERT INTO projects(id,company_id,kind,name,created_by)
+      SELECT $1,company_id,kind,'隔离项目',created_by FROM projects WHERE id=$2`,[isolatedProjectId,projectId])
+    const foreignOwner = (await pool.query<{created_by:string}>('SELECT created_by FROM projects WHERE id=$1',[foreign.projectId])).rows[0].created_by
+    const isolatedDeck = await createSlides({companyId,projectId:isolatedProjectId,conversationId:null,title:'项目隔离验收',actorId:owner,origin:'user'})
+    const foreignDeck = await createSlides({companyId:foreign.companyId,projectId:foreign.projectId,conversationId:null,title:'租户隔离验收',actorId:foreignOwner,origin:'user'})
+    for(const target of [
+      {id:isolatedDeck.id,scope:{projectId:isolatedProjectId}},
+      {id:foreignDeck.id,scope:{companyId:foreign.companyId,projectId:foreign.projectId}},
+      {id:foreignDeck.id,scope:{companyId,projectId}},
+    ])for(const method of ['GET','POST','PATCH','DELETE']){
+      const suffix=method==='PATCH'||method==='DELETE'?`/${probe.id}`:''
+      const denied=await authenticated(`/artifacts/${target.id}/comments${suffix}`,method,method==='POST'?{anchor,label:'越权验收',text:'不应保存'}:method==='PATCH'?{status:'resolved'}:undefined,target.scope)
+      assert.ok([403,404].includes(denied.status),`unauthorized ${method} returned HTTP ${denied.status}`)
+    }
     assert.equal((await fetch(`${gateway.url}/api${base}`,{headers:{'x-company-id':companyId,'x-project-id':projectId}})).status,401)
     assert.equal((await authenticated(`${base}/${probe.id}`,'DELETE')).status,200)
     const remaining=await(await authenticated(base)).json() as {threads:Array<{id:string}>}
