@@ -25,11 +25,11 @@ window.addEventListener('message', event => {
       else pending.reject(new Error(data.error ?? '导出资源加载失败'))
       return
     }
-    if (data?.type !== 'start' || started || !['html', 'pdf', 'pptx', 'png', 'jpeg', 'svg'].includes(data.format)) return
+    if (started || data?.type !== 'svg-font-image' && (data?.type !== 'start' || !['html', 'pdf', 'pptx', 'png', 'jpeg', 'svg'].includes(data.format))) return
     started = true
     void (async () => {
       try {
-        const result = await executeExport(data.document as ArtifactDocument, {
+        const result = data.type==='svg-font-image'?await(await import('../svg-font-image')).svgFontImage(data.source,data.fontFamily,controller.signal):await executeExport(data.document as ArtifactDocument, {
           format: data.format as ArtifactExportFormat, signal: controller.signal,
           resolveAsset: asset => new Promise<Blob>((resolve, reject) => {
             controller.signal.throwIfAborted()

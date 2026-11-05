@@ -45,6 +45,7 @@ const mocks = {
 for (const [name, source] of Object.entries(mocks)) await writeFile(join(workspace, `${name}.js`), source)
 await writeFile(join(workspace, 'index.html'), '<html><head><meta charset="UTF-8"></head><body style="margin:0"><div id="root" style="height:100vh"></div><script type="module" src="/entry.tsx"></script></body></html>')
 await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<React.StrictMode>${options.checks==='canvas-pages'?'<div style={{height:"100%"}} data-fixture-workspace onKeyDown={event=>{if(event.key==="Escape"&&!event.defaultPrevented)event.currentTarget.hidden=true}}>':''}<NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'?'design':'slides'} title="原生编辑器验收" />${options.checks==='canvas-pages'?'</div>':''}</React.StrictMode>)`)
+await writeFile(join(workspace,'artifact-export.html'),(await readFile(join(root,'artifact-export.html'),'utf8')).replace('/src/features/artifacts/native/export/realm-entry.ts',`/@fs${root}/src/features/artifacts/native/export/realm-entry.ts`))
 let server, browser
 try {
   server = await createServer({ configFile: false, root: workspace, publicDir: join(root, 'public'), plugins: [react()], logLevel: 'error',
@@ -52,7 +53,7 @@ try {
       ...Object.entries({ '@/api/core/http': 'http', '@/api/core/realtime': 'realtime', '@/api/transport': 'transport', '@/stores/auth': 'auth', '@/lib/workspaceSession': 'workspaceSession' }).map(([find, name]) => ({ find, replacement: join(workspace, `${name}.js`) })),
       { find: 'react', replacement: dirname(require.resolve('react/package.json')) },
       { find: 'react-dom', replacement: dirname(require.resolve('react-dom/package.json')) },
-    ] }, server: { host: '127.0.0.1', port: 0, fs: { allow: [root, workspace, dependencyRoot] } } })
+    ] }, server: { host: '127.0.0.1', port: 0, hmr:false, fs: { allow: [root, workspace, dependencyRoot] } } })
   await server.listen()
   const address = server.httpServer.address()
   const baseUrl = `http://127.0.0.1:${address.port}`
@@ -71,7 +72,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','canvas-pages','canvas-pages-cas','canvas-flow']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   if(options.checks==='canvas-flow'){
@@ -85,7 +86,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     Object.assign(other,{canvasPageId:'canvas-second',x:0,y:options['flow-overlap']?0:700,width:800,height:600})
   }
   if(options.checks==='canvas-pages-cas')document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
-  if(['svg-font','svg-font-error','svg-font-cancel'].includes(options.checks)){
+  if(['svg-font','svg-font-error','svg-font-cancel','svg-font-module'].includes(options.checks)){
     const node={...createNode('svg','font-svg'),svg:'<svg xmlns="http://www.w3.org/2000/svg" width="600" height="150" viewBox="0 0 600 150"><text x="16" y="100" font-family="Merriweather" font-size="80" font-weight="700">Hello</text></svg>'}
     document.pages['page-1'].nodes[node.id]=node;document.pages['page-1'].nodeOrder.push(node.id)
     const group={...createNode('group','svg-font-group'),x:80,y:400,width:600,height:470,style:{fontFamily:'Merriweather'}}
@@ -117,13 +118,14 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     pageVersions: Object.fromEntries(document.pageOrder.map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
-  let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0
+  let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0,svgModuleBlocked=options.checks==='svg-font-module',svgModuleRequests=0
   const editorFontRequests=[]
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
   page.setDefaultTimeout(30_000)
   await page.addInitScript(()=>{window.__geometryLog=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(['visible','update-pages'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
-  page.on('console', message => { if (message.type() === 'error'&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))) errors.push(message.text()) })
+  page.on('console', message => { if (message.type() === 'error'&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))) errors.push(message.text()) })
+  if(options.checks==='svg-font-module')await page.route('**/svg-font-image.ts*',async route=>{svgModuleRequests++;if(svgModuleBlocked)await route.fulfill({status:503,body:'图形工具暂时无法加载'});else await route.continue()})
   if(['svg-font-error','svg-font-cancel'].includes(options.checks))await page.route('**/fonts/editors/**',async route=>{if(svgFontsBlocked){svgFontFailures++;await route.fulfill({status:503,body:'字体暂时无法加载'});return}if(svgFontsHeld)await new Promise(resolve=>{const previous=releaseSvgFonts;releaseSvgFonts=()=>{previous?.();resolve()}});await route.continue().catch(()=>{})})
   await page.route('**/isolated-fixture/**', async route => {
     const [, pageId, nodeId] = new URL(route.request().url()).pathname.match(/^\/isolated-fixture\/([^/]+)\/([^/]+)$/) ?? []
@@ -387,6 +389,17 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await trigger.click();const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true,'cached popup re-entry must focus its search');await search.press('Escape')
       assert.deepEqual(errors,[])
       return{kind:'isolated-font-lazy-cancellation-diagnostic',mode:kind,cancelAction:editorCase,actualModuleHeld:true,pendingSessionCancelled:true,lateModuleDoesNotStealFocus:true,cachedReentryFocus:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='svg-font-module'){
+      const target=page.locator('[data-node-id="font-svg"]'),original=pageHash(document)
+      await target.getByRole('button',{name:'重试图形',exact:true}).waitFor();const before=svgModuleRequests;assert.ok(before>0)
+      let navigations=0;page.on('framenavigated',frame=>{if(frame===page.mainFrame())navigations++})
+      svgModuleBlocked=false;await target.getByRole('button',{name:'重试图形',exact:true}).click();await target.locator('img').waitFor({timeout:20000})
+      assert.ok(svgModuleRequests>before,'retry must make a new actual module request after a cached import rejection')
+      assert.match(decodeURIComponent(await target.locator('img').getAttribute('src')),/@font-face/)
+      if(kind==='slides')await page.locator('[data-page-target="page-1"] image[href^="data:image/svg+xml"]').first().waitFor()
+      assert.equal(await page.locator('[data-artifact-export-realm]').count(),0);assert.equal(navigations,0);assert.equal(pageHash(document),original);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-svg-font-module-recovery',mode:kind,actualModule503:true,newModuleRequestOnRetry:true,packedImageRecovered:true,editorNotReloaded:true,realmDisposed:true,sourceAndHistoryUnchanged:true,scope:'actual browser ESM cache and real trusted renderer; controlled HTTP outage',consoleOrPageErrors:errors}
     }
     if(options.checks==='svg-font-error'){
       const target=page.locator('[data-node-id="font-svg"]'),original=document.pages['page-1'].nodes['font-svg'].svg

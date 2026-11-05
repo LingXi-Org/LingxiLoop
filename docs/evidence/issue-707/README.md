@@ -74,3 +74,5 @@ Design 独立页面回归使用 `--mode=design --checks=canvas-pages`，深色�
 当前截图目录包含 53 张来源图和 70 张原生/独立导出预览图；所有哈希见清单，局部历史截图不等于当前候选完整验收。
 
 SVG 图片的本地字体使用 `--checks=svg-font`；失败重试与迟到源变化分别使用 `--checks=svg-font-error` / `--checks=svg-font-cancel`。原始 SVG 保持不变，包含文字的实际可见图形才加载字体工具，完成缓存有界；墨迹边界与某个字体匹配不等于全部视觉状态通过。
+
+模块首次503恢复使用 `--checks=svg-font-module`，验证实际 ESM 缓存失败和新可信上下文重试；字体失败使用原入口。生产隔离导出故障回归为 `node scripts/native-export-fault-acceptance.mjs /tmp/export-faults.json`，它只使用固定夹具。

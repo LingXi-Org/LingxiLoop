@@ -1,0 +1,12 @@
+{
+  "kind": "isolated-svg-font-module-recovery",
+  "mode": "slides",
+  "actualModule503": true,
+  "newModuleRequestOnRetry": true,
+  "packedImageRecovered": true,
+  "editorNotReloaded": true,
+  "realmDisposed": true,
+  "sourceAndHistoryUnchanged": true,
+  "scope": "actual browser ESM cache and real trusted renderer; controlled HTTP outage",
+  "consoleOrPageErrors": []
+}
