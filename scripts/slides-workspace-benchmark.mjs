@@ -1,3 +1,4 @@
+import { addLegacyMedia } from './slides-workspace-fixture.mjs'
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { readFile, readdir, mkdir, writeFile, mkdtemp, rm } from 'node:fs/promises'
@@ -34,11 +35,8 @@ function fixture() {
 }
 const downloadAdapter = (await readFile(resolve(root, 'server/src/modules/artifacts/editor-downloads.ts'),'utf8')).split('`')[1]
 let files = fixture()
-function addLegacyMedia(files) {
-  files.set('project/slides/slide-1.html', Buffer.from(files.get(firstSlidePath).toString().replace('</section>', '<video src="/_blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" aria-label="旧媒体"></video><img data-video-youtube="abcdefghijk" alt="旧链接"></section>')))
-  return files
-}
-const fixtureFilesSha256 = sha(Buffer.concat([...(args.legacy ? addLegacyMedia(fixture()) : fixture()).values()]))
+
+const fixtureFilesSha256 = sha(Buffer.concat([...(args.legacy ? addLegacyMedia(fixture(), firstSlidePath) : fixture()).values()]))
 const requestedPaths = new Set()
 const server = createServer(async (req, res) => {
   try {
@@ -120,7 +118,7 @@ try {
   await cdp('Browser.setDownloadBehavior', {behavior:'allow',downloadPath:downloads,eventsEnabled:true})
   for (let run = 0; run < runs; run++) {
     files = fixture()
-    if(args.legacy) addLegacyMedia(files)
+    if(args.legacy) addLegacyMedia(files, firstSlidePath)
     const { browserContextId } = await cdp('Target.createBrowserContext')
     await cdp('Browser.setDownloadBehavior', {behavior:'allow',downloadPath:downloads,eventsEnabled:true,browserContextId})
     const { targetId } = await cdp('Target.createTarget', { url: 'about:blank', browserContextId })

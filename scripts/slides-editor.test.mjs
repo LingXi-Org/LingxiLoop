@@ -1,3 +1,4 @@
+import './slides-workspace-fixture.test.mjs'
 import './slides-debug.test.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'

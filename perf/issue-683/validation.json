@@ -71,6 +71,27 @@
       "passed": 1,
       "failed": 0,
       "coverage": "model-visible version_conflict/refresh, original files unchanged, false completion withheld"
+    },
+    "legacyGeneratedFixture": {
+      "regression": "scripts/slides-workspace-fixture.test.mjs",
+      "firstIndexedPage": "project/slides/goal.html",
+      "beforeFix": {
+        "passed": 1,
+        "failed": 1,
+        "reason": "unexpected unindexed project/slides/slide-1.html"
+      },
+      "afterFix": {
+        "passed": 2,
+        "failed": 0
+      },
+      "owningCommand": "node --test scripts/slides-editor.test.mjs",
+      "owningPassed": 28,
+      "owningFailed": 0,
+      "browserReport": "browser-whole01-legacy.json",
+      "legacyPlaceholders": 6,
+      "legacyMetadataPreserved": true,
+      "videoRequests": [],
+      "newProviderCalls": 0
     }
   },
   "ci": {
