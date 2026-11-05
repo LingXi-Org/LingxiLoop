@@ -95,18 +95,19 @@ async function captureCanvasPages(address) {
       }))})
       results.push({kind:'design',state,width:1440,height:1000,theme,file,controls:records.at(-1).controls})
     }
+    const zoom=async value=>{const button=page.getByRole('button',{name:`${value}%, Zoom`,exact:true});await button.waitFor();return button.innerText()}
     const picker=()=>page.getByTestId('dc-pages')
     const select=async name=>{await picker().click();await page.locator('[data-dc-pages-list]').getByText(name,{exact:true}).click();await page.waitForTimeout(200)}
     const actions=async name=>{await picker().click();await page.getByRole('button',{name:`Page “${name}” actions`,exact:true}).click()}
     try {
       await page.goto(url.href,{waitUntil:'networkidle'});await picker().waitFor();await page.evaluate(()=>document.fonts.ready)
-      await select('Page 1');assert.equal(await page.locator('[data-mega-artboard]').count(),3,'Canvas-page evidence requires exactly three original boards; remove probe leftovers from the disposable clone');cameras.first=await page.getByRole('button',{name:/%, Zoom$/}).innerText()
+      await select('Page 1');assert.equal(await page.locator('[data-mega-artboard]').count(),3,'Canvas-page evidence requires exactly three original boards; remove probe leftovers from the disposable clone');cameras.first=await zoom(22)
       await picker().click()
       if(await page.locator('[data-dc-pages-list]').getByText('Page 2',{exact:true}).count())await page.locator('[data-dc-pages-list]').getByText('Page 2',{exact:true}).click()
       else {assert.equal(await page.locator('[data-dc-pages-list] button').filter({hasText:/^Page /}).count(),1,'Use a fresh disposable page fixture, or reset its second page name to Page 2');await page.getByText('New page',{exact:true}).click()}
-      await page.waitForTimeout(300);cameras.second=await page.getByRole('button',{name:/%, Zoom$/}).innerText()
-      await select('Page 1');cameras.firstRestored=await page.getByRole('button',{name:/%, Zoom$/}).innerText()
-      await select('Page 2');cameras.secondRestored=await page.getByRole('button',{name:/%, Zoom$/}).innerText()
+      await page.waitForTimeout(300);cameras.second=await zoom(133)
+      await select('Page 1');cameras.firstRestored=await zoom(22)
+      await select('Page 2');cameras.secondRestored=await zoom(133)
       await picker().click();await screenshot('two-pages')
       await page.getByRole('button',{name:'Page “Page 2” actions',exact:true}).click();await screenshot('page-actions')
       await page.getByText('Rename',{exact:true}).click();await page.getByRole('textbox',{name:'Page name',exact:true}).waitFor();await screenshot('page-rename')

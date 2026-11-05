@@ -1,9 +1,9 @@
 {
   "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
   "cameras": {
-    "first": "19%",
+    "first": "22%",
     "second": "133%",
-    "firstRestored": "19%",
+    "firstRestored": "22%",
     "secondRestored": "133%"
   },
   "records": [
@@ -546,7 +546,7 @@
           "popup": null
         },
         {
-          "label": "Page 1, artboards: 4",
+          "label": "Page 1, artboards: 3",
           "role": "BUTTON",
           "rect": {
             "x": 21,
@@ -1206,7 +1206,7 @@
           "popup": null
         },
         {
-          "label": "Page 1, artboards: 4",
+          "label": "Page 1, artboards: 3",
           "role": "BUTTON",
           "rect": {
             "x": 21,
