@@ -1,0 +1,30 @@
+<section id="s3" style="background:#f5f4ed;color:#141413;font-family:Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<p style="font-family:system-ui, sans-serif;font-size:36px;font-weight:500;letter-spacing:1px;color:#d97757;margin:0">03 · 确认与累计确认</p>
+<h2 style="font-size:96px;font-weight:300;line-height:1.2;margin:0">ACK 说的是“下一段该从哪开始”</h2>
+<ul style="font-family:system-ui, sans-serif;font-size:32px;line-height:1.4;color:#3d3d3a;margin:0;padding-left:44px;display:flex;flex-direction:column;gap:20px">
+<li>累计确认：ACK 序号表示该序号之前的所有字节都已正确收到</li>
+<li>某个报文段丢失时，后到的数据可以先缓存，但 ACK 会停在缺口处不再前移</li>
+<li>ACK 携带在报文段里随数据捎带，不必为每个报文单独发送</li>
+</ul>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:16px">
+<p style="width:200px;font-family:system-ui, sans-serif;font-size:24px;color:#73726c;margin:0">发送端 → 接收端</p>
+<div style="display:flex;gap:16px;flex:1;font-family:system-ui, sans-serif;font-size:32px">
+<div style="flex:1;background:#faf9f5;border:1px solid #e3dacc;border-radius:12px;padding:24px">seq 0</div>
+<div style="flex:1;background:#faf9f5;border:1px dashed #d97757;border-radius:12px;padding:24px;color:#73726c">seq 3 丢失</div>
+<div style="flex:1;background:#faf9f5;border:1px solid #e3dacc;border-radius:12px;padding:24px">seq 6</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:16px">
+<p style="width:200px;font-family:system-ui, sans-serif;font-size:24px;color:#73726c;margin:0">返回的 ACK</p>
+<div style="display:flex;gap:16px;flex:1;font-family:system-ui, sans-serif;font-size:32px;color:#faf9f5">
+<div style="flex:1;background:#141413;border-radius:12px;padding:24px">ACK 3</div>
+<div style="flex:1;background:#141413;border-radius:12px;padding:24px">ACK 3</div>
+<div style="flex:1;background:#141413;border-radius:12px;padding:24px">ACK 3</div>
+</div>
+</div>
+<p style="font-family:system-ui, sans-serif;font-size:24px;color:#73726c;margin:0">缺口没补上，ACK 就一直是 3：这就是累计确认</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-family:system-ui, sans-serif;font-size:24px;color:#73726c;margin:0">第 3 页 · 可靠传输 6 讲</p>
+<aside>最容易讲错的是 ACK 的含义：它确认的是“序号小于 ACK 序号的字节”，而不是“我收到了这个序号”。用缺口图说明累计确认为什么会停在 3。</aside>
+</section>

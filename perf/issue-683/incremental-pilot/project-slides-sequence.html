@@ -1,0 +1,34 @@
+<section id="sequence" style="background:#f5f4ed;color:#141413;font-family:system-ui, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<p style="font-size:36px;font-weight:500;line-height:1.2;color:#73726c">TCP 可靠传输 · 2 / 6</p>
+<h2 style="font-family:Georgia, serif;font-size:72px;font-weight:300;line-height:1.2">序号给每个字节编号</h2>
+<p style="font-size:44px;font-weight:400;line-height:1.4;color:#3d3d3a">TCP 不按“段”编号，而是按<b>字节流</b>编号：每个字节都有唯一序号。</p>
+<div style="display:flex;flex-direction:row;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#faf9f5;padding:32px;border:1px solid #e3dacc;border-radius:16px">
+<p style="font-size:24px;font-weight:400;line-height:1.4;color:#73726c">序号 1000</p>
+<p style="font-size:44px;font-weight:500;line-height:1.3">A</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#faf9f5;padding:32px;border:1px solid #e3dacc;border-radius:16px">
+<p style="font-size:24px;font-weight:400;line-height:1.4;color:#73726c">序号 1001</p>
+<p style="font-size:44px;font-weight:500;line-height:1.3">B</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#faf9f5;padding:32px;border:1px solid #e3dacc;border-radius:16px">
+<p style="font-size:24px;font-weight:400;line-height:1.4;color:#73726c">序号 1002</p>
+<p style="font-size:44px;font-weight:500;line-height:1.3">C</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#faf9f5;padding:32px;border:1px solid #e3dacc;border-radius:16px">
+<p style="font-size:24px;font-weight:400;line-height:1.4;color:#73726c">序号 1003</p>
+<p style="font-size:44px;font-weight:500;line-height:1.3">D</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#141413;padding:32px;border-radius:16px">
+<p style="font-size:24px;font-weight:400;line-height:1.4;color:#e3dacc">序号 1004</p>
+<p style="font-size:44px;font-weight:500;line-height:1.3;color:#faf9f5">E</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:32px;font-weight:400;line-height:1.4">每段开头写<b>起始序号</b>，段内字节按顺序排下去，长度由“字节数”字段说明。</p>
+<p style="font-size:32px;font-weight:400;line-height:1.4">序号从 0 到 2³²−1 循环，所以要靠初始序号和已收字节数判断新旧。</p>
+</div>
+<p style="font-size:32px;font-weight:400;line-height:1.4;color:#3d3d3a">例：一段携带 A–D 共 4 字节，起始序号 1000；下一段从 1004（E）开始。</p>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#73726c">2 / 6 · TCP 可靠传输</p>
+<aside>强调“字节流编号”而不是“报文编号”：这样重传时只要补上缺的字节区间即可，接收方也能判断哪些字节已经收过。序号空间有限会回绕，因此不要只靠数字大小比较新旧，要看相对关系和已收字节数。</aside>
+</section>

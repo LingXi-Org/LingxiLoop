@@ -1,0 +1,17 @@
+<section id="seq" data-transition="fade" style="background:#fbfbf8;color:#141413;font-family:'Source Serif 4',Georgia,serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<h2 style="font-size:96px;font-weight:300;line-height:1.15">序号：给每个字节编号，把流切开</h2>
+<ul style="font-size:36px;line-height:1.6;color:#3d3d3a">
+<li>序号（seq）指本次报文数据中<b>第一个字节</b>在整个流中的位置</li>
+<li>字节流被切成报文段；序号让接收方可重组乱序到达的数据</li>
+<li>序号是32位的，可长期运行后回绕，两端需比较相对位置</li>
+</ul>
+<div style="display:flex;flex-direction:column;gap:12px;background:#fbfbf8;padding:32px;border:1px solid #e3dacc;border-radius:16px;font-family:'Space Grotesk',sans-serif">
+<p style="font-size:28px;line-height:1.5">字节位置　　0　1　2　3　4　5　6　7</p>
+<p style="font-size:28px;line-height:1.5">报文段A seq=0　■ ■ ■</p>
+<p style="font-size:28px;line-height:1.5">报文段B seq=3　　　　　■ ■ ■</p>
+<p style="font-size:28px;line-height:1.5">报文段C seq=6　　　　　　　　■ ■</p>
+<p style="font-size:24px;line-height:1.5;color:#3d3d3a">按序号拼回：0-1-2　3-4-5　6-7</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#6a7179">第 2 页 · 序号与字节流</p>
+<aside>强调序号按字节而不是按报文计数，所以“收到 0-4”就是字节 0,1,2,3,4 都到了。图示是三个报文段依次覆盖 0-2、3-5、6-7。</aside>
+</section>

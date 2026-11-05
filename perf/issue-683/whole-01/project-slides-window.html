@@ -1,0 +1,15 @@
+<section id="window" data-transition="fade" style="background:#faf9f5;color:#141413;font-family:'PingFang SC','Noto Sans SC',sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<p style="font-size:36px;letter-spacing:2px;color:#c9674a">TCP可靠传输 · 第 5 页</p>
+<h2 style="font-size:96px;font-weight:300;line-height:1.15">滑动窗口：一次能发多少，ACK 来了就前移</h2>
+<ul style="font-size:36px;line-height:1.6;color:#3d3d3a">
+<li>窗口划定已发未确认的范围，范围外不能先发</li>
+<li>接收窗口 rwnd 由对端给出，防止把慢的接收方淹没</li>
+<li>拥塞窗口 cwnd 反映网络状况，可发量取两者较小的一个</li>
+</ul>
+<div style="background:#fbfbf8;padding:32px;border:1px solid #e3dacc;border-radius:16px;font-family:'PingFang SC','Noto Sans SC',sans-serif">
+<p style="font-size:28px;line-height:1.6;color:#3d3d3a">已确认　｜已发未确认　｜　还能发　｜　不能发</p>
+<p style="font-size:28px;line-height:1.6">收到 ACK 后窗口整体右移，空出的额度才可继续发送</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#6a7179">第 5 页 · 滑动窗口与流量控制</p>
+<aside>区分两件事：流量控制看接收方有没有能力收，拥塞控制看网络有没有余量；发送方同时受两者约束。窗口滑动不是重发，而是把“可发”范围向前推进。</aside>
+</section>

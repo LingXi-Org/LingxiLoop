@@ -1,0 +1,24 @@
+<section id="s1" style="background:#f5f4ed;color:#141413;font-family:Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<p style="font-family:system-ui, sans-serif;font-size:36px;font-weight:500;letter-spacing:1px;color:#d97757">01 · 目标与边界</p>
+<h1 style="font-size:112px;font-weight:300;line-height:1.2;margin:0">TCP 想送达，但不替你保证一切</h1>
+<p style="font-family:system-ui, sans-serif;font-size:44px;line-height:1.4;color:#3d3d3a">把一份字节流，按原顺序交给对面的应用</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">
+<div style="background:#faf9f5;border:1px solid #e3dacc;border-radius:16px;padding:40px;display:flex;flex-direction:column;gap:16px">
+<h3 style="font-family:system-ui, sans-serif;font-size:32px;font-weight:600;margin:0">它保证</h3>
+<p style="font-family:system-ui, sans-serif;font-size:32px;line-height:1.4;margin:0">数据不丢、不重、按序，且能发现传输中的比特错误</p>
+</div>
+<div style="background:#141413;color:#faf9f5;border-radius:16px;padding:40px;display:flex;flex-direction:column;gap:16px">
+<h3 style="font-family:system-ui, sans-serif;font-size:32px;font-weight:600;margin:0">它不保证</h3>
+<p style="font-family:system-ui, sans-serif;font-size:32px;line-height:1.4;margin:0">送达时间、固定带宽；不加密内容，也不保证对方应用一定处理</p>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:24px;background:#faf9f5;border:1px solid #e3dacc;border-radius:16px;padding:40px">
+<p style="font-family:system-ui, sans-serif;font-size:32px;margin:0;color:#3d3d3a">应用写入字节流</p>
+<span style="font-size:44px;color:#d97757">→</span>
+<p style="font-family:system-ui, sans-serif;font-size:32px;font-weight:600;margin:0;padding:16px 32px;background:#d97757;color:#141413;border-radius:12px">TCP</p>
+<span style="font-size:44px;color:#d97757">→</span>
+<p style="font-family:system-ui, sans-serif;font-size:32px;margin:0;color:#3d3d3a">对端按原顺序读出</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-family:system-ui, sans-serif;font-size:24px;color:#73726c;margin:0">第 1 页 · 可靠传输 6 讲</p>
+<aside>开场先划清边界：TCP 的目标是把字节流完整、有序地送到对端应用，而不是延迟或带宽的保证。可靠性建立在序号、确认、重传和窗口之上，后面五页就是这条链路。</aside>
+</section>

@@ -1,0 +1,22 @@
+[
+  {
+    "seq": "1",
+    "elapsedMs": 43872,
+    "fileCount": 4
+  },
+  {
+    "seq": "2",
+    "elapsedMs": 90235,
+    "fileCount": 5
+  },
+  {
+    "seq": "3",
+    "elapsedMs": 124059,
+    "fileCount": 7
+  },
+  {
+    "seq": "4",
+    "elapsedMs": 176952,
+    "fileCount": 7
+  }
+]

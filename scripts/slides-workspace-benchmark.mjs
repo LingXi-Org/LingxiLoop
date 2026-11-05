@@ -1,3 +1,4 @@
+import { addLegacyMedia } from './slides-workspace-fixture.mjs'
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { readFile, readdir, mkdir, writeFile, mkdtemp, rm } from 'node:fs/promises'
@@ -17,7 +18,15 @@ const base = '/artifact-editor/slides/benchmark/'
 const sha = data => createHash('sha256').update(data).digest('hex')
 const imageId = '1234567890abcdef1234567890abcdef'
 const image = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="#426b46"/><circle cx="320" cy="180" r="120" fill="#b8d994"/><path d="M0 360L220 100 440 360Z" fill="#204c3b"/></svg>')
+const generatedDirectory = args.generated ? resolve(root, args.generated) : null
+const generatedEvidence = generatedDirectory ? JSON.parse(await readFile(resolve(generatedDirectory, 'result.json'), 'utf8')) : null
+const generatedFiles = generatedEvidence ? await Promise.all(generatedEvidence.files.map(async ({path}) =>
+  [path, await readFile(resolve(generatedDirectory, path.replaceAll('/', '-')))])) : null
+const firstSlidePath = generatedFiles ? `project/slides/${JSON.parse(generatedFiles.find(([path])=>path==='project/deck.json')[1]).order[0]}.html` : 'project/slides/slide-1.html'
+const firstTitle = generatedFiles ? generatedFiles.find(([path])=>path===firstSlidePath)[1].toString().match(/<h[123]\b[^>]*>([\s\S]*?)<\/h[123]>/i)?.[1].replace(/<[^>]+>/g, '').trim() : '幻灯片 1'
+if (!firstTitle) throw Error('Generated first slide needs a real heading for editing acceptance')
 function fixture() {
+  if (generatedFiles) return new Map(generatedFiles.map(([path, bytes])=>[path, Buffer.from(bytes)]))
   const order = Array.from({ length: 20 }, (_, i) => `slide-${i + 1}`)
   return new Map([
     ['project/deck.json', Buffer.from(JSON.stringify({ v: 4, lists: 'css', title: '20 页图片基准稿', order, sections: {}, faces: {}, designSystems: [] }))],
@@ -26,11 +35,8 @@ function fixture() {
 }
 const downloadAdapter = (await readFile(resolve(root, 'server/src/modules/artifacts/editor-downloads.ts'),'utf8')).split('`')[1]
 let files = fixture()
-function addLegacyMedia(files) {
-  files.set('project/slides/slide-1.html', Buffer.from(files.get('project/slides/slide-1.html').toString().replace('</section>', '<video src="/_blob/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" aria-label="旧媒体"></video><img data-video-youtube="abcdefghijk" alt="旧链接"></section>')))
-  return files
-}
-const fixtureFilesSha256 = sha(Buffer.concat([...(args.legacy ? addLegacyMedia(fixture()) : fixture()).values()]))
+
+const fixtureFilesSha256 = sha(Buffer.concat([...(args.legacy ? addLegacyMedia(fixture(), firstSlidePath) : fixture()).values()]))
 const requestedPaths = new Set()
 const server = createServer(async (req, res) => {
   try {
@@ -102,7 +108,7 @@ function cdp(method, params = {}, sessionId) {
   })
 }
 const delay = ms => new Promise(r => setTimeout(r, ms))
-const readyScript = `(() => { if (!location.pathname.startsWith('${base}')) return; const poll = () => { const stage = document.querySelector('[data-slides-editor]'); const add = [...document.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === '添加幻灯片' || b.textContent === '添加幻灯片'); if(stage && stage.getBoundingClientRect().width > 0 && add && !add.disabled && document.body.textContent.includes('幻灯片 1') && [...document.querySelectorAll('img')].some(img=>img.getBoundingClientRect().width>300 && img.complete && img.naturalWidth>0)) { requestAnimationFrame(() => { window.__slidesReady = performance.now(); }); } else requestAnimationFrame(poll); }; requestAnimationFrame(poll); })()`
+const readyScript = `(() => { if (!location.pathname.startsWith('${base}')) return; const poll = () => { const stage = document.querySelector('[data-slides-editor]'); const add = [...document.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === '添加幻灯片' || b.textContent === '添加幻灯片'); if(stage && stage.getBoundingClientRect().width > 0 && add && !add.disabled && document.body.textContent.includes(${JSON.stringify(firstTitle)}) && (${Boolean(generatedFiles)} || [...document.querySelectorAll('img')].some(img=>img.getBoundingClientRect().width>300 && img.complete && img.naturalWidth>0))) { requestAnimationFrame(() => { window.__slidesReady = performance.now(); }); } else requestAnimationFrame(poll); }; requestAnimationFrame(poll); })()`
 const samples = [], edits = [], regression = {}
 const parsingTraces = []
 const networkRequests = new Set()
@@ -112,7 +118,7 @@ try {
   await cdp('Browser.setDownloadBehavior', {behavior:'allow',downloadPath:downloads,eventsEnabled:true})
   for (let run = 0; run < runs; run++) {
     files = fixture()
-    if(args.legacy) addLegacyMedia(files)
+    if(args.legacy) addLegacyMedia(files, firstSlidePath)
     const { browserContextId } = await cdp('Target.createBrowserContext')
     await cdp('Browser.setDownloadBehavior', {behavior:'allow',downloadPath:downloads,eventsEnabled:true,browserContextId})
     const { targetId } = await cdp('Target.createTarget', { url: 'about:blank', browserContextId })
@@ -193,8 +199,13 @@ try {
         for (const { contextId, session } of contexts.values()) { const r = await cdp('Runtime.evaluate', { expression: `({url:location.pathname,buttons:[...document.querySelectorAll('button')].slice(0,25).map(b=>({aria:b.getAttribute('aria-label'),title:b.title,text:b.textContent})),heading:document.querySelector('h1')?.outerHTML,stage:document.querySelector('h1')?.parentElement?.outerHTML.slice(0,1300)})`, contextId, returnByValue: true }, session); console.error(r.result.value) }
         throw new Error('Editor did not become editable before timeout')
       }
+      if (args['screenshots-dir']) {
+        await mkdir(resolve(args['screenshots-dir']), {recursive:true})
+        const shot = await cdp('Page.captureScreenshot', {}, sessionId)
+        await writeFile(resolve(args['screenshots-dir'], `run-${run+1}-${phase}.png`), Buffer.from(shot.data, 'base64'))
+      }
       const evaluate = async expression => (await cdp('Runtime.evaluate', { expression, contextId: editorContext, returnByValue: true, awaitPromise: true }, editorSession)).result.value
-      const rect = await evaluate(`([...document.querySelectorAll('[data-text-path]')].find(e=>e.textContent==='幻灯片 1' && e.getBoundingClientRect().width>300)?.getBoundingClientRect().toJSON())`)
+      const rect = await evaluate(`([...document.querySelectorAll('[data-text-path]')].find(e=>e.textContent===${JSON.stringify(firstTitle)} && e.getBoundingClientRect().width>100)?.getBoundingClientRect().toJSON())`)
       if (!rect) throw Error('Visible title missing')
       for (const type of ['mousePressed', 'mouseReleased']) await cdp('Input.dispatchMouseEvent', { type, x:rect.x+50, y:rect.y+20, button:'left', clickCount:2 }, editorSession)
       let editable = false
@@ -208,6 +219,8 @@ try {
       measurement = { ...measurement, renderedMs: measurement.readyMs + offset, readyMs: interactiveAt + offset, editableVerified: true }
       if (phase === 'reopen') {
         await evaluate(`window.__editFeedback=null;document.addEventListener('beforeinput',()=>{const start=performance.now();requestAnimationFrame(()=>requestAnimationFrame(()=>{window.__editFeedback={durationMs:performance.now()-start,text:document.activeElement?.textContent}}))},{once:true,capture:true});true`)
+        await cdp('Input.dispatchKeyEvent',{type:'keyDown',key:'a',code:'KeyA',windowsVirtualKeyCode:65,modifiers:2},editorSession)
+        await cdp('Input.dispatchKeyEvent',{type:'keyUp',key:'a',code:'KeyA',windowsVirtualKeyCode:65,modifiers:2},editorSession)
         await cdp('Input.insertText',{text:'测试'},editorSession)
         let feedback
         for(let n=0;n<40 && !feedback;n++){feedback=await evaluate('window.__editFeedback');if(!feedback)await delay(25)}
@@ -274,7 +287,7 @@ try {
           }
           regression.exports.push({format:extension,bytes:bytes.length,sha256:sha(bytes)})
         }
-        regression.saved=Boolean(await waitFor(async()=>files.get('project/slides/slide-1.html')?.toString().includes('测试'),'saved edit'))
+        regression.saved=Boolean(await waitFor(async()=>files.get(firstSlidePath)?.toString().includes('测试'),'saved edit'))
         await click('button','放映')
         await click('menuitem','放映')
         const mode=await evaluate(`document.body.innerText.slice(0,300)`)
@@ -291,7 +304,7 @@ try {
         if(!regression.noVideoControls)throw Error('Video control is still mounted')
         if(args.legacy){
           regression.legacyPlaceholders=await evaluate(`document.querySelectorAll('[data-unsupported-media]').length`)
-          regression.legacyMetadataPreserved=files.get('project/slides/slide-1.html').toString().includes('data-video-youtube="abcdefghijk"')
+          regression.legacyMetadataPreserved=files.get(firstSlidePath).toString().includes('data-video-youtube="abcdefghijk"')
           regression.videoRequests=[...networkRequests].filter(url=>/youtube|vimeo|loom\.com|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/.test(url))
           if(!regression.legacyPlaceholders||!regression.legacyMetadataPreserved||regression.videoRequests.length)throw Error('Legacy media was lost or activated')
         }
@@ -299,13 +312,13 @@ try {
           for(const type of ['keyDown','keyUp']) await cdp('Input.dispatchKeyEvent',{type,key:'z',code:'KeyZ',windowsVirtualKeyCode:90,modifiers:redo?10:2},editorSession)
         }
         await undo(false)
-        regression.undo=Boolean(await waitFor(async()=>files.get('project/slides/slide-1.html')?.toString().includes('幻灯片 1'),'undo saved edit'))
+        regression.undo=Boolean(await waitFor(async()=>files.get(firstSlidePath)?.toString().includes(firstTitle),'undo saved edit'))
         await undo(true)
-        regression.redo=Boolean(await waitFor(async()=>files.get('project/slides/slide-1.html')?.toString().includes('测试'),'redo saved edit'))
+        regression.redo=Boolean(await waitFor(async()=>files.get(firstSlidePath)?.toString().includes('测试'),'redo saved edit'))
         await cdp('Page.navigate',{url:`${origin}/host`},sessionId)
         regression.savedReopen=Boolean(await waitFor(async()=>{
           for(const {contextId,session} of contexts.values()){
-            try {const r=await cdp('Runtime.evaluate',{contextId,expression:`location.pathname.startsWith('${base}') && Boolean([...document.querySelectorAll('[data-text-path]')].find(e=>e.textContent==='测试' && e.getBoundingClientRect().width>300))`,returnByValue:true},session);if(r.result.value)return true}catch{}
+            try {const r=await cdp('Runtime.evaluate',{contextId,expression:`location.pathname.startsWith('${base}') && Boolean([...document.querySelectorAll('[data-text-path]')].find(e=>e.textContent==='测试' && e.getBoundingClientRect().width>100))`,returnByValue:true},session);if(r.result.value)return true}catch{}
           }
           return false
         },'saved reopen'))
@@ -319,6 +332,11 @@ try {
   }
   const percentile = (values, p) => [...values].sort((a, b) => a - b)[Math.ceil(values.length * p) - 1]
   const report = { scope: 'Real Chromium, isolated sandboxed editor, deterministic local HTTP API fixture; not full product or production acceptance', source: args.label ?? 'baseline', measuredAt: new Date().toISOString(), browser: version, device: { platform: platform(), cpu: cpus()[0]?.model, logicalCpus: cpus().length, totalMemoryBytes: totalmem(), viewport: '1440x1000@1', cpuThrottling: 1 }, network: { latencyMs: 20, downloadMbps: 4, uploadMbps: 3, compression: args.compression === 'precompressed' ? 'build-time Brotli quality 11 for JS/CSS, gzip for fixture responses' : 'gzip', allRequests: true }, fixture: { variant: args.legacy ? 'legacy-compatibility' : 'fixed-performance', slides: 20, images: 20, imageSha256: sha(image), filesSha256: fixtureFilesSha256 }, runs, samples, regression, summary: Object.fromEntries(['cold', 'reopen'].map(phase => [phase, Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === phase).map(s => s.readyMs), p)]))])), editFeedback: { status: 'measured', definition: 'Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text', samples: edits, p95Ms: percentile(edits.map(edit=>edit.durationMs),.95) }, jsParseTime: {status:'unmeasured', note:'ScriptDuration measures execution, not a separate V8 parse trace'}, errors }
+  if (generatedFiles) {
+    report.scope = 'Real Chromium with model-generated saved files, sandboxed production editor, isolated local HTTP API fixture; not authenticated production acceptance'
+    report.fixture = {variant:'live-model-snapshot',sampleId:generatedEvidence.sampleId,slides:generatedEvidence.pageCount,filesSha256:fixtureFilesSha256}
+    if (runs < 10) { delete report.summary; delete report.editFeedback.p95Ms }
+  }
   if (args.retained) report.retainedReopen = {
     definition: 'Additional same-frame reopen: hide 100ms, start before a throttled authorization HTTP fixture, show the original iframe, verify loaded image and real double-click text editing. Excludes real product authorization cost; not a fresh navigation or cold measurement.',
     ...Object.fromEntries([.5, .75, .95].map(p => [`p${p * 100}Ms`, percentile(samples.filter(s => s.phase === 'retained').map(s => s.readyMs), p)])),

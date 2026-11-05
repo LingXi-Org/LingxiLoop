@@ -1,0 +1,19 @@
+<section id="ack" style="background:#f5f4ed;color:#141413;font-family:system-ui, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:40px">
+<p style="font-size:36px;font-weight:500;letter-spacing:2px;color:#d97757">第 3 页 · 确认与累计确认</p>
+<h2 style="font-family:Georgia, serif;font-size:80px;font-weight:400;line-height:1.15">确认号说的是：这个字节我还没收到</h2>
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:34px;line-height:1.5"><b style="font-weight:700;color:#d97757">① </b>接收方用确认号告诉发送方：此前的字节都已收到。</p>
+<p style="font-size:34px;line-height:1.5"><b style="font-weight:700;color:#d97757">② </b>确认号是累计的，一个较大的确认号就覆盖了之前的全部数据。</p>
+<p style="font-size:34px;line-height:1.5"><b style="font-weight:700;color:#d97757">③ </b>乱序到达的段先缓存，等缺口补上，确认号才能往前推。</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;background:#faf9f5;border:1px solid #e3dacc;border-radius:16px;padding:40px">
+<div style="display:flex;flex-direction:row;gap:16px;align-items:stretch">
+<div style="flex:1;background:#3d3d3a;color:#faf9f5;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:4px"><span style="font-size:26px">段 A</span><span style="font-size:28px">1–100 已到</span></div>
+<div style="flex:1;background:#faf9f5;color:#141413;border:2px dashed #d97757;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:4px"><span style="font-size:26px">段 B</span><span style="font-size:28px">101–200 未到</span></div>
+<div style="flex:1;background:#3d3d3a;color:#faf9f5;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:4px"><span style="font-size:26px">段 C</span><span style="font-size:28px">201–300 已缓存</span></div>
+</div>
+<p style="font-size:28px;line-height:1.5"><b style="font-weight:700;color:#d97757">收到的确认：ACK = 101</b>　B 之前都到了；B 没到，C 只能暂存，不能交给应用。</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#73726c">3 / 6</p>
+<aside>强调“ACK 101 表示期待 101 号字节”，与“已确认收到 100 号字节”是同一意思的两种说法，考试常考。</aside>
+</section>

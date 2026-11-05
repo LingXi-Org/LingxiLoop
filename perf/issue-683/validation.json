@@ -1,0 +1,128 @@
+{
+  "runtime": "3.8.25",
+  "local": {
+    "serverUnit": {
+      "command": "npm run server:test",
+      "exitCode": 0,
+      "passed": 208
+    },
+    "serverTypecheck": {
+      "command": "npm run server:typecheck",
+      "exitCode": 0
+    },
+    "serverLint": {
+      "command": "npm run server:lint",
+      "exitCode": 0
+    },
+    "casBeforeFix": {
+      "file": "slides-workspace-flow.test.ts",
+      "passed": 5,
+      "failed": 1,
+      "actual": "transaction_rolled_back",
+      "expected": "version_conflict"
+    },
+    "finalCasAfterFix": {
+      "command": "npm run test:integration -- --file slides-workspace-flow.test.ts",
+      "exitCode": 0,
+      "passed": 6,
+      "failed": 0,
+      "boundary": "formal25 Worker, PostgreSQL, real signed product HTTP ingress, no provider network"
+    },
+    "defaultLiveGate": {
+      "command": "npm run test:integration -- --file runtime-slides-generation.test.ts",
+      "exitCode": 0,
+      "skipped": 1,
+      "liveFlag": false
+    },
+    "realProviderQualification": {
+      "exitCodes": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "samples": [
+        "incremental-pilot",
+        "incremental-01",
+        "whole-01",
+        "incremental-02"
+      ],
+      "fullyQualified": false,
+      "stopReason": "HTTP429 in incremental-02; no further provider requests"
+    },
+    "browser": {
+      "report": "browser-whole01.json",
+      "exitCode": 0,
+      "scope": "generated six-page snapshot in sandboxed production editor with local HTTP API fixture",
+      "finalReport": "browser-whole01-final.json",
+      "finalPdfPages": 6,
+      "finalPdfPixelsEqualInspected": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    "designFailureAfterFix": {
+      "command": "npm run test:integration -- --file runtime-design-failure.test.ts",
+      "exitCode": 0,
+      "passed": 1,
+      "failed": 0,
+      "coverage": "model-visible version_conflict/refresh, original files unchanged, false completion withheld"
+    },
+    "legacyGeneratedFixture": {
+      "regression": "scripts/slides-workspace-fixture.test.mjs",
+      "firstIndexedPage": "project/slides/goal.html",
+      "beforeFix": {
+        "passed": 1,
+        "failed": 1,
+        "reason": "unexpected unindexed project/slides/slide-1.html"
+      },
+      "afterFix": {
+        "passed": 2,
+        "failed": 0
+      },
+      "owningCommand": "node --test scripts/slides-editor.test.mjs",
+      "owningPassed": 28,
+      "owningFailed": 0,
+      "browserReport": "browser-whole01-legacy.json",
+      "legacyPlaceholders": 6,
+      "legacyMetadataPreserved": true,
+      "videoRequests": [],
+      "newProviderCalls": 0
+    },
+    "harnessSplit": {
+      "sourceCommit": "1bd9e539bea64d9bfd356d68c7dcf3e7e4fdbaff",
+      "preSplitCommit": "b6782230bf6d1ca81972412e34eee55ff3fb5aff",
+      "runtime": "3.8.25",
+      "assembledSourceHash": "2cd6afd4037eb4596c6ef9b3ee1fdc6d00540d5fa3e05ee0820ba79f5e92e2cb",
+      "assembledPreSplitHash": "ed91050db5636b67511c9622dd75b87d50b92a28779772603468a823f551417d",
+      "nativeSourceAdmissionHash": "8c8b2433d1df76cf30f8410ce83278588ba2a19c2c99360dc341a37ab20369d1",
+      "candidateMatchesSource": true,
+      "allToolContractHashesMatch": true,
+      "allSkillIndexesMatch": true,
+      "unitPassed": 209,
+      "slidesNativePassed": 7,
+      "designNativePassed": 1,
+      "pinRewrite": false,
+      "changedCatalogRejectedBeforeContext": true,
+      "guidanceDeferred": true,
+      "realProviderCalls": 0,
+      "productionActions": 0,
+      "historicalPartialSamplesQualifyThisCandidate": false,
+      "testFixtureLeaseSettledThroughHostPort": true
+    }
+  },
+  "ci": {
+    "initialRun": 41939501157,
+    "initialConclusion": "failure",
+    "initialFailure": "pre-existing Design test expected the obsolete transaction_rolled_back code",
+    "correction": "expect version_conflict and assert version/refresh diagnostics without relaxing file/publication guards",
+    "finalRun": "see final handoff",
+    "splitFinalCi": "pending at this evidence commit; see PR checks and final handoff"
+  },
+  "independentReview": "parent sole integrator pending",
+  "production": "not deployed by this worker"
+}

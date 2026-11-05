@@ -4,14 +4,19 @@ import { createServer, type Server } from 'node:http'
 import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import express from 'express'
-import { skillIndex, type ActionContext, type WorkItem, type RunVerificationContext } from '@lyyzka/lingxios'
+import { readFileSync } from 'node:fs'
+import { assembleHarness, createLingxiOS, skillIndex, type ActionContext, type WorkItem, type RunVerificationContext } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { api } from '../api/router.js'
 import { env } from '../env.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { lingxiOSControl, runtimeModelConfiguration } from '../agent-runtime/runtime.js'
+import { bindProductRun } from '../agent-runtime/identity.js'
+import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { receiveAgentRequest } from '../agent-runtime/receive.js'
+import { createProductHarness } from '../agent-runtime/harness.js'
+import { createProductTools } from '../agent-runtime/tools.js'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { startNativeEventWorker } from '../agents/native-event-worker.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
@@ -93,6 +98,42 @@ async function invoke(current: Omit<WorkItem, 'leaseToken'>, name: string, input
     return result.value
   })
 }
+
+test('production-main admitted work retains its native pin after the guidance split', async () => {
+  const expected = JSON.parse(readFileSync(new URL('../../../perf/issue-683/harness-main-1bd9e539.json', import.meta.url), 'utf8'))
+  const control = await lingxiOSControl()
+  const profile = createProductHarness(createProductTools(lingxiOSControl), lingxiOSControl)
+  assert.equal(assembleHarness(profile).context.hash, expected.hash)
+  const policy = await syncConversationPolicy(control,companyId,'slides-flow-source')
+  const identity = (await control.conversations.ingest({tenantId:companyId,conversationId:'slides-flow-source',policyVersion:policy.version,
+    messageId:'source-harness-request',version:1,author:{id:userId,kind:'human'},text:'Continue the saved Slides safely.',mentions:[builderId]},
+    {mode:'execute',codeExecution:'disabled',executionClass:'conversation'})).runs[0]
+  assert.ok(identity)
+  let incompatible: Awaited<ReturnType<typeof createLingxiOS>> | undefined
+  const host = control.connectWorker({workerId:'same-harness-release',workKinds:['turn']})
+  let claimed: WorkItem | null = null
+  try {
+    await bindProductRun(pool,identity,'slides-flow-source')
+    const pin = async () => (await pool.query('SELECT meta FROM lingxios.agent_work_items WHERE id=$1',[identity.runId])).rows[0].meta.harnessHash
+    assert.equal(await pin(),expected.admissionHash)
+    claimed = await host.claimWork(); assert.ok(claimed); assert.equal(claimed.id,identity.runId)
+    assert.equal((await host.loadContext(claimed)).harness?.hash,expected.admissionHash)
+    const changed = {...profile,capabilities:profile.capabilities.map(capability=>({...capability,
+      skills:capability.skills?.map(skill=>skill.name==='claude-slides'?{...skill,body:skill.body+' Deferred guidance fixture.'}:skill)}))}
+    assert.notEqual(assembleHarness(changed).context.hash,expected.hash,'a skill-body change alone changes the assembled harness')
+    let changedContextLoaded = false
+    incompatible = await createLingxiOS({database:pool,background:{role:'passive'},harness:changed,
+      contextProvider:{async loadContext(){changedContextLoaded=true;throw new Error('changed guidance must be rejected before product context')}}})
+    await assert.rejects(incompatible.connectWorker({workerId:'changed-harness-release',workKinds:['turn']}).loadContext(claimed),/harness version mismatch/)
+    assert.equal(changedContextLoaded,false)
+    assert.equal(await pin(),expected.admissionHash,'no persisted pin may be rewritten')
+    assert.equal((await host.loadContext(claimed)).harness?.hash,expected.admissionHash)
+  } finally {
+    await incompatible?.stop(); await control.cancel(identity)
+    if (claimed) await host.completeWork(claimed,{status:'cancelled'})
+    assert.equal((await control.readRun(identity))?.status,'cancelled','the fixture must settle its own claimed lease')
+  }
+})
 
 test('authenticated Slides cooperation keeps source provenance and completes in its dedicated room', { timeout: 45_000 }, async () => {
   const deck = await createSlides({ companyId, projectId, conversationId: 'slides-flow-source', title: 'Shared deck', actorId: userId, origin: 'user' })
@@ -184,7 +225,8 @@ test('a sent editor comment is delivered to the dedicated room through the real 
   assert.equal(snapshot.threads[0]?.agent?.status, 'delivered')
 })
 
-for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14→10→1→1→1 Slides writes and delivers once' : 'authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
+for (const mode of ['single','chained','conflict']) test(mode === 'conflict' ? 'formal25 worker receives actionable CAS refresh diagnostics without changing saved files' : mode === 'chained' ? 'formal25 worker verifies 14→10→1→1→1 Slides writes and delivers once' : 'authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
+  const chained = mode === 'chained'
   const created = await request(`/projects/${projectId}/slides`, 'POST', { title: 'Model flow' })
   assert.equal(created.status, 201)
   const deck = await created.json() as { id: string }
@@ -219,6 +261,7 @@ for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14�
     { name: 'skills__load', args: { name, version, hash: skillHash } },
     { name: 'slides__read_file', args: { artifactId: deck.id, path } },
     ...(chained ? [{name:'slides__read_file',args:{artifactId:deck.id,path:'project/deck.json'}}] : []),
+    ...(mode === 'conflict' ? [{name:'slides__write_files',args:{artifactId:deck.id,files:{[path]:{content:'Must not be saved',ifMatch:'0'.repeat(64)}}}}] : []),
     ...writes,
     { name: 'slides__read_file', args: { artifactId: deck.id, path } },
     { name: 'slides__current', args: { artifactId: deck.id } },
@@ -238,6 +281,12 @@ for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14�
       const prompt = JSON.stringify(input.messages)
       assert.ok(prompt.includes('Original title'), 'persisted editor selection/source must reach the actual model request')
       if (issued === 4) assert.ok(prompt.includes(hash), 'the model must receive the preceding read receipt')
+      if (mode === 'conflict' && issued === 5) {
+        assert.ok(prompt.includes('version_conflict'),'model must receive the supported conflict code')
+        assert.ok(prompt.includes('refresh'),'model must receive refresh recovery guidance')
+        const beforeRecovery = await pool.query('SELECT body FROM artifact_files WHERE artifact_id=$1 AND path=$2',[deck.id,path])
+        assert.equal(beforeRecovery.rows[0].body.toString('utf8'),original,'rejected CAS must leave the human file intact before recovery')
+      }
       if (issued === 6) assert.ok(prompt.includes('Saved by the native Slides tool'), 'read-back must reach the model before completion')
       const call = { id: `slides-model-${issued}`, type: 'function', function: { name: step.name, arguments: JSON.stringify(step.args) } }
       const usage = { prompt_tokens: 10, completion_tokens: 12 }
@@ -265,6 +314,14 @@ for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14�
     assert.deepEqual(providerErrors, [])
     assert.equal((await control.readRun(run))?.status, 'succeeded')
     assert.equal(issued, calls.length)
+    if(mode === 'conflict'){
+      const failed = await pool.query("SELECT result FROM lingxios.agent_action_ledger ledger JOIN lingxios.agent_action_intents intent USING(idempotency_key) WHERE intent.intent->>'workId'=$1 AND result->>'ok'='false'",[run.runId])
+      assert.equal(failed.rows.length,1)
+      assert.equal(failed.rows[0].result.code,'version_conflict')
+      assert.equal(failed.rows[0].result.executionState,'no_effect')
+      assert.equal(failed.rows[0].result.diagnostics.category,'version')
+      assert.equal(failed.rows[0].result.diagnostics.recovery,'refresh')
+    }
     if(chained){
       const receipts=await pool.query("SELECT (SELECT count(*)::int FROM jsonb_object_keys(intent.intent->'action'->'args'->'files')) AS count FROM lingxios.agent_action_intents intent WHERE intent.intent->>'workId'=$1 AND intent.intent->'action'->>'action'='slides.write_files' ORDER BY intent.recorded_at,intent.idempotency_key",[run.runId])
       assert.deepEqual(receipts.rows.map(row=>row.count),[14,10,1,1,1])

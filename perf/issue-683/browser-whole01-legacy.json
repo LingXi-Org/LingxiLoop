@@ -1,0 +1,764 @@
+{
+  "scope": "Real Chromium with model-generated saved files, sandboxed production editor, isolated local HTTP API fixture; not authenticated production acceptance",
+  "source": "issue683-generated-goal-legacy",
+  "measuredAt": "2026-11-05T00:33:43.224Z",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/154.0.8037.57",
+    "revision": "@73c14f6228d7cd537c855007e8f88678969cc0eb",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+    "jsVersion": "15.4.80.11"
+  },
+  "device": {
+    "platform": "linux",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logicalCpus": 5,
+    "totalMemoryBytes": 18882662400,
+    "viewport": "1440x1000@1",
+    "cpuThrottling": 1
+  },
+  "network": {
+    "latencyMs": 20,
+    "downloadMbps": 4,
+    "uploadMbps": 3,
+    "compression": "gzip",
+    "allRequests": true
+  },
+  "fixture": {
+    "variant": "live-model-snapshot",
+    "sampleId": "whole-01",
+    "slides": 6,
+    "filesSha256": "2e07f21764f841f571a08fe662ec7583b9cb74fbc30936bc62f8bce27c5544c7"
+  },
+  "runs": 1,
+  "samples": [
+    {
+      "run": 1,
+      "phase": "cold",
+      "readyMs": 3899.2999999998137,
+      "timeOrigin": 1793838793008.2,
+      "resources": [
+        {
+          "name": "/artifact-editor/slides-assets/editor-VDCTX6Z4.js",
+          "initiatorType": "script",
+          "startTime": 81.6999999997206,
+          "requestStart": 109,
+          "responseStart": 308.1999999997206,
+          "responseEnd": 2589,
+          "transferSize": 888559,
+          "encodedBodySize": 888259,
+          "decodedBodySize": 2673670,
+          "duration": 2507.3000000002794
+        },
+        {
+          "name": "/artifact-editor/slides-assets/editor-00c9d314277a0a28.css",
+          "initiatorType": "link",
+          "startTime": 82,
+          "requestStart": 108.89999999990687,
+          "responseStart": 131.89999999990687,
+          "responseEnd": 483.5,
+          "transferSize": 71366,
+          "encodedBodySize": 71066,
+          "decodedBodySize": 519266,
+          "duration": 401.5
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+          "initiatorType": "other",
+          "startTime": 82.10000000009313,
+          "requestStart": 109,
+          "responseStart": 195.10000000009313,
+          "responseEnd": 1226.7999999998137,
+          "transferSize": 241539,
+          "encodedBodySize": 241239,
+          "decodedBodySize": 821198,
+          "duration": 1144.6999999997206
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-XTLB25XY.js",
+          "initiatorType": "other",
+          "startTime": 82.1999999997206,
+          "requestStart": 109.10000000009313,
+          "responseStart": 138.5,
+          "responseEnd": 141.5,
+          "transferSize": 1161,
+          "encodedBodySize": 861,
+          "decodedBodySize": 1528,
+          "duration": 59.3000000002794
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-3EEM4S6B.js",
+          "initiatorType": "other",
+          "startTime": 82.29999999981374,
+          "requestStart": 109.10000000009313,
+          "responseStart": 138.5,
+          "responseEnd": 152.39999999990687,
+          "transferSize": 1591,
+          "encodedBodySize": 1291,
+          "decodedBodySize": 2581,
+          "duration": 70.10000000009313
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+          "initiatorType": "other",
+          "startTime": 82.39999999990687,
+          "requestStart": 109.10000000009313,
+          "responseStart": 138.89999999990687,
+          "responseEnd": 195.39999999990687,
+          "transferSize": 11731,
+          "encodedBodySize": 11431,
+          "decodedBodySize": 27174,
+          "duration": 113
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+          "initiatorType": "other",
+          "startTime": 94.89999999990687,
+          "requestStart": 141.60000000009313,
+          "responseStart": 198.5,
+          "responseEnd": 207,
+          "transferSize": 490,
+          "encodedBodySize": 190,
+          "decodedBodySize": 265,
+          "duration": 112.10000000009313
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/__deck/session",
+          "initiatorType": "fetch",
+          "startTime": 2639.7999999998137,
+          "requestStart": 2642.7999999998137,
+          "responseStart": 2643.600000000093,
+          "responseEnd": 2667.2999999998137,
+          "transferSize": 336,
+          "encodedBodySize": 36,
+          "decodedBodySize": 16,
+          "duration": 27.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "initiatorType": "fetch",
+          "startTime": 2995.399999999907,
+          "requestStart": 2996.100000000093,
+          "responseStart": 2997.5,
+          "responseEnd": 3018.399999999907,
+          "transferSize": 970,
+          "encodedBodySize": 670,
+          "decodedBodySize": 1576,
+          "duration": 23
+        },
+        {
+          "name": "/artifact-editor/slides-assets/anthropicons-fizzy-lake-D4byUNVq.woff2",
+          "initiatorType": "css",
+          "startTime": 3066.100000000093,
+          "requestStart": 3150.6999999997206,
+          "responseStart": 3153.6999999997206,
+          "responseEnd": 3370.6999999997206,
+          "transferSize": 88360,
+          "encodedBodySize": 88060,
+          "decodedBodySize": 88012,
+          "duration": 304.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/deck.json",
+          "initiatorType": "fetch",
+          "startTime": 3180.600000000093,
+          "requestStart": 3181.399999999907,
+          "responseStart": 3182,
+          "responseEnd": 3210.100000000093,
+          "transferSize": 1249,
+          "encodedBodySize": 949,
+          "decodedBodySize": 2143,
+          "duration": 29.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "initiatorType": "fetch",
+          "startTime": 3212.7999999998137,
+          "requestStart": 3213.600000000093,
+          "responseStart": 3214.2999999998137,
+          "responseEnd": 3237.5,
+          "transferSize": 970,
+          "encodedBodySize": 670,
+          "decodedBodySize": 1576,
+          "duration": 24.700000000186265
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/ds/slides-builtin/tokens.json",
+          "initiatorType": "fetch",
+          "startTime": 3259,
+          "requestStart": 3259.600000000093,
+          "responseStart": 3260.2999999998137,
+          "responseEnd": 3286.6999999997206,
+          "transferSize": 791,
+          "encodedBodySize": 491,
+          "decodedBodySize": 2325,
+          "duration": 27.699999999720603
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/ds/baoyu-ember/tokens.json",
+          "initiatorType": "fetch",
+          "startTime": 3288,
+          "requestStart": 3288.600000000093,
+          "responseStart": 3289.2999999998137,
+          "responseEnd": 3317.5,
+          "transferSize": 1796,
+          "encodedBodySize": 1496,
+          "decodedBodySize": 5933,
+          "duration": 29.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/ds/baoyu-seazar/tokens.json",
+          "initiatorType": "fetch",
+          "startTime": 3323.399999999907,
+          "requestStart": 3324,
+          "responseStart": 3324.7999999998137,
+          "responseEnd": 3354.600000000093,
+          "transferSize": 3001,
+          "encodedBodySize": 2701,
+          "decodedBodySize": 11291,
+          "duration": 31.200000000186265
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/ack.html",
+          "initiatorType": "fetch",
+          "startTime": 3358.100000000093,
+          "requestStart": 3358.600000000093,
+          "responseStart": 3359.5,
+          "responseEnd": 3380.899999999907,
+          "transferSize": 1176,
+          "encodedBodySize": 876,
+          "decodedBodySize": 1383,
+          "duration": 22.799999999813735
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/example.html",
+          "initiatorType": "fetch",
+          "startTime": 3358.600000000093,
+          "requestStart": 3358.899999999907,
+          "responseStart": 3360.100000000093,
+          "responseEnd": 3384,
+          "transferSize": 1195,
+          "encodedBodySize": 895,
+          "decodedBodySize": 1306,
+          "duration": 25.399999999906868
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/goal.html",
+          "initiatorType": "fetch",
+          "startTime": 3358.7999999998137,
+          "requestStart": 3359.1999999997206,
+          "responseStart": 3360.1999999997206,
+          "responseEnd": 3390.6999999997206,
+          "transferSize": 1128,
+          "encodedBodySize": 828,
+          "decodedBodySize": 1118,
+          "duration": 31.899999999906868
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/retrans.html",
+          "initiatorType": "fetch",
+          "startTime": 3358.7999999998137,
+          "requestStart": 3360.100000000093,
+          "responseStart": 3360.5,
+          "responseEnd": 3390.899999999907,
+          "transferSize": 1199,
+          "encodedBodySize": 899,
+          "decodedBodySize": 1532,
+          "duration": 32.10000000009313
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/seq.html",
+          "initiatorType": "fetch",
+          "startTime": 3358.899999999907,
+          "requestStart": 3370.899999999907,
+          "responseStart": 3371.2999999998137,
+          "responseEnd": 3393.2999999998137,
+          "transferSize": 1205,
+          "encodedBodySize": 905,
+          "decodedBodySize": 1574,
+          "duration": 34.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/window.html",
+          "initiatorType": "fetch",
+          "startTime": 3359.100000000093,
+          "requestStart": 3381.1999999997206,
+          "responseStart": 3381.600000000093,
+          "responseEnd": 3405,
+          "transferSize": 1237,
+          "encodedBodySize": 937,
+          "decodedBodySize": 1461,
+          "duration": 45.89999999990687
+        }
+      ],
+      "marks": [
+        {
+          "name": "slides:runtime-start",
+          "startTime": 2640
+        },
+        {
+          "name": "slides:files-boot-start",
+          "startTime": 2967.399999999907
+        },
+        {
+          "name": "slides:runtime-ready",
+          "startTime": 2968.1999999997206
+        },
+        {
+          "name": "slides:write-access-ready",
+          "startTime": 2972.899999999907
+        },
+        {
+          "name": "slides:files-port-ready",
+          "startTime": 2973.1999999997206
+        },
+        {
+          "name": "slides:files-boot-ready",
+          "startTime": 2975.399999999907
+        },
+        {
+          "name": "slides:react-render-requested",
+          "startTime": 2976.5
+        },
+        {
+          "name": "slides:first-slide-painted",
+          "startTime": 3622.600000000093
+        },
+        {
+          "name": "slides:document-ready",
+          "startTime": 3715.399999999907
+        }
+      ],
+      "body": "\n\n\n\n\n\n\n70%\n幻灯片 1 / 6: TCP的可靠：按序、不重、不丢地交付字节流\nTCP的可靠：按序、不重、不丢地交付字节流\n目标：应用交出一串字节，收到的是同一串字节，不重不漏、顺序不变\n网络本身只尽力而为：可能丢包、乱序、重复、延迟抖动\nTCP不保证速度、低延迟，也不保证每条报文被单独送达\n不支持的媒体\n不支持的媒体\n第 1 页 · 目标与边界\n\n\n\n\n\nTCP的可靠：按序、不重、不丢地交付字节流\n目标：应用交出一串字节，收到的是同一串字节，不重不漏、顺序不变\n网络本身只尽力而为：可能丢包、乱序、重复、延迟抖动\nTCP不保证速度、低延迟，也不保证每条报文被单独送达\n不支持的媒体\n不支持的媒体\n第 1 页 · 目标与边界\n1\n\n序号：给每个字节编号，把流切开\n序号（seq）指本次报文数据中第一个字节在整个流中的位置\n字节流被切成报文段；序号让接收方可重组乱序到达的数据\n序号是32位的，可长期运行后回绕，两端需比较相对位置\n字节位置　　0　1　2　3　4　5　6　7\n报文段A seq=0　■ ■ ■\n报文段B seq=3　　　　　■ ■ ■\n报文段C s",
+      "renderedMs": 3616.5,
+      "editableVerified": true,
+      "transferredBytes": 1323230,
+      "nonNetworkEncodedBytes": 2288,
+      "jsHeapUsedBytes": 20142876,
+      "scriptDurationSeconds": 0.775295,
+      "taskDurationSeconds": 1.253723
+    },
+    {
+      "run": 1,
+      "phase": "reopen",
+      "readyMs": 3135.899999999907,
+      "timeOrigin": 1793838796947.7,
+      "resources": [
+        {
+          "name": "/artifact-editor/slides-assets/editor-VDCTX6Z4.js",
+          "initiatorType": "script",
+          "startTime": 41.5,
+          "requestStart": 42.6999999997206,
+          "responseStart": 138.09999999962747,
+          "responseEnd": 2505.6999999997206,
+          "transferSize": 888559,
+          "encodedBodySize": 888259,
+          "decodedBodySize": 2673670,
+          "duration": 2464.1999999997206
+        },
+        {
+          "name": "/artifact-editor/slides-assets/editor-00c9d314277a0a28.css",
+          "initiatorType": "link",
+          "startTime": 41.799999999813735,
+          "requestStart": 42.59999999962747,
+          "responseStart": 58,
+          "responseEnd": 477.79999999981374,
+          "transferSize": 71366,
+          "encodedBodySize": 71066,
+          "decodedBodySize": 519266,
+          "duration": 436
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-XTLB25XY.js",
+          "initiatorType": "other",
+          "startTime": 41.89999999990687,
+          "requestStart": 44.299999999813735,
+          "responseStart": 76.1999999997206,
+          "responseEnd": 85.5,
+          "transferSize": 1161,
+          "encodedBodySize": 861,
+          "decodedBodySize": 1528,
+          "duration": 43.60000000009313
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-QC32QTJR.js",
+          "initiatorType": "other",
+          "startTime": 41.89999999990687,
+          "requestStart": 42.799999999813735,
+          "responseStart": 75.89999999990687,
+          "responseEnd": 1192.5999999996275,
+          "transferSize": 241539,
+          "encodedBodySize": 241239,
+          "decodedBodySize": 821198,
+          "duration": 1150.6999999997206
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-3EEM4S6B.js",
+          "initiatorType": "other",
+          "startTime": 42,
+          "requestStart": 44.39999999990687,
+          "responseStart": 76.5,
+          "responseEnd": 100.39999999990687,
+          "transferSize": 1591,
+          "encodedBodySize": 1291,
+          "decodedBodySize": 2581,
+          "duration": 58.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-JV5WIUZU.js",
+          "initiatorType": "other",
+          "startTime": 42,
+          "requestStart": 44.39999999990687,
+          "responseStart": 78.1999999997206,
+          "responseEnd": 166.6999999997206,
+          "transferSize": 11731,
+          "encodedBodySize": 11431,
+          "decodedBodySize": 27174,
+          "duration": 124.6999999997206
+        },
+        {
+          "name": "/artifact-editor/slides-assets/chunk-I7AUKTXE.js",
+          "initiatorType": "other",
+          "startTime": 42.1999999997206,
+          "requestStart": 85.6999999997206,
+          "responseStart": 140.79999999981374,
+          "responseEnd": 154.59999999962747,
+          "transferSize": 490,
+          "encodedBodySize": 190,
+          "decodedBodySize": 265,
+          "duration": 112.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/__deck/session",
+          "initiatorType": "fetch",
+          "startTime": 2519.6999999997206,
+          "requestStart": 2520.5,
+          "responseStart": 2521.2999999998137,
+          "responseEnd": 2542.6999999997206,
+          "transferSize": 336,
+          "encodedBodySize": 36,
+          "decodedBodySize": 16,
+          "duration": 23
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "initiatorType": "fetch",
+          "startTime": 2545.2999999998137,
+          "requestStart": 2545.7999999998137,
+          "responseStart": 2546.399999999907,
+          "responseEnd": 2569.6999999997206,
+          "transferSize": 970,
+          "encodedBodySize": 670,
+          "decodedBodySize": 1576,
+          "duration": 24.399999999906868
+        },
+        {
+          "name": "/artifact-editor/slides-assets/anthropicons-fizzy-lake-D4byUNVq.woff2",
+          "initiatorType": "css",
+          "startTime": 2568.7999999998137,
+          "requestStart": 2590.1999999997206,
+          "responseStart": 2593.1999999997206,
+          "responseEnd": 2824.2999999998137,
+          "transferSize": 88360,
+          "encodedBodySize": 88060,
+          "decodedBodySize": 88012,
+          "duration": 255.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/deck.json",
+          "initiatorType": "fetch",
+          "startTime": 2611.0999999996275,
+          "requestStart": 2611.7999999998137,
+          "responseStart": 2614.7999999998137,
+          "responseEnd": 2635.7999999998137,
+          "transferSize": 1249,
+          "encodedBodySize": 949,
+          "decodedBodySize": 2143,
+          "duration": 24.700000000186265
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/_files.json",
+          "initiatorType": "fetch",
+          "startTime": 2643.5,
+          "requestStart": 2644,
+          "responseStart": 2644.899999999907,
+          "responseEnd": 2668.2999999998137,
+          "transferSize": 970,
+          "encodedBodySize": 670,
+          "decodedBodySize": 1576,
+          "duration": 24.799999999813735
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/ds/slides-builtin/tokens.json",
+          "initiatorType": "fetch",
+          "startTime": 2669.5,
+          "requestStart": 2670.0999999996275,
+          "responseStart": 2670.5999999996275,
+          "responseEnd": 2695.2999999998137,
+          "transferSize": 791,
+          "encodedBodySize": 491,
+          "decodedBodySize": 2325,
+          "duration": 25.799999999813735
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/ds/baoyu-ember/tokens.json",
+          "initiatorType": "fetch",
+          "startTime": 2700.899999999907,
+          "requestStart": 2703.1999999997206,
+          "responseStart": 2703.899999999907,
+          "responseEnd": 2734.1999999997206,
+          "transferSize": 1796,
+          "encodedBodySize": 1496,
+          "decodedBodySize": 5933,
+          "duration": 33.299999999813735
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/ds/baoyu-seazar/tokens.json",
+          "initiatorType": "fetch",
+          "startTime": 2735.2999999998137,
+          "requestStart": 2735.899999999907,
+          "responseStart": 2736.5,
+          "responseEnd": 2767.0999999996275,
+          "transferSize": 3001,
+          "encodedBodySize": 2701,
+          "decodedBodySize": 11291,
+          "duration": 31.799999999813735
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/ack.html",
+          "initiatorType": "fetch",
+          "startTime": 2768.2999999998137,
+          "requestStart": 2768.899999999907,
+          "responseStart": 2769.5999999996275,
+          "responseEnd": 2794.399999999907,
+          "transferSize": 1176,
+          "encodedBodySize": 876,
+          "decodedBodySize": 1383,
+          "duration": 26.100000000093132
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/example.html",
+          "initiatorType": "fetch",
+          "startTime": 2768.5,
+          "requestStart": 2769.399999999907,
+          "responseStart": 2770,
+          "responseEnd": 2802.899999999907,
+          "transferSize": 1195,
+          "encodedBodySize": 895,
+          "decodedBodySize": 1306,
+          "duration": 34.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/goal.html",
+          "initiatorType": "fetch",
+          "startTime": 2768.6999999997206,
+          "requestStart": 2769.399999999907,
+          "responseStart": 2770.1999999997206,
+          "responseEnd": 2803.0999999996275,
+          "transferSize": 1128,
+          "encodedBodySize": 828,
+          "decodedBodySize": 1118,
+          "duration": 34.39999999990687
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/retrans.html",
+          "initiatorType": "fetch",
+          "startTime": 2768.7999999998137,
+          "requestStart": 2769.5,
+          "responseStart": 2770.5999999996275,
+          "responseEnd": 2803.2999999998137,
+          "transferSize": 1199,
+          "encodedBodySize": 899,
+          "decodedBodySize": 1532,
+          "duration": 34.5
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/seq.html",
+          "initiatorType": "fetch",
+          "startTime": 2769,
+          "requestStart": 2794.5999999996275,
+          "responseStart": 2795.2999999998137,
+          "responseEnd": 2818.5999999996275,
+          "transferSize": 1205,
+          "encodedBodySize": 905,
+          "decodedBodySize": 1574,
+          "duration": 49.59999999962747
+        },
+        {
+          "name": "/artifact-editor/slides/benchmark/project/slides/window.html",
+          "initiatorType": "fetch",
+          "startTime": 2769.1999999997206,
+          "requestStart": 2803.5,
+          "responseStart": 2804.0999999996275,
+          "responseEnd": 2828.7999999998137,
+          "transferSize": 1237,
+          "encodedBodySize": 937,
+          "decodedBodySize": 1461,
+          "duration": 59.60000000009313
+        }
+      ],
+      "marks": [
+        {
+          "name": "slides:runtime-start",
+          "startTime": 2519.6999999997206
+        },
+        {
+          "name": "slides:files-boot-start",
+          "startTime": 2532.1999999997206
+        },
+        {
+          "name": "slides:runtime-ready",
+          "startTime": 2532.2999999998137
+        },
+        {
+          "name": "slides:write-access-ready",
+          "startTime": 2543.2999999998137
+        },
+        {
+          "name": "slides:files-port-ready",
+          "startTime": 2543.399999999907
+        },
+        {
+          "name": "slides:files-boot-ready",
+          "startTime": 2543.6999999997206
+        },
+        {
+          "name": "slides:react-render-requested",
+          "startTime": 2544.1999999997206
+        },
+        {
+          "name": "slides:first-slide-painted",
+          "startTime": 2921.7999999998137
+        },
+        {
+          "name": "slides:document-ready",
+          "startTime": 2989.7999999998137
+        }
+      ],
+      "body": "\n\n\n\n\n\n\n70%\n幻灯片 1 / 6: TCP的可靠：按序、不重、不丢地交付字节流\nTCP的可靠：按序、不重、不丢地交付字节流\n目标：应用交出一串字节，收到的是同一串字节，不重不漏、顺序不变\n网络本身只尽力而为：可能丢包、乱序、重复、延迟抖动\nTCP不保证速度、低延迟，也不保证每条报文被单独送达\n不支持的媒体\n不支持的媒体\n第 1 页 · 目标与边界\n\n\n\n\n\nTCP的可靠：按序、不重、不丢地交付字节流\n目标：应用交出一串字节，收到的是同一串字节，不重不漏、顺序不变\n网络本身只尽力而为：可能丢包、乱序、重复、延迟抖动\nTCP不保证速度、低延迟，也不保证每条报文被单独送达\n不支持的媒体\n不支持的媒体\n第 1 页 · 目标与边界\n1\n\n序号：给每个字节编号，把流切开\n序号（seq）指本次报文数据中第一个字节在整个流中的位置\n字节流被切成报文段；序号让接收方可重组乱序到达的数据\n序号是32位的，可长期运行后回绕，两端需比较相对位置\n字节位置　　0　1　2　3　4　5　6　7\n报文段A seq=0　■ ■ ■\n报文段B seq=3　　　　　■ ■ ■\n报文段C s",
+      "renderedMs": 2910.7999999998137,
+      "editableVerified": true,
+      "transferredBytes": 3117200,
+      "nonNetworkEncodedBytes": 4576,
+      "jsHeapUsedBytes": 35195260,
+      "scriptDurationSeconds": 0.316619,
+      "taskDurationSeconds": 0.61189
+    }
+  ],
+  "regression": {
+    "exportMenu": [
+      {
+        "text": "PDF（.pdf）",
+        "aria": null
+      },
+      {
+        "text": "网页（.html）",
+        "aria": null
+      },
+      {
+        "text": "当前页图片（.png）",
+        "aria": null
+      },
+      {
+        "text": "PowerPoint，保留当前字体（.pptx）",
+        "aria": null
+      },
+      {
+        "text": "PowerPoint，使用通用字体（.pptx）",
+        "aria": null
+      }
+    ],
+    "editContext": {
+      "slideId": "goal",
+      "selectedElementIds": [
+        "e0-683k3a/0"
+      ],
+      "selection": [
+        {
+          "id": "e0-683k3a/0",
+          "kind": "text",
+          "label": "测试"
+        }
+      ],
+      "selectedSlides": [],
+      "selectedText": "",
+      "slideTitle": "测试",
+      "slideIndex": 1,
+      "slideCount": 6,
+      "mode": "edit",
+      "dirty": false,
+      "version": null
+    },
+    "exports": [
+      {
+        "format": ".pdf",
+        "bytes": 1185933,
+        "sha256": "87901e3e37d92a51e438b85af4fb15c8fe937475f461640630d91369be3cebbb"
+      },
+      {
+        "format": ".html",
+        "bytes": 466898,
+        "sha256": "7327e932078b1cc952784c4c7322e4091e289f7a48190ccfb4d309d122cce079"
+      },
+      {
+        "format": ".pptx",
+        "bytes": 33657,
+        "sha256": "dbce701bcde58b1f7aca0627973fcb5bac5026379bcc9d33c82f8609f3248c34"
+      }
+    ],
+    "saved": true,
+    "presentation": {
+      "mode": "\n\n\n\n\n\n\n70%\n幻灯片 1 / 6: 测试\n测试\n目标：应用交出一串字节，收到的是同一串字节，不重不漏、顺序不变\n网络本身只尽力而为：可能丢包、乱序、重复、延迟抖动\nTCP不保证速度、低延迟，也不保证每条报文被单独送达\n不支持的媒体\n不支持的媒体\n第 1 页 · 目标与边界\n\n\n\n\n\n测试\n目标：应用交出一串字节，收到的是同一串字节，不重不漏、顺序不变\n网络本身只尽力而为：可能丢包、乱序、重复、延迟抖动\nTCP不保证速度、低延迟，也不保证每条报文被单独送达\n不支持的媒体\n不支持的媒体\n第 1 页 · 目标与边界\n1\n\n序号：给每个字节编号，把流切开\n序号（seq",
+      "context": {
+        "slideId": "goal",
+        "selectedElementIds": [],
+        "selection": [],
+        "selectedSlides": [],
+        "selectedText": "",
+        "slideTitle": "测试",
+        "slideIndex": 1,
+        "slideCount": 6,
+        "mode": "present",
+        "dirty": false,
+        "version": null
+      }
+    },
+    "exitPresentation": true,
+    "selectionContext": {
+      "slideId": "goal",
+      "selectedElementIds": [],
+      "selection": [],
+      "selectedSlides": [],
+      "selectedText": "",
+      "slideTitle": "测试",
+      "slideIndex": 1,
+      "slideCount": 6,
+      "mode": "edit",
+      "dirty": false,
+      "version": null
+    },
+    "noVideoControls": true,
+    "legacyPlaceholders": 6,
+    "legacyMetadataPreserved": true,
+    "videoRequests": [],
+    "undo": true,
+    "redo": true,
+    "savedReopen": true
+  },
+  "editFeedback": {
+    "status": "measured",
+    "definition": "Trusted beforeinput to next painted text (two requestAnimationFrame callbacks), verified changed text",
+    "samples": [
+      {
+        "run": 1,
+        "durationMs": 52.89999999990687,
+        "text": "测试"
+      }
+    ]
+  },
+  "jsParseTime": {
+    "status": "unmeasured",
+    "note": "ScriptDuration measures execution, not a separate V8 parse trace"
+  },
+  "errors": []
+}

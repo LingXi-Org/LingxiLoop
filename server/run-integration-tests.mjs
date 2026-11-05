@@ -89,7 +89,8 @@ if (!process.env.AGENT_OS_RESPONSE_POLICY) process.env.AGENT_OS_RESPONSE_POLICY 
 // Report real wall time and propagate every failure, signal and timeout.
 const groups = partitionMigrationTests(selectedFiles)
 const started = performance.now(), records = []
-const liveArtifactQualification = process.env.LINGXIOS_LIVE_ARTIFACTS === '1' && selectedFiles.length === 1 && selectedFiles[0] === 'runtime-first-action-contracts.test.ts'
+const liveArtifactQualification = selectedFiles.length === 1 && (process.env.LINGXIOS_LIVE_ARTIFACTS === '1' && selectedFiles[0] === 'runtime-first-action-contracts.test.ts'
+  || process.env.LINGXIOS_LIVE_SLIDES === '1' && selectedFiles[0] === 'runtime-slides-generation.test.ts')
 const budgetMs = (liveArtifactQualification ? 600_000 : mode === 'full' ? 1_500_000 : mode === 'selected' ? 360_000 : 180_000)
   + integrationOwnerAllowanceMs(mode,selectedFiles)
 let code = 0
@@ -98,6 +99,7 @@ for (const name of groups.current) {
   if (remaining <= 0) { console.error(`[integration] ${mode} time budget exhausted before ${name}`); code = 1; break }
   const begin = performance.now()
   const fileTimeout = name === 'runtime-first-action-contracts.test.ts' && process.env.LINGXIOS_LIVE_ARTIFACTS === '1'
+    || name === 'runtime-slides-generation.test.ts' && process.env.LINGXIOS_LIVE_SLIDES === '1'
     ? 540_000 : mode === 'full' ? 600_000 : 180_000
   const formal19Source = name === 'runtime-patch60-provenance.test.ts' && ['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24','3.8.25'].includes(String(releaseVersions.runtime))
   const formal21Source = name === 'runtime-patch61-21-provenance.test.ts' && ['3.8.22','3.8.23','3.8.24','3.8.25'].includes(String(releaseVersions.runtime))

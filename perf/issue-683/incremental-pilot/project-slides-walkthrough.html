@@ -1,0 +1,27 @@
+<section id="walkthrough" style="background:#f5f4ed;color:#141413;font-family:system-ui, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<p style="font-size:36px;font-weight:500;line-height:1.2;color:#73726c">TCP 可靠传输 · 6 / 6</p>
+<h2 style="font-family:Georgia, serif;font-size:72px;font-weight:300;line-height:1.2">走一遍：从丢一段到全部收齐</h2>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:row;gap:16px">
+<p style="font-size:32px;font-weight:500;line-height:1.4;width:80px;color:#73726c">① </p>
+<p style="font-size:32px;font-weight:400;line-height:1.4;flex:1">发送方发出序号 1000–1003、1004–1007、1008–1011、1012–1015，第二段在途中丢失。</p>
+</div>
+<div style="display:flex;flex-direction:row;gap:16px">
+<p style="font-size:32px;font-weight:500;line-height:1.4;width:80px;color:#73726c">② </p>
+<p style="font-size:32px;font-weight:400;line-height:1.4;flex:1">接收方收到 1000–1003，回 ACK = 1004；之后收到乱序的 1008–1011，仍回 ACK = 1004。</p>
+</div>
+<div style="display:flex;flex-direction:row;gap:16px">
+<p style="font-size:32px;font-weight:500;line-height:1.4;width:80px;color:#73726c">③ </p>
+<p style="font-size:32px;font-weight:400;line-height:1.4;flex:1">同样的 ACK = 1004 累计到 3 次，发送方不等计时到就重发 1004–1007。</p>
+</div>
+<div style="display:flex;flex-direction:row;gap:16px">
+<p style="font-size:32px;font-weight:500;line-height:1.4;width:80px;color:#73726c">④ </p>
+<p style="font-size:32px;font-weight:400;line-height:1.4;flex:1">缺口补上，接收方按序交付 1000–1011，回 ACK = 1012；窗口随之向右滑动，继续发送。</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:row;gap:24px;background:#141413;padding:40px;border-radius:16px">
+<p style="font-size:32px;font-weight:500;line-height:1.4;color:#faf9f5;flex:1">一句话总结：序号定位置，确认告诉我们还缺什么，重传补上缺失，窗口控制节奏——四件事合起来，字节流才能被可靠且有序地交付。</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#73726c">6 / 6 · TCP 可靠传输</p>
+<aside>用一个完整例子把前五页串起来：丢一段、重复确认、快速重发、缺口补齐、累计交付、窗口滑动。最后一句可以作为记忆锚点。可以让学生自己改一次丢的是第一段，看确认号会停在哪。</aside>
+</section>

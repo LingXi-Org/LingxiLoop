@@ -1,0 +1,14 @@
+<section id="example" data-transition="fade" style="background:#fbfbf8;color:#141413;font-family:'PingFang SC','Noto Sans SC',sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<p style="font-size:36px;letter-spacing:2px;color:#c9674a">TCP可靠传输 · 第 6 页</p>
+<h2 style="font-size:96px;font-weight:300;line-height:1.15">完整一例：丢一段，靠重传补齐</h2>
+<ul style="font-size:36px;line-height:1.6;color:#3d3d3a">
+<li>发出 0–14：0–4、10–14 到达，5–9 丢失</li>
+<li>接收方持续回 ACK=5，发送方快速重传 5–9</li>
+<li>补齐后回 ACK=15，窗口前移，传输继续</li>
+</ul>
+<div style="background:#fbfbf8;padding:32px;border:1px solid #e3dacc;border-radius:16px;font-family:'PingFang SC','Noto Sans SC',sans-serif">
+<p style="font-size:28px;line-height:1.7">序号负责指出差哪 → 确认负责报告进度 → 重传负责补缺口 → 窗口负责不失衡</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#6a7179">第 6 页 · 完整传输示例与总结</p>
+<aside>收尾提问：“如果 ACK=5 也丢了会怎样？”答案是累计确认与超时重传兜底，传输仍会完成。让学生用这四句话自己复述一遍，检验是否真的理解。</aside>
+</section>
