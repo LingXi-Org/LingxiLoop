@@ -30,7 +30,7 @@ export function ConversationHeader({
     <header
       className={cn(
         'im-conversation-header select-none z-20 flex min-h-14 min-w-0 shrink-0 items-center bg-background text-foreground',
-        mobile ? 'gap-2 px-2' : 'h-14 gap-2 ps-2.5 pe-3',
+        mobile ? 'gap-2 px-2' : 'h-[52px] min-h-[52px] gap-2 ps-2 pe-3',
       )}
     >
       {!mobile && navTrigger}
@@ -49,7 +49,7 @@ export function ConversationHeader({
         </Button>
       )}
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <ConversationAvatar conversation={conversation} size={22} />
+        <ConversationAvatar conversation={conversation} size={20} />
         <h1 className="truncate font-heading text-sm font-semibold tracking-[-0.01em] text-foreground">{conversation.title}</h1>
         {conversation.subtitle && <span className="truncate text-[13px] text-muted-foreground max-sm:hidden">{conversation.subtitle}</span>}
       </div>

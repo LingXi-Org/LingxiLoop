@@ -239,9 +239,9 @@ export function ConversationThread({
             if ((event.target as Element).closest('input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]')) return
             markUserInput()
           }}
-          className="chat-thread-scroll relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable_both-edges] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
+          className="chat-thread-scroll chat-thread-fade relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable_both-edges] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
           {/* Align the reading column with the reference composer. */}
-          <div data-chat-message-column className="@container/chat mx-auto flex min-h-full w-full max-w-[756px] shrink-0 flex-col px-7 pt-2 [--chat-extra-space:0.5rem] max-sm:px-3">
+          <div data-chat-message-column className="@container/chat mx-auto flex min-h-full w-full max-w-[848px] shrink-0 flex-col px-6 pt-1 [--chat-extra-space:1.5rem] max-sm:px-3">
             {!threadRootId && (
               <div ref={sentinelRef} className="flex min-h-10 w-full shrink-0 items-center justify-center text-xs text-muted-foreground">
                 {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
@@ -257,12 +257,12 @@ export function ConversationThread({
         </ScrollFadeContainer>
         </ThreadPrimitive.Viewport>
       {showJumpControl && <button type="button"
-        className="absolute bottom-3 start-1/2 z-30 grid size-[34px] -translate-x-1/2 place-items-center rounded-full border border-input bg-background text-fg2 shadow-[var(--composer-shadow)] hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring max-md:size-11 rtl:translate-x-1/2"
+        className="absolute bottom-3 start-1/2 z-30 grid size-8 -translate-x-1/2 place-items-center rounded-full border border-input bg-background text-fg2 shadow-[0_2px_8px_rgb(20_20_18/8%)] hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring max-md:size-11 rtl:translate-x-1/2"
         aria-label="回到最新" data-chat-scroll-bottom onClick={() => scrollToBottom(false)}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="m6 9 6 6 6-6" /></svg>
       </button>}
       </div>
-      {!readOnly && <div className="relative z-20 shrink-0 bg-background px-7 pb-3.5 pt-1 max-sm:px-3 max-sm:pb-2" data-chat-composer-bar>
+      {!readOnly && <div className="relative z-20 shrink-0 bg-background px-6 pb-4 pt-1 max-sm:px-3 max-sm:pb-2" data-chat-composer-bar>
         <ConversationComposer
           conversationId={conversationId}
           compact={compact}

@@ -53,7 +53,7 @@ export function AssistantMessageActions() {
     && view?.runId === metadata.runId && outcome?.requestVersion === view?.requestVersion
     && (outcome?.status === 'partial' || outcome?.status === 'blocked')
     && (view?.lifecycle === outcome.status || view?.lifecycle === 'succeeded') ? outcome.status : null
-  const buttonClassName = cn(ghostButton, 'size-8 rounded-lg text-muted-foreground disabled:pointer-events-none disabled:opacity-40 max-md:size-11 [&_svg]:size-4')
+  const buttonClassName = cn(ghostButton, 'size-7 rounded-lg text-muted-foreground disabled:pointer-events-none disabled:opacity-40 max-md:size-11 [&_svg]:size-4')
   const ratingClassName = (emoji: string) => cn(buttonClassName,
     metadata.reactions.some(reaction => reaction.emoji === emoji && reaction.mine)
       && 'bg-foreground/[0.06] text-foreground/90 dark:bg-foreground/[0.09]')

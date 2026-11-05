@@ -91,13 +91,15 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 6px;
+  max-inline-size: 752px;
+  margin-inline: auto;
+  padding: 9px 9px 9px 8px;
   border: 1px solid var(--input);
-  border-radius: 24px;
+  border-radius: 26px;
   background: var(--card);
   color: var(--foreground);
   font-family: var(--font-sans);
-  box-shadow: var(--composer-shadow);
+  box-shadow: 0 1px 2px rgb(20 20 18 / 4%), 0 4px 14px rgb(20 20 18 / 5%);
   transition: box-shadow 200ms, border-color 200ms;
 }
 /* A quote or pending attachments turn the pill into a panel. */
@@ -108,7 +110,7 @@
   box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgb(20 20 18 / 4%), 0 8px 22px -8px rgb(20 20 18 / 12%);
 }
 .chat-composer:focus-within { border-color: color-mix(in srgb, var(--brand) 45%, var(--input)); outline: none; }
-.chat-composer-row { display: flex; align-items: flex-end; gap: 6px; min-block-size: 34px; }
+.chat-composer-row { display: flex; align-items: flex-end; gap: 8px; min-block-size: 34px; }
 .chat-composer-input {
   position: relative;
   flex: 1;
@@ -116,10 +118,10 @@
   min-inline-size: 0;
   max-block-size: 384px;
   overflow-y: auto;
-  padding-block: 6px 7px;
+  padding-block: 6px;
   font-family: inherit;
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 22px;
   outline: none;
 }
 .chat-composer-input .aui-lexical-input { min-block-size: 22px; outline: none; }
@@ -129,6 +131,7 @@
 .chat-composer-add:hover { background: var(--accent); color: var(--foreground); }
 .chat-composer-send { background: var(--brand); color: var(--brand-foreground); }
 .chat-composer-send:hover { background: color-mix(in srgb, var(--brand) 90%, var(--foreground)); }
+.chat-composer-send:disabled { background: var(--accent); color: var(--muted-foreground); opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .chat-composer { transition: none; } }
 
 /* Code surfaces follow the active mode, including editable native blocks. */

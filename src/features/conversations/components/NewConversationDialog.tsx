@@ -107,8 +107,8 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
       <DialogTrigger asChild>
-        {trigger ?? <Button type="button" variant="ghost" size="icon" className={isMobile ? 'size-11 shrink-0 rounded-lg text-fg2' : 'size-8 shrink-0 rounded-lg text-fg2 hover:bg-accent'} aria-label="新建对话" title="新建对话">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-[17px]"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.4 2.6a2 2 0 0 1 3 3L12 15l-4 1 1-4z" /></svg>
+        {trigger ?? <Button type="button" variant="ghost" size="icon" className={isMobile ? 'size-11 shrink-0 rounded-lg text-fg2' : 'size-9 shrink-0 rounded-lg text-fg2 hover:bg-accent'} aria-label="新建对话" title="新建对话">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
         </Button>}
       </DialogTrigger>
       <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-hidden">

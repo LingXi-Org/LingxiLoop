@@ -26,7 +26,7 @@ export function CodeBlock({ language = 'text', codeContent }: { language?: strin
       showLineNumbers lineNumberStyle={{ minWidth: '18px', paddingRight: '16px', textAlign: 'right', color: '#A3A39E', userSelect: 'none' }}
       customStyle={{ margin: 0, padding: '14px 16px', background: 'var(--card)', color: 'var(--foreground)', fontFamily: 'var(--font-mono)', fontSize: '13px', lineHeight: 1.75, borderRadius: 0, overflowX: 'auto' }}
       codeTagProps={{ className: `language-${syntaxLanguage}`, style: { fontFamily: 'inherit', fontSize: 'inherit', lineHeight: 'inherit', background: 'transparent', textShadow: 'none' } }}>
-      {codeContent}
+      {codeContent.replace(/\n$/, '')}
     </SyntaxHighlighter>
     {copyError && <p role="status" className="px-3 py-1 text-xs text-muted-foreground">复制失败，请选择代码后复制。</p>}
   </CodeBlockContainer>

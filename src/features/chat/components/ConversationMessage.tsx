@@ -150,7 +150,7 @@ function MessageTextPart() {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
   const markdown = <MarkdownText agent={isAgent} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations} mentionTargets={mentionTargets} />
-  return <div className={cn('relative min-w-0', isAgent || !metadata.isMine ? 'w-full max-w-full' : 'w-fit max-w-[80%]', metadata.isMine && 'ms-auto')}>
+  return <div className={cn('relative min-w-0', isAgent || !metadata.isMine ? 'w-full max-w-full' : 'w-fit max-w-[76%]', metadata.isMine && 'ms-auto')}>
     {!isMobile && !isAgent && <MessageActions isMine={metadata.isMine} getText={getText} />}
     <div
       ref={bodyRef}
@@ -222,6 +222,7 @@ export function ConversationMessage() {
     state.message.status?.type === 'running' && state.message.content.length === 0
   ))
   const rosterParticipant = useParticipants((state) => state.byId[custom.senderId])
+  const quotedAuthor = useParticipants((state) => custom.quote ? state.byId[custom.quote.authorId] : undefined)
   const participant: Participant | undefined = rosterParticipant ?? (custom.senderKind === 'agent' ? {
     id: custom.senderId,
     kind: 'agent',
@@ -250,6 +251,7 @@ export function ConversationMessage() {
   ) : null
   const isAgent = custom.senderKind === 'agent'
   const name = participant ? participantDisplayName(participant) : custom.senderName
+  const quotedName = custom.quote ? quotedAuthor ? participantDisplayName(quotedAuthor) : '引用消息' : null
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
@@ -274,6 +276,10 @@ export function ConversationMessage() {
         <div data-agent-header className="row-start-1 flex h-[26px] min-w-0 items-center gap-2">
           <ConversationMessageAvatar participant={participant} isMobile={isMobile} isMine={false} groupStart groupEnd={custom.groupEnd} inline />
           <span className="truncate text-[13px] font-semibold text-foreground">{name}</span>
+          {custom.quote && <span className="inline-flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-[13px] shrink-0"><path d="M9 14 4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 6 6v5" /></svg>
+            <span className="truncate">回复 {quotedName}</span>
+          </span>}
           <span ref={slot} data-run-pill-slot className="ms-1 flex min-w-0 empty:hidden" />
         </div>
       )}>
@@ -284,9 +290,9 @@ export function ConversationMessage() {
           </div>
         )}
         <div data-chat-message-content data-sender-kind={custom.senderKind} className={cn('row-start-2 grid w-full min-w-0 gap-1',
-          isAgent ? custom.groupStart ? 'mt-3.5' : '' : custom.isMine ? 'max-w-full justify-self-end' : 'col-start-2 max-w-full justify-self-start', running && 'min-h-5')}>
+          isAgent ? custom.groupStart ? 'mt-3' : '' : custom.isMine ? 'max-w-full justify-self-end' : 'col-start-2 max-w-full justify-self-start', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
-          {custom.quote && (custom.senderKind !== 'human' || !quoteInsideText) && (
+          {custom.quote && !(isAgent && custom.groupStart) && (custom.senderKind !== 'human' || !quoteInsideText) && (
             <div className={cn('min-w-0 max-w-md', custom.isMine && 'w-full justify-self-end')}>
               <MessageQuotePreview quote={custom.quote} />
             </div>

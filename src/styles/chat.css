@@ -592,8 +592,8 @@ input:focus, textarea:focus, button:focus { outline: none; }
   --chat-user-size: 15px;
   --chat-assistant-size: 15px;
   --chat-bubble-pad-y: 10px;
-  --chat-bubble-pad-x: 16px;
-  --chat-bubble-radius: 18px 18px 6px 18px;
+  --chat-bubble-pad-x: 14px;
+  --chat-bubble-radius: 16px 16px 4px 16px;
   --reading-gap: 12px;
 }
 [data-message-bubble] { box-shadow: none; }
@@ -714,3 +714,42 @@ input:focus, textarea:focus, button:focus { outline: none; }
   color: #7B5CC9;
 }
 .im-markdown :where(h1, h2, h3, h4) { letter-spacing: -0.01em; }
+
+.chat-thread-fade {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent 100%);
+}
+.im-markdown-agent :where(h3) { font-size: 16px; line-height: 1.5; margin-block-start: 8px !important; }
+/* A quote inside the user's own bubble reads as an indented excerpt. */
+[data-message-bubble] [data-quote-preview] {
+  margin-block-end: 8px;
+  border-radius: 0;
+  background: transparent;
+  border-inline-start: 2px solid var(--input);
+  padding: 0 0 0 10px;
+}
+[data-message-bubble] [data-quote-preview] [data-slot='quote-block-text'] { font-size: 13.5px; }
+.im-markdown [data-streamdown='table-wrapper'] { margin: 0; padding: 0; gap: 0; }
+.im-markdown [data-streamdown='table-wrapper'] > div:first-child {
+  height: 44px;
+  justify-content: flex-start;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 6px 0 10px;
+}
+.im-markdown [data-streamdown='table-wrapper'] > div:first-child::before {
+  content: '表格';
+  margin-inline-end: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1F8A5B;
+}
+.dark .im-markdown [data-streamdown='table-wrapper'] > div:first-child::before { color: #6CC59A; }
+.im-markdown [data-streamdown='table-wrapper'] > div:first-child button {
+  display: inline-flex; height: 28px; min-width: 28px; align-items: center; justify-content: center;
+  border-radius: 7px; padding: 0 6px; color: var(--fg2);
+}
+.im-markdown [data-streamdown='table-wrapper'] > div:first-child button:hover { background: var(--accent); }
+.im-markdown [data-streamdown='table-wrapper'] > div:not(:first-child) { border: 0; border-radius: 0; background: transparent; }
+.im-markdown [data-streamdown='table'] { border: 0; }
+.im-markdown [data-streamdown='table'] > :is(thead, tbody) { border: 0; }

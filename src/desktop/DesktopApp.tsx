@@ -196,7 +196,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
           <ShellNavContext.Provider value={mobileNav}>
           <ShellNavTriggerContext.Provider value={!isMobile && shellModule === 'chat' ? <Button type="button" variant="ghost" size="icon"
             aria-label={sidebarOpen ? '收起会话列表' : '展开会话列表'} aria-expanded={sidebarOpen} aria-controls="conversations"
-            onClick={() => setSidebarOpen(value => !value)} className="size-9 shrink-0 rounded-[9px] text-muted-foreground hover:bg-accent"><PanelLeft className="size-[18px]" strokeWidth={1.6} /></Button> : null}>
+            onClick={() => setSidebarOpen(value => !value)} className="size-8 shrink-0 rounded-lg text-muted-foreground hover:bg-accent"><PanelLeft className="size-4" strokeWidth={1.7} /></Button> : null}>
           <div key={`conversation:${scope}`} style={shellModule === 'slides' || directPage ? { position: 'absolute', inset: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined} inert={shellModule === 'slides' || directPage} aria-hidden={shellModule === 'slides' || directPage} className="h-full min-h-0 min-w-0">
           <ResizablePanelGroup
             id="desktop-conversation-layout"

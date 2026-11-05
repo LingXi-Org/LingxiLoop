@@ -11,7 +11,7 @@ import {
 } from "react";
 import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
 import { cva, type VariantProps } from "class-variance-authority";
-import { BrainIcon, ChevronDownIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useScrollLock } from '@assistant-ui/react';
 import {
@@ -179,40 +179,29 @@ function ReasoningTrigger({
   active?: boolean;
   duration?: number | undefined;
 }) {
-  const durationText = duration ? ` (${duration}s)` : "";
+  const label = active ? "正在思考" : duration ? `已思考 ${duration} 秒` : "公开说明";
 
   return (
     <CollapsibleTrigger
       data-slot="reasoning-trigger"
       className={cn(
-        "aui-reasoning-trigger group/trigger text-muted-foreground hover:text-foreground flex max-w-[75%] origin-left items-center gap-2 py-1.5 text-sm transition-[color,scale] active:scale-[0.98]",
+        "aui-reasoning-trigger group/trigger flex h-[26px] w-fit max-w-[75%] items-center gap-1 rounded-full bg-accent ps-2 pe-2.5 text-[12.5px] text-fg2 outline-none hover:bg-accent/70 focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
       {...props}
     >
-      <BrainIcon
-        data-slot="reasoning-trigger-icon"
-        className="aui-reasoning-trigger-icon size-4 shrink-0"
+      <ChevronRightIcon
+        data-slot="reasoning-trigger-chevron"
+        aria-hidden="true"
+        strokeWidth={2}
+        className="aui-reasoning-trigger-chevron size-[13px] shrink-0 transition-transform duration-150 group-data-open/trigger:rotate-90 group-data-panel-open/trigger:rotate-90 motion-reduce:transition-none"
       />
       <span
         data-slot="reasoning-trigger-label"
-        className={cn(
-          "aui-reasoning-trigger-label-wrapper inline-block leading-none tabular-nums",
-          active && "shimmer motion-reduce:animate-none",
-        )}
+        className={cn("aui-reasoning-trigger-label-wrapper inline-block leading-none tabular-nums", active && "shimmer motion-reduce:animate-none")}
       >
-        公开说明{durationText}
+        {label}
       </span>
-      <ChevronDownIcon
-        data-slot="reasoning-trigger-chevron"
-        className={cn(
-          "aui-reasoning-trigger-chevron mt-0.5 size-4 shrink-0",
-          "transition-transform duration-(--animation-duration) ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
-          "-rotate-90",
-          "group-data-open/trigger:rotate-0",
-          "group-data-panel-open/trigger:rotate-0",
-        )}
-      />
     </CollapsibleTrigger>
   );
 }

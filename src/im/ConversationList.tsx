@@ -191,17 +191,16 @@ export function ConversationListItemContent({
   return (
     <>
       <ItemMedia className="relative self-center! translate-y-0!">
-        <ConversationAvatar conversation={conversation} size={28} />
+        <ConversationAvatar conversation={conversation} size={32} />
       </ItemMedia>
-      <ItemContent className="min-w-0 gap-0">
+      <ItemContent className="min-w-0 gap-px">
         <div className="flex min-w-0 items-baseline gap-2">
-          <ItemTitle className={cn('block min-w-0 flex-1 truncate text-[13.5px] leading-5', unread ? 'font-semibold' : 'font-medium')}>{conversation.title}</ItemTitle>
+          <ItemTitle className={cn('block min-w-0 flex-1 truncate text-sm leading-5', unread ? 'font-semibold' : 'font-medium')}>{conversation.title}</ItemTitle>
           <span className={cn('shrink-0 whitespace-nowrap text-xs tabular-nums', unread ? 'text-brand' : 'text-muted-foreground')}>{conversation.lastAt}</span>
         </div>
-        <ItemDescription className={cn('line-clamp-none flex min-w-0 items-center gap-1.5 text-[12.5px] leading-[18px]', unread ? 'text-fg2' : 'text-muted-foreground', !selected && typingNames.length > 0 && 'text-brand')}>
-          {tone && <span aria-hidden="true" data-run-tone={tone} className={cn('size-1.5 shrink-0 rounded-full', tone === 'warn' ? 'bg-warning' : tone === 'live' ? 'bg-brand' : 'bg-input')} />}
+        <ItemDescription className={cn('line-clamp-none flex min-w-0 items-center gap-2 text-[12.5px] leading-[18px]', unread ? 'text-fg2' : 'text-muted-foreground', !selected && typingNames.length > 0 && 'text-brand')}>
           <span className="min-w-0 flex-1 truncate">
-            {runStatus && <><span aria-label={`任务状态：${runStatus}`}>{runStatus}</span><span aria-hidden> · </span></>}
+            {runStatus && <span data-run-tone={tone ?? undefined} className="text-muted-foreground"><span aria-label={`任务状态：${runStatus}`}>{runStatus}</span><span aria-hidden> · </span></span>}
             {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}
           </span>
           {muted && <span className="inline-flex size-4 shrink-0 items-center justify-center" aria-label="已静音" title="已静音"><HugeiconsIcon icon={NotificationOff01Icon} strokeWidth={2} className="size-3.5" /></span>}

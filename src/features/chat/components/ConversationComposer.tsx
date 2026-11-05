@@ -38,7 +38,7 @@ const actionClassName = 'h-auto min-h-11 w-full justify-start gap-3 rounded-xl p
 export function ConversationComposer({
   conversationId,
   compact = false,
-  placeholder = '继续提问，输入 / 使用命令，@ 提及 agent',
+  placeholder = '发消息，输入 @ 提及 agent',
 }: {
   conversationId: string
   compact?: boolean
@@ -148,7 +148,7 @@ export function ConversationComposer({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <Button ref={addRef} type="button" variant="ghost" size="icon" className="chat-composer-control chat-composer-add shrink-0" aria-label="添加附件">
-                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M12 5v14M5 12h14" /></svg>
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-[18px]"><path d="M12 5v14M5 12h14" /></svg>
                 </Button>
               </PopoverTrigger>
             </TooltipTrigger>
@@ -176,7 +176,7 @@ export function ConversationComposer({
           <Tooltip>
             <TooltipTrigger asChild>
               <ComposerPrimitive.Send asChild>
-                <Button type="submit" size="icon" className="chat-composer-control chat-composer-send transition-opacity disabled:opacity-40" aria-label="发送">
+                <Button type="submit" size="icon" className="chat-composer-control chat-composer-send transition-colors" aria-label="发送">
                   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
                 </Button>
               </ComposerPrimitive.Send>

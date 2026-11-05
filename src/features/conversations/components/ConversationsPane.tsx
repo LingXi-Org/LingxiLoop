@@ -61,7 +61,7 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
         onSelect()
       }}
       className={cn(
-        'mb-0.5 cursor-pointer flex-nowrap gap-2.5 rounded-[10px] border-0 px-2.5 py-[9px] text-left hover:bg-accent/70 focus-visible:ring-inset',
+        'mb-0.5 cursor-pointer flex-nowrap gap-2.5 rounded-[10px] border-0 px-2.5 py-2 text-left hover:bg-accent/70 focus-visible:ring-inset',
         selected && 'bg-accent',
         className,
       )}
@@ -265,14 +265,14 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
   }
 
   return (
-    <aside data-slot="sidebar" aria-label="对话列表" className={cn('im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden bg-background text-foreground', isMobile ? 'py-2' : 'pb-3 pe-2.5 ps-2 pt-3')}>
+    <aside data-slot="sidebar" aria-label="对话列表" className={cn('im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden bg-background text-foreground', isMobile ? 'py-2' : 'px-2 py-2.5')}>
       <SidebarHeader className="desktop-window-toolbar select-none shrink-0 gap-0 p-0">
         {isMobile && <h1 className="h-12 shrink-0 truncate px-4 font-heading text-xl font-medium leading-[48px] text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
-        <div className={cn('flex min-w-0 shrink-0 items-center gap-1', isMobile ? 'h-12 px-3' : 'h-8 ps-0.5')}>
-          <label className={cn('flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-muted-foreground focus-within:bg-accent/60', isMobile ? 'h-11' : 'h-8')}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-[15px] shrink-0"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-            <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索" aria-label="搜索会话和消息"
-              className="min-w-0 flex-1 border-0 bg-transparent text-[13.5px] text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none" />
+        <div className={cn('flex min-w-0 shrink-0 items-center gap-1', isMobile ? 'h-12 px-3' : 'h-9 ps-0.5')}>
+          <label className={cn('flex min-w-0 flex-1 items-center gap-2 rounded-[9px] px-2.5 text-muted-foreground focus-within:bg-accent/60', isMobile ? 'h-11' : 'h-9')}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-4 shrink-0"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息"
+              className="min-w-0 flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none" />
             {query && <button type="button" className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-3.5" /></button>}
           </label>
           {companyId && projectId && <NewConversationDialog key={`${companyId}:${projectId}`} companyId={companyId} projectId={projectId} isMobile={isMobile} onCreated={(id) => {
@@ -305,7 +305,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
           <Virtuoso
             className="conversation-list-scroll h-full"
             data={conversations}
-            context={{ header: <><PinnedConversations conversations={pinned} renderConversation={(conversation, mode) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} pinnedMode={mode} />} />{conversations.length > 0 && <p className="px-2.5 pb-1.5 pt-3 text-xs text-muted-foreground">最近</p>}</> }}
+            context={{ header: <><PinnedConversations conversations={pinned} renderConversation={(conversation, mode) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} pinnedMode={mode} />} />{conversations.length > 0 && <p className="px-2.5 pb-1 pt-2.5 text-xs text-muted-foreground">最近</p>}</> }}
             computeItemKey={(_, conversation) => conversation.id}
             defaultItemHeight={60}
             increaseViewportBy={{ top: 500, bottom: 500 }}
