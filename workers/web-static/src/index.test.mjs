@@ -12,7 +12,7 @@ const env = {
   RETAINED_ASSETS: { get: async () => null },
 }
 test('API, protected files, artifact editor and WebSocket routes never become HTML', async () => {
-  for (const path of ['/api', '/api/a', '/uploads/private', '/runtime/x', '/artifact-editor/design/grant/', '/_blob/0123456789abcdef0123456789abcdef', '/ws', '/files/x', '/webhooks/wukong', '/readyz', '/healthz']) {
+  for (const path of ['/api', '/api/a', '/uploads/private', '/artifact-editor/design/grant/', '/_blob/0123456789abcdef0123456789abcdef', '/ws', '/files/x', '/webhooks/wukong', '/readyz', '/healthz']) {
     assert.notEqual(route(path), 'asset')
     let called
     const request = new Request(`https://loop.example.com${path}?a=1`, { headers: { cookie: 'session=secret', authorization: 'Bearer user', 'x-lingxiloop-gateway': 'old.signature', 'last-event-id': '42' } })
@@ -52,6 +52,17 @@ test('auth service binding keeps the public request origin for password and sign
   assert.equal(await response.text(), 'auth')
 })
 
+test('retired visualization routes and hashes never reach assets, retained storage or backend', async () => {
+  let calls = 0
+  const forbidden = async () => { calls++; throw new Error('Retired executable bytes were requested') }
+  const fixture = { ...env, ASSETS: { fetch: forbidden }, RETAINED_ASSETS: { get: forbidden } }
+  for (const path of ['/visualize/x', '/runtime/visualize/x', '/assets/visualize-' + 'a'.repeat(64) + '.js', '/assets/visualize-' + 'b'.repeat(64) + '.txt', '/%76isualize/x']) {
+    const response = await handleRequest(new Request('https://loop.example.com' + path), fixture, forbidden)
+    assert.equal(response.status, 410, path)
+    assert.equal(response.headers.get('cache-control'), 'no-store')
+  }
+  assert.equal(calls, 0)
+})
 import { artifactEditorOrigin } from '../../../shared/artifact-editor-origin.ts'
 
 test('executable Design and Slides origins are grant-bound and never proxy authenticated product requests', async () => {

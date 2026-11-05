@@ -1,0 +1,18 @@
+<section id="goal" style="background:#f5f4ed;color:#141413;font-family:system-ui, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<p style="font-size:36px;font-weight:500;letter-spacing:2px;color:#d97757">第 1 页 · 目标与边界</p>
+<h2 style="font-family:Georgia, serif;font-size:88px;font-weight:400;line-height:1.15">TCP 帮你把数据可靠地送达</h2>
+<div style="display:flex;flex-direction:column;gap:0;background:#faf9f5;border:1px solid #e3dacc;border-radius:16px;padding:48px">
+<p style="font-size:34px;line-height:1.5;padding:16px 0"><b style="font-weight:700">目标：</b>让应用层交出去的字节流，按原顺序、不重不漏地到达对端。</p>
+<p style="font-size:34px;line-height:1.5;padding:16px 0;border-top:1px solid #e3dacc"><b style="font-weight:700">手段：</b>序号、确认、重传、窗口四件事配合，在不可靠的网络之上做出可靠。</p>
+<p style="font-size:34px;line-height:1.5;padding:16px 0;border-top:1px solid #e3dacc"><b style="font-weight:700">边界：</b>TCP 不保证时延、不保证带宽、也不保证数据一定被应用读取。</p>
+</div>
+<div style="display:flex;flex-direction:row;align-items:center;gap:24px">
+<div style="flex:1;background:#141413;color:#faf9f5;padding:40px 32px;border-radius:16px;font-size:32px;line-height:1.4;display:flex;flex-direction:column;gap:8px"><span style="font-size:24px;color:#e3dacc">应用层</span><span>发送：按字节写入</span></div>
+<x-shape kind="arrow-right" style="width:96px;height:56px;background:#d97757"></x-shape>
+<div style="flex:1;background:#141413;color:#faf9f5;padding:40px 32px;border-radius:16px;font-size:32px;line-height:1.4;display:flex;flex-direction:column;gap:8px"><span style="font-size:24px;color:#e3dacc">TCP 层</span><span>编号 · 确认 · 重传</span></div>
+<x-shape kind="arrow-right" style="width:96px;height:56px;background:#d97757"></x-shape>
+<div style="flex:1;background:#d97757;color:#141413;padding:40px 32px;border-radius:16px;font-size:32px;line-height:1.4;display:flex;flex-direction:column;gap:8px"><span style="font-size:24px;color:#141413">对端应用</span><span>收到同一字节流</span></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#73726c">1 / 6</p>
+<aside>开场先讲清目标：可靠指顺序、完整性、不重复，而不是快。可用“寄快递”类比说明边界：TCP 保证包裹不丢不错，但不保证当天到。</aside>
+</section>

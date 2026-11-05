@@ -162,7 +162,8 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
       : publicTextId(part)
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
-    for (const text of [{ type: 'text' as const, text: part.text }]) {
+    // Keep exact public bytes during replay; historical references are inert.
+    for (const text of part.text ? [{ type: 'text' as const, text: part.text }] : []) {
       put(id,part.firstSeq,annotated({ ...text,status },{ id,kind: kind === 'revision' ? 'commentary' : kind,
         label: kind === 'answer' ? '答复' : kind !== 'revision' ? '公开说明' : currentPurpose === 'answer' ? answerRevisionLabels.current : part.acceptedResultId ? answerRevisionLabels.accepted
           : part.reason === 'failed' ? answerRevisionLabels.failed : part.reason === 'cancelled' ? answerRevisionLabels.cancelled : answerRevisionLabels.superseded,
@@ -285,7 +286,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
     // the explicit committed source ID; no text comparison is involved.
     const publicCandidate = (view.publicTextParts ?? []).some(part => part.requestVersion === view.requestVersion
       && part.fence === view.fence && part.reason === 'completed' && part.purpose !== 'commentary' && !part.acceptedResultId)
-    return publicCandidate ? cards : [...answerParts(view, [{ type: 'text', text: view.draft }]), ...cards]
+    return publicCandidate ? cards : [...answerParts(view, view.draft ? [{ type: 'text', text: view.draft }] : []), ...cards]
   }
   if (!view.message || view.message.envelope.requestVersion !== view.requestVersion || view.messageFence !== view.fence) return [...answer,...cards]
   const segments = responseSegments(view.message.envelope)

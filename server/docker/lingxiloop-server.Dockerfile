@@ -83,10 +83,10 @@ RUN node scripts/build-slides-editor.mjs
 
 FROM web-deps AS spa-build
 WORKDIR /app
-# Preserve the existing Web build entrypoints after the scoped install.
+# Preserve the Web and Design build entrypoints after the scoped install.
 COPY package.json ./
 COPY src ./src
-COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts ./shared/
+COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts shared/retired-visualize.ts shared/assistant-directive-parser.ts shared/upload-mime.ts ./shared/
 COPY public ./public
 COPY index.html ./
 COPY vite.config.ts ./
@@ -126,25 +126,20 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/package-lock.json ./
 # Ship only runtime sources/resources and the exact provenance manifests.
 COPY server/src ./server/src
-COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts ./shared/
-COPY server/assets ./server/assets
+COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts shared/retired-visualize.ts shared/assistant-directive-parser.ts ./shared/
 COPY server/package.json server/package-lock.json ./server/
 COPY server/scripts/check-packaged-startup.mjs ./server/scripts/
+COPY shared/upload-mime.ts ./shared/
 # The server deliberately shares these dependency-free domain helpers with
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into
 # this final stage).
 COPY src/types.ts ./src/types.ts
 COPY src/lib/conversationRunSummary.ts ./src/lib/
-COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/executionBudget.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
-# The renderer shares only these five dependency-light VM inputs with Web.
-COPY src/features/cases/cover-vm/runtime.ts ./src/features/cases/cover-vm/runtime.ts
-COPY src/features/cases/cover-vm/protocol.ts ./src/features/cases/cover-vm/protocol.ts
-COPY src/features/cases/cover-vm/program.ts ./src/features/cases/cover-vm/program.ts
-COPY src/features/cases/cover-vm/guest-source.ts ./src/features/cases/cover-vm/guest-source.ts
-COPY src/features/cases/cover-vm/svg.ts ./src/features/cases/cover-vm/svg.ts
+COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/uploadError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/executionBudget.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
 # Design and Slides serve the vendored editor pages and run the vendored checker unchanged.
 COPY third_party/baoyu-design ./third_party/baoyu-design
+COPY third_party/visualize-compat ./third_party/visualize-compat
 COPY --from=design-build /app/server/assets/design-editor ./server/assets/design-editor
 COPY --from=slides-build /app/server/assets/slides-editor ./server/assets/slides-editor
 
@@ -175,3 +170,4 @@ COPY third_party/assistant-ui/streaming-text/LICENSE ./dist/licenses/assistant-u
 COPY third_party/assistant-ui-elements/LICENSE ./dist/licenses/assistant-ui-elements.txt
 COPY third_party/assistant-ui-with-artifacts/LICENSE ./dist/licenses/assistant-ui-with-artifacts.txt
 COPY third_party/react-chat-elements/reply-message/LICENSE ./dist/licenses/react-chat-elements-reply-message.txt
+COPY third_party/visualize-compat/LICENSE.md ./dist/licenses/visualize-compat.txt

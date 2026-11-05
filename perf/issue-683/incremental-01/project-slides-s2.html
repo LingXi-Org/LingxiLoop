@@ -1,0 +1,26 @@
+<section id="s2" style="background:#faf9f5;color:#141413;font-family:Georgia, serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<p style="font-family:system-ui, sans-serif;font-size:36px;font-weight:500;letter-spacing:1px;color:#d97757;margin:0">02 · 序号与字节流</p>
+<h2 style="font-size:96px;font-weight:300;line-height:1.2;margin:0">每个字节都有一个序号</h2>
+<ul style="font-family:system-ui, sans-serif;font-size:32px;line-height:1.4;color:#3d3d3a;margin:0;padding-left:44px;display:flex;flex-direction:column;gap:20px">
+<li>TCP 把应用写进来的数据看成一条连续的字节流，不是一条条独立的消息</li>
+<li>序号以字节为单位累加，接收端据此把乱序到达的数据重新排好</li>
+<li>序号用完一轮后回绕，两端按模运算比较序号的新旧</li>
+</ul>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:16px">
+<div style="flex:1;background:#f5f4ed;border:1px solid #e3dacc;border-radius:12px;padding:32px;font-family:system-ui, sans-serif;font-size:32px">abc</div>
+<div style="flex:1;background:#f5f4ed;border:1px solid #e3dacc;border-radius:12px;padding:32px;font-family:system-ui, sans-serif;font-size:32px">def</div>
+<div style="flex:1;background:#f5f4ed;border:1px solid #e3dacc;border-radius:12px;padding:32px;font-family:system-ui, sans-serif;font-size:32px">ghi</div>
+<div style="flex:1;background:#f5f4ed;border:1px solid #e3dacc;border-radius:12px;padding:32px;font-family:system-ui, sans-serif;font-size:32px">jkl</div>
+</div>
+<div style="display:flex;gap:16px;font-family:system-ui, sans-serif;font-size:24px;color:#73726c">
+<div style="flex:1">seq 0</div>
+<div style="flex:1">seq 3</div>
+<div style="flex:1">seq 6</div>
+<div style="flex:1">seq 9</div>
+</div>
+<p style="font-family:system-ui, sans-serif;font-size:24px;color:#73726c;margin:0">每个报文段携带起始序号，接收端知道它落在字节流的哪一段</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-family:system-ui, sans-serif;font-size:24px;color:#73726c;margin:0">第 2 页 · 可靠传输 6 讲</p>
+<aside>强调“字节流”而非“消息流”：应用的一次写入可能被拆成多个报文段，多次写入也可能合并进一段。序号是后面确认、重传、排序的共同坐标。</aside>
+</section>

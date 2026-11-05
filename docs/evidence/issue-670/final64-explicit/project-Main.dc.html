@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>FlashAttention · 分块与在线 softmax</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:#FAF9F5;color:#141413}
+a{color:#8A5B3A}a:hover{color:#5C3A22}
+.kicker{font-size:13px;letter-spacing:.12em;font-weight:600;color:#8A5B3A;margin:0}
+h1{font-family:Georgia,'Songti SC',serif;font-weight:400;font-size:40px;line-height:1.2;margin:10px 0 0}
+h2{font-family:Georgia,'Songti SC',serif;font-weight:400;font-size:24px;line-height:1.25;margin:0}
+p{margin:0}
+.muted{color:#5C5B55}
+.card{background:#FFFFFF;border:1px solid #E3DACC;border-radius:14px;padding:22px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:#F5F4ED;color:#3D3D3A;border:1px solid #E3DACC}
+.formula{font-family:Georgia,serif;font-size:17px;line-height:1.5;color:#141413}
+.tile{border:1px solid #E3DACC;border-radius:8px;background:#F5F4ED;display:flex;align-items:center;justify-content:center;font-size:12px;color:#5C5B55}
+</style>
+</helmet>
+<div style="width:1180px;min-height:1000px;box-sizing:border-box;padding:56px 64px 64px;display:flex;flex-direction:column;gap:28px">
+
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <p class="kicker">注意力机制的 IO 优化</p>
+    <h1>FlashAttention：不把完整注意力矩阵写进显存</h1>
+    <p class="muted" style="font-size:17px;line-height:1.6;margin-top:10px;max-width:900px">标准注意力先算出整张 $N\\times N$ 分数矩阵，再归一化、再乘 $V$，中间结果要反复写入显存。FlashAttention 换了一种<strong style="font-weight:600">计算顺序</strong>：输入分块，边算边把 softmax 的归一化量累积起来，得到<strong style="font-weight:600">数值上相同的输出</strong>，但显存占用从 $O(N^2)$ 降到 $O(N)$，显存读写也大幅减少。</p>
+  </header>
+
+  <section style="display:flex;gap:20px;flex-wrap:wrap">
+    <div class="card" style="flex:1 1 320px;display:flex;flex-direction:column;gap:8px;border-left:4px solid #D97757">
+      <p class="pill">标准做法</p>
+      <h2>先把整张分数矩阵做完</h2>
+      <p class="muted" style="font-size:15px;line-height:1.65">$S = QK^{\\mathsf T}$ 全量写入显存 → 对每行求最大值与和 → $P=\\operatorname{softmax}(S)$ → 再取回显存与 $V$ 相乘。每一步都在显存和片上高速缓存之间搬大块数据。</p>
+    </div>
+    <div class="card" style="flex:1 1 320px;display:flex;flex-direction:column;gap:8px;border-left:4px solid #4A6B8A">
+      <p class="pill">FlashAttention 做法</p>
+      <h2>在片上内存里分块算完</h2>
+      <p class="muted" style="font-size:15px;line-height:1.65">把 $Q$、$K$、$V$ 切成块，只搬小块进片上内存；每访问一个 $K/V$ 块就更新一小段输出。中间矩阵从不整体落到显存，只在寄存器里短暂存在。</p>
+    </div>
+  </section>
+
+  <section class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:baseline;gap:12px">
+      <h2>第一步：输出是按行累积的</h2>
+      <p class="muted" style="font-size:14px">以 $Q$ 的第 $i$ 行 $q_i$ 为例，它只和 $K$ 的所有行打交道</p>
+    </div>
+    <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+      <div style="flex: 1 1 420px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:14px;align-items:center">
+          <div style="width:96px;display:flex;flex-direction:column;gap:4px">
+            <div class="tile" style="height:26px">行 1</div>
+            <div class="tile" style="height:26px;background:#D97757;color:#FFFFFF;border-color:#D97757">行 i</div>
+            <div class="tile" style="height:26px">行 N</div>
+          </div>
+          <span class="muted" style="font-size:13px">$q_i$</span>
+          <span class="muted" style="font-size:18px">×</span>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;gap:4px">
+              <div class="tile" style="width:64px;height:26px;background:#FFFFFF">K 块 1</div>
+              <div class="tile" style="width:64px;height:26px;background:#FFFFFF">K 块 2</div>
+              <div class="tile" style="width:64px;height:26px;background:#FFFFFF">K 块 3</div>
+            </div>
+            <div style="display:flex;gap:4px">
+              <div class="tile" style="width:64px;height:26px;background:#FFFFFF">V 块 1</div>
+              <div class="tile" style="width:64px;height:26px;background:#FFFFFF">V 块 2</div>
+              <div class="tile" style="width:64px;height:26px;background:#FFFFFF">V 块 3</div>
+            </div>
+          </div>
+          <span class="muted" style="font-size:13px">$K,V$ 分块</span>
+          <span class="muted" style="font-size:18px">→</span>
+          <div class="tile" style="width:84px;height:58px;background:#E3DACC;color:#141413;border-color:#D97757">输出<br>块 $i$</div>
+        </div>
+        <p class="muted" style="font-size:14px;line-height:1.6">每个 $q_i$ 依次访问全部 $K/V$ 块，输出 $o_i$ 随着块的推进被<strong style="font-weight:600">原地更新</strong>，最后才写出一次。</p>
+      </div>
+      <div style="flex:1 1 360px;display:flex;flex-direction:column;gap:8px">
+        <p style="font-size:14px;font-weight:600">为什么不能直接边算边加？</p>
+        <p class="muted" style="font-size:14px;line-height:1.65">softmax 的权重是概率，分母要拿到<strong style="font-weight:600">整行所有分数</strong>才能知道。看到第 1 块时，你不知道后面还有没有更大的分数，因此既不能确定权重，也不能直接累加。</p>
+        <p class="formula">权重在整行上的和为 1，分母 $\\sum_j e^{s_{ij}}$ 必须等全行分数都见过才确定。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="display:flex;flex-direction:column;gap:16px">
+    <h2>第二步：在线 softmax 的三个累积量</h2>
+    <p class="muted" style="font-size:15px;line-height:1.65;max-width:860px">每处理一个 $K$ 块，就更新状态 $(m, \\ell, o)$：$m$ 是迄今为止见过的行最大值，$\\ell$ 是“用当前 $m$ 归一化后”的权重和，$o$ 是输出的未归一化累加。等所有块都过完，再用 $\\ell$ 和 $o$ 收尾。</p>
+    <div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:16px">
+      <div style="border:1px solid #E3DACC;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px;background:#F5F4ED">
+        <p style="font-family:Georgia,serif;font-size:22px;margin:0">$m$</p>
+        <p style="font-size:13px;font-weight:600">当前最大分数</p>
+        <p style="font-size:13px;line-height:1.6" class="muted">防止 $e^{s}$ 上溢：每块都取 $m^{(j)}=\\max(m^{(j-1)},\\tilde m^{(j)})$。</p>
+      </div>
+      <div style="border:1px solid #E3DACC;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px;background:#F5F4ED">
+        <p style="font-family:Georgia,serif;font-size:22px;margin:0">$\\ell$</p>
+        <p style="font-size:13px;font-weight:600">权重和（分母）</p>
+        <p style="font-size:13px;line-height:1.6" class="muted">当 $m$ 变大时，旧的 $\\ell$ 要乘衰减因子 $e^{m_{旧}-m_{新}}$，使各块权重在同一基准下相加。</p>
+      </div>
+      <div style="border:1px solid #E3DACC;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px;background:#F5F4ED">
+        <p style="font-family:Georgia,serif;font-size:22px;margin:0">$o$</p>
+        <p style="font-size:13px;font-weight:600">输出累加</p>
+        <p style="font-size:13px;line-height:1.6" class="muted">同样按衰减因子缩放旧 $o$，再加上本块贡献 $e^{s_{ij}-m^{(j)}}\\,v_j$，最后除以 $\\ell$ 归一化。</p>
+      </div>
+    </div>
+    <div style="background:#FAF9F5;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;border:1px dashed #C9BBA8">
+      <p style="font-size:13px;font-weight:600;color:#3D3D3A">在片上内存里，第 $j$ 步的状态更新</p>
+      <p class="formula">$m^{(j)}=\\max\\left(m^{(j-1)},\\ \\tilde m^{(j)}\\right),\\quad \\tilde m^{(j)}=\\max_{j\\in\\text{块}}\\ s_{ij}$</p>
+      <p class="formula">$\\ell^{(j)}=e^{m^{(j-1)}-m^{(j)}}\\,\\ell^{(j-1)}+\\sum_{j\\in\\text{块}}e^{s_{ij}-m^{(j)}}$</p>
+      <p class="formula">$o^{(j)}=e^{m^{(j-1)}-m^{(j)}}\\,o^{(j-1)}+\\sum_{j\\in\\text{块}}e^{s_{ij}-m^{(j)}}\\,v_j\\quad\\to\\quad o_i=\\frac{o^{(j_{\\text{末}})}}{\\ell^{(j_{\\text{末}})}}$</p>
+    </div>
+    <p class="muted" style="font-size:14px;line-height:1.6;max-width:900px">$e^{m_{旧}-m_{新}}$ 这一乘是关键：它把早期用较小最大值算出的权重，重缩放到新最大值下；$\\ell$ 与 $o$ 用同一个因子缩放，因此最后相除时归一化结论不变。</p>
+  </section>
+
+  <section style="display:flex;gap:20px;flex-wrap:wrap">
+    <div class="card" style="flex:1 1 420px;display:flex;flex-direction:column;gap:10px">
+      <h2>代价与边界</h2>
+      <p class="muted" style="font-size:14px;line-height:1.65">• FlashAttention 是<strong style="font-weight:600">精确</strong>的，不是近似，但并非与朴素实现逐位相同：浮点加减顺序变了，结果有舍入级差异。<br>• 收益取决于 $K$ 块大小与片上内存容量；小规模矩阵未必占优。<br>• 反向传播时不必保存完整的 $P$ 矩阵，可用重计算得到梯度，因此训练显存收益尤其明显。</p>
+    </div>
+    <div class="card" style="flex:1 1 420px;display:flex;flex-direction:column;gap:10px">
+      <h2>一句话检查理解</h2>
+      <p class="muted" style="font-size:14px;line-height:1.65">如果第 2 块出现了一个远大于第 1 块的最大值，之前累加的 $o$ 和 $\\ell$ 会发生什么？<br>答：都乘上 $e^{m_{旧}-m_{新}}<1$ 被缩小，相当于重新按新基准计数，而比值 $o/\\ell$ 仍收敛到同一行 softmax 加权结果。</p>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1180,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

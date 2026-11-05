@@ -19,13 +19,14 @@ import { artifactKind, type ArtifactKind } from './kinds.js'
 import { publishArtifactProgress } from './progress.js'
 import { artifactById, conversationDesignId, conversationSlidesId, lockReportWork, type ArtifactRow } from './repository.js'
 import { artifactReferencePages, readArtifactReference } from './skills.js'
-import { listing, putBlob, sha256, type WireEntry } from './store.js'
+import { isProjectPath, listing, putBlob, sha256, type WireEntry } from './store.js'
+import { slidesSummary } from './slides-observation.js'
 import { slideEditingContext } from './slides-workspace.js'
 
 type Control = Parameters<typeof createArtifactExecution>[0]
 const reportMethods = { submit_report: 'specialist', submit_verification: 'verifier' } as const
 /** Tools that read, or only change the files and comments any member may edit. */
-const READ_METHODS = new Set(['current', 'available_agents', 'read_file', 'check', 'read_reference', 'comments', 'design_systems'])
+const READ_METHODS = new Set(['plan_explanation', 'current', 'available_agents', 'read_file', 'check', 'read_reference', 'comments', 'design_systems'])
 const WORKSPACE_METHODS = new Set(['stop_workspace', 'stop_assignment', 'submit_report', 'submit_verification'])
 const DESIGN_FILE_JSON = ' Native arguments are JSON. Encode content as a JSON string: double quotes, backslashes and line breaks must be escaped so JSON decoding recovers the exact file text. Field-encoding example only: '
   + JSON.stringify({ content: '<div title="QK" data-demo="a\\b">\nQK\n</div>' })
@@ -116,7 +117,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
     const outcome = await native.api.publishArtifactFiles({ ...actor(context), artifactId: artifact.id, files })
     if (outcome.status !== 200) {
       throw new NoEffectError(outcome.body.message ?? `${outcome.body.code}: ${JSON.stringify(outcome.body.paths ?? [])}`,
-        outcome.status === 409 ? 'conflict' : outcome.status === 413 ? 'too_large' : 'invalid_input')
+        outcome.status === 409 ? 'version_conflict' : outcome.status === 413 ? 'too_large' : 'invalid_input')
     }
     return result(context, native, { version: outcome.body.version, seq: outcome.body.seq, shas: outcome.body.shas }, artifact)
   }
@@ -171,7 +172,23 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
 
   const label = kind === 'design' ? 'Design canvas' : 'Slides deck'
   const tools: ToolDefinition[] = [
-    nativeTool(`${kind}.current`, agentArtifactSchemas.current, { description: `Read the ${label} of this conversation: title, project files with sha256, assignments and reports.${kind === 'slides' ? ' Lists every deck this conversation made.' : ''}`, effect: 'read', approval: false, authorize,
+    ...(kind === 'design' ? [nativeTool('design.plan_explanation', z.object({ delivery: z.enum(['canvas', 'text', 'other']) }).strict(), {
+      description: 'Choose the response surface from the meaning of the current human request before answering. Choose canvas by default for an introduction, connected concepts, mechanisms, processes, relationships, multi-dimensional comparisons, tradeoffs or another broad/complex explanation, even without canvas keywords. A prose answer or Markdown comparison table accompanies the saved canvas for these requests. Reserve text for greetings, a single direct fact or explicit text-only requests. Choose other when the person requested a different deliverable or an operation rather than an explanation. This records a semantic decision only: it neither creates content nor proves delivery.',
+      effect: 'read', approval: false, authorize,
+      async execute(context, input) {
+        await scope(context, {})
+        return { ok: true, value: { delivery: input.delivery } }
+      },
+    })] : []),
+    ...(kind === 'design' ? [nativeTool('design.ensure', agentArtifactSchemas.current, {
+      description: 'Initialize this conversation’s single editable Design canvas if design.current returned null; otherwise reuse its existing canvas without replacing files. Returns the actual artifact and project files with sha256. Requires current artifact write authorization.',
+      effect: 'transaction', approval: false, authorize,
+      async execute(context, input) {
+        const artifact = await required(context, input), native = application(context)
+        return result(context, native, await native.api.getArtifactSnapshot(context.work.tenantId, artifact.id), artifact)
+      }, verify,
+    })] : []),
+    nativeTool(`${kind}.current`, agentArtifactSchemas.current, { description: `Read the ${label} of this conversation: title, project files with sha256, assignments and reports.${kind === 'slides' ? ' Lists every deck this conversation made in { deck, decks, editor }; top-level title and slideCount observe the saved deck.json title and order length. Missing/malformed index fields are omitted. These summary fields do not verify slide contents or rendering.' : ''}`, effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await scope(context, input), api = application(context).api
         const value = artifact ? await api.getArtifactSnapshot(context.work.tenantId, artifact.id) : null
@@ -179,7 +196,9 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         const project = (await (context.database as Queryable).query<{ project_id: string }>('SELECT project_id FROM conversations WHERE id=$1 AND company_id=$2', [conversation(context), context.work.tenantId])).rows[0]
         const decks = project ? await api.listArtifacts({ companyId: context.work.tenantId, projectId: project.project_id, kind: 'slides',
           readerId: context.work.principalId!, conversationId: conversation(context) }) : []
-        return { ok: true, value: { deck: value, decks, ...(artifact ? { editor: await slideEditingContext(context.database as Queryable, artifact.id, context.work.principalId!) } : {}) } }
+        const index = artifact ? await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/deck.json') : null
+        return { ok: true, value: { deck: value, decks, ...slidesSummary(index?.bytes.toString('utf8')),
+          ...(artifact ? { editor: await slideEditingContext(context.database as Queryable, artifact.id, context.work.principalId!) } : {}) } }
       } }),
     nativeTool(`${kind}.read_file`, agentArtifactSchemas.read_file, { description: `Read one project file of the ${label} and its sha256. Read right before you edit: people edit in the editor too.`, effect: 'read', approval: false, authorize,
       async execute(context, input) {
@@ -229,10 +248,11 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         const stored = await putBlob(db, definition, artifact.id, bytes, data.mime)
         return result(context, application(context), stored, artifact)
       } }),
-    nativeTool(`${kind}.check`, agentArtifactSchemas.check, { description: `Check the ${label}'s files with the format checker; fix what it names until problems is 0.`, effect: 'read', approval: false, authorize,
+    nativeTool(`${kind}.check`, kind === 'design' ? agentArtifactSchemas.check.extend({paths:z.array(z.string().max(512).refine(path=>isProjectPath(path)&&/^project\/.+\.dc\.html$/.test(path))).max(32).optional()}) : agentArtifactSchemas.check,
+      { description: `Check the ${label}'s files with the format checker; fix what it names until problems is 0. This verifies format, not content quality, visual rendering or export.` + (kind === 'design' ? ' Pass the actual authored .dc.html paths to verify they still exist and are referenced in the checked canvas; checkedBoardPaths is authoritative for those files.' : ''), effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await required(context, input)
-        return { ok: true, value: await checkArtifact(context.database as Queryable, artifact, context.signal) }
+        return { ok: true, value: await checkArtifact(context.database as Queryable, artifact, context.signal,(input as {paths?:string[]}).paths) }
       } }),
     nativeTool(`${kind}.read_reference`, kind === 'design' ? agentArtifactSchemas.read_reference.extend({ page: z.enum(artifactReferencePages(kind) as [string, ...string[]]) }) : agentArtifactSchemas.read_reference, { description: kind === 'design' ? `Read a ${label} reference page. Start with format.md for the authoring format, after loading the registered skill. Valid pages from this deployment: ${artifactReferencePages(kind).join(', ')}. Use the skill's reference links for each page's purpose; never guess filenames.` : `Read a ${label} format reference page (artifact-type/reference/<page>).`, effect: 'read', approval: false, authorize,
       async execute(_context, input) {
@@ -305,13 +325,13 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
       async execute(context, input) {
         const artifact = await required(context, input), api = application(context).api
         const index = await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/deck.json')
-        if (!index || index.sha256 !== input.ifMatch) throw new NoEffectError('Read the current deck.json before installing a design system.', 'conflict')
+        if (!index || index.sha256 !== input.ifMatch) throw new NoEffectError('Read the current deck.json before installing a design system.', 'version_conflict')
         const metadata = JSON.parse(index.bytes.toString('utf8')) as Record<string, unknown>
         const systems = Array.isArray(metadata.designSystems) ? metadata.designSystems : Object.values((metadata.designSystems ?? {}) as object)
         const prefix = `project/ds/${input.namespace}/`
         const current = await listing(context.database as Queryable, artifact.id)
         if (systems.some(system => system?.namespace === input.namespace) || Object.keys(current.files).some(path => path.startsWith(prefix))) {
-          throw new NoEffectError('This namespace already exists; inspect and edit its files with ifMatch.', 'conflict')
+          throw new NoEffectError('This namespace already exists; inspect and edit its files with ifMatch.', 'version_conflict')
         }
         if (!input.files['tokens.json']) throw new NoEffectError('tokens.json is required; read_reference ds-format.md describes the format.', 'invalid_input')
         try { JSON.parse(input.files['tokens.json']) } catch { throw new NoEffectError('tokens.json must contain valid JSON.', 'invalid_input') }

@@ -1,4 +1,5 @@
 // Adapted from Memos MemoContent/index, MemoMarkdownRenderer and markdown/Paragraph (MIT). See README.md.
+import { preserveLearningOperators } from '../learning-operators'
 import { TaskEditContext } from './TaskEditContext'
 import { useContext, lazy, memo, Suspense } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
@@ -47,7 +48,8 @@ const components: Components = {
 }
 const MathMarkdownRenderer = lazy(() => import('./MathMarkdownRenderer'))
 
-export const MemoContent = memo(function MemoContent({ content, className, onTaskToggle }: { content: string; className?: string; onTaskToggle?:(line:number)=>void }) {
+export const MemoContent = memo(function MemoContent({ content, className, onTaskToggle, literalOperators = false }: { content: string; literalOperators?: boolean; className?: string; onTaskToggle?:(line:number)=>void }) {
+  if (literalOperators) content = preserveLearningOperators(content)
   return <TaskEditContext value={onTaskToggle}><div className={cn('w-full min-w-0 flex flex-col justify-start items-start text-foreground', className)}>
     <div data-content-typography="forum" data-memo-content className="relative w-full max-w-full min-w-0 [overflow-wrap:anywhere] text-base leading-6 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_.katex-display]:max-w-full [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.footnotes]:mt-4 [&_.footnotes]:border-t [&_.footnotes]:border-border [&_.footnotes]:pt-2 [&_.footnotes]:text-sm [&_.footnotes]:text-muted-foreground">
       {hasMathSyntax(content) ? <Suspense fallback={<p role="status" className="text-sm text-muted-foreground">正在排版公式…</p>}><MathMarkdownRenderer content={content} components={components} /></Suspense>

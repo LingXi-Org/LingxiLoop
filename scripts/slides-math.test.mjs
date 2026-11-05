@@ -43,6 +43,22 @@ test('an amount before explicit math cannot consume its delimiters', () => {
   }
 })
 
+test('negative prices and prose stay literal without swallowing later Slides formulas', () => {
+  for (const text of ['$-5$', '$-10.00$', '$hello world$']) {
+    assert.deepEqual(slideMathRuns([{ text }]), [{ text }], text)
+  }
+  for (const prefix of ['Budget $-5; formula ', 'Budget $-5 and $-10; formula ', '$hello world$; formula ']) {
+    for (const formula of ['$x^2$', String.raw`\(x^2\)`, '$$x^2$$']) {
+      const text = prefix + formula
+      const output = slideMathRuns([{ text }])
+      assert.equal(output.filter(run => run.mathHtml).length, 1, text)
+      assert.equal(output.find(run => run.mathHtml).text, formula, text)
+      assert.equal(output.map(run => run.text).join(''), text)
+    }
+  }
+  for (const text of ['$-2^n$', '$h_t = f(h_{t-1}, x_t)$']) assert.equal(math(text).length, 1, text)
+})
+
 test('invalid math and untrusted commands stay readable without executing HTML', () => {
   const invalid = slideMathRuns([{ text: String.raw`\(\notACommand{x}\)` }])
   assert.equal(invalid[0].mathHtml, undefined)

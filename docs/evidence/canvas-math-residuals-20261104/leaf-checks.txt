@@ -1,0 +1,23 @@
+✔ Slides exports fetch formula fonts from the public stylesheet while project fonts keep their grant paths (13.870341ms)
+✔ Design preview math covers both external and inline runtime without changing archived bytes (59.174469ms)
+✔ math injection preserves replacement tokens and minified dollar identifiers literally (0.351342ms)
+✔ the public Roadmap RNN and independent Attention samples are recognized as inline math (0.990291ms)
+✔ currency does not consume a subsequent formula delimiter (0.421438ms)
+✔ backticks, escaped dollars and explicit math delimiters keep their source boundary (0.168265ms)
+✔ Slides renders delimited inline, display, matrix and aligned math with the installed KaTeX (13.715226ms)
+✔ math keeps original text and rich marks across a formula, including line breaks (1.55823ms)
+✔ amounts, escaped delimiters, code and unmarked TeX stay literal (2.348613ms)
+✔ an amount before explicit math cannot consume its delimiters (1.187769ms)
+✔ negative prices and prose stay literal without swallowing later Slides formulas (2.804288ms)
+✔ invalid math and untrusted commands stay readable without executing HTML (3.872882ms)
+✔ existing monospace model values stay code and tables participate in formula export (0.605367ms)
+✔ ordinary text does not request math; first use coalesces and a failed chunk can retry (111.792336ms)
+✔ feature dependency preparation coalesces and a failed fetch never starts a cached module failure (20.249164ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 392.401273

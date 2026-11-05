@@ -1,0 +1,440 @@
+{
+  "sourceCommit": "1bd9e539bea64d9bfd356d68c7dcf3e7e4fdbaff",
+  "runtime": "3.8.25",
+  "id": "lingxiloop",
+  "version": "3.8.24-design-1",
+  "hash": "2cd6afd4037eb4596c6ef9b3ee1fdc6d00540d5fa3e05ee0820ba79f5e92e2cb",
+  "skills": [
+    {
+      "name": "public-task-progress",
+      "version": "4",
+      "hash": "64f2cb973052f2970f4181d75491832def63526f00e96e5e0b75accac0050e1c"
+    },
+    {
+      "name": "claude-design",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6-host-4",
+      "hash": "f251cbd0d0357699f64ab1d9e520d24ae3f49c5b57d5bede2dd6be981e6c0c4f"
+    },
+    {
+      "name": "design-cooperation",
+      "version": "1",
+      "hash": "0fdb712ac581998cda2314b627009d616443ac5a8a1d6543abf593c301a1e7ef"
+    },
+    {
+      "name": "document-edit",
+      "version": "1",
+      "hash": "5c311b7ffd4f81451f0521c9eb2e74491c722954b8cb4c31237aca9bab2250c7"
+    },
+    {
+      "name": "course-evidence",
+      "version": "4",
+      "hash": "0eda44f05a99f8adc099e632f2d709c95c411198ce6d6a923793f19e83b44a6a"
+    },
+    {
+      "name": "forum-assignments",
+      "version": "1",
+      "hash": "c1d485052db5a6369f819e39c752e5aee6d322cac7d906fbdc664778e1f46ba9"
+    },
+    {
+      "name": "research-evidence",
+      "version": "2",
+      "hash": "cd18dde58a2c178474169b78a638e11122720ddff5da8ac2bbc4eeafff5856a2"
+    },
+    {
+      "name": "claude-slides",
+      "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6-host-3",
+      "hash": "487b586b3eda964fa972879be2ab4f1a9061e4ff87f0764c99ef6112774950c1"
+    },
+    {
+      "name": "slides-cooperation",
+      "version": "1",
+      "hash": "b90d5070fb35462a9e57d8e61807feaa60d8ec4482f4f4a3e035a0d46979b116"
+    }
+  ],
+  "tools": [
+    {
+      "action": "chat.metadata",
+      "hash": "ee119c3a1e004d5cf2d1c5d3cb862244ee7cba5fa837839e8c3f7ac17b8903a6"
+    },
+    {
+      "action": "chat.list_mutes",
+      "hash": "246e6d8542c623ac5876664e1945dacb516838233859f565d149266f6c6c73c3"
+    },
+    {
+      "action": "chat.add_member",
+      "hash": "b629b2b60beca03f9d96830c1630608f6106f03a1d3a059b2e51c1819b609acc"
+    },
+    {
+      "action": "chat.set_topic",
+      "hash": "0ab7d0114bb8effde972286eeb4a86fc7669df05e9c177f10166008182c9e30e"
+    },
+    {
+      "action": "chat.rename",
+      "hash": "6091a27713fb758a18021667134a56263a2027c8cc28aaf7bebd985c44aa9105"
+    },
+    {
+      "action": "chat.set_muted",
+      "hash": "6e463931b52ddc47c10c9d499bf2eb2f9d8870b93481b18e89e76909ef258ae5"
+    },
+    {
+      "action": "chat.send",
+      "hash": "96680066a12a5e0d2f8f630e050a1e8daaba614cfd7f032e89b3844bb7df9bf1"
+    },
+    {
+      "action": "chat.recommend",
+      "hash": "3e734bea008ce832d3cd94e322b5071a2c00a1ee88bf5974d0e391e657477e2f"
+    },
+    {
+      "action": "chat.ask",
+      "hash": "2da9b68cb7f7f7f890082899c537f1e86d904138698395e7fd1ce942ef7342a8"
+    },
+    {
+      "action": "chat.history",
+      "hash": "7fc4a5a4b2e6e486279d3a15b58505fbba8fa25ce72ea900e6611bdbbc0c5b51"
+    },
+    {
+      "action": "chat.inbox",
+      "hash": "95e547175d5823b35a6448831334371705033bb616ddc77d0b46ed608c57d2a8"
+    },
+    {
+      "action": "chat.search",
+      "hash": "79c89dcc0b76d8e1fe1f44af7d388dc04c8484a854ac979f4025a32659d4f7d8"
+    },
+    {
+      "action": "chat.ack",
+      "hash": "aa97fca8dbe63dd40a4fb853be7a5ae220bb5603078744714b1b027e425e5f36"
+    },
+    {
+      "action": "chat.react",
+      "hash": "72d9e5ec0cdce686a5537ce314125289cbb96d6a2d4142ee5732730753dec325"
+    },
+    {
+      "action": "chat.report_progress",
+      "hash": "8ba84eec2f1127cbf7edf4618ea6fc6ae9a331a7104805618b6525de6a9af0a1"
+    },
+    {
+      "action": "design.plan_explanation",
+      "hash": "770ea4afa9547b7c251aac943d8b14b2e97e7b7b534b4db72637201e20438b7e"
+    },
+    {
+      "action": "design.ensure",
+      "hash": "fc666bec1a6f79983f841e39dd7cdba0596b191cd90e49963ecf69dc400bcf0e"
+    },
+    {
+      "action": "design.current",
+      "hash": "ab1bf640ec4bb4c561eb74b63f54da1f303655f5d5d762543088d63d7ad9396c"
+    },
+    {
+      "action": "design.read_file",
+      "hash": "715a33d54a59caf690be9f6bfc56cfaa2eb61520f3a445ddbdef2e9ac502677c"
+    },
+    {
+      "action": "design.write_files",
+      "hash": "2377e6cfc7a87aa6013a3f3c134f277ddcfe9566dd6eadfa9c740cd71308f25e"
+    },
+    {
+      "action": "design.edit_file",
+      "hash": "756674b7af5d22b49e5b157aad002f5621f7ecce51558a75b5953c186e3c9da8"
+    },
+    {
+      "action": "design.import_asset",
+      "hash": "339e8d9c4e0a9eaeec88a4efe06e65307a70e8a466d617773e6538d0fb54a9c7"
+    },
+    {
+      "action": "design.check",
+      "hash": "0563819d574e2b8b3c7ab699c47859713b0ec71fa54601a54ea6ad7d005f7e8c"
+    },
+    {
+      "action": "design.read_reference",
+      "hash": "91151338c93df920f50ef883e8093a88a9214b19c1965f3f387a25955c83c6f0"
+    },
+    {
+      "action": "design.comments",
+      "hash": "959b10276edd92276135b568850af7772d34e4bbc0614ee6bc6af6f3ab94cf8e"
+    },
+    {
+      "action": "design.comment_reply",
+      "hash": "07fb036a6b47701b4eac9b258f62ea98f4773ba446bbb046997a84057cf7854d"
+    },
+    {
+      "action": "design.comment_resolve",
+      "hash": "b59712522b0335968f060beacb3978776ef47261c392ce3e12538e4d49c3340a"
+    },
+    {
+      "action": "design.available_agents",
+      "hash": "4cad9a10e24af03509b7a27f65fcd033efc743b2816631d3c5ee58a665a83642"
+    },
+    {
+      "action": "design.start_workspace",
+      "hash": "42a122360ca09836ba075ddb1e853b9973c55b24d8f81defbd0454c26f4ed47c"
+    },
+    {
+      "action": "design.stop_assignment",
+      "hash": "e30fdbc3e811b5b79a4d969db9627a525459f5a8ef45c0c6a3743d1a6ac8dfa3"
+    },
+    {
+      "action": "design.stop_workspace",
+      "hash": "9ea03c653adefa5afaa4837ea56b7a2b518a216a49eac22e34e5a68794ec57bf"
+    },
+    {
+      "action": "design.submit_report",
+      "hash": "06e16ee9876389a86e52a4e3b19602d68de3e9d8131af13e7b9639ff38901e0f"
+    },
+    {
+      "action": "design.submit_verification",
+      "hash": "84afe2f92292762979c27737a3019c1fbb520a9350e654dd39ab6c5ad779c0f8"
+    },
+    {
+      "action": "directory.self",
+      "hash": "1d91462392f736a7126acd3872ee5cee96278d073d6959894da0c602a19ff543"
+    },
+    {
+      "action": "directory.participants",
+      "hash": "4c9bc068892e22a245b527b9c430624de903fa8fe5d8c8b2014a568711345793"
+    },
+    {
+      "action": "directory.statuses",
+      "hash": "24f47e1ce8854ff38eda76d7fa71f107b62941c0796e1fa0a29c97d2ba42abc5"
+    },
+    {
+      "action": "documents.list",
+      "hash": "9355e209885a5f6ac1fc4a2729423c6eada8d02cee8494d02f25b7698c6ddf66"
+    },
+    {
+      "action": "documents.recent",
+      "hash": "10c625f67de47fb573ebcf26c3a868b38da1999ec38e2e608f8d4917c0aaa64f"
+    },
+    {
+      "action": "documents.read",
+      "hash": "ec41223730ce006de0a25720fe347228749ad2f3bcfe5cc1b5f95a58132ff6a8"
+    },
+    {
+      "action": "documents.create",
+      "hash": "48a3e77301ced2ab3318e01f42eadb2e9fbd531274706343d536650a128f83c3"
+    },
+    {
+      "action": "documents.edit",
+      "hash": "ccbd43690c764d1587b95a9d91391ed26f3545f05b9bb66164843e57714bf15c"
+    },
+    {
+      "action": "documents.rename",
+      "hash": "ad0b8fbaba642fe271721f7c45c1d5d5975d0a64bbd7b1980135f09a4b658ee7"
+    },
+    {
+      "action": "documents.delete",
+      "hash": "8d819452df3fcd33ff44e4e8f63a5912ec4ec9f7d2e6c9b8b027df8ccb3cdba1"
+    },
+    {
+      "action": "files.list",
+      "hash": "a37c1ccafd2cdfc8703602c789b44edd31906c408d8fc4492a0759361bf3a9c0"
+    },
+    {
+      "action": "files.read",
+      "hash": "018d3a0b3599d500e97c758f9b0808ab4d932526fea07176abf31aa2c3f4e5d3"
+    },
+    {
+      "action": "files.create",
+      "hash": "1e834caa94ec0e35669c1171f8939f4136827bdd99335af6ab1b893dadb0c36c"
+    },
+    {
+      "action": "knowledge.search",
+      "hash": "3a09fbeaa50f213d325a0ea54e35c99e5f389fbe54082d0d1e18a3907fcf7b03"
+    },
+    {
+      "action": "knowledge.read_source",
+      "hash": "965dd8ea86addb4130c0b8696b85139a58731f8a9cb775394d0b4dbe92b72833"
+    },
+    {
+      "action": "knowledge.list_sources",
+      "hash": "8f2fd78487824b6771545962e30efc65035b8a8266c6fe8c3b1795b9f1afcca3"
+    },
+    {
+      "action": "knowledge.check_source",
+      "hash": "98e39bb80a17da9a0c2ade35497c313dc060925e78ae949a76d91489b77b4ae5"
+    },
+    {
+      "action": "knowledge.add_text",
+      "hash": "4b1249d6e7b21d176f74a1f39a6146dcf5bf15d143b2a0245b2cd28b821ba273"
+    },
+    {
+      "action": "knowledge.add_url",
+      "hash": "bce29ecbbe95d88baccc4826029b660c647b79096595e731e52bf0c590bd8c3c"
+    },
+    {
+      "action": "knowledge.add_file",
+      "hash": "eb1e2c6a2ea31a125032e5307ca156d1f8ec73264bbb754d70d0072c03324ad3"
+    },
+    {
+      "action": "knowledge.retry_ingestion",
+      "hash": "23808801e2e3dffb5f7a92a9cfabcace72c1f1fd52141f6abed67e0405dc9141"
+    },
+    {
+      "action": "knowledge.set_source_enabled",
+      "hash": "df3bdd90a965373965c4cf871d287e2f9096b8d93dbb080f2a94d30baeea7fea"
+    },
+    {
+      "action": "knowledge.delete_source",
+      "hash": "f5202be3694e23bfc38deaa0ce0b176456aa52a76774abd20eaf809584d94a59"
+    },
+    {
+      "action": "learning.get_homework",
+      "hash": "560a23f230e612c05f05105ce8293200fdc381d8272afafb43bf7fde1aad1823"
+    },
+    {
+      "action": "learning.assess_homework",
+      "hash": "139de3269762175a39d2c39680300a8663f5147554a5ee11445b7f2e745c0ec8"
+    },
+    {
+      "action": "learning.list_assignments",
+      "hash": "caa6e90e27f4665e841207fd7f5a86fbc974223249ed871cc5bdde632b8b86a9"
+    },
+    {
+      "action": "learning.get_assignment",
+      "hash": "61cc8ccee62f7b38fe1c7f209fa5dd4bdd488938c1c1269233db55fd4c26a056"
+    },
+    {
+      "action": "learning.list_submissions",
+      "hash": "c7be8c92034740f48d25741d0e1acc3a70aa6872acef6cf80a370ef1722ae2ce"
+    },
+    {
+      "action": "learning.submit_assignment",
+      "hash": "696d94981f6f9235ed222e16c60f706075f6a4a33bfc93c71170d965901199ce"
+    },
+    {
+      "action": "memory.summary",
+      "hash": "421bad85a182cbcd54dc26d5c091d4280470847c982968b4e92625a5c7740441"
+    },
+    {
+      "action": "polls.create",
+      "hash": "75199e57e836d2c82b900b2bcc2ad2129c7a378bf57fab49ba0fb7fb2d3d40a7"
+    },
+    {
+      "action": "polls.vote",
+      "hash": "994fc6f928e2e3f74984e592c1f2dadd2edb2a5480d06739812bb73d7261ac06"
+    },
+    {
+      "action": "polls.close",
+      "hash": "2ff30d30e4838d877931d2fe6b5fd34f9b8de0021f3b2d6f5e85b8917039088c"
+    },
+    {
+      "action": "polls.show",
+      "hash": "3e4c63e104d6fc8d5666e2e27b46a39c0e0685e6b1c9295ee3e3186a25597cbd"
+    },
+    {
+      "action": "research.search",
+      "hash": "f76218ee9a8ae9027a830a43486b02c307067a94422740e2bd87749e8fd1d3e8"
+    },
+    {
+      "action": "research.read",
+      "hash": "c8b4b516afef371a8a8595cf24cf6f4e19765054eab33e855ccfc1e20f287ed4"
+    },
+    {
+      "action": "routines.list",
+      "hash": "444ee87c7895119bbf22c77a9a4609de2b945cad9af7b2eedef8679b772b6776"
+    },
+    {
+      "action": "routines.create",
+      "hash": "3be739b57af4c238a9fdbc44cf9e0bfc7a0d634f44849ffcd9871504fb1c0aa0"
+    },
+    {
+      "action": "routines.activate",
+      "hash": "ea9d086206193d124abb9df7b342d9a40776940a27df548865c3a32f5e3c98a6"
+    },
+    {
+      "action": "routines.pause",
+      "hash": "95c7e50747d21c9568a6606b86e175d56fa3ee6727978eb72d2a5b327b1d5b02"
+    },
+    {
+      "action": "slides.current",
+      "hash": "9a25a06d497a5f2a8ff6e114676da152bcbf5f29ced348a112ded669f24335f6"
+    },
+    {
+      "action": "slides.create",
+      "hash": "5ff399a6236cfcadaab9ca06e46eda52faed9752ea5edfe96da98dada708804f"
+    },
+    {
+      "action": "slides.read_file",
+      "hash": "6c62f5574aa9dad51af662c09f9f43e39834f277610e77b0efe666657e718d64"
+    },
+    {
+      "action": "slides.write_files",
+      "hash": "0ecb2d2ffc785cf5305b64443ac88d27e007362f0e5877222be3680533f9d307"
+    },
+    {
+      "action": "slides.edit_file",
+      "hash": "5819557c3d9ddb457b5eb133426a947757a703a9d9f50ae93720325b5c640b80"
+    },
+    {
+      "action": "slides.import_asset",
+      "hash": "189774274e98e76727dbfe7977fa004abefa761777a0058865b2c62be0b46519"
+    },
+    {
+      "action": "slides.check",
+      "hash": "82725985b5ba0db44c147a1106a4ab335a63f37d155afda73406ea99c88f0037"
+    },
+    {
+      "action": "slides.read_reference",
+      "hash": "dbaccf220b80522be61cd896a390bedeac7ae38f3fe65a57f869eb8d8b521ae9"
+    },
+    {
+      "action": "slides.comments",
+      "hash": "217b35838f06c89fade156e6e809952357e1931ea34fe5b697064b7318732a31"
+    },
+    {
+      "action": "slides.comment_reply",
+      "hash": "9c22e897436d943da9bb6aa67e3895781cc0e30e200daef4e8eca144c22260fa"
+    },
+    {
+      "action": "slides.comment_resolve",
+      "hash": "bfcbb1b8838007bf6bc1b0e7dd42f35fe2f687816ead2a68601eaa0be02b8fdb"
+    },
+    {
+      "action": "slides.available_agents",
+      "hash": "f4d275811429f3a94e97a089b49c20913d8a3521462c57bd53e845ea8e9a38f9"
+    },
+    {
+      "action": "slides.start_workspace",
+      "hash": "4ba98d2b12cc0a76aa785eccc191709ace0000f1b25bb0ca2072f237f9126a02"
+    },
+    {
+      "action": "slides.stop_assignment",
+      "hash": "52a7c067bc659eaa38ec10e989bb17d19a15015caec2fe299eac6be31fd4fcce"
+    },
+    {
+      "action": "slides.stop_workspace",
+      "hash": "7b15999cf0a7fb874aa9de04f156cba9d539688c5cdf0a4f3f919950dfd4969a"
+    },
+    {
+      "action": "slides.submit_report",
+      "hash": "d22ba99d9aac90534657710921fcb4fe9d9a113cb4cb855a09fbd2babc9ecf19"
+    },
+    {
+      "action": "slides.submit_verification",
+      "hash": "cf2480d8e0a06957943c5c5f2540a20a35bd8ed03182e3dc12b94de2cea03e38"
+    },
+    {
+      "action": "slides.design_systems",
+      "hash": "9ad16111f3c763a0de1b3d46ae975e07a540d9c36422c66ebbd2641e2d8eff09"
+    },
+    {
+      "action": "slides.install_design_system",
+      "hash": "9425d503d4538f0fd63c9241bbc37ded78e9d11536b0fe017e57d0686484af7c"
+    },
+    {
+      "action": "teacher.draft_homework",
+      "hash": "7a7d87f53c122d4bdf1ebb827ef6d0ba7f69da70161e766d0d4fb9b95e50a34c"
+    },
+    {
+      "action": "teacher.homework_overview",
+      "hash": "44bd3a64ea3dd7ed71d304059a236fd1753928bcd288c33ada571f00e3068976"
+    }
+  ],
+  "presentations": [
+    {
+      "type": "memory-summary",
+      "version": "1"
+    }
+  ],
+  "admissionHash": "8c8b2433d1df76cf30f8410ce83278588ba2a19c2c99360dc341a37ab20369d1",
+  "admissionCapture": "Public conversations.ingest on exact main1bd9e539/formal25 in a fresh isolated test database; no Worker/model invocation."
+}

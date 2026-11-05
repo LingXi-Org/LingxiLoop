@@ -7,7 +7,8 @@ const delimiters = [
   { left: '\\[', right: '\\]', display: true },
 ]
 const inlineDollar = [{ left: '$', right: '$', display: false }]
-const isCurrency = source => /^\s|\s$|\n/.test(source) || /^\d/.test(source) && !/[\\^_={}+*<>]/.test(source)
+const isCurrency = source => /^\s|\s$|\n|^[;,:.!?]/.test(source) ||
+  (/^-?\d/.test(source) || /\s/.test(source)) && !/[\\^_={}+*<>]/.test(source)
 
 // Raw text remains the document format and the editing surface. Only read-only
 // views use these derived runs; never write KaTeX DOM back into the model.
@@ -42,7 +43,7 @@ export function slideMathRunsWith(runs, render) {
     // Explicit delimiters take precedence over ambiguous currency dollars.
     const parts = splitAtDelimiters(masked, delimiters).flatMap(part => {
       if (part.type !== 'text') return [part]
-      const dollars = part.data.replace(/\$(?=\d)/g, (dollar, index) => {
+      const dollars = part.data.replace(/\$(?=-?\d)/g, (dollar, index) => {
         const end = part.data.indexOf('$', index + 1)
         return end === -1 || isCurrency(part.data.slice(index + 1, end)) ? ' ' : dollar
       })

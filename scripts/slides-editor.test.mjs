@@ -1,3 +1,5 @@
+import './slides-workspace-fixture.test.mjs'
+import './slides-debug.test.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
@@ -64,6 +66,8 @@ test('native build keeps export libraries lazy and reduces initial JavaScript', 
   assert.doesNotMatch(html, /index-kN-1njux/)
   assert.ok(html.includes(report.styles.file))
   assert.deepEqual(Object.keys(report.features).sort(), ['exports', 'math', 'pptx', 'presentation', 'properties', 'templates', 'woff2'])
+  assert.ok(!report.initial.inputs.some(path => path.endsWith('/modules/files-debug-panel.js')), 'disabled file debugger stays out of first view')
+  assert.ok(report.inputs.some(path => path.endsWith('/modules/files-debug-panel.js')), 'enabled debugger remains packaged')
   assert.ok(report.features.properties.some(file => file.startsWith('properties-')))
   assert.ok(!report.initial.inputs.some(path => /\/(?:ui-selection-inspector|design-system-theme-panel|ui-segmented-property|ui-sides-property)\.js$/.test(path)), 'closed property panels stay out of first view')
   assert.ok(report.features.presentation.some(file => file.startsWith('presentation-')))

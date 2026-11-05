@@ -1,10 +1,12 @@
 import { retiredVisualizationRanges } from '@/lib/retired-visualizations'
 import { type TextMessagePartComponent, type TextMessagePartProps, TextMessagePartProvider, useAuiState } from '@assistant-ui/react'
 import { Fragment, useMemo } from 'react'
+import { legacyVisualizeReferences } from '../../../../shared/retired-visualize'
+import { ArchivedVisualizeReferences } from './ArchivedVisualizeReferences'
 import { answerTextOffset } from '@/lib/answerSegment'
 import { answerDisplayRunning, answerDisplaySlice } from '@/lib/answerSegmentDisplay'
 import { TextOffsetContext } from '@/components/assistant-ui/text-offset-context'
-export function AnswerText({part,Text}: {part:TextMessagePartProps;Text:TextMessagePartComponent}) {
+export function AnswerText({part,Text,readOnly = false}: {part:TextMessagePartProps;Text:TextMessagePartComponent;readOnly?:boolean}) {
   const message = useAuiState(state=>state.message)
   const textOffset = useAuiState(state=>answerTextOffset(state.message.parts,state.message.parts.indexOf(state.part)))
   const partIndex = useAuiState(state=>state.message.parts.indexOf(state.part))
@@ -26,10 +28,17 @@ export function AnswerText({part,Text}: {part:TextMessagePartProps;Text:TextMess
   </TextOffsetContext.Provider>
   if (!ranges.length) return text === part.text && offset === textOffset && running === (part.status.type === 'running')
     ? <Text {...part} /> : render(0,text.length)
+  const custom = message.metadata.custom
+  const source = typeof custom.sourceMessageId === 'string' ? custom.sourceMessageId
+    : typeof custom.imMessageId === 'string' && typeof custom.sequence === 'number' && custom.sequence > 0 ? custom.imMessageId
+    : custom.harness ? undefined : message.id
+  const archive = !running && message.status?.type === 'complete' && <ArchivedVisualizeReferences
+    key={JSON.stringify([message.id,source,custom.conversationId])} references={legacyVisualizeReferences(text)}
+    conversationId={typeof custom.conversationId === 'string' ? custom.conversationId : undefined} sourceMessageId={source} readOnly={readOnly}/>
   let cursor = 0
   return <>{ranges.map(({start,end}) => {
     const before = render(cursor,start)
     cursor = end
     return <Fragment key={start}>{before}<p role="note" className="retired-visualization text-sm text-muted-foreground">此可视化功能已下线。</p></Fragment>
-  })}{render(cursor,text.length)}</>
+  })}{render(cursor,text.length)}{archive}</>
 }

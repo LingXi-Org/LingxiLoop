@@ -49,7 +49,7 @@ export const conversationTools: ToolDefinition[] = [
     } }),
   nativeTool('chat.add_member', z.object({ participantId: addMemberRequestSchema.shape.id }).strict(), { description: 'Add a permitted participant to this group conversation.', effect: 'transaction', approval: false, authorize, verify,
     async execute(context, input) {
-      const native = application(context), result = await native.app.addAgentMember(context.work.agentId, productConversationId(context.work), input.participantId)
+      const native = application(context), result = await native.app.addAgentMember(context.work.agentId, productConversationId(context.work), input.participantId, context.work.principalId!)
       await queueNativeEvents(context, native.events)
       return { ok: true, value: { ...result, expected: { members: result.members } } }
     } }),

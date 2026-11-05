@@ -1,0 +1,57 @@
+{
+  "measurementComplete": false,
+  "wire": [
+    {
+      "call": 1,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__plan_explanation",
+          "fields": [
+            "delivery"
+          ],
+          "argumentBytes": 19,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 2,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "public_answer",
+          "fields": [
+            "operation",
+            "answer",
+            "outcome"
+          ],
+          "argumentBytes": 665,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    }
+  ]
+}

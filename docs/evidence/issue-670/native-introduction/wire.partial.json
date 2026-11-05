@@ -1,0 +1,263 @@
+{
+  "measurementComplete": false,
+  "wire": [
+    {
+      "call": 1,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__plan_explanation",
+          "fields": [
+            "delivery"
+          ],
+          "argumentBytes": 28,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 2,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "skills__load",
+          "fields": [
+            "name",
+            "version",
+            "hash"
+          ],
+          "argumentBytes": 169,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 3,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__read_reference",
+          "fields": [
+            "page"
+          ],
+          "argumentBytes": 20,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 4,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__current",
+          "fields": [
+            "artifactId"
+          ],
+          "argumentBytes": 25,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 5,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__ensure",
+          "fields": [
+            "artifactId"
+          ],
+          "argumentBytes": 30,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 6,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__read_file",
+          "fields": [
+            "artifactId",
+            "path"
+          ],
+          "argumentBytes": 93,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 7,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__read_file",
+          "fields": [
+            "artifactId",
+            "path"
+          ],
+          "argumentBytes": 107,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 8,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__write_files",
+          "fields": [
+            "artifactId",
+            "files"
+          ],
+          "argumentBytes": 23794,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 9,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__check",
+          "fields": [
+            "artifactId"
+          ],
+          "argumentBytes": 50,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 10,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "public_answer",
+          "fields": [
+            "operation",
+            "commentary",
+            "answer",
+            "outcome"
+          ],
+          "argumentBytes": 3291,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    }
+  ]
+}

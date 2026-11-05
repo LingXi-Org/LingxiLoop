@@ -212,3 +212,22 @@ test('all three failed append candidates stay out of the body on both live and r
     assert.doesNotMatch(JSON.stringify(projected),/Different complete explanation/)
   }
 })
+
+test('retired visualization references preserve exact body bytes through streaming, cancellation, history and final replay', () => {
+  for (const reference of ['::visualize{"path":"/retained/lesson.html"}', 'visualize{"path":"/retained/lesson.html"}', '::visualize{"path":']) {
+    const text = `历史正文。\n${reference}\n尾部保留。`
+    const projection = new RunStreamProjection('run', true)
+    projection.advance({ type: 'state', state: state() })
+    projection.advance({ type: 'event', event: event(1, 'public.text.delta', { ...source('legacy', 'answer'), chunkIndex: 0, text }) })
+    assert.equal(answer(projection).map(part => part.type === 'text' ? part.text : '').join(''), text)
+    projection.advance({ type: 'event', event: event(2, 'public.text.ended', { ...source('legacy', 'answer'), chunkCount: 1, reason: 'cancelled' }) })
+    const history = projection.activityPage(0).message.content.filter(part => part.type === 'text')
+    assert.ok(history.some(part => part.type === 'text' && part.text === text))
+    const goalOutcome = { status: 'partial' as const, verification: 'inconclusive' as const, requestVersion: 1 }
+    projection.committed({ version: 2, runId: 'run', agentId: 'agent', sessionId: 'session', body: text,
+      envelope: { version: 1, requestVersion: 1, body: text, evidenceSnapshotId: 'evidence', citations: [], artifacts: [], goalOutcome } },
+    { resultId: 'historical-result', fence: 1 })
+    assert.equal(answer(projection).map(part => part.type === 'text' ? part.text : '').join(''), text)
+    assert.ok(projection.snapshot.message.content.every(part => part.type !== 'generative-ui'), 'a retired reference never becomes executable UI')
+  }
+})

@@ -37,8 +37,12 @@ with sync_playwright() as pw:
   assert abs(after-(expected+(10 if side=='left' else -10)))<2
   assert handle.evaluate('(el)=>el===document.activeElement && getComputedStyle(el).outlineWidth!=="0px"')
   box=handle.bounding_box();page.mouse.move(box['x']+box['width']/2,y);page.mouse.down();page.mouse.move(box['x']+20,y)
-  handle.dispatch_event('pointercancel',{'pointerId':1});page.mouse.up();page.wait_for_timeout(30)
+  updates_before_cancel=page.evaluate('measurements.changes')
+  handle.dispatch_event('pointercancel',{'pointerId':1});page.mouse.up();page.wait_for_timeout(240)
   assert page.evaluate('document.querySelector("[data-sidebar-resizing]")===null')
+  cancelled_width=page.locator('[data-slot="sidebar-container"]').bounding_box()['width']
+  assert abs(cancelled_width-after)<2, {'case':'cancelling a drag must restore the last committed width','side':side,'before':after,'after':cancelled_width,'updates':page.evaluate('measurements.changes')}
+  assert page.evaluate('measurements.changes')==updates_before_cancel, 'cancel must not commit an interrupted width'
   page.click('#toggle');page.wait_for_timeout(240);page.click('#toggle');page.wait_for_timeout(240)
   assert page.evaluate('input===document.querySelector("textarea")&&frame===document.querySelector("iframe")')
   assert page.locator('textarea').input_value()=='Scoped unsent draft'
@@ -48,7 +52,7 @@ with sync_playwright() as pw:
   page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(200)
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   assert not handle.is_visible()
-  page.screenshot(path=str(out/f'{side}-narrow.png'));reports.append({'side':side,'pointer':True,'settledUpdates':1,'keyboard':True,'visibleFocus':True,'scrollPosition':True,'reducedMotion':True,'cancelCleanup':True,'retainedDraftAndFrame':True,'narrow':True})
+  page.screenshot(path=str(out/f'{side}-narrow.png'));reports.append({'side':side,'pointer':True,'settledUpdates':1,'keyboard':True,'visibleFocus':True,'scrollPosition':True,'reducedMotion':True,'cancelRollback':True,'retainedDraftAndFrame':True,'narrow':True})
   context.close()
  # Touch drag crosses into the authored iframe while capture stays with the handle.
  context=browser.new_context(viewport={'width':1440,'height':1000},has_touch=True)

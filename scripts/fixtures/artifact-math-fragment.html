@@ -1,0 +1,15 @@
+<main id="math-fixture" style="font:16px system-ui;padding:20px;box-sizing:border-box;max-width:100%">
+<h1>Attention · 数学排版</h1>
+<p>行内：\(x_i^2 + \sqrt{n}\)，求和：\(\sum_{i=1}^{n} i\)。</p>
+<div id="attention">\[\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\left(\frac{QK^{\mathsf T}}{\sqrt{d_k}}\right)V\]</div>
+<div id="matrix">$$\begin{bmatrix}1 &amp; 2 \\ 3 &amp; 4\end{bmatrix}$$</div>
+<div id="aligned">\[\begin{aligned}a &amp;= b+c \\ d &amp;= \frac{1}{2}\end{aligned}\]</div>
+<p id="roadmap-rnn">Budget $5; RNN $h_t = f(h_{t-1}, x_t)$</p>
+<p id="dollar-attention">$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}(\frac{QK^{\mathsf T}}{\sqrt{d_k}})V$</p>
+<p id="inline-code">`$h_t=f(x_t)$` stays literal.</p>
+<p id="dynamic">\(a_1=1\)</p>
+<p id="invalid">非法公式仍可读：\(\unknowncommand{x}\)</p>
+<p id="invalid-dollar">$\unknowncommand{x}$</p>
+<p id="ordinary">Budget $5 and $10; ordinary text stays readable.</p>
+<pre id="code"><code>const formula = "\(x^2\)"; const price = "$5";</code></pre>
+</main>

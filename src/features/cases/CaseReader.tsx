@@ -3,20 +3,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { casesApi, type CaseArticle } from './api'
 import { CaseCard } from './CaseCard'
-import { CaseCover, caseCoverIdentity, caseCoverPending } from './CaseCover'
-import { mergeCaseCoverMetadata } from './cover/polling'
-import { useCaseCoverPolling } from './cover/useCaseCoverPolling'
+import { CaseCover } from './CaseCover'
 import { caseDate, caseOutline, relatedCases } from './presentation'
 
-export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate, onRefresh, onRetry, busy, notice }: {
+export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate, notice }: {
   article: CaseArticle
   children: ReactNode
   scopeKey: string
   articleUrl(id: string): string
   onNavigate(id: string): void
-  onRefresh(): void
-  onRetry?: () => Promise<void>
-  busy: boolean
   notice?: ReactNode
 }) {
   const root = useRef<HTMLDivElement>(null)
@@ -37,19 +32,6 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
     }).catch(() => { if (!abort.signal.aborted) setRelatedError(true) })
     return () => abort.abort()
   }, [article.id, article.companyId, article.category, scopeKey, retry])
-
-  const { resume: refreshRelatedCovers } = useCaseCoverPolling({
-    scopeKey: JSON.stringify([scopeKey, article.id, related.map(item => [item.id, caseCoverIdentity(item.generatedCover)])]),
-    pending: related.some(item => caseCoverPending(item.generatedCover)),
-    refresh: signal => casesApi.list('', '', 'reader', signal),
-    receive: value => {
-      if (value.view !== 'reader') return false
-      const incoming = new Map(value.items.filter(item => item.companyId === article.companyId).map(item => [item.id, item]))
-      const merge = (items: CaseArticle[]) => items.map(item => incoming.has(item.id) ? mergeCaseCoverMetadata(item, incoming.get(item.id)!) : item)
-      setRelated(merge)
-      return merge(related).some(item => caseCoverPending(item.generatedCover))
-    },
-  })
 
   useEffect(() => {
     const container = body.current
@@ -75,7 +57,7 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
       clickedSection.current = null
       // Observe rendered headings so lazy rich-text readers and Markdown share anchors.
       const nodes = Array.from(container.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6'))
-      const entries = caseOutline(nodes.map(node => node.textContent ?? ''))
+      const entries = caseOutline(nodes.map(node => ({ title: node.textContent ?? '', level: Number(node.tagName.slice(1)) })))
       headings.current = entries.map(entry => {
         const node = nodes[entry.index]
         node.id = entry.id
@@ -93,6 +75,7 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
   }, [article.id, article.body, article.editorDocument])
 
   const links = <nav aria-label="本文目录">{outline.map(entry => <a key={entry.id} href={`#${entry.id}`}
+    style={{ paddingInlineStart: 12 + entry.depth * 12 }}
     aria-current={active === entry.id ? 'location' : undefined} onClick={event => {
       event.preventDefault()
       const target = headings.current.find(node => node.id === entry.id)
@@ -110,21 +93,21 @@ export function CaseReader({ article, children, scopeKey, articleUrl, onNavigate
       </div>}
       <h1>{article.title}</h1>
       <div className="case-reader-author"><Avatar><AvatarImage src={article.authorAvatarUrl ?? undefined} alt="" /><AvatarFallback>{article.authorName.slice(0, 1)}</AvatarFallback></Avatar>
-        <span>{article.authorName}</span><span aria-hidden="true">·</span><time dateTime={article.publishedAt ?? article.createdAt}>{caseDate(article)}</time>
+        <span>{article.authorName}</span>{article.college && <><span aria-hidden="true">·</span><span>{article.college}</span></>}<span aria-hidden="true">·</span><time dateTime={article.publishedAt ?? article.createdAt}>{caseDate(article)}</time>
       </div>
       {notice}
     </div>
     <div className="case-reading-layout">
       {outline.length > 0 && <details className="case-mobile-outline"><summary>本文目录</summary>{links}</details>}
       <article className="case-reading-column">
-        <div className="case-reader-cover"><CaseCover cover={article.generatedCover} fallbackUrl={article.cover} title={article.title} scopeKey={`${scopeKey}:${article.id}`}
-          className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRefresh={onRefresh} onRetry={onRetry} busy={busy} /></div>
+        <div className="case-reader-cover"><CaseCover title={article.title} coverText={article.coverText} coverColor={article.coverColor}
+          className="h-full" /></div>
         <div ref={body} data-case-body className="case-body">{children}</div>
       </article>
       {outline.length > 0 && <aside className="case-outline"><p>本文目录</p>{links}</aside>}
     </div>
     {related.length > 0 && <section className="case-related" aria-label="相关案例"><h2>相关案例</h2><div className="case-grid">{related.map(item =>
-      <CaseCard key={item.id} article={item} href={articleUrl(item.id)} onNavigate={() => onNavigate(item.id)} scopeKey={scopeKey} onRefresh={refreshRelatedCovers} />
+      <CaseCard key={item.id} article={item} href={articleUrl(item.id)} onNavigate={() => onNavigate(item.id)} />
     )}</div></section>}
     {relatedError && <div className="case-related-error" role="status">相关案例暂时无法加载。<Button variant="ghost" size="sm" onClick={() => setRetry(value => value + 1)}>重试</Button></div>}
   </div>

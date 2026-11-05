@@ -13,7 +13,7 @@ export function pasteContent(context: Parameters<typeof pasteCode>[0], format: '
     const markdown = clipboard.getData('text/markdown')
     if (!markdown && clipboard.getData('text/html')) return defaultPasteHandler()
     const source = markdown || clipboard.getData('text/plain')
-    if (format === 'forum' ? !hasMathSyntax(source) : !hasCodeSyntax(source)) return defaultPasteHandler()
+    if (!hasMathSyntax(source) && (format === 'forum' || !hasCodeSyntax(source))) return defaultPasteHandler()
     const inCode = editor.transact(tr => tr.selection.$from.parent.type.spec.code && tr.selection.$to.parent.type.spec.code)
     if (inCode) return defaultPasteHandler()
     editor.pasteHTML(legacyMarkdownHtml(source, format), true)

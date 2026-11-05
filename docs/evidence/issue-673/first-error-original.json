@@ -1,0 +1,66 @@
+{
+  "qualification": "real-provider-published-compiler-staged-synthetic-context-not-production-e2e",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "providerHost": "api.siliconflow.cn",
+  "cap": 2,
+  "calls": 2,
+  "stopped": false,
+  "productDatabaseWritten": false,
+  "records": [
+    {
+      "id": "tcp-first-error-0-facts",
+      "text": "{\"goal\":\"reasoning\",\"goalQuote\":\"解释TCP流量控制和拥塞控制的区别。\",\"intent\":\"check\",\"attempts\":[{\"messageId\":\"q\",\"excerpt\":\"TCP流量控制和拥塞控制都是接收端来不及接收？\"}],\"fullDemonstrationQuote\":\"\"}",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 544,
+        "completion_tokens": 57,
+        "total_tokens": 601,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 544
+      }
+    },
+    {
+      "id": "tcp-first-error-0-decision",
+      "plan": {
+        "stage": "hint",
+        "goal": "reasoning",
+        "allowFullAnswer": false,
+        "confirmedMastery": false,
+        "maxBodyChars": 550,
+        "nextStep": "先用你自己的判断回答上面这一步，我再据此继续。",
+        "networkTask": false,
+        "taskNetworkPrefixes": []
+      }
+    },
+    {
+      "id": "tcp-first-error-0-draft",
+      "text": "**线索**：一个看的是“对方还能不能接”，另一个看的是“路上还能不能过得去”。\n\n**想一想**：如果接收方窗口还有很大空间，但网络中间链路已经严重拥堵，此时发送端应当依据什么来减速？",
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 2692,
+        "completion_tokens": 52,
+        "total_tokens": 2744,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 2688
+        },
+        "prompt_cache_hit_tokens": 2688,
+        "prompt_cache_miss_tokens": 4
+      }
+    },
+    {
+      "id": "tcp-first-error-0-delivery",
+      "violation": "Finish with the current independent learner action; do not substitute a calculation or omit prediction/reasons and diagnosis from a verification goal.",
+      "published": false,
+      "text": "**线索**：一个看的是“对方还能不能接”，另一个看的是“路上还能不能过得去”。\n\n**想一想**：如果接收方窗口还有很大空间，但网络中间链路已经严重拥堵，此时发送端应当依据什么来减速？"
+    }
+  ]
+}

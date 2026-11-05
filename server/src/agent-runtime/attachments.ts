@@ -1,11 +1,12 @@
-import { nativeAttachments } from '../im/message-types.js'
-import { attachmentMetadata } from '../im/attachments.js'
-import { attachmentRefSchema, type AttachmentRef } from '../im/contracts.js'
 import { createHash } from 'node:crypto'
 import { decodeSourceText, extractDocumentText, type RequestAttachment } from '@lyyzka/lingxios'
+import { canonicalUploadMime } from '../../../shared/upload-mime.js'
+import type { Queryable } from '../db/queryable.js'
+import { attachmentMetadata } from '../im/attachments.js'
+import { type AttachmentRef, attachmentRefSchema } from '../im/contracts.js'
+import { nativeAttachments } from '../im/message-types.js'
 import type { ImMessageEnvelope } from '../im/messages-application.js'
 import { storage } from '../storage.js'
-import type { Queryable } from '../db/queryable.js'
 import { readImageInput, supportedImageInput } from './image-input.js'
 
 export const attachmentRefId = (ref: AttachmentRef) => JSON.stringify([ref.clientMsgNo,ref.attachmentId])
@@ -53,7 +54,9 @@ export async function readRequestAttachments(messages: ImMessageEnvelope[], refs
     if (!file) throw new Error('invalid committed attachment')
     const data = await attachmentMetadata(file,companyId)
     const attachment: RequestAttachment = { id, sourceVersion: `committed:${id}`, name: data.name, mimeType: data.mime, size: data.size }
-    const mime = data.mime.split(';')[0].trim().toLowerCase()
+    // Normalize only after the original committed MIME/ownership checks above.
+    // Legacy browser uploads can store a valid DOCX as application/zip.
+    const mime = canonicalUploadMime(data.name, data.mime)
     if (unavailable.has(id)) attachment.contentStatus = 'unavailable'
     else if (attachment.size > 16 * 1024 * 1024) attachment.contentStatus = 'too_large'
     else if (!supportedImageInput(mime) && !mime.startsWith('text/') && !['application/json','application/xml','application/pdf',

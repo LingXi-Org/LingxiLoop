@@ -1,0 +1,10 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": { "types": ["node"] },
+  "include": [
+    "../../../src/features/learning/forum/learning-operators.ts",
+    "../../../src/features/learning/forum/learning-operators.test.tsx",
+    "../../../src/features/content-editor/fenced-code.test.ts"
+  ],
+  "exclude": []
+}

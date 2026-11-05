@@ -1,20 +1,20 @@
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
-import { createServer, type Server } from 'node:http'
+import { createHash, randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
+import { createServer, type Server } from 'node:http'
 import { after, afterEach, before, beforeEach, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import type OpenAI from 'openai'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
-import { HomeworkApplication } from '../modules/learning/homework-application.js'
-import type { LearningAttachment } from '../modules/learning/forum-contracts.js'
-import { runLearningEffects as runLearningEffectsOnce } from '../modules/learning/worker.js'
-import { createHomeworkThread } from '../modules/context-threads/public.js'
-import { __setLlmClientOverrideForTesting } from '../llm.js'
 import { createNativeMessage } from '../im/message-types.js'
-import { installRecordingWukong } from './_recording-wukong.js'
+import { __setLlmClientOverrideForTesting } from '../llm.js'
+import { createHomeworkThread } from '../modules/context-threads/public.js'
+import type { LearningAttachment } from '../modules/learning/forum-contracts.js'
+import { HomeworkApplication } from '../modules/learning/homework-application.js'
+import { runLearningEffects as runLearningEffectsOnce } from '../modules/learning/worker.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
+import { installRecordingWukong } from './_recording-wukong.js'
 
 // Real material fixtures live beside the owning integration suite.
 // These cases exercise persisted business boundaries, not a browser-only hidden-field check.
@@ -244,8 +244,48 @@ test('[integration] each homework learner resumes one private thread and renewed
   await assert.rejects(createHomeworkThread(scope, input))
 })
 
+test('[integration] T11 teacher criteria persist and reload only for the authorized homework on every turn', async () => {
+  const { t11Instructions, t11Criteria } = await import('../__tests__/fixtures/homework-teaching.js')
+  const { loadHomeworkTurnContext } = await import('../modules/learning/homework-tools.js')
+  const { homeworkHelpRules } = await import('../modules/learning/homework-help.js')
+  const { ProductRuntimePolicy } = await import('../agent-runtime/context.js')
+  const tasks = []
+  for (const group of ['A', 'B'] as const) {
+    const detail = await published({ title: `T11-${group}`, instructions: t11Instructions, criteria: [t11Criteria[group as 'A' | 'B']] })
+    tasks.push({ task: detail.homework, thread: await homework.start(student, courseId, detail.homework.id) })
+  }
+  const policy = new ProductRuntimePolicy()
+  for (const { task, thread } of tasks) {
+    const work = { id: 'synthetic-turn', companyId, authorizationUserId: student.userId, agentId: thread.agentId,
+      channelId: thread.channelId, triggerClientMsgNo: 'synthetic-question', reason: 'message' as const }
+    for (let turn = 1; turn <= 2; turn++) {
+      const context = await loadHomeworkTurnContext(work, pool, true)
+      assert.ok(context)
+      assert.equal(context.help?.basis, 'unknown')
+      assert.equal(homeworkHelpRules(context.help), '', 'an unassessed task has no invented attempt-specific help override')
+      assert.deepEqual(context.homework.criteria, task.criteria)
+      assert.equal(context.homework.instructions, t11Instructions)
+      assert.deepEqual(context.binding, { companyId, projectId, courseId, homeworkId: task.id, learnerId: student.userId,
+        agentId: thread.agentId, channelId: thread.channelId, teacherId: teacher.userId,
+        homeworkRevision: task.revision, requirementsHash: task.visibleHash })
+      const items = policy.dynamicContextItems({ work: { agentId: thread.agentId }, persona: { name: 'Tutor', role: 'assistant' },
+        messages: [], dynamic: { homeworkContext: context } } as unknown as import('@lyyzka/lingxios').TurnContext)
+      assert.ok(items.some(item => 'content' in item && typeof item.content === 'string' && item.content.includes(JSON.stringify(task.criteria))))
+    }
+    assert.equal((await homework.start(student, courseId, task.id)).channelId, thread.channelId, 'reopen retains the task binding')
+    await assert.rejects(loadHomeworkTurnContext({ ...work, authorizationUserId: peer.userId }, pool))
+    await assert.rejects(loadHomeworkTurnContext({ ...work, agentId: 'homework-other-agent' }, pool))
+    assert.equal(await loadHomeworkTurnContext({ ...work, companyId: 'another-tenant' }, pool), null)
+    assert.equal(await loadHomeworkTurnContext({ ...work, channelId: 'homework-study-room' }, pool), null,
+      'a general study room must not infer a homework from matching text')
+    await pool.query(`UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id=$2 AND user_id=$3`, [companyId, projectId, student.userId])
+    await assert.rejects(loadHomeworkTurnContext(work, pool))
+    await pool.query(`UPDATE project_memberships SET status='ACTIVE' WHERE company_id=$1 AND project_id=$2 AND user_id=$3`, [companyId, projectId, student.userId])
+  }
+})
+
 function evidenceJudgment(criteria: string[], messageId: string, text: string, met: boolean) {
-  return { criteria: criteria.map(criterion => ({ criterion, met, independent: met, feedback: met ? 'Explained and transferred independently.' : 'Explain the relationship in your own words.' })),
+  return { criteria: criteria.map(criterion => ({ criterion, met, independent: met, feedback: met ? 'Explained and transferred independently.' : 'Explain the relationship in your own words.', evidence: text?[{messageId,excerpt:text}]:[] })),
     completion: met ? 'All requirements demonstrated.' : 'More evidence needed.', assistance: 'A similar example was discussed.', independence: met ? 'New example solved independently.' : 'Independence remains unverified.',
     weaknesses: met ? [] : ['Explain the factor one half.'], evidence: [{ messageId, excerpt: text }] }
 }
@@ -471,32 +511,43 @@ for (const appendedRole of ['user', 'assistant'] as const) test(`[integration] a
   } finally { release(); await blocker.query('ROLLBACK'); blocker.release(); await completed }
 })
 
-test('[integration] invalid model claims yield an explicitly unverified factual report that the learner may submit', async () => {
+test('[integration] 675 invalid model output is a generation failure; retry recovers and unchanged evidence reuses the report', async () => {
   const { homework: task } = await published()
   const thread = await homework.start(student, courseId, task.id)
   const message = commitLearnerEvidence(thread, 'I asked for help because I do not understand the factor one half.')
-  await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: 'This is my current partial answer and request for teacher feedback.', links: [], attachments: [] })
-  const badJudgment = { ...evidenceJudgment(task.criteria, message.clientMsgNo, message.text, true),
-    completion: 'unsupported-completion-sentinel', independence: 'unsupported-independence-sentinel',
-    evidence: [{ messageId: 'invented-model-evidence', excerpt: 'unsupported-evidence-sentinel' }] }
-  const ready = await report(task.id, badJudgment)
-  assert.equal(modelReplies.length, 0, 'The actual model attempt precedes the safe unverified record')
-  assert.equal(Reflect.get(ready.report!, 'verification'), 'unverified')
-  assert.equal(ready.unlocked, false)
-  assert.ok(ready.report!.criteria.every(item => !item.met && !item.independent && /未.*核实|未.*核验|无法.*核实/.test(item.feedback)))
-  assert.match(ready.report!.completion, /未.*核实|未.*核验|无法.*核实/)
-  assert.doesNotMatch(JSON.stringify(ready.report), /unsupported-(?:completion|independence|evidence)-sentinel|invented-model-evidence/)
-  assert.ok(ready.report!.evidenceSources.some(item => item.messageId === message.clientMsgNo && message.text.includes(item.excerpt)))
-  const { learnerHomeworkRead, teacherHomeworkOverview } = await import('../modules/learning/homework-reporting.js')
-  const learnerView = await learnerHomeworkRead(pool, student, courseId, { homeworkId: task.id, section: 'report', offset: 0 }, AbortSignal.timeout(10000))
-  assert.ok('text' in learnerView)
-  assert.equal(JSON.parse(learnerView.text).verification, 'unverified', 'The learner native read must retain the qualification')
-  const submitted = await homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id, conversationReferences:currentReferences(), idempotencyKey: 'explicit-unverified-submission' })
-  assert.deepEqual(submitted.report, ready.report)
-  const teacherView = await teacherHomeworkOverview(pool, teacher, courseId, { homeworkId: task.id, learnerId: student.userId, section: 'report', offset: 0 })
-  assert.ok('text' in teacherView)
-  assert.equal(JSON.parse(teacherView.text).verification, 'unverified', 'The teacher native read must not present unverified flags as a confirmed finding')
-  assert.equal((await pool.query<{ count: number }>("SELECT count(*)::int AS count FROM llm_calls WHERE company_id=$1 AND purpose='homework.report'", [companyId])).rows[0].count, 1)
+  const saved = await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: 'My partial answer survives a failed report.', links: [], attachments: [] })
+  modelReplies.push({ ...evidenceJudgment(task.criteria, message.clientMsgNo, message.text, true),
+    evidence: [{ messageId: 'invented-model-evidence', excerpt: 'unsupported-evidence-sentinel' }] })
+  await runLearningEffects()
+  const failed = (await homework.detail(student, courseId, task.id)).student!
+  assert.equal(failed.reportStatus, 'INVALID')
+  assert.equal(failed.report, null)
+  assert.match(failed.reportFeedback, /报告生成失败/)
+  const failedCall=(await pool.query("SELECT extras FROM llm_calls WHERE company_id=$1 AND purpose='homework.report' ORDER BY created_at DESC LIMIT 1",[companyId])).rows[0]
+  assert.equal(failedCall.extras.reportValidation,'failed')
+  assert.match(failedCall.extras.reportInputHash,/^[a-f0-9]{64}$/)
+  assert.deepEqual(failed.answer, saved!.answer)
+  assert.equal((await homework.learners(teacher,courseId,task.id)).items[0].latestSubmission,null)
+  await homework.requestReport(student,courseId,task.id,{expectedAnswerRevision:failed.answerRevision})
+  const unsupported=evidenceJudgment(task.criteria,message.clientMsgNo,message.text,true)
+  modelReplies.push({...unsupported,criteria:unsupported.criteria.map(item=>({...item,evidence:[]}))})
+  await runLearningEffects()
+  assert.equal((await homework.detail(student,courseId,task.id)).student!.reportStatus,'INVALID','One global quote cannot certify every criterion')
+  const judgment=evidenceJudgment(task.criteria,message.clientMsgNo,message.text,false)
+  const recovered=await report(task.id,judgment)
+  assert.equal(recovered.report!.verification,'verified')
+  assert.ok(recovered.report!.generatedAt)
+  assert.match(recovered.report!.inputHash!,/^[a-f0-9]{64}$/)
+  const calls=await pool.query("SELECT count(*)::int AS n FROM llm_calls WHERE company_id=$1 AND purpose='homework.report'",[companyId])
+  await homework.requestReport(student,courseId,task.id,{expectedAnswerRevision:recovered.answerRevision})
+  await runLearningEffects()
+  const repeated=(await homework.detail(student,courseId,task.id)).student!
+  assert.deepEqual(repeated.report,recovered.report)
+  assert.equal((await pool.query("SELECT count(*)::int AS n FROM llm_calls WHERE company_id=$1 AND purpose='homework.report'",[companyId])).rows[0].n,calls.rows[0].n)
+  const second=commitLearnerEvidence(thread,'Now two equal triangles fill a rectangle; this is new evidence.')
+  const changed=await report(task.id,evidenceJudgment(task.criteria,second.clientMsgNo,second.text,false))
+  assert.notEqual(changed.report!.inputHash,recovered.report!.inputHash)
+  assert.notEqual(changed.report!.id,recovered.report!.id)
 })
 
 test('[integration] optional assessment diagnostics do not invalidate a ready report for unchanged learning records', async () => {
@@ -1924,4 +1975,99 @@ test('[integration] 519 retaining manual criteria requires owner confirmation an
   assert.match(studentReport.report!.completion, /需要教师判断/)
   const submitted = await homework.submit(student, courseId, draft.id, { expectedAnswerRevision: studentReport.answerRevision, reportId: studentReport.report!.id, conversationReferences: currentReferences(), idempotencyKey: '519-manual-submit' })
   assert.equal(submitted.report.criteria[0]!.reviewRequired, true)
+})
+
+
+test('[integration] student code/image/document uploads retry once by immutable identity and teachers read only submitted evidence', async () => {
+  const { storage } = await import('../storage.js')
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a4NQAAAAASUVORK5CYII=', 'base64')
+  const files = [
+    { name: 'answer.py', mime: 'text/x-python', bytes: Buffer.from('print("evidence")\n') },
+    { name: 'run.png', mime: 'image/png', bytes: png },
+    ...await Promise.all([['triangle-reference.pdf','application/pdf'], ['triangle-answer.docx','application/zip']].map(async ([name,mime]) => ({
+      name, mime, bytes: await readFile(new URL(`./fixtures/homework/${name}`, import.meta.url)),
+    }))),
+  ]
+  const attachments: LearningAttachment[] = []
+  for (const file of files) {
+    const input = { name: file.name, mime: file.mime, size: file.bytes.length,
+      sha256: createHash('sha256').update(file.bytes).digest('hex'), idempotencyKey: randomUUID() }
+    const first = await call(student, '/uploads/presign', 'POST', input)
+    assert.equal(first.status, 200)
+    const signed = await first.json() as { key: string; mime: string }
+    await storage.put(signed.key, file.bytes, signed.mime)
+    const retry = await call(student, '/uploads/presign', 'POST', input)
+    assert.equal(retry.status, 200)
+    assert.equal((await retry.json() as { key: string }).key, signed.key)
+    const own = await call(student, `/files?key=${encodeURIComponent(signed.key)}`)
+    assert.equal(own.status, 200)
+    assert.equal(createHash('sha256').update(Buffer.from(await own.arrayBuffer())).digest('hex'), input.sha256)
+    assert.equal((await call(teacher, `/files?key=${encodeURIComponent(signed.key)}`)).status, 404)
+    attachments.push({ key: signed.key, name: file.name })
+  }
+  assert.equal((await pool.query('SELECT count(*)::int AS n FROM uploaded_files WHERE owner_user_id=$1', [student.userId])).rows[0].n, 4)
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const message = commitLearnerEvidence(thread, 'I tested my answer and attached original evidence; I still need feedback.')
+  await homework.saveAnswer(student, courseId, task.id, { expectedRevision: 0, text: message.text, links: [], attachments })
+  assert.equal((await call(teacher, `/files?key=${encodeURIComponent(attachments[0].key)}`)).status, 404, 'private draft is not teacher evidence')
+  const ready = await report(task.id, evidenceJudgment(task.criteria, message.clientMsgNo, message.text, false))
+  await homework.submit(student, courseId, task.id, { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id,
+    conversationReferences: currentReferences(), idempotencyKey: 'upload-original-evidence' })
+  for (let index = 0; index < attachments.length; index++) {
+    const path = `/files?key=${encodeURIComponent(attachments[index].key)}`
+    const actual = await call(teacher, path)
+    assert.equal(actual.status, 200)
+    assert.equal(createHash('sha256').update(Buffer.from(await actual.arrayBuffer())).digest('hex'), createHash('sha256').update(files[index].bytes).digest('hex'))
+    assert.equal((await call(peer, path)).status, 404)
+    assert.equal((await call(outsider, path)).status, 404)
+  }
+  await pool.query(`UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id=$2 AND user_id=$3`, [companyId, projectId, teacher.userId])
+  assert.equal((await call(teacher, `/files?key=${encodeURIComponent(attachments[0].key)}`)).status, 404)
+})
+
+test('[integration] 674 explicit teacher grade criteria cannot be certified by a missing validator finding or model prose', async () => {
+  const { homework: task } = await published({ instructions: '最终评分档由教师人工确定。学生独立解释三角形面积。', criteria: ['解释三角形面积。', '教师依据四级量规确定评分等级。'] })
+  const evidence=await assess(task.id,true)
+  assert.equal(Reflect.get(evidence.state.criteria[1],'reviewRequired'),true)
+  assert.equal(evidence.state.criteria[1].met,false)
+  await homework.saveAnswer(student,courseId,task.id,{expectedRevision:0,text:evidence.judgment.evidence[0].excerpt,links:[],attachments:[]})
+  modelReplies.push({...evidence.judgment,completion:'已达成优秀档'})
+  await runLearningEffects()
+  const rejected=(await homework.detail(student,courseId,task.id)).student!
+  assert.equal(rejected.reportStatus,'INVALID')
+  assert.equal(rejected.report,null)
+  const ready=await report(task.id,{...evidence.judgment,evidence:[]})
+  assert.ok(ready.report!.evidenceSources.length,'Validated per-criterion quotes populate the report summary even if global evidence was empty')
+  assert.equal(ready.report!.criteria[0].met,true)
+  assert.equal(ready.report!.criteria[1].reviewRequired,true)
+  const submitted=await homework.submit(student,courseId,task.id,{expectedAnswerRevision:ready.answerRevision,reportId:ready.report!.id,conversationReferences:currentReferences(),idempotencyKey:'674-teacher-boundary'})
+  assert.equal(submitted.reviewStatus,'PENDING')
+  assert.equal((await homework.detail(student,courseId,task.id)).student!.status,'PENDING')
+  assert.equal((await homework.learners(teacher,courseId,task.id)).items.find(item=>item.learnerId===student.userId)!.status,'PENDING')
+})
+
+test('[integration] 676/679 reports retain raw operators and distinct exact assistant citations inside authorized shared snapshots', async () => {
+  const {homework:task}=await published()
+  const thread=await homework.start(student,courseId,task.id)
+  const text='2+3*4、3*-2、a*b、x**2\n*斜体*\n* 列表\n```python\nx=2+3*4\n```'
+  const message=commitLearnerEvidence(thread,text)
+  const assistant=im.messages.filter(item=>item.fromUid===thread.agentId).at(-1)!
+  Object.assign(assistant.payload,{content:[...assistant.payload.content,{type:'reasoning',text:'private-process-sentinel'}]})
+  const assistanceEvidence=[{messageId:assistant.clientMsgNo,excerpt:'Explain your reasoning'}]
+  await homework.saveAnswer(student,courseId,task.id,{expectedRevision:0,text,links:[],attachments:[]})
+  const judgment={...evidenceJudgment(task.criteria,message.clientMsgNo,text,false),assistanceEvidence}
+  const ready=await report(task.id,judgment)
+  const input=JSON.parse((lastModelRequest as {messages:{content:string}[]}).messages[1].content)
+  assert.equal(input.answer.text,text)
+  assert.doesNotMatch(JSON.stringify(input),/private-process-sentinel/)
+  assert.equal(input.messages.find((item:{messageId:string})=>item.messageId===message.clientMsgNo).text,text)
+  assert.deepEqual(ready.report!.assistanceEvidence,assistanceEvidence)
+  const submitted=await homework.submit(student,courseId,task.id,{expectedAnswerRevision:ready.answerRevision,reportId:ready.report!.id,conversationReferences:currentReferences(),idempotencyKey:'679-raw-operators'})
+  assert.equal(submitted.answer.text,text)
+  assert.equal(submitted.report.evidence[0],text)
+  const snapshot=submitted.conversationReferences.flatMap(item=>item.messages).find(item=>item.id===message.clientMsgNo)!
+  assert.equal(snapshot.text,text)
+  assert.ok(snapshot.timestamp)
+  await assert.rejects(homework.submissions(outsider,courseId,task.id,0,student.userId))
 })

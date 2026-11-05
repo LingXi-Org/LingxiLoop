@@ -6,6 +6,7 @@ import { resolve } from 'node:path'
 
 const testsByScope = {
   server: [
+    'server/src/__tests__/retired-capabilities.test.ts',
     'server/src/__tests__/gateway-auth.test.ts',
     'server/src/__tests__/document-collaboration.test.ts',
     'server/src/__tests__/admin-platform.test.ts',
@@ -18,10 +19,14 @@ const testsByScope = {
     'server/src/__tests__/entitlement-resolver.test.ts',
     'server/src/__tests__/llm-ledger.test.ts',
     'server/src/__tests__/llm-recovery.test.ts',
+    'server/src/__tests__/teaching-scaffold.test.ts',
+    'server/src/__tests__/teaching-scaffold-model.test.ts',
     'server/src/__tests__/agent-tool-registry.test.ts',
     'server/src/__tests__/artifact-tool-contracts.test.ts',
+    'server/src/__tests__/slides-observation.test.ts',
     'server/src/__tests__/first-action-contracts.test.ts',
     'server/src/modules/artifacts/artifacts.test.ts',
+    'server/src/modules/artifacts/check.test.ts',
     'server/src/__tests__/assistant-text.test.ts',
     'server/src/__tests__/assistant-transport.test.ts',
     'server/src/__tests__/run-activity-projection.test.ts',
@@ -43,6 +48,9 @@ const testsByScope = {
   ],
   admin: ['admin/src/lingxilit-url.test.ts', 'admin/src/record-presentation.test.ts', 'admin/src/management-session.test.ts'],
   web: [
+    'src/lib/retiredVisualize.test.ts',
+    'src/features/chat/components/ArchivedVisualizeReferences.test.tsx',
+    'src/features/chat/components/AnswerText.test.tsx',
     'src/features/artifacts/components/artifact-recovery-handoff.test.ts',
     'src/components/assistant-ui/markdown-text.test.tsx',
     'src/components/shell/modules.test.ts',

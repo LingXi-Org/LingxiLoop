@@ -87,6 +87,23 @@ test('production stops both old workers before an application can enqueue new ef
   assert.match(servers, /if \(index === 1\) await barrier/, 'both old Workers stop before slot A moves')
 })
 
+// Failure: a removed resource directory remains a COPY input; local generated
+// editor output masks the missing path until a clean production image build.
+test('server runtime image COPY inputs exist in the committed checkout', () => {
+  const root = fileURLToPath(new URL('../', import.meta.url))
+  const runtime = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
+    .find(part => /^.* AS runtime\r?\n/.test(part))
+  assert.ok(runtime, 'server runtime stage exists')
+  const files = spawnSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
+  assert.equal(files.status, 0, files.stderr)
+  const tracked = files.stdout.split('\0').filter(Boolean)
+  for (const source of runtime.split(/\r?\n/).filter(line => /^COPY (?!-)/.test(line))
+    .flatMap(line => line.trim().split(/\s+/).slice(1, -1))) {
+    assert.ok(tracked.some(path => path === source || path.startsWith(`${source}/`)),
+      `Runtime COPY input missing from committed checkout: ${source}`)
+  }
+})
+
 // Failure: development resolves shared imports that the production image never copies.
 test('server image includes the complete shared runtime import graph', () => {
   const root = fileURLToPath(new URL('../', import.meta.url))
@@ -94,14 +111,11 @@ test('server image includes the complete shared runtime import graph', () => {
   // Runtime provenance reads both manifests/locks; CI graphs and fixtures stay out.
   assert.deepEqual(runtime.split(/\r?\n/).filter(line => /^COPY server[ /]/.test(line))
     .flatMap(line => line.trim().split(/\s+/).slice(1, -1)), [
-      'server/src', 'server/assets', 'server/package.json', 'server/package-lock.json',
+      'server/src', 'server/package.json', 'server/package-lock.json',
       'server/scripts/check-packaged-startup.mjs',
     ])
   const copied = runtime.split(/\r?\n/)
     .filter(line => /^COPY (?:src|shared)[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
-  assert.deepEqual(copied.filter(path => path.startsWith('src/features/cases/cover-vm')), [
-    'runtime', 'protocol', 'program', 'guest-source', 'svg',
-  ].map(name => `src/features/cases/cover-vm/${name}.ts`), 'Server ships only the five shared VM sources')
   const pending = [
     ...ts.sys.readDirectory(resolve(root, 'server/src'), ['.ts'], ['**/*.test.ts', '**/__tests__/**', '**/__integration__/**']),
     ...copied.filter(path => path.endsWith('.ts')).map(path => resolve(root, path)),
@@ -134,6 +148,21 @@ test('server image includes the complete shared runtime import graph', () => {
     visit(source)
   }
   assert.deepEqual([...missing].sort(), [])
+})
+
+// Retired runtime code must not return through Docker context or old packaging hooks.
+test('server image excludes the retired visualization runtime and packages Design independently', () => {
+  const docker = read('server/docker/lingxiloop-server.Dockerfile')
+  assert.doesNotMatch(docker, /third_party\/zcode|visualize-runtime|chat\/visualize/)
+  assert.match(docker, /FROM web-deps AS design-build/)
+  assert.match(docker, /RUN node scripts\/build-design-editor\.mjs/)
+  assert.match(docker, /COPY --from=design-build \/app\/server\/assets\/design-editor \.\/server\/assets\/design-editor/)
+  const commands = JSON.parse(read('package.json')).scripts
+  assert.equal(commands['build:visualize-runtime'], undefined)
+  assert.equal(commands['verify:visualize'], undefined)
+  assert.equal(commands.prebuild, 'npm run build:design-editor')
+  assert.doesNotMatch(read('vite.config.ts'), /visualize-public-assets|visualize-public-resources/)
+  assert.equal(read('public/licenses/visualize-compat.txt'), read('third_party/visualize-compat/LICENSE.md'), 'Static Worker distribution retains the passive parser Apache license')
 })
 
 // Failure: checkout resolves frontend imports that COPY or the build context omits.
@@ -172,6 +201,21 @@ test('SPA image includes the transitive source graph and pinned vendor license',
         assert.ok(inContext(source), `${name} explicit COPY input excluded from Docker context: ${source}`)
       }
     }
+    // Follow the real builder's local import graph, including future helpers.
+    // A checkout can hide a missing Docker COPY for a transitive build module.
+    const pending = ['scripts/build-design-editor.mjs'], visited = new Set()
+    while (pending.length) {
+      const path = pending.pop()
+      if (visited.has(path)) continue
+      visited.add(path)
+      assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing transitive Design build input: ${path}`)
+      for (const item of ts.preProcessFile(read(path), true, true).importedFiles) {
+        if (!item.fileName.startsWith('.')) continue
+        const target = relative(root, resolve(root, path, '..', item.fileName)).replaceAll('\\', '/')
+        assert.ok(ts.sys.fileExists(resolve(root, target)), `Missing Design build module: ${target}`)
+        pending.push(target)
+      }
+    }
     for (const path of ['scripts/design-copy.mjs', 'third_party/baoyu-design/host/design-zh-CN.json',
       'third_party/baoyu-design/host/slides-zh-CN.json', 'third_party/baoyu-design/host/design-theme.css',
       'src/styles/fonts.css', 'public/fonts/mingli/inter-OFL.txt']) {
@@ -185,12 +229,6 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   for (const path of ['server/build/admin/package-lock.json', 'server/scripts/scoped-dependencies.mjs',
     'server/fixtures/historical-runtime-3.8.2.json', 'server/src/__tests__/gateway-auth.test.ts']) {
     assert.equal(inContext(path), false, `Non-runtime server content entered image context: ${path}`)
-  }
-  for (const name of ['runtime.ts', 'protocol.ts', 'program.ts', 'guest-source.ts', 'svg.ts', 'session.ts', 'worker.ts', 'CaseCoverPreview.tsx']) {
-    assert.ok(inContext(`src/features/cases/cover-vm/${name}`), `Missing cover source in SPA context: ${name}`)
-  }
-  for (const name of ['verify-package.mjs', 'guest.ts', 'guest-entry.ts', 'build-guest.mjs', 'guest.test.ts', 'session.test.ts']) {
-    assert.equal(inContext(`src/features/cases/cover-vm/${name}`), false, `Cover build/test input must stay out of image context: ${name}`)
   }
   const pathOf = file => relative(root, file).replaceAll('\\', '/')
   const options = { moduleResolution: ts.ModuleResolutionKind.Bundler, baseUrl: root, paths: { '@/*': ['src/*'] } }
@@ -220,10 +258,11 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   for (const [source, target] of [
     ['third_party/assistant-ui-elements/LICENSE', 'assistant-ui-elements.txt'],
     ['third_party/react-chat-elements/reply-message/LICENSE', 'react-chat-elements-reply-message.txt'],
+    ['third_party/visualize-compat/LICENSE.md', 'visualize-compat.txt'],
   ]) {
     assert.ok(inContext(source), `Distributed component license missing from build context: ${source}`)
     assert.ok(finalStage.includes(`COPY ${source} ./dist/licenses/${target}`), `Distributed component license missing from final image: ${source}`)
-    assert.match(read(source), /Permission is hereby granted/)
+    assert.match(read(source), source.includes('visualize-compat') ? /Apache License/ : /Permission is hereby granted/)
   }
 })
 
@@ -544,7 +583,8 @@ test('workflow path filters route real changed paths to their owning checks', ()
     // Server runtime imports must not silently receive only Web checks.
     ['src/lib/mentions.ts', 'integration', 'server'],
     ['src/lib/memoryActivity.ts', 'integration', 'server'],
-    ...['runtime', 'protocol', 'program', 'guest-source', 'svg'].map(name => [`src/features/cases/cover-vm/${name}.ts`, 'integration', 'server']),
+    ['shared/retired-visualize.ts', 'integration', 'server'],
+    ['shared/assistant-directive-parser.ts', 'integration', 'server'],
     ['third_party/assistant-ui/streaming-text/upstream/utils/range.ts', 'web', 'server'],
     ['third_party/assistant-ui/streaming-text/LICENSE', 'web', 'server'],
     ['third_party/assistant-ui/streaming-text/SHA256SUMS', 'web', 'server'],
@@ -574,7 +614,6 @@ test('workflow path filters route real changed paths to their owning checks', ()
     assert.equal(scope.server, true, `server check missing for ${file}`)
     assert.equal(scope.integration, true, `integration missing for ${file}`)
     assert.notEqual(scope.integration_mode, 'full', `shared source must use bounded owning checks: ${file}`)
-    if (file.startsWith('src/features/cases/cover-vm/')) assert.ok(scope.integration_files.includes('case-covers.test.ts'), file)
   }
 })
 
@@ -632,6 +671,7 @@ test('CI integration modes distinguish core smoke, explicit owners and manual fu
     ['server/src/agent-runtime/runtime.ts', 'runtime-chat-recovery.test.ts'],
     ['server/src/im/reconcile.ts', 'im-send-reconciliation.test.ts'],
     ['server/src/modules/learning/homework-application.ts', 'homework.test.ts'],
+    ['server/src/modules/artifacts/tools.ts', 'artifact-app-boundary.test.ts'],
   ]
   for (const [path, file] of owners) {
     const selected = computeScope({ serverSource: true, serverSourceFiles: [path] })

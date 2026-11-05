@@ -1,0 +1,812 @@
+{
+  "qualification": "real-provider-native-product",
+  "sampleId": "process",
+  "coldCanvas": true,
+  "correctRouting": true,
+  "measurementComplete": true,
+  "runtime": "3.8.24",
+  "binding": "native-v3",
+  "maxOutputTokens": 16384,
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "runId": "im:a8970ec7592d2c333787466bf507f428b3c5fecd283aa1279e81a478bbe80e65",
+  "accepted": false,
+  "elapsedMs": 85821,
+  "decisions": [
+    {
+      "call": 1,
+      "names": [
+        "design__plan_explanation",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": "design__plan_explanation"
+    },
+    {
+      "call": 2,
+      "names": [
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": false,
+      "referenceSchema": false,
+      "requiredTool": "skills__load"
+    },
+    {
+      "call": 3,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": "design__read_reference"
+    },
+    {
+      "call": 4,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": "design__current"
+    },
+    {
+      "call": 5,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": "design__ensure"
+    },
+    {
+      "call": 6,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": "design__read_file"
+    },
+    {
+      "call": 7,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": "design__read_file"
+    },
+    {
+      "call": 8,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": "design__write_files"
+    },
+    {
+      "call": 9,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": null
+    },
+    {
+      "call": 10,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": null
+    },
+    {
+      "call": 11,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": null
+    },
+    {
+      "call": 12,
+      "names": [
+        "design__ensure",
+        "design__current",
+        "design__read_file",
+        "design__write_files",
+        "design__edit_file",
+        "design__import_asset",
+        "design__check",
+        "design__read_reference",
+        "design__comments",
+        "design__comment_reply",
+        "design__comment_resolve",
+        "design__available_agents",
+        "design__start_workspace",
+        "design__stop_assignment",
+        "design__stop_workspace",
+        "skills__load"
+      ],
+      "fullGuidance": true,
+      "referenceSchema": true,
+      "requiredTool": "design__write_files"
+    }
+  ],
+  "wire": [
+    {
+      "call": 1,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__plan_explanation",
+          "fields": [
+            "delivery"
+          ],
+          "argumentBytes": 24,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 2,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "skills__load",
+          "fields": [
+            "name",
+            "version",
+            "hash"
+          ],
+          "argumentBytes": 158,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 3,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__read_reference",
+          "fields": [
+            "page"
+          ],
+          "argumentBytes": 20,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 4,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__current",
+          "fields": [
+            "artifactId"
+          ],
+          "argumentBytes": 89,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 5,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__ensure",
+          "fields": [
+            "artifactId"
+          ],
+          "argumentBytes": 88,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 6,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__read_file",
+          "fields": [
+            "path"
+          ],
+          "argumentBytes": 36,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 7,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__read_file",
+          "fields": [
+            "path"
+          ],
+          "argumentBytes": 50,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 8,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__write_files",
+          "fields": [
+            "artifactId",
+            "files"
+          ],
+          "argumentBytes": 64,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": false,
+          "issues": [
+            {
+              "code": "custom",
+              "path": [
+                "files"
+              ]
+            }
+          ]
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 9,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "chat__report_progress",
+          "fields": [
+            "version",
+            "id",
+            "kind",
+            "label",
+            "text",
+            "state",
+            "plan"
+          ],
+          "argumentBytes": 570,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 10,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "task__contract",
+          "fields": [
+            "deliverables",
+            "constraints",
+            "actions",
+            "acceptance"
+          ],
+          "argumentBytes": 1071,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 11,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__write_files",
+          "fields": [
+            "artifactId",
+            "files"
+          ],
+          "argumentBytes": 1767,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        },
+        {
+          "index": 1,
+          "name": "design__check",
+          "fields": [
+            "artifactId"
+          ],
+          "argumentBytes": 49,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 12,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__write_files",
+          "fields": [
+            "files"
+          ],
+          "argumentBytes": 11636,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    }
+  ],
+  "actions": [
+    {
+      "action": "design.plan_explanation",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "skills.load",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.read_reference",
+      "ok": true,
+      "code": null,
+      "page": "format.md"
+    },
+    {
+      "action": "design.current",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.ensure",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.read_file",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.read_file",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "chat.report_progress",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "task.contract",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.write_files",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.check",
+      "ok": true,
+      "code": null
+    },
+    {
+      "action": "design.write_files",
+      "ok": true,
+      "code": null
+    }
+  ],
+  "contractFailures": [],
+  "protocolFailures": 0,
+  "providerFailures": 0,
+  "budgetFailures": [
+    {
+      "code": "budget_limit",
+      "dimension": "calls"
+    }
+  ],
+  "modelAttempts": [
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    },
+    {
+      "status": "succeeded",
+      "purpose": "agent-turn",
+      "attempt": "1",
+      "category": null
+    }
+  ],
+  "failedModelAttempts": [],
+  "wireContractFailures": [
+    {
+      "call": 8,
+      "name": "design__write_files",
+      "truncated": false,
+      "jsonValid": true,
+      "issues": [
+        {
+          "code": "custom",
+          "path": [
+            "files"
+          ]
+        }
+      ]
+    }
+  ],
+  "protocolCodes": [],
+  "files": [
+    {
+      "path": "project/canvas.json",
+      "sha256": "f17d32c7ec0620cb76981c3cdc7ca058770511667be079a51e1827aa3bb8057f"
+    },
+    {
+      "path": "project/ds/baoyu-ember/tokens.json",
+      "sha256": "68f5e58c19853bef9b4b84ae15dd3feee06ca7676ad0563690b7b6a949697146"
+    },
+    {
+      "path": "project/ds/baoyu-seazar/tokens.json",
+      "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6"
+    },
+    {
+      "path": "project/ds/slides-builtin/tokens.json",
+      "sha256": "612cda1e3e87333eb3c71e545f9d1d1cd175f9542fda38c3caef3159212b56f2"
+    },
+    {
+      "path": "project/url-to-page.dc.html",
+      "sha256": "1c4492523ec5770da4e0af6e18b49732ffa24bbba02ea8a6c1a249d5f8b3a23e"
+    }
+  ],
+  "checkProblems": 0,
+  "status": "failed",
+  "verification": "inconclusive",
+  "delivery": null,
+  "deliveryTarget": "isolated-test-recording-im",
+  "browserValidated": false
+}

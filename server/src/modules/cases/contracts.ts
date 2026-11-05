@@ -6,6 +6,9 @@ export const caseContentSchema = z.object({
   editorDocument: optionalContentDocument, summaryDocument: optionalContentDocument,
   body: z.string().max(200_000).default(''),
   cover: z.string().max(2000).nullable().default(null),
+  coverText: z.string().trim().max(24).optional(),
+  coverColor: z.enum(['orange', 'green', 'blue', 'red', 'yellow', 'purple']).optional(),
+  college: z.string().trim().max(80).optional(),
   category: z.string().trim().max(80).default(''),
   tags: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
 }).strict().refine(value => matchesProjection(value.editorDocument, value.body) && matchesProjection(value.summaryDocument, value.summary), 'native content and text must be saved together')
@@ -26,9 +29,4 @@ export interface CaseScope { companyId: string; userId: string }
 export const caseViewSchema = z.enum(['reader', 'manage']).default('reader')
 export type CaseView = z.infer<typeof caseViewSchema>
 
-export const caseCoverRetrySchema = z.object({
-  snapshot:z.enum(['draft','published']).default('draft'), fingerprint:z.string().regex(/^[a-f0-9]{64}$/),
-  expectedGeneration:z.number().int().positive(),idempotencyKey:z.string().min(1).max(160),
-}).strict()
-export const caseCoverBackfillSchema = z.object({ afterId:z.string().max(200).default(''),limit:z.number().int().min(1).max(50).default(25) }).strict()
-export const caseCoverAssetSchema = z.object({ snapshot:z.enum(['draft','published']),generation:z.coerce.number().int().positive(),kind:z.enum(['preview','interactive']) })
+export const caseOptionSchema = z.object({ kind: z.enum(['category', 'college']), name: z.string().trim().min(1).max(80) }).strict()

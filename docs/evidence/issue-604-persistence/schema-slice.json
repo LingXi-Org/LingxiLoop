@@ -1,0 +1,33 @@
+{
+  "scope": "Only owning-case SQL and access prerequisites, not a full bootstrapped application/runtime database",
+  "assets": [
+    {
+      "file": "0001_v1_baseline.sql",
+      "sha256": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+    },
+    {
+      "file": "0002_remove_legacy_identity.sql",
+      "sha256": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+    },
+    {
+      "file": "0011_closed_education.sql",
+      "sha256": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+    },
+    {
+      "file": "0014_profile_avatars.sql",
+      "sha256": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+    },
+    {
+      "file": "0045_organization_cases.sql",
+      "sha256": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+    },
+    {
+      "file": "0057_case_soft_delete.sql",
+      "sha256": "f42124684d66f1387267f6da653ec2b255c2fa4a9f6dccd6179a3a5fbb4607a0"
+    },
+    {
+      "file": "0062_case_options.sql",
+      "sha256": "fac65cb0db99ee102f581a9a8d4ed5f7229e08450066467cb6e42a116366351d"
+    }
+  ]
+}

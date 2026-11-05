@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>从输入网址到看到网页的全过程</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#F5F4ED;font-family:system-ui,sans-serif;color:#141413}
+a{color:#3D3D3A}a:hover{color:#141413}
+</style>
+</helmet>
+<div style="width: 1240px; box-sizing: border-box; padding: 56px 64px 64px; background: #F5F4ED; display: flex; flex-direction: column; gap: 36px">
+  <div style="display: flex; flex-direction: column; gap: 14px">
+    <div style="font-size: 15px; letter-spacing: 0.14em; color: #73726C; font-weight: 600">一次页面加载的六个阶段</div>
+    <h1 style="margin: 0; font-family: Georgia, serif; font-weight: 400; font-size: 54px; line-height: 1.15; color: #141413">从输入网址到看到网页</h1>
+    <p style="margin: 0; max-width: 940px; font-size: 19px; line-height: 1.6; color: #3D3D3A">浏览器不是“一次请求”就把网页拿回来的。它先把网址翻译成服务器地址，建立一条连接，再用 HTTP 说“我要这个页面”，拿到内容后自己把文字、样式、图片装配成画面。<b>前半程是在找路和建通道，后半程是在搬内容和排版</b>，每一步都要等上一步的答案。</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; align-items: center; gap: 16px; padding-bottom: 10px; border-bottom: 2px solid #141413">
+      <div style="width: 34px; font-size: 14px; color: #73726C; font-weight: 600">步骤</div>
+      <div style="flex: 1 1 260px; font-size: 14px; letter-spacing: 0.08em; color: #73726C; font-weight: 600">发生了什么</div>
+      <div style="flex: 0 0 176px; font-size: 14px; letter-spacing: 0.08em; color: #73726C; font-weight: 600">谁在做</div>
+      <div style="flex: 0 0 236px; font-size: 14px; letter-spacing: 0.08em; color: #73726C; font-weight: 600">代价与常见故障</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 16px; padding: 18px 0; border-bottom: 1px solid #E3DACC">
+      <div style="width: 34px; font-family: Georgia, serif; font-size: 26px; color: #D97757">1</div>
+      <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 22px; font-weight: 600">解析网址，先决定去问谁</div>
+        <div style="font-size: 16px; line-height: 1.6; color: #3D3D3A">拆出协议、主机名、端口、路径。有缓存就直接用，否则把主机名交给 DNS，并把该域名之前的连接、IP、HSTS 等记录翻出来复用。</div>
+      </div>
+      <div style="flex: 0 0 176px; font-size: 16px; line-height: 1.5">浏览器<br><span style="color: #3D3D3A">操作系统缓存</span></div>
+      <div style="flex: 0 0 236px; font-size: 16px; line-height: 1.55; color: #3D3D3A">几乎零成本；故障是网址格式错或协议不支持。</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 16px; padding: 18px 0; border-bottom: 1px solid #E3DACC">
+      <div style="width: 34px; font-family: Georgia, serif; font-size: 26px; color: #D97757">2</div>
+      <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 22px; font-weight: 600">DNS 把名字换成 IP</div>
+        <div style="font-size: 16px; line-height: 1.6; color: #3D3D3A">递归解析器依次问根、顶级域、权威服务器，拿到 A/AAAA 记录（IPv4/IPv6 地址），结果按 TTL 缓存。</div>
+      </div>
+      <div style="flex: 0 0 176px; font-size: 16px; line-height: 1.5">本地/运营商递归解析器<br><span style="color: #3D3D3A">根、TLD、权威服务器</span></div>
+      <div style="flex: 0 0 236px; font-size: 16px; line-height: 1.55; color: #3D3D3A">未命中缓存时是首屏主要延迟；故障是域名不存在、解析超时、解析到错误地址。</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 16px; padding: 18px 0; border-bottom: 1px solid #E3DACC">
+      <div style="width: 34px; font-family: Georgia, serif; font-size: 26px; color: #D97757">3</div>
+      <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 22px; font-weight: 600">建立连接：TCP 三次握手 + TLS 协商</div>
+        <div style="font-size: 16px; line-height: 1.6; color: #3D3D3A">TCP 确认双方都能收发；HTTPS 再做 TLS 握手，完成证书校验并协商出加密密钥。之后双方可复用这条连接发送多次请求。</div>
+      </div>
+      <div style="flex: 0 0 176px; font-size: 16px; line-height: 1.5">浏览器 ⇄ 服务器<br><span style="color: #3D3D3A">（含中间网络设备）</span></div>
+      <div style="flex: 0 0 236px; font-size: 16px; line-height: 1.55; color: #3D3D3A">新连接至少要等一个往返；离得越远越慢。故障是连接被拒、超时、证书过期或不被信任。</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 16px; padding: 18px 0; border-bottom: 1px solid #E3DACC">
+      <div style="width: 34px; font-family: Georgia, serif; font-size: 26px; color: #D97757">4</div>
+      <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 22px; font-weight: 600">发送 HTTP 请求，服务器处理后回应</div>
+        <div style="font-size: 16px; line-height: 1.6; color: #3D3D3A">请求带上方法、路径、头部（含 Cookie）。请求可能先到 CDN 或反向代理，再到应用服务器查询数据库；服务器回状态码、响应头和正文（通常是 HTML）。</div>
+      </div>
+      <div style="flex: 0 0 176px; font-size: 16px; line-height: 1.5">浏览器 → CDN/代理 → 应用 → 数据库</div>
+      <div style="flex: 0 0 236px; font-size: 16px; line-height: 1.55; color: #3D3D3A">等待时间取决于后端处理与距离；故障是 404、500、重定向循环、等待超时。</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 16px; padding: 18px 0; border-bottom: 1px solid #E3DACC">
+      <div style="width: 34px; font-family: Georgia, serif; font-size: 26px; color: #D97757">5</div>
+      <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 22px; font-weight: 600">浏览器解析并渲染</div>
+        <div style="font-size: 16px; line-height: 1.6; color: #3D3D3A">边解析 HTML 边构建 DOM 树，解析样式构建 CSSOM，合成渲染树后计算布局、绘制图层并上屏；脚本与样式会阻塞解析，所以关键文件要优先到达。</div>
+      </div>
+      <div style="flex: 0 0 176px; font-size: 16px; line-height: 1.5">浏览器渲染进程<br><span style="color: #3D3D3A">（主线程 + GPU）</span></div>
+      <div style="flex: 0 0 236px; font-size: 16px; line-height: 1.55; color: #3D3D3A">通常是首屏最大的一块成本；故障是脚本报错、样式未到导致画面闪烁、字体加载慢。</div>
+    </div>
+
+    <div style="display: flex; align-items: flex-start; gap: 16px; padding: 18px 0">
+      <div style="width: 34px; font-family: Georgia, serif; font-size: 26px; color: #D97757">6</div>
+      <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 22px; font-weight: 600">继续取子资源，页面逐步完整</div>
+        <div style="font-size: 16px; line-height: 1.6; color: #3D3D3A">解析中遇到图片、脚本、样式、字体会再发请求，共用已有连接、走缓存、按优先级排队；动态内容再通过脚本发起额外请求。</div>
+      </div>
+      <div style="flex: 0 0 176px; font-size: 16px; line-height: 1.5">浏览器<br><span style="color: #3D3D3A">CDN / 服务器</span></div>
+      <div style="flex: 0 0 236px; font-size: 16px; line-height: 1.55; color: #3D3D3A">数量多、并发受限；故障是个别图片/字体加载失败，页面缺图或字体回退。</div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px; padding: 26px 28px; background: #FAF9F5; border: 1px solid #E3DACC">
+    <div style="font-size: 22px; font-weight: 600">它们怎样配合：一条串行的链，之后才并行</div>
+    <div style="font-size: 17px; line-height: 1.7; color: #3D3D3A">前四步是<b>严格串行</b>的：不知道 IP 就没法连接，连接好的那一刻才是发请求的时刻。总等待量级可以粗略看成各段之和：</div>
+    <div style="font-size: 18px; line-height: 1.7; color: #141413; overflow-x: auto; white-space: nowrap; padding: 4px 0">
+      $$T_{\text{首屏}} \approx T_{\text{DNS}} + 2\,T_{\text{RTT}} + T_{\text{服务器}} + T_{\text{传输}} + T_{\text{渲染}}$$
+    </div>
+    <div style="font-size: 17px; line-height: 1.7; color: #3D3D3A">其中 $T_{\text{RTT}}$ 是到服务器的一个往返时间（三次握手与 TLS 协商合计常要用到两个往返），$T_{\text{传输}}$ 约为 $\dfrac{\text{页面体积}}{\text{有效带宽}}$。所以“打开慢”要分段看：DNS 慢是解析问题，连接慢是距离或网络问题，后端慢是服务器问题，渲染慢是前端资源问题。</div>
+    <div style="font-size: 17px; line-height: 1.7; color: #3D3D3A">到了第 5、6 步，子资源才<b>并行</b>加载：CDN 把内容搬到离你近的地方，压缩与 HTTP/2、HTTP/3 的多路复用减少往返浪费，浏览器缓存让重复访问跳过前四步。</div>
+  </div>
+
+  <div style="display: flex; gap: 24px; flex-wrap: wrap">
+    <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 10px; padding: 22px 24px; background: #FFFFFF; border: 1px solid #E3DACC">
+      <div style="font-size: 18px; font-weight: 600">一个可以自己验证的观察方法</div>
+      <div style="font-size: 16px; line-height: 1.65; color: #3D3D3A">打开开发者工具的 Network 面板，勾选 Disable cache 后再刷新：在时间轴上依次看 DNS、Connecting、SSL、Waiting（服务器处理）与 Content Download 各占多长。清空缓存后重新访问，对比前后两次的区别，就能看到 DNS 与连接这两步被省掉了多少。</div>
+    </div>
+    <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 10px; padding: 22px 24px; background: #FFFFFF; border: 1px solid #E3DACC">
+      <div style="font-size: 18px; font-weight: 600">容易混淆的两个边界</div>
+      <div style="font-size: 16px; line-height: 1.65; color: #3D3D3A">DNS 只负责“名字到地址”，它不搬运网页内容；服务器返回的通常只是 HTML，样式、图片、字体要浏览器再依次索取。也就是说：<b>页面“出来”的时刻，往往早于页面“完整”的时刻</b>。</div>
+    </div>
+  </div>
+
+  <div style="font-size: 14px; color: #73726C">示意图中的往返次数是常见情形的近似，具体取决于协议版本、连接复用与网络状况。</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1240,"height":1660}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

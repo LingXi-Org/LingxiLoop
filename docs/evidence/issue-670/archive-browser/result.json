@@ -1,0 +1,49 @@
+{
+  "browser": "Chrome/154.0.8037.57",
+  "transport": "CDP; trusted keyboard input; real browser download",
+  "scope": "Actual AnswerText/MarkdownText/HTTP client with public synthetic identity and HTTP archive fixture",
+  "unverified": [
+    "production/current database authorization",
+    "live model generation",
+    "legacy executable interaction recovery"
+  ],
+  "oldRuntimeRequests": [],
+  "consoleErrors": [],
+  "reports": [
+    {
+      "scenario": "actual-answer-text-render",
+      "body": "历史正文前半段😀。\n\n::visualize{\"path\":\"/work/public-lesson.html\",\"title\":\"公共历史讲解\"}\n\n历史正文后半段。",
+      "automaticallyExported": false,
+      "frames": 0
+    },
+    {
+      "scenario": "keyboard-explicit-json-download",
+      "file": "public-lesson.html.json",
+      "bytes": 373,
+      "sha256": "d5b8a742e36be11f4d1465219c96adb58c877ba29bcc37e8a22d6fce7c88d505",
+      "request": {
+        "method": "GET",
+        "path": "/api/im/channels/public-room/visualize/archive",
+        "query": {
+          "path": "/work/public-lesson.html",
+          "sourceMessageId": "public-source"
+        },
+        "company": "public-archive-company",
+        "project": "public-archive-project",
+        "denied": false
+      },
+      "oldSourceExecuted": false
+    },
+    {
+      "scenario": "revoked-http-response",
+      "status": 403,
+      "bodyPreserved": true,
+      "focus": {
+        "tag": "BUTTON",
+        "text": "下载历史内容"
+      },
+      "error": "历史内容暂时无法导出，请稍后重试或检查当前访问权限。",
+      "frames": 0
+    }
+  ]
+}

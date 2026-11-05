@@ -126,8 +126,8 @@ export class WukongWebhookApplication {
       }
     }
     if (input.payload.role === 'user') await assertOwnedMessageAttachments(db, { companyId: binding.company_id, userId: input.fromUid, payload: input.payload })
-    const parsedMentions = custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(input.payload), members)
-    const mentionedIds = (custom.questionnaireReply) && Array.isArray(custom.mentionedIds)
+    const parsedMentions = custom.visualizeFollowUp || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(input.payload), members)
+    const mentionedIds = (custom.visualizeFollowUp || custom.questionnaireReply) && Array.isArray(custom.mentionedIds)
       ? custom.mentionedIds.map(String) : parsedMentions.mentionedIds
     const mentionAll = parsedMentions.mentionAll
     const recipients = resolveLearningAgentRecipients({

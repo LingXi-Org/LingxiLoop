@@ -1,10 +1,10 @@
 import { NoEffectError } from '@lyyzka/lingxios'
-import { homeworkAnswerText } from './homework-answer.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { LearningScope } from './contracts.js'
+import { homeworkAnswerText } from './homework-answer.js'
 import type { HomeworkReport } from './homework-contracts.js'
 import { readHomeworkMaterials } from './homework-effects.js'
-import { assertHomeworkPublished, homeworkHash, homeworkRow, homeworkScope, homeworkState, studentHomeworkView, type homeworkView } from './homework-repository.js'
+import { assertHomeworkPublished, homeworkHash, homeworkRow, homeworkScope, homeworkState, type homeworkView, studentHomeworkView } from './homework-repository.js'
 
 type OverviewInput = { homeworkId?: string; learnerId?: string; section: 'report'|'answer'|'shared_evidence'|'requirements'; offset: number }
 type LearnerReadInput = { homeworkId: string; section: 'summary'|'requirements'|'materials'|'answer'|'report'; offset: number }
@@ -30,8 +30,8 @@ function page<T>(base: object, rows: T[], offset: number) {
 }
 
 function visibleReport(report:HomeworkReport) {
-  return {completion:report.completion,criteria:report.criteria,assistance:report.assistance,independence:report.independence,
-    weaknesses:report.weaknesses,evidence:report.evidenceSources,manualReview:report.manualReview,verification:report.verification??'verified',coverage:report.coverage}
+  return {id:report.id,generatedAt:report.generatedAt,homeworkRevision:report.homeworkRevision,answerRevision:report.answerRevision,inputHash:report.inputHash,generatorVersion:report.generatorVersion,completion:report.completion,criteria:report.criteria,assistance:report.assistance,independence:report.independence,
+    weaknesses:report.weaknesses,assistanceEvidence:report.assistanceEvidence,evidence:report.evidenceSources,manualReview:report.manualReview,verification:report.verification??'verified',coverage:report.coverage}
 }
 
 function textPage(base:object,content:unknown,offset:number) {
@@ -71,11 +71,11 @@ export async function learnerHomeworkRead(db:Queryable,scope:LearningScope,cours
   switch(input.section) {
     case 'requirements': content={title:hw.title,instructions:hw.instructions,criteria:hw.criteria,links:hw.links,attachments:hw.attachments,dueAt:hw.due_at};break
     case 'materials': {
-      const materials=await readHomeworkMaterials(db,scope,hw,AbortSignal.any([signal,AbortSignal.timeout(90000)]))
+      const materials=await readHomeworkMaterials(db,scope,hw,AbortSignal.any([signal,AbortSignal.timeout(90000)]),'read')
       if(homeworkHash(materials.map(item=>[item.source,item.hash]))!==homeworkHash(hw.materials.map(item=>[item.source,item.hash]))) {
         throw new NoEffectError('作业材料已变化，需要教师发布新版本','conflict')
       }
-      content=materials;break
+      content=materials.map(material=>({...material,...(material.contentStatus?{code:{failed:'attachment_extraction_failed',unsupported:'attachment_format_unsupported',empty:'attachment_text_empty',too_large:'attachment_read_limit'}[material.contentStatus]}:{})}));break
     }
     case 'answer': content=homeworkAnswerText(state.answer);break
     case 'report': content=state.report?visibleReport(state.report):null;break

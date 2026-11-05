@@ -246,7 +246,7 @@ export class HomeworkApplication {
       if(!view.hasLearningRecord) throw new LearningApplicationError('conflict','请先在本作业学习对话中留下真实学习记录')
       if(!state.answer.text.trim()&&!state.answer.links.length&&!state.answer.attachments.length) throw new LearningApplicationError('invalid','请先保存作答内容')
       if(!view.canSubmit) throw new LearningApplicationError('conflict',hw.status==='CLOSED'?'作业已关闭，仅当前被退回的学生可提交一次修订':'作业已通过')
-      await db.query(`UPDATE homework_learner_state SET report=NULL,report_status='PENDING',report_feedback='' WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3`,[scope.companyId,id,scope.userId])
+      await db.query(`UPDATE homework_learner_state SET report_status='PENDING',report_feedback='' WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3`,[scope.companyId,id,scope.userId])
       await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.report',effectKey:`${id}:${scope.userId}`,
         payload:{homeworkId:id,userId:scope.userId,answerRevision:state.answer_revision,returnEpoch:state.return_epoch}})
     })
@@ -303,6 +303,9 @@ export class HomeworkApplication {
       const references=await captureConversationEvidence(db,scope,hw.project_id,data.conversationReferences)
       if(report.evidenceSources.some(quote=>!references.some(ref=>ref.messages.some(message=>message.role==='user'&&message.id===quote.messageId&&message.text.includes(quote.excerpt))))) {
         throw new LearningApplicationError('conflict','请选择包含学习报告证据的对话片段，再预览提交')
+      }
+      if(report.assistanceEvidence?.some(quote=>!references.some(ref=>ref.messages.some(message=>message.role==='assistant'&&message.id===quote.messageId&&message.text.includes(quote.excerpt))))) {
+        throw new LearningApplicationError('conflict','请选择包含报告所引助手讲解的对话片段，再预览提交')
       }
       const submission=randomUUID(),version=(view.latestSubmission?.version??0)+1
       await db.query(`INSERT INTO homework_submissions(id,company_id,project_id,homework_id,learner_id,version,idempotency_key,content_hash,answer,report,answer_revision,return_epoch,late,submitted_at,conversation_references)

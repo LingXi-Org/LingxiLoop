@@ -1,7 +1,7 @@
 # Learning experience
 
 Read the affected row before editing. Reuse assistant-ui, Lexical, the native
-runtime, official MCP App bridge and existing scoped state. Keep student requests,
+runtime, Design/Slides editors and existing scoped state. Keep student requests,
 authorization, execution and learning evidence distinct.
 
 Paths below are relative to the repository root. Source inspection establishes

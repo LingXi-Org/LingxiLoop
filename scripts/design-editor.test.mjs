@@ -60,7 +60,7 @@ test('Design package preserves the agreed math runtime and optional executable b
   const source = resolve(manifest.source), output = resolve('server/assets/design-editor')
   const entry = await readFile(resolve(output, manifest.entry.file), 'utf8')
   assert.doesNotMatch(entry, /sendRequest:x=>g\.sendRequest\(x\)/, 'unported direct agent requests must not be advertised')
-  const math = await readFile('server/assets/artifact-math/math.js', 'utf8')
+  const math = await readFile(resolve(output, 'assets', manifest.math.offlineFile), 'utf8')
   const catalog = { ...JSON.parse(await readFile('third_party/baoyu-design/host/slides-zh-CN.json', 'utf8')), ...JSON.parse(await readFile('third_party/baoyu-design/host/design-zh-CN.json', 'utf8')) }
   const layout = await buildDesignLayout()
   const injected = adaptDesignMath('supportJs:e.dcSupportSource}', math)

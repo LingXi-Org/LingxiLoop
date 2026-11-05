@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs'
+import { assembleHarness, releaseVersions, toolContractHash } from '@lyyzka/lingxios'
+import { createProductHarness } from '../agent-runtime/harness.js'
+import { createProductTools } from '../agent-runtime/tools.js'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createArtifactTools } from '../modules/artifacts/agent-tools.js'
@@ -8,9 +12,19 @@ const report = { finding: 'Observed finding', evidenceRefs: [{ kind: 'file', id:
 
 test('Slides retains common native tools and adds deck creation and real design-system tools', () => {
   const methods = (tools: typeof design) => tools.map(tool => tool.action.split('.')[1])
-  assert.deepEqual(methods(slides).filter(method => !['create', 'design_systems', 'install_design_system'].includes(method)), methods(design))
+  assert.deepEqual(methods(slides).filter(method => !['create', 'design_systems', 'install_design_system'].includes(method)), methods(design).filter(method => !['ensure','plan_explanation'].includes(method)))
   assert.ok(methods(slides).includes('create'))
   for (const tool of [...design, ...slides]) assert.equal((tool.parameters as { additionalProperties: boolean }).additionalProperties, false)
+})
+
+test('cold Design initialization is an explicit authorized transaction with a strict schema', () => {
+  const initialize = design.find(tool => tool.action === 'design.ensure')!
+  assert.equal(initialize.effect, 'transaction')
+  assert.deepEqual(initialize.parse({}), {})
+  assert.throws(() => initialize.parse({ companyId: 'other', conversationId: 'other' }))
+  assert.ok(initialize.authorize)
+  assert.ok(initialize.verify)
+  assert.equal(slides.some(tool => tool.action === 'slides.ensure'), false)
 })
 
 test('design-system installation rejects traversal, missing preconditions and unbounded batches', () => {
@@ -51,4 +65,17 @@ test('file writes take whole files or deletions under project paths only', () =>
   assert.throws(() => write.parse({ files: {} }))
   assert.throws(() => write.parse({ files: { '../escape.txt': { content: 'x' } } }))
   assert.throws(() => write.parse({ files: { 'project/a.html': { content: 'x', ifMatch: 'not-a-sha' } } }))
+})
+
+// This patch must remain compatible with already admitted production-main work.
+// A future intentional harness change needs its supported cutover and a new
+// release-specific baseline; never update this hash merely to make CI green.
+test('Slides compatibility fixes retain production-main formal25 harness and tool contracts', () => {
+  const expected = JSON.parse(readFileSync(new URL('../../../perf/issue-683/harness-main-1bd9e539.json', import.meta.url), 'utf8'))
+  const actual = assembleHarness(createProductHarness(createProductTools(control), control))
+  assert.equal(releaseVersions.runtime, expected.runtime)
+  assert.equal(actual.context.hash, expected.hash, 'guidance changes require the safe harness cutover; defer them from this patch')
+  assert.deepEqual(actual.context.skills.map(({name,version,hash})=>({name,version,hash})), expected.skills)
+  assert.deepEqual(actual.tools.map(tool=>({action:tool.action,hash:toolContractHash(tool)})), expected.tools)
+  assert.deepEqual(actual.context.presentations.map(({type,version})=>({type,version})), expected.presentations)
 })

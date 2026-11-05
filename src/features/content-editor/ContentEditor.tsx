@@ -6,10 +6,12 @@ import { contentSchema, contentDictionary } from './schema'
 import { importLegacy } from './legacy'
 import { recoverFencedCode } from './fenced-code'
 import { pasteContent } from './paste'
+import { markdownInput } from './markdown-input'
 import { useCreateBlockNote } from '@blocknote/react'
-import { forwardRef, useImperativeHandle, useLayoutEffect, useRef } from 'react'
+import { forwardRef, useImperativeHandle, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useTheme } from 'next-themes'
-import { preserveCodeNewlines, usableDocument, type ContentDocument } from './document'
+import { Button } from '@/components/ui/button'
+import { hasCodeSyntax, preserveCodeNewlines, usableDocument, type ContentDocument } from './document'
 
 export interface ContentEditorHandle {
   insertImage(url: string, name: string): void
@@ -35,7 +37,7 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
   const last = useRef<{ value: string; document?: ContentDocument | null; legacyParagraphKey?: string } | null>(null)
   const original = useRef(document?.legacyMarkdown ?? value)
   const editor = useCreateBlockNote({
-    schema: contentSchema, dictionary: contentDictionary, extensions: [syntaxHighlighter], pasteHandler: context => pasteContent(context, legacyFormat),
+    schema: contentSchema, dictionary: contentDictionary, extensions: [syntaxHighlighter, ...(legacyFormat === 'markdown' ? [markdownInput] : [])], pasteHandler: context => pasteContent(context, legacyFormat),
     domAttributes: { editor: { 'aria-label': label, role: 'textbox', 'aria-multiline': 'true' } },
     uploadFile: async file => {
       if (!current.current.uploadFile) throw new Error('此内容不支持上传附件，请使用链接。')
@@ -111,13 +113,28 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
 })
 ContentEditor.displayName = 'ContentEditor'
 
-export function ContentDocumentView({ document, legacyFormat }: { document: ContentDocument; legacyFormat?: 'forum' | 'markdown' }) {
+export function ContentDocumentView({ document, legacyFormat, codeReadingView }: { document: ContentDocument; legacyFormat?: 'forum' | 'markdown'; codeReadingView?: ReactNode }) {
   const { resolvedTheme } = useTheme()
+  const [offerCodeView, setOfferCodeView] = useState(false)
+  const [readingCode, setReadingCode] = useState(false)
+  const hasCodeView = codeReadingView != null
   const editor = useCreateBlockNote({ initialContent: document.blocks, schema: contentSchema, dictionary: contentDictionary, extensions: [syntaxHighlighter] }, [document])
   useLayoutEffect(() => {
+    setReadingCode(false)
+    setOfferCodeView(false)
     if (legacyFormat !== 'markdown') return
     const recovered = recoverFencedCode(document, document.projection, source => importLegacy(editor, source, 'markdown'))
     if (recovered !== document) editor.replaceBlocks(editor.document, recovered.blocks)
-  }, [document, editor, legacyFormat])
-  return <div className="content-document"><NativeView editor={editor} editable={false} theme={resolvedTheme === 'dark' ? 'dark' : 'light'} /></div>
+    const hasNativeCode = (blocks: typeof editor.document): boolean => blocks.some(block => block.type === 'codeBlock' || hasNativeCode(block.children))
+    // Styled/ambiguous historical paragraphs stay canonical. Offer an explicit
+    // read-only interpretation of current source instead of stripping their marks.
+    setOfferCodeView(hasCodeView && hasCodeSyntax(document.projection) && !hasNativeCode(editor.document))
+  }, [document, editor, legacyFormat, hasCodeView])
+  return <div className="content-document">
+    {offerCodeView && <div className="mb-3 flex flex-wrap items-center gap-2">
+      <Button type="button" variant="outline" size="sm" aria-pressed={readingCode} onClick={() => setReadingCode(value => !value)}>{readingCode ? '返回原排版' : '查看代码排版'}</Button>
+      <span className="text-xs text-muted-foreground">仅切换阅读显示，原排版保留。</span>
+    </div>}
+    {offerCodeView && readingCode ? codeReadingView : <NativeView editor={editor} editable={false} theme={resolvedTheme === 'dark' ? 'dark' : 'light'} />}
+  </div>
 }

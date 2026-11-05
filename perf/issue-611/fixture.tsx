@@ -1,12 +1,10 @@
 import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { DesignWorkspace } from '@/features/design/DesignWorkspace'
-import { GenUiCard } from '@/features/chat/visualize/zcode/gen-ui/components/GenUiCard'
 import { useAuth } from '@/stores/auth'
 import { setWorkspaceSession } from '@/lib/workspaceSession'
 import '@/styles/globals.css'
 import '@/features/design/design-workspace.css'
-import '@/features/chat/visualize/zcode.css'
 
 useAuth.setState({ user: { id: 'perf-user', name: 'Performance fixture' } as never, activeCompanyId: 'perf-company', authenticated: true, ready: true })
 setWorkspaceSession({ companyId: 'perf-company', projectId: 'perf-project' })
@@ -17,8 +15,6 @@ document.getElementById('root')!.style.cssText = 'height:100%;'
 function Fixture() {
   const [open, setOpen] = useState(false)
   const [scope, setScope] = useState('a')
-  const kind = new URLSearchParams(location.search).get('kind') ?? 'design'
-  const target = { workspaceIdentity: 'perf-company', workspacePath: 'perf-project', sessionId: `perf-${scope}`, path: '/workspace/perf.html', instanceKey: `perf-${scope}`, sourceMessageId: `message-${scope}` }
   return <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
     <nav style={{ padding: 8, display: 'flex', gap: 16 }}>
       <button id="open" type="button" onClick={() => { performance.mark('fixture:open'); setOpen(true) }}>打开</button>
@@ -26,9 +22,9 @@ function Fixture() {
       <button id="switch" type="button" onClick={() => { setOpen(false); setScope(s => s === 'a' ? 'b' : 'a') }}>切换会话</button>
     </nav>
     <div style={{ flex: 1, minHeight: 0 }}>
-      {kind === 'design' ? <DesignWorkspace key={scope} design={open ? { artifactId: `board-${scope}`, title: `性能样稿 ${scope}` } : null} onClose={() => setOpen(false)}>
+      {<DesignWorkspace key={scope} design={open ? { artifactId: `board-${scope}`, title: `性能样稿 ${scope}` } : null} onClose={() => setOpen(false)}>
         <main><p>对话正文</p><textarea aria-label="消息" /></main>
-      </DesignWorkspace> : open && <GenUiCard target={target} reference={{ path: target.path, title: '固定交互样稿' } as never} />}
+      </DesignWorkspace>}
     </div>
   </div>
 }

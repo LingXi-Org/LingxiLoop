@@ -1,0 +1,24 @@
+✔ 674 explicit teacher grade criteria retain the boundary without model validation findings (1.272579ms)
+✔ 674 teacher-only grades in instructions bind grading criteria without classifying ordinary computation as grading (0.893104ms)
+✔ 674 deferred or negative rubric discussion is not an awarded teacher grade (0.749486ms)
+✔ 558 missing severity retains an actionable teacher review instead of inventing a blocker (9.286777ms)
+✔ 558 unclassified wording and unsupported blocker labels remain nonblocking findings (0.861606ms)
+✔ 558 a grounded contradiction still blocks with the exact conflicting requirement (0.496563ms)
+✔ 558 missing essential task content still blocks while malformed contradiction evidence is a service error (0.693261ms)
+✔ 558 contradictory material excerpts must come from supplied readable materials (0.376852ms)
+✔ 558 uncertain model checks and ungrounded findings never become confirmed content failures (1.021568ms)
+✔ 558 ready model responses retain nonblocking teacher-review findings (0.779091ms)
+✔ 679 operator symbols survive Markdown while intentional italics, lists and fenced code retain semantics (22.896114ms)
+✔ 679 recoverable native operator disagreement is explicit; historical recovery copies are not substituted (2.362981ms)
+✔ 679 intentional adjacent and intraword emphasis stays intact during legacy import/render (14.896709ms)
+✔ 604 current exact-fence recovery preserves surrounding authored italic and code operators (6.382644ms)
+✔ 604 styled or ambiguous native paragraphs and stale recovery source are never destructively converted (6.562477ms)
+✔ 676 stable IDs and exact quotes locate shared evidence after reordering (0.97661ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 858.007223

@@ -1,0 +1,32 @@
+<section id="window-flow" style="background:#f5f4ed;color:#141413;font-family:system-ui, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<p style="font-size:36px;font-weight:500;line-height:1.2;color:#73726c">TCP 可靠传输 · 5 / 6</p>
+<h2 style="font-family:Georgia, serif;font-size:72px;font-weight:300;line-height:1.2">滑动窗口：发得出去，也收得下</h2>
+<p style="font-size:44px;font-weight:400;line-height:1.4;color:#3d3d3a">接收方用<b>窗口</b>告诉发送方：我现在还能收多少字节。</p>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:row;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#faf9f5;padding:24px 32px;border:1px solid #e3dacc;border-radius:12px">
+<p style="font-size:24px;font-weight:400;line-height:1.4;color:#73726c">已确认</p>
+<p style="font-size:32px;font-weight:500;line-height:1.4">1000–1003</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#d97757;padding:24px 32px;border-radius:12px">
+<p style="font-size:24px;font-weight:400;line-height:1.4;color:#faf9f5">已发未确认</p>
+<p style="font-size:32px;font-weight:500;line-height:1.4;color:#faf9f5">1004–1007</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#faf9f5;padding:24px 32px;border:1px solid #e3dacc;border-radius:12px">
+<p style="font-size:24px;font-weight:400;line-height:1.4;color:#73726c">还能发的窗口</p>
+<p style="font-size:32px;font-weight:500;line-height:1.4">1008–1015</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#e3dacc;padding:24px 32px;border-radius:12px">
+<p style="font-size:24px;font-weight:400;line-height:1.4;color:#3d3d3a">窗口之外暂不发</p>
+<p style="font-size:32px;font-weight:500;line-height:1.4;color:#3d3d3a">1016 起</p>
+</div>
+</div>
+<p style="font-size:32px;font-weight:400;line-height:1.4">收到确认后窗口向右滑动，空出来的位置才能继续发——这就是“滑动”。</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:32px;font-weight:400;line-height:1.4">接收方缓冲区快满时会把窗口调小；窗口为 0 时发送方暂停，之后靠对方通知窗口变大再继续。</p>
+<p style="font-size:32px;font-weight:400;line-height:1.4">窗口管的是“别把对方淹了”；网络本身拥堵时，发送方也会用拥塞窗口限制自己，两者取更小的那个。</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#73726c">5 / 6 · TCP 可靠传输</p>
+<aside>窗口是接收方的承诺，不是发送方的愿望。图示四段：已确认、已发未确认、还能发、窗口外。窗口滑动靠确认号推进；零窗口要用对方再通告才能恢复。再补充一层：真正的发送上限通常是接收窗口与拥塞窗口中的较小者。</aside>
+</section>

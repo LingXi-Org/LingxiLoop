@@ -1,8 +1,10 @@
 // The auth Worker signs product API requests. It must in turn use the separate
 // backend hostname; neither upstream may resolve back to the public SPA route.
 import { isolatedEditor } from '../../../shared/artifact-editor-origin.ts'
-const dynamic = /^\/(?:api|uploads|runtime|ws|files|artifact-editor|_blob|webhooks|readyz|healthz)(?:\/|$)/i
+const dynamic = /^\/(?:api|uploads|runtime|ws|files|visualize|artifact-editor|_blob|webhooks|readyz|healthz)(?:\/|$)/i
 const internal = /^\/(?:internal)(?:\/|$)/i
+// Old entrypoints and retained executable hashes stay retired across rollouts.
+const retiredVisualize = /^\/(?:visualize(?:\/|$)|runtime\/visualize(?:\/|$)|assets\/visualize-[a-f0-9]{64}\.(?:js|css|txt)$)/i
 const immutable = /^\/assets\/[\w./-]+-[\w-]{8,}\.[\w.]+$/
 export { immutable }
 export function route(path) {
@@ -23,6 +25,7 @@ export async function handleRequest(request, env, fetcher = fetch) {
   let path
   try { path = decodeURIComponent(url.pathname) } catch { return new Response('Invalid path', { status: 400 }) }
   if (/[\\\x00-\x1f]/.test(path)) return new Response('Invalid path', { status: 400 })
+  if (retiredVisualize.test(path)) return new Response('This visualization runtime has retired. Open the conversation to recover its source.', { status: 410, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } })
   const target = route(path)
   if (target === 'deny') return new Response('Not found', { status: 404 })
   if (target !== 'asset') {

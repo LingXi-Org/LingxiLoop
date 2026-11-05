@@ -1,0 +1,25 @@
+<section id="ack-cumulative" style="background:#f5f4ed;color:#141413;font-family:system-ui, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:48px">
+<p style="font-size:36px;font-weight:500;line-height:1.2;color:#73726c">TCP 可靠传输 · 3 / 6</p>
+<h2 style="font-family:Georgia, serif;font-size:72px;font-weight:300;line-height:1.2">确认号说明“还缺哪个字节”</h2>
+<p style="font-size:44px;font-weight:400;line-height:1.4;color:#3d3d3a">确认号 = <b>期望收到的下一个字节序号</b>，它同时暗示前面的字节都已收齐。</p>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:row;gap:16px">
+<p style="font-size:32px;font-weight:400;line-height:1.4;width:160px;color:#73726c">已收到</p>
+<p style="font-size:32px;font-weight:400;line-height:1.4;flex:1;background:#faf9f5;padding:16px 24px;border:1px solid #e3dacc;border-radius:12px">1000–1003 收齐，1004–1007 收齐，1008–1011 收齐</p>
+</div>
+<div style="display:flex;flex-direction:row;gap:16px">
+<p style="font-size:32px;font-weight:400;line-height:1.4;width:160px;color:#73726c">缺一个</p>
+<p style="font-size:32px;font-weight:400;line-height:1.4;flex:1;background:#faf9f5;padding:16px 24px;border:1px solid #e3dacc;border-radius:12px">1012–1015 没到，1016–1019 先到了也只能先存着</p>
+</div>
+<div style="display:flex;flex-direction:row;gap:16px">
+<p style="font-size:32px;font-weight:400;line-height:1.4;width:160px;color:#73726c">回确认号</p>
+<p style="font-size:32px;font-weight:500;line-height:1.4;flex:1;background:#141413;color:#faf9f5;padding:16px 24px;border-radius:12px">ACK = 1012（不是 1020）</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:32px;font-weight:400;line-height:1.4">一个确认覆盖一串连续字节，不必逐段回执，这就是<b>累计确认</b>。</p>
+<p style="font-size:32px;font-weight:400;line-height:1.4">补充：TCP 标准里的确认号只表示<b>下一个期望的序号</b>，对缺口的精确“选择性确认”由可选的 SACK 扩展提供。</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#73726c">3 / 6 · TCP 可靠传输</p>
+<aside>这一页抓住两点：确认号是“下一个期望的序号”，一个确认代表它之前连续收到；乱序到达的字节可以先缓存，但缺口要等重传补上。SACK 属于可选扩展，没有它时重复确认是发送方判断缺口的信号。</aside>
+</section>

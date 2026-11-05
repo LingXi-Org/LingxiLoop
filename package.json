@@ -57,6 +57,7 @@
     "icons": "node scripts/generate-icons.mjs",
     "build:slides-editor": "node scripts/build-slides-editor.mjs",
     "build:design-editor": "node scripts/build-design-editor.mjs",
+    "prebuild": "npm run build:design-editor",
     "memory:maintain": "tsx server/src/bin/memory-maintenance.ts"
   },
   "dependencies": {
@@ -86,7 +87,7 @@
     "@hugeicons/react": "^1.1.10",
     "@jitl/quickjs-wasmfile-release-sync": "0.32.0",
     "@lezer/markdown": "1.6.4",
-    "@lyyzka/lingxios": "3.8.24",
+    "@lyyzka/lingxios": "3.8.25",
     "@mantine/core": "8.3.18",
     "@mantine/hooks": "8.3.18",
     "@modelcontextprotocol/sdk": "1.30.0",

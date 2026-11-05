@@ -16,18 +16,10 @@
 !src/**
 # The SPA needs the preview/session/worker, crop geometry and shared VM inputs. Build
 # probes and the already-bundled guest sources are not image inputs.
-src/features/cases/cover-vm/**
-!src/features/cases/cover-vm/runtime.ts
-!src/features/cases/cover-vm/protocol.ts
-!src/features/cases/cover-vm/program.ts
-!src/features/cases/cover-vm/guest-source.ts
-!src/features/cases/cover-vm/svg.ts
-!src/features/cases/cover-vm/geometry.ts
-!src/features/cases/cover-vm/session.ts
-!src/features/cases/cover-vm/worker.ts
-!src/features/cases/cover-vm/CaseCoverPreview.tsx
 !shared
 shared/**
+!shared/retired-visualize.ts
+!shared/assistant-directive-parser.ts
 !shared/artifact-math.ts
 !shared/artifact-math-source.ts
 !shared/artifact-math-loader.ts
@@ -35,6 +27,7 @@ shared/**
 !shared/artifact-editor-origin.ts
 !shared/artifact-recovery.ts
 !shared/slides-editor-context.ts
+!shared/upload-mime.ts
 !public/**
 !index.html
 !vite.config.ts
@@ -43,6 +36,7 @@ shared/**
 !postcss.config.js
 !tailwind.config.ts
 !third_party/baoyu-design/**
+!third_party/visualize-compat/**
 !third_party/assistant-ui/streaming-text/**
 !third_party/assistant-ui-elements/LICENSE
 !third_party/assistant-ui-with-artifacts/LICENSE
