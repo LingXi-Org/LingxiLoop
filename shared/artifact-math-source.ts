@@ -1,4 +1,4 @@
-import delimiterModule from 'katex/contrib/auto-render/splitAtDelimiters'
+import delimiterModule from 'katex/contrib/auto-render/splitAtDelimiters.js'
 
 // KaTeX's published TypeScript helper is ESM in browsers and a nested default
 // when loaded by the Node test runner through its CommonJS package boundary.
