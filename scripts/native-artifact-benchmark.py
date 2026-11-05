@@ -264,8 +264,6 @@ class Trace:
         for i, j in pairs:
             _, row = cdp[i]
             old_key, old = fallback[j]
-            if all(item.get('finished') and not item.get('transferPending') and 'transferredBytes' in item for item in (row, old)) and row['transferredBytes'] != old['transferredBytes']:
-                self.byte_conflicts += 1
             row['_playwrightKey'] = old['_playwrightKey']
             row['_mergedRequestOrdinals'] = [row['requestOrdinal'], *row.get('_mergedRequestOrdinals', []), *old.get('_mergedRequestOrdinals', [])]
             row['requestOrdinal'] = old['requestOrdinal']
@@ -289,8 +287,13 @@ class Trace:
                 'type':entry['type'],'network':entry['network'],'scriptPath':entry['scriptPath'],'targetType':entry['targetType'],'fromPlaywright':True,'_playwrightKey':entry['_requestIdentity']}
         by_identity = {entry['_requestIdentity']:entry for entry in self.finished_requests}
         for row in self.requests.values():
-            if row.get('finished') or '_playwrightKey' not in row: continue
+            if '_playwrightKey' not in row: continue
             entry = by_identity[row['_playwrightKey']]
+            if row.get('finished'):
+                if not row.get('transferPending') and entry['bodyBytes'] > 0 and row.get('transferredBytes') != entry['headersBytes'] + entry['bodyBytes'] and not row.get('_playwrightWireConflict'):
+                    self.byte_conflicts += 1
+                    row['_playwrightWireConflict'] = True
+                continue
             row.update(finished=True, status=entry['status'], finishedEpochMs=entry['finishedEpochMs'],
                 observedResponseHeadersBytes=entry['headersBytes'], transferredBytes=entry['headersBytes'] + entry['bodyBytes'],
                 transferPending=entry['bodyBytes'] == 0, transferredBytesSource='PlaywrightRequestSizes')
@@ -1176,6 +1179,11 @@ def self_check():
     late_conflict.event('', 'loadingFinished', {'requestId':'conflict','timestamp':12,'encodedDataLength':120})
     late_conflict.snapshot()
     assert late_conflict.byte_conflicts == 1, 'late aliases cannot discard a conflicting complete wire observation'
+    cdp_first_conflict = reconciliation_fixture([])
+    cdp_first_conflict.requests['cdp']['transferredBytes'] = 120
+    cdp_first_conflict.finished_requests = reconciliation_fixture([1000]).finished_requests
+    cdp_first_conflict.snapshot()
+    assert cdp_first_conflict.byte_conflicts == 1, 'CDP-first completion must check the same complete PW wire observation'
     ambiguous = reconciliation_fixture([1000,1000])
     assert ambiguous.ambiguous_requests > 0, 'indistinguishable requests cannot qualify'
     assert safe_url(raw+'?v=1') == safe_url(raw+'?v=2') and resource_key(raw+'?v=1') != resource_key(raw+'?v=2')
