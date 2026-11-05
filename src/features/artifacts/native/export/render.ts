@@ -45,7 +45,7 @@ function textStyle(style: ArtifactStyle) {
   }).filter(([, value]) => value !== undefined).map(([key, value]) => `${key}:${String(value)}`).join(';')
 }
 
-export const EXPORT_PAGE_CSS = `.artifact-export-page{position:relative;overflow:hidden;box-sizing:border-box;font:32px/1.3 system-ui,sans-serif;color:#141413;background:white}.artifact-export-page *{box-sizing:border-box}.artifact-export-node{overflow:visible;min-width:0;min-height:0}.artifact-export-node p,.artifact-export-node h1,.artifact-export-node h2,.artifact-export-node h3,.artifact-export-node h4,.artifact-export-node h5,.artifact-export-node h6{font:inherit;line-height:inherit;margin:0}.artifact-export-node img,.artifact-export-node svg{display:block;width:100%;height:100%;object-fit:contain}.artifact-export-node table{border-collapse:collapse;width:100%;height:100%;table-layout:fixed}.artifact-export-node td{padding:.25em;border:1px solid currentColor;overflow-wrap:anywhere}.artifact-export-node .katex-display{margin:0;max-width:100%;overflow:hidden}.artifact-export-node a{color:inherit}.artifact-export-unsupported{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border:1px dashed #73726c;color:#73726c;font-size:18px;white-space:pre-wrap}`
+export const EXPORT_PAGE_CSS = `.artifact-export-page{position:relative;overflow:hidden;box-sizing:border-box;font:32px/1.3 system-ui,sans-serif;color:#141413;background:white}.artifact-export-page *{box-sizing:border-box}.artifact-export-node{overflow:visible;min-width:0;min-height:0}.artifact-export-node p,.artifact-export-node h1,.artifact-export-node h2,.artifact-export-node h3,.artifact-export-node h4,.artifact-export-node h5,.artifact-export-node h6{font:inherit;line-height:inherit;margin:0}.artifact-export-node img,.artifact-export-node svg{display:block;width:100%;height:100%;object-fit:contain}.artifact-export-node img{object-fit:cover}.artifact-export-node table{border-collapse:collapse;width:100%;height:100%;table-layout:fixed}.artifact-export-node td{padding:.25em;border:1px solid currentColor;overflow-wrap:anywhere}.artifact-export-node .katex-display{margin:0;max-width:100%;overflow:hidden}.artifact-export-node a{color:inherit}.artifact-export-unsupported{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border:1px dashed #73726c;color:#73726c;font-size:18px;white-space:pre-wrap}`
 
 export async function renderPageHtml(page: ArtifactPage, resources: ExportResources): Promise<string> {
   resources.check()
@@ -69,7 +69,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
       case 'note':
       case 'text': content = node.richText ? await richText(node.richText, resources) : await sourceText(node.text ?? '', resources); break
       case 'video': {
-        if (node.posterAssetId) { const crop=node.crop;content=`<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text??'视频')}" src="${escapeHtml(await resources.asset(node.posterAssetId))}"${crop?` style="max-width:none;width:${100/Math.max(.01,crop.width)}%;height:${100/Math.max(.01,crop.height)}%;transform:translate(${-crop.x*100}%,-${crop.y*100}%);object-fit:fill"`:''}></div>` }
+        if (node.posterAssetId) { const crop=node.crop;content=`<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text??'视频')}" src="${escapeHtml(await resources.asset(node.posterAssetId))}" ${crop?` style="max-width:none;width:${100/Math.max(.01,crop.width)}%;height:${100/Math.max(.01,crop.height)}%;transform:translate(${-crop.x*100}%,-${crop.y*100}%);object-fit:cover"`:''}></div>` }
         else content = `<div class="artifact-export-unsupported">${escapeHtml(node.text ?? '视频')}</div>`
         resources.warnings.add(`${page.title} / ${node.id}：视频以封面导出，原稿保留视频。`)
         break
@@ -77,7 +77,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
       case 'image': {
         const source = node.assetId ? await resources.asset(node.assetId) : ''
         const crop = node.crop
-        content = `<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text ?? '')}" src="${escapeHtml(source)}"${crop && crop.width > 0 && crop.height > 0 ? ` style="max-width:none;width:${100 / crop.width}%;height:${100 / crop.height}%;transform:translate(${-crop.x * 100}%,-${crop.y * 100}%);object-fit:fill"` : ''}></div>`
+        content = `<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text ?? '')}" src="${escapeHtml(source)}"${crop && crop.width > 0 && crop.height > 0 ? ` style="max-width:none;width:${100 / crop.width}%;height:${100 / crop.height}%;transform:translate(${-crop.x * 100}%,-${crop.y * 100}%);object-fit:cover"` : ''}></div>`
         break
       }
       case 'math': {

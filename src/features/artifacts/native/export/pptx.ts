@@ -101,14 +101,12 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
             slide.addShape(shape, { ...box, rectRadius: Math.min(.5, (style.borderRadius ?? 0) / Math.min(node.width, node.height)), rotate: rotation, fill: { color: color(style.fill, 'D97757'), transparency: (1 - (style.opacity ?? 1)) * 100 }, line: style.stroke && style.strokeWidth ? { color: color(style.stroke), width: style.strokeWidth * .75 } : { transparency: 100 } })
           } else if (node.type === 'table' && !nodeHasMath(node)) {
             slide.addTable((node.cells ?? []).map(row => row.map(text => ({ text }))), { ...box, fontSize, color: color(style.color), border: { type: 'solid', color: color(style.stroke, '73726C'), pt: 1 }, margin: 4, autoPage: false })
-          } else if (node.type === 'line' && (!node.points || node.points.length === 2)) {
-            slide.addShape('line', { ...box, line: { color: color(style.stroke ?? style.color), width: (style.strokeWidth ?? 2) * .75 } })
           } else {
             // Only unsupported nodes become pictures; ordinary objects on the page remain editable.
             const data = await toPng(element, { pixelRatio: 2, skipAutoScale: true, style: { position: 'static', left: '0', top: '0', transform: 'none', margin: '0' } })
             resources.check()
             slide.addImage({ data, ...box, rotate: rotation })
-            if (['math', 'svg', 'embed', 'text', 'table'].includes(node.type)) resources.warnings.add(`${page.title} / ${node.id}：${node.type === 'math' ? '公式' : '复杂内容'}以图片导出；文档保留源数据。`)
+            if (['math', 'svg', 'embed', 'text', 'table', 'line', 'drawing'].includes(node.type)) resources.warnings.add(`${page.title} / ${node.id}：${node.type === 'math' ? '公式' : '复杂内容'}以图片导出；文档保留源数据。`)
           }
         }
       } finally { mounted.dispose() }

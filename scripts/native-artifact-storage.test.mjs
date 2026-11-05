@@ -24,7 +24,10 @@ test('native fixture asset retains stable IDs and dimensions with the product up
 
 test('workflow pins real MinIO and service uses protected uploads only for native Slides', () => {
   const workflow = readFileSync(new URL('../.github/workflows/native-artifact-acceptance.yml', import.meta.url), 'utf8')
-  for (const required of ['quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z', '127.0.0.1:29000:9000', 'MINIO_ROOT_USER=native-artifact-access', 'MINIO_ROOT_PASSWORD=native-artifact-storage-test-only', 'native-artifact-minio']) assert.ok(workflow.includes(required), required)
+  for (const required of ['scripts/native-artifact-minio.Dockerfile', 'native-artifact-minio:acceptance server /data', '127.0.0.1:29000:9000', 'MINIO_ROOT_USER=native-artifact-access', 'MINIO_ROOT_PASSWORD=native-artifact-storage-test-only', 'native-artifact-minio']) assert.ok(workflow.includes(required), required)
+  const storageBuild = readFileSync(new URL('./native-artifact-minio.Dockerfile', import.meta.url), 'utf8')
+  assert.match(storageBuild, /MINIO_COMMIT=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e/)
+  assert.match(storageBuild, /test "\$\(git rev-parse HEAD\)" = "\$MINIO_COMMIT"/)
   const service = readFileSync(new URL('./native-artifact-serve.mjs', import.meta.url), 'utf8')
   assert.match(service, /if \(args\.format === 'native'\) \{\s+if \(kind === 'slides'\)/)
   assert.match(service, /\/assets\?name=/)

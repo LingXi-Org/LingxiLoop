@@ -119,11 +119,12 @@ jobs:
         env: { NODE_AUTH_TOKEN: '${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}' }
       - name: Start pinned local object storage for actual native image uploads
         run: |
+          docker build --file scripts/native-artifact-minio.Dockerfile --tag native-artifact-minio:acceptance .
           docker run --detach --name native-artifact-minio \
             --publish 127.0.0.1:29000:9000 \
             --env MINIO_ROOT_USER=native-artifact-access \
             --env MINIO_ROOT_PASSWORD=native-artifact-storage-test-only \
-            quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z server /data
+            native-artifact-minio:acceptance server /data
           for attempt in $(seq 1 60); do
             if curl --fail --silent http://127.0.0.1:29000/minio/health/ready >/dev/null; then exit 0; fi
             sleep 1

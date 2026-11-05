@@ -15,6 +15,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createServer } from 'vite'
 import react from '@vitejs/plugin-react'
 import { createFixture } from './native-artifact-fixture.mjs'
+import { createVisualFixture } from './native-editor-visual-fixture.mjs'
 import { applyOperations, prepareBatch } from '../shared/artifact-operations.ts'
 
 const require = createRequire(import.meta.url)
@@ -66,7 +67,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const fixture = createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
+  const fixture = options.checks === 'parity' ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
   const initialPageHashes = Object.fromEntries(document.pageOrder.map(id => [id, pageHash(document.pages[id])]))
@@ -128,7 +129,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   })
   const ready = async index => {
     const canvas = page.locator(`[data-page-id="page-${index}"]`)
-    await canvas.locator('[data-formula-ready=true]').waitFor()
+    if(options.checks!=='parity') await canvas.locator('[data-formula-ready=true]').waitFor()
     await canvas.locator('[data-node-type=image] img').waitFor()
     await page.waitForFunction(index => {
       const image = window.document.querySelector(`[data-page-id="page-${index}"] [data-node-type=image] img`)

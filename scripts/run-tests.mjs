@@ -66,6 +66,7 @@ const testsByScope = {
     'src/features/artifacts/native/compute-geometry.test.ts',
     'src/features/artifacts/native/compute-bulk.test.ts',
     'src/features/artifacts/native/visibility.test.ts',
+    'src/features/artifacts/native/rendered-geometry.test.ts',
     'src/features/artifacts/native/thumbnail.test.tsx',
     'src/features/artifacts/native/assets-policy.test.ts',
     'src/features/artifacts/native/embed-preview-snapshot.test.ts',

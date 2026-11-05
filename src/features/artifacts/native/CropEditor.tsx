@@ -1,24 +1,25 @@
 import { useRef, useState, type PointerEvent } from 'react'
-import type { ArtifactDocument, ArtifactNode, ArtifactPage } from '../../../../shared/artifact-document'
-import { nodeMatrix, inverseVector } from '../../../../shared/artifact-geometry'
+import type { ArtifactDocument, ArtifactNode } from '../../../../shared/artifact-document'
+import { inverseVector } from '../../../../shared/artifact-geometry'
 import type { ArtifactOperation } from '../../../../shared/artifact-operations'
 import type { ResizeHandle } from '../../../../shared/artifact-editor-actions'
+import type { RenderedNodeFrame } from './rendered-geometry'
 import { IconButton } from './EditorPrimitives'
 
-export default function CropEditor({ node, page, pageId, scale, base, onCommit, onClose }: {
-  node: ArtifactNode; page: ArtifactPage; pageId: string; scale: number; base: ArtifactDocument
+export default function CropEditor({ node, frame, pageId, scale, base, onCommit, onClose }: {
+  node: ArtifactNode; frame: RenderedNodeFrame; pageId: string; scale: number; base: ArtifactDocument
   onCommit(operations: ArtifactOperation[], base: ArtifactDocument): void; onClose(): void
 }) {
   const [crop, setCrop] = useState(node.crop ?? { x: 0, y: 0, width: 1, height: 1 })
   const start = useRef<{ x: number; y: number; crop: typeof crop; handle: ResizeHandle | 'move' } | null>(null)
   const snapshot = useRef(base)
-  const matrix=nodeMatrix(page,node)
+  const matrix=frame.matrix
   const commit = () => { onCommit([{ type: 'node.patch', pageId, nodeId: node.id, patch: { crop } }], snapshot.current); onClose() }
   const down = (event: PointerEvent, handle: ResizeHandle | 'move') => { event.preventDefault(); event.stopPropagation(); start.current = { x: event.clientX, y: event.clientY, crop, handle }; event.currentTarget.setPointerCapture(event.pointerId) }
   const move = (event: PointerEvent) => {
     event.stopPropagation(); const active = start.current; if (!active) return
     const local=inverseVector(matrix,(event.clientX-active.x)/scale,(event.clientY-active.y)/scale)
-    const dx=local.x/node.width,dy=local.y/node.height,c=active.crop
+    const dx=local.x/Math.max(1,frame.width),dy=local.y/Math.max(1,frame.height),c=active.crop
     if (active.handle === 'move') { setCrop({...c,x:Math.max(0,Math.min(1-c.width,c.x+dx)),y:Math.max(0,Math.min(1-c.height,c.y+dy))}); return }
     const left=active.handle.includes('w')?Math.max(0,Math.min(c.x+c.width-.01,c.x+dx)):c.x
     const top=active.handle.includes('n')?Math.max(0,Math.min(c.y+c.height-.01,c.y+dy)):c.y
@@ -32,7 +33,7 @@ export default function CropEditor({ node, page, pageId, scale, base, onCommit, 
     if (e.key==='Enter') { e.preventDefault();commit() }
     const step=e.shiftKey?.01:.001
     if (e.key.startsWith('Arrow')) { e.preventDefault();setCrop(c=>({...c,x:Math.max(0,Math.min(1-c.width,c.x+(e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0))),y:Math.max(0,Math.min(1-c.height,c.y+(e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0)))})) }
-  }} style={{left:0,top:0,width:node.width,height:node.height,transform:`matrix(${matrix.join(',')})`,transformOrigin:'0 0'}}>
+  }} style={{left:0,top:0,width:frame.width,height:frame.height,transform:`matrix(${matrix.join(',')})`,transformOrigin:'0 0'}}>
     <div className="native-crop-shade" />
     <div className="native-crop-region" style={{left:`${crop.x*100}%`,top:`${crop.y*100}%`,width:`${crop.width*100}%`,height:`${crop.height*100}%`}} onPointerDown={e=>down(e,'move')} onPointerMove={move} onPointerUp={e=>{e.stopPropagation();start.current=null}} onPointerCancel={()=>{start.current=null}}>
       {(['nw','n','ne','e','se','s','sw','w'] as const).map(handle=><button key={handle} type="button" className={`native-resize-handle native-handle-${handle}`} style={{width:8/scale,height:8/scale}} aria-label={`裁剪边缘 ${handle}`} onPointerDown={e=>down(e,handle)} onPointerMove={move} onPointerUp={e=>{e.stopPropagation();start.current=null}} />)}
