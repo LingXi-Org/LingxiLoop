@@ -331,10 +331,12 @@ export function Modal({
   title,
   onClose,
   children,
+  editorBoundary,
 }: {
   title: string
   onClose(): void
   children: ReactNode
+  editorBoundary?:boolean
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -351,6 +353,7 @@ export function Modal({
       ref={ref}
       className="native-dialog"
       aria-label={title}
+      data-native-editor-boundary={editorBoundary?'':undefined}
       onCancel={onClose}
       onClose={onClose}
     >

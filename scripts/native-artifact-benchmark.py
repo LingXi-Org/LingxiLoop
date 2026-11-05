@@ -80,7 +80,7 @@ def script_totals(rows):
     return {"transferredBytes": sum(row.get("transferredBytes", 0) for row in scripts),
             "decodedBytes": sum(row.get("decodedBytes", 0) for row in scripts),
             "requests": len(scripts), "inflight": sum(not row.get("finished") for row in scripts),
-            "missingDecoded": sum(row.get("finished") and not row.get("decodedObserved")
+            "missingDecoded": sum(bool(row.get("finished")) and not row.get("decodedObserved")
                                   and 200 <= row.get("status", 0) < 300 and row.get("declaredEncodedBodyBytes") != 0 for row in scripts)}
 
 
@@ -821,6 +821,11 @@ def self_check():
     assert not script_request({'network': False, 'type': 'Script', 'mime': 'application/javascript'})
     assert percentile([], 75) is None
     assert script_totals([])['decodedBytes'] == 0
+    # An in-flight request has no finished key yet; it must stay observable
+    # without crashing the failure receipt or being counted as decoded.
+    pending_script = {'network': True, 'type': 'Script'}
+    assert script_totals([pending_script]) == {'transferredBytes': 0, 'decodedBytes': 0, 'requests': 1, 'inflight': 1, 'missingDecoded': 0}
+    assert script_totals([{**pending_script, 'finished': True, 'status': 200}])['missingDecoded'] == 1
     report = {'samples': [], 'requestedRuns': 1}
     summarize(report, KINDS, ['baseline', 'candidate'], True)
     assert not report['qualified'] and not report['diagnosticPassed']

@@ -30,10 +30,12 @@ export function PageRail({ document, loadedPageIds, previews, current, selected,
     if(button){button.focus({preventScroll:true});keyboardFocus.current=null}
   },[current,first,end])
   useEffect(() => {
-    if (grid || !current || !root.current) return
-    const at = document.pageOrder.indexOf(current) * 136, element = root.current
+    if (!current || !root.current) return
+    const index=document.pageOrder.indexOf(current),element=root.current
+    if(grid){const at=Math.floor(index/columns)*rowHeight;if(at<element.scrollTop||at+rowHeight>element.scrollTop+element.clientHeight)element.scrollTo({top:Math.max(0,at-(element.clientHeight-rowHeight)/2),behavior:'instant'});return}
+    const at = index * 136
     if (at < element.scrollLeft || at + 136 > element.scrollLeft + element.clientWidth) element.scrollTo({ left: Math.max(0, at - element.clientWidth / 2 + 68), behavior: 'instant' })
-  }, [current, grid, document.pageOrder])
+  }, [current, grid, document.pageOrder,columns,rowHeight,size.width,size.height])
   return <nav className={grid ? 'native-page-grid' : 'native-pages'} aria-label={document.kind === 'slides' ? '页面导航' : '画板导航'}>
     <div ref={root} className="native-page-list" aria-orientation={grid ? 'vertical' : 'horizontal'} onScroll={e => setScroll({ x: e.currentTarget.scrollLeft, y: e.currentTarget.scrollTop })} onKeyDown={event=>{
       const target=(event.target as HTMLElement).closest<HTMLElement>('[data-page-target]');if(!target)return

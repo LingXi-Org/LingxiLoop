@@ -61,7 +61,7 @@ export default function VersionHistory({
   }
   if (preview !== null)
     return (
-      <Modal title="历史版本预览" onClose={() => setPreview(null)}>
+      <Modal editorBoundary title="历史版本预览" onClose={() => setPreview(null)}>
         <div className="native-revision-preview">
           <Suspense fallback={<p role="status">正在加载历史版本…</p>}>
             <NativeEditor
