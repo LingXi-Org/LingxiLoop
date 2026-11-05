@@ -278,9 +278,9 @@ const TABLE_ROW_LINE_HEIGHT = 20;
 const TABLE_ROW_OVERSCAN = 4;
 const HARD_WRAPPED_LINE_MIN_LENGTH = 52;
 const HARD_WRAPPED_RUN_AVERAGE_LENGTH = 64;
-const SANS_FAMILY = "Arial, Helvetica, sans-serif";
-const SERIF_FAMILY = "Georgia, Times New Roman, serif";
-const MONO_FAMILY = '"SF Mono", Menlo, Monaco, Consolas, monospace';
+const SANS_FAMILY = 'AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif';
+const SERIF_FAMILY = 'AnthropicSerif, Newsreader, ui-serif, Georgia, "Times New Roman", serif';
+const MONO_FAMILY = '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace';
 const EMPTY_MARK_STATE: MarkState = {
   bold: false,
   href: null,

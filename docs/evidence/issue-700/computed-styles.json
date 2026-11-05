@@ -1,0 +1,73 @@
+{
+  "narrowContainer": 390,
+  "overflow": false,
+  "ownAvatarCount": 0,
+  "styles": {
+    "#case-markdown h1": {
+      "fontFamily": "AnthropicSerif, Newsreader, ui-serif, Georgia, \"Times New Roman\", serif",
+      "fontSize": "23.25px",
+      "lineHeight": "31.3875px",
+      "margin": "34px 0px 18px"
+    },
+    "#case-markdown p": {
+      "fontFamily": "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", sans-serif",
+      "fontSize": "15px",
+      "lineHeight": "24.375px",
+      "margin": "0px 0px 15px"
+    },
+    "#case-native h1": {
+      "fontFamily": "AnthropicSerif, Newsreader, ui-serif, Georgia, \"Times New Roman\", serif",
+      "fontSize": "23.25px",
+      "lineHeight": "31.3875px",
+      "margin": "34px 0px 18px"
+    },
+    "#case-native p": {
+      "fontFamily": "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", sans-serif",
+      "fontSize": "15px",
+      "lineHeight": "24.375px",
+      "margin": "0px 0px 15px"
+    },
+    "#forum-markdown p": {
+      "fontFamily": "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", sans-serif",
+      "fontSize": "15px",
+      "lineHeight": "24.375px",
+      "margin": "0px 0px 15px"
+    },
+    "#forum-native p": {
+      "fontFamily": "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", sans-serif",
+      "fontSize": "15px",
+      "lineHeight": "24.375px",
+      "margin": "0px 0px 15px"
+    },
+    "#homework-markdown p": {
+      "fontFamily": "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", sans-serif",
+      "fontSize": "15px",
+      "lineHeight": "24.375px",
+      "margin": "0px 0px 15px"
+    },
+    "#homework-native p": {
+      "fontFamily": "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", sans-serif",
+      "fontSize": "15px",
+      "lineHeight": "24.375px",
+      "margin": "0px 0px 15px"
+    },
+    ".chat-composer-input": {
+      "fontFamily": "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", sans-serif",
+      "fontSize": "15px",
+      "lineHeight": "21px",
+      "margin": "0px"
+    },
+    "[data-agent-body]": {
+      "fontFamily": "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", sans-serif",
+      "fontSize": "15px",
+      "lineHeight": "24.375px",
+      "margin": "0px"
+    },
+    "[data-message-bubble]": {
+      "fontFamily": "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"PingFang SC\", sans-serif",
+      "fontSize": "14.5px",
+      "lineHeight": "23.5625px",
+      "margin": "0px"
+    }
+  }
+}

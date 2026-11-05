@@ -326,10 +326,11 @@ test('sender kind owns bubble chrome and agent avatars align at the top', () => 
     const $ = load(renderToStaticMarkup(<Preview messages={[message('1', sender)]} />))
     assert.equal($('[data-message-bubble]').length, sender === 'agent' ? 0 : 1)
     assert.equal($('[data-agent-body]').length, sender === 'agent' ? 1 : 0)
+    assert.equal($('[data-message-avatar]').length, sender === 'me' ? 0 : 1)
     if (sender === 'agent') {
       assert.match($('[data-message-avatar]').attr('class') ?? '', /self-start/)
       assert.doesNotMatch($('[data-agent-body]').attr('class') ?? '', /bg-|rounded-|border-/)
-      assert.match($('[data-agent-body]').attr('class') ?? '', /text-\[15px\]/)
+      assert.match($('[data-agent-body]').attr('class') ?? '', /conversation-message-body/)
     }
   }
 })

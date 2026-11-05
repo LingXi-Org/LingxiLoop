@@ -12,7 +12,7 @@ const MMDR_THEME = {
   cluster_bkg: "transparent",
   cluster_border: "var(--mmdr-border)",
   edge_label_background: "transparent",
-  font_family: "Inter, ui-sans-serif, system-ui, sans-serif",
+  font_family: "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, sans-serif",
   font_size: 16,
   line_color: "var(--mmdr-line)",
   primary_border_color: "var(--mmdr-border)",
@@ -37,7 +37,7 @@ const MERMAID_CONFIG = {
   theme: "base",
   themeVariables: {
     background: "transparent",
-    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+    fontFamily: "AnthropicSans, Inter, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, sans-serif",
     lineColor: "#64748b",
     primaryBorderColor: "#94a3b8",
     primaryColor: "#f8fafc",

@@ -25,7 +25,7 @@ export const styledGenerativeUILibrary: GenerativeUILibrary = {
     streamProperties: markdownBase.streamProperties,
     description: "A markdown string, rendered with GitHub-flavored markdown.",
     render: ({ value, children }) => (
-      <div data-aui="markdown">
+      <div data-aui="markdown" data-content-typography="chat">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{value ?? ""}</ReactMarkdown>
         {children}
       </div>

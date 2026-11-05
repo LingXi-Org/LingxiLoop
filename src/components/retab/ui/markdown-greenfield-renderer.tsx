@@ -45,7 +45,7 @@ const MarkdownContentReadyContext = React.createContext<(() => void) | null>(
 // The rendered body size at 100% zoom. Every other size (headings, code,
 // tables, footnotes) is authored in `em` relative to this, so scaling this one
 // value with the zoom `fontScale` resizes the whole document as one system.
-export const MARKDOWN_GREENFIELD_BASE_FONT_PX = 15.5;
+export const MARKDOWN_GREENFIELD_BASE_FONT_PX = 15;
 // Tailwind v4's default spacing unit (0.25rem). Scaling it with the zoom
 // fontScale keeps padding/margins proportional to the body text.
 export const MARKDOWN_GREENFIELD_BASE_SPACING_REM = 0.25;
@@ -111,7 +111,7 @@ export const MarkdownGreenfieldChunkRenderer = React.memo(
       <MarkdownContentReadyContext.Provider value={notifyContentReady}>
         <div
           ref={ref}
-          className="markdown-greenfield-content text-foreground min-w-0 leading-relaxed"
+          data-content-typography="preview" className="markdown-greenfield-content text-foreground min-w-0 leading-relaxed"
           data-slot="markdown-greenfield-content"
           // Scale both the font and the spacing scale with zoom so vertical
           // rhythm tracks the type size. Tailwind v4 spacing utilities resolve to

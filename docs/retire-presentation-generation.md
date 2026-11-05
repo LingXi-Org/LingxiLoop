@@ -26,7 +26,7 @@ Retained consumers were traced before deletion:
   and their dependencies still serve file extraction. There is no remaining
   generation-only npm/Python package to uninstall.
 - SDK `capabilities[].presentations`, memory-summary cards, run presentation
-  provenance/pool, public text/trace, zcode presentation methods, case-cover
+  provenance/pool, public text/trace, case-cover
   presentation and HTML `role="presentation"` serve other features.
 - Frozen historical SDK projection fixtures and already applied migrations keep
   their exact source/checksums. `0001_v1_baseline.sql` is unchanged.

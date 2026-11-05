@@ -1,6 +1,5 @@
 import { answerSegment } from './answerSegment.js'
-import { findMarkdownCodeRanges } from '../../shared/assistant-directive-parser.js'
-import { legacyVisualizeReferences } from '../../shared/retired-visualize.js'
+import { retiredVisualizationRanges } from './retired-visualizations.js'
 import { parseMarkdownIntoBlocks } from 'streamdown'
 
 /** Display complete atomic references at the source in which they start. The
@@ -26,10 +25,8 @@ export function answerDisplaySlice(parts: readonly unknown[], index: number, cit
   if (blocks.join('') !== body) return source.start===0 ? {text:body,offset:0} : {text:'',offset:body.length}
   let blockOffset=0
   const blockRanges=blocks.map(block=>{const start=blockOffset;blockOffset+=block.length;return {start,end:blockOffset}})
-  const code = findMarkdownCodeRanges(body)
-  const ranges = [...blockRanges,...code.map(([start,end])=>({start,end})), ...citations.filter(range => Number.isSafeInteger(range.start) && Number.isSafeInteger(range.end)
-    && range.start >= 0 && range.end > range.start && range.end <= body.length),
-    ...legacyVisualizeReferences(body).map(({start,end})=>({start,end}))]
+  const ranges = [...blockRanges, ...citations.filter(range => Number.isSafeInteger(range.start) && Number.isSafeInteger(range.end)
+    && range.start >= 0 && range.end > range.start && range.end <= body.length), ...retiredVisualizationRanges(body)]
   let start = source.start,end = source.end
   for (const range of ranges.sort((a,b)=>a.start-b.start)) {
     if (range.start < start && range.end > start) start = range.end

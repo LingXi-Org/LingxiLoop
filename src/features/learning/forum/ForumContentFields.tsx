@@ -15,7 +15,8 @@ import { attachmentKind, ForumAttachments, ForumFileOpen, forumFileUrl } from '.
 import { ForumMaterials } from './ForumMaterials'
 
 
-export function ForumContentFields({ body, editorDocument, legacyParagraphs, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, compact = false, focusCanvas = false, nativeOnly = false, onFocus, editorRef }: {
+export function ForumContentFields({ body, editorDocument, legacyParagraphs, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, compact = false, focusCanvas = false, nativeOnly = false, onFocus, editorRef, purpose = 'forum' }: {
+  purpose?: 'forum' | 'homework'
   body: string; editorDocument?: ContentDocument | null; setBody(value: string, document?: ContentDocument, sections?: string[]): void; links: string; setLinks(value: string): void
   editorRef?: React.RefObject<ContentEditorHandle | null>
   legacyParagraphs?: string[]
@@ -65,7 +66,7 @@ export function ForumContentFields({ body, editorDocument, legacyParagraphs, set
     setAttachments(next)
   }
   return <div className={compact || focusCanvas ? 'min-w-0' : 'min-w-0 space-y-2'}>
-    <ContentEditor ref={editorRef ? value => { editor.current = value; editorRef.current = value } : editor} compact={compact} onFocus={onFocus} value={body} document={editorDocument} legacyParagraphs={legacyParagraphs} onChange={setBody} label={label} maxLength={maxLength} disabled={disabled} uploadFile={async file => {
+    <ContentEditor purpose={purpose} ref={editorRef ? value => { editor.current = value; editorRef.current = value } : editor} compact={compact} onFocus={onFocus} value={body} document={editorDocument} legacyParagraphs={legacyParagraphs} onChange={setBody} label={label} maxLength={maxLength} disabled={disabled} uploadFile={async file => {
       const [url] = await upload([file])
       if (!url) throw new Error('附件上传失败，请重试。')
       return url

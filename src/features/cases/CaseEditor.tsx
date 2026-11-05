@@ -48,7 +48,7 @@ export function CaseEditor({ input, options, preview, busy, authorName, authorAv
       <div className="case-edit-document" hidden={preview}>
         <Textarea className="case-edit-title" aria-label="案例标题" placeholder="案例标题" rows={1} maxLength={200} required disabled={busy} value={input.title} onChange={event => onChange(value => ({ ...value, title: event.target.value }))}/>
         <Textarea id="case-summary-input" className="case-edit-summary" aria-label="一句话简介" placeholder="一句话简介，会显示在案例卡片上" rows={1} maxLength={2000} disabled={busy} value={input.summary} onChange={event => onChange(value => ({ ...value, summary: event.target.value, summaryDocument: null }))}/>
-        <div className="case-inline-editor case-compose-body"><ContentEditor legacyFormat="markdown" label="正文" value={input.body} document={input.editorDocument} maxLength={200000} disabled={busy} uploadFile={uploadFile} onChange={(body, editorDocument) => onChange(value => ({ ...value, body, editorDocument }))}/></div>
+        <div className="case-inline-editor case-compose-body"><ContentEditor purpose="case" legacyFormat="markdown" label="正文" value={input.body} document={input.editorDocument} maxLength={200000} disabled={busy} uploadFile={uploadFile} onChange={(body, editorDocument) => onChange(value => ({ ...value, body, editorDocument }))}/></div>
       </div>
       {preview && <article className="case-preview-document case-reader">
         {input.category && <div className="case-reader-tags"><span>{input.category}</span></div>}

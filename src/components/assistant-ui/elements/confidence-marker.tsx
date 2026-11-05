@@ -150,7 +150,7 @@ export function ConfidenceMarker({
         </div>
         {page && <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs whitespace-nowrap text-muted-foreground">{page}</span>}
       </div>
-      <div id={`${basisId}-excerpt-${index}`} className={cn("border-s-2 border-emerald-500/60 ps-3 text-[13.5px] leading-[1.75] text-foreground/90 [&>:first-child]:mt-0 [&>:last-child]:mb-0 [&_mark]:rounded [&_mark]:bg-amber-200/60 [&_mark]:px-0.5 [&_mark]:text-inherit dark:[&_mark]:bg-amber-400/25",
+      <div data-content-typography="chat" id={`${basisId}-excerpt-${index}`} className={cn("border-s-2 border-emerald-500/60 ps-3 text-[13.5px] leading-[1.75] text-foreground/90 [&>:first-child]:mt-0 [&>:last-child]:mb-0 [&_mark]:rounded [&_mark]:bg-amber-200/60 [&_mark]:px-0.5 [&_mark]:text-inherit dark:[&_mark]:bg-amber-400/25",
         !open && "max-h-36 overflow-hidden [mask-image:linear-gradient(to_bottom,black_65%,transparent)]",
         "[&_p]:my-2 [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_blockquote]:border-s-2 [&_blockquote]:border-border [&_blockquote]:ps-3 [&_blockquote]:text-muted-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:font-mono [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-2 [&_pre_code]:p-0 [&_th]:border-b [&_th]:border-border [&_th]:px-2 [&_th]:py-1 [&_td]:px-2 [&_td]:py-1 [&_a]:underline [&_a]:underline-offset-2 [&_a]:focus-visible:outline [&_a]:focus-visible:outline-ring [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold")}>
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[highlightSentence(sentence)]} skipHtml components={{

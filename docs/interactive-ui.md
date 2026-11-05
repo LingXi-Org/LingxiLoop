@@ -1,15 +1,9 @@
-# Retired interactive message implementations
+# Interactive visualizations: retired
 
-The experimental OpenUI implementation (#111) and its Visualize successor (#193)
-are retired. Issue #670 unifies new visual explanations under the editable Design
-canvas. No OpenUI/Visualize executable renderer or tool is registered.
+Issue [#700](https://github.com/LingXi-Org/LingxiLoop/issues/700) retires the ZCode/Visualize renderer, Agent tools and skill, authoring/delivery policies, state/follow-up APIs, runtime assets and build pipeline. It does not install a replacement interactive-HTML capability. Ordinary Markdown, code, formulas, Mermaid, questionnaires, Design and Slides keep their existing owners.
 
-Historical message bodies and persistent data remain. See
-[historical Visualize recovery](visualize.md) for the permission-checked inert
-JSON archive and its migration limits. Existing `0033_interactive_ui.sql` and
-`0046_visualize.sql` migrations remain unchanged; retirement never erases or
-converts user work silently.
+Archived visualization references in assistant messages show a retirement notice. They never execute the old content or expose its internal path. Literal code examples and user-authored messages remain literal. Previously exported standalone files remain normal artifacts.
 
-Old evidence in Git history documents old versions and is not current setup,
-validation or release guidance. Current production release checks remain in
-[RELEASE.md](RELEASE.md).
+Applied migrations and historical OpenUI/Visualize records remain unchanged. This source change neither deletes stored data nor implies a production deployment. Older evidence and commands describe their historical commits, not the current supported workflow.
+
+Current implementation, checks and remaining limits are recorded in [issue #700 evidence](evidence/issue-700/README.md).

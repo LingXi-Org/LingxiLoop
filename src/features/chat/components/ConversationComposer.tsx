@@ -4,7 +4,7 @@ import {
   useAui,
   useAuiState,
 } from '@assistant-ui/react'
-import { Alert02Icon, ArrowUp02Icon, Cancel01Icon, Loading03Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, ArrowRight02Icon, Cancel01Icon, Loading03Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AtSignIcon, BarChart3Icon, PaperclipIcon } from 'lucide-react'
@@ -85,7 +85,7 @@ export function ConversationComposer({
   }, [focusInput, uiCommand])
 
   return (
-    <div data-composer-column className={compact ? 'mx-auto w-full min-w-0 max-w-[960px] px-3 pb-3' : 'mx-auto w-full min-w-0 max-w-[960px] px-3 pb-4 pt-2 sm:px-6'}>
+    <div data-composer-column className="chat-composer-column min-w-0">
       {cancelError && <p role="alert" className="mb-2 px-2 text-xs text-destructive">{cancelError}</p>}
       {attachmentError && <p role="alert" className="mb-2 px-2 text-xs text-destructive">{attachmentError}</p>}
       {pollOpen ? (
@@ -95,7 +95,7 @@ export function ConversationComposer({
           <Popover open={actionsOpen} onOpenChange={setActionsOpen}>
           <PopoverAnchor asChild>
           <ComposerPrimitive.Root
-            className="chat-composer group/composer relative flex w-full flex-col rounded-2xl border border-border bg-card px-2 py-2 text-card-foreground"
+            className="chat-composer group/composer relative w-full"
             onSubmit={finalizeTyping}
           >
         <input ref={fileInputRef} type="file" hidden multiple aria-label="上传文件" disabled={attachmentDisabled}
@@ -143,19 +143,6 @@ export function ConversationComposer({
             }}
           </ComposerPrimitive.Attachments>
         </AttachmentGroup>
-        <div className="flex items-end gap-1">
-          <div className="flex shrink-0 items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button ref={addRef} type="button" variant="ghost" size="icon" className="size-11 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground md:size-9" aria-label="添加">
-                    <HugeiconsIcon icon={PlusSignIcon} size={20} strokeWidth={2} />
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="top">添加</TooltipContent>
-            </Tooltip>
-          </div>
           <ComposerLexicalInput
             conversationId={conversationId}
             ref={inputRef}
@@ -163,13 +150,26 @@ export function ConversationComposer({
             autoFocus={!compact}
             submitMode="enter"
             placeholder={placeholder}
-            className="relative min-w-0 max-h-52 min-h-11 flex-1 overflow-y-auto bg-transparent py-2.5 pr-2 pl-1 text-base text-foreground outline-none md:min-h-9 md:py-1.5 [&_.aui-lexical-input]:min-h-6 [&_.aui-lexical-input]:outline-none [&_.aui-lexical-placeholder]:pointer-events-none [&_.aui-lexical-placeholder]:absolute [&_.aui-lexical-placeholder]:top-2.5 [&_.aui-lexical-placeholder]:text-muted-foreground md:[&_.aui-lexical-placeholder]:top-1.5"
+            className="chat-composer-input"
           />
+        <div className="chat-composer-footer">
+          <div className="flex shrink-0 items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <Button ref={addRef} type="button" variant="ghost" size="icon" className="chat-composer-control shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="添加">
+                    <HugeiconsIcon icon={PlusSignIcon} size={20} strokeWidth={2} />
+                  </Button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top">添加</TooltipContent>
+            </Tooltip>
+          </div>
           <div className="flex shrink-0 items-center gap-1">
             {canCancel || cancelling ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button type="button" disabled={cancelling} onClick={() => void cancel()} className="flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground md:size-9" aria-label="停止全部智能助教" aria-busy={cancelling}>
+                  <Button type="button" disabled={cancelling} onClick={() => void cancel()} className="chat-composer-control chat-composer-send flex items-center justify-center" aria-label="停止全部智能助教" aria-busy={cancelling}>
                     <span className="size-2.5 rounded-[2px] bg-current" />
                   </Button>
                 </TooltipTrigger>
@@ -179,8 +179,8 @@ export function ConversationComposer({
             <Tooltip>
               <TooltipTrigger asChild>
                 <ComposerPrimitive.Send asChild>
-                  <Button type="submit" size="icon" className="size-11 rounded-full transition-opacity disabled:opacity-30 md:size-9" aria-label="发送">
-                    <HugeiconsIcon icon={ArrowUp02Icon} size={24} strokeWidth={2} />
+                  <Button type="submit" size="icon" className="chat-composer-control chat-composer-send transition-opacity disabled:opacity-30" aria-label="发送">
+                    <HugeiconsIcon icon={ArrowRight02Icon} size={16} strokeWidth={2} />
                   </Button>
                 </ComposerPrimitive.Send>
               </TooltipTrigger>
@@ -193,7 +193,7 @@ export function ConversationComposer({
           </PopoverAnchor>
           <PopoverContent
             side="top" align="start" sideOffset={8} collisionPadding={12} aria-label="添加"
-            className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-24px)] max-h-[var(--radix-popover-content-available-height)] gap-0 overflow-y-auto rounded-2xl p-2 motion-reduce:animate-none"
+            className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-24px)] max-h-[var(--radix-popover-content-available-height)] gap-0 overflow-y-auto rounded-xl p-1.5 motion-reduce:animate-none"
             onCloseAutoFocus={(event) => {
               event.preventDefault()
               const action = afterMenuClose.current
