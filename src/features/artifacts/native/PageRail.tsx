@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ArtifactDocument } from '../../../../shared/artifact-document'
 import { PageThumbnail } from './thumbnail'
 import { Menu, MenuItem } from './EditorPrimitives'
@@ -10,6 +10,7 @@ export function PageRail({ document, loadedPageIds, previews, current, selected,
   onReorder(ids: string[]): void; onAction(action: 'duplicate' | 'delete' | 'skip' | 'section' | 'up' | 'down', pageId: string): void; onVisible(ids: string[]): void
 }) {
   const root = useRef<HTMLDivElement>(null)
+  const keyboardFocus=useRef<string|null>(null)
   const [size, setSize] = useState({ width: 800, height: 100 }), [scroll, setScroll] = useState({ x: 0, y: 0 })
   useEffect(() => {
     const element = root.current; if (!element) return
@@ -17,24 +18,36 @@ export function PageRail({ document, loadedPageIds, previews, current, selected,
     observer.observe(element); return () => observer.disconnect()
   }, [])
   const columns = grid ? Math.max(1, Math.floor(size.width / 240)) : document.pageOrder.length
-  const step = grid ? size.width / columns : 136, rowHeight = grid ? step * .5625 + 40 : 88
+  const step = grid ? size.width / columns : 136, rowHeight = grid ? step * .5625 + 40 : 93.75
   const first = grid ? Math.max(0, Math.floor(scroll.y / rowHeight) - 1) * columns : Math.max(0, Math.floor(scroll.x / step) - 2)
   const end = Math.min(document.pageOrder.length, grid ? (Math.ceil((scroll.y + size.height) / rowHeight) + 1) * columns : Math.ceil((scroll.x + size.width) / step) + 2)
   const visibleCallback = useRef(onVisible); visibleCallback.current = onVisible
   const key = document.pageOrder.slice(first, end).join(',')
   useEffect(() => { visibleCallback.current(key ? key.split(',') : []) }, [key])
+  useLayoutEffect(()=>{
+    if(!keyboardFocus.current)return
+    const button=Array.from(root.current?.querySelectorAll<HTMLButtonElement>('[data-page-target]')??[]).find(e=>e.dataset.pageTarget===keyboardFocus.current)
+    if(button){button.focus({preventScroll:true});keyboardFocus.current=null}
+  },[current,first,end])
   useEffect(() => {
     if (grid || !current || !root.current) return
     const at = document.pageOrder.indexOf(current) * 136, element = root.current
     if (at < element.scrollLeft || at + 136 > element.scrollLeft + element.clientWidth) element.scrollTo({ left: Math.max(0, at - element.clientWidth / 2 + 68), behavior: 'instant' })
   }, [current, grid, document.pageOrder])
   return <nav className={grid ? 'native-page-grid' : 'native-pages'} aria-label={document.kind === 'slides' ? '页面导航' : '画板导航'}>
-    <div ref={root} className="native-page-list" aria-orientation={grid ? 'vertical' : 'horizontal'} onScroll={e => setScroll({ x: e.currentTarget.scrollLeft, y: e.currentTarget.scrollTop })}>
-      <div className="native-rail-space" style={{ width: grid ? '100%' : document.pageOrder.length * step, height: grid ? Math.ceil(document.pageOrder.length / columns) * rowHeight : rowHeight }}>
+    <div ref={root} className="native-page-list" aria-orientation={grid ? 'vertical' : 'horizontal'} onScroll={e => setScroll({ x: e.currentTarget.scrollLeft, y: e.currentTarget.scrollTop })} onKeyDown={event=>{
+      const target=(event.target as HTMLElement).closest<HTMLElement>('[data-page-target]');if(!target)return
+      const index=document.pageOrder.indexOf(target.dataset.pageTarget!),delta=event.key==='ArrowRight'?1:event.key==='ArrowLeft'?-1:event.key==='ArrowDown'?grid?columns:1:event.key==='ArrowUp'?grid?-columns:-1:0
+      if(!delta&&event.key!=='Home'&&event.key!=='End')return
+      event.preventDefault();event.stopPropagation()
+      const next=event.key==='Home'?0:event.key==='End'?document.pageOrder.length-1:Math.max(0,Math.min(document.pageOrder.length-1,index+delta)),id=document.pageOrder[next]
+      if(id){keyboardFocus.current=id;onSelect(id,false,event.shiftKey)}
+    }}>
+      <div className="native-rail-space" style={{ width: grid ? '100%' : document.pageOrder.length * step+24, height: grid ? Math.ceil(document.pageOrder.length / columns) * rowHeight : rowHeight }}>
         {document.pageOrder.slice(first, end).map((pageId, offset) => {
           const index = first + offset, page = document.pages[pageId]!
-          return <div className="native-page-item" key={pageId} style={{ left: grid ? index % columns * step : index * step, top: grid ? Math.floor(index / columns) * rowHeight : 0, width: step, height: rowHeight }}>
-            <button type="button" data-page-target={pageId} aria-current={current === pageId ? 'page' : undefined} aria-pressed={selected.includes(pageId)} aria-label={`${index + 1}：${page.title}${page.skip ? '，已跳过' : ''}`} className="native-page-button" onClick={e => onSelect(pageId, e.metaKey || e.ctrlKey, e.shiftKey)} onDoubleClick={() => onOpen(pageId)} draggable={writable}
+          return <div className="native-page-item" key={pageId} style={{ left: grid ? index % columns * step : 12+index * step, top: grid ? Math.floor(index / columns) * rowHeight : 0, width: step, height: rowHeight }}>
+            <button type="button" data-page-target={pageId} tabIndex={current===pageId?0:-1} aria-current={current === pageId ? 'page' : undefined} aria-pressed={selected.includes(pageId)} aria-label={`${index + 1}：${page.title}${page.skip ? '，已跳过' : ''}`} className="native-page-button" onClick={e => onSelect(pageId, e.metaKey || e.ctrlKey, e.shiftKey)} onDoubleClick={() => onOpen(pageId)} draggable={writable}
               onDragStart={e => e.dataTransfer.setData('application/lingxi-page', pageId)} onDragOver={e => { if (writable) e.preventDefault() }} onDrop={e => { if (!writable) return; e.preventDefault(); const id = e.dataTransfer.getData('application/lingxi-page'); if (!document.pages[id] || id === pageId) return; const next = document.pageOrder.filter(value => value !== id); next.splice(next.indexOf(pageId), 0, id); onReorder(next) }}>
               <span className={`native-page-preview ${page.skip ? 'native-page-skipped' : ''}`}><PageThumbnail page={loadedPageIds.includes(pageId) ? page : previews?.[pageId] ?? page} document={document} loaded={loadedPageIds.includes(pageId) || !!previews?.[pageId]} /><span className="native-page-number">{index + 1}</span></span>
               {grid && <span className="native-page-title">{page.title}</span>}

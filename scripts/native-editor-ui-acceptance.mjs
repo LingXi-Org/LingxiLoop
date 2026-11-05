@@ -225,6 +225,21 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual(errors,[])
       return {kind:'isolated-shape-roundtrip-diagnostic',mode:kind,directionalArrows:kind==='slides',drawnArrow:kind==='design',consoleOrPageErrors:errors}
     }
+    if(options.checks==='rail') {
+      assert.equal(kind,'slides')
+      const unselected=await page.locator('[data-page-target="page-2"] .native-page-preview').boundingBox()
+      assert.ok(Math.abs(unselected.width-124)<=1&&Math.abs(unselected.height-69.75)<=1,'filmstrip previews must retain the reference 124 × 69.75 size')
+      const first=page.locator('[data-page-target="page-1"]');await first.focus();await page.keyboard.press('Shift+ArrowRight');await ready(2)
+      await page.keyboard.press('Shift+ArrowRight');await ready(3)
+      assert.equal(await page.locator('.native-page-button[aria-pressed=true]').count(),3,'shift navigation must extend from a stable selection anchor')
+      assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('data-page-target')),'page-3')
+      await page.keyboard.press('ArrowRight');await ready(4)
+      assert.equal(await page.locator('.native-page-button[aria-pressed=true]').count(),1)
+      await page.keyboard.press('End');await ready(50)
+      assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('data-page-target')),'page-50','virtualized keyboard navigation must focus the newly rendered current page')
+      assert.deepEqual(errors,[])
+      return {kind:'isolated-filmstrip-navigation-diagnostic',mode:kind,referenceThumbnailSize:true,stableRangeSelection:true,virtualizedKeyboardFocus:true,consoleOrPageErrors:errors}
+    }
     if(options.checks==='export-ink') {
       const ink=await page.evaluate(async root=>{
         const {captureWithBleed}=await import(`/@fs/${root}/src/features/artifacts/native/export/capture.ts`)

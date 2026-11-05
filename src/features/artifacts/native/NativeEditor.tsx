@@ -90,6 +90,7 @@ export default function NativeEditor({ artifactId, kind, title, visible = true, 
   const [compactRailOpen, setCompactRailOpen] = useState(false)
   const [layersOpen, setLayersOpen] = useState(false), [guidesOpen, setGuidesOpen] = useState(true)
   const [selectedPages, setSelectedPages] = useState<string[]>([])
+  const pageSelectionAnchor=useRef<string|null>(null)
   const [dialog, setDialog] = useState<'layouts' | 'section' | 'rename' | null>(null), [dialogText, setDialogText] = useState('')
   const [commentsOpen, setCommentsOpen] = useState(false), [commentAnchor, setCommentAnchor] = useState<NativeCommentAnchor | null>(null)
   const [commentThreads, setCommentThreads] = useState<EditorComment[]>([])
@@ -305,8 +306,8 @@ export default function NativeEditor({ artifactId, kind, title, visible = true, 
   }
   const pageSelection = selectedPages.length ? selectedPages : current ? [current.id] : []
   const choosePage = (value: string, multiple = false, range = false) => {
-    if (range && pageId && doc) { const a = doc.pageOrder.indexOf(pageId), b = doc.pageOrder.indexOf(value); setSelectedPages(doc.pageOrder.slice(Math.min(a, b), Math.max(a, b) + 1)) }
-    else setSelectedPages(previous => multiple ? previous.includes(value) ? previous.filter(id => id !== value) : [...previous, value] : [value])
+    if (range && pageId && doc) { const anchor=pageSelectionAnchor.current&&doc.pages[pageSelectionAnchor.current]?pageSelectionAnchor.current:pageId;pageSelectionAnchor.current=anchor;const a = doc.pageOrder.indexOf(anchor), b = doc.pageOrder.indexOf(value); setSelectedPages(doc.pageOrder.slice(Math.min(a, b), Math.max(a, b) + 1)) }
+    else {pageSelectionAnchor.current=value;setSelectedPages(previous => multiple ? previous.includes(value) ? previous.filter(id => id !== value) : [...previous, value] : [value])}
     selectPage(value)
   }
   const pageAction = async (action: 'duplicate' | 'delete' | 'skip' | 'section' | 'up' | 'down', target?: string) => {
