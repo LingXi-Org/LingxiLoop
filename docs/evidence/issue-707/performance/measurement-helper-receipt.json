@@ -7,7 +7,7 @@
         "encoding": "identity",
         "workerTransferBytes": 1000203,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2023.0,
+        "importDurationMs": 2022.8,
         "scriptRequests": 2,
         "inflight": 0
       },
@@ -15,7 +15,7 @@
         "encoding": "gzip",
         "workerTransferBytes": 1230,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2026.1,
+        "importDurationMs": 2024.6,
         "scriptRequests": 2,
         "inflight": 0
       },
@@ -27,7 +27,7 @@
       {
         "encoding": "queued",
         "scriptRequests": 12,
-        "maxNetworkStartSkewMs": 612.2,
+        "maxNetworkStartSkewMs": 604.6,
         "scriptDecodedBytes": 240492
       }
     ],
@@ -76,6 +76,20 @@
         "markerUndoneWithRealKeyboardAndAck": true,
         "unknownEditRefused": true,
         "outerWorkspaceStayedOpen": null
+      }
+    ],
+    "completionResults": [
+      {
+        "kind": "design",
+        "trustedCompletionClick": true,
+        "outerWorkspaceStayedOpen": true,
+        "realKeyboardUndoAcknowledged": true
+      },
+      {
+        "kind": "slides",
+        "trustedCompletionClick": true,
+        "outerWorkspaceStayedOpen": true,
+        "realKeyboardUndoAcknowledged": true
       }
     ],
     "deniedUndoEvidence": {
@@ -151,5 +165,9 @@
     "transferredBytes": 1000120,
     "decodedBytes": 1000000,
     "scope": "冻结回归中的确定性真实事件字段；不属于产品性能样本"
-  }
+  },
+  "wireConflictRejectedInBothOrders": true,
+  "unresolvedObservations": [
+    "真实 Worker 回归曾出现 CDP/PW 请求起点与 ResourceTiming 起点相差超过现有 100ms 匹配范围，导致 missingDecoded 拒绝；未放宽时间容差。随后同脚本完成回归，但不能认为该时序问题已经消除。"
+  ]
 }

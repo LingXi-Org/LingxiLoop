@@ -1,0 +1,43 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "locations": [
+    {
+      "symbol": "defaultCanvasPage",
+      "offset": 5488635,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "designPageId",
+      "offset": 2570240,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "canvasPageDeleteSnapshot",
+      "offset": 4970366,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "PageMenuName",
+      "offset": 5873308,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "dc-pages",
+      "offset": 5825765,
+      "offsetUnit": "UTF-16 code units"
+    }
+  ],
+  "observations": [
+    "Design 页面菜单管理自由画布页面，独立于画板。画布页面有稳定 id/name，画板和自由画布对象通过 page 归属。",
+    "没有显式页面列表时使用隐式默认页面；单个未修改的默认页面可省略持久化列表。",
+    "新建页面、页面重命名和删除在页面菜单操作；最后一个页面不能删除。删除同时移除页面中的画板和自由对象，确认文案显示数量，并支持撤销。",
+    "页面切换和画布评论定位使用页面身份；各页视图是否独立持久化仍待运行验证。",
+    "已有 native pageOrder 表示画板，section 表示幻灯片节；当前原生 Design 菜单将 section 作为页面名的做法不符合此模型。"
+  ],
+  "implementation": "src/features/artifacts/native/NativeEditor.tsx",
+  "result": "源码与菜单入口已解析；独立画布页面模型与界面仍待实现",
+  "functionalQualified": false,
+  "visualQualified": false
+}

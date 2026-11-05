@@ -22,14 +22,14 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         native, kind = '/native/' in self.path, 'slides' if '/slides/' in self.path else 'design'
         denied=self.path.endswith('/denied')
-        editing=self.path.endswith('/active')
+        editing=self.path.endswith(('/active','/finish'))
         heading = '<h1 data-text-path="heading" style="font:24px system-ui">验收页面 1 ✓</h1>'
-        if editing:heading=heading.replace('<h1 ','<h1 contenteditable="true" ',1)
-        if native: heading = '<div data-node-id="page-1-heading"><div class="native-text-content">' + heading + '</div></div>'
+        if editing:heading=heading.replace('<h1 ','<h1 data-native-text-editor="true" contenteditable="true" ',1)
+        if native: heading = '<div data-node-id="page-1-heading">' + ('<div class="native-rich-editor">'+heading+'<button id="finish">完成</button></div>' if editing else '<div class="native-text-content">'+heading+'</div>') + '</div>'
         body = heading + f'<img src="{image}" width="64" height="36"><span class="katex">公式</span>'
         body = f'<aside id="workspace"><div data-native-artifact-editor="{kind}" tabindex="0"><button>工具</button><div data-page-id="page-1">{body}</div></div></aside>' if native else f'<div data-slides-editor><div data-slide-surface>{body}</div></div>' if kind == 'slides' else body
         endpoint = '/api/artifacts/denied/operations' if denied else '/api/artifacts/fixture/operations' if native else f'/artifact-editor/{kind}/fixture/__deck/publish'
-        body += '<script>window.__fixtureUndoCount=0;window.__nativeArtifactInputAttempt={number:1,attempted:true};const root=document.querySelector("[data-native-artifact-editor]"),denied='+json.dumps(denied)+';(root??document).addEventListener("keydown",event=>{if(event.key==="Escape"&&event.target.isContentEditable){event.preventDefault();event.target.removeAttribute("contenteditable");root.querySelector("button").focus()}if(event.ctrlKey&&event.key==="z"){event.preventDefault();if(!event.isTrusted)throw Error("untrusted");window.__fixtureUndoCount++;if(!denied)document.querySelector("h1").textContent="验收页面 1";fetch(' + json.dumps(endpoint) + ',{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({kind:"undo"})})}});document.querySelector("#workspace")?.addEventListener("keydown",event=>{if(event.key==="Escape"&&!event.defaultPrevented){root.hidden=true;window.__fixtureWorkspaceClosed=true}});</script>'
+        body += '<script>window.__fixtureFinishCount=0;document.querySelector("#finish")?.addEventListener("click",event=>{if(!event.isTrusted)throw Error("untrusted");document.querySelector("h1").removeAttribute("contenteditable");window.__fixtureFinishCount++;event.currentTarget.remove();document.querySelector("[data-native-artifact-editor] button").focus()});window.__fixtureUndoCount=0;window.__nativeArtifactInputAttempt={number:1,attempted:true};const root=document.querySelector("[data-native-artifact-editor]"),denied='+json.dumps(denied)+';(root??document).addEventListener("keydown",event=>{if(event.key==="Escape"&&event.target.isContentEditable){event.preventDefault();event.target.removeAttribute("contenteditable");document.querySelector("#finish")?.remove();root.querySelector("button").focus()}if(event.ctrlKey&&event.key==="z"){event.preventDefault();if(!event.isTrusted)throw Error("untrusted");window.__fixtureUndoCount++;if(!denied)document.querySelector("h1").textContent="验收页面 1";fetch(' + json.dumps(endpoint) + ',{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({kind:"undo"})})}});document.querySelector("#workspace")?.addEventListener("keydown",event=>{if(event.key==="Escape"&&!event.defaultPrevented){root.hidden=true;window.__fixtureWorkspaceClosed=true}});</script>'
         encoded = ('<!doctype html><meta charset="utf-8">'+body).encode()
         self.send_response(200); self.send_header('Content-Type','text/html;charset=utf-8'); self.send_header('Content-Length',str(len(encoded))); self.end_headers(); self.wfile.write(encoded)
     def do_POST(self):
@@ -61,6 +61,19 @@ try:
             assert page.evaluate('window.__fixtureUndoCount') == 0
             results.append({'kind':kind,'native':native,'activeEditableEnded':editing,'markerUndoneWithRealKeyboardAndAck':True,'unknownEditRefused':True,'outerWorkspaceStayedOpen':True if native else None})
             page.close()
+        completion_results=[]
+        for kind in ('design','slides'):
+            page=browser.new_page(viewport={'width':1440,'height':1000})
+            page.goto(f'http://127.0.0.1:{server.server_port}/native/{kind}/finish',wait_until='networkidle')
+            page.locator('h1').click();page.get_by_role('button',name='工具',exact=True).click()
+            benchmark['finish_heading'](page,page.main_frame)
+            assert page.evaluate('window.__fixtureFinishCount')==1
+            assert not page.locator('h1').evaluate('e=>e.isContentEditable')
+            assert not page.evaluate('Boolean(window.__fixtureWorkspaceClosed)')
+            result=benchmark['cleanup_edit'](page,kind,1,'fixture')
+            assert result['saveAcknowledged'] and result['originalHeadingRestored']
+            completion_results.append({'kind':kind,'trustedCompletionClick':True,'outerWorkspaceStayedOpen':True,'realKeyboardUndoAcknowledged':True})
+            page.close()
         page=browser.new_page(viewport={'width':1440,'height':1000})
         page.goto(f'http://127.0.0.1:{server.server_port}/native/design/denied',wait_until='networkidle')
         page.keyboard.press('Tab');page.keyboard.press('Tab')
@@ -87,4 +100,4 @@ try:
         browser.close()
 finally:
     server.shutdown()
-print(json.dumps({'check':'failed-input-cleanup-selector','results':results,'deniedUndoEvidence':probe,'closedEditorEvidence':closed_probe,'scope':'isolated measurement helper fixture, not product undo acceptance','performanceSamples':0,'qualified':False}))
+print(json.dumps({'check':'failed-input-cleanup-selector','results':results,'completionResults':completion_results,'deniedUndoEvidence':probe,'closedEditorEvidence':closed_probe,'scope':'isolated measurement helper fixture, not product undo acceptance','performanceSamples':0,'qualified':False}))

@@ -36,7 +36,7 @@ export function ArtifactSurfaceProvider({ children, initial, onClose }: {
 
 export function useArtifactSurface() {
   const value = useContext(ArtifactSurfaceContext)
-  if (!value) throw new Error('useArtifactSurface must be used within ArtifactSurfaceProvider')
+  if (!value) throw new Error('演示文稿工作区尚未初始化。')
   return value
 }
 
@@ -104,7 +104,7 @@ function ArtifactWorkbench({ target, onEditorContext, context, agentWorking, vis
             {!versions ? <p role="status" className="p-2 text-sm text-muted-foreground">正在加载版本…</p> : !versions.revisions.length ? <p className="p-2 text-sm text-muted-foreground">首次保存后会显示版本。</p>
               : versions.revisions.map(version => <Button key={version.seq} variant="ghost" className="h-auto min-h-10 w-full justify-start whitespace-normal text-start font-normal"
                 disabled={restoring || context?.dirty || version.version === versions.current} onClick={() => void restore(version.seq)}>
-                <span>版本 {version.seq} · <span className="tabular-nums">{new Date(version.createdAt).toLocaleString()}</span>{version.version === versions.current ? ' · 当前' : ''}</span>
+                <span>版本 {version.seq} · <span className="tabular-nums">{new Date(version.createdAt).toLocaleString('zh-CN')}</span>{version.version === versions.current ? ' · 当前' : ''}</span>
               </Button>)}
           </div>}
         </div>

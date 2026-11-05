@@ -682,6 +682,15 @@ def legacy_save_prefix(frame):
     return None
 
 
+def finish_heading(page, frame):
+    if frame.locator('[data-native-artifact-editor]').count():
+        # Both native arms expose the same real completion action. An Escape
+        # after focus has left the RTE can dismiss the surrounding workspace.
+        frame.locator('.native-rich-editor').get_by_role('button', name='完成', exact=True).click()
+    else:
+        page.keyboard.press('Escape')
+
+
 def edit_heading(page, frame, heading, trace, artifact_id, number):
     saves = []; input_step = 0
     frame.evaluate("number=>{window.__nativeArtifactInputAttempt={number,attempted:false}}", number)
@@ -716,7 +725,7 @@ def edit_heading(page, frame, heading, trace, artifact_id, number):
             raise MeasurementFailure("trusted_input_proof_failed")
         requests_at_paint = trace.snapshot()
         input_step = 4
-        page.keyboard.press("Escape")
+        finish_heading(page, frame)
         deadline = time.monotonic() + 20
         while not any(row["status"] == 200 for row in saves) and time.monotonic() < deadline: page.wait_for_timeout(50)
         acknowledgments = [row for row in saves if row["status"] == 200]

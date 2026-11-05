@@ -96,13 +96,14 @@
         "native": "visual/native/design-pages.png",
         "matchedStateVerified": false
       },
-      "result": "待补齐页面组织",
+      "result": "未通过：原生 section 分组与来源独立画布页面模型不同，需扩展模型与菜单",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
-      }
+      },
+      "semanticEvidence": "source-design-pages.json"
     },
     {
       "id": "D03-design",
