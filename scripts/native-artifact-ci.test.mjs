@@ -100,3 +100,13 @@ test('failed undo keeps stage, focus and history evidence without document text 
   const safe=publicEvidence({requestsAtEditable:[{url:'https://secret.example/script.js?token=private',type:'Script',_playwrightStartEpochMs:1250,_resourceKey:'private identity'}]})
   assert.doesNotMatch(JSON.stringify(safe),/secret|private|_playwright|_resource/)
 })
+
+test('failed product flows retain only fixed request routes and measured timing gaps',()=>{
+  const safe=publicEvidence({failedRequests:[{url:'https://secret.invalid/api/artifacts/private/document?token=secret',routeClass:'artifact-api',status:403,type:'Fetch'}],unaccountedScriptTimings:[{url:'https://secret.invalid/worker.js',type:'Script',startEpochMs:1000,responseEndEpochMs:1400,requestStartEpochMs:1250,decodedBytes:1000000}],failureObservations:{editorState:[{nativeEditors:0,nativeFailure:true,nativeLoading:false,designWorkspaceOpen:true,passwordForm:false}],privateText:'secret'}})
+  assert.equal(safe.failedRequests[0].routeClass,'artifact-api')
+  assert.equal(safe.unaccountedScriptTimings[0].responseEndEpochMs,1400)
+  assert.equal(safe.unaccountedScriptTimings[0].requestStartEpochMs,1250)
+  assert.deepEqual(safe.failureObservations.editorState,[{nativeEditors:0,nativeFailure:true,nativeLoading:false,designWorkspaceOpen:true,passwordForm:false}])
+  assert.doesNotMatch(JSON.stringify(safe),/private|secret|token|worker\.js/)
+  assert.equal(publicEvidence({failedRequests:[{routeClass:'private raw URL'}]}).failedRequests[0].routeClass,undefined)
+})

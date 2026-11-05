@@ -60,6 +60,28 @@ def safe_url(raw):
         return "<invalid-url>"
 
 
+def request_route(raw):
+    path = urlsplit(raw).path
+    for prefix, label in (('/api/artifacts/', 'artifact-api'), ('/api/projects/', 'project-api'), ('/api/conversations/', 'conversation-api'), ('/api/auth/', 'auth-api'), ('/api/', 'product-api'), ('/artifact-editor/', 'editor-reference')):
+        if path.startswith(prefix): return label
+    if re.search(r'\.(?:m?js|cjs)$', path): return 'static-script'
+    if re.search(r'\.(?:png|jpg|svg|webp|woff2?|mp4)$', path): return 'static-media'
+    return 'other'
+
+
+def failed_requests(rows):
+    return [row for row in rows if row.get('status', 200) >= 400 or row.get('failed') and not row.get('canceled')]
+
+
+def editor_observations(page):
+    states = []
+    for frame in page.frames:
+        try:
+            states.append(frame.evaluate("""() => ({nativeEditors:document.querySelectorAll('[data-native-artifact-editor]').length,nativeFailure:!!document.querySelector('.native-loading[role=alert]'),nativeLoading:!!document.querySelector('.native-loading[role=status]'),designWorkspaceOpen:!!document.querySelector('[data-design-workspace][data-design-open=true]'),passwordForm:!!document.querySelector('input[type=password]')})"""))
+        except Exception: pass
+    return states
+
+
 def failure_code(error):
     if isinstance(error, MeasurementFailure):
         return error.code
@@ -203,7 +225,7 @@ class Trace:
                 row.update(start=value['timestamp'], startEpochMs=value.get('wallTime',0)*1000, targetType=self.targets.get(route,{}).get('type','page'))
                 row.pop('fromPlaywright', None)
                 return
-            self.requests[key] = {"url": safe_url(value["request"]["url"]), "_resourceKey": resource_key(value["request"]["url"]), "type": value.get("type"),
+            self.requests[key] = {"url": safe_url(value["request"]["url"]), "_resourceKey": resource_key(value["request"]["url"]), "type": value.get("type"), "routeClass": request_route(value["request"]["url"]),
                 "start": value["timestamp"], "startEpochMs": value.get("wallTime", 0) * 1000, "requestOrdinal": self.request_sequence, "targetType": self.targets.get(route, {}).get("type", "page"),
                 "network": url.scheme in ("http", "https"), "scriptPath": bool(re.search(r"\.(?:m?js|cjs)$", url.path)),
                 "sourcePayload": bool(re.search(r"/artifact-editor/(?:design|slides)/[^/]+/project/.*\.(?:html|jsx)$", url.path)),
@@ -245,7 +267,8 @@ class Trace:
             sizes = request.sizes()
             try: target_type = 'page' if request.frame == request.frame.page.main_frame else 'iframe'
             except Exception: target_type = 'worker'
-            self.finished_requests.append({"url": safe_url(request.url), "_resourceKey":resource_key(request.url), "_requestIdentity":len(self.finished_requests), "startEpochMs": request.timing["startTime"],
+            self.finished_requests.append({"url": safe_url(request.url), "_resourceKey":resource_key(request.url), "_requestIdentity":len(self.finished_requests), "startEpochMs": request.timing["startTime"], "routeClass": request_route(request.url),
+                **({"responseEndEpochMs": request.timing["startTime"] + request.timing["responseEnd"]} if request.timing["responseEnd"] >= 0 else {}),
                 "status": response.status, "targetType": target_type, "headersBytes": sizes["responseHeadersSize"],
                 "bodyBytes": sizes["responseBodySize"], "finishedEpochMs": time.time() * 1000,
                 "type": {"script":"Script","document":"Document","fetch":"Fetch","xhr":"XHR","image":"Image","font":"Font","stylesheet":"Stylesheet"}.get(request.resource_type,"Other"),
@@ -284,11 +307,12 @@ class Trace:
             entry = entries[j]
             self.request_sequence += 1
             self.requests['playwright:' + str(self.request_sequence)] = {'url':entry['url'],'_resourceKey':entry['_resourceKey'],'startEpochMs':entry['startEpochMs'], 'requestOrdinal':self.request_sequence,
-                'type':entry['type'],'network':entry['network'],'scriptPath':entry['scriptPath'],'targetType':entry['targetType'],'fromPlaywright':True,'_playwrightKey':entry['_requestIdentity']}
+                'type':entry['type'],'routeClass':entry.get('routeClass','other'),'network':entry['network'],'scriptPath':entry['scriptPath'],'targetType':entry['targetType'],'fromPlaywright':True,'_playwrightKey':entry['_requestIdentity']}
         by_identity = {entry['_requestIdentity']:entry for entry in self.finished_requests}
         for row in self.requests.values():
             if '_playwrightKey' not in row: continue
             entry = by_identity[row['_playwrightKey']]
+            if 'responseEndEpochMs' in entry: row['responseEndEpochMs'] = entry['responseEndEpochMs']
             if row.get('finished'):
                 if not row.get('transferPending') and entry['bodyBytes'] > 0 and row.get('transferredBytes') != entry['headersBytes'] + entry['bodyBytes'] and not row.get('_playwrightWireConflict'):
                     self.byte_conflicts += 1
@@ -314,7 +338,7 @@ class Trace:
         entries = []
         for frame in [*page.frames, *page.workers]:
             try:
-                entries.extend(frame.evaluate("() => performance.getEntriesByType('resource').filter(row=>row.decodedBodySize>0).map(row=>({url:row.name,startEpochMs:performance.timeOrigin+row.startTime,decodedBytes:row.decodedBodySize,encodedBytes:row.encodedBodySize}))"))
+                entries.extend(frame.evaluate("() => performance.getEntriesByType('resource').filter(row=>row.decodedBodySize>0).map(row=>({url:row.name,startEpochMs:performance.timeOrigin+row.startTime,responseEndEpochMs:performance.timeOrigin+row.responseEnd,requestStartEpochMs:performance.timeOrigin+row.requestStart,decodedBytes:row.decodedBodySize,encodedBytes:row.encodedBodySize}))"))
             except Exception: pass
         for entry in entries: entry['_resourceKey'] = resource_key(entry['url'])
         rows = [row for row in self.requests.values() if script_request(row) and row.get('finished')]
@@ -1219,6 +1243,8 @@ def self_check():
     parsed.feed('<main><article><p>one</p></article><article><p>two</p><script>let fake="<article>"</script></article></main>')
     assert len(parsed.pages) == 2 and parsed.pages[1]['text'] == 'two'
     assert failure_code(RuntimeError('cookie=secret')) == 'browser_or_measurement_error'
+    assert request_route('https://private/api/artifacts/secret/document?token=private') == 'artifact-api'
+    assert failed_requests([{'status':403},{'failed':True},{'failed':True,'canceled':True},{'status':200}]) == [{'status':403},{'failed':True}]
     print(json.dumps({'selfCheck': 'passed', 'performanceSamples': 0, 'qualified': False}))
     return 0
 
@@ -1361,7 +1387,7 @@ def main():
                             sample['reclamation'] = measure_reclamation(page, process, trace, config, kind, args, host)
                             sample['cdpErrors'] = [row for row in trace.errors if row.get('command') != 'HeapProfiler.collectGarbage']
                             sample['retiredRequests'] = [row['url'] for row in trace.snapshot() if arm == 'candidate' and row.get('retiredEditor')]
-                            sample['failedRequests'] = [row for row in trace.snapshot() if row.get('status', 200) >= 400 or row.get('failed') and not row.get('canceled')]
+                            sample['failedRequests'] = failed_requests(trace.snapshot())
                             sample['phase'] = 'validation'
                             if sample['pageErrors']: raise MeasurementFailure('page_exception_observed')
                             if sample['failedRequests']: raise MeasurementFailure('network_failure_observed')
@@ -1374,6 +1400,7 @@ def main():
                             sample.update(failureStage=sample['phase'], failureCode=failure_code(error))
                             if isinstance(error, MeasurementFailure) and error.observations: sample['failureObservations'] = error.observations
                             if resources:
+                                sample.setdefault('failureObservations', {})['editorState'] = editor_observations(resources[2])
                                 try: sample['failureScreenshot'] = safe_screenshot(resources[2], kind, output.parent / f'{arm}-{kind}-{run+1}-{mode}-failure.png')
                                 except Exception: sample['failureScreenshot'] = False
                         finally:
@@ -1384,6 +1411,8 @@ def main():
                                     sample['failureCleanup'] = {'status': 'failed', 'failureCode': failure_code(cleanup_error)}
                             if trace:
                                 rows = trace.snapshot()
+                                sample['failedRequests'] = failed_requests(rows)
+                                sample['unaccountedScriptTimings'] = trace.unaccounted_script_resources
                                 sample['networkObservations'] = {'requests': len(rows), 'scripts': script_totals(rows), 'inflight': len(trace.inflight()),
                                     'failed': sum(row.get('status', 200) >= 400 or row.get('failed', False) and not row.get('canceled', False) for row in rows),
                                     'sourcePayloadTransferBytes': sum(row.get('transferredBytes', 0) for row in rows if row.get('sourcePayload')),

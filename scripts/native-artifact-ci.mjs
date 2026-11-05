@@ -99,14 +99,15 @@ const labels = new Set(['baseline', 'candidate', 'design', 'slides', 'passed', '
 const dottedVersion = /^\d{1,3}(?:\.\d{1,6}){1,4}$/
 const linuxKernelPattern = String.raw`\d{1,3}\.\d{1,3}\.\d{1,4}(?:[.-]\d{1,6})?(?:-(?:generic|azure|aws|amd64|cloud-amd64))?\+?`
 const linuxPlatform = new RegExp(`^Linux-${linuxKernelPattern}-(?:x86_64|aarch64)-with-glibc\\d{1,3}\\.\\d{1,3}$`)
-const requestTables = new Set(['inflightRequests', 'requestsAtEditable', 'requestsAtIdle', 'requestsAtStable', 'requestsAtOpen', 'requestsBeforeOpen', 'failedRequests'])
+const requestTables = new Set(['inflightRequests', 'requestsAtEditable', 'requestsAtIdle', 'requestsAtStable', 'requestsAtOpen', 'requestsBeforeOpen', 'failedRequests', 'unaccountedScriptTimings'])
 const requestTypes = new Set(['Script', 'Document', 'Stylesheet', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'Media', 'WebSocket', 'EventSource', 'Ping', 'Preflight', 'Manifest'])
 export function publicRequest(row) {
   const safe = { resourceHash: createHash('sha256').update(typeof row.url === 'string' ? row.url : '').digest('hex'),
     category: row.retiredEditor ? 'retired-editor' : row.scriptPath || row.type === 'Script' ? 'script' : row.sourcePayload ? 'source-document' : 'other',
     type: requestTypes.has(row.type) ? row.type : 'Other',
     targetType: ['page', 'iframe', 'worker', 'service_worker', 'shared_worker'].includes(row.targetType) ? row.targetType : 'other' }
-  for (const key of ['start', 'startEpochMs', 'requestOrdinal', 'status', 'transferredBytes', 'decodedBytes', 'declaredEncodedBodyBytes', 'observedResponseHeadersBytes', 'finishedEpochMs', 'end']) if (typeof row[key] === 'number' && Number.isFinite(row[key])) safe[key] = row[key]
+  if (['artifact-api','project-api','conversation-api','auth-api','product-api','static-script','static-media','editor-reference','other'].includes(row.routeClass)) safe.routeClass=row.routeClass
+  for (const key of ['start', 'startEpochMs', 'requestOrdinal', 'status', 'transferredBytes', 'decodedBytes', 'declaredEncodedBodyBytes', 'observedResponseHeadersBytes', 'finishedEpochMs', 'end', 'responseEndEpochMs', 'requestStartEpochMs']) if (typeof row[key] === 'number' && Number.isFinite(row[key])) safe[key] = row[key]
   for (const key of ['network', 'scriptPath', 'sourcePayload', 'retiredEditor', 'cache', 'decodedObserved', 'finished', 'failed', 'canceled', 'transferPending']) if (typeof row[key] === 'boolean') safe[key] = row[key]
   if (['identity', 'gzip', 'br', 'deflate', 'zstd'].includes(row.encoding)) safe.encoding = row.encoding
   if (['Network.dataReceived', 'PerformanceResourceTiming'].includes(row.decodedBytesSource)) safe.decodedBytesSource = row.decodedBytesSource
@@ -122,6 +123,7 @@ export function publicEvidence(value, key = '') {
       return /^[a-f0-9]{64}$/.test(hash ?? '') ? [[kind, hash]] : []
     })),
   }]))
+  if (['nativeFailure','passwordForm'].includes(key) && typeof value === 'boolean') return value
   if (key === 'textVerified' && typeof value === 'boolean') return value
   if (key === 'networkRequests' && typeof value === 'number') return Number.isFinite(value) ? value : null
   if (key === 'offlineHtml' && value && typeof value === 'object') return publicEvidence(value)

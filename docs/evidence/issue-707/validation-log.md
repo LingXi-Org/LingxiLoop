@@ -127,3 +127,9 @@
 - 历史恢复在原有单批操作中恢复 canvasPages，旧隐式默认稿明确 unset；新增 API 覆盖仅剩第二页时恢复旧快照、共享撤销恢复页面组织，以及恢复显式页面快照。新 API 用例待下一 owning CI。
 - 受控浏览器先复现 flow 自动增长后另一页画板哈希改变，再把页面身份传给原有布局计算。`functional/canvas-flow*.json` 确认非重叠/同坐标两种情况下内容增长成功、另一画布哈希不变。
 - 通过 CDP Input.imeSetComposition 建立 Chromium 的真实组合状态，真实 Escape 先复现弹窗关闭，修复为组合态阻止原生 dialog cancel；浅深页面完整回归通过并保留通常 Escape 退出。它验证浏览器组合事件，不冒充真实操作系统输入法验收。
+
+## 5b74a17f 复审及正式检查通过
+
+- [owning CI 42127532950](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42127532950) Web、Server、admin、control、deploy-contract 和 owning integration 全部通过，deploy 跳过。真实 API 页面回归包含非法元数据 patch 的 400 与文档不变、仅剩第二页时恢复旧隐式快照、共享撤销、显式页面快照恢复。
+- 独立只读复审关闭 fbde931f 四项发现，无新增可执行缺陷；审查者独立运行 40 项模型/转换/操作检查、历史恢复与逆操作、跨页增高隔离和 Chromium 组合态 Escape。收据见 `reviews/5b74a17f.json`。完整视觉、性能及其余功能缺口未通过。
+- 性能失败收据补充实际失败请求（固定路由类别和哈希）、编辑器/加载/错误/登录表单布尔状态及未匹配脚本的实际开始/网络开始/完成时间。先新增公开证据过滤回归并复现缺字段，再修正严格白名单；18 项编排/隐私/存储回归通过，真实浏览器清理与状态检查通过。计量窗口、字节推算和性能门槛均未放宽；这些检查没有产生性能样本。

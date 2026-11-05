@@ -47,6 +47,8 @@ try:
             url = f'http://127.0.0.1:{server.server_port}/' + (f'native/{kind}/'+('active' if editing else '') if native else f'artifact-editor/{kind}/fixture/')
             page.goto(url,wait_until='networkidle')
             if native:
+                observed=benchmark['editor_observations'](page)
+                assert observed[0]['nativeEditors']==1 and not observed[0]['nativeFailure'] and not observed[0]['nativeLoading'] and not observed[0]['passwordForm']
                 page.keyboard.press('Tab');page.keyboard.press('Tab')
                 assert page.evaluate('document.activeElement.textContent') == '工具'
             if editing:page.locator('h1').click()
