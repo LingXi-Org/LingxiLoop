@@ -15,18 +15,21 @@ test('Enter converts opening fences and math delimiters only at a plain paragrap
     for (const blocked of ['no', 'code', 'selection', 'middle', 'composition']) {
       let result: unknown
       let cursor: unknown
+      let popup = { popupOpen: undefined as string | undefined }
       const block = { id: 'test', type: blocked === 'code' ? 'codeBlock' : 'paragraph' }
       const editor = {
         transact: (run: (tr: unknown) => unknown) => run({ selection: { empty: blocked !== 'selection', $from: { parentOffset: blocked === 'middle' ? 1 : source.length, parent: { textContent: source, content: { size: source.length } } } } }),
         getTextCursorPosition: () => ({ block }),
         updateBlock: (_block: unknown, update: unknown) => { result = update },
         setTextCursorPosition: (id: unknown, position: unknown) => { cursor = [id, position] },
+        getExtension: () => ({ store: { setState: (update: (state: typeof popup) => typeof popup) => { popup = update(popup) } } }),
       }
       const extension = markdownInput({ editor } as unknown as Parameters<typeof markdownInput>[0])
       const handled = extension.keyboardShortcuts.Enter({ editor, event: { isComposing: blocked === 'composition' } } as unknown as Parameters<typeof extension.keyboardShortcuts.Enter>[0])
       assert.equal(handled, blocked === 'no')
       assert.deepEqual(result, blocked === 'no' ? { type, props, content: [] } : undefined)
       assert.deepEqual(cursor, blocked === 'no' ? [block, 'start'] : undefined)
+      assert.equal(popup.popupOpen, blocked === 'no' && type === 'mathBlock' ? block.id : undefined)
     }
   }
 })

@@ -1,4 +1,5 @@
 import { createExtension } from '@blocknote/core'
+import { SourceBlockWithPreviewExtension } from '@blocknote/core/extensions'
 import { codeLanguage } from './code-block'
 
 /** Upstream handles a trailing space; Markdown authors also finish fences with Enter. */
@@ -18,6 +19,7 @@ export const markdownInput = createExtension({
           ? { type: 'codeBlock', props: { language: codeLanguage(fence[1]) }, content: [] }
           : { type: 'mathBlock', props: {}, content: [] })
         editor.setTextCursorPosition(block, 'start')
+        if (!fence) editor.getExtension(SourceBlockWithPreviewExtension)?.store.setState(state => ({ ...state, popupOpen: block.id }))
         return true
       })
     },
