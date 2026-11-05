@@ -1,0 +1,62 @@
+{
+  "runtime": "3.8.25",
+  "local": {
+    "serverUnit": {
+      "command": "npm run server:test",
+      "exitCode": 0,
+      "passed": 208
+    },
+    "serverTypecheck": {
+      "command": "npm run server:typecheck",
+      "exitCode": 0
+    },
+    "serverLint": {
+      "command": "npm run server:lint",
+      "exitCode": 0
+    },
+    "casBeforeFix": {
+      "file": "slides-workspace-flow.test.ts",
+      "passed": 5,
+      "failed": 1,
+      "actual": "transaction_rolled_back",
+      "expected": "version_conflict"
+    },
+    "finalCasAfterFix": {
+      "command": "npm run test:integration -- --file slides-workspace-flow.test.ts",
+      "exitCode": 0,
+      "passed": 6,
+      "failed": 0,
+      "boundary": "formal25 Worker, PostgreSQL, real signed product HTTP ingress, no provider network"
+    },
+    "defaultLiveGate": {
+      "command": "npm run test:integration -- --file runtime-slides-generation.test.ts",
+      "exitCode": 0,
+      "skipped": 1,
+      "liveFlag": false
+    },
+    "realProviderQualification": {
+      "exitCodes": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "samples": [
+        "incremental-pilot",
+        "incremental-01",
+        "whole-01",
+        "incremental-02"
+      ],
+      "fullyQualified": false,
+      "stopReason": "HTTP429 in incremental-02; no further provider requests"
+    },
+    "browser": {
+      "report": "browser-whole01.json",
+      "exitCode": 0,
+      "scope": "generated six-page snapshot in sandboxed production editor with local HTTP API fixture"
+    }
+  },
+  "ci": "pending",
+  "independentReview": "parent sole integrator pending",
+  "production": "not deployed by this worker"
+}

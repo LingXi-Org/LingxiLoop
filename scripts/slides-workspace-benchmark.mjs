@@ -201,6 +201,11 @@ try {
         for (const { contextId, session } of contexts.values()) { const r = await cdp('Runtime.evaluate', { expression: `({url:location.pathname,buttons:[...document.querySelectorAll('button')].slice(0,25).map(b=>({aria:b.getAttribute('aria-label'),title:b.title,text:b.textContent})),heading:document.querySelector('h1')?.outerHTML,stage:document.querySelector('h1')?.parentElement?.outerHTML.slice(0,1300)})`, contextId, returnByValue: true }, session); console.error(r.result.value) }
         throw new Error('Editor did not become editable before timeout')
       }
+      if (args['screenshots-dir']) {
+        await mkdir(resolve(args['screenshots-dir']), {recursive:true})
+        const shot = await cdp('Page.captureScreenshot', {}, sessionId)
+        await writeFile(resolve(args['screenshots-dir'], `run-${run+1}-${phase}.png`), Buffer.from(shot.data, 'base64'))
+      }
       const evaluate = async expression => (await cdp('Runtime.evaluate', { expression, contextId: editorContext, returnByValue: true, awaitPromise: true }, editorSession)).result.value
       const rect = await evaluate(`([...document.querySelectorAll('[data-text-path]')].find(e=>e.textContent===${JSON.stringify(firstTitle)} && e.getBoundingClientRect().width>100)?.getBoundingClientRect().toJSON())`)
       if (!rect) throw Error('Visible title missing')

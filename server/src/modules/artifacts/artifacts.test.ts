@@ -16,7 +16,7 @@ import { blobIdOf, fileOf, isWireEntry, putBlob, sha256 } from './store.js'
 
 const grant = { artifactId: 'design-1', companyId: 'company', userId: 'user', kind: 'design' as const, write: true }
 
-test('new artifacts install local themes while Slides keep their default look', () => {
+test('new artifacts install local themes with compatible Slides authoring defaults', () => {
   const { slides, design } = ARTIFACT_KIND_DEFINITIONS
   const at = '2026-11-02T00:00:00.000Z'
   const first = slides.initialIndex('New deck', at)

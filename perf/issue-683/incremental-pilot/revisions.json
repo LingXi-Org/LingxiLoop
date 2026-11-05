@@ -1,0 +1,42 @@
+[
+  {
+    "seq": "1",
+    "elapsedMs": 35996,
+    "fileCount": 4
+  },
+  {
+    "seq": "2",
+    "elapsedMs": 55996,
+    "fileCount": 5
+  },
+  {
+    "seq": "3",
+    "elapsedMs": 62996,
+    "fileCount": 5
+  },
+  {
+    "seq": "4",
+    "elapsedMs": 160996,
+    "fileCount": 7
+  },
+  {
+    "seq": "5",
+    "elapsedMs": 188996,
+    "fileCount": 7
+  },
+  {
+    "seq": "6",
+    "elapsedMs": 188996,
+    "fileCount": 8
+  },
+  {
+    "seq": "7",
+    "elapsedMs": 188996,
+    "fileCount": 9
+  },
+  {
+    "seq": "8",
+    "elapsedMs": 189996,
+    "fileCount": 10
+  }
+]

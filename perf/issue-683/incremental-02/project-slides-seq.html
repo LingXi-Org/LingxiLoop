@@ -1,0 +1,19 @@
+<section id="seq" style="background:#faf9f5;color:#141413;font-family:system-ui, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:space-between;gap:40px">
+<p style="font-size:36px;font-weight:500;letter-spacing:2px;color:#d97757">第 2 页 · 序号与字节流</p>
+<h2 style="font-family:Georgia, serif;font-size:80px;font-weight:400;line-height:1.15">序号不是包号，而是字节的位置</h2>
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:34px;line-height:1.5"><b style="font-weight:700;color:#d97757">① </b>应用层看到的是一串连续字节，TCP 把它切成段发送。</p>
+<p style="font-size:34px;line-height:1.5"><b style="font-weight:700;color:#d97757">② </b>每段的序号标的是它携带的第一字节在流中的偏移。</p>
+<p style="font-size:34px;line-height:1.5"><b style="font-weight:700;color:#d97757">③ </b>初始序号由双方在建立连接时各自挑选。</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;background:#f5f4ed;border:1px solid #e3dacc;border-radius:16px;padding:40px">
+<div style="display:flex;flex-direction:row;gap:16px">
+<div style="flex:1;background:#e3dacc;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:4px"><span style="font-size:26px;font-weight:700">段 A</span><span style="font-size:28px">seq = 1，长度 100</span></div>
+<div style="flex:1;background:#e3dacc;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:4px"><span style="font-size:26px;font-weight:700">段 B</span><span style="font-size:28px">seq = 101，长度 100</span></div>
+<div style="flex:1;background:#e3dacc;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:4px"><span style="font-size:26px;font-weight:700">段 C</span><span style="font-size:28px">seq = 201，长度 100</span></div>
+</div>
+<p style="font-size:26px;color:#3d3d3a">字节流总长度 300：1–100、101–200、201–300</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#73726c">2 / 6</p>
+<aside>常见误区：学生以为序号是“第几个包”。用 1、101、201 的示意让他们算下一段的序号，是最好的检验。</aside>
+</section>

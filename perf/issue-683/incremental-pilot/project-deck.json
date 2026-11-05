@@ -1,0 +1,44 @@
+{
+  "v": 4,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-04T23:44:01.522Z"
+  },
+  "lists": "css",
+  "title": "TCP怎样可靠传输数据",
+  "order": ["goal-boundary", "sequence", "ack-cumulative", "retransmit", "window-flow"],
+  "sections": {
+    "s1": {"description": "可靠传输要达到的目标，以及TCP不保证什么", "start": "goal-boundary"},
+    "s2": {"description": "序号怎样给字节流编号，载荷与序号的关系", "start": "sequence"},
+    "s3": {"description": "确认怎样告诉发送方收到了什么，累计确认的含义", "start": "ack-cumulative"},
+    "s4": {"description": "超时重传与重复确认怎样触发补发", "start": "retransmit"},
+    "s5": {"description": "滑动窗口怎样让发送方不淹没接收方", "start": "window-flow"}
+  },
+  "cover": "goal-boundary",
+  "faces": {},
+  "style": [{
+    "look": "slides-builtin/light",
+    "colors": "background:#f5f4ed surface:#faf9f5 text:#141413 muted:#3d3d3a muted-2:#73726c accent:#d97757 border:#e3dacc inverse:#141413 on-inverse:#faf9f5",
+    "fonts": "Georgia/serif,/sans",
+    "text": "display:128,300,1.15,0 h1:112,300,1.2,0 h2:96,300,1.2,0 h3:72,300,1.2,0 lead:44,400,1.4,1 eyebrow:36,500,1.2,1 body:32,400,1.4,1 caption:24,400,1.4,1"
+  }],
+  "designSystems": [{
+    "namespace": "slides-builtin",
+    "title": "Claude 经典",
+    "artifact": "https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-slides",
+    "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "copiedAt": "2026-11-04T23:44:01.522Z"
+  }, {
+    "namespace": "baoyu-ember",
+    "title": "Ember",
+    "artifact": "https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-design-system/artifact-type/demo.json",
+    "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "copiedAt": "2026-11-04T23:44:01.522Z"
+  }, {
+    "namespace": "baoyu-seazar",
+    "title": "Seazar",
+    "artifact": "https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json",
+    "version": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "copiedAt": "2026-11-04T23:44:01.522Z"
+  }]
+}

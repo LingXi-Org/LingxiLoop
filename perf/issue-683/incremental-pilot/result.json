@@ -1,0 +1,454 @@
+{
+  "sampleId": "incremental-pilot",
+  "strategy": "incremental",
+  "runtime": "3.8.25",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "provider": "api.siliconflow.cn",
+  "binding": "native-v3",
+  "maxOutputTokens": 16384,
+  "requestSha256": "54092a2ede8ea3bcd0f6dc278d50c4f8ce7eecb00e2d122e785cca392626905b",
+  "contentRequest": "请制作一份可编辑的6页Slides演示文稿，主题是“TCP怎样可靠传输数据”。对象是计算机专业一年级学生。6页依次讲：1目标与不保证的边界；2序号与字节流；3确认与累计确认；4超时重传和重复确认；5滑动窗口与流量控制；6完整传输小例子与总结。每页一个明确标题、2到3条简洁要点，可用一个简单图示帮助理解；不要封面凑页数，不用外部图片或视频，不需要网络检索。采用内置默认设计风格。必须保存实际页面并运行Slides格式检查，最后如实告诉我保存和检查结果。",
+  "savePolicy": "保存策略：先把第1页的完整可编辑HTML和仅列出已完成页的有效deck.json一起保存，之后每批最多新增2页并同步索引；保留已保存内容，不要整稿重写。",
+  "measurement": "first saved revision matched to post-write tool.completed event; not browser first paint",
+  "createdAt": "2026-11-04T23:43:25.004Z",
+  "queueMs": -4,
+  "firstSaved": {
+    "elapsedMs": 55996,
+    "revisionTimestampMs": 55996,
+    "seq": "2",
+    "pages": 1
+  },
+  "firstAnswerOperationMs": 9996,
+  "firstAnswerDeltaMs": 44996,
+  "finalMs": 194996,
+  "runStatus": "partial",
+  "outcome": {
+    "gaps": [
+      "Model call, token, cost or execution-time budget exhausted"
+    ],
+    "status": "partial",
+    "verification": "inconclusive",
+    "requestVersion": 1
+  },
+  "delivery": "delivered",
+  "modelCalls": 19,
+  "correctionCalls": 2,
+  "inputTokens": 628918,
+  "cachedInputTokens": 500992,
+  "outputTokens": 13196,
+  "summedModelLatencyMs": 186680,
+  "calls": [
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 19747,
+      "cachedInputTokens": 0,
+      "outputTokens": 7,
+      "latencyMs": 2551,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 19693,
+      "cachedInputTokens": 3072,
+      "outputTokens": 113,
+      "latencyMs": 7882,
+      "status": "failed",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 19893,
+      "cachedInputTokens": 18688,
+      "outputTokens": 84,
+      "latencyMs": 2799,
+      "status": "succeeded",
+      "operation": "correction"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 27167,
+      "cachedInputTokens": 5248,
+      "outputTokens": 97,
+      "latencyMs": 5691,
+      "status": "failed",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 27361,
+      "cachedInputTokens": 26112,
+      "outputTokens": 26,
+      "latencyMs": 2482,
+      "status": "succeeded",
+      "operation": "correction"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 27644,
+      "cachedInputTokens": 25472,
+      "outputTokens": 349,
+      "latencyMs": 7618,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 28899,
+      "cachedInputTokens": 25856,
+      "outputTokens": 20,
+      "latencyMs": 5238,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 30480,
+      "cachedInputTokens": 26752,
+      "outputTokens": 100,
+      "latencyMs": 6420,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 34085,
+      "cachedInputTokens": 27392,
+      "outputTokens": 191,
+      "latencyMs": 2998,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 34389,
+      "cachedInputTokens": 30976,
+      "outputTokens": 1620,
+      "latencyMs": 9629,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 36918,
+      "cachedInputTokens": 31232,
+      "outputTokens": 194,
+      "latencyMs": 6005,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 37557,
+      "cachedInputTokens": 33792,
+      "outputTokens": 45,
+      "latencyMs": 1413,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 38629,
+      "cachedInputTokens": 34304,
+      "outputTokens": 3073,
+      "latencyMs": 17312,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 42322,
+      "cachedInputTokens": 35456,
+      "outputTokens": 129,
+      "latencyMs": 62969,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 46278,
+      "cachedInputTokens": 39040,
+      "outputTokens": 3067,
+      "latencyMs": 14534,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 50061,
+      "cachedInputTokens": 43008,
+      "outputTokens": 39,
+      "latencyMs": 2359,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 51181,
+      "cachedInputTokens": 46720,
+      "outputTokens": 3927,
+      "latencyMs": 24363,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 56614,
+      "cachedInputTokens": 47872,
+      "outputTokens": 115,
+      "latencyMs": 2980,
+      "status": "succeeded",
+      "operation": "generation"
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "inputTokens": 0,
+      "cachedInputTokens": 0,
+      "outputTokens": 0,
+      "latencyMs": 1437,
+      "status": "failed",
+      "operation": "generation"
+    }
+  ],
+  "actions": [
+    {
+      "action": "design.plan_explanation",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 2996
+    },
+    {
+      "action": "skills.load",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 13996
+    },
+    {
+      "action": "slides.design_systems",
+      "ok": false,
+      "code": "not_found",
+      "elapsedMs": 22996
+    },
+    {
+      "action": "slides.current",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 22996
+    },
+    {
+      "action": "task.contract",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 30996
+    },
+    {
+      "action": "slides.create",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 35996
+    },
+    {
+      "action": "slides.read_reference",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 42996
+    },
+    {
+      "action": "slides.read_file",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 42996
+    },
+    {
+      "action": "slides.read_file",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 42996
+    },
+    {
+      "action": "slides.write_files",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 55996,
+      "fileCount": 2,
+      "pageFiles": 1
+    },
+    {
+      "action": "slides.check",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 55996
+    },
+    {
+      "action": "slides.edit_file",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 62996
+    },
+    {
+      "action": "slides.read_file",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 64996
+    },
+    {
+      "action": "slides.write_files",
+      "ok": false,
+      "code": "transaction_rolled_back",
+      "elapsedMs": 81996,
+      "fileCount": 3,
+      "pageFiles": 2
+    },
+    {
+      "action": "slides.check",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 82996
+    },
+    {
+      "action": "slides.design_systems",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 145996
+    },
+    {
+      "action": "slides.read_file",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 145996
+    },
+    {
+      "action": "slides.read_reference",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 145996
+    },
+    {
+      "action": "slides.read_file",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 145996
+    },
+    {
+      "action": "slides.write_files",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 160996,
+      "fileCount": 3,
+      "pageFiles": 2
+    },
+    {
+      "action": "slides.check",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 160996
+    },
+    {
+      "action": "slides.read_file",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 164996
+    },
+    {
+      "action": "slides.write_files",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 188996,
+      "fileCount": 1,
+      "pageFiles": 0
+    },
+    {
+      "action": "slides.write_files",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 188996,
+      "fileCount": 1,
+      "pageFiles": 1
+    },
+    {
+      "action": "slides.write_files",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 188996,
+      "fileCount": 1,
+      "pageFiles": 1
+    },
+    {
+      "action": "slides.write_files",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 189996,
+      "fileCount": 1,
+      "pageFiles": 1
+    },
+    {
+      "action": "slides.check",
+      "ok": true,
+      "code": null,
+      "elapsedMs": 189996
+    }
+  ],
+  "failures": [
+    {
+      "action": "slides.design_systems",
+      "code": "not_found",
+      "executionState": "no_effect"
+    },
+    {
+      "action": "slides.write_files",
+      "code": "transaction_rolled_back",
+      "executionState": "no_effect"
+    }
+  ],
+  "formatProblems": 0,
+  "pageCount": 5,
+  "files": [
+    {
+      "path": "project/deck.json",
+      "sha256": "fada78023f2a2b136415f001c061a7a6b570daef7fcd1a72bb8fc5f55e7be637"
+    },
+    {
+      "path": "project/ds/baoyu-ember/tokens.json",
+      "sha256": "68f5e58c19853bef9b4b84ae15dd3feee06ca7676ad0563690b7b6a949697146"
+    },
+    {
+      "path": "project/ds/baoyu-seazar/tokens.json",
+      "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6"
+    },
+    {
+      "path": "project/ds/slides-builtin/tokens.json",
+      "sha256": "612cda1e3e87333eb3c71e545f9d1d1cd175f9542fda38c3caef3159212b56f2"
+    },
+    {
+      "path": "project/slides/ack-cumulative.html",
+      "sha256": "3891ce7d0536d68e9682b18c1518be85e85811adb8b744e1c45aada92f61193e"
+    },
+    {
+      "path": "project/slides/goal-boundary.html",
+      "sha256": "5ffe35b0bee56ad312c856e5c57343ff94c3a59652eeb6c28e8f6f6ac94a45db"
+    },
+    {
+      "path": "project/slides/retransmit.html",
+      "sha256": "df0325c91977b756a5a9fe55b1884711f84c6c620729f5f8e527db4878e611de"
+    },
+    {
+      "path": "project/slides/sequence.html",
+      "sha256": "ff117b4dfe9d405f4fefa71d868aec614643058a7e8b83903c05185d3a631300"
+    },
+    {
+      "path": "project/slides/walkthrough.html",
+      "sha256": "acf76f14def02bd30e28c574d3e940b5490f8cf283786783abb20ddedfb6f25e"
+    },
+    {
+      "path": "project/slides/window-flow.html",
+      "sha256": "9ebddedec55944bb85d5ee017b00dfd89c787587748f1b2707e027826f4a9310"
+    }
+  ],
+  "assistantText": [
+    "我先按“内置默认风格”做了设计决定：米白底（#F5F4ED）、衬线标题（Georgia）、深墨正文（#141413）、黏土橙（#D97757）只做强调；字号四档（标题 72、提示 44、正文 32、页脚 24）。六页不设封面，第1页直接进入内容，页脚只放“页/6 · TCP 可靠传输”。全部图示用页内简单形状与文字画，不引用任何外部图片或视频。\n\n现在开始写第1页并同步索引，随后分两批补到第6页。\n第1页已保存（含完整可编辑 HTML 与只列已完成页的索引）。首次格式检查报了 6 处问题，都是同一类：内置风格里的字重 430 不在可编辑格式允许的整百取值内。我先把它改成 400，再继续补页，之后统一复查。"
+  ],
+  "runError": false,
+  "browserValidated": false,
+  "productionRequestCovered": false,
+  "accepted": false
+}

@@ -240,6 +240,12 @@ for (const mode of ['single','chained','conflict']) test(mode === 'conflict' ? '
       const prompt = JSON.stringify(input.messages)
       assert.ok(prompt.includes('Original title'), 'persisted editor selection/source must reach the actual model request')
       if (issued === 4) assert.ok(prompt.includes(hash), 'the model must receive the preceding read receipt')
+      if (mode === 'conflict' && issued === 5) {
+        assert.match(prompt,/version_conflict/)
+        assert.match(prompt,/refresh/)
+        const beforeRecovery = await pool.query('SELECT body FROM artifact_files WHERE artifact_id=$1 AND path=$2',[deck.id,path])
+        assert.equal(beforeRecovery.rows[0].body.toString('utf8'),original,'rejected CAS must leave the human file intact before recovery')
+      }
       if (issued === 6) assert.ok(prompt.includes('Saved by the native Slides tool'), 'read-back must reach the model before completion')
       const call = { id: `slides-model-${issued}`, type: 'function', function: { name: step.name, arguments: JSON.stringify(step.args) } }
       const usage = { prompt_tokens: 10, completion_tokens: 12 }

@@ -1,0 +1,16 @@
+<section id="retrans" data-transition="fade" style="background:#fbfbf8;color:#141413;font-family:'PingFang SC','Noto Sans SC',sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<p style="font-size:36px;letter-spacing:2px;color:#c9674a">TCP可靠传输 · 第 4 页</p>
+<h2 style="font-size:96px;font-weight:300;line-height:1.15">重传：超时兜底，重复确认提前补</h2>
+<ul style="font-size:36px;line-height:1.6;color:#3d3d3a">
+<li>超时重传：计时器到期仍未确认，就重发这一段</li>
+<li>重复确认：缺口之后的段让接收方反复回同一个ACK</li>
+<li>收到3个重复确认即快速重传，不必等到超时</li>
+</ul>
+<div style="background:#fbfbf8;padding:32px;border:1px solid #e3dacc;border-radius:16px;font-family:'PingFang SC','Noto Sans SC',sans-serif">
+<p style="font-size:28px;line-height:1.6">发送方：发出 0–4 ｜ 5–9 ｜ 10–14</p>
+<p style="font-size:28px;line-height:1.6">接收方：0–4 收到，10–14 收到，5–9 丢失</p>
+<p style="font-size:28px;line-height:1.6">回 ACK=5、ACK=5、ACK=5　→　重传 5–9</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#6a7179">第 4 页 · 超时重传与重复确认</p>
+<aside>用“5–9 丢失”演示两条路径：等计时器到期是超时重传；10–14 到达后接收方继续回 ACK=5，凑满三次重复确认就快速重传 5–9。超时时间由往返时延估算，设得太短会造成不必要的重传。</aside>
+</section>
