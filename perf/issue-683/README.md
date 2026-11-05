@@ -36,7 +36,7 @@ Format success is not subject-matter certification. Manual review of the generat
 
 ## Validation and remaining boundaries
 
-Observed before/after regressions: unsupported default font test failed before the implementation; CAS Worker regression5passed/1failed with the old code, then6/6passed with the fix. Server unit suite208/208passed, `server:typecheck` and `server:lint` passed. The strengthened final CAS regression and final CI status are recorded in the handoff.
+Observed before/after regressions: unsupported default font test failed before the implementation; CAS Worker regression5passed/1failed with the old code, then6/6passed with the fix. Server unit suite208/208passed, `server:typecheck` and `server:lint` passed. The strengthened final CAS regression also passed6/6, including the model-visible refresh hint and an unchanged file before recovery; the live test without its opt-in flag skipped with exit0. Final CI status is recorded in the handoff.
 
 The original private production content, production first-body/paint timing, full real-auth browser flow, multi-worker load and teaching-quality qualification remain uncovered. Production deployment belongs to the designated sole release integrator. A draft PR or successful local check is not a production release.
 
@@ -50,3 +50,5 @@ node scripts/slides-workspace-benchmark.mjs --generated=perf/issue-683/whole-01 
 ```
 
 The live test is explicitly opt-in and makes real paid model requests; ordinary CI skips it. All saved experimental samples include failed native actions or incomplete outcomes, and their nonzero qualification exits are preserved. No model sampling continues after the recorded HTTP429 limit.
+
+After rebasing onto main e18af1fe (#694), the editor was rebuilt and the same snapshot passed the complete browser regression again: see `browser-whole01-final.json` and `screenshots-final/`. Cold/reopen editing readiness was3570.4/3192.4ms in this one-run fixture. Final PDF still has6pages; its six1100px Poppler images were byte-identical to the previously inspected images. This rerun establishes compatibility with the new editor build, not a before/after performance claim.
