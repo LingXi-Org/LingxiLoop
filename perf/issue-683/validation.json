@@ -64,9 +64,22 @@
         true,
         true
       ]
+    },
+    "designFailureAfterFix": {
+      "command": "npm run test:integration -- --file runtime-design-failure.test.ts",
+      "exitCode": 0,
+      "passed": 1,
+      "failed": 0,
+      "coverage": "model-visible version_conflict/refresh, original files unchanged, false completion withheld"
     }
   },
-  "ci": "pending",
+  "ci": {
+    "initialRun": 41939501157,
+    "initialConclusion": "failure",
+    "initialFailure": "pre-existing Design test expected the obsolete transaction_rolled_back code",
+    "correction": "expect version_conflict and assert version/refresh diagnostics without relaxing file/publication guards",
+    "finalRun": "see final handoff"
+  },
   "independentReview": "parent sole integrator pending",
   "production": "not deployed by this worker"
 }

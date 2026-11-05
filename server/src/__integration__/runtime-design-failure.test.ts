@@ -53,7 +53,10 @@ test('failed native Design save rejects false partial completion before publicat
         'project/BrowserFlow.dc.html': { content: '<div>Uncommitted browser explanation</div>', ifMatch: null },
       } } })
       if (calls <= 7) assert.equal(input.tool_choice?.function?.name, business[0]?.name, 'each native prerequisite uses one published required tool selection')
-      if (calls === 8) { assert.notEqual(typeof input.tool_choice, 'object', 'a failed write must stop forcing prerequisite actions'); business.push({ name: 'design__check', args: {} }) }
+      if (calls === 8) {
+        assert.match(JSON.stringify(input.messages), /version_conflict/)
+        assert.match(JSON.stringify(input.messages), /refresh/)
+        assert.notEqual(typeof input.tool_choice, 'object', 'a failed write must stop forcing prerequisite actions'); business.push({ name: 'design__check', args: {} }) }
       const toolCalls = business.map((tool, position) => ({ index: position, id: `design-failure-business-${calls}`, type: 'function', function: { name: tool.name, arguments: JSON.stringify(tool.args) } }))
       if (calls >= 9) {
         if (calls === 10) {
@@ -100,7 +103,9 @@ test('failed native Design save rejects false partial completion before publicat
       JOIN lingxios.agent_action_ledger r USING(idempotency_key) WHERE i.intent->>'workId'=$1 ORDER BY i.recorded_at,i.idempotency_key`, [identity.runId])).rows
     const writes = receipts.filter(receipt => receipt.action === 'design.write_files')
     assert.equal(writes.length, 1); assert.equal(writes[0].result.ok, false)
-    assert.equal(writes[0].result.code, 'transaction_rolled_back'); assert.equal(writes[0].result.executionState, 'no_effect')
+    assert.equal(writes[0].result.code, 'version_conflict'); assert.equal(writes[0].result.executionState, 'no_effect')
+    assert.equal(writes[0].result.diagnostics.category, 'version')
+    assert.equal(writes[0].result.diagnostics.recovery, 'refresh')
     assert.ok(receipts.some(receipt => receipt.action === 'design.check' && receipt.result.ok && receipt.result.value.problems === 0), 'checking the old canvas cannot certify the failed save')
     assert.deepEqual((await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows, original)
     const events = (await api.readEvents(identity)).events
