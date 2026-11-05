@@ -264,6 +264,8 @@ class Trace:
         for i, j in pairs:
             _, row = cdp[i]
             old_key, old = fallback[j]
+            if all(item.get('finished') and not item.get('transferPending') and 'transferredBytes' in item for item in (row, old)) and row['transferredBytes'] != old['transferredBytes']:
+                self.byte_conflicts += 1
             row['_playwrightKey'] = old['_playwrightKey']
             row['_mergedRequestOrdinals'] = [row['requestOrdinal'], *row.get('_mergedRequestOrdinals', []), *old.get('_mergedRequestOrdinals', [])]
             row['requestOrdinal'] = old['requestOrdinal']
@@ -1167,6 +1169,13 @@ def self_check():
         assert len(snapshot) == 1 and snapshot[0]['requestOrdinal'] == fallback_ordinal
         assert totals['transferredBytes'] == 1000120 and totals['decodedBytes'] == 1000000 and not totals['missingDecoded']
     assert not late_clock.ambiguous_requests and not late_clock.unaccounted_script_resources and not late_clock.byte_conflicts
+    late_conflict = reconciliation_fixture([1250]); late_conflict.requests.clear()
+    late_conflict.snapshot()
+    late_conflict.event('', 'requestWillBeSent', {'requestId':'conflict','request':{'url':raw},'timestamp':10,'wallTime':1,'type':'Script'})
+    late_conflict.event('', 'responseReceived', {'requestId':'conflict','response':{'headers':{},'status':200,'mimeType':'text/javascript','timing':{'requestTime':10.25}}})
+    late_conflict.event('', 'loadingFinished', {'requestId':'conflict','timestamp':12,'encodedDataLength':120})
+    late_conflict.snapshot()
+    assert late_conflict.byte_conflicts == 1, 'late aliases cannot discard a conflicting complete wire observation'
     ambiguous = reconciliation_fixture([1000,1000])
     assert ambiguous.ambiguous_requests > 0, 'indistinguishable requests cannot qualify'
     assert safe_url(raw+'?v=1') == safe_url(raw+'?v=2') and resource_key(raw+'?v=1') != resource_key(raw+'?v=2')
