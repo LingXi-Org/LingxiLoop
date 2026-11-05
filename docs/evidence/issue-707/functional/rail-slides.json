@@ -1,0 +1,8 @@
+{
+  "kind": "isolated-filmstrip-navigation-diagnostic",
+  "mode": "slides",
+  "referenceThumbnailSize": true,
+  "stableRangeSelection": true,
+  "virtualizedKeyboardFocus": true,
+  "consoleOrPageErrors": []
+}

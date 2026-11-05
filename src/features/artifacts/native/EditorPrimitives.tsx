@@ -367,17 +367,17 @@ export function Modal({
 }
 
 export function FloatingPopover({anchor,label,className='',align='end',onClose,children}:{anchor:RefObject<HTMLElement|null>;label:string;className?:string;align?:'start'|'end';onClose(restoreFocus?:boolean):void;children:ReactNode}) {
-  const popup=useRef<HTMLDivElement>(null)
+  const popup=useRef<HTMLDivElement>(null),close=useRef(onClose);close.current=onClose
   useLayoutEffect(()=>{
     const element=popup.current,button=anchor.current;if(!element||!button)return
     element.showPopover()
     const update=()=>positionEditorPopover(element,button,align),observer=new ResizeObserver(update)
     observer.observe(element);observer.observe(button)
     const editor=button.closest('[data-native-artifact-editor]');if(editor)observer.observe(editor)
-    const toggle=(event:Event)=>{if((event as ToggleEvent).newState==='closed')onClose()}
-    element.addEventListener('toggle',toggle);window.addEventListener('resize',update);document.addEventListener('scroll',update,true);update();element.querySelector<HTMLElement>('textarea,button:not(:disabled)')?.focus({preventScroll:true})
+    const toggle=(event:Event)=>{if((event as ToggleEvent).newState==='closed')close.current()}
+    element.addEventListener('toggle',toggle);window.addEventListener('resize',update);document.addEventListener('scroll',update,true);update();(element.querySelector<HTMLTextAreaElement>('textarea')??Array.from(element.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')).find(button=>button.checkVisibility()))?.focus({preventScroll:true})
     return()=>{observer.disconnect();element.removeEventListener('toggle',toggle);window.removeEventListener('resize',update);document.removeEventListener('scroll',update,true);queueMicrotask(()=>{if(!element.isConnected)element.hidePopover()})}
-  },[anchor,onClose,align])
+  },[anchor,align])
   useLayoutEffect(()=>{if(popup.current?.matches(':popover-open')&&anchor.current)positionEditorPopover(popup.current,anchor.current,align)})
   return <div ref={popup} popover="auto" role="dialog" aria-label={label} className={`native-floating-popover ${className}`} onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();onClose(true)}}}>{children}</div>
 }

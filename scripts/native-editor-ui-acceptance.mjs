@@ -75,7 +75,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historical=structuredClone(document),historyNode=Object.values(historical.pages['page-1'].nodes).find(node=>node.type==='text')
   if(options.checks==='history')document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:historyNode.id,patch:{x:historyNode.x+80}}])).document
   const revisionReads=[],revisionRestores=[],contextWrites=[]
-  let commentThreads=[];let commentSequence=0
+  let commentThreads=[];let commentSequence=0;let holdCommentAck=false,releaseCommentAck=null,rejectCommentReply=false,expectedCommentError=false
   const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
   const initialPageHashes = Object.fromEntries(document.pageOrder.map(id => [id, pageHash(document.pages[id])]))
   const history = { version: 0, undo: null, redo: null }, receipts = [], errors = []
@@ -88,7 +88,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   page.setDefaultTimeout(30_000)
   await page.addInitScript(()=>{window.__geometryLog=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(['visible','update-pages'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
-  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()) })
+  page.on('console', message => { if (message.type() === 'error'&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))) errors.push(message.text()) })
   await page.route('**/isolated-fixture/**', async route => {
     const [, pageId, nodeId] = new URL(route.request().url()).pathname.match(/^\/isolated-fixture\/([^/]+)\/([^/]+)$/) ?? []
     const source = document.pages[pageId]?.nodes[nodeId]?.embed?.source
@@ -102,6 +102,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(url.pathname.includes('/comments')){
       const [,threadId,action,messageId]=url.pathname.split('/comments')[1].split('/'),body=request.postData()?request.postDataJSON():null
       if(request.method()==='GET'){await route.fulfill({status:200,json:{threads:commentThreads,me:{id:'fixture-user',name:'验收用户'},agent:{available:options.checks==='comments'}}});return}
+      if(rejectCommentReply&&action==='messages'&&!messageId&&request.method()==='POST'){await route.fulfill({status:503,json:{error:'controlled comment failure'}});return}
       let thread=commentThreads.find(thread=>thread.id===threadId)
       const message=text=>({id:`message-${++commentSequence}`,text,author:{kind:'user',id:'fixture-user',name:'验收用户'},at:new Date().toISOString()})
       if(!threadId){thread={id:`thread-${++commentSequence}`,anchor:body.anchor,label:body.label,status:'open',messages:[message(body.text)]};commentThreads.push(thread)}
@@ -110,6 +111,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       else if(action==='send')thread.agent={status:'pending'}
       else if(request.method()==='DELETE')commentThreads=commentThreads.filter(item=>item.id!==threadId)
       else thread.status=body.status
+      if(holdCommentAck)await new Promise(resolve=>{releaseCommentAck=resolve})
       await route.fulfill({status:200,json:{thread}});return
     }
     if(url.pathname.endsWith('/editor-context'))contextWrites.push(request.postDataJSON())
@@ -313,21 +315,29 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('data-tool'),'comment')
       const shape=Object.values(document.pages['page-1'].nodes).find(node=>node.type==='shape'),box=await page.locator(`[data-node-id="${shape.id}"]`).boundingBox()
       await page.mouse.click(box.x+box.width/2,box.y+box.height/2)
-      const form=page.locator('.native-comment-composer');await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('请检查这个图形');await form.getByRole('button',{name:'发送',exact:true}).click()
+      const form=page.locator('.native-comment-composer');await form.getByRole('textbox',{name:'评论内容',exact:true}).waitFor();assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'评论内容','a new comment must focus its visible composer');await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('请检查这个图形');holdCommentAck=true;await form.getByRole('button',{name:'发送',exact:true}).click();await page.getByRole('button',{name:'正在保存…',exact:true}).waitFor();assert.equal(await form.getByRole('textbox',{name:'评论内容',exact:true}).isEditable(),false,'a pending submission must prevent input that its ACK would clear');await form.getByRole('textbox',{name:'评论内容',exact:true}).focus();await page.keyboard.type('x');assert.equal(await form.getByRole('textbox',{name:'评论内容',exact:true}).inputValue(),'请检查这个图形');holdCommentAck=false;releaseCommentAck?.()
       await page.waitForFunction(()=>document.querySelectorAll('.native-comment-message').length===1)
       assert.equal(commentThreads.length,1);const anchor=decodeCommentAnchor(commentThreads[0].anchor);assert.equal(anchor.nodeId,shape.id);assert.ok(Math.abs(anchor.x-.5)<.01&&Math.abs(anchor.y-.5)<.01)
       assert.deepEqual(await page.locator('[data-page-id="page-1"]').boundingBox(),before,'floating comments must not resize or move the page')
-      await page.getByRole('button',{name:'编辑评论',exact:true}).click();await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('修改后的评论');await form.getByRole('button',{name:'保存',exact:true}).click()
+      await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('待发送回复草稿');await page.getByRole('button',{name:'关闭评论',exact:true}).click()
+      if(await page.locator('[data-native-artifact-editor]').getAttribute('data-tool')!=='comment')await control.click()
+      const paper=await page.locator('[data-page-id="page-1"]').boundingBox();await page.mouse.click(paper.x+paper.width-80,paper.y+50)
+      await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('第二条评论');await form.getByRole('button',{name:'发送',exact:true}).click();await page.getByText('第二条评论',{exact:true}).waitFor()
+      await page.getByRole('button',{name:/^评论 1：/}).click();await page.getByText('请检查这个图形',{exact:true}).waitFor()
+      assert.equal(await form.getByRole('textbox',{name:'评论内容',exact:true}).inputValue(),'待发送回复草稿','switching pins and reopening a thread must retain its unsent reply')
+      assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('data-save-state'),'draft')
+      await form.getByRole('button',{name:'取消',exact:true}).click();await page.getByRole('button',{name:/^评论 1：/}).click();await form.getByRole('textbox',{name:'评论内容',exact:true}).waitFor();assert.equal(await form.getByRole('textbox',{name:'评论内容',exact:true}).inputValue(),'','explicit cancel clears only this draft');assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('data-save-state'),'saved')
+      await page.getByRole('button',{name:'编辑评论',exact:true}).click();await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('修改后的评论');await page.getByRole('button',{name:'关闭评论',exact:true}).click();await page.getByRole('button',{name:/^评论 1：/}).click();await page.getByRole('button',{name:'编辑评论',exact:true}).click();assert.equal(await form.getByRole('textbox',{name:'评论内容',exact:true}).inputValue(),'修改后的评论','editing drafts survive closing and reopening');await form.getByRole('button',{name:'保存',exact:true}).click()
       await page.getByText('修改后的评论',{exact:true}).waitFor()
-      await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('补充回复');await form.getByRole('button',{name:'发送',exact:true}).click();await page.getByText('补充回复',{exact:true}).waitFor()
+      await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('补充回复');rejectCommentReply=true;expectedCommentError=true;await form.getByRole('button',{name:'发送',exact:true}).click();await page.getByRole('alert').filter({hasText:'尚未确认保存'}).waitFor();assert.equal(commentThreads[0].messages.length,1);await page.getByRole('button',{name:'关闭评论',exact:true}).click();await page.getByRole('button',{name:/^评论 1：/}).click();await form.getByRole('textbox',{name:'评论内容',exact:true}).waitFor();assert.equal(await form.getByRole('textbox',{name:'评论内容',exact:true}).inputValue(),'补充回复','a failed reply remains recoverable after closing');rejectCommentReply=false;await form.getByRole('button',{name:'发送',exact:true}).click();await page.getByText('补充回复',{exact:true}).waitFor();expectedCommentError=false
       assert.equal(commentThreads[0].messages.length,2)
       await page.getByRole('button',{name:'解决评论',exact:true}).click();await page.getByRole('button',{name:'关闭评论',exact:true}).click()
       await page.getByLabel('评论选项',{exact:true}).click();await page.getByRole('button',{name:/显示全部评论/}).click()
       const all=page.getByRole('complementary',{name:'全部评论',exact:true});await all.getByLabel('评论筛选',{exact:true}).click();await all.getByRole('button',{name:'显示已解决的评论',exact:true}).click()
-      await all.getByRole('button',{name:'重新打开评论',exact:true}).click();await all.getByRole('button',{name:'发送给 Agent',exact:true}).click();await all.getByText('已发送，等待 Agent 接收',{exact:true}).waitFor()
-      await all.getByLabel('评论操作',{exact:true}).click();await all.getByRole('button',{name:'删除评论',exact:true}).click();await all.getByText('暂无评论',{exact:true}).waitFor();assert.equal(commentThreads.length,0)
+      const firstThread=all.locator(`[data-comment-id="${commentThreads[0].id}"]`);await firstThread.getByRole('button',{name:'重新打开评论',exact:true}).click();await firstThread.getByRole('button',{name:'发送给 Agent',exact:true}).click();await firstThread.getByText('已发送，等待 Agent 接收',{exact:true}).waitFor()
+      for(const id of commentThreads.map(thread=>thread.id)){const card=all.locator(`[data-comment-id="${id}"]`);await card.getByLabel('评论操作',{exact:true}).click();await card.getByRole('button',{name:'删除评论',exact:true}).click();await card.waitFor({state:'detached'})}await all.getByText('暂无评论',{exact:true}).waitFor();assert.equal(commentThreads.length,0)
       assert.deepEqual(errors,[])
-      return {kind:'isolated-comment-editor-diagnostic',mode:kind,stableNodeAnchor:true,floatingGeometry:true,createReplyEditResolveReopenSendDelete:true,scope:'controlled same-origin HTTP protocol fixture; real auth/Worker validated separately',consoleOrPageErrors:errors}
+      return {kind:'isolated-comment-editor-diagnostic',mode:kind,stableNodeAnchor:true,floatingGeometry:true,createReplyEditResolveReopenSendDelete:true,replyAndEditDraftsRetained:true,explicitCancelClearsDraft:true,pendingSubmitReadOnly:true,failedReplyRecoverable:true,pinSwitchKeepsPopover:true,composerAutofocus:true,scope:'controlled same-origin HTTP protocol fixture; real auth/Worker validated separately',consoleOrPageErrors:errors}
     }
     if(options.checks==='export-ink') {
       const ink=await page.evaluate(async root=>{

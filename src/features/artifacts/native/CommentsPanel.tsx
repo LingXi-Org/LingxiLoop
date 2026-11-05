@@ -37,14 +37,18 @@ export default function CommentsPanel({
   onNavigate,
   anchorElement,
   threadId,
+  drafts,
+  onDraftChange,
 }: {
+  drafts: Map<string, string>
+  onDraftChange(key: string, text: string | null): void
   anchorElement: RefObject<HTMLElement | null>
   threadId: string | null
   artifactId: string
   writable: boolean
   anchor: NativeCommentAnchor | null
   label: string
-  onClose(restoreFocus?:boolean): void
+  onClose(restoreFocus?: boolean): void
   onPlaced(threadId?: string): void
   onThreads(threads: EditorComment[]): void
   onNavigate(anchor: string): void
@@ -52,8 +56,8 @@ export default function CommentsPanel({
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false)
-  const [text, setText] = useState(''),
-    [resolved, setResolved] = useState(false)
+  const [resolved, setResolved] = useState(false),
+    [composerReset, setComposerReset] = useState(0)
   const [reply, setReply] = useState<string | null>(null),
     [editing, setEditing] = useState<{ threadId: string; messageId: string } | null>(null)
   const base = `/artifacts/${encodeURIComponent(artifactId)}/comments`
@@ -83,23 +87,30 @@ export default function CommentsPanel({
       stop()
     }
   }, [refresh, artifactId])
-  async function mutate(path: string, method: string, body?: unknown, clear = false) {
+  async function mutate(path: string, method: string, body?: unknown, clearKey?: string) {
     setBusy(true)
     setError('')
+    let confirmed = false
     try {
       const result = await http<{ thread?: EditorComment }>(base + path, {
         method,
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       })
-      if (clear) {
-        setText('')
+      confirmed = true
+      if (clearKey) {
+        onDraftChange(clearKey, null)
+        setComposerReset((v) => v + 1)
         setReply(null)
         setEditing(null)
         onPlaced(result.thread?.id)
       }
       await refresh()
     } catch {
-      setError('修改尚未保存。内容已保留，请重试。')
+      setError(
+        confirmed
+          ? '评论已保存，列表尚未更新。请重新加载。'
+          : '尚未确认保存。草稿已保留，请刷新列表确认后重试。',
+      )
     } finally {
       setBusy(false)
     }
@@ -119,9 +130,13 @@ export default function CommentsPanel({
       align={anchor ? 'start' : 'end'}
       label={threadId ? '评论线程' : anchor ? '添加评论' : '全部评论'}
       className={`native-comment-popover ${anchor && !threadId ? 'native-comments-composing' : threadId ? 'native-comments-thread' : 'native-comments-all'}`}
-      onClose={onClose}
+      onClose={restore=>{if(restore&&anchor&&!threadId&&!busy)onDraftChange(`new:${encodeCommentAnchor(anchor)}`,null);onClose(restore)}}
     >
-      {anchor&&!threadId&&<span className="native-comment-composer-avatar" aria-hidden="true">{snapshot?.me.name.slice(0,1)}</span>}
+      {anchor && !threadId && (
+        <span className="native-comment-composer-avatar" aria-hidden="true">
+          {snapshot?.me.name.slice(0, 1)}
+        </span>
+      )}
       <aside
         className="native-comments-panel"
         aria-label={threadId ? '评论线程' : anchor ? '添加评论' : '全部评论'}
@@ -133,7 +148,7 @@ export default function CommentsPanel({
               显示已解决的评论
             </MenuItem>
           </Menu>
-          <IconButton icon="close" label="关闭评论" onClick={()=>onClose(true)} />
+          <IconButton icon="close" label="关闭评论" onClick={() => onClose(true)} />
         </header>
         {error && (
           <div role="alert" className="native-comment-error">
@@ -204,7 +219,6 @@ export default function CommentsPanel({
                           icon="pencil"
                           label="编辑评论"
                           onClick={() => {
-                            setText(message.text)
                             setEditing({ threadId: thread.id, messageId: message.id })
                             setReply(null)
                           }}
@@ -232,7 +246,6 @@ export default function CommentsPanel({
                     onClick={() => {
                       setReply(thread.id)
                       setEditing(null)
-                      setText('')
                     }}
                   >
                     回复
@@ -255,59 +268,119 @@ export default function CommentsPanel({
             </article>
           ))}
         </div>
-        {writable && ((anchor && !threadId) || composerThread || editing) && (
-          <form
-            className="native-comment-composer"
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (!text.trim() || busy) return
-              if (editing)
-                void mutate(
-                  `/${editing.threadId}/messages/${editing.messageId}`,
-                  'PATCH',
-                  { text },
-                  true,
-                )
-              else if (composerThread)
-                void mutate(`/${composerThread}/messages`, 'POST', { text }, true)
-              else if (anchor)
-                void mutate('', 'POST', { anchor: encodeCommentAnchor(anchor), label, text }, true)
-            }}
-          >
-            <label htmlFor="native-comment-text">
-              {editing ? '编辑评论' : composerThread ? '回复评论' : label}
-            </label>
-            <textarea
-              id="native-comment-text"
-              aria-label="评论内容"
-              placeholder="添加评论…"
-              value={text}
-              maxLength={10000}
-              autoFocus
-              onChange={(e) => setText(e.target.value)}
-            />
-            <footer>
-              <button
-                type="button"
-                onClick={() => {
-                  setText('')
+        {writable &&
+          ((anchor && !threadId) || composerThread || editing) &&
+          (() => {
+            const draftKey = editing
+              ? `edit:${editing.threadId}:${editing.messageId}`
+              : composerThread
+                ? `reply:${composerThread}`
+                : `new:${encodeCommentAnchor(anchor!)}`
+            const initial = editing
+              ? (snapshot?.threads
+                  .find((t) => t.id === editing.threadId)
+                  ?.messages.find((m) => m.id === editing.messageId)?.text ?? '')
+              : ''
+            return (
+              <CommentComposer
+                key={`${draftKey}:${composerReset}`}
+                draftKey={draftKey}
+                drafts={drafts}
+                initial={initial}
+                busy={busy}
+                editing={!!editing}
+                label={editing ? '编辑评论' : composerThread ? '回复评论' : label}
+                onDraftChange={onDraftChange}
+                onCancel={() => {
+                  onDraftChange(draftKey, null)
+                  setComposerReset((v) => v + 1)
                   setReply(null)
                   setEditing(null)
                   onPlaced()
                 }}
-              >
-                取消
-              </button>
-              <button type="submit" className="native-primary" disabled={!text.trim() || busy}>
-                <span className="native-visually-hidden">
-                  {busy ? '正在保存…' : editing ? '保存' : '发送'}
-                </span>
-                <EditorIcon name="up" size={18} />
-              </button>
-            </footer>
-          </form>
-        )}
+                onSubmit={(text) => {
+                  if (editing)
+                    void mutate(
+                      `/${editing.threadId}/messages/${editing.messageId}`,
+                      'PATCH',
+                      { text },
+                      draftKey,
+                    )
+                  else if (composerThread)
+                    void mutate(`/${composerThread}/messages`, 'POST', { text }, draftKey)
+                  else if (anchor)
+                    void mutate(
+                      '',
+                      'POST',
+                      { anchor: encodeCommentAnchor(anchor), label, text },
+                      draftKey,
+                    )
+                }}
+              />
+            )
+          })()}
       </aside>
     </FloatingPopover>
+  )
+}
+
+function CommentComposer({
+  draftKey,
+  drafts,
+  initial,
+  label,
+  busy,
+  editing,
+  onDraftChange,
+  onCancel,
+  onSubmit,
+}: {
+  draftKey: string
+  drafts: Map<string, string>
+  initial: string
+  label: string
+  busy: boolean
+  editing: boolean
+  onDraftChange(key: string, text: string | null): void
+  onCancel(): void
+  onSubmit(text: string): void
+}) {
+  const [text, setText] = useState(() => drafts.get(draftKey) ?? initial)
+  return (
+    <form
+      className="native-comment-composer"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (text.trim() && !busy) onSubmit(text)
+      }}
+    >
+      <label htmlFor="native-comment-text">{label}</label>
+      <textarea
+        id="native-comment-text"
+        aria-label="评论内容"
+        placeholder="添加评论…"
+        value={text}
+        readOnly={busy}
+        aria-disabled={busy}
+        maxLength={10000}
+        autoFocus
+        onChange={(event) => {
+          const value = event.target.value
+          setText(value)
+          onDraftChange(draftKey, value === initial ? null : value)
+        }}
+      />
+      <footer>
+        <button type="button" disabled={busy} onClick={onCancel}>
+          取消
+        </button>
+        <button type="submit" className="native-primary" disabled={!text.trim() || busy}>
+          <span className="native-visually-hidden">
+            {busy ? '正在保存…' : editing ? '保存' : '发送'}
+          </span>
+          <EditorIcon name="up" size={18} />
+        </button>
+      </footer>
+    </form>
   )
 }

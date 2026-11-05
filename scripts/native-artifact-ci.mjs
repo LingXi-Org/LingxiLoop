@@ -95,7 +95,7 @@ export async function verifyDiagnosticPrerequisite(env = process.env, fetcher = 
 
 // Permit numeric evidence and fixed labels only. URLs, errors, headers, cookies,
 // HTML, source code, prompts and arbitrary strings never enter uploaded JSON.
-const labels = new Set(['baseline', 'candidate', 'design', 'slides', 'passed', 'failed', 'unsupported', 'diagnostic', 'paired', 'fullNavigation', 'workbenchOpen', 'html', 'pdf', 'pptx', 'Script', 'Document', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'page', 'iframe', 'worker', 'service_worker', 'none', 'observed', 'incomplete', 'nativePageStrip', 'nativeDesignKeyboard', 'legacySlidesRail', 'legacyDesignPageKey', 'legacyDesignBoard', 'insertText'])
+const labels = new Set(['baseline', 'candidate', 'design', 'slides', 'passed', 'failed', 'unsupported', 'diagnostic', 'paired', 'fullNavigation', 'workbenchOpen', 'html', 'pdf', 'pptx', 'Script', 'Document', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'page', 'iframe', 'worker', 'service_worker', 'none', 'observed', 'incomplete', 'nativePageStrip', 'nativeDesignKeyboard', 'nativeDesignBoard', 'legacySlidesRail', 'legacyDesignPageKey', 'legacyDesignBoard', 'insertText'])
 const dottedVersion = /^\d{1,3}(?:\.\d{1,6}){1,4}$/
 const linuxKernelPattern = String.raw`\d{1,3}\.\d{1,3}\.\d{1,4}(?:[.-]\d{1,6})?(?:-(?:generic|azure|aws|amd64|cloud-amd64))?\+?`
 const linuxPlatform = new RegExp(`^Linux-${linuxKernelPattern}-(?:x86_64|aarch64)-with-glibc\\d{1,3}\\.\\d{1,3}$`)
@@ -168,7 +168,7 @@ async function executionEnvironment(config) {
 }
 
 export function compactReceipt(safe) {
-  const fields = ['run', 'arm', 'kind', 'mode', 'status', 'phase', 'failureStage', 'failureCode', 'editableMs', 'scriptTransferBytes', 'scriptDecodedBytes', 'idleScriptTransferBytes', 'idleScriptDecodedBytes', 'pssDeltaBytes', 'firstInputMs']
+  const fields = ['run', 'arm', 'kind', 'mode', 'status', 'phase', 'failureStage', 'failureCode', 'editableMs', 'scriptTransferBytes', 'scriptDecodedBytes', 'idleScriptTransferBytes', 'idleScriptDecodedBytes', 'pssDeltaBytes', 'firstInputMs', 'failureObservations', 'viewNormalization']
   const exportFields = ['format', 'status', 'failureCode', 'bytes', 'pages', 'durationMs', 'peakPssBytes', 'hostSubtractedPeakPssBytes', 'offlineHtml']
   return { schemaVersion: safe.schemaVersion, phase: safe.phase, baselineCommit: safe.baselineCommit, candidateCommit: safe.candidateCommit,
     environment: { ...safe.executionEnvironment, ...safe.measurement?.environment },

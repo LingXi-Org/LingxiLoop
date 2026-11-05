@@ -1,0 +1,9 @@
+{
+  "scenario": "comments",
+  "files": {
+    "src/features/artifacts/native/NativeEditor.tsx": "3224279ee16c7f70bc74b1e13d1c58200166bd2fc4f671010fa2156618d5f070",
+    "src/features/artifacts/native/CommentsPanel.tsx": "ccf76ed7088f48fff4c3b10eb0988ea631eb40539bbb4a1f4688b393019e8452",
+    "src/features/artifacts/native/EditorPrimitives.tsx": "a64159c79738f787be945be6f30d095a0f05c4785a2eb4510a3873f0a9755c28",
+    "src/features/artifacts/native/native-editor.css": "82f5fc5f95aaca3255182b8b26c365455b26a4f7578f2258826c2b8a4bb87984"
+  }
+}

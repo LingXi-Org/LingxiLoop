@@ -383,6 +383,33 @@ def heading_candidates(frame, kind, number):
     return frame.locator('h1').filter(has_text=title)
 
 
+def normalize_native_view(page, frame, kind):
+    """Use the real controls to compare the same camera/inspector state.
+    All actions remain inside the measured cold-open interval."""
+    root = frame.locator('[data-native-artifact-editor]')
+    if not root.count(): return None
+    actions = {"inspectorToggles": 0, "zoomActions": 0}
+    if frame.locator('.native-inspector:visible').count():
+        frame.locator('.native-toolbar').get_by_role('button', name=re.compile('^(属性|显示属性)$')).click()
+        actions['inspectorToggles'] += 1
+    if kind == 'design':
+        board = frame.locator('[data-page-id="page-1"]').first
+        box = board.bounding_box()
+        if not box or abs(box['width'] / 1920 - .5) > .005:
+            select = frame.locator('select[aria-label="画布缩放"]')
+            if select.count():
+                index = select.evaluate("e=>[...e.options].findIndex(o=>Number(o.value)===1)")
+                if index < 0: raise MeasurementFailure('page_navigation_control_missing')
+                select.click(); page.keyboard.press('Home')
+                for _ in range(index): page.keyboard.press('ArrowDown')
+                page.keyboard.press('Enter'); actions['zoomActions'] += index + 3
+            else:
+                frame.get_by_label('画布缩放', exact=True).click()
+                frame.get_by_role('button', name='50%', exact=True).click(); actions['zoomActions'] += 2
+        frame.wait_for_function("Math.abs(document.querySelector('[data-page-id=\"page-1\"]').getBoundingClientRect().width/1920-.5)<.005")
+    return actions
+
+
 def ready_heading(page, kind, number, timeout=120):
     deadline = time.monotonic() + timeout
     observations = {"frames": 0, "matchingHeadings": 0}
@@ -439,15 +466,20 @@ def navigate(page, kind, number):
                 page.mouse.wheel(delta if native.get_attribute('aria-orientation') == 'horizontal' else 0, 0 if native.get_attribute('aria-orientation') == 'horizontal' else delta)
                 wheel_count += 1; page.wait_for_timeout(80)
                 break
-            native_design = frame.locator('[data-native-artifact-editor="design"][data-current-page]')
+            native_design = frame.locator('[data-native-artifact-editor="design"]')
             if kind == 'design' and native_design.count():
-                current_id = native_design.get_attribute('data-current-page') or ''
-                current = int(current_id.replace('page-', '')) if re.fullmatch(r'page-\d+', current_id) else 1
-                if current == number: return {"control": "nativeDesignKeyboard", "wheelEvents": wheel_count}
-                native_design.focus()
-                page.keyboard.press('PageDown' if current < number else 'PageUp')
-                page.wait_for_timeout(50)
-                continue
+                target = frame.locator(f'[data-page-id="page-{number}"] .native-board-label')
+                stage = frame.locator('.native-stage')
+                if target.count():
+                    item, bounds = target.first.bounding_box(), stage.bounding_box()
+                    if item and bounds and item['x'] >= bounds['x'] and item['y'] >= bounds['y'] and item['x'] + item['width'] <= bounds['x'] + bounds['width'] and item['y'] + item['height'] <= bounds['y'] + bounds['height']:
+                        target.first.click(); return {"control": "nativeDesignBoard", "wheelEvents": wheel_count}
+                scroll = stage.evaluate('e=>({x:e.scrollLeft,y:e.scrollTop})')
+                # Shared fixture geometry: five columns, 2080 × 1240 spacing,
+                # at the measured 50% camera. Never assign product scroll/state.
+                x, y = (number-1) % 5 * 1040, (number-1) // 5 * 620
+                stage.hover(); page.mouse.wheel(max(-600,min(600,x-scroll['x'])),max(-600,min(600,y-scroll['y'])))
+                wheel_count += 1; page.wait_for_timeout(80); continue
             if kind == "slides":
                 target = frame.locator(f'[role="option"][data-slide-id="page-{number}"]')
                 if target.count():
@@ -502,12 +534,16 @@ def legacy_save_prefix(frame):
 
 
 def edit_heading(page, frame, heading, trace, artifact_id, number):
-    saves = []
+    saves = []; input_step = 0
     prefix = legacy_save_prefix(frame)
     listener = lambda response: saves.append({"status": response.status, "epochMs": time.time() * 1000, "requests": trace.snapshot()}) if save_request_matches(response, artifact_id, MARKER.strip(), prefix) else None
     page.on("response", listener)
     try:
         heading.dblclick()
+        input_step = 1
+        if frame.locator('[data-native-artifact-editor]').count():
+            frame.locator('.tiptap[contenteditable=true]').first.click()
+        input_step = 2
         frame.wait_for_function("Boolean(document.activeElement?.isContentEditable)")
         frame.evaluate(r"""({number,marker}) => {
           window.__nativeArtifactInput=null;
@@ -521,12 +557,14 @@ def edit_heading(page, frame, heading, trace, artifact_id, number):
             }));
           },{once:true,capture:true});
         }""", {"number": number, "marker": MARKER})
+        input_step = 3
         page.keyboard.press("End"); page.keyboard.insert_text(MARKER)
         frame.wait_for_function("window.__nativeArtifactInput?.samePagePainted")
         proof = frame.evaluate("window.__nativeArtifactInput")
         if not all(proof.get(key) for key in ("trusted", "targetEditable", "expectedBefore", "samePagePainted")):
             raise MeasurementFailure("trusted_input_proof_failed")
         requests_at_paint = trace.snapshot()
+        input_step = 4
         page.keyboard.press("Escape")
         deadline = time.monotonic() + 20
         while not any(row["status"] == 200 for row in saves) and time.monotonic() < deadline: page.wait_for_timeout(50)
@@ -539,6 +577,13 @@ def edit_heading(page, frame, heading, trace, artifact_id, number):
         proof["saveAfterPaintMs"] = round(proof["acceptedEpochMs"] - proof["paintedEpochMs"], 1)
         requests_at_editable = acknowledgment["requests"] if proof["acceptedEpochMs"] >= proof["paintedEpochMs"] else requests_at_paint
         return proof, requests_at_editable
+    except Exception as error:
+        if isinstance(error, MeasurementFailure): raise
+        observations = {"inputStep": input_step}
+        try:
+            observations.update(frame.evaluate("""() => ({activeEditable:!!document.activeElement?.isContentEditable,documentFocused:document.hasFocus(),nativeEditorCount:document.querySelectorAll('[data-native-artifact-editor]').length,editableCount:document.querySelectorAll('[contenteditable=true]').length,inspectorCount:document.querySelectorAll('.native-inspector').length,nativeReadonly:[...document.querySelectorAll('[data-native-artifact-editor] [role=status]')].some(e=>e.textContent.includes('仅查看'))})"""))
+        except Exception: pass
+        raise MeasurementFailure(failure_code(error), observations) from None
     finally: page.remove_listener("response", listener)
 
 
@@ -925,6 +970,9 @@ def main():
                             else: page.locator(workbench(config, kind)['openSelector']).first.click()
                             if arm == 'baseline' and kind == 'design': navigate(page, kind, 1)
                             sample['phase'] = 'firstReadiness'
+                            for native_frame in page.frames:
+                                if native_frame.locator('[data-native-artifact-editor]').count():
+                                    sample['viewNormalization'] = normalize_native_view(page, native_frame, kind); break
                             frame, heading, proof = ready_heading(page, kind, 1)
                             sample['readiness'] = [proof]; sample['phase'] = 'firstInput'
                             input_proof, requests_at_editable = edit_heading(page, frame, heading, trace, config['artifactIds'][kind], 1)

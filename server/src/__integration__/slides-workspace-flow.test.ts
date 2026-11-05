@@ -235,7 +235,7 @@ test('a sent editor comment is delivered to the dedicated room through the real 
   assert.equal(snapshot.threads[0]?.agent?.status, 'delivered')
 })
 
-for (const mode of ['single','chained','conflict','comment']) test(mode === 'comment' ? 'native anchored comment reaches the formal worker and persists its Agent reply through the same-origin API' : mode === 'conflict' ? 'formal worker receives actionable native CAS refresh diagnostics without changing saved content' : mode === 'chained' ? 'formal worker verifies 14→10→1→1→1 native Slides operation batches and delivers once' : 'authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
+for (const mode of ['single','chained','conflict','comment']) test(mode === 'comment' ? 'signed-in comment CRUD reaches the formal worker and persists its Agent reply through the same-origin API' : mode === 'conflict' ? 'formal worker receives actionable native CAS refresh diagnostics without changing saved content' : mode === 'chained' ? 'formal worker verifies 14→10→1→1→1 native Slides operation batches and delivers once' : 'authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async t => {
   const chained = mode === 'chained'
   const created = await request(`/projects/${projectId}/slides`, 'POST', { title: 'Model flow' })
   assert.equal(created.status, 201)
@@ -253,9 +253,35 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
   assert.equal(context.status, 200)
   const commentAnchor={pageId:'page-1',nodeId:'heading',x:.2,y:.7}
   let commentId:string|undefined
+  let commentRequest:typeof request=request
   if(mode==='comment') {
+    const {gatewayFixture}=await import('../../scripts/slides-acceptance-gateway.mjs')
+    const gateway=await gatewayFixture({origin,userId,gatewaySecret:env.GATEWAY_HMAC_SECRET})
+    t.after(()=>gateway.worker.dispose())
+    const authenticated=(path:string,method='GET',body?:unknown,scope?:{companyId?:string;projectId?:string})=>fetch(`${gateway.url}/api${path}`,{method,headers:{cookie:gateway.cookie,'content-type':'application/json','x-company-id':scope?.companyId??companyId,'x-project-id':scope?.projectId??projectId},...(body===undefined?{}:{body:JSON.stringify(body)})})
+    commentRequest=authenticated
     const anchor=(await import('../../../shared/artifact-comment-anchor.js')).encodeCommentAnchor(commentAnchor)
-    const created=await request(`/artifacts/${deck.id}/comments`,'POST',{anchor,label:'选中标题',text:'请修改当前选中页的标题，保存后回复本评论。'})
+    const base=`/artifacts/${deck.id}/comments`
+    const probeResponse=await authenticated(base,'POST',{anchor,label:'评论 CRUD 验收',text:'初始评论'})
+    assert.equal(probeResponse.status,201,await probeResponse.clone().text())
+    const probe=(await probeResponse.json() as {thread:{id:string;messages:Array<{id:string}>}}).thread
+    const reply=await authenticated(`${base}/${probe.id}/messages`,'POST',{text:'人工回复'})
+    assert.equal(reply.status,200,await reply.clone().text())
+    const edit=await authenticated(`${base}/${probe.id}/messages/${probe.messages[0].id}`,'PATCH',{text:'已编辑的评论'})
+    assert.equal(edit.status,200,await edit.clone().text())
+    assert.equal((await edit.json() as {thread:{messages:Array<{text:string}>}}).thread.messages[0].text,'已编辑的评论')
+    for(const status of ['resolved','open']){
+      const changed=await authenticated(`${base}/${probe.id}`,'PATCH',{status})
+      assert.equal(changed.status,200,await changed.clone().text())
+      assert.equal((await changed.json() as {thread:{status:string}}).thread.status,status)
+    }
+    for(const scope of [{companyId:'another-company'},{projectId:'another-project'}])assert.ok([403,404].includes((await authenticated(base,'GET',undefined,scope)).status))
+    assert.equal((await fetch(`${gateway.url}/api${base}`,{headers:{'x-company-id':companyId,'x-project-id':projectId}})).status,401)
+    assert.equal((await authenticated(`${base}/${probe.id}`,'DELETE')).status,200)
+    const remaining=await(await authenticated(base)).json() as {threads:Array<{id:string}>}
+    assert.ok(!remaining.threads.some(thread=>thread.id===probe.id))
+    assert.deepEqual((await readNativeDocument(pool,deck.id))!.document,snapshot.document,'comment CRUD must not change canonical page bytes or versions')
+    const created=await authenticated(base,'POST',{anchor,label:'选中标题',text:'请修改当前选中页的标题，保存后回复本评论。'})
     assert.equal(created.status,201,await created.clone().text())
     commentId=(await created.json() as {thread:{id:string}}).thread.id
   }
@@ -330,7 +356,7 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
   try {
     let clientNonce=randomUUID()
     if(commentId) {
-      const sent=await request(`/artifacts/${deck.id}/comments/${commentId}/send`,'POST')
+      const sent=await commentRequest(`/artifacts/${deck.id}/comments/${commentId}/send`,'POST')
       assert.equal(sent.status,200,await sent.clone().text())
       const queued=(await pool.query("SELECT event FROM agent_native_event_outbox WHERE company_id=$1 AND event->>'artifactId'=$2 AND event->>'commentId'=$3 AND event->>'type'='im.user'",[companyId,deck.id,commentId])).rows
       assert.equal(queued.length,1);assert.equal(queued[0].event.channelId,workspace.conversationId)
@@ -354,7 +380,7 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
     assert.equal((await control.readRun(run))?.status, 'succeeded')
     assert.equal(issued, calls.length)
     if(commentId) {
-      const comments=await(await request(`/artifacts/${deck.id}/comments`)).json() as {threads:Array<{id:string;anchor:string;agent?:{status:string};messages:Array<{text:string;author:{kind:string;id:string}}>}>}
+      const comments=await(await commentRequest(`/artifacts/${deck.id}/comments`)).json() as {threads:Array<{id:string;anchor:string;agent?:{status:string};messages:Array<{text:string;author:{kind:string;id:string}}>}>}
       const thread=comments.threads.find(thread=>thread.id===commentId)!
       const {decodeCommentAnchor}=await import('../../../shared/artifact-comment-anchor.js')
       assert.deepEqual(decodeCommentAnchor(thread.anchor),commentAnchor)
