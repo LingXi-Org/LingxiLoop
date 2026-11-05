@@ -15,6 +15,10 @@ on:
         description: Space-separated server stacks (empty = all)
         type: string
         default: ''
+      activate_native:
+        description: For up only; enable native editing after both server slots have converged
+        type: boolean
+        default: false
       run_id:
         description: Exact run ID for knowledge-observe only (no deployment)
         type: string
@@ -38,6 +42,7 @@ jobs:
     concurrency: { group: production-deploy, cancel-in-progress: false }
     env:
       SIGILLO_TOKEN: ${{ secrets.SIGILLO_TOKEN }}
+      SIGILLO_API_URL: https://sigillo.lingxilearn.cn
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -45,6 +50,9 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: server/build/admin-control/package-lock.json
+      - name: Keep native writes closed during protocol cutover
+        if: inputs.command == 'up' && inputs.activate_native
+        run: npm exec --yes --package=sigillo@0.14.2 -- sigillo secrets set NATIVE_ARTIFACT_WRITES_ENABLED false -p 01M1TZH9C21C1A9PFAR8E41553 -c prod
       - if: inputs.command != 'knowledge-observe' && inputs.command != 'capacity-observe'
         run: node deploy/cli.mjs ${{ inputs.command }} ${{ inputs.stacks }}
       - name: Read-only knowledge observation
@@ -52,6 +60,11 @@ jobs:
         env:
           OBSERVATION_RUN_ID: ${{ inputs.run_id }}
         run: node deploy/cli.mjs knowledge-observe "$OBSERVATION_RUN_ID"
+      - name: Activate native editing after successful server and client convergence
+        if: inputs.command == 'up' && inputs.activate_native
+        run: |
+          npm exec --yes --package=sigillo@0.14.2 -- sigillo secrets set NATIVE_ARTIFACT_WRITES_ENABLED true -p 01M1TZH9C21C1A9PFAR8E41553 -c prod
+          node deploy/cli.mjs servers app-a app-b
       - name: Read-only Worker capacity observation
         if: inputs.command == 'capacity-observe'
         run: node deploy/cli.mjs capacity-observe

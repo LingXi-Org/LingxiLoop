@@ -33,7 +33,7 @@ The job uses only fresh, dedicated local services:
   these exact local settings; production endpoints and credentials are rejected.
 - Separate HTTPS product origins `localhost:24411` / `localhost:24412`, with the
   existing isolated editor origins and a per-run certificate/SPKI exception.
-- Pinned Python Playwright 1.55.1 and its managed Chromium, on Ubuntu 24.04.
+- Pinned Python Playwright 1.55.0 and its managed Chromium, on Ubuntu 24.04.
 
 First dispatch `phase=diagnostic`. It attempts one real sample for each arm and
 Design/Slides mode, including both opening paths supported by the runner. A

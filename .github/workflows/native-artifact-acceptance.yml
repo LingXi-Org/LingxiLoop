@@ -78,7 +78,7 @@ jobs:
         with: { python-version: '3.12' }
       - name: Install the pinned real browser runner
         run: |
-          python -m pip install playwright==1.55.1
+          python -m pip install playwright==1.55.0
           python -m playwright install --with-deps chromium
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends postgresql-client poppler-utils

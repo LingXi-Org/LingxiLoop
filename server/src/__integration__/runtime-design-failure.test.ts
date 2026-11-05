@@ -4,17 +4,17 @@ import { after, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { skillIndex } from '@lingxi-org/lingxios'
 import { createWorker } from '@lingxi-org/lingxios/worker'
-import { pool } from '../db/pool.js'
+import { createNode } from '../../../shared/artifact-document.js'
+import { artifactVersionKey, prepareBatch } from '../../../shared/artifact-operations.js'
 import { DESIGN_INCOMPLETE_NOTICE, ProductRuntimePolicy } from '../agent-runtime/context.js'
-import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
+import { bindProductRun } from '../agent-runtime/identity.js'
 import { lingxiOSControl, runtimeModelConfiguration } from '../agent-runtime/runtime.js'
+import { pool } from '../db/pool.js'
 import { nativeText } from '../im/message-types.js'
 import { ensureConversationDesign } from '../modules/artifacts/facade.js'
-import { artifactSkills } from '../modules/artifacts/skills.js'
 import { readNativeDocument } from '../modules/artifacts/native-document.js'
-import { createNode } from '../../../shared/artifact-document.js'
-import { prepareBatch, artifactVersionKey } from '../../../shared/artifact-operations.js'
+import { artifactSkills } from '../modules/artifacts/skills.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
@@ -81,18 +81,13 @@ test('failed native Design save rejects false partial completion before publicat
         assert.equal(input.tool_choice, 'required', 'a failed write stops forcing prerequisite actions while preserving the native tool protocol'); business.push({ name: 'design__check', args: {} }) }
       const toolCalls = business.map((tool, position) => ({ index: position, id: `design-failure-business-${calls}`, type: 'function', function: { name: tool.name, arguments: JSON.stringify(tool.args) } }))
       if (calls >= 9) {
-        let operation: { kind: 'append' | 'replace'; supersedes: string[] } = { kind: 'append', supersedes: [] }
+        const operation = { kind: 'append', supersedes: [] }
         if (calls === 10) {
           streamingCorrectionSeen = (input.messages as Array<{ content?: unknown }>).some(message => typeof message.content === 'string' && message.content.includes('The public response was withheld by the trusted streaming safety policy.'))
           assert.equal(streamingCorrectionSeen, true, 'the failed streaming candidate must receive the native bounded correction')
-          const corrections = (input.messages as Array<{ content?: unknown }>).map(message => message.content)
-            .filter((content): content is string => typeof content === 'string' && content.startsWith('This generation repairs the explicitly selected candidate sources.'))
-          assert.equal(corrections.length, 1, 'the repair must identify its exact failed candidate')
-          const selected = /using exactly this operation: (\{.*?\})\. Do not append/.exec(corrections[0]!)
-          assert.ok(selected, 'the native correction supplies its required operation')
-          operation = JSON.parse(selected[1]!)
-          assert.equal(operation.kind, 'replace'); assert.equal(operation.supersedes.length, 1)
-          assert.equal(typeof operation.supersedes[0], 'string'); assert.ok(operation.supersedes[0]!.length > 0)
+          // SDK 4 records failed replacement targets only after a public delta
+          // was acknowledged. This candidate fails its first safety assessment,
+          // so there is no published part to replace; the truthful answer appends.
         }
         toolCalls.push({ index: 0, id: `design-failure-answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation,
           answer: calls === 9 ? falseClaim : fallback, commentary: '', outcome: { status: 'partial', gaps: ['Requested new canvas was not saved because its version changed.'] } }) } })
@@ -147,9 +142,12 @@ test('failed native Design save rejects false partial completion before publicat
     const provisionalFalseClaimObserved = JSON.stringify(events.filter(event => event.visibility === 'user')).includes(falseClaim)
     assert.equal(provisionalFalseClaimObserved, false)
     assert.equal(events.filter(event => event.kind === 'public.text.delta').map(event => event.data.text).join(''), fallback, 'only truthful text may enter user-visible deltas')
+    assert.equal(events.filter(event => event.kind === 'public.text.ended' && event.data.reason === 'failed').length, 0, 'a fully withheld candidate must not create a failed public source to replace')
     const seals = events.filter(event => event.kind === 'public.text.sealed')
     assert.equal(seals.length, 1, 'the rejected false candidate must never acquire a sealed source')
     assert.equal(seals[0].data.attemptId, `${identity.runId}:1:model:10`)
+    assert.equal(seals[0].data.operation, 'append')
+    assert.deepEqual(seals[0].data.supersedes, [])
     assert.equal(final.message.publicTextSources?.segments.length, 1)
     assert.equal(final.message.publicTextSources.segments[0].partId, seals[0].data.partId)
     const delivered = im.messages.filter(message => message.channelId === channelId && message.payload.role === 'assistant').map(message => nativeText(message.payload))
