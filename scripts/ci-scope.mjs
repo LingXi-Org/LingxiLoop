@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync } from 'node:fs'
 import { basename } from 'node:path'
-import { SMOKE_FILES } from '../server/integration-suite.mjs'
+import { SMOKE_FILES, DURABLE_QUEUE_ALLOWANCE_MS } from '../server/integration-suite.mjs'
 import { runtimeSharedPaths } from './ci-scope-paths.mjs'
 
 // Core boundaries run for ordinary server changes. Extra owning tests are
@@ -11,6 +11,7 @@ const HISTORICAL_FILES = [
   'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts',
 ]
 const OWNERS = [
+  [/^server\/src\/__integration__\/_queue-capacity-fixture\.ts$/, Object.keys(DURABLE_QUEUE_ALLOWANCE_MS)],
   [/^server\/src\/(?:agent-runtime\/(?:context|skill-context)|modules\/artifacts\/(?:skills|agent-tools)|modules\/learning\/teacher-preset)\.ts$/, ['runtime-first-action-contracts.test.ts', 'runtime-design-failure.test.ts', 'runtime-teaching-scaffold.test.ts']],
   [/^server\/src\/(?:im\/(?:retired-visualize|visualize-router|interaction-admission)|agent-runtime\/retired-capabilities)\.ts$|^shared\/(?:retired-visualize|assistant-directive-parser)\.ts$/, ['retired-visualize.test.ts']],
   [/^server\/src\/db\/(?:migrate\.ts|migrations\/0062_case_options\.sql)$|^server\/scripts\/bootstrap-runtime-patch-test-db\.mjs$/, ['case-options-migration.test.ts', 'cases.test.ts']],

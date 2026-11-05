@@ -6,7 +6,7 @@
 import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runProduct58MigrationTests, runFormal19Product60Tests, runFormal20Product60Tests, runFormal21Product61Tests, runFormal22Product61Tests, runFormal23Product61Tests, runFormal24ProductTests, runTestChild } from './run-historical-migration-tests.mjs'
 import { releaseVersions } from '@lyyzka/lingxios'
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs'
-import { parseIntegrationArgs, selectIntegrationFiles } from './integration-suite.mjs'
+import { parseIntegrationArgs, selectIntegrationFiles, integrationOwnerAllowanceMs } from './integration-suite.mjs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 // Load the developer's .env so RESEND_API_KEY / EMAIL_DOMAIN /
@@ -90,7 +90,8 @@ if (!process.env.AGENT_OS_RESPONSE_POLICY) process.env.AGENT_OS_RESPONSE_POLICY 
 const groups = partitionMigrationTests(selectedFiles)
 const started = performance.now(), records = []
 const liveArtifactQualification = process.env.LINGXIOS_LIVE_ARTIFACTS === '1' && selectedFiles.length === 1 && selectedFiles[0] === 'runtime-first-action-contracts.test.ts'
-const budgetMs = liveArtifactQualification ? 600_000 : mode === 'full' ? 1_500_000 : mode === 'selected' ? 360_000 : 180_000
+const budgetMs = (liveArtifactQualification ? 600_000 : mode === 'full' ? 1_500_000 : mode === 'selected' ? 360_000 : 180_000)
+  + integrationOwnerAllowanceMs(mode,selectedFiles)
 let code = 0
 for (const name of groups.current) {
   const remaining = budgetMs - (performance.now() - started)
