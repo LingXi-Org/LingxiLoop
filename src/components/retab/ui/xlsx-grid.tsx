@@ -231,7 +231,7 @@ export function XlsxGrid({
       <div
         className="bg-card text-muted-foreground flex flex-1 items-center justify-center text-xs"
         role="status"
-        aria-label={`${sheetName} is empty`}
+        aria-label={`工作表“${sheetName}”为空`}
       >
         工作表为空
       </div>

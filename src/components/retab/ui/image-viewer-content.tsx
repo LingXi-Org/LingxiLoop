@@ -416,7 +416,7 @@ export function ImageViewerContent({
   const countLabel =
     frameSource.kind === "tiff"
       ? `第 ${Math.min(currentFrameNumber, frameCount)} 页，共 ${frameCount} 页`
-      : `${frameCount} image${frameCount === 1 ? "" : "s"}`;
+      : `${frameCount} 张图片`;
   const zoomOut = React.useCallback(() => {
     beginZoomMotion();
     setViewerScale(clamp(scale / 1.2, MIN_VIEWER_SCALE, MAX_VIEWER_SCALE));

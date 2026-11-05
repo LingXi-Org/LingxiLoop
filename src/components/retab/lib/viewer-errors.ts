@@ -354,7 +354,7 @@ function unknownErrorDefaultRetry(context: ViewerErrorContext) {
 function resourceErrorUserMessage(error: ResourceError) {
   if (error.kind === "http_error") {
     return error.status
-      ? `Failed to load file: ${error.status}.`
+      ? `无法加载文件（状态码 ${error.status}），请稍后重试。`
       : "无法加载文件，请重试。";
   }
   if (error.kind === "fetch_failed") return "无法加载文件，请重试。";

@@ -495,17 +495,17 @@ const markdownComponents = {
         </details>
       );
     }
-    if (trusted && componentName === "标签页") {
+    if (trusted && componentName === "Tabs") {
       return <MarkdownTabs node={readHastElement(node)} />;
     }
-    if (trusted && componentName === "图片") {
+    if (trusted && componentName === "Image") {
       const componentProps = readComponentProps(
         readDataProperty(node, "dataPretextComponentProps"),
       );
       return (
         <MarkdownImageSurface
           alt={readOptionalString(componentProps.alt) ?? ""}
-          componentName="图片"
+          componentName="Image"
           height={readOptionalNumber(componentProps.height)}
           src={readOptionalString(componentProps.src) ?? ""}
           title={readOptionalString(componentProps.title)}
@@ -513,7 +513,7 @@ const markdownComponents = {
         />
       );
     }
-    if (trusted && componentName === "视频") {
+    if (trusted && componentName === "Video") {
       const componentProps = readComponentProps(
         readDataProperty(node, "dataPretextComponentProps"),
       );
@@ -1388,7 +1388,7 @@ function markdownCodeElementProps({
 }) {
   return {
     "aria-label": metadata.showLineNumbers
-      ? `${language} numbered code lines`
+      ? `${language} 带行号的代码`
       : undefined,
     className: [
       "block font-mono text-[0.9em] leading-[1.45]",
@@ -1413,7 +1413,7 @@ function markdownCodeElementProps({
     "data-pretext-code-virtualized": virtualized ? "" : undefined,
     role: metadata.showLineNumbers ? "list" : undefined,
     style: metadata.showLineNumbers
-      ? { counterSet: `第 ${lineNumberStart + start - 1} 行` }
+      ? { counterSet: `line ${lineNumberStart + start - 1}` }
       : undefined,
   };
 }
@@ -1436,7 +1436,7 @@ function markdownVirtualizedCodeCanvasStyle({
   return {
     "--markdown-code-line-height": markdownCodeLineHeightCss(language),
     counterSet: metadata.showLineNumbers
-      ? `第 ${lineNumberStart + start - 1} 行`
+      ? `line ${lineNumberStart + start - 1}`
       : undefined,
     height: `calc(${Math.max(totalLines, 1)} * var(--markdown-code-line-height))`,
     minWidth: markdownCodeMinWidth(lineWidthCh, metadata.showLineNumbers),
@@ -1570,7 +1570,7 @@ function MarkdownImageSurface({
   return (
     <figure
       aria-label={
-        state === "failed" ? `Image failed: ${alt}` : alt || title || "图片"
+        state === "failed" ? `图片加载失败：${alt}` : alt || title || "图片"
       }
       className="my-5 w-fit max-w-full"
       data-pretext-component={componentName}
@@ -1698,9 +1698,9 @@ function MarkdownVideoSurface({
   if (!safeSrc) {
     return (
       <div
-        aria-label={`Video blocked: ${label}`}
+        aria-label={`视频已被拦截：${label}`}
         className="bg-muted/35 text-muted-foreground my-5 rounded-md border border-dashed p-4 text-sm"
-        data-pretext-component="视频"
+        data-pretext-component="Video"
         data-pretext-video-state="blocked"
         role="group"
       >
@@ -1710,9 +1710,9 @@ function MarkdownVideoSurface({
   }
   return (
     <figure
-      aria-label={failed ? `Video failed to load: ${label}` : label}
+      aria-label={failed ? `视频加载失败：${label}` : label}
       className="my-5 max-w-full"
-      data-pretext-component="视频"
+      data-pretext-component="Video"
       data-pretext-video-state={failed ? "failed" : "ready"}
       role="group"
     >
@@ -1755,7 +1755,7 @@ function MarkdownTabs({ node }: { node: MarkdownHastElement | null }) {
     setSelected((index + tabs.length) % tabs.length);
 
   return (
-    <div className="my-5" data-pretext-component="标签页">
+    <div className="my-5" data-pretext-component="Tabs">
       <div aria-label={label} className="flex gap-1 border-b" role="tablist">
         {tabs.map((tab, index) => {
           const tabProps = readComponentProps(
