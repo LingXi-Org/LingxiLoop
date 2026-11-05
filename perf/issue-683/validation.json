@@ -92,6 +92,26 @@
       "legacyMetadataPreserved": true,
       "videoRequests": [],
       "newProviderCalls": 0
+    },
+    "harnessSplit": {
+      "sourceCommit": "1bd9e539bea64d9bfd356d68c7dcf3e7e4fdbaff",
+      "preSplitCommit": "b6782230bf6d1ca81972412e34eee55ff3fb5aff",
+      "runtime": "3.8.25",
+      "assembledSourceHash": "2cd6afd4037eb4596c6ef9b3ee1fdc6d00540d5fa3e05ee0820ba79f5e92e2cb",
+      "assembledPreSplitHash": "ed91050db5636b67511c9622dd75b87d50b92a28779772603468a823f551417d",
+      "nativeSourceAdmissionHash": "8c8b2433d1df76cf30f8410ce83278588ba2a19c2c99360dc341a37ab20369d1",
+      "candidateMatchesSource": true,
+      "allToolContractHashesMatch": true,
+      "allSkillIndexesMatch": true,
+      "unitPassed": 209,
+      "slidesNativePassed": 7,
+      "designNativePassed": 1,
+      "pinRewrite": false,
+      "changedCatalogRejectedBeforeContext": true,
+      "guidanceDeferred": true,
+      "realProviderCalls": 0,
+      "productionActions": 0,
+      "historicalPartialSamplesQualifyThisCandidate": false
     }
   },
   "ci": {
@@ -99,7 +119,8 @@
     "initialConclusion": "failure",
     "initialFailure": "pre-existing Design test expected the obsolete transaction_rolled_back code",
     "correction": "expect version_conflict and assert version/refresh diagnostics without relaxing file/publication guards",
-    "finalRun": "see final handoff"
+    "finalRun": "see final handoff",
+    "splitFinalCi": "pending at this evidence commit; see PR checks and final handoff"
   },
   "independentReview": "parent sole integrator pending",
   "production": "not deployed by this worker"

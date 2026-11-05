@@ -11,13 +11,13 @@ Local scope/selector checks pass20/20 after linking the existing dependency cach
 The first run without node_modules failed three subprocess guard assertions;
 the dependency-linked rerun passed. This local cache contains an older SDK and
 does not qualify formal25 native behavior. Exact dependency CI is required.
-The production source changes from c04df0e6 are retained without editing them.
+That preparation retained the production source changes from c04df0e6; the follow-up below intentionally splits out its guidance changes.
 All four real-provider samples remain partial; the earlier source evidence does
 not establish stable speedup or real teaching acceptance.
 
-## Outstanding release compatibility gate
+## Pre-split release compatibility gate (b6782230)
 
-This candidate changes the registered Slides skill body in
+The pre-split b6782230 candidate changes the registered Slides skill body in
 `server/src/modules/artifacts/skills.ts`. The published formal25 harness includes
 each skill index/hash in its fingerprint: `src/skills/definition.ts` hashes the
 whole skill, and `src/harness/profile.ts` includes those indexes when assembling
@@ -45,3 +45,7 @@ change or SDK provenance rewrite is a substitute for this gate.
 This merge preparation does not implement or execute that missing cutover path.
 PR696 remains unmerged. Production697 is verified healthy; its container/public
 checks do not establish the696 gate or production IM/SLA acceptance.
+
+## Compatible follow-up
+
+The guidance-only changes are now deferred, rather than releasing a changed harness through ordinary convergence. `skills.ts` and the added design_systems description sentence match main exactly; the new-resource typography fix and compatible CAS diagnostics remain. See [HARNESS-COMPATIBILITY.md](HARNESS-COMPATIBILITY.md) for both actual fingerprint layers, the exact source capture, native pin regression and remaining boundaries. No release gates are changed or bypassed, and no production deployment is started. Historical older-cache checks above do not qualify this follow-up: its checks use the exact installed formal25 package.

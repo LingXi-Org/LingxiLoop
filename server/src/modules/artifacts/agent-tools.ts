@@ -313,7 +313,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
       return { ok: true, value: { result: snapshot, artifactId: snapshot.id } }
     } }))
   if (kind === 'slides') tools.push(
-    nativeTool('slides.design_systems', agentArtifactSchemas.design_systems, { description: 'List this deck\'s installed design systems and their actual files. Requires an existing deck: call slides.current first and slides.create if none exists. Use read_file to inspect tokens, styles and templates.', effect: 'read', approval: false, authorize,
+    nativeTool('slides.design_systems', agentArtifactSchemas.design_systems, { description: 'List this deck\'s installed design systems and their actual files. Use read_file to inspect tokens, styles and templates.', effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await required(context, input), api = application(context).api
         const index = await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/deck.json')

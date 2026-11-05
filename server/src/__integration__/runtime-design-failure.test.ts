@@ -54,8 +54,8 @@ test('failed native Design save rejects false partial completion before publicat
       } } })
       if (calls <= 7) assert.equal(input.tool_choice?.function?.name, business[0]?.name, 'each native prerequisite uses one published required tool selection')
       if (calls === 8) {
-        assert.match(JSON.stringify(input.messages), /version_conflict/)
-        assert.match(JSON.stringify(input.messages), /refresh/)
+        assert.ok(JSON.stringify(input.messages).includes('version_conflict'),'model must receive the supported conflict code')
+        assert.ok(JSON.stringify(input.messages).includes('refresh'),'model must receive refresh recovery guidance')
         assert.notEqual(typeof input.tool_choice, 'object', 'a failed write must stop forcing prerequisite actions'); business.push({ name: 'design__check', args: {} }) }
       const toolCalls = business.map((tool, position) => ({ index: position, id: `design-failure-business-${calls}`, type: 'function', function: { name: tool.name, arguments: JSON.stringify(tool.args) } }))
       if (calls >= 9) {
