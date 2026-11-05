@@ -336,3 +336,11 @@ The local adaptations retain project tokens/icons, accessible labels and reduced
 motion, scope the panels to the workspace, and keep the nonmodal Canvas iframe
 mounted across folding and responsive placement changes. The MIT license is
 retained at `public/licenses/shadcn.txt`.
+
+## open-claude-ui
+
+Chat/composer metrics and typography fallbacks are adapted from [Caho1/open-claude-ui](https://github.com/Caho1/open-claude-ui/tree/2d56ab417f888e8c77f5d5090f53c1f65a05ab0b). Copyright (c) 2026 Caho1, MIT; full license: [third_party/open-claude-ui/LICENSE](third_party/open-claude-ui/LICENSE). Anthropic proprietary fonts are not distributed. LingxiLoop retains its own brand tokens.
+
+## react-syntax-highlighter
+
+Code blocks use [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter) 16.1.2, its asynchronous light Prism renderer and One Light/One Dark themes. Copyright (c) 2019 Conor Hastings, MIT; full license: [public/licenses/react-syntax-highlighter.txt](public/licenses/react-syntax-highlighter.txt).

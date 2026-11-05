@@ -1,11 +1,12 @@
+import { retiredVisualizationRanges } from '@/lib/retired-visualizations'
 import { type TextMessagePartComponent, type TextMessagePartProps, TextMessagePartProvider, useAuiState } from '@assistant-ui/react'
-import { useMemo } from 'react'
-import { answerTextOffset } from '@/lib/answerSegment'
-import { answerDisplayRunning, answerDisplaySlice } from '@/lib/answerSegmentDisplay'
-import { TextOffsetContext } from './TextOffsetContext'
+import { Fragment, useMemo } from 'react'
 import { legacyVisualizeReferences } from '../../../../shared/retired-visualize'
 import { ArchivedVisualizeReferences } from './ArchivedVisualizeReferences'
-export function AnswerText({part,Text,readOnly}: {part:TextMessagePartProps;Text:TextMessagePartComponent;readOnly:boolean}) {
+import { answerTextOffset } from '@/lib/answerSegment'
+import { answerDisplayRunning, answerDisplaySlice } from '@/lib/answerSegmentDisplay'
+import { TextOffsetContext } from '@/components/assistant-ui/text-offset-context'
+export function AnswerText({part,Text,readOnly = false}: {part:TextMessagePartProps;Text:TextMessagePartComponent;readOnly?:boolean}) {
   const message = useAuiState(state=>state.message)
   const textOffset = useAuiState(state=>answerTextOffset(state.message.parts,state.message.parts.indexOf(state.part)))
   const partIndex = useAuiState(state=>state.message.parts.indexOf(state.part))
@@ -19,17 +20,25 @@ export function AnswerText({part,Text,readOnly}: {part:TextMessagePartProps;Text
   const text = slice?.text ?? part.text, offset = slice?.offset ?? textOffset
   const running=part.status.type==='running' || slice?.running===true
   if (!text) return null
-  const body = slice && (text!==part.text || offset!==textOffset || running!==(part.status.type==='running'))
-    ? <TextOffsetContext.Provider value={offset}><TextMessagePartProvider text={text} isRunning={running}><Text {...part} text={text} status={running?{type:'running'}:part.status}/></TextMessagePartProvider></TextOffsetContext.Provider>
-    : <Text {...part}/>
-  if (message.role !== 'assistant' || running || message.status?.type !== 'complete') return body
-  const references = legacyVisualizeReferences(text)
-  if (!references.length) return body
+  const ranges = message.role === 'assistant' ? retiredVisualizationRanges(text) : []
+  const render = (start: number, end: number) => start < end && <TextOffsetContext.Provider value={offset + start}>
+    <TextMessagePartProvider text={text.slice(start,end)} isRunning={running}>
+      <Text {...part} text={text.slice(start,end)} status={running ? {type:'running'} : part.status} />
+    </TextMessagePartProvider>
+  </TextOffsetContext.Provider>
+  if (!ranges.length) return text === part.text && offset === textOffset && running === (part.status.type === 'running')
+    ? <Text {...part} /> : render(0,text.length)
   const custom = message.metadata.custom
   const source = typeof custom.sourceMessageId === 'string' ? custom.sourceMessageId
     : typeof custom.imMessageId === 'string' && typeof custom.sequence === 'number' && custom.sequence > 0 ? custom.imMessageId
     : custom.harness ? undefined : message.id
-  return <>{body}<ArchivedVisualizeReferences key={JSON.stringify([message.id,source,custom.conversationId])}
-    references={references} conversationId={typeof custom.conversationId === 'string' ? custom.conversationId : undefined}
-    sourceMessageId={source} readOnly={readOnly} /></>
+  const archive = !running && message.status?.type === 'complete' && <ArchivedVisualizeReferences
+    key={JSON.stringify([message.id,source,custom.conversationId])} references={legacyVisualizeReferences(text)}
+    conversationId={typeof custom.conversationId === 'string' ? custom.conversationId : undefined} sourceMessageId={source} readOnly={readOnly}/>
+  let cursor = 0
+  return <>{ranges.map(({start,end}) => {
+    const before = render(cursor,start)
+    cursor = end
+    return <Fragment key={start}>{before}<p role="note" className="retired-visualization text-sm text-muted-foreground">此可视化功能已下线。</p></Fragment>
+  })}{render(cursor,text.length)}{archive}</>
 }

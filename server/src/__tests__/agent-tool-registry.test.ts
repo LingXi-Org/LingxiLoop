@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { productSkills } from '../agent-runtime/system-skills.js'
 import { createProductTools } from '../agent-runtime/tools.js'
 
 test('the LingxiOS registry exposes every product capability exactly once', () => {
@@ -11,4 +12,9 @@ test('the LingxiOS registry exposes every product capability exactly once', () =
     'polls', 'chat', 'knowledge', 'routines', 'memory',
   ])
   assert.deepEqual(actions.filter(action => action.startsWith('visualize.')), [])
+})
+
+test('retired visualizations expose no skill, activation or authoring instructions', () => {
+  assert.deepEqual(productSkills.filter(skill => skill.name === 'visualize' || skill.actions.some(action => action.startsWith('visualize.'))), [])
+  assert.ok(productSkills.every(skill => !/visualize\.(?:save|read|chart|diagram|export)|ZCode/.test(skill.body)))
 })

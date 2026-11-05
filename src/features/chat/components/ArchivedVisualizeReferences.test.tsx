@@ -10,7 +10,7 @@ test('historical cards are inert, escaped, and offer scoped export rather than a
   assert.match(html, /交互功能已停用/)
   assert.match(html, /下载历史内容/)
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/)
-  assert.match(html, /\/work\/diagram.html/)
+  assert.doesNotMatch(html, /\/work\/diagram.html/)
   assert.doesNotMatch(html, /<iframe|<script|srcdoc|follow.up|data-visualize-guest/)
   assert.match(html, /type="button"/)
 })

@@ -33,7 +33,6 @@ export function ArchivedVisualizeReferences({ references, conversationId, source
     <p className="text-muted-foreground">历史可视化的交互功能已停用。原始内容与个人保存状态可导出留存。</p>
     {references.map(reference => <div key={`${reference.start}:${reference.path}`} className="space-y-1">
       {reference.title && <p className="font-medium break-words">{reference.title}</p>}
-      <p className="text-muted-foreground break-all">{reference.path}</p>
       {!readOnly && conversationId && sourceMessageId && <button type="button"
         className="cursor-pointer rounded px-2 py-1 text-primary underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring aria-disabled:cursor-wait aria-disabled:opacity-60"
         aria-disabled={pending !== null} aria-busy={pending === reference.path || undefined} onClick={() => { void download(reference) }}>

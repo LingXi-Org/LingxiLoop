@@ -66,7 +66,8 @@ export default defineConfig({
         } catch (error) { next(error) }
       })
     },
-  }],  // Retab format workers lazy-load their parsers as native ES modules.
+  }],
+  // Retab format workers lazy-load their parsers as native ES modules.
   worker: { format: 'es' },
   // Disposable API fixtures use distinct caches. Concurrent dev servers with
   // different proxy defines must not replace each other's optimized modules.

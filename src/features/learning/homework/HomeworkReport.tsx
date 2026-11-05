@@ -44,11 +44,11 @@ export function HomeworkReport({ report, references = [], sourceId }: { report: 
 export function HomeworkSubmissionView({ submission, framed = true }: { submission: HomeworkSubmission; framed?: boolean }) {
   const content = <div className="w-full space-y-4">
     <p className="text-xs text-muted-foreground">{homeworkStatus[submission.reviewStatus]}{submission.late && ' · 迟交'}</p>
-    <section aria-label="提交的作答" className="space-y-3"><h3 className="font-medium">作答</h3><ForumBody content={submission.answer.text} document={submission.answer.editorDocument} evidence />
+    <section aria-label="提交的作答" className="space-y-3"><h3 className="font-medium">作答</h3><ForumBody purpose="homework" content={submission.answer.text} document={submission.answer.editorDocument} evidence />
     <details><summary className="cursor-pointer text-xs focus-visible:outline-2">核对保存的作答原文</summary><pre className="whitespace-pre-wrap break-words text-sm">{submission.answer.text}</pre><p className="text-xs text-muted-foreground">这是本次提交保存的文本；若原文已缺失符号，请核对原始学习记录并重新保存作答。</p></details><ForumFiles links={submission.answer.links} attachments={submission.answer.attachments} /></section>
     <HomeworkReport report={submission.report} references={submission.conversationReferences} sourceId={submission.id} />
     <ConversationReferences references={submission.conversationReferences} id={submission.id}/><p className="text-xs text-muted-foreground">学习评价供教师参考，不等同于正式成绩。</p>
-    {submission.feedback && <div className="space-y-2 border-s-2 ps-3 text-sm"><p>教师意见</p><ForumBody content={submission.feedback} document={submission.feedbackDocument}/><ForumFiles links={submission.feedbackLinks ?? []} attachments={submission.feedbackAttachments ?? []}/></div>}
+    {submission.feedback && <div className="space-y-2 border-s-2 ps-3 text-sm"><p>教师意见</p><ForumBody purpose="homework" content={submission.feedback} document={submission.feedbackDocument}/><ForumFiles links={submission.feedbackLinks ?? []} attachments={submission.feedbackAttachments ?? []}/></div>}
   </div>
   return framed ? <MemoCard label={`${submission.learnerName}第 ${submission.version} 次提交`} author={submission.learnerName} authorId={submission.learnerId} authorAvatarUrl={submission.learnerAvatarUrl} createdAt={submission.submittedAt} actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>{content}</MemoCard> : content
 }

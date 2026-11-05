@@ -1,11 +1,10 @@
-@import './case-fonts.css';
 
 [data-cases-shell] { --workspace-chrome-surface: #f6f6f4; }
 .dark [data-cases-shell] { --workspace-chrome-surface: var(--sidebar); }
 [data-shell-module=cases] { border-radius: 14px; }
 [data-cases-shell] [data-workspace-module][aria-current=page] { background: #eaf4ee; color: #2e7d5b; }
 .dark [data-cases-shell] [data-workspace-module][aria-current=page] { background: var(--sidebar-accent); color: var(--sidebar-primary); }
-.cases-page { --primary: var(--brand); --primary-foreground: var(--brand-foreground); container: cases / inline-size; font-family: 'Inter Variable', 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif; font-size: 14px; line-height: 1.5; }
+.cases-page { --primary: var(--brand); --primary-foreground: var(--brand-foreground); container: cases / inline-size; font-family: var(--font-sans); --font-heading: var(--font-serif); font-size: 14px; line-height: 1.5; }
 .cases-page :is(button,a,summary):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .cases-page .case-page-header { min-height: 56px; padding: 0 12px 0 20px; gap: 8px; border: 0; }
 .cases-page .case-page-header h1 { font-family: inherit; font-size: 13.5px; font-weight: 500; letter-spacing: normal; }
@@ -22,7 +21,7 @@
 .case-card-link { border-radius: 3px; color: inherit; text-decoration: none; }
 .case-card-link:hover { color: inherit; text-decoration: none; }
 .case-featured .case-card-copy { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.case-featured h2 { margin: 0; font-family: 'Noto Serif SC', serif; font-size: 27px; font-weight: 600; line-height: 1.4; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.case-featured h2 { margin: 0; font-family: var(--font-serif); font-size: 27px; font-weight: 600; line-height: 1.4; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .case-featured .case-card-copy > p { margin: 0; font-size: 15px; line-height: 1.8; color: var(--case-secondary); overflow-wrap: anywhere; }
 .cases-page { --case-secondary: #3d3d3a; --case-muted: #6b6b66; --case-outline: #d8d8d3; }
 .dark .cases-page { --case-secondary: var(--foreground); --case-muted: var(--muted-foreground); --case-outline: var(--border); }
@@ -62,33 +61,23 @@
 .case-reader-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .case-reader-tags > span { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid var(--case-outline); border-radius: 6px; font-size: 12px; font-weight: 500; color: var(--case-secondary); }
 .case-reader-tags > span:first-child { align-self: center; min-height: 22px; border-color: transparent; background: var(--muted); }
-.case-reader-heading > h1 { margin: 0; font-family: 'Noto Serif SC', serif; font-size: 34px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.case-reader-heading > h1 { margin: 0; font-family: var(--font-serif); font-size: 34px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .case-reader-author { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13.5px; color: var(--case-muted); }
 .case-reader-author > span:nth-child(2) { color: var(--case-secondary); }
 .case-reader-author [data-slot=avatar] { width: 26px; height: 26px; font-size: 11px; }
 .case-reading-layout { display: flex; gap: 64px; align-items: flex-start; padding-bottom: 48px; }
 .case-reading-column { flex: 1; min-width: 0; max-width: 680px; display: flex; flex-direction: column; gap: 18px; }
 .case-reader-cover { position: relative; height: 300px; border-radius: 10px; }
-.case-reader .case-body { font-size: 16px; line-height: 1.9; color: var(--case-secondary); }
-.case-reader .case-body :is(h1,h2,h3,h4,h5,h6) { scroll-margin-block-start: 24px; font-family: 'Noto Serif SC', serif; color: var(--foreground); font-weight: 600; }
-.case-reader .case-body :is(h1,h2) { font-size: 21px; line-height: 1.5; letter-spacing: -.005em; margin-block: 34px 18px; }
-.case-reader .case-body h3 { font-size: 18px; }
-.case-reader .case-body .bn-editor { padding: 0; background: transparent; font-family: inherit; color: inherit; font-size: inherit; line-height: inherit; min-height: 0; }
-.case-reader .bn-editor > .bn-block-group { display: flex; flex-direction: column; gap: 18px; }
-.case-reader .bn-block-content { padding-block: 0; }
-.case-reader .case-body .bn-editor :is(h1,h2) { margin-block: 16px 0; }
-.case-reader .case-body [data-content-type=heading] { --level: 21px; }
-.case-reader .case-body blockquote { margin-block: 22px; padding: 4px 0 4px 20px; font-family: 'Noto Serif SC', serif; font-size: 18px; line-height: 1.8; color: var(--foreground); border-inline-start: 2px solid var(--case-outline); }
-.case-reader .case-markdown > * { margin-block: 0; }
-.case-reader .case-markdown > * + * { margin-block-start: 18px; }
-.case-reader .case-markdown > :is(h1,h2) { margin-block: 34px 18px; }
-.case-reader .case-markdown :is(p,blockquote) { line-height: inherit; }
-.case-reader .case-markdown :is(strong,b) { font-weight: 600; color: var(--foreground); }
-.case-reader .case-body .case-markdown table { font-size: 15px; line-height: 1.7; }
+.case-reader .case-body {   color: var(--case-secondary); }
+.case-reader .case-body :is(h1,h2,h3,h4,h5,h6) { scroll-margin-block-start: 24px;  color: var(--foreground);  }
+.case-reader .case-body :is(h1,h2) {    margin-block: 34px 18px; }
+.case-reader .case-body .bn-editor { padding: 0; background: transparent;  color: inherit;   min-height: 0; }
+.case-reader .case-body blockquote { margin-block: 22px; padding: 4px 0 4px 20px;    color: var(--foreground); border-inline-start: 2px solid var(--case-outline); }
+.case-reader .case-markdown :is(strong,b) {  color: var(--foreground); }
 .case-reader .case-body .case-markdown :is(th,td) { border: 0; border-block-end: 1px solid var(--border); padding: 12px 12px; }
 .case-reader .case-body .case-markdown :is(th,td):first-child { padding-inline-start: 0; }
 .case-reader .case-body .case-markdown :is(th,td):last-child { padding-inline-end: 0; }
-.case-reader .case-body .case-markdown th { background: transparent; font-weight: 600; color: var(--foreground); }
+.case-reader .case-body .case-markdown th { background: transparent;  color: var(--foreground); }
 .case-outline { flex: 0 0 220px; position: sticky; top: 16px; }
 .case-outline > p { margin: 0 0 8px; font-size: 12px; color: var(--case-muted); }
 .case-outline nav, .case-mobile-outline nav { border-inline-start: 1px solid var(--border); }
@@ -138,7 +127,7 @@
 .case-cover-upload:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
 .case-hero-copy { display: flex; min-width: 0; flex-direction: column; }
 .case-eyebrow { margin-bottom: 8px; color: var(--brand); font-size: 13px; font-weight: 500; }
-.case-title, .cases-page .case-title-input { font-family: var(--font-heading); font-size: 26px; line-height: 1.3; font-weight: 600; letter-spacing: -.015em; overflow-wrap: anywhere; }
+.case-title, .cases-page .case-title-input { font-family: var(--font-serif); font-size: 26px; line-height: 1.3; font-weight: 600; letter-spacing: -.015em; overflow-wrap: anywhere; }
 .cases-page .case-title-input[data-slot=textarea] { padding: 0; min-height: 36px; border: 0; border-radius: 6px; background: transparent; box-shadow: none; }
 .case-summary { margin-top: 12px; font-size: 16px; line-height: 1.7; color: var(--muted-foreground); overflow-wrap: anywhere; }
 .case-metadata, .case-edit-metadata { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-top: 20px; font-size: 13px; color: var(--muted-foreground); }
@@ -160,8 +149,6 @@
 .case-inline-editor:has(.bn-editor:focus-visible) > .case-editor-label { outline: 2px solid var(--ring); outline-offset: 2px; color: var(--foreground); }
 .cases-page .case-inline-editor :is(.bn-container, .bn-editor) { min-width: 0; max-width: 100%; }
 .cases-page .case-inline-editor [data-content-type=codeBlock] > pre { max-width: 100%; overflow-x: auto; }
-.cases-page[data-case-editing] .case-body [data-content-type=heading][data-level="2"] { --level: 20px; }
-.cases-page[data-case-editing] .case-body [data-content-type=heading][data-level="3"] { --level: 17px; }
 .cases-page .case-inline-editor .bn-editor { padding: 0; background: transparent; font-size: inherit; line-height: inherit; }
 .cases-page .case-summary .bn-editor { min-height: 64px; }
 .cases-page[data-case-editing] .case-body .bn-editor { min-height: 320px; }
@@ -176,7 +163,7 @@
 }
 .case-markdown { font-size: inherit; line-height: inherit; }
 .case-text-cover { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; min-height: inherit; overflow: hidden; border-radius: 10px; background-color: var(--case-cover-background); background-image: radial-gradient(var(--case-cover-dots) 1px, transparent 1px); background-size: 14px 14px; color: #1a1a19; }
-.case-text-cover > span { max-width: 90%; text-align: center; overflow-wrap: anywhere; font-family: 'STIX Two Text', 'Noto Serif SC', serif; font-style: italic; font-size: 64px; font-weight: 400; line-height: 1.1; letter-spacing: -.02em; }
+.case-text-cover > span { max-width: 90%; text-align: center; overflow-wrap: anywhere; font-family: var(--font-serif); font-style: italic; font-size: 64px; font-weight: 400; line-height: 1.1; letter-spacing: -.02em; }
 .case-text-cover > .case-cover-long-text { font-size: 34px; }
 .case-reader-cover .case-text-cover > span { font-size: 84px; }
 .case-reader-cover .case-text-cover > .case-cover-long-text { font-size: 48px; }
@@ -192,7 +179,7 @@
 .case-compose-scroll { flex: 1; min-width: 0; overflow-y: auto; overscroll-behavior: contain; }
 .case-edit-document { box-sizing: content-box; max-width: 680px; margin: 0 auto; padding: 32px 40px 280px 80px; display: flex; flex-direction: column; gap: 18px; }
 .cases-page .case-edit-title[data-slot=textarea], .cases-page .case-edit-summary[data-slot=textarea] { width: 100%; padding: 0; border: 0; border-radius: 4px; box-shadow: none; background: transparent; resize: none; min-height: 0; field-sizing: content; overflow: hidden; }
-.cases-page .case-edit-title[data-slot=textarea] { margin-top: 8px; font-family: 'Noto Serif SC', serif; font-size: 34px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; }
+.cases-page .case-edit-title[data-slot=textarea] { margin-top: 8px; font-family: var(--font-serif); font-size: 34px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; }
 .cases-page .case-edit-summary[data-slot=textarea] { font-size: 16px; line-height: 1.7; color: var(--case-muted); }
 .cases-page :is(.case-edit-title,.case-edit-summary):focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
 .case-compose-body { padding-top: 8px; font-size: 16px; line-height: 1.9; }
@@ -210,7 +197,7 @@
 .case-cover-colors button[aria-pressed=true] { box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--foreground); }
 .case-cover-colors button:disabled { cursor: default; }
 .case-preview-document { box-sizing: content-box; max-width: 680px; margin: 0 auto; padding: 40px 40px 120px; display: flex; flex-direction: column; gap: 18px; }
-.case-preview-document > h1 { margin: 0; font-family: 'Noto Serif SC', serif; font-size: 34px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.case-preview-document > h1 { margin: 0; font-family: var(--font-serif); font-size: 34px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .case-preview-cover { height: 300px; margin-top: 6px; }
 .case-preview-cover .case-text-cover > span { font-size: 84px; }
 .case-preview-cover .case-text-cover > .case-cover-long-text { font-size: 48px; }
