@@ -77,7 +77,7 @@ jobs:
         run: node scripts/native-artifact-ci.mjs guard
         env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
       - name: Verify acceptance orchestration contracts
-        run: node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs
+        run: node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs scripts/native-artifact-failure.test.mjs
       - name: Install both immutable dependency graphs
         run: |
           npm ci --ignore-scripts --no-audit --no-fund

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
+import {positionEditorPopover}from'./popover-position'
 import { IconButton } from './EditorPrimitives'
 import { useLocalDraft } from './draft-context'
 
@@ -106,15 +107,18 @@ export default function ColorPopover({
     const element = ref.current,
       button = anchor.current
     if (!element || !button) return
-    const rect = button.getBoundingClientRect()
-    element.style.left = `${Math.max(8, Math.min(window.innerWidth - 264, rect.right - 256))}px`
-    element.style.top = `${Math.max(8, Math.min(window.innerHeight - 400, rect.bottom + 4))}px`
     element.showPopover()
+    const update=()=>positionEditorPopover(element,button,'end')
+    const observer=new ResizeObserver(update)
+    observer.observe(element);observer.observe(button)
+    const editor=button.closest('[data-native-artifact-editor]');if(editor)observer.observe(editor)
+    window.addEventListener('resize',update);document.addEventListener('scroll',update,true);update()
     const toggle = (event: Event) => {
       if ((event as ToggleEvent).newState === 'closed') onClose()
     }
     element.addEventListener('toggle', toggle)
     return () => {
+      observer.disconnect();window.removeEventListener('resize',update);document.removeEventListener('scroll',update,true)
       element.removeEventListener('toggle', toggle)
       queueMicrotask(() => {
         if (!element.isConnected) element.hidePopover()

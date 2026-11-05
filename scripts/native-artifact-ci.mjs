@@ -1,3 +1,4 @@
+import {checkedServiceFailure}from'./native-artifact-failure.mjs'
 /** CI-only real product orchestration. No API mocks, runtime substitutions or model calls.
  * Cookies, TLS keys, downloads and raw service output stay in RUNNER_TEMP. The
  * artifact projection below is deliberately an allowlist, not a log redactor. */
@@ -277,7 +278,7 @@ async function summarize(config) {
   const servicePhases = {}
   for (const arm of ['baseline', 'candidate']) {
     const state = await readFile(join(config.privateRoot, `${arm}-service-status.json`), 'utf8').then(JSON.parse).catch(() => null)
-    if (state && serviceStages.has(state.phase)) servicePhases[arm] = { phase: state.phase, ...(state.failed ? { code: codes.has(state.code) ? state.code : 'CHILD_FAILED' } : {}) }
+    if (state && serviceStages.has(state.phase)) servicePhases[arm] = { phase: state.phase, fault:checkedServiceFailure(state.fault), ...(state.failed ? { code: codes.has(state.code) ? state.code : 'CHILD_FAILED' } : {}) }
   }
   const safe = { schemaVersion: 1, phase: config.phase, baselineCommit: config.baselineCommit,
     candidateCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
@@ -296,7 +297,7 @@ async function summarize(config) {
   }
   const total = report?.samples?.length ?? 0, passed = report?.samples?.filter(sample => sample.status === 'passed').length ?? 0
   console.log(`::notice title=Native artifact acceptance::phase=${config.phase}; samples=${total}; passed=${passed}; diagnosticPassed=${safe.diagnosticPassed}; qualified=${safe.qualified}; checkpoint=${safe.checkpoint.phase}${safe.checkpoint.code ? `; code=${safe.checkpoint.code}` : ''}`)
-  for (const [arm, stage] of Object.entries(servicePhases)) console.log(`::notice title=Native artifact service::arm=${arm}; phase=${stage.phase}${stage.code ? `; code=${stage.code}` : ''}`)
+  for (const [arm, stage] of Object.entries(servicePhases)) console.log(`::notice title=Native artifact service::arm=${arm}; phase=${stage.phase}${stage.code ? `; code=${stage.code}` : ''}; fault=${JSON.stringify(stage.fault)}`)
   if (measurementStages.has(report?.setupFailure?.failureStage) && failureCodes.has(report?.setupFailure?.failureCode)) console.log(`::notice title=Native artifact setup failed::phase=${report.setupFailure.failureStage}; code=${report.setupFailure.failureCode}`)
   for (const sample of report?.samples ?? []) {
     if (!['baseline', 'candidate'].includes(sample.arm) || !['design', 'slides'].includes(sample.kind) || !['fullNavigation', 'workbenchOpen'].includes(sample.mode)) continue

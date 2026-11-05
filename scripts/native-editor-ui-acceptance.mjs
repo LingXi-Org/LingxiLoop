@@ -154,6 +154,40 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   try {
     await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     await ready(1)
+    if(options.checks==='menu-resize') {
+      await page.setViewportSize({width:900,height:1000});await page.getByLabel('画布缩放',{exact:true}).click()
+      await page.setViewportSize({width:390,height:844});await page.waitForTimeout(100)
+      const popup=page.getByRole('group',{name:'画布缩放选项',exact:true}),rect=await popup.boundingBox()
+      assert.ok(rect&&rect.x>=0&&rect.x+rect.width<=390,'an open menu must follow the resized editor')
+      await page.locator('[data-native-artifact-editor]').evaluate(e=>e.style.width='360px');await page.waitForTimeout(100)
+      const resized=await popup.boundingBox();assert.ok(resized&&resized.x>=0&&resized.x+resized.width<=360,'menu must also follow container-only resizing')
+      await page.keyboard.press('Escape');await page.locator('[data-native-artifact-editor]').evaluate(e=>e.style.width='')
+      await page.setViewportSize({width:900,height:1000});await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'背景',exact:true}).click();await page.getByRole('dialog',{name:'背景颜色',exact:true}).waitFor()
+      await page.setViewportSize({width:390,height:844});await page.waitForTimeout(100)
+      const color=await page.getByRole('dialog',{name:'背景颜色',exact:true}).boundingBox();assert.ok(color&&color.x>=0&&color.x+color.width<=390,'an open color picker must follow the resized editor')
+      return {kind:'isolated-menu-resize-diagnostic',mode:kind,windowAndContainerResize:true,scope:'real native popover and editor container'}
+    }
+    if(options.checks==='narrow') {
+      await page.setViewportSize({width:390,height:844});await ready(1);await page.waitForTimeout(150)
+      const islands=await page.locator('.native-toolbar-island').evaluateAll(nodes=>nodes.map(e=>e.getBoundingClientRect().toJSON()))
+      assert.ok(Math.abs(islands[0].top-islands[1].top)<=1,'narrow toolbars must stay on the same row')
+      if(kind==='slides') {
+        assert.equal(await page.locator('.native-page-list').count(),0,'narrow Slides uses the floating page navigator')
+        const board=await page.locator('[data-page-id="page-1"]').boundingBox();assert.ok(Math.abs(board.width-374)<=1)
+        await page.getByRole('navigation',{name:'页面切换',exact:true}).getByRole('button',{name:'下一页',exact:true}).click();await ready(2)
+        await page.getByRole('navigation',{name:'页面切换',exact:true}).getByRole('button',{name:'上一页',exact:true}).click();await ready(1)
+        await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:/^添加页面/}).click()
+        await page.getByRole('dialog',{name:'版式',exact:true}).waitFor();await page.getByRole('button',{name:'空白',exact:true}).click()
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+        assert.equal(document.pageOrder.length,51)
+        assert.equal(document.pages[document.pageOrder[1]].width,1920,'new layouts retain the current slide dimensions')
+      }
+      await page.getByLabel('插入图形',{exact:true}).click()
+      const menu=await page.getByRole('group',{name:'插入图形选项',exact:true}).boundingBox();assert.ok(menu&&menu.x>=0&&menu.x+menu.width<=390,'overflow menus must fit the narrow editor')
+      await page.keyboard.press('Escape')
+      assert.deepEqual(errors,[])
+      return {kind:'isolated-narrow-editor-diagnostic',mode:kind,singleToolbarRow:true,floatingPageNavigation:kind==='slides',scope:'390×844 container and real editor through controlled HTTP fixture',consoleOrPageErrors:errors}
+    }
     if(options.checks==='export-ink') {
       const ink=await page.evaluate(async root=>{
         const {captureWithBleed}=await import(`/@fs/${root}/src/features/artifacts/native/export/capture.ts`)
@@ -193,6 +227,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         for (const theme of ['light','dark']) {
           await page.locator('[data-native-artifact-editor]').evaluate((e,theme) => e.setAttribute('data-theme',theme),theme)
           await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(200)
+          if(width===1440&&theme==='light')await writeFile(join(output,`${kind}-dom.json`),JSON.stringify(await page.locator('[data-page-id] [data-node-id]').evaluateAll(nodes=>nodes.map(e=>({id:e.dataset.nodeId,html:e.outerHTML.slice(0,2000),rect:e.getBoundingClientRect().toJSON(),children:[...e.querySelectorAll('h1,.native-text-content,img')].map(c=>({tag:c.tagName,rect:c.getBoundingClientRect().toJSON(),color:getComputedStyle(c).color,display:getComputedStyle(c).display,position:getComputedStyle(c).position,font:getComputedStyle(c).font}))}))),null,2))
           await page.screenshot({path:join(output,`${kind}-${width}-${theme}.png`)})
           screenshots.push({width,height,theme,path:`${kind}-${width}-${theme}.png`})
         }
@@ -291,7 +326,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await page.mouse.move(box.x+800*scale,box.y+820*scale);await page.mouse.down();await page.mouse.move(box.x+900*scale,box.y+880*scale,{steps:12});await page.mouse.up();await waitSaved()
         const stroke=Object.values(document.pages['page-1'].nodes).find(n=>n.type==='drawing');assert.ok(stroke);assert.ok(stroke.points.length>2);drawing=true
       } else {
-        await page.getByRole('button',{name:'添加页面',exact:true}).click();await page.getByRole('button',{name:'标题与正文',exact:true}).click();await waitSaved()
+        await page.getByRole('button',{name:/^添加页面/}).click();await page.getByRole('button',{name:'标题与正文',exact:true}).click();await waitSaved()
         const created=document.pages[document.pageOrder[1]];assert.equal(created.nodeOrder.length,2);layouts=true
         await page.getByRole('button',{name:'网格视图',exact:true}).click()
         await page.locator('[data-page-target="page-1"]').click();await page.locator('[data-page-target="page-2"]').click({modifiers:['Shift']})

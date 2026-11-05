@@ -7,6 +7,7 @@
  *   --out=/workspace/scratch/native-artifact-baseline.json
  */
 import assert from 'node:assert/strict'
+import {serviceFailure}from'./native-artifact-failure.mjs'
 import { createServer as createHttpsServer } from 'node:https'
 import { request as httpRequest } from 'node:http'
 import { connect } from 'node:net'
@@ -31,7 +32,7 @@ const servicePhase = next => {
 }
 process.on('uncaughtExceptionMonitor', error => {
   const codes = new Set(['ERR_MODULE_NOT_FOUND', 'MODULE_NOT_FOUND', 'ERR_ASSERTION', 'ECONNREFUSED', 'ETIMEDOUT', 'ENOENT'])
-  if (args.status) writeFileSync(resolve(args.status), JSON.stringify({ phase, failed: true, code: codes.has(error?.code) ? error.code : 'SERVICE_FAILED' }) + '\n', { mode: 0o600 })
+  if (args.status) writeFileSync(resolve(args.status), JSON.stringify({ phase, failed: true, code: codes.has(error?.code) ? error.code : 'SERVICE_FAILED',fault:serviceFailure(error) }) + '\n', { mode: 0o600 })
 })
 servicePhase('database-connect')
 const target = new URL(process.env.DATABASE_URL ?? 'postgres://invalid/invalid')
