@@ -1,11 +1,11 @@
 import { artifactShapeGeometry } from '../../../../../shared/artifact-shapes'
 import type { ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../../shared/artifact-document'
-import { isSafeArtifactSvg } from '../../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../../shared/artifact-themes'
 import { awaitPageFonts } from './fonts'
 import { escapeHtml, type ExportResources, offlineMathCss } from './common'
 import { appearance, nodeTransform } from '../../../../../shared/artifact-appearance'
 import { editorFontFamily } from '../editor-fonts'
+import { presentSvg } from '../svg-presentation'
 
 const safeText = (text: string) => escapeHtml(text).replace(/\n/g, '<br>')
 export function nodeHasMath(node: ArtifactNode) { return node.type === 'math' || /\$|\\(?:\(|\[|begin\{)/.test([node.text ?? '', ...(node.cells ?? []).flat()].join('\n')) }
@@ -95,7 +95,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
       }
       case 'svg': {
         const prefix = `${page.id}-${node.id}-`
-        content = node.svg && isSafeArtifactSvg(node.svg) ? node.svg.replace(/\bid=("|')([^"']+)\1/g, (_, quote: string, id: string) => `id=${quote}${prefix}${id}${quote}`).replace(/url\(#([a-zA-Z0-9_-]+)\)/g, `url(#${prefix}$1)`) : ''
+        content = node.svg ? presentSvg(node.svg, prefix) : ''
         break
       }
       case 'drawing':

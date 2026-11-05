@@ -1,0 +1,10 @@
+{
+  "kind": "isolated-font-lazy-cancellation-diagnostic",
+  "mode": "design",
+  "cancelAction": "escape",
+  "actualModuleHeld": true,
+  "pendingSessionCancelled": true,
+  "lateModuleDoesNotStealFocus": true,
+  "cachedReentryFocus": true,
+  "consoleOrPageErrors": []
+}

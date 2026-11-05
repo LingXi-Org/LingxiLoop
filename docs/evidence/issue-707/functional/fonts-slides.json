@@ -9,6 +9,18 @@
     "width": 187,
     "height": 28
   },
+  "fontPopupGeometry": {
+    "x": 1209,
+    "y": 241,
+    "width": 192,
+    "height": 350
+  },
+  "searchGeometry": {
+    "x": 1253,
+    "y": 251,
+    "width": 126,
+    "height": 28
+  },
   "fontRequestsBeforeOpening": 0,
   "selectedFamily": "Merriweather",
   "supportedFacesOnly": true,
@@ -37,8 +49,8 @@
   "emptySearchChinese": true,
   "escapeRestoresFocus": true,
   "narrowPopupBounds": {
-    "x": 164,
-    "y": 243,
+    "x": 163.5,
+    "y": 241,
     "width": 192,
     "height": 350
   },

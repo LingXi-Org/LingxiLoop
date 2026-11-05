@@ -18,6 +18,7 @@ import { createFixture } from './native-artifact-fixture.mjs'
 import { createVisualFixture } from './native-editor-visual-fixture.mjs'
 import { applyOperations, prepareBatch } from '../shared/artifact-operations.ts'
 import { createTableNode } from '../shared/artifact-tables.ts'
+import { createNode } from '../shared/artifact-document.ts'
 import {decodeCommentAnchor}from'../shared/artifact-comment-anchor.ts'
 
 const require = createRequire(import.meta.url)
@@ -56,7 +57,7 @@ try {
   const baseUrl = `http://127.0.0.1:${address.port}`
   browser = await chromium.launch({ headless: true, ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox'] })
   for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
-    for (const editorCase of options.checks === 'cas' ? ['rte', 'table'] : [null]) {
+    for (const editorCase of options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
       const result = await verifyMode(kind, browser, baseUrl, editorCase)
       await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
       console.log(JSON.stringify(options.checks==='parity'?{...result,screenshots:result.screenshots.map(({controls,...row})=>row)}:result))
@@ -69,8 +70,13 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const fixture = ['parity','table','table-stability','fonts','font-cas'].includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font']
+  const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
+  if(options.checks==='svg-font'){
+    const node={...createNode('svg','font-svg'),svg:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 150"><text x="16" y="100" font-family="Merriweather" font-size="80" font-weight="700">Hello</text></svg>'}
+    document.pages['page-1'].nodes[node.id]=node;document.pages['page-1'].nodeOrder.push(node.id)
+  }
   if(options.checks==='table-stability'){
     const page=document.pages['page-1'],table={...createTableNode('stable-table',page),tableHeader:false,cells:[['甲','乙'],['丙'],['丁','戊']]}
     page.nodes[table.id]=table;page.nodeOrder.push(table.id)
@@ -87,7 +93,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let holdAcknowledgment = false, releaseAcknowledgment = null
   let historyEntry = null
   const historyRequests = []
-  const snapshot = () => ({ document, history, write: true, loadedPageIds: document.pageOrder,
+  let fixtureWrite=true
+  const snapshot = () => ({ document, history, write: fixtureWrite, loadedPageIds: document.pageOrder,
     pageVersions: Object.fromEntries(document.pageOrder.map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
   const editorFontRequests=[]
@@ -171,7 +178,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   })
   const ready = async index => {
     const canvas = page.locator(`[data-page-id="page-${index}"]`)
-    if(!['parity','table','table-stability','fonts','font-cas'].includes(options.checks)) await canvas.locator('[data-formula-ready=true]').waitFor()
+    if(!visualChecks.includes(options.checks)) await canvas.locator('[data-formula-ready=true]').waitFor()
     await canvas.locator('[data-node-type=image] img').waitFor()
     await page.waitForFunction(index => {
       const image = window.document.querySelector(`[data-page-id="page-${index}"] [data-node-type=image] img`)
@@ -243,6 +250,47 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual(errors,[])
       return {kind:'isolated-narrow-editor-diagnostic',mode:kind,singleToolbarRow:true,floatingPageNavigation:kind==='slides',scope:'390×844 container and real editor through controlled HTTP fixture',consoleOrPageErrors:errors}
     }
+    if(options.checks==='fonts-lazy'||options.checks==='fonts-readonly'){
+      await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      const trigger=page.getByRole('button',{name:'字体',exact:true}),weight=page.getByLabel('字重',{exact:true})
+      if(options.checks==='fonts-readonly'){
+        await trigger.click();await page.getByRole('combobox',{name:'搜索字体',exact:true}).waitFor();fixtureWrite=false
+        document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'page-1-heading',patch:{style:{opacity:.95}}}])).document
+        await page.waitForFunction(()=>document.querySelector('[aria-label="字体"]')?.matches(':disabled'))
+        assert.equal(await page.getByRole('combobox',{name:'搜索字体',exact:true}).count(),0,'losing write permission must close the font popup')
+        assert.equal(await trigger.isDisabled(),true);await weight.click();assert.equal(await weight.getAttribute('aria-disabled'),'true');assert.equal(await page.locator('.native-font-variants details[open]').count(),0)
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-readonly-font-diagnostic',mode:kind,fontDisabled:true,weightMenuDisabled:true,committedBatches:receipts.length,consoleOrPageErrors:errors}
+      }
+      let release,held=false
+      await page.route('**/FontPopover.tsx*',async route=>{held=true;await new Promise(resolve=>{release=resolve});await route.continue()})
+      await trigger.click();await page.waitForFunction(()=>document.querySelector('[aria-label="字体"]')?.getAttribute('aria-expanded')==='true')
+      for(let attempt=0;attempt<100&&!held;attempt++)await page.waitForTimeout(20)
+      assert.ok(held,'the real lazy module request must be held')
+      const outside=page.getByRole('button',{name:'属性',exact:true})
+      if(editorCase==='escape')await page.keyboard.press('Escape');else await outside.click()
+      release();await page.waitForLoadState('networkidle')
+      assert.equal(await trigger.getAttribute('aria-expanded'),'false','an outside action must cancel the pending popup session')
+      assert.equal(await page.getByRole('combobox',{name:'搜索字体',exact:true}).count(),0)
+      assert.equal(await(editorCase==='escape'?trigger:outside).evaluate(e=>document.activeElement===e),true,'late module arrival must not steal focus')
+      await trigger.click();const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true,'cached popup re-entry must focus its search');await search.press('Escape')
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-font-lazy-cancellation-diagnostic',mode:kind,cancelAction:editorCase,actualModuleHeld:true,pendingSessionCancelled:true,lateModuleDoesNotStealFocus:true,cachedReentryFocus:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='svg-font'){
+      const original=document.pages['page-1'].nodes['font-svg'].svg
+      const result=await page.evaluate(async({root,snapshot})=>{
+        const{renderPageHtml,EXPORT_PAGE_CSS}=await import(`/@fs${root}/src/features/artifacts/native/export/render.ts`)
+        const{ExportResources}=await import(`/@fs${root}/src/features/artifacts/native/export/common.ts`)
+        const{awaitPageFonts}=await import(`/@fs${root}/src/features/artifacts/native/export/fonts.ts`)
+        const source=snapshot.pages['page-1'],slim={...source,nodeOrder:['font-svg'],nodes:{'font-svg':source.nodes['font-svg']}},html=await renderPageHtml(slim,new ExportResources(snapshot,{format:'html'}))
+        const host=document.createElement('div');host.innerHTML=`<style>${EXPORT_PAGE_CSS}</style>${html}`;document.body.append(host)
+        try{await awaitPageFonts(host);return{fontFamily:getComputedStyle(host.querySelector('svg text')).fontFamily,htmlPreservesText:host.querySelector('svg text').textContent==='Hello'}}finally{host.remove()}
+      },{root,snapshot:document})
+      assert.match(result.fontFamily,/LingxiLoopEditor Merriweather/);assert.equal(result.htmlPreservesText,true)
+      assert.equal(document.pages['page-1'].nodes['font-svg'].svg,original);assert.deepEqual(errors,[])
+      return{kind:'isolated-svg-font-export-diagnostic',mode:kind,...result,sourceUnchanged:true,canvasFontQualified:false,scope:'actual static SVG export and font readiness; data-image canvas fonts remain a separate gate',consoleOrPageErrors:errors}
+    }
     if(options.checks==='font-cas'){
       await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'字体',exact:true}).click()
       const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.fill('拉托')
@@ -271,10 +319,14 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(fontRequests.length,0,'unused font files must not load with the editor')
       await page.getByLabel('字重',{exact:true}).click();await page.screenshot({path:join(output,`${kind}-font-weight.png`)});await page.keyboard.press('Escape')
       await trigger.click();const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true)
+      const fontPopupGeometry=await page.locator('.native-font-popup').boundingBox();assert.ok(Math.abs(fontPopupGeometry.height-350)<=1,'nested field styles must not shrink the source font search input')
+      const searchGeometry=await search.boundingBox();assert.ok(Math.abs(searchGeometry.x-1253)<=1&&Math.abs(searchGeometry.y-252)<=1&&Math.abs(searchGeometry.width-126)<=1&&Math.abs(searchGeometry.height-28)<=1,'the inner font search must match the source field geometry')
       await page.screenshot({path:join(output,`${kind}-font-picker.png`)})
       const fontOptions=page.locator('.native-font-popup').getByRole('option')
       assert.equal(await fontOptions.count(),29)
       assert.ok((await fontOptions.allTextContents()).every(label=>!/[A-Za-z]/.test(label)))
+      await trigger.click();assert.equal(await trigger.getAttribute('aria-expanded'),'false','clicking the font trigger again must close the popup')
+      await trigger.click();await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true)
       await search.fill('无匹配字体');await page.screenshot({path:join(output,`${kind}-font-empty.png`)})
       await search.fill('梅里');assert.equal(await fontOptions.count(),1)
       await search.press('ArrowDown');await search.press('Enter')
@@ -325,7 +377,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.ok(popupBounds.x>=editorBounds.x&&popupBounds.x+popupBounds.width<=editorBounds.x+editorBounds.width&&popupBounds.y+popupBounds.height<=844,'the font popup must fit the narrow editor')
       await page.screenshot({path:join(output,`${kind}-font-narrow.png`)});await search.press('Escape')
       assert.deepEqual(errors,[])
-      return{kind:'isolated-font-picker-diagnostic',mode:kind,chineseChoices:29,searchAndKeyboardSelection:true,fontGeometry,fontRequestsBeforeOpening:0,selectedFamily:'Merriweather',supportedFacesOnly:true,familyFaceFallbackAndSharedUndo:true,fontAssets:[...new Set(fontRequests)],savedAndReopened:true,emptySearchChinese:true,escapeRestoresFocus:true,narrowPopupBounds:popupBounds,offlineFontPacking:{loadedFaces,externalRequests:externalFontRequests.length,localFileOpening:false},chineseOnlyFallbackReady:true,scope:'actual React, self-hosted font loading and shared reducer; controlled HTTP fixture; packed HTML font loading is not file-URL opening',consoleOrPageErrors:errors}
+      return{kind:'isolated-font-picker-diagnostic',mode:kind,chineseChoices:29,searchAndKeyboardSelection:true,fontGeometry,fontPopupGeometry,searchGeometry,fontRequestsBeforeOpening:0,selectedFamily:'Merriweather',supportedFacesOnly:true,familyFaceFallbackAndSharedUndo:true,fontAssets:[...new Set(fontRequests)],savedAndReopened:true,emptySearchChinese:true,escapeRestoresFocus:true,narrowPopupBounds:popupBounds,offlineFontPacking:{loadedFaces,externalRequests:externalFontRequests.length,localFileOpening:false},chineseOnlyFallbackReady:true,scope:'actual React, self-hosted font loading and shared reducer; controlled HTTP fixture; packed HTML font loading is not file-URL opening',consoleOrPageErrors:errors}
     }
     if(options.checks==='table-stability') {
       const table=page.locator('[data-node-id="stable-table"] table'),cell=table.locator('td').first()

@@ -13,8 +13,9 @@ const repository = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const output = resolve(process.argv[2] ?? '/workspace/scratch/native-export-acceptance')
 const temporary = await mkdtemp(join(tmpdir(), 'lingxi-export-'))
 const fixture = createFixture(process.env.NATIVE_EXPORT_KIND ?? 'slides')
-if(process.env.NATIVE_EXPORT_TABLE==='1'||process.env.NATIVE_EXPORT_FONT) {
+if(process.env.NATIVE_EXPORT_TABLE==='1'||process.env.NATIVE_EXPORT_FONT||process.env.NATIVE_EXPORT_SVG_FONT==='1') {
   const {createTableNode}=await import('../shared/artifact-tables.ts')
+  const {createNode}=await import('../shared/artifact-document.ts')
   const {applyOperations,prepareBatch}=await import('../shared/artifact-operations.ts')
   const {EDITOR_FONTS}=await import('../src/features/artifacts/native/editor-fonts.ts')
   const family=process.env.NATIVE_EXPORT_FONT
@@ -26,10 +27,14 @@ if(process.env.NATIVE_EXPORT_TABLE==='1'||process.env.NATIVE_EXPORT_FONT) {
     if(family)node.style={...node.style,fontFamily:family,fontWeight:700,fontStyle:'italic'}
     operations.push({type:'node.insert',pageId:page.id,node})
   }
+  if(process.env.NATIVE_EXPORT_SVG_FONT==='1') {
+    const node={...createNode('svg','export-svg-font'),x:1100,y:700,width:600,height:150,svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 150"><text x="16" y="100" font-family="${family??'Merriweather'}" font-size="80" font-weight="700">Hello</text></svg>`}
+    operations.push({type:'node.insert',pageId:page.id,node})
+  }
   fixture.document=applyOperations(fixture.document,prepareBatch(fixture.document,operations,'export-variant-fixture')).document
   const baseNativeSha256=fixture.manifest.nativeSha256
   fixture.manifest.nativeSha256=createHash('sha256').update(JSON.stringify(fixture.document)).digest('hex')
-  fixture.manifest.exportVariant={name:'字体与标题行表格',table:process.env.NATIVE_EXPORT_TABLE==='1',fontFamily:family??null,baseNativeSha256,documentSha256:fixture.manifest.nativeSha256}
+  fixture.manifest.exportVariant={name:'字体与标题行表格',table:process.env.NATIVE_EXPORT_TABLE==='1',svgFont:process.env.NATIVE_EXPORT_SVG_FONT==='1',fontFamily:family??null,baseNativeSha256,documentSha256:fixture.manifest.nativeSha256}
 }
 
 await mkdir(output, { recursive: true })

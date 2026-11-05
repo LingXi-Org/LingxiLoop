@@ -203,6 +203,7 @@ export function Menu({
 }) {
   const root = useRef<HTMLDetailsElement>(null),
     popup = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (disabled && root.current) root.current.open = false }, [disabled])
   const position = () => {
     const element = popup.current,
       details = root.current
@@ -370,7 +371,7 @@ export function Modal({
   )
 }
 
-export function FloatingPopover({anchor,label,className='',align='end',onClose,children}:{anchor:RefObject<HTMLElement|null>;label:string;className?:string;align?:'start'|'end';onClose(restoreFocus?:boolean):void;children:ReactNode}) {
+export function FloatingPopover({anchor,label,className='',align='end',initialFocusSelector,onClose,children}:{anchor:RefObject<HTMLElement|null>;label:string;className?:string;align?:'start'|'end';initialFocusSelector?:string;onClose(restoreFocus?:boolean):void;children:ReactNode}) {
   const popup=useRef<HTMLDivElement>(null),close=useRef(onClose);close.current=onClose
   useLayoutEffect(()=>{
     const element=popup.current,button=anchor.current;if(!element||!button)return
@@ -379,9 +380,9 @@ export function FloatingPopover({anchor,label,className='',align='end',onClose,c
     observer.observe(element);observer.observe(button)
     const editor=button.closest('[data-native-artifact-editor]');if(editor)observer.observe(editor)
     const toggle=(event:Event)=>{if((event as ToggleEvent).newState==='closed')close.current()}
-    element.addEventListener('toggle',toggle);window.addEventListener('resize',update);document.addEventListener('scroll',update,true);update();(element.querySelector<HTMLTextAreaElement>('textarea')??Array.from(element.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')).find(button=>button.checkVisibility()))?.focus({preventScroll:true})
+    element.addEventListener('toggle',toggle);window.addEventListener('resize',update);document.addEventListener('scroll',update,true);update();((initialFocusSelector?element.querySelector<HTMLElement>(initialFocusSelector):null)??element.querySelector<HTMLTextAreaElement>('textarea')??Array.from(element.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')).find(button=>button.checkVisibility()))?.focus({preventScroll:true})
     return()=>{observer.disconnect();element.removeEventListener('toggle',toggle);window.removeEventListener('resize',update);document.removeEventListener('scroll',update,true);queueMicrotask(()=>{if(!element.isConnected)element.hidePopover()})}
-  },[anchor,align])
+  },[anchor,align,initialFocusSelector])
   useLayoutEffect(()=>{if(popup.current?.matches(':popover-open')&&anchor.current)positionEditorPopover(popup.current,anchor.current,align)})
   return <div ref={popup} popover="auto" role="dialog" aria-label={label} className={`native-floating-popover ${className}`} onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();onClose(true)}}}>{children}</div>
 }
