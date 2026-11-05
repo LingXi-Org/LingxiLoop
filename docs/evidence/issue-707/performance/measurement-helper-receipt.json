@@ -1,0 +1,145 @@
+{
+  "scope": "测量辅助程序的真实浏览器回归；不代表产品性能或撤销验收",
+  "trace": {
+    "check": "worker-entry-network-accounting",
+    "results": [
+      {
+        "encoding": "identity",
+        "workerTransferBytes": 1000203,
+        "workerDecodedBytes": 1000054,
+        "importDurationMs": 2025.3,
+        "scriptRequests": 2,
+        "inflight": 0
+      },
+      {
+        "encoding": "gzip",
+        "workerTransferBytes": 1230,
+        "workerDecodedBytes": 1000054,
+        "importDurationMs": 2028.8,
+        "scriptRequests": 2,
+        "inflight": 0
+      },
+      {
+        "encoding": "concurrent",
+        "refusedAsAmbiguous": true,
+        "ambiguousRequests": 2
+      },
+      {
+        "encoding": "queued",
+        "scriptRequests": 12,
+        "maxNetworkStartSkewMs": 609.8,
+        "scriptDecodedBytes": 240492
+      }
+    ],
+    "performanceSamples": 0,
+    "qualified": false
+  },
+  "cleanup": {
+    "check": "failed-input-cleanup-selector",
+    "results": [
+      {
+        "kind": "design",
+        "native": true,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": true
+      },
+      {
+        "kind": "slides",
+        "native": true,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": true
+      },
+      {
+        "kind": "design",
+        "native": true,
+        "activeEditableEnded": true,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": true
+      },
+      {
+        "kind": "design",
+        "native": false,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": null
+      },
+      {
+        "kind": "slides",
+        "native": false,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": null
+      }
+    ],
+    "deniedUndoEvidence": {
+      "frames": 1,
+      "matchingHeadings": 0,
+      "operationPosts": 1,
+      "snapshotReads": 0,
+      "historyPosts": 1,
+      "snapshotStatuses": [],
+      "operationStatuses": [
+        403
+      ],
+      "historyStatuses": [
+        403
+      ],
+      "focusCompleted": true,
+      "keySent": true,
+      "headingVerified": false,
+      "ackVerified": false,
+      "focusTabs": 0,
+      "focusInsideEditor": true,
+      "nativeEditorPresent": true,
+      "editorVisible": true,
+      "documentFocused": true,
+      "activeInEditor": true,
+      "activeIsButton": true,
+      "activeIsRoot": false,
+      "activeEditable": false,
+      "headingNodePresent": true,
+      "bodyOriginal": false,
+      "bodyMarked": true,
+      "rootKeySeen": true,
+      "rootKeyTrusted": true,
+      "rootKeyPrevented": true
+    },
+    "closedEditorEvidence": {
+      "operationPosts": 0,
+      "snapshotReads": 0,
+      "historyPosts": 0,
+      "snapshotStatuses": [],
+      "operationStatuses": [],
+      "historyStatuses": [],
+      "focusCompleted": false,
+      "keySent": false,
+      "headingVerified": false,
+      "ackVerified": false,
+      "nativeEditorPresent": true,
+      "editorVisible": false,
+      "documentFocused": true,
+      "activeInEditor": false,
+      "activeIsButton": false,
+      "activeIsRoot": false,
+      "activeEditable": false,
+      "headingNodePresent": true,
+      "bodyOriginal": false,
+      "bodyMarked": true,
+      "rootKeySeen": false,
+      "rootKeyTrusted": false,
+      "rootKeyPrevented": false
+    },
+    "scope": "isolated measurement helper fixture, not product undo acceptance",
+    "performanceSamples": 0,
+    "qualified": false
+  },
+  "performanceSamples": 0,
+  "qualified": false
+}

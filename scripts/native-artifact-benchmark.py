@@ -76,17 +76,19 @@ def resource_key(raw):
     return hashlib.sha256(urlsplit(raw)._replace(fragment='').geturl().encode()).hexdigest()
 
 
-def pair_observations(left, right):
+def pair_observations(left, right, playwright_start=False):
     """One-to-one time/resource matches. Ambiguous observations fail closed."""
     remaining_left, remaining_right = set(range(len(left))), set(range(len(right)))
     pairs = []
+    def start(row):
+        return row.get('_playwrightStartEpochMs', row['startEpochMs']) if playwright_start else row['startEpochMs']
     for tolerance in (.01, 100):
-        candidates = {i: [j for j in remaining_right if left[i]['_resourceKey'] == right[j]['_resourceKey'] and abs(left[i]['startEpochMs'] - right[j]['startEpochMs']) < tolerance] for i in remaining_left}
+        candidates = {i: [j for j in remaining_right if left[i]['_resourceKey'] == right[j]['_resourceKey'] and abs(start(left[i]) - right[j]['startEpochMs']) < tolerance] for i in remaining_left}
         reverse = {j: [i for i, matches in candidates.items() if j in matches] for j in remaining_right}
         matched = [(i, matches[0]) for i,matches in candidates.items() if len(matches) == 1 and len(reverse[matches[0]]) == 1]
         for i,j in matched:
             pairs.append((i,j)); remaining_left.remove(i); remaining_right.remove(j)
-    ambiguous = {j for j in remaining_right if any(left[i]['_resourceKey'] == right[j]['_resourceKey'] and abs(left[i]['startEpochMs'] - right[j]['startEpochMs']) < 100 for i in remaining_left)}
+    ambiguous = {j for j in remaining_right if any(left[i]['_resourceKey'] == right[j]['_resourceKey'] and abs(start(left[i]) - right[j]['startEpochMs']) < 100 for i in remaining_left)}
     return pairs, remaining_left, remaining_right, ambiguous
 
 
@@ -198,7 +200,7 @@ class Trace:
                 old_key, row = prior[0]
                 del self.requests[old_key]
                 self.requests[key] = row
-                row.update(start=value['timestamp'], targetType=self.targets.get(route,{}).get('type','page'))
+                row.update(start=value['timestamp'], startEpochMs=value.get('wallTime',0)*1000, targetType=self.targets.get(route,{}).get('type','page'))
                 row.pop('fromPlaywright', None)
                 return
             self.requests[key] = {"url": safe_url(value["request"]["url"]), "_resourceKey": resource_key(value["request"]["url"]), "type": value.get("type"),
@@ -210,6 +212,11 @@ class Trace:
             row = self.requests[key]
             if method == "responseReceived":
                 response = value["response"]
+                request_time = response.get('timing', {}).get('requestTime')
+                if isinstance(request_time, (int, float)) and math.isfinite(request_time) and 'start' in row:
+                    # Playwright uses network requestTime; requestWillBeSent
+                    # and ResourceTiming use the earlier enqueue instant.
+                    row['_playwrightStartEpochMs'] = row['startEpochMs'] + (request_time - row['start']) * 1000
                 headers = {key.lower(): value for key, value in response["headers"].items()}
                 declared_length = headers.get("content-length")
                 if isinstance(declared_length, str) and declared_length.isdigit(): row["declaredEncodedBodyBytes"] = int(declared_length)
@@ -253,7 +260,7 @@ class Trace:
         assigned = {row['_playwrightKey'] for row in self.requests.values() if '_playwrightKey' in row}
         entries = [entry for entry in self.finished_requests if entry['_requestIdentity'] not in assigned]
         rows = [row for row in self.requests.values() if '_playwrightKey' not in row]
-        pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries)
+        pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries, playwright_start=True)
         self.ambiguous_requests = max(self.ambiguous_requests, len(ambiguous))
         for i,j in pairs: rows[i]['_playwrightKey'] = entries[j]['_requestIdentity']
         for j in unmatched - ambiguous:
@@ -720,14 +727,17 @@ def cleanup_edit(page, kind, number, artifact_id):
             state = edit_restore_state(value['text'],number,value['attempted'])
             if state == 'unchanged': return {'status':'passed','pageNumber':number,'originalHeadingRestored':True,'inputAttempted':False}
             if state == 'undo':
-                page.keyboard.press('Escape')
+                if target.evaluate("e=>{const active=document.activeElement;return !!active?.isContentEditable&&(e.contains(active)||active.contains(e))}"):
+                    page.keyboard.press('Escape')
                 return {'status':'passed',**undo_edit(page,kind,number,artifact_id)}
     raise MeasurementFailure('fixture_restore_unconfirmed')
 
 
 
 def focus_native_keyboard(page, kind):
+    native_present = False
     for frame in page.frames:
+        native_present = native_present or bool(frame.locator('[data-native-artifact-editor]').count())
         root=frame.locator(f'[data-native-artifact-editor="{kind}"]:visible').first
         if not root.count(): continue
         # Closing an editable can leave focus on body. Move through the real
@@ -737,23 +747,81 @@ def focus_native_keyboard(page, kind):
                 return {'focusTabs':tabs,'focusInsideEditor':True}
             page.keyboard.press('Shift+Tab')
         raise MeasurementFailure('native_keyboard_focus_unavailable')
+    if native_present: raise MeasurementFailure('native_keyboard_focus_unavailable')
     return {'focusTabs':0,'legacyDocumentShortcut':True}
 
 
-def undo_edit(page, kind, number, artifact_id):
+def undo_dom_state(page, kind, number):
+    for frame in page.frames:
+        root=frame.locator(f'[data-native-artifact-editor="{kind}"]').first
+        if not root.count(): continue
+        return root.evaluate(r"""(e,{number,marker})=>{
+          const node=e.querySelector(`[data-page-id="page-${number}"] [data-node-id="page-${number}-heading"]`);
+          const body=(node?.querySelector('[data-native-text-editor],.native-text-content')??node)?.textContent?.trim();
+          return {nativeEditorPresent:true,editorVisible:e.checkVisibility(),documentFocused:document.hasFocus(),
+            activeInEditor:e.contains(document.activeElement),activeIsButton:document.activeElement?.tagName==='BUTTON',activeIsRoot:document.activeElement===e,
+            activeEditable:!!document.activeElement?.isContentEditable,headingNodePresent:!!node,
+            bodyOriginal:body===`验收页面 ${number}`,bodyMarked:body===`验收页面 ${number}${marker}`,
+            ...(window.__nativeArtifactUndoProbe??{}),rootKeyPrevented:!!window.__nativeArtifactUndoEvent?.defaultPrevented};
+        }""",{'number':number,'marker':MARKER})
+    return {'nativeEditorPresent':False}
+
+
+def undo_edit(page, kind, number, artifact_id, timeout=20):
     saves = []
+    stats={'operationPosts':0,'snapshotReads':0,'historyPosts':0,'snapshotStatuses':[],'operationStatuses':[],'historyStatuses':[]}
+    progress={'focusCompleted':False,'keySent':False,'headingVerified':False,'ackVerified':False}
+    focus={};probe_frame=None
+    native=any(frame.locator('[data-native-artifact-editor]').count() for frame in page.frames)
     prefixes = {legacy_save_prefix(frame) for frame in page.frames} - {None}
-    listener = lambda response: saves.append(response.status) if any(save_request_matches(response, artifact_id, legacy_prefix=prefix) for prefix in prefixes or {None}) else None
+    def history_request(request):
+        try:return request.method=='POST' and urlsplit(request.url).path.endswith(f'/artifacts/{artifact_id}/operations') and request.post_data_json.get('kind')=='undo'
+        except Exception:return False
+    def request_listener(request):
+        path=urlsplit(request.url).path
+        if request.method=='GET' and path.endswith(f'/artifacts/{artifact_id}/document'): stats['snapshotReads']+=1
+        if request.method=='POST' and path.endswith(f'/artifacts/{artifact_id}/operations'): stats['operationPosts']+=1
+        if history_request(request):stats['historyPosts']+=1
+    def listener(response):
+        path=urlsplit(response.url).path
+        if response.request.method=='GET' and path.endswith(f'/artifacts/{artifact_id}/document'):stats['snapshotStatuses'].append(response.status)
+        if response.request.method=='POST' and path.endswith(f'/artifacts/{artifact_id}/operations'):stats['operationStatuses'].append(response.status)
+        matching=history_request(response.request) if native else any(save_request_matches(response,artifact_id,legacy_prefix=prefix) for prefix in prefixes or {None})
+        if matching:saves.append(response.status);stats['historyStatuses'].append(response.status)
+    page.on('request',request_listener)
     page.on("response", listener)
     try:
+        for frame in page.frames:
+            root=frame.locator(f'[data-native-artifact-editor="{kind}"]').first
+            if not root.count():continue
+            root.evaluate("""e=>{
+              const proof=window.__nativeArtifactUndoProbe={rootKeySeen:false,rootKeyTrusted:false};
+              const observe=event=>{if(event.ctrlKey&&event.key.toLowerCase()==='z'){proof.rootKeySeen=true;proof.rootKeyTrusted=event.isTrusted;window.__nativeArtifactUndoEvent=event}};
+              e.addEventListener('keydown',observe,true);window.__nativeArtifactUndoStop=()=>e.removeEventListener('keydown',observe,true);
+            }""")
+            probe_frame=frame;break
         focus = focus_native_keyboard(page,kind)
+        progress['focusCompleted']=True
         page.keyboard.press("Control+z")
-        ready_heading(page, kind, number, timeout=20)
-        deadline = time.monotonic() + 20
+        progress['keySent']=True
+        ready_heading(page, kind, number, timeout=timeout)
+        progress['headingVerified']=True
+        deadline = time.monotonic() + timeout
         while 200 not in saves and time.monotonic() < deadline: page.wait_for_timeout(50)
         if 200 not in saves: raise MeasurementFailure("undo_save_not_acknowledged")
-        return {"pageNumber": number, "originalHeadingRestored": True, "saveAcknowledged": True, **focus}
-    finally: page.remove_listener("response", listener)
+        progress['ackVerified']=True
+        return {"pageNumber": number, "originalHeadingRestored": True, "saveAcknowledged": True, **focus, **stats, **progress, **undo_dom_state(page,kind,number)}
+    except Exception as error:
+        observations=dict(error.observations or {}) if isinstance(error,MeasurementFailure) else {}
+        observations.update(stats);observations.update(progress);observations.update(focus)
+        try:observations.update(undo_dom_state(page,kind,number))
+        except Exception:pass
+        raise MeasurementFailure(failure_code(error),observations) from None
+    finally:
+        page.remove_listener("response", listener);page.remove_listener('request',request_listener)
+        if probe_frame:
+            try:probe_frame.evaluate("()=>{window.__nativeArtifactUndoStop?.();delete window.__nativeArtifactUndoStop;delete window.__nativeArtifactUndoProbe;delete window.__nativeArtifactUndoEvent}")
+            except Exception:pass
 
 
 class ExportHtmlPages(HTMLParser):
@@ -1048,6 +1116,21 @@ def self_check():
     partial.reconcile_snapshot(partial_snapshot)
     assert script_totals(partial_snapshot)['decodedBytes'] == 1000000, 'editable snapshot must retain complete observed bytes'
     assert script_totals(partial.snapshot())['decodedBytes'] == 1000000, 'complete RT must supersede partial CDP chunks'
+    queued = reconciliation_fixture([1000])
+    row = queued.requests.pop('cdp'); row.pop('_playwrightKey', None); row['start'] = 10
+    queued.requests[':queued'] = row
+    queued.finished_requests[0]['startEpochMs'] = 1250
+    queued.event('', 'responseReceived', {'requestId':'queued','response':{'headers':{},'status':200,'mimeType':'text/javascript','encodedDataLength':120,'timing':{'requestTime':10.25}}})
+    assert len(queued.snapshot()) == 1, 'PW network-start timing must not duplicate the same queued CDP request'
+    assert script_totals(queued.snapshot())['transferredBytes'] == 1000120
+    late_clock = reconciliation_fixture([1000]);late_clock.requests.clear()
+    late_clock.finished_requests[0]['startEpochMs']=1050
+    late_clock.snapshot()
+    late_clock.event('', 'requestWillBeSent', {'requestId':'queued-late','request':{'url':raw},'timestamp':10,'wallTime':1,'type':'Script'})
+    late_clock.event('', 'responseReceived', {'requestId':'queued-late','response':{'headers':{},'status':200,'mimeType':'text/javascript','timing':{'requestTime':10.05}}})
+    assert len(late_clock.snapshot()) == 1
+    assert late_clock.requests[':queued-late']['startEpochMs'] == 1000
+    assert abs(late_clock.requests[':queued-late']['_playwrightStartEpochMs']-1050) < .01
     ambiguous = reconciliation_fixture([1000,1000])
     assert ambiguous.ambiguous_requests > 0, 'indistinguishable requests cannot qualify'
     assert safe_url(raw+'?v=1') == safe_url(raw+'?v=2') and resource_key(raw+'?v=1') != resource_key(raw+'?v=2')

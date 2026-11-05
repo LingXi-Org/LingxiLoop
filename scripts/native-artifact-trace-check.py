@@ -5,6 +5,7 @@ import gzip
 import json
 import runpy
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -16,13 +17,17 @@ parser.add_argument('--browser')
 args = parser.parse_args()
 source = b'//' + b'x' * 1000000 + b'\nimport "./dependency.js";self.postMessage("ready");'
 dependency = b'//' + b'y' * 1000000 + b'\nexport const ready=true;'
+queued_source = b'window.__queued=(window.__queued||0)+1;//' + b'q' * 20000
 assets = {'/plain-worker.js': source, '/gzip-worker.js': gzip.compress(source, mtime=0), '/dependency.js': dependency}
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_args): pass
     def do_GET(self):
         path = self.path.split('?')[0]
-        body = assets.get(path, b'<script>const urls=location.hash==="#concurrent"?["/plain-worker.js?one","/plain-worker.js?two"]:[location.hash.slice(1)];let ready=0;for(const url of urls)new Worker(url,{type:"module"}).onmessage=()=>{if(++ready===urls.length)document.documentElement.dataset.ready="yes"};</script>')
+        body = assets.get(path, b'<script>let ready=0;if(location.hash==="#queued"){for(let i=0;i<12;i++){const s=document.createElement("script");s.src="/queued-"+i+".js";s.onload=()=>{if(++ready===12)document.documentElement.dataset.ready="yes"};document.head.append(s)}}else{const urls=location.hash==="#concurrent"?["/plain-worker.js?one","/plain-worker.js?two"]:[location.hash.slice(1)];for(const url of urls)new Worker(url,{type:"module"}).onmessage=()=>{if(++ready===urls.length)document.documentElement.dataset.ready="yes"}}</script>')
+        if path.startswith('/queued-') and path.endswith('.js'):
+            time.sleep(.35)
+            body = queued_source
         self.send_response(200)
         self.send_header('Content-Type', 'text/javascript' if path.endswith('.js') else 'text/html')
         if path == '/gzip-worker.js': self.send_header('Content-Encoding', 'gzip')
@@ -79,6 +84,19 @@ try:
             assert totals(rows)['decodedBytes'] == 2 * (len(source) + len(dependency))
             assert not totals(rows)['missingDecoded'] and not totals(rows)['missingTransfer']
             results.append({'encoding':'concurrent','scriptRequests':totals(rows)['requests'],'scriptDecodedBytes':totals(rows)['decodedBytes'],'ambiguousRequests':0})
+        context.close()
+        context=browser.new_context();page=context.new_page();trace=Trace(context,page)
+        page.goto(f'http://127.0.0.1:{server.server_port}/#queued',wait_until='domcontentloaded')
+        page.wait_for_function('document.documentElement.dataset.ready==="yes"',timeout=30000)
+        trace.reconcile_decoded(page);rows=trace.snapshot()
+        cdp=[row for row in rows if row.get('start') is not None and row.get('type')=='Script']
+        skews=[entry['startEpochMs']-row['startEpochMs'] for row in cdp for entry in trace.finished_requests if entry['_resourceKey']==row['_resourceKey']]
+        assert max(skews)>=100, 'real connection queueing must exercise distinct protocol timing stages'
+        assert totals(rows)['requests']==12, 'network-start timing must not duplicate queued script requests'
+        assert totals(rows)['decodedBytes']==12*len(queued_source)
+        assert not totals(rows)['missingDecoded'] and not totals(rows)['missingTransfer']
+        assert not trace.ambiguous_requests and not trace.unaccounted_script_resources
+        results.append({'encoding':'queued','scriptRequests':totals(rows)['requests'],'maxNetworkStartSkewMs':round(max(skews),1),'scriptDecodedBytes':totals(rows)['decodedBytes']})
         context.close()
         browser.close()
 finally:

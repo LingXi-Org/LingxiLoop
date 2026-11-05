@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { BASELINE, FIDELITY_BASELINE, baselineFor, compactReceipt, configuration, publicEvidence, verifyDiagnosticPrerequisite } from './native-artifact-ci.mjs'
+import { BASELINE, baselineFor, compactReceipt, configuration, FIDELITY_BASELINE, publicEvidence, verifyDiagnosticPrerequisite } from './native-artifact-ci.mjs'
 
 const env = {
   GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_REF_TYPE: 'branch', GITHUB_REF: 'refs/heads/codex/shared-artifact-editor',
@@ -92,4 +92,11 @@ test('worker completion receipts retain measured bytes and strip request details
   assert.equal(receipt.failureObservations.inflightRequests[0].transferredBytesSource,'PlaywrightHeaders+PerformanceResourceTiming')
   assert.equal(receipt.failureCleanup.originalHeadingRestored,true)
   assert.doesNotMatch(JSON.stringify(receipt),/secret|authorization|worker\.js/)
+})
+
+test('failed undo keeps stage, focus and history evidence without document text or private timing identities', () => {
+  const proof={focusTabs:2,focusCompleted:true,keySent:true,headingVerified:false,historyPosts:1,historyStatuses:[403],snapshotReads:1,snapshotStatuses:[200],rootKeySeen:true,rootKeyTrusted:true,rootKeyPrevented:true,editorVisible:true,bodyMarked:true}
+  assert.deepEqual(publicEvidence({failureObservations:{...proof,rawTitle:'private document text',prompt:'private prompt'}}),{failureObservations:proof})
+  const safe=publicEvidence({requestsAtEditable:[{url:'https://secret.example/script.js?token=private',type:'Script',_playwrightStartEpochMs:1250,_resourceKey:'private identity'}]})
+  assert.doesNotMatch(JSON.stringify(safe),/secret|private|_playwright|_resource/)
 })
