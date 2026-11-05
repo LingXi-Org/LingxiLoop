@@ -14,7 +14,8 @@ import { createNode, type ArtifactDocument } from '../../../shared/artifact-docu
 import { prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
 import { readNativeDocument, submitNativeOperations } from '../modules/artifacts/native-document.js'
 import { withTransaction } from '../db/transaction.js'
-import { publishArtifactFiles } from '../modules/artifacts/facade.js'
+import { publishArtifactFiles, replyComment } from '../modules/artifacts/facade.js'
+import { encodeCommentAnchor } from '../../../shared/artifact-comment-anchor.js'
 import { permissionService } from '../modules/access/public.js'
 import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
@@ -69,6 +70,30 @@ async function seedTitle(id: string, text = 'Original') {
   assert.equal(response.status, 200, await response.clone().text())
   return document(id)
 }
+
+test('native comments use durable node anchors, authorized mutations and the existing Agent reply service', async () => {
+  const deck=await(await api(`/projects/${projectId}/slides`,'POST',{title:'Native comments'})).json() as {id:string}
+  await seedTitle(deck.id)
+  const path=`/artifacts/${deck.id}/comments`,anchor=encodeCommentAnchor({pageId:'page-1',nodeId:'title',x:.2,y:.7})
+  const created=await api(path,'POST',{anchor,label:'标题',text:'请检查这个标题',author:{id:'forged'},companyId:'forged'})
+  assert.equal(created.status,201,await created.clone().text())
+  const {thread}=await created.json() as {thread:{id:string;messages:Array<{id:string;author:{id:string}}>}}
+  assert.equal(thread.messages[0].author.id,userId)
+  const saved=(await pool.query('SELECT doc FROM artifact_comments WHERE artifact_id=$1',[deck.id])).rows[0].doc
+  assert.deepEqual(saved.threads[0].location,{file:'project/pages/page-1.json',pageId:'page-1',nodeId:'title',x:.2,y:.7})
+  assert.equal((await api(`${path}/${thread.id}/messages/${thread.messages[0].id}`,'PATCH',{text:'修改后的评论'})).status,200)
+  assert.equal((await api(`${path}/${thread.id}/messages`,'POST',{text:'补充说明'})).status,200)
+  await replyComment({companyId,artifactId:deck.id,author:{kind:'agent',id:agentId,name:'Fixture Agent'},commentId:thread.id,text:'已检查标题'})
+  const reopened=await(await api(path)).json() as {threads:Array<{messages:Array<{text:string;author:{kind:string}}>}>}
+  assert.equal(reopened.threads[0].messages.at(-1)!.text,'已检查标题')
+  assert.equal(reopened.threads[0].messages.at(-1)!.author.kind,'agent')
+  for(const status of ['resolved','open']) assert.equal((await api(`${path}/${thread.id}`,'PATCH',{status})).status,200)
+  assert.equal((await api(path,'POST',{anchor:encodeCommentAnchor({pageId:'page-1',nodeId:'missing',x:0,y:0}),label:'缺失',text:'不能绑定'})).status,409)
+  for(const [suffix,method,body] of [['','GET',undefined],['','POST',{anchor,label:'标题',text:'不能写'}],[`/${thread.id}`,'DELETE',undefined]] as const) assert.ok([403,404].includes((await api(path+suffix,method,body,{'x-company-id':'other-tenant'})).status))
+  assert.equal((await api(`${path}/${thread.id}`,'DELETE')).status,200)
+  assert.deepEqual((await(await api(path)).json() as {threads:unknown[]}).threads,[])
+  await api(`/artifacts/${deck.id}`,'DELETE')
+})
 
 test('old Slides gain independent durable native chats without rewriting source or bytes; source revocation still denies access', async () => {
   const old = { id: randomUUID() }, definition = artifactKind('slides')

@@ -12,7 +12,8 @@ export function elementBounds(page: ArtifactPage): Bounds[] {
   const matrix = (node: ArtifactNode): Matrix => {
     const cached = matrices.get(node.id); if (cached) return cached
     const angle = node.rotation * Math.PI / 180, c = Math.cos(angle), s = Math.sin(angle)
-    const local: Matrix = [c, s, -s, c, node.x + node.width/2 - c*node.width/2 + s*node.height/2, node.y + node.height/2 - s*node.width/2 - c*node.height/2]
+    const fx=node.flipX?-1:1,fy=node.flipY?-1:1
+    const local: Matrix = [c*fx, s*fx, -s*fy, c*fy, node.x + node.width/2 - c*fx*node.width/2 + s*fy*node.height/2, node.y + node.height/2 - s*fx*node.width/2 - c*fy*node.height/2]
     const parent = node.parentId ? page.nodes[node.parentId] : undefined
     const result = multiply(parent ? matrix(parent) : identity, local)
     matrices.set(node.id, result); return result

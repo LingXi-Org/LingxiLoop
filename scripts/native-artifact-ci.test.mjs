@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { BASELINE, compactReceipt, configuration, publicEvidence, verifyDiagnosticPrerequisite } from './native-artifact-ci.mjs'
+import { BASELINE, FIDELITY_BASELINE, baselineFor, compactReceipt, configuration, publicEvidence, verifyDiagnosticPrerequisite } from './native-artifact-ci.mjs'
 
 const env = {
   GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_REF_TYPE: 'branch', GITHUB_REF: 'refs/heads/codex/shared-artifact-editor',
@@ -76,4 +76,11 @@ test('exact browser and platform metadata use strict formats and compact logs ex
   assert.equal(receipt.environment.node, 'v22.21.0')
   assert.equal(receipt.samples[0].editableMs, 123)
   assert.doesNotMatch(JSON.stringify(receipt), /requestsAtEditable|resourceHash/)
+})
+
+test('fidelity profile pins the native baseline while retirement retains its original graph', () => {
+  assert.equal(baselineFor(env),BASELINE)
+  assert.equal(configuration({...env,NATIVE_ARTIFACT_PROFILE:'fidelity'}).baselineCommit,FIDELITY_BASELINE)
+  assert.equal(configuration({...env,NATIVE_ARTIFACT_PROFILE:'fidelity'}).fidelity,true)
+  assert.throws(()=>configuration({...env,NATIVE_ARTIFACT_PROFILE:'custom'}))
 })

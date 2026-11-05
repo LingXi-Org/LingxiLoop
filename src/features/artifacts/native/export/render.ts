@@ -69,7 +69,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
       case 'note':
       case 'text': content = node.richText ? await richText(node.richText, resources) : await sourceText(node.text ?? '', resources); break
       case 'video': {
-        if (node.posterAssetId) content = `<img alt="${escapeHtml(node.text ?? '视频')}" src="${escapeHtml(await resources.asset(node.posterAssetId))}">`
+        if (node.posterAssetId) { const crop=node.crop;content=`<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text??'视频')}" src="${escapeHtml(await resources.asset(node.posterAssetId))}"${crop?` style="max-width:none;width:${100/Math.max(.01,crop.width)}%;height:${100/Math.max(.01,crop.height)}%;transform:translate(${-crop.x*100}%,-${crop.y*100}%);object-fit:fill"`:''}></div>` }
         else content = `<div class="artifact-export-unsupported">${escapeHtml(node.text ?? '视频')}</div>`
         resources.warnings.add(`${page.title} / ${node.id}：视频以封面导出，原稿保留视频。`)
         break
@@ -145,5 +145,12 @@ export async function mountExportPage(page: ArtifactPage, resources: ExportResou
 }
 
 export function pageText(page: ArtifactPage) {
-  return page.nodeOrder.map(id => page.nodes[id]!).filter(node => !node.hidden).flatMap(node => node.type === 'text' ? [node.text ?? ''] : node.type === 'table' ? (node.cells ?? []).map(row => row.join('\t')) : node.type === 'math' ? [node.source ?? ''] : []).join('\n')
+  return page.nodeOrder.map(id => page.nodes[id]!).filter(node => {
+    let current: ArtifactNode | undefined = node
+    while (current) {
+      if (current.hidden || current.scope === 'canvas') return false
+      current = current.parentId ? page.nodes[current.parentId] : undefined
+    }
+    return true
+  }).flatMap(node => node.type === 'text' || node.type === 'note' ? [node.text ?? ''] : node.type === 'table' ? (node.cells ?? []).map(row => row.join('\t')) : node.type === 'math' ? [node.source ?? ''] : []).join('\n')
 }

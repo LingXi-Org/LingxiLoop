@@ -18,7 +18,7 @@ export function Menu({ label, icon, children, align = 'start', text, disabled }:
     const element = root.current; if (!element || disabled) return
     if (event.key === 'Escape') { event.stopPropagation(); element.open = false; element.querySelector('summary')?.focus() }
     if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
-      event.preventDefault(); element.open = true
+      event.preventDefault(); event.stopPropagation(); element.open = true
       const items = Array.from(element.querySelectorAll<HTMLButtonElement>('button:not(:disabled),input,select'))
       const index = items.indexOf(document.activeElement as HTMLButtonElement)
       items[event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowUp' ? -1 : 1) + items.length) % items.length]?.focus()
@@ -33,6 +33,6 @@ export function MenuItem({ children, icon, shortcut, selected, ...props }: Butto
 }
 export function Modal({ title, onClose, children }: { title: string; onClose(): void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null)
-  useEffect(() => { const element = ref.current; element?.showModal(); return () => element?.close() }, [])
+  useEffect(() => { const element=ref.current; if(element && !element.open) element.showModal(); return () => { queueMicrotask(()=>{if(element && !element.isConnected) element.close()}) } }, [])
   return <dialog ref={ref} className="native-dialog" aria-label={title} onCancel={onClose} onClose={onClose}><header><h2>{title}</h2><IconButton icon="close" label="关闭" onClick={onClose} /></header>{children}</dialog>
 }

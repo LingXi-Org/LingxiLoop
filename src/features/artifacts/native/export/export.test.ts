@@ -5,7 +5,7 @@ import { createDocument, createNode, createPage } from '../../../../../shared/ar
 import { exportArtifact } from '../export-artifact'
 import { ExportResources } from './common'
 import { encodeArtifactPdf } from './pdf-writer'
-import { renderPageHtml } from './render'
+import { renderPageHtml, pageText } from './render'
 
 function fixture() {
   const document = createDocument('slides', 'export-test', '导出测试')
@@ -25,6 +25,10 @@ test('extended appearance exports with geometry, annotations stay off artboards 
   assert.match(html, /linearGradient/); assert.match(html, /fill="url\(#gradient-page-gradient\)"/)
   assert.match(html, /box-shadow:2px 4px 8px 0px #00000040/); assert.match(html, /scale\(-1,1\)/)
   assert.ok(!html.includes('PRIVATE CANVAS ANNOTATION'))
+  const group = { ...createNode('group', 'canvas-group'), scope: 'canvas' as const }
+  const child = { ...createNode('text', 'canvas-child'), parentId: group.id, text: 'PRIVATE NESTED ANNOTATION' }
+  page.nodes[group.id]=group; page.nodes[child.id]=child; page.nodeOrder.push(group.id,child.id)
+  assert.ok(!pageText(page).includes('PRIVATE'))
   assert.ok([...resources.warnings].some(w => w.includes('视频以封面导出')))
 })
 

@@ -32,7 +32,7 @@ export function nativeStyle(source: ArtifactStyle, document: ArtifactDocument): 
     opacity: style.opacity, borderRadius: style.borderRadius,
     ...((style.borderColor ?? style.stroke) ? { border: `${style.borderWidth ?? style.strokeWidth ?? 1}px ${style.borderStyle ?? 'solid'} ${style.borderColor ?? style.stroke}` } : {}) }
 }
-function AssetVideo({ asset, documentId, presenting }: { asset: ArtifactAsset; documentId: string; presenting?: boolean }) {
+function AssetVideo({ asset, documentId, presenting, style }: { asset: ArtifactAsset; documentId: string; presenting?: boolean; style?: CSSProperties }) {
   const [source, setSource] = useState<string | null>(null), [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
@@ -41,7 +41,7 @@ function AssetVideo({ asset, documentId, presenting }: { asset: ArtifactAsset; d
     void fetchArtifactAsset(asset, documentId, controller.signal).then(blob => { if (!controller.signal.aborted) { url = URL.createObjectURL(blob); setSource(url) } }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
     return () => { controller.abort(); if (url) URL.revokeObjectURL(url) }
   }, [asset.url, asset.sha256, documentId, attempt])
-  return failed ? <button type="button" onClick={() => setAttempt(v => v + 1)}>重试视频</button> : source ? <video src={source} controls={presenting} preload="metadata" playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span aria-busy="true">加载视频…</span>
+  return failed ? <button type="button" onClick={() => setAttempt(v => v + 1)}>重试视频</button> : source ? <video src={source} controls={presenting} preload="metadata" playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', ...style }} /> : <span aria-busy="true">加载视频…</span>
 }
 function AssetImage({ asset, artifactId, alt, style }: { asset: ArtifactAsset; artifactId: string; alt: string; style: CSSProperties }) {
   const [source, setSource] = useState<string | null>(null)
@@ -98,6 +98,7 @@ export interface PageRenderProps {
   visibleNodeIds?: ReadonlySet<string>
   contentBottom?: number
   canvasOnly?: boolean
+  cropEditingId?: string | null
 }
 function TableCell({ value, editing, onCommit }: { value: string; editing: boolean; onCommit(value: string): void }) {
   const root = useRef<HTMLTableCellElement>(null)
@@ -120,8 +121,8 @@ function TableCell({ value, editing, onCommit }: { value: string; editing: boole
     onPaste={event => { event.preventDefault(); window.document.execCommand('insertText', false, event.clipboardData.getData('text/plain')) }}
     onPointerDown={event => { if (editing) event.stopPropagation() }} onBlur={() => { focused.current = false; save(); if (!composing.current) { setRendered(latest.current.value); if (root.current) root.current.textContent = latest.current.value } }}>{rendered}</td>
 }
-function NodeContent({ node, document, page, compute, editingId, onTextChange, onFinishText, onCellChange, presenting }: PageRenderProps & { node: ArtifactNode }) {
-  node = { ...node, style: artifactResolvedStyle(node.style, document) }
+function NodeContent({ node, document, page, compute, editingId, cropEditingId, onTextChange, onFinishText, onCellChange, presenting }: PageRenderProps & { node: ArtifactNode }) {
+  node = { ...node, ...(cropEditingId===node.id ? {crop:undefined} : {}), style: artifactResolvedStyle(node.style, document) }
   const gradient = node.style.gradient
   const fill = gradient ? `url(#native-gradient-${node.id})` : node.style.fill ?? '#d6e6ff'
   switch (node.type) {
@@ -130,7 +131,8 @@ function NodeContent({ node, document, page, compute, editingId, onTextChange, o
     case 'math': return <MathContent source={node.source ?? ''} revision={document.seq} compute={compute} />
     case 'video': {
       const asset = node.assetId ? document.assets[node.assetId] : undefined
-      return asset ? <AssetVideo asset={asset} documentId={document.id} presenting={presenting} /> : null
+      const crop=node.crop??{x:0,y:0,width:1,height:1}
+      return asset ? <div className="native-image-crop"><AssetVideo asset={asset} documentId={document.id} presenting={presenting} style={{width:`${100/Math.max(.01,crop.width)}%`,height:`${100/Math.max(.01,crop.height)}%`,maxWidth:'none',transform:`translate(${-crop.x*100}%,${-crop.y*100}%)`}} /></div> : null
     }
     case 'image': {
       const asset = node.assetId ? document.assets[node.assetId] : undefined

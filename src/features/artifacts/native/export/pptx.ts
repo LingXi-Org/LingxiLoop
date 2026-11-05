@@ -62,7 +62,12 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
       const mounted = await mountExportPage(page, resources)
       try {
         const pageBounds = mounted.element.getBoundingClientRect()
-        const rasterGroups = new Set<string>()
+        // Group IDs are not necessarily before their children in nodeOrder:
+        // grouping existing objects appends the group after those objects.
+        const rasterGroups = new Set(page.nodeOrder.filter(id => {
+          const node=page.nodes[id]!, style=artifactResolvedStyle(node.style,document)
+          return node.type==='group' && !!(style.gradient || style.shadow || node.flipX || node.flipY)
+        }))
         for (const id of page.nodeOrder) {
           resources.check()
           const node = page.nodes[id]!
@@ -90,7 +95,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
           } else if ((node.type === 'text' || node.type === 'note') && !nodeHasMath(node)) {
             slide.addText(node.richText ? textRuns(node.richText) : node.text ?? '', { ...box, fontSize, fontFace: (style.fontFamily ?? 'Arial').split(',')[0]!.replace(/["']/g, ''),
               color: color(style.color), bold: (style.fontWeight ?? 400) >= 600, italic: style.fontStyle === 'italic', align: style.textAlign ?? 'left',
-              margin: 0, breakLine: false, valign: 'top', rotate: rotation, transparency: (1 - (style.opacity ?? 1)) * 100 })
+              margin: (style.padding??0)*.75*scale, ...(node.type==='note' && style.fill ? {fill:{color:color(style.fill,'FFF3B0')}} : {}), breakLine: false, valign: 'top', rotate: rotation, transparency: (1 - (style.opacity ?? 1)) * 100 })
           } else if (node.type === 'shape') {
             const shape = ({ rect: style.borderRadius ? 'roundRect' : 'rect', ellipse: 'ellipse', triangle: 'triangle', diamond: 'diamond', arrow: 'rightArrow' } as const)[node.shape ?? 'rect']
             slide.addShape(shape, { ...box, rectRadius: Math.min(.5, (style.borderRadius ?? 0) / Math.min(node.width, node.height)), rotate: rotation, fill: { color: color(style.fill, 'D97757'), transparency: (1 - (style.opacity ?? 1)) * 100 }, line: style.stroke && style.strokeWidth ? { color: color(style.stroke), width: style.strokeWidth * .75 } : { transparency: 100 } })

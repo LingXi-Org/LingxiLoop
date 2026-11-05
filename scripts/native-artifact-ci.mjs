@@ -11,6 +11,8 @@ import { release as kernelRelease, platform as osPlatform, arch as osArchitectur
 import { fileURLToPath } from 'node:url'
 
 export const BASELINE = 'd004312841026a4d90dfbd9e8292a55cc29a2e95'
+export const FIDELITY_BASELINE = '72162f582fe49e9cbdb03f760e29e3683f9c5c99'
+export function baselineFor(env = process.env) { return env.NATIVE_ARTIFACT_PROFILE === 'fidelity' ? FIDELITY_BASELINE : BASELINE }
 const root = fileURLToPath(new URL('../', import.meta.url))
 const database = arm => `postgresql://postgres:native-artifact-local-test-only@127.0.0.1:25432/native_artifact_${arm}_test`
 const delay = milliseconds => new Promise(resolveDelay => setTimeout(resolveDelay, milliseconds))
@@ -24,6 +26,7 @@ for (const code of ['configuration_invalid', 'browser_dependency_missing', 'expo
 for (const code of ['export_offline_browser_mismatch', 'export_offline_html_incomplete', 'export_offline_html_open_failed']) failureCodes.add(code)
 
 export function configuration(env = process.env) {
+  assert.ok(!env.NATIVE_ARTIFACT_PROFILE || ['retirement','fidelity'].includes(env.NATIVE_ARTIFACT_PROFILE), 'known measurement profile required')
   assert.ok(['diagnostic', 'paired'].includes(env.NATIVE_ARTIFACT_PHASE), 'explicit acceptance phase required')
   const temporary = resolve(env.RUNNER_TEMP ?? '/tmp')
   const privateRoot = resolve(env.NATIVE_ARTIFACT_PRIVATE ?? '')
@@ -31,7 +34,7 @@ export function configuration(env = process.env) {
   const publicRoot = resolve(env.NATIVE_ARTIFACT_PUBLIC ?? '')
   assert.ok(isAbsolute(env.NATIVE_ARTIFACT_PUBLIC ?? '') && publicRoot !== privateRoot && !publicRoot.startsWith(privateRoot + '/') && !privateRoot.startsWith(publicRoot + '/'), 'public and private directories must be separate')
   assert.ok(isAbsolute(env.NATIVE_ARTIFACT_BASELINE_ROOT ?? ''), 'explicit frozen checkout required')
-  return { phase: env.NATIVE_ARTIFACT_PHASE, privateRoot, publicRoot, baselineRoot: resolve(env.NATIVE_ARTIFACT_BASELINE_ROOT) }
+  return { phase: env.NATIVE_ARTIFACT_PHASE, fidelity: env.NATIVE_ARTIFACT_PROFILE === 'fidelity', baselineCommit: baselineFor(env), privateRoot, publicRoot, baselineRoot: resolve(env.NATIVE_ARTIFACT_BASELINE_ROOT) }
 }
 
 async function downloadDiagnosticReceipt(env, artifactName) {
@@ -73,7 +76,7 @@ export async function verifyDiagnosticPrerequisite(env = process.env, fetcher = 
   assert.equal(artifacts.length, 1, 'exact unexpired diagnostic artifact required')
   const receipt = await receiptReader(env, artifactName)
   assert.equal(receipt.phase, 'diagnostic')
-  assert.equal(receipt.baselineCommit, BASELINE)
+  assert.equal(receipt.baselineCommit, baselineFor(env))
   assert.equal(receipt.candidateCommit, env.GITHUB_SHA)
   assert.equal(receipt.diagnosticPassed, true)
   assert.equal(receipt.qualified, false)
@@ -91,7 +94,7 @@ export async function verifyDiagnosticPrerequisite(env = process.env, fetcher = 
 
 // Permit numeric evidence and fixed labels only. URLs, errors, headers, cookies,
 // HTML, source code, prompts and arbitrary strings never enter uploaded JSON.
-const labels = new Set(['baseline', 'candidate', 'design', 'slides', 'passed', 'failed', 'unsupported', 'diagnostic', 'paired', 'fullNavigation', 'workbenchOpen', 'html', 'pdf', 'pptx', 'Script', 'Document', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'page', 'iframe', 'worker', 'service_worker', 'none', 'observed', 'incomplete', 'nativePageStrip', 'legacySlidesRail', 'legacyDesignPageKey', 'legacyDesignBoard', 'insertText'])
+const labels = new Set(['baseline', 'candidate', 'design', 'slides', 'passed', 'failed', 'unsupported', 'diagnostic', 'paired', 'fullNavigation', 'workbenchOpen', 'html', 'pdf', 'pptx', 'Script', 'Document', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'page', 'iframe', 'worker', 'service_worker', 'none', 'observed', 'incomplete', 'nativePageStrip', 'nativeDesignKeyboard', 'legacySlidesRail', 'legacyDesignPageKey', 'legacyDesignBoard', 'insertText'])
 const dottedVersion = /^\d{1,3}(?:\.\d{1,6}){1,4}$/
 const linuxKernelPattern = String.raw`\d{1,3}\.\d{1,3}\.\d{1,4}(?:[.-]\d{1,6})?(?:-(?:generic|azure|aws|amd64|cloud-amd64))?\+?`
 const linuxPlatform = new RegExp(`^Linux-${linuxKernelPattern}-(?:x86_64|aarch64)-with-glibc\\d{1,3}\\.\\d{1,3}$`)
@@ -159,8 +162,8 @@ async function executionEnvironment(config) {
     distribution: ['ubuntu', 'debian'].includes(distribution) ? distribution : null,
     distributionVersion: distributionVersion && /^\d{1,3}(?:\.\d{1,3})?$/.test(distributionVersion) ? distributionVersion : null,
     node: /^v\d{1,3}(?:\.\d{1,6}){2}$/.test(process.version) ? process.version : null,
-    expectedRuntime: { baseline: '3.8.25', candidate: '4.0.0' },
-    installedRuntime: { baseline: await runtimeVersion(join(config.baselineRoot, 'node_modules/@lyyzka/lingxios/package.json')), candidate: await runtimeVersion(join(root, 'node_modules/@lingxi-org/lingxios/package.json')) } }
+    expectedRuntime: { baseline: config.fidelity ? '4.0.0' : '3.8.25', candidate: '4.0.0' },
+    installedRuntime: { baseline: await runtimeVersion(join(config.baselineRoot, config.fidelity ? 'node_modules/@lingxi-org/lingxios/package.json' : 'node_modules/@lyyzka/lingxios/package.json')), candidate: await runtimeVersion(join(root, 'node_modules/@lingxi-org/lingxios/package.json')) } }
 }
 
 export function compactReceipt(safe) {
@@ -225,18 +228,18 @@ async function bootstrap(config) {
     const env = { ...process.env, NODE_ENV: 'test', DATABASE_URL: database(arm), INTEGRATION_DATABASE_URL: database(arm), DOTENV_CONFIG_PATH: '/dev/null',
       REDIS_URL: `redis://127.0.0.1:26379/${arm === 'baseline' ? 1 : 2}`, WUKONG_USER_TOKEN_SECRET: 'native-artifact-local-test-only',
       LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:24411', OPENAI_API_KEY: 'native-artifact-provider-disabled', OPENAI_BASE_URL: 'http://127.0.0.1:1', LINGXILOOP_DISABLE_EMBEDDINGS: '1' }
-    if (arm === 'baseline') {
+    if (arm === 'baseline' && !config.fidelity) {
       // The existing verified historical fixture executes the official 3.8.25
       // chain and product62 SQL. No candidate SDK is run as the old product.
       const code = "import {withFormal25TestFixture} from './server/scripts/formal19-test-fixture.mjs';import{execFile}from'node:child_process';import{promisify}from'node:util';await withFormal25TestFixture(process.cwd(),process.env,async(root,env)=>{await promisify(execFile)(process.execPath,['server/scripts/bootstrap-runtime-patch-test-db.mjs'],{cwd:root,env,timeout:900000,maxBuffer:2097152})})"
       await execute(config, 'bootstrap-baseline', process.execPath, ['--input-type=module', '-e', code], root, env)
       const verify = "import{assertMigrationsCurrent}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{await assertMigrationsCurrent()}finally{await pool.end()}"
       await execute(config, 'verify-frozen-baseline-database', process.execPath, ['--import', 'tsx', '--input-type=module', '-e', verify], config.baselineRoot, env)
-    } else await execute(config, 'bootstrap-candidate', process.execPath, ['server/scripts/bootstrap-runtime-patch-test-db.mjs'], root, env)
+    } else await execute(config, `bootstrap-${arm}`, process.execPath, ['server/scripts/bootstrap-runtime-patch-test-db.mjs'], arm === 'baseline' ? config.baselineRoot : root, env)
   }
 }
 async function measure(config) {
-  assert.equal(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: config.baselineRoot, encoding: 'utf8' }).trim(), BASELINE)
+  assert.equal(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: config.baselineRoot, encoding: 'utf8' }).trim(), config.baselineCommit)
   for (const name of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GOOGLE_API_KEY', 'GEMINI_API_KEY']) assert.ok(!process.env[name], 'measurement cannot inherit model credentials')
   const tasks = []
   try {
@@ -246,7 +249,7 @@ async function measure(config) {
       const status = join(config.privateRoot, `${arm}-service-status.json`)
       const env = { ...process.env, DATABASE_URL: database(arm), REDIS_URL: `redis://127.0.0.1:26379/${index + 1}`, DOTENV_CONFIG_PATH: '/dev/null' }
       delete env.NODE_AUTH_TOKEN; delete env.GH_TOKEN; delete env.GITHUB_TOKEN
-      const task = child(process.execPath, ['--import', 'tsx', join(root, 'scripts/native-artifact-serve.mjs'), `--root=${checkout}`, `--format=${arm === 'baseline' ? 'legacy' : 'native'}`, `--port=${24411 + index}`, `--api-port=${24811 + index}`, `--out=${join(config.privateRoot, `${arm}.json`)}`, `--status=${status}`], checkout, env, join(config.privateRoot, `${arm}-service.log`))
+      const task = child(process.execPath, ['--import', 'tsx', join(root, 'scripts/native-artifact-serve.mjs'), `--root=${checkout}`, `--format=${arm === 'baseline' && !config.fidelity ? 'legacy' : 'native'}`, `--port=${24411 + index}`, `--api-port=${24811 + index}`, `--out=${join(config.privateRoot, `${arm}.json`)}`, `--status=${status}`], checkout, env, join(config.privateRoot, `${arm}-service.log`))
       tasks.push(task)
       const deadline = Date.now() + 600000
       while (true) {
@@ -261,6 +264,7 @@ async function measure(config) {
     await delay(5000)
     const chromium = execFileSync('python', ['-c', 'from playwright.sync_api import sync_playwright\nwith sync_playwright() as p: print(p.chromium.executable_path)'], { encoding: 'utf8' }).trim()
     const arguments_ = [join(root, 'scripts/native-artifact-benchmark.py'), '--baseline', join(config.privateRoot, 'baseline.json'), '--candidate', join(config.privateRoot, 'candidate.json'), '--browser', chromium, '--out', join(config.privateRoot, 'measurement', 'report.json')]
+    if (config.fidelity) arguments_.push('--fidelity')
     if (config.phase === 'diagnostic') arguments_.push('--diagnostic', '--keep-going')
     else arguments_.push('--runs', '10')
     await execute(config, 'measurement', 'python', arguments_)
@@ -275,7 +279,7 @@ async function summarize(config) {
     const state = await readFile(join(config.privateRoot, `${arm}-service-status.json`), 'utf8').then(JSON.parse).catch(() => null)
     if (state && serviceStages.has(state.phase)) servicePhases[arm] = { phase: state.phase, ...(state.failed ? { code: codes.has(state.code) ? state.code : 'CHILD_FAILED' } : {}) }
   }
-  const safe = { schemaVersion: 1, phase: config.phase, baselineCommit: BASELINE,
+  const safe = { schemaVersion: 1, phase: config.phase, baselineCommit: config.baselineCommit,
     candidateCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
     executionEnvironment: await executionEnvironment(config),
     checkpoint: { phase: phases.has(phase.phase) ? phase.phase : 'guard', status: phase.status === 'passed' ? 'passed' : 'failed', ...(phase.status === 'failed' ? { code: safeCode(phase) } : {}) },

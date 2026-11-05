@@ -137,6 +137,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   }
   const select = async index => {
     if (kind === 'design') {
+      if (!(await page.getByLabel('画布缩放',{exact:true}).innerText()).includes('50%')) { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'50%',exact:true}).click() }
       const p = document.pages[`page-${index}`]
       await page.locator('.native-stage').evaluate((element,point) => { element.scrollLeft=point.x*.5; element.scrollTop=point.y*.5 },p)
       await page.locator(`[data-page-id="page-${index}"] .native-board-label`).click()
@@ -168,6 +169,47 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if (kind==='design') { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'50%',exact:true}).click() }
     await page.getByRole('button',{name:'显示属性',exact:true}).click()
+    if (options.checks === 'interactions') {
+      const waitSaved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      const before=document.pages['page-1'].nodeOrder.length
+      await page.getByRole('button',{name:'文本',exact:true}).click()
+      const box=await page.locator('[data-page-id="page-1"] .native-page-scaled').boundingBox();assert.ok(box)
+      const scale=box.width/document.pages['page-1'].width
+      await page.mouse.click(box.x+120*scale,box.y+820*scale)
+      const input=page.locator('[data-native-text-editor]');await input.waitFor();await input.fill('Native action regression');await input.press('Control+s');await waitSaved();await input.press('Escape')
+      assert.equal(document.pages['page-1'].nodeOrder.length,before+1)
+      assert.ok(Object.values(document.pages['page-1'].nodes).some(n=>n.text==='Native action regression'))
+      const shape=page.locator('[data-node-id="page-1-shape"]');await shape.click()
+      await page.locator('.native-inspector-section').filter({has:page.locator('summary',{hasText:'渐变'})}).locator('summary').click()
+      await page.getByLabel('填充类型',{exact:true}).selectOption('linear');await waitSaved()
+      assert.equal(document.pages['page-1'].nodes['page-1-shape'].style.gradient.type,'linear')
+      const y=document.pages['page-1'].nodes['page-1-shape'].y
+      await page.getByLabel('历史记录',{exact:true}).click();await page.keyboard.press('ArrowDown');await page.keyboard.press('ArrowDown');await page.keyboard.press('Escape')
+      assert.equal(document.pages['page-1'].nodes['page-1-shape'].y,y,'menu navigation must not move an object')
+      const image=page.locator('[data-node-id="page-1-image"]');await image.dblclick()
+      const handle=page.getByLabel('裁剪边缘 se',{exact:true});await handle.waitFor();const edge=await handle.boundingBox();assert.ok(edge)
+      await page.mouse.move(edge.x+edge.width/2,edge.y+edge.height/2);await page.mouse.down();await page.mouse.move(edge.x-60,edge.y-30,{steps:5});await page.mouse.up()
+      await page.getByRole('button',{name:'完成裁剪',exact:true}).click();await waitSaved()
+      assert.ok(document.pages['page-1'].nodes['page-1-image'].crop.width<1)
+      await image.dblclick();assert.equal(await image.locator('img').evaluate(e=>e.style.width),'100%','reopened crop must show the full source image')
+      await page.getByRole('button',{name:'取消裁剪',exact:true}).click()
+      let drawing=false,layouts=false,multiplePages=false
+      if(kind==='design') {
+        await page.getByRole('button',{name:'铅笔',exact:true}).click()
+        await page.mouse.move(box.x+800*scale,box.y+820*scale);await page.mouse.down();await page.mouse.move(box.x+900*scale,box.y+880*scale,{steps:12});await page.mouse.up();await waitSaved()
+        const stroke=Object.values(document.pages['page-1'].nodes).find(n=>n.type==='drawing');assert.ok(stroke);assert.ok(stroke.points.length>2);drawing=true
+      } else {
+        await page.getByRole('button',{name:'添加页面',exact:true}).click();await page.getByRole('button',{name:'标题与正文',exact:true}).click();await waitSaved()
+        const created=document.pages[document.pageOrder[1]];assert.equal(created.nodeOrder.length,2);layouts=true
+        await page.getByRole('button',{name:'网格视图',exact:true}).click()
+        await page.locator('[data-page-target="page-1"]').click();await page.locator('[data-page-target="page-2"]').click({modifiers:['Shift']})
+        await page.locator('[data-page-target="page-2"]').hover();await page.getByLabel('页面 3 操作',{exact:true}).click();await page.getByRole('button',{name:'复制页面',exact:true}).click();await waitSaved()
+        assert.equal(document.pageOrder.length,54);multiplePages=true
+      }
+      assert.deepEqual(errors,[])
+      await page.screenshot({path:join(output,`${kind}-interactions.png`)})
+      return {kind:'isolated-native-editor-interaction-diagnostic',mode:kind,textInsertion:true,gradientSaved:true,menuKeysDoNotNudge:true,cropReopensFullSource:true,drawing,layouts,multiplePages,scope:'controlled HTTP shared reducer fixture, not authenticated product integration',consoleOrPageErrors:errors}
+    }
     if (options.checks === 'cas') {
       const table = editorCase === 'table', nodeId = table ? 'page-1-table' : 'page-1-heading'
       const target = page.locator(`[data-node-id="${nodeId}"]`)

@@ -13,7 +13,17 @@ export function resizeSelection(nodes: ArtifactNode[], handle: ResizeHandle, dx:
   const height = Math.max(8, b.height + (handle.includes('n') ? -dy : handle.includes('s') ? dy : 0))
   const x = handle.includes('w') ? b.x + b.width - width : b.x, y = handle.includes('n') ? b.y + b.height - height : b.y
   const sx = width / Math.max(1, b.width), sy = height / Math.max(1, b.height)
-  return nodes.map(n => ({ ...n, x: x + (n.x - b.x) * sx, y: y + (n.y - b.y) * sy, width: Math.max(1, n.width * sx), height: Math.max(1, n.height * sy) }))
+  return nodes.map(n => ({ ...n, x: x + (n.x - b.x) * sx, y: y + (n.y - b.y) * sy, width: Math.max(1, n.width * sx), height: Math.max(1, n.height * sy), ...(n.points ? {points:n.points.map(p=>({x:p.x*sx,y:p.y*sy}))} : {}) }))
+}
+export function ungroupNodes(group: ArtifactNode, children: ArtifactNode[]): ArtifactNode[] {
+  const angle=group.rotation*Math.PI/180, mirrored=!!group.flipX!==!!group.flipY
+  return children.map(node=>{
+    const x=(node.x+node.width/2-group.width/2)*(group.flipX?-1:1),y=(node.y+node.height/2-group.height/2)*(group.flipY?-1:1)
+    return {...node,parentId:group.parentId,x:group.x+group.width/2+Math.cos(angle)*x-Math.sin(angle)*y-node.width/2,y:group.y+group.height/2+Math.sin(angle)*x+Math.cos(angle)*y-node.height/2,rotation:group.rotation+(mirrored?-node.rotation:node.rotation),flipX:!!group.flipX!==!!node.flipX,flipY:!!group.flipY!==!!node.flipY,...(group.scope==='canvas'?{scope:'canvas' as const}:{})}
+  })
+}
+export function appendDrawingPoint(points: Array<{x:number;y:number}>, point: {x:number;y:number}) {
+  return [...(points.length>=1999?points.filter((_,index)=>index%2===0):points),point]
 }
 export function distributeNodes(nodes: ArtifactNode[], axis: 'horizontal' | 'vertical'): ArtifactNode[] {
   if (nodes.length < 3) return nodes

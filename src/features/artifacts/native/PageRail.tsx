@@ -29,7 +29,7 @@ export function PageRail({ document, loadedPageIds, previews, current, selected,
     if (at < element.scrollLeft || at + 136 > element.scrollLeft + element.clientWidth) element.scrollTo({ left: Math.max(0, at - element.clientWidth / 2 + 68), behavior: 'instant' })
   }, [current, grid, document.pageOrder])
   return <nav className={grid ? 'native-page-grid' : 'native-pages'} aria-label={document.kind === 'slides' ? '页面导航' : '画板导航'}>
-    <div ref={root} className="native-page-list" onScroll={e => setScroll({ x: e.currentTarget.scrollLeft, y: e.currentTarget.scrollTop })}>
+    <div ref={root} className="native-page-list" aria-orientation={grid ? 'vertical' : 'horizontal'} onScroll={e => setScroll({ x: e.currentTarget.scrollLeft, y: e.currentTarget.scrollTop })}>
       <div className="native-rail-space" style={{ width: grid ? '100%' : document.pageOrder.length * step, height: grid ? Math.ceil(document.pageOrder.length / columns) * rowHeight : rowHeight }}>
         {document.pageOrder.slice(first, end).map((pageId, offset) => {
           const index = first + offset, page = document.pages[pageId]!

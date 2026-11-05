@@ -435,9 +435,19 @@ def navigate(page, kind, number):
                         page.wait_for_timeout(50); continue
                     return {"control": "nativePageStrip", "wheelEvents": wheel_count}
                 current = native.locator('[data-page-target]').evaluate_all("nodes=>nodes.map(node=>Number(node.dataset.pageTarget.replace('page-','')))")
-                native.hover(); page.mouse.wheel(0, -500 if current and number < min(current) else 500)
+                native.hover(); delta = -500 if current and number < min(current) else 500
+                page.mouse.wheel(delta if native.get_attribute('aria-orientation') == 'horizontal' else 0, 0 if native.get_attribute('aria-orientation') == 'horizontal' else delta)
                 wheel_count += 1; page.wait_for_timeout(80)
                 break
+            native_design = frame.locator('[data-native-artifact-editor="design"][data-current-page]')
+            if kind == 'design' and native_design.count():
+                current_id = native_design.get_attribute('data-current-page') or ''
+                current = int(current_id.replace('page-', '')) if re.fullmatch(r'page-\d+', current_id) else 1
+                if current == number: return {"control": "nativeDesignKeyboard", "wheelEvents": wheel_count}
+                native_design.focus()
+                page.keyboard.press('PageDown' if current < number else 'PageUp')
+                page.wait_for_timeout(50)
+                continue
             if kind == "slides":
                 target = frame.locator(f'[role="option"][data-slide-id="page-{number}"]')
                 if target.count():
@@ -600,6 +610,11 @@ def export_control(page, arm, kind, format_name):
     for frame in page.frames:
         select = frame.locator('select[aria-label="导出格式"]')
         if select.count(): select.select_option(format_name); return
+        menu = frame.locator('summary[aria-label="导出格式"]')
+        if menu.count():
+            menu.click()
+            frame.get_by_role('button', name={'html':'HTML 网页','pdf':'PDF','pptx':'PowerPoint'}[format_name], exact=True).click()
+            return
     if arm == "candidate": raise MeasurementFailure("native_export_control_missing")
     for frame in page.frames:
         if kind == "slides" and frame.locator('[data-slides-editor]').count():
@@ -666,7 +681,7 @@ def verify_offline_html(source_page, target, arm, browser_executable=None):
             textVerified:pages.every((page,index)=>new RegExp('验收页面\\s*'+(index+1)+'(?!\\d)').test(page.textContent)),
             fontsReady:document.fonts.status==='loaded'&&[...fonts].every(([font,text])=>document.fonts.check(font,text))&&![...document.fonts].some(face=>face.status==='error'),
             fontStylesChecked:fonts.size,fontFacesLoaded:[...document.fonts].filter(face=>face.status==='loaded').length};
-        }""", arm)
+        }""", 'candidate' if source_page.locator('[data-native-artifact-editor]').count() else arm)
         observations.update(proof, sameBrowserVersion=True)
         if not (proof['pages'] == proof['pagesWithDecodedImages'] == proof['pagesWithFormula'] == 50
                 and proof['textVerified'] and proof['fontsReady'] and proof['fontStylesChecked'] > 0
@@ -682,8 +697,8 @@ def verify_offline_html(source_page, target, arm, browser_executable=None):
         if browser: browser.close()
 
 
-def measure_export(page, process, trace, arm, kind, format_name, host_pss, timeout_ms, browser_executable=None):
-    if arm == 'baseline' and kind == 'design' and format_name in ('html', 'pptx'):
+def measure_export(page, process, trace, arm, kind, format_name, host_pss, timeout_ms, browser_executable=None, fidelity=False):
+    if not fidelity and arm == 'baseline' and kind == 'design' and format_name in ('html', 'pptx'):
         return {"format": format_name, "status": "unsupported", "peakPssBytes": None, "bytes": None,
                 "scope": 'frozenBaselineDesignHasNoPptx' if format_name == 'pptx' else 'frozenBaselineDesignOnlySingleBoardHtml'}
     result = {"format": format_name, "status": "failed", "peakPssBytes": None, "bytes": None}
@@ -781,7 +796,8 @@ def summarize(report, kinds, arms, diagnostic):
     for kind in kinds:
         before, after = report['summary'].get(f'baseline:{kind}'), report['summary'].get(f'candidate:{kind}')
         if not before or not after: continue
-        for metric, point, ratio in [('editableMs', 'p75', .7), ('scriptTransferBytes', 'p50', .5), ('pssDeltaBytes', 'p50', .7)]:
+        ratios = [('editableMs', 'p75', 1.05), ('scriptTransferBytes', 'p50', 1.05), ('pssDeltaBytes', 'p50', 1.05)] if report.get('fidelity') else [('editableMs', 'p75', .7), ('scriptTransferBytes', 'p50', .5), ('pssDeltaBytes', 'p50', .7)]
+        for metric, point, ratio in ratios:
             a, b = before[metric][point], after[metric][point]
             observed = before['successfulSamples'] >= 10 and after['successfulSamples'] >= 10 and a is not None and b is not None and a > 0
             gates.append({'kind': kind, 'mode': 'fullNavigation', 'metric': metric, 'requiredRatio': ratio,
@@ -821,6 +837,7 @@ def main():
     parser.add_argument('--baseline'); parser.add_argument('--candidate'); parser.add_argument('--out')
     parser.add_argument('--browser', '--chromium', dest='browser')
     parser.add_argument('--runs', type=int, default=10); parser.add_argument('--kinds', default='design,slides')
+    parser.add_argument('--fidelity', action='store_true')
     parser.add_argument('--diagnostic', action='store_true'); parser.add_argument('--self-check', action='store_true')
     parser.add_argument('--skip-traversal', action='store_true'); parser.add_argument('--keep-going', action='store_true')
     parser.add_argument('--idle-ms', type=int, default=5000); parser.add_argument('--host-idle-ms', type=int, default=12000)
@@ -851,7 +868,7 @@ def main():
         'environment': {'platform': platform.platform(), 'viewport': [1440, 1000], 'network': {'latencyMs': 20, 'downloadMbps': 4, 'uploadMbps': 3},
             'cpuRate': 1, 'coldProcessPerSample': True, 'authenticatedCookieOnly': True, 'hostIdleMs': args.host_idle_ms,
             'scriptIdleWindowMs': args.idle_ms, 'naturalCloseWindowMs': args.natural_close_ms, 'exportPeakIntervalMs': 100},
-        'arms': {arm: {'commit': config.get('commit') if re.fullmatch('[a-f0-9]{40}', config.get('commit', '')) else None,
+        'fidelity': args.fidelity, 'arms': {arm: {'commit': config.get('commit') if re.fullmatch('[a-f0-9]{40}', config.get('commit', '')) else None,
                       'fixtureSemanticHashes': {kind: config.get('fixtureManifests', {}).get(kind, {}).get('semanticSha256') for kind in kinds}}
                  for arm, config in configs.items()}, 'samples': []}
     def persist():
@@ -938,7 +955,7 @@ def main():
                             sample['blankSubtractedPssBytes'] = sample['afterTraversalPss']['bytes'] - sample['emptyBrowserPss']['bytes']
                             sample['phase'] = 'export'
                             if run == 0 and mode == 'fullNavigation':
-                                sample['exports'] = [measure_export(page, process, trace, arm, kind, name, host, args.export_timeout_ms, args.browser) for name in FORMATS]
+                                sample['exports'] = [measure_export(page, process, trace, arm, kind, name, host, args.export_timeout_ms, args.browser, args.fidelity) for name in FORMATS]
                             sample['phase'] = 'closeReclamation'
                             sample['reclamation'] = measure_reclamation(page, process, trace, config, kind, args, host)
                             sample['cdpErrors'] = [row for row in trace.errors if row.get('command') != 'HeapProfiler.collectGarbage']

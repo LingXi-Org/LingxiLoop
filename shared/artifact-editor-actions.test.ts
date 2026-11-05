@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createDocument, createPage, createNode, validateArtifactDocument } from './artifact-document.js'
 import { applyOperations, prepareBatch, ArtifactOperationConflict } from './artifact-operations.js'
-import { duplicatePages, distributeNodes, resizeSelection, layoutSlide, drawingNode } from './artifact-editor-actions.js'
+import { duplicatePages, distributeNodes, resizeSelection, layoutSlide, drawingNode, ungroupNodes, appendDrawingPoint } from './artifact-editor-actions.js'
 
 function fixture() {
   const doc = createDocument('slides', 'fixture'), page = createPage('first')
@@ -54,4 +54,20 @@ test('slide layouts create editable native nodes without replacing existing cont
   const nodes = layoutSlide('title-body', createPage('p'), () => `layout-${++count}`)
   assert.equal(nodes.length, 2)
   assert.ok(nodes.every(node => node.type === 'text' && node.width > 0 && node.height > 0))
+})
+test('resizing a drawing changes its actual local point geometry',()=>{
+  const node=drawingNode('d',[{x:0,y:0},{x:100,y:100}],'pencil')
+  assert.deepEqual(resizeSelection([node],'se',100,100)[0].points,[{x:0,y:0},{x:200,y:200}])
+})
+test('ungrouping rotated mirrored objects preserves their world-space geometry',()=>{
+  const group={...createNode('group','g'),x:100,y:200,width:200,height:100,rotation:90,flipX:true}
+  const child={...createNode('shape','c'),parentId:'g',x:0,y:0,width:40,height:20,rotation:15}
+  const result=ungroupNodes(group,[child])[0]
+  assert.equal(result.rotation,75);assert.equal(result.flipX,true);assert.equal(result.parentId,null)
+  assert.ok(Math.abs(result.x-220)<1e-9);assert.ok(Math.abs(result.y-320)<1e-9)
+})
+test('long stroke sampling keeps the gesture origin and latest point within its bound',()=>{
+  let points=[{x:10,y:20}]
+  for(let i=1;i<6000;i++) points=appendDrawingPoint(points,{x:10+i,y:20+i})
+  assert.deepEqual(points[0],{x:10,y:20});assert.deepEqual(points.at(-1),{x:6009,y:6019});assert.ok(points.length<=2000)
 })
