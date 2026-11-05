@@ -88,9 +88,13 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(['svg-font','svg-font-error','svg-font-cancel'].includes(options.checks)){
     const node={...createNode('svg','font-svg'),svg:'<svg xmlns="http://www.w3.org/2000/svg" width="600" height="150" viewBox="0 0 600 150"><text x="16" y="100" font-family="Merriweather" font-size="80" font-weight="700">Hello</text></svg>'}
     document.pages['page-1'].nodes[node.id]=node;document.pages['page-1'].nodeOrder.push(node.id)
-    const group={...createNode('group','svg-font-group'),x:80,y:400,width:600,height:150,style:{fontFamily:'Merriweather'}}
+    const group={...createNode('group','svg-font-group'),x:80,y:400,width:600,height:470,style:{fontFamily:'Merriweather'}}
     const child={...node,id:'inherited-svg',parentId:group.id,x:0,y:0,svg:node.svg.replace(' font-family="Merriweather"','')}
     for(const item of [group,child]){document.pages['page-1'].nodes[item.id]=item;document.pages['page-1'].nodeOrder.push(item.id)}
+    for(const [index,value]of ['inherit','unset'].entries()){
+      const item={...child,id:`svg-root-${value}`,y:(index+1)*160,svg:child.svg.replace('<svg ',`<svg font-family="${value}" `)}
+      document.pages['page-1'].nodes[item.id]=item;document.pages['page-1'].nodeOrder.push(item.id)
+    }
   }
   if(options.checks==='table-stability'){
     const page=document.pages['page-1'],table={...createTableNode('stable-table',page),tableHeader:false,cells:[['甲','乙'],['丙'],['丁','戊']]}
@@ -409,7 +413,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       const imageSource=await rendered.getAttribute('src')
       const inherited=page.locator('[data-node-id="inherited-svg"] img');await inherited.waitFor();assert.match(decodeURIComponent(await inherited.getAttribute('src')),/@font-face/,'SVG images must preserve an inherited group font')
       assert.match(decodeURIComponent(imageSource),/@font-face/,'SVG image text must carry its actual registered font; parent CSS cannot style image internals')
-      const raster=await rendered.evaluate(async image=>{
+      const paint=async target=>target.evaluate(async image=>{
         await image.decode()
         const loaded=await document.fonts.load('700 80px "LingxiLoopEditor Merriweather"','Hello')
         const canvas=document.createElement('canvas');canvas.width=600;canvas.height=150
@@ -418,11 +422,18 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         context.clearRect(0,0,600,150);context.font='700 80px "LingxiLoopEditor Merriweather"';context.fillText('Hello',16,100)
         return{actual,expected:bounds(),loadedFaces:loaded.filter(face=>face.status==='loaded').length}
       })
+      const raster=await paint(rendered)
       assert.ok(raster.loadedFaces>0)
       for(const axis of ['left','right','top','bottom'])assert.ok(Math.abs(raster.actual[axis]-raster.expected[axis])<=1,`SVG image must paint the actual font on ${axis}`)
+      const inheritedRasters={}
+      for(const id of ['inherited-svg','svg-root-inherit','svg-root-unset']){
+        const image=page.locator(`[data-node-id="${id}"] img`);await image.waitFor();inheritedRasters[id]=await paint(image)
+        assert.deepEqual(inheritedRasters[id].actual,inheritedRasters[id].expected,`${id} must paint the resolved inherited face`)
+      }
       if(kind==='slides'){
-        const thumbnail=page.locator('[data-page-target="page-1"] image[href^="data:image/svg+xml"]').first();await thumbnail.waitFor()
-        assert.match(decodeURIComponent(await thumbnail.getAttribute('href')),/@font-face/,'thumbnails must carry the same actual font')
+        const thumbnails=page.locator('[data-page-target="page-1"] image[href^="data:image/svg+xml"]');await thumbnails.nth(3).waitFor()
+        for(const source of await thumbnails.evaluateAll(es=>es.map(e=>e.getAttribute('href')))){const xml=decodeURIComponent(source);assert.match(xml,/@font-face/,'thumbnails must carry the same actual font');assert.doesNotMatch(xml,/font-family="(?:inherit|unset)"/,'isolated thumbnail roots must resolve their host font')}
+
       }
       await page.screenshot({path:join(output,`${kind}-svg-font-canvas.png`)})
       const result=await page.evaluate(async({root,snapshot})=>{
@@ -435,7 +446,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       },{root,snapshot:document})
       assert.match(result.fontFamily,/LingxiLoopEditor Merriweather/);assert.equal(result.htmlPreservesText,true)
       assert.equal(document.pages['page-1'].nodes['font-svg'].svg,original);assert.deepEqual(errors,[])
-      return{kind:'isolated-svg-font-export-diagnostic',mode:kind,...result,sourceUnchanged:true,canvasFontQualified:false,localFontPaintVerified:true,inheritedGroupFontEmbedded:true,inertImageRetained:true,raster,thumbnailFontEmbedded:kind==='slides',scope:'actual SVG image font packing, bitmap ink bounds versus a loaded local font, thumbnail and static SVG export; controlled HTTP fixture, not complete visual qualification',consoleOrPageErrors:errors}
+      return{kind:'isolated-svg-font-export-diagnostic',mode:kind,...result,sourceUnchanged:true,canvasFontQualified:false,localFontPaintVerified:true,inheritedGroupFontEmbedded:true,inertImageRetained:true,raster,inheritedRasters,thumbnailFontEmbedded:kind==='slides',scope:'actual SVG image font packing, bitmap ink bounds versus a loaded local font, thumbnail and static SVG export; controlled HTTP fixture, not complete visual qualification',consoleOrPageErrors:errors}
     }
     if(options.checks==='font-cas'){
       await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'字体',exact:true}).click()

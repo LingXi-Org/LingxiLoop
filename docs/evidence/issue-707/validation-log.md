@@ -150,3 +150,9 @@
 - `functional/svg-font-error-*.json`：真实字体请求返回 503 后中文重试成功，不修改稿件和撤销历史。`functional/svg-font-cancel-*.json`：实际阻塞字体请求期间远端替换 SVG，迟到图片不会覆盖新源。均为真实 React / 浏览器及受控 HTTP，不代替正式服务性能。
 - 22 项字体、SVG 呈现、导出、缩略图和中文定向测试通过；6 文件 Biome lint、脚本语法与 diff 检查通过。本地完整 typecheck 仍因正式私有 SDK 无权限失败，当前改动文件未报告类型错误。两种编辑器五十页回归重跑通过，47 页哈希不变；Slides 最多 1 页/7 节点，Design 最多 6 页/24 节点。
 - 该批仍须冻结候选 owning CI 与独立只读审查。性能诊断42128136040使用65e83395原始候选，正在运行，不作为本批性能资格。
+
+## SVG 根字体继承复审修正
+
+- [ea72efce owning CI42130520587](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42130520587) 全绿，deploy 跳过。独立只读审查实际复现 P2：SVG 根 font-family 显式 inherit/unset 时，独立图片内仍继承后备字体，虽然本地字体已打包。
+- 在既有实际绘制回归新增根 inherit/unset 两例，先复现 179×57 的后备墨迹与 202×68 的本地字体不符，再把缺省/inherit/unset 都在临时图片呈现中解析为实际宿主别名。保存的 SVG 不变。
+- Design/Slides 的原始属性、无属性组合继承、根 inherit 和根 unset 四例实际墨迹逐边一致；Slides 四图缩略图也消除未解析根字体。22 项定向测试、改动文件 lint、脚本语法和 diff 检查通过；修正后的冻结候选 CI / 独立复审待执行。

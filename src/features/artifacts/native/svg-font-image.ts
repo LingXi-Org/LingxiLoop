@@ -28,7 +28,7 @@ export async function svgFontImage(source:string,inherited:string|undefined,sign
     const xml=new DOMParser().parseFromString(presentSvg(source),'image/svg+xml'),root=xml.documentElement
     if(root.localName!=='svg'||xml.querySelector('parsererror'))throw new Error('图形内容无法读取，请检查原始文件。')
     if(!root.hasAttribute('xmlns'))root.setAttribute('xmlns','http://www.w3.org/2000/svg')
-    if(inherited&&!root.hasAttribute('font-family'))root.setAttribute('font-family',editorFontFamily(inherited)??inherited)
+    if(inherited&&(!root.hasAttribute('font-family')||/^(?:inherit|unset)$/i.test(root.getAttribute('font-family')!.trim())))root.setAttribute('font-family',editorFontFamily(inherited)??inherited)
     if(css){const style=xml.createElementNS('http://www.w3.org/2000/svg','style');style.textContent=css;root.prepend(style)}
     const url=`data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(root))}`,bytes=2*(key.length+url.length)
     signal.throwIfAborted()

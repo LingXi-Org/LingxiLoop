@@ -98,7 +98,7 @@
     "design-page-rename-narrow-light.png": "7e7d70861982e264a98fc78066ff2b4e04314694242b751d2a381e74c53fffc1",
     "design-pages.png": "e5432ba62a25cccb0e14a6d0b511e945d9da731285d64fc10147722b2b5c1e26",
     "design-shapes.png": "7367dbf4fc3488c16e2d90ba05588962b68592588e08448d48b14f65f767b21e",
-    "design-svg-font-canvas.png": "7e991f97e10daa52952fe1dec0184bc6d50b2b10c4c4030365f6183b3a8e7cfc",
+    "design-svg-font-canvas.png": "333df760ebe04f69e72d98ae72a60309a87eb9e8c2f3cf376255a842b84f7e1f",
     "design-two-pages-dark.png": "c0b01e7b166ccef6b4e1b81303e8f0df00f67ba3bb409bce30ba1e62f89aa2ca",
     "design-two-pages-light.png": "63d1094741f5ff37f5b896455ef7bda35cf031e790ac6f022e3562245fb5ff00",
     "design-zoom.png": "d067a4f44aff55bc04df3583e27ec45e89ec762656a8e804f103a6e56aee5064",
@@ -130,7 +130,7 @@
     "slides-inspector.png": "186042d11b90bd58599ef4e5d0dce2b55424e88799d7717e772404453a7b2a52",
     "slides-layouts.png": "c5da8d6789413b9235f1eee6bce05c547719c97c151d2a076d1842a688c93652",
     "slides-shapes.png": "600e2b3924d904365abce482c5b7dd86c45fc7f3da33a8f2ea6e394169b22d6b",
-    "slides-svg-font-canvas.png": "f4b85410b71760b403eb496dbf1008bdc89d86d718235bdc224d7733b1341edd",
+    "slides-svg-font-canvas.png": "ec4261da5281f7622bc4aa6c3561215723385c5f668c9016ff369221ee385d75",
     "slides-svg-font-export-pptx.png": "3db9e36aee73c29935bbfd25dabdbd011d20c902a6b1b785acd2329dfb0fb50c",
     "slides-table-export-pptx.png": "2949f5804504cdd1e5fd36b9088b7fb344a501318d0808b02b206f328afca718",
     "slides-table-inserted.png": "e552a10501dba12ddf035ab3224766fb11f8848b258057d44d886481848f04da",
@@ -143,7 +143,7 @@
     "src/features/artifacts/native/native-editor.css": "9a8bf244ce5a619ce512afe67e60ebf93c4105609b89479190168c09b3f1097d",
     "src/features/artifacts/native/CommentsPanel.tsx": "bc0e01b100c7940082e776bda638af88525f528b801825a8c14d71a89f217a95",
     "src/features/artifacts/native/editor-copy.ts": "abfd904e0f3ced4b0e9e5717cc6bac48de370a10c3d9e927355182abbefefa3b",
-    "scripts/native-editor-ui-acceptance.mjs": "28c50c048a01c41fc59a729b55af169d0fd071a9e4307a12a07f709bb0b53102",
+    "scripts/native-editor-ui-acceptance.mjs": "be5eea0fff02abe9d275093460351ac41b8d42c4ab03be0908ee039670414005",
     "scripts/native-editor-reference-capture.mjs": "802667b18628ddb40162738caa2a29194a1d003fc2a1b5a5def42dbddac1dc49",
     "scripts/native-editor-visual-fixture.mjs": "0f914a4dd4bff805075874e011fa3fa6d98aed382ec9fb29e7190f1a4562f401",
     "shared/artifact-tables.ts": "4c5157f2c73df044942281ce339028cd7ea60c29f33a81b99fe7bdacfdc34db3",
@@ -167,6 +167,6 @@
     "src/features/artifacts/native/popover-position.ts": "c5743412a0177ecceaa407efeec4a36b83fe2d3c8fd7d8bf1a23da2e68afab45",
     "server/src/modules/artifacts/native-document.ts": "3aa0c4d919948590fdb8d520fade3a5d037e4d168f729eddebd8af6150e1df88",
     "src/features/artifacts/native/SvgImage.tsx": "d7ebd32e1c70716815baa194969deae60bb6901a03fdc49342a2418cf10f351d",
-    "src/features/artifacts/native/svg-font-image.ts": "e2a2b2f960d01fb26b1b0add9428c87f32ec67289756d1973f3e946deaf8b832"
+    "src/features/artifacts/native/svg-font-image.ts": "b7f34fbb938b934658144c60d13c61b7074111a6a2cad213c78f925fa790eac3"
   }
 }
