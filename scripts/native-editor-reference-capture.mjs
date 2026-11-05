@@ -10,6 +10,7 @@ import {pathToFileURL} from 'node:url'
 const args=Object.fromEntries(process.argv.slice(2).map(value=>value.replace(/^--/,'').split('=')))
 const sourceRoot=resolve(args['reference-root']??''),output=resolve(args.output??'/tmp/lingxi-reference-evidence')
 assert.ok(args['reference-root'],'--reference-root must identify the separately downloaded pinned release')
+assert.ok(!args['pages-only']||args['pages-url'],'--pages-only requires a disposable --pages-url')
 const inventory=JSON.parse(await readFile(new URL('../docs/evidence/issue-707/source-inventory.json',import.meta.url),'utf8'))
 for(const source of inventory.sources) {
   const bytes=await readFile(join(sourceRoot,source.path))
@@ -99,7 +100,7 @@ async function captureCanvasPages(address) {
     const actions=async name=>{await picker().click();await page.getByRole('button',{name:`Page “${name}” actions`,exact:true}).click()}
     try {
       await page.goto(url.href,{waitUntil:'networkidle'});await picker().waitFor();await page.evaluate(()=>document.fonts.ready)
-      await select('Page 1');cameras.first=await page.getByRole('button',{name:/%, Zoom$/}).innerText()
+      await select('Page 1');assert.equal(await page.locator('[data-mega-artboard]').count(),3,'Canvas-page evidence requires exactly three original boards; remove probe leftovers from the disposable clone');cameras.first=await page.getByRole('button',{name:/%, Zoom$/}).innerText()
       await picker().click()
       if(await page.locator('[data-dc-pages-list]').getByText('Page 2',{exact:true}).count())await page.locator('[data-dc-pages-list]').getByText('Page 2',{exact:true}).click()
       else {assert.equal(await page.locator('[data-dc-pages-list] button').filter({hasText:/^Page /}).count(),1,'Use a fresh disposable page fixture, or reset its second page name to Page 2');await page.getByText('New page',{exact:true}).click()}
