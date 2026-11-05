@@ -31,8 +31,10 @@ try {
     const page=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'light',reducedMotion:'reduce'})
     try {
       const reset=async()=>{await page.goto(url.href,{waitUntil:'networkidle'});await ready(page,kind);await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(200)}
-      const menus=kind==='design'?[['pages',/pages$/],['drawing','More drawing tools'],['shapes','More shapes'],['export','Export'],['zoom',/%, Zoom$/]]:[['shapes','Shapes'],['export','Download'],['zoom',/%, Zoom$/],['layouts','Add slide']]
+      const menus=kind==='design'?[['pages',/pages$/],['drawing','More drawing tools'],['shapes','More shapes'],['export','Export'],['zoom',/%, Zoom$/],['history','Version history'],['comment-options','Comment options']]:[['shapes','Shapes'],['export','Download'],['zoom',/%, Zoom$/],['layouts','Add slide'],['history','Version history'],['comment-options','Comment options']]
       for(const [state,name]of menus){await reset();await page.getByRole('button',{name,exact:typeof name==='string'}).click();await capture(page,kind,state,1440,1000,'light')}
+      await reset();await page.getByRole('button',{name:'Comments',exact:true}).click();await capture(page,kind,'comments-active',1440,1000,'light');await page.mouse.click(kind==='design'?100:800,kind==='design'?500:600);await page.getByRole('textbox',{name:'Comment',exact:true}).waitFor();await capture(page,kind,'comment-composer',1440,1000,'light')
+      await reset();await page.getByRole('button',{name:'Comment options',exact:true}).click();await page.getByText('Show all comments',{exact:true}).click();await capture(page,kind,'all-comments',1440,1000,'light')
       await reset();await page.getByRole('button',{name:'Properties',exact:true}).click();await capture(page,kind,'inspector',1440,1000,'light')
       if(kind==='slides') {
         await page.getByText('#FAF8F4',{exact:true}).click();await capture(page,kind,'color-theme',1440,1000,'light')
@@ -47,7 +49,7 @@ console.log(JSON.stringify({referenceCommit:inventory.referenceCommit,screenshot
 async function capture(page,kind,state,width,height,theme) {
   await page.waitForTimeout(120)
   const filename=`${kind}-${state}.png`;await page.screenshot({path:join(output,filename)})
-  const metrics=await page.evaluate(()=>[...document.querySelectorAll('button,[role=tab],input,select,[role=menuitem],summary')].filter(e=>e.getBoundingClientRect().width&&e.getBoundingClientRect().height&&getComputedStyle(e).visibility!=='hidden').map(e=>{
+  const metrics=await page.locator('button,[role=button],[role=tab],input,select,textarea,[role=menuitem],summary').evaluateAll(elements=>elements.filter(e=>e.getBoundingClientRect().width&&e.getBoundingClientRect().height&&getComputedStyle(e).visibility!=='hidden').map(e=>{
     const s=getComputedStyle(e),r=e.getBoundingClientRect()
     return {label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent?.slice(0,100),role:e.getAttribute('role')??e.tagName.toLowerCase(),rect:{x:r.x,y:r.y,width:r.width,height:r.height},fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,color:s.color,background:s.backgroundColor,border:s.border,shadow:s.boxShadow,radius:s.borderRadius,cursor:s.cursor,transition:s.transition}
   }))

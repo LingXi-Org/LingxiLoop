@@ -17,6 +17,7 @@ import react from '@vitejs/plugin-react'
 import { createFixture } from './native-artifact-fixture.mjs'
 import { createVisualFixture } from './native-editor-visual-fixture.mjs'
 import { applyOperations, prepareBatch } from '../shared/artifact-operations.ts'
+import {decodeCommentAnchor}from'../shared/artifact-comment-anchor.ts'
 
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -57,7 +58,7 @@ try {
     for (const editorCase of options.checks === 'cas' ? ['rte', 'table'] : [null]) {
       const result = await verifyMode(kind, browser, baseUrl, editorCase)
       await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
-      console.log(JSON.stringify(result))
+      console.log(JSON.stringify(options.checks==='parity'?{...result,screenshots:result.screenshots.map(({controls,...row})=>row)}:result))
     }
   }
 } finally {
@@ -74,6 +75,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historical=structuredClone(document),historyNode=Object.values(historical.pages['page-1'].nodes).find(node=>node.type==='text')
   if(options.checks==='history')document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:historyNode.id,patch:{x:historyNode.x+80}}])).document
   const revisionReads=[],revisionRestores=[],contextWrites=[]
+  let commentThreads=[];let commentSequence=0
   const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
   const initialPageHashes = Object.fromEntries(document.pageOrder.map(id => [id, pageHash(document.pages[id])]))
   const history = { version: 0, undo: null, redo: null }, receipts = [], errors = []
@@ -97,9 +99,22 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   })
   await page.route('**/api/artifacts/fixture/**', async route => {
     const request = route.request(), url = new URL(request.url())
+    if(url.pathname.includes('/comments')){
+      const [,threadId,action,messageId]=url.pathname.split('/comments')[1].split('/'),body=request.postData()?request.postDataJSON():null
+      if(request.method()==='GET'){await route.fulfill({status:200,json:{threads:commentThreads,me:{id:'fixture-user',name:'验收用户'},agent:{available:options.checks==='comments'}}});return}
+      let thread=commentThreads.find(thread=>thread.id===threadId)
+      const message=text=>({id:`message-${++commentSequence}`,text,author:{kind:'user',id:'fixture-user',name:'验收用户'},at:new Date().toISOString()})
+      if(!threadId){thread={id:`thread-${++commentSequence}`,anchor:body.anchor,label:body.label,status:'open',messages:[message(body.text)]};commentThreads.push(thread)}
+      else if(action==='messages'&&messageId)thread.messages.find(message=>message.id===messageId).text=body.text
+      else if(action==='messages')thread.messages.push(message(body.text))
+      else if(action==='send')thread.agent={status:'pending'}
+      else if(request.method()==='DELETE')commentThreads=commentThreads.filter(item=>item.id!==threadId)
+      else thread.status=body.status
+      await route.fulfill({status:200,json:{thread}});return
+    }
     if(url.pathname.endsWith('/editor-context'))contextWrites.push(request.postDataJSON())
     if(url.pathname.endsWith('/revisions')){
-      revisionReads.push(true);await route.fulfill({status:200,json:{current:`fixture-${document.seq}`,revisions:[document.seq,0].map(seq=>({seq:String(seq),version:`fixture-${seq}`,actorId:'fixture-user',actorName:'测试用户',actorKind:'user',createdAt:new Date().toISOString(),changedPageIds:['page-1']}))}});return
+      revisionReads.push(true);await route.fulfill({status:200,json:{current:`fixture-${document.seq}`,revisions:[...new Set([document.seq,0])].map(seq=>({seq:String(seq),version:`fixture-${seq}`,actorId:'fixture-user',actorName:'测试用户',actorKind:'user',createdAt:new Date().toISOString(),changedPageIds:['page-1']}))}});return
     }
     if(url.pathname.includes('/revisions/0/document')){
       await route.fulfill({status:200,json:{...snapshot(),document:historical,write:false,history:{version:0,undo:null,redo:null}}});return
@@ -291,6 +306,29 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual(errors,[])
       return {kind:'isolated-version-history-diagnostic',mode:kind,onDemand:true,readonlyPreview:true,restoredThroughExistingApi:true,consoleOrPageErrors:errors}
     }
+    if(options.checks==='comments') {
+      if(kind==='design')await select(1)
+      const control=page.getByRole('button',{name:'评论',exact:true}),rect=await control.boundingBox();assert.ok(rect.y<60,'comments belong in the reference top toolbar')
+      const before=await page.locator('[data-page-id="page-1"]').boundingBox();await control.click()
+      assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('data-tool'),'comment')
+      const shape=Object.values(document.pages['page-1'].nodes).find(node=>node.type==='shape'),box=await page.locator(`[data-node-id="${shape.id}"]`).boundingBox()
+      await page.mouse.click(box.x+box.width/2,box.y+box.height/2)
+      const form=page.locator('.native-comment-composer');await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('请检查这个图形');await form.getByRole('button',{name:'发送',exact:true}).click()
+      await page.waitForFunction(()=>document.querySelectorAll('.native-comment-message').length===1)
+      assert.equal(commentThreads.length,1);const anchor=decodeCommentAnchor(commentThreads[0].anchor);assert.equal(anchor.nodeId,shape.id);assert.ok(Math.abs(anchor.x-.5)<.01&&Math.abs(anchor.y-.5)<.01)
+      assert.deepEqual(await page.locator('[data-page-id="page-1"]').boundingBox(),before,'floating comments must not resize or move the page')
+      await page.getByRole('button',{name:'编辑评论',exact:true}).click();await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('修改后的评论');await form.getByRole('button',{name:'保存',exact:true}).click()
+      await page.getByText('修改后的评论',{exact:true}).waitFor()
+      await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('补充回复');await form.getByRole('button',{name:'发送',exact:true}).click();await page.getByText('补充回复',{exact:true}).waitFor()
+      assert.equal(commentThreads[0].messages.length,2)
+      await page.getByRole('button',{name:'解决评论',exact:true}).click();await page.getByRole('button',{name:'关闭评论',exact:true}).click()
+      await page.getByLabel('评论选项',{exact:true}).click();await page.getByRole('button',{name:/显示全部评论/}).click()
+      const all=page.getByRole('complementary',{name:'全部评论',exact:true});await all.getByLabel('评论筛选',{exact:true}).click();await all.getByRole('button',{name:'显示已解决的评论',exact:true}).click()
+      await all.getByRole('button',{name:'重新打开评论',exact:true}).click();await all.getByRole('button',{name:'发送给 Agent',exact:true}).click();await all.getByText('已发送，等待 Agent 接收',{exact:true}).waitFor()
+      await all.getByLabel('评论操作',{exact:true}).click();await all.getByRole('button',{name:'删除评论',exact:true}).click();await all.getByText('暂无评论',{exact:true}).waitFor();assert.equal(commentThreads.length,0)
+      assert.deepEqual(errors,[])
+      return {kind:'isolated-comment-editor-diagnostic',mode:kind,stableNodeAnchor:true,floatingGeometry:true,createReplyEditResolveReopenSendDelete:true,scope:'controlled same-origin HTTP protocol fixture; real auth/Worker validated separately',consoleOrPageErrors:errors}
+    }
     if(options.checks==='export-ink') {
       const ink=await page.evaluate(async root=>{
         const {captureWithBleed}=await import(`/@fs/${root}/src/features/artifacts/native/export/capture.ts`)
@@ -332,16 +370,18 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
           await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(200)
           if(width===1440&&theme==='light')await writeFile(join(output,`${kind}-dom.json`),JSON.stringify(await page.locator('[data-page-id] [data-node-id]').evaluateAll(nodes=>nodes.map(e=>({id:e.dataset.nodeId,html:e.outerHTML.slice(0,2000),rect:e.getBoundingClientRect().toJSON(),children:[...e.querySelectorAll('h1,.native-text-content,img')].map(c=>({tag:c.tagName,rect:c.getBoundingClientRect().toJSON(),color:getComputedStyle(c).color,display:getComputedStyle(c).display,position:getComputedStyle(c).position,font:getComputedStyle(c).font}))}))),null,2))
           await page.screenshot({path:join(output,`${kind}-${width}-${theme}.png`)})
-          screenshots.push({width,height,theme,path:`${kind}-${width}-${theme}.png`})
+          screenshots.push({width,height,theme,path:`${kind}-${width}-${theme}.png`,controls:await visualControls(page)})
         }
       }
-      await page.setViewportSize({width:1440,height:1000})
-      await page.locator('[data-native-artifact-editor]').evaluate(e=>e.setAttribute('data-theme','light'))
-      await page.getByRole('button',{name:'显示属性',exact:true}).click()
-      await page.waitForTimeout(200)
-      await page.screenshot({path:join(output,`${kind}-inspector.png`)})
-      await page.locator('[data-node-id=page-1-heading]').click();await page.waitForTimeout(100)
-      await page.screenshot({path:join(output,`${kind}-heading-inspector.png`)})
+      const reset=async()=>{await page.setViewportSize({width:1440,height:1000});await page.reload({waitUntil:'domcontentloaded'});await ready(1);await page.locator('[data-native-artifact-editor]').evaluate(e=>e.setAttribute('data-theme','light'));await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(120)}
+      const capture=async state=>{await page.waitForTimeout(120);const path=`${kind}-${state}.png`;await page.screenshot({path:join(output,path)});screenshots.push({width:1440,height:1000,theme:'light',state,path,controls:await visualControls(page)})}
+      const menus=kind==='design'?[['pages','页面菜单'],['drawing','绘图工具'],['shapes','插入图形'],['export','导出格式'],['zoom','画布缩放'],['history','版本历史'],['comment-options','评论选项']]:[['shapes','插入图形'],['export','导出格式'],['zoom','画布缩放'],['layouts','添加页面'],['history','版本历史'],['comment-options','评论选项']]
+      for(const [state,label]of menus){await reset();if(['history','layouts'].includes(state))await page.getByRole('button',{name:label,exact:true}).click();else await page.getByLabel(label,{exact:true}).click();if(state==='history')await page.getByRole('dialog',{name:'版本历史',exact:true}).getByRole('button',{name:/^版本/}).waitFor();await capture(state)}
+      await reset();await page.getByRole('button',{name:'评论',exact:true}).click();await capture('comments-active');await page.mouse.click(kind==='design'?100:800,kind==='design'?500:600);await page.getByRole('textbox',{name:'评论内容',exact:true}).waitFor();await capture('comment-composer')
+      await reset();await page.getByLabel('评论选项',{exact:true}).click();await page.getByRole('button',{name:/显示全部评论/}).click();await page.getByText('暂无评论',{exact:true}).waitFor();await capture('all-comments')
+      await reset();await page.getByRole('button',{name:'显示属性',exact:true}).click();await capture('inspector')
+      await page.getByRole('button',{name:'背景',exact:true}).click();await page.getByRole('dialog',{name:'背景颜色',exact:true}).waitFor();await capture('color-theme');await page.getByRole('button',{name:'自定义',exact:true}).click();await capture('color-custom')
+      await reset();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.locator('[data-node-id=page-1-heading]').click();await capture('heading-inspector')
       assert.equal(await page.getByRole('complementary',{name:'属性面板'}).count(),1)
       assert.deepEqual(errors,[])
       return {kind:'isolated-native-editor-visual-diagnostic',mode:kind,screenshots,scope:'controlled HTTP reducer fixture; screenshots only, not measured source parity, real API or performance acceptance',consoleOrPageErrors:errors}
@@ -622,9 +662,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     document = agentChange.document; historyEntry = { inverse: agentChange.inverse, forward: agentBatch.operations }
     history.version = document.seq; history.undo = agentBatch.operationId; history.redo = null
     await page.waitForFunction(() => window.document.querySelector('[data-node-id="page-50-heading"]')?.textContent === 'Agent collaborative heading')
-    await page.getByLabel('历史记录',{exact:true}).click(); await page.getByRole('button', { name: '撤销',exact:true }).click()
+    await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+z')
     await page.waitForFunction(value => window.document.querySelector('[data-node-id="page-50-heading"]')?.textContent === value, expected.get(50))
-    await page.getByLabel('历史记录',{exact:true}).click(); await page.getByRole('button', { name: '重做',exact:true }).click()
+    await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+y')
     await page.waitForFunction(() => window.document.querySelector('[data-node-id="page-50-heading"]')?.textContent === 'Agent collaborative heading')
     assert.deepEqual(historyRequests, ['undo', 'redo', 'undo', 'redo'])
     const changedPageIds = document.pageOrder.filter(id => pageHash(document.pages[id]) !== initialPageHashes[id]).sort()
@@ -662,3 +702,5 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       agentPlainTextPatchVisible: true, isolatedInteraction, consoleOrPageErrors: errors }
   } catch(error) { await page.screenshot({path:join(output,`${kind}-failure.png`)}); const diagnostic=await page.evaluate(()=>({geometry:window.__geometryLog,zoom:document.querySelector('[aria-label="画布缩放"]')?.textContent,stage:[...document.querySelectorAll('.native-stage')].map(e=>({scrollLeft:e.scrollLeft,scrollTop:e.scrollTop,w:e.clientWidth,h:e.clientHeight,scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})),notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent)}));await writeFile(join(output,`${kind}-failure.json`),JSON.stringify({message:String(error),errors,diagnostic},null,2));throw error } finally { releaseAcknowledgment?.(); await page.close() }
 }
+
+async function visualControls(page){return page.locator('button,[role=button],[role=tab],input,select,textarea,[role=menuitem],summary').evaluateAll(elements=>elements.filter(e=>e.getBoundingClientRect().width&&e.getBoundingClientRect().height&&getComputedStyle(e).visibility!=='hidden').map(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect();return {label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent?.slice(0,100),role:e.getAttribute('role')??e.tagName.toLowerCase(),rect:{x:r.x,y:r.y,width:r.width,height:r.height},fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,color:s.color,background:s.backgroundColor,border:s.border,shadow:s.boxShadow,radius:s.borderRadius,cursor:s.cursor,transition:s.transition}}))}
