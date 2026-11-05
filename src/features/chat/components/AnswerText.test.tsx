@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import test, { mock } from 'node:test'
 import { useContext } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { load } from 'cheerio'
 import { AssistantRuntimeProvider, MessagePrimitive, ThreadPrimitive, useExternalStoreRuntime, useMessagePartText, type ThreadMessage } from '@assistant-ui/react'
 import { TextOffsetContext } from '@/components/assistant-ui/text-offset-context'
-import { AnswerText } from './AnswerText'
+mock.module('@/api/core/http', { namedExports: { http: () => { throw new Error('no automatic export') } } })
+const { AnswerText } = await import('./AnswerText')
 
 function Text() {
   const { text } = useMessagePartText()
