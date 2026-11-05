@@ -2,9 +2,10 @@ import assert from 'node:assert/strict'
 
 /** Fixed local acceptance storage. Never inherit a real bucket or credential. */
 export function nativeArtifactStorageConfiguration(env = {}, origin = 'https://localhost:24412') {
-  assert.equal(origin, 'https://localhost:24412', 'native acceptance storage requires its dedicated local origin')
+  assert.ok(['https://localhost:24411','https://localhost:24412'].includes(origin), 'native acceptance storage requires its dedicated local origin')
+  const arm=origin.endsWith(':24411')?'baseline':'candidate'
   const configuration = {
-    R2_ENDPOINT: 'http://127.0.0.1:29000', R2_BUCKET: 'native-artifact-candidate-test',
+    R2_ENDPOINT: 'http://127.0.0.1:29000', R2_BUCKET: `native-artifact-${arm}-test`,
     R2_ACCESS_KEY_ID: 'native-artifact-access', R2_SECRET_ACCESS_KEY: 'native-artifact-storage-test-only',
     R2_PUBLIC_BASE: `${origin}/native-artifact-objects`, R2_URL_SIGNING_SECRET: 'native-artifact-local-test-only',
   }
@@ -14,8 +15,8 @@ export function nativeArtifactStorageConfiguration(env = {}, origin = 'https://l
   return configuration
 }
 
-export async function ensureNativeArtifactBucket(configuration) {
-  const local = nativeArtifactStorageConfiguration(configuration)
+export async function ensureNativeArtifactBucket(configuration,origin='https://localhost:24412') {
+  const local = nativeArtifactStorageConfiguration(configuration,origin)
   const { S3Client, CreateBucketCommand } = await import('@aws-sdk/client-s3')
   const client = new S3Client({ endpoint: local.R2_ENDPOINT, region: 'us-east-1', forcePathStyle: true,
     credentials: { accessKeyId: local.R2_ACCESS_KEY_ID, secretAccessKey: local.R2_SECRET_ACCESS_KEY } })

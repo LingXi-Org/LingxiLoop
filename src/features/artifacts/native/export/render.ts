@@ -98,7 +98,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         const points = node.points?.length ? node.points : [{ x: 0, y: 0 }, { x: node.width, y: node.height }]
         const markerId = `marker-${page.id}-${node.id}`
         const marker = `<defs><marker id="${markerId}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${escapeHtml(style.stroke ?? '#333')}"/></marker></defs>`
-        content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${node.width || 1} ${node.height || 1}">${marker}<polyline${node.lineStart === 'arrow' ? ` marker-start="url(#${markerId})"` : ''}${node.type !== 'drawing' && node.lineEnd !== 'none' ? ` marker-end="url(#${markerId})"` : ''} points="${points.map(point => `${point.x},${point.y}`).join(' ')}" fill="none" stroke="${escapeHtml(style.stroke ?? style.color ?? '#141413')}" stroke-width="${style.strokeWidth ?? 2}"/></svg>`
+        content = `<svg xmlns="http://www.w3.org/2000/svg" style="overflow:visible" viewBox="0 0 ${node.width || 1} ${node.height || 1}">${marker}<polyline${node.lineStart === 'arrow' ? ` marker-start="url(#${markerId})"` : ''}${node.type !== 'drawing' && node.lineEnd !== 'none' ? ` marker-end="url(#${markerId})"` : ''} points="${points.map(point => `${point.x},${point.y}`).join(' ')}" fill="none" stroke="${escapeHtml(style.stroke ?? style.color ?? '#141413')}" stroke-width="${style.strokeWidth ?? 2}"/></svg>`
         break
       }
       case 'shape': {

@@ -11,7 +11,7 @@ export function createVisualFixture(kind, id='fixture') {
   const files=new Map(),boards={}
   for(let i=1;i<=3;i++) {
     const pageId=`page-${i}`,node=(type,name,x,y,width,height,extra={})=>({id:`${pageId}-${name}`,type,x,y,width,height,rotation:0,parentId:null,style:{},...extra})
-    const nodes=[node('text','heading',64,40,1152,76,{text:`LingxiLoop ${i}`,style:{fontFamily:'Arial',fontSize:48,fontWeight:700,lineHeight:1.25,color:'#18332b'}}),node('image','image',64,200,640,360,{assetId:'image-1'}),node('shape','shape',760,440,180,80,{shape:'rect',style:{fill:'#426b46',borderRadius:12}})]
+    const nodes=[node('text','heading',64,40,1152,76,{text:`LingxiLoop ${i}`,richText:{type:'doc',content:[{type:'heading',attrs:{level:1},content:[{type:'text',text:`LingxiLoop ${i}`}]}]},style:{fontFamily:'Arial',fontSize:48,fontWeight:700,lineHeight:1.25,color:'#18332b'}}),node('image','image',64,200,640,360,{assetId:'image-1'}),node('shape','shape',760,440,180,80,{shape:'rect',style:{fill:'#426b46',borderRadius:12}})]
     const p={id:pageId,title:`Page ${i}`,x:kind==='design'?(i-1)*2080:0,y:0,width:1920,height:1080,background:'#faf8f4',notes:'',skip:false,transition:'none',nodeOrder:nodes.map(n=>n.id),nodes:Object.fromEntries(nodes.map(n=>[n.id,n]))}
     document.pages[pageId]=p;document.pageOrder.push(pageId)
     const source=kind==='slides'?'project/ds/fixture/image-1.png':data

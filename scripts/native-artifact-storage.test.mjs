@@ -12,6 +12,14 @@ test('acceptance storage permits only its dedicated loopback bucket and fixed te
   assert.throws(() => nativeArtifactStorageConfiguration({}, 'https://production.example'))
 })
 
+test('fidelity native baseline gets separate storage on its own fixed origin',()=>{
+  const baseline=nativeArtifactStorageConfiguration({},'https://localhost:24411')
+  assert.equal(baseline.R2_BUCKET,'native-artifact-baseline-test')
+  assert.equal(baseline.R2_PUBLIC_BASE,'https://localhost:24411/native-artifact-objects')
+  assert.deepEqual(nativeArtifactStorageConfiguration(baseline,'https://localhost:24411'),baseline)
+  assert.throws(()=>nativeArtifactStorageConfiguration(baseline,'https://localhost:24412'))
+})
+
 test('native fixture asset retains stable IDs and dimensions with the product upload URL and exact bytes', () => {
   const image = { id: 'image-1', sha256: 'a'.repeat(64), contentType: 'image/png', width: 640, height: 360 }
   const uploaded = { id: 'b'.repeat(32), url: `/api/artifacts/test-slide/assets/${'b'.repeat(32)}`, sha256: image.sha256, contentType: image.contentType }

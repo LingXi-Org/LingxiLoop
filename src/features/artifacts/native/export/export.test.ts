@@ -7,6 +7,14 @@ import { ExportResources } from './common'
 import { encodeArtifactPdf } from './pdf-writer'
 import { renderPageHtml, pageText } from './render'
 
+test('a one-pixel-high horizontal stroke retains ink and arrow overflow in export', async () => {
+  const document=fixture(),page=document.pages.page!
+  const line={...createNode('line','horizontal'),width:240,height:1,points:[{x:0,y:0},{x:240,y:0}],lineEnd:'arrow' as const,style:{stroke:'#18332b',strokeWidth:12}}
+  page.nodes[line.id]=line;page.nodeOrder.push(line.id)
+  const html=await renderPageHtml(page,new ExportResources(document,{format:'html'}))
+  assert.match(html,/<svg[^>]+style="overflow:visible"[^>]*viewBox="0 0 240 1"/)
+})
+
 function fixture() {
   const document = createDocument('slides', 'export-test', '导出测试')
   const page = createPage('page', '第一页'), node = { ...createNode('text', 'text'), text: '<script>doNotExecute()</script> 中文 text' }

@@ -4,6 +4,7 @@ import { artifactPageBackground, artifactResolvedStyle } from '../../../../../sh
 import type { ArtifactExportOptions, ArtifactExportResult } from '../export-artifact'
 import { exportFilename, ExportResources } from './common'
 import { mountExportPage, nodeHasMath } from './render'
+import { captureWithBleed } from './capture'
 import type { PptxJob, PptxPage } from './pptx.worker'
 
 const color = (value: string | undefined, fallback = '141413') => /^#[a-fA-F0-9]{6}$/.test(value ?? '') ? value!.slice(1) : /^#[a-fA-F0-9]{3}$/.test(value ?? '') ? [...value!.slice(1)].map(character => character + character).join('') : fallback
@@ -44,7 +45,6 @@ function textRuns(node: ArtifactRichText): Array<{ text: string; options?: Recor
 export async function exportDocument(document: ArtifactDocument, options: ArtifactExportOptions): Promise<ArtifactExportResult> {
   const resources = new ExportResources(document, options)
   try {
-    const { toPng } = await import('html-to-image')
     const pages: PptxPage[] = []
     const first = document.pages[document.pageOrder[0] ?? '']
     if (!first) throw new Error('没有可导出的页面')
@@ -85,9 +85,15 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
           if (box.w <= 0 || box.h <= 0) continue
           const computed = getComputedStyle(element)
           const fontSize = (style.fontSize ?? Number.parseFloat(computed.fontSize)) * .75 * scale
+          const capture=async()=>{
+            const descendants=Array.from(element.querySelectorAll<HTMLElement>('[data-node-id]')).map(child=>page.nodes[child.dataset.nodeId!]).filter(Boolean)
+            const {data,padding}=await captureWithBleed(mounted.element,element,[style,...descendants.map(n=>artifactResolvedStyle(n.style,document))])
+            const bleed=padding/96*scale
+            return {data,x:box.x-bleed,y:box.y-bleed,w:box.w+2*bleed,h:box.h+2*bleed,rotate:rotation}
+          }
           if (style.gradient || style.shadow || node.flipX || node.flipY || node.type === 'video') {
-            const data = await toPng(element, { pixelRatio: 2, skipAutoScale: true, style: { position: 'static', left: '0', top: '0', transform: 'none', margin: '0' } })
-            resources.check(); slide.addImage({data,...box,rotate:rotation,flipH:node.flipX,flipV:node.flipY})
+            const image=await capture()
+            resources.check(); slide.addImage({...image,flipH:node.flipX,flipV:node.flipY})
             if (node.type === 'group') rasterGroups.add(node.id)
             resources.warnings.add(`${page.title} / ${node.id}：复杂外观以图片导出；原稿保留可编辑属性。`)
           } else if (node.type === 'group') {
@@ -103,9 +109,9 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
             slide.addTable((node.cells ?? []).map(row => row.map(text => ({ text }))), { ...box, fontSize, color: color(style.color), border: { type: 'solid', color: color(style.stroke, '73726C'), pt: 1 }, margin: 4, autoPage: false })
           } else {
             // Only unsupported nodes become pictures; ordinary objects on the page remain editable.
-            const data = await toPng(element, { pixelRatio: 2, skipAutoScale: true, style: { position: 'static', left: '0', top: '0', transform: 'none', margin: '0' } })
+            const image=await capture()
             resources.check()
-            slide.addImage({ data, ...box, rotate: rotation })
+            slide.addImage(image)
             if (['math', 'svg', 'embed', 'text', 'table', 'line', 'drawing'].includes(node.type)) resources.warnings.add(`${page.title} / ${node.id}：${node.type === 'math' ? '公式' : '复杂内容'}以图片导出；文档保留源数据。`)
           }
         }

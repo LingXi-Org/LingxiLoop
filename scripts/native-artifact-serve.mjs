@@ -59,7 +59,7 @@ Object.assign(process.env, {
   ...storageConfiguration,
 })
 if (args.format === 'native') {
-  await ensureNativeArtifactBucket(storageConfiguration)
+  await ensureNativeArtifactBucket(storageConfiguration,origin)
   servicePhase('object-storage-ready')
 }
 const load = path => import(pathToFileURL(resolve(root, path)).href)

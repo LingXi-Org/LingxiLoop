@@ -79,6 +79,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     pageVersions: Object.fromEntries(document.pageOrder.map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
   page.setDefaultTimeout(30_000)
+  await page.addInitScript(()=>{window.__geometryLog=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(['visible','update-pages'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()) })
   await page.route('**/isolated-fixture/**', async route => {
@@ -151,25 +152,65 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   try {
     await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     await ready(1)
+    if(options.checks==='export-ink') {
+      const ink=await page.evaluate(async root=>{
+        const {captureWithBleed}=await import(`/@fs/${root}/src/features/artifacts/native/export/capture.ts`)
+        const host=document.createElement('div'),node=document.createElement('div')
+        Object.assign(node.style,{width:'240px',height:'1px'})
+        node.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" style="overflow:visible;width:100%;height:100%" viewBox="0 0 240 1"><defs><marker id="ink-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><polyline points="0,0 240,0" stroke="black" stroke-width="12" marker-end="url(#ink-arrow)"/></svg>'
+        host.append(node);document.body.append(host)
+        try {
+          const {data,padding}=await captureWithBleed(host,node,[{strokeWidth:12}]),image=new Image();image.src=data;await image.decode()
+          const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0)
+          const pixels=ctx.getImageData(0,0,image.width,image.height).data;let left=image.width,top=image.height,right=0,bottom=0
+          for(let y=0;y<image.height;y++)for(let x=0;x<image.width;x++)if(pixels[(y*image.width+x)*4+3]>128){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
+          return {width:image.width,height:image.height,padding,left,top,right,bottom,inkHeight:bottom-top+1}
+        }finally{host.remove()}
+      },root)
+      assert.ok(ink.inkHeight>=100,'arrow ink must exceed the authored one-pixel height');assert.ok(ink.left>0&&ink.top>0&&ink.right<ink.width-1&&ink.bottom<ink.height-1,'no stroke edge may touch the capture boundary')
+      return {kind:'isolated-export-ink-diagnostic',mode:kind,...ink,scope:'actual Chromium html-to-image rasterizer; not a full PPTX rendering comparison'}
+    }
     if (options.checks === 'parity') {
       const screenshots = []
       for (const [width,height] of [[1920,1200],[1440,1000],[768,1024],[390,844]]) {
         await page.setViewportSize({width,height})
+        await page.reload({waitUntil:'domcontentloaded'});await ready(1)
         for (const theme of ['light','dark']) {
           await page.locator('[data-native-artifact-editor]').evaluate((e,theme) => e.setAttribute('data-theme',theme),theme)
+          await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(200)
           await page.screenshot({path:join(output,`${kind}-${width}-${theme}.png`)})
           screenshots.push({width,height,theme,path:`${kind}-${width}-${theme}.png`})
         }
       }
       await page.setViewportSize({width:1440,height:1000})
+      await page.locator('[data-native-artifact-editor]').evaluate(e=>e.setAttribute('data-theme','light'))
       await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      await page.waitForTimeout(200)
       await page.screenshot({path:join(output,`${kind}-inspector.png`)})
+      await page.locator('[data-node-id=page-1-heading]').click();await page.waitForTimeout(100)
+      await page.screenshot({path:join(output,`${kind}-heading-inspector.png`)})
       assert.equal(await page.getByRole('complementary',{name:'属性面板'}).count(),1)
       assert.deepEqual(errors,[])
       return {kind:'isolated-native-editor-visual-diagnostic',mode:kind,screenshots,scope:'controlled HTTP reducer fixture; screenshots only, not measured source parity, real API or performance acceptance',consoleOrPageErrors:errors}
     }
     if (kind==='design') { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'50%',exact:true}).click() }
     await page.getByRole('button',{name:'显示属性',exact:true}).click()
+    if(options.checks==='colors') {
+      const waitSaved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      await page.getByRole('button',{name:'背景',exact:true}).click()
+      const picker=page.getByRole('dialog',{name:'背景颜色',exact:true});await picker.waitFor()
+      await picker.getByRole('button',{name:'自定义',exact:true}).click()
+      await picker.getByLabel('十六进制颜色',{exact:true}).fill('#12345680');await picker.getByLabel('十六进制颜色',{exact:true}).press('Enter');await waitSaved()
+      assert.equal(document.pages['page-1'].background,'#12345680')
+      await picker.getByRole('slider',{name:'饱和度和亮度',exact:true}).press('ArrowRight');await waitSaved()
+      assert.match(document.pages['page-1'].background,/^#[\da-f]{6}80$/i)
+      await picker.getByLabel('关闭颜色选择',{exact:true}).click();assert.equal(await picker.count(),0)
+      assert.equal(await page.getByRole('button',{name:'背景',exact:true}).evaluate(e=>document.activeElement===e),true)
+      const saved=document.pages['page-1'].background;await page.reload({waitUntil:'domcontentloaded'});await ready(1)
+      await page.getByRole('button',{name:'显示属性',exact:true}).click();assert.match(await page.getByRole('button',{name:'背景',exact:true}).innerText(),new RegExp(saved,'i'))
+      assert.deepEqual(errors,[])
+      return {kind:'isolated-color-editor-diagnostic',mode:kind,alphaPreserved:true,keyboardColorChange:true,focusRestored:true,reloadRetained:true,scope:'actual color popover and shared reducer through HTTP fixture',consoleOrPageErrors:errors}
+    }
     if (options.checks === 'interactions') {
       const waitSaved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
       const before=document.pages['page-1'].nodeOrder.length
@@ -181,6 +222,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(document.pages['page-1'].nodeOrder.length,before+1)
       assert.ok(Object.values(document.pages['page-1'].nodes).some(n=>n.text==='Native action regression'))
       const shape=page.locator('[data-node-id="page-1-shape"]');await shape.click()
+      await page.locator('.native-property-disclosure>summary').filter({hasText:'效果'}).click()
       await page.locator('.native-inspector-section').filter({has:page.locator('summary',{hasText:'渐变'})}).locator('summary').click()
       await page.getByLabel('填充类型',{exact:true}).selectOption('linear');await waitSaved()
       assert.equal(document.pages['page-1'].nodes['page-1-shape'].style.gradient.type,'linear')
@@ -194,6 +236,11 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.ok(document.pages['page-1'].nodes['page-1-image'].crop.width<1)
       await image.dblclick();assert.equal(await image.locator('img').evaluate(e=>e.style.width),'100%','reopened crop must show the full source image')
       await page.getByRole('button',{name:'取消裁剪',exact:true}).click()
+      await page.getByRole('button',{name:'放映',exact:true}).click()
+      await page.getByRole('button',{name:'下一页',exact:true}).focus();await page.keyboard.press('ArrowRight')
+      await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-2')
+      await page.getByRole('button',{name:'退出放映',exact:true}).focus();await page.keyboard.press('Escape')
+      assert.equal(await page.locator('.native-presenting').count(),0);await select(1)
       let drawing=false,layouts=false,multiplePages=false
       if(kind==='design') {
         await page.getByRole('button',{name:'铅笔',exact:true}).click()
@@ -209,7 +256,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       }
       assert.deepEqual(errors,[])
       await page.screenshot({path:join(output,`${kind}-interactions.png`)})
-      return {kind:'isolated-native-editor-interaction-diagnostic',mode:kind,textInsertion:true,gradientSaved:true,menuKeysDoNotNudge:true,cropReopensFullSource:true,drawing,layouts,multiplePages,scope:'controlled HTTP shared reducer fixture, not authenticated product integration',consoleOrPageErrors:errors}
+      return {kind:'isolated-native-editor-interaction-diagnostic',mode:kind,textInsertion:true,gradientSaved:true,menuKeysDoNotNudge:true,cropReopensFullSource:true,presentationKeysFromControls:true,drawing,layouts,multiplePages,scope:'controlled HTTP shared reducer fixture, not authenticated product integration',consoleOrPageErrors:errors}
     }
     if (options.checks === 'cas') {
       const table = editorCase === 'table', nodeId = table ? 'page-1-table' : 'page-1-heading'
@@ -251,6 +298,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         committedManualBatches: receipts.length, capturedVersion: 0, currentVersion: 1, consoleOrPageErrors: errors }
     }
     if (options.checks === 'save') {
+      await page.locator('.native-property-disclosure>summary').filter({hasText:'高级'}).click()
       const editor = page.locator('[data-native-artifact-editor]')
       const waitState = value => page.waitForFunction(value => window.document.querySelector('[data-save-state]')?.getAttribute('data-save-state') === value, value)
       const assertPending = async () => { await waitState('pending'); assert.match(await page.locator('.native-save-status').innerText(), /正在保存/); assert.ok(releaseAcknowledgment, 'Transport acknowledgment must still be held') }
@@ -309,6 +357,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.reload({ waitUntil: 'domcontentloaded' }); await ready(1)
       await page.getByRole('button',{name:'显示属性',exact:true}).click()
       if (kind === 'slides') await page.getByRole('button',{name:'讲者备注',exact:true}).click(); else { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'讲者备注',exact:true}).click() }
+      await page.locator('.native-property-disclosure>summary').filter({hasText:'高级'}).click()
       assert.equal(await page.getByLabel('标题', { exact: true }).inputValue(), 'Focused property save')
       assert.equal(await page.getByLabel('宽', { exact: true }).inputValue(), '1800')
       assert.equal(await page.getByRole('textbox', { name: '讲者备注', exact: true }).inputValue(), '备注草稿二')
@@ -362,7 +411,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     assert.equal(document.pages['page-25'].nodes['page-25-formula'].source, formula)
     await select(50)
     await page.locator('[data-node-id="page-50-image"]').click()
-    for (const [label, value] of [['width', '0.75'], ['x', '0.1']]) { const control = page.getByLabel(label, { exact: true }); await control.fill(value); await control.press('Control+s'); await waitSaved() }
+    await page.locator('.native-property-disclosure>summary').filter({hasText:'高级'}).click()
+    for (const [label, value] of [['width', '0.75'], ['x', '0.1']]) { const control = page.getByLabel(`裁剪 ${label}`, { exact: true }); await control.fill(value); await control.press('Control+s'); await waitSaved() }
     assert.deepEqual(document.pages['page-50'].nodes['page-50-image'].crop, { x: .1, y: 0, width: .75, height: 1 })
     await select(1)
     await page.getByRole('button',{name:'主题',exact:true}).click()
@@ -428,5 +478,5 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       openingTextWithoutChangesDoesNotSave: true, chineseIme, formulaEditedAndReopened: 25, imageCropEditedAndReopened: 50, themeSwitchedAndRestored: true,
       pageOrderChangedAndReopened: true, pageOrderSharedUndoRedo: true, agentSharedUndoRedo: true, changedPageIds, untouchedPageHashes: 47,
       agentPlainTextPatchVisible: true, isolatedInteraction, consoleOrPageErrors: errors }
-  } catch(error) { await page.screenshot({path:join(output,`${kind}-failure.png`)}); const diagnostic=await page.evaluate(()=>({zoom:document.querySelector('[aria-label="画布缩放"]')?.textContent,stage:[...document.querySelectorAll('.native-stage')].map(e=>({scrollLeft:e.scrollLeft,scrollTop:e.scrollTop,w:e.clientWidth,h:e.clientHeight,scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})),notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent)}));await writeFile(join(output,`${kind}-failure.json`),JSON.stringify({message:String(error),errors,diagnostic},null,2));throw error } finally { releaseAcknowledgment?.(); await page.close() }
+  } catch(error) { await page.screenshot({path:join(output,`${kind}-failure.png`)}); const diagnostic=await page.evaluate(()=>({geometry:window.__geometryLog,zoom:document.querySelector('[aria-label="画布缩放"]')?.textContent,stage:[...document.querySelectorAll('.native-stage')].map(e=>({scrollLeft:e.scrollLeft,scrollTop:e.scrollTop,w:e.clientWidth,h:e.clientHeight,scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})),notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent)}));await writeFile(join(output,`${kind}-failure.json`),JSON.stringify({message:String(error),errors,diagnostic},null,2));throw error } finally { releaseAcknowledgment?.(); await page.close() }
 }

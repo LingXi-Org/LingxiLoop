@@ -235,7 +235,7 @@ test('a sent editor comment is delivered to the dedicated room through the real 
   assert.equal(snapshot.threads[0]?.agent?.status, 'delivered')
 })
 
-for (const mode of ['single','chained','conflict']) test(mode === 'conflict' ? 'formal worker receives actionable native CAS refresh diagnostics without changing saved content' : mode === 'chained' ? 'formal worker verifies 14→10→1→1→1 native Slides operation batches and delivers once' : 'authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
+for (const mode of ['single','chained','conflict','comment']) test(mode === 'comment' ? 'native anchored comment reaches the formal worker and persists its Agent reply through the same-origin API' : mode === 'conflict' ? 'formal worker receives actionable native CAS refresh diagnostics without changing saved content' : mode === 'chained' ? 'formal worker verifies 14→10→1→1→1 native Slides operation batches and delivers once' : 'authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
   const chained = mode === 'chained'
   const created = await request(`/projects/${projectId}/slides`, 'POST', { title: 'Model flow' })
   assert.equal(created.status, 201)
@@ -251,6 +251,14 @@ for (const mode of ['single','chained','conflict']) test(mode === 'conflict' ? '
   const context = await request(`/artifacts/${deck.id}/editor-context`, 'PUT', { slideId: 'page-1', selectedElementIds: ['heading'],
     selectedText: original, selection: [{ id: 'heading', kind: 'text', label: original }], mode: 'edit', dirty: false, version: null })
   assert.equal(context.status, 200)
+  const commentAnchor={pageId:'page-1',nodeId:'heading',x:.2,y:.7}
+  let commentId:string|undefined
+  if(mode==='comment') {
+    const anchor=(await import('../../../shared/artifact-comment-anchor.js')).encodeCommentAnchor(commentAnchor)
+    const created=await request(`/artifacts/${deck.id}/comments`,'POST',{anchor,label:'选中标题',text:'请修改当前选中页的标题，保存后回复本评论。'})
+    assert.equal(created.status,201,await created.clone().text())
+    commentId=(await created.json() as {thread:{id:string}}).thread.id
+  }
   const { name, version, hash: skillHash } = skillIndex(artifactSkills.find(skill => skill.name === 'claude-slides')!)
   const textOperation = (pageId: string, text: string): ArtifactOperation => ({ type: 'node.patch', pageId, nodeId: 'heading', patch: { text } })
   const pageIds = Array.from({ length: 12 }, (_, index) => `chain-${index}`)
@@ -286,6 +294,7 @@ for (const mode of ['single','chained','conflict']) test(mode === 'conflict' ? '
     ...batches.map(batch => ({ name: 'slides__apply_ops', args: { artifactId: deck.id, ...batch } })),
     { name: 'slides__read_page', args: { artifactId: deck.id, pageId: 'page-1' } },
     { name: 'slides__current', args: { artifactId: deck.id } },
+    ...(commentId ? [{name:'slides__comment_reply',args:{artifactId:deck.id,commentId,text:'已保存并重新读取标题。',resolve:false}}] : []),
     { name: 'task__check_resource', args: { action: 'slides.current', args: { artifactId: deck.id }, expected: { title: 'Model flow', slideCount: chained ? 13 : 1 } } },
     { name: 'public_answer', args: { operation: { kind: 'append', supersedes: [] }, commentary: '',
       answer: '已保存并重新读取选中页面的标题。', outcome: { status: 'satisfied', gaps: [] } } },
@@ -319,9 +328,18 @@ for (const mode of ['single','chained','conflict']) test(mode === 'conflict' ? '
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
   let worker: ReturnType<typeof createWorker> | undefined
   try {
-    const clientNonce = randomUUID(), payload = createNativeMessage({ id: clientNonce, role: 'user', content: [{ type: 'text', text: '请修改当前选中页的标题，保存后重新读取确认。' }] })
-    const accepted = await request(`/im/channels/${workspace.conversationId}/messages/accept`, 'POST', { clientNonce, payload })
-    assert.equal(accepted.status, 202, await accepted.clone().text())
+    let clientNonce=randomUUID()
+    if(commentId) {
+      const sent=await request(`/artifacts/${deck.id}/comments/${commentId}/send`,'POST')
+      assert.equal(sent.status,200,await sent.clone().text())
+      const queued=(await pool.query("SELECT event FROM agent_native_event_outbox WHERE company_id=$1 AND event->>'artifactId'=$2 AND event->>'commentId'=$3 AND event->>'type'='im.user'",[companyId,deck.id,commentId])).rows
+      assert.equal(queued.length,1);assert.equal(queued[0].event.channelId,workspace.conversationId)
+      clientNonce=queued[0].event.clientNonce;await deliverUserEvents(queued.map(row=>row.event))
+    }else{
+      const payload=createNativeMessage({id:clientNonce,role:'user',content:[{type:'text',text:'请修改当前选中页的标题，保存后重新读取确认。'}]})
+      const accepted=await request(`/im/channels/${workspace.conversationId}/messages/accept`,'POST',{clientNonce,payload})
+      assert.equal(accepted.status,202,await accepted.clone().text())
+    }
     assert.ok(im.messages.some(message => message.clientMsgNo === clientNonce && message.fromUid === userId))
     const received = await receiveAgentRequest({ companyId, agentId: workspace.agentId, channelId: workspace.conversationId, clientMsgNo: clientNonce, authenticatedUserId: userId })
     assert.ok('runs' in received && received.runs.length === 1)
@@ -335,6 +353,15 @@ for (const mode of ['single','chained','conflict']) test(mode === 'conflict' ? '
     assert.deepEqual(providerErrors, [])
     assert.equal((await control.readRun(run))?.status, 'succeeded')
     assert.equal(issued, calls.length)
+    if(commentId) {
+      const comments=await(await request(`/artifacts/${deck.id}/comments`)).json() as {threads:Array<{id:string;anchor:string;agent?:{status:string};messages:Array<{text:string;author:{kind:string;id:string}}>}>}
+      const thread=comments.threads.find(thread=>thread.id===commentId)!
+      const {decodeCommentAnchor}=await import('../../../shared/artifact-comment-anchor.js')
+      assert.deepEqual(decodeCommentAnchor(thread.anchor),commentAnchor)
+      assert.equal(thread.agent?.status,'replied')
+      assert.equal(thread.messages.at(-1)!.author.kind,'agent');assert.equal(thread.messages.at(-1)!.author.id,workspace.agentId)
+      assert.equal(thread.messages.at(-1)!.text,'已保存并重新读取标题。')
+    }
     if(mode === 'conflict'){
       const failed = await pool.query("SELECT result FROM lingxios.agent_action_ledger ledger JOIN lingxios.agent_action_intents intent USING(idempotency_key) WHERE intent.intent->>'workId'=$1 AND result->>'ok'='false'",[run.runId])
       assert.equal(failed.rows.length,1)
