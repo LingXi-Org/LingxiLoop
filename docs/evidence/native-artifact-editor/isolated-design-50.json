@@ -1,6 +1,8 @@
 {
   "kind": "isolated-native-editor-ui-diagnostic",
   "mode": "design",
+  "fixtureVersion": 3,
+  "fixtureSemanticSha256": "1859698ab513381bad8dfeb41a504d61f29081d8048e42f7d5f1f7ac33aae708",
   "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
   "pagesTraversed": 50,
   "activePageImageDecodedAndFormulaReady": 50,

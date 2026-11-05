@@ -5,7 +5,7 @@
     "page-25",
     "page-50"
   ],
-  "fixtureSemanticSha256": "7819968e5469ba48a35207514e3071efc4d0bf120b4872a9696f9e10fda31c13",
+  "fixtureSemanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
   "realmLoad": {
     "failure": {
       "format": "pdf",
@@ -23,7 +23,7 @@
     "retry": {
       "format": "pdf",
       "ok": true,
-      "bytes": 444591,
+      "bytes": 391638,
       "progress": [
         {
           "done": 1,
@@ -50,7 +50,7 @@
       "ok": false,
       "error": {
         "name": "TypeError",
-        "message": "Failed to fetch dynamically imported module: http://127.0.0.1:5327/assets/pdf-CojYEqlE.js"
+        "message": "Failed to fetch dynamically imported module: http://127.0.0.1:5327/assets/pdf-Co4Xqa5E.js"
       },
       "progress": [],
       "immutable": true,
@@ -61,7 +61,7 @@
     "retry": {
       "format": "pdf",
       "ok": true,
-      "bytes": 444591,
+      "bytes": 391638,
       "progress": [
         {
           "done": 1,
@@ -88,7 +88,7 @@
       "ok": false,
       "error": {
         "name": "TypeError",
-        "message": "Failed to fetch dynamically imported module: http://127.0.0.1:5327/assets/pdf-CojYEqlE.js"
+        "message": "Failed to fetch dynamically imported module: http://127.0.0.1:5327/assets/pdf-Co4Xqa5E.js"
       },
       "progress": [],
       "immutable": true,
@@ -99,7 +99,7 @@
     "retry": {
       "format": "pdf",
       "ok": true,
-      "bytes": 444591,
+      "bytes": 391638,
       "progress": [
         {
           "done": 1,
@@ -137,7 +137,7 @@
     "retry": {
       "format": "pdf",
       "ok": true,
-      "bytes": 444591,
+      "bytes": 391638,
       "progress": [
         {
           "done": 1,
@@ -180,7 +180,7 @@
     "retry": {
       "format": "pdf",
       "ok": true,
-      "bytes": 444591,
+      "bytes": 391638,
       "progress": [
         {
           "done": 1,
@@ -225,7 +225,7 @@
       "retry": {
         "format": "html",
         "ok": true,
-        "bytes": 4765015,
+        "bytes": 3949895,
         "progress": [
           {
             "done": 1,
@@ -269,7 +269,7 @@
       "retry": {
         "format": "pdf",
         "ok": true,
-        "bytes": 444591,
+        "bytes": 391638,
         "progress": [
           {
             "done": 1,
@@ -313,7 +313,7 @@
       "retry": {
         "format": "pptx",
         "ok": true,
-        "bytes": 1259569,
+        "bytes": 1083169,
         "progress": [
           {
             "done": 1,
@@ -365,7 +365,7 @@
     "retry": {
       "format": "pdf",
       "ok": true,
-      "bytes": 444591,
+      "bytes": 391638,
       "progress": [
         {
           "done": 1,
@@ -496,17 +496,61 @@
       "workers": 0
     }
   },
+  "svgFonts": [
+    {
+      "format": "html",
+      "mode": "inherited",
+      "bytes": 136880,
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "svgTextPreserved": true,
+      "interFaces": 2,
+      "notoFaces": 0,
+      "allFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    },
+    {
+      "format": "html",
+      "mode": "explicit",
+      "bytes": 136889,
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "svgTextPreserved": true,
+      "interFaces": 2,
+      "notoFaces": 0,
+      "allFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    },
+    {
+      "format": "html",
+      "mode": "nested",
+      "bytes": 373865,
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "svgTextPreserved": true,
+      "interFaces": 2,
+      "notoFaces": 3,
+      "allFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    }
+  ],
   "injected": [
     {
       "pathname": "/artifact-export.html",
       "status": 503
     },
     {
-      "pathname": "/assets/pdf-CojYEqlE.js",
+      "pathname": "/assets/pdf-Co4Xqa5E.js",
       "status": 503
     },
     {
-      "pathname": "/assets/render-BZEchOkF.js",
+      "pathname": "/assets/render-TV-JZWVl.js",
       "status": 503
     },
     {
@@ -530,5 +574,10 @@
       "status": 503
     }
   ],
-  "unexpectedErrors": []
+  "unexpectedErrors": [],
+  "fixtureIdentityRefresh": {
+    "previousSemanticSha256": "1f047c910ac7cfae1097e24ec86c8045ff37faf618dfbc34856e70f068a78bbd",
+    "reason": "Semantic identity now includes the exact speaker-note array; Slides document and legacy file bytes are unchanged, so this is a metadata refresh, not a rerun.",
+    "verifiedNativeSha256": "8ba7c9d343b42b90dc6e995ea73312058ee2f4afc87b8c76cbf8e9d1a5857698"
+  }
 }

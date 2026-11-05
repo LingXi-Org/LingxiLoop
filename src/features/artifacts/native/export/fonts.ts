@@ -1,4 +1,4 @@
-import type { ArtifactDocument, ArtifactPage } from '../../../../../shared/artifact-document'
+import { isSafeArtifactSvg, type ArtifactDocument, type ArtifactPage } from '../../../../../shared/artifact-document'
 import { artifactResolvedStyle } from '../../../../../shared/artifact-themes'
 import { blobDataUrl, type ExportResources } from './common'
 
@@ -6,14 +6,36 @@ const normalize = (family: string) => family.trim().replace(/^["']|["']$/g, '').
 const retainedFonts = new Set(['inter', 'noto sans sc', 'jetbrains mono'])
 function requestedFonts(document: ArtifactDocument, pages: ArtifactPage[]) {
   const requested = new Map<string, string>()
-  for (const page of pages) for (const node of Object.values(page.nodes)) {
-    if (node.hidden || !['text', 'table', 'math'].includes(node.type)) continue
-    let family = artifactResolvedStyle(node.style, document).fontFamily, parent = node.parentId
-    while (!family && parent) { family = artifactResolvedStyle(page.nodes[parent]!.style, document).fontFamily; parent = page.nodes[parent]!.parentId }
-    const text = [node.text ?? '', node.source ?? '', ...(node.cells ?? []).flat(), JSON.stringify(node.richText ?? '')].join('')
+  const append = (family: string | undefined, text: string) => {
+    if (!text.trim()) return
     for (const entry of (family ?? '').split(',')) {
       const key = normalize(entry)
       if (retainedFonts.has(key)) requested.set(key, (requested.get(key) ?? '') + text)
+    }
+  }
+  for (const page of pages) for (const node of Object.values(page.nodes)) {
+    if (node.hidden || !['text', 'table', 'math', 'svg'].includes(node.type)) continue
+    let family = artifactResolvedStyle(node.style, document).fontFamily, parent = node.parentId
+    while (!family && parent) { family = artifactResolvedStyle(page.nodes[parent]!.style, document).fontFamily; parent = page.nodes[parent]!.parentId }
+    if (node.type === 'svg') {
+      if (!node.svg || !isSafeArtifactSvg(node.svg)) continue
+      // This inert document uses the same SVG-in-HTML parsing as the renderer.
+      // Whitelisting precedes parsing; no source DOM enters the live export page.
+      const root = new DOMParser().parseFromString(node.svg, 'text/html').querySelector('svg')
+      if (!root) continue
+      const visit = (element: Element, inherited: string | undefined, inText: boolean) => {
+        if (element.localName === 'title' || element.localName === 'desc') return
+        const declared = element.getAttribute('font-family')
+        const current = declared === null || /^(?:inherit|unset)$/i.test(declared.trim()) ? inherited : declared
+        const text = inText || element.localName === 'text'
+        for (const child of element.childNodes) {
+          if (child.nodeType === Node.TEXT_NODE && text) append(current, child.textContent ?? '')
+          else if (child instanceof Element) visit(child, current, text)
+        }
+      }
+      visit(root, family, false)
+    } else {
+      append(family, [node.text ?? '', node.source ?? '', ...(node.cells ?? []).flat(), JSON.stringify(node.richText ?? '')].join(''))
     }
   }
   return requested

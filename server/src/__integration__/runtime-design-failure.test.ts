@@ -29,7 +29,10 @@ function annotateFixtureFailure(error: unknown, calls: number) {
   console.error(`::error file=server/src/__integration__/runtime-design-failure.test.ts${line && Number.isSafeInteger(line) ? `,line=${line}` : ''}::Native Design fixture failed at provider stage ${calls}`)
 }
 
-test('failed native Design save rejects false partial completion before publication and preserves truthful text and existing files', { timeout: 40_000 }, async () => {
+test('failed native Design save rejects false partial completion before publication and preserves truthful text and existing files', { timeout: 40_000 }, async context => {
+  let calls = 0, finished = false
+  context.signal.addEventListener('abort', () => { if (!finished) annotateFixtureFailure(undefined, calls) }, { once: true })
+  try {
   await ensureSchemaOnce(); await resetAllTables()
   const im = await installRecordingWukong()
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
@@ -52,7 +55,7 @@ test('failed native Design save rejects false partial completion before publicat
   const falseClaim = '浏览器流程画板已经准备好了，所有内容已保存并检查通过。'
   const explanation = '浏览器先通过 DNS 找到地址，再建立连接，服务器返回内容，最后浏览器解析并渲染页面。'
   const fallback = `${DESIGN_INCOMPLETE_NOTICE}\n${explanation}\n本次保存发生版本冲突，新画板没有保存；原有内容保持完整。`
-  let calls = 0, providerError: unknown, streamingCorrectionSeen = false
+  let providerError: unknown, streamingCorrectionSeen = false
   const provider = createServer(async (request, response) => {
     try {
       let raw = ''; for await (const chunk of request) raw += chunk
@@ -67,11 +70,15 @@ test('failed native Design save rejects false partial completion before publicat
       // One schema-valid stale target rejects the entire operation batch:
       // neither its page title nor its new node may enter the saved document.
       if (calls === 7) business.push({ name: 'design__apply_ops', args: batch })
-      if (calls <= 7) assert.equal(input.tool_choice?.function?.name, business[0]?.name, 'each native prerequisite uses one published required tool selection')
+      if (calls <= 5) assert.equal(input.tool_choice?.function?.name, business[0]?.name, 'initial native prerequisites use their published required tool selections')
+      // The theme-bearing document read is represented by a bounded observation.
+      // Policy must not derive a forced page target from its truncated preview;
+      // native-v3 still requires a tool call while the model chooses the next one.
+      if (calls === 6 || calls === 7) assert.equal(input.tool_choice, 'required', 'bounded document observations leave the next native tool selection to the model')
       if (calls === 8) {
         assert.ok(JSON.stringify(input.messages).includes('version_conflict'),'model must receive the supported conflict code')
         assert.ok(JSON.stringify(input.messages).includes('refresh'),'model must receive refresh recovery guidance')
-        assert.notEqual(typeof input.tool_choice, 'object', 'a failed write must stop forcing prerequisite actions'); business.push({ name: 'design__check', args: {} }) }
+        assert.equal(input.tool_choice, 'required', 'a failed write stops forcing prerequisite actions while preserving the native tool protocol'); business.push({ name: 'design__check', args: {} }) }
       const toolCalls = business.map((tool, position) => ({ index: position, id: `design-failure-business-${calls}`, type: 'function', function: { name: tool.name, arguments: JSON.stringify(tool.args) } }))
       if (calls >= 9) {
         let operation: { kind: 'append' | 'replace'; supersedes: string[] } = { kind: 'append', supersedes: [] }
@@ -125,6 +132,7 @@ test('failed native Design save rejects false partial completion before publicat
     assert.equal(final.message?.body, fallback); assert.ok(final.message.body.includes(explanation)); assert.equal(final.message.body.includes(falseClaim), false)
     const receipts = (await pool.query(`SELECT i.intent->'action'->>'action' AS action,r.result FROM lingxios.agent_action_intents i
       JOIN lingxios.agent_action_ledger r USING(idempotency_key) WHERE i.intent->>'workId'=$1 ORDER BY i.recorded_at,i.idempotency_key`, [identity.runId])).rows
+    for (const action of ['design.read_document', 'design.read_page']) assert.ok(receipts.some(receipt => receipt.action === action && receipt.result.ok), `successful native prerequisite: ${action}`)
     const writes = receipts.filter(receipt => receipt.action === 'design.apply_ops')
     assert.equal(writes.length, 1); assert.equal(writes[0].result.ok, false)
     assert.equal(writes[0].result.code, 'version_conflict'); assert.equal(writes[0].result.executionState, 'no_effect')
@@ -151,4 +159,6 @@ test('failed native Design save rejects false partial completion before publicat
       provisionalFalseClaimObserved, originalFilesUnchanged: true }))
   } catch (error) { annotateFixtureFailure(error, calls); throw error }
   finally { await worker?.stop(); provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve())); await im.close() }
+  } catch (error) { annotateFixtureFailure(error, calls); throw error }
+  finally { finished = true }
 })

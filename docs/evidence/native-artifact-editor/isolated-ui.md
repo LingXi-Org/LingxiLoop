@@ -20,6 +20,15 @@ resolvable normally, omit `PLAYWRIGHT_MODULE`; if its bundled Chromium is
 installed, omit `--browser`. The script starts a loopback Vite server in a
 temporary directory and closes the server/browser on completion or failure.
 
+`--checks=cas --mode=both` runs the active-editor double-click regression for
+rich text and table cells in both modes. After the editor context confirms a
+remote same-field revision, a second real double click selects text in the
+still-active local editor. Typing and Ctrl+S must retain the remote value, enter
+conflict, submit no stale mutation, and download a recovery containing the exact
+local draft with its original version 0 (remote version 1). The report stores
+only these outcomes; the temporary synthetic recovery file is removed with the
+harness. This is a shared-reducer UI diagnostic, not a real Agent/API test.
+
 The runner visits all 50 pages through navigation buttons, waits for each active
 page's decoded image and formula, and checks bounded page DOM. It edits and
 reopens pages 1, 25 and 50; page 1 uses Chinese composition with two 800 ms pauses

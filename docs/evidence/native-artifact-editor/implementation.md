@@ -198,7 +198,7 @@ They expose progress and cancellation without changing the editing snapshot.
 | --- | --- |
 | HTML | Offline asset/font packing; isolated executable blocks become fixed preview images with explicit interaction-loss warnings. Direct `file://` opening is blocked by this browser environment, so offline opening remains unverified. |
 | PDF | Page captures plus Chinese-capable text layer and links; flow pages split by selected paper ratio. A 50-page PDF and Chinese text extraction were verified. Representative-page fidelity and flow text selection/link placement remain to inspect. |
-| PPTX | Ordinary text, shapes, tables and notes retain native objects; formulas and complex nodes use reported image fallbacks. All 50 slides, notes and native objects were inspected; LibreOffice rendered 50 pages, with visual inspection of pages 1, 25 and 50. Formula/complex content uses explicit raster fallbacks. |
+| PPTX | Ordinary text, shapes, tables and notes retain native objects; formulas and complex nodes use reported image fallbacks. All 50 pages and native objects were inspected in each mode; the Slides fixture also verifies 50 speaker notes. The paired Design fixture starts with no speaker notes because legacy canvas annotations use a different schema. LibreOffice rendered 50 pages, with visual inspection of pages 1, 25 and 50. Formula/complex content uses explicit raster fallbacks. |
 
 Element culling, previews and theme Worker work were added after the first
 production-bundle smoke. The later focused checks cover their contracts, but

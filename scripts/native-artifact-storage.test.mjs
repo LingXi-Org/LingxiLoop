@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import test from 'node:test'
+import { nativeArtifactStorageConfiguration, nativeFixtureAsset } from './native-artifact-storage.mjs'
+
+test('acceptance storage permits only its dedicated loopback bucket and fixed test credentials', () => {
+  const configuration = nativeArtifactStorageConfiguration()
+  assert.equal(configuration.R2_ENDPOINT, 'http://127.0.0.1:29000')
+  assert.equal(configuration.R2_BUCKET, 'native-artifact-candidate-test')
+  assert.deepEqual(nativeArtifactStorageConfiguration(configuration), configuration)
+  for (const key of Object.keys(configuration)) assert.throws(() => nativeArtifactStorageConfiguration({ [key]: 'production-value' }), { code: 'ERR_ASSERTION' })
+  assert.throws(() => nativeArtifactStorageConfiguration({}, 'https://production.example'))
+})
+
+test('native fixture asset retains stable IDs and dimensions with the product upload URL and exact bytes', () => {
+  const image = { id: 'image-1', sha256: 'a'.repeat(64), contentType: 'image/png', width: 640, height: 360 }
+  const uploaded = { id: 'b'.repeat(32), url: `/api/artifacts/test-slide/assets/${'b'.repeat(32)}`, sha256: image.sha256, contentType: image.contentType }
+  assert.deepEqual(nativeFixtureAsset(image, uploaded, 'test-slide'), { ...image, url: uploaded.url })
+  for (const patch of [{ sha256: 'c'.repeat(64) }, { contentType: 'image/jpeg' }, { url: 'https://example.test/image.png' }, { id: '../file' }]) {
+    assert.throws(() => nativeFixtureAsset(image, { ...uploaded, ...patch }, 'test-slide'))
+  }
+  assert.throws(() => nativeFixtureAsset(image, uploaded, 'other-artifact'))
+})
+
+test('workflow pins real MinIO and service uses protected uploads only for native Slides', () => {
+  const workflow = readFileSync(new URL('../.github/workflows/native-artifact-acceptance.yml', import.meta.url), 'utf8')
+  for (const required of ['quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z', '127.0.0.1:29000:9000', 'MINIO_ROOT_USER=native-artifact-access', 'MINIO_ROOT_PASSWORD=native-artifact-storage-test-only', 'native-artifact-minio']) assert.ok(workflow.includes(required), required)
+  const service = readFileSync(new URL('./native-artifact-serve.mjs', import.meta.url), 'utf8')
+  assert.match(service, /if \(args\.format === 'native'\) \{\s+if \(kind === 'slides'\)/)
+  assert.match(service, /\/assets\?name=/)
+  assert.match(service, /nativeFixtureAsset\(image, await response\.json\(\), artifact\.id\)/)
+  assert.match(service, /type: 'asset\.set', asset/)
+})

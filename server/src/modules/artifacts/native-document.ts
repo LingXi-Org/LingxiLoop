@@ -1,15 +1,15 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { Worker } from 'node:worker_threads'
 import { z } from 'zod'
-import { artifactPageSchema, createDocument, createPage, validateArtifactDocument, type ArtifactDocument, type ArtifactPage } from '../../../../shared/artifact-document.js'
-import { applyOperations, prepareBatch, type ArtifactOperation, type ArtifactOperationBatch } from '../../../../shared/artifact-operations.js'
-import type { Queryable } from '../../db/queryable.js'
-import type { ArtifactRow } from './repository-types.js'
-import { artifactKind } from './kinds.js'
-import { listing, sha256, type ListedFile } from './store.js'
-import { advanceNativeHistory, historyView, type NativeHistoryState } from './native-history.js'
+import { type ArtifactDocument, type ArtifactPage, artifactPageSchema, createDocument, createPage, validateArtifactDocument } from '../../../../shared/artifact-document.js'
+import { type ArtifactOperation, type ArtifactOperationBatch, applyOperations, prepareBatch } from '../../../../shared/artifact-operations.js'
 import { projectArtifactThemes } from '../../../../shared/artifact-themes.js'
+import type { Queryable } from '../../db/queryable.js'
 import { storage } from '../../storage.js'
+import { artifactKind } from './kinds.js'
+import { advanceNativeHistory, historyView, type NativeHistoryState } from './native-history.js'
+import type { ArtifactRow } from './repository-types.js'
+import { type ListedFile, listing, sha256 } from './store.js'
 
 export const NATIVE_DOCUMENT_PATH = 'project/document.json'
 export const nativePagePath = (pageId: string) => `project/pages/${pageId}.json`
@@ -203,11 +203,20 @@ export async function initializeNativeArtifact(db: Queryable, artifact: Artifact
 }
 
 interface SourceSnapshot { artifact: ArtifactRow; version: string; files: Record<string, { content: string; sha256: string }>; listing: Record<string, ListedFile>; blobs: Record<string, OriginalBlob> }
+/** Conversion needs text sources and asset identities; original binary bytes stay in storage. */
+export function legacyConversionText(path: string, contentType: string, bytes: Buffer): string {
+  if (/\.(?:html?|xhtml|jsx?|tsx?|mjs|cjs|jsonc?|css|scss|less|svg|txt|md|markdown|ya?ml|xml|csv|tsv)$/i.test(path)) return bytes.toString('utf8')
+  const mime = contentType.split(';', 1)[0].trim().toLowerCase()
+  if (/\.(?:png|jpe?g|webp|gif|avif|apng|bmp|ico|tiff?|heic|heif|woff2?|ttf|otf|eot|pdf|zip|gz|br|mp[34]|webm|ogg|wav|flac|mov)$/i.test(path)
+    || /^(?:image\/(?!svg\+xml$)|font\/|audio\/|video\/)/.test(mime)
+    || /^(?:application\/(?:octet-stream|pdf|zip|gzip|font-[\w-]+|x-font-[\w-]+|vnd\.ms-fontobject))$/.test(mime)) return ''
+  return bytes.toString('utf8')
+}
 async function legacySource(db: Queryable, artifactId: string, companyId: string): Promise<SourceSnapshot> {
   const artifact = await scopedArtifact(db, artifactId, companyId)
   const rows = (await db.query<{ path: string; sha256: string; size: number; content_type: string; body: Buffer }>('SELECT path,sha256,size,content_type,body FROM artifact_files WHERE artifact_id=$1 ORDER BY path COLLATE "C"', [artifactId])).rows
   const files: SourceSnapshot['files'] = {}, listed: Record<string, ListedFile> = {}
-  for (const row of rows) { files[row.path] = { content: row.body.toString('utf8'), sha256: row.sha256 }; listed[row.path] = { sha256: row.sha256, size: Number(row.size), contentType: row.content_type } }
+  for (const row of rows) { files[row.path] = { content: legacyConversionText(row.path, row.content_type, row.body), sha256: row.sha256 }; listed[row.path] = { sha256: row.sha256, size: Number(row.size), contentType: row.content_type } }
   return { artifact, version: 'local-' + sha256(rows.map(row => `${row.path}:${row.sha256}`).join('\n')).slice(0, 16), files, listing: listed, blobs: await nativeBlobManifest(db, artifactId) }
 }
 
@@ -343,8 +352,17 @@ export async function readNativeOriginal(db: Queryable, artifactId: string, hash
     const source = (await db.query<{ body: Buffer; content_type: string }>('SELECT body,content_type FROM artifact_files WHERE artifact_id=$1 AND path=$2 AND sha256=$3', [artifactId, path, hash])).rows[0]
     return source ? { bytes: source.body, contentType: source.content_type } : null
   }
-  const file = state?.original_manifest?.files[path]
-  if (!file || file.sha256 !== hash) return null
+  let file = state.original_manifest?.files[path]
+  if (!file || file.sha256 !== hash) {
+    // A restored image can predate the immutable first-conversion manifest.
+    // Require its exact path/hash in this artifact's retained legacy checkpoint;
+    // content-addressed storage alone must never authorize a resource URL.
+    const historical = (await db.query<{ file: ListedFile }>(`SELECT files->$2::text AS file FROM artifact_revisions
+      WHERE artifact_id=$1 AND files->$2::text->>'sha256'=$3 AND NOT (files ? $4)
+      ORDER BY seq DESC LIMIT 1`, [artifactId, path, hash, NATIVE_DOCUMENT_PATH])).rows[0]?.file
+    if (!historical || !/^image\/(?:png|jpeg|webp|gif|avif|svg\+xml)$/.test(historical.contentType.split(';', 1)[0].trim().toLowerCase())) return null
+    file = historical
+  }
   const bytes = (await versionContents(db, artifactId, [hash])).get(hash)
   return bytes ? { bytes, contentType: file.contentType } : null
 }
@@ -429,7 +447,7 @@ export async function restoreNativeRevision(db: Queryable, input: { artifactId: 
     for (const [path, file] of Object.entries(checkpoint.files)) {
       const bytes = contents.get(file.sha256)
       if (!bytes) throw new NativeDocumentError(500, 'missing_revision', 'Revision source missing')
-      files[path] = { content: bytes.toString('utf8'), sha256: file.sha256 }
+      files[path] = { content: legacyConversionText(path, file.contentType, bytes), sha256: file.sha256 }
     }
     restored = (await convertInWorker({ artifact, files })).document
     stampLegacyResources(restored, checkpoint.version)

@@ -8,6 +8,15 @@ import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
+test('TAP-prefixed fixture diagnostics expose only the fixed source line and stage', async () => {
+ const matchers = JSON.parse(await readFile('.github/matchers/native-checks.json', 'utf8')).problemMatcher
+ const pattern = new RegExp(matchers.find(matcher => matcher.owner === 'lingxiloop-design-fixture').pattern[0].regexp)
+ const match = pattern.exec('# ::error file=server/src/__integration__/runtime-design-failure.test.ts,line=123::Native Design fixture failed at provider stage 6')
+ assert.deepEqual(match.slice(1), ['server/src/__integration__/runtime-design-failure.test.ts', '123', 'Native Design fixture failed at provider stage 6'])
+ assert.equal(pattern.test('# ::error file=private.env,line=123::secret=value'), false)
+ assert.equal(pattern.test('# ::error file=server/src/__integration__/runtime-design-failure.test.ts,line=123::Native Design fixture failed at provider stage 6 secret=value'), false)
+})
+
 test('only named durable queue owners add selected-run time without changing other modes',()=>{
  const owners=['runtime-queue-interactive-capacity.test.ts','runtime-queue-background-capacity.test.ts','runtime-queue-capacity.test.ts','runtime-queue-lifecycle.test.ts']
  assert.equal(integrationOwnerAllowanceMs('selected',[...SMOKE_FILES,...owners]),450_000)

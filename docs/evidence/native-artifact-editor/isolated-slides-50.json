@@ -1,6 +1,8 @@
 {
   "kind": "isolated-native-editor-ui-diagnostic",
   "mode": "slides",
+  "fixtureVersion": 3,
+  "fixtureSemanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
   "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
   "pagesTraversed": 50,
   "activePageImageDecodedAndFormulaReady": 50,
@@ -33,5 +35,6 @@
   "untouchedPageHashes": 47,
   "agentPlainTextPatchVisible": true,
   "isolatedInteraction": true,
-  "consoleOrPageErrors": []
+  "consoleOrPageErrors": [],
+  "receiptMetadataRefresh": "Semantic hash definition now includes speaker notes; Slides document bytes and all50notes are unchanged. This refresh does not claim a new browser run."
 }

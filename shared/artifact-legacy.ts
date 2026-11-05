@@ -17,13 +17,13 @@ export interface LegacyArtifactResult {
   originals: Record<string, string>
   warnings: string[]
 }
-interface HtmlElement { tag: string; attrs: Record<string, string>; children: HtmlNode[] }
+interface HtmlElement { tag: string; attrs: Record<string, string>; children: HtmlNode[]; contentStart?: number; innerSource?: string }
 type HtmlNode = HtmlElement | string
 const element = (node: HtmlNode): node is HtmlElement => typeof node !== 'string'
 const object = (value: unknown): Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 const finite = (value: unknown, fallback: number) => Number.isFinite(Number(value)) && value !== '' && value !== undefined && value !== null ? Number(value) : fallback
 const dimension = (value: unknown, fallback: number) => Math.max(1, Math.min(1_000_000, finite(value, fallback)))
-const escape = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const escapeHtml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const safeId = (value: string, fallback: string) => value.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 120) || fallback
 function hashId(value: string) {
   let hash = 2166136261
@@ -34,19 +34,36 @@ function parseHtml(source: string): HtmlElement {
   const root: HtmlElement = { tag: 'root', attrs: {}, children: [] }
   const stack = [root]
   const parser = new Parser({
-    onopentag(tag, attrs) { const node = { tag, attrs, children: [] }; stack.at(-1)!.children.push(node); stack.push(node) },
+    onopentag(tag, attrs) {
+      const node: HtmlElement = { tag, attrs, children: [], ...(tag.toLowerCase() === 'x-embed' ? { contentStart: parser.endIndex + 1 } : {}) }
+      stack.at(-1)!.children.push(node); stack.push(node)
+    },
     ontext(text) { stack.at(-1)!.children.push(text) },
-    onclosetag() { if (stack.length > 1) stack.pop() },
+    onclosetag() {
+      if (stack.length > 1) {
+        const node = stack.pop()!
+        if (node.contentStart !== undefined) node.innerSource = source.slice(node.contentStart, parser.startIndex)
+      }
+    },
   }, { decodeEntities: true, lowerCaseAttributeNames: false, lowerCaseTags: false })
   parser.end(source)
   return root
 }
 const textContent = (node: HtmlNode): string => typeof node === 'string' ? node : node.children.map(textContent).join(node.tag === 'br' ? '\n' : '')
-function descendants(node: HtmlElement, tag: string): HtmlElement[] {
-  return node.children.flatMap(child => element(child) ? [...(child.tag.toLowerCase() === tag ? [child] : []), ...descendants(child, tag)] : [])
+function descendants(node: HtmlElement, tag: string, outsideEmbeds = false): HtmlElement[] {
+  return node.children.flatMap(child => element(child) ? [...(child.tag.toLowerCase() === tag ? [child] : []), ...(outsideEmbeds && child.tag.toLowerCase() === 'x-embed' ? [] : descendants(child, tag, outsideEmbeds))] : [])
 }
-const serialize = (node: HtmlNode): string => typeof node === 'string' ? escape(node) : `<${node.tag}${Object.entries(node.attrs).map(([key, value]) => ` ${key}="${escape(value)}"`).join('')}>${node.children.map(serialize).join('')}</${node.tag}>`
+const serialize = (node: HtmlNode): string => typeof node === 'string' ? escapeHtml(node) : `<${node.tag}${Object.entries(node.attrs).map(([key, value]) => ` ${key}="${escapeHtml(value)}"`).join('')}>${node.children.map(serialize).join('')}</${node.tag}>`
 const styles = (node: HtmlElement) => Object.fromEntries((node.attrs.style ?? '').split(';').map(part => part.split(/:(.*)/s).slice(0, 2)).filter(pair => pair.length === 2).map(([key, value]) => [key!.trim().toLowerCase(), value!.trim()]))
+function storedImage(source: string, pagePath: string, files: LegacyArtifactInput['files']) {
+  if (/^[a-z][a-z\d+.-]*:|^\/\/|\\/i.test(source)) return undefined
+  try {
+    const url = new URL(source, `https://artifact.invalid/${source.startsWith('project/') ? '' : pagePath}`)
+    const path = decodeURIComponent(url.pathname.slice(1))
+    const mime = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif', svg: 'image/svg+xml' }[path.split('.').at(-1)?.toLowerCase() ?? '']
+    return path.startsWith('project/') && files[path] && mime ? { path, mime, file: files[path]! } : undefined
+  } catch { return undefined }
+}
 function pixels(value: string | undefined, base: number, fallback: number) {
   if (!value || value === 'auto') return fallback
   if (/^-?[\d.]+%$/.test(value)) return Number.parseFloat(value) / 100 * base
@@ -148,7 +165,7 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
     const rootCss = styles(section)
     const background = rootCss['background-color'] ?? rootCss.background
     if (background && !/[<>;\\]|url\s*\(|expression\s*\(/i.test(background)) page.background = background
-    page.notes = descendants(tree, 'aside').map(textContent).join('\n') || String(object(index.notes)[oldId] ?? '')
+    page.notes = descendants(tree, 'aside', true).map(textContent).join('\n') || String(object(index.notes)[oldId] ?? '')
     page.transition = ['fade', 'slide'].includes(section.attrs['data-transition'] ?? '') ? section.attrs['data-transition'] as 'fade' | 'slide' : 'none'
     page.skip = section.attrs['data-skip'] === 'true'
     document.pages[id] = page; document.pageOrder.push(id)
@@ -164,8 +181,8 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
         embed: { source, format: 'html', sourceHash: file!.sha256, originalPath: path } })
       warnings.push(`${page.title}：不能逐元素转换的内容作为隔离块保留。`)
     }
-    const executable = descendants(tree, 'script').some(node => !/^(?:\.\/)?support\.js$/.test(node.attrs.src ?? '') && !/^(?:application\/(?:ld\+)?json|importmap)$/.test(node.attrs.type ?? ''))
-      || descendants(tree, 'style').length || descendants(tree, 'link').some(node => node.attrs.rel === 'stylesheet')
+    const executable = descendants(tree, 'script', true).some(node => !/^(?:\.\/)?support\.js$/.test(node.attrs.src ?? '') && !/^(?:application\/(?:ld\+)?json|importmap)$/.test(node.attrs.type ?? ''))
+      || descendants(tree, 'style', true).length || descendants(tree, 'link', true).some(node => node.attrs.rel === 'stylesheet')
     if (executable) { embed(file.content, 0, 0, page.width, page.height); continue }
     function convert(source: HtmlElement, parentId: string | null, box: { x: number; y: number; width: number; height: number }, cursor: number): number {
       const tag = source.tag.toLowerCase(), css = styles(source)
@@ -183,6 +200,9 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       if (tag === 'iframe' && source.attrs.srcdoc !== undefined && !Object.keys(source.attrs).some(key => /^on/i.test(key))) {
         embed(source.attrs.srcdoc, common.x, common.y, width, height, common.parentId); return absolute ? 0 : height
       }
+      if (tag === 'x-embed' && source.innerSource !== undefined && !Object.keys(source.attrs).some(key => /^on/i.test(key))) {
+        embed(source.innerSource, common.x, common.y, width, height, common.parentId); return absolute ? 0 : height
+      }
       if (Object.keys(source.attrs).some(key => /^on/i.test(key)) || ['script', 'iframe', 'object', 'embed', 'video', 'audio', 'x-embed'].includes(tag)) {
         embed(serialize(source), common.x, common.y, width, height, common.parentId); return absolute ? 0 : height
       }
@@ -194,9 +214,11 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       }
       if (tag === 'img') {
         const src = source.attrs.src ?? ''
-        if (/^\/(?!\/)/.test(src) || /^https?:\/\//.test(src) || /^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(src)) {
-          const assetId = `asset_${hashId(src)}`
-          document.assets[assetId] = { id: assetId, url: src, contentType: /^data:([^;]+)/.exec(src)?.[1] ?? 'image/*', width, height }
+        const stored = storedImage(src, path, input.files)
+        if (stored || /^\/(?!\/)/.test(src) || /^https?:\/\//.test(src) || /^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(src)) {
+          const url = stored ? `/api/artifacts/${encodeURIComponent(input.id)}/originals/${stored.file.sha256}/${stored.path.split('/').map(encodeURIComponent).join('/')}` : src
+          const assetId = `asset_${hashId(url)}`
+          document.assets[assetId] = { id: assetId, url, contentType: stored?.mime ?? /^data:([^;]+)/.exec(src)?.[1] ?? 'image/*', ...(stored ? { sha256: stored.file.sha256 } : {}), width, height }
           add({ ...createNode('image', nodeId(source.attrs.id)), ...common, assetId, text: source.attrs.alt ?? '' })
         } else { embed(serialize(source), common.x, common.y, width, height, common.parentId) }
         return absolute ? 0 : height

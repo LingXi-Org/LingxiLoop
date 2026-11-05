@@ -1,4 +1,5 @@
 name: LingxiLoop CI
+run-name: ${{ inputs.scope == 'native-artifact-diagnostic' && format('Native artifact diagnostic {0}', github.sha) || inputs.scope == 'native-artifact-paired' && format('Native artifact paired {0}', github.sha) || github.workflow }}
 
 on:
   pull_request:
@@ -11,11 +12,15 @@ on:
         description: Component to verify, or run deep integration checks
         required: true
         type: choice
-        options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release, deep-integration]
+        options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release, deep-integration, native-artifact-diagnostic, native-artifact-paired]
+      diagnostic_run_id:
+        description: Native paired acceptance only; successful diagnostic run for this exact SHA
+        type: string
+        default: ''
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ${{ startsWith(inputs.scope, 'native-artifact-') && format('native-artifact-entry-{0}', github.ref) || format('ci-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(inputs.scope, 'native-artifact-') }}
 
 permissions:
   actions: read
@@ -24,7 +29,15 @@ permissions:
   pull-requests: read
 
 jobs:
+  native-artifact-acceptance:
+    if: github.event_name == 'workflow_dispatch' && github.ref_type == 'branch' && github.ref != 'refs/heads/main' && startsWith(inputs.scope, 'native-artifact-')
+    uses: ./.github/workflows/native-artifact-acceptance.yml
+    with:
+      phase: ${{ inputs.scope == 'native-artifact-paired' && 'paired' || 'diagnostic' }}
+      diagnostic_run_id: ${{ inputs.diagnostic_run_id }}
+    secrets: inherit
   changes:
+    if: github.event_name != 'workflow_dispatch' || !startsWith(inputs.scope, 'native-artifact-')
     runs-on: ubuntu-latest
     outputs:
       admin_build: ${{ steps.scope.outputs.admin_build }}

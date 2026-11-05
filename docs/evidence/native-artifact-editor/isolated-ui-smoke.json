@@ -5,7 +5,7 @@
   "scope": {
     "react": "StrictMode, real NativeEditor and Worker modules",
     "input": "Playwright trusted pointer/keyboard events; CDP Input.imeSetComposition and Input.insertText for Chinese composition",
-    "fixture": "scripts/native-artifact-fixture.mjs v2; 50 pages/artboards, 50 PNG images, 50 formulas, and one equivalent legacy/native sandboxed interactive block on page 25",
+    "fixture": "scripts/native-artifact-fixture.mjs v3; 50 pages/artboards, 50 original 640x360 PNG images and 50 formulas; equivalent compact 64x36 sandbox preview on page 25",
     "transport": "deterministic intercepted HTTP responses; real shared operation reducer; synthetic tenant context checked on authenticated image requests",
     "notVerified": [
       "real API authentication and authorization",
@@ -17,6 +17,8 @@
   },
   "results": {
     "slides": {
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
       "pagesTraversed": 50,
       "activePageImageDecodedAndFormulaReady": 50,
       "maxMountedPages": 1,
@@ -48,9 +50,12 @@
       "untouchedPageHashes": 47,
       "agentPlainTextPatchVisible": true,
       "isolatedInteraction": true,
-      "consoleOrPageErrors": []
+      "consoleOrPageErrors": [],
+      "receiptMetadataRefresh": "Semantic hash definition now includes speaker notes; Slides document bytes and all50notes are unchanged. This refresh does not claim a new browser run."
     },
     "design": {
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "1859698ab513381bad8dfeb41a504d61f29081d8048e42f7d5f1f7ac33aae708",
       "pagesTraversed": 50,
       "activePageImageDecodedAndFormulaReady": 50,
       "maxMountedPages": 4,
@@ -165,6 +170,23 @@
       "noGlobalFlushEvent": true,
       "transientDraftsExcludedFromHistory": true,
       "focusedRegistryTestsPassed": 4
+    },
+    "activeEditorDoubleClickCas": {
+      "cases": 4,
+      "fixtureVersion": 3,
+      "remoteObservedBeforeDoubleClick": true,
+      "remotePreserved": true,
+      "originalVersionRetained": true,
+      "exactLocalDraftRecoverable": true,
+      "staleManualBatchesCommitted": 0,
+      "evidence": "isolated-cas-reentry.json",
+      "independentReview": "isolated-cas-independent-review.json"
+    },
+    "designNotesCorrespondence": {
+      "initialSpeakerNotes": 0,
+      "legacySourceHasNoSpeakerNotes": true,
+      "manualNotesSaveReopenPassed": true,
+      "affectedDesign50PageRerunPassed": true
     }
   },
   "limits": [

@@ -78,3 +78,29 @@ it('legacy iframe srcdoc becomes the opaque block source without a forbidden nes
   assert.ok(!node.embed!.source.includes('<iframe'))
   assert.equal(files['project/slides/one.html'].content, source)
 })
+
+it('keeps x-embed contents byte-exact and converts surrounding nodes and stored image references', () => {
+  const isolated = '<!doctype html><html><head><style>body{margin:0}</style></head><body><p>isolated</p><script>if (1 < 2) globalThis.__legacyEmbedMustNotRun = "a&b";</script></body></html>'
+  const source = `<section><p>editable</p><img src="project/ds/fixture/photo.png"><img src="../ds/fixture/photo.png"><img src="../../missing.png"><x-embed style="position:absolute;left:10px;top:20px;width:640px;height:360px">${isolated}</x-embed></section>`
+  const files = {
+    'project/deck.json': file('{"v":4,"order":["one"]}'),
+    'project/slides/one.html': file(source),
+    'project/ds/fixture/photo.png': { content: 'binary bytes are not decoded by the converter', sha256: 'b'.repeat(64) },
+  }
+  const before = JSON.stringify(files)
+  const converted = convertLegacyArtifact({ id: 'fixture', kind: 'slides', title: 'Fixture', files })
+  const nodes = Object.values(converted.document.pages.one!.nodes)
+  assert.ok(nodes.some(node => node.type === 'text' && node.text === 'editable'))
+  const isolatedNode = nodes.find(node => node.embed?.source === isolated)!
+  assert.ok(isolatedNode)
+  assert.deepEqual([isolatedNode.x, isolatedNode.y, isolatedNode.width, isolatedNode.height], [10, 20, 640, 360])
+  assert.equal(nodes.filter(node => node.type === 'image').length, 2)
+  for (const node of nodes.filter(node => node.type === 'image')) {
+    const asset = converted.document.assets[node.assetId!]!
+    assert.equal(asset.url, `/api/artifacts/fixture/originals/${'b'.repeat(64)}/project/ds/fixture/photo.png`)
+    assert.equal(asset.contentType, 'image/png')
+  }
+  assert.ok(nodes.some(node => node.embed?.source.includes('../../missing.png')))
+  assert.equal(JSON.stringify(files), before)
+  assert.equal('__legacyEmbedMustNotRun' in globalThis, false)
+})

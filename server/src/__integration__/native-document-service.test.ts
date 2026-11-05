@@ -4,15 +4,15 @@ import { readFile } from 'node:fs/promises'
 import { after, before, test } from 'node:test'
 import { Pool } from 'pg'
 import { createNode, createPage } from '../../../shared/artifact-document.js'
-import { prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
+import { type ArtifactOperation, prepareBatch } from '../../../shared/artifact-operations.js'
 import { withTransaction } from '../db/transaction.js'
+import { artifactKind } from '../modules/artifacts/kinds.js'
 import {
-  ensureNativeDocument, initializeNativeArtifact, nativeDocumentChanges, nativeOperationReceipt,
+  ensureNativeDocument, initializeNativeArtifact, legacyConversionText, nativeDocumentChanges, nativeOperationReceipt,
   nativeSourceArchive, readNativeDocument, readNativeOriginal, readNativeOriginalBlob, readNativeOriginalResource, readNativePage, readNativePageSnapshot, restoreNativeRevision, submitNativeOperations, submitNativeRename,
 } from '../modules/artifacts/native-document.js'
-import { artifactKind } from '../modules/artifacts/kinds.js'
-import { listing, publish, readProjectFile, sha256 } from '../modules/artifacts/store.js'
 import type { ArtifactRow } from '../modules/artifacts/repository-types.js'
+import { listing, publish, readProjectFile, sha256 } from '../modules/artifacts/store.js'
 import { installStorageProvider, type Storage } from '../storage.js'
 
 // Real PostgreSQL transactions exercise the document service independently of model/runtime availability.
@@ -179,6 +179,90 @@ test('the title endpoint adapter keeps the observed version and stable retry pay
   assert.equal(retry.document.title, 'Human title')
 })
 
+test('legacy conversion projects textual formats but never decodes known binary assets as UTF-8', () => {
+  const text = Buffer.from('中文 <source> with exact bytes')
+  for (const extension of ['html', 'xhtml', 'jsx', 'js', 'mjs', 'cjs', 'ts', 'tsx', 'json', 'jsonc', 'css', 'scss', 'less', 'svg', 'md', 'xml']) {
+    assert.equal(legacyConversionText(`project/source.${extension}`, 'application/octet-stream', text), text.toString('utf8'), extension)
+  }
+  assert.equal(legacyConversionText('project/vector', 'image/svg+xml; charset=utf-8', text), text.toString('utf8'))
+  assert.equal(legacyConversionText('project/source', 'text/plain', text), text.toString('utf8'))
+  const binary = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0xff])
+  Object.defineProperty(binary, 'toString', { value: () => { throw new Error('binary assets must not be decoded for conversion') } })
+  for (const extension of ['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif', 'bmp', 'woff', 'woff2', 'ttf', 'otf', 'eot', 'pdf', 'zip', 'mp3', 'mp4']) {
+    assert.equal(legacyConversionText(`project/asset.${extension}`, 'application/octet-stream', binary), '', extension)
+  }
+  for (const mime of ['image/png', 'image/jpeg', 'image/webp', 'font/woff2', 'application/font-woff', 'application/vnd.ms-fontobject', 'application/octet-stream', 'application/pdf', 'audio/mpeg', 'video/mp4']) {
+    assert.equal(legacyConversionText('project/asset', mime, binary), '', mime)
+  }
+})
+
+test('stored legacy PNGs convert to immutable original URLs without isolating surrounding text and x-embed content', async () => {
+  const item = await artifact('slides', false)
+  const imagePath = 'project/ds/fixture/pixel.png', pagePath = 'project/slides/cover.html'
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX9sAAAAASUVORK5CYII=', 'base64')
+  const imageHash = sha256(png)
+  assert.notDeepEqual(Buffer.from(png.toString('utf8'), 'utf8'), png, 'the stored image is binary, not lossless UTF-8 text')
+  const isolated = '<!doctype html><html><head><meta charset="utf-8"><style>button{color:teal}</style></head><body><button id="count">0</button><script>document.querySelector("button").onclick=event=>event.target.textContent="1"</script></body></html>'
+  const source = `<section id="cover"><h1 id="title">Editable original 中文</h1><img id="canonical-image" src="${imagePath}" width="1" height="1"><img id="relative-image" src="../ds/fixture/pixel.png" width="1" height="1"><x-embed style="position:absolute;left:200px;top:200px;width:320px;height:200px">${isolated}</x-embed></section>`
+  const files = {
+    'project/deck.json': { bytes: Buffer.from(JSON.stringify({ v: 4, title: 'Binary image import', order: ['cover'] })), contentType: 'application/json' },
+    [pagePath]: { bytes: Buffer.from(source), contentType: 'text/html' },
+    [imagePath]: { bytes: png, contentType: 'image/png' },
+  }
+  const published = await withTransaction(db, client => publish(client, artifactKind('slides'), item.id,
+    Object.fromEntries(Object.entries(files).map(([path, file]) => [path, { base64: file.bytes.toString('base64'), contentType: file.contentType, ifMatch: null }])), 'human'))
+  assert.equal(published.status, 200)
+  const stored = (await db.query<{ body: Buffer; content_type: string; sha256: string }>('SELECT body,content_type,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [item.id, imagePath])).rows[0]
+  assert.ok(Buffer.isBuffer(stored.body))
+  assert.deepEqual(stored.body, png)
+  assert.equal(stored.sha256, imageHash)
+  assert.equal(stored.content_type, 'image/png')
+
+  const context = { db, transaction: <T>(run: (client: import('../db/queryable.js').Queryable) => Promise<T>) => withTransaction(db, run) }
+  const converted = await ensureNativeDocument(context, { artifactId: item.id, companyId: 'company', actorId: 'human', write: true })
+  const page = converted.document.pages.cover
+  const nodes = Object.values(page.nodes), images = nodes.filter(node => node.type === 'image'), embeds = nodes.filter(node => node.type === 'embed')
+  assert.equal(page.nodes.title.type, 'text')
+  assert.equal(page.nodes.title.text, 'Editable original 中文')
+  assert.equal(images.length, 2, 'both canonical and page-relative stored image references become image nodes')
+  assert.equal(embeds.length, 1, 'executable content stays inside its own block')
+  assert.equal(embeds[0].embed?.source, isolated, 'x-embed source is preserved byte-for-byte without absorbing the page')
+  assert.equal(embeds[0].embed?.sourceHash, sha256(isolated))
+  assert.equal(embeds[0].embed?.originalPath, pagePath)
+  assert.equal(Object.keys(converted.document.assets).length, 1, 'both paths identify the same immutable asset')
+  for (const node of images) {
+    const asset = converted.document.assets[node.assetId!]
+    assert.equal(asset.url, `/api/artifacts/${item.id}/originals/${imageHash}/${imagePath}`)
+    assert.equal(asset.contentType, 'image/png')
+    assert.equal(asset.sha256, imageHash)
+  }
+  assert.deepEqual(converted.original?.files[imagePath], { sha256: imageHash, size: png.length, contentType: 'image/png' })
+  const original = await readNativeOriginal(db, item.id, imageHash, imagePath)
+  assert.ok(original)
+  assert.deepEqual(original.bytes, png)
+  assert.equal(original.contentType, 'image/png')
+  assert.equal(sha256(original.bytes), imageHash)
+
+  await apply(item.id, prepareBatch(converted.document, [{ type: 'node.patch', pageId: page.id, nodeId: 'title', patch: { text: 'Edited native title' } }], 'edit-imported-binary-page'))
+  assert.equal((await snapshot(item.id)).document.pages.cover.nodes.title.text, 'Edited native title')
+  const currentVersion = (await listing(db, item.id)).ver
+  const restored = await withTransaction(db, client => restoreNativeRevision(client, {
+    artifactId: item.id, companyId: 'company', actorId: 'human', seq: String((published.body as { seq: number }).seq), version: currentVersion,
+  }))
+  assert.equal(restored.document.pages.cover.nodes.title.text, 'Editable original 中文')
+  assert.equal(Object.values(restored.document.pages.cover.nodes).filter(node => node.type === 'image').length, 2)
+  assert.equal(Object.values(restored.document.pages.cover.nodes).find(node => node.type === 'embed')?.embed?.source, isolated)
+  assert.equal(Object.values(restored.document.assets)[0].url, `/api/artifacts/${item.id}/originals/${imageHash}/${imagePath}`)
+  assert.deepEqual(restored.original, converted.original)
+  for (const [path, file] of Object.entries(files)) {
+    const retained = await readNativeOriginal(db, item.id, sha256(file.bytes), path)
+    assert.ok(retained)
+    assert.deepEqual(retained.bytes, file.bytes, `${path}: native edits must leave the original bytes unchanged`)
+    assert.equal(retained.contentType, file.contentType)
+    assert.equal(sha256(retained.bytes), sha256(file.bytes))
+  }
+})
+
 test('old source converts without rewriting originals and retained checkpoints restore through native history', async () => {
   const item = await artifact('slides', false)
   const originalImage = Buffer.from('fixed original image bytes'), blobId = '0123456789abcdef0123456789abcdef'
@@ -209,6 +293,57 @@ test('old source converts without rewriting originals and retained checkpoints r
   assert.equal(restored.document.title, converted.document.title)
   assert.ok(restored.document.seq > edited.document.seq)
   for (const [path, content] of Object.entries(sourceFiles)) assert.equal((await readNativeOriginal(db, item.id, sha256(content), path))?.bytes.toString('utf8'), content)
+})
+
+test('restoring a historical PNG resolves its exact recorded image without changing the first-conversion originals', async () => {
+  const item = await artifact('slides', false), imagePath = 'project/ds/fixture/pixel.png', pagePath = 'project/slides/cover.html'
+  const oldImage = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX9sAAAAASUVORK5CYII=', 'base64')
+  const latestImage = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADUlEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC', 'base64')
+  const publishVersion = async (label: string, image: Buffer) => {
+    const current = await listing(db, item.id)
+    const source = `<section id="cover"><h1 id="title">${label}</h1><img id="photo" src="${imagePath}"></section>`
+    const files = {
+      'project/deck.json': { bytes: Buffer.from(JSON.stringify({ v: 4, title: label, order: ['cover'] })), contentType: 'application/json' },
+      [pagePath]: { bytes: Buffer.from(source), contentType: 'text/html' },
+      [imagePath]: { bytes: image, contentType: 'image/png' },
+    }
+    const result = await withTransaction(db, client => publish(client, artifactKind('slides'), item.id,
+      Object.fromEntries(Object.entries(files).map(([path, file]) => [path, { base64: file.bytes.toString('base64'), contentType: file.contentType, ifMatch: current.files[path]?.sha256 ?? null }])), 'human'))
+    assert.equal(result.status, 200)
+    return { seq: String((result.body as { seq: number }).seq), files }
+  }
+  const old = await publishVersion('Historical page', oldImage)
+  const latest = await publishVersion('First conversion page', latestImage)
+  assert.notEqual(sha256(oldImage), sha256(latestImage))
+  const context = { db, transaction: <T>(run: (client: import('../db/queryable.js').Queryable) => Promise<T>) => withTransaction(db, run) }
+  const converted = await ensureNativeDocument(context, { artifactId: item.id, companyId: 'company', actorId: 'human', write: true })
+  const currentVersion = (await listing(db, item.id)).ver
+  const restored = await withTransaction(db, client => restoreNativeRevision(client, { artifactId: item.id, companyId: 'company', actorId: 'human', seq: old.seq, version: currentVersion }))
+  assert.equal(restored.document.pages.cover.nodes.title.text, 'Historical page')
+  assert.deepEqual(restored.original, converted.original)
+  assert.equal(restored.original?.files[imagePath].sha256, sha256(latestImage))
+  const asset = restored.document.assets[restored.document.pages.cover.nodes.photo.assetId!]
+  assert.equal(asset.url, `/api/artifacts/${item.id}/originals/${sha256(oldImage)}/${imagePath}`)
+  const image = await readNativeOriginal(db, item.id, sha256(oldImage), imagePath)
+  assert.ok(image, 'the restored image URL must resolve its historical PNG')
+  assert.deepEqual(image.bytes, oldImage)
+  assert.equal(image.contentType, 'image/png')
+  assert.equal(sha256(image.bytes), asset.sha256)
+  for (const [path, file] of Object.entries(latest.files)) {
+    const original = await readNativeOriginal(db, item.id, sha256(file.bytes), path)
+    assert.deepEqual(original?.bytes, file.bytes, 'first-conversion source bytes remain unchanged')
+  }
+  assert.equal(await readNativeOriginal(db, item.id, sha256(oldImage), 'project/ds/other.png'), null)
+  assert.equal(await readNativeOriginal(db, item.id, sha256('unknown image'), imagePath), null)
+  assert.equal(await readNativeOriginal(db, item.id, sha256(old.files[pagePath].bytes), pagePath), null, 'historical executable/text sources do not gain an originals alias')
+  const unrelated = await artifact('slides')
+  assert.equal(await readNativeOriginal(db, unrelated.id, sha256(oldImage), imagePath), null)
+  const unindexed = Buffer.concat([oldImage, Buffer.from('not a recorded checkpoint')])
+  await db.query('INSERT INTO artifact_file_versions(artifact_id,sha256,body) VALUES($1,$2,$3)', [item.id, sha256(unindexed), unindexed])
+  assert.equal(await readNativeOriginal(db, item.id, sha256(unindexed), imagePath), null, 'a stored blob hash alone does not authorize a source path')
+  const archive = await nativeSourceArchive(db, item.id)
+  assert.equal(archive.originals[imagePath].base64, latestImage.toString('base64'))
+  assert.equal(archive.originals[imagePath].sha256, sha256(latestImage))
 })
 
 test('restored legacy embeds retain their checkpoint resources without changing original conversion files', async () => {

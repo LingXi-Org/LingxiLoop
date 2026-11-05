@@ -1,0 +1,80 @@
+{
+  "scope": "Independent Chromium diagnostic with intercepted HTTP fixture and real shared reducer; not real API or Agent runtime acceptance",
+  "source": "Independent candidate review after the active-editor double-click CAS guard; synthetic recovery payloads excluded",
+  "cases": [
+    {
+      "kind": "cas-doubleclick-reentry-guard",
+      "mode": "slides",
+      "editor": "rte",
+      "before": "验收页面 1",
+      "remote": "REMOTE AUTHOR VERSION",
+      "saved": "REMOTE AUTHOR VERSION",
+      "saveState": "conflict",
+      "localDraft": "验收页面 1 AFTER REENTRY",
+      "recoverableDraft": true,
+      "committedManualBatches": 0,
+      "expectedVersions": {
+        "page/page-1/exists": 0,
+        "node/page-1/page-1-heading/exists": 0,
+        "node/page-1/page-1-heading/field/text": 0,
+        "node/page-1/page-1-heading/field/richText": 0
+      },
+      "errors": []
+    },
+    {
+      "kind": "cas-doubleclick-reentry-guard",
+      "mode": "design",
+      "editor": "rte",
+      "before": "验收页面 1",
+      "remote": "REMOTE AUTHOR VERSION",
+      "saved": "REMOTE AUTHOR VERSION",
+      "saveState": "conflict",
+      "localDraft": "验收页面 1 AFTER REENTRY",
+      "recoverableDraft": true,
+      "committedManualBatches": 0,
+      "expectedVersions": {
+        "page/page-1/exists": 0,
+        "node/page-1/page-1-heading/exists": 0,
+        "node/page-1/page-1-heading/field/text": 0,
+        "node/page-1/page-1-heading/field/richText": 0
+      },
+      "errors": []
+    },
+    {
+      "kind": "cas-doubleclick-reentry-guard",
+      "mode": "slides",
+      "editor": "table",
+      "before": "页面 Page",
+      "remote": "REMOTE CELL AUTHOR",
+      "saved": "REMOTE CELL AUTHOR",
+      "saveState": "conflict",
+      "localDraft": "页面 Page AFTER REENTRY",
+      "recoverableDraft": true,
+      "committedManualBatches": 0,
+      "expectedVersions": {
+        "page/page-1/exists": 0,
+        "node/page-1/page-1-table/exists": 0,
+        "node/page-1/page-1-table/field/cells": 0
+      },
+      "errors": []
+    },
+    {
+      "kind": "cas-doubleclick-reentry-guard",
+      "mode": "design",
+      "editor": "table",
+      "before": "页面 Page",
+      "remote": "REMOTE CELL AUTHOR",
+      "saved": "REMOTE CELL AUTHOR",
+      "saveState": "conflict",
+      "localDraft": "页面 Page AFTER REENTRY",
+      "recoverableDraft": true,
+      "committedManualBatches": 0,
+      "expectedVersions": {
+        "page/page-1/exists": 0,
+        "node/page-1/page-1-table/exists": 0,
+        "node/page-1/page-1-table/field/cells": 0
+      },
+      "errors": []
+    }
+  ]
+}

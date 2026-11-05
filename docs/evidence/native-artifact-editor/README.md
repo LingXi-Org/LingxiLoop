@@ -29,40 +29,67 @@ Historical `perf/issue-652` values describe different source revisions and a
 different, smaller sample. They are not relabelled as this refactor's baseline.
 
 The candidate now uses the user-approved `@lingxi-org/lingxios@4.0.0`.
-[CI run 41973257639](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41973257639)
-installed that official package and passed the frontend checks/build, server typecheck,
-and formal historical-runtime/bootstrap migration to product63. The server unit
-suite then failed an outdated authoring-guidance expectation (fixed in `c18fc571`);
-the integration suite also failed and remains under investigation. Local package access and the original baseline dependency
-remain unavailable. This does not change the unverified performance gates above.
+[CI run 41980058295](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41980058295)
+installed that official package and passed web/server/admin/control checks,
+deployment contracts and formal historical-runtime/bootstrap migration to product63.
+Its runtime Design failure fixture still expected a forced page-read tool after
+SDK 4 returned a bounded document observation. The corrected fixture preserves
+the conflict and false-completion assertions and awaits the next real CI run.
+The authorized GitHub connector supplied the exact failure log; local package
+download remains unavailable. A branch-only real-service diagnostic and paired
+measurement workflow is ready; see [CI acceptance](ci-acceptance.md). None of this
+changes the unverified performance gates above.
 
 ## Fixed input and measurement contract
 
-Version 2 of `scripts/native-artifact-fixture.mjs` creates equivalent legacy files and native
+Version 3 of `scripts/native-artifact-fixture.mjs` creates equivalent legacy files and native
 documents: 50 ordered slides or 50 positioned artboards, each with an editable
 heading, body, distinct 640×360 raster image, formula, shape and table. Slides
-also carry notes. Formula variants include fractions, sums, matrices and an
+also carry 50 speaker notes. Historical Design `canvas.notes` entries are
+spatial annotation objects (`x/y/w/h/kind/text`), not per-page speaker strings;
+that format has no page speaker-note representation. Initial native Design
+speaker notes are therefore empty to match the legacy input. Manual native
+Design note editing is checked separately; retained annotation source is not
+claimed as converted speaker notes. Formula variants include fractions, sums, matrices and an
 integral, including a formula on the first page. Images total 30,877,750 bytes;
 they are 50 distinct PNGs, not 50 references to one image. Page 25 additionally
 contains an isolated interactive block whose image toggles opacity on click or
-keyboard input. The native block and legacy sandboxed iframe contain the exact
-same standalone HTML and an inline copy of image 25. This keeps the source hash
-stable across both application origins; its fixed export preview references the
-original image-25 asset and matches the initial pixels. Both arms carry the same
-added source. The manifests record isolated source and preview hashes; the image
-asset count and unique raster bytes are unchanged. Native and legacy page
-coordinates use 1920×1080. Fixed local image responses exercise real transfer
-and image decoding without an external CDN. Upload to object storage and live
-model inference are separate acceptance scenarios.
+keyboard input. The native block, legacy Design sandboxed iframe and legacy
+Slides `x-embed` contain the exact same standalone HTML and an additional compact
+64×36 PNG. This 8,776-byte source fits the frozen Slides compiler's 16 KiB limit;
+its fixed export preview references the same 6,075-byte raster and matches the
+initial pixels. Both arms carry the same source, with a hash independent of the
+application origin. The original 50 full-size images and their hashes remain
+unchanged; the native asset map has one additional inline preview. Legacy Slides
+references and supplies these page images at `project/ds/fixture/image-N.png`,
+the path accepted by the frozen compiler and file API. Design retains its
+documented `./support.js` marker, which the genuine editor replaces with its
+runtime; the fixture supplies no substitute runtime. The manifests record the
+isolated source, preview and every legacy file hash. Native and legacy page
+coordinates use 1920×1080. Design uses matching fixed local HTTP image responses.
+Native Slides uploads these exact PNGs through the actual protected asset API
+and local MinIO storage; frozen Slides reads its supplied PostgreSQL file bytes
+through the original grant route. These product storage paths exercise real
+transfer and decoding without an external CDN; they are not identical storage
+implementations. Live model inference remains a separate acceptance scenario.
 
 [design-fixture-manifest.json](design-fixture-manifest.json) and
 [slides-fixture-manifest.json](slides-fixture-manifest.json) record image, file
-and semantic SHA-256 hashes. Local origin changes alter serialized file hashes;
+and semantic SHA-256 hashes, including the exact initial speaker-note array.
+Local origin changes alter serialized file hashes;
 the semantic hash remains the same. The focused fixture regression verifies
 50 pages, 50 unique decodable PNGs, valid KaTeX on every page, legacy source
 preservation, schema validity and reconstruction through the real shared
 operation reducer. It also verifies byte-identical legacy/native isolated
-source, the exact preview raster and origin-independent semantic/source hashes.
+source, the exact preview raster, origin-independent semantic/source hashes and
+all declared image/file references. The documented injected Design runtime
+marker is explicitly excluded from the ordinary file-reference check. Existing
+browser/export receipts identify their exact fixture hashes and whether a change
+was a metadata-only rekey; fixture checks alone establish no browser readiness
+or performance result.
+[The frozen compiler check](fixture-v3-compiler.md) additionally confirms all 50
+legacy Slides pages compile without errors, resolve the supplied project assets
+and preserve page 25's exact isolated source.
 
 The browser runner uses a new Chromium process and empty cache for every cold
 sample, restoring only a valid login cookie. The whole production app loads;
@@ -75,7 +102,8 @@ in an accepted timing window.
 Readiness requires the real canvas heading, a decoded image, rendered formula,
 trusted text input and a verified painted change. A real save response must
 acknowledge the edit before the sample qualifies. The timing endpoint is the
-painted edit, with the later save acknowledgement reported separately. Script
+later of the painted edit and its matching server acknowledgement; script bytes
+use that same endpoint. Input-to-paint latency remains a separate metric. Script
 accounting uses actual CDP encoded bytes, including source-data Fetch requests
 and Workers; screenshots, loaded placeholders and nominal gzip sizes do not
 qualify. Network traces redact grant tokens and query strings.
@@ -114,10 +142,11 @@ the report cannot pass the ten-sample gate. The runner preserves a failed sample
 and screenshot and stops by default, rather than repeating an invalid setup.
 `--skip-traversal` is explicitly diagnostic and cannot pass the memory gate.
 
-The service's fixed image resources do not require object storage. Its loopback
-storage endpoint deliberately refuses accidental uploads, and its model endpoint
-deliberately refuses accidental paid requests. Neither upload nor live Agent
-generation is claimed by this performance fixture.
+The native service requires the dedicated MinIO service described in
+[CI acceptance](ci-acceptance.md), which seeds a fresh local bucket and validates
+the exact upload bytes before fixture operations are submitted. Production
+storage settings are rejected. The model endpoint remains closed loopback;
+no live Agent generation is claimed by this performance fixture.
 
 ## Checks actually run
 

@@ -1,27 +1,28 @@
-✔ legacy JSX is syntax-transformed without executing source and React imports use the isolated runtime (181.969326ms)
-✔ JSON script data remains data and unsafe runtime URLs are rejected (6.08419ms)
-✔ documented DCLogic classes are registered without evaluating them on the server (26.302016ms)
+✔ legacy JSX is syntax-transformed without executing source and React imports use the isolated runtime (77.952231ms)
+✔ JSON script data remains data and unsafe runtime URLs are rejected (4.871474ms)
+✔ documented DCLogic classes are registered without evaluating them on the server (180.902191ms)
 ▶ legacy artifact conversion
-  ✔ preserves ordered pages, editable text, images, formula source and notes without changing originals (45.634758ms)
-  ✔ keeps executable Design source isolated and addressed by its original hash (2.918559ms)
-  ✔ never moves event handlers or unsafe SVG into native DOM nodes (2.329609ms)
-  ✔ refuses unknown format versions and missing referenced pages instead of losing data (0.850575ms)
-  ✔ converts static DC wrappers, empty decorative shapes, grid tracks and print metadata (2.549017ms)
-✔ legacy artifact conversion (56.558688ms)
-✔ legacy iframe srcdoc becomes the opaque block source without a forbidden nested frame (3.52236ms)
-✔ offline HTML escapes authored text and preserves the fixed snapshot (30.064227ms)
-✔ image metadata never authorizes embedding a JSON API response or forged image bytes (11.156853ms)
-✔ cancellation occurs before loading resources or modifying a document (0.730402ms)
-✔ offline HTML uses the isolated content snapshot and reports loss of interactivity (39.745149ms)
-✔ formula output uses KaTeX and a malformed source remains readable with a warning (53.048324ms)
-✔ PDF page tree, Unicode text layer and links are understood by an independent parser (101.605753ms)
-✔ inline formulas in text and table cells render while prices and code stay literal (33.932075ms)
-✔ theme-bound defaults affect page, text and shape export while authored overrides remain fixed (3.730515ms)
-ℹ tests 17
+  ✔ preserves ordered pages, editable text, images, formula source and notes without changing originals (46.627773ms)
+  ✔ keeps executable Design source isolated and addressed by its original hash (3.006716ms)
+  ✔ never moves event handlers or unsafe SVG into native DOM nodes (1.218775ms)
+  ✔ refuses unknown format versions and missing referenced pages instead of losing data (1.107509ms)
+  ✔ converts static DC wrappers, empty decorative shapes, grid tracks and print metadata (4.995036ms)
+✔ legacy artifact conversion (59.523586ms)
+✔ legacy iframe srcdoc becomes the opaque block source without a forbidden nested frame (5.520577ms)
+✔ keeps x-embed contents byte-exact and converts surrounding nodes and stored image references (2.324858ms)
+✔ offline HTML escapes authored text and preserves the fixed snapshot (68.334042ms)
+✔ image metadata never authorizes embedding a JSON API response or forged image bytes (11.359707ms)
+✔ cancellation occurs before loading resources or modifying a document (0.749388ms)
+✔ offline HTML uses the isolated content snapshot and reports loss of interactivity (69.562846ms)
+✔ formula output uses KaTeX and a malformed source remains readable with a warning (61.443998ms)
+✔ PDF page tree, Unicode text layer and links are understood by an independent parser (674.620174ms)
+✔ inline formulas in text and table cells render while prices and code stay literal (184.308653ms)
+✔ theme-bound defaults affect page, text and shape export while authored overrides remain fixed (15.100528ms)
+ℹ tests 18
 ℹ suites 1
-ℹ pass 17
+ℹ pass 18
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 1599.040227
+ℹ duration_ms 3494.949907

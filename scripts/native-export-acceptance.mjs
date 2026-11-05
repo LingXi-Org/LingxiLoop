@@ -12,7 +12,7 @@ import { createFixture } from './native-artifact-fixture.mjs'
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const output = resolve(process.argv[2] ?? '/workspace/scratch/native-export-acceptance')
 const temporary = await mkdtemp(join(tmpdir(), 'lingxi-export-'))
-const fixture = createFixture('slides')
+const fixture = createFixture(process.env.NATIVE_EXPORT_KIND ?? 'slides')
 await mkdir(output, { recursive: true })
 await mkdir(join(temporary, 'public/native-artifact-fixture'), { recursive: true })
 await cp(join(repository, 'public/fonts'), join(temporary, 'public/fonts'), { recursive: true })

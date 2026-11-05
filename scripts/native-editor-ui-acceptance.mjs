@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { mkdtemp, mkdir, writeFile, rm, realpath } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm, realpath } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { createRequire } from 'node:module'
@@ -53,9 +53,11 @@ try {
   const baseUrl = `http://127.0.0.1:${address.port}`
   browser = await chromium.launch({ headless: true, ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox'] })
   for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
-    const result = await verifyMode(kind, browser, baseUrl)
-    await writeFile(join(output, `${kind}.json`), JSON.stringify(result, null, 2) + '\n')
-    console.log(JSON.stringify(result))
+    for (const editorCase of options.checks === 'cas' ? ['rte', 'table'] : [null]) {
+      const result = await verifyMode(kind, browser, baseUrl, editorCase)
+      await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
+      console.log(JSON.stringify(result))
+    }
   }
 } finally {
   await browser?.close()
@@ -63,7 +65,7 @@ try {
   await rm(workspace, { recursive: true, force: true })
 }
 
-async function verifyMode(kind, browser, baseUrl) {
+async function verifyMode(kind, browser, baseUrl, editorCase) {
   const fixture = createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
@@ -141,6 +143,45 @@ async function verifyMode(kind, browser, baseUrl) {
   try {
     await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     await ready(1)
+    if (options.checks === 'cas') {
+      const table = editorCase === 'table', nodeId = table ? 'page-1-table' : 'page-1-heading'
+      const target = page.locator(`[data-node-id="${nodeId}"]`)
+      const active = table ? target.locator('td').first() : page.locator('[data-native-text-editor]')
+      await (table ? active : target).dblclick()
+      if (table) await page.waitForFunction(() => window.document.querySelector('[data-node-id="page-1-table"] td')?.getAttribute('contenteditable') === 'true')
+      else await active.waitFor()
+      await active.focus()
+      const before = await active.innerText(), remote = table ? 'REMOTE CELL AUTHOR' : 'REMOTE AUTHOR VERSION'
+      const cells = document.pages['page-1'].nodes[nodeId].cells?.map(row => [...row])
+      if (cells) cells[0][0] = remote
+      const remoteObserved = page.waitForRequest(request => request.method() === 'PUT' && request.url().includes('/editor-context') && request.postDataJSON()?.version === String(document.seq))
+      document = applyOperations(document, prepareBatch(document, [{ type: 'node.patch', pageId: 'page-1', nodeId, patch: table ? { cells } : { text: remote } }])).document
+      await remoteObserved
+      assert.equal(await active.innerText(), before, 'remote refresh must retain the active draft content')
+      // Word selection is a second real double click inside the same editor.
+      // It must not replace the original CAS snapshot with the remote revision.
+      await active.dblclick(); await page.keyboard.press('End'); await page.keyboard.insertText(' AFTER REENTRY'); await active.press('Control+s')
+      await page.waitForFunction(() => window.document.querySelector('[data-save-state]')?.getAttribute('data-save-state') === 'conflict')
+      const saved = table ? document.pages['page-1'].nodes[nodeId].cells[0][0] : document.pages['page-1'].nodes[nodeId].text
+      assert.equal(saved, remote, 'remote value must survive the rejected stale draft')
+      assert.equal(receipts.length, 0, 'no stale mutation may be submitted')
+      const pending = page.waitForEvent('download')
+      await page.getByRole('button', { name: '下载本地副本', exact: true }).click()
+      const recoveryPath = join(workspace, `${kind}-${editorCase}-recovery.json`)
+      await (await pending).saveAs(recoveryPath)
+      const recovery = JSON.parse(await readFile(recoveryPath, 'utf8'))
+      const expected = before + ' AFTER REENTRY'
+      const recoverableDraft = recovery.operations.flatMap(batch => batch.operations).some(operation => table ? operation.patch?.cells?.[0]?.[0] === expected : operation.patch?.text === expected)
+      assert.ok(recoverableDraft, 'the exact local rejected draft must remain recoverable')
+      const versionKey = `node/page-1/${nodeId}/field/${table ? 'cells' : 'text'}`
+      assert.equal(recovery.operations.at(-1)?.expectedVersions[versionKey], 0)
+      assert.equal(document.versions[versionKey], 1)
+      assert.deepEqual(errors, [])
+      return { kind: 'isolated-cas-doubleclick-reentry-diagnostic', mode: kind, editor: editorCase, fixtureVersion: fixture.manifest.version,
+        scope: 'HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance',
+        remoteObservedBeforeDoubleClick: true, remotePreserved: saved === remote, saveState: 'conflict', recoverableDraft,
+        committedManualBatches: receipts.length, capturedVersion: 0, currentVersion: 1, consoleOrPageErrors: errors }
+    }
     if (options.checks === 'save') {
       const editor = page.locator('[data-native-artifact-editor]')
       const waitState = value => page.waitForFunction(value => window.document.querySelector('[data-save-state]')?.getAttribute('data-save-state') === value, value)
@@ -310,7 +351,7 @@ async function verifyMode(kind, browser, baseUrl) {
       isolatedInteraction = true
     }
     assert.deepEqual(errors, [])
-    return { kind: 'isolated-native-editor-ui-diagnostic', mode: kind, scope: 'HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance', pagesTraversed: 50,
+    return { kind: 'isolated-native-editor-ui-diagnostic', mode: kind, fixtureVersion: fixture.manifest.version, fixtureSemanticSha256: fixture.manifest.semanticSha256, scope: 'HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance', pagesTraversed: 50,
       activePageImageDecodedAndFormulaReady: 50, maxMountedPages, maxMountedNodes, editedPages, reloadedPages: editedPages, committedManualBatches: receipts.length,
       openingTextWithoutChangesDoesNotSave: true, chineseIme, formulaEditedAndReopened: 25, imageCropEditedAndReopened: 50, themeSwitchedAndRestored: true,
       pageOrderChangedAndReopened: true, pageOrderSharedUndoRedo: true, agentSharedUndoRedo: true, changedPageIds, untouchedPageHashes: 47,

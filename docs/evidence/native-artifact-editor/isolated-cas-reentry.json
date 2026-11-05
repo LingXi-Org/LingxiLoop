@@ -1,0 +1,65 @@
+{
+  "scope": "Reproducible UI diagnostic with fixturev3; no real API/Agent runtime acceptance",
+  "cases": [
+    {
+      "kind": "isolated-cas-doubleclick-reentry-diagnostic",
+      "mode": "slides",
+      "editor": "rte",
+      "fixtureVersion": 3,
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "remoteObservedBeforeDoubleClick": true,
+      "remotePreserved": true,
+      "saveState": "conflict",
+      "recoverableDraft": true,
+      "committedManualBatches": 0,
+      "capturedVersion": 0,
+      "currentVersion": 1,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-cas-doubleclick-reentry-diagnostic",
+      "mode": "slides",
+      "editor": "table",
+      "fixtureVersion": 3,
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "remoteObservedBeforeDoubleClick": true,
+      "remotePreserved": true,
+      "saveState": "conflict",
+      "recoverableDraft": true,
+      "committedManualBatches": 0,
+      "capturedVersion": 0,
+      "currentVersion": 1,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-cas-doubleclick-reentry-diagnostic",
+      "mode": "design",
+      "editor": "rte",
+      "fixtureVersion": 3,
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "remoteObservedBeforeDoubleClick": true,
+      "remotePreserved": true,
+      "saveState": "conflict",
+      "recoverableDraft": true,
+      "committedManualBatches": 0,
+      "capturedVersion": 0,
+      "currentVersion": 1,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-cas-doubleclick-reentry-diagnostic",
+      "mode": "design",
+      "editor": "table",
+      "fixtureVersion": 3,
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "remoteObservedBeforeDoubleClick": true,
+      "remotePreserved": true,
+      "saveState": "conflict",
+      "recoverableDraft": true,
+      "committedManualBatches": 0,
+      "capturedVersion": 0,
+      "currentVersion": 1,
+      "consoleOrPageErrors": []
+    }
+  ]
+}

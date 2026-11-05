@@ -1,0 +1,41 @@
+✔ 50-page acceptance fixture has distinct decoded images and source formulas on every page in both formats (9332.998891ms)
+✔ all legacy resource references resolve to supplied assets except the documented injected Design runtime marker (17.494277ms)
+✔ isolated source and semantic hash stay fixed across fixture origins and document IDs (7013.930235ms)
+▶ legacy artifact conversion
+  ✔ preserves ordered pages, editable text, images, formula source and notes without changing originals (49.801954ms)
+  ✔ keeps executable Design source isolated and addressed by its original hash (2.390852ms)
+  ✔ never moves event handlers or unsafe SVG into native DOM nodes (1.332103ms)
+  ✔ refuses unknown format versions and missing referenced pages instead of losing data (1.479601ms)
+  ✔ converts static DC wrappers, empty decorative shapes, grid tracks and print metadata (3.83192ms)
+✔ legacy artifact conversion (61.345499ms)
+✔ legacy iframe srcdoc becomes the opaque block source without a forbidden nested frame (1.728628ms)
+✔ keeps x-embed contents byte-exact and converts surrounding nodes and stored image references (2.280392ms)
+✔ stale document revisions can change disjoint fields of the same node (57.154747ms)
+✔ same field conflict rejects the entire batch without mutation (5.800053ms)
+✔ inverse restores content but versions and sequence keep increasing (19.248945ms)
+✔ deleted and recreated IDs invalidate older field edits (7.800973ms)
+✔ different style fields merge, and missing CAS checks are rejected (5.242427ms)
+✔ page and group removal detect descendant changes and inverse restores structure (9.892286ms)
+✔ native data rejects executable SVG, unknown properties and invalid graph references (7.152398ms)
+✔ SVG subset rejects executable namespaces, encoded attributes and malformed tag boundaries (1.028526ms)
+✔ new page and dependent nodes can be submitted atomically (6.910477ms)
+✔ reordering conflicts on collection version without conflicting on unrelated text edits (6.42584ms)
+✔ stale group deletion cannot discard newly inserted descendants (3.397525ms)
+✔ replacement invalidates older patches even for previously absent fields (5.82423ms)
+✔ resource deletion conflicts with concurrent new references instead of breaking them (13.515772ms)
+✔ flow and paper metadata undo remains lossless through serialized history (2.358186ms)
+✔ theme operations retain exact source resources as inert metadata and undo restores prior theme (5.794548ms)
+✔ theme source resources enforce safe paths, file count and UTF-8 byte limits (82.908338ms)
+✔ plain text edits replace manual rich text, guard both values and undo restores formatting (10.333534ms)
+✔ plain text prepared before rich text existed cannot erase a later rich edit (1.173859ms)
+✔ retained theme variants change default page, text and shapes with one reversible selection (42.876805ms)
+✔ explicit colors remain overrides and resetting page theme binding is reversible (2.036604ms)
+✔ theme style helpers reject executable token strings and unresolved aliases (0.510318ms)
+ℹ tests 31
+ℹ suites 1
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18734.343272
