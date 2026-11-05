@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { nativeArtifactStorageConfiguration, nativeFixtureAsset } from './native-artifact-storage.mjs'
+import { nativeArtifactStorageConfiguration, nativeArtifactRuntimeConfiguration, nativeFixtureAsset } from './native-artifact-storage.mjs'
 
 test('acceptance storage permits only its dedicated loopback bucket and fixed test credentials', () => {
   const configuration = nativeArtifactStorageConfiguration()
@@ -18,6 +18,13 @@ test('fidelity native baseline gets separate storage on its own fixed origin',()
   assert.equal(baseline.R2_PUBLIC_BASE,'https://localhost:24411/native-artifact-objects')
   assert.deepEqual(nativeArtifactStorageConfiguration(baseline,'https://localhost:24411'),baseline)
   assert.throws(()=>nativeArtifactStorageConfiguration(baseline,'https://localhost:24412'))
+})
+
+test('production acceptance configures independent runtime storage, Redis and control listeners for both arms',()=>{
+  const arms=['https://localhost:24411','https://localhost:24412'].map(origin=>({files:nativeArtifactStorageConfiguration({},origin),runtime:nativeArtifactRuntimeConfiguration({},origin)}))
+  for(const {files,runtime}of arms){assert.notEqual(runtime.LINGXIOS_R2_BUCKET,files.R2_BUCKET);assert.ok(runtime.LINGXIOS_SERVICE_TOKEN.length>=32);assert.equal(runtime.AGENT_OS_INPUT_COST_MICROS_PER_MILLION,'0')}
+  for(const key of ['LINGXIOS_R2_BUCKET','LINGXIOS_REALTIME_REDIS_URL','LINGXIOS_CONTROL_PORT'])assert.notEqual(arms[0].runtime[key],arms[1].runtime[key])
+  assert.throws(()=>nativeArtifactRuntimeConfiguration({LINGXIOS_R2_BUCKET:'other'},'https://localhost:24411'))
 })
 
 test('native fixture asset retains stable IDs and dimensions with the product upload URL and exact bytes', () => {

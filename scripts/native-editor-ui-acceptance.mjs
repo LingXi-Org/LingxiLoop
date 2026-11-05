@@ -69,6 +69,8 @@ try {
 async function verifyMode(kind, browser, baseUrl, editorCase) {
   const fixture = options.checks === 'parity' ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
+  if(options.checks==='legacy-colors')document.pages['page-1'].background='#f00'
+  if(options.checks==='color-cas')document.pages['page-1'].background='#ff0000'
   const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
   const initialPageHashes = Object.fromEntries(document.pageOrder.map(id => [id, pageHash(document.pages[id])]))
   const history = { version: 0, undo: null, redo: null }, receipts = [], errors = []
@@ -157,17 +159,30 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         const {captureWithBleed}=await import(`/@fs/${root}/src/features/artifacts/native/export/capture.ts`)
         const host=document.createElement('div'),node=document.createElement('div')
         Object.assign(node.style,{width:'240px',height:'1px'})
-        node.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" style="overflow:visible;width:100%;height:100%" viewBox="0 0 240 1"><defs><marker id="ink-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><polyline points="0,0 240,0" stroke="black" stroke-width="12" marker-end="url(#ink-arrow)"/></svg>'
+        node.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible;width:100%;height:100%" viewBox="0 0 240 1"><defs><marker id="ink-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><polyline points="0,0 240,0" stroke="black" stroke-width="12" marker-end="url(#ink-arrow)"/></svg>'
         host.append(node);document.body.append(host)
         try {
-          const {data,padding}=await captureWithBleed(host,node,[{strokeWidth:12}]),image=new Image();image.src=data;await image.decode()
+          const captures=[]
+          for(const width of [12,2]) {
+            node.querySelector('polyline').setAttribute('stroke-width',String(width))
+            const {data,padding}=await captureWithBleed(host,node,width===12?[{strokeWidth:12}]:[{}]),image=new Image();image.src=data;await image.decode()
+            const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0)
+            const pixels=ctx.getImageData(0,0,image.width,image.height).data;let left=image.width,top=image.height,right=0,bottom=0
+            for(let y=0;y<image.height;y++)for(let x=0;x<image.width;x++)if(pixels[(y*image.width+x)*4+3]>128){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
+            captures.push({width:image.width,height:image.height,padding,left,top,right,bottom,inkHeight:bottom-top+1})
+          }
+          Object.assign(host.style,{color:'rgb(255,0,0)',fontFamily:'monospace',fontSize:'48px'})
+          Object.assign(node.style,{width:'80px',height:'64px'});node.textContent='X'
+          const {data}=await captureWithBleed(document.body,node,[{}]),image=new Image();image.src=data;await image.decode()
           const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0)
-          const pixels=ctx.getImageData(0,0,image.width,image.height).data;let left=image.width,top=image.height,right=0,bottom=0
-          for(let y=0;y<image.height;y++)for(let x=0;x<image.width;x++)if(pixels[(y*image.width+x)*4+3]>128){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
-          return {width:image.width,height:image.height,padding,left,top,right,bottom,inkHeight:bottom-top+1}
+          const pixels=ctx.getImageData(0,0,image.width,image.height).data;let red=0,black=0
+          for(let i=0;i<pixels.length;i+=4)if(pixels[i+3]>128){if(pixels[i]>200&&pixels[i+1]<30&&pixels[i+2]<30)red++;else if(pixels[i]<30&&pixels[i+1]<30&&pixels[i+2]<30)black++}
+          return {captures,inheritedRedPixels:red,inheritedBlackPixels:black}
         }finally{host.remove()}
       },root)
-      assert.ok(ink.inkHeight>=100,'arrow ink must exceed the authored one-pixel height');assert.ok(ink.left>0&&ink.top>0&&ink.right<ink.width-1&&ink.bottom<ink.height-1,'no stroke edge may touch the capture boundary')
+      assert.ok(ink.captures[0].inkHeight>=100,'arrow ink must exceed the authored one-pixel height')
+      for(const capture of ink.captures)assert.ok(capture.left>0&&capture.top>0&&capture.right<capture.width-1&&capture.bottom<capture.height-1,`explicit and default strokes must not touch capture boundaries: ${JSON.stringify(ink)}`)
+      assert.ok(ink.inheritedRedPixels>100&&ink.inheritedBlackPixels===0,'captured text must keep its inherited group color')
       return {kind:'isolated-export-ink-diagnostic',mode:kind,...ink,scope:'actual Chromium html-to-image rasterizer; not a full PPTX rendering comparison'}
     }
     if (options.checks === 'parity') {
@@ -195,13 +210,42 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if (kind==='design') { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'50%',exact:true}).click() }
     await page.getByRole('button',{name:'显示属性',exact:true}).click()
+    if(options.checks==='legacy-colors') {
+      const waitSaved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      for(const color of ['#f00','rgb(255,0,0)','rgba(255,0,0,0.25)']) {
+        if(color!=='#f00'){document=applyOperations(document,prepareBatch(document,[{type:'page.patch',pageId:'page-1',patch:{background:color}}])).document;history.version=document.seq;await page.waitForFunction(color=>document.querySelector('.native-color-field>button')?.textContent.includes(color.toUpperCase()),color)}
+        await page.getByRole('button',{name:'背景',exact:true}).click();await page.getByRole('button',{name:'自定义',exact:true}).click()
+        await page.getByLabel('颜色透明度',{exact:true}).press('Home');await waitSaved();assert.equal(document.pages['page-1'].background,'#ff000000')
+        await page.getByRole('button',{name:'关闭颜色选择',exact:true}).click()
+      }
+      await page.locator('[data-node-id="page-1-shape"]').click()
+      await page.locator('.native-property-disclosure>summary').filter({hasText:'效果'}).click();await page.locator('.native-inspector-section>summary').filter({hasText:'阴影'}).click()
+      await page.getByRole('checkbox',{name:'阴影',exact:true}).check();await waitSaved()
+      assert.match(await page.getByRole('button',{name:'阴影颜色',exact:true}).innerText(),/#00000040/i)
+      return {kind:'isolated-legacy-color-diagnostic',mode:kind,shortHexAndCssRgbPreserved:true,shadowAlphaPreserved:true,scope:'actual color popover and shared reducer through HTTP fixture'}
+    }
+    if(options.checks==='color-cas') {
+      await page.getByRole('button',{name:'背景',exact:true}).click()
+      document=applyOperations(document,prepareBatch(document,[{type:'page.patch',pageId:'page-1',patch:{background:'#0000ff'}}])).document;history.version=document.seq
+      await page.waitForFunction(()=>document.querySelector('.native-color-field>button')?.textContent.includes('#0000FF'))
+      await page.getByRole('button',{name:'自定义',exact:true}).click()
+      await page.getByLabel('颜色透明度',{exact:true}).press('Home');await page.waitForTimeout(200)
+      assert.equal(document.pages['page-1'].background,'#0000ff','an open color editor must not overwrite the newer Agent color')
+      assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'conflict')
+      return {kind:'isolated-color-cas-diagnostic',mode:kind,remoteColorPreserved:true,staleEditConflicts:true,scope:'actual focus changes and shared CAS through controlled HTTP fixture'}
+    }
     if(options.checks==='colors') {
       const waitSaved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
       await page.getByRole('button',{name:'背景',exact:true}).click()
       const picker=page.getByRole('dialog',{name:'背景颜色',exact:true});await picker.waitFor()
       await picker.getByRole('button',{name:'自定义',exact:true}).click()
-      await picker.getByLabel('十六进制颜色',{exact:true}).fill('#12345680');await picker.getByLabel('十六进制颜色',{exact:true}).press('Enter');await waitSaved()
+      const hex=picker.getByLabel('十六进制颜色',{exact:true});await hex.fill('#12345680')
+      assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'draft')
+      holdAcknowledgment=true;await hex.press('Control+s')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='pending')
       assert.equal(document.pages['page-1'].background,'#12345680')
+      assert.equal(await hex.evaluate(e=>document.activeElement===e),true)
+      holdAcknowledgment=false;releaseAcknowledgment?.();releaseAcknowledgment=null;await waitSaved()
       await picker.getByRole('slider',{name:'饱和度和亮度',exact:true}).press('ArrowRight');await waitSaved()
       assert.match(document.pages['page-1'].background,/^#[\da-f]{6}80$/i)
       await picker.getByLabel('关闭颜色选择',{exact:true}).click();assert.equal(await picker.count(),0)

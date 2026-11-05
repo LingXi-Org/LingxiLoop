@@ -18,7 +18,7 @@ import { pathToFileURL } from 'node:url'
 import { Readable } from 'node:stream'
 import { createHash } from 'node:crypto'
 import { createFixture } from './native-artifact-fixture.mjs'
-import { ensureNativeArtifactBucket, nativeArtifactStorageConfiguration, nativeFixtureAsset } from './native-artifact-storage.mjs'
+import { ensureNativeArtifactBucket, nativeArtifactStorageConfiguration, nativeArtifactRuntimeConfiguration, nativeFixtureAsset } from './native-artifact-storage.mjs'
 
 const args = Object.fromEntries(process.argv.slice(2).map(arg => arg.replace(/^--/, '').split('=')))
 const root = resolve(args.root ?? '.'), output = resolve(args.out ?? '/tmp/native-artifact-arm.json')
@@ -57,6 +57,7 @@ Object.assign(process.env, {
   LINGXILOOP_GATEWAY_HMAC_SECRET: 'native-artifact-local-test-only',
   LINGXILOOP_INVITE_BASE_URL: origin, LINGXILOOP_PUBLIC_ORIGIN: origin, LINGXILOOP_ARTIFACT_EDITOR_BASE: editorBase,
   ...storageConfiguration,
+  ...nativeArtifactRuntimeConfiguration(process.env,origin),
 })
 if (args.format === 'native') {
   await ensureNativeArtifactBucket(storageConfiguration,origin)
