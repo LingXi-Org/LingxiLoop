@@ -290,15 +290,22 @@ test('Design canvas pages persist through authorized APIs with shared undo and m
   const design=await created.json() as {id:string}
   try {
     const base=await document(design.id),original=structuredClone(base),board=base.pageOrder[0]
+    const initialRevision=await(await api(`/artifacts/${design.id}/revisions`)).json() as {current:string;revisions:Array<{seq:string}>}
     assert.ok(board)
     assert.equal((await operate(design.id,base,createCanvasPage(base,'second-canvas'))).status,200)
     const added=await document(design.id)
     assert.equal(added.canvasPages?.[1]?.name,'页面 2')
+    const invalid=prepareBatch(added,renameCanvasPage(added,'second-canvas','不会保存'),randomUUID())
+    invalid.operations=[{type:'document.patch',patch:{canvasPages:[added.canvasPages![1]]}}]
+    const rejected=await api(`/artifacts/${design.id}/operations`,'POST',invalid)
+    assert.equal(rejected.status,400)
+    assert.deepEqual(await document(design.id),added)
     assert.equal((await operate(design.id,added,renameCanvasPage(added,'second-canvas','流程图'))).status,200)
     assert.equal((await operate(design.id,added,renameCanvasPage(added,'second-canvas','旧名称'))).status,409)
     const renamed=await document(design.id)
     assert.equal((await operate(design.id,renamed,moveCanvasArtboards(renamed,[board],'second-canvas'))).status,200)
     const moved=await document(design.id)
+    const explicitRevision=await(await api(`/artifacts/${design.id}/revisions`)).json() as typeof initialRevision
     assert.equal(moved.pages[board].canvasPageId,'second-canvas')
     const projected=await(await api(`/artifacts/${design.id}/document`)).json() as {document:ArtifactDocument}
     assert.deepEqual(projected.document.canvasPages,moved.canvasPages)
@@ -312,6 +319,22 @@ test('Design canvas pages persist through authorized APIs with shared undo and m
     const reopened=await document(design.id)
     assert.deepEqual(reopened.canvasPages,moved.canvasPages)
     assert.deepEqual(reopened.pages[board],moved.pages[board])
+    assert.equal((await operate(design.id,reopened,deleteCanvasPage(reopened,'canvas-page-1'))).status,200)
+    const beforeRestore=await document(design.id)
+    const live=await(await api(`/artifacts/${design.id}/revisions`)).json() as typeof initialRevision
+    const restored=await api(`/artifacts/${design.id}/revisions/${initialRevision.revisions[0].seq}/restore`,'POST',{version:live.current})
+    assert.equal(restored.status,200)
+    const implicit=await document(design.id)
+    assert.equal(Object.hasOwn(implicit,'canvasPages'),false)
+    assert.deepEqual(implicit.pages,base.pages)
+    const restoreReceipt=await restored.json() as {history:{version:number;undo:string}}
+    assert.equal((await api(`/artifacts/${design.id}/operations`,'POST',{operationId:randomUUID(),kind:'undo',targetOperationId:restoreReceipt.history.undo,expectedHistoryVersion:restoreReceipt.history.version})).status,200)
+    const undoRestore=await document(design.id)
+    assert.deepEqual(undoRestore.canvasPages,beforeRestore.canvasPages)
+    assert.deepEqual(undoRestore.pages[board],beforeRestore.pages[board])
+    const currentRevision=await(await api(`/artifacts/${design.id}/revisions`)).json() as typeof initialRevision
+    assert.equal((await api(`/artifacts/${design.id}/revisions/${explicitRevision.revisions[0].seq}/restore`,'POST',{version:currentRevision.current})).status,200)
+    assert.deepEqual((await document(design.id)).canvasPages,moved.canvasPages)
     assert.deepEqual(base,original)
   } finally { assert.equal((await api(`/artifacts/${design.id}`,'DELETE')).status,200) }
 })

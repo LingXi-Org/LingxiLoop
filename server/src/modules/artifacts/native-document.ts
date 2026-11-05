@@ -469,7 +469,7 @@ export async function restoreNativeRevision(db: Queryable, input: { artifactId: 
   for (const id of Object.keys(current.document.themes)) operations.push({ type: 'theme.delete', themeId: id } as ArtifactOperation)
   for (const asset of Object.values(restored.assets)) operations.push({ type: 'asset.set', asset } as ArtifactOperation)
   for (const theme of Object.values(restored.themes)) operations.push({ type: 'theme.set', theme } as ArtifactOperation)
-  operations.push({ type: 'document.patch', patch: { title: restored.title, themeId: restored.themeId } } as ArtifactOperation)
+  operations.push({ type: 'document.patch', patch: { title: restored.title, themeId: restored.themeId, ...(restored.canvasPages ? {canvasPages:restored.canvasPages} : {}) }, ...(!restored.canvasPages ? {unset:['canvasPages'] as const} : {}) } as ArtifactOperation)
   for (const pageId of restored.pageOrder) operations.push({ type: 'page.insert', page: restored.pages[pageId] } as ArtifactOperation)
   return submitNativeOperations(db, { ...input, actorKind: 'user', kind: 'restore', request: prepareBatch(current.document, operations, `restore-${randomUUID()}`) })
 }

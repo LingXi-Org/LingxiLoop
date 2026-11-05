@@ -71,9 +71,19 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','canvas-pages','canvas-pages-cas']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','canvas-pages','canvas-pages-cas','canvas-flow']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
+  if(options.checks==='canvas-flow'){
+    document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
+    document.pageOrder=['page-1','page-2'];delete document.pages['page-3']
+    const first=document.pages['page-1'],other=document.pages['page-2'],heading=first.nodes['page-1-heading']
+    Object.assign(first,{width:800,height:600});Object.assign(heading,{x:50,y:50,width:700,height:100})
+    const shape={...createNode('shape','flow-bottom'),x:0,y:900,width:100,height:100}
+    const image=Object.values(first.nodes).find(node=>node.type==='image');Object.assign(image,{x:50,y:200,width:100,height:100})
+    first.nodeOrder=[heading.id,image.id,shape.id];first.nodes={[heading.id]:heading,[image.id]:image,[shape.id]:shape}
+    Object.assign(other,{canvasPageId:'canvas-second',x:0,y:options['flow-overlap']?0:700,width:800,height:600})
+  }
   if(options.checks==='canvas-pages-cas')document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
   if(options.checks==='svg-font'){
     const node={...createNode('svg','font-svg'),svg:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 150"><text x="16" y="100" font-family="Merriweather" font-size="80" font-weight="700">Hello</text></svg>'}
@@ -204,6 +214,18 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='canvas-flow') {
+      assert.equal(kind,'design')
+      await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      await page.locator('.native-inspector summary').getByText('高级',{exact:true}).click()
+      await page.getByLabel('页面高度模式',{exact:true}).selectOption('flow')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      await page.waitForTimeout(1000)
+      assert.ok(document.pages['page-1'].height>=1000&&document.pages['page-1'].height<=1003,'a flow board grows despite boards on another canvas')
+      assert.equal(pageHash(document.pages['page-2']),initialPageHashes['page-2'],'flow growth must not move or change boards on another canvas')
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-flow-diagnostic',mode:kind,otherCanvasOverlaps:!!options['flow-overlap'],height:document.pages['page-1'].height,otherCanvasHashUnchanged:true,scope:'actual React, Worker geometry, content measurement and shared operations; controlled HTTP fixture',consoleOrPageErrors:errors}
+    }
     if(options.checks==='canvas-pages-cas') {
       assert.equal(kind,'design')
       await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“页面 2”操作',{exact:true}).click();await page.getByRole('button',{name:'重命名页面',exact:true}).click()
@@ -246,7 +268,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await page.evaluate(()=>document.activeElement?.textContent?.trim()),'页面 2','arrow navigation must skip actions in closed nested popovers')
       await page.keyboard.press('Escape')
       await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“页面 2”操作',{exact:true}).click();await captureCanvasState('page-actions');await page.getByRole('button',{name:'重命名页面',exact:true}).click()
-      const rename=page.getByRole('dialog',{name:'重命名页面',exact:true});await rename.waitFor();assert.equal(await rename.getByLabel('页面名称',{exact:true}).evaluate(e=>document.activeElement===e&&e.selectionStart===0&&e.selectionEnd===e.value.length),true,'rename opens with the entire current name selected');await captureCanvasState('page-rename');await rename.getByLabel('页面名称',{exact:true}).fill('流程图');await rename.getByLabel('页面名称',{exact:true}).dispatchEvent('keydown',{key:'Enter',keyCode:229,isComposing:true});assert.equal(await rename.isVisible(),true);await rename.getByLabel('页面名称',{exact:true}).dispatchEvent('keydown',{key:'Enter',keyCode:13,repeat:true});assert.equal(await rename.isVisible(),true);await rename.getByLabel('页面名称',{exact:true}).press('Enter');await saved()
+      const rename=page.getByRole('dialog',{name:'重命名页面',exact:true});await rename.waitFor();assert.equal(await rename.getByLabel('页面名称',{exact:true}).evaluate(e=>document.activeElement===e&&e.selectionStart===0&&e.selectionEnd===e.value.length),true,'rename opens with the entire current name selected');await captureCanvasState('page-rename');const ime=await page.context().newCDPSession(page);await ime.send('Input.imeSetComposition',{text:'中文',selectionStart:0,selectionEnd:2});await page.keyboard.press('Escape');assert.equal(await rename.isVisible(),true,'Escape during browser composition must preserve the rename dialog');await ime.send('Input.imeSetComposition',{text:'',selectionStart:0,selectionEnd:0});await ime.detach();await rename.getByLabel('页面名称',{exact:true}).fill('流程图');await rename.getByLabel('页面名称',{exact:true}).dispatchEvent('keydown',{key:'Enter',keyCode:229,isComposing:true});assert.equal(await rename.isVisible(),true);await rename.getByLabel('页面名称',{exact:true}).dispatchEvent('keydown',{key:'Enter',keyCode:13,repeat:true});assert.equal(await rename.isVisible(),true);await rename.getByLabel('页面名称',{exact:true}).press('Enter');await saved()
       assert.equal(document.canvasPages[1].name,'流程图')
       const unchangedSeq=document.seq,unchangedReceipts=receipts.length
       await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“流程图”操作',{exact:true}).click();await page.getByRole('button',{name:'重命名页面',exact:true}).click();await page.getByLabel('页面名称',{exact:true}).press('Enter');await page.getByRole('dialog',{name:'重命名页面',exact:true}).waitFor({state:'detached'})
@@ -278,7 +300,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.ok(compactRect&&compactRect.x>=0&&compactRect.x+compactRect.width<=390)
       await captureCanvasState('page-rename-narrow');await compactDialog.getByRole('button',{name:'取消',exact:true}).click()
       assert.deepEqual(errors,[]);assert.equal(await page.locator('.native-notice').count(),0)
-      return{kind:'isolated-canvas-pages-diagnostic',mode:kind,theme:options['canvas-theme']??'light',sourceNewBoardGeometryWithin1px:true,pageCamerasRestored:true,keyboardOpensOnCurrentPage:true,hiddenItemsSkipped:true,dialogFocusAndSelection:true,unchangedNameDoesNotSave:true,compositionEnterGuard:'controlled DOM events; actual OS input method remains unverified',escapeKeepsWorkspace:true,deleteCancelInitiallyFocused:true,narrowLongNameAndDialog:true,independentCanvasPages:true,newCanvasHasSourceSizedBlankBoard:true,otherCanvasesHidden:true,boardMembershipSaved:true,renameAndReopen:true,deleteAndSharedUndo:true,unchangedBoards:Object.keys(initialPageHashes).length,scope:'actual React, Workers and reducer; controlled HTTP fixture',consoleOrPageErrors:errors}
+      return{kind:'isolated-canvas-pages-diagnostic',mode:kind,theme:options['canvas-theme']??'light',sourceNewBoardGeometryWithin1px:true,pageCamerasRestored:true,keyboardOpensOnCurrentPage:true,hiddenItemsSkipped:true,dialogFocusAndSelection:true,unchangedNameDoesNotSave:true,compositionEnterGuard:'controlled DOM events; actual OS input method remains unverified',protocolCompositionEscapeGuard:true,escapeKeepsWorkspace:true,deleteCancelInitiallyFocused:true,narrowLongNameAndDialog:true,independentCanvasPages:true,newCanvasHasSourceSizedBlankBoard:true,otherCanvasesHidden:true,boardMembershipSaved:true,renameAndReopen:true,deleteAndSharedUndo:true,unchangedBoards:Object.keys(initialPageHashes).length,scope:'actual React, Workers and reducer; controlled HTTP fixture',consoleOrPageErrors:errors}
     }
     if(options.checks==='menu-resize') {
       await page.setViewportSize({width:900,height:1000});await page.getByLabel('画布缩放',{exact:true}).click()

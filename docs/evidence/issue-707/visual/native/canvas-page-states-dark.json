@@ -5,7 +5,7 @@
       "name": "two-pages",
       "boards": [
         {
-          "id": "5fc3ba7d-b30c-46f6-9086-92fd78c17c8a",
+          "id": "d3403d37-29b2-4588-9d11-420eb5695b70",
           "rect": {
             "x": 188.75,
             "y": 155.125,
@@ -47,7 +47,7 @@
       "name": "page-actions",
       "boards": [
         {
-          "id": "5fc3ba7d-b30c-46f6-9086-92fd78c17c8a",
+          "id": "d3403d37-29b2-4588-9d11-420eb5695b70",
           "rect": {
             "x": 188.75,
             "y": 155.125,
@@ -111,7 +111,7 @@
       "name": "page-rename",
       "boards": [
         {
-          "id": "5fc3ba7d-b30c-46f6-9086-92fd78c17c8a",
+          "id": "d3403d37-29b2-4588-9d11-420eb5695b70",
           "rect": {
             "x": 188.75,
             "y": 155.125,
@@ -175,7 +175,7 @@
       "name": "page-delete",
       "boards": [
         {
-          "id": "5fc3ba7d-b30c-46f6-9086-92fd78c17c8a",
+          "id": "d3403d37-29b2-4588-9d11-420eb5695b70",
           "rect": {
             "x": 188.75,
             "y": 155.125,
@@ -217,7 +217,7 @@
       "name": "page-rename-narrow",
       "boards": [
         {
-          "id": "5fc3ba7d-b30c-46f6-9086-92fd78c17c8a",
+          "id": "d3403d37-29b2-4588-9d11-420eb5695b70",
           "rect": {
             "x": 85,
             "y": 165.5625,

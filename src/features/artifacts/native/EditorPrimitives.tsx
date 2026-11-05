@@ -383,7 +383,7 @@ export function Modal({
       className={`native-dialog ${className}`}
       aria-label={title}
       data-native-editor-boundary={editorBoundary?'':undefined}
-      onKeyDown={event=>{if(event.key==='Escape')event.stopPropagation()}}
+      onKeyDown={event=>{if(event.key==='Escape'){event.stopPropagation();if(event.nativeEvent.isComposing||event.keyCode===229)event.preventDefault()}}}
       onCancel={onClose}
       onClose={onClose}
     >

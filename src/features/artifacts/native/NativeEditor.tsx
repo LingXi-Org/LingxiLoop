@@ -261,7 +261,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if (!snapshot.document || !snapshot.write || snapshot.conflict) return
     const document = snapshot.document, page = document.pages[id]
     if (!page || page.sizing !== 'flow' || Math.abs(page.height - height) <= 1) return
-    const manifest = { artboards: document.pageOrder.map(value => { const p = document.pages[value]; return { file: p.id, x: p.x, y: p.y, w: p.width, h: p.height } }) }
+    const manifest = { artboards: document.pageOrder.map(value => { const p = document.pages[value]; return { file: p.id, page:canvasPageOf(p), x: p.x, y: p.y, w: p.width, h: p.height } }) }
     const next = resizeFlowManifest(manifest, id, { w: page.width, h: height }, item => item)
     if (next === manifest) return
     dispatch(next.artboards.flatMap(board => { const p = document.pages[board.file]; return p.height !== board.h || p.y !== board.y ? [{ type: 'page.patch' as const, pageId: p.id, patch: { height: board.h, y: board.y } }] : [] }))

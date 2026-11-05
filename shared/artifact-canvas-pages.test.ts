@@ -100,3 +100,13 @@ test('canvas page creation retains the pinned forty-page limit with Chinese feed
   assert.throws(()=>createCanvasPage(doc,'extra'),/40.*上限/)
   assert.throws(()=>validateArtifactDocument({...doc,canvasPages:[...doc.canvasPages,{id:'extra',name:'额外页面'}]}))
 })
+
+test('direct metadata patch or unset cannot orphan an unchanged board',()=>{
+  const initial=fixture(),doc=edit(initial,createCanvasPage(initial,'second')).document
+  const unchanged=doc.pages.board
+  assert.throws(()=>edit(doc,[{type:'document.patch',patch:{canvasPages:[{id:'second',name:'第二页'}]}}]),/页面/)
+  const moved=edit(doc,moveCanvasArtboards(doc,['board'],'second')).document
+  assert.throws(()=>edit(moved,[{type:'document.patch',patch:{},unset:['canvasPages']}]),/页面/)
+  assert.equal(doc.pages.board,unchanged)
+  validateArtifactDocument(doc)
+})

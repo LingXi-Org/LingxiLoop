@@ -1,0 +1,9 @@
+{
+  "kind": "isolated-canvas-flow-diagnostic",
+  "mode": "design",
+  "otherCanvasOverlaps": false,
+  "height": 1002,
+  "otherCanvasHashUnchanged": true,
+  "scope": "actual React, Worker geometry, content measurement and shared operations; controlled HTTP fixture",
+  "consoleOrPageErrors": []
+}

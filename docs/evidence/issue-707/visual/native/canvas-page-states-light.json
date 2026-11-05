@@ -5,7 +5,7 @@
       "name": "two-pages",
       "boards": [
         {
-          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "id": "a0690932-e528-45bd-a6ad-dd359a68f8e5",
           "rect": {
             "x": 188.75,
             "y": 155.125,
@@ -47,7 +47,7 @@
       "name": "page-actions",
       "boards": [
         {
-          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "id": "a0690932-e528-45bd-a6ad-dd359a68f8e5",
           "rect": {
             "x": 188.75,
             "y": 155.125,
@@ -111,7 +111,7 @@
       "name": "page-rename",
       "boards": [
         {
-          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "id": "a0690932-e528-45bd-a6ad-dd359a68f8e5",
           "rect": {
             "x": 188.75,
             "y": 155.125,
@@ -175,7 +175,7 @@
       "name": "page-delete",
       "boards": [
         {
-          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "id": "a0690932-e528-45bd-a6ad-dd359a68f8e5",
           "rect": {
             "x": 188.75,
             "y": 155.125,
@@ -217,7 +217,7 @@
       "name": "page-rename-narrow",
       "boards": [
         {
-          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "id": "a0690932-e528-45bd-a6ad-dd359a68f8e5",
           "rect": {
             "x": 85,
             "y": 165.5625,

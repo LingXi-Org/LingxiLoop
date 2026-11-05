@@ -195,14 +195,19 @@ export function createNode(type: ArtifactNodeType, id: string): ArtifactNode {
     ...(type === 'text' ? { text: '文本' } : type === 'math' ? { source: 'E=mc^2' } : type === 'shape' ? { shape: 'rect' as const } : type === 'table' ? { cells: [['', ''], ['', '']] } : {}) }
 }
 
+/** Canvas membership is a document-wide metadata relation, even when page bodies are unchanged. */
+export function validateArtifactCanvasPages(document: Pick<ArtifactDocument,'kind'|'canvasPages'|'pages'>): void {
+  const canvas = canvasPages(document), ids = new Set(canvas.map(page=>page.id))
+  if (ids.size !== canvas.length) throw new Error('画布页面标识重复。')
+  if (document.kind !== 'design' && (document.canvasPages || Object.values(document.pages).some(page=>page.canvasPageId))) throw new Error('画布页面只适用于设计稿件。')
+  if (document.kind === 'design' && Object.values(document.pages).some(page=>!ids.has(canvasPageOf(page)))) throw new Error('画板所属页面不存在。')
+}
+
 /** Referential validation also applies after a batch, allowing create+link in one transaction. */
 export function validateArtifactDocument(input: unknown): ArtifactDocument {
   const document = artifactDocumentSchema.parse(input)
   const sameIds = (order: string[], entries: Record<string, unknown>) => order.length === new Set(order).size && order.length === Object.keys(entries).length && order.every(id => Object.hasOwn(entries, id))
-  const canvas = canvasPages(document)
-  if (new Set(canvas.map(page=>page.id)).size !== canvas.length) throw new Error('duplicate canvas page')
-  if (document.kind !== 'design' && (document.canvasPages || Object.values(document.pages).some(page=>page.canvasPageId))) throw new Error('canvas pages require a design document')
-  if (document.kind === 'design' && Object.values(document.pages).some(page=>!canvas.some(sheet=>sheet.id===canvasPageOf(page)))) throw new Error('unknown canvas page')
+  validateArtifactCanvasPages(document)
   if (!sameIds(document.pageOrder, document.pages)) throw new Error('page order must include every page exactly once')
   if (document.themeId !== null && !Object.hasOwn(document.themes, document.themeId)) throw new Error('unknown theme')
   for (const [id, theme] of Object.entries(document.themes)) if (id !== theme.id) throw new Error('theme id mismatch')

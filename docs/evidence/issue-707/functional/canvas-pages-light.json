@@ -9,6 +9,7 @@
   "dialogFocusAndSelection": true,
   "unchangedNameDoesNotSave": true,
   "compositionEnterGuard": "controlled DOM events; actual OS input method remains unverified",
+  "protocolCompositionEscapeGuard": true,
   "escapeKeepsWorkspace": true,
   "deleteCancelInitiallyFocused": true,
   "narrowLongNameAndDialog": true,

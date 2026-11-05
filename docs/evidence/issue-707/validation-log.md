@@ -118,3 +118,12 @@
 - 五十页 Design 流程在居中修正后重跑通过（最多 6 个页面、24 个节点 DOM，47 页未改哈希）；Slides 同批先前检查通过（最多 1 页、7 节点）。真实 API 新增页面持久化、重命名冲突、画板归属、删除/共享撤销用例待本候选 CI。
 - 最新冻结前全量界面截取完成两种编辑器四尺寸浅深主题及主要菜单，16 张默认图原始像素差异仍全数超过 0.5%，不宣称完整视觉合格。
 - [be5ae0fb owning CI](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42110220700) 全部通过，deploy 跳过；独立只读复审未发现新增可执行缺陷。其 [真实性能诊断](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42110207953) 失败：基线 Design 导航遍历第 12 页时媒体请求未就绪，另外三组基线流程存在同一 Worker 脚本字节缺口；候选 Design 首次输入前编辑器消失并记录 13 个失败请求，清理未获确认后停止复用。具体证据见失败收据，完整合格性能样本仍为零。
+
+## fbde931f 独立复审与修正
+
+- [fbde931f owning CI](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42126637549) Web、Server、admin、control、deploy-contract 及 owning integration 全部通过，deploy 跳过；新增 Design 页面持久化/成员/名称冲突/删除共享撤销实际 API 流程已执行。
+- 独立只读审查发现四项：P1 直接元数据操作可留下无效画板归属，P2 历史恢复遗漏页面组织，P2 自动增高串扰其他画布，P2 中文组合输入 Escape 关闭弹窗。没有将 CI 绿灯视为这些路径已覆盖。
+- 先新增直接 patch/unset 拒绝回归，复现共享 reducer 接受无效页面关系，再提取全稿元数据关系校验；仍仅复制和深度校验受影响页面。API 新用例要求非法 patch 返回 400 且文档未变，可继续重开。
+- 历史恢复在原有单批操作中恢复 canvasPages，旧隐式默认稿明确 unset；新增 API 覆盖仅剩第二页时恢复旧快照、共享撤销恢复页面组织，以及恢复显式页面快照。新 API 用例待下一 owning CI。
+- 受控浏览器先复现 flow 自动增长后另一页画板哈希改变，再把页面身份传给原有布局计算。`functional/canvas-flow*.json` 确认非重叠/同坐标两种情况下内容增长成功、另一画布哈希不变。
+- 通过 CDP Input.imeSetComposition 建立 Chromium 的真实组合状态，真实 Escape 先复现弹窗关闭，修复为组合态阻止原生 dialog cancel；浅深页面完整回归通过并保留通常 Escape 退出。它验证浏览器组合事件，不冒充真实操作系统输入法验收。

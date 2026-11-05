@@ -61,8 +61,8 @@
     "slides-zoom.png": "627b548dfc10ce315a05b4550084a72ca457480c28f776139a74d3410c5d28a5"
   },
   "native": {
-    "canvas-page-states-dark.json": "6ac2ea0741df49695f25099d560ae5fab0948165236441ece58e0e3932d64722",
-    "canvas-page-states-light.json": "fd3104b91688030de7a1e70df5f2be34260c7938b6b7fc9daff687a2cdcd0cad",
+    "canvas-page-states-dark.json": "49946e93125f82d4af1455855972465237994a96088552c999275c1b9dec1ede",
+    "canvas-page-states-light.json": "cc0b6a47a925011350b8b22e4a2a916f205266dded23b9a84d3ff43280417343",
     "design-1440-dark.png": "219c06872768a01c67de60e3a76e3ebc63fbfbc081df9126af73abee91eceb93",
     "design-1440-light.png": "94b1a46b18791d46346308fce0fe58fabcd0a5c329e3565c5332c394911f6220",
     "design-1920-dark.png": "ebd355a573da401b39e6d2938c4f36a8eb31f55ab90b21ec2bb4e4a8ada846e2",
@@ -89,7 +89,7 @@
     "design-history.png": "bceb5f1f78bd51e260ddc986d62e3976441e8c42079f3a1db63c4a87cb298c29",
     "design-inspector.png": "b0ea00115edd1d07e3fed8e18b4c52433bdb8132c1454d9e121c93d6653db405",
     "design-page-actions-dark.png": "d0584733c22adc5d8fabd428795bc1230dcf358787712172d364418c8e3d4bf8",
-    "design-page-actions-light.png": "4d76b1a3d6980160016504499b876690af4874ccba44484e5025af1b2adeace8",
+    "design-page-actions-light.png": "91fed8f7aa4867a0f2b3f561414fc6bef0f611f7eedb62d13feb195016546a54",
     "design-page-delete-dark.png": "79a5cf5970b84506e872d8af74b87a46be71b7242db9d1e01b44d84100130209",
     "design-page-delete-light.png": "99e764bb0ba95a4c0b8f448c64ee90eb65b485f9eced56574b433cc9ba755c92",
     "design-page-rename-dark.png": "ac9739a90009375c8509b3791b5f03cfde83e51ac9cec594fdba177e126c5429",
@@ -99,7 +99,7 @@
     "design-pages.png": "e5432ba62a25cccb0e14a6d0b511e945d9da731285d64fc10147722b2b5c1e26",
     "design-shapes.png": "7367dbf4fc3488c16e2d90ba05588962b68592588e08448d48b14f65f767b21e",
     "design-two-pages-dark.png": "c0b01e7b166ccef6b4e1b81303e8f0df00f67ba3bb409bce30ba1e62f89aa2ca",
-    "design-two-pages-light.png": "4b456028b72294d34559483fa0d43ec2ba483b082503562173eaf3087d79e482",
+    "design-two-pages-light.png": "63d1094741f5ff37f5b896455ef7bda35cf031e790ac6f022e3562245fb5ff00",
     "design-zoom.png": "d067a4f44aff55bc04df3583e27ec45e89ec762656a8e804f103a6e56aee5064",
     "design.json": "503c36631798189c62871a3cc1df376eb70fa41c5bfb895864243ffe006cf80a",
     "slides-1440-dark.png": "770e73d43adef6d9c03077264de2a5e37211d5788902af0ac8d7bdddc13cbee9",
@@ -137,15 +137,15 @@
     "slides.json": "388bf55d92a58b3ff30d0fbb21587f52b73b339de9ea2d61d87fb30613d4e00b"
   },
   "implementationSources": {
-    "src/features/artifacts/native/NativeEditor.tsx": "53f95a2a0c30a5ac90ea8fcafcb23cb6e7483183acd6eddc5762ff5b285a9f55",
+    "src/features/artifacts/native/NativeEditor.tsx": "3ff1beda580f77685f6880e9e49bec94c707335f097ee07bf59a2dbfdb93cb92",
     "src/features/artifacts/native/native-editor.css": "9a8bf244ce5a619ce512afe67e60ebf93c4105609b89479190168c09b3f1097d",
     "src/features/artifacts/native/CommentsPanel.tsx": "bc0e01b100c7940082e776bda638af88525f528b801825a8c14d71a89f217a95",
     "src/features/artifacts/native/editor-copy.ts": "abfd904e0f3ced4b0e9e5717cc6bac48de370a10c3d9e927355182abbefefa3b",
-    "scripts/native-editor-ui-acceptance.mjs": "482fc657d48279a0be75c0b0d503343cdecc58e0bd4ae0e213fff215942ee6a3",
+    "scripts/native-editor-ui-acceptance.mjs": "75795b080e6e04ec570f8e6d0de11c00b59a3dc617223e995866b1de1ff8cf91",
     "scripts/native-editor-reference-capture.mjs": "ef596f7eef9ee90b41b504fd405c0b2a5f836f9e13de0e1bc6fae5b593d35bcf",
     "scripts/native-editor-visual-fixture.mjs": "0f914a4dd4bff805075874e011fa3fa6d98aed382ec9fb29e7190f1a4562f401",
     "shared/artifact-tables.ts": "4c5157f2c73df044942281ce339028cd7ea60c29f33a81b99fe7bdacfdc34db3",
-    "shared/artifact-document.ts": "e03305db6c9118f9dbff6210c95e5f6474f6db1904c5458dc36f8ec6738cd0c2",
+    "shared/artifact-document.ts": "9516e0358fd34cfc406f93f8bf061e94aa64b474ab3553ec0464c53189ff6a2f",
     "shared/artifact-themes.ts": "1dc303335e5d17e9f159900488f37ed306a13467492b4bf68148b5320d705345",
     "src/features/artifacts/native/renderer.tsx": "7df72bf97b28926956de66bae510c3ab2fbbb9b12c5d093531585954582b9504",
     "src/features/artifacts/native/thumbnail.tsx": "77f204304e1b0f81b0e02e6b5b8d4a631c8723f1c11fb7b907274ef63a3272ab",
@@ -155,13 +155,14 @@
     "src/features/artifacts/native/FontPopover.tsx": "40ec7a8e8ce764dc492489ace521bf28c04d88ad5c380968154a6ca97357f9e2",
     "src/features/artifacts/native/editor-fonts.ts": "0862219e26add21e3010eb24790ad506c9b2dfc6167448cf9fea69bedb7eced4",
     "src/features/artifacts/native/editor-fonts.css": "e3aedbf71b848a09bb1468ed77f76d11249858cb3c56e988e0f94a0101235b2a",
-    "src/features/artifacts/native/EditorPrimitives.tsx": "b7226f1e6d86289bb5d8694c64dbd49179cd130c6b2bb68c0c49d8983cac02fb",
+    "src/features/artifacts/native/EditorPrimitives.tsx": "79784349bf5ead464e0a3c0ca53c36e6ebb842ca68313fc7304ce4b4d5045980",
     "src/features/artifacts/native/export/fonts.ts": "b1743c0b1603c813adc6442fc7a4c36e332339d7dd725d986bde089ce8232951",
     "third_party/editor-fonts/manifest.json": "7a1b52ca9bc54352e14709548653a24344a02c1de4946d2c570f2c67ddbcc8cc",
     "src/features/artifacts/native/svg-presentation.ts": "81298173fcd97650d8aacb0e10a1b6684bee77edaa89aecd4d8d016e2497a79a",
     "shared/artifact-canvas-pages.ts": "7a479ddbc272945b5931c53773b3a75e63e630d7d9a00136537d276940048a2a",
-    "shared/artifact-operations.ts": "c5026097ad27b31d5fc41955a85b4c20f6957741a9264d2e945343c6591c8e68",
+    "shared/artifact-operations.ts": "f667444d7e1865deef89de05b2c1bad9e0e035484bbbedf7b7b103028c3417b9",
     "shared/artifact-legacy.ts": "73bc8aa91c6ed3c85d5950ee78862a4e9104b3db5aded9e7f7d1374ceb792293",
-    "src/features/artifacts/native/popover-position.ts": "c5743412a0177ecceaa407efeec4a36b83fe2d3c8fd7d8bf1a23da2e68afab45"
+    "src/features/artifacts/native/popover-position.ts": "c5743412a0177ecceaa407efeec4a36b83fe2d3c8fd7d8bf1a23da2e68afab45",
+    "server/src/modules/artifacts/native-document.ts": "3aa0c4d919948590fdb8d520fade3a5d037e4d168f729eddebd8af6150e1df88"
   }
 }

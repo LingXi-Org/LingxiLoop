@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { canvasPages, canvasPageOf } from './artifact-canvas-pages.js'
 import {
   artifactAssetSchema, artifactDocumentSchema, artifactIdSchema, artifactNodeSchema, artifactPageSchema,
-  artifactStyleSchema, artifactThemeSchema, validateArtifactDocument,
+  artifactStyleSchema, artifactThemeSchema, validateArtifactDocument, validateArtifactCanvasPages,
   type ArtifactDocument, type ArtifactNode, type ArtifactPage,
 } from './artifact-document.js'
 
@@ -348,6 +348,7 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
     }
   }
   if (document.pageOrder.length > 1000) throw new Error('Too many pages')
+  validateArtifactCanvasPages(document)
   // Validation is bounded to affected pages, except removing an asset which can invalidate any page.
   const validateAll = operations.some(operation => operation.type === 'asset.delete')
   const validatePages = validateAll ? document.pages : Object.fromEntries([...pageIds].filter(id => Object.hasOwn(document.pages, id)).map(id => [id, document.pages[id]!]))
