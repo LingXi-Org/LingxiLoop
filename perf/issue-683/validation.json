@@ -111,7 +111,8 @@
       "guidanceDeferred": true,
       "realProviderCalls": 0,
       "productionActions": 0,
-      "historicalPartialSamplesQualifyThisCandidate": false
+      "historicalPartialSamplesQualifyThisCandidate": false,
+      "testFixtureLeaseSettledThroughHostPort": true
     }
   },
   "ci": {

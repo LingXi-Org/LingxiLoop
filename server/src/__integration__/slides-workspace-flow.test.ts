@@ -110,12 +110,13 @@ test('production-main admitted work retains its native pin after the guidance sp
     {mode:'execute',codeExecution:'disabled',executionClass:'conversation'})).runs[0]
   assert.ok(identity)
   let incompatible: Awaited<ReturnType<typeof createLingxiOS>> | undefined
+  const host = control.connectWorker({workerId:'same-harness-release',workKinds:['turn']})
+  let claimed: WorkItem | null = null
   try {
     await bindProductRun(pool,identity,'slides-flow-source')
     const pin = async () => (await pool.query('SELECT meta FROM lingxios.agent_work_items WHERE id=$1',[identity.runId])).rows[0].meta.harnessHash
     assert.equal(await pin(),expected.admissionHash)
-    const host = control.connectWorker({workerId:'same-harness-release',workKinds:['turn']})
-    const claimed = await host.claimWork(); assert.ok(claimed); assert.equal(claimed.id,identity.runId)
+    claimed = await host.claimWork(); assert.ok(claimed); assert.equal(claimed.id,identity.runId)
     assert.equal((await host.loadContext(claimed)).harness?.hash,expected.admissionHash)
     const changed = {...profile,capabilities:profile.capabilities.map(capability=>({...capability,
       skills:capability.skills?.map(skill=>skill.name==='claude-slides'?{...skill,body:skill.body+' Deferred guidance fixture.'}:skill)}))}
@@ -127,7 +128,11 @@ test('production-main admitted work retains its native pin after the guidance sp
     assert.equal(changedContextLoaded,false)
     assert.equal(await pin(),expected.admissionHash,'no persisted pin may be rewritten')
     assert.equal((await host.loadContext(claimed)).harness?.hash,expected.admissionHash)
-  } finally { await incompatible?.stop(); await control.cancel(identity) }
+  } finally {
+    await incompatible?.stop(); await control.cancel(identity)
+    if (claimed) await host.completeWork(claimed,{status:'cancelled'})
+    assert.equal((await control.readRun(identity))?.status,'cancelled','the fixture must settle its own claimed lease')
+  }
 })
 
 test('authenticated Slides cooperation keeps source provenance and completes in its dedicated room', { timeout: 45_000 }, async () => {

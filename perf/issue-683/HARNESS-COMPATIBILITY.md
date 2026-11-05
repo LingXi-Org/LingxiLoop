@@ -36,3 +36,5 @@ The four historical real-provider samples were taken before this guidance split 
 ## Recorded checks
 
 Exact formal25 source capture and candidate comparison passed. The source-index regression first failed for b6782230's assembled fingerprint and then passed after guidance removal. Current server unit suite209/209, Slides/real-PostgreSQL flow7/7 (including retained source pin and mismatch rejection), Design truthful-failure flow1/1, `server:typecheck` and `server:lint` passed. The opt-in provider test skipped with exit0. No real model request or production release was executed.
+
+The manual-claim fixture explicitly completes cancellation of its own fenced test lease through HostPort, and asserts its final cancelled status. A cancellation request alone retains a leased run in formal25. This cleanup is limited to the dedicated test database and is not a production drain/cancellation mechanism. The tightened native fixture and both affected flows passed again.
