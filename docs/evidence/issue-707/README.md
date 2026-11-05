@@ -64,3 +64,5 @@ No production merge or deployment is included.
 [visual/manifest.json](visual/manifest.json) 绑定参考与原生截图、源码及夹具哈希；[visual/reference](visual/reference) 与 [visual/native](visual/native) 可直接并排审阅。原始差异报告不应用排除区，且明确 `qualified: false`。
 
 表格插入与标题行诊断可使用 `--mode=slides --checks=table`。当前视觉目录为 42 张来源截图、45 张原生状态截图及 1 张独立演示文稿预览；它们用于逐项审阅，默认图原始差异仍未通过门槛。表格真实 API 保存及冲突回归随 owning integration 执行；导出局部结果见 `functional/table-exports.json`，离线文件打开仍未验证。
+
+字体诊断使用 `--checks=fonts`，并发选择冲突使用 `--checks=font-cas`。当前字体相关文案与默认选项均为中文，文档保存原始字体族数据。资源版本/许可见 `third_party/editor-fonts/manifest.json`。最新目录包含 45 张来源图、53 张原生界面图、2 张网页字体预览和 2 张独立演示文稿预览；完整视觉仍未通过。最新真实性能诊断失败收据见 `performance/79558e79-diagnostic.json`。

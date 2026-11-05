@@ -7,6 +7,8 @@ import { fetchArtifactAsset } from './assets'
 import type { NativeCompute } from './compute'
 import { useLocalDraft } from './draft-context'
 import { appearance, nodeTransform } from '../../../../shared/artifact-appearance'
+import { editorFontFamily } from './editor-fonts'
+import './editor-fonts.css'
 
 const RichTextEditor = lazy(() => import('./RichTextEditor'))
 let mathStyles: Promise<unknown> | undefined
@@ -27,7 +29,7 @@ export function richTextContent(value: ArtifactRichText): ReactNode {
 }
 export function nativeStyle(source: ArtifactStyle, document: ArtifactDocument): CSSProperties {
   const style = artifactResolvedStyle(source, document)
-  return { ...appearance(style), backgroundColor: style.backgroundColor ?? style.fill, color: style.color, fontFamily: style.fontFamily,
+  return { ...appearance(style), backgroundColor: style.backgroundColor ?? style.fill, color: style.color, fontFamily: editorFontFamily(style.fontFamily),
     fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight, fontStyle: style.fontStyle, textAlign: style.textAlign,
     textDecoration: style.textDecoration, lineHeight: style.lineHeight ?? 1.25, padding: style.padding,
     opacity: style.opacity, borderRadius: style.borderRadius,

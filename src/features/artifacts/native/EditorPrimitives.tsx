@@ -62,9 +62,11 @@ import {
   ArrowRight,
   ScanLine,
   Palette,
+  Search,
 } from 'lucide-react'
 
 const icons = {
+  search: Search,
   previous: ChevronLeft,
   next: ChevronRight,
   presenter: Monitor,
@@ -189,6 +191,7 @@ export function Menu({
   align = 'start',
   text,
   disabled,
+  onOpen,
 }: {
   label: string
   icon?: EditorIconName
@@ -196,6 +199,7 @@ export function Menu({
   align?: 'start' | 'end'
   text?: string
   disabled?: boolean
+  onOpen?(): void
 }) {
   const root = useRef<HTMLDetailsElement>(null),
     popup = useRef<HTMLDivElement>(null)
@@ -237,7 +241,7 @@ export function Menu({
       ref={root}
       data-align={align}
       onToggle={(event) => {
-        if (event.target === event.currentTarget) position()
+        if (event.target === event.currentTarget) { position(); if (event.currentTarget.open) onOpen?.() }
       }}
       onKeyDown={(event) => {
         const element = root.current

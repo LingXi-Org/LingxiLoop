@@ -1,4 +1,5 @@
 import { artifactShapeGeometry } from '../../../../shared/artifact-shapes'
+import { editorFontFamily } from './editor-fonts'
 import { memo, useEffect, useState, type ReactNode } from 'react'
 import { isSafeArtifactSvg, type ArtifactAsset, type ArtifactDocument, type ArtifactNode, type ArtifactPage, type ArtifactRichText, type ArtifactTheme, type ArtifactStyle } from '../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
@@ -82,7 +83,7 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
       color: safeColor(style.color, '#222'),
       stroke: safeColor(style.stroke ?? style.borderColor, node.type === 'line' ? '#333' : 'transparent'),
       strokeWidth: style.strokeWidth ?? style.borderWidth ?? (node.type === 'line' ? 3 : 1),
-      fontFamily:style.fontFamily??'sans-serif', opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
+      fontFamily:editorFontFamily(style.fontFamily)??'sans-serif', opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
       text: (node.type === 'math' ? node.source ?? '' : node.text ?? plainText(node.richText)).slice(0, 512),
       shape: node.shape, crop: node.crop, gradient: style.gradient, shadow: style.shadow, flipX: node.flipX, flipY: node.flipY,
       ...(asset ? { assetId, imageKey: imageKey(document.id, asset) } : {}),
@@ -220,8 +221,13 @@ function PreviewShape({ node, document, loaded }: { node: PreviewNode; document:
 }
 
 /** A lightweight visual summary; it never mounts an editor or executes an embed. */
+function hasEditorFonts(nodes: PreviewNode[]): boolean {
+  return nodes.some(node => node.fontFamily.includes('LingxiLoopEditor ') || (node.children && hasEditorFonts(node.children)))
+}
 export const PageThumbnail = memo(function PageThumbnail({ page, document, loaded }: { page: ArtifactPage; document: ArtifactDocument; loaded: boolean }) {
   const preview = loaded ? describePage(page, document) : previews.get(`${document.id}:${page.id}`)
+  const needsFonts = !!preview && hasEditorFonts(preview.nodes)
+  useEffect(() => { if (needsFonts) void import('./editor-fonts.css').catch(() => {}) }, [needsFonts])
   return <svg aria-hidden="true" focusable="false" width="64" height="40" viewBox={`0 0 ${preview?.width ?? page.width} ${preview?.height ?? page.height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', width: 64, height: 40, flexShrink: 0, borderRadius: 3, overflow: 'hidden', background: '#e8eaee' }}>
     <rect width={preview?.width ?? page.width} height={preview?.height ?? page.height} fill={preview?.background ?? safeColor(artifactPageBackground(page, document), '#fff')} />
     {preview?.nodes.map(node => <PreviewShape key={node.id} node={node} document={document} loaded={loaded} />)}

@@ -5,6 +5,7 @@ import { artifactPageBackground, artifactResolvedStyle } from '../../../../../sh
 import { awaitPageFonts } from './fonts'
 import { escapeHtml, type ExportResources, offlineMathCss } from './common'
 import { appearance, nodeTransform } from '../../../../../shared/artifact-appearance'
+import { editorFontFamily } from '../editor-fonts'
 
 const safeText = (text: string) => escapeHtml(text).replace(/\n/g, '<br>')
 export function nodeHasMath(node: ArtifactNode) { return node.type === 'math' || /\$|\\(?:\(|\[|begin\{)/.test([node.text ?? '', ...(node.cells ?? []).flat()].join('\n')) }
@@ -39,7 +40,7 @@ async function richText(node: ArtifactRichText, resources: ExportResources): Pro
 }
 function textStyle(style: ArtifactStyle) {
   const extra = Object.fromEntries(Object.entries(appearance(style)).map(([key,value]) => [key.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`),value]))
-  return Object.entries({ color: style.color, background: style.backgroundColor ?? style.fill, opacity: style.opacity, 'font-family': style.fontFamily, 'font-size': style.fontSize === undefined ? undefined : `${style.fontSize}px`,
+  return Object.entries({ color: style.color, background: style.backgroundColor ?? style.fill, opacity: style.opacity, 'font-family': editorFontFamily(style.fontFamily), 'font-size': style.fontSize === undefined ? undefined : `${style.fontSize}px`,
     'font-weight': style.fontWeight, 'font-style': style.fontStyle, 'text-align': style.textAlign, 'text-decoration': style.textDecoration, 'line-height': style.lineHeight,
     'border-radius': style.borderRadius === undefined ? undefined : `${style.borderRadius}px`, padding: style.padding === undefined ? undefined : `${style.padding}px`,
     border: (style.borderColor ?? style.stroke) ? `${style.borderWidth ?? style.strokeWidth ?? 1}px ${style.borderStyle ?? 'solid'} ${style.borderColor ?? style.stroke}` : undefined, ...extra,

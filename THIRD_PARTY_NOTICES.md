@@ -343,3 +343,12 @@ Chat/composer metrics and typography fallbacks are adapted from [Caho1/open-clau
 ## react-syntax-highlighter
 
 Code blocks use [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter) 16.1.2, its asynchronous light Prism renderer and One Light/One Dark themes. Copyright (c) 2019 Conor Hastings, MIT; full license: [public/licenses/react-syntax-highlighter.txt](public/licenses/react-syntax-highlighter.txt).
+
+## 原生编辑器字体
+
+Design 与 Slides 的中文字体选择器保留固定 baoyu-design 版本的字体目录顺序。
+其中十七种开源字体使用 Fontsource 5.3.0 的原始 WOFF2 资源，遵循各字体的
+SIL Open Font License 1.1；原始署名和许可随字体发布于
+`public/fonts/editors/*-OFL.txt`。来源、版本、发布包完整性值、每个文件的
+SHA-256 及字体别名适配见 [字体说明](third_party/editor-fonts/README.md)
+和 [资源清单](third_party/editor-fonts/manifest.json)。没有分发原版私有图标字体。

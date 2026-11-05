@@ -111,8 +111,8 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
           } else if (node.type === 'table' && !nodeHasMath(node)) {
             const ink=color(style.color),background=output.background,headerFill=tableBlend(ink,background,.08)
             const border=(surface:string)=>({type:'solid',color:tableBlend(ink,surface,.22),pt:1})
-            const rows=(node.cells??[]).map((row,index)=>row.map((text,column)=>({text,options:{bold:node.tableHeader&&index===0?true:(style.fontWeight??400)>=600,...(node.tableHeader&&index===0?{fill:{color:headerFill}}:{}),...(node.tableHeader?{border:[index===0?border(background):border(index===1?headerFill:background),border(index===0?headerFill:background),border(index===0?headerFill:background),column===0?border(background):border(index===0?headerFill:background)]}:{})}})))
-            slide.addTable(rows,{...box,fontSize,fontFace:(style.fontFamily??'Arial').split(',')[0].replace(/["']/g,''),color:ink,valign:'top',border:border(background),margin:fontSize*.35,autoPage:false})
+            const rows=(node.cells??[]).map((row,index)=>row.map((text,column)=>({text,options:{italic:style.fontStyle==='italic',bold:node.tableHeader&&index===0?true:(style.fontWeight??400)>=600,...(node.tableHeader&&index===0?{fill:{color:headerFill}}:{}),...(node.tableHeader?{border:[index===0?border(background):border(index===1?headerFill:background),border(index===0?headerFill:background),border(index===0?headerFill:background),column===0?border(background):border(index===0?headerFill:background)]}:{})}})))
+            slide.addTable(rows,{...box,fontSize,fontFace:(style.fontFamily??'Arial').split(',')[0].replace(/["']/g,''),italic:style.fontStyle==='italic',color:ink,valign:'top',border:border(background),margin:fontSize*.35,autoPage:false})
           } else {
             // Only unsupported nodes become pictures; ordinary objects on the page remain editable.
             const image=await capture()

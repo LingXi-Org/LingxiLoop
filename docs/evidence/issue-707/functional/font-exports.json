@@ -1,0 +1,136 @@
+{
+  "scope": "真实导出模块与五十页受控文档；不替代真实 API、全部字体视觉或本地文件打开",
+  "browser": "Chrome/154.0.8037.57",
+  "documentSha256": "024b1e39a30e625dcfeb7a4b6f59b4e28b438b6739f997cbd4a0482a7b0a0969",
+  "variant": {
+    "name": "字体与标题行表格",
+    "table": true,
+    "fontFamily": "Merriweather",
+    "baseNativeSha256": "8ba7c9d343b42b90dc6e995ea73312058ee2f4afc87b8c76cbf8e9d1a5857698",
+    "documentSha256": "024b1e39a30e625dcfeb7a4b6f59b4e28b438b6739f997cbd4a0482a7b0a0969"
+  },
+  "results": [
+    {
+      "format": "html",
+      "bytes": 43137529,
+      "milliseconds": 2648.2999999970198,
+      "warnings": [
+        "验收页面 25 / page-25-isolated：交互内容以静态快照导出；原稿保留可执行源码与交互。"
+      ],
+      "immutable": true,
+      "mountedPages": 0
+    },
+    {
+      "format": "pdf",
+      "bytes": 6288843,
+      "milliseconds": 20166.79999999702,
+      "warnings": [
+        "验收页面 25 / page-25-isolated：交互内容以静态快照导出；原稿保留可执行源码与交互。"
+      ],
+      "immutable": true,
+      "mountedPages": 0
+    },
+    {
+      "format": "pptx",
+      "bytes": 16386967,
+      "milliseconds": 18630.19999999553,
+      "warnings": [
+        "验收页面 1 / page-1-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 2 / page-2-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 3 / page-3-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 4 / page-4-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 5 / page-5-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 6 / page-6-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 7 / page-7-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 8 / page-8-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 9 / page-9-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 10 / page-10-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 11 / page-11-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 12 / page-12-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 13 / page-13-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 14 / page-14-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 15 / page-15-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 16 / page-16-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 17 / page-17-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 18 / page-18-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 19 / page-19-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 20 / page-20-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 21 / page-21-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 22 / page-22-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 23 / page-23-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 24 / page-24-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 25 / page-25-isolated：交互内容以静态快照导出；原稿保留可执行源码与交互。",
+        "验收页面 25 / page-25-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 25 / page-25-isolated：复杂内容以图片导出；文档保留源数据。",
+        "验收页面 26 / page-26-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 27 / page-27-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 28 / page-28-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 29 / page-29-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 30 / page-30-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 31 / page-31-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 32 / page-32-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 33 / page-33-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 34 / page-34-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 35 / page-35-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 36 / page-36-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 37 / page-37-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 38 / page-38-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 39 / page-39-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 40 / page-40-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 41 / page-41-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 42 / page-42-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 43 / page-43-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 44 / page-44-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 45 / page-45-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 46 / page-46-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 47 / page-47-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 48 / page-48-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 49 / page-49-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 50 / page-50-formula：公式以图片导出；文档保留源数据。"
+      ],
+      "immutable": true,
+      "mountedPages": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "format": "html",
+      "bytes": 43137529,
+      "sha256": "d613c271e08365e0e8ca1e6d313b9e8b641132546fc160788f240fb218b0d7bf"
+    },
+    {
+      "format": "pdf",
+      "bytes": 6288843,
+      "sha256": "08f273d841dec3af73adde4203178e8ed24e28e16500bbd1e4bcb6d427fc87ef"
+    },
+    {
+      "format": "pptx",
+      "bytes": 16386967,
+      "sha256": "8fc0d986592628db77694eb3fc52f6eadbad3e26e804d6784f808dd770e95dd7"
+    }
+  ],
+  "fontExport": {
+    "family": "Merriweather",
+    "namedTextRuns": 26,
+    "editableTables": 2,
+    "italicTableRuns": 9
+  },
+  "independentPptx": {
+    "pages": 50,
+    "rendered": [
+      1,
+      25,
+      50
+    ],
+    "renderer": "pptxviewjs1.1.9"
+  },
+  "pdfPages": 50,
+  "offlineHtml": {
+    "packaging": "self-contained image/font data URLs",
+    "pages": 50,
+    "images": 51,
+    "formulas": 50,
+    "fileOpening": "BLOCKED: managed Chromium file URL policy; not verified"
+  },
+  "consoleErrors": []
+}

@@ -2986,18 +2986,22 @@
         ],
         "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明"
       },
-      "implementation": "src/features/artifacts/native/NativeEditor.tsx",
+      "implementation": "src/features/artifacts/native/FontField.tsx",
       "screenshots": {
         "reference": null,
-        "native": "visual/native/design-heading-inspector.png",
+        "native": "visual/native/design-font-picker.png",
         "matchedStateVerified": false
       },
-      "result": "待完整上游字体选择器",
+      "result": "字体目录、中文搜索、支持的字重/斜体、切换回退及保存/撤销有局部回归；完整字体视觉与全部混合值仍待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/fonts-design.json",
+        "additionalReceipts": [
+          "functional/font-cas-design.json",
+          "functional/font-exports.json"
+        ],
+        "scope": "实际 React、共享操作与本地字体；受控 HTTP，真实 API 仍由 owning CI 另验。来源字体菜单截图目前只覆盖 Slides，Design 原版入口归属仍需继续回溯"
       }
     },
     {
@@ -3038,18 +3042,22 @@
         ],
         "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明"
       },
-      "implementation": "src/features/artifacts/native/NativeEditor.tsx",
+      "implementation": "src/features/artifacts/native/FontField.tsx",
       "screenshots": {
-        "reference": "visual/reference/slides-heading-inspector.png",
-        "native": "visual/native/slides-heading-inspector.png",
+        "reference": "visual/reference/slides-font-picker.png",
+        "native": "visual/native/slides-font-picker.png",
         "matchedStateVerified": false
       },
-      "result": "待完整上游字体选择器",
+      "result": "字体目录、中文搜索、支持的字重/斜体、切换回退及保存/撤销有局部回归；完整字体视觉与全部混合值仍待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/fonts-slides.json",
+        "additionalReceipts": [
+          "functional/font-cas-slides.json",
+          "functional/font-exports.json"
+        ],
+        "scope": "实际 React、共享操作与本地字体；受控 HTTP，真实 API 仍由 owning CI 另验。来源字体菜单截图目前只覆盖 Slides，Design 原版入口归属仍需继续回溯"
       }
     },
     {
@@ -3216,18 +3224,22 @@
         ],
         "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明"
       },
-      "implementation": "src/features/artifacts/native/RichTextEditor.tsx",
+      "implementation": "src/features/artifacts/native/FontField.tsx",
       "screenshots": {
         "reference": null,
-        "native": null,
+        "native": "visual/native/design-font-picker.png",
         "matchedStateVerified": false
       },
-      "result": "待完整交互验收",
+      "result": "字体目录、中文搜索、支持的字重/斜体、切换回退及保存/撤销有局部回归；完整字体视觉与全部混合值仍待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/fonts-design.json",
+        "additionalReceipts": [
+          "functional/font-cas-design.json",
+          "functional/font-exports.json"
+        ],
+        "scope": "实际 React、共享操作与本地字体；受控 HTTP，真实 API 仍由 owning CI 另验。来源字体菜单截图目前只覆盖 Slides，Design 原版入口归属仍需继续回溯"
       }
     },
     {
@@ -3268,18 +3280,22 @@
         ],
         "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明"
       },
-      "implementation": "src/features/artifacts/native/RichTextEditor.tsx",
+      "implementation": "src/features/artifacts/native/FontField.tsx",
       "screenshots": {
-        "reference": null,
-        "native": null,
+        "reference": "visual/reference/slides-font-picker.png",
+        "native": "visual/native/slides-font-picker.png",
         "matchedStateVerified": false
       },
-      "result": "待完整交互验收",
+      "result": "字体目录、中文搜索、支持的字重/斜体、切换回退及保存/撤销有局部回归；完整字体视觉与全部混合值仍待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/fonts-slides.json",
+        "additionalReceipts": [
+          "functional/font-cas-slides.json",
+          "functional/font-exports.json"
+        ],
+        "scope": "实际 React、共享操作与本地字体；受控 HTTP，真实 API 仍由 owning CI 另验。来源字体菜单截图目前只覆盖 Slides，Design 原版入口归属仍需继续回溯"
       }
     },
     {
@@ -3350,18 +3366,22 @@
         ],
         "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明"
       },
-      "implementation": "src/features/artifacts/native/RichTextEditor.tsx",
+      "implementation": "src/features/artifacts/native/FontField.tsx",
       "screenshots": {
         "reference": null,
-        "native": null,
+        "native": "visual/native/design-font-picker.png",
         "matchedStateVerified": false
       },
-      "result": "待完整交互验收",
+      "result": "字体目录、中文搜索、支持的字重/斜体、切换回退及保存/撤销有局部回归；完整字体视觉与全部混合值仍待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/fonts-design.json",
+        "additionalReceipts": [
+          "functional/font-cas-design.json",
+          "functional/font-exports.json"
+        ],
+        "scope": "实际 React、共享操作与本地字体；受控 HTTP，真实 API 仍由 owning CI 另验。来源字体菜单截图目前只覆盖 Slides，Design 原版入口归属仍需继续回溯"
       }
     },
     {
@@ -3412,18 +3432,22 @@
         ],
         "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明"
       },
-      "implementation": "src/features/artifacts/native/RichTextEditor.tsx",
+      "implementation": "src/features/artifacts/native/FontField.tsx",
       "screenshots": {
-        "reference": null,
-        "native": null,
+        "reference": "visual/reference/slides-font-picker.png",
+        "native": "visual/native/slides-font-picker.png",
         "matchedStateVerified": false
       },
-      "result": "待完整交互验收",
+      "result": "字体目录、中文搜索、支持的字重/斜体、切换回退及保存/撤销有局部回归；完整字体视觉与全部混合值仍待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/fonts-slides.json",
+        "additionalReceipts": [
+          "functional/font-cas-slides.json",
+          "functional/font-exports.json"
+        ],
+        "scope": "实际 React、共享操作与本地字体；受控 HTTP，真实 API 仍由 owning CI 另验。来源字体菜单截图目前只覆盖 Slides，Design 原版入口归属仍需继续回溯"
       }
     },
     {

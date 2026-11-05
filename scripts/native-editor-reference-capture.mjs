@@ -28,9 +28,9 @@ try {
         await capture(page,kind,`${width}-${theme}`,width,height,theme)
       }finally{await page.close()}
     }
-    const page=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'light',reducedMotion:'reduce'})
+    let page
     try {
-      const reset=async()=>{await page.goto(url.href,{waitUntil:'networkidle'});await ready(page,kind);await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(200)}
+      const reset=async()=>{await page?.close();page=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'light',reducedMotion:'reduce'});await page.goto(url.href,{waitUntil:'networkidle'});await ready(page,kind);await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(200)}
       const menus=kind==='design'?[['pages',/pages$/],['drawing','More drawing tools'],['shapes','More shapes'],['export','Export'],['zoom',/%, Zoom$/],['history','Version history'],['comment-options','Comment options']]:[['shapes','Shapes'],['export','Download'],['zoom',/%, Zoom$/],['layouts','Add slide'],['history','Version history'],['comment-options','Comment options']]
       for(const [state,name]of menus){await reset();await page.getByRole('button',{name,exact:typeof name==='string'}).click();await capture(page,kind,state,1440,1000,'light')}
       await reset();await page.getByRole('button',{name:'Comments',exact:true}).click();await capture(page,kind,'comments-active',1440,1000,'light');await page.mouse.click(kind==='design'?100:800,kind==='design'?500:600);await page.getByRole('textbox',{name:'Comment',exact:true}).waitFor();await capture(page,kind,'comment-composer',1440,1000,'light')
@@ -39,9 +39,12 @@ try {
       if(kind==='slides') {
         await page.getByText('#FAF8F4',{exact:true}).click();await capture(page,kind,'color-theme',1440,1000,'light')
         await page.getByText('Custom',{exact:true}).first().click();await capture(page,kind,'color-custom',1440,1000,'light')
-        await reset();await page.getByRole('button',{name:'Properties',exact:true}).click();await page.mouse.click(150,205);await capture(page,kind,'heading-inspector',1440,1000,'light')
+        await reset();await page.getByRole('button',{name:'Properties',exact:true}).click();await page.getByText('LingxiLoop 1',{exact:true}).first().click();await page.getByRole('button',{name:'Font: Arial',exact:true}).waitFor();await capture(page,kind,'heading-inspector',1440,1000,'light')
+        await page.getByRole('button',{name:'Weight: Bold',exact:true}).click();await capture(page,kind,'font-weight',1440,1000,'light');await page.keyboard.press('Escape')
+        await page.getByRole('button',{name:'Font: Arial',exact:true}).click();await page.getByRole('textbox',{name:'Search fonts',exact:true}).waitFor();await capture(page,kind,'font-picker',1440,1000,'light')
+        await page.getByRole('textbox',{name:'Search fonts',exact:true}).fill('无匹配字体');await capture(page,kind,'font-empty',1440,1000,'light')
       }
-    }finally{await page.close()}
+    }finally{await page?.close()}
   }
   if(args['table-url']) {
     const url=new URL(args['table-url']);assert.ok(['127.0.0.1','localhost'].includes(url.hostname))

@@ -45,7 +45,7 @@ await writeFile(join(workspace, 'index.html'), '<html><head><meta charset="UTF-8
 await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<React.StrictMode><NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'?'design':'slides'} title="原生编辑器验收" /></React.StrictMode>)`)
 let server, browser
 try {
-  server = await createServer({ configFile: false, root: workspace, plugins: [react()], logLevel: 'error',
+  server = await createServer({ configFile: false, root: workspace, publicDir: join(root, 'public'), plugins: [react()], logLevel: 'error',
     resolve: { alias: [
       ...Object.entries({ '@/api/core/http': 'http', '@/api/core/realtime': 'realtime', '@/api/transport': 'transport', '@/stores/auth': 'auth', '@/lib/workspaceSession': 'workspaceSession' }).map(([find, name]) => ({ find, replacement: join(workspace, `${name}.js`) })),
       { find: 'react', replacement: dirname(require.resolve('react/package.json')) },
@@ -69,7 +69,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const fixture = ['parity','table','table-stability'].includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
+  const fixture = ['parity','table','table-stability','fonts','font-cas'].includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   if(options.checks==='table-stability'){
     const page=document.pages['page-1'],table={...createTableNode('stable-table',page),tableHeader:false,cells:[['甲','乙'],['丙'],['丁','戊']]}
@@ -90,6 +90,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const snapshot = () => ({ document, history, write: true, loadedPageIds: document.pageOrder,
     pageVersions: Object.fromEntries(document.pageOrder.map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  const editorFontRequests=[]
+  page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
   page.setDefaultTimeout(30_000)
   await page.addInitScript(()=>{window.__geometryLog=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(['visible','update-pages'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
@@ -169,7 +171,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   })
   const ready = async index => {
     const canvas = page.locator(`[data-page-id="page-${index}"]`)
-    if(!['parity','table','table-stability'].includes(options.checks)) await canvas.locator('[data-formula-ready=true]').waitFor()
+    if(!['parity','table','table-stability','fonts','font-cas'].includes(options.checks)) await canvas.locator('[data-formula-ready=true]').waitFor()
     await canvas.locator('[data-node-type=image] img').waitFor()
     await page.waitForFunction(index => {
       const image = window.document.querySelector(`[data-page-id="page-${index}"] [data-node-type=image] img`)
@@ -240,6 +242,90 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.keyboard.press('Escape')
       assert.deepEqual(errors,[])
       return {kind:'isolated-narrow-editor-diagnostic',mode:kind,singleToolbarRow:true,floatingPageNavigation:kind==='slides',scope:'390×844 container and real editor through controlled HTTP fixture',consoleOrPageErrors:errors}
+    }
+    if(options.checks==='font-cas'){
+      await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'字体',exact:true}).click()
+      const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.fill('拉托')
+      const versionKey='node/page-1/page-1-heading/field/style.fontFamily',capturedVersion=document.versions[versionKey]??0
+      document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'page-1-heading',patch:{style:{fontFamily:'Tahoma'}}}])).document
+      const remoteSeq=String(document.seq)
+      await page.waitForRequest(request=>request.method()==='PUT'&&request.url().includes('/editor-context')&&request.postDataJSON()?.version===remoteSeq)
+      assert.equal(await search.inputValue(),'拉托','a remote font update must not replace the active search')
+      await search.press('ArrowDown');await search.press('Enter')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='conflict')
+      assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,'Tahoma');assert.equal(receipts.length,0)
+      const pending=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click()
+      const path=join(workspace,`${kind}-font-recovery.json`);await(await pending).saveAs(path);const recovery=JSON.parse(await readFile(path,'utf8'))
+      assert.ok(recovery.operations.some(batch=>batch.operations.some(op=>op.patch?.style?.fontFamily==='Lato')&&batch.expectedVersions[versionKey]===capturedVersion))
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-font-cas-diagnostic',mode:kind,searchSurvivesRemoteChange:true,remoteFamilyPreserved:true,localSelectionRecoverable:true,saveState:'conflict',scope:'actual React and shared CAS reducer; controlled HTTP fixture',consoleOrPageErrors:errors}
+    }
+    if(options.checks==='fonts') {
+      const fontRequests=editorFontRequests
+      const target=page.locator('[data-node-id="page-1-heading"]')
+      await target.click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      const trigger=page.getByRole('button',{name:'字体',exact:true})
+      assert.equal(await trigger.count(),1,'the font property must offer the reference searchable picker')
+      const fontGeometry=await trigger.boundingBox()
+      assert.ok(Math.abs(fontGeometry.width-187)<=1,'the font control must reserve the reference trailing reset space')
+      assert.equal(fontRequests.length,0,'unused font files must not load with the editor')
+      await page.getByLabel('字重',{exact:true}).click();await page.screenshot({path:join(output,`${kind}-font-weight.png`)});await page.keyboard.press('Escape')
+      await trigger.click();const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true)
+      await page.screenshot({path:join(output,`${kind}-font-picker.png`)})
+      const fontOptions=page.locator('.native-font-popup').getByRole('option')
+      assert.equal(await fontOptions.count(),29)
+      assert.ok((await fontOptions.allTextContents()).every(label=>!/[A-Za-z]/.test(label)))
+      await search.fill('无匹配字体');await page.screenshot({path:join(output,`${kind}-font-empty.png`)})
+      await search.fill('梅里');assert.equal(await fontOptions.count(),1)
+      await search.press('ArrowDown');await search.press('Enter')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,'Merriweather')
+      await page.waitForFunction(()=>document.fonts.check('700 48px "LingxiLoopEditor Merriweather"','LingxiLoop 1'))
+      assert.ok(fontRequests.length>0);assert.match(await target.evaluate(e=>getComputedStyle(e).fontFamily),/LingxiLoopEditor Merriweather/)
+      await page.getByLabel('字重',{exact:true}).click();assert.equal(await page.locator('.native-font-variants .native-menu-popup button').count(),14)
+      await page.getByRole('button',{name:'粗体斜体',exact:true}).click()
+      await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontStyle==='italic')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontStyle,'italic')
+      await trigger.click();await search.fill('贝巴斯');await search.press('ArrowDown');await search.press('Enter')
+      await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontFamily.includes('Bebas Neue'))
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontWeight,400);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontStyle,'normal')
+      await page.getByLabel('字重',{exact:true}).click();assert.equal(await page.locator('.native-font-variants .native-menu-popup button').count(),1);await page.keyboard.press('Escape')
+      await page.mouse.click(1000,700);await page.keyboard.press('Control+z')
+      await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontFamily.includes('Merriweather'))
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontWeight,700);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontStyle,'italic')
+      await page.reload();await ready(1);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,'Merriweather')
+      await target.click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await trigger.click();await search.waitFor();await search.fill('无匹配字体');assert.equal(await page.getByText('未找到匹配字体',{exact:true}).count(),1)
+      await search.press('Escape');await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='字体')
+      const packed=await page.evaluate(async({root,snapshot})=>{
+        const {offlineDocumentFonts,awaitPageFonts}=await import(`/@fs${root}/src/features/artifacts/native/export/fonts.ts`)
+        const {ExportResources}=await import(`/@fs${root}/src/features/artifacts/native/export/common.ts`)
+        const {renderPageHtml,EXPORT_PAGE_CSS}=await import(`/@fs${root}/src/features/artifacts/native/export/render.ts`)
+        const resources=new ExportResources(snapshot,{format:'html'}),source=snapshot.pages['page-1'],heading=source.nodes['page-1-heading']
+        const cjk={...heading,id:'cjk-font',y:200,text:'中文标题',richText:undefined,style:{...heading.style,fontWeight:600}}
+        const slim={...source,nodeOrder:['page-1-heading','cjk-font'],nodes:{'page-1-heading':heading,'cjk-font':cjk}},html=await renderPageHtml(slim,resources)
+        const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0';host.innerHTML=`<style>${EXPORT_PAGE_CSS}</style>${html}`;document.body.append(host)
+        try{await awaitPageFonts(host)}finally{host.remove()}
+        return{css:await offlineDocumentFonts(resources),html,pageCss:EXPORT_PAGE_CSS}
+      },{root,snapshot:document})
+      assert.match(packed.css,/data:font\/woff2;base64,/);assert.doesNotMatch(packed.css,/url\(["']?(?:https?:|\/fonts)/)
+      const offline=await browser.newPage(),externalFontRequests=[]
+      let loadedFaces
+      try{
+        offline.on('request',request=>{if(/^https?:/.test(request.url()))externalFontRequests.push(request.url())})
+        await offline.setContent(`<style>${packed.css}${packed.pageCss}</style>${packed.html}`)
+        loadedFaces=await offline.evaluate(async()=>{const faces=await document.fonts.load('italic 700 48px "LingxiLoopEditor Merriweather"','LingxiLoop 1');return faces.filter(face=>face.status==='loaded').length})
+        assert.ok(loadedFaces>0);assert.deepEqual(externalFontRequests,[])
+        await offline.screenshot({path:join(output,`${kind}-font-html.png`)})
+      }finally{await offline.close()}
+      await page.setViewportSize({width:390,height:844});await trigger.click();await search.waitFor()
+      const popupBounds=await page.locator('.native-font-popup').boundingBox(),editorBounds=await page.locator('[data-native-artifact-editor]').boundingBox()
+      assert.ok(popupBounds.x>=editorBounds.x&&popupBounds.x+popupBounds.width<=editorBounds.x+editorBounds.width&&popupBounds.y+popupBounds.height<=844,'the font popup must fit the narrow editor')
+      await page.screenshot({path:join(output,`${kind}-font-narrow.png`)});await search.press('Escape')
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-font-picker-diagnostic',mode:kind,chineseChoices:29,searchAndKeyboardSelection:true,fontGeometry,fontRequestsBeforeOpening:0,selectedFamily:'Merriweather',supportedFacesOnly:true,familyFaceFallbackAndSharedUndo:true,fontAssets:[...new Set(fontRequests)],savedAndReopened:true,emptySearchChinese:true,escapeRestoresFocus:true,narrowPopupBounds:popupBounds,offlineFontPacking:{loadedFaces,externalRequests:externalFontRequests.length,localFileOpening:false},chineseOnlyFallbackReady:true,scope:'actual React, self-hosted font loading and shared reducer; controlled HTTP fixture; packed HTML font loading is not file-URL opening',consoleOrPageErrors:errors}
     }
     if(options.checks==='table-stability') {
       const table=page.locator('[data-node-id="stable-table"] table'),cell=table.locator('td').first()

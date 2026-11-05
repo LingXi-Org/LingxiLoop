@@ -1,5 +1,6 @@
 import '../../../../styles/app-fonts.css'
 import '../../../../styles/fonts.css'
+import '../editor-fonts.css'
 import type { ArtifactDocument } from '../../../../../shared/artifact-document'
 import type { ArtifactExportFormat } from '../export-artifact'
 import { executeExport } from './execute'

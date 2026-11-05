@@ -41,8 +41,8 @@
       "image": "design-768-light.png",
       "width": 768,
       "height": 1024,
-      "differentPixels": 31169,
-      "rawDifferentRatio": 0.03963343302408854,
+      "differentPixels": 30684,
+      "rawDifferentRatio": 0.0390167236328125,
       "conservativePixelPass": false
     },
     {
