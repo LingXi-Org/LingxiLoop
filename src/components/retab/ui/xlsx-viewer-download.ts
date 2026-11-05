@@ -25,7 +25,7 @@ export function createXlsxSheetCsvExportAction({
 }): ViewerDownloadAction {
   return {
     id: "xlsx-export-sheet",
-    label: "Export sheet",
+    label: "导出工作表",
     fileName,
     origin: "derived",
     getPayload: async ({ signal } = {}) => {
@@ -76,7 +76,7 @@ export function useXlsxDownloadActions({
   return React.useMemo(() => {
     const originalDownloadAction = {
       ...resource.originalDownload,
-      label: activeSheet ? "Download original" : "Download",
+      label: activeSheet ? "下载原文件" : "下载",
     };
     if (!activeSheet || !sheets) return [originalDownloadAction];
     return [
@@ -143,6 +143,6 @@ function sanitizeFileNamePart(value: string, fallback = "sheet") {
 
 function throwIfAborted(signal: AbortSignal | undefined) {
   if (signal?.aborted) {
-    throw new DOMException("Download was cancelled.", "AbortError");
+    throw new DOMException("下载已取消。", "AbortError");
   }
 }

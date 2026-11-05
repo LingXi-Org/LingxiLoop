@@ -520,7 +520,7 @@ const markdownComponents = {
       return (
         <MarkdownVideoSurface
           controls={readOptionalBoolean(componentProps.controls) ?? true}
-          label={readOptionalString(componentProps.label) ?? "Video"}
+          label={readOptionalString(componentProps.label) ?? "视频"}
           loop={readOptionalBoolean(componentProps.loop) ?? false}
           muted={readOptionalBoolean(componentProps.muted) ?? false}
           src={readOptionalString(componentProps.src) ?? ""}
@@ -626,7 +626,7 @@ const markdownComponents = {
     return (
       <input
         {...props}
-        aria-label={checked ? "Completed task" : "Incomplete task"}
+        aria-label={checked ? "已完成任务" : "未完成任务"}
         aria-readonly="true"
         checked={checked}
         className="border-border accent-primary mr-2 size-3.5 rounded align-[-0.15em]"
@@ -696,7 +696,7 @@ const markdownComponents = {
       return (
         <span
           {...props}
-          aria-label="Math block"
+          aria-label="公式块"
           className={[classes, "block overflow-x-auto"]
             .filter(Boolean)
             .join(" ")}
@@ -762,7 +762,7 @@ const markdownComponents = {
     return (
       <section
         {...props}
-        aria-label={isFootnotes ? "Footnotes" : props["aria-label"]}
+        aria-label={isFootnotes ? "脚注" : props["aria-label"]}
         className={[
           isFootnotes
             ? "text-muted-foreground mt-10 border-t pt-5 text-[0.9em]"
@@ -903,7 +903,7 @@ function HeadingAnchor({ id, text }: { id: string; text: string }) {
   const [copied, setCopied] = React.useState(false);
   return (
     <button
-      aria-label={`Copy link to ${text}`}
+      aria-label={`复制“${text}”的链接`}
       className="text-muted-foreground hover:text-foreground absolute top-1/2 -left-7 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded opacity-0 transition-opacity group-hover/heading:opacity-100 focus-visible:opacity-100"
       type="button"
       onClick={() => {
@@ -943,7 +943,7 @@ function MarkdownGreenfieldHostileChunk({
 
   return (
     <section
-      aria-label="Large Markdown block"
+      aria-label="大型 Markdown 内容块"
       className="bg-muted/25 text-muted-foreground overflow-hidden rounded-md border text-sm"
       data-markdown-hostile-fallback=""
       data-markdown-hostile-line-count={sourceLines.length}
@@ -952,18 +952,18 @@ function MarkdownGreenfieldHostileChunk({
       data-markdown-hostile-virtualized=""
     >
       <div className="bg-muted/55 text-foreground flex items-center justify-between gap-3 border-b px-3 py-2 font-medium">
-        Large Markdown block
+        大型 Markdown 内容块
         <button
-          aria-label="Copy large Markdown block source"
+          aria-label="复制大型 Markdown 内容块源码"
           className="text-muted-foreground text-xs underline underline-offset-4"
           type="button"
           onClick={() => void navigator.clipboard?.writeText(chunk.sourceText)}
         >
-          Copy
+          复制
         </button>
       </div>
       <pre
-        aria-label="Large Markdown source preview"
+        aria-label="大型 Markdown 源码预览"
         className="bg-background/60 max-h-[36rem] overflow-auto font-mono text-[13px] whitespace-pre"
         data-markdown-hostile-preview=""
         role="region"
@@ -1042,7 +1042,7 @@ function MarkdownCodeBlock({
 
   return (
     <figure
-      aria-label={`${title} code block`}
+      aria-label={`${title} 代码块`}
       // text-[1em] keeps the code block on the document's scaling em cascade:
       // a host stylesheet (e.g. the demo's rehype-pretty-code rule) may pin
       // [data-rehype-pretty-code-figure] to a fixed font-size, which would stop
@@ -1061,20 +1061,20 @@ function MarkdownCodeBlock({
         </span>
         <span className="flex items-center gap-2">
           {copyFailed ? (
-            <span aria-label="Copy failed" className="text-destructive text-xs">
-              Copy failed
+            <span aria-label="复制失败" className="text-destructive text-xs">
+              复制失败
             </span>
           ) : null}
           <button
-            aria-label="Copy code block"
+            aria-label="复制代码块"
             className="text-muted-foreground text-xs underline underline-offset-4"
             type="button"
             onClick={() => void copy(false)}
           >
-            Copy
+            复制
           </button>
           <button
-            aria-label="Copy selected code or block"
+            aria-label="复制所选代码或内容块"
             className="sr-only"
             type="button"
             onClick={() => void copy(true)}
@@ -1143,7 +1143,7 @@ const MarkdownCodeSource = React.memo(function MarkdownCodeSource({
         {MARKDOWN_CODE_HIGHLIGHT_STYLES}
       </style>
       <pre
-        aria-label={`${language} code source`}
+        aria-label={`${language} 代码源码`}
         className="overflow-x-auto p-3 [overflow-wrap:normal] [&_code]:min-w-max"
         data-pretext-code-source=""
         role="region"
@@ -1255,7 +1255,7 @@ function MarkdownVirtualizedCodeSource({
       </style>
       <pre
         ref={preRef}
-        aria-label={`${language} code source`}
+        aria-label={`${language} 代码源码`}
         className="max-h-[32rem] overflow-auto overflow-x-auto p-3 [overflow-wrap:normal] [&_code]:min-w-max"
         data-pretext-code-line-count={sourceLines.length}
         data-pretext-code-mounted-lines={mountedLines.length}
@@ -1330,7 +1330,7 @@ function MarkdownCodeLine({
   const diffKind = diffLineKind(line);
   return (
     <span
-      aria-label={metadata.showLineNumbers ? `Line ${lineNumber}` : undefined}
+      aria-label={metadata.showLineNumbers ? `第 ${lineNumber} 行` : undefined}
       aria-posinset={
         metadata.showLineNumbers && virtualized ? index + 1 : undefined
       }
@@ -1388,7 +1388,7 @@ function markdownCodeElementProps({
 }) {
   return {
     "aria-label": metadata.showLineNumbers
-      ? `${language} numbered code lines`
+      ? `${language} 带行号的代码`
       : undefined,
     className: [
       "block font-mono text-[0.9em] leading-[1.45]",
@@ -1570,7 +1570,7 @@ function MarkdownImageSurface({
   return (
     <figure
       aria-label={
-        state === "failed" ? `Image failed: ${alt}` : alt || title || "Image"
+        state === "failed" ? `图片加载失败：${alt}` : alt || title || "图片"
       }
       className="my-5 w-fit max-w-full"
       data-pretext-component={componentName}
@@ -1589,7 +1589,7 @@ function MarkdownImageSurface({
         >
           {state === "loading" ? (
             <span className="text-muted-foreground absolute inset-x-4 top-1/2 -translate-y-1/2 text-center text-sm">
-              Loading image
+              正在加载图片
             </span>
           ) : null}
           {state === "failed" ? (
@@ -1597,23 +1597,23 @@ function MarkdownImageSurface({
               className="text-muted-foreground absolute inset-0 flex items-center justify-center px-4 text-center text-sm"
               role="alert"
             >
-              Could not load image{alt ? `: ${alt}` : ""}
+              无法加载图片{alt ? `: ${alt}` : ""}
             </div>
           ) : null}
           {state === "failed" ? (
             <div
-              aria-label={alt || "Image"}
+              aria-label={alt || "图片"}
               className="text-muted-foreground text-sm"
               data-pretext-image-state="failed"
               role="img"
             >
-              Image failed to load: {alt}
+              图片加载失败： {alt}
               <button
                 className="ml-2 text-xs underline underline-offset-4"
                 type="button"
                 onClick={() => setState("loading")}
               >
-                Retry image
+                重新加载图片
               </button>
             </div>
           ) : (
@@ -1651,11 +1651,11 @@ function MarkdownImageSurface({
         </div>
       ) : (
         <span
-          aria-label={alt || "Blocked image"}
+          aria-label={alt || "图片已被拦截"}
           className="bg-muted/35 text-muted-foreground flex min-h-24 items-center rounded-md border border-dashed px-4 text-sm"
           role="img"
         >
-          {alt || "Blocked image"}
+          {alt || "图片已被拦截"}
         </span>
       )}
       {title ? (
@@ -1698,7 +1698,7 @@ function MarkdownVideoSurface({
   if (!safeSrc) {
     return (
       <div
-        aria-label={`Video blocked: ${label}`}
+        aria-label={`视频已被拦截：${label}`}
         className="bg-muted/35 text-muted-foreground my-5 rounded-md border border-dashed p-4 text-sm"
         data-pretext-component="Video"
         data-pretext-video-state="blocked"
@@ -1710,7 +1710,7 @@ function MarkdownVideoSurface({
   }
   return (
     <figure
-      aria-label={failed ? `Video failed to load: ${label}` : label}
+      aria-label={failed ? `视频加载失败：${label}` : label}
       className="my-5 max-w-full"
       data-pretext-component="Video"
       data-pretext-video-state={failed ? "failed" : "ready"}
@@ -1749,7 +1749,7 @@ function MarkdownTabs({ node }: { node: MarkdownHastElement | null }) {
     });
   const [selected, setSelected] = React.useState(0);
   const baseId = React.useId();
-  const label = readOptionalString(props.label) ?? "Tabs";
+  const label = readOptionalString(props.label) ?? "标签页";
 
   const select = (index: number) =>
     setSelected((index + tabs.length) % tabs.length);
@@ -1762,7 +1762,7 @@ function MarkdownTabs({ node }: { node: MarkdownHastElement | null }) {
             readDataProperty(tab, "dataPretextComponentProps"),
           );
           const title =
-            readOptionalString(tabProps.title) ?? `Tab ${index + 1}`;
+            readOptionalString(tabProps.title) ?? `标签 ${index + 1}`;
           const active = selected === index;
           return (
             <button
@@ -2102,13 +2102,13 @@ function alertIconForKind(kind: string) {
 
 function calloutTitle(kind: string) {
   const titles: Record<string, string> = {
-    caution: "Caution",
-    important: "Important",
-    note: "Note",
-    tip: "Tip",
-    warning: "Warning",
+    caution: "小心",
+    important: "重要",
+    note: "说明",
+    tip: "提示",
+    warning: "警告",
   };
-  return titles[kind] ?? "Note";
+  return titles[kind] ?? "说明";
 }
 
 function linkKindForHref(href: string) {
@@ -2144,10 +2144,10 @@ function footnoteLabelForLink({
 }) {
   const display = footnoteDisplayForHref(href, text);
   if (/^#(?:user-content-)?fnref-/i.test(href)) {
-    return "Back to footnote reference ↩";
+    return "返回脚注引用 ↩";
   }
   if (/^#(?:user-content-)?fn-/i.test(href)) {
-    return `Footnote${display ? ` ${display}` : ""}`;
+    return `脚注${display ? ` ${display}` : ""}`;
   }
   if (typeof label === "string" && label) return label;
   return undefined;
@@ -2249,7 +2249,7 @@ function MarkdownTable({ node, style, ...props }: any) {
   const columnCount = ariaColumnCount ?? 0;
   return (
     <div
-      aria-label="Markdown table"
+      aria-label="Markdown 表格"
       className="group relative my-4 overflow-hidden rounded-lg border"
       data-markdown-table-region=""
       role="region"
@@ -2344,7 +2344,7 @@ function MarkdownVirtualTable({
 
   return (
     <div
-      aria-label="Markdown table"
+      aria-label="Markdown 表格"
       className="group relative my-4 overflow-hidden rounded-lg border"
       data-markdown-table-region=""
       data-markdown-table-virtualized-region=""
@@ -2786,7 +2786,7 @@ function TableCopyButton({ copyText }: { copyText?: string }) {
   const [copied, setCopied] = React.useState(false);
   return (
     <button
-      aria-label="Copy table as TSV"
+      aria-label="复制表格（制表符分隔）"
       className="bg-background/90 text-muted-foreground hover:text-foreground absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
       type="button"
       onClick={(event) => {
@@ -2800,7 +2800,7 @@ function TableCopyButton({ copyText }: { copyText?: string }) {
       ) : (
         <Copy className="size-3.5" aria-hidden="true" />
       )}
-      {copied ? "Copied" : "Copy"}
+      {copied ? "已复制" : "复制"}
     </button>
   );
 }

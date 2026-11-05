@@ -191,7 +191,7 @@ export function FileViewerSidebarTrigger({
   children,
   size = "icon",
   variant = "ghost",
-  "aria-label": ariaLabel = "Toggle sidebar",
+  "aria-label": ariaLabel = "切换侧栏",
   ...props
 }: FileViewerSidebarTriggerProps) {
   const {
@@ -250,7 +250,7 @@ export function FileViewerSidebarTrigger({
       {children ?? (
         <>
           {loading ? null : <Icon />}
-          <span className="sr-only">Toggle sidebar</span>
+          <span className="sr-only">切换侧栏</span>
         </>
       )}
     </Button>

@@ -116,7 +116,7 @@ export function MarkdownGreenfieldDiagram({
     <figure
       ref={figureRef}
       aria-describedby={describedBy}
-      aria-label={title || "Mermaid diagram"}
+      aria-label={title || "Mermaid 图表"}
       className="group bg-muted/30 my-5 min-h-40 overflow-hidden rounded-md border"
       data-diagram-language="mermaid"
       data-diagram-renderer={
@@ -137,12 +137,12 @@ export function MarkdownGreenfieldDiagram({
           {title || "mermaid"}
         </span>
         <DiagramCopyButton
-          ariaLabel="Copy diagram source"
+          ariaLabel="复制图表源码"
           className="ml-auto"
           text={source}
         />
         {state.status === "ready" ? (
-          <DiagramCopyButton ariaLabel="Copy diagram SVG" text={state.svg} />
+          <DiagramCopyButton ariaLabel="复制图表 SVG" text={state.svg} />
         ) : null}
       </div>
       {description ? (
@@ -155,7 +155,7 @@ export function MarkdownGreenfieldDiagram({
         </p>
       ) : null}
       <div
-        aria-label="Mermaid diagram body"
+        aria-label="Mermaid 图表内容"
         className="h-(--pretext-diagram-body-height) overflow-auto p-4"
         data-pretext-diagram-body=""
         onKeyDown={(event) => {
@@ -204,7 +204,7 @@ export function MarkdownGreenfieldDiagram({
               </p>
             ) : null}
             <pre
-              aria-label="Mermaid diagram source"
+              aria-label="Mermaid 图表源码"
               className="text-muted-foreground m-0 overflow-x-auto font-mono text-[0.82em] leading-relaxed"
               tabIndex={0}
             >
@@ -280,7 +280,7 @@ function DiagramCopyButton({
 
   return (
     <button
-      aria-label={isCopied ? "Copied" : ariaLabel}
+      aria-label={isCopied ? "已复制" : ariaLabel}
       className={[
         "text-muted-foreground hover:bg-background hover:text-foreground focus-visible:ring-ring inline-flex size-7 items-center justify-center rounded-md transition focus-visible:ring-2 focus-visible:outline-none",
         className,

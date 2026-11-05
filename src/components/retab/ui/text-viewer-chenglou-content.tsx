@@ -1711,15 +1711,15 @@ function appendCodeBlockToolbar({
   copyButton.type = "button";
   copyButton.className =
     "rounded bg-background/90 p-1 text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground";
-  copyButton.setAttribute("aria-label", "Copy code block");
+  copyButton.setAttribute("aria-label", "复制代码块");
   appendCopyIcon(copyButton);
   copyButton.addEventListener("click", () => {
     void navigator.clipboard?.writeText(block.fallbackText).then(() => {
-      copyButton.setAttribute("aria-label", "Copied");
+      copyButton.setAttribute("aria-label", "已复制");
       copyButton.replaceChildren();
       appendCheckIcon(copyButton);
       window.setTimeout(() => {
-        copyButton.setAttribute("aria-label", "Copy code block");
+        copyButton.setAttribute("aria-label", "复制代码块");
         copyButton.replaceChildren();
         appendCopyIcon(copyButton);
       }, 1200);
@@ -1843,8 +1843,8 @@ function renderTableBlock({
   copyButton.type = "button";
   copyButton.className =
     "absolute top-1 right-1 z-10 rounded bg-background/90 px-1.5 py-1 text-[10px] text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground";
-  copyButton.setAttribute("aria-label", "Copy table");
-  copyButton.textContent = "Copy";
+  copyButton.setAttribute("aria-label", "复制表格");
+  copyButton.textContent = "复制";
   copyButton.addEventListener("click", () => {
     void navigator.clipboard?.writeText(
       serializeMarkdownTableForClipboard(block),

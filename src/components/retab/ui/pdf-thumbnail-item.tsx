@@ -35,7 +35,7 @@ export function PdfThumbnailItem({
     <button
       id={itemId}
       type="button"
-      aria-label={`Page ${item.pageNumber}`}
+      aria-label={`第 ${item.pageNumber} 页`}
       aria-current={active ? "page" : undefined}
       data-active={active}
       data-page-number={item.pageNumber}

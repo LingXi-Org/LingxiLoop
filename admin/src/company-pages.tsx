@@ -28,7 +28,7 @@ export function CompanyDashboard() {
 export function CompanyUsage() {
   const result = useCustom<{ calls: number; inputTokens: number; outputTokens: number; costUsd: number }>({ url: '/api/control/company/usage', method: 'get' })
   const usage = result.query.data?.data
-  return <>{result.query.isError && <ErrorPanel message="用量刷新失败" retry={() => void result.query.refetch()} />}{!usage ? (result.query.isError ? null : <AdminMetricsSkeleton />) : <div className="ui-stagger admin-kpi-grid">{[['调用次数', usage.calls], ['输入 Token', usage.inputTokens], ['输出 Token', usage.outputTokens], ['费用（USD）', usage.costUsd]].map(([label, value]) => <Card key={label}><CardContent className="py-6"><p>{label}</p><strong className="text-2xl">{Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 6 })}</strong></CardContent></Card>)}</div>}</>
+  return <>{result.query.isError && <ErrorPanel message="用量刷新失败" retry={() => void result.query.refetch()} />}{!usage ? (result.query.isError ? null : <AdminMetricsSkeleton />) : <div className="ui-stagger admin-kpi-grid">{[['调用次数', usage.calls], ['输入词元', usage.inputTokens], ['输出词元', usage.outputTokens], ['费用（USD）', usage.costUsd]].map(([label, value]) => <Card key={label}><CardContent className="py-6"><p>{label}</p><strong className="text-2xl">{Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 6 })}</strong></CardContent></Card>)}</div>}</>
 }
 
 export function CompanyProfileEdit({ id, name, description }: { id: string; name: string; description: string }) {

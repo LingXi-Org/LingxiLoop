@@ -24,7 +24,7 @@ export function EducationPage() {
       }).then(setResult).catch((reason) => setError(userFacingError(reason, '创建失败，请稍后重试。'))).finally(() => setBusy(false))
     }}>
       <label className="block space-y-1">公司名称<Input name="name" required maxLength={100} /></label>
-      <label className="block space-y-1">公司标识<Input name="slug" required minLength={3} maxLength={80} pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="example-school" /></label>
+      <label className="block space-y-1">公司标识<Input name="slug" required minLength={3} maxLength={80} pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="例如：shiyan-zhongxue" /></label>
       <label className="block space-y-1">首位管理员邮箱<Input name="email" type="email" required /></label>
       <label className="block space-y-1">席位数<Input name="seats" type="number" min={1} defaultValue={100} required /></label>
       <label className="block space-y-1">合同开始<Input name="startsAt" type="date" defaultValue={new Date().toISOString().slice(0,10)} required /></label>

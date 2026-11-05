@@ -49,7 +49,7 @@ export class ViewerDownloadError extends Error {
 
 export function createHrefDownloadAction({
   id,
-  label = "Download",
+  label = "下载",
   href,
   fileName,
   origin = "original",
@@ -71,7 +71,7 @@ export function createHrefDownloadAction({
 
 export function createBlobDownloadAction({
   id,
-  label = "Download",
+  label = "下载",
   blob,
   fileName,
   origin = "original",
@@ -93,7 +93,7 @@ export function createBlobDownloadAction({
 
 export function createTextDownloadAction({
   id,
-  label = "Download",
+  label = "下载",
   text,
   fileName,
   mimeType,
@@ -117,7 +117,7 @@ export function createTextDownloadAction({
 
 export function createDisabledDownloadAction({
   id,
-  label = "Download",
+  label = "下载",
   fileName,
   origin = "original",
 }: {

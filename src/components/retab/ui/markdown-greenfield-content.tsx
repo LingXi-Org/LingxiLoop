@@ -601,7 +601,7 @@ export function MarkdownGreenfieldContent({
   const handleDownloadError = React.useCallback<ViewerDownloadErrorHandler>(
     (error) => {
       if (error.kind === "aborted") return;
-      setDownloadError(error.message || "Could not download Markdown.");
+      setDownloadError(error.message || "无法下载 Markdown 文档，请重试。");
     },
     [],
   );
@@ -666,12 +666,12 @@ export function MarkdownGreenfieldContent({
           )}
           {isDocumentPending ? (
             <div
-              aria-label="Preparing Markdown document"
+              aria-label="正在准备 Markdown 文档"
               className="text-muted-foreground absolute inset-x-4 top-0 flex min-h-40 items-center justify-center text-sm"
               data-slot="markdown-loading-state"
               role="status"
             >
-              Preparing Markdown...
+              正在准备 Markdown…
             </div>
           ) : document.text.trim() ? (
             <>
@@ -755,12 +755,12 @@ export function MarkdownGreenfieldContent({
             </>
           ) : (
             <div
-              aria-label="Empty Markdown document"
+              aria-label="Markdown 文档为空"
               className="text-muted-foreground absolute inset-x-4 top-0 flex min-h-40 items-center justify-center text-sm"
               data-slot="markdown-empty-state"
               role="status"
             >
-              Empty Markdown document
+              Markdown 文档为空
             </div>
           )}
         </div>
@@ -1042,8 +1042,8 @@ function ChunkFrame({
       ref={ref}
       aria-label={
         highlighted
-          ? `Highlighted source lines ${highlightRange?.start}-${highlightRange?.end}`
-          : `Markdown lines ${frame.sourceStartLine} to ${frame.sourceEndLine}`
+          ? `已高亮源码第 ${highlightRange?.start} 至 ${highlightRange?.end} 行`
+          : `Markdown 第 ${frame.sourceStartLine} 至 ${frame.sourceEndLine} 行`
       }
       className={[
         "absolute left-1/2 w-full -translate-x-1/2 px-8 py-1",

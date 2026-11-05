@@ -62,7 +62,7 @@ export interface CsvGridProps {
   statusNode: React.ReactNode;
 }
 
-const CSV_TABLE_LABEL = "CSV data";
+const CSV_TABLE_LABEL = "CSV 数据";
 const COLUMN_WIDTH = 180;
 const COLUMN_OVERSCAN = 2;
 const JUMP_COLUMN_OVERSCAN = 0;
@@ -354,7 +354,7 @@ export const CsvGrid = React.forwardRef<CsvGridHandle, CsvGridProps>(
                 <div
                   role="columnheader"
                   aria-colindex={1}
-                  aria-label="Row number"
+                  aria-label="行号"
                   className="sticky left-0 z-10 border-r bg-[color-mix(in_oklab,var(--card)_94%,var(--foreground))]"
                   style={{ height: effectiveRowHeight }}
                 />
@@ -362,7 +362,7 @@ export const CsvGrid = React.forwardRef<CsvGridHandle, CsvGridProps>(
                 {columnItems.map((item) => (
                   <HeaderCell
                     key={item.index}
-                    name={columns[item.index] || `Column ${item.index + 1}`}
+                    name={columns[item.index] || `列 ${item.index + 1}`}
                     columnIndex={columnOffset + item.index + 1}
                     height={effectiveRowHeight}
                     sorted={
@@ -544,7 +544,7 @@ function HeaderCell({
         onClick={onToggle}
         className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:bg-muted flex w-full items-center gap-1 px-3 text-left font-medium transition-colors focus-visible:outline-none"
         style={{ height }}
-        title={`Sort by ${name}`}
+        title={`按“${name}”排序`}
       >
         <span className="truncate">{name}</span>
         {sorted ? (

@@ -75,7 +75,7 @@ export function TextViewerControls({
   wordCount,
   fontScale,
   copyText,
-  copyLabel = "Copy text",
+  copyLabel = "复制文本",
   downloadAction,
   extra,
   leading,
@@ -109,7 +109,7 @@ export function TextViewerControls({
         onZoomOut,
         onZoomIn,
         onFit: onResetZoom,
-        fitLabel: "Reset zoom",
+        fitLabel: "重置缩放",
       }}
       downloads={downloadAction ? [downloadAction] : undefined}
       onDownloadError={onDownloadError}
@@ -140,9 +140,9 @@ function TextViewerCopyControl({
 
   const buttonLabel =
     status === "copied"
-      ? "Copied"
+      ? "已复制"
       : status === "failed"
-        ? "Copy failed"
+        ? "复制失败"
         : label;
 
   return (

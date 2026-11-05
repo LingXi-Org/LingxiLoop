@@ -196,7 +196,7 @@ export function FileViewerSidebarRail({
   return (
     <Comp
       aria-disabled={sidebar.canToggleSidebar ? undefined : true}
-      aria-label="Toggle sidebar"
+      aria-label="切换侧栏"
       data-file-viewer-sidebar-mode={sidebar.mode}
       data-file-viewer-sidebar-side={sidebar.side}
       data-file-viewer-sidebar-state={sidebar.sidebarState}

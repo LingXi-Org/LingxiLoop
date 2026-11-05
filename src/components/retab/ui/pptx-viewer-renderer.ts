@@ -81,7 +81,7 @@ export async function createPptxRenderer(
     viewer.destroy?.();
     throw toPptxFormatError(error, {
       kind: "load_failed",
-      message: "Failed to parse presentation.",
+      message: "无法读取演示文稿。",
     });
   }
   const loadFileMs = now() - loadFileStartedAt;
@@ -98,7 +98,7 @@ export async function createPptxRenderer(
     viewer.destroy?.();
     throw toPptxFormatError(error, {
       kind: "load_failed",
-      message: "Failed to inspect presentation slides.",
+      message: "无法读取幻灯片信息。",
     });
   }
   const inspectMs = now() - inspectStartedAt;
@@ -106,7 +106,7 @@ export async function createPptxRenderer(
     viewer.destroy?.();
     throw new PptxRendererError(
       "load_failed",
-      "Presentation does not contain any slides.",
+      "演示文稿中没有幻灯片。",
     );
   }
 

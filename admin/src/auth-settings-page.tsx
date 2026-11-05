@@ -81,8 +81,8 @@ export function AuthSettingsPage() {
     <div className="admin-overview-tabs"><a href="#auth-parameters">会话与验证</a><a href="#auth-security">安全策略</a></div>
     <section className="admin-kpi-grid" aria-label="身份认证状态">
       <StatusCard icon={MailCheckIcon} label="邮件服务" ready={form.secrets.smtp} detail="阿里企业邮箱 SMTP" />
-      <StatusCard icon={ShieldCheckIcon} label="人机验证" ready={form.secrets.turnstile} detail="Cloudflare Turnstile" />
-      <StatusCard icon={KeyRoundIcon} label="邮箱验证" ready={form.locked.requireEmailVerification} detail="Email OTP" />
+      <StatusCard icon={ShieldCheckIcon} label="人机验证" ready={form.secrets.turnstile} detail="人机验证" />
+      <StatusCard icon={KeyRoundIcon} label="邮箱验证" ready={form.locked.requireEmailVerification} detail="邮箱验证码" />
       <StatusCard icon={CheckCircle2Icon} label="默认角色" ready detail={form.locked.defaultRole} />
     </section>
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">

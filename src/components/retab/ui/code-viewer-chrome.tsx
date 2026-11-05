@@ -89,7 +89,7 @@ export function codeViewerControlsState({
       onZoomOut,
       onZoomIn,
       onFit: onResetZoom,
-      fitLabel: "Reset zoom",
+      fitLabel: "重置缩放",
     },
     downloads: downloadAction ? [downloadAction] : [],
   };

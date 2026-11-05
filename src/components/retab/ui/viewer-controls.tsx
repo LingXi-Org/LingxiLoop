@@ -265,7 +265,7 @@ export function ViewerControlsSkeleton({
                 disabled
                 aria-hidden
                 tabIndex={-1}
-                label="Zoom out"
+                label="缩小"
               >
                 <Minus />
               </ViewerControlButton>
@@ -276,7 +276,7 @@ export function ViewerControlsSkeleton({
                 disabled
                 aria-hidden
                 tabIndex={-1}
-                label="Zoom in"
+                label="放大"
               >
                 <Plus />
               </ViewerControlButton>
@@ -284,7 +284,7 @@ export function ViewerControlsSkeleton({
                 disabled
                 aria-hidden
                 tabIndex={-1}
-                label="Fit width"
+                label="适合宽度"
               >
                 <Maximize />
               </ViewerControlButton>
@@ -296,7 +296,7 @@ export function ViewerControlsSkeleton({
               disabled
               aria-hidden
               tabIndex={-1}
-              label="Rotate"
+              label="旋转"
             >
               <RotateCw />
             </ViewerControlButton>
@@ -307,7 +307,7 @@ export function ViewerControlsSkeleton({
               disabled
               aria-hidden
               tabIndex={-1}
-              label="Download"
+              label="下载"
             >
               <Download />
             </ViewerControlButton>
@@ -347,27 +347,27 @@ export function formatViewerControlPosition(position: ViewerControlPosition) {
 
   const label =
     position.kind === "page"
-      ? "Page"
+      ? "页"
       : position.kind === "slide"
-        ? "Slide"
-        : "Frame";
+        ? "张"
+        : "帧";
   const current =
     position.total == null
       ? position.current
       : Math.min(position.current, position.total);
 
   return position.total == null
-    ? `${label} ${current}`
-    : `${label} ${current} of ${position.total}`;
+    ? `第 ${current} ${label}`
+    : `第 ${current} ${label}，共 ${position.total} ${label}`;
 }
 
 function ViewerZoomControls({ zoom }: { zoom: ViewerZoomControl }) {
-  const fitLabel = zoom.fitLabel ?? "Fit width";
+  const fitLabel = zoom.fitLabel ?? "适合宽度";
 
   return (
     <>
       <ViewerControlButton
-        label="Zoom out"
+        label="缩小"
         onClick={zoom.onZoomOut}
         disabled={zoom.isDisabled}
       >
@@ -377,19 +377,19 @@ function ViewerZoomControls({ zoom }: { zoom: ViewerZoomControl }) {
         <button
           type="button"
           className="text-muted-foreground hover:text-foreground w-12 text-center text-xs tabular-nums disabled:pointer-events-none disabled:opacity-64"
-          title="Reset zoom"
+          title="重置缩放"
           onClick={zoom.onReset}
           disabled={zoom.isDisabled}
         >
-          {zoom.scale == null ? "Fit" : `${Math.round(zoom.scale * 100)}%`}
+          {zoom.scale == null ? "适应" : `${Math.round(zoom.scale * 100)}%`}
         </button>
       ) : (
         <span className="text-muted-foreground w-12 text-center text-xs tabular-nums">
-          {zoom.scale == null ? "Fit" : `${Math.round(zoom.scale * 100)}%`}
+          {zoom.scale == null ? "适应" : `${Math.round(zoom.scale * 100)}%`}
         </span>
       )}
       <ViewerControlButton
-        label="Zoom in"
+        label="放大"
         onClick={zoom.onZoomIn}
         disabled={zoom.isDisabled}
       >
@@ -415,7 +415,7 @@ function ViewerRotateControlButton({
 }) {
   return (
     <ViewerControlButton
-      label="Rotate"
+      label="旋转"
       onClick={rotate.onRotate}
       disabled={rotate.isDisabled}
     >
