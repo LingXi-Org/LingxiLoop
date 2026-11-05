@@ -1,0 +1,24 @@
+[
+  {
+    "kind": "design",
+    "realNativeEditor": true,
+    "resizeKeepsIframeAndDocument": true,
+    "refusedPublishKeepsDraft": true,
+    "keyboard": true,
+    "retainedReopen": true,
+    "narrowNoOverflow": true,
+    "syntheticReadRevocationHidesRetainedFrame": true,
+    "errors": []
+  },
+  {
+    "kind": "slides",
+    "realNativeEditor": true,
+    "resizeKeepsIframeAndDocument": true,
+    "refusedPublishKeepsDraft": true,
+    "keyboard": true,
+    "retainedReopen": true,
+    "narrowNoOverflow": true,
+    "syntheticReadRevocationHidesRetainedFrame": true,
+    "errors": []
+  }
+]

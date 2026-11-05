@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "color": {
+    "themes": [
+      {
+        "id": "light",
+        "name": "Light"
+      },
+      {
+        "id": "dark",
+        "name": "Dark"
+      }
+    ],
+    "tokens": [
+      {
+        "name": "surface",
+        "value": {
+          "light": "#fbf7f1",
+          "dark": "#1d1a17"
+        },
+        "usage": "Page background."
+      },
+      {
+        "name": "surface-raised",
+        "value": {
+          "light": "#ffffff",
+          "dark": "#27231f"
+        },
+        "usage": "Cards and menus."
+      },
+      {
+        "name": "line",
+        "value": {
+          "light": "#e4dbcf",
+          "dark": "#3a342d"
+        },
+        "usage": "Hairlines and input borders."
+      },
+      {
+        "name": "ink",
+        "value": {
+          "light": "#2b2118",
+          "dark": "#f3ece3"
+        },
+        "usage": "Primary text, on surface and surface-raised."
+      },
+      {
+        "name": "ink-muted",
+        "value": {
+          "light": "#6f6254",
+          "dark": "#b7aa9b"
+        },
+        "usage": "Secondary text and metadata, on either surface."
+      },
+      {
+        "name": "ember",
+        "value": {
+          "light": "#c2410c",
+          "dark": "#fb923c"
+        },
+        "usage": "Primary action, active state; as text, on the surfaces or ember-soft."
+      },
+      {
+        "name": "ember-soft",
+        "value": {
+          "light": "#ffedd5",
+          "dark": "#431407"
+        },
+        "usage": "Tinted backgrounds behind ember text."
+      },
+      {
+        "name": "on-ember",
+        "value": {
+          "light": "#ffffff",
+          "dark": "#1d1a17"
+        },
+        "usage": "Text and icons on an ember fill (the primary button's label)."
+      },
+      {
+        "name": "leaf",
+        "value": {
+          "light": "#3f6212",
+          "dark": "#a3e635"
+        },
+        "usage": "Success and \"in stock\"; as text, on the surfaces or leaf-soft."
+      },
+      {
+        "name": "leaf-soft",
+        "value": {
+          "light": "#ecfccb",
+          "dark": "#1a2e05"
+        },
+        "usage": "Tinted backgrounds behind leaf text."
+      },
+      {
+        "name": "link",
+        "value": "{ember}",
+        "usage": "Links — an alias of ember, so a theme that moves ember moves links."
+      }
+    ]
+  },
+  "type": {
+    "fonts": [],
+    "families": {
+      "sans": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "mono": "ui-monospace, \"SF Mono\", Menlo, monospace"
+    },
+    "groups": [
+      {
+        "name": "Text",
+        "family": "sans",
+        "note": "One family, four steps.",
+        "styles": [
+          {
+            "name": "display",
+            "fontSize": "32px",
+            "lineHeight": "40px",
+            "fontWeight": 600,
+            "letterSpacing": "-0.01em",
+            "sample": "ember filter one",
+            "usage": "Page titles only."
+          },
+          {
+            "name": "heading",
+            "fontSize": "20px",
+            "lineHeight": "28px",
+            "fontWeight": 600,
+            "sample": "This week’s roast",
+            "usage": "Section headings."
+          },
+          {
+            "name": "body",
+            "fontSize": "15px",
+            "lineHeight": "22px",
+            "fontWeight": 400,
+            "sample": "Washed Ethiopian, roasted light on Tuesday.",
+            "usage": "Everything else."
+          },
+          {
+            "name": "caption",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "fontWeight": 500,
+            "letterSpacing": "0.02em",
+            "sample": "250 g · whole bean",
+            "usage": "Labels and metadata."
+          }
+        ]
+      },
+      {
+        "name": "Code",
+        "family": "mono",
+        "styles": [
+          {
+            "name": "code",
+            "fontSize": "13px",
+            "lineHeight": "20px",
+            "fontWeight": 400,
+            "sample": "brew --ratio 1:16"
+          }
+        ]
+      }
+    ]
+  },
+  "spacing": {
+    "note": "4px base.",
+    "tokens": [
+      {
+        "name": "space-1",
+        "value": "4px",
+        "usage": "Icon-to-label gap."
+      },
+      {
+        "name": "space-2",
+        "value": "8px",
+        "usage": "Inside controls."
+      },
+      {
+        "name": "space-3",
+        "value": "12px",
+        "usage": "Between related rows."
+      },
+      {
+        "name": "space-4",
+        "value": "16px",
+        "usage": "Card padding."
+      },
+      {
+        "name": "space-6",
+        "value": "24px",
+        "usage": "Between sections."
+      }
+    ]
+  },
+  "radius": {
+    "note": "Soft, never round — except pills.",
+    "tokens": [
+      {
+        "name": "radius-sm",
+        "value": "4px",
+        "usage": "Badges, inputs."
+      },
+      {
+        "name": "radius-md",
+        "value": "8px",
+        "usage": "Buttons, cards."
+      },
+      {
+        "name": "radius-full",
+        "value": "9999px",
+        "usage": "Pills and avatars."
+      }
+    ]
+  },
+  "shadow": {
+    "note": "Two elevations; darker and tighter in the dark theme.",
+    "tokens": [
+      {
+        "name": "shadow-sm",
+        "value": {
+          "light": "0 1px 2px #2b21180f, 0 1px 3px #2b21181a",
+          "dark": "0 1px 3px #000000b3"
+        },
+        "usage": "Cards and inputs at rest."
+      },
+      {
+        "name": "shadow-lg",
+        "value": {
+          "light": "0 4px 8px #2b211814, 0 12px 28px -2px #2b211829",
+          "dark": "0 12px 28px -2px #000000cc"
+        },
+        "usage": "Menus, popovers, the toast — anything floating."
+      },
+      {
+        "name": "focus-ring",
+        "value": {
+          "light": "0 0 0 2px #fbf7f1, 0 0 0 4px #c2410c",
+          "dark": "0 0 0 2px #1d1a17, 0 0 0 4px #fb923c"
+        },
+        "usage": "Keyboard focus ring: a 2px page-colour gap, then 2px of solid ember (box-shadow, so it follows the radius)."
+      }
+    ]
+  }
+}

@@ -3,15 +3,12 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import type React from 'react'
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
-import { Avatar } from '@/components/Avatar'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
 import { SidebarContent, SidebarHeader } from '@/components/ui/sidebar'
-import { useParticipants } from '@/features/agents/state'
 import { conversationsApi } from '@/features/conversations/api'
 import { captureConversationScope, isMuted, useConversations } from '@/features/conversations/store'
 import { useWorkspace } from '@/features/knowledge/workspace'
@@ -24,8 +21,9 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import { useUiCommand } from '@/stores/uiCommands'
-import type { Conversation, Participant } from '@/types'
+import type { Conversation } from '@/types'
 import type { ConversationSearchResults } from '../contracts'
+import { ConversationMembersDialog } from './ConversationMembersDialog'
 import { NewConversationDialog } from './NewConversationDialog'
 import { PinnedConversations, type PinnedMode } from './PinnedConversations'
 
@@ -111,46 +109,6 @@ function ConversationRow({ conversation, selected, items, onConversationSelected
     </ContextMenuTrigger>
     <ContextMenuContent aria-label="会话操作" className="min-w-[200px]"><ConversationMenuItems items={items} /></ContextMenuContent>
     </ContextMenu>
-  )
-}
-
-function AddMembersDialog({ conversation, onClose }: { conversation: Conversation; onClose: () => void }) {
-  const all = useParticipants((s) => Object.values(s.byId))
-  const [busy, setBusy] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const candidates = all.filter((p) => !conversation.members.includes(p.id) && !p.departedAt)
-  const add = async (participant: Participant) => {
-    setBusy(participant.id); setError(null)
-    try {
-      await conversationsApi.addMember(conversation.id, participant.id)
-      await useConversations.getState().reload()
-    } catch (reason) {
-      setError(userFacingError(reason, '暂时无法搜索对话，请稍后重试。'))
-    } finally {
-      setBusy(null)
-    }
-  }
-  return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="flex max-h-[70vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[420px]">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle>添加群成员</DialogTitle>
-          <DialogDescription>选择要加入“{conversation.title}”的成员。</DialogDescription>
-        </DialogHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
-          {candidates.length === 0 && <p className="px-3 py-8 text-center text-sm text-muted-foreground">所有成员都已在群聊中</p>}
-          <ItemGroup className="gap-1">{candidates.map((p) => (
-            <Item key={p.id} role="button" tabIndex={busy === null ? 0 : undefined} size="sm" aria-disabled={busy !== null || undefined} onClick={() => { if (busy === null) void add(p) }} onKeyDown={(event) => { if (busy !== null || (event.key !== 'Enter' && event.key !== ' ')) return; event.preventDefault(); void add(p) }} className="cursor-pointer flex-nowrap rounded-xl hover:bg-muted aria-disabled:pointer-events-none aria-disabled:opacity-50">
-              <Avatar p={p} size={34} ringColor="var(--card)" />
-              <ItemContent className="min-w-0"><ItemTitle className="block w-full truncate text-sm text-foreground">{p.name}</ItemTitle></ItemContent>
-              <span className="text-xs text-primary">{busy === p.id ? '添加中…' : '添加'}</span>
-            </Item>
-          ))}</ItemGroup>
-          {error && <p role="alert" className="m-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{userFacingError(error, '搜索失败，请稍后重试。')}</p>}
-        </div>
-        <DialogFooter className="border-t border-border p-3"><Button type="button" onClick={onClose} size="sm">完成</Button></DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }
 
@@ -277,7 +235,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
       },
     ]
     if (conversation.kind === 'group' && conversation.tag !== 'teacher') {
-      items.push({ label: '添加成员…', onSelect: () => setAddingMembers(conversation) })
+      items.push({ label: '管理成员…', onSelect: () => setAddingMembers(conversation) })
       items.push({
         label: '退出群聊',
         destructive: true,
@@ -357,7 +315,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
         )}
       </SidebarContent>
 
-      {addingMembers && <AddMembersDialog conversation={addingMembers} onClose={() => setAddingMembers(null)} />}
+      {addingMembers && <ConversationMembersDialog conversation={addingMembers} onClose={() => setAddingMembers(null)} />}
     </aside>
   )
 }

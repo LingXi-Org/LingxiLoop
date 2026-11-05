@@ -1,6 +1,5 @@
 import {
   Archive02Icon,
-  BookOpen01Icon,
   ChartHistogramIcon,
   FolderLibraryIcon,
   MessageMultiple01Icon,
@@ -32,7 +31,7 @@ export function CourseNav({ space, onNavigate }: { space?: LearningSpace; onNavi
         media={<CourseAvatar avatarUrl={space.avatarUrl} courseId={space.courseId ?? space.projectId} title={space.title} size="sm" />}
         action={<Badge variant="secondary" className="shrink-0">{space.perspective === 'teacher' ? '教师' : '学生'}</Badge>}
       />
-    : <SecondaryTitle title="课程" description="案例与课程资源" />
+    : <SecondaryTitle title="课程" description="课程资源" />
 
   return (
     <SecondaryPane label="课程导航" header={header}>
@@ -46,7 +45,6 @@ export function CourseNav({ space, onNavigate }: { space?: LearningSpace; onNavi
           ))}
         </SecondarySub> : null}
         {can('materials') ? <SecondaryItem label="课程资料" icon={FolderLibraryIcon} selected={view === 'course-materials'} onSelect={() => go('course-materials')} /> : null}
-        <SecondaryItem label="案例库" icon={BookOpen01Icon} selected={view === 'cases'} onSelect={() => go('cases')} />
       </SecondaryGroup>
       {can('settings') ? (
         <SecondaryGroup label="管理">

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>概率分布入门</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#FAF9F5;font-family:system-ui,sans-serif;color:#141413}
+a{color:#B4502F}a:hover{color:#8C3D24}
+</style>
+</helmet>
+<div style="max-width: 1120px; margin: 0 auto; padding: 64px 32px 88px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px">
+
+  <header style="display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid #E3DACC; padding-bottom: 32px">
+    <div style="font-size: 13px; letter-spacing: 0.12em; color: #73726C">零基础 · 概率分布专题</div>
+    <h1 style="margin: 0; font-family: Georgia, serif; font-size: 56px; font-weight: 300; line-height: 1.15">概率分布：把“不确定”排成一张表</h1>
+    <p style="margin: 0; font-size: 22px; line-height: 1.55; color: #3D3D3A; max-width: 820px">随机试验的结果有多个可能，而且说不准是哪一个。分布回答的是：<strong>每个结果有多少可能</strong>。它是什么、为什么非要有它、离散与连续之间怎么过渡，以及一个贯穿全篇的例子——一张看板都会在一页里讲完。</p>
+  </header>
+
+  <section style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 12px; padding: 36px; display: flex; flex-direction: column; gap: 20px">
+    <div style="font-size: 13px; letter-spacing: 0.1em; color: #73726C">01 · 它是什么</div>
+    <h2 style="margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 400">两样东西：可能取什么值，各有多大可能</h2>
+    <p style="margin: 0; font-size: 17px; line-height: 1.8; color: #3D3D3A">把一次随机试验的可能结果看作一个变量 $X$，这个 $X$ 就叫<strong>随机变量</strong>。分布就是给每个可能的取值附上一个概率，而且全部加起来正好是 1（概率的总量为 100%）。</p>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+      <div style="background: #F5F4ED; border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+        <div style="font-size: 15px; font-weight: 600">离散型分布</div>
+        <p style="margin: 0; font-size: 15px; line-height: 1.75; color: #3D3D3A">结果是可数的、一个一个的格子：0 次、1 次、2 次……用 <strong>概率质量函数</strong> $p(x_i)$ 描述，每格有一根柱子。</p>
+        <div style="font-family: Georgia, serif; font-size: 20px; color: #141413">\[ \sum_i p(x_i)=1 \]</div>
+      </div>
+      <div style="background: #F5F4ED; border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+        <div style="font-size: 15px; font-weight: 600">连续型分布</div>
+        <p style="margin: 0; font-size: 15px; line-height: 1.75; color: #3D3D3A">结果填满一段区间：时间、长度、温度……用 <strong>概率密度函数</strong> $f(x)$ 描述，问的是某一段的面积。单个精确点概率为 0，所以不等式两侧写或不写 $< $ 与 $\le$ 都一样。</p>
+        <div style="font-family: Georgia, serif; font-size: 20px; color: #141413">\[ \int_{-\infty}^{+\infty} f(x)\,dx=1 \]</div>
+      </div>
+    </div>
+    <p style="margin: 0; font-size: 15px; line-height: 1.75; color: #73726C">一句话对照：离散看“柱子有多高”，连续看“曲线下的面积有多大”。</p>
+  </section>
+
+  <section style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 12px; padding: 36px; display: flex; flex-direction: column; gap: 20px">
+    <div style="font-size: 13px; letter-spacing: 0.1em; color: #73726C">02 · 为何需要</div>
+    <h2 style="margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 400">因为它让“不确定”可以比较、可以计算</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 15px; font-weight: 600">① 把零散的事实压缩成一个对象</div>
+        <p style="margin: 0; font-size: 14.5px; line-height: 1.75; color: #3D3D3A">有了分布，就能算期望（平均会怎样）、方差（波动有多大），再算区间概率、分位数。</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 15px; font-weight: 600">② 让不同情形可比较</div>
+        <p style="margin: 0; font-size: 14.5px; line-height: 1.75; color: #3D3D3A">同样“平均 3 次”，波动大还是小，决策后果不同。期望相同不代表风险相同。</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 15px; font-weight: 600">③ 由已知推未知</div>
+        <p style="margin: 0; font-size: 14.5px; line-height: 1.75; color: #3D3D3A">抽样、误差范围、质检、保险定价、A/B 实验，都靠给结果一个分布来推理。</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #F5F4ED; border-radius: 12px; padding: 36px; display: flex; flex-direction: column; gap: 22px">
+    <div style="font-size: 13px; letter-spacing: 0.1em; color: #73726C">03 · 贯穿全篇的例子</div>
+    <h2 style="margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 400">一张看板，十次提问</h2>
+    <p style="margin: 0; font-size: 17px; line-height: 1.8; color: #3D3D3A">看板上一共 12 个提问，其中 3 个你已经会答。现在随机点开一个提问，令 $X=1$ 表示“点到的正好是会答的”：</p>
+    <div style="background: #FFFFFF; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+      <div style="font-size: 15px; color: #3D3D3A">$X$ 只能取 0 或 1，这是一次<strong>伯努利试验</strong>，它的分布就叫伯努利分布：</div>
+      <div style="font-size: 20px; font-family: Georgia, serif">\[ P(X=1)=\tfrac{3}{12}=0.25,\qquad P(X=0)=\tfrac{9}{12}=0.75 \]</div>
+      <div style="font-size: 15px; color: #73726C">两根柱子的高度加起来 $=0.25+0.75=1$。</div>
+    </div>
+    <div style="border-top: 1px dashed #E3DACC; padding-top: 22px; display: flex; flex-direction: column; gap: 12px">
+      <div style="font-size: 17px; font-weight: 600">改成“十次提问里会答几个”</div>
+      <p style="margin: 0; font-size: 16px; line-height: 1.8; color: #3D3D3A">十道题会答 3 道、不会答 9 道，现在不放回地抽 10 道题并数出会答的数量，这个数量 $Y$ 服从参数为 $N=10$、$K=3$ 的超几何分布。列成表就是这张分布本身：</p>
+      <div style="overflow-x: auto; background: #FFFFFF; border-radius: 10px">
+        <table style="width: 100%; min-width: 620px; border-collapse: collapse; font-size: 14px">
+          <thead>
+            <tr style="background: #FAF9F5; color: #3D3D3A">
+              <th style="text-align: left; padding: 12px 14px; font-weight: 600">$y$（会答的道数）</th>
+              <sc-for list="{{rows}}" as="row"><th style="text-align: right; padding: 12px 14px; font-weight: 600">{{row.y}}</th></sc-for>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-top: 1px solid #E3DACC">
+              <td style="padding: 12px 14px">$P(Y=y)$</td>
+              <sc-for list="{{rows}}" as="row"><td style="text-align: right; padding: 12px 14px">{{row.p}}</td></sc-for>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin: 0; font-size: 15px; line-height: 1.75; color: #73726C">比如 1 道：从 3 道会答里选 1 道、从 9 道不会里选 9 道，共 $\binom{3}{1}\binom{9}{9}=3$ 种；所有选法共 $\binom{10}{?}=$ 全部 $=\binom{12}{10}=66$ 种，所以 $3/66\approx0.045$。</p>
+    </div>
+    <p style="margin: 0; font-size: 16px; line-height: 1.8; color: #3D3D3A">再换成“打开 10 道题，每次会答的概率都是 0.25 且互不影响”，数出的 $Z$ 就是二项分布 $B(10,0.25)$：$P(Z=k)=\binom{10}{k}0.25^{k}0.75^{10-k}$。它不是课本上的抽象符号——你在上面那张表里看到的“每个取值有多可能”，就是分布。</p>
+  </section>
+
+  <section style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 12px; padding: 36px; display: flex; flex-direction: column; gap: 16px">
+    <div style="font-size: 13px; letter-spacing: 0.1em; color: #73726C">04 · 离散与连续的关系</div>
+    <h2 style="margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 400">连续是离散的极限：柱子越放越细，总面积不变</h2>
+    <p style="margin: 0; font-size: 16.5px; line-height: 1.8; color: #3D3D3A">把一张连续分布的区间切成很多极小的格子，每格的面积就是落在那格里的概率 $\approx f(x)\,\Delta x$；格子越细，面积越接近曲线下的精确面积。离散的“高度”就这样平滑成了连续的“密度”。</p>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+      <div style="background: #F5F4ED; border-radius: 10px; padding: 20px">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px">期望与方差其实同一套思路</div>
+        <div style="font-size: 15px; line-height: 1.7; color: #3D3D3A">离散用求和：$\sum_i x_i p(x_i)$；连续用积分：$\int x f(x)\,dx$。</div>
+      </div>
+      <div style="background: #F5F4ED; border-radius: 10px; padding: 20px">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px">三个必须警惕的坑</div>
+        <div style="font-size: 15px; line-height: 1.7; color: #3D3D3A">密度可以大于 1；密度本身不是概率；连续分布任何一点的概率都是 0，但区间概率可以不为 0。</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #F5F4ED; border-radius: 12px; padding: 36px; display: flex; flex-direction: column; gap: 18px">
+    <div style="font-size: 13px; letter-spacing: 0.1em; color: #73726C">05 · 常见分布地图</div>
+    <h2 style="margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 400">先认样子，再问“为什么长这样”</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+      <sc-for list="{{families}}" as="f">
+        <div style="background: #FFFFFF; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 15px; font-weight: 600; color: #141413">{{f.name}}</div>
+          <div style="font-size: 13px; color: #73726C">{{f.params}}</div>
+          <p style="margin: 0; font-size: 14.5px; line-height: 1.7; color: #3D3D3A">{{f.use}}</p>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 12px; padding: 36px; display: flex; flex-direction: column; gap: 14px">
+    <div style="font-size: 13px; letter-spacing: 0.1em; color: #73726C">06 · 检查你理解了吗</div>
+    <h2 style="margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 400">三道小检查 · 答案在画板下方</h2>
+    <ol style="margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 12px; font-size: 16.5px; line-height: 1.8; color: #3D3D3A">
+      <li>上面那张表里 $P(Y=3)$ 是多少？它和 $P(Y=0)$ 相比，哪个更大？先不加，凭“3 个会答的都得被抽到”的直觉说。</li>
+      <li>连续型里“$X=1.5$ 的概率是 0”，那为什么还能算出“$X$ 在 1 到 2 之间”的概率？</li>
+      <li>同一张看板，如果十道题每次放回后再抽一次（可重复打开同一道），分布为什么从超几何变成二项？</li>
+    </ol>
+    <details style="border-top: 1px dashed #E3DACC; padding-top: 16px">
+      <summary style="cursor: pointer; font-size: 15px; font-weight: 600; color: #B4502F">展开参考答案</summary>
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 12px; font-size: 15px; line-height: 1.75; color: #3D3D3A">
+        <div>1. $P(Y=3)=1/66\approx0.015$，比 $P(Y=0)$ 还小——因为要一网打尽 3 道会答的，路径只有 1 条。</div>
+        <div>2. 密度是“单位长度上的概率量”，单点宽度是 0，所以点概率为 0；1 到 2 之间是一段有宽度的区间，曲线下面积不为 0。</div>
+        <div>3. 放回抽时各次结果互不影响，每次“会答”的概率固定为 0.25，十次独立重复的伯努利就是二项分布；不放回时各次相互牵连。</div>
+      </div>
+    </details>
+  </section>
+
+  <footer style="display: flex; flex-direction: column; gap: 6px; padding-top: 12px; font-size: 13px; color: #73726C">
+    <div>建议下一步：把上面的表格手工算一遍，再打开一个真实数据的小样本，试着数出它的大致形状。</div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3620}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      rows: [
+        { y: 0, p: '0.545' },
+        { y: 1, p: '0.409' },
+        { y: 2, p: '0.045' },
+        { y: 3, p: '0.0015' }
+      ],
+      families: [
+        { name: '伯努利分布', params: '参数 p · 取 0 或 1', use: '一次成功/失败的判定：是否会答这一道。' },
+        { name: '二项分布', params: '参数 n, p · 0 到 n', use: 'n 次独立成败试验中成功的次数，抽奖、质检、点击。' },
+        { name: '超几何分布', params: '参数 N, K, n · 有限总数不放回', use: '从有限的一批里不放回抽若干，数出某一类有几个。' },
+        { name: '泊松分布', params: '参数 λ · 0, 1, 2, …', use: '一段时间内的偶发事件次数：来电、故障、到店。' },
+        { name: '均匀分布', params: '参数 a, b · 连续', use: '区间里每一段等可能，是随机数的起点。' },
+        { name: '正态分布', params: '参数 μ, σ · 连续', use: '大量小幅随机误差叠加后的形状，测量、身高、抽样均值。' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

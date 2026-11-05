@@ -1,0 +1,99 @@
+{
+  "measurementComplete": false,
+  "wire": [
+    {
+      "call": 1,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "design__plan_explanation",
+          "fields": [
+            "delivery"
+          ],
+          "argumentBytes": 22,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": true,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 2,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "skills__load",
+          "fields": [
+            "name",
+            "version",
+            "hash"
+          ],
+          "argumentBytes": 69,
+          "argumentType": "object",
+          "jsonError": null,
+          "jsonErrorPosition": null,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": true,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [
+        "tool_calls"
+      ],
+      "closed": "cancelled"
+    },
+    {
+      "call": 3,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "public_answer",
+          "fields": [],
+          "argumentBytes": 79,
+          "argumentType": null,
+          "jsonError": "incomplete_json",
+          "jsonErrorPosition": 75,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": false,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [],
+      "closed": "cancelled"
+    },
+    {
+      "call": 4,
+      "status": 200,
+      "tools": [
+        {
+          "index": 0,
+          "name": "public_answer",
+          "fields": [],
+          "argumentBytes": 70,
+          "argumentType": null,
+          "jsonError": "incomplete_json",
+          "jsonErrorPosition": 68,
+          "cumulativeArgumentFrames": 0,
+          "jsonValid": false,
+          "parserValid": null,
+          "issues": []
+        }
+      ],
+      "finish": [],
+      "closed": "cancelled"
+    }
+  ]
+}

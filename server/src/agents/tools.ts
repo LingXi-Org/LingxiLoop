@@ -6,7 +6,7 @@ import type { Queryable } from '../db/queryable.js'
 import { createPermissionService, ForbiddenError, type PermissionRequest } from '../modules/access/public.js'
 import type { AgentActionContext } from './contracts.js'
 import { resolveTeacherScope } from '../modules/learning/teacher-agent-application.js'
-import { TEACHER_KNOWLEDGE_ACTIONS } from '../modules/learning/teacher-preset.js'
+import { TEACHER_KNOWLEDGE_ACTIONS, TEACHER_DESIGN_ACTIONS } from '../modules/learning/teacher-preset.js'
 
 export function compareResource(resource: string, expected: Record<string, unknown>, actual: object) {
   // Receipts cross a JSON boundary; PostgreSQL Date values must compare in that same representation.
@@ -57,18 +57,18 @@ export async function authorizeAgent(context: ActionContext) {
       AND b.profile->'members' ? p.id FOR SHARE OF p,b`, [work.tenantId,work.agentId,productConversationId(work)])
   const agent = rows[0], namespace = context.action.action.split('.')[0]
   const capability = namespace === 'research' ? 'web' : namespace
-  if (namespace === 'visualize' && (work.kind !== 'turn' || work.conversation?.internal)) throw new NoEffectError('visualize requires an ordinary conversation turn', 'forbidden')
+  if (namespace === 'visualize') throw new NoEffectError('visualize is retired; use an authorized Design canvas', 'forbidden')
   const teacherChat = ['chat.send', 'chat.report_progress'].includes(context.action.action) && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
-  const teacherVisualize = namespace === 'visualize' && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
+  const teacherDesign = TEACHER_DESIGN_ACTIONS.has(context.action.action) && agent?.capabilities.includes('design') && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
   const teacherMemoryRead = context.action.action === 'memory.summary' && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
   const teacherKnowledge = TEACHER_KNOWLEDGE_ACTIONS.has(context.action.action) && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
-  if (!agent || (agent.teacher_managed ? namespace !== 'teacher' && !teacherChat && !teacherKnowledge && !teacherVisualize && !teacherMemoryRead : namespace === 'teacher')
-    || !['teacher', 'memory', 'chat', 'polls', 'directory', 'visualize'].includes(namespace) && !agent.capabilities.includes(capability)) {
+  if (!agent || (agent.teacher_managed ? namespace !== 'teacher' && !teacherChat && !teacherKnowledge && !teacherDesign && !teacherMemoryRead : namespace === 'teacher')
+    || !['teacher', 'memory', 'chat', 'polls', 'directory'].includes(namespace) && !agent.capabilities.includes(capability)) {
     throw new NoEffectError('agent capability or membership was revoked', 'forbidden')
   }
   await createPermissionService(db, { lockDependencies: true }).assertCan({ actorUserId: work.principalId,
     companyId: work.tenantId, action: 'conversation:read', resource: { type: 'conversation', id: productConversationId(work) } })
-  if (agent.teacher_managed && (teacherChat || teacherKnowledge || teacherVisualize || teacherMemoryRead)) {
+  if (agent.teacher_managed && (teacherChat || teacherKnowledge || teacherDesign || teacherMemoryRead)) {
     const scope = await resolveTeacherScope(nativeContext(context),db)
     await authorizeAudienceRead(context,{ projectId: scope.projectId,action: 'learning:manage',resource: { type: 'project',id: scope.projectId } })
   }

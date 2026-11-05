@@ -12,7 +12,7 @@ import type { Participant } from '@/types'
 import { load } from 'cheerio'
 import { TooltipProvider } from '@/components/ui/tooltip'
 mock.module('../../artifacts/components/ArtifactChatCard', { namedExports: { ArtifactChatCard: () => null, openArtifact: () => undefined } })
-mock.module('../visualize/VisualizeText', { namedExports: { VisualizeText: ({ Text }: { Text: React.ComponentType }) => <Text /> } })
+mock.module('./AnswerText', { namedExports: { AnswerText: ({ Text }: { Text: React.ComponentType }) => <Text /> } })
 mock.module('./ConversationComposer', { namedExports: { ConversationComposer: () => null } })
 mock.module('../runtime/transport', { namedExports: { ChatTransport: class {}, chatTransport: {}, filterThreadMessages: (messages: ThreadMessage[]) => messages } })
 mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })), getMeId: () => null, getActiveCompanyId: () => null } })

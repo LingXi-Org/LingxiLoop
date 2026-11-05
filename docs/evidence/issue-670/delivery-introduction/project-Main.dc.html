@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>概率分布：随机结果的形状</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,'PingFang SC','Noto Sans SC',sans-serif;color:#141413;background:#FAF9F5}
+a{color:#8C3F22}a:hover{color:#141413}
+h2{font-weight:400;margin:0}
+</style>
+</helmet>
+<div style="width: 1120px; box-sizing: border-box; padding: 56px 64px 64px; display: flex; flex-direction: column; gap: 40px">
+
+<!-- 抬头 -->
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 14px; letter-spacing: 0.14em; color: #73726C">零基础入门 · 概率与统计</div>
+<h1 style="margin: 0; font-family: Georgia, serif; font-weight: 300; font-size: 52px; line-height: 1.18">概率分布：随机结果的“形状”</h1>
+<p style="margin: 0; max-width: 840px; font-size: 19px; line-height: 1.65; color: #3D3D3A">一句话总览：概率分布就是一张“结果清单 + 每个结果的可能性大小”。有了它，随机的事情就能被计算、比较和预测——而不是只能靠运气。</p>
+</div>
+
+<!-- 1 是什么 -->
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span style="font-family: Georgia, serif; font-size: 30px; color: #D97757">01</span>
+<h2 style="font-size: 30px; font-family: Georgia, serif">它是什么：三个要素</h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 13px; letter-spacing: 0.08em; color: #73726C">要素一</div>
+<div style="font-size: 20px; font-weight: 600">可能的结果</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.65; color: #3D3D3A">随机实验能取到的所有值，例如掷骰子的 1、2、3、4、5、6。</p>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 13px; letter-spacing: 0.08em; color: #73726C">要素二</div>
+<div style="font-size: 20px; font-weight: 600">每个结果的概率</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.65; color: #3D3D3A">一个 0 到 1 之间的数，表示“这个结果出现的可能性有多大”，如公平骰子每个都是 $1/6$。</p>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 13px; letter-spacing: 0.08em; color: #73726C">要素三</div>
+<div style="font-size: 20px; font-weight: 600">总和为 1</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.65; color: #3D3D3A">把所有结果的概率加起来必须等于 1——迟早会发生某件事，没有任何结果被遗漏。</p>
+</div>
+</div>
+<div style="background: #F5F4ED; border-radius: 14px; padding: 22px 26px; display: flex; flex-wrap: wrap; align-items: center; gap: 24px">
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 16px; font-weight: 600">用符号写出来就是</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.7; color: #3D3D3A">对离散情形，$P(X=x_i)$ 给出每个取值的概率，且</p>
+</div>
+<div style="flex: 0 1 auto; font-family: Georgia, serif; font-size: 22px; background: #FFFFFF; border-radius: 10px; padding: 14px 22px">
+\\[ \\sum_i P(X=x_i)=1 \\]
+</div>
+</div>
+</div>
+
+<!-- 2 为何需要 -->
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span style="font-family: Georgia, serif; font-size: 30px; color: #D97757">02</span>
+<h2 style="font-size: 30px; font-family: Georgia, serif">为何需要：把“碰运气”变成“可计算”</h2>
+</div>
+<p style="margin: 0; max-width: 880px; font-size: 17px; line-height: 1.7; color: #3D3D3A">只知道“某件事可能发生”无法做决定。分布把全部可能性压缩成可运算的对象，于是我们才能回答下面这类问题，而且对期望、方差、区间都有统一的公式可用。</p>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<div style="border-left: 3px solid #D97757; padding: 4px 0 4px 18px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 17px; font-weight: 600">预测平均水平</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.6; color: #3D3D3A">长期来看平均会得到多少？（期望值，如骰子为 3.5）</p>
+</div>
+<div style="border-left: 3px solid #D97757; padding: 4px 0 4px 18px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 17px; font-weight: 600">衡量波动大小</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.6; color: #3D3D3A">结果通常偏离平均多少？（方差与标准差）</p>
+</div>
+<div style="border-left: 3px solid #D97757; padding: 4px 0 4px 18px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 17px; font-weight: 600">评估极端情况</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.6; color: #3D3D3A">出问题的概率有多大？（如“至少有 8 个次品”的概率）</p>
+</div>
+<div style="border-left: 3px solid #D97757; padding: 4px 0 4px 18px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 17px; font-weight: 600">从数据反推模型</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.6; color: #3D3D3A">观测到的数据更像哪种分布？这就是统计推断的起点。</p>
+</div>
+</div>
+</div>
+
+<!-- 3 离散与连续 -->
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span style="font-family: Georgia, serif; font-size: 30px; color: #D97757">03</span>
+<h2 style="font-size: 30px; font-family: Georgia, serif">离散与连续：同一件事的两种形状</h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+<div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><div style="font-size: 21px; font-weight: 600">离散分布</div><div style="font-size: 13px; color: #73726C">可数、有间隔</div></div>
+<p style="margin: 0; font-size: 16px; line-height: 1.6; color: #3D3D3A">结果是能一个个数出来的，比如掷骰子点数、一天内到店的顾客数。</p>
+<div style="font-size: 16px; color: #141413">每点的概率：$P(X=x_i)$，柱子的<b>高度</b>就是概率。</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.7; color: #3D3D3A">“落在某个范围内”= 把对应几根柱子加起来。</p>
+<div style="font-size: 14px; color: #73726C">代表：伯努利、二项、泊松分布</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><div style="font-size: 21px; font-weight: 600">连续分布</div><div style="font-size: 13px; color: #73726C">连续、无限细分</div></div>
+<p style="margin: 0; font-size: 16px; line-height: 1.6; color: #3D3D3A">结果在区间内可以取任意精确值，比如某人的身高 172.38… 厘米。</p>
+<div style="font-size: 16px; color: #141413">概率密度：$f(x)$，<b>面积</b>才是概率，单点概率为 0。</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.7; color: #3D3D3A">所以连续情形问的是“落在某个区间”的概率，靠积分求面积。</p>
+<div style="font-size: 14px; color: #73726C">代表：均匀、正态、指数分布</div>
+</div>
+</div>
+<div style="background: #141413; color: #FAF9F5; border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 14px">
+<div style="font-size: 18px; font-weight: 600; color: #D97757">两者的关系：连续是离散的“无限细分极限”</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; font-size: 16px; line-height: 1.7">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div>柱子的<b>宽度趋近 0</b>、根数趋近无限时，高度图就化成一条曲线，柱高变成密度 $f(x)$。</div>
+<div>“求和”相应变成“积分”：$\\int f(x)\\,dx=1$。</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div>离散量在细分到很小时，可近似用连续分布计算（连续性修正就是从这来的）。</div>
+<div>两者都不是“凭空规定”，而是由具体随机过程（抛硬币、测量误差）决定的形状。</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 4 例子 -->
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span style="font-family: Georgia, serif; font-size: 30px; color: #D97757">04</span>
+<h2 style="font-size: 30px; font-family: Georgia, serif">一个例子：掷两枚公平的骰子</h2>
+</div>
+<p style="margin: 0; max-width: 880px; font-size: 17px; line-height: 1.7; color: #3D3D3A">记 $X$ 为两枚骰子的点数和。$X$ 可能取 2 到 12，但并非每个值的机会都一样——和越大或越小都越难凑出来。</p>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 14px; letter-spacing: 0.06em; color: #73726C">第一步：数组合</div>
+<div style="font-size: 16px; line-height: 1.65; color: #3D3D3A">两骰共 $6\\times 6=36$ 种等可能的组合。和为 7 有 (1,6)(2,5)(3,4)(4,3)(5,2)(6,1) 共 6 种，所以 $P(X=7)=6/36=1/6$。</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 14px; letter-spacing: 0.06em; color: #73726C">第二步：算期望</div>
+<div style="font-size: 16px; line-height: 1.65; color: #3D3D3A">每枚骰子期望 3.5，两枚相加：<br>$E(X)=3.5+3.5=7$。分布对称地围绕 7 展开。</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 14px; letter-spacing: 0.06em; color: #73726C">第三步：问区间</div>
+<div style="font-size: 16px; line-height: 1.65; color: #3D3D3A">“和不超过 4”只有 2、3、4 三种和：$1/36+2/36+3/36=6/36=1/6$——把柱子相加，就是离散分布里的“求面积”。</div>
+</div>
+</div>
+<img src="./assets/dice-sum.svg" alt="两枚骰子点数和 2 到 12 的概率柱状图：和为 2 或 12 时为 1/36，和为 7 时最高为 6/36，整体呈对称的钟形凸起" style="width: 100%; height: auto; display: block; border-radius: 12px">
+<div style="font-size: 14px; line-height: 1.6; color: #73726C">读图法：纵轴是概率，每根柱子代表一个可能的和；总面积为 1（36/36）。这张图已经很像钟形——再加更多骰子，它就会越来越接近连续的正态分布。</div>
+</div>
+
+<!-- 5 检查 -->
+<div style="background: #F5F4ED; border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: baseline; gap: 14px">
+<span style="font-family: Georgia, serif; font-size: 30px; color: #D97757">05</span>
+<h2 style="font-size: 26px; font-family: Georgia, serif">三个自查问题</h2>
+</div>
+<ol style="margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; font-size: 16px; line-height: 1.65; color: #3D3D3A">
+<li>如果分布的概率总和小于 1，说明哪里出了问题？（提示：遗漏了某些结果）</li>
+<li>“身高恰好等于 172.000… 厘米”的概率是多少？为什么连续分布要改问区间？</li>
+<li>掷两枚骰子，和为 2 与和为 12 哪个更可能？和为 5 呢？各是多少？</li>
+</ol>
+</div>
+
+<div style="display: flex; justify-content: space-between; gap: 16px; font-size: 13px; color: #73726C; border-top: 1px solid #E3DACC; padding-top: 16px">
+<div>概率分布 · 零基础入门</div>
+<div>理解路径：是什么 → 为何需要 → 离散与连续 → 一个例子 → 自查</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1120,"height":1560}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

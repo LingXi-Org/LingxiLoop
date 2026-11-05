@@ -1,0 +1,19 @@
+{
+  "operation": "GET /user/info",
+  "providerHost": "api.siliconflow.cn",
+  "modelCalls": 0,
+  "status": "read-failed",
+  "failure": {
+    "httpStatus": "410",
+    "category": "http",
+    "observedAt": "2026-11-02T09:56:24.601Z",
+    "retryAfterMs": null,
+    "retryNotBefore": null,
+    "limitRequests": null,
+    "remainingRequests": null,
+    "limitTokens": null,
+    "remainingTokens": null,
+    "rateLimited": false,
+    "recovery": null
+  }
+}

@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os'
 import {basename,isAbsolute,join,sep} from 'node:path'
 import {execFile,spawn} from 'node:child_process'
 import {promisify} from 'node:util'
-import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal22TestFixture,withFormal23TestFixture} from './scripts/formal19-test-fixture.mjs'
+import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal22TestFixture,withFormal23TestFixture,withFormal24TestFixture} from './scripts/formal19-test-fixture.mjs'
 const execute=promisify(execFile)
 const PATCH54=new Set(['runtime-patch-provenance.test.ts'])
 const PATCH57=new Set(['runtime-patch57-provenance.test.ts'])
@@ -23,6 +23,9 @@ const PROJECTION_FILES=[
  {path:'server/src/im/wukong.ts',sha256:'20854873ddb0fe3b8a05bf0fdee187fb727e84f6a0d269faf1e65cd5007e8e69'},
  {path:'server/src/im/message-types.ts',sha256:'d7acb44eac11489ed3e45bec7b61cb9a3e5b660f46e9c968909767ae2061443b'},
 ]
+// The archived projector imports this former product leaf. Supply only an
+// inert test dependency; the four historical source snapshots stay unchanged.
+const RETIRED_PROJECTION_SUPPORT={path:'server/src/agent-runtime/visualize-projection.ts',sha256:'49fbac5f0271221b3af39002a50ba3cbe15f2e6c51c9cad3aa50c7de056e609f'}
 // Freeze only the test fixture's real product54/57/58 prefix. Current production
 // migrations, package manifests/locks and the strict CAS inventory stay intact.
 export const copyProduct54FixtureSource=(root,fixture)=>copyProductFixtureSource(root,fixture,54)
@@ -50,7 +53,10 @@ export async function copyHistoricalFixtureSource(root,fixture){
  }))
  const product54=await copyProduct54FixtureSource(root,fixture)
  for(const row of snapshots)await writeFile(join(fixture,row.path),row.bytes)
- return {sourceCommit:PROJECTION_SOURCE,files:PROJECTION_FILES.map(row=>({...row})),product54}
+ const support=await readFile(join(root,'server/fixtures/historical-projection-3.8.2',RETIRED_PROJECTION_SUPPORT.path))
+ assert.equal(createHash('sha256').update(support).digest('hex'),RETIRED_PROJECTION_SUPPORT.sha256,'Inert historical projection support changed')
+ await writeFile(join(fixture,RETIRED_PROJECTION_SUPPORT.path),support)
+ return {sourceCommit:PROJECTION_SOURCE,files:PROJECTION_FILES.map(row=>({...row})),retiredSupport:{...RETIRED_PROJECTION_SUPPORT},product54}
 }
 export function partitionMigrationTests(files){
  const historical=files.filter(f=>HISTORICAL.has(f)),patch54=files.filter(f=>PATCH54.has(f)),patch57=files.filter(f=>PATCH57.has(f)),patch58=files.filter(f=>PATCH58.has(f)),current=files.filter(f=>!HISTORICAL.has(f)&&!PATCH54.has(f)&&!PATCH57.has(f)&&!PATCH58.has(f))
@@ -118,6 +124,14 @@ export async function runFormal23Product61Tests(root,files,env=process.env){
  assertFixtureTarget(files,env,new Set(['runtime-patch61-23-provenance.test.ts','runtime-patch61-23-from21-provenance.test.ts']))
  return withFormal23TestFixture(root,env,async(fixture,sourceEnv)=>{
   const proof="import assert from'node:assert/strict';import{releaseVersions}from'@lyyzka/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';assert.equal(releaseVersions.runtime,'3.8.23');assert.equal((await loadLockedRuntimePackage()).runtime,'3.8.23');console.log('[integration product61 source] actual formal23; original21/22 to23 owning coverage retained')"
+  if(await runTestChild(['--import','tsx','--input-type=module','-e',proof],{cwd:fixture,env:sourceEnv,timeout:30000}))return 1
+  return runTestChild(['--import','tsx','--experimental-test-module-mocks','--test','--test-reporter=tap','--test-concurrency=1','--test-force-exit',...files.map(file=>join(fixture,'server/src/__integration__',file))],{cwd:fixture,env:sourceEnv})
+ })
+}
+export async function runFormal24ProductTests(root,files,env=process.env){
+ assertFixtureTarget(files,env,new Set(['runtime-patch61-24-provenance.test.ts','case-options-migration.test.ts']))
+ return withFormal24TestFixture(root,env,async(fixture,sourceEnv)=>{
+  const proof="import assert from'node:assert/strict';import{releaseVersions}from'@lyyzka/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';assert.equal(releaseVersions.runtime,'3.8.24');assert.equal((await loadLockedRuntimePackage()).runtime,'3.8.24');console.log('[integration source] actual formal24; product61/62 owning coverage retained')"
   if(await runTestChild(['--import','tsx','--input-type=module','-e',proof],{cwd:fixture,env:sourceEnv,timeout:30000}))return 1
   return runTestChild(['--import','tsx','--experimental-test-module-mocks','--test','--test-reporter=tap','--test-concurrency=1','--test-force-exit',...files.map(file=>join(fixture,'server/src/__integration__',file))],{cwd:fixture,env:sourceEnv})
  })

@@ -1,0 +1,187 @@
+{
+  "runtime": "3.8.24",
+  "mainBaseline": "8102eb43231435251fd0ccb55f08821394ebab58",
+  "sourceProofCommit": "607a90ddaace47e55461da22d70816535fcdbd0c",
+  "finalSourceHashes": {
+    "server/src/agent-runtime/skill-context.ts": "192a559964ecb1001b5316633d8cef89725a35cbe319bbadb09be309dea4cd38",
+    "server/src/modules/artifacts/agent-tools.ts": "04fc86c97929ed3c19b664710a70e4c1e3575374f485908d809bfbb7acd86c94",
+    "server/src/__integration__/runtime-first-action-contracts.test.ts": "6341dc0d3ba7c2aa70507ad333891089c5bfd5ad16eff9e9621fc5ea23fc1cc1",
+    "scripts/check-design-snapshot.mjs": "ec0046de6b56892af4ef5505cb77e347e5c52bce368fde1aa40bd11c7291d75e",
+    ".github/workflows/ci.yml": "961814dd93993d017436378af878539f8fae5bc3b1eb03fd8b0f804a6b2c6a82"
+  },
+  "boundary": "Representative successful runs plus all failed attempts retained; not a provider reliability estimate. Browser and ACL evidence are separate fixtures. No production deployment claimed.",
+  "cases": [
+    {
+      "case": "introduction",
+      "directory": "final-observed-introduction",
+      "accepted": true,
+      "elapsedMs": 92578,
+      "checkProblems": 0,
+      "status": "succeeded",
+      "delivery": "delivered",
+      "files": [
+        {
+          "path": "project/canvas.json",
+          "sha256": "81a9fd6a3ebd655447a839c639ab0afcf9d0f43465e09acc4cebcfaf2217240a"
+        },
+        {
+          "path": "project/ds/baoyu-ember/tokens.json",
+          "sha256": "68f5e58c19853bef9b4b84ae15dd3feee06ca7676ad0563690b7b6a949697146"
+        },
+        {
+          "path": "project/ds/baoyu-seazar/tokens.json",
+          "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6"
+        },
+        {
+          "path": "project/ds/slides-builtin/tokens.json",
+          "sha256": "612cda1e3e87333eb3c71e545f9d1d1cd175f9542fda38c3caef3159212b56f2"
+        },
+        {
+          "path": "project/Main.dc.html",
+          "sha256": "293ccf63d9ae8298c59a820755a43a44891de7c8331968e3600593eb3efb6dc5"
+        }
+      ],
+      "evidenceSha256": "19889d805f93346074fc19f9129670e190307e366cd3540af91ed9ffcc085e76",
+      "revisionNote": "final retained-board proof implementation before semantic default wording"
+    },
+    {
+      "case": "process",
+      "directory": "final64-process",
+      "accepted": true,
+      "elapsedMs": 99612,
+      "checkProblems": 0,
+      "status": "succeeded",
+      "delivery": "delivered",
+      "files": [
+        {
+          "path": "project/canvas.json",
+          "sha256": "5934df46cbcbf8eb439b963d22e77e2da4d386132309667a971ac0745474ebd8"
+        },
+        {
+          "path": "project/ds/baoyu-ember/tokens.json",
+          "sha256": "68f5e58c19853bef9b4b84ae15dd3feee06ca7676ad0563690b7b6a949697146"
+        },
+        {
+          "path": "project/ds/baoyu-seazar/tokens.json",
+          "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6"
+        },
+        {
+          "path": "project/ds/slides-builtin/tokens.json",
+          "sha256": "612cda1e3e87333eb3c71e545f9d1d1cd175f9542fda38c3caef3159212b56f2"
+        },
+        {
+          "path": "project/Main.dc.html",
+          "sha256": "d645628dc033a7b3a29fffb0a4c228e472bbd5fdb8565b7777d24c9d1bb217cb"
+        }
+      ],
+      "evidenceSha256": "a8ee01248709ff09b2c32491a0f5478c28f01559dc290a6c5e673c5c141b3db8",
+      "revisionNote": "final retained-board proof implementation before semantic default wording"
+    },
+    {
+      "case": "comparison",
+      "directory": "semantic-default-comparison",
+      "accepted": true,
+      "elapsedMs": 92537,
+      "checkProblems": 0,
+      "status": "succeeded",
+      "delivery": "delivered",
+      "files": [
+        {
+          "path": "project/canvas.json",
+          "sha256": "d0aa5a6babd11900054f39067c4b56d4c55c4b0989a742e4c0446e1d104b0203"
+        },
+        {
+          "path": "project/DatabaseChoice.dc.html",
+          "sha256": "3aa966ded02607c89e84f327fbc5b04b481c6b0090a28ef193a6f0c9567dde0d"
+        },
+        {
+          "path": "project/ds/baoyu-ember/tokens.json",
+          "sha256": "68f5e58c19853bef9b4b84ae15dd3feee06ca7676ad0563690b7b6a949697146"
+        },
+        {
+          "path": "project/ds/baoyu-seazar/tokens.json",
+          "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6"
+        },
+        {
+          "path": "project/ds/slides-builtin/tokens.json",
+          "sha256": "612cda1e3e87333eb3c71e545f9d1d1cd175f9542fda38c3caef3159212b56f2"
+        }
+      ],
+      "evidenceSha256": "5b2ad09fde619d889a82fb55380064d80e166d5e1b210c152262440e99f549c9",
+      "revisionNote": "semantic default wording"
+    },
+    {
+      "case": "explicit",
+      "directory": "final64-explicit",
+      "accepted": true,
+      "elapsedMs": 98804,
+      "checkProblems": 0,
+      "status": "succeeded",
+      "delivery": "delivered",
+      "files": [
+        {
+          "path": "project/canvas.json",
+          "sha256": "7d3725d8c1137c1d1a74937e600b52d3dd719397e2257338df8fe1975e88a2f0"
+        },
+        {
+          "path": "project/ds/baoyu-ember/tokens.json",
+          "sha256": "68f5e58c19853bef9b4b84ae15dd3feee06ca7676ad0563690b7b6a949697146"
+        },
+        {
+          "path": "project/ds/baoyu-seazar/tokens.json",
+          "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6"
+        },
+        {
+          "path": "project/ds/slides-builtin/tokens.json",
+          "sha256": "612cda1e3e87333eb3c71e545f9d1d1cd175f9542fda38c3caef3159212b56f2"
+        },
+        {
+          "path": "project/Main.dc.html",
+          "sha256": "410d68ee88021e647618b9ae25b71dc94f74e4eefdef854ab5b6f810f30dae1e"
+        },
+        {
+          "path": "project/Memory.dc.html",
+          "sha256": "3e27525bb5ef549fd47977ff37141e82f57ed022ad4cdc19992903a7165eda3f"
+        }
+      ],
+      "evidenceSha256": "ef3ef1cae4f7ab7626190c9dd8f0541c02da4d070b6bd2b225800ecbe3ce4078",
+      "revisionNote": "final retained-board proof implementation before semantic default wording"
+    },
+    {
+      "case": "greeting",
+      "directory": "semantic-default-greeting",
+      "accepted": true,
+      "elapsedMs": 7417,
+      "checkProblems": -1,
+      "status": "succeeded",
+      "delivery": "delivered",
+      "files": [],
+      "evidenceSha256": "831dfc7555bc43e9c2c90b6f6d89c035a5709e79403923429ef7ce6e4ac5c9d0",
+      "revisionNote": "semantic default wording"
+    },
+    {
+      "case": "fact",
+      "directory": "semantic-default-fact",
+      "accepted": true,
+      "elapsedMs": 13640,
+      "checkProblems": -1,
+      "status": "succeeded",
+      "delivery": "delivered",
+      "files": [],
+      "evidenceSha256": "b3a8d5aaacb0f70ec4117eda986e3e9db2b870d5531fd84d30eddac3dd2dbac9",
+      "revisionNote": "semantic default wording"
+    },
+    {
+      "case": "textOnly",
+      "directory": "semantic-default-textOnly",
+      "accepted": true,
+      "elapsedMs": 22278,
+      "checkProblems": -1,
+      "status": "succeeded",
+      "delivery": "delivered",
+      "files": [],
+      "evidenceSha256": "6692ffa705825275f48e40f574126e87a7ce8cb01845d0c69dc9048f42d02d84",
+      "revisionNote": "semantic default wording"
+    }
+  ]
+}

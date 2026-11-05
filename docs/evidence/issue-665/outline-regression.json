@@ -1,0 +1,22 @@
+{
+  "before": {
+    "active": "作业与学生自评",
+    "focused": "case-section-2",
+    "scrollTop": 1061.5
+  },
+  "after": {
+    "clicked": {
+      "active": "在线 softmax 的那一步",
+      "focused": "case-section-2",
+      "scrollTop": 1061.5
+    },
+    "last": {
+      "active": "作业与学生自评",
+      "focused": "case-section-3"
+    },
+    "manualScroll": {
+      "active": "课堂流程",
+      "scrollTop": 867
+    }
+  }
+}

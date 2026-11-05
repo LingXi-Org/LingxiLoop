@@ -21,7 +21,7 @@ export type WorkKind = z.infer<typeof workKindSchema>
 /** Registered action identities only; arbitrary names and prose never select a stage. */
 export function toolWorkKind(action: string): WorkKind {
   const name = canonicalToolName(action)
-  if (['skills.load','skills.activate','visualize.read_reference'].includes(name)) return 'skill'
+  if (['skills.load','skills.activate'].includes(name)) return 'skill'
   if (['research.search','research.read','knowledge.search','knowledge.read_source','knowledge.list_sources',
     'task.read_evidence','task.read_attachment','files.read','documents.read','memory.search','observations.read'].includes(name)) return 'retrieval'
   return 'tool'

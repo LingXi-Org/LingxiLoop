@@ -1,0 +1,25 @@
+{
+  "previousHead": "ffe1ee98b970f8edd2f4ec723406091d89303a9b",
+  "mainBaseline": "ab31390b",
+  "runtime": "3.8.24",
+  "productVersion": 62,
+  "conflictFiles": [
+    ".github/workflows/ci.yml",
+    "server/docker/lingxiloop-server.Dockerfile",
+    "server/src/agent-runtime/context.ts"
+  ],
+  "localChecks": {
+    "policyToolTeaching": 29,
+    "packagingCiWorker": 52,
+    "nativeCombined": 21,
+    "serverTypecheck": true,
+    "serverLint": true
+  },
+  "boundaries": [
+    "No global publication implementation change; PR688 owns it",
+    "No SDK or migration change relative to current main",
+    "No fresh live model/browser qualification of combined teaching/Design path",
+    "No production/admission/old-run termination action",
+    "Old final CI is historical; new exact-head CI required"
+  ]
+}

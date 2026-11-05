@@ -1,4 +1,3 @@
-import { visualizeTools } from './visualize-tools.js'
 import { fileTools } from './file-tools.js'
 import type { createLingxiOS, ToolDefinition } from '@lyyzka/lingxios'
 import { documentTools } from '../modules/documents/public.js'
@@ -14,7 +13,7 @@ import { createRoutineTools } from '../modules/routines/public.js'
 import { createMemorySummaryTool } from '../modules/memory/presentation.js'
 
 export function createProductTools(control: () => ReturnType<typeof createLingxiOS>): ToolDefinition[] {
-  return [...visualizeTools, ...fileTools, ...documentTools, ...createArtifactTools('design', control), ...createArtifactTools('slides', control), ...learningTools, ...teacherTools,
+  return [...fileTools, ...documentTools, ...createArtifactTools('design', control), ...createArtifactTools('slides', control), ...learningTools, ...teacherTools,
     ...directoryTools, ...researchTools, ...pollTools, ...conversationTools, ...createMessageTools(control),
     ...knowledgeTools, ...createRoutineTools(control), createMemorySummaryTool(control)]
 }

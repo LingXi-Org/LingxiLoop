@@ -7,7 +7,7 @@ p = argparse.ArgumentParser()
 p.add_argument('--urls', nargs='+', default=['http://127.0.0.1:4191/'])
 p.add_argument('--runs', type=int, default=10)
 p.add_argument('--cpu', type=int, default=1)
-p.add_argument('--kinds', nargs='+', default=['design', 'visualize'])
+p.add_argument('--kinds', nargs='+', choices=['design'], default=['design'])
 p.add_argument('--out', default='/tmp/611-baseline.json')
 p.add_argument('--width', type=int, default=1440)
 a = p.parse_args()
@@ -85,27 +85,7 @@ def guest(page, kind):
         except Exception: pass
     return None
 def usable(page, kind, start, trace, scope="a"):
-    if kind=='visualize':
-        # Chromium state-preserving moveBefore retains the guest but can leave
-        # Playwright's Frame map stale. Inspect the real OOPIF execution context.
-        deadline=time.monotonic()+25
-        while time.monotonic()<deadline:
-            for (route,context),value in list(trace.contexts.items()):
-                if not value.get('auxData',{}).get('isDefault'):continue
-                result=trace.evaluate(route,context,"(()=>{const h=document.querySelector('h1'),b=document.querySelector('#increment');return h&&b&&h.dataset.fixtureChannel==='perf-"+scope+"'&&h.getBoundingClientRect().height?{rect:b.getBoundingClientRect().toJSON(),count:Number(document.querySelector('#count').textContent)}:null})()")
-                if result:break
-            else:page.wait_for_timeout(20);continue
-            break
-        else:raise RuntimeError('No visible GenUI context: '+repr(trace.contexts))
-        visible=(time.monotonic()-start)*1000
-        box=page.locator('[data-visualize-guest]:visible').bounding_box();r=result['rect']
-        page.mouse.click(box['x']+r['x']+r['width']/2,box['y']+r['y']+r['height']/2)
-        deadline=time.monotonic()+8
-        while time.monotonic()<deadline:
-            if trace.evaluate(route,context,'Number(document.querySelector("#count").textContent)')==result['count']+1:break
-            page.wait_for_timeout(10)
-        else:raise RuntimeError('GenUI did not acknowledge trusted interaction')
-        return None, {'visibleMs':visible,'usableMs':(time.monotonic()-start)*1000}
+    if kind != 'design': raise ValueError('Only the retained Design editor is supported')
     deadline=time.monotonic()+40
     f=None
     while time.monotonic()<deadline:
@@ -118,14 +98,9 @@ def usable(page, kind, start, trace, scope="a"):
         page.wait_for_timeout(20)
     else: raise RuntimeError('No visible authored content: '+repr([(f.url,f.locator('body').inner_text()[:160])for f in page.frames]))
     visible=(time.monotonic()-start)*1000
-    if kind=='design':
-        box=f.locator('h1').bounding_box()
-        page.mouse.dblclick(box['x']+min(120,box['width']/2),box['y']+box['height']/2)
-        f.locator('h1[contenteditable="true"]').wait_for(timeout=10000)
-    else:
-        old=int(f.locator('#count').inner_text())
-        f.locator('#increment').click()
-        f.wait_for_function('(n)=>Number(document.querySelector("#count").textContent)===n',arg=old+1)
+    box=f.locator('h1').bounding_box()
+    page.mouse.dblclick(box['x']+min(120,box['width']/2),box['y']+box['height']/2)
+    f.locator('h1[contenteditable="true"]').wait_for(timeout=10000)
     return f, {'visibleMs':visible,'usableMs':(time.monotonic()-start)*1000}
 
 if __name__ == '__main__':

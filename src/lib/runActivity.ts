@@ -106,13 +106,6 @@ const labels: Record<string, readonly [string, string]> = {
   'response.upgrade': ['准备完整答复', '按当前请求准备完整的答复格式。'],
   'task.read_evidence': ['回查引用依据', '读取已收集且获授权的依据片段。'],
   'task.read_attachment': ['回查请求附件', '按请求中的附件版本读取所需片段。'],
-  'visualize.read_reference': ['查看可视化参考', '查阅当前可视化组件的使用说明。'],
-  'visualize.save': ['保存可视化', '保存当前任务的可视化内容。'],
-  'visualize.chart': ['生成数据图表', '根据给定数据计算并保存图表。'],
-  'visualize.diagram': ['生成流程图', '根据给定步骤生成并保存流程图。'],
-  'visualize.sliding_window': ['生成滑动窗口演示', '根据给定参数生成并保存滑动窗口演示。'],
-  'visualize.read': ['读取可视化', '读取已保存且获授权的可视化内容。'],
-  'visualize.export': ['导出可视化', '将已保存的可视化导出为附件。'],
   'documents.list': ['查找文档', '列出当前有权访问的文档。'],
   'documents.recent': ['查看最近文档', '查看最近创建且有权访问的文档。'],
   'documents.rename': ['重命名文档', '更新已授权文档的名称。'],
@@ -245,11 +238,7 @@ export function toolDisplay(action: string, status?: unknown): ToolDisplay {
     cancelled: '这一步已停止。', unknown: '操作结果尚未确认，请先核对结果，避免重复执行。',
     'awaiting-approval': '需要你确认后才能继续。',
   }
-  if (status === 'completed' && ['visualize.save','visualize.chart','visualize.diagram','visualize.sliding_window'].includes(action)) {
-    return { title,purpose,summary: '可视化内容已保存。' }
-  }
   if (status === 'completed' && action === 'memory.summary') return { title,purpose,summary: '已读取记忆摘要。' }
-  if (status === 'failed' && action.startsWith('visualize.')) return { title,purpose,summary: `${title}未完成，请重试。` }
   if (status === 'failed' && action === 'ipython') return { title,purpose,summary: '脚本执行未完成，请重试。' }
   return { title, purpose, ...(typeof status === 'string' && summaries[status] ? { summary: summaries[status] } : {}) }
 }

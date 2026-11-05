@@ -11,7 +11,7 @@ import type { ArtifactEvent } from '../redis.js'
 export type NativeEvent = DocumentChangedEvent | DocumentUpdateEvent | ConversationUpdatedEvent | ReactionChangedEvent | ArtifactEvent
 
   | { type: 'im.channel_sync'; companyId: string; channelId: string }
-  | { type: 'im.membership'; companyId: string; conversationId: string; actorId: string; participantId: string; kind: 'joined' | 'left'; clientNonce: string }
+  | { type: 'im.membership'; companyId: string; conversationId: string; actorId: string; participantId: string; kind: 'joined' | 'left' | 'kicked'; clientNonce: string }
   | { type: 'im.clear_hold'; agentId: string; conversationId: string }
   | { type: 'im.read_receipt'; advance: ReadReceiptAdvance }
   | { type: 'im.system'; companyId: string; actorId: string; channelId: string; clientNonce: string; payload: NativeMessage }

@@ -1,0 +1,29 @@
+{
+  "scenario": "missing-call-exhaustion",
+  "runtime": "3.8.24",
+  "syntheticProvider": true,
+  "calls": 3,
+  "toolChoices": [
+    "required",
+    "required",
+    "required"
+  ],
+  "status": "failed",
+  "protocolCode": "public_text_answer_required",
+  "protocolDetail": "native_call_missing",
+  "ledgerStatuses": [
+    "failed",
+    "failed",
+    "failed"
+  ],
+  "operations": [
+    "generation",
+    "correction",
+    "correction"
+  ],
+  "deliveredBodies": 0,
+  "sealedBodyPreserved": false,
+  "authenticatedReplayMatched": true,
+  "crossTenantRejected": true,
+  "replayExtraCalls": 0
+}

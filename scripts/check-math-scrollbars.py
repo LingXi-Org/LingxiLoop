@@ -1,6 +1,5 @@
 """Actual math entry checks with synthetic public formulas and read-only APIs.
-Build Design/Slides first; run Vite at VISUALIZE_TEST_ORIGIN (default5299).
-GenUiCard's opaque frames are covered by check-math-scrollbars-cdp.mjs.
+Build Design/Slides first; run Vite at ARTIFACT_TEST_ORIGIN (default5299).
 """
 import argparse, hashlib, json, os, time
 from pathlib import Path
@@ -73,7 +72,7 @@ with sync_playwright() as p:
   for dpr in ([1,2] if not opts.entry or 'host' in opts.entry else []):
    context=browser.new_context(viewport={'width':1440,'height':1100},device_scale_factor=dpr)
    page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-   page.goto(os.environ.get('VISUALIZE_TEST_ORIGIN','http://127.0.0.1:5299')+'/scripts/fixtures/math-scrollbars.html',wait_until='domcontentloaded')
+   page.goto(os.environ.get('ARTIFACT_TEST_ORIGIN','http://127.0.0.1:5299')+'/scripts/fixtures/math-scrollbars.html',wait_until='domcontentloaded')
    page.wait_for_function("['chat','file','forum','native'].every(id=>document.querySelectorAll('#'+id+' .katex').length===8)")
    for scale in [.8,1,1.25,1.5]:
     page.evaluate('(s)=>document.body.style.zoom=s',scale)

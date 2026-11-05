@@ -1,0 +1,38 @@
+[
+  {
+    "arm": "control",
+    "kind": "design",
+    "scenario": "cold",
+    "runs": 10,
+    "p50": 4812.7,
+    "p75": 4945.8,
+    "p95": 5405.0
+  },
+  {
+    "arm": "control",
+    "kind": "slides",
+    "scenario": "cold",
+    "runs": 10,
+    "p50": 4626.2,
+    "p75": 4689.3,
+    "p95": 4703.3
+  },
+  {
+    "arm": "candidate",
+    "kind": "design",
+    "scenario": "cold",
+    "runs": 10,
+    "p50": 4884.9,
+    "p75": 4971.8,
+    "p95": 5201.4
+  },
+  {
+    "arm": "candidate",
+    "kind": "slides",
+    "scenario": "cold",
+    "runs": 10,
+    "p50": 4739.3,
+    "p75": 4803.3,
+    "p95": 5304.7
+  }
+]

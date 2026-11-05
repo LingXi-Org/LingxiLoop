@@ -112,7 +112,7 @@ await page.waitForTimeout(500);
 d = await data();
 assert.equal(d.scroll.sh, d.scroll.h);
 report.push({ case: "full-window", ...d });
-await editor().getByRole("button", { name: "Back to canvas", exact: true }).click();
+await editor().getByRole("button", { name: "返回画布", exact: true }).click();
 await page.waitForTimeout(400);
 await page.click("#switch");
 await page.click("#open");

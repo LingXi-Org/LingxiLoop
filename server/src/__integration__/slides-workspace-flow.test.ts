@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { createHmac, randomUUID } from 'node:crypto'
+import { createHash, createHmac, randomUUID } from 'node:crypto'
 import { createServer, type Server } from 'node:http'
 import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -184,7 +184,7 @@ test('a sent editor comment is delivered to the dedicated room through the real 
   assert.equal(snapshot.threads[0]?.agent?.status, 'delivered')
 })
 
-test('authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
+for (const chained of [false,true]) test(chained ? 'formal25 worker verifies 14→10→1→1→1 Slides writes and delivers once' : 'authenticated message reaches the formal worker, loads the Slides skill, edits with CAS and replays the saved answer', { timeout: 60_000 }, async () => {
   const created = await request(`/projects/${projectId}/slides`, 'POST', { title: 'Model flow' })
   assert.equal(created.status, 201)
   const deck = await created.json() as { id: string }
@@ -197,11 +197,32 @@ test('authenticated message reaches the formal worker, loads the Slides skill, e
     selectedText: 'Original title', selection: [{ id: 'heading', kind: 'text', label: 'Original title' }], mode: 'edit', dirty: false, version: null })
   assert.equal(context.status, 200)
   const { name, version, hash: skillHash } = skillIndex(artifactSkills.find(skill => skill.name === 'claude-slides')!)
+  const digest = (content: string) => createHash('sha256').update(content).digest('hex')
+  const index = (await pool.query("SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path='project/deck.json'", [deck.id])).rows[0]
+  const ids = ['selected',...Array.from({length:12},(_,i)=>'chain-'+i)]
+  const first: Record<string,{content:string;ifMatch:string|null}> = {
+    'project/deck.json': {content:JSON.stringify({...JSON.parse(index.body.toString('utf8')),order:ids}),ifMatch:index.sha256},
+    [path]: {content:revised+'<!-- first -->',ifMatch:hash},
+    ...Object.fromEntries(ids.slice(1).map(id=>[`project/slides/${id}.html`,{content:`<section><h1>${id}</h1></section>`,ifMatch:null}])) }
+  const second: Record<string,{content:string;ifMatch:string|null}> = Object.fromEntries(Object.entries(first).filter(([p])=>p!=='project/deck.json').slice(0,9)
+    .map(([p,entry])=>[p,{content:entry.content+'<!-- second -->',ifMatch:digest(entry.content)}]))
+  second['project/slides/extra.html']={content:'<section><h1>Extra saved file</h1></section>',ifMatch:null}
+  const updates = [first,second]
+  let last=second[path].content
+  for(const content of [revised+'<!-- third -->',revised+'<!-- fourth -->',revised]){
+    updates.push({[path]:{content,ifMatch:digest(last)}});last=content
+  }
+  const writes = chained ? updates.map(files=>({name:'slides__write_files',args:{artifactId:deck.id,files}}))
+    : [{name:'slides__write_files',args:{artifactId:deck.id,files:{[path]:{content:revised,ifMatch:hash}}}}]
   const calls = [
+    { name: 'design__plan_explanation', args: { delivery: 'other' } },
     { name: 'skills__load', args: { name, version, hash: skillHash } },
     { name: 'slides__read_file', args: { artifactId: deck.id, path } },
-    { name: 'slides__write_files', args: { artifactId: deck.id, files: { [path]: { content: revised, ifMatch: hash } } } },
+    ...(chained ? [{name:'slides__read_file',args:{artifactId:deck.id,path:'project/deck.json'}}] : []),
+    ...writes,
     { name: 'slides__read_file', args: { artifactId: deck.id, path } },
+    { name: 'slides__current', args: { artifactId: deck.id } },
+    { name: 'task__check_resource', args: { action: 'slides.current', args: { artifactId: deck.id }, expected: { title: 'Model flow', slideCount: chained ? 13 : 0 } } },
     { name: 'public_answer', args: { operation: { kind: 'append', supersedes: [] }, commentary: '',
       answer: '已保存并重新读取选中页面的标题。', outcome: { status: 'satisfied', gaps: [] } } },
   ]
@@ -212,11 +233,12 @@ test('authenticated message reaches the formal worker, loads the Slides skill, e
       let raw = ''; for await (const chunk of req) raw += chunk
       const input = JSON.parse(raw), step = calls[issued++]
       assert.ok(step, 'worker must stop after the verified public answer')
+      if (issued === 1) assert.equal(input.tool_choice?.function?.name, 'design__plan_explanation', 'the explicit Slides operation chooses another deliverable through the semantic decision')
       assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === step.name), `missing tool ${step.name}`)
       const prompt = JSON.stringify(input.messages)
       assert.ok(prompt.includes('Original title'), 'persisted editor selection/source must reach the actual model request')
-      if (issued === 3) assert.ok(prompt.includes(hash), 'the model must receive the preceding read receipt')
-      if (issued === 5) assert.ok(prompt.includes('Saved by the native Slides tool'), 'read-back must reach the model before completion')
+      if (issued === 4) assert.ok(prompt.includes(hash), 'the model must receive the preceding read receipt')
+      if (issued === 6) assert.ok(prompt.includes('Saved by the native Slides tool'), 'read-back must reach the model before completion')
       const call = { id: `slides-model-${issued}`, type: 'function', function: { name: step.name, arguments: JSON.stringify(step.args) } }
       const usage = { prompt_tokens: 10, completion_tokens: 12 }
       res.writeHead(200, { 'content-type': input.stream ? 'text/event-stream' : 'application/json' })
@@ -243,6 +265,18 @@ test('authenticated message reaches the formal worker, loads the Slides skill, e
     assert.deepEqual(providerErrors, [])
     assert.equal((await control.readRun(run))?.status, 'succeeded')
     assert.equal(issued, calls.length)
+    if(chained){
+      const receipts=await pool.query("SELECT (SELECT count(*)::int FROM jsonb_object_keys(intent.intent->'action'->'args'->'files')) AS count FROM lingxios.agent_action_intents intent WHERE intent.intent->>'workId'=$1 AND intent.intent->'action'->>'action'='slides.write_files' ORDER BY intent.recorded_at,intent.idempotency_key",[run.runId])
+      assert.deepEqual(receipts.rows.map(row=>row.count),[14,10,1,1,1])
+      const verification=await pool.query("SELECT evidence FROM lingxios.agent_verifications WHERE work_id=$1 AND checker LIKE 'action:%' AND status='passed'",[run.runId])
+      assert.ok(verification.rows.some(row=>row.evidence.scope==='successful_receipt_with_superseded_postconditions'
+        && Object.keys(row.evidence.supersededFields).length>=9),'earliest batch must retain field-level replacement proof')
+    }
+    const current = await invoke(work(workspace.agentId, workspace.conversationId), 'current', { artifactId: deck.id }) as Record<string, unknown>
+    assert.equal(current.title, 'Model flow'); assert.equal(current.slideCount, chained ? 13 : 0)
+    assert.ok(current.deck && Array.isArray(current.decks) && current.editor)
+    const checks = await pool.query("SELECT result->'value' AS value FROM lingxios.agent_action_ledger ledger JOIN lingxios.agent_action_intents intent USING(idempotency_key) WHERE intent.intent->>'workId'=$1 AND intent.intent->'action'->>'action'='task.check_resource'", [run.runId])
+    assert.ok(checks.rows.length >= 1 && checks.rows.every(row => row.value.status === 'pass'))
     const deadline = AbortSignal.timeout(5000)
     while ((await control.readRunState(run))?.delivery !== 'delivered') { deadline.throwIfAborted(); await delay(20) }
     const saved = (await pool.query('SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [deck.id, path])).rows[0]
@@ -251,8 +285,7 @@ test('authenticated message reaches the formal worker, loads the Slides skill, e
     const replay = await request(`/im/channels/${workspace.conversationId}/agents/${workspace.agentId}/runs/${run.runId}`)
     assert.equal(replay.status, 200, await replay.clone().text())
     assert.match(await replay.text(), /已保存/)
-    // Memory retrieval can independently add an embedding receipt in a live
-    // configured environment. Count the five actual worker chat requests.
+    // Memory retrieval can independently add an embedding receipt; count the actual worker chat requests.
     const ledger = await pool.query("SELECT count(*)::int AS n FROM llm_calls WHERE run_id=$1 AND purpose='lingxios.agent-turn'", [run.runId])
     assert.equal(ledger.rows[0].n, calls.length)
     const duplicate = await receiveAgentRequest({ companyId, agentId: workspace.agentId, channelId: workspace.conversationId, clientMsgNo: clientNonce, authenticatedUserId: userId })

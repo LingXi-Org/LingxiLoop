@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>FlashAttention 在做什么</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#FAF9F5;color:#141413;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;font-size:15px;line-height:1.6}
+h2{font-family:Georgia,'Songti SC',serif;font-weight:400}
+a{color:#8A3B1E}a:hover{color:#5C2410}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+</style>
+</helmet>
+<div style="width:880px;box-sizing:border-box;padding:56px 64px 64px;display:flex;flex-direction:column;gap:32px">
+
+  <header style="display:flex;flex-direction:column;gap:12px;border-bottom:1px solid #E3DACC;padding-bottom:24px">
+    <div style="font-size:12px;letter-spacing:.14em;color:#73726C;text-transform:uppercase">注意力机制 · 计算与内存</div>
+    <h1 style="margin:0;font-family:Georgia,'Songti SC',serif;font-weight:300;font-size:40px;line-height:1.2;color:#141413">FlashAttention 在做什么</h1>
+    <p style="margin:0;font-size:17px;color:#3D3D3A;max-width:640px">不改变注意力数学，只改变它怎么落到 GPU 的片上存储与显存之间：分块计算、即时归一化、不落盘最大的中间矩阵。</p>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <h2 style="margin:0;font-size:24px">起点：标准注意力的三个量级</h2>
+    <p style="margin:0;color:#3D3D3A">对长度为 $N$、每头维度为 $d$ 的序列，标准做法是显式算出分数矩阵再归一化：</p>
+    <div style="background:#FFFFFF;border:1px solid #E3DACC;border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-family:Georgia,serif;font-size:21px">$$S=QK^{\mathsf T}/\sqrt{d},\qquad P=\operatorname{softmax}(S),\qquad O=PV$$</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px;font-size:14px;color:#3D3D3A">
+        <div>$S,\ P$ 的形状是 $N\times N$</div>
+        <div>中间矩阵显存开销 $O(N^2)$</div>
+        <div>读写显存 $P$ 再乘 $V$ 带来额外访存</div>
+        <div>序列翻倍，矩阵占用变四倍</div>
+      </div>
+    </div>
+    <p style="margin:0;color:#3D3D3A">瓶颈往往不是浮点运算量，而是把 $N\times N$ 的矩阵写进显存、再读回来。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <h2 style="margin:0;font-size:24px">关键动作：按块运行 softmax</h2>
+    <p style="margin:0;color:#3D3D3A">softmax 需要整行的最大值与和，而整行可能放不进片上存储。做法是把 $K$、$V$ 切成块，逐块累加，并维护这一行迄今为止的最大值 $m$、指数和 $\ell$：</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:#F5F4ED;border:1px solid #E3DACC;border-radius:10px;padding:14px 18px">
+        <div style="font-size:12px;letter-spacing:.08em;color:#73726C;margin-bottom:4px">步骤 1 · 新块的最大值</div>
+        <div style="font-family:Georgia,serif;font-size:19px">$m^{(j)}=\max\big(m^{(j-1)},\ \max_r S^{(j)}_r\big)$</div>
+      </div>
+      <div style="background:#F5F4ED;border:1px solid #E3DACC;border-radius:10px;padding:14px 18px">
+        <div style="font-size:12px;letter-spacing:.08em;color:#73726C;margin-bottom:4px">步骤 2 · 旧和按指数差缩放</div>
+        <div style="font-family:Georgia,serif;font-size:19px">$\ell^{(j)}=e^{\,m^{(j-1)}-m^{(j)}}\,\ell^{(j-1)}+\sum_r e^{\,S^{(j)}_r-m^{(j)}}$</div>
+      </div>
+      <div style="background:#F5F4ED;border:1px solid #E3DACC;border-radius:10px;padding:14px 18px">
+        <div style="font-size:12px;letter-spacing:.08em;color:#73726C;margin-bottom:4px">步骤 3 · 输出累加器同样缩放后并入</div>
+        <div style="font-family:Georgia,serif;font-size:19px">$O^{(j)}=e^{\,m^{(j-1)}-m^{(j)}}\,O^{(j-1)}+e^{\,S^{(j)}-m^{(j)}}V^{(j)}$</div>
+      </div>
+      <div style="background:#141413;border-radius:10px;padding:14px 18px;color:#FAF9F5">
+        <div style="font-size:12px;letter-spacing:.08em;color:#E3DACC;margin-bottom:4px">最后一步 · 一次性归一化</div>
+        <div style="font-family:Georgia,serif;font-size:19px">$O=O^{(T)}/\ell^{(T)}$</div>
+      </div>
+    </div>
+    <p style="margin:0;color:#3D3D3A">缩放因子 $e^{m^{(j-1)}-m^{(j)}}$ 只与这一行有关。它让前面块的结果与后面块的新最大值保持一致，因此分块顺序不影响最终结果——得到的是与标准注意力相同的数值。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <h2 style="margin:0;font-size:24px">融合：三个量只走过一次</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+      <div style="border:1px solid #E3DACC;border-radius:10px;padding:14px 16px;background:#FFFFFF">
+        <div style="font-family:Georgia,serif;font-size:18px;margin-bottom:4px">$Q$ 留在片上</div>
+        <div style="font-size:13px;color:#3D3D3A">一块 $Q$ 从开始用到结束，不反复换入换出。</div>
+      </div>
+      <div style="border:1px solid #E3DACC;border-radius:10px;padding:14px 16px;background:#FFFFFF">
+        <div style="font-family:Georgia,serif;font-size:18px;margin-bottom:4px">$K,V$ 流式读取</div>
+        <div style="font-size:13px;color:#3D3D3A">每个块依次读入，算完即用即弃。</div>
+      </div>
+      <div style="border:1px solid #E3DACC;border-radius:10px;padding:14px 16px;background:#FFFFFF">
+        <div style="font-family:Georgia,serif;font-size:18px;margin-bottom:4px">$S,P$ 不落盘</div>
+        <div style="font-size:13px;color:#3D3D3A">分数块与概率块只存在于片上，从不写回显存。</div>
+      </div>
+    </div>
+    <p style="margin:0;color:#3D3D3A">结果是显存占用从 $O(N^2)$ 降到 $O(N)$；长序列的收益最明显，短序列上提升有限。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <h2 style="margin:0;font-size:24px">反向传播与因果掩码</h2>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:13px;letter-spacing:.06em;color:#73726C">反向</div>
+        <p style="margin:0;color:#3D3D3A;font-size:14px">反向也不保存前向的 $P$，而是用已经存入显存的输出 $O$ 和归一化量 $\ell$ 重新生成需要的概率块，再求各梯度。代价是重算，换来的是显存。</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:13px;letter-spacing:.06em;color:#73726C">因果掩码</div>
+        <p style="margin:0;color:#3D3D3A;font-size:14px">解码时只能看前面的位置：对角块只算下三角，整块在对角线上方的块可跳过。计算量随之下降，不只是省内存。</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <h2 style="margin:0;font-size:24px">常见误读</h2>
+    <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;color:#3D3D3A">
+      <li>它不是近似算法：没有丢掉小概率项，结果与标准注意力在数值上一致。</li>
+      <li>它不是只省显存：减少显存读写本身就让同一个计算跑得更快。</li>
+      <li>别把分块当成并行拆分：这里的块是对序列维度做循环，块内是矩阵乘法。</li>
+    </ul>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #E3DACC;padding-top:18px">
+    <div style="font-size:13px;letter-spacing:.06em;color:#73726C">自测</div>
+    <p style="margin:0;color:#3D3D3A;font-size:14px">如果块 $j$ 算出了更大的行最大值，为什么只需要缩放前面的 $O$ 和 $\ell$，而不必重算前面的 $S$？试着用“缩放因子只依赖行最大值”来解释，这正好说明分块为什么能成立。</p>
+  </section>
+
+  <footer style="font-size:12px;color:#73726C">公式采用 FlashAttention 论文中分块 softmax 的写法；符号解释见上方三个步骤。</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":1460}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

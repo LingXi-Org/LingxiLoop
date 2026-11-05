@@ -18,8 +18,8 @@ export function getAgentConversationMetadata(agentId: string, conversationId: st
   return conversationsApplication.getAgentMetadata(agentId, conversationId)
 }
 
-export function addAgentConversationMember(agentId: string, conversationId: string, participantId: string) {
-  return conversationsApplication.addAgentMember(agentId, conversationId, participantId)
+export function addAgentConversationMember(agentId: string, conversationId: string, participantId: string, principalId: string) {
+  return conversationsApplication.addAgentMember(agentId, conversationId, participantId, principalId)
 }
 
 export function leaveAgentConversation(agentId: string, conversationId: string) {

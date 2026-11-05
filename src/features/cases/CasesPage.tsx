@@ -4,29 +4,27 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import './cases.css'
 import { CaseCodeBlock } from './CaseCodeBlock'
-import { ImagePlus, LockKeyhole, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { CaseCard } from './CaseCard'
+import { CaseReader } from './CaseReader'
+import { CaseEditor } from './CaseEditor'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { caseCatalogue } from './presentation'
+import { ArrowLeft, Eye, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { markdownText, usableDocument } from '@/features/content-editor/document'
-import { ContentEditor, ContentDocumentView } from '@/features/content-editor'
+import { usableDocument } from '@/features/content-editor/document'
+import { ContentDocumentView } from '@/features/content-editor'
 import { useAuth } from '@/stores/auth'
 import { userFacingError } from '@/lib/userFacingError'
-import { casesApi, type CaseArticle, type CaseInput, type CaseList } from './api'
-import { CaseCover, caseCoverIdentity, caseCoverPending } from './CaseCover'
-import { mergeCaseCoverMetadata } from './cover/polling'
-import { useCaseCoverPolling } from './cover/useCaseCoverPolling'
+import { casesApi, type CaseArticle, type CaseInput, type CaseList, type CaseOptions } from './api'
 import { caseArticleUrl, caseViewFromSearch, canManageCaseView, type CaseView } from './case-view'
 import { submitCase } from './submission'
 import { PageBody, PageHeader, PageLayout, PageToolbar } from '@/components/shell/PageHeader'
 import { PanelCloseButton } from '@/components/shell/RightPanel'
 
-const empty: CaseInput = { title: '', summary: '', body: '', cover: null, category: '', tags: [] }
-const statusLabels = { draft: '草稿', published: '已发布', unpublished: '已下架' }
+const empty: CaseInput = { title: '', summary: '', body: '', cover: null, category: '', tags: [], college: '', coverText: '', coverColor: 'blue' }
 function routeId() {
   const match = /^\/cases\/([^/]+)$/.exec(window.location.pathname)
   try { return match ? decodeURIComponent(match[1]) : new URLSearchParams(window.location.search).get('case') } catch { return '__invalid_case_url__' }
@@ -37,13 +35,15 @@ function Markdown({ body }: { body: string }) {
 
 export function CasesPage() {
   const companyId = useAuth(state => state.activeCompanyId)
-  const userId = useAuth(state => state.user?.id)
+  const user = useAuth(state => state.user)
+  const userId = user?.id
   const [id, setId] = useState(routeId)
   const [view, setView] = useState(() => caseViewFromSearch(window.location.search))
   const [list, setList] = useState<CaseList>({ items: [], categories: [], canManage: false, view })
   const [article, setArticle] = useState<CaseArticle | null>(null)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
+  const [visibleCount, setVisibleCount] = useState(6)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -53,10 +53,16 @@ export function CasesPage() {
   const [busy, setBusy] = useState(false)
   const [submissionStage, setSubmissionStage] = useState<'saving' | 'publishing' | null>(null)
   const [preview, setPreview] = useState(false)
+  const [options, setOptions] = useState<CaseOptions>({ categories: [], colleges: [] })
+  const [categoryOpen, setCategoryOpen] = useState(false)
+  const [categoryName, setCategoryName] = useState('')
+  const [optionBusy, setOptionBusy] = useState(false)
+  const [optionError, setOptionError] = useState('')
+  const [savedInput, setSavedInput] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<CaseArticle | null>(null)
   const [deleteError, setDeleteError] = useState('')
   const heading = useRef<HTMLHeadingElement>(null)
-  const coverUpload = useRef<HTMLInputElement>(null)
+  const pageRoot = useRef<HTMLElement>(null)
   const operationEpoch = useRef(0)
   const mutationPending = useRef(false)
   const readRequest = useRef<AbortController | null>(null)
@@ -66,11 +72,14 @@ export function CasesPage() {
   const currentView = useRef(view)
   currentView.current = view
   const articleUrl = (next?: string, nextView = view) => caseArticleUrl(window.location.search, companyId, next, nextView)
+  const catalogue = caseCatalogue(list.items, { search, category, visibleCount })
+  useEffect(() => { setVisibleCount(6) }, [search, category, view, companyId, userId])
+  useEffect(() => { pageRoot.current?.querySelector('[data-page-scroll]')?.scrollTo(0, 0) }, [id, view, editing])
   useEffect(() => {
     currentScope.current = companyId
     mutationPending.current = false; setBusy(false); setEditing(false); setPreview(false); setInput(empty)
-    setSubmissionStage(null); setNotice('')
-    setDeleteTarget(null); setDeleteError('')
+    setSubmissionStage(null); setNotice(''); setOptions({ categories: [], colleges: [] })
+    setDeleteTarget(null); setDeleteError(''); setCategoryOpen(false); setOptionError(''); setOptionBusy(false)
     setArticle(null); setList({ items: [], categories: [], canManage: false, view: currentView.current })
     return () => { currentScope.current = null; operationEpoch.current += 1 }
   }, [companyId, userId])
@@ -81,7 +90,7 @@ export function CasesPage() {
     adoptedId.current = null
     currentView.current = nextView
     mutationPending.current = false; setBusy(false); setSubmissionStage(null)
-    setDeleteTarget(null); setDeleteError('')
+    setDeleteTarget(null); setDeleteError(''); setCategoryOpen(false); setOptionError(''); setOptionBusy(false)
     setArticle(null)
     if (viewChanged) setList({ items: [], categories: [], canManage: false, view: nextView })
     setId(next); setView(nextView); setRevision(value => value + 1)
@@ -105,16 +114,49 @@ export function CasesPage() {
     const requestedCompany = new URLSearchParams(window.location.search).get('company')
     if (requestedCompany && requestedCompany !== companyId) { setLoading(false); setArticle(null); setList({ items: [], categories: [], canManage: false, view: currentView.current }); setError('此案例属于其他组织，当前账号无权访问。'); return }
     setLoading(true); setError(''); if (!editing) setArticle(null)
-    const timer = window.setTimeout(() => {
-      const request = id ? casesApi.detail(id, view, abort.signal).then(value => { if (current() && value.view === view) setArticle(value) }) : casesApi.list(search, category, view, abort.signal).then(value => { if (current() && value.view === view) setList(value) })
-      void request.catch(reason => { if (current()) { setError(userFacingError(reason, '案例暂时无法加载，请重试。')); if (!id) setList(value => ({ ...value, items: [] })) } }).finally(() => { if (current()) setLoading(false) })
-    }, id ? 0 : 200)
-    return () => { abort.abort(); window.clearTimeout(timer) }
-  }, [id, view, search, category, revision, companyId, userId])
+    const request = id ? casesApi.detail(id, view, abort.signal).then(value => { if (current() && value.view === view) setArticle(value) }) : casesApi.list('', '', view, abort.signal).then(value => { if (current() && value.view === view) setList(value) })
+    void request.catch(reason => { if (current()) { setError(userFacingError(reason, '案例暂时无法加载，请重试。')); if (!id) setList(value => ({ ...value, items: [] })) } }).finally(() => { if (current()) setLoading(false) })
+    return () => abort.abort()
+  }, [id, view, revision, companyId, userId])
   useEffect(() => { if (skipFocus.current) { skipFocus.current = false; return }; heading.current?.focus({ preventScroll: true }) }, [id])
   const canManage = article?.canManage ?? list.canManage
   const managing = canManageCaseView(view, canManage)
-  const beginEdit = () => { if (!managing || (article && article.view !== 'manage')) return; setInput(article ? { title: article.title, summary: article.summary, body: article.body, editorDocument: article.editorDocument, summaryDocument: article.summaryDocument, cover: article.cover, category: article.category, tags: article.tags } : { ...empty }); setEditing(true); setPreview(false); setNotice(''); setError('') }
+  const beginEdit = () => {
+    if (!managing || (article && article.view !== 'manage')) return
+    const next: CaseInput = article ? { title: article.title, summary: article.summary, body: article.body, editorDocument: article.editorDocument, summaryDocument: article.summaryDocument, cover: article.cover, category: article.category, tags: article.tags, college: article.college ?? '', coverText: article.coverText ?? '', coverColor: article.coverColor ?? 'blue' } : { ...empty }
+    setInput(next); setSavedInput(article ? JSON.stringify(next) : ''); setEditing(true); setPreview(false); setNotice(''); setError('')
+  }
+  const beginNew = () => {
+    if (!canManage || busy) return
+    navigate(undefined, 'manage')
+    const url = new URL(window.location.href); url.searchParams.set('compose', '1')
+    window.history.replaceState(null, '', url)
+  }
+  useEffect(() => {
+    if (!loading && !id && managing && !editing && new URLSearchParams(window.location.search).has('compose')) beginEdit()
+  }, [loading, id, managing, revision, editing])
+  useEffect(() => {
+    if (!editing || !managing) return
+    const abort = new AbortController()
+    void casesApi.options(abort.signal).then(value => { if (!abort.signal.aborted) setOptions(value) })
+      .catch(reason => { if (!abort.signal.aborted) setError(userFacingError(reason, '分类与学院暂时无法加载，请重新打开编辑页。')) })
+    return () => abort.abort()
+  }, [editing, managing, companyId, userId])
+  const createOption = async (kind: 'category' | 'college', name: string) => {
+    if (!canManage) throw new Error('当前账号没有案例管理权限。')
+    const epoch = operationEpoch.current
+    const value = await casesApi.createOption(kind, name)
+    if (epoch !== operationEpoch.current || useAuth.getState().activeCompanyId !== companyId || useAuth.getState().user?.id !== userId) throw new Error('页面已切换。')
+    setOptions(value); setList(current => ({ ...current, categories: value.categories }))
+    if (kind === 'college') editInput(current => ({ ...current, college: name }))
+  }
+  const addCategory = async () => {
+    if (!categoryName.trim() || optionBusy) return
+    setOptionBusy(true); setOptionError('')
+    try { await createOption('category', categoryName.trim()); setCategoryOpen(false); setCategoryName('') }
+    catch (reason) { setOptionError(userFacingError(reason, '分类未创建，请重试。')) }
+    finally { setOptionBusy(false) }
+  }
   // Navigation invalidates completions; a settled request must never mutate a new page.
   const startMutation = () => {
     if (mutationPending.current) return null
@@ -150,7 +192,7 @@ export function CasesPage() {
     setSubmissionStage('saving')
     try {
       const result = await submitCase(normalizedInput(), article ?? undefined, publish, casesApi, operation.current, saved => {
-        adopt(saved)
+        adopt(saved); setSavedInput(JSON.stringify(input))
         if (publish) setSubmissionStage('publishing')
       })
       if (result.status === 'obsolete') return
@@ -195,44 +237,11 @@ export function CasesPage() {
       if (operation.current()) setDeleteError(`删除失败。${userFacingError(reason, '请重试。')}`)
     } finally { operation.finish() }
   }
-  const retryCover = async (target: CaseArticle) => {
-    if (target.view !== 'manage') return
-    const operation = startMutation()
-    if (!operation) return
-    try {
-      const next = await casesApi.retryCover(target)
-      if (!operation.current()) return
-      setArticle(current => current?.id === target.id ? { ...current, generatedCover: next.generatedCover } : current)
-      setList(current => ({ ...current, items: current.items.map(item => item.id === target.id ? { ...item, generatedCover: next.generatedCover } : item) }))
-      setNotice('已提交封面重试，完成后自动更新。')
-    } catch (reason) {
-      if (operation.current()) setError(userFacingError(reason, '封面重试失败，请稍后再试。'))
-      throw reason
-    } finally { operation.finish() }
-  }
-  const coverScope = `${userId ?? ''}:${companyId ?? ''}:${view}`
-  const coverSources = id || editing ? article ? [article] : [] : list.items
-  const { resume: refreshCoverStatus } = useCaseCoverPolling<CaseArticle | CaseList>({
-    scopeKey: JSON.stringify([coverScope, id, search, category, coverSources.map(item => [item.id, caseCoverIdentity(item.generatedCover)])]),
-    pending: !loading && !busy && coverSources.some(item => caseCoverPending(item.generatedCover)),
-    refresh: signal => id ? casesApi.detail(id, view, signal) : casesApi.list(search, category, view, signal),
-    receive: value => {
-      if (value.view !== view || currentView.current !== view || useAuth.getState().activeCompanyId !== companyId || useAuth.getState().user?.id !== userId) return false
-      if ('items' in value) {
-        const incoming = new Map(value.items.map(item => [item.id, item]))
-        setList(current => ({ ...current, items: current.items.map(item => incoming.has(item.id) ? mergeCaseCoverMetadata(item, incoming.get(item.id)!) : item) }))
-        return coverSources.some(item => incoming.has(item.id) && caseCoverPending(mergeCaseCoverMetadata(item, incoming.get(item.id)!).generatedCover))
-      }
-      if (!article || article.id !== value.id) return false
-      setArticle(current => current ? mergeCaseCoverMetadata(current, value) : current)
-      return caseCoverPending(mergeCaseCoverMetadata(article, value).generatedCover)
-    },
-  })
-  const uploadAsset = async (file: File, cover = false): Promise<string> => {
+  const caseScope = `${userId ?? ''}:${companyId ?? ''}:${view}`
+  const uploadAsset = async (file: File): Promise<string> => {
     if (!input.title.trim()) throw new Error('请先填写案例标题。')
     if (file.size > 8 * 1024 * 1024) throw new Error('附件最大为 8 MB。')
     const images = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
-    if (cover && !images.includes(file.type)) throw new Error('请选择 PNG、JPEG、WebP 或 GIF 封面。')
     const supported = [...images,'audio/mpeg','audio/wav','audio/ogg','audio/mp4','video/mp4','video/webm','application/pdf']
     const mime = supported.includes(file.type) ? file.type : 'application/octet-stream'
     const operation = startMutation()
@@ -242,75 +251,34 @@ export function CasesPage() {
       if (!target) { target = await casesApi.save(normalizedInput()); if (!operation.current()) throw new Error('页面已切换。'); adopt(target) }
       const data = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]); reader.onerror = reject; reader.readAsDataURL(file) })
       if (!operation.current()) throw new Error('页面已切换。')
-      const result = await (cover ? casesApi.image : casesApi.file)(target.id, mime, data)
+      const result = await casesApi.file(target.id, mime, data)
       if (!operation.current()) throw new Error('页面已切换。')
       setNotice('附件已上传，请保存草稿或保存并发布。')
       return result.url
     } catch (reason) { if (operation.current()) setError(userFacingError(reason, '附件上传失败，请重试。')); throw reason }
     finally { operation.finish() }
   }
-  const uploadCover = async (file?: File) => {
-    if (!file) return
-    try { const cover = await uploadAsset(file, true); setInput(value => ({ ...value, cover })) }
-    catch (reason) { setError(userFacingError(reason, '封面上传失败，请重试。')) }
-  }
-
-  const content = editing ? input : article
   const detail = Boolean(id || editing)
   const invalid = busy || !input.title.trim() || input.body.length > 200000 || input.summary.length > 2000
-  const date = (value: CaseArticle) => new Date(value.publishedAt ?? value.createdAt ?? value.updatedAt).toLocaleDateString('zh-CN').replaceAll('/', '.')
-  const body = (value: CaseInput) => <ProtectedFileLinks>{usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument} legacyFormat="markdown"/> : <Markdown body={value.body}/>}</ProtectedFileLinks>
-  const hero = content && <div data-case-hero className="case-hero">
-    <div className="case-cover">
-      <CaseCover cover={article?.generatedCover} fallbackUrl={content.cover} title={content.title} scopeKey={`${coverScope}:${article?.id ?? 'new'}`}
-        className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" busy={busy} onRefresh={refreshCoverStatus}
-        onRetry={managing && article?.view === 'manage' ? () => retryCover(article) : undefined}/>
-      {editing && !preview && <div className="case-cover-actions">
-        <DropdownMenu><DropdownMenuTrigger asChild><Button type="button" size="icon-sm" variant="outline" aria-label="封面更多操作" disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem disabled={!input.title.trim()} onSelect={() => coverUpload.current?.click()}><ImagePlus aria-hidden="true"/>{input.cover ? '更换备用图片' : '上传备用图片'}</DropdownMenuItem>
-            {input.cover && <DropdownMenuItem onSelect={() => editInput(value => ({...value, cover: null}))}>移除备用图片</DropdownMenuItem>}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <input ref={coverUpload} hidden aria-label="上传备用封面" type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy || !input.title.trim()} onChange={event => { void uploadCover(event.target.files?.[0]); event.target.value = '' }}/>
-      </div>}
-    </div>
-    <div className="case-hero-copy">
-      {editing && <div hidden={preview}>
-        <label><span className="sr-only">标题</span><Textarea required maxLength={200} disabled={busy} className="case-title-input" placeholder="案例标题" rows={1} value={input.title} onChange={event => editInput(value => ({...value, title: event.target.value}))}/></label>
-        <div className="case-summary case-inline-editor"><span className="case-editor-label" aria-hidden="true">摘要</span><ContentEditor legacyFormat="markdown" label="摘要" compact value={input.summary} document={input.summaryDocument} maxLength={2000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(summary, summaryDocument) => editInput(value => ({...value, summary, summaryDocument}))}/></div>
-      </div>}
-      {(!editing || preview) && <div><p className="case-eyebrow">{content.category || '未分类'}</p><h2 className="case-title">{content.title}</h2><div className="case-summary">{usableDocument(content.summaryDocument, content.summary) ? <ContentDocumentView document={content.summaryDocument}/> : <p>{content.summary}</p>}</div></div>}
-      {editing && !preview ? <div className="case-edit-metadata">
-        <label className="flex items-center gap-2 text-sm"><span>分类</span><Input list="case-categories" aria-label="分类" maxLength={80} className="w-28" value={input.category} onChange={event => editInput(value => ({...value, category: event.target.value}))}/></label>
-        <datalist id="case-categories">{list.categories.map(value => <option key={value} value={value}/>)}</datalist>
-        <label className="flex min-w-0 flex-1 items-center gap-2 text-sm"><span className="shrink-0">标签</span><Input aria-label="标签（逗号分隔）" placeholder="用逗号分隔" value={input.tags.join(',')} onChange={event => editInput(value => ({...value, tags: event.target.value.split(/[,，]/)}))}/></label>
-        <span className="flex items-center gap-2 text-sm text-muted-foreground"><LockKeyhole aria-hidden="true" className="size-4"/>{article?.status === 'published' ? '未发布修改仅案例管理者可见' : '草稿仅案例管理者可见'}</span>
-      </div> : <div className="case-metadata">
-        {article?.authorName && <span className="case-author"><Avatar size="sm"><AvatarImage src={article.authorAvatarUrl ?? undefined} alt=""/><AvatarFallback>{article.authorName.slice(0, 1)}</AvatarFallback></Avatar>{article.authorName}</span>}
-        {article && <time dateTime={article.publishedAt ?? article.createdAt ?? article.updatedAt} className="tabular-nums">{date(article)}</time>}
-        {(managing || editing) && <Badge variant="outline" className="font-normal">{editing && preview ? '草稿预览' : statusLabels[article?.status ?? 'draft']}</Badge>}
-        {content.tags.length > 0 && <span className="case-tags">{content.tags.map(tag => <Badge key={tag} variant="secondary" className="font-normal">{tag}</Badge>)}</span>}
-      </div>}
-    </div>
-  </div>
+  const body = (value: CaseInput) => <ProtectedFileLinks>{usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument} legacyFormat="markdown" codeReadingView={<Markdown body={value.body}/>}/> : <Markdown body={value.body}/>}</ProtectedFileLinks>
+  const managementMenu = canManage && <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label="案例管理" disabled={busy}><MoreHorizontal /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
+    {view === 'reader' ? <DropdownMenuItem onSelect={() => navigate(id ?? undefined, 'manage')}>管理案例</DropdownMenuItem> : <>
+      <DropdownMenuItem onSelect={() => navigate(article?.status === 'published' ? id ?? undefined : undefined, 'reader')}>阅读案例</DropdownMenuItem>
+      {!detail && <DropdownMenuItem onSelect={beginNew}><Plus className="size-4" />新增案例</DropdownMenuItem>}
+    </>}
+  </DropdownMenuContent></DropdownMenu>
   const header = !detail
-    ? <PageHeader title="案例库" titleRef={heading} actions={<>
-        {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(undefined, 'manage')}>管理案例</Button> : <Button variant="outline" disabled={busy} onClick={() => navigate(undefined, 'reader')}>阅读案例</Button>}
-        {managing && <Button disabled={busy} onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>}
-      </>} />
-    : <PageHeader title={editing ? (input.title.trim() || '新建案例') : article?.title ?? '案例'} titleRef={heading}
-        crumbs={[{ label: '案例库', onSelect: busy ? undefined : () => navigate() }]}
-        leading={<PanelCloseButton back label="返回案例库" onClick={() => { if (!busy) navigate() }} className="-ms-2" />}
+    ? <PageHeader className="case-page-header" title="教学案例" titleRef={heading} actions={<>{canManage && <Button className="case-new-button" onClick={beginNew}><Plus aria-hidden="true"/>新增案例</Button>}{managementMenu}</>} />
+    : <PageHeader title={editing ? (preview ? '预览' : article ? '编辑案例' : '新增案例') : article?.title ?? '案例'} titleRef={heading}
+        className="case-page-header"
+        crumbs={[{ label: '教学案例', onSelect: busy ? undefined : () => navigate(undefined, 'reader') }, ...(editing && preview ? [{ label: article ? '编辑案例' : '新增案例', onSelect: () => setPreview(false) }] : [])]}
+        leading={editing ? false : <PanelCloseButton back label="返回案例库" onClick={() => { if (!busy) navigate() }} className="-ms-2" />}
         actions={<div className="flex flex-wrap items-center justify-end gap-2">
-          {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(id ?? undefined, 'manage')}>管理案例</Button> : !editing && <Button variant="outline" disabled={busy} onClick={() => navigate(article?.status === 'published' ? id ?? undefined : undefined, 'reader')}>阅读案例</Button>}
+          {!editing && managementMenu}
           {editing && managing ? <>
-            <span className="text-sm text-muted-foreground">草稿</span>
-            <Button type="submit" form="case-edit-form" name="intent" value="draft" variant="outline" disabled={invalid}>{submissionStage === 'saving' ? '正在保存…' : '保存草稿'}</Button>
-            <Button type="button" variant="outline" aria-pressed={preview} disabled={busy} onClick={() => setPreview(value => !value)}>{preview ? '继续编辑' : '预览'}</Button>
-            {!input.body.trim() && <span id="case-publish-help" className="text-xs text-muted-foreground">填写正文后可发布</span>}
-            <Button type="submit" form="case-edit-form" name="intent" value="publish" disabled={invalid || !input.body.trim()} aria-describedby={!input.body.trim() ? 'case-publish-help' : undefined}>{submissionStage === 'publishing' ? '正在发布…' : '发布'}</Button>
-            <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label="编辑选项" disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => setEditing(false)}>取消编辑</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+            {!preview && <Button type="submit" form="case-edit-form" name="intent" value="draft" variant="ghost" className="case-draft-save" disabled={invalid || savedInput === JSON.stringify(input)}>{submissionStage === 'saving' ? '正在保存…' : savedInput === JSON.stringify(input) ? '草稿已保存' : '保存草稿'}</Button>}
+            <Button type="button" variant="ghost" disabled={busy} onClick={() => setPreview(value => !value)}>{preview ? <ArrowLeft aria-hidden="true"/> : <Eye aria-hidden="true"/>}{preview ? '返回编辑' : '预览'}</Button>
+            <Button type="submit" form="case-edit-form" name="intent" value="publish" disabled={invalid || !input.body.trim()}>{submissionStage === 'publishing' ? '正在发布…' : '发布'}</Button>
           </> : managing && article?.view === 'manage' && <>
             <Button variant="outline" onClick={beginEdit}><Pencil className="size-4"/>编辑案例</Button>
             <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label="更多案例操作" disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
@@ -322,54 +290,50 @@ export function CasesPage() {
             </DropdownMenuContent></DropdownMenu>
           </>}
         </div>} />
-  return <main aria-label="组织案例库" className="cases-page h-full min-h-0">
-    <PageLayout header={header} scrollProps={{ className: 'cases-scroll' }}>
-    <PageBody className={detail ? 'case-detail-shell' : undefined}>
+  const card = (item: CaseArticle, featured = false) => <CaseCard key={item.id} article={item} href={articleUrl(item.id)}
+    onNavigate={() => navigate(item.id)} featured={featured}
+    actions={managing && item.view === 'manage' && item.canManage ? <DropdownMenu>
+      <DropdownMenuTrigger asChild><Button type="button" variant="ghost" size="icon-sm" aria-label={`更多案例操作：${item.title}`} disabled={busy}><MoreHorizontal /></Button></DropdownMenuTrigger>
+      <DropdownMenuContent align="end"><DropdownMenuItem variant="destructive" onSelect={() => requestDelete(item)}><Trash2 aria-hidden="true" />删除案例</DropdownMenuItem></DropdownMenuContent>
+    </DropdownMenu> : undefined} />
+  return <main ref={pageRoot} aria-label="组织案例库" className="cases-page h-full min-h-0" data-case-editing={editing || undefined}>
+    <PageLayout header={header} scrollProps={{ className: editing ? 'case-compose-frame' : 'cases-scroll' }}>
+    {editing && managing ? <form id="case-edit-form" className="case-compose-form" aria-busy={busy} onSubmit={event => { event.preventDefault(); void save((event.nativeEvent as SubmitEvent).submitter?.getAttribute('value') === 'publish') }}>
+      {error && <p role="alert" className="case-compose-message text-destructive">{error}</p>}
+      {notice && <p role="status" className="case-compose-message">{notice}</p>}
+      <CaseEditor input={input} options={options} preview={preview} busy={busy} authorName={article?.authorName ?? user?.name ?? ''} authorAvatar={article?.authorAvatarUrl ?? user?.avatarUrl}
+        onChange={editInput} onCreateCollege={name => createOption('college', name)} uploadFile={uploadAsset} onEditSummary={() => { setPreview(false); requestAnimationFrame(() => document.getElementById('case-summary-input')?.focus()) }}>{body(input)}</CaseEditor>
+    </form> : <PageBody className="case-page-content">
       {error && <div role="alert" className="case-notice text-destructive">{error}{!editing && <Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button>}</div>}
       {notice && <p role="status" className="case-notice">{notice}</p>}
       {!detail && <>
-        <PageToolbar>
-        <div role="group" aria-label="案例分类" className="flex flex-wrap gap-1">{['', ...list.categories].map(value => <Button key={value || 'all'} size="sm" variant={category === value ? 'secondary' : 'ghost'} aria-pressed={category === value} onClick={() => setCategory(value)}>{value || '全部'}</Button>)}</div>
-        <label className="relative ms-auto w-full min-w-0 sm:w-72"><span className="sr-only">关键词搜索</span><Search aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
+        {!loading && !error && catalogue.featured && card(catalogue.featured, true)}
+        <PageToolbar className="case-filters">
+        <div role="group" aria-label="案例分类" className="case-categories">{['', ...list.categories].map(value => <Button key={value || 'all'} size="sm" variant="outline" aria-pressed={category === value} onClick={() => setCategory(value)}>{value || '全部'}</Button>)}{canManage && <Button type="button" variant="ghost" size="icon-sm" aria-label="添加分类" onClick={() => { setCategoryName(''); setOptionError(''); setCategoryOpen(true) }}><Plus aria-hidden="true"/></Button>}</div>
+        <label className="case-search"><span className="sr-only">搜索案例</span><Search aria-hidden="true"/><Input type="search" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
         {(search || category) && <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setCategory('') }}>清除筛选</Button>}
         </PageToolbar>
       </>}
-      {editing && managing ? <form id="case-edit-form" aria-busy={busy} onSubmit={event => {
-        event.preventDefault()
-        void save((event.nativeEvent as SubmitEvent).submitter?.getAttribute('value') === 'publish')
-      }}>
-        <fieldset disabled={busy} className="min-w-0">
-          <section aria-label={preview ? '案例预览' : '编辑案例'}>{hero}
-            <div className="case-body-divider"><div data-case-body className="case-body">
-              <div hidden={preview} className="case-inline-editor"><span className="case-editor-label" aria-hidden="true">正文</span><ContentEditor legacyFormat="markdown" label="正文" value={input.body} document={input.editorDocument} maxLength={200000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(body, editorDocument) => editInput(value => ({...value, body, editorDocument}))}/></div>
-              {preview && body(input)}
-            </div></div>
-          </section>
-        </fieldset>
-      </form> : loading ? <p role="status" className="case-notice py-8">正在加载案例…</p> : article ? <article>
-        {hero}
-        {managing && article.hasUnpublishedChanges && <p className="case-notice">{article.status === 'published' ? '当前显示管理草稿；阅读视图仍显示上次发布版本。' : '当前为未发布草稿，仅案例管理者可见。'}</p>}
-        <div className="case-body-divider"><div data-case-body className="case-body">{body(article)}</div></div>
-      </article> : !id ? <>
-        <div data-case-grid className="case-grid">{list.items.map(item => <article key={item.id}>
-          <div className="case-grid-cover relative"><CaseCover cover={item.generatedCover} fallbackUrl={item.cover} title={item.title} scopeKey={`${coverScope}:${item.id}`}
-            className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" busy={busy} onRefresh={refreshCoverStatus}
-            onRetry={managing && item.view === 'manage' && item.canManage ? () => retryCover(item) : undefined}/></div>
-          <div className="flex items-start gap-2">
-            <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="case-grid-link min-w-0 flex-1">
-              <div className="case-grid-meta"><time dateTime={item.publishedAt ?? item.createdAt ?? item.updatedAt}>{date(item)}</time><span>·</span><span>{item.category || '未分类'}</span>{managing && item.status !== 'published' && <span>{statusLabels[item.status]}</span>}</div>
-              <h2>{item.title}</h2><p>{markdownText(item.summary)}</p>
-            </a>
-            {managing && item.view === 'manage' && item.canManage && <DropdownMenu>
-              <DropdownMenuTrigger asChild><Button type="button" className="mt-2" variant="ghost" size="icon-sm" aria-label={`更多案例操作：${item.title}`} disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger>
-              <DropdownMenuContent align="end"><DropdownMenuItem variant="destructive" onSelect={() => requestDelete(item)}><Trash2 aria-hidden="true"/>删除案例</DropdownMenuItem></DropdownMenuContent>
-            </DropdownMenu>}
-          </div>
-        </article>)}</div>
-        {!list.items.length && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '没有找到匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : managing ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
+      {loading ? <p role="status" className="case-notice py-8">正在加载案例…</p> : article ? <CaseReader key={`${caseScope}:${article.id}`} article={article} scopeKey={caseScope}
+        articleUrl={next => articleUrl(next, 'reader')} onNavigate={next => navigate(next, 'reader')}
+        notice={managing && article.hasUnpublishedChanges ? <p className="case-notice">{article.status === 'published' ? '当前显示管理草稿；阅读视图仍显示上次发布版本。' : '当前为未发布草稿，仅案例管理者可见。'}</p> : undefined}>
+        {body(article)}
+      </CaseReader> : !id ? <>
+        <div data-case-grid className="case-grid">{catalogue.items.map(item => card(item))}</div>
+        {catalogue.hasMore && <div className="case-load-more"><Button variant="outline" onClick={() => setVisibleCount(value => value + 6)}>加载更多</Button></div>}
+        {!catalogue.items.length && (search || category || !catalogue.featured) && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '下方列表没有匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : managing ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
       </> : null}
-    </PageBody>
+    </PageBody>}
     </PageLayout>
+    <Dialog open={categoryOpen && !detail && canManage} onOpenChange={open => { if (!optionBusy) setCategoryOpen(open) }}>
+      <DialogContent><DialogHeader><DialogTitle>添加分类</DialogTitle></DialogHeader>
+        <form onSubmit={event => { event.preventDefault(); void addCategory() }} className="grid gap-4">
+          <Input aria-label="分类名称" autoFocus maxLength={80} value={categoryName} disabled={optionBusy} onChange={event => setCategoryName(event.target.value)} placeholder="分类名称"/>
+          {optionError && <p role="alert" className="text-sm text-destructive">{optionError}</p>}
+          <DialogFooter><Button type="button" variant="outline" disabled={optionBusy} onClick={() => setCategoryOpen(false)}>取消</Button><Button type="submit" disabled={optionBusy || !categoryName.trim()}>{optionBusy ? '正在添加…' : '添加'}</Button></DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
     <AlertDialog open={deleteTarget !== null} onOpenChange={open => { if (!open && !busy) { setDeleteTarget(null); setDeleteError('') } }}>
       <AlertDialogContent aria-busy={busy}>
         <AlertDialogHeader>

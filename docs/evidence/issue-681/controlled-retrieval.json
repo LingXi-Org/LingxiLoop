@@ -1,0 +1,28 @@
+{
+  "synthetic": true,
+  "samples": 20,
+  "deadlineClockScale": 0.01,
+  "configuredDeadlinesMs": {
+    "baseline": 90000,
+    "candidate": 5000
+  },
+  "baseline": {
+    "p50Ms": 901.2090749999998,
+    "p95Ms": 904.8650099999995
+  },
+  "candidate": {
+    "p50Ms": 50.710699000000204,
+    "p95Ms": 51.802254000000175
+  },
+  "transportRequests": 80,
+  "realProviderCalls": 0,
+  "successfulPartialResults": 40,
+  "abortedHeaders": 20,
+  "abortedBodies": 20,
+  "completeReplyOrVisibleFirstText": "not_measured",
+  "baselineCommit": "8cc00fd86441118ffacba5d3ca5b0f139944689a",
+  "runtime": "3.8.24",
+  "fixture": "server/src/__tests__/knowledge-retrieval-deadline.test.ts",
+  "productionWrites": 0,
+  "originalT15Reproduced": false
+}

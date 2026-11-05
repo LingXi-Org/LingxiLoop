@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>什么是概率分布：离散与连续的统一视角</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#FAF9F5;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#141413;}
+a{color:#B4532F}a:hover{color:#8E3F22}
+</style>
+</helmet>
+<div style="width: 960px; height: 1240px; box-sizing: border-box; padding: 56px 64px; display: flex; flex-direction: column; gap: 22px; background: #FAF9F5">
+
+  <!-- 头部 -->
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 14px; letter-spacing: 0.14em; color: #73726C; text-transform: uppercase">零基础入门 · 概率与统计</div>
+    <h1 style="margin: 0; font-family: Georgia,serif; font-weight: 400; font-size: 46px; line-height: 1.15; color: #141413">概率分布是什么，为什么需要它</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.6; color: #3D3D3A; max-width: 760px">一句话：<strong style="font-weight: 600">概率分布就是“把 100% 的把握分给所有可能结果”的分配表</strong>。理解它，就等于理解随机世界里的“谁更常见、典型值在哪、不确定性多大”。</p>
+  </div>
+
+  <div style="height: 1px; background: #E3DACC"></div>
+
+  <!-- 1 为什么需要 -->
+  <div style="display: flex; gap: 28px">
+    <div style="flex: 0 0 210px; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 13px; letter-spacing: 0.1em; color: #B4532F; font-weight: 600">01 · 为什么需要</div>
+      <div style="font-family: Georgia,serif; font-size: 24px; line-height: 1.3">单个结果说不清，分布才说清</div>
+    </div>
+    <div style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; font-size: 15.5px; line-height: 1.6; color: #3D3D3A">
+      <p style="margin: 0">说“明天可能下雨”信息很少；说“不下雨 20%、小雨 50%、大雨 30%”就能决定要不要带伞。前者只给一个答案，后者给出<strong>每个答案的可能性</strong>，还有顺序和轻重。</p>
+      <div style="display: flex; gap: 16px">
+        <div style="flex: 1 1 0; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 14px 16px">
+          <div style="font-size: 13px; color: #73726C; margin-bottom: 4px">没有分布时</div>
+          <div style="font-size: 15px; color: #141413">“平均 2 个电话”——不知道闲不闲、忙起来能有多忙</div>
+        </div>
+        <div style="flex: 1 1 0; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 14px 16px">
+          <div style="font-size: 13px; color: #73726C; margin-bottom: 4px">有分布时</div>
+          <div style="font-size: 15px; color: #141413">“2 个最常见，5 个以上几乎不发生”——可以按此排班</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 两个性质 -->
+  <div style="display: flex; gap: 28px">
+    <div style="flex: 0 0 210px; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 13px; letter-spacing: 0.1em; color: #B4532F; font-weight: 600">02 · 定义</div>
+      <div style="font-family: Georgia,serif; font-size: 24px; line-height: 1.3">两条铁律，任何分布都遵守</div>
+    </div>
+    <div style="flex: 1 1 auto; display: flex; gap: 16px">
+      <div style="flex: 1 1 0; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 14px 16px">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px">① 没有负概率</div>
+        <div style="font-size: 14.5px; line-height: 1.55; color: #3D3D3A">任何结果的可能性至少是 0，不存在“−20% 的机会”。</div>
+      </div>
+      <div style="flex: 1 1 0; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 14px 16px">
+        <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px">② 总共是 100%</div>
+        <div style="font-size: 14.5px; line-height: 1.55; color: #3D3D3A">把所有可能结果的可能性加起来，恰好等于 1（即 100%）。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 离散 vs 连续 图 -->
+  <div style="display: flex; gap: 28px">
+    <div style="flex: 0 0 210px; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 13px; letter-spacing: 0.1em; color: #B4532F; font-weight: 600">03 · 两类形态</div>
+      <div style="font-family: Georgia,serif; font-size: 24px; line-height: 1.3">离散画柱子，连续画曲线</div>
+    </div>
+    <div style="flex: 1 1 auto; display: flex; gap: 20px">
+      <!-- 离散图 -->
+      <div style="flex: 1 1 0; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 12px; padding: 14px">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 2px">离散型：结果能一个个数</div>
+        <div style="font-size: 12.5px; color: #73726C; margin-bottom: 10px">例：一家店一天接到的电话数</div>
+        <svg viewBox="0 0 320 150" width="100%" height="150" role="img" aria-label="柱状图：接 0 个电话概率 0.08，1 个 0.27，2 个 0.33，3 个 0.20，4 个 0.09，5 个 0.03">
+          <line x1="18" y1="128" x2="310" y2="128" stroke="#C9C1B4" stroke-width="1"/>
+          <rect x="30" y="118" width="34" height="10" fill="#D97757" rx="2"/>
+          <rect x="80" y="85" width="34" height="43" fill="#D97757" rx="2"/>
+          <rect x="130" y="75" width="34" height="53" fill="#D97757" rx="2"/>
+          <rect x="180" y="96" width="34" height="32" fill="#D97757" rx="2"/>
+          <rect x="230" y="114" width="34" height="14" fill="#D97757" rx="2"/>
+          <rect x="280" y="123" width="22" height="5" fill="#D97757" rx="2"/>
+          <text x="47" y="143" font-size="11" fill="#73726C" text-anchor="middle" font-family="system-ui">0</text>
+          <text x="97" y="143" font-size="11" fill="#73726C" text-anchor="middle" font-family="system-ui">1</text>
+          <text x="147" y="143" font-size="11" fill="#73726C" text-anchor="middle" font-family="system-ui">2</text>
+          <text x="197" y="143" font-size="11" fill="#73726C" text-anchor="middle" font-family="system-ui">3</text>
+          <text x="247" y="143" font-size="11" fill="#73726C" text-anchor="middle" font-family="system-ui">4</text>
+          <text x="291" y="143" font-size="11" fill="#73726C" text-anchor="middle" font-family="system-ui">5</text>
+          <text x="147" y="66" font-size="11" fill="#141413" text-anchor="middle" font-family="system-ui">0.33</text>
+        </svg>
+        <div style="font-size: 13px; color: #3D3D3A; font-family: Georgia,serif; font-style: italic">柱高 = 概率，各柱相加 = 1</div>
+      </div>
+      <!-- 连续图 -->
+      <div style="flex: 1 1 0; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 12px; padding: 14px">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 2px">连续型：结果在区间里任意取值</div>
+        <div style="font-size: 12.5px; color: #73726C; margin-bottom: 10px">例：一批电池的续航时间</div>
+        <svg viewBox="0 0 320 150" width="100%" height="150" role="img" aria-label="钟形曲线：横轴为续航小时数，中间高两边低，阴影表示 8 到 10 小时这一段的概率">
+          <line x1="18" y1="128" x2="310" y2="128" stroke="#C9C1B4" stroke-width="1"/>
+          <path d="M30 127 C 90 127, 110 40, 164 34 C 218 40, 238 127, 298 127" fill="none" stroke="#D97757" stroke-width="2.5"/>
+          <path d="M118 127 L118 88 C 140 52, 162 40, 164 34" fill="none" stroke="#3D3D3A" stroke-width="1" stroke-dasharray="3 3"/>
+          <path d="M210 127 L210 88 C 190 44, 170 38, 164 34" fill="none" stroke="#3D3D3A" stroke-width="1" stroke-dasharray="3 3"/>
+          <path d="M118 127 C 140 52, 162 40, 164 34 C 170 38, 190 44, 210 88 L210 127 Z" fill="#D97757" fill-opacity="0.22"/>
+          <text x="164" y="143" font-size="11" fill="#73726C" text-anchor="middle" font-family="system-ui">9 小时</text>
+          <text x="60" y="143" font-size="11" fill="#73726C" text-anchor="middle" font-family="system-ui">短</text>
+          <text x="270" y="143" font-size="11" fill="#73726C" text-anchor="middle" font-family="system-ui">长</text>
+          <text x="164" y="24" font-size="11" fill="#141413" text-anchor="middle" font-family="system-ui">峰值 ≈ 最常见</text>
+        </svg>
+        <div style="font-size: 13px; color: #3D3D3A; font-family: Georgia,serif; font-style: italic">曲线下<b style="font-style: normal">面积</b> = 概率，总面积 = 1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 连续：面积而非高度 -->
+  <div style="display: flex; gap: 28px">
+    <div style="flex: 0 0 210px; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 13px; letter-spacing: 0.1em; color: #B4532F; font-weight: 600">04 · 关键动作</div>
+      <div style="font-family: Georgia,serif; font-size: 24px; line-height: 1.3">连续型：读面积，不读高度</div>
+    </div>
+    <div style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; font-size: 15.5px; line-height: 1.6; color: #3D3D3A">
+      <p style="margin: 0">连续型概率密度记为 $f(x)$。想知道“续航落在 8～10 小时”的概率，就把这段区间上的面积加起来：</p>
+      <div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 14px 18px; font-size: 16px; color: #141413">
+        $$P(8 \le X \le 10)=\int_{8}^{10} f(x)\,\mathrm{d}x$$
+      </div>
+      <p style="margin: 0"><strong>为什么不是取一个点的概率？</strong>因为一条曲线在一个点上没有宽度，“面积”为 0——连续型随机变量<em>恰好</em>等于 9.000… 小时的概率为 0。所以连续型只谈区间，这也正是上面阴影部分的含义。</p>
+    </div>
+  </div>
+
+  <!-- 5 关系 -->
+  <div style="display: flex; gap: 28px">
+    <div style="flex: 0 0 210px; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 13px; letter-spacing: 0.1em; color: #B4532F; font-weight: 600">05 · 二者关系</div>
+      <div style="font-family: Georgia,serif; font-size: 24px; line-height: 1.3">同一件事，两种粒度</div>
+    </div>
+    <div style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; font-size: 15.5px; line-height: 1.6; color: #3D3D3A">
+      <p style="margin: 0">离散型 <strong>P(x)</strong> 是“某个格子的概率”；连续型 <strong>f(x)</strong> 不是概率，而是“格子不够细时的密度”。把连续区间切成一格格很窄的小区间，每格概率 ≈ 曲线高度 × 格宽——格宽越小，越接近曲线：</p>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+        <div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 12px 14px">
+          <div style="font-size: 13px; color: #73726C; margin-bottom: 4px">离散</div>
+          <div style="font-size: 14.5px">P(x) 本身就是概率；单点有意义，$\sum P(x)=1$</div>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 12px 14px">
+          <div style="font-size: 13px; color: #73726C; margin-bottom: 4px">连续</div>
+          <div style="font-size: 14.5px">f(x) 是密度；面积才是概率，$\int f(x)\,\mathrm{d}x=1$</div>
+        </div>
+        <div style="background: #F5F4ED; border: 1px solid #E3DACC; border-radius: 10px; padding: 12px 14px">
+          <div style="font-size: 13px; color: #73726C; margin-bottom: 4px">换算</div>
+          <div style="font-size: 14.5px">细窄格子：$P \approx f(x)\cdot\Delta x$；求和 → 积分</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 例子 -->
+  <div style="display: flex; gap: 28px">
+    <div style="flex: 0 0 210px; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 13px; letter-spacing: 0.1em; color: #B4532F; font-weight: 600">06 · 一个例子</div>
+      <div style="font-family: Georgia,serif; font-size: 24px; line-height: 1.3">咖啡店一天卖出几杯</div>
+    </div>
+    <div style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.6; color: #3D3D3A">
+      <p style="margin: 0">小明记了 100 天的销量，每天杯数只能是整数（离散）。把它写成分布表：</p>
+      <table style="width: 100%; border-collapse: collapse; background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; overflow: hidden; font-size: 14px">
+        <thead>
+          <tr style="background: #F5F4ED; color: #141413">
+            <th style="text-align: left; padding: 8px 12px; border-bottom: 1px solid #E3DACC; font-weight: 600">每天杯数 x</th>
+            <th style="text-align: right; padding: 8px 12px; border-bottom: 1px solid #E3DACC; font-weight: 600">出现天数</th>
+            <th style="text-align: right; padding: 8px 12px; border-bottom: 1px solid #E3DACC; font-weight: 600">概率 P(x)</th>
+            <th style="text-align: right; padding: 8px 12px; border-bottom: 1px solid #E3DACC; font-weight: 600">x·P(x)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0">50</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">10</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">0.10</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">5.0</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0">60</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">20</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">0.20</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">12.0</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0">70</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">40</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">0.40</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">28.0</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0">80</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">20</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">0.20</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">16.0</td></tr>
+          <tr><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0">90</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">10</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">0.10</td><td style="padding: 8px 12px; border-bottom: 1px solid #EFEAE0; text-align: right">9.0</td></tr>
+          <tr style="background: #F9F6EF; font-weight: 600; color: #141413"><td style="padding: 8px 12px">合计</td><td style="padding: 8px 12px; text-align: right">100</td><td style="padding: 8px 12px; text-align: right">1.00</td><td style="padding: 8px 12px; text-align: right">70.0</td></tr>
+        </tbody>
+      </table>
+      <p style="margin: 0">两条铁律都满足：概率都非负，加起来正好 1。读表能立刻得到三件事：</p>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+        <div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 12px 14px">
+          <div style="font-size: 13px; color: #73726C; margin-bottom: 4px">最典型值</div>
+          <div style="font-size: 17px; color: #141413; font-weight: 600">70 杯</div>
+          <div style="font-size: 13px; margin-top: 2px">出现最多（众数），概率 0.40</div>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 12px 14px">
+          <div style="font-size: 13px; color: #73726C; margin-bottom: 4px">长期平均</div>
+          <div style="font-size: 17px; color: #141413; font-weight: 600">70 杯／天</div>
+          <div style="font-size: 13px; margin-top: 2px">x·P(x) 求和（期望值）</div>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E3DACC; border-radius: 10px; padding: 12px 14px">
+          <div style="font-size: 13px; color: #73726C; margin-bottom: 4px">备货需求</div>
+          <div style="font-size: 17px; color: #141413; font-weight: 600">≥80 杯仅 30%</div>
+          <div style="font-size: 13px; margin-top: 2px">0.20 + 0.10 = 0.30</div>
+        </div>
+      </div>
+      <p style="margin: 0">于是老板能据此定备货量：按 70 杯准备，偶发多卖 10～20 杯仍不至于断货。<strong>连续版本</strong>：如果改记“每天咖啡机运行的小时数”，结果就能是 6.3、6.78 小时这样的任意数，表格换成曲线，需求“超过 7 小时”的概率就变成曲线右侧的面积。</p>
+    </div>
+  </div>
+
+  <!-- 底部结论 -->
+  <div style="margin-top: auto; background: #141413; color: #FAF9F5; border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px">
+    <div style="font-size: 15px; font-weight: 600">带走这一句：分布 = 可能性清单 + 每项的可能性大小</div>
+    <div style="font-size: 14px; line-height: 1.55; color: #E3DACC">离散看“每格的概率”，连续看“曲线下的面积”；两者本质相同，只是连续没有一格一格的格子。无论哪种，非负 + 总和为 1 始终成立。</div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":960,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

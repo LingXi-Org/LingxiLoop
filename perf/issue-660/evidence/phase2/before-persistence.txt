@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/LingxiLoop/perf/issue-660/workspace/persistence.py", line 17, in <module>
+    assert count==1 and stored is not None,{'writes':count,'stored':stored}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'writes': 0, 'stored': None}

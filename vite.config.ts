@@ -1,11 +1,8 @@
 import { defineConfig, normalizePath } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
-import { readFile } from 'node:fs/promises'
-import { createHash } from 'node:crypto'
 import { Readable } from 'node:stream'
 import { isolatedEditor } from './shared/artifact-editor-origin'
-import { VISUALIZE_PUBLIC_RESOURCES, visualizeResourceFile, visualizeResourceUrl } from './shared/visualize-public-resources'
 
 // Every signed-in start renders these route modules, but each is discovered only
 // after its parent executes. Preloading them from the document turns that serial
@@ -69,37 +66,7 @@ export default defineConfig({
         } catch (error) { next(error) }
       })
     },
-  }, {
-    name: 'visualize-public-assets',
-    async generateBundle() {
-      // These are the same fixed bytes/hash identities advertised by the API.
-      // Existing static release retention preserves old URLs across rollouts.
-      for (const name of VISUALIZE_PUBLIC_RESOURCES) {
-        const source = await readFile(visualizeResourceFile(name)!)
-        const digest = createHash('sha256').update(source).digest('hex')
-        this.emitFile({type:'asset',fileName:visualizeResourceUrl(name,digest)!.slice(1),source})
-      }
-    },
-    configureServer(server) {
-      server.middlewares.use(async (req, res, next) => {
-        if (!/^\/assets\/visualize-[a-f0-9]{64}\.(js|css|txt)$/.test(req.url ?? '')) return next()
-        try {
-          for (const name of VISUALIZE_PUBLIC_RESOURCES) {
-            const source = await readFile(visualizeResourceFile(name)!)
-            const digest = createHash('sha256').update(source).digest('hex')
-            if (req.url !== visualizeResourceUrl(name,digest)) continue
-            res.setHeader('Cache-Control','public, max-age=31536000, immutable')
-            res.setHeader('Access-Control-Allow-Origin','*')
-            res.setHeader('X-Content-Type-Options','nosniff')
-            res.setHeader('Content-Type',name.endsWith('.js') ? 'text/javascript' : name.endsWith('.css') ? 'text/css' : 'application/octet-stream')
-            res.end(source); return
-          }
-          res.statusCode=404; res.end()
-        } catch (error) { next(error) }
-      })
-    },
-  }],
-  // Retab format workers lazy-load their parsers as native ES modules.
+  }],  // Retab format workers lazy-load their parsers as native ES modules.
   worker: { format: 'es' },
   // Disposable API fixtures use distinct caches. Concurrent dev servers with
   // different proxy defines must not replace each other's optimized modules.
