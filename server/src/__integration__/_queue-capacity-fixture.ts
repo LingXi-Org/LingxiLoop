@@ -362,4 +362,3 @@ export async function leaseProbe(context:TestContext) {
     exactPublicLeaseTtlMs:null,oldHeartbeatRejected:true,oldCompletionRejected:true,expiryAttempts:replacement.attempts,finalAttempts:record.attempts,
     finalStatus:record.status,clockScale:1,privateRuntimeSql:false}))
 }
-
