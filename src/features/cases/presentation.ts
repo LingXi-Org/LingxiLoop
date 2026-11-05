@@ -8,11 +8,10 @@ export function caseCatalogue(items: CaseArticle[], { search = '', category = ''
 } = {}) {
   const sorted = [...items].sort(newestFirst)
   const featured = sorted.find(item => item.status === 'published' && item.view === 'reader') ?? null
-  const rest = sorted.filter(item => item.id !== featured?.id)
   const query = search.trim().toLocaleLowerCase()
-  if (query || category) return { featured, items: rest.filter(item => (!category || item.category === category)
+  if (query || category) return { featured, items: sorted.filter(item => (!category || item.category === category)
     && (!query || [item.title, item.summary, item.body, item.category, ...item.tags].join(' ').toLocaleLowerCase().includes(query))), hasMore: false }
-  return { featured, items: rest.slice(0, visibleCount), hasMore: rest.length > visibleCount }
+  return { featured, items: sorted.slice(0, visibleCount), hasMore: sorted.length > visibleCount }
 }
 
 export function relatedCases(items: CaseArticle[], current: CaseArticle): CaseArticle[] {
@@ -22,9 +21,11 @@ export function relatedCases(items: CaseArticle[], current: CaseArticle): CaseAr
     .slice(0, 3)
 }
 
-export function caseOutline(titles: string[]) {
-  return titles.map((title, index) => ({ id: `case-section-${index}`, title: title.trim(), index }))
+export function caseOutline(headings: { title: string; level: number }[]) {
+  const entries = headings.map(({ title, level }, index) => ({ id: `case-section-${index}`, title: title.trim(), level, index }))
     .filter(item => item.title)
+  const baseLevel = entries.reduce((minimum, item) => Math.min(minimum, item.level), 6)
+  return entries.map(item => ({ ...item, depth: item.level - baseLevel }))
 }
 
 export function caseDate(article: CaseArticle, short = false) {
