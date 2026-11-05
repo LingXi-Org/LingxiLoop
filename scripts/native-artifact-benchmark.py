@@ -120,6 +120,7 @@ class Trace:
         self.finished_requests = []
         self.unaccounted_script_resources = []
         self.ambiguous_requests = 0
+        self.byte_conflicts = 0
         context.on("requestfinished", self.record_finished)
         for method in ("requestWillBeSent", "responseReceived", "dataReceived", "loadingFinished", "loadingFailed"):
             self.cdp.on("Network." + method, lambda params, name=method: self.event("", name, params))
@@ -198,6 +199,7 @@ class Trace:
                 del self.requests[old_key]
                 self.requests[key] = row
                 row.update(start=value['timestamp'], targetType=self.targets.get(route,{}).get('type','page'))
+                row.pop('fromPlaywright', None)
                 return
             self.requests[key] = {"url": safe_url(value["request"]["url"]), "_resourceKey": resource_key(value["request"]["url"]), "type": value.get("type"),
                 "start": value["timestamp"], "startEpochMs": value.get("wallTime", 0) * 1000, "requestOrdinal": self.request_sequence, "targetType": self.targets.get(route, {}).get("type", "page"),
@@ -212,15 +214,18 @@ class Trace:
                 declared_length = headers.get("content-length")
                 if isinstance(declared_length, str) and declared_length.isdigit(): row["declaredEncodedBodyBytes"] = int(declared_length)
                 row.update(status=response["status"], cache=response.get("fromDiskCache", False),
-                           mime=response.get("mimeType"), encoding=headers.get("content-encoding") if headers.get("content-encoding") in ("gzip", "br", "deflate", "zstd") else "identity",
-                           transferredBytes=response.get("encodedDataLength", 0))
+                           mime=response.get("mimeType"), encoding=headers.get("content-encoding") if headers.get("content-encoding") in ("gzip", "br", "deflate", "zstd") else "identity")
+                if not row.get("finished"): row["transferredBytes"] = response.get("encodedDataLength", 0)
             elif method == "dataReceived":
+                if row.get("finished"): return
                 row["transferredBytes"] = row.get("transferredBytes", 0) + value.get("encodedDataLength", 0)
                 row["decodedBytes"] = row.get("decodedBytes", 0) + value.get("dataLength", 0)
                 row["decodedObserved"] = True
                 row["decodedBytesSource"] = "Network.dataReceived"
             elif method == "loadingFinished":
-                row.update(finished=True, end=value["timestamp"], transferredBytes=value["encodedDataLength"])
+                if row.get('finished') and not row.get('transferPending') and row.get('transferredBytes') != value['encodedDataLength']:
+                    self.byte_conflicts += 1
+                row.update(finished=True, end=value['timestamp'], transferredBytes=value['encodedDataLength'],transferPending=False,transferredBytesSource='Network.loadingFinished')
             elif method == "loadingFailed":
                 row.update(finished=True, failed=True, canceled=value.get("canceled", False))
 
@@ -461,10 +466,11 @@ READINESS_JS = r"""async (heading, {number, kind}) => {
 }"""
 
 
-def heading_candidates(frame, kind, number):
-    title = re.compile("^" + re.escape(f"验收页面 {number}") + "$")
+def heading_candidates(frame, kind, number, allow_edited=False):
+    title = re.compile("^" + re.escape(f"验收页面 {number}") + ("(?:" + re.escape(MARKER) + ")?" if allow_edited else "") + "$")
     if frame.locator("[data-native-artifact-editor]").count():
-        return frame.locator(f'[data-page-id="page-{number}"] [data-node-id="page-{number}-heading"]').filter(has_text=title)
+        targets = frame.locator(f'[data-page-id="page-{number}"] [data-node-id="page-{number}-heading"]')
+        return targets if allow_edited else targets.filter(has_text=title)
     if kind == "slides":
         return frame.locator('[data-slides-editor] [data-slide-surface] [data-text-path], [data-slides-editor] [data-slide-surface] h1').filter(has_text=title)
     return frame.locator('h1').filter(has_text=title)
@@ -705,7 +711,7 @@ def edit_restore_state(text, number, attempted):
 def cleanup_edit(page, kind, number, artifact_id):
     # Never blindly undo when input/paint/ACK verification has thrown.
     for frame in page.frames:
-        targets = heading_candidates(frame,kind,number)
+        targets = heading_candidates(frame,kind,number,allow_edited=True)
         for index in range(targets.count()):
             target = targets.nth(index)
             if not target.is_visible(): continue
@@ -1000,7 +1006,7 @@ def self_check():
         trace = Trace.__new__(Trace)
         trace.requests = {'cdp':{'url':safe_url(raw),'_resourceKey':key,'startEpochMs':1000,'type':'Script','network':True,'scriptPath':True,'requestOrdinal':1,'finished':True,'status':200,'transferredBytes':1000120,'decodedBytes':1000000,'decodedObserved':True}}
         trace.finished_requests = [{'url':safe_url(raw),'_resourceKey':key,'_requestIdentity':i,'startEpochMs':start,'finishedEpochMs':start+2000,'headersBytes':120,'bodyBytes':1000000,'status':200,'type':'Script','network':True,'scriptPath':True,'targetType':'worker'} for i,start in enumerate(starts)]
-        trace.request_sequence = 1; trace.ambiguous_requests = 0
+        trace.request_sequence = 1; trace.ambiguous_requests = 0; trace.byte_conflicts = 0; trace.targets = {}
         frame = SimpleNamespace(evaluate=lambda _script:[{'url':raw,'startEpochMs':start,'encodedBytes':1000000,'decodedBytes':1000000} for start in starts])
         trace.reconcile_decoded(SimpleNamespace(frames=[frame],workers=[]))
         return trace
@@ -1008,6 +1014,16 @@ def self_check():
     assert len(trace.snapshot()) == 2 and script_totals(trace.snapshot())['transferredBytes'] == 2000240
     assert not trace.ambiguous_requests and not trace.unaccounted_script_resources
     assert not script_totals(trace.snapshot())['missingDecoded']
+    # Late CDP metadata/chunks cannot downgrade a completed observed response.
+    trace.event('', 'requestWillBeSent', {'requestId':'late','request':{'url':raw},'timestamp':1.05,'wallTime':1.05,'type':'Script'})
+    trace.event('', 'responseReceived', {'requestId':'late','response':{'headers':{},'status':200,'mimeType':'text/javascript','encodedDataLength':120}})
+    trace.event('', 'dataReceived', {'requestId':'late','encodedDataLength':500,'dataLength':500})
+    assert script_totals(trace.snapshot())['transferredBytes'] == 2000240
+    assert script_totals(trace.snapshot())['decodedBytes'] == 2000000
+    trace.event('', 'loadingFinished', {'requestId':'late','timestamp':3.05,'encodedDataLength':1000120})
+    assert not trace.byte_conflicts
+    trace.event('', 'loadingFinished', {'requestId':'late','timestamp':3.05,'encodedDataLength':120})
+    assert trace.byte_conflicts == 1, 'conflicting completed observations cannot qualify'
     ambiguous = reconciliation_fixture([1000,1000])
     assert ambiguous.ambiguous_requests > 0, 'indistinguishable requests cannot qualify'
     assert safe_url(raw+'?v=1') == safe_url(raw+'?v=2') and resource_key(raw+'?v=1') != resource_key(raw+'?v=2')
@@ -1151,7 +1167,7 @@ def main():
                             stable = trace.snapshot(); sample['requestsAtStable'] = stable
                             idle_delta = script_delta(requests_at_editable, stable)
                             sample.update(idleScriptTransferBytes=idle_delta['transferredBytes'], idleScriptDecodedBytes=idle_delta['decodedBytes'])
-                            sample['scriptAccounting'] = {**script_totals(stable), 'unaccountedResources':len(trace.unaccounted_script_resources), 'ambiguousRequests':trace.ambiguous_requests}
+                            sample['scriptAccounting'] = {**script_totals(stable), 'unaccountedResources':len(trace.unaccounted_script_resources), 'ambiguousRequests':trace.ambiguous_requests, 'byteConflicts':trace.byte_conflicts}
                             sample['phase'] = 'undo'; sample['undoProofs'] = [undo_edit(page, kind, 1, config['artifactIds'][kind])]; pending_undo = None
                             sample['visitedPages'] = [1]; sample['navigation'] = []
                             if args.skip_traversal: raise MeasurementFailure('traversal_intentionally_unverified')
@@ -1182,7 +1198,7 @@ def main():
                             if sample['failedRequests']: raise MeasurementFailure('network_failure_observed')
                             if sample['cdpErrors']: raise MeasurementFailure('cdp_setup_failed')
                             if sample['retiredRequests']: raise MeasurementFailure('retired_editor_loaded')
-                            if sample['scriptAccounting']['missingDecoded'] or sample['scriptAccounting']['missingTransfer'] or sample['scriptAccounting']['unaccountedResources'] or sample['scriptAccounting']['ambiguousRequests']: raise MeasurementFailure('decoded_script_accounting_incomplete')
+                            if sample['scriptAccounting']['missingDecoded'] or sample['scriptAccounting']['missingTransfer'] or sample['scriptAccounting']['unaccountedResources'] or sample['scriptAccounting']['ambiguousRequests'] or sample['scriptAccounting']['byteConflicts']: raise MeasurementFailure('decoded_script_accounting_incomplete')
                             if any(row['status'] == 'failed' for row in sample.get('exports', [])): raise MeasurementFailure('export_diagnostic_incomplete')
                             sample['status'] = 'passed'; sample['phase'] = 'complete'
                         except Exception as error:

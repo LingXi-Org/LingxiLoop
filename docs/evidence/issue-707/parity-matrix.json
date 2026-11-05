@@ -6971,12 +6971,14 @@
         "native": "visual/native/design-comment-composer.png",
         "matchedStateVerified": false
       },
-      "result": "局部功能通过；真实登录集成待跑",
+      "result": "受控浏览器与真实登录接口/正式工作流局部回归通过；视觉及全部状态待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/comments-design.json",
-        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过",
+        "integrationRun": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42071891626",
+        "integrationScope": "真实控制 Worker 登录与授权、同源接口、数据库、项目/租户隔离、正式 SDK Worker；模型与 WuKong 响应使用记录夹具。"
       }
     },
     {
@@ -7053,12 +7055,14 @@
         "native": "visual/native/slides-comment-composer.png",
         "matchedStateVerified": false
       },
-      "result": "局部功能通过；真实登录集成待跑",
+      "result": "受控浏览器与真实登录接口/正式工作流局部回归通过；视觉及全部状态待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/comments-slides.json",
-        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过",
+        "integrationRun": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42071891626",
+        "integrationScope": "真实控制 Worker 登录与授权、同源接口、数据库、项目/租户隔离、正式 SDK Worker；模型与 WuKong 响应使用记录夹具。"
       }
     },
     {
@@ -7147,12 +7151,14 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "局部功能通过；真实登录集成待跑",
+      "result": "受控浏览器与真实登录接口/正式工作流局部回归通过；视觉及全部状态待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/comments-design.json",
-        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过",
+        "integrationRun": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42071891626",
+        "integrationScope": "真实控制 Worker 登录与授权、同源接口、数据库、项目/租户隔离、正式 SDK Worker；模型与 WuKong 响应使用记录夹具。"
       }
     },
     {
@@ -7179,12 +7185,14 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "局部功能通过；真实登录集成待跑",
+      "result": "受控浏览器与真实登录接口/正式工作流局部回归通过；视觉及全部状态待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/comments-slides.json",
-        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过",
+        "integrationRun": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42071891626",
+        "integrationScope": "真实控制 Worker 登录与授权、同源接口、数据库、项目/租户隔离、正式 SDK Worker；模型与 WuKong 响应使用记录夹具。"
       }
     },
     {
@@ -7222,12 +7230,14 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "局部功能通过；真实登录集成待跑",
+      "result": "受控浏览器与真实登录接口/正式工作流局部回归通过；视觉及全部状态待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/comments-design.json",
-        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过",
+        "integrationRun": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42071891626",
+        "integrationScope": "真实控制 Worker 登录与授权、同源接口、数据库、项目/租户隔离、正式 SDK Worker；模型与 WuKong 响应使用记录夹具。"
       }
     },
     {
@@ -7254,12 +7264,14 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "局部功能通过；真实登录集成待跑",
+      "result": "受控浏览器与真实登录接口/正式工作流局部回归通过；视觉及全部状态待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/comments-slides.json",
-        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过",
+        "integrationRun": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42071891626",
+        "integrationScope": "真实控制 Worker 登录与授权、同源接口、数据库、项目/租户隔离、正式 SDK Worker；模型与 WuKong 响应使用记录夹具。"
       }
     },
     {
@@ -7338,12 +7350,14 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "正式工作流已有回归；新增真实登录流程待跑",
+      "result": "受控浏览器与真实登录接口/正式工作流局部回归通过；视觉及全部状态待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/comments-design.json",
-        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过",
+        "integrationRun": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42071891626",
+        "integrationScope": "真实控制 Worker 登录与授权、同源接口、数据库、项目/租户隔离、正式 SDK Worker；模型与 WuKong 响应使用记录夹具。"
       }
     },
     {
@@ -7422,12 +7436,14 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "正式工作流已有回归；新增真实登录流程待跑",
+      "result": "受控浏览器与真实登录接口/正式工作流局部回归通过；视觉及全部状态待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/comments-slides.json",
-        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+        "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过",
+        "integrationRun": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42071891626",
+        "integrationScope": "真实控制 Worker 登录与授权、同源接口、数据库、项目/租户隔离、正式 SDK Worker；模型与 WuKong 响应使用记录夹具。"
       }
     },
     {

@@ -110,7 +110,7 @@ export function publicRequest(row) {
   for (const key of ['network', 'scriptPath', 'sourcePayload', 'retiredEditor', 'cache', 'decodedObserved', 'finished', 'failed', 'canceled', 'transferPending']) if (typeof row[key] === 'boolean') safe[key] = row[key]
   if (['identity', 'gzip', 'br', 'deflate', 'zstd'].includes(row.encoding)) safe.encoding = row.encoding
   if (['Network.dataReceived', 'PerformanceResourceTiming'].includes(row.decodedBytesSource)) safe.decodedBytesSource = row.decodedBytesSource
-  if (['PlaywrightRequestSizes', 'PlaywrightHeaders+PerformanceResourceTiming'].includes(row.transferredBytesSource)) safe.transferredBytesSource = row.transferredBytesSource
+  if (['Network.loadingFinished', 'PlaywrightRequestSizes', 'PlaywrightHeaders+PerformanceResourceTiming'].includes(row.transferredBytesSource)) safe.transferredBytesSource = row.transferredBytesSource
   return safe
 }
 export function publicEvidence(value, key = '') {
