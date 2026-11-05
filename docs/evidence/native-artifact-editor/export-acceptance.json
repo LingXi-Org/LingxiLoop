@@ -3,24 +3,28 @@
   "results": [
     {
       "format": "html",
-      "bytes": 42846090,
-      "milliseconds": 5115.799999999814,
-      "warnings": [],
+      "bytes": 43669547,
+      "milliseconds": 11867.900000000373,
+      "warnings": [
+        "验收页面 25 / page-25-isolated：交互内容以静态快照导出；原稿保留可执行源码与交互。"
+      ],
       "immutable": true,
       "mountedPages": 0
     },
     {
       "format": "pdf",
-      "bytes": 6373618,
-      "milliseconds": 47785.60000000056,
-      "warnings": [],
+      "bytes": 6438345,
+      "milliseconds": 33323.800000000745,
+      "warnings": [
+        "验收页面 25 / page-25-isolated：交互内容以静态快照导出；原稿保留可执行源码与交互。"
+      ],
       "immutable": true,
       "mountedPages": 0
     },
     {
       "format": "pptx",
-      "bytes": 15940921,
-      "milliseconds": 64661.700000000186,
+      "bytes": 16218160,
+      "milliseconds": 35660.79999999888,
       "warnings": [
         "验收页面 1 / page-1-formula：公式以图片导出；文档保留源数据。",
         "验收页面 2 / page-2-formula：公式以图片导出；文档保留源数据。",
@@ -46,7 +50,9 @@
         "验收页面 22 / page-22-formula：公式以图片导出；文档保留源数据。",
         "验收页面 23 / page-23-formula：公式以图片导出；文档保留源数据。",
         "验收页面 24 / page-24-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 25 / page-25-isolated：交互内容以静态快照导出；原稿保留可执行源码与交互。",
         "验收页面 25 / page-25-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 25 / page-25-isolated：复杂内容以图片导出；文档保留源数据。",
         "验收页面 26 / page-26-formula：公式以图片导出；文档保留源数据。",
         "验收页面 27 / page-27-formula：公式以图片导出；文档保留源数据。",
         "验收页面 28 / page-28-formula：公式以图片导出；文档保留源数据。",
@@ -80,18 +86,18 @@
   "artifacts": [
     {
       "format": "html",
-      "bytes": 42846090,
-      "sha256": "5ebb9df5b7ffdc979053f2f4b453bec73c05b47c07e4cd703caba594e78c721d"
+      "bytes": 43669547,
+      "sha256": "1777e6ff63b912c931f3d994646158f46b015a83f34b8644348857d7481f4065"
     },
     {
       "format": "pdf",
-      "bytes": 6373618,
-      "sha256": "d7687de255ef3162de4a93e211eaef1aca03655c5ee2ece31c23d42143b89f35"
+      "bytes": 6438345,
+      "sha256": "65bfc6bb004c5e9979659bb8cd98079b521c10a167ba6444f286379072a993c8"
     },
     {
       "format": "pptx",
-      "bytes": 15940921,
-      "sha256": "de5167c6530c5e61019cbeb9689d6a8a26c32710a5b4dd8d9e39d4b9efe12c18"
+      "bytes": 16218160,
+      "sha256": "b4a49552a016ea712c784786f1e8123c570b91c70a8316fc4601f8d9a6c70d09"
     }
   ],
   "cancellation": {
@@ -110,7 +116,7 @@
   "offlineHtml": {
     "packaging": "self-contained image/font data URLs",
     "pages": 50,
-    "images": 50,
+    "images": 51,
     "formulas": 50,
     "fileOpening": "BLOCKED: managed Chromium file URL policy; not verified"
   },
@@ -125,12 +131,54 @@
   },
   "errors": [],
   "browserLogs": [],
+  "fixture": {
+    "version": 2,
+    "pages": 50,
+    "images": 50,
+    "formulas": 50,
+    "isolatedBlocks": [
+      {
+        "pageId": "page-25",
+        "nodeId": "page-25-isolated",
+        "sourceSha256": "9bfaae700e1778bde6b78378fa602db2b3b5f387d39207cec9c4b6c548e2253e",
+        "previewAssetId": "image-25",
+        "previewSha256": "3d26afabbae1886c43f8a523b6535d9a103ed827ac64a7b758ac318f4eac955d",
+        "format": "html"
+      }
+    ],
+    "imageBytes": 30877750,
+    "semanticSha256": "7819968e5469ba48a35207514e3071efc4d0bf120b4872a9696f9e10fda31c13",
+    "nativeSha256": "134cf0795d4aa7c671ca63ba79a6dff597fa4ab0028fff8adc5967e484ee6404"
+  },
+  "network": {
+    "uniqueRequests": 346,
+    "scriptPaths": [
+      "http://127.0.0.1:5325/assets/main-BE7zEefy.js",
+      "http://127.0.0.1:5325/assets/modulepreload-polyfill-B5Qt9EMX.js",
+      "http://127.0.0.1:5325/assets/preload-helper-CLcXU_4U.js",
+      "http://127.0.0.1:5325/document.json",
+      "http://127.0.0.1:5325/assets/export-artifact-jNGQ0whc.js",
+      "http://127.0.0.1:5325/assets/export-DTYnnwtn.js",
+      "http://127.0.0.1:5325/assets/execute-BTJmOMD-.js",
+      "http://127.0.0.1:5325/assets/html-1Mkk1g16.js",
+      "http://127.0.0.1:5325/assets/render-C85glQUJ.js",
+      "http://127.0.0.1:5325/assets/katex-HP8lGamR.js",
+      "http://127.0.0.1:5325/assets/katex.min-DXaO1tdm.js",
+      "http://127.0.0.1:5325/assets/pdf-CB9Q_LLt.js",
+      "http://127.0.0.1:5325/assets/index-Cs9OzAhw.js",
+      "http://127.0.0.1:5325/assets/pdf.worker-CCeDUFOc.js",
+      "http://127.0.0.1:5325/assets/pptx-D8OAIaVj.js",
+      "http://127.0.0.1:5325/assets/pptx.worker-CAreH9pM.js",
+      "http://127.0.0.1:5325/assets/PptxViewJS.es-DEA-sGyA.js"
+    ]
+  },
   "inspection": {
     "slides": 50,
     "notes": 50,
     "allPagesNativeObjects": true,
     "all50FormulaImagesVisible": true,
     "all50PhotoImagesUncropped": true,
+    "isolatedBlockPage": 25,
     "samples": [
       {
         "page": 1,
@@ -169,7 +217,7 @@
         "page": 25,
         "nativeShapes": 3,
         "nativeTables": 1,
-        "pictures": 2,
+        "pictures": 3,
         "notesPreserved": true,
         "picturesInspected": [
           {
@@ -237,35 +285,220 @@
       1,
       25,
       50
-    ]
+    ],
+    "inputPptxSha256": "b4a49552a016ea712c784786f1e8123c570b91c70a8316fc4601f8d9a6c70d09"
   },
-  "fixture": {
-    "version": 1,
-    "pages": 50,
-    "images": 50,
-    "formulas": 50,
-    "imageBytes": 30877750,
-    "semanticSha256": "68859e9f939e90ee61d53702dce2652b60b1eb90296992b6b0c9391b877aa765",
-    "nativeSha256": "d2a8d96f5740bd26e4d9e09bac110b555d2bedb60b12ab31ac3c3456ca159278"
-  },
-  "network": {
-    "uniqueRequests": 340,
-    "scriptPaths": [
-      "http://127.0.0.1:5325/assets/index-Bi1AMPMM.js",
-      "http://127.0.0.1:5325/assets/preload-helper-CLcXU_4U.js",
-      "http://127.0.0.1:5325/document.json",
-      "http://127.0.0.1:5325/assets/export-artifact-DN28jqqP.js",
-      "http://127.0.0.1:5325/assets/html-CB16GBP2.js",
-      "http://127.0.0.1:5325/assets/render-Ch_sCwmm.js",
-      "http://127.0.0.1:5325/assets/katex-HP8lGamR.js",
-      "http://127.0.0.1:5325/assets/katex.min-DXaO1tdm.js",
-      "http://127.0.0.1:5325/assets/pdf-CPGistlA.js",
-      "http://127.0.0.1:5325/assets/index-Cs9OzAhw.js",
-      "http://127.0.0.1:5325/assets/pdf.worker-CCeDUFOc.js",
-      "http://127.0.0.1:5325/assets/pptx-DYwlgP5j.js",
-      "http://127.0.0.1:5325/assets/pptx.worker-CAreH9pM.js",
-      "http://127.0.0.1:5325/assets/PptxViewJS.es-DEA-sGyA.js"
-    ]
+  "faultAcceptance": {
+    "script": "node scripts/native-export-fault-acceptance.mjs",
+    "pages": [
+      "page-1",
+      "page-25",
+      "page-50"
+    ],
+    "browser": "Chrome/154.0.8037.57",
+    "realm": "fresh trusted iframe for every attempt; fixed entry URL and private MessageChannel",
+    "networkFailures": {
+      "realmLoad": {
+        "initialFailure": true,
+        "sameWindowRetry": true,
+        "refreshRequired": false
+      },
+      "lazyModule": {
+        "initialFailure": true,
+        "sameWindowRetry": true,
+        "refreshRequired": false
+      },
+      "sharedDependency": {
+        "initialFailure": true,
+        "sameWindowRetry": true,
+        "refreshRequired": false
+      },
+      "innerLazyModule": {
+        "initialFailure": true,
+        "sameWindowRetry": true,
+        "refreshRequired": false
+      },
+      "resourceFailure": {
+        "initialFailure": true,
+        "sameWindowRetry": true,
+        "refreshRequired": false
+      }
+    },
+    "midExportCancellation": {
+      "formats": [
+        "html",
+        "pdf",
+        "pptx"
+      ],
+      "abortAfterPage": 1,
+      "allRetriesSucceeded": true
+    },
+    "packingCancellation": {
+      "failure": {
+        "format": "pdf",
+        "ok": false,
+        "error": {
+          "name": "AbortError",
+          "message": "signal is aborted without reason"
+        },
+        "progress": [
+          {
+            "done": 1,
+            "total": 3
+          },
+          {
+            "done": 2,
+            "total": 3
+          },
+          {
+            "done": 3,
+            "total": 3
+          }
+        ],
+        "immutable": true,
+        "mountedPages": 0,
+        "realms": 0,
+        "workers": 0
+      },
+      "retry": {
+        "format": "pdf",
+        "ok": true,
+        "bytes": 444591,
+        "progress": [
+          {
+            "done": 1,
+            "total": 3
+          },
+          {
+            "done": 2,
+            "total": 3
+          },
+          {
+            "done": 3,
+            "total": 3
+          }
+        ],
+        "immutable": true,
+        "mountedPages": 0,
+        "realms": 0,
+        "workers": 0
+      },
+      "workerLoadObserved": true
+    },
+    "localFonts": {
+      "italicFailure": {
+        "format": "pdf",
+        "ok": false,
+        "error": {
+          "name": "NetworkError",
+          "message": "A network error occurred."
+        },
+        "immutable": true,
+        "mountedPages": 0,
+        "realms": 0,
+        "loadedFamilies": [
+          "KaTeX_Main",
+          "KaTeX_Math"
+        ],
+        "loadedFaces": [
+          "KaTeX_Main|normal|400",
+          "KaTeX_Math|italic|400"
+        ],
+        "authoredStyle": "italic",
+        "offlineFontFaces": 0,
+        "offlineFontData": true,
+        "remoteFontReferences": false,
+        "workers": 0
+      },
+      "italicRetry": {
+        "format": "pdf",
+        "ok": true,
+        "bytes": 121337,
+        "immutable": true,
+        "mountedPages": 0,
+        "realms": 0,
+        "loadedFamilies": [
+          "KaTeX_Main",
+          "KaTeX_Math",
+          "Inter",
+          "Noto Sans SC"
+        ],
+        "loadedFaces": [
+          "KaTeX_Main|normal|400",
+          "KaTeX_Math|italic|400",
+          "Inter|italic|100 900",
+          "Noto Sans SC|normal|400 600"
+        ],
+        "authoredStyle": "italic",
+        "offlineFontFaces": 0,
+        "offlineFontData": true,
+        "remoteFontReferences": false,
+        "workers": 0
+      },
+      "pdf": {
+        "format": "pdf",
+        "ok": true,
+        "bytes": 120823,
+        "immutable": true,
+        "mountedPages": 0,
+        "realms": 0,
+        "loadedFamilies": [
+          "KaTeX_Main",
+          "KaTeX_Math",
+          "Inter",
+          "Noto Sans SC"
+        ],
+        "loadedFaces": [
+          "KaTeX_Main|normal|400",
+          "KaTeX_Math|italic|400",
+          "Inter|normal|100 900",
+          "Noto Sans SC|normal|400 600"
+        ],
+        "authoredStyle": "normal",
+        "offlineFontFaces": 0,
+        "offlineFontData": true,
+        "remoteFontReferences": false,
+        "workers": 0
+      },
+      "failure": {
+        "format": "html",
+        "ok": false,
+        "error": {
+          "name": "Error",
+          "message": "字体加载失败 (503)"
+        },
+        "immutable": true,
+        "mountedPages": 0,
+        "realms": 0,
+        "loadedFamilies": [],
+        "loadedFaces": [],
+        "authoredStyle": "normal",
+        "offlineFontFaces": 0,
+        "offlineFontData": true,
+        "remoteFontReferences": false,
+        "workers": 0
+      },
+      "retry": {
+        "format": "html",
+        "ok": true,
+        "bytes": 2849946,
+        "immutable": true,
+        "mountedPages": 0,
+        "realms": 0,
+        "loadedFamilies": [],
+        "loadedFaces": [],
+        "authoredStyle": "normal",
+        "offlineFontFaces": 8,
+        "offlineFontData": true,
+        "remoteFontReferences": false,
+        "workers": 0
+      }
+    },
+    "allAttemptsPreservedDocument": true,
+    "allAttemptsReleasedDomRealmsAndWorkers": true,
+    "workerCheck": "Chromium Target.getTargets after each attempt",
+    "unexpectedErrors": [],
+    "rawReport": "export-faults.json"
   },
   "libreOffice": {
     "renderer": "LibreOfficeDev 26.8.0.0.alpha0",
@@ -280,8 +513,9 @@
       25,
       50
     ],
-    "pdfBytes": 5805605,
-    "pdfSha256": "27f2b3f2ebd11c3ca6d11e72189e2460952a510e578f79086eb369b5283b6812"
+    "inputPptxSha256": "b4a49552a016ea712c784786f1e8123c570b91c70a8316fc4601f8d9a6c70d09",
+    "pdfBytes": 5805869,
+    "pdfSha256": "6efbf177b253be0a967402ef91edaaaf6258a82a7d16101ee0f650fbfb5db267"
   },
   "visualInspection": {
     "renderer": "LibreOffice",
@@ -290,43 +524,12 @@
       25,
       50
     ],
-    "observed": "Chinese text, full photograph, formula, rounded shape, table, background present; XML and extracted text preserve page labels and notes",
+    "observed": "Chinese text, complete photograph, formula, rounded shape, table and theme background; page25 includes the static isolated-content preview",
     "limitations": [
       "Direct file:// HTML opening blocked by managed Chromium policy; offline packaging assertions are separate.",
-      "PDF visual appearance is raster plus searchable Unicode text and links; text selection positions are not fully faithful.",
-      "PPTX formulas and complex nodes are pictures; ordinary text/shapes/tables/notes remain native.",
+      "PDF appearance is raster plus searchable Unicode text and links; text-selection positions are approximate.",
+      "PPTX formulas and complex/isolated nodes are pictures; ordinary text/shapes/tables/notes remain native.",
       "This isolated export check is not the authenticated product API/Agent or cold-start performance acceptance."
     ]
-  },
-  "faultAcceptance": {
-    "script": "node scripts/native-export-fault-acceptance.mjs",
-    "pages": [
-      "page-1",
-      "page-25",
-      "page-50"
-    ],
-    "browser": "Chrome/154.0.8037.57",
-    "lazyPdfChunk503": {
-      "initialFailure": true,
-      "sameWindowRetry": true,
-      "refreshRequired": false
-    },
-    "image503": {
-      "failedAfterPage": 1,
-      "retrySucceeded": true
-    },
-    "midExportCancellation": {
-      "formats": [
-        "html",
-        "pdf",
-        "pptx"
-      ],
-      "abortAfterPage": 1,
-      "allRetriesSucceeded": true
-    },
-    "allAttemptsPreservedDocument": true,
-    "allAttemptsReleasedDomAndWorkers": true,
-    "unexpectedErrors": [],
-    "rawReport": "export-faults.json"
   }
 }

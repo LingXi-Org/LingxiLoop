@@ -20,6 +20,15 @@ import { installRecordingWukong } from './_recording-wukong.js'
 
 after(async () => { await teardownAll() })
 
+function annotateFixtureFailure(error: unknown, calls: number) {
+  if (process.env.GITHUB_ACTIONS !== 'true') return
+  // Emit only a fixed repository path, numeric source line and fixture stage.
+  // Error messages and provider requests can contain private runtime context.
+  const match = error instanceof Error ? /runtime-design-failure\.test\.ts:(\d+):\d+/.exec(error.stack ?? '') : null
+  const line = match ? Number(match[1]) : undefined
+  console.error(`::error file=server/src/__integration__/runtime-design-failure.test.ts${line && Number.isSafeInteger(line) ? `,line=${line}` : ''}::Native Design fixture failed at provider stage ${calls}`)
+}
+
 test('failed native Design save rejects false partial completion before publication and preserves truthful text and existing files', { timeout: 40_000 }, async () => {
   await ensureSchemaOnce(); await resetAllTables()
   const im = await installRecordingWukong()
@@ -54,7 +63,7 @@ test('failed native Design save rejects false partial completion before publicat
       if (calls === 3) business.push({ name: 'design__read_reference', args: { page: 'native-model.md' } })
       if (calls === 4) business.push({ name: 'design__current', args: {} })
       if (calls === 5) business.push({ name: 'design__read_document', args: {} })
-      if (calls === 6) business.push({ name: 'design__read_page', args: { pageId, version: snapshot.pageVersions[pageId] } })
+      if (calls === 6) business.push({ name: 'design__read_page', args: { pageId, version: snapshot.pageVersions[pageId], atSeq: snapshot.document.seq } })
       // One schema-valid stale target rejects the entire operation batch:
       // neither its page title nor its new node may enter the saved document.
       if (calls === 7) business.push({ name: 'design__apply_ops', args: batch })
@@ -65,11 +74,20 @@ test('failed native Design save rejects false partial completion before publicat
         assert.notEqual(typeof input.tool_choice, 'object', 'a failed write must stop forcing prerequisite actions'); business.push({ name: 'design__check', args: {} }) }
       const toolCalls = business.map((tool, position) => ({ index: position, id: `design-failure-business-${calls}`, type: 'function', function: { name: tool.name, arguments: JSON.stringify(tool.args) } }))
       if (calls >= 9) {
+        let operation: { kind: 'append' | 'replace'; supersedes: string[] } = { kind: 'append', supersedes: [] }
         if (calls === 10) {
           streamingCorrectionSeen = (input.messages as Array<{ content?: unknown }>).some(message => typeof message.content === 'string' && message.content.includes('The public response was withheld by the trusted streaming safety policy.'))
           assert.equal(streamingCorrectionSeen, true, 'the failed streaming candidate must receive the native bounded correction')
+          const corrections = (input.messages as Array<{ content?: unknown }>).map(message => message.content)
+            .filter((content): content is string => typeof content === 'string' && content.startsWith('This generation repairs the explicitly selected candidate sources.'))
+          assert.equal(corrections.length, 1, 'the repair must identify its exact failed candidate')
+          const selected = /using exactly this operation: (\{.*?\})\. Do not append/.exec(corrections[0]!)
+          assert.ok(selected, 'the native correction supplies its required operation')
+          operation = JSON.parse(selected[1]!)
+          assert.equal(operation.kind, 'replace'); assert.equal(operation.supersedes.length, 1)
+          assert.equal(typeof operation.supersedes[0], 'string'); assert.ok(operation.supersedes[0]!.length > 0)
         }
-        toolCalls.push({ index: 0, id: `design-failure-answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] },
+        toolCalls.push({ index: 0, id: `design-failure-answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation,
           answer: calls === 9 ? falseClaim : fallback, commentary: '', outcome: { status: 'partial', gaps: ['Requested new canvas was not saved because its version changed.'] } }) } })
       }
       for (const call of toolCalls) assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === call.function.name), call.function.name)
@@ -84,7 +102,7 @@ test('failed native Design save rejects false partial completion before publicat
         return
       }
       response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: toolCalls }, finish_reason: 'tool_calls' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
-    } catch (error) { providerError ??= error; response.writeHead(500); response.end('{}') }
+    } catch (error) { providerError ??= error; annotateFixtureFailure(error, calls); response.writeHead(500); response.end('{}') }
   })
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
   let worker: ReturnType<typeof createWorker> | undefined
@@ -131,5 +149,6 @@ test('failed native Design save rejects false partial completion before publicat
     console.info(JSON.stringify({ qualification: 'synthetic-native-design-save-failure', failedSave: writes[0].result.code, calls,
       streamingCorrectionSeen, status: final.run.status, delivery: final.delivery, falseClaimInAcceptedBody: false,
       provisionalFalseClaimObserved, originalFilesUnchanged: true }))
-  } finally { await worker?.stop(); provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve())); await im.close() }
+  } catch (error) { annotateFixtureFailure(error, calls); throw error }
+  finally { await worker?.stop(); provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve())); await im.close() }
 })

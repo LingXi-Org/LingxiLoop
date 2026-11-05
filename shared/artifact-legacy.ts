@@ -180,6 +180,9 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       const style = nodeStyle(css)
       const rotation = Number(/rotate\(([-\d.]+)deg\)/.exec(css.transform ?? '')?.[1] ?? 0)
       const common = { x: absolute ? box.x + x : x, y: absolute ? box.y + y : y, width, height, rotation, parentId: absolute ? null : parentId, style }
+      if (tag === 'iframe' && source.attrs.srcdoc !== undefined && !Object.keys(source.attrs).some(key => /^on/i.test(key))) {
+        embed(source.attrs.srcdoc, common.x, common.y, width, height, common.parentId); return absolute ? 0 : height
+      }
       if (Object.keys(source.attrs).some(key => /^on/i.test(key)) || ['script', 'iframe', 'object', 'embed', 'video', 'audio', 'x-embed'].includes(tag)) {
         embed(serialize(source), common.x, common.y, width, height, common.parentId); return absolute ? 0 : height
       }

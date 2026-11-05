@@ -5,7 +5,7 @@
  */
 import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runProduct58MigrationTests, runFormal19Product60Tests, runFormal20Product60Tests, runFormal21Product61Tests, runFormal22Product61Tests, runFormal23Product61Tests, runFormal24ProductTests, runFormal25ProductTests, runTestChild } from './run-historical-migration-tests.mjs'
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs'
-import { parseIntegrationArgs, selectIntegrationFiles, integrationOwnerAllowanceMs } from './integration-suite.mjs'
+import { parseIntegrationArgs, selectIntegrationFiles, integrationBudgetMs } from './integration-suite.mjs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 // Load the developer's .env so RESEND_API_KEY / EMAIL_DOMAIN /
@@ -14,6 +14,7 @@ import { dirname, join } from 'node:path'
 // dotenv/config via env.ts, so this is mostly belt-and-braces — the
 // gating checks below need them present in THIS process.
 import 'dotenv/config'
+import { reportIntegrationFailure } from './scripts/integration-diagnostics.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const integrationDir = join(here, 'src/__integration__')
@@ -92,12 +93,11 @@ const groups = partitionMigrationTests(selectedFiles)
 const started = performance.now(), records = []
 const liveArtifactQualification = selectedFiles.length === 1 && (process.env.LINGXIOS_LIVE_ARTIFACTS === '1' && selectedFiles[0] === 'runtime-first-action-contracts.test.ts'
   || process.env.LINGXIOS_LIVE_SLIDES === '1' && selectedFiles[0] === 'runtime-slides-generation.test.ts')
-const budgetMs = (liveArtifactQualification ? 600_000 : mode === 'full' ? 1_500_000 : mode === 'selected' ? 360_000 : 180_000)
-  + integrationOwnerAllowanceMs(mode,selectedFiles)
+const budgetMs = integrationBudgetMs(mode, selectedFiles, { liveArtifactQualification })
 let code = 0
 for (const name of groups.current) {
   const remaining = budgetMs - (performance.now() - started)
-  if (remaining <= 0) { console.error(`[integration] ${mode} time budget exhausted before ${name}`); code = 1; break }
+  if (remaining <= 0) { reportIntegrationFailure({ file: name, reason: 'suite_budget', timeoutMs: budgetMs }); code = 1; break }
   const begin = performance.now()
   const fileTimeout = name === 'runtime-first-action-contracts.test.ts' && process.env.LINGXIOS_LIVE_ARTIFACTS === '1'
     || name === 'runtime-slides-generation.test.ts' && process.env.LINGXIOS_LIVE_SLIDES === '1'
@@ -147,7 +147,7 @@ if (!code && groups.historical.length) {
   records.push({ files: groups.historical, runtime: '3.8.2', durationMs: Math.round(performance.now() - begin), exitCode: code })
 }
 const report = {
-  mode, availableFiles: availableFiles.length, selectedFiles,
+  mode, availableFiles: availableFiles.length, selectedFiles, budgetMs,
   executedFiles: records.flatMap(record => record.files), records,
   durationMs: Math.round(performance.now() - started), exitCode: code,
 }

@@ -11,7 +11,7 @@ import {
   nativeSourceArchive, readNativeDocument, readNativeOriginal, readNativeOriginalBlob, readNativeOriginalResource, readNativePage, readNativePageSnapshot, restoreNativeRevision, submitNativeOperations, submitNativeRename,
 } from '../modules/artifacts/native-document.js'
 import { artifactKind } from '../modules/artifacts/kinds.js'
-import { listing, publish, sha256 } from '../modules/artifacts/store.js'
+import { listing, publish, readProjectFile, sha256 } from '../modules/artifacts/store.js'
 import type { ArtifactRow } from '../modules/artifacts/repository-types.js'
 import { installStorageProvider, type Storage } from '../storage.js'
 
@@ -93,6 +93,23 @@ test('50 image and formula pages persist by changed page and reopen at their imm
   assert.equal((await snapshot(item.id)).document.pages['page-25'].nodes.title.text, 'Human edit')
   assert.equal((await snapshot(item.id)).document.pages['page-50'].nodes.formula.source, String.raw`\frac{x_50}{\sqrt{2}}`)
   assert.equal((await db.query('SELECT count(*)::int AS count FROM artifact_files WHERE artifact_id=$1', [item.id])).rows[0].count, 51)
+})
+
+test('native Slides manifest and page reads are allowed without opening legacy file writes', async () => {
+  const item = await withText(), before = await snapshot(item.id), definition = artifactKind('slides')
+  const manifest = await readProjectFile(db, definition, item.id, 'project/document.json')
+  assert.equal(JSON.parse(manifest!.toString()).schemaVersion, 1)
+  assert.equal(JSON.parse(manifest!.toString()).pageFiles['page-1'], before.pageVersions['page-1'])
+  const page = await readProjectFile(db, definition, item.id, 'project/pages/page-1.json')
+  assert.equal(JSON.parse(page!.toString()).nodes.title.text, 'Original')
+  for (const path of ['project/pages/../document.json', 'project/pages/nested/page.json', 'project/pages/.hidden.json']) {
+    assert.equal(await readProjectFile(db, definition, item.id, path), null)
+  }
+  const rejected = await withTransaction(db, client => publish(client, definition, item.id, {
+    'project/slides/legacy.html': { base64: Buffer.from('<h1>Retired write</h1>').toString('base64'), contentType: 'text/html', ifMatch: null },
+  }, 'human'))
+  assert.equal(rejected.status, 409); assert.equal(rejected.body.code, 'editor_upgrade_required')
+  assert.deepEqual((await snapshot(item.id)).document, before.document)
 })
 
 test('independent fields merge, same-field conflicts are atomic, and retry receipts are durable', async () => {

@@ -1,3 +1,4 @@
+import { trackExportWorker, releaseExportWorker } from './worker-lifecycle'
 import type { ArtifactDocument, ArtifactRichText } from '../../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../../shared/artifact-themes'
 import type { ArtifactExportOptions, ArtifactExportResult } from '../export-artifact'
@@ -9,8 +10,8 @@ const color = (value: string | undefined, fallback = '141413') => /^#[a-fA-F0-9]
 function packPptx(job: PptxJob, signal?: AbortSignal): Promise<ArrayBuffer> {
   signal?.throwIfAborted()
   return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./pptx.worker.ts', import.meta.url), { type: 'module' })
-    const cleanup = () => { worker.terminate(); signal?.removeEventListener('abort', aborted) }
+    const worker = trackExportWorker(new Worker(new URL('./pptx.worker.ts', import.meta.url), { type: 'module' }))
+    const cleanup = () => { releaseExportWorker(worker); signal?.removeEventListener('abort', aborted) }
     const aborted = () => { cleanup(); reject(signal?.reason ?? new DOMException('Export cancelled', 'AbortError')) }
     signal?.addEventListener('abort', aborted, { once: true })
     worker.onmessage = (event: MessageEvent<{ bytes?: ArrayBuffer; error?: string }>) => {

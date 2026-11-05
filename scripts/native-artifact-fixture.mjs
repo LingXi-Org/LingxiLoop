@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { deflateSync } from 'node:zlib'
 
-export const FIXTURE_VERSION = 1
+export const FIXTURE_VERSION = 2
 export const FIXTURE_PAGE_COUNT = 50
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex')
 const formulas = [String.raw`E=mc^2`, String.raw`\frac{1}{2}+\sum_{i=1}^{n}i`, String.raw`\begin{pmatrix}1&2\\3&4\end{pmatrix}`, String.raw`\int_0^1 x^2\,dx=\frac{1}{3}`]
@@ -34,6 +34,12 @@ export function fixtureImage(index) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', header), chunk('IDAT', deflateSync(pixels, { level: 9 })), chunk('IEND', Buffer.alloc(0))])
 }
 
+// The embedded raster makes this source/hash independent of each benchmark arm's origin.
+// Its initial pixels match the existing image asset used for fixed export previews.
+function isolatedSource(image) {
+  return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden}img{display:block;width:100%;height:100%;object-fit:fill;cursor:pointer}</style></head><body><img id="isolated-image" alt="第25页隔离图片" aria-label="切换隔离图片透明度" role="button" tabindex="0" src="data:image/png;base64,${image.bytes.toString('base64')}"><script>const image=document.getElementById('isolated-image');const toggle=()=>{image.style.opacity=image.style.opacity==='0.35'?'1':'0.35'};image.addEventListener('click',toggle);image.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle()}});</script></body></html>`
+}
+
 export function createFixture(kind, id = `benchmark-${kind}`, imageUrls) {
   if (!['design', 'slides'].includes(kind)) throw Error('fixture kind must be design or slides')
   const images = Array.from({ length: FIXTURE_PAGE_COUNT }, (_, index) => {
@@ -44,6 +50,7 @@ export function createFixture(kind, id = `benchmark-${kind}`, imageUrls) {
     themes: { 'fixture-theme': { id: 'fixture-theme', name: '验收主题', tokens: { background: '#faf8f4', text: '#18332b', accent: '#426b46', fontFamily: 'Arial' } } }, assets: {}, pageOrder: [], pages: {}, versions: {} }
   const legacyFiles = new Map()
   const boards = {}, boardOrder = []
+  const isolatedBlocks = []
   for (let index = 0; index < FIXTURE_PAGE_COUNT; index++) {
     const number = index + 1, pageId = `page-${number}`, title = `验收页面 ${number}`, image = images[index]
     const url = imageUrls?.[index] ?? `/native-artifact-fixture/${image.filename}`
@@ -57,10 +64,18 @@ export function createFixture(kind, id = `benchmark-${kind}`, imageUrls) {
       makeNode('shape', 'shape', 760, 440, 180, 80, { shape: 'rect', style: { fill: '#426b46', borderRadius: 12 } }),
       makeNode('table', 'table', 64, 600, 1152, 70, { cells: [['页面 Page', '图像 Image', '公式 Formula'], [String(number), image.filename, `formula-${index % formulas.length + 1}`]], style: { fontSize: 18, color: '#18332b' } }),
     ]
+    let isolatedHtml = ''
+    if (number === 25) {
+      const source = isolatedSource(image), sourceHash = sha256(source)
+      const node = makeNode('embed', 'isolated', 1280, 200, 640, 360, { text: '隔离内容：点击切换图片透明度', embed: { format: 'html', source, sourceHash, previewAssetId: image.id } })
+      nodes.push(node)
+      isolatedBlocks.push({ pageId, nodeId: node.id, sourceSha256: sourceHash, previewAssetId: image.id, previewSha256: image.sha256, format: 'html' })
+      isolatedHtml = `<iframe title="第25页隔离内容" sandbox="allow-scripts" srcdoc="${escape(source)}" style="position:absolute;left:1280px;top:200px;width:640px;height:360px;border:0"></iframe>`
+    }
     const page = { id: pageId, title, x: kind === 'design' ? (index % 5) * 2080 : 0, y: kind === 'design' ? Math.floor(index / 5) * 1240 : 0, width: 1920, height: 1080,
       background: '#faf8f4', notes: `第 ${number} 页讲者备注，保存和导出后必须保留。`, skip: false, transition: 'none', nodeOrder: nodes.map(node => node.id), nodes: Object.fromEntries(nodes.map(node => [node.id, node])) }
     document.pageOrder.push(pageId); document.pages[pageId] = page
-    const body = `<h1 style="position:absolute;left:64px;top:40px;margin:0;font-size:48px;font-weight:700">${title}</h1><p style="position:absolute;left:64px;top:126px;margin:0;font-size:24px">${escape(nodes[1].text)}</p><img src="${escape(url)}" alt="验收图片 ${number}" style="position:absolute;left:64px;top:200px;width:640px;height:360px"><p style="position:absolute;left:744px;top:220px;width:460px;font-size:32px">\\[${escape(nodes[3].source)}\\]</p><div style="position:absolute;left:760px;top:440px;width:180px;height:80px;border-radius:12px;background:#426b46"></div><table style="position:absolute;left:64px;top:600px;width:1152px;font-size:18px"><tr><td>页面 Page</td><td>图像 Image</td><td>公式 Formula</td></tr><tr><td>${number}</td><td>${image.filename}</td><td>formula-${index % formulas.length + 1}</td></tr></table>`
+    const body = `<h1 style="position:absolute;left:64px;top:40px;margin:0;font-size:48px;font-weight:700">${title}</h1><p style="position:absolute;left:64px;top:126px;margin:0;font-size:24px">${escape(nodes[1].text)}</p><img src="${escape(url)}" alt="验收图片 ${number}" style="position:absolute;left:64px;top:200px;width:640px;height:360px"><p style="position:absolute;left:744px;top:220px;width:460px;font-size:32px">\\[${escape(nodes[3].source)}\\]</p><div style="position:absolute;left:760px;top:440px;width:180px;height:80px;border-radius:12px;background:#426b46"></div><table style="position:absolute;left:64px;top:600px;width:1152px;font-size:18px"><tr><td>页面 Page</td><td>图像 Image</td><td>公式 Formula</td></tr><tr><td>${number}</td><td>${image.filename}</td><td>formula-${index % formulas.length + 1}</td></tr></table>${isolatedHtml}`
     if (kind === 'slides') legacyFiles.set(`project/slides/${pageId}.html`, Buffer.from(`<section id="${pageId}" style="position:relative;width:1920px;height:1080px;background:#faf8f4;color:#18332b;font-family:Arial">${body}<aside>${page.notes}</aside></section>`))
     else {
       const filename = `Page${number}.dc.html`
@@ -70,8 +85,8 @@ export function createFixture(kind, id = `benchmark-${kind}`, imageUrls) {
   }
   if (kind === 'slides') legacyFiles.set('project/deck.json', Buffer.from(JSON.stringify({ v: 4, lists: 'css', title: document.title, order: document.pageOrder, sections: {}, faces: {}, designSystems: [] })))
   else legacyFiles.set('project/canvas.json', Buffer.from(JSON.stringify({ v: 3, title: document.title, launch: { view: 'canvas' }, pages: [], boards, order: boardOrder, notes: {}, designSystems: [] })))
-  return { document, legacyFiles, images, manifest: { version: FIXTURE_VERSION, pages: FIXTURE_PAGE_COUNT, images: images.length, formulas: FIXTURE_PAGE_COUNT,
+  return { document, legacyFiles, images, manifest: { version: FIXTURE_VERSION, pages: FIXTURE_PAGE_COUNT, images: images.length, formulas: FIXTURE_PAGE_COUNT, isolatedBlocks,
     imageBytes: images.reduce((sum, image) => sum + image.bytes.length, 0), imageHashes: images.map(({ filename, sha256, bytes }) => ({ filename, sha256, bytes: bytes.length })),
-    semanticSha256: sha256(JSON.stringify({ kind, titles: document.pageOrder.map(key => document.pages[key].title), formulas, images: images.map(image => image.sha256) })),
+    semanticSha256: sha256(JSON.stringify({ version: FIXTURE_VERSION, kind, titles: document.pageOrder.map(key => document.pages[key].title), formulas, images: images.map(image => image.sha256), isolatedBlocks })),
     nativeSha256: sha256(JSON.stringify(document)), legacyFiles: [...legacyFiles].map(([path, bytes]) => ({ path, bytes: bytes.length, sha256: sha256(bytes) })) } }
 }

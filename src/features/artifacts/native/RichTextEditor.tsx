@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import { useLocalDraft } from './draft-context'
 import type { ArtifactRichText } from '../../../../shared/artifact-document'
 
 function normalizedRichText(raw: ArtifactRichText): ArtifactRichText {
@@ -32,28 +33,30 @@ export default function RichTextEditor({ value, text, onChange, onFinish }: {
     editorProps: {
       attributes: { 'aria-label': '编辑文本', 'data-native-text-editor': 'true', role: 'textbox', 'aria-multiline': 'true' },
       handleDOMEvents: {
-        compositionstart: () => { composing.current = true; return false },
+        compositionstart: () => { composing.current = true; markDirty(true); return false },
         compositionend: (_view, event) => { composing.current = false; if (event.isTrusted) queueMicrotask(save); return false },
       },
       handleKeyDown: (_view, event) => { if (event.key === 'Escape' && !event.isComposing) { save(); onFinish(); return true } return false },
     },
-    onCreate: ({ editor }) => { lastSaved.current = JSON.stringify(normalizedRichText(editor.getJSON() as ArtifactRichText)) },
-    onUpdate: () => { if (pending.current) clearTimeout(pending.current); pending.current = setTimeout(save, 500) },
+    onCreate: ({ editor }) => { if (!lastSaved.current) lastSaved.current = JSON.stringify(normalizedRichText(editor.getJSON() as ArtifactRichText)) },
+    onUpdate: () => { markDirty(true); if (pending.current) clearTimeout(pending.current); pending.current = setTimeout(save, 500) },
     onBlur: () => { save() },
   })
   function save() {
-    if (!editor || composing.current) return
+    if (!editor || composing.current || !lastSaved.current) return
     if (pending.current) { clearTimeout(pending.current); pending.current = null }
     const next = normalizedRichText(editor.getJSON() as ArtifactRichText)
     const serialized = JSON.stringify(next)
-    if (serialized === lastSaved.current) return
+    if (serialized === lastSaved.current) { markDirty(false); return }
     lastSaved.current = serialized
-    callback.current(next, editor.getText())
+    callback.current(next, editor.getText()); markDirty(false)
   }
+  const markDirty = useLocalDraft(save)
   useEffect(() => {
-    const flush = () => save()
-    window.addEventListener('native-editor:flush', flush)
-    return () => { save(); if (pending.current) clearTimeout(pending.current); window.removeEventListener('native-editor:flush', flush) }
+    // StrictMode may clean up this effect before Tiptap's asynchronous onCreate.
+    // Establish the editor's normalized baseline before any cleanup can flush it.
+    if (editor && !lastSaved.current) lastSaved.current = JSON.stringify(normalizedRichText(editor.getJSON() as ArtifactRichText))
+    return () => { save(); if (pending.current) clearTimeout(pending.current) }
   }, [editor])
   if (!editor) return null
   return <div className="native-rich-editor" onPointerDown={event => event.stopPropagation()}>

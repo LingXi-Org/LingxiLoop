@@ -1,7 +1,7 @@
 {
   "format": "native-artifact-runtime-upgrade-source-audit/v1",
   "observedAt": "2026-11-05T04:45:50.430073+00:00",
-  "qualification": "source-and-publication-metadata-only; actual package installation and database bridge not qualified",
+  "qualification": "source/publication audit plus official package installation, frontend checks/build and formal bootstrap in CI; final owning suites and paired performance remain incomplete",
   "authorization": "User explicitly requested @lingxi-org/lingxios@4.0.0 after the original same-SDK plan; frozen editor baseline remains3.8.25.",
   "source": {
     "repository": "https://github.com/LingXi-Org/LingxiOS",
@@ -34,7 +34,7 @@
     "reportedUnpackedBytesApprox": 1900000,
     "reportedFileCount": 369,
     "resolvedUrl": "https://npm.pkg.github.com/download/@lingxi-org/lingxios/4.0.0/8ae8bb3697ec77e4f04149451a395cb57d9eddb8",
-    "resolvedUrlBasis": "GitHub Packages canonical download URL formed from observed name/version/published shasum; registry endpoint and archive bytes are not locally verified.",
+    "resolvedUrlBasis": "GitHub Packages canonical URL from observed name/version/published shasum; exact lockfile installation succeeded in CI. Archive bytes remain unavailable locally.",
     "registryReadStatus": 401,
     "organizationPackageApiStatus": 403,
     "buildAndPublishArtifactCounts": [
@@ -43,7 +43,8 @@
     ],
     "archiveDownloaded": false,
     "archiveDigestVerified": false,
-    "installedPackageExecuted": false
+    "installedPackageExecuted": true,
+    "executionEvidence": "CI official dependency installation and historical runtime bootstrap/product63 migration passed in run41973257639; local archive download remains blocked."
   },
   "database": {
     "allDatabaseResourceBlobsIdentical": true,
@@ -56,7 +57,7 @@
       "publicText": 3,
       "runTrace": 1
     },
-    "migrationImplication": "No SDK schema DDL. Explicit reviewed3.8.25→4.0.0 runtime-provenance CAS on unchanged product62, followed by additive product63; never auto-adopt mismatched runtime."
+    "migrationImplication": "No SDK schema DDL. Explicit reviewed3.8.25\u21924.0.0 runtime-provenance CAS on unchanged product62, followed by additive product63; never auto-adopt mismatched runtime."
   },
   "unchangedPublicAndBindingSources": [
     {
@@ -162,7 +163,7 @@
   ],
   "requiredBeforeQualification": [
     "Download exact official archive and verify its published checksum.",
-    "Install and execute the official package; complete frontend/backend type checks and production builds.",
+    "Complete final candidate frontend/backend checks and owning integration suites with the official package; earlier CI build/bootstrap successes are not a final all-green result.",
     "Generate actual harness receipts for candidate and deployed source images.",
     "Run runtime-patch62-40-provenance, harness-cutover and native-artifact-documents-migration against PostgreSQL.",
     "Complete frozen3.8.25 baseline vs candidate4.0.0 functional/performance acceptance; report the SDK version change as a changed experimental factor.",
@@ -170,9 +171,14 @@
   ],
   "productionActionsPerformed": false,
   "ciInstallation": {
-    "run": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/41971122979",
-    "integrationJob": 127059492901,
+    "run": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/41973257639",
+    "integrationJob": 127066271594,
     "officialPackageInstall": "passed",
-    "evidence": "Scoped dependency installation completed successfully in the integration job. The owning bootstrap failed afterward; this is not migration or runtime acceptance."
+    "formalBootstrap": "passed",
+    "webChecksAndBuild": "passed",
+    "serverTypecheck": "passed",
+    "serverUnitSuite": "failed obsolete guidance expectation; corrected in c18fc571, rerun pending",
+    "integrationSuite": "failed; diagnosis and rerun pending",
+    "evidence": "GitHub job/step conclusions and check annotations; this does not qualify the final candidate, full authenticated acceptance, or performance."
   }
 }

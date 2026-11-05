@@ -5,24 +5,25 @@
     "page-25",
     "page-50"
   ],
-  "fixtureSemanticSha256": "68859e9f939e90ee61d53702dce2652b60b1eb90296992b6b0c9391b877aa765",
-  "lazyModule": {
+  "fixtureSemanticSha256": "7819968e5469ba48a35207514e3071efc4d0bf120b4872a9696f9e10fda31c13",
+  "realmLoad": {
     "failure": {
       "format": "pdf",
       "ok": false,
       "error": {
-        "name": "TypeError",
-        "message": "Failed to fetch dynamically imported module: http://127.0.0.1:5327/assets/pdf-CPGistlA.js"
+        "name": "Error",
+        "message": "导出功能未能加载，请检查网络后重试。"
       },
       "progress": [],
       "immutable": true,
       "mountedPages": 0,
+      "realms": 0,
       "workers": 0
     },
     "retry": {
       "format": "pdf",
       "ok": true,
-      "bytes": 376314,
+      "bytes": 444591,
       "progress": [
         {
           "done": 1,
@@ -39,6 +40,121 @@
       ],
       "immutable": true,
       "mountedPages": 0,
+      "realms": 0,
+      "workers": 0
+    }
+  },
+  "lazyModule": {
+    "failure": {
+      "format": "pdf",
+      "ok": false,
+      "error": {
+        "name": "TypeError",
+        "message": "Failed to fetch dynamically imported module: http://127.0.0.1:5327/assets/pdf-CojYEqlE.js"
+      },
+      "progress": [],
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "workers": 0
+    },
+    "retry": {
+      "format": "pdf",
+      "ok": true,
+      "bytes": 444591,
+      "progress": [
+        {
+          "done": 1,
+          "total": 3
+        },
+        {
+          "done": 2,
+          "total": 3
+        },
+        {
+          "done": 3,
+          "total": 3
+        }
+      ],
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "workers": 0
+    }
+  },
+  "sharedDependency": {
+    "failure": {
+      "format": "pdf",
+      "ok": false,
+      "error": {
+        "name": "TypeError",
+        "message": "Failed to fetch dynamically imported module: http://127.0.0.1:5327/assets/pdf-CojYEqlE.js"
+      },
+      "progress": [],
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "workers": 0
+    },
+    "retry": {
+      "format": "pdf",
+      "ok": true,
+      "bytes": 444591,
+      "progress": [
+        {
+          "done": 1,
+          "total": 3
+        },
+        {
+          "done": 2,
+          "total": 3
+        },
+        {
+          "done": 3,
+          "total": 3
+        }
+      ],
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "workers": 0
+    }
+  },
+  "innerLazyModule": {
+    "failure": {
+      "format": "pdf",
+      "ok": false,
+      "error": {
+        "name": "TypeError",
+        "message": "Failed to fetch dynamically imported module: http://127.0.0.1:5327/assets/index-Cs9OzAhw.js"
+      },
+      "progress": [],
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "workers": 0
+    },
+    "retry": {
+      "format": "pdf",
+      "ok": true,
+      "bytes": 444591,
+      "progress": [
+        {
+          "done": 1,
+          "total": 3
+        },
+        {
+          "done": 2,
+          "total": 3
+        },
+        {
+          "done": 3,
+          "total": 3
+        }
+      ],
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
       "workers": 0
     }
   },
@@ -58,12 +174,13 @@
       ],
       "immutable": true,
       "mountedPages": 0,
+      "realms": 0,
       "workers": 0
     },
     "retry": {
       "format": "pdf",
       "ok": true,
-      "bytes": 376314,
+      "bytes": 444591,
       "progress": [
         {
           "done": 1,
@@ -80,6 +197,7 @@
       ],
       "immutable": true,
       "mountedPages": 0,
+      "realms": 0,
       "workers": 0
     }
   },
@@ -101,12 +219,13 @@
         ],
         "immutable": true,
         "mountedPages": 0,
+        "realms": 0,
         "workers": 0
       },
       "retry": {
         "format": "html",
         "ok": true,
-        "bytes": 3941558,
+        "bytes": 4765015,
         "progress": [
           {
             "done": 1,
@@ -123,6 +242,7 @@
         ],
         "immutable": true,
         "mountedPages": 0,
+        "realms": 0,
         "workers": 0
       }
     },
@@ -143,12 +263,13 @@
         ],
         "immutable": true,
         "mountedPages": 0,
+        "realms": 0,
         "workers": 0
       },
       "retry": {
         "format": "pdf",
         "ok": true,
-        "bytes": 376314,
+        "bytes": 444591,
         "progress": [
           {
             "done": 1,
@@ -165,6 +286,7 @@
         ],
         "immutable": true,
         "mountedPages": 0,
+        "realms": 0,
         "workers": 0
       }
     },
@@ -185,12 +307,13 @@
         ],
         "immutable": true,
         "mountedPages": 0,
+        "realms": 0,
         "workers": 0
       },
       "retry": {
         "format": "pptx",
         "ok": true,
-        "bytes": 982333,
+        "bytes": 1259569,
         "progress": [
           {
             "done": 1,
@@ -207,17 +330,203 @@
         ],
         "immutable": true,
         "mountedPages": 0,
+        "realms": 0,
         "workers": 0
       }
     }
   ],
+  "packingCancellation": {
+    "failure": {
+      "format": "pdf",
+      "ok": false,
+      "error": {
+        "name": "AbortError",
+        "message": "signal is aborted without reason"
+      },
+      "progress": [
+        {
+          "done": 1,
+          "total": 3
+        },
+        {
+          "done": 2,
+          "total": 3
+        },
+        {
+          "done": 3,
+          "total": 3
+        }
+      ],
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "workers": 0
+    },
+    "retry": {
+      "format": "pdf",
+      "ok": true,
+      "bytes": 444591,
+      "progress": [
+        {
+          "done": 1,
+          "total": 3
+        },
+        {
+          "done": 2,
+          "total": 3
+        },
+        {
+          "done": 3,
+          "total": 3
+        }
+      ],
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "workers": 0
+    },
+    "workerLoadObserved": true
+  },
+  "localFonts": {
+    "italicFailure": {
+      "format": "pdf",
+      "ok": false,
+      "error": {
+        "name": "NetworkError",
+        "message": "A network error occurred."
+      },
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "loadedFamilies": [
+        "KaTeX_Main",
+        "KaTeX_Math"
+      ],
+      "loadedFaces": [
+        "KaTeX_Main|normal|400",
+        "KaTeX_Math|italic|400"
+      ],
+      "authoredStyle": "italic",
+      "offlineFontFaces": 0,
+      "offlineFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    },
+    "italicRetry": {
+      "format": "pdf",
+      "ok": true,
+      "bytes": 121337,
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "loadedFamilies": [
+        "KaTeX_Main",
+        "KaTeX_Math",
+        "Inter",
+        "Noto Sans SC"
+      ],
+      "loadedFaces": [
+        "KaTeX_Main|normal|400",
+        "KaTeX_Math|italic|400",
+        "Inter|italic|100 900",
+        "Noto Sans SC|normal|400 600"
+      ],
+      "authoredStyle": "italic",
+      "offlineFontFaces": 0,
+      "offlineFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    },
+    "pdf": {
+      "format": "pdf",
+      "ok": true,
+      "bytes": 120823,
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "loadedFamilies": [
+        "KaTeX_Main",
+        "KaTeX_Math",
+        "Inter",
+        "Noto Sans SC"
+      ],
+      "loadedFaces": [
+        "KaTeX_Main|normal|400",
+        "KaTeX_Math|italic|400",
+        "Inter|normal|100 900",
+        "Noto Sans SC|normal|400 600"
+      ],
+      "authoredStyle": "normal",
+      "offlineFontFaces": 0,
+      "offlineFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    },
+    "failure": {
+      "format": "html",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "字体加载失败 (503)"
+      },
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "loadedFamilies": [],
+      "loadedFaces": [],
+      "authoredStyle": "normal",
+      "offlineFontFaces": 0,
+      "offlineFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    },
+    "retry": {
+      "format": "html",
+      "ok": true,
+      "bytes": 2849946,
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "loadedFamilies": [],
+      "loadedFaces": [],
+      "authoredStyle": "normal",
+      "offlineFontFaces": 8,
+      "offlineFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    }
+  },
   "injected": [
     {
-      "pathname": "/assets/pdf-CPGistlA.js",
+      "pathname": "/artifact-export.html",
+      "status": 503
+    },
+    {
+      "pathname": "/assets/pdf-CojYEqlE.js",
+      "status": 503
+    },
+    {
+      "pathname": "/assets/render-BZEchOkF.js",
+      "status": 503
+    },
+    {
+      "pathname": "/assets/index-Cs9OzAhw.js",
       "status": 503
     },
     {
       "pathname": "/native-artifact-fixture/image-25.png",
+      "status": 503
+    },
+    {
+      "pathname": "/assets/pdf.worker-CCeDUFOc.js",
+      "delayMs": 3000
+    },
+    {
+      "pathname": "/assets/inter-latin-wght-italic-DpCbqKDY.woff2",
+      "status": 503
+    },
+    {
+      "pathname": "/assets/inter-latin-wght-normal-Dx4kXJAl.woff2",
       "status": 503
     }
   ],

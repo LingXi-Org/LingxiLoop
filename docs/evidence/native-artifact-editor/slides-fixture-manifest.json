@@ -1,8 +1,18 @@
 {
-  "version": 1,
+  "version": 2,
   "pages": 50,
   "images": 50,
   "formulas": 50,
+  "isolatedBlocks": [
+    {
+      "pageId": "page-25",
+      "nodeId": "page-25-isolated",
+      "sourceSha256": "9bfaae700e1778bde6b78378fa602db2b3b5f387d39207cec9c4b6c548e2253e",
+      "previewAssetId": "image-25",
+      "previewSha256": "3d26afabbae1886c43f8a523b6535d9a103ed827ac64a7b758ac318f4eac955d",
+      "format": "html"
+    }
+  ],
   "imageBytes": 30877750,
   "imageHashes": [
     {
@@ -256,8 +266,8 @@
       "bytes": 616939
     }
   ],
-  "semanticSha256": "68859e9f939e90ee61d53702dce2652b60b1eb90296992b6b0c9391b877aa765",
-  "nativeSha256": "d2a8d96f5740bd26e4d9e09bac110b555d2bedb60b12ab31ac3c3456ca159278",
+  "semanticSha256": "7819968e5469ba48a35207514e3071efc4d0bf120b4872a9696f9e10fda31c13",
+  "nativeSha256": "134cf0795d4aa7c671ca63ba79a6dff597fa4ab0028fff8adc5967e484ee6404",
   "legacyFiles": [
     {
       "path": "project/slides/page-1.html",
@@ -381,8 +391,8 @@
     },
     {
       "path": "project/slides/page-25.html",
-      "bytes": 1034,
-      "sha256": "756dd35b2cfe8fe497ce6431342f08e868eb51d9bec66888de5629d20e1e9178"
+      "bytes": 825246,
+      "sha256": "32398656b9cf75b9b0eb4f96c2acb3d6586100d3324520779fdc637ef571c3b8"
     },
     {
       "path": "project/slides/page-26.html",

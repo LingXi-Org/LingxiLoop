@@ -192,7 +192,7 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   for (const { source } of copiesOf(stage)) {
     if (ts.sys.fileExists(resolve(root, source))) assert.ok(inContext(source), `SPA explicit COPY input excluded: ${source}`)
   }
-  for (const path of ['server/package.json', 'server/package-lock.json', 'server/build/web/package.json',
+  for (const path of ['artifact-export.html', 'server/package.json', 'server/package-lock.json', 'server/build/web/package.json',
     'server/build/web/package-lock.json', 'server/scripts/check-packaged-startup.mjs']) {
     assert.ok(inContext(path), `Missing build/runtime input: ${path}`)
   }
@@ -201,6 +201,7 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     assert.equal(inContext(path), false, `Non-runtime server content entered image context: ${path}`)
   }
   const pathOf = file => relative(root, file).replaceAll('\\', '/')
+  assert.ok(packaged('artifact-export.html'), 'The independent export renderer HTML must be shipped by the SPA build')
   const options = { moduleResolution: ts.ModuleResolutionKind.Bundler, baseUrl: root, paths: { '@/*': ['src/*'] } }
   const pending = ts.sys.readDirectory(resolve(root, 'src'), ['.ts', '.tsx'])
     .filter(file => inContext(pathOf(file)))
@@ -666,7 +667,10 @@ test('workflow carries explicit integration mode and bounded ordinary budgets', 
   const checks = workflow.match(/^  checks:\r?\n([\s\S]*?)(?=^  integration:)/m)?.[1]
   assert.match(checks, /timeout-minutes: 8/)
   const integration = workflow.match(/^  integration:\r?\n([\s\S]*?)(?=^  deploy:)/m)?.[1]
-  assert.match(integration, /timeout-minutes: \$\{\{ needs.changes.outputs.deep_integration == 'true' && 30 \|\| 12 \}\}/)
+  assert.match(workflow, /integration_timeout_minutes: \$\{\{ steps.scope.outputs.integration_timeout_minutes \}\}/)
+  assert.match(integration, /timeout-minutes: \$\{\{ fromJSON\(needs.changes.outputs.integration_timeout_minutes\) \}\}/)
+  assert.equal(computeScope({ serverSource: true }).integration_timeout_minutes, 12, 'ordinary smoke remains bounded')
+  assert.equal(computeScope({}, 'deep-integration').integration_timeout_minutes, 32, 'full suite plus bounded bootstrap margin')
   assert.match(integration, /- if: always\(\)\r?\n\s+uses: actions\/upload-artifact@v4/)
   assert.match(integration, /path: artifacts\/ci-integration\/timings\.json/)
   assert.match(integration, /if-no-files-found: warn/)

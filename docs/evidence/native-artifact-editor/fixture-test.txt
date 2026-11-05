@@ -1,9 +1,13 @@
-✔ 50-page acceptance fixture has distinct decoded images and source formulas on every page in both formats (17085.312763ms)
-ℹ tests 1
+Command: node --import tsx --test scripts/native-artifact-fixture.test.mjs
+Fixture version: 2
+
+✔ 50-page acceptance fixture has distinct decoded images and source formulas on every page in both formats (7986.581868ms)
+✔ isolated source and semantic hash stay fixed across fixture origins and document IDs (4619.512611ms)
+ℹ tests 2
 ℹ suites 0
-ℹ pass 1
+ℹ pass 2
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 18148.646468
+ℹ duration_ms 14242.223122

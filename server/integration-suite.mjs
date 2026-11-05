@@ -22,6 +22,15 @@ export function integrationOwnerAllowanceMs(mode, files) {
     total + (Object.hasOwn(DURABLE_QUEUE_ALLOWANCE_MS,file) ? DURABLE_QUEUE_ALLOWANCE_MS[file] : 0),0) : 0
 }
 
+// Selected runs can contain most of the suite after a shared runtime change.
+// Preserve the short-run floor, allow one minute per owning file, and never
+// exceed the ordinary full-suite ceiling before explicit queue allowances.
+export function integrationBudgetMs(mode, files, { liveArtifactQualification = false } = {}) {
+  const base = liveArtifactQualification ? 600_000 : mode === 'full' ? 1_500_000
+    : mode === 'selected' ? Math.min(1_500_000, Math.max(360_000, new Set(files).size * 60_000)) : 180_000
+  return base + integrationOwnerAllowanceMs(mode, files)
+}
+
 export function parseIntegrationArgs(argv, env = process.env) {
   let mode
   const files = []

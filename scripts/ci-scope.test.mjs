@@ -82,3 +82,21 @@ test('settled stage producers and readers retain shared-ledger and public public
     assert.ok(scope.integration_files.includes('runtime-public-text-suspension.test.ts'), path)
   }
 })
+
+
+test('integration job timeout follows its selected owner budget while smoke stays short', () => {
+  assert.equal(computeScope({ serverSource: true }).integration_timeout_minutes, 12)
+  const one = computeScope({ integrationTests: true, integrationFiles: ['server/src/__integration__/slides-workspace-flow.test.ts'] })
+  assert.equal(one.integration_timeout_minutes, 13)
+  const broad = computeScope({ serverSource: true, serverSourceFiles: [
+    'server/src/db/runtime-patch.ts', 'server/src/db/migrate.ts', 'server/src/agent-runtime/runtime.ts',
+    'server/src/modules/artifacts/agent-tools.ts', 'server/src/modules/access/public.ts',
+    'server/src/modules/conversations/public.ts', 'server/src/modules/memory/public.ts',
+    'server/src/modules/projects/public.ts', 'server/src/modules/knowledge/public.ts',
+  ] })
+  assert.ok(broad.integration_files.length >= 25)
+  assert.equal(broad.integration_timeout_minutes, 32)
+  assert.equal(computeScope({}, 'deep-integration').integration_timeout_minutes, 32)
+  const queue = computeScope({ serverSource: true, serverSourceFiles: ['server/src/__integration__/_queue-capacity-fixture.ts'] })
+  assert.equal(queue.integration_timeout_minutes, Math.ceil((queue.integration_files.length * 60_000 + 450_000) / 60_000) + 7)
+})

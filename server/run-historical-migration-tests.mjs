@@ -8,6 +8,7 @@ import {execFile,spawn} from 'node:child_process'
 import {promisify} from 'node:util'
 import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal22TestFixture,withFormal23TestFixture,withFormal24TestFixture,withFormal25TestFixture,useHistoricalRuntimeScope} from './scripts/formal19-test-fixture.mjs'
 import {provisionHistoricalDependencies} from './scripts/historical-runtime-dependencies.mjs'
+import {reportIntegrationFailure} from './scripts/integration-diagnostics.mjs'
 const execute=promisify(execFile)
 const PATCH54=new Set(['runtime-patch-provenance.test.ts'])
 const PATCH57=new Set(['runtime-patch57-provenance.test.ts'])
@@ -84,12 +85,21 @@ export function assertHistoricalArtifact(bytes,record){
  assertHistoricalRecord(record)
  assert.equal('sha512-'+createHash('sha512').update(bytes).digest('base64'),record.integrity,'Historical runtime archive integrity changed')
 }
-export function runTestChild(args,{cwd,env=process.env,timeout=600_000}={}){
+export function runTestChild(args,{cwd,env=process.env,timeout=600_000,onFailure=reportIntegrationFailure}={}){
  return new Promise(resolve=>{
+  const started=performance.now(),file=args.map(value=>basename(value)).find(value=>/^[\w-]+\.test\.ts$/.test(value))
   const child=spawn(process.execPath,args,{cwd,env,stdio:'inherit',timeout,killSignal:'SIGKILL'})
-  child.once('error',()=>resolve(1));child.once('exit',code=>resolve(code??1))
+  let settled=false
+  const finish=(code,signal,failedToSpawn=false)=>{
+   if(settled)return
+   settled=true
+   if(code!==0)onFailure({file,reason:failedToSpawn?'spawn':signal==='SIGKILL'&&performance.now()-started>=timeout?'timeout':signal?'signal':'exit',exitCode:code,signal,timeoutMs:timeout},env.GITHUB_ACTIONS)
+   resolve(code??1)
+  }
+  child.once('error',()=>finish(1,null,true));child.once('exit',(code,signal)=>finish(code,signal))
  })
 }
+
 export async function runFormal19Product60Tests(root,files,env=process.env){
  assertFixtureTarget(files,env,new Set(['runtime-patch60-provenance.test.ts']))
  return withFormal19TestFixture(root,env,async(fixture,sourceEnv)=>{

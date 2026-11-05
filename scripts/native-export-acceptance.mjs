@@ -1,5 +1,5 @@
 // Focused product export check. Uses actual browser adapters/Workers and the fixed 50-page fixture.
-import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm, cp } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
@@ -15,10 +15,12 @@ const temporary = await mkdtemp(join(tmpdir(), 'lingxi-export-'))
 const fixture = createFixture('slides')
 await mkdir(output, { recursive: true })
 await mkdir(join(temporary, 'public/native-artifact-fixture'), { recursive: true })
+await cp(join(repository, 'public/fonts'), join(temporary, 'public/fonts'), { recursive: true })
 await Promise.all(fixture.images.map(image => writeFile(join(temporary, 'public/native-artifact-fixture', image.filename), image.bytes)))
 await writeFile(join(temporary, 'public/document.json'), JSON.stringify(fixture.document))
 const embedPreview = await readFile(resolve(process.argv[3] ?? join(output, '../native-embed-acceptance/dc-preview.png')))
 await writeFile(join(temporary, 'public/embed-preview.png'), embedPreview)
+await writeFile(join(temporary, 'artifact-export.html'), (await readFile(join(repository, 'artifact-export.html'), 'utf8')).replace('/src/features/artifacts/native/export/realm-entry.ts', join(repository, 'src/features/artifacts/native/export/realm-entry.ts')))
 await writeFile(join(temporary, 'index.html'), '<!doctype html><html><head><meta charset="utf-8"><title>Native export acceptance</title></head><body><output id="status">loading</output><script type="module" src="/entry.ts"></script></body></html>')
 await writeFile(join(temporary, 'entry.ts'), `
 const original = await fetch('/document.json').then(response=>response.json());
@@ -31,7 +33,7 @@ window.runExport = async format => {
   const response = await fetch('/_capture/'+format,{method:'POST',body:result.blob});
   if(!response.ok)throw Error('capture upload failed');
   if(before!==JSON.stringify(original))throw Error('export mutated source document');
-  if(document.querySelectorAll('.artifact-export-page').length)throw Error('export renderer leaked a mounted page');
+  if(document.querySelectorAll('.artifact-export-page,[data-artifact-export-realm]').length)throw Error('export renderer leaked a mounted page');
   return {format,bytes:result.blob.size,milliseconds:performance.now()-started,warnings:result.warnings,immutable:true,mountedPages:0};
 };
 window.runCancelledExport = async () => {const {exportArtifact}=await import(${JSON.stringify(join(repository, 'src/features/artifacts/native/export-artifact.ts'))});const controller=new AbortController();controller.abort();try{await exportArtifact(original,{format:'pdf',signal:controller.signal});throw Error('cancelled export succeeded')}catch(error){return {name:error.name,cancelled:error.name==='AbortError'}}};
@@ -43,7 +45,7 @@ window.runEmbedHtml = async () => {
 };
 window.fixtureReady=true; document.querySelector('#status').textContent='ready';
 `)
-await build({ configFile: false, root: temporary, logLevel: 'warn', build: { outDir: join(temporary, 'dist'), target: 'esnext', chunkSizeWarningLimit: 2000 }, worker: { format: 'es' } })
+await build({ configFile: false, root: temporary, logLevel: 'warn', build: { outDir: join(temporary, 'dist'), target: 'esnext', chunkSizeWarningLimit: 2000, rollupOptions: { input: { main: join(temporary, 'index.html'), export: join(temporary, 'artifact-export.html') } } }, worker: { format: 'es' } })
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf' }
 const server = createServer(async (request, response) => {
   try {
@@ -113,7 +115,7 @@ try {
   const offlineHtml = await readFile(join(output, 'fifty-pages.html'), 'utf8')
   const offlineEmbed = await readFile(join(output, 'embed-offline.html'), 'utf8')
   const imageSources = [...offlineHtml.matchAll(/<img[^>]*src="([^"]*)"/g)].map(match => match[1])
-  if (imageSources.length !== 50 || imageSources.some(source => !source.startsWith('data:image/'))) throw Error('HTML images are not self-contained')
+  if (imageSources.length !== 50 + fixture.manifest.isolatedBlocks.length || imageSources.some(source => !source.startsWith('data:image/'))) throw Error('HTML images are not self-contained')
   if (offlineEmbed.includes('support.js') || offlineEmbed.includes('{{title}}') || offlineEmbed.includes('<iframe') || !offlineEmbed.includes('data:image/png;base64,')) throw Error('isolated preview was not packaged offline')
   const artifacts = await Promise.all(['html', 'pdf', 'pptx'].map(async format => { const bytes = await readFile(join(output, `fifty-pages.${format}`)); return { format, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') } }))
   const report = { browser: browser.Browser, fixture: fixture.manifest, results, artifacts, cancellation: cancelled.result.value, independentPptx: rendered.result.value, offlineHtml:{packaging:'self-contained image/font data URLs',pages:50,images:imageSources.length,formulas:(offlineHtml.match(/class="katex"/g)??[]).length,fileOpening:'BLOCKED: managed Chromium file URL policy; not verified'}, offlineEmbed:{...embedResult.result.value,packaged:true,fileOpening:'BLOCKED: managed Chromium file URL policy; not verified',previewSha256:createHash('sha256').update(embedPreview).digest('hex')}, errors, browserLogs, requests: [...new Set(requests)] }
@@ -122,5 +124,5 @@ try {
 } finally {
   socket?.close(); chrome.kill('SIGTERM'); server.close()
   await new Promise(resolve => chrome.once('exit', resolve))
-  await rm(temporary, { recursive: true, force: true })
+  await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
 }

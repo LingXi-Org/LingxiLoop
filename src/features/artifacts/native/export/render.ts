@@ -1,6 +1,7 @@
 import type { ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../../shared/artifact-document'
 import { isSafeArtifactSvg } from '../../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../../shared/artifact-themes'
+import { awaitPageFonts } from './fonts'
 import { escapeHtml, type ExportResources, offlineMathCss } from './common'
 
 const safeText = (text: string) => escapeHtml(text).replace(/\n/g, '<br>')
@@ -120,7 +121,7 @@ export async function mountExportPage(page: ArtifactPage, resources: ExportResou
   const element = surface.firstElementChild as HTMLElement
   try {
     await Promise.all([...element.querySelectorAll('img')].map(image => image.decode()))
-    await document.fonts.ready
+    await awaitPageFonts(element)
     resources.check()
     return { element, viewport: surface, dispose: () => host.remove() }
   } catch (error) { host.remove(); throw error }

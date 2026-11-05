@@ -29,19 +29,28 @@ Historical `perf/issue-652` values describe different source revisions and a
 different, smaller sample. They are not relabelled as this refactor's baseline.
 
 The candidate now uses the user-approved `@lingxi-org/lingxios@4.0.0`.
-[CI run 41971122979](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41971122979)
-installed that official package successfully; its server and integration bootstrap
-checks have not passed. Local package access and the original baseline dependency
+[CI run 41973257639](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41973257639)
+installed that official package and passed the frontend checks/build, server typecheck,
+and formal historical-runtime/bootstrap migration to product63. The server unit
+suite then failed an outdated authoring-guidance expectation (fixed in `c18fc571`);
+the integration suite also failed and remains under investigation. Local package access and the original baseline dependency
 remain unavailable. This does not change the unverified performance gates above.
 
 ## Fixed input and measurement contract
 
-`scripts/native-artifact-fixture.mjs` creates equivalent legacy files and native
+Version 2 of `scripts/native-artifact-fixture.mjs` creates equivalent legacy files and native
 documents: 50 ordered slides or 50 positioned artboards, each with an editable
 heading, body, distinct 640×360 raster image, formula, shape and table. Slides
 also carry notes. Formula variants include fractions, sums, matrices and an
 integral, including a formula on the first page. Images total 30,877,750 bytes;
-they are 50 distinct PNGs, not 50 references to one image. Native and legacy page
+they are 50 distinct PNGs, not 50 references to one image. Page 25 additionally
+contains an isolated interactive block whose image toggles opacity on click or
+keyboard input. The native block and legacy sandboxed iframe contain the exact
+same standalone HTML and an inline copy of image 25. This keeps the source hash
+stable across both application origins; its fixed export preview references the
+original image-25 asset and matches the initial pixels. Both arms carry the same
+added source. The manifests record isolated source and preview hashes; the image
+asset count and unique raster bytes are unchanged. Native and legacy page
 coordinates use 1920×1080. Fixed local image responses exercise real transfer
 and image decoding without an external CDN. Upload to object storage and live
 model inference are separate acceptance scenarios.
@@ -52,7 +61,8 @@ and semantic SHA-256 hashes. Local origin changes alter serialized file hashes;
 the semantic hash remains the same. The focused fixture regression verifies
 50 pages, 50 unique decodable PNGs, valid KaTeX on every page, legacy source
 preservation, schema validity and reconstruction through the real shared
-operation reducer.
+operation reducer. It also verifies byte-identical legacy/native isolated
+source, the exact preview raster and origin-independent semantic/source hashes.
 
 The browser runner uses a new Chromium process and empty cache for every cold
 sample, restoring only a valid login cookie. The whole production app loads;

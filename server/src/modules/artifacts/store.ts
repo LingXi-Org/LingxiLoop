@@ -71,7 +71,8 @@ export async function listing(db: Queryable, artifactId: string): Promise<Listin
 }
 
 export async function readProjectFile(db: Queryable, definition: ArtifactKindDefinition, artifactId: string, p: string) {
-  if (fileOf(definition, p) === null) return null
+  const nativePath = p === 'project/document.json' || /^project\/pages\/[A-Za-z0-9_-]{1,128}\.json$/.test(p)
+  if (!nativePath && fileOf(definition, p) === null) return null
   const { rows } = await db.query<{ body: Buffer }>('SELECT body FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifactId, p])
   return rows[0]?.body ?? null
 }

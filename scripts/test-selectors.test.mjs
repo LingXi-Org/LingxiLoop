@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import test from 'node:test'
-import { SMOKE_FILES, parseIntegrationArgs, selectIntegrationFiles, integrationOwnerAllowanceMs } from '../server/integration-suite.mjs'
+import { SMOKE_FILES, parseIntegrationArgs, selectIntegrationFiles, integrationOwnerAllowanceMs, integrationBudgetMs } from '../server/integration-suite.mjs'
 import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact, copyProduct54FixtureSource, copyProduct57FixtureSource, assertProduct54FixtureTarget } from '../server/run-historical-migration-tests.mjs'
 import { createHash } from 'node:crypto'
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
@@ -14,6 +14,34 @@ test('only named durable queue owners add selected-run time without changing oth
  assert.equal(integrationOwnerAllowanceMs('selected',[owners[0],owners[0]]),90_000)
  for(const mode of ['smoke','full'])assert.equal(integrationOwnerAllowanceMs(mode,owners),0)
  assert.equal(integrationOwnerAllowanceMs('selected',[...SMOKE_FILES,'runtime-queue-unknown.test.ts','toString','../runtime-queue-capacity.test.ts']),0)
+})
+
+test('selected integration budgets scale with deduplicated owners and retain a full-suite ceiling', () => {
+ const files = Array.from({ length: 62 }, (_, i) => `owner-${i}.test.ts`)
+ const selected = selectIntegrationFiles({ ...parseIntegrationArgs([], { INTEGRATION_TEST_MODE: 'selected', INTEGRATION_TEST_FILES: JSON.stringify(files) }), availableFiles: files })
+ assert.deepEqual(selected, files, 'the broader budget never drops selected owners')
+ assert.equal(integrationBudgetMs('selected', selected), 1_500_000)
+ assert.equal(integrationBudgetMs('selected', files.slice(0, 7)), 420_000)
+ assert.equal(integrationBudgetMs('selected', [files[0], files[0]]), 360_000)
+ assert.equal(integrationBudgetMs('selected', [...files, 'runtime-queue-background-capacity.test.ts']), 1_650_000)
+ assert.equal(integrationBudgetMs('full', files), 1_500_000)
+ assert.equal(integrationBudgetMs('smoke', SMOKE_FILES), 180_000)
+ assert.equal(integrationBudgetMs('selected', [files[0]], { liveArtifactQualification: true }), 600_000)
+})
+
+test('integration failure diagnostics expose fixed file/status metadata without child output', async () => {
+ const { integrationFailure, integrationFailureAnnotation } = await import('../server/scripts/integration-diagnostics.mjs')
+ const { runTestChild } = await import('../server/run-historical-migration-tests.mjs')
+ const failure = { file: 'slides-workspace-flow.test.ts', reason: 'timeout', signal: 'SIGKILL', timeoutMs: 180000, stderr: 'sentinel-secret', message: 'secret command' }
+ assert.deepEqual(integrationFailure(failure), { integration: 'failed', file: 'slides-workspace-flow.test.ts', reason: 'timeout', signal: 'SIGKILL', timeoutMs: 180000 })
+ assert.match(integrationFailureAnnotation(failure, 'true'), /^::error title=Integration test process failed::integration=failed; file=slides-workspace-flow.test.ts; reason=timeout/)
+ assert.equal(integrationFailureAnnotation(failure, 'false'), null)
+ assert.doesNotMatch(integrationFailureAnnotation({ file: '../sentinel-secret\n::error', reason: 'secret', signal: 'secret', stderr: 'secret' }, 'true'), /secret|\n/)
+ const failures = []
+ assert.equal(await runTestChild(['-e', 'process.exit(7)'], { onFailure: value => failures.push(value) }), 7)
+ assert.equal(failures[0].reason, 'exit'); assert.equal(failures[0].exitCode, 7)
+ assert.equal(await runTestChild(['-e', 'setInterval(()=>{},1000)'], { timeout: 100, onFailure: value => failures.push(value) }), 1)
+ assert.equal(failures[1].reason, 'timeout'); assert.equal(failures[1].signal, 'SIGKILL')
 })
 
 // Failure model: today's projection imports new runtime UI exports which the

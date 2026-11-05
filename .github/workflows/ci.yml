@@ -30,6 +30,7 @@ jobs:
       admin_build: ${{ steps.scope.outputs.admin_build }}
       integration_files: ${{ steps.scope.outputs.integration_files }}
       integration_mode: ${{ steps.scope.outputs.integration_mode }}
+      integration_timeout_minutes: ${{ steps.scope.outputs.integration_timeout_minutes }}
       deep_integration: ${{ steps.scope.outputs.deep_integration }}
       open_notebook: ${{ steps.scope.outputs.open_notebook }}
       deployment: ${{ steps.scope.outputs.deployment }}
@@ -378,7 +379,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.integration == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ needs.changes.outputs.deep_integration == 'true' && 30 || 12 }}
+    timeout-minutes: ${{ fromJSON(needs.changes.outputs.integration_timeout_minutes) }}
     services:
       postgres:
         image: pgvector/pgvector:pg16

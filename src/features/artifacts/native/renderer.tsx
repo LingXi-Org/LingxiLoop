@@ -4,6 +4,7 @@ import { artifactPageBackground, artifactResolvedStyle } from '../../../../share
 import { http } from '@/api/core/http'
 import { fetchArtifactAsset } from './assets'
 import type { NativeCompute } from './compute'
+import { useLocalDraft } from './draft-context'
 
 const RichTextEditor = lazy(() => import('./RichTextEditor'))
 let mathStyles: Promise<unknown> | undefined
@@ -85,6 +86,27 @@ export interface PageRenderProps {
   visibleNodeIds?: ReadonlySet<string>
   contentBottom?: number
 }
+function TableCell({ value, editing, onCommit }: { value: string; editing: boolean; onCommit(value: string): void }) {
+  const root = useRef<HTMLTableCellElement>(null)
+  const [rendered, setRendered] = useState(value)
+  const focused = useRef(false), dirty = useRef(false), composing = useRef(false), flushAfterComposition = useRef(false)
+  const draft = useRef(value), baseline = useRef(value)
+  const latest = useRef({ value, onCommit }); latest.current = { value, onCommit }
+  const save = () => {
+    if (composing.current) { flushAfterComposition.current = true; return }
+    if (dirty.current && draft.current !== baseline.current) latest.current.onCommit(draft.current)
+    baseline.current = draft.current; dirty.current = false; markDirty(false)
+  }
+  const markDirty = useLocalDraft(save)
+  useEffect(() => {
+    if (!focused.current) { baseline.current = value; draft.current = value; setRendered(value); if (root.current) root.current.textContent = value; dirty.current = false; markDirty(false) }
+  }, [value, markDirty])
+  const input = () => { draft.current = root.current?.textContent ?? ''; dirty.current = draft.current !== baseline.current; markDirty(dirty.current || composing.current) }
+  return <td ref={root} contentEditable={editing} suppressContentEditableWarning onFocus={() => { focused.current = true }} onInput={input}
+    onCompositionStart={() => { composing.current = true; markDirty(true) }} onCompositionEnd={() => { composing.current = false; input(); if (flushAfterComposition.current) { flushAfterComposition.current = false; queueMicrotask(save) } }}
+    onPaste={event => { event.preventDefault(); window.document.execCommand('insertText', false, event.clipboardData.getData('text/plain')) }}
+    onPointerDown={event => { if (editing) event.stopPropagation() }} onBlur={() => { focused.current = false; save(); if (!composing.current) { setRendered(latest.current.value); if (root.current) root.current.textContent = latest.current.value } }}>{rendered}</td>
+}
 function NodeContent({ node, document, page, compute, editingId, onTextChange, onFinishText, onCellChange, presenting }: PageRenderProps & { node: ArtifactNode }) {
   node = { ...node, style: artifactResolvedStyle(node.style, document) }
   switch (node.type) {
@@ -104,7 +126,7 @@ function NodeContent({ node, document, page, compute, editingId, onTextChange, o
         : <rect x="1" y="1" width={Math.max(0, node.width - 2)} height={Math.max(0, node.height - 2)} rx={node.style.borderRadius ?? 0} fill={node.style.fill ?? '#d6e6ff'} stroke={node.style.stroke} strokeWidth={node.style.strokeWidth} />}
     </svg>
     case 'line': return <svg width="100%" height="100%" viewBox={`0 0 ${node.width} ${node.height}`} style={{ overflow: 'visible' }}><defs><marker id={`arrow-${node.id}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill={node.style.stroke ?? '#333'} /></marker></defs><polyline points={(node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ')} stroke={node.style.stroke ?? '#333'} strokeWidth={node.style.strokeWidth ?? 3} fill="none" markerEnd={`url(#arrow-${node.id})`} /></svg>
-    case 'table': return <table className="native-table"><tbody>{node.cells?.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, colIndex) => <td key={colIndex} contentEditable={editingId === node.id && !!onCellChange} suppressContentEditableWarning onPaste={event => { event.preventDefault(); window.document.execCommand('insertText', false, event.clipboardData.getData('text/plain')) }} onPointerDown={event => { if (editingId === node.id) event.stopPropagation() }} onBlur={event => { if (event.currentTarget.textContent !== cell) onCellChange?.(node.id, rowIndex, colIndex, event.currentTarget.textContent ?? '') }}>{cell}</td>)}</tr>)}</tbody></table>
+    case 'table': return <table className="native-table"><tbody>{node.cells?.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, colIndex) => <TableCell key={colIndex} value={cell} editing={editingId === node.id && !!onCellChange} onCommit={text => onCellChange?.(node.id, rowIndex, colIndex, text)} />)}</tr>)}</tbody></table>
     case 'embed': return node.embed?.sourceHash ? <IsolatedEmbed documentId={document.id} pageId={page.id} node={node} presenting={presenting} /> : <div className="native-embed-wait">隔离内容等待保存</div>
     case 'group': return null
   }

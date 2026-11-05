@@ -67,3 +67,14 @@ describe('legacy artifact conversion', () => {
     assert.ok(!Object.values(page.nodes).some(node => node.type === 'embed'))
   })
 })
+
+it('legacy iframe srcdoc becomes the opaque block source without a forbidden nested frame', () => {
+  const source = '<section><iframe width="640" height="360" srcdoc="&lt;html&gt;&lt;body&gt;&lt;button onclick=&quot;this.textContent=\'clicked\'&quot;&gt;click&lt;/button&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></section>'
+  const files = { 'project/deck.json': { content: JSON.stringify({ v: 4, order: ['one'] }), sha256: 'a'.repeat(64) }, 'project/slides/one.html': { content: source, sha256: 'b'.repeat(64) } }
+  const converted = convertLegacyArtifact({ id: 'srcdoc', kind: 'slides', title: 'Srcdoc', files })
+  const node = Object.values(converted.document.pages.one!.nodes).find(node => node.type === 'embed')!
+  assert.ok(node.embed!.source.startsWith('<html>'))
+  assert.ok(node.embed!.source.includes('onclick="this.textContent=\'clicked\'"'))
+  assert.ok(!node.embed!.source.includes('<iframe'))
+  assert.equal(files['project/slides/one.html'].content, source)
+})

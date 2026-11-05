@@ -10,7 +10,7 @@ The user subsequently authorized upgrading the candidate to the published
 `@lingxi-org/lingxios@4.0.0`. The dependency and explicit provenance bridge are implemented;
 the original `@lyyzka/lingxios@3.8.25` baseline remains frozen. Package access
 remains unavailable locally for both releases. CI installed the formal 4.0.0
-package successfully, but the owning server/bootstrap checks have not passed. Consequently the complete authenticated app, owning runtime
+package successfully. CI run [41973257639](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41973257639) passed the web checks/build, server typecheck and formal bootstrap/migration, then failed server unit and integration checks. The outdated server authoring-guidance test was corrected in `c18fc571`; integration is still under investigation. Consequently the complete authenticated app, owning runtime
 integrations, live Agent conversation and paired performance runs remain
 unverified. Public dependencies were installed at their lockfile versions for
 isolated checks and browser builds. No replacement SDK or fake runtime is
@@ -196,7 +196,7 @@ They expose progress and cancellation without changing the editing snapshot.
 
 | Format | Implemented representation and remaining qualification |
 | --- | --- |
-| HTML | Offline asset/font packing; executable blocks stay isolated. A 50-page file was generated; complete offline/browser behavior still needs the acceptance scenario. |
+| HTML | Offline asset/font packing; isolated executable blocks become fixed preview images with explicit interaction-loss warnings. Direct `file://` opening is blocked by this browser environment, so offline opening remains unverified. |
 | PDF | Page captures plus Chinese-capable text layer and links; flow pages split by selected paper ratio. A 50-page PDF and Chinese text extraction were verified. Representative-page fidelity and flow text selection/link placement remain to inspect. |
 | PPTX | Ordinary text, shapes, tables and notes retain native objects; formulas and complex nodes use reported image fallbacks. All 50 slides, notes and native objects were inspected; LibreOffice rendered 50 pages, with visual inspection of pages 1, 25 and 50. Formula/complex content uses explicit raster fallbacks. |
 
@@ -278,22 +278,23 @@ checks after final edits and attach the final commit and independent review.
 | Check | Observed result and scope |
 | --- | --- |
 | Shared checker/reducer | 26 passed: 21 reducer cases plus 5 checker cases, including field concurrency, atomic rejection, descendants, resource races, monotonic inverses, retained theme resources, actual retained light/dark defaults and plain-text/rich-text replacement. Standalone strict TypeScript and focused Biome passed. |
-| Native SQL service | 9 passed against real PostgreSQL using actual 0063 DDL in an isolated schema with minimal owning tables; covers 50-page persistence/hashes, immutable reads, conflicts/retry, original bytes, history, source-version conversion guards and unknown schema. A later resource-checkpoint case is being rerun. This is not the full formal-runtime migration/auth API integration. |
+| Native SQL service | 11 passed against real PostgreSQL using actual 0063 DDL in an isolated schema with minimal owning tables; covers 50-page persistence/hashes, immutable reads, conflicts/retry, original bytes, history, source-version conversion guards, unknown schema immutable historical resource checkpoints and strict native manifest/page file reads. This is not the full formal-runtime migration/auth API integration. |
 | History/projection and storage | 3 history/projection cases and 4 storage-provider cases passed. |
-| Browser session/compute/assets/capture/preview | 18 focused `.test.ts` cases plus 3 preview `.test.tsx` cases passed, including Worker element indexes, theme alias work and preview bounds. |
-| Legacy/embed/export units | 13 passed, including static DC shape/grid/print conversion and DCLogic registration syntax. |
-| Browser editor smoke | Isolated Chromium + React StrictMode, controlled HTTP reducer fixture: all 50 Slides pages visited with images/formulas and one mounted page; trusted text edit/save and reload; an injected remote operation appeared through polling. Design page 25 retained two boards/11 visible nodes after element culling. Presentation navigation also passed. This does not exercise product auth, PostgreSQL, a live Agent or physical IME. |
-| Isolated DC browser smoke | Real browser verified Chinese props, loops, click/state/conditional behavior, immutable child import, blocked `parent.document`, wrong-nonce rejection and a 27,186-byte PNG capture with zero browser errors. This remains separate from the authenticated product origin acceptance. |
-| Candidate browser bundle | Vite production build passed in 2 min 44 s before subsequent small UI fixes; not a passing full `npm run build` or final-commit build. |
-| Export browser run | Real Chromium, production-bundled 50-page snapshot: HTML 42,846,090 bytes, PDF 6,373,618 bytes, PPTX 7,685,417 bytes; snapshot unchanged, zero mounted export pages after completion, cancellation returned `AbortError`. PDF tooling verified 50 pages and Chinese headings 1/25/50. |
+| Browser session/compute/assets/capture/preview | 25 focused native UI/session/compute/draft/capture/preview cases passed, including Worker element indexes, theme alias work and preview bounds. |
+| Legacy/embed/export units | [17 passed](conversion-export-tests.txt), including DC shape/grid/print conversion, DCLogic registration, inline formulas, semantic themes, static isolated previews and invalid assets. |
+| Browser editor smoke | [Isolated UI report](isolated-ui-smoke.json): Chromium + React StrictMode, controlled HTTP reducer fixture; all 50 Slides pages and all 50 Design artboards visited with images/formulas; at most one Slides page or four visible Design artboards mounted; trusted text edits/save/reload on pages 1/25/50, formula and crop edits, theme/order changes, shared undo/redo including an injected Agent batch, and interaction with page 25’s isolated content; 47 untouched page payload hashes remained unchanged; a plain-text injected remote operation appeared through polling. Dense Design culling, active-editor retention, theme changes and presentation navigation passed. CDP Chinese composition saved once after commit and never during pauses; native OS IME remains unverified. Focused Ctrl+S tests hold server acknowledgements and verify draft→pending→saved state for properties, table cells and notes. This does not exercise product auth, PostgreSQL or a live Agent. |
+| Isolated DC browser smoke | [Compatibility report](isolated-compatibility.json): Chinese props, loops, click/state/conditional behavior, immutable child import, installed component/CSS, blocked `parent.document`, wrong-nonce rejection, and 30,546-byte PNG captures including one waiting for a delayed child. No browser errors. This remains separate from authenticated product-origin acceptance. |
+| Candidate browser bundle | CI full web checks and production build passed at `d436a421`. The production [static dependency audit](bundle-graph.json) verifies that the app, native editor and active text editor do not statically import compatibility/export code, and the separate export HTML does not preload the app. It records the exact source-input fingerprint. The public-only local build cannot qualify the full SDK-dependent typecheck or actual browser network loading. |
+| Export browser run | [Export report](export-acceptance.json) owns file sizes/hashes, independent PPTX renderers and visual/media inspection. Real Chromium rendered a production-bundled 50-page snapshot; PDF tooling verified 50 pages and Chinese headings 1/25/50. [Fault checks](export-faults.json) verified mid-export cancellation/retry for all formats, image HTTP 503/retry, export HTML entry failure, adapter/shared/inner module failures, and cancellation during active packing-Worker loading. All retries run in the same window using fresh trusted renderer realms; snapshots stay immutable and renderer/Worker counts return to zero. |
 | Retirement/release source checks | `harness-cutover` + CI-scope: 20 passed in the latest reported run. Earlier `harness-cutover` + runtime-patch + retirement: 35 passed. Compose config, deploy CLI syntax and diff whitespace checks passed. These do not qualify a built image or actual SDK receipt. |
-| Agent authoring fixtures | Updated for `read_document`/pinned `read_page`/`apply_ops` and failed-CAS completion guards. Syntax/Biome passed; owning unit run failed at missing SDK import before executing tests. Runtime/live-model integrations remain unrun. |
+| Agent authoring fixtures | Updated for `read_document`/pinned `read_page`/`apply_ops` and failed-CAS completion guards. Syntax/Biome passed. CI run41976017829 at `c18fc571` passed the complete server unit/typecheck job after the observation/guidance correction. Its integration suite failed the native Design failure scenario; the owning test is being diagnosed, while stale legacy-write fixtures and the 62-file selected-suite timeout were corrected. Runtime/live-model qualification remains incomplete. |
 | Frozen baseline and fixed fixture | See [baseline-build.json](baseline-build.json), [fixture-test.txt](fixture-test.txt) and [baseline startup blocker](baseline-service-blocker.txt). Static sizes are not cold-start/transfer/memory measurements. |
 
-The local export report is
-`/workspace/scratch/native-export-acceptance/report.json`; browser diagnostics are
-under `/workspace/scratch/native-editor-smoke/`. They are temporary development
-artifacts until the integrator preserves the selected report and output samples.
+The evidence files above preserve selected results and screenshots. Larger
+export files remain under `/workspace/scratch/native-export-acceptance/`.
+Fixture version 2 adds the isolated block to page 25. Both 50-page UI diagnostics
+and all three 50-page exports were rerun using its semantic hash. They remain
+isolated functional evidence, not authenticated-app or performance acceptance.
 
 ## Reproduction and outstanding acceptance
 
@@ -306,6 +307,7 @@ node --import tsx --test shared/artifact-legacy.test.ts server/src/modules/artif
 node --import tsx --test server/src/modules/artifacts/{native-history,native-projection}.test.ts
 node --test scripts/native-artifact-retirement.test.mjs deploy/harness-cutover.test.mjs deploy/runtime-patch.test.mjs
 node scripts/native-export-acceptance.mjs /workspace/scratch/native-export-acceptance
+node scripts/native-export-fault-acceptance.mjs /workspace/scratch/native-export-acceptance/export-faults.json
 node --import tsx scripts/native-embed-acceptance.mjs /workspace/scratch/native-embed-acceptance
 ```
 
@@ -337,7 +339,6 @@ editing, durable reopen, shared undo/redo, theme/order changes, Agent collaborat
 and disconnect/ack-loss recovery. Outstanding evidence includes cross-tenant and
 revoked-permission HTTP behavior, simultaneous client undo, malicious source
 isolation in the real granted origin, conversion/edit/restore hash checks through
-the product, offline HTML, independent PPTX layout/render inspection, export
-failure/retry, final image/dependency/network inventory, final frontend/backend
+the product, offline HTML, final image/dependency/network inventory, final frontend/backend
 checks and independent review. Passing the isolated tests above does not waive
 any of these gates.

@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync } from 'node:fs'
 import { basename } from 'node:path'
-import { SMOKE_FILES, DURABLE_QUEUE_ALLOWANCE_MS } from '../server/integration-suite.mjs'
+import { SMOKE_FILES, DURABLE_QUEUE_ALLOWANCE_MS, integrationBudgetMs } from '../server/integration-suite.mjs'
 import { runtimeSharedPaths } from './ci-scope-paths.mjs'
 
 // Core boundaries run for ordinary server changes. Extra owning tests are
@@ -100,6 +100,9 @@ export function computeScope(changed = {}, manual = '') {
   const server = serverSource || enabled('server') || enabled('serverTests') || runner || lintConfig
   const deepIntegration = manual === 'deep-integration'
   const integrationSelection = integrationScope(changed, { serverSource, deepIntegration, deployment: enabled('deployment') })
+  // Service startup, exact historical bootstrap, and timing upload remain bounded
+  // outside the test-process budget; ordinary smoke retains its twelve-minute job.
+  const integrationTimeoutMinutes = Math.max(12, Math.ceil(integrationBudgetMs(integrationSelection.integration_mode, integrationSelection.integration_files) / 60_000) + 7)
   const openNotebook = enabled('openNotebook') || enabled('openNotebookTests') || release
   const deployment = enabled('deployment')
   const deployContract = serverSource || deployment || enabled('ci') || enabled('serverDocker') || enabled('wukongim') || enabled('gateway') || openNotebook || release
@@ -116,6 +119,7 @@ export function computeScope(changed = {}, manual = '') {
     web, web_build: webBuild,
     admin, admin_build: adminBuild,
     control, server, ...integrationSelection,
+    integration_timeout_minutes: integrationTimeoutMinutes,
     deep_integration: deepIntegration,
     open_notebook: openNotebook,
     deployment,

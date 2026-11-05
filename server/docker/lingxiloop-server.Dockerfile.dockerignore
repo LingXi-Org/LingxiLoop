@@ -24,6 +24,7 @@
 !shared/upload-mime.ts
 !public/**
 !index.html
+!artifact-export.html
 !vite.config.ts
 !tsconfig.json
 !tsconfig.node.json

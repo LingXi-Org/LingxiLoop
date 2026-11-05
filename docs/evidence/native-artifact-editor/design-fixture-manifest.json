@@ -1,8 +1,18 @@
 {
-  "version": 1,
+  "version": 2,
   "pages": 50,
   "images": 50,
   "formulas": 50,
+  "isolatedBlocks": [
+    {
+      "pageId": "page-25",
+      "nodeId": "page-25-isolated",
+      "sourceSha256": "9bfaae700e1778bde6b78378fa602db2b3b5f387d39207cec9c4b6c548e2253e",
+      "previewAssetId": "image-25",
+      "previewSha256": "3d26afabbae1886c43f8a523b6535d9a103ed827ac64a7b758ac318f4eac955d",
+      "format": "html"
+    }
+  ],
   "imageBytes": 30877750,
   "imageHashes": [
     {
@@ -256,8 +266,8 @@
       "bytes": 616939
     }
   ],
-  "semanticSha256": "6aab5a4176217b57e165756a76442a24412296e727d8c730a292fd96989a554a",
-  "nativeSha256": "e4747da7911854c0f477df273752aa569861e9ff61d20988f481249e986c6ff6",
+  "semanticSha256": "03229f678388ffd085da29350cb18626e2fa20762d79d14c5390f5d3e2fb7b36",
+  "nativeSha256": "61e2898ce9da20ab37db06bd5628ded2fdc9799c193132b428fb808e9d45038b",
   "legacyFiles": [
     {
       "path": "project/Page1.dc.html",
@@ -381,8 +391,8 @@
     },
     {
       "path": "project/Page25.dc.html",
-      "bytes": 1028,
-      "sha256": "cd9d33545a462f16aa3dabd8e27a0cda530a15c27bc5d5f495238cd4ff946782"
+      "bytes": 825240,
+      "sha256": "99e0d5a962d8cf11ea4ad65436b242e8b24fa0510dd5e61241db166e62fc85de"
     },
     {
       "path": "project/Page26.dc.html",

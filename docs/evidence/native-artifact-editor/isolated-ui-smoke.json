@@ -5,7 +5,7 @@
   "scope": {
     "react": "StrictMode, real NativeEditor and Worker modules",
     "input": "Playwright trusted pointer/keyboard events; CDP Input.imeSetComposition and Input.insertText for Chinese composition",
-    "fixture": "scripts/native-artifact-fixture.mjs; 50 pages, 50 PNG images, 50 formulas",
+    "fixture": "scripts/native-artifact-fixture.mjs v2; 50 pages/artboards, 50 PNG images, 50 formulas, and one equivalent legacy/native sandboxed interactive block on page 25",
     "transport": "deterministic intercepted HTTP responses; real shared operation reducer; synthetic tenant context checked on authenticated image requests",
     "notVerified": [
       "real API authentication and authorization",
@@ -18,22 +18,70 @@
   "results": {
     "slides": {
       "pagesTraversed": 50,
-      "imageAndFormulaOnEveryPage": true,
-      "mountedPagesAtEachStep": 1,
-      "page25MountedNodes": 6,
-      "manualTextSaved": true,
-      "reloadRetainedSavedText": true,
-      "plainTextAgentOperationVisibleAfterPolling": true,
-      "presentationArrowRight": "page-25 to page-26",
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 1,
+      "maxMountedNodes": 7,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
       "consoleOrPageErrors": []
     },
     "design": {
-      "initialMountedBoards": 4,
-      "initialVisibleImages": 2,
-      "page25MountedBoards": 2,
-      "page25MountedNodes": 11,
-      "manualTextSaved": true,
-      "presentationArrowRight": "page-25 to page-26",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 4,
+      "maxMountedNodes": 12,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
       "consoleOrPageErrors": []
     },
     "denseDesign": {
@@ -51,7 +99,7 @@
     },
     "focusedTests": {
       "command": "node --import tsx --test src/features/artifacts/native/*.test.ts src/features/artifacts/native/thumbnail.test.tsx",
-      "passed": 21,
+      "passed": 25,
       "failed": 0
     },
     "chineseIme": {
@@ -79,13 +127,52 @@
         "plainContenteditableCompositionEndTrusted": false,
         "note": "This Chromium CDP path emits an untrusted compositionend even for a plain contenteditable control; compositionstart, updates and committed input events are trusted. No JavaScript dispatchEvent was used to generate input."
       }
+    },
+    "richTextInitialization": {
+      "strictModeOpeningWithoutEditsProducesNoHistory": true,
+      "regression": "An asynchronous Tiptap onCreate callback previously allowed StrictMode cleanup to save unchanged initial text. The effect now establishes the normalized baseline before cleanup, and onCreate does not reset an established baseline."
+    },
+    "saveControls": {
+      "slides": {
+        "focusedPropertyCtrlS": true,
+        "focusedTableCtrlS": true,
+        "repeatedFocusedNotesSave": true,
+        "dirtyBeforeSubmit": true,
+        "pendingUntilAcknowledged": true,
+        "compositionNotSubmittedByCtrlS": true,
+        "unrelatedAgentStylePreserved": true,
+        "activeRichTextSharedUndoRedo": true,
+        "reloadRetainedAllValues": true,
+        "designBoardCoordinates": false,
+        "consoleOrPageErrors": []
+      },
+      "design": {
+        "focusedPropertyCtrlS": true,
+        "focusedTableCtrlS": true,
+        "repeatedFocusedNotesSave": true,
+        "dirtyBeforeSubmit": true,
+        "pendingUntilAcknowledged": true,
+        "compositionNotSubmittedByCtrlS": true,
+        "unrelatedAgentStylePreserved": true,
+        "activeRichTextSharedUndoRedo": true,
+        "reloadRetainedAllValues": true,
+        "designBoardCoordinates": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    "draftScope": {
+      "perEditorController": true,
+      "noGlobalFlushEvent": true,
+      "transientDraftsExcludedFromHistory": true,
+      "focusedRegistryTestsPassed": 4
     }
   },
   "limits": [
     "Flex/grid siblings stay mounted together to preserve browser layout; active edits and selected groups remain mounted.",
     "Thumbnails are bounded visual summaries (96 nodes, 64x40), with cached downsampled images; never-loaded pages show their background until page data has loaded.",
     "This diagnostic is not a substitute for the full product, persistence, export, or performance acceptance runs.",
-    "Chinese composition is verified through Chromium CDP, including two pauses longer than the autosave debounce; native OS candidate windows and other browser/OS IMEs are not verified."
+    "Chinese composition is verified through Chromium CDP, including two pauses longer than the autosave debounce; native OS candidate windows and other browser/OS IMEs are not verified.",
+    "Transformed iframe descendants report unscaled bounds in this Chromium/Playwright combination; the runnable harness sends trusted pointer input at the iframe element’s rendered centre."
   ],
   "screenshots": [
     "isolated-slides.png",
@@ -97,5 +184,7 @@
     "/workspace/scratch/native-editor-smoke/culling.mts",
     "/workspace/scratch/native-editor-smoke/theme.mts",
     "/workspace/scratch/native-editor-smoke/ime.mts"
-  ]
+  ],
+  "reproducibleHarness": "scripts/native-editor-ui-acceptance.mjs",
+  "reproductionGuide": "docs/evidence/native-artifact-editor/isolated-ui.md"
 }

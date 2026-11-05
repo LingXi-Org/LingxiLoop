@@ -70,7 +70,7 @@ COPY package.json ./
 COPY src ./src
 COPY shared ./shared
 COPY public ./public
-COPY index.html ./
+COPY index.html artifact-export.html ./
 COPY vite.config.ts ./
 COPY tsconfig.json ./
 COPY tsconfig.node.json ./
