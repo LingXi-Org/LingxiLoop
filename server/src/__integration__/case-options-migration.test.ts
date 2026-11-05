@@ -17,12 +17,20 @@ test('formal24 product61 upgrades atomically to62, preserves data, and repeats a
   url.pathname = `/${name}`
   const db = new Pool({ connectionString: url.toString(), max: 1 })
   try {
-    // This cloned test fixture may originate from an upgraded formal25 template.
+    // This cloned test fixture may originate from a product63/formal4 template.
     // The owning test runs with the actual formal24 package; construct its prior
     // provenance only inside the disposable clone before capturing preservation.
     await db.query("UPDATE lingxios_installation SET runtime_version='3.8.24'")
     // Derive the exact prior product fixture from the verified, dedicated test schema.
-    await db.query('DROP TABLE organization_case_options; DELETE FROM schema_migrations WHERE version=62')
+    await db.query(`
+      DROP TABLE IF EXISTS artifact_operations, artifact_document_state, artifact_editor_contexts;
+      DROP TABLE organization_case_options;
+      DELETE FROM schema_migrations WHERE version >= 62;
+    `)
+    assert.deepEqual(
+      (await db.query('SELECT version FROM schema_migrations ORDER BY version')).rows.map(row => row.version),
+      Array.from({ length: 61 }, (_, index) => index + 1),
+    )
     const plan = await ensureEducationPlan(db)
     await db.query("INSERT INTO companies(id,name,slug,type,plan_id) VALUES('migration-school','School','migration-school','EDUCATION',$1)", [plan])
     await db.query("INSERT INTO users(id,email,display_name) VALUES('migration-teacher','migration@example.invalid','Teacher')")
