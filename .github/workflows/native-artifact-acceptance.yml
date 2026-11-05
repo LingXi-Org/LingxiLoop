@@ -49,7 +49,6 @@ jobs:
       NATIVE_ARTIFACT_PHASE: ${{ inputs.phase }}
       NATIVE_ARTIFACT_DIAGNOSTIC_RUN_ID: ${{ inputs.diagnostic_run_id }}
       NATIVE_ARTIFACT_BASELINE_ROOT: ${{ github.workspace }}/baseline
-      NATIVE_ARTIFACT_PRIVATE: ${{ runner.temp }}/native-artifact-private
       NATIVE_ARTIFACT_PUBLIC: ${{ github.workspace }}/native-artifact-results
       DOTENV_CONFIG_PATH: /dev/null
       NODE_OPTIONS: --max-old-space-size=4096
@@ -63,6 +62,8 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v5
         with: { node-version: '22' }
+      - name: Configure private acceptance directory
+        run: echo "NATIVE_ARTIFACT_PRIVATE=$RUNNER_TEMP/native-artifact-private" >> "$GITHUB_ENV"
       - name: Enforce exact-commit diagnostic prerequisite
         run: node scripts/native-artifact-ci.mjs guard
         env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
