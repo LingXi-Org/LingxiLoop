@@ -1,0 +1,563 @@
+{
+  "qualification": "controlled-persistent-queue",
+  "sourceBase": "bb1186f4",
+  "runtime": "3.8.25",
+  "packageIntegrity": "sha512-uZaidlmNBclhbbqjsGLGqSfCtxmLlTKu07zeiR7IOGy8KtoSdS4jheH8wrtC4Ll2bElYmCnKgxcksuiLRQdCqg==",
+  "recordedAtUTC": "2026-11-05T00:27:20.318736+00:00",
+  "status": "tests_passed",
+  "clockScale": 1,
+  "syntheticProvider": true,
+  "realProviderCalls": 0,
+  "productionWrites": 0,
+  "originalT15Reproduced": false,
+  "productionSlaQualified": false,
+  "sameProcessWorkers": true,
+  "sharedSupplierQuotaQualified": false,
+  "browserVisibilityMeasured": false,
+  "externalIMDeliveryQualified": false,
+  "rawSamples": {
+    "file": "durable-queue-samples.jsonl",
+    "n": 120,
+    "sha256": "1dea55a455dff4dc2a63bd52e7737d91d9062b6d031006dc82bfb211716509be"
+  },
+  "selectedFiles": [
+    {
+      "file": "identity-vertical-slice.test.ts",
+      "durationMs": 4893,
+      "exitCode": 0
+    },
+    {
+      "file": "permission-resolver.test.ts",
+      "durationMs": 4024,
+      "exitCode": 0
+    },
+    {
+      "file": "native-message-flow.test.ts",
+      "durationMs": 4202,
+      "exitCode": 0
+    },
+    {
+      "file": "runtime-realtime.test.ts",
+      "durationMs": 1328,
+      "exitCode": 0
+    },
+    {
+      "file": "public-activity-history.test.ts",
+      "durationMs": 9260,
+      "exitCode": 0
+    },
+    {
+      "file": "public-run-activity.test.ts",
+      "durationMs": 11094,
+      "exitCode": 0
+    },
+    {
+      "file": "basic-process-recovery.test.ts",
+      "durationMs": 15433,
+      "exitCode": 0
+    },
+    {
+      "file": "runtime-queue-interactive-capacity.test.ts",
+      "durationMs": 64521,
+      "exitCode": 0
+    },
+    {
+      "file": "runtime-queue-background-capacity.test.ts",
+      "durationMs": 122420,
+      "exitCode": 0
+    },
+    {
+      "file": "runtime-queue-capacity.test.ts",
+      "durationMs": 98782,
+      "exitCode": 0
+    },
+    {
+      "file": "runtime-queue-lifecycle.test.ts",
+      "durationMs": 50603,
+      "exitCode": 0
+    }
+  ],
+  "selectedDurationMs": 386563,
+  "tests": 22,
+  "passes": 22,
+  "failures": 0,
+  "usageOutboxDrainedAtShutdownQualified": false,
+  "lease": {
+    "observedClaimToReclaimMs": 45054.572481,
+    "protectedObservationWindowMs": 1000,
+    "exactPublicLeaseTtlMs": null,
+    "oldHeartbeatRejected": true,
+    "oldCompletionRejected": true,
+    "expiryAttempts": 2,
+    "finalAttempts": 2,
+    "finalStatus": "succeeded",
+    "clockScale": 1,
+    "privateRuntimeSql": false
+  },
+  "profiles": [
+    {
+      "runtime": "3.8.25",
+      "syntheticProvider": true,
+      "persistentPostgres": true,
+      "profile": "interactive",
+      "clockScale": 1,
+      "arrival": "20 submitted before workers start per profile/variant",
+      "workers": 2,
+      "taskSlotsPerWorker": 2,
+      "modelSlotsPerWorker": 2,
+      "reservedInteractivePerWorker": 1,
+      "terminalObservationPollMs": 50,
+      "modelCalls": 40,
+      "corrections": 0,
+      "searchRequests": 80,
+      "abortedSearches": 20,
+      "provider429": 0,
+      "providerCircuitFailures": 0,
+      "realProviderCalls": 0,
+      "productionWrites": 0,
+      "originalT15Reproduced": false,
+      "budget": {
+        "queueP95Ms": 25393,
+        "submissionToTerminalObservedP95Ms": 31590,
+        "executionP95Ms": 6000,
+        "successRate": 1,
+        "maxProviderCallsPerRoot": 1
+      },
+      "baseline": {
+        "profile": "interactive",
+        "variant": "baseline",
+        "n": 20,
+        "durationMs": 33411.174093,
+        "queue": {
+          "n": 20,
+          "p50Ms": 13567,
+          "p95Ms": 26729,
+          "maxMs": 26747
+        },
+        "execution": {
+          "n": 20,
+          "p50Ms": 6546.534,
+          "p95Ms": 6874.953,
+          "maxMs": 6904.617
+        },
+        "submissionToTerminalObserved": {
+          "n": 20,
+          "p50Ms": 20058,
+          "p95Ms": 33252,
+          "maxMs": 33254
+        },
+        "retrieval": {
+          "n": 20,
+          "p50Ms": 6134.565796999999,
+          "p95Ms": 6205.624943999999,
+          "maxMs": 6214.905924000001
+        },
+        "submissionToFirstDurableTextAck": {
+          "n": 20,
+          "p50Ms": 19881,
+          "p95Ms": 33057,
+          "maxMs": 33068
+        },
+        "modelObservedTotal": {
+          "n": 20,
+          "p50Ms": 138.1077609999993,
+          "p95Ms": 217.796961,
+          "maxMs": 224.142656
+        },
+        "peakEligible": 20,
+        "sampledOldestEligibleMs": 26719,
+        "observedLeased": 4,
+        "tokens": 480,
+        "costMicros": 480,
+        "maxObservedActiveRuns": [
+          2,
+          2
+        ],
+        "occupancy": [
+          {
+            "maxClaimedUncommitted": 2,
+            "maxClaimedUncommittedBackground": 0
+          },
+          {
+            "maxClaimedUncommitted": 2,
+            "maxClaimedUncommittedBackground": 0
+          }
+        ]
+      },
+      "candidate": {
+        "profile": "interactive",
+        "variant": "candidate",
+        "n": 20,
+        "durationMs": 27463.699158999996,
+        "queue": {
+          "n": 20,
+          "p50Ms": 11050,
+          "p95Ms": 21885,
+          "maxMs": 21911
+        },
+        "execution": {
+          "n": 20,
+          "p50Ms": 5413.876,
+          "p95Ms": 5515.961,
+          "maxMs": 5521.302
+        },
+        "submissionToTerminalObserved": {
+          "n": 20,
+          "p50Ms": 16523,
+          "p95Ms": 27296,
+          "maxMs": 27298
+        },
+        "retrieval": {
+          "n": 20,
+          "p50Ms": 5026.662742,
+          "p95Ms": 5037.717887999999,
+          "maxMs": 5038.778366999999
+        },
+        "submissionToFirstDurableTextAck": {
+          "n": 20,
+          "p50Ms": 16305,
+          "p95Ms": 27115,
+          "maxMs": 27138
+        },
+        "modelObservedTotal": {
+          "n": 20,
+          "p50Ms": 141.91922700000578,
+          "p95Ms": 165.89801799999987,
+          "maxMs": 178.3176800000001
+        },
+        "peakEligible": 20,
+        "sampledOldestEligibleMs": 21868,
+        "observedLeased": 4,
+        "tokens": 480,
+        "costMicros": 480,
+        "maxObservedActiveRuns": [
+          2,
+          2
+        ],
+        "occupancy": [
+          {
+            "maxClaimedUncommitted": 2,
+            "maxClaimedUncommittedBackground": 0
+          },
+          {
+            "maxClaimedUncommitted": 2,
+            "maxClaimedUncommittedBackground": 0
+          }
+        ]
+      }
+    },
+    {
+      "runtime": "3.8.25",
+      "syntheticProvider": true,
+      "persistentPostgres": true,
+      "profile": "background",
+      "clockScale": 1,
+      "arrival": "20 submitted before workers start per profile/variant",
+      "workers": 2,
+      "taskSlotsPerWorker": 2,
+      "modelSlotsPerWorker": 2,
+      "reservedInteractivePerWorker": 1,
+      "terminalObservationPollMs": 50,
+      "modelCalls": 40,
+      "corrections": 0,
+      "searchRequests": 80,
+      "abortedSearches": 20,
+      "provider429": 0,
+      "providerCircuitFailures": 0,
+      "realProviderCalls": 0,
+      "productionWrites": 0,
+      "originalT15Reproduced": false,
+      "budget": {
+        "queueP95Ms": 55583,
+        "submissionToTerminalObservedP95Ms": 61660,
+        "executionP95Ms": 6000,
+        "successRate": 1,
+        "maxProviderCallsPerRoot": 1
+      },
+      "baseline": {
+        "profile": "background",
+        "variant": "baseline",
+        "n": 20,
+        "durationMs": 65170.464375,
+        "queue": {
+          "n": 20,
+          "p50Ms": 26279,
+          "p95Ms": 58508,
+          "maxMs": 58578
+        },
+        "execution": {
+          "n": 20,
+          "p50Ms": 6456.851,
+          "p95Ms": 6666.564,
+          "maxMs": 6668.731
+        },
+        "submissionToTerminalObserved": {
+          "n": 20,
+          "p50Ms": 32719,
+          "p95Ms": 64905,
+          "maxMs": 65006
+        },
+        "retrieval": {
+          "n": 20,
+          "p50Ms": 6123.617599000001,
+          "p95Ms": 6164.329651000001,
+          "maxMs": 6165.975031
+        },
+        "submissionToFirstDurableTextAck": {
+          "n": 20,
+          "p50Ms": 32588,
+          "p95Ms": 64773,
+          "maxMs": 64855
+        },
+        "modelObservedTotal": {
+          "n": 20,
+          "p50Ms": 125.65104599999904,
+          "p95Ms": 180.22488800000065,
+          "maxMs": 187.4756410000009
+        },
+        "peakEligible": 20,
+        "sampledOldestEligibleMs": 58544,
+        "observedLeased": 2,
+        "tokens": 480,
+        "costMicros": 480,
+        "maxObservedActiveRuns": [
+          1,
+          1
+        ],
+        "occupancy": [
+          {
+            "maxClaimedUncommitted": 1,
+            "maxClaimedUncommittedBackground": 1
+          },
+          {
+            "maxClaimedUncommitted": 1,
+            "maxClaimedUncommittedBackground": 1
+          }
+        ]
+      },
+      "candidate": {
+        "profile": "background",
+        "variant": "candidate",
+        "n": 20,
+        "durationMs": 53805.499905000004,
+        "queue": {
+          "n": 20,
+          "p50Ms": 21502,
+          "p95Ms": 48255,
+          "maxMs": 48305
+        },
+        "execution": {
+          "n": 20,
+          "p50Ms": 5336.777,
+          "p95Ms": 5366.274,
+          "maxMs": 5375.549
+        },
+        "submissionToTerminalObserved": {
+          "n": 20,
+          "p50Ms": 26831,
+          "p95Ms": 53593,
+          "maxMs": 53646
+        },
+        "retrieval": {
+          "n": 20,
+          "p50Ms": 5022.813559999995,
+          "p95Ms": 5030.705656000006,
+          "maxMs": 5034.229109000007
+        },
+        "submissionToFirstDurableTextAck": {
+          "n": 20,
+          "p50Ms": 26690,
+          "p95Ms": 53439,
+          "maxMs": 53510
+        },
+        "modelObservedTotal": {
+          "n": 20,
+          "p50Ms": 123.79408399999375,
+          "p95Ms": 139.5929460000043,
+          "maxMs": 146.1399390000006
+        },
+        "peakEligible": 20,
+        "sampledOldestEligibleMs": 48278,
+        "observedLeased": 2,
+        "tokens": 480,
+        "costMicros": 480,
+        "maxObservedActiveRuns": [
+          1,
+          1
+        ],
+        "occupancy": [
+          {
+            "maxClaimedUncommitted": 1,
+            "maxClaimedUncommittedBackground": 1
+          },
+          {
+            "maxClaimedUncommitted": 1,
+            "maxClaimedUncommittedBackground": 1
+          }
+        ]
+      }
+    },
+    {
+      "runtime": "3.8.25",
+      "syntheticProvider": true,
+      "persistentPostgres": true,
+      "profile": "mixed",
+      "clockScale": 1,
+      "arrival": "20 submitted before workers start per profile/variant",
+      "workers": 2,
+      "taskSlotsPerWorker": 2,
+      "modelSlotsPerWorker": 2,
+      "reservedInteractivePerWorker": 1,
+      "terminalObservationPollMs": 50,
+      "modelCalls": 40,
+      "corrections": 0,
+      "searchRequests": 80,
+      "abortedSearches": 20,
+      "provider429": 0,
+      "providerCircuitFailures": 0,
+      "realProviderCalls": 0,
+      "productionWrites": 0,
+      "originalT15Reproduced": false,
+      "budget": {
+        "queueP95Ms": 37418,
+        "submissionToTerminalObservedP95Ms": 43567,
+        "executionP95Ms": 6000,
+        "successRate": 1,
+        "maxProviderCallsPerRoot": 1
+      },
+      "baseline": {
+        "profile": "mixed",
+        "variant": "baseline",
+        "n": 20,
+        "durationMs": 52258.419069,
+        "queue": {
+          "n": 20,
+          "p50Ms": 13526,
+          "p95Ms": 39387,
+          "maxMs": 45707
+        },
+        "execution": {
+          "n": 20,
+          "p50Ms": 6445.367,
+          "p95Ms": 6811.969,
+          "maxMs": 6844.019
+        },
+        "submissionToTerminalObserved": {
+          "n": 20,
+          "p50Ms": 19982,
+          "p95Ms": 45859,
+          "maxMs": 52102
+        },
+        "retrieval": {
+          "n": 20,
+          "p50Ms": 6127.140563000001,
+          "p95Ms": 6193.838258,
+          "maxMs": 6199.390986
+        },
+        "submissionToFirstDurableTextAck": {
+          "n": 20,
+          "p50Ms": 19835,
+          "p95Ms": 45716,
+          "maxMs": 51985
+        },
+        "modelObservedTotal": {
+          "n": 20,
+          "p50Ms": 141.50739500000054,
+          "p95Ms": 216.98139599999922,
+          "maxMs": 223.93381799999952
+        },
+        "peakEligible": 20,
+        "sampledOldestEligibleMs": 45645,
+        "observedLeased": 4,
+        "tokens": 480,
+        "costMicros": 480,
+        "maxObservedActiveRuns": [
+          2,
+          2
+        ],
+        "occupancy": [
+          {
+            "maxClaimedUncommitted": 2,
+            "maxClaimedUncommittedBackground": 1
+          },
+          {
+            "maxClaimedUncommitted": 2,
+            "maxClaimedUncommittedBackground": 1
+          }
+        ]
+      },
+      "candidate": {
+        "profile": "mixed",
+        "variant": "candidate",
+        "n": 20,
+        "durationMs": 43063.01467299999,
+        "queue": {
+          "n": 20,
+          "p50Ms": 11000,
+          "p95Ms": 32413,
+          "maxMs": 37609
+        },
+        "execution": {
+          "n": 20,
+          "p50Ms": 5351.27,
+          "p95Ms": 5485.656,
+          "maxMs": 5505.299
+        },
+        "submissionToTerminalObserved": {
+          "n": 20,
+          "p50Ms": 16385,
+          "p95Ms": 37757,
+          "maxMs": 42911
+        },
+        "retrieval": {
+          "n": 20,
+          "p50Ms": 5031.621141999989,
+          "p95Ms": 5040.283792999995,
+          "maxMs": 5041.440391999997
+        },
+        "submissionToFirstDurableTextAck": {
+          "n": 20,
+          "p50Ms": 16205,
+          "p95Ms": 37594,
+          "maxMs": 42786
+        },
+        "modelObservedTotal": {
+          "n": 20,
+          "p50Ms": 133.1499230000045,
+          "p95Ms": 151.23255800000334,
+          "maxMs": 153.04109499999322
+        },
+        "peakEligible": 20,
+        "sampledOldestEligibleMs": 37580,
+        "observedLeased": 4,
+        "tokens": 480,
+        "costMicros": 480,
+        "maxObservedActiveRuns": [
+          2,
+          2
+        ],
+        "occupancy": [
+          {
+            "maxClaimedUncommitted": 2,
+            "maxClaimedUncommittedBackground": 1
+          },
+          {
+            "maxClaimedUncommitted": 2,
+            "maxClaimedUncommittedBackground": 1
+          }
+        ]
+      }
+    }
+  ],
+  "shutdownDeliveryQualification": "not_qualified",
+  "outboxAckWarnings": {
+    "total": 9,
+    "existingSmoke": 5,
+    "queueLifecycle": 4,
+    "perFile": {
+      "public-activity-history.test.ts": 4,
+      "public-run-activity.test.ts": 1,
+      "runtime-queue-lifecycle.test.ts": 4
+    }
+  }
+}

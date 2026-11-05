@@ -9,6 +9,19 @@ export const SMOKE_FILES = Object.freeze([
   'basic-process-recovery.test.ts',
 ])
 
+// Actual 20-root/variant waits and a real abandoned lease do not fit in the
+// ordinary smoke allowance. Only these named owning cases add bounded time.
+export const DURABLE_QUEUE_ALLOWANCE_MS = Object.freeze({
+  'runtime-queue-interactive-capacity.test.ts': 90_000,
+  'runtime-queue-background-capacity.test.ts': 150_000,
+  'runtime-queue-capacity.test.ts': 120_000,
+  'runtime-queue-lifecycle.test.ts': 90_000,
+})
+export function integrationOwnerAllowanceMs(mode, files) {
+  return mode === 'selected' ? [...new Set(files)].reduce((total,file) =>
+    total + (Object.hasOwn(DURABLE_QUEUE_ALLOWANCE_MS,file) ? DURABLE_QUEUE_ALLOWANCE_MS[file] : 0),0) : 0
+}
+
 export function parseIntegrationArgs(argv, env = process.env) {
   let mode
   const files = []

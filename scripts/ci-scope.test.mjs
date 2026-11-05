@@ -3,6 +3,16 @@ import assert from 'node:assert/strict'
 import { computeScope } from './ci-scope.mjs'
 import { classifyPaths } from './ci-scope-paths.mjs'
 
+test('the shared durable-queue fixture retains all four owning files without a broad full run', () => {
+  const files = ['runtime-queue-interactive-capacity.test.ts', 'runtime-queue-background-capacity.test.ts',
+    'runtime-queue-capacity.test.ts', 'runtime-queue-lifecycle.test.ts']
+  const scope = computeScope(classifyPaths(['server/src/__integration__/_queue-capacity-fixture.ts']))
+  assert.equal(scope.integration_mode,'selected')
+  assert.deepEqual(scope.integration_files.filter(file=>file.startsWith('runtime-queue-')),files)
+  const unrelated = computeScope(classifyPaths(['server/src/__integration__/_recording-wukong.ts']))
+  assert.ok(!unrelated.integration_files.some(file=>files.includes(file)))
+})
+
 test('pure CSS changes check and build only the web', () => {
   const scope = computeScope(classifyPaths(['src/styles.css']))
   assert.equal(scope.web_build, true); assert.equal(scope.server, false); assert.equal(scope.integration, false)
