@@ -2,7 +2,7 @@ import type { LingxiMessageMetadata } from '@/features/chat/runtime/model'
 import { conversationListRunLabel } from '@/lib/conversationRunSummary'
 import { useChatThreadStore } from '@/features/chat/runtime/store'
 import { conversationRunStatus } from '@/features/chat/runtime/conversation-status'
-import { NotificationOff01Icon, PinIcon } from '@hugeicons/core-free-icons'
+import { NotificationOff01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item'
 import { useEffect } from 'react'
@@ -85,33 +85,74 @@ export function ConversationUnread({ conversation }: { conversation: Conversatio
   if (!conversation.unread) return null
   return isMuted(conversation)
     ? <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground/50" aria-label={`${conversation.unread} 条未读消息，已静音`} />
-    : <span className="inline-flex min-w-4 shrink-0 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-medium leading-4 tabular-nums text-brand-foreground" aria-label={`${conversation.unread} 条未读消息`}>
+    : <span className="inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-brand px-[5px] text-[11px] font-semibold leading-[18px] tabular-nums text-brand-foreground" aria-label={`${conversation.unread} 条未读消息`}>
       {conversation.unread > 99 ? '99+' : conversation.unread}
     </span>
 }
 
 const pinnedColors = ['bleu', 'violet', 'turquoise', 'orange', 'rose', 'vert', 'ambre', 'rouge'].map(id => COLOR_BY_ID.get(id)!.hex)
 
+/** The pinned card surface: the conversation colour washed into the page surface. */
+export function pinnedTint(conversation: Conversation) {
+  const color = pinnedColors[stableParticipantHash(conversation.id) % pinnedColors.length]
+  return { color, surface: `color-mix(in srgb, ${color} var(--pinned-tint-strength, 13%), var(--background))` }
+}
+
+// Peeking member portraits, right to left: the front one is largest.
+const PEEK = {
+  wide: [{ size: 50, end: -6, bottom: -16, rotate: -10 }, { size: 40, end: 38, bottom: -22, rotate: 8 }, { size: 34, end: 78, bottom: -18, rotate: -5 }],
+  card: [{ size: 50, end: -12, bottom: -14, rotate: -12 }, { size: 40, end: 14, bottom: -20, rotate: 8 }, { size: 34, end: 36, bottom: -16, rotate: -6 }],
+  compact: [{ size: 44, end: -10, bottom: -14, rotate: -12 }, { size: 34, end: 14, bottom: -18, rotate: 8 }, { size: 28, end: 34, bottom: -14, rotate: -6 }],
+} as const
+
 export function PinnedConversationContent({ conversation, mode }: { conversation: Conversation; mode: PinnedMode }) {
   const byId = useParticipants(state => state.byId)
   const meId = useMe()
   const members = conversation.members.filter(id => id !== meId).map(id => byId[id]).filter((person): person is Participant => Boolean(person))
-  const tint = pinnedColors[stableParticipantHash(conversation.id) % pinnedColors.length]
-  return <>
-    <span aria-hidden className="pointer-events-none absolute inset-0 opacity-[.13] dark:opacity-[.16]" style={{ backgroundColor: tint }} />
-    {mode === 'tile' ? <>
-      <ConversationAvatar conversation={conversation} size={28} />
-      <span className="relative w-full truncate text-center text-xs">{conversation.title}</span>
-    </> : <>
-      <span className="relative w-full truncate pe-4 text-[13px] font-medium">{conversation.title}</span>
-      <span className="relative w-full truncate text-xs text-muted-foreground"><PreviewText body={conversation.preview || '还没有消息'} /></span>
-      <span className="relative mt-auto flex items-center gap-1 text-[11px] tabular-nums text-muted-foreground"><span className="size-1.5 rounded-full" style={{ backgroundColor: tint }} />{conversation.lastAt}</span>
-      <span aria-hidden className="pointer-events-none absolute -bottom-3 -end-1 flex items-end -space-x-5">
-        {members.slice(0, 3).map(person => <Avatar key={person.id} p={person} size={mode === 'compact' ? 40 : 48} animated={false} ringColor="transparent" />)}
-      </span>
-    </>}
-    <span className="absolute end-1.5 top-1.5"><ConversationUnread conversation={conversation} /></span>
+  const { color, surface } = pinnedTint(conversation)
+  const agents = members.filter(person => person.kind === 'agent').length
+  const memberMeta = conversation.kind === 'group' ? `${members.length + 1} 位成员` : agents ? `${agents} 位 agent` : ''
+  if (mode === 'tile') return <>
+    <ConversationAvatar conversation={conversation} size={28} />
+    <span className="relative w-full truncate text-center text-[11.5px] font-medium">{conversation.title}</span>
+    <span className="absolute end-1 top-1"><ConversationUnread conversation={conversation} /></span>
   </>
+  const peek = PEEK[mode]
+  return <>
+    {mode === 'wide' ? <>
+      <span className="relative flex min-w-0 items-center gap-2">
+        <span className="truncate text-[13.5px] font-semibold">{conversation.title}</span>
+        {memberMeta && <span className="shrink-0 text-[11.5px] text-muted-foreground">{memberMeta}</span>}
+      </span>
+      <span className="relative truncate text-[12.5px] text-fg2"><PreviewText body={conversation.preview || '还没有消息'} /></span>
+      <span className="relative flex items-center gap-1.5 text-[11.5px] tabular-nums text-muted-foreground">
+        <span className="size-1.5 rounded-full" style={{ backgroundColor: color }} />{conversation.lastAt}<ConversationUnread conversation={conversation} />
+      </span>
+    </> : <>
+      <span className="relative flex w-full min-w-0 flex-col gap-px">
+        <span className="truncate text-[13px] font-semibold tracking-[-0.01em]">{conversation.title}</span>
+        <span className="truncate text-[11.5px] text-muted-foreground"><PreviewText body={conversation.preview || memberMeta || '还没有消息'} /></span>
+      </span>
+      <span className="relative flex items-center gap-[5px] text-[11.5px] tabular-nums text-fg2"><span className="size-1.5 rounded-full" style={{ backgroundColor: color }} />{conversation.lastAt}</span>
+      <span className="absolute end-2 top-2 z-[5] flex"><ConversationUnread conversation={conversation} /></span>
+    </>}
+    <span aria-hidden className="pointer-events-none">
+      {members.slice(0, 3).map((person, index) => {
+        const place = peek[index]!
+        return <span key={person.id} className="absolute flex rounded-full" style={{ insetInlineEnd: place.end, bottom: place.bottom, transform: `rotate(${place.rotate}deg)`, zIndex: 3 - index }}>
+          <Avatar p={person} size={place.size} animated={false} ringColor={index ? surface : 'transparent'} />
+        </span>
+      })}
+    </span>
+  </>
+}
+
+/** Run state, read as one of the list's three status dots. */
+export function conversationRunTone(label: string | null | undefined): 'warn' | 'live' | 'done' | null {
+  if (!label) return null
+  if (/处理中|排队中|已提交|协作/.test(label)) return 'live'
+  if (/已完成/.test(label)) return 'done'
+  return 'warn'
 }
 
 /** Shared native Item content for conversation rows. */
@@ -145,25 +186,24 @@ export function ConversationListItemContent({
     .filter((id) => id !== meId)
     .map((id) => byId[id]?.name?.trim())
     .filter((name): name is string => Boolean(name))
-  const secondaryText = 'text-muted-foreground'
+  const unread = !muted && Boolean(conversation.unread)
+  const tone = conversationRunTone(runStatus)
   return (
     <>
       <ItemMedia className="relative self-center! translate-y-0!">
-        <ConversationAvatar conversation={conversation} size={32} />
+        <ConversationAvatar conversation={conversation} size={28} />
       </ItemMedia>
-      <ItemContent className="min-w-0 gap-0.5">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <ItemTitle className="block min-w-0 flex-1 truncate text-sm font-medium leading-5">{conversation.title}</ItemTitle>
-          <span className={cn('flex shrink-0 items-center gap-1 whitespace-nowrap', !muted && conversation.unread ? 'text-brand' : secondaryText)}>
-            <span className="text-xs tabular-nums">{conversation.lastAt}</span>
-          </span>
+      <ItemContent className="min-w-0 gap-0">
+        <div className="flex min-w-0 items-baseline gap-2">
+          <ItemTitle className={cn('block min-w-0 flex-1 truncate text-[13.5px] leading-5', unread ? 'font-semibold' : 'font-medium')}>{conversation.title}</ItemTitle>
+          <span className={cn('shrink-0 whitespace-nowrap text-xs tabular-nums', unread ? 'text-brand' : 'text-muted-foreground')}>{conversation.lastAt}</span>
         </div>
-        <ItemDescription className={cn('line-clamp-none flex min-w-0 items-center gap-1.5 text-xs leading-4', !selected && typingNames.length > 0 && 'text-brand')}>
+        <ItemDescription className={cn('line-clamp-none flex min-w-0 items-center gap-1.5 text-[12.5px] leading-[18px]', unread ? 'text-fg2' : 'text-muted-foreground', !selected && typingNames.length > 0 && 'text-brand')}>
+          {tone && <span aria-hidden="true" data-run-tone={tone} className={cn('size-1.5 shrink-0 rounded-full', tone === 'warn' ? 'bg-warning' : tone === 'live' ? 'bg-brand' : 'bg-input')} />}
           <span className="min-w-0 flex-1 truncate">
-            {runStatus && <><span className="text-muted-foreground" aria-label={`任务状态：${runStatus}`}>{runStatus}</span><span aria-hidden> · </span></>}
+            {runStatus && <><span aria-label={`任务状态：${runStatus}`}>{runStatus}</span><span aria-hidden> · </span></>}
             {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}
           </span>
-          {conversation.pinned && <span className="inline-flex size-4 shrink-0 items-center justify-center" aria-label="已置顶" title="已置顶"><HugeiconsIcon icon={PinIcon} strokeWidth={2} className="size-3.5" /></span>}
           {muted && <span className="inline-flex size-4 shrink-0 items-center justify-center" aria-label="已静音" title="已静音"><HugeiconsIcon icon={NotificationOff01Icon} strokeWidth={2} className="size-3.5" /></span>}
           <ConversationUnread conversation={conversation} />
         </ItemDescription>

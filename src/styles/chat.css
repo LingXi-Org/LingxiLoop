@@ -559,6 +559,158 @@ input:focus, textarea:focus, button:focus { outline: none; }
 .chat-question-index-button:focus-visible { outline: 2px solid var(--ring); outline-offset: -3px; }
 .chat-question-index-button:disabled { opacity: .5; cursor: wait; }
 
-.conversation-message-body { font-family: var(--font-sans); line-height: 1.625; }
+.conversation-message-body { font-family: var(--font-sans); line-height: 1.6; }
 [data-message-bubble] { font-size: var(--chat-user-size); padding: var(--chat-bubble-pad-y) var(--chat-bubble-pad-x); border-radius: var(--chat-bubble-radius); }
-[data-agent-body] { max-inline-size: 42rem; font-size: var(--chat-assistant-size); }
+[data-agent-body] { max-inline-size: none; font-size: var(--chat-assistant-size); line-height: 1.75; }
+
+/* ============== 明理 · 对话页重设计 ============== */
+.dark { --pinned-tint-strength: 16%; }
+
+/* Conversation list: no visible scrollbar at rest; a 4px floating thumb on
+   hover/scroll, 6px when pointed at, and a 32px fade hinting at more below. */
+.conversation-list-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent 100%);
+}
+.conversation-list-scroll:hover,
+.conversation-list-scroll:focus-within { scrollbar-color: rgb(20 20 18 / 28%) transparent; }
+.dark .conversation-list-scroll:hover,
+.dark .conversation-list-scroll:focus-within { scrollbar-color: rgb(255 255 255 / 22%) transparent; }
+.conversation-list-scroll::-webkit-scrollbar { width: 6px; }
+.conversation-list-scroll::-webkit-scrollbar-track { background: transparent; }
+.conversation-list-scroll::-webkit-scrollbar-thumb { border-radius: 6px; background: transparent; }
+.conversation-list-scroll:hover::-webkit-scrollbar-thumb { background: rgb(20 20 18 / 16%); }
+.conversation-list-scroll::-webkit-scrollbar-thumb:hover { background: rgb(20 20 18 / 28%); }
+
+/* Messages: user turns sit in a quiet right-aligned bubble with a tucked
+   corner; agent and member turns read as plain text in the 700px column. */
+.chat-surface,
+.desktop-openmaus .chat-surface { background: var(--background); }
+[data-lingxi-assistant-thread] {
+  --chat-user-size: 15px;
+  --chat-assistant-size: 15px;
+  --chat-bubble-pad-y: 10px;
+  --chat-bubble-pad-x: 16px;
+  --chat-bubble-radius: 18px 18px 6px 18px;
+  --reading-gap: 12px;
+}
+[data-message-bubble] { box-shadow: none; }
+[data-message-bubble='user'] { background: var(--bubble); color: var(--foreground); }
+[data-message-bubble='human'] {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 14.5px;
+}
+[data-message-footer][data-delivery] { margin-block-start: 4px; }
+.chat-thread-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.chat-thread-scroll:hover { scrollbar-color: rgb(20 20 18 / 22%) transparent; }
+.dark .chat-thread-scroll:hover { scrollbar-color: rgb(255 255 255 / 18%) transparent; }
+.im-markdown :where(:not(pre) > code) {
+  border: 0;
+  border-radius: 5px;
+  background: var(--accent);
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* Status cards: tone owns ring, icon well and action; text stays neutral. */
+.status-notice { box-shadow: 0 0 0 1px var(--tone-ring), 0 1px 2px rgb(20 20 18 / 3%); }
+.status-notice-icon, .status-notice-action { background: var(--tone-bg); color: var(--tone-fg); }
+.status-notice-action:hover { background: color-mix(in srgb, var(--tone-fg) 16%, var(--tone-bg)); }
+.status-notice[data-tone='error'] { --tone-fg: #B04A3E; --tone-bg: #FBEFEC; --tone-ring: #F1DCD7; }
+.status-notice[data-tone='incomplete'] { --tone-fg: #93621A; --tone-bg: #FAF2E2; --tone-ring: #EFE2C6; }
+.status-notice[data-tone='offline'] { --tone-fg: #56606C; --tone-bg: #EEF0F3; --tone-ring: #E1E4E8; }
+.status-notice[data-tone='undelivered'] { --tone-fg: #A2465A; --tone-bg: #FAEEF1; --tone-ring: #F0DAE0; }
+.dark .status-notice[data-tone='error'] { --tone-fg: #E58A80; --tone-bg: #2C1B19; --tone-ring: #3A2522; }
+.dark .status-notice[data-tone='incomplete'] { --tone-fg: #E5B565; --tone-bg: #262017; --tone-ring: #3A3020; }
+.dark .status-notice[data-tone='offline'] { --tone-fg: #A9B1BC; --tone-bg: #1E2125; --tone-ring: #2C3036; }
+.dark .status-notice[data-tone='undelivered'] { --tone-fg: #E38BA0; --tone-bg: #2A1B20; --tone-ring: #3A262C; }
+
+@keyframes typing-dot-fade { 0%, 100% { opacity: .3; } 40% { opacity: .9; } }
+.typing-dot { opacity: .6; animation: typing-dot-fade 1.1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .typing-dot { animation: none; }
+  .typing-dot:nth-child(1) { opacity: .9; }
+  .typing-dot:nth-child(3) { opacity: .3; }
+}
+
+.composer-trigger-menu {
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px rgb(20 20 18 / 5%), 0 12px 32px rgb(20 20 18 / 12%);
+}
+.dark .composer-trigger-menu { box-shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 12px 32px rgb(0 0 0 / 40%); }
+
+/* Rich elements: one card language — 14px radius, hairline ring, a 44px
+   toolbar (type on the left, actions on the right). */
+.im-markdown [data-streamdown='code-block'],
+.im-markdown [data-streamdown='table-wrapper'],
+.im-markdown [data-streamdown='mermaid-block'] {
+  border: 0;
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgb(20 20 18 / 4%), 0 6px 18px -6px rgb(20 20 18 / 8%);
+  overflow: hidden;
+}
+.im-markdown [data-code-toolbar] [data-streamdown='code-block-header'] { padding: 0; background: transparent; color: inherit; font: inherit; }
+.im-markdown [data-code-toolbar] :is([data-streamdown='code-block-copy-button'], [data-streamdown='code-block-download-button']) {
+  display: inline-flex; height: 28px; min-width: 28px; align-items: center; justify-content: center;
+  border-radius: 7px; color: var(--fg2);
+}
+.im-markdown [data-code-toolbar] :is([data-streamdown='code-block-copy-button'], [data-streamdown='code-block-download-button']):hover { background: var(--accent); }
+.im-markdown [data-streamdown='table'] { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.im-markdown [data-streamdown='table-header'] { background: transparent; }
+.im-markdown [data-streamdown='table-header-cell'] {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground); font-size: 12.5px; font-weight: 500; text-align: start;
+}
+.im-markdown [data-streamdown='table-cell'] { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--fg2); }
+.im-markdown [data-streamdown='table-cell']:first-child { color: var(--foreground); font-weight: 500; }
+.im-markdown [data-streamdown='table-row']:last-child [data-streamdown='table-cell'] { border-bottom-color: transparent; }
+.im-markdown [data-streamdown='mermaid'] {
+  padding: 24px 40px;
+  background-color: var(--card);
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.im-markdown :where(a, [data-streamdown='link']) {
+  color: var(--brand);
+  font-weight: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--brand) 35%, transparent);
+  text-underline-offset: 3px;
+}
+.im-markdown :where(a, [data-streamdown='link']):hover { color: color-mix(in srgb, var(--brand) 80%, var(--foreground)); }
+.im-markdown [data-streamdown='image-wrapper'] { border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 1px var(--border); }
+.im-markdown [data-streamdown='blockquote'], .im-markdown :where(blockquote) {
+  border-inline-start: 2px solid var(--input);
+  padding-inline-start: 12px;
+  color: var(--fg2);
+}
+.im-markdown .katex-display {
+  position: relative;
+  margin: 0;
+  border-radius: 14px;
+  background: rgb(123 92 201 / 6%);
+  box-shadow: inset 0 0 0 1px rgb(123 92 201 / 14%);
+  padding: 26px 22px 22px;
+  font-size: 1.25em;
+}
+.im-markdown .katex-display::before {
+  content: '公式';
+  position: absolute;
+  inset-inline-start: 10px;
+  inset-block-start: 8px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: #7B5CC9;
+}
+.im-markdown :where(h1, h2, h3, h4) { letter-spacing: -0.01em; }

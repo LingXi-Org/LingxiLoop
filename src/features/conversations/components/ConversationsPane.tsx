@@ -1,4 +1,4 @@
-import { Cancel01Icon, Delete02Icon, Notification01Icon, NotificationOff01Icon, PinIcon, PinOffIcon, SearchIcon } from '@hugeicons/core-free-icons'
+import { Cancel01Icon, Delete02Icon, Notification01Icon, NotificationOff01Icon, PinIcon, PinOffIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type React from 'react'
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
@@ -6,14 +6,13 @@ import { Virtuoso } from 'react-virtuoso'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Button } from '@/components/ui/button'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
 import { SidebarContent, SidebarHeader } from '@/components/ui/sidebar'
 import { conversationsApi } from '@/features/conversations/api'
 import { captureConversationScope, isMuted, useConversations } from '@/features/conversations/store'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { ConversationListItemContent, PinnedConversationContent } from '@/im/ConversationList'
+import { ConversationListItemContent, PinnedConversationContent, pinnedTint } from '@/im/ConversationList'
 import { notifyAction, toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
@@ -62,7 +61,7 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
         onSelect()
       }}
       className={cn(
-        'mb-1 cursor-pointer flex-nowrap gap-2.5 rounded-[10px] border-0 px-2 py-2 text-left hover:bg-accent focus-visible:ring-inset',
+        'mb-0.5 cursor-pointer flex-nowrap gap-2.5 rounded-[10px] border-0 px-2.5 py-[9px] text-left hover:bg-accent/70 focus-visible:ring-inset',
         selected && 'bg-accent',
         className,
       )}
@@ -99,8 +98,9 @@ function ConversationRow({ conversation, selected, items, onConversationSelected
     <ContextMenuTrigger asChild>
       {pinnedMode ? <button type="button" data-pinned-conversation={pinnedMode} aria-current={selected ? 'page' : undefined}
         aria-label={[conversation.title, conversation.unread ? `${conversation.unread} 条未读消息` : '', isMuted(conversation) ? '已静音' : ''].filter(Boolean).join('，')} onClick={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}
-        className={cn('pinned-conversation relative flex w-full min-w-0 overflow-hidden rounded-[10px] bg-accent/60 text-start outline-offset-2 hover:bg-accent',
-          pinnedMode === 'tile' ? 'min-h-[68px] flex-col items-center gap-1 px-1 py-2' : pinnedMode === 'compact' ? 'h-[72px] flex-col p-2.5' : 'h-[84px] flex-col p-2.5',
+        style={{ backgroundColor: pinnedTint(conversation).surface }}
+        className={cn('pinned-conversation relative flex w-full min-w-0 overflow-hidden rounded-xl text-start text-foreground outline-offset-2 transition-[filter] hover:brightness-[.97] dark:hover:brightness-110',
+          pinnedMode === 'tile' ? 'min-h-[68px] flex-col items-center gap-1 px-1 py-2' : pinnedMode === 'wide' ? 'h-[76px] flex-col justify-center gap-[3px] ps-3 pe-32' : pinnedMode === 'compact' ? 'h-[72px] flex-col justify-between py-2.5 ps-[11px] pe-[70px]' : 'h-[84px] flex-col justify-between py-2.5 ps-[11px] pe-[34px]',
           selected && 'ring-1 ring-inset ring-brand')}>
         <PinnedConversationContent conversation={conversation} mode={pinnedMode} />
       </button> : <ConversationListRow selected={selected} onSelect={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}>
@@ -265,22 +265,23 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
   }
 
   return (
-    <aside data-slot="sidebar" className="im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
+    <aside data-slot="sidebar" aria-label="对话列表" className={cn('im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden bg-background text-foreground', isMobile ? 'py-2' : 'pb-3 pe-2.5 ps-2 pt-3')}>
       <SidebarHeader className="desktop-window-toolbar select-none shrink-0 gap-0 p-0">
         {isMobile && <h1 className="h-12 shrink-0 truncate px-4 font-heading text-xl font-medium leading-[48px] text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
-        <div className={cn('flex h-14 min-w-0 shrink-0 items-center gap-2', isMobile ? 'px-3' : 'px-2')}>
-        <InputGroup className={cn('min-w-0 flex-1 rounded-lg border-transparent bg-transparent shadow-none', isMobile ? 'h-11' : 'h-9')}>
-          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className={cn('px-2 text-sm', isMobile ? 'h-11' : 'h-9')} />
-          <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4" /></InputGroupAddon>
-          {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" className={isMobile ? 'size-8' : undefined} onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
-        </InputGroup>
-        {companyId && projectId && <NewConversationDialog key={`${companyId}:${projectId}`} companyId={companyId} projectId={projectId} isMobile={isMobile} onCreated={(id) => {
-          setQuery(''); select(id); onConversationSelected?.(id)
-        }} />}
+        <div className={cn('flex min-w-0 shrink-0 items-center gap-1', isMobile ? 'h-12 px-3' : 'h-8 ps-0.5')}>
+          <label className={cn('flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-muted-foreground focus-within:bg-accent/60', isMobile ? 'h-11' : 'h-8')}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-[15px] shrink-0"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索" aria-label="搜索会话和消息"
+              className="min-w-0 flex-1 border-0 bg-transparent text-[13.5px] text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none" />
+            {query && <button type="button" className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-3.5" /></button>}
+          </label>
+          {companyId && projectId && <NewConversationDialog key={`${companyId}:${projectId}`} companyId={companyId} projectId={projectId} isMobile={isMobile} onCreated={(id) => {
+            setQuery(''); select(id); onConversationSelected?.(id)
+          }} />}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className={cn('gap-0 py-0', isMobile ? 'px-3' : 'px-2')}>
+      <SidebarContent className={cn('gap-0 py-0', isMobile ? 'px-3' : 'px-0')}>
         {query.trim() ? (
           <div className="h-full overflow-y-auto">
             {searching && <ResourceSkeleton variant="list" count={4} compact label="正在搜索会话" />}
@@ -302,9 +303,9 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
           <div className="relative min-h-0 flex-1">
           {error && conversations.length > 0 && <div role="alert" className="absolute inset-x-2 top-2 z-10 flex items-center gap-2 rounded-xl border border-destructive/30 bg-background/95 px-3 py-2 text-xs text-destructive shadow-sm"><span className="min-w-0 flex-1 truncate">{userFacingError(error, '会话刷新失败，请稍后重试。')}</span><Button type="button" variant="ghost" size="sm" onClick={() => void useConversations.getState().reload()}>重试</Button></div>}
           <Virtuoso
-            className="h-full"
+            className="conversation-list-scroll h-full"
             data={conversations}
-            context={{ header: <><PinnedConversations conversations={pinned} renderConversation={(conversation, mode) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} pinnedMode={mode} />} />{conversations.length > 0 && <p className="px-2 pb-2 pt-1 text-xs text-muted-foreground">最近</p>}</> }}
+            context={{ header: <><PinnedConversations conversations={pinned} renderConversation={(conversation, mode) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} pinnedMode={mode} />} />{conversations.length > 0 && <p className="px-2.5 pb-1.5 pt-3 text-xs text-muted-foreground">最近</p>}</> }}
             computeItemKey={(_, conversation) => conversation.id}
             defaultItemHeight={60}
             increaseViewportBy={{ top: 500, bottom: 500 }}

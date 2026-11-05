@@ -37,33 +37,34 @@ function mentionFormatter(targets: readonly MentionTarget[]): Unstable_Directive
 function TriggerIcon({ item }: { item: Unstable_TriggerItem }) {
   const participant = useParticipants((state) => state.byId[item.id])
   if (item.type === 'participant' && participant) {
-    return <span aria-hidden="true"><Avatar p={participant} size={28} ringColor="transparent" animated={false} mode="chat" /></span>
+    return <span aria-hidden="true" className="grid size-[30px] shrink-0 place-items-center"><Avatar p={participant} size={28} ringColor="transparent" animated={false} mode="chat" /></span>
   }
   const Icon = item.type === 'broadcast' ? UsersRoundIcon : BarChart3Icon
   return (
-    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-      <Icon className="size-4" aria-hidden />
+    <span aria-hidden="true" className="grid size-[30px] shrink-0 place-items-center rounded-lg border border-border bg-background text-fg2">
+      <Icon className="size-4" strokeWidth={1.6} />
     </span>
   )
 }
 
-function TriggerItems() {
+function TriggerItems({ heading, hint }: { heading: string; hint?: (item: Unstable_TriggerItem) => string }) {
   return (
-    <ComposerPrimitive.Unstable_TriggerPopoverItems className="max-h-64 overflow-y-auto p-1">
-      {(items) => items.map((item, index) => (
+    <ComposerPrimitive.Unstable_TriggerPopoverItems className="flex max-h-72 flex-col gap-px overflow-y-auto">
+      {(items) => [<div key="heading" aria-hidden="true" className="px-2.5 pb-1 pt-1.5 text-xs text-muted-foreground">{heading}</div>, ...items.map((item, index) => (
         <ComposerPrimitive.Unstable_TriggerPopoverItem
           key={`${item.type}:${item.id}`}
           item={item}
           index={index}
-          className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left outline-none hover:bg-muted data-[highlighted]:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-left text-foreground outline-none hover:bg-accent data-[highlighted]:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
         >
           <TriggerIcon item={item} />
-          <span className="min-w-0 flex-1">
-            <span className="block break-words text-sm font-semibold text-foreground">{item.label}</span>
-            {item.description ? <span className="block break-words text-xs text-muted-foreground">{item.description}</span> : null}
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-sm font-medium">{item.label}</span>
+            {item.description ? <span className="truncate text-[12.5px] text-muted-foreground">{item.description}</span> : null}
           </span>
+          {hint && <span className="shrink-0 text-xs text-muted-foreground">{hint(item)}</span>}
         </ComposerPrimitive.Unstable_TriggerPopoverItem>
-      ))}
+      ))]}
     </ComposerPrimitive.Unstable_TriggerPopoverItems>
   )
 }
@@ -130,19 +131,19 @@ export function ComposerTriggers({
           char="@"
           adapter={mention.adapter}
           aria-label="提及成员"
-          className="app-menu-surface absolute bottom-full left-0 z-30 mb-2 w-80 max-w-full animate-rise"
+          className="composer-trigger-menu absolute bottom-full left-0 z-30 mb-2 w-[340px] max-w-full animate-rise"
         >
           <ComposerPrimitive.Unstable_TriggerPopover.Directive {...mention.directive} />
-          <TriggerItems />
+          <TriggerItems heading="提及" />
         </ComposerPrimitive.Unstable_TriggerPopover>
         <ComposerPrimitive.Unstable_TriggerPopover
           char="/"
           adapter={slash.adapter}
           aria-label="快捷命令"
-          className="app-menu-surface absolute bottom-full left-0 z-30 mb-2 w-80 max-w-full animate-rise"
+          className="composer-trigger-menu absolute bottom-full left-0 z-30 mb-2 w-[340px] max-w-full animate-rise"
         >
           <ComposerPrimitive.Unstable_TriggerPopover.Action {...slash.action} />
-          <TriggerItems />
+          <TriggerItems heading="命令" hint={item => `/${item.label}`} />
         </ComposerPrimitive.Unstable_TriggerPopover>
       </div>
     </ComposerPrimitive.Unstable_TriggerPopoverRoot>

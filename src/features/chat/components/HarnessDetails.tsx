@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { ErrorPrimitive, useAui, useAuiState } from '@assistant-ui/react'
 import { Button } from '@/components/ui/button'
+import { StatusNotice } from '@/components/assistant-ui/elements/status-notice'
 import { ApprovalRequestCard } from './ApprovalRequestCard'
 import { harnessApi } from '../runtime/harness-api'
 import { userFacingError } from '@/lib/userFacingError'
@@ -57,21 +58,19 @@ function HarnessDetailsContent({ metadata }: { metadata: LingxiMessageMetadata }
     setResolvedApproval(id)
   })
 
-  return <section aria-label="答复附件与操作" className="mt-2 grid w-full max-w-xl gap-2 text-xs text-muted-foreground empty:hidden">
-    {metadata.runConnection === 'released' && <p role="status">暂时无法更新原任务进度。
-      <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => void perform(async () => {})}>恢复连接 / 刷新进度</Button>
-    </p>}
+  return <section aria-label="答复附件与操作" className="mt-1 grid w-full max-w-xl gap-2 text-[12.5px] text-muted-foreground empty:hidden">
+    {metadata.runConnection === 'released' && <StatusNotice tone="offline" title="连接已中断" detail="重新连接后会继续显示进度"
+      action={{ label: '刷新进度', onClick: () => void perform(async () => {}), busy }} />}
     {metadata.runConnection === 'unauthenticated' && <p role="status">登录已失效，请重新登录。</p>}
     {metadata.runConnection === 'inaccessible' && <p role="status">你已无法访问此回复。</p>}
     {metadata.runConnection === 'missing' && <p role="status">原任务暂不可读取。请先核对已执行的操作，再决定是否重新发起。</p>}
     {!!metadata.unresolvedActions?.length && <p role="status">操作结果待核对。请先刷新原任务进度并核查结果，避免重复提交。</p>}
     {message.status?.type === 'incomplete' && message.status.reason === 'cancelled' && <p role="status">{failure?.detail ?? currentTerminalNotice(metadata)?.text ?? '已取消'}</p>}
-    {view.delivery === 'failed' && <ErrorPrimitive.Root className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-      <p>{failure?.recovery === 'refresh' ? '请先刷新原任务，核对答复投递与收尾进度。' : '答复投递失败，请重试投递；无需重新生成已有答复。'}</p>
-      {metadata.harnessControl && (failure?.recovery === 'refresh'
-        ? <Button type="button" size="sm" className="mt-2" disabled={busy} onClick={() => void perform(async () => {})}>刷新进度</Button>
-        : <Button type="button" size="sm" className="mt-2" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button>)}
-    </ErrorPrimitive.Root>}
+    {view.delivery === 'failed' && <ErrorPrimitive.Root asChild><StatusNotice tone="undelivered" title="答复未送达"
+      detail={failure?.recovery === 'refresh' ? '请先刷新原任务，核对答复投递与收尾进度。' : '重试投递即可，无需重新生成已有答复。'}
+      action={metadata.harnessControl ? failure?.recovery === 'refresh'
+        ? { label: '刷新进度', onClick: () => void perform(async () => {}), busy }
+        : { label: '重试投递', onClick: () => void perform(() => harnessApi.retryDelivery(target)), busy } : undefined} /></ErrorPrimitive.Root>}
     {questionnaireWait ? <p role="status">请在问卷卡片中提交回答。</p> : owner.type === 'harness' && outcome?.status === 'awaiting_input' ? <ElicitationForm server="补充信息" message={outcome.question ?? '请补充信息以继续任务。'}
       fields={[{ name: 'answer', label: '补充信息', kind: 'text', value: answer, required: true }]}
       state={submitted === view.requestVersion ? 'accepted' : 'request'} acceptDisabled={!metadata.harnessControl || busy || !answer.trim()}

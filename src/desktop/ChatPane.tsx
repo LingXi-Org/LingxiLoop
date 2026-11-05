@@ -74,6 +74,7 @@ export function ChatPane({
           conversationId={conversationId}
           variant={onBackToConversations ? 'mobile' : 'desktop'}
           onBack={onBackToConversations}
+          onSearch={() => setSearchOpen(true)}
           actions={<DesignButton key={conversationId} conversationId={conversationId} />}
         />
         <div data-chat-auxiliary="true">

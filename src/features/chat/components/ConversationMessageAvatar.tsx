@@ -23,28 +23,31 @@ export function isMessageAvatarActive(messages: readonly ThreadMessage[], index:
 }
 
 export const ConversationMessageAvatar = memo(function ConversationMessageAvatar({
-  participant, isMobile, isMine, groupStart, groupEnd,
+  participant, isMobile, isMine, groupStart, groupEnd, inline = false,
 }: {
   participant: Participant | undefined
   isMobile: boolean
   isMine: boolean
   groupStart: boolean
   groupEnd: boolean
+  /** Sits in the agent's name row instead of its own grid column. */
+  inline?: boolean
 }) {
+  void isMobile
   const showAvatar = Boolean((isMine ? groupEnd : groupStart) && participant)
   const animated = useAuiState(state => showAvatar && participant?.kind === 'agent'
     && isMessageAvatarActive(state.thread.messages, state.message.index))
+  const size = inline ? 22 : 28
   return <div data-message-avatar className={cn(
-    'flex',
-    participant?.kind === 'agent' ? 'row-start-1' : 'row-start-2',
-    participant?.kind === 'agent' ? 'self-start' : 'self-center',
-    participant?.kind === 'agent' ? 'w-7' : isMobile ? 'w-8' : 'w-10',
-    isMine ? 'col-start-2' : 'col-start-1',
+    'flex shrink-0',
+    !inline && 'row-span-3 row-start-1 self-start pt-0.5',
+    inline ? 'size-[22px]' : 'w-7',
+    !inline && (isMine ? 'col-start-2' : 'col-start-1'),
     groupStart && participant?.kind === 'agent' && 'chat-message-avatar',
     groupStart && animated && participant?.status === 'thinking' && 'bloub-activity-thinking',
     groupStart && animated && participant?.status === 'working' && 'bloub-activity-working',
   )}>
-    {showAvatar && participant && <Avatar p={participant} size={participant.kind === 'agent' ? 28 : isMobile ? 32 : 38} ringColor="var(--background)"
+    {showAvatar && participant && <Avatar p={participant} size={size} ringColor="var(--background)"
       animated={Boolean(animated)} mode="chat" className="transition-[width,height] duration-200" />}
   </div>
 })

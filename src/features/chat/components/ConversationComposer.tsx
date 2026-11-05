@@ -4,7 +4,7 @@ import {
   useAui,
   useAuiState,
 } from '@assistant-ui/react'
-import { Alert02Icon, ArrowRight02Icon, Cancel01Icon, Loading03Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, Cancel01Icon, Loading03Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AtSignIcon, BarChart3Icon, PaperclipIcon } from 'lucide-react'
@@ -38,7 +38,7 @@ const actionClassName = 'h-auto min-h-11 w-full justify-start gap-3 rounded-xl p
 export function ConversationComposer({
   conversationId,
   compact = false,
-  placeholder = '发送消息…',
+  placeholder = '继续提问，输入 / 使用命令，@ 提及 agent',
 }: {
   conversationId: string
   compact?: boolean
@@ -106,14 +106,14 @@ export function ConversationComposer({
             void Promise.all(files.map(file => aui.composer.addAttachment(file).catch(() => setAttachmentError('附件未能添加，请重新选择文件。'))))
           }} />
         <ComposerQuotePreview onDismiss={() => requestAnimationFrame(focusInput)} />
-        <AttachmentGroup className="px-1 pb-2 pt-1 empty:hidden" role="group" aria-label="待发送附件" tabIndex={0}>
+        <AttachmentGroup className="chat-composer-attachments flex flex-wrap gap-1.5 px-0.5 empty:hidden" role="group" aria-label="待发送附件" tabIndex={0}>
           <ComposerPrimitive.Attachments>
             {({ attachment }) => {
               const state = attachment.status.type === 'running'
                 ? 'uploading'
                 : attachment.status.type === 'incomplete' ? 'error' : 'done'
               return <AttachmentPrimitive.Root asChild>
-                <Attachment size="sm" state={state} aria-busy={state === 'uploading'}>
+                <Attachment size="sm" state={state} aria-busy={state === 'uploading'} className="w-[190px] rounded-[10px] border-0 py-1.5 ps-2 pe-2 shadow-[0_0_0_1px_var(--border)]">
                   <AttachmentMedia>
                     {state === 'uploading'
                       ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" strokeWidth={2} />
@@ -143,6 +143,17 @@ export function ConversationComposer({
             }}
           </ComposerPrimitive.Attachments>
         </AttachmentGroup>
+        <div className="chat-composer-row">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <Button ref={addRef} type="button" variant="ghost" size="icon" className="chat-composer-control chat-composer-add shrink-0" aria-label="添加附件">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M12 5v14M5 12h14" /></svg>
+                </Button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top">添加</TooltipContent>
+          </Tooltip>
           <ComposerLexicalInput
             conversationId={conversationId}
             ref={inputRef}
@@ -152,42 +163,27 @@ export function ConversationComposer({
             placeholder={placeholder}
             className="chat-composer-input"
           />
-        <div className="chat-composer-footer">
-          <div className="flex shrink-0 items-center gap-1">
+          {canCancel || cancelling ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button ref={addRef} type="button" variant="ghost" size="icon" className="chat-composer-control shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="添加">
-                    <HugeiconsIcon icon={PlusSignIcon} size={20} strokeWidth={2} />
-                  </Button>
-                </PopoverTrigger>
+                <Button type="button" disabled={cancelling} onClick={() => void cancel()} className="chat-composer-control chat-composer-send flex items-center justify-center" aria-label="停止全部智能助教" aria-busy={cancelling}>
+                  <span className="size-2.5 rounded-[2px] bg-current" />
+                </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">添加</TooltipContent>
+              <TooltipContent side="top">停止当前会话中的全部智能助教</TooltipContent>
             </Tooltip>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            {canCancel || cancelling ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button type="button" disabled={cancelling} onClick={() => void cancel()} className="chat-composer-control chat-composer-send flex items-center justify-center" aria-label="停止全部智能助教" aria-busy={cancelling}>
-                    <span className="size-2.5 rounded-[2px] bg-current" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">停止当前会话中的全部智能助教</TooltipContent>
-              </Tooltip>
-            ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <ComposerPrimitive.Send asChild>
-                  <Button type="submit" size="icon" className="chat-composer-control chat-composer-send transition-opacity disabled:opacity-30" aria-label="发送">
-                    <HugeiconsIcon icon={ArrowRight02Icon} size={16} strokeWidth={2} />
-                  </Button>
-                </ComposerPrimitive.Send>
-              </TooltipTrigger>
-              <TooltipContent side="top">发送</TooltipContent>
-            </Tooltip>
-            )}
-          </div>
+          ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ComposerPrimitive.Send asChild>
+                <Button type="submit" size="icon" className="chat-composer-control chat-composer-send transition-opacity disabled:opacity-40" aria-label="发送">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+                </Button>
+              </ComposerPrimitive.Send>
+            </TooltipTrigger>
+            <TooltipContent side="top">发送</TooltipContent>
+          </Tooltip>
+          )}
         </div>
           </ComposerPrimitive.Root>
           </PopoverAnchor>

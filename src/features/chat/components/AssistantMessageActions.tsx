@@ -10,6 +10,7 @@ import { useConversations } from '@/features/conversations/store'
 import { createNativeMessage } from '@/lib/nativeMessage'
 import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
+import { StatusNotice } from '@/components/assistant-ui/elements/status-notice'
 import type { LingxiMessageMetadata } from '../runtime/model'
 import { terminalFailurePresentation, savedPartialWork, savedPartialWorkText } from '../runtime/terminal-presentation'
 import { chatTransport } from '../runtime/transport'
@@ -52,7 +53,7 @@ export function AssistantMessageActions() {
     && view?.runId === metadata.runId && outcome?.requestVersion === view?.requestVersion
     && (outcome?.status === 'partial' || outcome?.status === 'blocked')
     && (view?.lifecycle === outcome.status || view?.lifecycle === 'succeeded') ? outcome.status : null
-  const buttonClassName = cn(ghostButton, 'size-7 disabled:pointer-events-none disabled:opacity-40 max-md:size-11')
+  const buttonClassName = cn(ghostButton, 'size-8 rounded-lg text-muted-foreground disabled:pointer-events-none disabled:opacity-40 max-md:size-11 [&_svg]:size-4')
   const ratingClassName = (emoji: string) => cn(buttonClassName,
     metadata.reactions.some(reaction => reaction.emoji === emoji && reaction.mine)
       && 'bg-foreground/[0.06] text-foreground/90 dark:bg-foreground/[0.09]')
@@ -110,12 +111,11 @@ export function AssistantMessageActions() {
         onRetry={failure.recovery === 'delivery' ? undefined : failure.recovery === 'refresh' ? () => void refresh() : () => void regenerate()}
         disabled={failure.recovery === 'refresh' ? pending !== null || !metadata.runId : retryDisabled} className="mt-2" />}
     </MessagePrimitive.Error>
-    {incompleteOutcome && <div data-run-outcome={incompleteOutcome} role="status" className="mt-3 flex flex-wrap items-center gap-2 rounded-[10px] bg-[var(--warning-surface)] px-3 py-2 text-xs text-warning">
-      <span className="min-w-0 flex-1">{pending === 'regenerate' ? '正在提交' : savedWork ? savedPartialWorkText : '答复尚未完成'}</span>
-      <button type="button" disabled={retryDisabled} onClick={() => void regenerate()}
-        className="shrink-0 rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40 max-md:min-h-11">{savedWork ? '继续未完成部分' : '重试'}</button>
-    </div>}
-    {(message.content.length > 0 || metadata.replyBranches) && <ActionBarPrimitive.Root ref={root} data-slot="message-actions" role="toolbar" aria-label="智能助教回复操作" className="mt-3 flex flex-wrap items-center gap-1">
+    {incompleteOutcome && <StatusNotice data-run-outcome={incompleteOutcome} tone="incomplete" className="mt-1"
+      title={pending === 'regenerate' ? '正在提交' : '回复不完整'}
+      detail={savedWork ? savedPartialWorkText : '答复尚未完成，可以继续生成。'}
+      action={{ label: savedWork ? '继续生成' : '重试', onClick: () => void regenerate(), disabled: retryDisabled }} />}
+    {(message.content.length > 0 || metadata.replyBranches) && <ActionBarPrimitive.Root ref={root} data-slot="message-actions" role="toolbar" aria-label="智能助教回复操作" className="-ms-1.5 mt-1 flex flex-wrap items-center gap-0.5 text-muted-foreground">
     {metadata.replyBranches && <MessageBranches variants={metadata.replyBranches.ids} index={metadata.replyBranches.index}
       onIndexChange={index => {
         const branch = metadata.replyBranches!

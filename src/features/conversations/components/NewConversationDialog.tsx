@@ -1,5 +1,3 @@
-import { PlusSignIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import { ApiError } from '@/api/core/http'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
@@ -109,8 +107,8 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
       <DialogTrigger asChild>
-        {trigger ?? <Button type="button" variant="secondary" size={isMobile ? 'icon-lg' : 'icon-sm'} className="shrink-0 rounded-full bg-sidebar-accent text-muted-foreground hover:bg-[var(--im-conversation-hover)] hover:text-sidebar-foreground" aria-label="新建对话" title="新建对话">
-          <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
+        {trigger ?? <Button type="button" variant="ghost" size="icon" className={isMobile ? 'size-11 shrink-0 rounded-lg text-fg2' : 'size-8 shrink-0 rounded-lg text-fg2 hover:bg-accent'} aria-label="新建对话" title="新建对话">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-[17px]"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.4 2.6a2 2 0 0 1 3 3L12 15l-4 1 1-4z" /></svg>
         </Button>}
       </DialogTrigger>
       <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-hidden">

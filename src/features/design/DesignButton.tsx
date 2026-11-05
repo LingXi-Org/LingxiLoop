@@ -32,8 +32,8 @@ export function DesignButton({ conversationId }: { conversationId: string }) {
       setPending(false)
     }
   }
-  return <Button type="button" variant="outline" size="sm" className="text-foreground max-md:min-h-11" aria-label={expanded ? '关闭画板' : '打开画板'} title="画板"
+  return <Button type="button" variant="ghost" size="sm" className={`h-8 gap-1.5 rounded-[9px] border border-border px-2.5 text-[13px] font-normal max-md:min-h-11 ${expanded ? 'bg-accent text-foreground hover:bg-accent' : 'text-fg2 hover:bg-accent/60'}`} aria-label={expanded ? '关闭画板' : '打开画板'} aria-pressed={expanded} title="画板"
     aria-controls="conversation-design-panel" aria-expanded={expanded} aria-busy={pending || undefined} aria-disabled={pending || undefined} onPointerEnter={warm} onFocus={warm} onClick={event => void open(event.currentTarget)} data-design-open-trigger>
-    <PanelRight className="size-4" />画板
+    <PanelRight className="size-4" strokeWidth={1.6} />画板
   </Button>
 }

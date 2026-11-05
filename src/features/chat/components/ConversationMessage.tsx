@@ -5,8 +5,10 @@ import {
 } from '@assistant-ui/react'
 import { Copy01Icon, ReplyIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { CheckCheck, LoaderCircle } from 'lucide-react'
+import { CheckCheck } from 'lucide-react'
 import { type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { RunActivityPillSlot } from '@/components/assistant-ui/elements/run-activity'
+import { StatusNotice } from '@/components/assistant-ui/elements/status-notice'
 import { ConversationMessageAvatar } from './ConversationMessageAvatar'
 import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
 import { MarkdownText } from '@/components/assistant-ui/markdown-text'
@@ -32,17 +34,15 @@ import { MessageQuotePreview } from './QuotePreview'
 function FailedSendActions({ metadata }: { metadata: LingxiMessageMetadata }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  return <div className="grid gap-1 text-xs text-muted-foreground" role="group" aria-label="未确认消息操作">
-    <p role="status">{error ?? metadata.sendError ?? '发送状态待确认，消息和附件已保留。'}</p>
-    <div className="flex justify-end gap-2">
-      <Button type="button" variant="link" size="sm" disabled={busy} onClick={async () => {
+  return <div role="group" aria-label="未确认消息操作" className="flex justify-end">
+    <StatusNotice tone="undelivered" title="消息未送达" detail={error ?? metadata.sendError ?? '发送状态待确认，消息和附件已保留。'}
+      action={{ label: '重新发送', busy, onClick: async () => {
         setBusy(true); setError(null)
         try { await chatTransport.retry(metadata.conversationId, metadata.clientMessageId) }
         catch { setError('暂时无法确认发送，请检查连接和权限后重试。') }
         finally { setBusy(false) }
-      }}>核对并重试发送</Button>
-      <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => chatTransport.discard(metadata.conversationId, metadata.clientMessageId)}>移除待发消息</Button>
-    </div>
+      } }}
+      secondary={{ label: '移除', disabled: busy, onClick: () => chatTransport.discard(metadata.conversationId, metadata.clientMessageId) }} />
   </div>
 }
 
@@ -150,7 +150,7 @@ function MessageTextPart() {
     if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
   }, [])
   const markdown = <MarkdownText agent={isAgent} confidenceClaims={confidenceClaims} inlineCitations={inlineCitations} mentionTargets={mentionTargets} />
-  return <div className={cn('relative min-w-0', isAgent ? 'w-full max-w-full' : 'w-fit max-w-[85%]', metadata.isMine && 'ms-auto')}>
+  return <div className={cn('relative min-w-0', isAgent || !metadata.isMine ? 'w-full max-w-full' : 'w-fit max-w-[80%]', metadata.isMine && 'ms-auto')}>
     {!isMobile && !isAgent && <MessageActions isMine={metadata.isMine} getText={getText} />}
     <div
       ref={bodyRef}
@@ -184,7 +184,7 @@ function MessageTextPart() {
 function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; messageId: string }) {
   if (metadata.reactions.length === 0) return null
   return (
-    <div className={cn('row-start-3 mt-1 flex flex-wrap gap-1', metadata.isMine ? 'justify-end' : 'justify-start')}>
+    <div className={cn('row-start-3 mt-2 flex flex-wrap gap-1.5', metadata.isMine ? 'justify-end' : 'justify-start', metadata.senderKind === 'human' && !metadata.isMine && 'col-start-2')}>
       {metadata.reactions.map((reaction) => (
         <Button
           key={reaction.emoji}
@@ -194,16 +194,16 @@ function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; m
           data-reaction-mine={reaction.mine}
           aria-pressed={reaction.mine}
           className={cn(
-            'h-[26px] gap-1 rounded-full px-2 text-xs tabular-nums transition-all hover:scale-105',
+            'h-6 gap-1 rounded-full border px-2 text-[12.5px] tabular-nums transition-colors',
             reaction.mine
-              ? 'border-primary/30 bg-accent text-accent-foreground hover:bg-accent/80'
-              : 'border-border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+              ? 'border-brand bg-brand-surface text-brand hover:bg-brand-surface'
+              : 'border-border bg-background text-fg2 hover:bg-accent',
           )}
           aria-label={`${reaction.emoji} ${reaction.count} 个反应`}
           onClick={() => void chatTransport.toggleReaction(metadata.conversationId, messageId, reaction.emoji)}
         >
-          <TwEmoji emoji={reaction.emoji} size={16} />
-          <span className="text-xs font-medium">{reaction.count}</span>
+          <TwEmoji emoji={reaction.emoji} size={13} />
+          <span>{reaction.count}</span>
         </Button>
       ))}
     </div>
@@ -216,6 +216,8 @@ export function ConversationMessage() {
   const quoteInsideText = useAuiState(state => state.message.content[0]?.type === 'text')
   const running = useAuiState((state) => state.message.status?.type === 'running')
   const messageId = useAuiState((state) => state.message.id)
+  const createdAt = useAuiState((state) => state.message.createdAt)
+  const timeLabel = createdAt && !custom.timestampMissing ? createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false }) : null
   const awaitingContent = useAuiState((state) => (
     state.message.status?.type === 'running' && state.message.content.length === 0
   ))
@@ -235,13 +237,19 @@ export function ConversationMessage() {
   const deliveryLabel = custom.delivery === 'sending' ? '发送中' : custom.delivery === 'sent' ? '已送达'
     : custom.sendError?.startsWith('自动发送已停止') ? '自动发送已停止' : custom.sendError ? '发送状态待确认' : '发送失败'
   const footer = custom.isMine ? (
-    <div data-message-footer data-align="end" className="flex items-center justify-end gap-2 whitespace-nowrap text-xs leading-4 tabular-nums text-muted-foreground">
-      <span role="status" aria-label={deliveryLabel}>
-        {custom.delivery === 'sending' ? <LoaderCircle aria-hidden="true" className="size-3.5 motion-safe:animate-spin" />
-          : custom.delivery === 'sent' ? <CheckCheck aria-hidden="true" className="size-3.5" /> : deliveryLabel}
+    <div data-message-footer data-align="end" data-delivery={custom.delivery}
+      className={cn('flex items-center justify-end gap-1 whitespace-nowrap text-[11.5px] leading-4 tabular-nums',
+        custom.delivery === 'sent' ? 'text-brand' : custom.delivery === 'sending' ? 'text-muted-foreground' : 'text-[#B7791F] dark:text-warning')}>
+      <span role="status" aria-label={deliveryLabel} className="inline-flex items-center gap-1">
+        {custom.delivery === 'sending' ? <span aria-hidden="true" className="size-2.5 rounded-full border-[1.5px] border-input border-t-muted-foreground motion-safe:animate-spin" />
+          : custom.delivery === 'sent' ? <CheckCheck aria-hidden="true" className="size-3.5" strokeWidth={1.8} />
+          : <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-[13px]"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>}
+        <span className={custom.delivery === 'sent' ? 'sr-only group-hover/message:not-sr-only' : undefined}>{deliveryLabel}</span>
       </span>
     </div>
   ) : null
+  const isAgent = custom.senderKind === 'agent'
+  const name = participant ? participantDisplayName(participant) : custom.senderName
   return (
     <MessagePrimitive.Root
       id={`m-${custom.clientMessageId}`}
@@ -250,26 +258,33 @@ export function ConversationMessage() {
       data-find-message-id={custom.clientMessageId}
       data-message-presentation={custom.presentation}
       data-message-continued-from={custom.continuedFromPrevious}
+      data-sender-kind={custom.senderKind}
       className={cn(
         'group/message grid w-full shrink-0',
         custom.replyBranches && 'fade-in slide-in-from-bottom-1 animate-in duration-300 motion-reduce:animate-none',
-        'px-4',
-        isMobile ? 'gap-x-2' : 'gap-x-2.5',
         '[&[data-message-presentation=special-card]+[data-message-presentation=conversation][data-message-continued-from=true]]:mt-1',
-        custom.continuedFromPrevious ? 'pt-1' : 'pt-3',
-        custom.continuedToNext ? 'pb-0' : 'pb-3',
-        custom.senderKind === 'agent' ? 'grid-cols-[28px_minmax(0,1fr)]' : custom.isMine ? 'grid-cols-1' : 'grid-cols-[auto_minmax(0,1fr)]',
+        custom.continuedFromPrevious ? 'pt-1' : 'pt-3.5',
+        custom.continuedToNext ? 'pb-0' : 'pb-3.5',
+        isAgent || custom.isMine ? 'grid-cols-1' : 'grid-cols-[28px_minmax(0,1fr)] gap-x-2.5',
       )}
     >
-      {!custom.isMine && <ConversationMessageAvatar participant={participant} isMobile={isMobile} isMine={custom.isMine}
+      {!isAgent && !custom.isMine && <ConversationMessageAvatar participant={participant} isMobile={isMobile} isMine={false}
         groupStart={custom.groupStart} groupEnd={custom.groupEnd} />}
-      <div className={cn('contents', custom.isMine ? '[&>div]:col-start-1' : '[&>div]:col-start-2')}>
-        {custom.groupStart && !custom.isMine && (
-          <div className="row-start-1 mb-1 flex items-center gap-2 px-1 text-xs text-muted-foreground">
-            <span className="font-medium">{participant ? participantDisplayName(participant) : custom.senderName}</span>
+      <AgentRunPillScope enabled={isAgent && custom.groupStart} header={(slot) => (
+        <div data-agent-header className="row-start-1 flex h-[26px] min-w-0 items-center gap-2">
+          <ConversationMessageAvatar participant={participant} isMobile={isMobile} isMine={false} groupStart groupEnd={custom.groupEnd} inline />
+          <span className="truncate text-[13px] font-semibold text-foreground">{name}</span>
+          <span ref={slot} data-run-pill-slot className="ms-1 flex min-w-0 empty:hidden" />
+        </div>
+      )}>
+        {custom.groupStart && !custom.isMine && !isAgent && (
+          <div className="col-start-2 row-start-1 mb-1.5 flex items-center gap-1 text-[12.5px] text-muted-foreground">
+            <b className="font-semibold text-foreground">{name}</b>
+            {timeLabel && <><span aria-hidden="true">·</span><time className="tabular-nums">{timeLabel}</time></>}
           </div>
         )}
-        <div data-chat-message-content data-sender-kind={custom.senderKind} className={cn('row-start-2 grid w-full min-w-0 gap-0.5', custom.senderKind === 'agent' ? 'max-w-2xl col-span-2 col-start-1! mt-2' : custom.isMine ? 'max-w-full' : 'max-w-[700px]', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>
+        <div data-chat-message-content data-sender-kind={custom.senderKind} className={cn('row-start-2 grid w-full min-w-0 gap-1',
+          isAgent ? custom.groupStart ? 'mt-3.5' : '' : custom.isMine ? 'max-w-full justify-self-end' : 'col-start-2 max-w-full justify-self-start', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
           {custom.quote && (custom.senderKind !== 'human' || !quoteInsideText) && (
             <div className={cn('min-w-0 max-w-md', custom.isMine && 'w-full justify-self-end')}>
@@ -277,12 +292,23 @@ export function ConversationMessage() {
             </div>
           )}
           <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={footer}
-            attention={custom.senderKind === 'agent' && custom.harness && custom.runId ? <HarnessDetails metadata={custom} /> : null} />
+            attention={isAgent && custom.harness && custom.runId ? <HarnessDetails metadata={custom} /> : null} />
           {custom.isMine && custom.delivery === 'failed' && <FailedSendActions metadata={custom} />}
-          {custom.senderKind === 'agent' && <AssistantMessageActions />}
+          {isAgent && <AssistantMessageActions />}
         </div>
         <Reactions metadata={custom} messageId={messageId} />
-      </div>
+      </AgentRunPillScope>
     </MessagePrimitive.Root>
   )
+}
+
+/** Gives the agent's run disclosure a slot in the name row, as the design places it. */
+function AgentRunPillScope({ enabled, header, children }: {
+  enabled: boolean
+  header: (slot: (node: HTMLElement | null) => void) => React.ReactNode
+  children: React.ReactNode
+}) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null)
+  if (!enabled) return <>{children}</>
+  return <RunActivityPillSlot.Provider value={slot}>{header(setSlot)}{children}</RunActivityPillSlot.Provider>
 }
