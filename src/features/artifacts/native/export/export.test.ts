@@ -15,6 +15,19 @@ function fixture() {
   return document
 }
 
+test('extended appearance exports with geometry, annotations stay off artboards and video fallback is explicit', async () => {
+  const document = fixture(), page = document.pages.page!
+  const shape = { ...createNode('shape', 'gradient'), shape: 'ellipse' as const, flipX: true, style: { gradient: { type: 'linear' as const, angle: 90, stops: [{ color: '#ff0000', offset: 0 }, { color: '#0000ff', offset: 1 }] }, shadow: { x: 2, y: 4, blur: 8, spread: 0, color: '#00000040' } } }
+  const note = { ...createNode('note', 'annotation'), scope: 'canvas' as const, text: 'PRIVATE CANVAS ANNOTATION' }
+  const video = { ...createNode('video', 'video'), text: '课程视频' }
+  for (const node of [shape, note, video]) { page.nodes[node.id] = node; page.nodeOrder.push(node.id) }
+  const resources = new ExportResources(document, { format: 'html' }), html = await renderPageHtml(page, resources)
+  assert.match(html, /linearGradient/); assert.match(html, /fill="url\(#gradient-page-gradient\)"/)
+  assert.match(html, /box-shadow:2px 4px 8px 0px #00000040/); assert.match(html, /scale\(-1,1\)/)
+  assert.ok(!html.includes('PRIVATE CANVAS ANNOTATION'))
+  assert.ok([...resources.warnings].some(w => w.includes('视频以封面导出')))
+})
+
 test('offline HTML escapes authored text and preserves the fixed snapshot', async () => {
   const document = fixture(), before = JSON.stringify(document)
   const result = await exportArtifact(document, { format: 'html' })

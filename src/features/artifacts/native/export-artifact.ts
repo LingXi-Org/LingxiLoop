@@ -1,6 +1,6 @@
 import type { ArtifactAsset, ArtifactDocument } from '../../../../shared/artifact-document'
 
-export type ArtifactExportFormat = 'html' | 'pdf' | 'pptx'
+export type ArtifactExportFormat = 'html' | 'pdf' | 'pptx' | 'png' | 'jpeg' | 'svg'
 export interface ArtifactExportOptions {
   format: ArtifactExportFormat
   resolveAsset?: (asset: ArtifactAsset, signal?: AbortSignal) => Promise<Blob>

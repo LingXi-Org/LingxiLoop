@@ -30,6 +30,7 @@ const testsByScope = {
     'server/src/modules/artifacts/check.test.ts',
     'server/src/modules/artifacts/native-history.test.ts',
     'server/src/modules/artifacts/native-projection.test.ts',
+    'server/src/modules/artifacts/native-comments-router.test.ts',
     'server/src/modules/artifacts/agent-summary.test.ts',
     'server/src/modules/artifacts/native-embed-source.test.ts',
     'server/src/__tests__/assistant-text.test.ts',
@@ -54,6 +55,9 @@ const testsByScope = {
   admin: ['admin/src/lingxilit-url.test.ts', 'admin/src/record-presentation.test.ts', 'admin/src/management-session.test.ts'],
   web: [
     'shared/artifact-operations.test.ts',
+    'shared/artifact-editor-actions.test.ts',
+    'shared/artifact-comment-anchor.test.ts',
+    'shared/artifact-previews.test.ts',
     'shared/artifact-legacy.test.ts',
     'shared/artifact-check.test.ts',
     'src/features/artifacts/native/session.test.ts',

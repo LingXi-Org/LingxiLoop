@@ -7,14 +7,14 @@ import {
 
 const nodePatchSchema = artifactNodeSchema.omit({ id: true, type: true }).partial()
 const pagePatchSchema = artifactPageSchema.omit({ id: true, nodes: true, nodeOrder: true }).partial()
-const optionalNodeFields = new Set(['text', 'richText', 'source', 'assetId', 'crop', 'shape', 'points', 'cells', 'svg', 'embed', 'layout', 'locked', 'hidden', 'animation'])
+const optionalNodeFields = new Set(['text', 'richText', 'source', 'assetId', 'posterAssetId', 'name', 'scope', 'flipX', 'flipY', 'lineStart', 'lineEnd', 'crop', 'shape', 'points', 'cells', 'svg', 'embed', 'layout', 'locked', 'hidden', 'animation'])
 const unsetFieldSchema = z.string().refine(field => optionalNodeFields.has(field) || field.startsWith('style.') && Object.hasOwn(artifactStyleSchema.shape, field.slice(6)), 'field cannot be removed')
 const indexSchema = z.number().int().min(0).max(10_000).optional()
 
 export const artifactOperationSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('document.patch'), patch: artifactDocumentSchema.pick({ title: true, themeId: true }).partial() }).strict(),
   z.object({ type: z.literal('page.insert'), page: artifactPageSchema, index: indexSchema }).strict(),
-  z.object({ type: z.literal('page.patch'), pageId: artifactIdSchema, patch: pagePatchSchema, unset: z.array(z.enum(['sizing', 'paper', 'themeBackground'])).max(3).optional() }).strict(),
+  z.object({ type: z.literal('page.patch'), pageId: artifactIdSchema, patch: pagePatchSchema, unset: z.array(z.enum(['sizing', 'paper', 'themeBackground', 'section', 'guides', 'layoutGuides'])).max(6).optional() }).strict(),
   z.object({ type: z.literal('page.delete'), pageId: artifactIdSchema }).strict(),
   z.object({ type: z.literal('pages.reorder'), pageIds: z.array(artifactIdSchema).max(1000) }).strict(),
   z.object({ type: z.literal('node.insert'), pageId: artifactIdSchema, node: artifactNodeSchema, index: indexSchema }).strict(),
@@ -128,6 +128,7 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
     ancestors(owner, item)
   }
   const changedAssetReferences = (item: ArtifactNode) => {
+    if (item.posterAssetId) change(`${key.asset(item.posterAssetId)}/references`)
     if (item.assetId) change(`${key.asset(item.assetId)}/references`)
     if (item.embed?.previewAssetId) change(`${key.asset(item.embed.previewAssetId)}/references`)
   }
@@ -154,7 +155,8 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
         change(key.page(id, 'exists'), key.page(id), key.document('pageOrder'), key.page(id, 'nodeOrder'))
         for (const item of Object.values(operation.page.nodes)) change(key.node(id, item.id, 'exists'), key.node(id, item.id))
         for (const item of Object.values(operation.page.nodes)) {
-          if (item.assetId) requireKey(key.asset(item.assetId))
+          if (item.posterAssetId) requireKey(key.asset(item.posterAssetId))
+        if (item.assetId) requireKey(key.asset(item.assetId))
           if (item.embed?.previewAssetId) requireKey(key.asset(item.embed.previewAssetId))
           changedAssetReferences(item)
         }
@@ -206,6 +208,7 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
         requireKey(key.page(owner.id, 'exists'), key.node(owner.id, item.id, 'exists'), key.page(owner.id, 'nodeOrder'))
         if (Object.hasOwn(owner.nodes, item.id)) throw new Error(`Node already exists: ${item.id}`)
         if (item.parentId) requireKey(key.node(owner.id, item.parentId, 'exists'))
+        if (item.posterAssetId) requireKey(key.asset(item.posterAssetId))
         if (item.assetId) requireKey(key.asset(item.assetId))
         if (item.embed?.previewAssetId) requireKey(key.asset(item.embed.previewAssetId))
         owner.nodes[item.id] = item
@@ -222,11 +225,12 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
         const unsets = [...operation.unset ?? []]
         // Plain text replaces the visible rich-text value; guard both representations,
         // even when richText was absent in the observed snapshot.
-        if (item.type === 'text' && Object.hasOwn(operation.patch, 'text') && !Object.hasOwn(operation.patch, 'richText') && !unsets.includes('richText')) unsets.push('richText')
+        if ((item.type === 'text' || item.type === 'note') && Object.hasOwn(operation.patch, 'text') && !Object.hasOwn(operation.patch, 'richText') && !unsets.includes('richText')) unsets.push('richText')
         if (new Set([...fields.map(([field]) => field), ...unsets]).size !== fields.length + unsets.length) throw new Error('A field cannot be patched and removed in one operation')
         const entries: Array<[string, unknown]> = [...fields, ...unsets.map((field): [string, unknown] => [field, undefined])]
         requireKey(key.page(owner.id, 'exists'), key.node(owner.id, item.id, 'exists'), ...entries.map(([field]) => key.node(owner.id, item.id, `field/${field}`)))
         const previous = patchFromFields(entries.map(([field]) => [field, readField(item, field)]))
+        if (operation.patch.posterAssetId) requireKey(key.asset(operation.patch.posterAssetId))
         if (operation.patch.assetId) requireKey(key.asset(operation.patch.assetId))
         if (operation.patch.embed?.previewAssetId) requireKey(key.asset(operation.patch.embed.previewAssetId))
         if (Object.hasOwn(operation.patch, 'parentId')) {
@@ -235,7 +239,7 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
           ancestors(owner, item)
           if (operation.patch.parentId) requireKey(key.node(owner.id, operation.patch.parentId, 'exists'))
         }
-        const changesAsset = entries.some(([field]) => field === 'assetId' || field === 'embed')
+        const changesAsset = entries.some(([field]) => field === 'assetId' || field === 'posterAssetId' || field === 'embed')
         if (changesAsset) changedAssetReferences(item)
         for (const [field, value] of entries) setField(item, field, value)
         if (changesAsset) changedAssetReferences(item)
@@ -253,6 +257,7 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
           if (operation.node.parentId) requireKey(key.node(owner.id, operation.node.parentId, 'exists'))
         }
         const item = structuredClone(operation.node)
+        if (item.posterAssetId) requireKey(key.asset(item.posterAssetId))
         if (item.assetId) requireKey(key.asset(item.assetId))
         if (item.embed?.previewAssetId) requireKey(key.asset(item.embed.previewAssetId))
         changedAssetReferences(previous)

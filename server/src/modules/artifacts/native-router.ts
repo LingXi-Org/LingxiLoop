@@ -20,8 +20,10 @@ import { projectNativeSnapshot } from './native-projection.js'
 import { artifactEditorOrigin } from '../../../../shared/artifact-editor-origin.js'
 import { issueGrant } from './grants.js'
 import { env } from '../../env.js'
+import { nativeCommentsRouter } from './native-comments-router.js'
 
 export const nativeArtifactsRouter = Router()
+nativeArtifactsRouter.use(nativeCommentsRouter)
 const transaction = <T>(work: Parameters<typeof withTransaction<T>>[1]) => withTransaction(pool, work)
 const assetCsp = "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:"
 
@@ -116,10 +118,10 @@ nativeArtifactsRouter.post('/artifacts/:id/assets', raw({ type: () => true, limi
   const artifactId = String(req.params.id), scope = await requireArtifact(req, artifactId, true)
   if (!nativeWritesEnabled()) throw new NativeDocumentError(503, 'editor_upgrade_pending', 'Editor upgrade is in progress.')
   const bytes = Buffer.isBuffer(req.body) ? req.body : null
-  if (!bytes?.length) { res.status(400).json({ error: 'Expected an image file.' }); return }
+  if (!bytes?.length) { res.status(400).json({ error: 'Expected a media file.' }); return }
   const contentType = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase()
-  if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif', 'image/svg+xml'].includes(contentType)) { res.status(415).json({ error: 'Unsupported image type.' }); return }
-  const asset = await putBlob(pool, artifactKind(scope.kind), artifactId, bytes, contentType)
+  if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif', 'image/svg+xml', 'video/mp4', 'video/webm', 'video/ogg'].includes(contentType)) { res.status(415).json({ error: 'Unsupported media type.' }); return }
+  const asset = await putBlob(pool, artifactKind(scope.kind), artifactId, bytes, contentType, { video: true })
   res.status(201).json({ id: asset.id, url: `/api/artifacts/${encodeURIComponent(artifactId)}/assets/${asset.id}`, contentType, sha256: sha256(bytes) })
 }))
 

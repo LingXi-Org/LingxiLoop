@@ -3,6 +3,7 @@ import { isSafeArtifactSvg } from '../../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../../shared/artifact-themes'
 import { awaitPageFonts } from './fonts'
 import { escapeHtml, type ExportResources, offlineMathCss } from './common'
+import { appearance, nodeTransform } from '../../../../../shared/artifact-appearance'
 
 const safeText = (text: string) => escapeHtml(text).replace(/\n/g, '<br>')
 export function nodeHasMath(node: ArtifactNode) { return node.type === 'math' || /\$|\\(?:\(|\[|begin\{)/.test([node.text ?? '', ...(node.cells ?? []).flat()].join('\n')) }
@@ -36,10 +37,11 @@ async function richText(node: ArtifactRichText, resources: ExportResources): Pro
   return `<${tag}>${body}</${tag}>`
 }
 function textStyle(style: ArtifactStyle) {
+  const extra = Object.fromEntries(Object.entries(appearance(style)).map(([key,value]) => [key.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`),value]))
   return Object.entries({ color: style.color, background: style.backgroundColor ?? style.fill, opacity: style.opacity, 'font-family': style.fontFamily, 'font-size': style.fontSize === undefined ? undefined : `${style.fontSize}px`,
     'font-weight': style.fontWeight, 'font-style': style.fontStyle, 'text-align': style.textAlign, 'text-decoration': style.textDecoration, 'line-height': style.lineHeight,
     'border-radius': style.borderRadius === undefined ? undefined : `${style.borderRadius}px`, padding: style.padding === undefined ? undefined : `${style.padding}px`,
-    border: (style.borderColor ?? style.stroke) ? `${style.borderWidth ?? style.strokeWidth ?? 1}px solid ${style.borderColor ?? style.stroke}` : undefined,
+    border: (style.borderColor ?? style.stroke) ? `${style.borderWidth ?? style.strokeWidth ?? 1}px ${style.borderStyle ?? 'solid'} ${style.borderColor ?? style.stroke}` : undefined, ...extra,
   }).filter(([, value]) => value !== undefined).map(([key, value]) => `${key}:${String(value)}`).join(';')
 }
 
@@ -47,14 +49,14 @@ export const EXPORT_PAGE_CSS = `.artifact-export-page{position:relative;overflow
 
 export async function renderPageHtml(page: ArtifactPage, resources: ExportResources): Promise<string> {
   resources.check()
-  const children = (id: string | null) => page.nodeOrder.map(key => page.nodes[key]!).filter(node => node.parentId === id && !node.hidden)
+  const children = (id: string | null) => page.nodeOrder.map(key => page.nodes[key]!).filter(node => node.parentId === id && !node.hidden && node.scope !== 'canvas')
   async function render(node: ArtifactNode): Promise<string> {
     resources.check()
     const parent = node.parentId ? page.nodes[node.parentId] : null
     const inFlow = parent?.layout?.mode === 'flex' || parent?.layout?.mode === 'grid'
     const position = inFlow ? 'position:relative;flex-shrink:1' : `position:absolute;left:${node.x}px;top:${node.y}px`
     const style = artifactResolvedStyle(node.style, resources.document)
-    let css = `${position};width:${node.width}px;height:${node.height}px;transform:rotate(${node.rotation}deg);${textStyle(style)}`
+    let css = `${position};width:${node.width}px;height:${node.height}px;transform:${nodeTransform(node)};${textStyle(style)}`
     let content = ''
     switch (node.type) {
       case 'group': {
@@ -64,7 +66,14 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         content = (await Promise.all(children(node.id).map(render))).join('')
         break
       }
+      case 'note':
       case 'text': content = node.richText ? await richText(node.richText, resources) : await sourceText(node.text ?? '', resources); break
+      case 'video': {
+        if (node.posterAssetId) content = `<img alt="${escapeHtml(node.text ?? '视频')}" src="${escapeHtml(await resources.asset(node.posterAssetId))}">`
+        else content = `<div class="artifact-export-unsupported">${escapeHtml(node.text ?? '视频')}</div>`
+        resources.warnings.add(`${page.title} / ${node.id}：视频以封面导出，原稿保留视频。`)
+        break
+      }
       case 'image': {
         const source = node.assetId ? await resources.asset(node.assetId) : ''
         const crop = node.crop
@@ -83,15 +92,23 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         content = node.svg && isSafeArtifactSvg(node.svg) ? node.svg.replace(/\bid=("|')([^"']+)\1/g, (_, quote: string, id: string) => `id=${quote}${prefix}${id}${quote}`).replace(/url\(#([a-zA-Z0-9_-]+)\)/g, `url(#${prefix}$1)`) : ''
         break
       }
+      case 'drawing':
       case 'line': {
+        css += ';background:none;border:none'
         const points = node.points?.length ? node.points : [{ x: 0, y: 0 }, { x: node.width, y: node.height }]
-        content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${node.width || 1} ${node.height || 1}"><polyline points="${points.map(point => `${point.x},${point.y}`).join(' ')}" fill="none" stroke="${escapeHtml(style.stroke ?? style.color ?? '#141413')}" stroke-width="${style.strokeWidth ?? 2}"/></svg>`
+        const markerId = `marker-${page.id}-${node.id}`
+        const marker = `<defs><marker id="${markerId}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${escapeHtml(style.stroke ?? '#333')}"/></marker></defs>`
+        content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${node.width || 1} ${node.height || 1}">${marker}<polyline${node.lineStart === 'arrow' ? ` marker-start="url(#${markerId})"` : ''}${node.type !== 'drawing' && node.lineEnd !== 'none' ? ` marker-end="url(#${markerId})"` : ''} points="${points.map(point => `${point.x},${point.y}`).join(' ')}" fill="none" stroke="${escapeHtml(style.stroke ?? style.color ?? '#141413')}" stroke-width="${style.strokeWidth ?? 2}"/></svg>`
         break
       }
       case 'shape': {
-        const fill = escapeHtml(style.fill ?? '#d97757'), stroke = escapeHtml(style.stroke ?? 'none')
+        const gradientId = `gradient-${page.id}-${node.id}`
+        const gradient = style.gradient
+        const gradientDefinition = gradient ? `<defs><${gradient.type === 'radial' ? 'radialGradient' : 'linearGradient'} id="${gradientId}"${gradient.type === 'linear' ? ` x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(${gradient.angle-90} .5 .5)"` : ''}>${gradient.stops.map(stop => `<stop offset="${stop.offset}" stop-color="${escapeHtml(stop.color)}"/>`).join('')}</${gradient.type === 'radial' ? 'radialGradient' : 'linearGradient'}></defs>` : ''
+        css += ';background:none'
+        const fill = gradient ? `url(#${gradientId})` : escapeHtml(style.fill ?? '#d97757'), stroke = escapeHtml(style.stroke ?? 'none')
         const shape = node.shape === 'ellipse' ? '<ellipse cx="50" cy="50" rx="49" ry="49"/>' : node.shape === 'triangle' ? '<polygon points="50,1 99,99 1,99"/>' : node.shape === 'diamond' ? '<polygon points="50,1 99,50 50,99 1,50"/>' : node.shape === 'arrow' ? '<polygon points="0,25 65,25 65,0 100,50 65,100 65,75 0,75"/>' : `<rect x="0" y="0" width="100" height="100" rx="${Math.min(50, (style.borderRadius ?? 0) / Math.max(1, node.width) * 100)}"/>`
-        content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" fill="${fill}" stroke="${stroke}" stroke-width="${style.strokeWidth ?? 0}">${shape}</svg>`
+        content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" fill="${fill}" stroke="${stroke}" stroke-width="${style.strokeWidth ?? 0}">${gradientDefinition}${shape}</svg>`
         break
       }
       case 'embed': {

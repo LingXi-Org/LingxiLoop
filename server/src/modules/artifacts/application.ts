@@ -26,7 +26,8 @@ import {
 import { listing, publish, readProjectFile, sha256, type WireEntry } from './store.js'
 import { createArtifactWorkspacesApplication } from './workspaces-application.js'
 import { slideWorkspaceConversation } from './slides-workspace.js'
-import { ensureNativeDocument, NativeDocumentError, submitNativeRename } from './native-document.js'
+import { ensureNativeDocument, NativeDocumentError, submitNativeRename, readNativePage } from './native-document.js'
+import { decodeCommentAnchor } from '../../../../shared/artifact-comment-anchor.js'
 
 export function createArtifactApplication(infrastructure: ArtifactInfrastructure) {
   const { db, transaction, withArtifactFence, missingChannelMessageIds, publishEvent, deliverComment } = infrastructure
@@ -165,12 +166,18 @@ export function createArtifactApplication(infrastructure: ArtifactInfrastructure
   async function createComment(input: { companyId: string; artifactId: string; author: CommentAuthor & { id: string }; thread: NewThread }) {
     const artifact = await requireArtifact(input.companyId, input.artifactId)
     const definition = artifactKind(artifact.kind)
-    const index = await readProjectFile(db, definition, artifact.id, `project/${definition.indexFile}`)
-    const files = await listing(db, artifact.id)
     let location: Record<string, unknown> = {}
-    try {
-      location = definition.commentLocation(input.thread, index ? JSON.parse(index.toString('utf8')) : null, file => Boolean(files.files[file]))
-    } catch { location = {} }
+    const native = decodeCommentAnchor(input.thread.anchor)
+    if (input.thread.anchor.startsWith('native:')) {
+      if (!native) throw new NativeDocumentError(400, 'invalid_anchor', '评论位置无效')
+      const page = await readNativePage(db, artifact.id, native.pageId)
+      if (!page || native.nodeId && !page.nodes[native.nodeId]) throw new NativeDocumentError(409, 'comment_target_missing', '评论目标已移除，请重新选择')
+      location = { file: `project/pages/${native.pageId}.json`, ...native }
+    } else {
+      const index = await readProjectFile(db, definition, artifact.id, `project/${definition.indexFile}`)
+      const files = await listing(db, artifact.id)
+      try { location = definition.commentLocation(input.thread, index ? JSON.parse(index.toString('utf8')) : null, file => Boolean(files.files[file])) } catch { location = {} }
+    }
     const { result } = await changeComments(input.companyId, artifact.id, doc => addThread(doc, input.thread, location, input.author, new Date().toISOString()))
     if (input.thread.send) await deliverPending(input.companyId, artifact, input.author)
     return result

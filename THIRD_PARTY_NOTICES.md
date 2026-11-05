@@ -95,8 +95,12 @@ byte counts and SHA-256 hashes. This is a resource subset; the former bundled
 editors, recovered application source, compiler and duplicate editor archives
 have been removed.
 
-The repository is MIT licensed, Copyright (c) Jim Liu; the license is retained at
-`third_party/baoyu-design/LICENSE`. The original `artifact-type/reference/`
+Jim Liu’s local tooling is MIT licensed; the license is retained at
+`third_party/baoyu-design/LICENSE`. The pinned upstream [NOTICE.md](https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/NOTICE.md)
+separately identifies the reconstructed Anthropic editors, reference material and
+Anthropicons as material outside that MIT license. LingxiLoop’s native editor
+implementation uses the existing React/Base UI ecosystem and Lucide’s ISC-licensed
+icons; it does not redistribute the upstream executable editors or Anthropicons. The original `artifact-type/reference/`
 pages follow the claude.ai Design and Slides artifact types. The Claude-style
 built-in tokens were extracted from the pinned Slides distribution, while Ember
 and Seazar are the upstream design-system examples; their source pointers remain

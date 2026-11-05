@@ -1,5 +1,5 @@
 import { memo, useEffect, useState, type ReactNode } from 'react'
-import { isSafeArtifactSvg, type ArtifactAsset, type ArtifactDocument, type ArtifactNode, type ArtifactPage, type ArtifactRichText, type ArtifactTheme } from '../../../../shared/artifact-document'
+import { isSafeArtifactSvg, type ArtifactAsset, type ArtifactDocument, type ArtifactNode, type ArtifactPage, type ArtifactRichText, type ArtifactTheme, type ArtifactStyle } from '../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
 
 const CACHE_ENTRIES = 128, CACHE_BYTES = 2 * 1024 * 1024
@@ -38,6 +38,7 @@ interface PreviewNode {
   id: string; type: ArtifactNode['type']; x: number; y: number; width: number; height: number; rotation: number
   fill: string; color: string; stroke: string; strokeWidth: number; opacity: number; radius: number
   fontSize: number; fontWeight: number; text: string; shape?: ArtifactNode['shape']; points?: string
+  gradient?: ArtifactStyle['gradient']; shadow?: ArtifactStyle['shadow']; flipX?: boolean; flipY?: boolean
   assetId?: string; imageKey?: string; crop?: ArtifactNode['crop']; svg?: string; cells?: string[][]; children?: PreviewNode[]
 }
 interface Preview { width: number; height: number; background: string; nodes: PreviewNode[] }
@@ -72,7 +73,7 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
   const describe = (node: ArtifactNode, x = node.x, y = node.y): PreviewNode => {
     remaining--
     const style = artifactResolvedStyle(node.style, document)
-    const assetId = node.assetId ?? node.embed?.previewAssetId
+    const assetId = (node.type === 'video' ? node.posterAssetId : node.assetId) ?? node.embed?.previewAssetId
     const asset = assetId ? document.assets[assetId] : undefined
     const preview: PreviewNode = {
       id: node.id, type: node.type, x, y, width: node.width, height: node.height, rotation: node.rotation,
@@ -82,9 +83,9 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
       strokeWidth: style.strokeWidth ?? style.borderWidth ?? (node.type === 'line' ? 3 : 1),
       opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
       text: (node.type === 'math' ? node.source ?? '' : node.text ?? plainText(node.richText)).slice(0, 512),
-      shape: node.shape, crop: node.crop,
+      shape: node.shape, crop: node.crop, gradient: style.gradient, shadow: style.shadow, flipX: node.flipX, flipY: node.flipY,
       ...(asset ? { assetId, imageKey: imageKey(document.id, asset) } : {}),
-      ...(node.type === 'line' ? { points: (node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ') } : {}),
+      ...(node.type === 'line' || node.type === 'drawing' ? { points: (node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ') } : {}),
       ...(node.type === 'svg' && node.svg && isSafeArtifactSvg(node.svg) ? { svg: node.svg } : {}),
       ...(node.type === 'table' ? { cells: node.cells?.slice(0, 12).map(row => row.slice(0, 8).map(cell => cell.slice(0, 48))) } : {}),
     }
@@ -198,10 +199,11 @@ function ThumbnailImage({ node, document, loaded }: { node: PreviewNode; documen
 function PreviewShape({ node, document, loaded }: { node: PreviewNode; document: ArtifactDocument; loaded: boolean }) {
   const { width: w, height: h } = node
   let content: ReactNode
-  const paint = { fill: node.fill, stroke: node.stroke, strokeWidth: node.strokeWidth }
-  if (node.type === 'image' || node.type === 'embed' && node.imageKey) content = <ThumbnailImage node={node} document={document} loaded={loaded} />
+  const gradientId = `preview-gradient-${document.id}-${node.id}`
+  const paint = { fill: node.gradient ? `url(#${gradientId})` : node.fill, stroke: node.stroke, strokeWidth: node.strokeWidth }
+  if (node.type === 'image' || node.type === 'video' && node.imageKey || node.type === 'embed' && node.imageKey) content = <ThumbnailImage node={node} document={document} loaded={loaded} />
   else if (node.type === 'svg' && node.svg) content = <image href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(node.svg)}`} width={w} height={h} />
-  else if (node.type === 'line') content = <polyline points={node.points} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} />
+  else if ((node.type === 'line' || node.type === 'drawing')) content = <polyline points={node.points} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} />
   else if (node.type === 'shape') content = node.shape === 'ellipse' ? <ellipse cx={w / 2} cy={h / 2} rx={w / 2} ry={h / 2} {...paint} />
     : node.shape === 'triangle' ? <polygon points={`${w / 2},0 ${w},${h} 0,${h}`} {...paint} />
       : node.shape === 'diamond' ? <polygon points={`${w / 2},0 ${w},${h / 2} ${w / 2},${h} 0,${h / 2}`} {...paint} />
@@ -215,7 +217,7 @@ function PreviewShape({ node, document, loaded }: { node: PreviewNode; document:
     </g>))
   } else if (node.type === 'group') content = <><rect width={w} height={h} rx={node.radius} {...paint} />{node.children?.map(child => <PreviewShape key={child.id} node={child} document={document} loaded={loaded} />)}</>
   else content = <><rect width={w} height={h} rx={node.radius} {...paint} />{(node.type === 'embed' ? ['交互内容'] : node.text.split('\n').slice(0, 4)).map((line, index) => <text key={index} x={0} y={node.fontSize * (index * 1.2 + 1)} fill={node.color} fontSize={node.fontSize} fontWeight={node.fontWeight}>{line.slice(0, 100)}</text>)}</>
-  return <g transform={`translate(${node.x} ${node.y}) rotate(${node.rotation} ${w / 2} ${h / 2})`} opacity={node.opacity}>{content}</g>
+  return <g transform={`translate(${node.x} ${node.y}) rotate(${node.rotation} ${w / 2} ${h / 2}) translate(${node.flipX ? w : 0} ${node.flipY ? h : 0}) scale(${node.flipX ? -1 : 1} ${node.flipY ? -1 : 1})`} opacity={node.opacity}>{node.gradient && <defs>{node.gradient.type === 'radial' ? <radialGradient id={gradientId}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</radialGradient> : <linearGradient id={gradientId} gradientTransform={`rotate(${node.gradient.angle-90} .5 .5)`}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</linearGradient>}</defs>}{content}</g>
 }
 
 /** A lightweight visual summary; it never mounts an editor or executes an embed. */

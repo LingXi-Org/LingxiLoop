@@ -62,11 +62,15 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
       const mounted = await mountExportPage(page, resources)
       try {
         const pageBounds = mounted.element.getBoundingClientRect()
+        const rasterGroups = new Set<string>()
         for (const id of page.nodeOrder) {
           resources.check()
           const node = page.nodes[id]!
           const style = artifactResolvedStyle(node.style, document)
-          if (node.hidden) continue
+          if (node.hidden || node.scope === 'canvas') continue
+          let parentId = node.parentId, captured = false
+          while (parentId) { if (rasterGroups.has(parentId)) { captured = true; break } parentId = page.nodes[parentId]?.parentId ?? null }
+          if (captured) continue
           const element = mounted.element.querySelector<HTMLElement>(`[data-node-id="${node.id}"]`)
           if (!element) continue
           const rect = element.getBoundingClientRect()
@@ -76,9 +80,14 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
           if (box.w <= 0 || box.h <= 0) continue
           const computed = getComputedStyle(element)
           const fontSize = (style.fontSize ?? Number.parseFloat(computed.fontSize)) * .75 * scale
-          if (node.type === 'group') {
+          if (style.gradient || style.shadow || node.flipX || node.flipY || node.type === 'video') {
+            const data = await toPng(element, { pixelRatio: 2, skipAutoScale: true, style: { position: 'static', left: '0', top: '0', transform: 'none', margin: '0' } })
+            resources.check(); slide.addImage({data,...box,rotate:rotation,flipH:node.flipX,flipV:node.flipY})
+            if (node.type === 'group') rasterGroups.add(node.id)
+            resources.warnings.add(`${page.title} / ${node.id}：复杂外观以图片导出；原稿保留可编辑属性。`)
+          } else if (node.type === 'group') {
             if (style.fill) slide.addShape('rect', { ...box, fill: { color: color(style.fill, 'FFFFFF') }, line: { transparency: 100 } })
-          } else if (node.type === 'text' && !nodeHasMath(node)) {
+          } else if ((node.type === 'text' || node.type === 'note') && !nodeHasMath(node)) {
             slide.addText(node.richText ? textRuns(node.richText) : node.text ?? '', { ...box, fontSize, fontFace: (style.fontFamily ?? 'Arial').split(',')[0]!.replace(/["']/g, ''),
               color: color(style.color), bold: (style.fontWeight ?? 400) >= 600, italic: style.fontStyle === 'italic', align: style.textAlign ?? 'left',
               margin: 0, breakLine: false, valign: 'top', rotate: rotation, transparency: (1 - (style.opacity ?? 1)) * 100 })

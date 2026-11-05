@@ -136,13 +136,38 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }, index)
   }
   const select = async index => {
-    await page.locator('.native-page-list').evaluate((element, index) => { element.scrollTop = (index - 1) * 72 }, index)
+    if (kind === 'design') {
+      const p = document.pages[`page-${index}`]
+      await page.locator('.native-stage').evaluate((element,point) => { element.scrollLeft=point.x*.5; element.scrollTop=point.y*.5 },p)
+      await page.locator(`[data-page-id="page-${index}"] .native-board-label`).click()
+      await ready(index); return
+    }
+    await page.locator('.native-page-list').evaluate((element, index) => { element.scrollLeft = (index - 1) * 136 }, index)
     await page.locator(`[data-page-target="page-${index}"]`).click()
     await ready(index)
   }
   try {
     await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     await ready(1)
+    if (options.checks === 'parity') {
+      const screenshots = []
+      for (const [width,height] of [[1920,1200],[1440,1000],[768,1024],[390,844]]) {
+        await page.setViewportSize({width,height})
+        for (const theme of ['light','dark']) {
+          await page.locator('[data-native-artifact-editor]').evaluate((e,theme) => e.setAttribute('data-theme',theme),theme)
+          await page.screenshot({path:join(output,`${kind}-${width}-${theme}.png`)})
+          screenshots.push({width,height,theme,path:`${kind}-${width}-${theme}.png`})
+        }
+      }
+      await page.setViewportSize({width:1440,height:1000})
+      await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      await page.screenshot({path:join(output,`${kind}-inspector.png`)})
+      assert.equal(await page.getByRole('complementary',{name:'属性面板'}).count(),1)
+      assert.deepEqual(errors,[])
+      return {kind:'isolated-native-editor-visual-diagnostic',mode:kind,screenshots,scope:'controlled HTTP reducer fixture; screenshots only, not measured source parity, real API or performance acceptance',consoleOrPageErrors:errors}
+    }
+    if (kind==='design') { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'50%',exact:true}).click() }
+    await page.getByRole('button',{name:'显示属性',exact:true}).click()
     if (options.checks === 'cas') {
       const table = editorCase === 'table', nodeId = table ? 'page-1-table' : 'page-1-heading'
       const target = page.locator(`[data-node-id="${nodeId}"]`)
@@ -203,7 +228,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await saveControl(page.getByLabel('画板 X', { exact: true }), '32', () => assert.equal(document.pages['page-1'].x, 32))
         await saveControl(page.getByLabel('画板 Y', { exact: true }), '48', () => assert.equal(document.pages['page-1'].y, 48))
       }
-      const notes = page.getByLabel('讲者备注', { exact: true })
+      if (kind === 'slides') await page.getByRole('button',{name:'讲者备注',exact:true}).click(); else { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'讲者备注',exact:true}).click() }
+      const notes = page.getByRole('textbox', { name: '讲者备注', exact: true })
       for (const value of ['备注草稿一', '备注草稿二']) await saveControl(notes, value, () => assert.equal(document.pages['page-1'].notes, value))
       await page.locator('[data-node-id="page-1-heading"]').dblclick()
       const text = page.locator('[data-native-text-editor]'); await text.waitFor(); await page.keyboard.press('End')
@@ -238,9 +264,11 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual(historyRequests, ['undo', 'redo'])
       assert.equal(await text.count(), 0, 'Shared redo must finish the active rich-text editor')
       await page.reload({ waitUntil: 'domcontentloaded' }); await ready(1)
+      await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      if (kind === 'slides') await page.getByRole('button',{name:'讲者备注',exact:true}).click(); else { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'讲者备注',exact:true}).click() }
       assert.equal(await page.getByLabel('标题', { exact: true }).inputValue(), 'Focused property save')
       assert.equal(await page.getByLabel('宽', { exact: true }).inputValue(), '1800')
-      assert.equal(await page.getByLabel('讲者备注', { exact: true }).inputValue(), '备注草稿二')
+      assert.equal(await page.getByRole('textbox', { name: '讲者备注', exact: true }).inputValue(), '备注草稿二')
       assert.equal(await page.locator('[data-node-id="page-1-table"] td').first().innerText(), '表格草稿二')
       if (kind === 'design') { assert.equal(await page.getByLabel('画板 X', { exact: true }).inputValue(), '32'); assert.equal(await page.getByLabel('画板 Y', { exact: true }).inputValue(), '48') }
       assert.deepEqual(errors, [])
@@ -294,17 +322,18 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     for (const [label, value] of [['width', '0.75'], ['x', '0.1']]) { const control = page.getByLabel(label, { exact: true }); await control.fill(value); await control.press('Control+s'); await waitSaved() }
     assert.deepEqual(document.pages['page-50'].nodes['page-50-image'].crop, { x: .1, y: 0, width: .75, height: 1 })
     await select(1)
-    const theme = page.getByLabel('主题', { exact: true })
-    await theme.selectOption(''); await waitSaved(); assert.equal(document.themeId, null)
-    await theme.selectOption('fixture-theme'); await waitSaved(); assert.equal(document.themeId, 'fixture-theme')
+    await page.getByRole('button',{name:'主题',exact:true}).click()
+    await page.getByRole('button',{name:'默认主题',exact:true}).click(); await waitSaved(); assert.equal(document.themeId,null)
+    await page.getByRole('button',{name:'使用主题 验收主题',exact:true}).click(); await waitSaved(); assert.equal(document.themeId,'fixture-theme')
+    await page.getByRole('button',{name:'属性',exact:true}).click()
     await select(50)
-    await page.getByRole('button', { name: '页面上移', exact: true }).click(); await waitSaved()
+    await page.locator('[data-native-artifact-editor]').focus(); await page.keyboard.press('Alt+ArrowUp'); await waitSaved()
     assert.equal(document.pageOrder[48], 'page-50')
     await page.keyboard.press('Control+z')
-    await page.waitForFunction(() => window.document.querySelector('[data-page-target="page-50"] .native-page-number')?.textContent === '50')
+    await page.waitForTimeout(100); await waitSaved()
     assert.equal(document.pageOrder[49], 'page-50')
     await page.keyboard.press('Control+y')
-    await page.waitForFunction(() => window.document.querySelector('[data-page-target="page-50"] .native-page-number')?.textContent === '49')
+    await page.waitForTimeout(100); await waitSaved()
     assert.equal(document.pageOrder[48], 'page-50')
     assert.deepEqual(historyRequests, ['undo', 'redo'])
     await page.reload({ waitUntil: 'domcontentloaded' }); await ready(1)
@@ -318,9 +347,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     document = agentChange.document; historyEntry = { inverse: agentChange.inverse, forward: agentBatch.operations }
     history.version = document.seq; history.undo = agentBatch.operationId; history.redo = null
     await page.waitForFunction(() => window.document.querySelector('[data-node-id="page-50-heading"]')?.textContent === 'Agent collaborative heading')
-    await page.getByRole('button', { name: /撤销/ }).click()
+    await page.getByLabel('历史记录',{exact:true}).click(); await page.getByRole('button', { name: '撤销',exact:true }).click()
     await page.waitForFunction(value => window.document.querySelector('[data-node-id="page-50-heading"]')?.textContent === value, expected.get(50))
-    await page.getByRole('button', { name: /重做/ }).click()
+    await page.getByLabel('历史记录',{exact:true}).click(); await page.getByRole('button', { name: '重做',exact:true }).click()
     await page.waitForFunction(() => window.document.querySelector('[data-node-id="page-50-heading"]')?.textContent === 'Agent collaborative heading')
     assert.deepEqual(historyRequests, ['undo', 'redo', 'undo', 'redo'])
     const changedPageIds = document.pageOrder.filter(id => pageHash(document.pages[id]) !== initialPageHashes[id]).sort()
@@ -356,5 +385,5 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       openingTextWithoutChangesDoesNotSave: true, chineseIme, formulaEditedAndReopened: 25, imageCropEditedAndReopened: 50, themeSwitchedAndRestored: true,
       pageOrderChangedAndReopened: true, pageOrderSharedUndoRedo: true, agentSharedUndoRedo: true, changedPageIds, untouchedPageHashes: 47,
       agentPlainTextPatchVisible: true, isolatedInteraction, consoleOrPageErrors: errors }
-  } finally { releaseAcknowledgment?.(); await page.close() }
+  } catch(error) { await page.screenshot({path:join(output,`${kind}-failure.png`)}); const diagnostic=await page.evaluate(()=>({zoom:document.querySelector('[aria-label="画布缩放"]')?.textContent,stage:[...document.querySelectorAll('.native-stage')].map(e=>({scrollLeft:e.scrollLeft,scrollTop:e.scrollTop,w:e.clientWidth,h:e.clientHeight,scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})),notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent)}));await writeFile(join(output,`${kind}-failure.json`),JSON.stringify({message:String(error),errors,diagnostic},null,2));throw error } finally { releaseAcknowledgment?.(); await page.close() }
 }

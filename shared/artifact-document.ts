@@ -13,6 +13,10 @@ export const artifactStyleSchema = z.object({
   fill: color.optional(), color: color.optional(), stroke: color.optional(), strokeWidth: positive.optional(),
   backgroundColor: color.optional(), borderColor: color.optional(), borderWidth: positive.optional(),
   opacity: z.number().min(0).max(1).optional(), borderRadius: positive.optional(),
+  gradient: z.object({ type: z.enum(['linear', 'radial']), angle: finite, stops: z.array(z.object({ color, offset: z.number().min(0).max(1) }).strict()).min(2).max(32) }).strict().optional(),
+  shadow: z.object({ x: finite, y: finite, blur: positive, spread: finite, color }).strict().optional(),
+  borderStyle: z.enum(['solid', 'dashed', 'dotted', 'double', 'none']).optional(),
+  letterSpacing: finite.optional(), verticalAlign: z.enum(['top', 'middle', 'bottom']).optional(),
   fontFamily: z.string().max(200).refine(value => !/[<>;{}]/.test(value)).optional(),
   fontSize: z.number().min(1).max(1000).optional(), fontWeight: z.number().int().min(100).max(1000).optional(),
   fontStyle: z.enum(['normal', 'italic']).optional(), textAlign: z.enum(['left', 'center', 'right', 'justify']).optional(),
@@ -101,15 +105,19 @@ export function isSafeArtifactSvg(value: string): boolean {
   return roots === 1 && stack.length === 0
 }
 
-export const artifactNodeTypes = ['text', 'image', 'shape', 'line', 'table', 'svg', 'math', 'group', 'embed'] as const
+export const artifactNodeTypes = ['text', 'image', 'shape', 'line', 'table', 'svg', 'math', 'group', 'embed', 'note', 'drawing', 'video'] as const
 export const artifactNodeSchema = z.object({
   id: artifactIdSchema,
   type: z.enum(artifactNodeTypes),
   x: finite, y: finite, width: positive, height: positive, rotation: finite,
   parentId: artifactIdSchema.nullable(),
+  name: z.string().max(1000).optional(), scope: z.enum(['artboard', 'canvas']).optional(),
+  flipX: z.boolean().optional(), flipY: z.boolean().optional(),
+  lineStart: z.enum(['none', 'arrow', 'circle']).optional(), lineEnd: z.enum(['none', 'arrow', 'circle']).optional(),
   style: artifactStyleSchema,
   text: z.string().max(100_000).optional(), richText: artifactRichTextSchema.optional(), source: z.string().max(100_000).optional(),
   assetId: artifactIdSchema.optional(),
+  posterAssetId: artifactIdSchema.optional(),
   crop: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), width: z.number().min(0).max(1), height: z.number().min(0).max(1) }).strict().optional(),
   shape: z.enum(['rect', 'ellipse', 'triangle', 'diamond', 'arrow']).optional(),
   points: z.array(z.object({ x: finite, y: finite }).strict()).max(10_000).optional(),
@@ -127,6 +135,9 @@ export const artifactPageSchema = z.object({
   id: artifactIdSchema, title: z.string().max(1000),
   x: finite, y: finite, width: positive.positive(), height: positive.positive(),
   sizing: z.enum(['fixed', 'flow']).optional(), paper: z.enum(['A4', 'Letter', 'custom']).optional(),
+  section: z.string().max(200).optional(),
+  guides: z.array(z.object({ axis: z.enum(['x', 'y']), position: finite }).strict()).max(100).optional(),
+  layoutGuides: z.array(z.object({ kind: z.enum(['columns', 'rows', 'grid']), count: z.number().int().min(1).max(1000), size: positive, gutter: positive, margin: positive, color, hidden: z.boolean().optional() }).strict()).max(6).optional(),
   background: color, themeBackground: z.string().max(128).optional(), notes: z.string().max(100_000), skip: z.boolean(), transition: z.enum(['none', 'fade', 'slide']),
   nodeOrder: z.array(artifactIdSchema).max(10_000), nodes: z.record(artifactIdSchema, artifactNodeSchema),
 }).strict()
@@ -189,6 +200,7 @@ export function validateArtifactDocument(input: unknown): ArtifactDocument {
     for (const [nodeId, node] of Object.entries(page.nodes)) {
       if (nodeId !== node.id) throw new Error('node id mismatch')
       if (node.assetId && !Object.hasOwn(document.assets, node.assetId)) throw new Error('unknown asset')
+      if (node.posterAssetId && !Object.hasOwn(document.assets, node.posterAssetId)) throw new Error('unknown poster asset')
       if (node.embed?.previewAssetId && !Object.hasOwn(document.assets, node.embed.previewAssetId)) throw new Error('unknown preview asset')
       const ancestors = new Set([node.id])
       let parentId = node.parentId

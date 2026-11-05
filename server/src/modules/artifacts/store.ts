@@ -166,11 +166,11 @@ export const blobIdOf = (artifactId: string, sha: string) =>
   createHmac('sha256', blobKey()).update(`${artifactId}:${sha}`).digest('hex').slice(0, 32)
 
 /** An upload, addressed by content: the same bytes always get the same url, stored once. */
-export async function putBlob(db: Queryable, definition: ArtifactKindDefinition, artifactId: string, bytes: Buffer, contentType: string) {
+export async function putBlob(db: Queryable, definition: ArtifactKindDefinition, artifactId: string, bytes: Buffer, contentType: string, options: { video?: boolean } = {}) {
   if (bytes.length === 0) throw Object.assign(new Error('empty upload'), { status: 400, code: 'invalid_content' })
   if (bytes.length > definition.layout.maxBlobBytes) throw Object.assign(new Error('upload is too large'), { status: 413, code: 'too_large' })
   const type = (contentType.split(';')[0] ?? '').trim().toLowerCase() || 'application/octet-stream'
-  if (definition.kind === 'slides' && type.startsWith('video/')) {
+  if (definition.kind === 'slides' && type.startsWith('video/') && !options.video) {
     throw Object.assign(new Error('video uploads are not supported'), { status: 415, code: 'invalid_content' })
   }
   const sha = sha256(bytes), id = blobIdOf(artifactId, sha)

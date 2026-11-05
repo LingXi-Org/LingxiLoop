@@ -24,7 +24,7 @@ window.addEventListener('message', event => {
       else pending.reject(new Error(data.error ?? '导出资源加载失败'))
       return
     }
-    if (data?.type !== 'start' || started || !['html', 'pdf', 'pptx'].includes(data.format)) return
+    if (data?.type !== 'start' || started || !['html', 'pdf', 'pptx', 'png', 'jpeg', 'svg'].includes(data.format)) return
     started = true
     void (async () => {
       try {

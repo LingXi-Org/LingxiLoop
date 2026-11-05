@@ -12,6 +12,7 @@ export interface DocumentReceipt {
   original?: unknown
   pageVersions?: Record<string, string>
   loadedPageIds?: string[]
+  previews?: Record<string, ArtifactPage>
 }
 export interface NativeState {
   document: ArtifactDocument | null
@@ -23,6 +24,7 @@ export interface NativeState {
   conflict: boolean
   original?: unknown
   loadedPageIds: string[]
+  previews?: Record<string, ArtifactPage>
 }
 export interface NativeTransport {
   read(signal?: AbortSignal): Promise<DocumentReceipt>
@@ -78,7 +80,7 @@ export class NativeDocumentSession {
       for (const batch of this.queue) { const result = applyOperations(document, batch); this.rememberSnapshot(result.document, document, batch.operationId, result.changedKeys); document = result.document }
     }
     catch { this.update({ history: receipt.history, error: '同一内容已有新修改。本地修改已保留，请下载副本后重新载入。', conflict: true, loading: false, pending: this.queue.length }); return }
-    this.update({ document, history: receipt.history, write: receipt.write ?? this.state.write, original: receipt.original ?? this.state.original, loading: false, pending: this.queue.length, loadedPageIds: [...loaded] })
+    this.update({ document, previews: receipt.previews ?? this.state.previews, history: receipt.history, write: receipt.write ?? this.state.write, original: receipt.original ?? this.state.original, loading: false, pending: this.queue.length, loadedPageIds: [...loaded] })
   }
   private rememberSnapshot(document: ArtifactDocument, parent: ArtifactDocument, operationId: string, keys: string[]) {
     const anchors = new Map(this.snapshotAnchors.get(parent))
