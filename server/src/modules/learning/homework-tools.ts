@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { pool } from '../../db/pool.js'
 import { productConversationId } from '../../agent-runtime/identity.js'

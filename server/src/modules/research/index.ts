@@ -1,4 +1,4 @@
-import { decodeSourceText, extractDocumentText } from '@lyyzka/lingxios'
+import { decodeSourceText, extractDocumentText } from '@lingxi-org/lingxios'
 export { researchTools } from './agent-tools.js'
 import { createHash } from 'node:crypto'
 export { searchResearch, type ResearchSearchResult } from './search.js'

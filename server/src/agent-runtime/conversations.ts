@@ -1,4 +1,4 @@
-import type { ConversationPolicy, createLingxiOS, RuntimeOperationContext } from '@lyyzka/lingxios'
+import type { ConversationPolicy, createLingxiOS, RuntimeOperationContext } from '@lingxi-org/lingxios'
 import { pool } from '../db/pool.js'
 import { withClientTransaction, withTransaction } from '../db/transaction.js'
 import { createPermissionService } from '../modules/access/public.js'

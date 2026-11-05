@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
-import { classifyToolFailure, createLogger, releaseVersions, type Logger } from '@lyyzka/lingxios'
+import { classifyToolFailure, createLogger, releaseVersions, type Logger } from '@lingxi-org/lingxios'
 
 const safeRunId = /^[A-Za-z0-9][A-Za-z0-9:_-]{0,199}$/
 const errorNameValues = ['UnknownError', 'Error', 'TypeError', 'RangeError', 'SyntaxError', 'ReferenceError', 'URIError', 'EvalError',
@@ -26,7 +26,7 @@ const productModules = new Set(['agent-runtime/context.ts', 'agent-runtime/ident
   'modules/memory/policy.ts', 'modules/learning/runtime.ts', 'modules/learning/homework-tools.ts',
   'modules/learning/teacher-agent-application.ts', 'modules/access/application.ts', 'im/retired-visualize.ts', 'im/wukong.ts',
   'im/messages-application.ts', 'modules/knowledge/runtime.ts', 'modules/access/context-resolver.ts'])
-const runtimeSourceRoot = fileURLToPath(new URL('.', import.meta.resolve('@lyyzka/lingxios')))
+const runtimeSourceRoot = fileURLToPath(new URL('.', import.meta.resolve('@lingxi-org/lingxios')))
 const productSourceRoot = fileURLToPath(new URL('../', import.meta.url))
 const modules = new Set([...runtimeModules].map(name => `lingxios/${name}`).concat([...productModules].map(name => `server/${name}`)))
 const sqlStateSchema = z.string().regex(/^[0-9A-Z]{5}$/).refine(value => sqlClasses.has(value.slice(0, 2)))

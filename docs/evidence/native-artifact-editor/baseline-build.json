@@ -1,0 +1,222 @@
+{
+  "scope": "Static frozen-baseline build inventory only; not real transfer, startup or memory measurements",
+  "commit": "d004312841026a4d90dfbd9e8292a55cc29a2e95",
+  "builtAt": "2026-11-05T04:10:51.519Z",
+  "node": "v24.19.0",
+  "dependencyLimitation": "Public dependencies installed at original lockfile versions; unavailable private @lyyzka/lingxios excluded from temporary toolchain. Browser builds succeeded; no server/runtime qualification.",
+  "lockSha256": "d026366ae698646a2788ef6770b68a6ff189f47ebb953b48e5dbec798998fc5f",
+  "editors": {
+    "design": {
+      "entry": {
+        "file": "assets/design-c3b0f7dd257b569d484e01da1e6f737e060190a56f93dc2ae4a761cb0b79dd05.js",
+        "decodedBytes": 5282009,
+        "brotliBytes": 1328231,
+        "gzipBytes": 1715251,
+        "sha256": "c3b0f7dd257b569d484e01da1e6f737e060190a56f93dc2ae4a761cb0b79dd05"
+      },
+      "files": 181,
+      "inventorySha256": "7722eab78a6e078c3a58ddabcff06fceccb3516dee53b81a8c58260c2caf24f1",
+      "manifestSha256": "e96594783a27a0ae0ca8264dfb989591dcbec7039293ed6c64455f43a7f52da2"
+    },
+    "slides": {
+      "entry": {
+        "file": "editor-GEKZ26L2.js",
+        "decodedBytes": 2673670,
+        "brotliBytes": 703983,
+        "gzipBytes": 886998,
+        "sha256": "e6859e60ef4ed10cc76e4ff686327c958928833304db01c6fcb411bcd222aaf1"
+      },
+      "files": 71,
+      "inventorySha256": "731440cb3b8eefe97992985c5d5ace50a6c77b9f2a8015b0bd88a52af86bf83c",
+      "manifestSha256": "5ef9ba767d665b9601ca826750d3d28a2ef396f5584714617569611381b11f7c",
+      "nominalInitial": {
+        "decodedBytes": 3526416,
+        "gzipBytes": 1143275
+      }
+    }
+  },
+  "web": {
+    "indexSha256": "f81470758760413da7bc89283cc5b1178c5f3e2b5ed83ac9a86a80e81a98cb95",
+    "htmlReferencedScripts": [
+      {
+        "path": "/assets/index-B87nSUEi.js",
+        "decodedBytes": 226263,
+        "sha256": "f3c961f67ff53312c5db9766e80f5dcdb680fc563fa23614ebe8a225959d88ac"
+      },
+      {
+        "path": "/assets/App-Bsh7K_AW.js",
+        "decodedBytes": 64344,
+        "sha256": "ddda312585e9eb8e8abfe831a68a7f3db664201b24a31ac7fcb051c4233a5493"
+      },
+      {
+        "path": "/assets/card-cBIStYYc.js",
+        "decodedBytes": 32552,
+        "sha256": "aa64f1fd7b5cd0a3f4f8be6e03437dca533a33673b1033e186d817e0ec833228"
+      },
+      {
+        "path": "/assets/input-BAxNMU8I.js",
+        "decodedBytes": 29807,
+        "sha256": "1159714ccfc8dee0d460654d8b1712cbdf664d5b71990b465568e841935623f7"
+      },
+      {
+        "path": "/assets/spinner-Dzx6Lql0.js",
+        "decodedBytes": 1912,
+        "sha256": "b45306a9c9d09ab5d45e70981f7800be30e3852093b8f28880ac7053f758e302"
+      },
+      {
+        "path": "/assets/GlobalInteractionProvider-DXqg4P1H.js",
+        "decodedBytes": 3069,
+        "sha256": "bcab9f1acddb2ba8ea6ea89eee84745ba246ae001846b0c98c4109099f84d8a9"
+      },
+      {
+        "path": "/assets/alert-dialog-RC2oYua-.js",
+        "decodedBytes": 4928,
+        "sha256": "4d434f8920990d237bbf4958e724d16d7125214608b314dc4a503f318055881f"
+      },
+      {
+        "path": "/assets/index-hnxlTY90.js",
+        "decodedBytes": 18874,
+        "sha256": "4f2966bc0402a506305f6bfdd85bc1adc79f7116b599bdeb3b5b86f68dbffd80"
+      },
+      {
+        "path": "/assets/index-p8CTWqUk.js",
+        "decodedBytes": 10278,
+        "sha256": "4111d293e458af830b98815af5d0fd667a1090c1bcea723a190998356558fda2"
+      },
+      {
+        "path": "/assets/index-BJGpPi6i.js",
+        "decodedBytes": 34801,
+        "sha256": "95d142fad66b7966f130233914bc49df22f43d835a1b4d5dc62065c03f475af0"
+      },
+      {
+        "path": "/assets/Alert02Icon-BoZ6UnzC.js",
+        "decodedBytes": 824,
+        "sha256": "abd040ccf309d39f4dffd4ab85ffeeda0598f29b408e17f3b6dbd73bca744de5"
+      },
+      {
+        "path": "/assets/InformationCircleIcon-CUKxAkIj.js",
+        "decodedBytes": 543,
+        "sha256": "d4c349110aa12dba41d2267a92aa5152357a5ae47b0a28cf1ad400f714966c6c"
+      },
+      {
+        "path": "/assets/confirmAction-CyuyVdhq.js",
+        "decodedBytes": 357,
+        "sha256": "0c678d5eec3c4eec378f4d8ab3c63037d0a792a984729809973a33ddf5c27c77"
+      },
+      {
+        "path": "/assets/AuthedApp-BcJJvERP.js",
+        "decodedBytes": 14775,
+        "sha256": "a7e562e826880f780fce45751a4f0493c9e4f08aa652fdf9ae2440b29c5a8bde"
+      },
+      {
+        "path": "/assets/tooltip-CCxhw5eT.js",
+        "decodedBytes": 37970,
+        "sha256": "c6e6ef6977bc3fc707e2e5a1885a547819486b842ad53fc879f4ae544e2ee2d2"
+      },
+      {
+        "path": "/assets/store-BpFocNq4.js",
+        "decodedBytes": 512596,
+        "sha256": "1a3bb833af6c14c6ab35ff56c69e184cf966d1dd5a8700e75f57b718e08e3b99"
+      },
+      {
+        "path": "/assets/realtime-BphaDxoS.js",
+        "decodedBytes": 2678,
+        "sha256": "8e0620a257ef89050e2876e64f0a52fbbff69064d107b115b42d9c342758bb80"
+      },
+      {
+        "path": "/assets/avatarCache-CwwW7D-O.js",
+        "decodedBytes": 1588,
+        "sha256": "b4ae4c7a96f9df62e01f8f15280beb5c4360d297136a5eeaa124f74716d66bc2"
+      },
+      {
+        "path": "/assets/workspace-J0lf0o14.js",
+        "decodedBytes": 3385,
+        "sha256": "6e2f6e0c13fcb3ad69a235808fbb8c6d7ea715d47f353fa8117be8f5bbb578ec"
+      },
+      {
+        "path": "/assets/state-BKJu5VGQ.js",
+        "decodedBytes": 1649,
+        "sha256": "b46c74d888b9672788554f296b2d91fcc8308f27b4b03ddbea76ff8ba8c5a56f"
+      },
+      {
+        "path": "/assets/state-CIAT1DUi.js",
+        "decodedBytes": 8316,
+        "sha256": "409e02c16487cc29ac11bc5a9da0b925bea772e1a589aa917a2b0535e79165bf"
+      },
+      {
+        "path": "/assets/api-C-cree4Z.js",
+        "decodedBytes": 2890,
+        "sha256": "0515629dfae6d765ddfaeb286f6376f49aaab51a8e97ace815b70c9ed737e383"
+      },
+      {
+        "path": "/assets/DesktopApp-Dh8Xtfmm.js",
+        "decodedBytes": 385337,
+        "sha256": "ebd57af542402589bf30fc7d959ae6c4cf6772a3ec30e8b053a0dff591404108"
+      },
+      {
+        "path": "/assets/api-Cyu_W7O3.js",
+        "decodedBytes": 396903,
+        "sha256": "39237a5c0ddeabd4fbb8a575a604d78f8aeca1798a70e6615a9ff9c31aa15d01"
+      },
+      {
+        "path": "/assets/theme-I-NZJwxR.js",
+        "decodedBytes": 4807,
+        "sha256": "3d1adb31c07568c95295384988e728552172d4b99d6a75a6b38d531b28814b69"
+      },
+      {
+        "path": "/assets/drawer-C-znk3yn.js",
+        "decodedBytes": 49015,
+        "sha256": "a02675748aa80ff4473bf66dc72064502bef53689b356077ff3233f9faab4984"
+      },
+      {
+        "path": "/assets/use-entrance-B3RHbbX9.js",
+        "decodedBytes": 172122,
+        "sha256": "431580b474306d038540a85efe8562d3e918273b362b4804f18f5300c142b189"
+      },
+      {
+        "path": "/assets/checkbox-Dz8TM3re.js",
+        "decodedBytes": 5212,
+        "sha256": "6f3b5dc61c8ed77e8fc54dae5fff38e93d042ec389db0bf9a536f53a5a565a8c"
+      },
+      {
+        "path": "/assets/index-P-uaBxqC.js",
+        "decodedBytes": 773,
+        "sha256": "bccc48186f03624fea751567dfff066de4b9ecd1e8cc76e6c26571f8420c7041"
+      },
+      {
+        "path": "/assets/createLucideIcon-DA93fbch.js",
+        "decodedBytes": 2576,
+        "sha256": "16a78c8cefa90f673bab51094325d61495916921d93cf32367c2f86a5174dce6"
+      },
+      {
+        "path": "/assets/ChatPane-BNIFjmUL.js",
+        "decodedBytes": 14667,
+        "sha256": "57dc2281b48f0b3e6064ef4008f8453df2c231f668309b056184c36bd8be00de"
+      },
+      {
+        "path": "/assets/editor-preload-DEEMv86Y.js",
+        "decodedBytes": 1595,
+        "sha256": "0e2900da85656195b2ec3fe64739b89aabc910ad9e8f9bdca79116b56bdadcd7"
+      },
+      {
+        "path": "/assets/icons-CyaHwBmG.js",
+        "decodedBytes": 478,
+        "sha256": "f8af4d74a96087463b06b7d437c43f276337a56faae04e40fb2159f8d4322264"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": "node scripts/build-design-editor.mjs",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/build-slides-editor.mjs",
+      "exitCode": 0
+    },
+    {
+      "command": "node node_modules/vite/bin/vite.js build --outDir dist",
+      "exitCode": 0
+    }
+  ]
+}

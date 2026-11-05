@@ -1,5 +1,5 @@
 import type { ToolCallMessagePart } from '@assistant-ui/react'
-import type { RunView, ResponseEnvelope } from '@lyyzka/lingxios/ui'
+import type { RunView, ResponseEnvelope } from '@lingxi-org/lingxios/ui'
 import type { NativeMessage } from './nativeMessage.js'
 
 export type HarnessToolPart = ToolCallMessagePart

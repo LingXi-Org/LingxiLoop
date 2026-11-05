@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto'
 import {readFile,readdir} from 'node:fs/promises'
 import {isDeepStrictEqual as equal} from 'node:util'
 import type {Pool,PoolClient} from 'pg'
-import {packageResources,releaseVersions} from '@lyyzka/lingxios'
+import {packageResources,releaseVersions} from '@lingxi-org/lingxios'
 import {assertCurrentRuntimeProfile,currentPublicTextVersion,loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH} from './runtime-profile.js'
 
 const LOCK_KEY=1_282_006_534
@@ -14,7 +14,10 @@ const check=(value:unknown,message:string):void=>{if(!value)throw Error(message)
 const hash=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex')
 export async function loadRuntimePatchInventory(productVersion:54|57|58|60|61|62=54):Promise<Migration[]>{
  check(productVersion===54||productVersion===57||productVersion===58||productVersion===60||productVersion===61||productVersion===62,'Unreviewed runtime patch product')
- const root=new URL('./migrations/',import.meta.url),allFiles=(await readdir(root)).sort()
+ const root=new URL('./migrations/',import.meta.url),present=(await readdir(root)).sort()
+ // The runtime4 bridge changes only provenance at product62. Product63 is
+ // applied by the separate product migrator after that bridge succeeds.
+ const allFiles=present.length===63&&present[62]==='0063_native_artifact_documents.sql'?present.slice(0,62):present
  // A recorded product60 transition still names exactly its original inventory.
  // The CAS separately rejects any applied ledger other than that exact prefix.
  const reviewedFiles=productVersion!==62&&allFiles.length===62&&allFiles[61]==='0062_case_options.sql'?allFiles.slice(0,61):allFiles
@@ -30,7 +33,8 @@ export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,targ
  check(source.productVersion===target.productVersion,'Runtime patch cannot change product schema')
  const product=target.productVersion
  check(product===54||product===57||product===58||product===60||product===61||product===62,'Unreviewed runtime patch product')
- if(product===62)check(source.runtime==='3.8.24'&&target.runtime==='3.8.25','Product62 runtime patch requires exact3.8.24 to3.8.25')
+ const organizationBridge=product===62&&source.runtime==='3.8.25'&&target.runtime==='4.0.0'
+ if(product===62)check(source.runtime==='3.8.24'&&target.runtime==='3.8.25'||organizationBridge,'Product62 runtime patch requires exact3.8.24 to3.8.25 or reviewed3.8.25 to4.0.0')
  if(product===61)check(source.runtime==='3.8.20'&&target.runtime==='3.8.21'||source.runtime==='3.8.21'&&target.runtime==='3.8.22'||source.runtime==='3.8.22'&&target.runtime==='3.8.23'||source.runtime==='3.8.21'&&target.runtime==='3.8.23'||['3.8.21','3.8.22','3.8.23'].includes(source.runtime)&&target.runtime==='3.8.24','Product61 runtime patch requires exact3.8.20 to3.8.21 or3.8.21 to3.8.22 or3.8.22 to3.8.23 or reviewed3.8.21 to3.8.23 or explicit21/22/23 to3.8.24')
  if(product===60)check(source.runtime==='3.8.18'&&target.runtime==='3.8.19'||source.runtime==='3.8.19'&&target.runtime==='3.8.20','Product60 runtime patch requires exact3.8.18 to3.8.19 or3.8.19 to3.8.20')
  if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.14','Product57 runtime patch is restricted to exact3.8.12 to3.8.14')
@@ -40,7 +44,7 @@ export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,targ
   check(d.migrations?.length===product,`Runtime patch requires complete product${product}`)
   check(d.migrations.every((m,i)=>m.version===i+1&&/^[a-z0-9_]+$/.test(m.name)&&/^[a-f0-9]{64}$/.test(m.checksum)),'Runtime patch requires complete ordered named migration checksums')
  }
- check(Number(target.runtime.split('.')[2])>Number(source.runtime.split('.')[2]),'Runtime patch must advance within the same reviewed major/minor')
+ check(organizationBridge||Number(target.runtime.split('.')[2])>Number(source.runtime.split('.')[2]),'Runtime patch must advance within the same reviewed major/minor or the exact organization bridge')
  check(equal(source.migrations,target.migrations),'Runtime patch cannot change any product migration')
 }
 const BARRIER_SQL=`SELECT
@@ -91,11 +95,17 @@ async function patchResources(source:RuntimePatchDescriptor,target:RuntimePatchD
  return tables
 }
 async function installedPatchState(client:PoolClient,target:RuntimePatchDescriptor,tables:string[]){
- check(equal((await client.query('SELECT version,name,checksum FROM public.schema_migrations ORDER BY version')).rows,target.migrations),'Installed inventory differs from runtime patch')
+ const ledger=(await client.query('SELECT version,name,checksum FROM public.schema_migrations ORDER BY version')).rows
+ const afterNativeMigration=target.runtime==='4.0.0'&&target.productVersion===62&&ledger.length===63
+ if(afterNativeMigration){
+  check(equal(ledger.slice(0,62),target.migrations),'Installed inventory differs from runtime patch')
+  check(equal(ledger[62],{version:63,name:'native_artifact_documents',checksum:hash(await readFile(new URL('./migrations/0063_native_artifact_documents.sql',import.meta.url)))}),'Installed native document migration changed')
+ }else check(equal(ledger,target.migrations),'Installed inventory differs from runtime patch')
  check((await client.query('SELECT version FROM lingxios.schema_version WHERE singleton')).rows[0]?.version===14,'Actual native schema changed')
  check((await client.query('SELECT name FROM unnest($1::text[]) AS name WHERE to_regclass(name) IS NULL',[tables])).rowCount===0,'Required native table missing')
  const rows=(await client.query('SELECT runtime_version,schema_version,protocol_version,schema_sha256 FROM public.lingxios_installation WHERE singleton')).rows
  check(rows.length===1&&rows[0].schema_version===target.schema&&rows[0].protocol_version===target.protocol&&rows[0].schema_sha256===target.schemaHash,'Installed runtime schema/protocol provenance changed')
+ if(afterNativeMigration)check(rows[0].runtime_version==='4.0.0','Native documents require the completed organization runtime bridge')
  return rows[0].runtime_version as string
 }
 /** Transaction core; the executing image entrypoint below independently proves its formal package. */

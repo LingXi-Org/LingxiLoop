@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { after, before, mock, test } from 'node:test'
-import type { ActionContext } from '@lyyzka/lingxios'
+import type { ActionContext } from '@lingxi-org/lingxios'
 
 // Exercise the real product authorization and tool with a deterministic upstream.
 // Missing capability, foreign tenant and revoked membership must never search.

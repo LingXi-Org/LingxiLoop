@@ -314,3 +314,106 @@ That changes the frontend access boundary and requires specific user approval.
 This release contains only its analysis/test plan, with no route exception,
 new token, endpoint relabelling or index migration. See
 [the evidence and separate route qualification plan](evidence/issue-633/README.md).
+
+
+## Native Design/Slides product63 cutover
+
+This release explicitly upgrades `@lyyzka/lingxios@3.8.25` to the published
+`@lingxi-org/lingxios@4.0.0`, then applies additive product62 → product63.
+The exact reviewed runtime bridge changes only the installed runtime provenance
+from 3.8.25 to 4.0.0 while product62 remains unchanged. It requires matching
+formal package receipts, the complete immutable product62 inventory, unchanged
+native schema14 bytes and an exclusive all-work drain barrier. Unknown CAS
+outcomes use the existing read-only observation path; never replay the CAS.
+Only after that bridge is confirmed does the product migrator apply63. Startup
+and ordinary migrations never adopt mismatched runtime provenance. Repeated
+release observation accepts product63 only on installed4.0.0 with the exact63
+checksum and unchanged first62 entries. The migration validates the complete existing checksum history, creates
+native document/history tables atomically and copies per-person editor context;
+it does not convert or overwrite any saved draft. Its repeated execution is a
+no-op. Old document files and content-addressed revisions remain available.
+
+The Agent contract intentionally moves from `3.8.24-design-1` to
+`4.0.0-native-artifacts-1`; the SDK still pins each admitted work item to its
+assembled harness hash. Native writes being disabled does not make those
+contracts interchangeable. The historical `perf/issue-683` receipt remains
+unchanged. `deploy/harness-receipt.mjs` obtains a fresh receipt from the exact
+published SDK and product sources inside each image; missing package access
+blocks qualification, and a guessed or manually edited hash is not evidence.
+
+`servers`/`up` now compare the target assembly with both Web and both background
+Worker assemblies. If any hash differs, the target image first validates the
+reviewed runtime provenance and immutable product62/63 inventory, then
+checks **all** nonterminal work (including future queued items, waiting approvals,
+expired leases and items without runtime checkpoints) and all live leases. Any
+pending item refuses the release before source containers are stopped. The source remains on3.8.25 if this initial
+preflight refuses; after a confirmed runtime CAS, recovery moves forward on4.0.0. Keep the
+pinned source running until that work finishes through the existing product
+flow; never cancel work, change its `harnessHash`, or edit queue state to satisfy
+this gate. Waiting work may require the original user's response.
+
+After a successful preflight, both source Workers drain with their source APIs
+still available, then both APIs stop. A second read-only barrier requires zero
+nonterminal work, live leases, prepared transactions and other database clients.
+This catches admissions racing preflight. A known refusal restores the exact
+source container IDs and leaves all work untouched. A lost stop acknowledgement
+leaves maintenance in place for container observation; do not race it with a
+restart. The runtime bridge starts no target application before its exclusive check and
+confirmed CAS. The subsequent harness barrier accepts only installed4.0.0;
+product63 and target application convergence follow that check. Once
+target convergence starts, failure requires compatible fix-forward/recovery;
+the deployer does not restart old source containers over a potentially migrated
+database. A subsequent compatible fix-forward can inspect stopped containers'
+immutable images through a network-disabled one-shot observer, repeat the
+barriers and converge forward; it never launches their old application merely
+to inspect a hash. Refusal restores only containers that were running when that
+attempt began, so an already stopped older Worker stays stopped. Repeating a
+failed recreation with a missing container requires the full barrier; an absent
+slot is recorded as absent, never assigned a guessed source receipt. Repeating a
+release whose four actual harness hashes already match
+uses ordinary convergence and preserves its admitted work. Web client publishing
+follows the server cutover; standalone `workers` refuses when the four contracts
+do not yet match the target.
+
+Before release, archive the candidate receipt generated with the actual locked
+package, the focused `deploy/harness-cutover.test.mjs` result and real PostgreSQL
+`server/src/__integration__/harness-cutover.test.ts` result with the candidate
+commit. `npm run deploy -- harness-observe` is the read-only image comparison
+after image build/pull; it prints hashes/contracts without task or tenant data.
+This implementation does not itself authorize production observation or deploy.
+
+For this release, keep `NATIVE_ARTIFACT_WRITES_ENABLED=false` in the reviewed
+runtime configuration while all Web and background Worker instances are updated.
+Verify every instance is on the candidate image with product63 installed before
+setting `NATIVE_ARTIFACT_WRITES_ENABLED=true`. Production defaults to disabled
+when the flag is absent. This prevents an older instance from writing legacy
+files after another instance has converted a document. The deployer rejects an
+enabled flag while any observed instance still declares the older contract.
+Development/test instances
+may enable native writes without this release barrier.
+
+After activation, native document state fences all legacy full-file writes.
+A cached old editor must refresh and retain its unsaved draft for recovery; it
+cannot overwrite converted pages. Conversion fixes the original file/resource
+hashes and writes an independent native representation. Normal undo and revision
+restore cannot remove that original manifest or return a draft to the legacy
+editor format.
+
+The release no longer copies or retains old editor programs in the application
+image. The ordinary web asset lifecycle owns native chunks. Old editor assets
+on hosts are no longer mounted or served; their storage can be reclaimed by the
+normal reviewed host cleanup after this release is healthy.
+
+Once any native document exists, rollback is limited to a version that supports
+schema63 and native document reads/writes. Preserve durable data and fix forward
+if an older image cannot meet that contract. Do not roll the schema backward or
+restore legacy source files over the current native document.
+
+The official v4.0.0 tag is `6f709b4e41993cf0eb65c40679bc22bc9a67012b`. Its
+[publication](https://github.com/LingXi-Org/LingxiOS/actions/runs/41967834715)
+reports SHA-1 `8ae8bb3697ec77e4f04149451a395cb57d9eddb8`; the lock uses its
+corresponding npm SRI. This published checksum does not prove local installation.
+Archive download, checksum validation, actual package execution, PostgreSQL
+bridge tests and final image qualification remain mandatory release evidence.
+The SDK no longer installs PDF/DOCX parsers automatically; this host explicitly
+pins `pdfjs-dist@6.3.289` and `mammoth@1.12.2` to preserve document extraction.

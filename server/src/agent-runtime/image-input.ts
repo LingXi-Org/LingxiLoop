@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { RequestAttachment } from '@lyyzka/lingxios'
+import type { RequestAttachment } from '@lingxi-org/lingxios'
 import { env } from '../env.js'
 import { createChatCompletion } from '../llm.js'
 import type { LlmCallContext } from '../llm-ledger.js'

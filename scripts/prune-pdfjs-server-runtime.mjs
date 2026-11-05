@@ -30,8 +30,9 @@ const inspectConsumers = directory => {
 }
 inspectConsumers(dependencyRoot)
 const allowedConsumers = [
-  '.package-lock.json', '@lyyzka/lingxios/package.json',
-  '@lyyzka/lingxios/dist/src/context/document-worker.js',
+  '.package-lock.json', '@lingxi-org/lingxios/package.json',
+  '@lingxi-org/lingxios/dist/src/context/document-text.js',
+  '@lingxi-org/lingxios/dist/src/context/document-worker.js',
 ]
 const officeRoot = join(dependencyRoot, 'officeparser')
 if (existsSync(join(officeRoot, 'package.json'))) {
@@ -64,7 +65,7 @@ if (existsSync(join(officeRoot, 'package.json'))) {
 assert.deepEqual(consumers.sort(), allowedConsumers.sort(),
   'Re-audit PDF.js consumers before pruning the installed package')
 const documentWorker = readFileSync(join(dependencyRoot,
-  '@lyyzka/lingxios/dist/src/context/document-worker.js'), 'utf8')
+  '@lingxi-org/lingxios/dist/src/context/document-worker.js'), 'utf8')
 assert.ok(documentWorker.includes("import('pdfjs-dist/legacy/build/pdf.mjs')"))
 assert.ok(documentWorker.includes("import.meta.resolve('pdfjs-dist/package.json')"))
 

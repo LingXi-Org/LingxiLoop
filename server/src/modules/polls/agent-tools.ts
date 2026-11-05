@@ -1,7 +1,7 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
 import { isDeepStrictEqual } from 'node:util'
 import { z } from 'zod'
-import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool } from '../../agents/tools.js'
 import { createPermissionService } from '../access/public.js'

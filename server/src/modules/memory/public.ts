@@ -1,4 +1,4 @@
-import { NoEffectError, type MemoryOptions, type MemoryIdentity, type MemoryDocument, type createLingxiOS } from '@lyyzka/lingxios'
+import { NoEffectError, type MemoryOptions, type MemoryIdentity, type MemoryDocument, type createLingxiOS } from '@lingxi-org/lingxios'
 import { createPermissionService, ForbiddenError } from '../access/public.js'
 import type { Queryable } from '../../db/queryable.js'
 import { HttpError } from '../../http/errors.js'

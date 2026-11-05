@@ -7,7 +7,7 @@ Part of [LingXi · 灵犀](https://github.com/LingXi-Org). The organization repo
 - [LingxiOS](https://github.com/LingXi-Org/LingxiOS): the independent agent execution runtime consumed through its published package.
 - [LingxiLit](https://github.com/LingXi-Org/LingxiLit): the organization's OpenLIT-based AI observability project.
 
-LingxiLoop uses the exact published `@lyyzka/lingxios` version in the root/server manifests and lockfiles. The Web process owns authenticated ingress and control operations; the Worker is the only process that claims LingxiOS work.
+LingxiLoop uses the exact published `@lingxi-org/lingxios` version in the root/server manifests and lockfiles. The Web process owns authenticated ingress and control operations; the Worker is the only process that claims LingxiOS work.
 
 LingxiLoop is a Web learning-collaboration product with direct messages, Study Rooms, and Labs.
 

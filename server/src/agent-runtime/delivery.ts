@@ -1,7 +1,7 @@
 import { readRunProjection } from './assistant-transport.js'
 import { assistantTextViolation } from './assistant-text.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, type createLingxiOS, type DeliveryPort } from '@lyyzka/lingxios'
+import { NoEffectError, type createLingxiOS, type DeliveryPort } from '@lingxi-org/lingxios'
 import { sendAgentChannelMessage, sendSystemChannelMessage } from '../im/public.js'
 import { loadRuntimeBinding } from './context.js'
 import { productConversationId, assertFrozenAudience, bindProductRun, notifyRunAvailable } from './identity.js'

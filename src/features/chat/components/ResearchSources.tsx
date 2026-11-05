@@ -1,6 +1,6 @@
 import { WebSearch } from '@/components/assistant-ui/elements/web-search'
 import { toolDisplaySchema } from '@/lib/runActivity'
-import type { RunView } from '@lyyzka/lingxios/ui'
+import type { RunView } from '@lingxi-org/lingxios/ui'
 import { Citation } from '@/components/tool-ui/citation'
 import { LinkPreview } from '@/components/tool-ui/link-preview'
 import type { HarnessToolPart } from '../runtime/model'

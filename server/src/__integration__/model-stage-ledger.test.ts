@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test, { after } from 'node:test'
-import type { ModelCallObservation } from '@lyyzka/lingxios'
+import type { ModelCallObservation } from '@lingxi-org/lingxios'
 import { pool } from '../db/pool.js'
 import { recordModelCall } from '../agent-runtime/runtime.js'
 import { bindProductRun } from '../agent-runtime/identity.js'

@@ -1,0 +1,16 @@
+[
+  {
+    "kind": "slides",
+    "pages": 50,
+    "isolatedSourceMatches": true,
+    "originalFilesUnchanged": true,
+    "sourceSha256": "9bfaae700e1778bde6b78378fa602db2b3b5f387d39207cec9c4b6c548e2253e"
+  },
+  {
+    "kind": "design",
+    "pages": 50,
+    "isolatedSourceMatches": true,
+    "originalFilesUnchanged": true,
+    "sourceSha256": "9bfaae700e1778bde6b78378fa602db2b3b5f387d39207cec9c4b6c548e2253e"
+  }
+]

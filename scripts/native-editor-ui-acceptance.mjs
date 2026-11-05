@@ -1,0 +1,360 @@
+#!/usr/bin/env node
+/** Isolated HTTP-fixture UI diagnostic, NOT full API acceptance or a benchmark.
+ * Run: PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs \
+ *   node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --browser=/usr/bin/chromium --output=/tmp/lingxi-ui
+ * Uses installed Vite/React and a separately available Playwright package. No SDK,
+ * real credentials, database, external service or general E2E framework is used.
+ */
+import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
+import { mkdtemp, mkdir, writeFile, readFile, rm, realpath } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
+import { createRequire } from 'node:module'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { createServer } from 'vite'
+import react from '@vitejs/plugin-react'
+import { createFixture } from './native-artifact-fixture.mjs'
+import { applyOperations, prepareBatch } from '../shared/artifact-operations.ts'
+
+const require = createRequire(import.meta.url)
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
+const mode = options.mode ?? 'both'
+assert.ok(['design', 'slides', 'both'].includes(mode), '--mode must be design, slides or both')
+const output = resolve(options.output ?? join(tmpdir(), 'lingxi-native-ui-results'))
+const modulePath = process.env.PLAYWRIGHT_MODULE ?? 'playwright'
+const { chromium } = await import(modulePath.startsWith('/') ? pathToFileURL(modulePath).href : modulePath).catch(() => {
+  throw new Error('Provide installed Playwright through PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs')
+})
+const dependencyRoot = await realpath(join(root, 'node_modules'))
+const workspace = await mkdtemp(join(tmpdir(), 'lingxi-native-ui-'))
+await mkdir(output, { recursive: true })
+const mocks = {
+  http: `export async function http(path,init){const response=await fetch('/api'+path,{...init,headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok)throw Object.assign(new Error(await response.text()),{status:response.status});return response.json()}`,
+  realtime: 'export const ws={on:()=>()=>{}}',
+  transport: 'export const lingxiApiFetch=(...args)=>fetch(...args)',
+  auth: "export const getActiveCompanyId=()=> 'fixture-company'",
+  workspaceSession: "export const getWorkspaceSession=()=>({companyId:'fixture-company',projectId:'fixture-project'})",
+}
+for (const [name, source] of Object.entries(mocks)) await writeFile(join(workspace, `${name}.js`), source)
+await writeFile(join(workspace, 'index.html'), '<html><head><meta charset="UTF-8"></head><body style="margin:0"><div id="root" style="height:100vh"></div><script type="module" src="/entry.tsx"></script></body></html>')
+await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<React.StrictMode><NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'?'design':'slides'} title="Isolated UI fixture" /></React.StrictMode>)`)
+let server, browser
+try {
+  server = await createServer({ configFile: false, root: workspace, plugins: [react()], logLevel: 'error',
+    resolve: { alias: [
+      ...Object.entries({ '@/api/core/http': 'http', '@/api/core/realtime': 'realtime', '@/api/transport': 'transport', '@/stores/auth': 'auth', '@/lib/workspaceSession': 'workspaceSession' }).map(([find, name]) => ({ find, replacement: join(workspace, `${name}.js`) })),
+      { find: 'react', replacement: dirname(require.resolve('react/package.json')) },
+      { find: 'react-dom', replacement: dirname(require.resolve('react-dom/package.json')) },
+    ] }, server: { host: '127.0.0.1', port: 0, fs: { allow: [root, workspace, dependencyRoot] } } })
+  await server.listen()
+  const address = server.httpServer.address()
+  const baseUrl = `http://127.0.0.1:${address.port}`
+  browser = await chromium.launch({ headless: true, ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox'] })
+  for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
+    for (const editorCase of options.checks === 'cas' ? ['rte', 'table'] : [null]) {
+      const result = await verifyMode(kind, browser, baseUrl, editorCase)
+      await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
+      console.log(JSON.stringify(result))
+    }
+  }
+} finally {
+  await browser?.close()
+  await server?.close()
+  await rm(workspace, { recursive: true, force: true })
+}
+
+async function verifyMode(kind, browser, baseUrl, editorCase) {
+  const fixture = createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
+  let document = fixture.document
+  const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
+  const initialPageHashes = Object.fromEntries(document.pageOrder.map(id => [id, pageHash(document.pages[id])]))
+  const history = { version: 0, undo: null, redo: null }, receipts = [], errors = []
+  let holdAcknowledgment = false, releaseAcknowledgment = null
+  let historyEntry = null
+  const historyRequests = []
+  const snapshot = () => ({ document, history, write: true, loadedPageIds: document.pageOrder,
+    pageVersions: Object.fromEntries(document.pageOrder.map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  page.setDefaultTimeout(30_000)
+  page.on('pageerror', error => errors.push(error.message))
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()) })
+  await page.route('**/isolated-fixture/**', async route => {
+    const [, pageId, nodeId] = new URL(route.request().url()).pathname.match(/^\/isolated-fixture\/([^/]+)\/([^/]+)$/) ?? []
+    const source = document.pages[pageId]?.nodes[nodeId]?.embed?.source
+    assert.equal(typeof source, 'string')
+    await route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', headers: {
+      'Content-Security-Policy': "sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:",
+    }, body: source })
+  })
+  await page.route('**/api/artifacts/fixture/**', async route => {
+    const request = route.request(), url = new URL(request.url())
+    const grant = url.pathname.match(/^\/api\/artifacts\/fixture\/embeds\/([^/]+)\/([^/]+)\/grant$/)
+    if (grant) {
+      const node = document.pages[grant[1]]?.nodes[grant[2]]
+      assert.equal(request.postDataJSON().sha256, node?.embed?.sourceHash)
+      await route.fulfill({ status: 200, json: { url: `${baseUrl}/isolated-fixture/${grant[1]}/${grant[2]}` } }); return
+    }
+    if (url.pathname.includes('/assets/')) {
+      assert.equal(request.headers()['x-company-id'], 'fixture-company')
+      assert.equal(request.headers()['x-project-id'], 'fixture-project')
+      const image = fixture.images[Number(url.pathname.split('-').at(-1)) - 1]
+      await route.fulfill({ status: 200, contentType: 'image/png', body: image.bytes }); return
+    }
+    let result = snapshot()
+    if (url.pathname.endsWith('/operations')) {
+      const batch = request.postDataJSON()
+      try {
+        if (batch.kind === 'undo' || batch.kind === 'redo') {
+          assert.equal(batch.expectedHistoryVersion, history.version)
+          assert.equal(batch.targetOperationId, history[batch.kind])
+          assert.ok(historyEntry)
+          document = applyOperations(document, prepareBatch(document, batch.kind === 'undo' ? historyEntry.inverse : historyEntry.forward, batch.operationId)).document
+          historyRequests.push(batch.kind)
+          history.undo = batch.kind === 'redo' ? batch.targetOperationId : null
+          history.redo = batch.kind === 'undo' ? batch.targetOperationId : null
+        } else {
+          const applied = applyOperations(document, batch)
+          document = applied.document; historyEntry = { inverse: applied.inverse, forward: batch.operations }
+          history.undo = batch.operationId; history.redo = null; receipts.push(batch)
+        }
+        history.version = document.seq
+        result = { ...snapshot(), seq: document.seq, committedSeq: document.seq, operationId: batch.operationId }
+        if (holdAcknowledgment) await new Promise(resolve => { releaseAcknowledgment = resolve })
+      } catch (error) { await route.fulfill({ status: 409, json: { error: String(error) } }); return }
+    } else if (url.pathname.endsWith('/changes')) result = { items: Number(url.searchParams.get('afterSeq') ?? 0) < document.seq ? [{ seq: document.seq }] : [], seq: document.seq }
+    await route.fulfill({ status: 200, json: result })
+  })
+  const ready = async index => {
+    const canvas = page.locator(`[data-page-id="page-${index}"]`)
+    await canvas.locator('[data-formula-ready=true]').waitFor()
+    await canvas.locator('[data-node-type=image] img').waitFor()
+    await page.waitForFunction(index => {
+      const image = window.document.querySelector(`[data-page-id="page-${index}"] [data-node-type=image] img`)
+      return image?.complete && image.naturalWidth > 0
+    }, index)
+  }
+  const select = async index => {
+    await page.locator('.native-page-list').evaluate((element, index) => { element.scrollTop = (index - 1) * 72 }, index)
+    await page.locator(`[data-page-target="page-${index}"]`).click()
+    await ready(index)
+  }
+  try {
+    await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
+    await ready(1)
+    if (options.checks === 'cas') {
+      const table = editorCase === 'table', nodeId = table ? 'page-1-table' : 'page-1-heading'
+      const target = page.locator(`[data-node-id="${nodeId}"]`)
+      const active = table ? target.locator('td').first() : page.locator('[data-native-text-editor]')
+      await (table ? active : target).dblclick()
+      if (table) await page.waitForFunction(() => window.document.querySelector('[data-node-id="page-1-table"] td')?.getAttribute('contenteditable') === 'true')
+      else await active.waitFor()
+      await active.focus()
+      const before = await active.innerText(), remote = table ? 'REMOTE CELL AUTHOR' : 'REMOTE AUTHOR VERSION'
+      const cells = document.pages['page-1'].nodes[nodeId].cells?.map(row => [...row])
+      if (cells) cells[0][0] = remote
+      const remoteObserved = page.waitForRequest(request => request.method() === 'PUT' && request.url().includes('/editor-context') && request.postDataJSON()?.version === String(document.seq))
+      document = applyOperations(document, prepareBatch(document, [{ type: 'node.patch', pageId: 'page-1', nodeId, patch: table ? { cells } : { text: remote } }])).document
+      await remoteObserved
+      assert.equal(await active.innerText(), before, 'remote refresh must retain the active draft content')
+      // Word selection is a second real double click inside the same editor.
+      // It must not replace the original CAS snapshot with the remote revision.
+      await active.dblclick(); await page.keyboard.press('End'); await page.keyboard.insertText(' AFTER REENTRY'); await active.press('Control+s')
+      await page.waitForFunction(() => window.document.querySelector('[data-save-state]')?.getAttribute('data-save-state') === 'conflict')
+      const saved = table ? document.pages['page-1'].nodes[nodeId].cells[0][0] : document.pages['page-1'].nodes[nodeId].text
+      assert.equal(saved, remote, 'remote value must survive the rejected stale draft')
+      assert.equal(receipts.length, 0, 'no stale mutation may be submitted')
+      const pending = page.waitForEvent('download')
+      await page.getByRole('button', { name: '下载本地副本', exact: true }).click()
+      const recoveryPath = join(workspace, `${kind}-${editorCase}-recovery.json`)
+      await (await pending).saveAs(recoveryPath)
+      const recovery = JSON.parse(await readFile(recoveryPath, 'utf8'))
+      const expected = before + ' AFTER REENTRY'
+      const recoverableDraft = recovery.operations.flatMap(batch => batch.operations).some(operation => table ? operation.patch?.cells?.[0]?.[0] === expected : operation.patch?.text === expected)
+      assert.ok(recoverableDraft, 'the exact local rejected draft must remain recoverable')
+      const versionKey = `node/page-1/${nodeId}/field/${table ? 'cells' : 'text'}`
+      assert.equal(recovery.operations.at(-1)?.expectedVersions[versionKey], 0)
+      assert.equal(document.versions[versionKey], 1)
+      assert.deepEqual(errors, [])
+      return { kind: 'isolated-cas-doubleclick-reentry-diagnostic', mode: kind, editor: editorCase, fixtureVersion: fixture.manifest.version,
+        scope: 'HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance',
+        remoteObservedBeforeDoubleClick: true, remotePreserved: saved === remote, saveState: 'conflict', recoverableDraft,
+        committedManualBatches: receipts.length, capturedVersion: 0, currentVersion: 1, consoleOrPageErrors: errors }
+    }
+    if (options.checks === 'save') {
+      const editor = page.locator('[data-native-artifact-editor]')
+      const waitState = value => page.waitForFunction(value => window.document.querySelector('[data-save-state]')?.getAttribute('data-save-state') === value, value)
+      const assertPending = async () => { await waitState('pending'); assert.match(await page.locator('.native-save-status').innerText(), /正在保存/); assert.ok(releaseAcknowledgment, 'Transport acknowledgment must still be held') }
+      const release = async () => { holdAcknowledgment = false; releaseAcknowledgment?.(); releaseAcknowledgment = null; await waitState('saved') }
+      const saveControl = async (control, value, verify) => {
+        await control.fill(value)
+        await waitState('draft')
+        assert.match(await page.locator('.native-save-status').innerText(), /未保存/)
+        holdAcknowledgment = true
+        await control.press('Control+s')
+        await assertPending()
+        assert.equal(await control.evaluate(element => document.activeElement === element), true, 'Ctrl+S must save without blur')
+        verify(); await release()
+      }
+      await saveControl(page.getByLabel('标题', { exact: true }), 'Focused property save', () => assert.equal(document.pages['page-1'].title, 'Focused property save'))
+      await saveControl(page.getByLabel('宽', { exact: true }), '1800', () => assert.equal(document.pages['page-1'].width, 1800))
+      if (kind === 'design') {
+        await saveControl(page.getByLabel('画板 X', { exact: true }), '32', () => assert.equal(document.pages['page-1'].x, 32))
+        await saveControl(page.getByLabel('画板 Y', { exact: true }), '48', () => assert.equal(document.pages['page-1'].y, 48))
+      }
+      const notes = page.getByLabel('讲者备注', { exact: true })
+      for (const value of ['备注草稿一', '备注草稿二']) await saveControl(notes, value, () => assert.equal(document.pages['page-1'].notes, value))
+      await page.locator('[data-node-id="page-1-heading"]').dblclick()
+      const text = page.locator('[data-native-text-editor]'); await text.waitFor(); await page.keyboard.press('End')
+      const cdp = await page.context().newCDPSession(page), beforeComposition = receipts.length
+      await cdp.send('Input.imeSetComposition', { text: '未确认', selectionStart: 3, selectionEnd: 3 })
+      await waitState('draft'); await text.press('Control+s'); await page.waitForTimeout(800)
+      assert.equal(receipts.length, beforeComposition, 'Ctrl+S must not submit an IME composition')
+      assert.equal(await editor.getAttribute('data-save-state'), 'draft')
+      holdAcknowledgment = true
+      await cdp.send('Input.insertText', { text: '确认后保存' })
+      await assertPending(); await release(); await cdp.detach(); await page.keyboard.press('Escape')
+      assert.ok(document.pages['page-1'].nodes['page-1-heading'].text.endsWith('确认后保存'))
+      const cell = page.locator('[data-node-id="page-1-table"] td').first()
+      await cell.dblclick()
+      await page.waitForFunction(() => window.document.querySelector('[data-node-id="page-1-table"] td')?.getAttribute('contenteditable') === 'true')
+      for (const value of ['表格草稿一', '表格草稿二']) await saveControl(cell, value, () => assert.equal(document.pages['page-1'].nodes['page-1-table'].cells[0][0], value))
+      await page.locator('[data-node-id="page-1-heading"]').click()
+      const fontSize = page.getByLabel('字号', { exact: true })
+      await fontSize.fill('64'); await waitState('draft')
+      document = applyOperations(document, prepareBatch(document, [{ type: 'node.patch', pageId: 'page-1', nodeId: 'page-1-heading', patch: { style: { color: '#7c3aed' } } }])).document
+      history.version = document.seq
+      await page.waitForFunction(() => getComputedStyle(window.document.querySelector('[data-node-id="page-1-heading"]')).color === 'rgb(124, 58, 237)')
+      await saveControl(fontSize, '64', () => { assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontSize, 64); assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.color, '#7c3aed') })
+      await page.locator('[data-node-id="page-1-heading"]').dblclick(); await text.waitFor(); await page.keyboard.press('End')
+      const beforeUndo = document.pages['page-1'].nodes['page-1-heading'].text
+      await page.keyboard.insertText(' redo-check'); await text.press('Control+s'); await waitState('saved')
+      await text.press('Control+z')
+      await page.waitForFunction(value => window.document.querySelector('[data-node-id="page-1-heading"]')?.textContent === value, beforeUndo)
+      await page.locator('[data-node-id="page-1-heading"]').dblclick(); await text.waitFor()
+      await text.press('Control+y')
+      await page.waitForFunction(value => window.document.querySelector('[data-node-id="page-1-heading"]')?.textContent === value, beforeUndo + ' redo-check')
+      assert.deepEqual(historyRequests, ['undo', 'redo'])
+      assert.equal(await text.count(), 0, 'Shared redo must finish the active rich-text editor')
+      await page.reload({ waitUntil: 'domcontentloaded' }); await ready(1)
+      assert.equal(await page.getByLabel('标题', { exact: true }).inputValue(), 'Focused property save')
+      assert.equal(await page.getByLabel('宽', { exact: true }).inputValue(), '1800')
+      assert.equal(await page.getByLabel('讲者备注', { exact: true }).inputValue(), '备注草稿二')
+      assert.equal(await page.locator('[data-node-id="page-1-table"] td').first().innerText(), '表格草稿二')
+      if (kind === 'design') { assert.equal(await page.getByLabel('画板 X', { exact: true }).inputValue(), '32'); assert.equal(await page.getByLabel('画板 Y', { exact: true }).inputValue(), '48') }
+      assert.deepEqual(errors, [])
+      return { kind: 'isolated-native-editor-save-diagnostic', mode: kind, focusedPropertyCtrlS: true, focusedTableCtrlS: true, repeatedFocusedNotesSave: true,
+        dirtyBeforeSubmit: true, pendingUntilAcknowledged: true, compositionNotSubmittedByCtrlS: true, unrelatedAgentStylePreserved: true, activeRichTextSharedUndoRedo: true, reloadRetainedAllValues: true, designBoardCoordinates: kind === 'design', consoleOrPageErrors: errors }
+    }
+    let maxMountedPages = 0, maxMountedNodes = 0
+    const editedPages = [1, 25, 50], expected = new Map()
+    let chineseIme = false
+    for (let index = 1; index <= 50; index++) {
+      await select(index)
+      const mounted = await page.locator('[data-page-id]').count()
+      assert.ok(mounted <= (kind === 'slides' ? 1 : 9), `Unbounded ${kind} page DOM: ${mounted}`)
+      maxMountedPages = Math.max(maxMountedPages, mounted)
+      maxMountedNodes = Math.max(maxMountedNodes, await page.locator('[data-page-id] [data-node-id]').count())
+      if (editedPages.includes(index)) {
+        const nodeId = `page-${index}-heading`, suffix = index === 1 ? ' 中文验收' : ` verified-${index}`
+        expected.set(index, document.pages[`page-${index}`].nodes[nodeId].text + suffix)
+        await page.locator(`[data-node-id="${nodeId}"]`).dblclick()
+        await page.locator('[data-native-text-editor]').waitFor()
+        const baseline = receipts.length
+        await page.waitForTimeout(800)
+        assert.equal(receipts.length, baseline, 'Opening text without changes must not create history')
+        await page.keyboard.press('End')
+        if (index === 1) {
+          const cdp = await page.context().newCDPSession(page)
+          await cdp.send('Input.imeSetComposition', { text: ' 中文', selectionStart: 3, selectionEnd: 3 })
+          await page.waitForTimeout(800)
+          assert.equal(receipts.length, baseline, 'Partial Chinese composition must not save')
+          await cdp.send('Input.imeSetComposition', { text: ' 中文验', selectionStart: 4, selectionEnd: 4 })
+          await page.waitForTimeout(800)
+          assert.equal(receipts.length, baseline, 'Updated Chinese composition must not save')
+          await cdp.send('Input.insertText', { text: suffix })
+          await cdp.detach(); chineseIme = true
+        } else await page.keyboard.insertText(suffix)
+        await page.keyboard.press('Escape')
+        await page.waitForFunction(() => window.document.querySelector('[data-save-state]')?.getAttribute('data-save-state') === 'saved')
+        assert.equal(document.pages[`page-${index}`].nodes[nodeId].text, expected.get(index))
+      }
+    }
+    assert.equal(receipts.length, 3, 'Each manual text edit must be one committed batch')
+    const waitSaved = () => page.waitForFunction(() => window.document.querySelector('[data-save-state]')?.getAttribute('data-save-state') === 'saved')
+    await select(25)
+    await page.locator('[data-node-id="page-25-formula"]').click()
+    const formula = '\\frac{25}{2}+x^{3}'
+    const formulaSource = page.getByLabel('LaTeX 公式源码', { exact: true })
+    await formulaSource.fill(formula); await formulaSource.press('Control+s'); await waitSaved(); await ready(25)
+    assert.equal(document.pages['page-25'].nodes['page-25-formula'].source, formula)
+    await select(50)
+    await page.locator('[data-node-id="page-50-image"]').click()
+    for (const [label, value] of [['width', '0.75'], ['x', '0.1']]) { const control = page.getByLabel(label, { exact: true }); await control.fill(value); await control.press('Control+s'); await waitSaved() }
+    assert.deepEqual(document.pages['page-50'].nodes['page-50-image'].crop, { x: .1, y: 0, width: .75, height: 1 })
+    await select(1)
+    const theme = page.getByLabel('主题', { exact: true })
+    await theme.selectOption(''); await waitSaved(); assert.equal(document.themeId, null)
+    await theme.selectOption('fixture-theme'); await waitSaved(); assert.equal(document.themeId, 'fixture-theme')
+    await select(50)
+    await page.getByRole('button', { name: '页面上移', exact: true }).click(); await waitSaved()
+    assert.equal(document.pageOrder[48], 'page-50')
+    await page.keyboard.press('Control+z')
+    await page.waitForFunction(() => window.document.querySelector('[data-page-target="page-50"] .native-page-number')?.textContent === '50')
+    assert.equal(document.pageOrder[49], 'page-50')
+    await page.keyboard.press('Control+y')
+    await page.waitForFunction(() => window.document.querySelector('[data-page-target="page-50"] .native-page-number')?.textContent === '49')
+    assert.equal(document.pageOrder[48], 'page-50')
+    assert.deepEqual(historyRequests, ['undo', 'redo'])
+    await page.reload({ waitUntil: 'domcontentloaded' }); await ready(1)
+    for (const index of editedPages) { await select(index); assert.equal(await page.locator(`[data-node-id="page-${index}-heading"]`).innerText(), expected.get(index)) }
+    assert.equal(document.pages['page-25'].nodes['page-25-formula'].source, formula)
+    assert.deepEqual(document.pages['page-50'].nodes['page-50-image'].crop, { x: .1, y: 0, width: .75, height: 1 })
+    assert.equal(document.themeId, 'fixture-theme'); assert.equal(document.pageOrder[48], 'page-50')
+    await page.screenshot({ path: join(output, `${kind}.png`) })
+    const agentBatch = prepareBatch(document, [{ type: 'node.patch', pageId: 'page-50', nodeId: 'page-50-heading', patch: { text: 'Agent collaborative heading' } }])
+    const agentChange = applyOperations(document, agentBatch)
+    document = agentChange.document; historyEntry = { inverse: agentChange.inverse, forward: agentBatch.operations }
+    history.version = document.seq; history.undo = agentBatch.operationId; history.redo = null
+    await page.waitForFunction(() => window.document.querySelector('[data-node-id="page-50-heading"]')?.textContent === 'Agent collaborative heading')
+    await page.getByRole('button', { name: /撤销/ }).click()
+    await page.waitForFunction(value => window.document.querySelector('[data-node-id="page-50-heading"]')?.textContent === value, expected.get(50))
+    await page.getByRole('button', { name: /重做/ }).click()
+    await page.waitForFunction(() => window.document.querySelector('[data-node-id="page-50-heading"]')?.textContent === 'Agent collaborative heading')
+    assert.deepEqual(historyRequests, ['undo', 'redo', 'undo', 'redo'])
+    const changedPageIds = document.pageOrder.filter(id => pageHash(document.pages[id]) !== initialPageHashes[id]).sort()
+    assert.deepEqual(changedPageIds, ['page-1', 'page-25', 'page-50'])
+    let isolatedInteraction = false
+    if (document.pages['page-25'].nodes['page-25-isolated']) {
+      await select(25)
+      await page.getByRole('button', { name: '放映', exact: true }).click()
+      const iframe = page.locator('[data-node-id="page-25-isolated"] iframe')
+      await iframe.waitFor()
+      assert.equal(await iframe.getAttribute('sandbox'), 'allow-scripts')
+      const image = iframe.contentFrame().locator('img')
+      await image.waitFor()
+      await image.evaluate(() => new Promise(resolve => {
+        if (document.readyState === 'complete') resolve()
+        else window.addEventListener('load', () => resolve(), { once: true })
+      }))
+      // Frame descendants report unscaled coordinates in this Chromium/Playwright
+      // combination. Send trusted pointer input at the iframe's rendered centre.
+      const frameBounds = await iframe.boundingBox()
+      assert.ok(frameBounds)
+      await page.mouse.click(frameBounds.x + frameBounds.width / 2, frameBounds.y + frameBounds.height / 2)
+      await image.evaluate(element => new Promise((resolve, reject) => {
+        const deadline = performance.now() + 3000
+        const check = () => { if (getComputedStyle(element).opacity === '0.35') resolve(); else if (performance.now() > deadline) reject(new Error('Isolated image click did not run')); else requestAnimationFrame(check) }
+        check()
+      }))
+      isolatedInteraction = true
+    }
+    assert.deepEqual(errors, [])
+    return { kind: 'isolated-native-editor-ui-diagnostic', mode: kind, fixtureVersion: fixture.manifest.version, fixtureSemanticSha256: fixture.manifest.semanticSha256, scope: 'HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance', pagesTraversed: 50,
+      activePageImageDecodedAndFormulaReady: 50, maxMountedPages, maxMountedNodes, editedPages, reloadedPages: editedPages, committedManualBatches: receipts.length,
+      openingTextWithoutChangesDoesNotSave: true, chineseIme, formulaEditedAndReopened: 25, imageCropEditedAndReopened: 50, themeSwitchedAndRestored: true,
+      pageOrderChangedAndReopened: true, pageOrderSharedUndoRedo: true, agentSharedUndoRedo: true, changedPageIds, untouchedPageHashes: 47,
+      agentPlainTextPatchVisible: true, isolatedInteraction, consoleOrPageErrors: errors }
+  } finally { releaseAcknowledgment?.(); await page.close() }
+}

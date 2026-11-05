@@ -1,4 +1,4 @@
-import { NoEffectError, readRunReference, type RunIdentity, type WorkItem } from '@lyyzka/lingxios'
+import { NoEffectError, readRunReference, type RunIdentity, type WorkItem } from '@lingxi-org/lingxios'
 import type { Queryable } from '../db/queryable.js'
 import { pool } from '../db/pool.js'
 import { CH_AGENT_RUN_AVAILABLE, publish, redis } from '../redis.js'

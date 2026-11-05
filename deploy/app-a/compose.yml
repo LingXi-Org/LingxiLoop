@@ -14,6 +14,7 @@ x-runtime: &runtime
     NODE_ENV: production
     NODE_OPTIONS: --max-old-space-size=320
     LINGXILOOP_LOG_LEVEL: ${LINGXILOOP_LOG_LEVEL:-warn}
+    NATIVE_ARTIFACT_WRITES_ENABLED: ${NATIVE_ARTIFACT_WRITES_ENABLED:-false}
     PORT: "5181"
     INSTANCE_ID: app-a
     DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-8}
@@ -90,8 +91,6 @@ services:
   lingxiloop:
     <<: *runtime
     environment: *runtime-environment
-    volumes:
-      - /opt/lingxiloop/editor-assets:/var/lib/lingxiloop/editor-assets:ro
     depends_on:
       db-migrate:
         condition: service_completed_successfully

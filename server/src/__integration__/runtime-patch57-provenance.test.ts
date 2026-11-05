@@ -3,7 +3,7 @@ import test from 'node:test'
 import {randomUUID,createHash} from 'node:crypto'
 import {readFile} from 'node:fs/promises'
 import {Pool} from 'pg'
-import {packageResources,releaseVersions} from '@lyyzka/lingxios'
+import {packageResources,releaseVersions} from '@lingxi-org/lingxios'
 import {applyPublishedRuntimePatch,loadRuntimePatchInventory,observePublishedRuntimePatch,runtimePatchPlanHash} from '../db/runtime-patch.js'
 import {loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH} from '../db/runtime-profile.js'
 

@@ -1,14 +1,16 @@
 import { readFileSync } from 'node:fs'
-import { assembleHarness, releaseVersions, toolContractHash } from '@lyyzka/lingxios'
+import { assembleHarness, releaseVersions, toolContractHash } from '@lingxi-org/lingxios'
 import { createProductHarness } from '../agent-runtime/harness.js'
 import { createProductTools } from '../agent-runtime/tools.js'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createArtifactTools } from '../modules/artifacts/agent-tools.js'
+import { createDocument, createNode, createPage } from '../../../shared/artifact-document.js'
+import { prepareBatch } from '../../../shared/artifact-operations.js'
 
 const control = async () => { throw new Error('schema tests must not access runtime') }
 const design = createArtifactTools('design', control), slides = createArtifactTools('slides', control)
-const report = { finding: 'Observed finding', evidenceRefs: [{ kind: 'file', id: 'project/Main.dc.html' }], confidence: 0.8 }
+const report = { finding: 'Observed finding', evidenceRefs: [{ kind: 'file', id: 'project/pages/main.json' }], confidence: 0.8 }
 
 test('Slides retains common native tools and adds deck creation and real design-system tools', () => {
   const methods = (tools: typeof design) => tools.map(tool => tool.action.split('.')[1])
@@ -59,23 +61,54 @@ test('independent verification has a strict required role-specific public contra
   for (const field of ['verifiesReportId','disconfirmingChecks','verdict']) assert.ok(schema.required.includes(field))
 })
 
-test('file writes take whole files or deletions under project paths only', () => {
-  const write = design.find(tool => tool.action === 'design.write_files')!
-  assert.ok(write.parse({ files: { 'project/Main.dc.html': { content: '<x-dc></x-dc>', ifMatch: null }, 'project/Old.dc.html': { delete: true } } }))
-  assert.throws(() => write.parse({ files: {} }))
-  assert.throws(() => write.parse({ files: { '../escape.txt': { content: 'x' } } }))
-  assert.throws(() => write.parse({ files: { 'project/a.html': { content: 'x', ifMatch: 'not-a-sha' } } }))
+test('human and Agent partial edits use the same strict versioned operation contract', () => {
+  const document = createDocument('design', 'canvas'), page = createPage('main')
+  const node = createNode('text', 'heading'); page.nodes[node.id] = node; page.nodeOrder = [node.id]
+  document.pages[page.id] = page; document.pageOrder = [page.id]
+  const batch = prepareBatch(document, [{ type: 'node.patch', pageId: page.id, nodeId: node.id, patch: { text: 'Updated with CAS' } }], 'agent-edit')
+  for (const tools of [design, slides]) {
+    const write = tools.find(tool => tool.action.endsWith('.apply_ops'))!
+    assert.equal(write.effect, 'transaction'); assert.ok(write.authorize); assert.ok(write.verify)
+    assert.deepEqual(write.parse(batch), batch)
+    assert.throws(() => write.parse({ ...batch, operationId: undefined }))
+    assert.throws(() => write.parse({ ...batch, expectedVersions: undefined }))
+    assert.throws(() => write.parse({ ...batch, operations: [] }))
+    assert.throws(() => write.parse({ ...batch, companyId: 'other-tenant' }))
+    assert.throws(() => write.parse({ ...batch, operations: [{ type: 'node.patch', pageId: '../escape', nodeId: 'heading', patch: { text: 'bad' } }] }))
+    assert.throws(() => write.parse({ ...batch, operations: [{ type: 'node.patch', pageId: 'main', nodeId: 'heading', patch: { onClick: 'execute()' } }] }))
+  }
 })
 
-// This patch must remain compatible with already admitted production-main work.
-// A future intentional harness change needs its supported cutover and a new
-// release-specific baseline; never update this hash merely to make CI green.
-test('Slides compatibility fixes retain production-main formal25 harness and tool contracts', () => {
-  const expected = JSON.parse(readFileSync(new URL('../../../perf/issue-683/harness-main-1bd9e539.json', import.meta.url), 'utf8'))
+test('native document and immutable page reads cannot select another tenant or arbitrary file', () => {
+  for (const tools of [design, slides]) {
+    const document = tools.find(tool => tool.action.endsWith('.read_document'))!, page = tools.find(tool => tool.action.endsWith('.read_page'))!
+    assert.equal(document.effect, 'read'); assert.equal(page.effect, 'read')
+    assert.deepEqual(document.parse({}), {})
+    assert.deepEqual(page.parse({ pageId: 'main', version: 'a'.repeat(64) }), { pageId: 'main', version: 'a'.repeat(64) })
+    assert.throws(() => page.parse({ pageId: 'main', version: 'wrong-version' }))
+    assert.throws(() => page.parse({ path: 'project/canvas.json' }))
+    assert.throws(() => document.parse({ companyId: 'another-tenant' }))
+  }
+})
+
+// Native operation tools intentionally replace the old authoring contract.
+// Keep its receipt unchanged: deploy compares actual image assemblies and
+// drains all nonterminal work before replacing a different pinned harness.
+test('native artifact tools declare a new organization runtime harness and use the enforced cutover boundary', () => {
+  const source = JSON.parse(readFileSync(new URL('../../../perf/issue-683/harness-main-1bd9e539.json', import.meta.url), 'utf8'))
   const actual = assembleHarness(createProductHarness(createProductTools(control), control))
-  assert.equal(releaseVersions.runtime, expected.runtime)
-  assert.equal(actual.context.hash, expected.hash, 'guidance changes require the safe harness cutover; defer them from this patch')
-  assert.deepEqual(actual.context.skills.map(({name,version,hash})=>({name,version,hash})), expected.skills)
-  assert.deepEqual(actual.tools.map(tool=>({action:tool.action,hash:toolContractHash(tool)})), expected.tools)
-  assert.deepEqual(actual.context.presentations.map(({type,version})=>({type,version})), expected.presentations)
+  assert.equal(source.hash, '2cd6afd4037eb4596c6ef9b3ee1fdc6d00540d5fa3e05ee0820ba79f5e92e2cb', 'never rewrite the admitted-work baseline')
+  assert.equal(source.runtime, '3.8.25')
+  assert.equal(releaseVersions.runtime, '4.0.0')
+  assert.equal(actual.context.version, '4.0.0-native-artifacts-1')
+  assert.notEqual(actual.context.hash, source.hash)
+  for (const kind of ['design', 'slides']) for (const method of ['read_document', 'read_page', 'apply_ops']) {
+    const tool = actual.tools.find(tool => tool.action === `${kind}.${method}`)
+    assert.ok(tool, 'shared data operations must be in the actual admitted harness')
+    assert.match(toolContractHash(tool), /^[a-f0-9]{64}$/)
+  }
+  const deploy = readFileSync(new URL('../../../deploy/cli.mjs', import.meta.url), 'utf8')
+  assert.match(deploy, /if \(nativeHarness && stacks\.includes\('app-a'\)\)/)
+  assert.match(deploy, /await convergeHarnessCutover\(/)
+  assert.match(deploy, /barrier: \(\) => harnessTargetEntry\(ssh, images, 'barrier'\)/)
 })

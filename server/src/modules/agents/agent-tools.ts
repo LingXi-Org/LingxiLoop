@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { ActionContext, ToolDefinition } from '@lyyzka/lingxios'
+import type { ActionContext, ToolDefinition } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, authorizeAudienceRead } from '../../agents/tools.js'
 import { ForbiddenError, type PermissionReason } from '../access/public.js'

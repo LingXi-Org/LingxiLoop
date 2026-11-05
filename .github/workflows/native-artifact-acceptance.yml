@@ -1,0 +1,139 @@
+name: Native artifact acceptance
+run-name: Native artifact ${{ inputs.phase }} ${{ github.sha }}
+
+# Explicit branch-only measurement. This workflow never publishes or deploys.
+on:
+  workflow_call:
+    inputs:
+      phase:
+        type: string
+        default: diagnostic
+      diagnostic_run_id:
+        type: string
+        default: ''
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Run one real diagnostic per arm/mode before requesting ten paired samples
+        type: choice
+        options: [diagnostic, paired]
+        default: diagnostic
+      diagnostic_run_id:
+        description: Paired only; successful diagnostic run ID for this exact candidate SHA
+        type: string
+        default: ''
+
+permissions: { contents: read, packages: read, actions: read }
+concurrency:
+  group: native-artifact-acceptance-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    if: github.event_name == 'workflow_dispatch' && github.ref_type == 'branch' && github.ref != 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: native-artifact-local-test-only, POSTGRES_DB: postgres }
+        ports: ['127.0.0.1:25432:5432']
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports: ['127.0.0.1:26379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
+    defaults:
+      run: { working-directory: candidate, shell: bash }
+    env:
+      NATIVE_ARTIFACT_PHASE: ${{ inputs.phase }}
+      NATIVE_ARTIFACT_DIAGNOSTIC_RUN_ID: ${{ inputs.diagnostic_run_id }}
+      NATIVE_ARTIFACT_BASELINE_ROOT: ${{ github.workspace }}/baseline
+      NATIVE_ARTIFACT_PUBLIC: ${{ github.workspace }}/native-artifact-results
+      DOTENV_CONFIG_PATH: /dev/null
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v5
+        with: { path: candidate, persist-credentials: false }
+      - uses: actions/checkout@v5
+        with:
+          path: baseline
+          ref: d004312841026a4d90dfbd9e8292a55cc29a2e95
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with: { node-version: '22' }
+      - name: Configure private acceptance directory
+        run: echo "NATIVE_ARTIFACT_PRIVATE=$RUNNER_TEMP/native-artifact-private" >> "$GITHUB_ENV"
+      - name: Enforce exact-commit diagnostic prerequisite
+        run: node scripts/native-artifact-ci.mjs guard
+        env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+      - name: Verify acceptance orchestration contracts
+        run: node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs
+      - name: Install both immutable dependency graphs
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm --prefix "$NATIVE_ARTIFACT_BASELINE_ROOT" ci --ignore-scripts --no-audit --no-fund
+        env: { NODE_AUTH_TOKEN: '${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}' }
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - name: Install the pinned real browser runner
+        run: |
+          python -m pip install playwright==1.55.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends postgresql-client poppler-utils
+      - name: Build both production applications before any measurements
+        run: |
+          npm --prefix "$NATIVE_ARTIFACT_BASELINE_ROOT" run build:slides-editor
+          npm --prefix "$NATIVE_ARTIFACT_BASELINE_ROOT" run build
+          npm run build
+      - name: Build and start the actual pinned WuKong service
+        run: |
+          mkdir -p "$RUNNER_TEMP/native-artifact-im-context/server/wukongim"
+          cp server/docker/wukongim.Dockerfile "$RUNNER_TEMP/native-artifact-im-context/Dockerfile"
+          cp server/wukongim/wukongim.toml "$RUNNER_TEMP/native-artifact-im-context/server/wukongim/"
+          docker build --target release --build-arg WUKONG_COMMIT=c7f663fa23a4ee2c6f7e08c68423f50f0f6e9c47 -t native-artifact-wukong:acceptance "$RUNNER_TEMP/native-artifact-im-context"
+          docker run --detach --name native-artifact-wukong --hostname wukongim \
+            --publish 127.0.0.1:25001:5001 --publish 127.0.0.1:25200:5200 \
+            --env WK_WEBHOOK_HTTP_ADDR=http://127.0.0.1:1 \
+            native-artifact-wukong:acceptance
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:25001/readyz >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          echo '::error title=Native artifact service failed::phase=wukong-ready; code=SERVICE_TIMEOUT'
+          exit 1
+      - name: Prepare two dedicated databases through formal runtime migrations
+        run: node scripts/native-artifact-ci.mjs bootstrap
+        env: { NODE_AUTH_TOKEN: '${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}' }
+      - name: Start pinned local object storage for actual native image uploads
+        run: |
+          docker run --detach --name native-artifact-minio \
+            --publish 127.0.0.1:29000:9000 \
+            --env MINIO_ROOT_USER=native-artifact-access \
+            --env MINIO_ROOT_PASSWORD=native-artifact-storage-test-only \
+            quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z server /data
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:29000/minio/health/ready >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          echo '::error title=Native artifact service failed::phase=minio-ready; code=SERVICE_TIMEOUT'
+          exit 1
+      - name: Run real authenticated full-application measurement
+        run: node scripts/native-artifact-ci.mjs measure
+      - name: Publish only allowlisted diagnostic evidence
+        if: always()
+        run: node scripts/native-artifact-ci.mjs summarize
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-artifact-${{ inputs.phase }}-${{ github.sha }}
+          path: native-artifact-results/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Remove ephemeral services and private login state
+        if: always()
+        run: |
+          docker rm --force native-artifact-wukong >/dev/null 2>&1 || true
+          docker rm --force native-artifact-minio >/dev/null 2>&1 || true
+          rm -rf "$NATIVE_ARTIFACT_PRIVATE"

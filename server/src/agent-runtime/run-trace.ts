@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import type { RunView } from '@lyyzka/lingxios/ui'
+import type { RunView } from '@lingxi-org/lingxios/ui'
 import { publicText,toolDisplay,toolDisplaySchema,resolveToolDisplay } from '../../../src/lib/runActivity.js'
 import type { RunTrace,TraceSpan,TraceStatus,TraceMoney,TracePricing } from '../../../src/lib/runTrace.js'
 import { traceCostTotals } from '../../../src/lib/traceCost.js'
@@ -40,7 +40,7 @@ function status(lifecycle: RunView['lifecycle']): TraceStatus {
     : lifecycle === 'cancelled' ? 'cancelled' : lifecycle === 'failed' ? 'error' : 'unknown'
 }
 
-export function nativeTraceMatchesState(snapshot: import('@lyyzka/lingxios').RunTraceSnapshot,view: Pick<RunView,'runId'|'fence'|'requestVersion'|'lifecycle'>): boolean {
+export function nativeTraceMatchesState(snapshot: import('@lingxi-org/lingxios').RunTraceSnapshot,view: Pick<RunView,'runId'|'fence'|'requestVersion'|'lifecycle'>): boolean {
   const root = snapshot.spans.find(span=>span.spanId === snapshot.rootSpanId && span.kind === 'agent' && span.runId === view.runId)
   return snapshot.runId === view.runId && snapshot.fence === view.fence && snapshot.requestVersion === view.requestVersion
     && (root?.state === 'failed' ? 'error' : root?.state) === status(view.lifecycle)
@@ -87,7 +87,7 @@ export function buildRunTrace(input: { runId: string; createdAt: string; lifecyc
 }
 
 /** Translate only the public runtime trace; no private events/tables or inferred lineage. */
-export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTraceSnapshot,
+export function buildNativeRunTrace(snapshot: import('@lingxi-org/lingxios').RunTraceSnapshot,
   tools: readonly HarnessToolPart[] = [],llm: readonly PublicLlmTrace[] = []): RunTrace {
   const origin = snapshot.origin
   const relative = (time: number|null) => origin !== null && time !== null && time >= origin ? time-origin : null

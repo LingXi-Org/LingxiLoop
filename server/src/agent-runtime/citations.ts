@@ -1,4 +1,4 @@
-import type { EvidenceItem } from '@lyyzka/lingxios'
+import type { EvidenceItem } from '@lingxi-org/lingxios'
 import { markdownToProseMirrorContent, type ProseMirrorJsonMark, type ProseMirrorJsonNode } from '../modules/documents/markdown.js'
 
 const normalizeLabel = (text: string) => text.replace(/[\s《》〈〉【】[\](),，:：;；。.!！?？]/g, '').toLowerCase()

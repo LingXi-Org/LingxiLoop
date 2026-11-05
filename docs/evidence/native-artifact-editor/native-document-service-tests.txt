@@ -1,0 +1,22 @@
+✔ 50 image and formula pages persist by changed page and reopen at their immutable snapshot (608.155412ms)
+✔ native Slides manifest and page reads are allowed without opening legacy file writes (142.031653ms)
+✔ independent fields merge, same-field conflicts are atomic, and retry receipts are durable (209.466845ms)
+✔ shared undo/redo includes Agent transactions and refuses a stale second client (317.353551ms)
+✔ native files reject old editor publishes and retain tenant scope (93.488804ms)
+✔ the title endpoint adapter keeps the observed version and stable retry payload (212.022699ms)
+✔ legacy conversion projects textual formats but never decodes known binary assets as UTF-8 (1.39951ms)
+✔ stored legacy PNGs convert to immutable original URLs without isolating surrounding text and x-embed content (3726.516082ms)
+✔ old source converts without rewriting originals and retained checkpoints restore through native history (3488.408979ms)
+✔ restoring a historical PNG resolves its exact recorded image without changing the first-conversion originals (2839.750244ms)
+✔ restored legacy embeds retain their checkpoint resources without changing original conversion files (5903.833329ms)
+✔ an Agent legacy source token cannot migrate or overwrite a newer source (3498.618628ms)
+✔ an export can read its pinned embed page after a later Agent edit (140.568645ms)
+✔ unknown schema remains read-only and no operation can silently downgrade it (62.532748ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22401.415184

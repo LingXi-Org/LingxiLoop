@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto'
-import type {MemoryAPI,MemoryIdentity,MemoryScope,MemoryOptions} from '@lyyzka/lingxios'
+import type {MemoryAPI,MemoryIdentity,MemoryScope,MemoryOptions} from '@lingxi-org/lingxios'
 
 const digest=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex')
 function fail(message:string):never{throw new Error(message)}

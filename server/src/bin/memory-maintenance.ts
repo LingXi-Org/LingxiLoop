@@ -1,4 +1,4 @@
-import {readRunReference} from '@lyyzka/lingxios'
+import {readRunReference} from '@lingxi-org/lingxios'
 import {pool,closeDatabasePools} from '../db/pool.js'
 import {redis,sub} from '../redis.js'
 import {lingxiOSControl,stopLingxiOSControl,prepareLingxiOSWorkerContext} from '../agent-runtime/runtime.js'

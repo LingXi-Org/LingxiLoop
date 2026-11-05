@@ -3,10 +3,9 @@
  * Requires a dedicated real Postgres test database and explicit Redis URL.
  * These tests TRUNCATE their database and remain serialized.
  */
-import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runProduct58MigrationTests, runFormal19Product60Tests, runFormal20Product60Tests, runFormal21Product61Tests, runFormal22Product61Tests, runFormal23Product61Tests, runFormal24ProductTests, runTestChild } from './run-historical-migration-tests.mjs'
-import { releaseVersions } from '@lyyzka/lingxios'
+import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runProduct57MigrationTests, runProduct58MigrationTests, runFormal19Product60Tests, runFormal20Product60Tests, runFormal21Product61Tests, runFormal22Product61Tests, runFormal23Product61Tests, runFormal24ProductTests, runFormal25ProductTests, runTestChild } from './run-historical-migration-tests.mjs'
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs'
-import { parseIntegrationArgs, selectIntegrationFiles, integrationOwnerAllowanceMs } from './integration-suite.mjs'
+import { parseIntegrationArgs, selectIntegrationFiles, integrationBudgetMs } from './integration-suite.mjs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 // Load the developer's .env so RESEND_API_KEY / EMAIL_DOMAIN /
@@ -15,6 +14,7 @@ import { dirname, join } from 'node:path'
 // dotenv/config via env.ts, so this is mostly belt-and-braces — the
 // gating checks below need them present in THIS process.
 import 'dotenv/config'
+import { reportIntegrationFailure } from './scripts/integration-diagnostics.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const integrationDir = join(here, 'src/__integration__')
@@ -87,32 +87,34 @@ if (!process.env.AGENT_OS_RESPONSE_POLICY) process.env.AGENT_OS_RESPONSE_POLICY 
 
 // Each file owns a fresh process but shares the dedicated database serially.
 // Report real wall time and propagate every failure, signal and timeout.
+// Validate selectors and test services before loading the runtime or any test.
+const { releaseVersions } = await import('@lingxi-org/lingxios')
 const groups = partitionMigrationTests(selectedFiles)
 const started = performance.now(), records = []
 const liveArtifactQualification = selectedFiles.length === 1 && (process.env.LINGXIOS_LIVE_ARTIFACTS === '1' && selectedFiles[0] === 'runtime-first-action-contracts.test.ts'
   || process.env.LINGXIOS_LIVE_SLIDES === '1' && selectedFiles[0] === 'runtime-slides-generation.test.ts')
-const budgetMs = (liveArtifactQualification ? 600_000 : mode === 'full' ? 1_500_000 : mode === 'selected' ? 360_000 : 180_000)
-  + integrationOwnerAllowanceMs(mode,selectedFiles)
+const budgetMs = integrationBudgetMs(mode, selectedFiles, { liveArtifactQualification })
 let code = 0
 for (const name of groups.current) {
   const remaining = budgetMs - (performance.now() - started)
-  if (remaining <= 0) { console.error(`[integration] ${mode} time budget exhausted before ${name}`); code = 1; break }
+  if (remaining <= 0) { reportIntegrationFailure({ file: name, reason: 'suite_budget', timeoutMs: budgetMs }); code = 1; break }
   const begin = performance.now()
   const fileTimeout = name === 'runtime-first-action-contracts.test.ts' && process.env.LINGXIOS_LIVE_ARTIFACTS === '1'
     || name === 'runtime-slides-generation.test.ts' && process.env.LINGXIOS_LIVE_SLIDES === '1'
     ? 540_000 : mode === 'full' ? 600_000 : 180_000
-  const formal19Source = name === 'runtime-patch60-provenance.test.ts' && ['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24','3.8.25'].includes(String(releaseVersions.runtime))
-  const formal21Source = name === 'runtime-patch61-21-provenance.test.ts' && ['3.8.22','3.8.23','3.8.24','3.8.25'].includes(String(releaseVersions.runtime))
-  const formal20Source = name === 'runtime-patch60-20-provenance.test.ts' && ['3.8.21','3.8.22','3.8.23','3.8.24','3.8.25'].includes(String(releaseVersions.runtime))
-  const formal22Source = name === 'runtime-patch61-22-provenance.test.ts' && ['3.8.23','3.8.24','3.8.25'].includes(String(releaseVersions.runtime))
-  const formal23Source = ['runtime-patch61-23-provenance.test.ts','runtime-patch61-23-from21-provenance.test.ts'].includes(name) && ['3.8.24','3.8.25'].includes(String(releaseVersions.runtime))
-  const formal24Source = ['runtime-patch61-24-provenance.test.ts','case-options-migration.test.ts'].includes(name) && String(releaseVersions.runtime) === '3.8.25'
-  const exitCode = formal24Source ? await runFormal24ProductTests(join(here, '..'), [name]) : formal23Source ? await runFormal23Product61Tests(join(here, '..'), [name]) : formal22Source ? await runFormal22Product61Tests(join(here, '..'), [name]) : formal21Source ? await runFormal21Product61Tests(join(here, '..'), [name]) : formal20Source ? await runFormal20Product60Tests(join(here, '..'), [name]) : formal19Source ? await runFormal19Product60Tests(join(here, '..'), [name]) : await runTestChild([
+  const formal19Source = name === 'runtime-patch60-provenance.test.ts' && ['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24','3.8.25','4.0.0'].includes(String(releaseVersions.runtime))
+  const formal21Source = name === 'runtime-patch61-21-provenance.test.ts' && ['3.8.22','3.8.23','3.8.24','3.8.25','4.0.0'].includes(String(releaseVersions.runtime))
+  const formal20Source = name === 'runtime-patch60-20-provenance.test.ts' && ['3.8.21','3.8.22','3.8.23','3.8.24','3.8.25','4.0.0'].includes(String(releaseVersions.runtime))
+  const formal22Source = name === 'runtime-patch61-22-provenance.test.ts' && ['3.8.23','3.8.24','3.8.25','4.0.0'].includes(String(releaseVersions.runtime))
+  const formal23Source = ['runtime-patch61-23-provenance.test.ts','runtime-patch61-23-from21-provenance.test.ts'].includes(name) && ['3.8.24','3.8.25','4.0.0'].includes(String(releaseVersions.runtime))
+  const formal24Source = ['runtime-patch61-24-provenance.test.ts','case-options-migration.test.ts'].includes(name) && ['3.8.25','4.0.0'].includes(String(releaseVersions.runtime))
+  const formal25Source = name === 'runtime-patch62-25-provenance.test.ts' && String(releaseVersions.runtime) === '4.0.0'
+  const exitCode = formal25Source ? await runFormal25ProductTests(join(here, '..'), [name]) : formal24Source ? await runFormal24ProductTests(join(here, '..'), [name]) : formal23Source ? await runFormal23Product61Tests(join(here, '..'), [name]) : formal22Source ? await runFormal22Product61Tests(join(here, '..'), [name]) : formal21Source ? await runFormal21Product61Tests(join(here, '..'), [name]) : formal20Source ? await runFormal20Product60Tests(join(here, '..'), [name]) : formal19Source ? await runFormal19Product60Tests(join(here, '..'), [name]) : await runTestChild([
     '--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-reporter=tap',
     '--test-concurrency=1', '--test-force-exit', join(integrationDir, name),
   ], { timeout: Math.max(1, Math.floor(Math.min(remaining, fileTimeout))) })
   const durationMs = Math.round(performance.now() - begin)
-  records.push({ files: [name], runtime: formal24Source ? '3.8.24' : formal23Source ? '3.8.23' : formal22Source ? '3.8.22' : formal21Source ? '3.8.21' : formal20Source ? '3.8.20' : formal19Source ? '3.8.19' : 'current', durationMs, exitCode })
+  records.push({ files: [name], runtime: formal25Source ? '3.8.25' : formal24Source ? '3.8.24' : formal23Source ? '3.8.23' : formal22Source ? '3.8.22' : formal21Source ? '3.8.21' : formal20Source ? '3.8.20' : formal19Source ? '3.8.19' : 'current', durationMs, exitCode })
   console.log(`[integration file] ${name} duration_ms=${durationMs} exit=${exitCode}`)
   if (exitCode !== 0) { code = exitCode; break }
 }
@@ -145,7 +147,7 @@ if (!code && groups.historical.length) {
   records.push({ files: groups.historical, runtime: '3.8.2', durationMs: Math.round(performance.now() - begin), exitCode: code })
 }
 const report = {
-  mode, availableFiles: availableFiles.length, selectedFiles,
+  mode, availableFiles: availableFiles.length, selectedFiles, budgetMs,
   executedFiles: records.flatMap(record => record.files), records,
   durationMs: Math.round(performance.now() - started), exitCode: code,
 }

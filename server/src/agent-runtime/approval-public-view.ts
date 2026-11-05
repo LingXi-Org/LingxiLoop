@@ -1,4 +1,4 @@
-import type { ApprovalSnapshot } from '@lyyzka/lingxios'
+import type { ApprovalSnapshot } from '@lingxi-org/lingxios'
 import { publicText, toolDisplay } from '../../../src/lib/runActivity.js'
 
 const object = (value: unknown): Record<string, unknown> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}

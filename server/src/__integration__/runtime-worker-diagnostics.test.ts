@@ -9,8 +9,8 @@ import { after, before, test } from 'node:test'
 import {
   createLingxiOS, createLogger, DefaultRuntimePolicy, releaseVersions,
   type PromptContext, type RunIdentity, type RuntimeFailureDiagnostic, type TurnContext, type WorkItem,
-} from '@lyyzka/lingxios'
-import { createWorker, type HostPort, type ModelDriver } from '@lyyzka/lingxios/worker'
+} from '@lingxi-org/lingxios'
+import { createWorker, type HostPort, type ModelDriver } from '@lingxi-org/lingxios/worker'
 import express from 'express'
 import type { AuthedRequest } from '../auth.js'
 import { bindProductRun } from '../agent-runtime/identity.js'

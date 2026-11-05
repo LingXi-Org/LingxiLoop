@@ -1,4 +1,4 @@
-import { releaseVersions } from '@lyyzka/lingxios'
+import { releaseVersions } from '@lingxi-org/lingxios'
 import { readFile } from 'node:fs/promises'
 
 // Published3.6 native14 bytes are unchanged by the reviewed3.7 reader,3.8 trace and3.8.2 repair releases.
@@ -11,11 +11,11 @@ interface PackageFile {
 
 /** Read-only proof, shared by startup, empty initialization and the explicit CAS. */
 export function assertLockedRuntimePackage(files:PackageFile[],runtime:string=releaseVersions.runtime){
-  const [lock,serverLock,manifest,serverManifest]=files,key='@lyyzka/lingxios'
+  const [lock,serverLock,manifest,serverManifest]=files,key=runtime==='4.0.0'?'@lingxi-org/lingxios':'@lyyzka/lingxios'
   const p=lock?.packages?.['node_modules/'+key],s=serverLock?.packages?.['node_modules/'+key]
   if(![manifest,serverManifest,lock?.packages?.[''],serverLock?.packages?.['']].every(v=>v?.dependencies?.[key]===runtime)
     ||p?.version!==runtime||s?.version!==runtime||p.integrity!==s.integrity||p.resolved!==s.resolved
-    ||!/^sha512-[\w+/]+={0,2}$/.test(p.integrity??'')
+    ||!(runtime==='4.0.0'?p.integrity==='sha1-iui7Npfsd+TwQUlFGjlctX2e3bg=':/^sha512-[\w+/]+={0,2}$/.test(p.integrity??''))
     ||!p.resolved?.startsWith(`https://npm.pkg.github.com/download/${key}/${runtime}/`)){
     throw new Error('exact formal runtime package and matching root/server manifests/locks required')
   }
@@ -40,6 +40,7 @@ export function assertRetirementRuntimeVersion(runtime:string):void {
 
 /** Full54 current execution uses the exact installed/locked package, not a historical migration version. */
 export function currentPublicTextVersion(runtime:string):2|3 {
+  if(runtime==='4.0.0')return 3
   const patch=/^3\.8\.(0|[1-9]\d*)$/.exec(runtime)
   if(!patch||!Number.isSafeInteger(Number(patch[1]))||Number(patch[1])<2)throw new Error('full54 requires the reviewed3.8 runtime patch family')
   return Number(patch[1])>=7?3:2

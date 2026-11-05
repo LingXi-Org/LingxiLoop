@@ -1,6 +1,6 @@
 
 import { http } from '@/api/core/http'
-import type { HarnessContext } from '@lyyzka/lingxios'
+import type { HarnessContext } from '@lingxi-org/lingxios'
 import type {
   AgentInput,
   ApiAutonomy,

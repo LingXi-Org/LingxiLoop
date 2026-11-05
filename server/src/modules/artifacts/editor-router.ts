@@ -1,10 +1,6 @@
 import { createHash } from 'node:crypto'
-import { lstat, readFile, realpath } from 'node:fs/promises'
-import { extname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { Router, type Request, type Response } from 'express'
 import { pool } from '../../db/pool.js'
-import { env } from '../../env.js'
 import { permissionService } from '../access/public.js'
 import { storage } from '../../storage.js'
 import { CommentsError, readEdit, readNewThread, readReply, readStatus } from './comments.js'
@@ -16,51 +12,21 @@ import { readGrant, type EditorGrant } from './grants.js'
 import { ARTIFACT_KIND_DEFINITIONS, artifactKind, type ArtifactKindDefinition } from './kinds.js'
 import { blobFile, contentTypeOf, isWireEntry, listing, putBlob, readProjectFile, type WireEntry } from './store.js'
 import { availableAgents } from './repository.js'
-import { EDITOR_DOWNLOAD_SCRIPT } from './editor-downloads.js'
-import { readEditorPreloads, retainedEditorAsset, sendEditorAsset } from './editor-static.js'
-import { designPageAssets } from './design-page.js'
-import { slidesPageAssets } from './slides-page.js'
 import { slideWorkspaceConversation } from './slides-workspace.js'
+import { ensureNativeDocument, readNativeDocument, readNativeOriginal, readNativeOriginalResource, readNativePage } from './native-document.js'
+import { withTransaction } from '../../db/transaction.js'
 
 // Ported from baoyu-design server.mjs `startServer`/`route`: the same routes under
 // /artifact-editor/<kind>/<grant>/, with the folder replaced by the artifact store,
 // the loopback grant by a signed grant and fs.watch by artifact events.
 const ROUTES = { listing: '_files.json', publish: '__deck/publish', assets: '__deck/assets', events: '__deck/events', session: '__deck/session' }
 const COMMENTS_ROUTE = '__comments'
-const SLIDES_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/slides-editor/', import.meta.url))
-const DESIGN_EDITOR_ROOT = fileURLToPath(new URL('../../../assets/design-editor/', import.meta.url))
 const BLOB_PATH = /^_blob\/([0-9a-f]{32})$/
 const DATA_CSP = "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:"
 const MAX_PUBLISH_BYTES = 64 * 1024 * 1024
 const MAX_COMMENT_BYTES = 256 * 1024
 const SSE_KEEPALIVE_MS = 25e3
-const STATIC_TYPES: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png',
-  '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.wasm': 'application/wasm', '.map': 'application/json; charset=utf-8',
-}
-
 class TooLarge extends Error {}
-
-/** Upstream's page policy, plus `sandbox`: the page has an opaque origin even when opened directly. */
-function pageCsp(scriptSrc: string, designAssets = '') {
-  const fonts = 'https://fonts.googleapis.com https://fonts.gstatic.com'
-  return [
-    'sandbox allow-scripts allow-downloads allow-popups allow-modals',
-    "default-src 'self'",
-    `${scriptSrc} ${designAssets}`.trim(),
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${designAssets}`.trim(),
-    `font-src 'self' data: https://fonts.gstatic.com ${designAssets}`.trim(),
-    "img-src 'self' data: blob:",
-    "media-src 'self' blob:",
-    "worker-src 'self' blob:",
-    `connect-src 'self' data: blob: ${fonts} ${designAssets}`.trim(),
-    "frame-src 'self' blob: data:",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'none'",
-  ].join('; ')
-}
 
 function sendJson(response: Response, status: number, body: unknown) {
   response.status(status).set({ 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }).json(body)
@@ -139,52 +105,6 @@ async function agentPresence(session: EditorSession) {
 async function commentsSnapshot(session: EditorSession) {
   const { doc } = await listComments(session.grant.companyId, session.grant.artifactId, true)
   return { threads: doc.threads, agent: await agentPresence(session), me: { name: session.userName } }
-}
-
-async function serveEditor(request: Request, response: Response, definition: ArtifactKindDefinition, rest: string, shared = false) {
-  const editorDir = definition.kind === 'slides' ? SLIDES_EDITOR_ROOT : DESIGN_EDITOR_ROOT
-  const parts = rest === '' ? ['index.html'] : rest.split('/')
-  const invalid = parts.some(p => p === '' || p === '.' || p === '..' || p.startsWith('.') || p.includes('\\')) || parts[0] === 'node'
-  const realDist = invalid ? null : await realpath(editorDir).catch(() => null)
-  let file = realDist === null ? null : join(realDist, ...parts)
-  if (shared && parts.length === 2 && parts[0] === 'assets' && (file === null || await realpath(file).catch(() => null) !== file)) {
-    file = await retainedEditorAsset(definition.kind, parts[1])
-  }
-  const real = file === null ? null : await realpath(file).catch(() => null)
-  const info = real === null ? null : await lstat(real).catch(() => null)
-  if (file === null || real !== file || !info?.isFile()) {
-    response.status(404).set('Cache-Control', 'no-store').end()
-    return
-  }
-  const ext = extname(file).toLowerCase()
-  const type = STATIC_TYPES[ext] ?? 'application/octet-stream'
-  if (ext === '.html') {
-    const bytes = await readFile(file)
-    const page = (definition.kind === 'design' ? designPageAssets : slidesPageAssets)(bytes.toString('utf8'), env.INVITE_BASE_URL)
-    const html = page.html.replace('</head>', `<script>${EDITOR_DOWNLOAD_SCRIPT}</script></head>`)
-    response.status(200).set({ 'Content-Type': type, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff',
-      'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': pageCsp(definition.pageScriptSrc(html), page.source) })
-    response.end(request.method === 'HEAD' ? undefined : html)
-    return
-  }
-  // Precompressed sidecars avoid spending request CPU on immutable assets.
-  if (['.js', '.css'].includes(ext) && (parts[0] === 'assets' || definition.kind === 'design' && parts[0] === 'artifact-type')) {
-    await sendEditorAsset(request, response, file, type, parts[0] === 'assets'
-      || definition.kind === 'design' && /^dc-runtime-[a-f0-9]{64}\.js$/.test(parts[1] ?? ''), shared ? 'public' : 'private')
-    return
-  }
-  response.status(200).set({ 'Content-Type': type, 'X-Content-Type-Options': 'nosniff',
-    'Cache-Control': parts[0] === 'assets' ? `${shared ? 'public' : 'private'}, max-age=31536000, immutable` : 'no-cache' })
-  response.end(request.method === 'HEAD' ? undefined : await readFile(file))
-}
-
-let preloads: Promise<Record<'design' | 'slides', string[]>> | undefined
-function editorPreloads() {
-  const origin = new URL(env.INVITE_BASE_URL).origin
-  preloads ??= Promise.all([readEditorPreloads(DESIGN_EDITOR_ROOT, 'design', origin), readEditorPreloads(SLIDES_EDITOR_ROOT, 'slides', origin)])
-    .then(([design, slides]) => ({ design, slides }))
-  preloads.catch(() => { preloads = undefined })
-  return preloads
 }
 
 async function serveBlob(request: Request, response: Response, id: string, artifactId?: string) {
@@ -376,6 +296,58 @@ async function route(request: Request, response: Response, session: EditorSessio
     return sendJson(response, 200, { canEdit })
   }
   if (rest === ROUTES.events) return events(request, response, session)
+  if (rest === 'native/runtime.js') {
+    const { nativeEmbedRuntime } = await import('./native-embed-source.js')
+    response.set({ 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'private, max-age=3600', 'X-Content-Type-Options': 'nosniff' }).end(await nativeEmbedRuntime())
+    return
+  }
+  const nativeEmbed = /^native\/embeds\/([a-zA-Z0-9_-]{1,128})\/([a-zA-Z0-9_-]{1,128})$/.exec(rest)
+  if (nativeEmbed) {
+    const pageHash = typeof request.query.pageHash === 'string' ? request.query.pageHash : undefined
+    let page = await readNativePage(pool, artifactId, nativeEmbed[1], pageHash)
+    let original = (await readNativeDocument(pool, artifactId))?.original
+    if (!page && !pageHash) {
+      const converted = await ensureNativeDocument({ db: pool, transaction: run => withTransaction(pool, run) }, { artifactId, companyId, actorId: userId, write: false })
+      page = converted.document.pages[nativeEmbed[1]] ?? null
+      original = converted.original
+    }
+    const embed = page?.nodes[nativeEmbed[2]]?.embed
+    if (!embed) { response.sendStatus(404); return }
+    const hash = createHash('sha256').update(embed.source).digest('hex')
+    if (request.query.sha256 !== hash) { response.status(409).end('The embedded content changed. Refresh the page.'); return }
+    const nonce = typeof request.query.nonce === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(request.query.nonce) ? request.query.nonce : session.session
+    const runtimeUrl = `${request.baseUrl}${request.path.slice(0, request.path.indexOf('/native/'))}/native/runtime.js`
+    const { renderNativeEmbedSource } = await import('./native-embed-source.js')
+    const originalDirectory = embed.originalPath?.includes('/') ? embed.originalPath.slice(0, embed.originalPath.lastIndexOf('/') + 1) : ''
+    const resourceVersion = embed.resourceVersion ?? original?.version
+    const resourceBaseUrl = resourceVersion && embed.originalPath ? `${request.baseUrl}${request.path.slice(0, request.path.indexOf('/native/'))}/native/original-resources/${resourceVersion}/${originalDirectory}` : undefined
+    const html = await renderNativeEmbedSource(embed.source, embed.format, { runtimeUrl, nonce, ...(resourceBaseUrl ? { resourceBaseUrl } : {}) })
+    response.set({ 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' data: blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'" }).end(method === 'HEAD' ? undefined : html)
+    return
+  }
+  const nativeAsset = /^native\/assets\/([a-f0-9]{32})$/.exec(rest)
+  if (nativeAsset) return serveBlob(request, response, nativeAsset[1], artifactId)
+  const nativeOriginal = /^native\/originals\/([a-f0-9]{64})\/(.+)$/.exec(rest)
+  if (nativeOriginal) {
+    const original = await readNativeOriginal(pool, artifactId, nativeOriginal[1], nativeOriginal[2])
+    if (!original) { response.sendStatus(404); return }
+    response.set({ 'Content-Type': original.contentType, 'Content-Security-Policy': DATA_CSP, 'Cache-Control': 'private, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' }).end(method === 'HEAD' ? undefined : original.bytes)
+    return
+  }
+  const originalResource = /^native\/original-resources\/(local-[a-f0-9]{16})\/(.+)$/.exec(rest)
+  if (originalResource) {
+    const resource = await readNativeOriginalResource(pool, artifactId, originalResource[1], originalResource[2])
+    if (!resource) { response.sendStatus(404); return }
+    if (request.query.component === '1' && originalResource[2].endsWith('.dc.html')) {
+      const { renderNativeDcModule } = await import('./native-embed-source.js')
+      const module = await renderNativeDcModule(resource.bytes.toString('utf8'), `${request.baseUrl}${request.path}`)
+      response.set({ 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'private, max-age=3600', 'X-Content-Type-Options': 'nosniff' }).end(method === 'HEAD' ? undefined : module)
+      return
+    }
+    response.set({ 'Content-Type': resource.contentType, 'Content-Security-Policy': DATA_CSP, 'Cache-Control': 'private, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' }).end(method === 'HEAD' ? undefined : resource.bytes)
+    return
+  }
   if (rest.startsWith('project/')) {
     const bytes = await readProjectFile(pool, session.definition, artifactId, rest)
     if (bytes === null) {
@@ -388,7 +360,7 @@ async function route(request: Request, response: Response, session: EditorSessio
   }
   const blob = BLOB_PATH.exec(rest)
   if (blob) return serveBlob(request, response, blob[1], artifactId)
-  return serveEditor(request, response, session.definition, rest)
+  return sendJson(response, 410, { code: 'editor_retired', message: 'Open this document in the current Design or Slides workspace. Your saved files are preserved.' })
 }
 
 async function guard(response: Response, work: () => Promise<unknown>) {
@@ -415,22 +387,16 @@ artifactEditorRouter.use((request, response, next) => {
   next()
 })
 
-// Public, content-hashed application assets can be reused across grants/decks.
-// Document files, uploads and editor pages still require their existing grants.
-artifactEditorRouter.get(/^\/slides-assets\/([A-Za-z0-9_-]+\.(?:js|css|woff2))$/, (request, response) => {
-  const name = request.path.slice('/slides-assets/'.length)
-  void guard(response, () => serveEditor(request, response, ARTIFACT_KIND_DEFINITIONS.slides, `assets/${name}`, true))
-})
-artifactEditorRouter.get(/^\/design-assets\/(design-[a-f0-9]{64}\.(?:js|css|woff2))$/, (request, response) => {
-  const name = request.path.slice('/design-assets/'.length)
-  void guard(response, () => serveEditor(request, response, ARTIFACT_KIND_DEFINITIONS.design, `assets/${name}`, true))
-})
-// The application warms these before an editor opens, so opening finds them cached.
-artifactEditorRouter.get('/preload.json', (_request, response) => {
+// Only the small isolated-content runtime is public. The retired editor bundles are never served.
+artifactEditorRouter.get('/native-embed-runtime.js', (request, response) => {
   void guard(response, async () => {
-    response.status(200).set({ 'Cache-Control': 'public, max-age=300', 'X-Content-Type-Options': 'nosniff' }).json(await editorPreloads())
+    const { nativeEmbedRuntime } = await import('./native-embed-source.js')
+    const runtime = await nativeEmbedRuntime()
+    response.set({ 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=3600', 'X-Content-Type-Options': 'nosniff' })
+      .end(request.method === 'HEAD' ? undefined : runtime)
   })
 })
+artifactEditorRouter.get('/preload.json', (_request, response) => sendJson(response, 200, { design: [], slides: [] }))
 
 artifactEditorRouter.all(/^\/([a-z-]+)\/([^/]+)(\/.*)?$/, (request, response) => {
   const match = /^\/([a-z-]+)\/([^/]+)(\/.*)?$/.exec(request.path)!

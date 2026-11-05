@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { RunTraceSnapshot, RunTraceSpan } from '@lyyzka/lingxios'
+import type { RunTraceSnapshot, RunTraceSpan } from '@lingxi-org/lingxios'
 import { projectActivityTasks } from '../agent-runtime/activity-tasks.js'
 
 // Failure model: issue-304/CONTRACT-FAILURE-MODEL.md case 6. Do not derive tasks

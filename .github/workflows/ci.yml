@@ -1,4 +1,5 @@
 name: LingxiLoop CI
+run-name: ${{ inputs.scope == 'native-artifact-diagnostic' && format('Native artifact diagnostic {0}', github.sha) || inputs.scope == 'native-artifact-paired' && format('Native artifact paired {0}', github.sha) || github.workflow }}
 
 on:
   pull_request:
@@ -11,11 +12,15 @@ on:
         description: Component to verify, or run deep integration checks
         required: true
         type: choice
-        options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release, deep-integration]
+        options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release, deep-integration, native-artifact-diagnostic, native-artifact-paired]
+      diagnostic_run_id:
+        description: Native paired acceptance only; successful diagnostic run for this exact SHA
+        type: string
+        default: ''
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ${{ startsWith(inputs.scope, 'native-artifact-') && format('native-artifact-entry-{0}', github.ref) || format('ci-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(inputs.scope, 'native-artifact-') }}
 
 permissions:
   actions: read
@@ -24,12 +29,21 @@ permissions:
   pull-requests: read
 
 jobs:
+  native-artifact-acceptance:
+    if: github.event_name == 'workflow_dispatch' && github.ref_type == 'branch' && github.ref != 'refs/heads/main' && startsWith(inputs.scope, 'native-artifact-')
+    uses: ./.github/workflows/native-artifact-acceptance.yml
+    with:
+      phase: ${{ inputs.scope == 'native-artifact-paired' && 'paired' || 'diagnostic' }}
+      diagnostic_run_id: ${{ inputs.diagnostic_run_id }}
+    secrets: inherit
   changes:
+    if: github.event_name != 'workflow_dispatch' || !startsWith(inputs.scope, 'native-artifact-')
     runs-on: ubuntu-latest
     outputs:
       admin_build: ${{ steps.scope.outputs.admin_build }}
       integration_files: ${{ steps.scope.outputs.integration_files }}
       integration_mode: ${{ steps.scope.outputs.integration_mode }}
+      integration_timeout_minutes: ${{ steps.scope.outputs.integration_timeout_minutes }}
       deep_integration: ${{ steps.scope.outputs.deep_integration }}
       open_notebook: ${{ steps.scope.outputs.open_notebook }}
       deployment: ${{ steps.scope.outputs.deployment }}
@@ -75,7 +89,9 @@ jobs:
               - 'shared/slides-editor-context.ts'
               - 'shared/retired-visualize.ts'
               - 'shared/assistant-directive-parser.ts'
-              - 'shared/artifact-math.ts'
+              - 'shared/artifact-document.ts'
+              - 'shared/artifact-operations.ts'
+              - 'shared/artifact-legacy.ts'
               - 'shared/artifact-math-source.ts'
               - 'shared/design-flow-size.ts'
               - 'shared/upload-mime.ts'
@@ -83,16 +99,10 @@ jobs:
               - 'third_party/assistant-ui/streaming-text/**'
               - 'third_party/assistant-ui-elements/**'
               - 'third_party/react-chat-elements/reply-message/**'
-              - 'scripts/build-artifact-math.mjs'
-              - 'scripts/build-design-editor.mjs'
-              - 'scripts/build-design-layout.mjs'
-              - 'scripts/design-flow-size.test.mjs'
-              - 'scripts/design-editor.test.mjs'
-              - 'scripts/artifact-math.test.mjs'
-              - 'scripts/build-slides-editor.mjs'
               - 'src/**'
               - 'public/**'
               - 'index.html'
+              - 'artifact-export.html'
               - 'vite.config.ts'
               - 'tsconfig.json'
               - 'tsconfig.node.json'
@@ -132,23 +142,22 @@ jobs:
               - '!server/src/__integration__/**'
             # Include shared sources loaded by the server runtime and copied by its image.
             server_source:
+              - 'shared/**'
+              - '!shared/**/*.test.ts'
               - 'src/styles/fonts.css'
               - 'public/fonts/mingli/**'
               - 'shared/artifact-editor-origin.ts'
               - 'shared/slides-editor-context.ts'
               - 'shared/retired-visualize.ts'
               - 'shared/assistant-directive-parser.ts'
-              - 'shared/artifact-math.ts'
+              - 'shared/artifact-document.ts'
+              - 'shared/artifact-operations.ts'
+              - 'shared/artifact-legacy.ts'
               - 'shared/artifact-math-source.ts'
               - 'shared/design-flow-size.ts'
               - 'shared/upload-mime.ts'
               - 'third_party/baoyu-design/**'
               - 'third_party/visualize-compat/**'
-              - 'scripts/build-artifact-math.mjs'
-              - 'scripts/artifact-math.test.mjs'
-              - 'scripts/build-slides-editor.mjs'
-              - 'scripts/build-design-editor.mjs'
-              - 'scripts/build-design-layout.mjs'
               - 'server/.npmrc'
               - 'server/scripts/**'
               - 'server/src/**'
@@ -180,10 +189,8 @@ jobs:
             integration_tests:
               - 'server/src/__integration__/*.test.ts'
             integration_runner:
-              - 'scripts/design-flow-size.test.mjs'
-              - 'scripts/slides-editor.test.mjs'
-              - 'scripts/design-editor.test.mjs'
-              - 'scripts/build-design-editor.mjs'
+              - 'shared/artifact-*.test.ts'
+              - 'scripts/native-artifact-retirement.test.mjs'
               - 'server/run-integration-tests.mjs'
               - 'server/integration-suite.mjs'
               - 'server/run-historical-migration-tests.mjs'
@@ -302,6 +309,9 @@ jobs:
           cache-dependency-path: ${{ format('server/build/{0}/package-lock.json', matrix.component == 'web' && 'web-ci' || matrix.component == 'server' && 'server-ci' || matrix.component == 'release' && 'deploy-contract' || matrix.component) }}
       # Version synchronization reads JSON with Node builtins; it needs no packages.
       - if: matrix.component != 'open-notebook' && matrix.component != 'release'
+        name: Annotate compiler and test failures
+        run: echo "::add-matcher::.github/matchers/native-checks.json"
+      - if: matrix.component != 'open-notebook' && matrix.component != 'release'
         run: |
           node server/scripts/scoped-dependencies.mjs
           node --test server/scripts/scoped-dependencies.test.mjs
@@ -371,8 +381,8 @@ jobs:
           node --test scripts/ci-scope.test.mjs scripts/checkout-bytes.test.mjs scripts/production-rag-contract.test.mjs scripts/production-model-contract.test.mjs workers/web-static/src/index.test.mjs
           node --experimental-test-module-mocks --test scripts/knowledge-shadow-pg-*.test.mjs
           node --check deploy/cli.mjs
-          node --test deploy/image-cleanup.test.mjs deploy/retain-editor-assets.test.mjs
-          node --test deploy/runtime-patch.test.mjs deploy/knowledge-observation.test.mjs deploy/worker-capacity-observe.test.mjs
+          node --test deploy/image-cleanup.test.mjs scripts/native-artifact-retirement.test.mjs
+          node --test deploy/runtime-patch.test.mjs deploy/harness-cutover.test.mjs deploy/knowledge-observation.test.mjs deploy/worker-capacity-observe.test.mjs
           python3 deploy/notebook-observation.test.py
           node scripts/image-tag.mjs env
       - if: matrix.component == 'release'
@@ -382,7 +392,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.integration == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ needs.changes.outputs.deep_integration == 'true' && 30 || 12 }}
+    timeout-minutes: ${{ fromJSON(needs.changes.outputs.integration_timeout_minutes) }}
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -415,8 +425,8 @@ jobs:
       - run: node server/scripts/scoped-dependencies.mjs && node server/scripts/install-scoped-dependencies.mjs integration
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-      # Editor tests build and verify both retained editors before integration.
-      - run: node --test scripts/slides-editor.test.mjs scripts/artifact-math.test.mjs scripts/design-editor.test.mjs
+      # Native documents retain design resources without shipping retired editors.
+      - run: node --test scripts/native-artifact-retirement.test.mjs
       - run: node --test server/scripts/bootstrap-runtime-patch-test-db.test.mjs && node server/scripts/bootstrap-runtime-patch-test-db.mjs
         env:
           NODE_ENV: test
@@ -433,6 +443,8 @@ jobs:
           if-no-files-found: error
       - if: needs.changes.outputs.server != 'true'
         run: node --test scripts/test-selectors.test.mjs
+      - name: Annotate integration test failures
+        run: echo "::add-matcher::.github/matchers/native-checks.json"
       - run: npm run test:integration
         env:
           INTEGRATION_TEST_MODE: ${{ needs.changes.outputs.integration_mode }}

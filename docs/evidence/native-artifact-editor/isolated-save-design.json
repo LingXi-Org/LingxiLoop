@@ -1,0 +1,15 @@
+{
+  "kind": "isolated-native-editor-save-diagnostic",
+  "mode": "design",
+  "focusedPropertyCtrlS": true,
+  "focusedTableCtrlS": true,
+  "repeatedFocusedNotesSave": true,
+  "dirtyBeforeSubmit": true,
+  "pendingUntilAcknowledged": true,
+  "compositionNotSubmittedByCtrlS": true,
+  "unrelatedAgentStylePreserved": true,
+  "activeRichTextSharedUndoRedo": true,
+  "reloadRetainedAllValues": true,
+  "designBoardCoordinates": true,
+  "consoleOrPageErrors": []
+}

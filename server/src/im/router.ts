@@ -1,6 +1,6 @@
 import { supportsArtifactSource } from '../../../src/lib/artifactSources.js'
 import { assistantRunResponse, readRunProjection } from '../agent-runtime/assistant-transport.js'
-import { NoEffectError } from '@lyyzka/lingxios'
+import { NoEffectError } from '@lingxi-org/lingxios'
 import { memoryIdSchema } from '../../../src/lib/memoryActivity.js'
 import { readMemoryChips, forgetMemoryChip } from '../modules/memory/public.js'
 import { Readable } from 'node:stream'

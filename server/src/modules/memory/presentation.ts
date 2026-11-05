@@ -1,4 +1,4 @@
-import { NoEffectError, type ActionContext, type PresentationDefinition, type createLingxiOS } from '@lyyzka/lingxios'
+import { NoEffectError, type ActionContext, type PresentationDefinition, type createLingxiOS } from '@lingxi-org/lingxios'
 import { z } from 'zod'
 import { memoryIdSchema } from '../../../../src/lib/memoryActivity.js'
 import { authorizeAgent, nativeTool } from '../../agents/tools.js'

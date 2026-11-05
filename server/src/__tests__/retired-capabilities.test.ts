@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { RunVerificationContext } from '@lyyzka/lingxios'
+import type { RunVerificationContext } from '@lingxi-org/lingxios'
 import { resolveRetiredDeliveries, verifyRetiredDeliveries, RETIRED_VISUALIZE_NOTICE } from '../agent-runtime/retired-capabilities.js'
 
 function context(): RunVerificationContext {

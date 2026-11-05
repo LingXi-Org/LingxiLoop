@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 import { AssistantTransportEncoder, AssistantStream, type AssistantStreamChunk } from 'assistant-stream'
 import { createNativeMessage } from '@/lib/nativeMessage'
-import { createRunView } from '@lyyzka/lingxios/ui'
+import { createRunView } from '@lingxi-org/lingxios/ui'
 import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 
 // Failure cases: tenant/project headers missing, native decoder bypassed, no DONE,

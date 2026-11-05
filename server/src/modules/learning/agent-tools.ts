@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { homeworkLearnerTools } from './homework-tools.js'
-import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lingxi-org/lingxios'
 import { productConversationId } from '../../agent-runtime/identity.js'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, compareResource, audienceHumanIds } from '../../agents/tools.js'

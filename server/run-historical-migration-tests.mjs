@@ -6,7 +6,9 @@ import {tmpdir} from 'node:os'
 import {basename,isAbsolute,join,sep} from 'node:path'
 import {execFile,spawn} from 'node:child_process'
 import {promisify} from 'node:util'
-import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal22TestFixture,withFormal23TestFixture,withFormal24TestFixture} from './scripts/formal19-test-fixture.mjs'
+import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal22TestFixture,withFormal23TestFixture,withFormal24TestFixture,withFormal25TestFixture,useHistoricalRuntimeScope} from './scripts/formal19-test-fixture.mjs'
+import {provisionHistoricalDependencies} from './scripts/historical-runtime-dependencies.mjs'
+import {reportIntegrationFailure} from './scripts/integration-diagnostics.mjs'
 const execute=promisify(execFile)
 const PATCH54=new Set(['runtime-patch-provenance.test.ts'])
 const PATCH57=new Set(['runtime-patch57-provenance.test.ts'])
@@ -37,6 +39,7 @@ async function copyProductFixtureSource(root,fixture,productVersion){
  const prefix=names.slice(0,productVersion),allowed=new Set(prefix)
  await cp(join(root,'server/src'),join(fixture,'server/src'),{recursive:true,filter:path=>!path.startsWith(directory+sep)||allowed.has(basename(path))})
  await cp(join(root,'src'),join(fixture,'src'),{recursive:true})
+ await cp(join(root,'shared'),join(fixture,'shared'),{recursive:true})
  for(const path of ['package.json','package-lock.json','server/package.json','server/package-lock.json'])await cp(join(root,path),join(fixture,path))
  assert.deepEqual((await readdir(join(fixture,'server/src/db/migrations'))).sort(),prefix,`Fixture must contain exactly product${productVersion}`)
  const migrations=await Promise.all(prefix.map(async(name,index)=>{
@@ -82,12 +85,21 @@ export function assertHistoricalArtifact(bytes,record){
  assertHistoricalRecord(record)
  assert.equal('sha512-'+createHash('sha512').update(bytes).digest('base64'),record.integrity,'Historical runtime archive integrity changed')
 }
-export function runTestChild(args,{cwd,env=process.env,timeout=600_000}={}){
+export function runTestChild(args,{cwd,env=process.env,timeout=600_000,onFailure=reportIntegrationFailure}={}){
  return new Promise(resolve=>{
+  const started=performance.now(),file=args.map(value=>basename(value)).find(value=>/^[\w-]+\.test\.ts$/.test(value))
   const child=spawn(process.execPath,args,{cwd,env,stdio:'inherit',timeout,killSignal:'SIGKILL'})
-  child.once('error',()=>resolve(1));child.once('exit',code=>resolve(code??1))
+  let settled=false
+  const finish=(code,signal,failedToSpawn=false)=>{
+   if(settled)return
+   settled=true
+   if(code!==0)onFailure({file,reason:failedToSpawn?'spawn':signal==='SIGKILL'&&performance.now()-started>=timeout?'timeout':signal?'signal':'exit',exitCode:code,signal,timeoutMs:timeout},env.GITHUB_ACTIONS)
+   resolve(code??1)
+  }
+  child.once('error',()=>finish(1,null,true));child.once('exit',(code,signal)=>finish(code,signal))
  })
 }
+
 export async function runFormal19Product60Tests(root,files,env=process.env){
  assertFixtureTarget(files,env,new Set(['runtime-patch60-provenance.test.ts']))
  return withFormal19TestFixture(root,env,async(fixture,sourceEnv)=>{
@@ -136,6 +148,14 @@ export async function runFormal24ProductTests(root,files,env=process.env){
   return runTestChild(['--import','tsx','--experimental-test-module-mocks','--test','--test-reporter=tap','--test-concurrency=1','--test-force-exit',...files.map(file=>join(fixture,'server/src/__integration__',file))],{cwd:fixture,env:sourceEnv})
  })
 }
+export async function runFormal25ProductTests(root,files,env=process.env){
+ assertFixtureTarget(files,env,new Set(['runtime-patch62-25-provenance.test.ts']))
+ return withFormal25TestFixture(root,env,async(fixture,sourceEnv)=>{
+  const proof="import assert from'node:assert/strict';import{releaseVersions}from'@lyyzka/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';assert.equal(releaseVersions.runtime,'3.8.25');assert.equal((await loadLockedRuntimePackage()).runtime,'3.8.25');console.log('[integration source] actual formal25; original24 to25 product62 owning coverage retained')"
+  if(await runTestChild(['--import','tsx','--input-type=module','-e',proof],{cwd:fixture,env:sourceEnv,timeout:30000}))return 1
+  return runTestChild(['--import','tsx','--experimental-test-module-mocks','--test','--test-reporter=tap','--test-concurrency=1','--test-force-exit',...files.map(file=>join(fixture,'server/src/__integration__',file))],{cwd:fixture,env:sourceEnv})
+ })
+}
 export const runProduct54MigrationTests=(root,files,env=process.env)=>runProductMigrationTests(root,files,env,54)
 export const runProduct57MigrationTests=(root,files,env=process.env)=>runProductMigrationTests(root,files,env,57)
 export const runProduct58MigrationTests=(root,files,env=process.env)=>runProductMigrationTests(root,files,env,58)
@@ -148,9 +168,9 @@ async function runProductMigrationTests(root,files,env,productVersion){
   await symlink(join(root,'node_modules'),join(fixture,'node_modules'),'junction')
   // Four actual current manifests/locks are copied verbatim; borrow the exact
   // installed formal package and dependencies read-only, without version edits.
-  const lock=JSON.parse(await readFile(join(root,'server/package-lock.json'),'utf8')).packages['node_modules/@lyyzka/lingxios']
+  const lock=JSON.parse(await readFile(join(root,'server/package-lock.json'),'utf8')).packages['node_modules/@lingxi-org/lingxios']
   assert.ok(lock?.version&&lock.integrity&&lock.resolved,'Current formal runtime lock required')
-  const prove=`import assert from 'node:assert/strict';import{releaseVersions}from'@lyyzka/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';import{loadRuntimePatchInventory}from'./server/src/db/runtime-patch.ts';const locked=await loadLockedRuntimePackage();assert.equal(releaseVersions.runtime,${JSON.stringify(lock.version)});assert.equal(locked.runtime,${JSON.stringify(lock.version)});assert.equal(locked.integrity,${JSON.stringify(lock.integrity)});assert.equal(locked.tarball,${JSON.stringify(lock.resolved)});assert.equal((await loadRuntimePatchInventory(${productVersion})).length,${productVersion});console.log('[integration product${productVersion}] actual formal runtime '+releaseVersions.runtime+'; exact current four manifests/locks; frozen${productVersion} migrations');`
+  const prove=`import assert from 'node:assert/strict';import{releaseVersions}from'@lingxi-org/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';import{loadRuntimePatchInventory}from'./server/src/db/runtime-patch.ts';const locked=await loadLockedRuntimePackage();assert.equal(releaseVersions.runtime,${JSON.stringify(lock.version)});assert.equal(locked.runtime,${JSON.stringify(lock.version)});assert.equal(locked.integrity,${JSON.stringify(lock.integrity)});assert.equal(locked.tarball,${JSON.stringify(lock.resolved)});assert.equal((await loadRuntimePatchInventory(${productVersion})).length,${productVersion});console.log('[integration product${productVersion}] actual formal runtime '+releaseVersions.runtime+'; exact current four manifests/locks; frozen${productVersion} migrations');`
   if(await runTestChild(['--import','tsx','--input-type=module','-e',prove],{cwd:fixture,env,timeout:30_000}))return 1
   if(profile.sourceProductVersion>productVersion){
    const reject=`import assert from 'node:assert/strict';import{loadRuntimePatchInventory}from'./server/src/db/runtime-patch.ts';await assert.rejects(loadRuntimePatchInventory(${productVersion}),/Runtime patch requires complete product${productVersion} inventory/);console.log('[integration product${productVersion}] current product${profile.sourceProductVersion} checkout correctly rejects strict production CAS inventory');`
@@ -190,7 +210,9 @@ export async function runHistoricalMigrationTests(root,files,env=process.env){
   await execute('tar',['-xzf',join(fixture,archive),'-C',packageRoot,'--strip-components=1'],{timeout:30_000})
   const actual=JSON.parse(await readFile(join(packageRoot,'package.json'),'utf8'))
   assert.equal(actual.name,'@lyyzka/lingxios');assert.equal(actual.version,record.version)
+  env.LINGXILOOP_HISTORICAL_DEPENDENCIES_DIR=await provisionHistoricalDependencies(root,fixture,packageRoot,env)
   const projection=await copyHistoricalFixtureSource(root,fixture)
+  await useHistoricalRuntimeScope(fixture)
   console.log(`[integration historical] display fixture source ${projection.sourceCommit}; current migration code and tests retained`)
   const key='@lyyzka/lingxios',manifest={name:'historical-migration-fixture',private:true,type:'module',dependencies:{[key]:record.version}}
   const lock={name:manifest.name,lockfileVersion:3,packages:{'':manifest,['node_modules/'+key]:record}}

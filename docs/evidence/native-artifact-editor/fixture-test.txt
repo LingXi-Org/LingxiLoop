@@ -1,0 +1,11 @@
+✔ 50-page acceptance fixture has distinct decoded images and source formulas on every page in both formats (6388.328268ms)
+✔ all legacy resource references resolve to supplied assets except the documented injected Design runtime marker (13.002973ms)
+✔ isolated source and semantic hash stay fixed across fixture origins and document IDs (4677.441924ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12083.704203

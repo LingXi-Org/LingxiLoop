@@ -4,6 +4,33 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
+import { createHash } from 'node:crypto'
+
+// Inspect the actual final runtime filesystem, not just Docker COPY declarations.
+// The retained resource manifest includes archived rules/templates, but no editor
+// implementation; an extra vendored file or changed resource fails the build.
+const designRoot = 'third_party/baoyu-design'
+const manifestBytes = readFileSync(join(designRoot, 'retained-manifest.json'))
+const manifest = JSON.parse(manifestBytes)
+const retainedFiles = readdirSync(designRoot, { recursive: true, withFileTypes: true })
+  .filter(entry => entry.isFile())
+  .map(entry => join(entry.parentPath, entry.name).slice(designRoot.length + 1))
+  .filter(path => !['README.md', 'retained-manifest.json'].includes(path)).sort()
+assert.deepEqual(retainedFiles, manifest.files.map(file => file.path).sort(), 'Unexpected design runtime payload')
+for (const file of manifest.files) {
+  assert.doesNotMatch(file.path, /(?:^|\/)(?:slides-source|editor|scripts)(?:\/|$)|\.(?:[cm]?js|[jt]sx?|py|sh)$/)
+  const bytes = readFileSync(join(designRoot, file.path))
+  assert.equal(bytes.byteLength, file.bytes, file.path)
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), file.sha256, file.path)
+}
+for (const path of ['shared/artifact-document.ts', 'shared/artifact-operations.ts',
+  'server/src/modules/artifacts/native-document.ts', 'server/src/db/migrations/0063_native_artifact_documents.sql']) {
+  assert.ok(existsSync(path), `Missing native document runtime: ${path}`)
+}
+console.log(JSON.stringify({ nativeArtifactInventory: {
+  retainedResources: retainedFiles.length, retiredEditorImplementations: 0,
+  manifestSha256: createHash('sha256').update(manifestBytes).digest('hex'),
+} }))
 
 // The final stage is Debian/glibc x64. Confirm the native GNU Canvas path
 // still works after the optional musl-only binary has been removed.

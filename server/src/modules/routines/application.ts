@@ -1,6 +1,6 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, readRunReference, type ActionContext, type RunIdentity, type createLingxiOS } from '@lyyzka/lingxios'
+import { NoEffectError, readRunReference, type ActionContext, type RunIdentity, type createLingxiOS } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
 import type { RoutineRow, RoutineRunRow } from './contracts.js'

@@ -13,23 +13,49 @@ export function runtimePatchPlan(read, migrationPaths, { sourceRuntime: selected
   const json = path => JSON.parse(read(path))
   const manifest = json('package.json')
   const paths = migrationPaths.toSorted()
+  const native63 = paths.length === 63
+    && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql'
+    && paths[61] === 'server/src/db/migrations/0062_case_options.sql'
+    && paths[62] === 'server/src/db/migrations/0063_native_artifact_documents.sql'
+  if (native63 && manifest.dependencies?.['@lingxi-org/lingxios'] === '4.0.0') {
+    assert.ok(selectedSource === undefined || selectedSource === '3.8.25', 'organization bridge requires explicit formal3.8.25 source')
+    const key = '@lingxi-org/lingxios', server = json('server/package.json'), lock = json('package-lock.json'), serverLock = json('server/package-lock.json')
+    const pkg = lock.packages?.[`node_modules/${key}`], other = serverLock.packages?.[`node_modules/${key}`]
+    for (const value of [manifest, server, lock.packages?.[''], serverLock.packages?.['']]) {
+      assert.equal(value?.dependencies?.[key], '4.0.0', 'exact organization runtime pin required')
+      assert.equal(value?.dependencies?.[PACKAGE], undefined, 'active package must use the canonical organization scope')
+    }
+    assert.equal(pkg?.version, '4.0.0')
+    assert.equal(pkg?.integrity, 'sha1-iui7Npfsd+TwQUlFGjlctX2e3bg=', 'official published4.0.0 shasum required')
+    assert.equal(pkg?.resolved, 'https://npm.pkg.github.com/download/@lingxi-org/lingxios/4.0.0/8ae8bb3697ec77e4f04149451a395cb57d9eddb8')
+    for (const field of ['version', 'integrity', 'resolved']) assert.equal(other?.[field], pkg?.[field], 'root/server formal package receipts differ')
+    const migrations = paths.slice(0, 62).map((path, index) => {
+      const match = /\/(\d{4})_([a-z0-9_]+)\.sql$/.exec(path)
+      assert.ok(match && Number(match[1]) === index + 1, 'ordered migration inventory required')
+      return { version: index + 1, name: match[2], checksum: hash(read(path)) }
+    })
+    const source = { runtime: '3.8.25', schema: 14, protocol: 11, schemaHash: SCHEMA, productVersion: 62, migrations }
+    const target = { ...source, runtime: '4.0.0', integrity: pkg.integrity, tarball: pkg.resolved }
+    return { source, target, id: hash(JSON.stringify({ source, target })) }
+  }
   const cases62 = paths.length === 62 && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql' && paths[61] === 'server/src/db/migrations/0062_case_options.sql'
   const slides61 = paths.length === 61 && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql'
-  const retirement = [59, 60, 61, 62].includes(paths.length)
+  const retirement = [59, 60, 61, 62, 63].includes(paths.length)
     && paths[58] === 'server/src/db/migrations/0059_retire_presentation_generation.sql'
     && (paths.length === 59 || paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql')
   const targetRuntime = manifest.dependencies?.[PACKAGE]
+  if (native63) throw new Error('product63 requires the canonical organization4.0.0 package and explicit formal25 bridge')
   if (cases62) assert.ok(['3.8.24','3.8.25'].includes(targetRuntime), 'product62 requires exact formal3.8.24 or reviewed formal3.8.25')
   const runtimeOnly62 = cases62 && targetRuntime === '3.8.25'
   const runtimeOnly60 = retirement && paths.length === 60 && ['3.8.19','3.8.20'].includes(targetRuntime)
   const runtimeOnly61 = slides61 && ['3.8.21','3.8.22','3.8.23','3.8.24'].includes(targetRuntime)
   if (slides61) assert.ok(['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(targetRuntime), 'product61 requires exact formal20 or reviewed20 to21 or21 to22 or reviewed21 to23/24 production bridge runtime patch')
-  if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly60 || slides61 || cases62, 'product59 requires a verified exact runtime')
-  if (['3.8.19','3.8.20','3.8.21','3.8.22','3.8.23','3.8.24','3.8.25'].includes(targetRuntime)) assert.ok(runtimeOnly60 || slides61 || cases62, 'unreviewed runtime transition; runtime patch requires installed product60')
+  if (retirement) assert.ok(['3.8.17','3.8.18'].includes(targetRuntime) || runtimeOnly60 || slides61 || cases62 || native63, 'product59 requires a verified exact runtime')
+  if (['3.8.19','3.8.20','3.8.21','3.8.22','3.8.23','3.8.24','3.8.25'].includes(targetRuntime)) assert.ok(runtimeOnly60 || slides61 || cases62 || native63, 'unreviewed runtime transition; runtime patch requires installed product60')
   if (targetRuntime === '3.8.16') return null
   assert.ok(Object.hasOwn(SOURCES, targetRuntime ?? ''), 'unreviewed runtime transition; only current3.8.16 or exact reviewed3.8.17/3.8.18/3.8.19/3.8.20/3.8.21/3.8.22/3.8.23/3.8.24/3.8.25 is supported')
-  const sourceRuntime = selectedSource ?? SOURCES[targetRuntime]
-  assert.ok(reviewedSource(targetRuntime, sourceRuntime), 'unreviewed explicit runtime source')
+  const sourceRuntime = selectedSource ?? (native63 ? targetRuntime : SOURCES[targetRuntime])
+  assert.ok(native63 ? sourceRuntime === targetRuntime : reviewedSource(targetRuntime, sourceRuntime), 'unreviewed explicit runtime source')
   const server = json('server/package.json'), lock = json('package-lock.json'), serverLock = json('server/package-lock.json')
   const pkg = lock.packages?.[`node_modules/${PACKAGE}`], other = serverLock.packages?.[`node_modules/${PACKAGE}`]
   for (const value of [manifest, server, lock.packages?.[''], serverLock.packages?.['']]) assert.equal(value?.dependencies?.[PACKAGE], targetRuntime, 'exact root/server runtime pin required')
@@ -60,6 +86,10 @@ export function runtimePatchPlan(read, migrationPaths, { sourceRuntime: selected
 
 /** The product59 retirement is staged manually after confirmed cleanup. */
 export function assertRetirementReleaseAllowed(paths, command, approval, patch) {
+  if (paths.length === 63 && paths[62] === 'server/src/db/migrations/0063_native_artifact_documents.sql'
+    && patch?.source.runtime === '3.8.25' && patch?.target.runtime === '4.0.0'
+    && [patch.source, patch.target].every(d => d.productVersion === 62 && d.schema === 14 && d.protocol === 11 && d.schemaHash === SCHEMA && d.migrations.length === 62)
+    && JSON.stringify(patch.source.migrations) === JSON.stringify(patch.target.migrations)) return
   const cases62 = patch === null && paths.length === 62
     && paths[59] === 'server/src/db/migrations/0060_native_artifacts.sql'
     && paths[60] === 'server/src/db/migrations/0061_slides_workspaces.sql'

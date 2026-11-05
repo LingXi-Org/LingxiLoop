@@ -1,4 +1,4 @@
-import type { TurnContext } from '@lyyzka/lingxios'
+import type { TurnContext } from '@lingxi-org/lingxios'
 import { maskNonMentionText, scanMentions, type MentionTarget } from '../mentions.js'
 
 /** A public, explicit assignment contract. Ordinary mentions are presentation only.

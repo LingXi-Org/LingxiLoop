@@ -1,0 +1,212 @@
+{
+  "kind": "isolated-native-editor-ui-diagnostic",
+  "date": "2026-11-05",
+  "browser": "Chromium 154.0.8037.57 built on Debian GNU/Linux 13 (trixie)",
+  "scope": {
+    "react": "StrictMode, real NativeEditor and Worker modules",
+    "input": "Playwright trusted pointer/keyboard events; CDP Input.imeSetComposition and Input.insertText for Chinese composition",
+    "fixture": "scripts/native-artifact-fixture.mjs v3; 50 pages/artboards, 50 original 640x360 PNG images and 50 formulas; equivalent compact 64x36 sandbox preview on page 25",
+    "transport": "deterministic intercepted HTTP responses; real shared operation reducer; synthetic tenant context checked on authenticated image requests",
+    "notVerified": [
+      "real API authentication and authorization",
+      "database durability",
+      "real Agent runtime tool invocation",
+      "performance acceptance thresholds",
+      "browser IME input across operating systems"
+    ]
+  },
+  "results": {
+    "slides": {
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 1,
+      "maxMountedNodes": 7,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": [],
+      "receiptMetadataRefresh": "Semantic hash definition now includes speaker notes; Slides document bytes and all50notes are unchanged. This refresh does not claim a new browser run."
+    },
+    "design": {
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "1859698ab513381bad8dfeb41a504d61f29081d8048e42f7d5f1f7ac33aae708",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 4,
+      "maxMountedNodes": 12,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": []
+    },
+    "denseDesign": {
+      "pageNodes": 506,
+      "offscreenFarNodesInitiallyMounted": 0,
+      "farNodesMountedAfterHorizontalPan": 153,
+      "activeRichTextEditorRetainedAfterPan": true,
+      "consoleOrPageErrors": []
+    },
+    "theme": {
+      "newPageBackgroundChanged": true,
+      "newDefaultTextColorChanged": true,
+      "newDefaultShapeFillChanged": true,
+      "consoleOrPageErrors": []
+    },
+    "focusedTests": {
+      "command": "node --import tsx --test src/features/artifacts/native/*.test.ts src/features/artifacts/native/thumbnail.test.tsx",
+      "passed": 25,
+      "failed": 0
+    },
+    "chineseIme": {
+      "method": [
+        "CDP Input.imeSetComposition",
+        "CDP Input.insertText"
+      ],
+      "compositionUpdates": 3,
+      "compositionStartAndUpdatesTrusted": true,
+      "commitInputTrusted": true,
+      "compositionEndTrusted": [
+        false
+      ],
+      "waitDuringCompositionMs": [
+        800,
+        800
+      ],
+      "operationsDuringComposition": 0,
+      "operationsAfterCommit": 1,
+      "operationsPerBatch": 1,
+      "committedText": "中文输入完成",
+      "reloadedTextMatches": true,
+      "errors": [],
+      "chromiumCdpEndEventControl": {
+        "plainContenteditableCompositionEndTrusted": false,
+        "note": "This Chromium CDP path emits an untrusted compositionend even for a plain contenteditable control; compositionstart, updates and committed input events are trusted. No JavaScript dispatchEvent was used to generate input."
+      }
+    },
+    "richTextInitialization": {
+      "strictModeOpeningWithoutEditsProducesNoHistory": true,
+      "regression": "An asynchronous Tiptap onCreate callback previously allowed StrictMode cleanup to save unchanged initial text. The effect now establishes the normalized baseline before cleanup, and onCreate does not reset an established baseline."
+    },
+    "saveControls": {
+      "slides": {
+        "focusedPropertyCtrlS": true,
+        "focusedTableCtrlS": true,
+        "repeatedFocusedNotesSave": true,
+        "dirtyBeforeSubmit": true,
+        "pendingUntilAcknowledged": true,
+        "compositionNotSubmittedByCtrlS": true,
+        "unrelatedAgentStylePreserved": true,
+        "activeRichTextSharedUndoRedo": true,
+        "reloadRetainedAllValues": true,
+        "designBoardCoordinates": false,
+        "consoleOrPageErrors": []
+      },
+      "design": {
+        "focusedPropertyCtrlS": true,
+        "focusedTableCtrlS": true,
+        "repeatedFocusedNotesSave": true,
+        "dirtyBeforeSubmit": true,
+        "pendingUntilAcknowledged": true,
+        "compositionNotSubmittedByCtrlS": true,
+        "unrelatedAgentStylePreserved": true,
+        "activeRichTextSharedUndoRedo": true,
+        "reloadRetainedAllValues": true,
+        "designBoardCoordinates": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    "draftScope": {
+      "perEditorController": true,
+      "noGlobalFlushEvent": true,
+      "transientDraftsExcludedFromHistory": true,
+      "focusedRegistryTestsPassed": 4
+    },
+    "activeEditorDoubleClickCas": {
+      "cases": 4,
+      "fixtureVersion": 3,
+      "remoteObservedBeforeDoubleClick": true,
+      "remotePreserved": true,
+      "originalVersionRetained": true,
+      "exactLocalDraftRecoverable": true,
+      "staleManualBatchesCommitted": 0,
+      "evidence": "isolated-cas-reentry.json",
+      "independentReview": "isolated-cas-independent-review.json"
+    },
+    "designNotesCorrespondence": {
+      "initialSpeakerNotes": 0,
+      "legacySourceHasNoSpeakerNotes": true,
+      "manualNotesSaveReopenPassed": true,
+      "affectedDesign50PageRerunPassed": true
+    }
+  },
+  "limits": [
+    "Flex/grid siblings stay mounted together to preserve browser layout; active edits and selected groups remain mounted.",
+    "Thumbnails are bounded visual summaries (96 nodes, 64x40), with cached downsampled images; never-loaded pages show their background until page data has loaded.",
+    "This diagnostic is not a substitute for the full product, persistence, export, or performance acceptance runs.",
+    "Chinese composition is verified through Chromium CDP, including two pauses longer than the autosave debounce; native OS candidate windows and other browser/OS IMEs are not verified.",
+    "Transformed iframe descendants report unscaled bounds in this Chromium/Playwright combination; the runnable harness sends trusted pointer input at the iframe element’s rendered centre."
+  ],
+  "screenshots": [
+    "isolated-slides.png",
+    "isolated-design.png"
+  ],
+  "temporaryHarnesses": [
+    "/workspace/scratch/native-editor-smoke/all-pages.mts",
+    "/workspace/scratch/native-editor-smoke/design.mts",
+    "/workspace/scratch/native-editor-smoke/culling.mts",
+    "/workspace/scratch/native-editor-smoke/theme.mts",
+    "/workspace/scratch/native-editor-smoke/ime.mts"
+  ],
+  "reproducibleHarness": "scripts/native-editor-ui-acceptance.mjs",
+  "reproductionGuide": "docs/evidence/native-artifact-editor/isolated-ui.md"
+}

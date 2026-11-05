@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync } from 'node:fs'
 import { basename } from 'node:path'
-import { SMOKE_FILES, DURABLE_QUEUE_ALLOWANCE_MS } from '../server/integration-suite.mjs'
+import { SMOKE_FILES, DURABLE_QUEUE_ALLOWANCE_MS, integrationBudgetMs } from '../server/integration-suite.mjs'
 import { runtimeSharedPaths } from './ci-scope-paths.mjs'
 
 // Core boundaries run for ordinary server changes. Extra owning tests are
@@ -15,9 +15,11 @@ const OWNERS = [
   [/^server\/src\/(?:agent-runtime\/(?:context|skill-context)|modules\/artifacts\/(?:skills|agent-tools)|modules\/learning\/teacher-preset)\.ts$/, ['runtime-first-action-contracts.test.ts', 'runtime-design-failure.test.ts', 'runtime-teaching-scaffold.test.ts']],
   [/^server\/src\/(?:im\/(?:retired-visualize|visualize-router|interaction-admission)|agent-runtime\/retired-capabilities)\.ts$|^shared\/(?:retired-visualize|assistant-directive-parser)\.ts$/, ['retired-visualize.test.ts']],
   [/^server\/src\/db\/(?:migrate\.ts|migrations\/0062_case_options\.sql)$|^server\/scripts\/bootstrap-runtime-patch-test-db\.mjs$/, ['case-options-migration.test.ts', 'cases.test.ts']],
+  [/^server\/src\/db\/(?:migrate\.ts|migrations\/0063_native_artifact_documents\.sql)$/, ['native-artifact-documents-migration.test.ts']],
+  [/^server\/src\/(?:db\/harness-cutover\.ts|harness-cutover-bin\.ts|agent-runtime\/harness\.ts)$/, ['harness-cutover.test.ts']],
   [/^server\/src\/(?:agent-runtime\/(?:model-observation-timing|runtime)\.ts|modules\/platform-operations\/model-stage-timing\.ts)$|^shared\/model-stage-timing\.ts$/, ['model-stage-ledger.test.ts', 'runtime-public-text-suspension.test.ts']],
   [/^server\/src\/modules\/platform-operations\/(?:agent-operations|agent-run-timing|model-stage-timing|company-router|router)\.ts$|^shared\/(?:agent-run-timing|model-stage-timing)\.ts$/, ['runtime-worker-diagnostics.test.ts']],
-  [/^server\/src\/(?:db\/runtime-patch\.ts|runtime-patch-bin\.ts)$/, ['runtime-patch58-provenance.test.ts', 'runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts', 'runtime-patch61-22-provenance.test.ts', 'runtime-patch61-23-provenance.test.ts', 'runtime-patch61-23-from21-provenance.test.ts', 'runtime-patch61-24-provenance.test.ts', 'runtime-patch62-25-provenance.test.ts']],
+  [/^server\/src\/(?:db\/runtime-patch\.ts|runtime-patch-bin\.ts)$/, ['runtime-patch58-provenance.test.ts', 'runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts', 'runtime-patch61-22-provenance.test.ts', 'runtime-patch61-23-provenance.test.ts', 'runtime-patch61-23-from21-provenance.test.ts', 'runtime-patch61-24-provenance.test.ts', 'runtime-patch62-25-provenance.test.ts', 'runtime-patch62-40-provenance.test.ts']],
   [/^server\/src\/modules\/cases\//, ['cases.test.ts']],
   [/^server\/(?:src\/db\/|src\/migrate-bin\.ts$|package(?:-lock)?\.json$|fixtures\/|run-historical-migration-tests\.mjs$)/, HISTORICAL_FILES],
   [/^server\/src\/(?:auth\.ts|tenant\.ts|http\/|domain\/(?:access|entitlement|identity|tenancy)\/|modules\/(?:access|identity|entitlements|trust)\/)/, ['trust-bff.test.ts']],
@@ -29,7 +31,7 @@ const OWNERS = [
   [/^server\/src\/modules\/(?:companies|enterprise)\//, ['companies-vertical-slice.test.ts', 'enterprise-governance.test.ts']],
   [/^server\/src\/(?:modules\/(?:knowledge|research|evidence)\/|knowledge)/, ['knowledge-vertical-slice.test.ts']],
   [/^server\/src\/modules\/memory\/|^server\/src\/agent-runtime\/memory-/, ['native-memory.test.ts']],
-  [/^server\/src\/modules\/artifacts\/|^third_party\/baoyu-design\/|^shared\/design-flow-size\.ts$|^scripts\/(?:build-slides-editor|slides-editor\.test|build-design-editor|build-artifact-math|artifact-math\.test|design-editor\.test|build-design-layout|design-flow-size\.test)\.mjs$/, ['artifact-app-boundary.test.ts', 'slides-workspace-flow.test.ts']],
+  [/^server\/src\/modules\/artifacts\/|^third_party\/baoyu-design\/|^shared\/(?:artifact-(?:document|operations|legacy)|design-flow-size)\.ts$|^scripts\/native-artifact-/, ['artifact-app-boundary.test.ts', 'slides-workspace-flow.test.ts']],
   [/^server\/src\/modules\/(?:documents|content-editor)\//, ['runtime-objects.test.ts']],
   [/^server\/src\/(?:llm-ledger|llm|llm-client)\.ts$|^server\/src\/agent-runtime\/pricing\.ts$/, ['model-pricing.test.ts', 'native-admission.test.ts']],
 ]
@@ -52,7 +54,8 @@ function integrationScope(changed, { serverSource, deepIntegration, deployment }
   for (const [pattern, files] of OWNERS) if ([...sourcePaths, ...runnerPaths].some(path => pattern.test(path))) {
     for (const file of files) owners.add(file)
   }
-  if (deployment) { owners.add('runtime-patch-provenance.test.ts'); owners.add('runtime-patch58-provenance.test.ts'); owners.add('runtime-patch60-provenance.test.ts'); owners.add('runtime-patch60-20-provenance.test.ts'); owners.add('runtime-patch61-21-provenance.test.ts'); owners.add('runtime-patch61-22-provenance.test.ts'); owners.add('runtime-patch61-23-provenance.test.ts'); owners.add('runtime-patch61-23-from21-provenance.test.ts'); owners.add('runtime-patch61-24-provenance.test.ts'); owners.add('runtime-patch62-25-provenance.test.ts') }
+  if (deployment) { owners.add('runtime-patch-provenance.test.ts'); owners.add('runtime-patch58-provenance.test.ts'); owners.add('runtime-patch60-provenance.test.ts'); owners.add('runtime-patch60-20-provenance.test.ts'); owners.add('runtime-patch61-21-provenance.test.ts'); owners.add('runtime-patch61-22-provenance.test.ts'); owners.add('runtime-patch61-23-provenance.test.ts'); owners.add('runtime-patch61-23-from21-provenance.test.ts'); owners.add('runtime-patch61-24-provenance.test.ts'); owners.add('runtime-patch62-25-provenance.test.ts'); owners.add('runtime-patch62-40-provenance.test.ts') }
+  if (deployment) owners.add('harness-cutover.test.ts')
   const changedTests = requested.filter(existsSync).map(file => basename(file))
   // A pure test edit runs its surviving files. Deleted-only edits still verify
   // the core, rather than interpreting [] as a full-suite request.
@@ -97,6 +100,9 @@ export function computeScope(changed = {}, manual = '') {
   const server = serverSource || enabled('server') || enabled('serverTests') || runner || lintConfig
   const deepIntegration = manual === 'deep-integration'
   const integrationSelection = integrationScope(changed, { serverSource, deepIntegration, deployment: enabled('deployment') })
+  // Service startup, exact historical bootstrap, and timing upload remain bounded
+  // outside the test-process budget; ordinary smoke retains its twelve-minute job.
+  const integrationTimeoutMinutes = Math.max(12, Math.ceil(integrationBudgetMs(integrationSelection.integration_mode, integrationSelection.integration_files) / 60_000) + 7)
   const openNotebook = enabled('openNotebook') || enabled('openNotebookTests') || release
   const deployment = enabled('deployment')
   const deployContract = serverSource || deployment || enabled('ci') || enabled('serverDocker') || enabled('wukongim') || enabled('gateway') || openNotebook || release
@@ -113,6 +119,7 @@ export function computeScope(changed = {}, manual = '') {
     web, web_build: webBuild,
     admin, admin_build: adminBuild,
     control, server, ...integrationSelection,
+    integration_timeout_minutes: integrationTimeoutMinutes,
     deep_integration: deepIntegration,
     open_notebook: openNotebook,
     deployment,

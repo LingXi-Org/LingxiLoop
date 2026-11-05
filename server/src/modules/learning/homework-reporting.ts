@@ -1,4 +1,4 @@
-import { NoEffectError } from '@lyyzka/lingxios'
+import { NoEffectError } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import type { LearningScope } from './contracts.js'
 import { homeworkAnswerText } from './homework-answer.js'

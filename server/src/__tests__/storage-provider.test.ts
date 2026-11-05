@@ -20,6 +20,8 @@ test('upload boundaries reject unsafe or cross-workspace storage paths', async (
     'attachments/company/file.pdf\u0000.jpg',
   ]) assert.equal(normalizeStorageKey(key), null)
   assert.equal(normalizeStorageKey('attachments/company/file.pdf'), 'attachments/company/file.pdf')
+  assert.equal(normalizeStorageKey('artifacts/design-1/assets/0123456789abcdef.png'), 'artifacts/design-1/assets/0123456789abcdef.png')
+  assert.equal(normalizeStorageKey('artifacts/design-1/../design-2/image.png'), null)
 
   let presignOptions: unknown
   const application = new PlatformApplication({

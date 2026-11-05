@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFile, realpath } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { releaseVersions } from '@lyyzka/lingxios'
+import { releaseVersions } from '@lingxi-org/lingxios'
 import type { Pool } from 'pg'
 import { developmentPoolFingerprint, type DevelopmentVerificationInput } from '../db/development-runtime-qualification.js'
 

@@ -1,6 +1,6 @@
 // Separate real Worker process; only the model is deterministic. No product
 // credentials, database mutations, internal runtime imports or kernel bypass.
-import { createWorker } from '@lyyzka/lingxios/worker'
+import { createWorker } from '@lingxi-org/lingxios/worker'
 
 const usage = { available: true, inputTokens: 100, outputTokens: 20 }
 let calls = 0

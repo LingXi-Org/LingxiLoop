@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import IORedis from 'ioredis'
-import type { PreviewFrame, PreviewSnapshot, RealtimeStore, RunIdentity } from '@lyyzka/lingxios'
+import type { PreviewFrame, PreviewSnapshot, RealtimeStore, RunIdentity } from '@lingxi-org/lingxios'
 
 const update = `
 local previous = redis.call('GET', KEYS[1])

@@ -1,4 +1,4 @@
-import type { MemoryWritePolicy } from '@lyyzka/lingxios'
+import type { MemoryWritePolicy } from '@lingxi-org/lingxios'
 
 /** Product learning records, teacher feedback and assessments remain authoritative. */
 export const memoryWritePolicy: MemoryWritePolicy = input => {

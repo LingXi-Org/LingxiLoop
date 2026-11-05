@@ -41,7 +41,7 @@ try {
   pdfSource += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`
     + offsets.slice(1).map(offset => `${String(offset).padStart(10, '0')} 00000 n \n`).join('')
     + `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`
-  const parserWorker = join(dependencies, '@lyyzka/lingxios/dist/src/context/document-worker.js')
+  const parserWorker = join(dependencies, '@lingxi-org/lingxios/dist/src/context/document-worker.js')
   const parseDocuments = () => Object.fromEntries([['pdf', Buffer.from(pdfSource)], ['docx', docx]].map(([format, input]) => {
     const result = spawnSync(process.execPath, [parserWorker, format], { input, encoding: 'utf8', timeout: 20_000 })
     assert.ifError(result.error)

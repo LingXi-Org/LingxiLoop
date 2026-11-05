@@ -11,7 +11,7 @@ import { attachmentRefId, readRequestAttachments, selectRequestAttachments, unav
 import { assertInteractionAdmission } from '../im/interaction-admission.js'
 import { assertQuestionnaireContinuation, recordQuestionnaireContinuation } from '../im/questionnaires.js'
 import { resolveRequestReferences, requestTextWithReferences } from './request-references.js'
-import { readRunReference } from '@lyyzka/lingxios'
+import { readRunReference } from '@lingxi-org/lingxios'
 
 export interface AgentRequest {
   companyId: string; agentId: string; channelId: string; clientMsgNo: string

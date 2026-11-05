@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { mock, test } from 'node:test'
-import { releaseVersions } from '@lyyzka/lingxios'
+import { releaseVersions } from '@lingxi-org/lingxios'
 import { installStorageProvider } from '../storage.js'
 
 test('real DOCX extraction is repeatable and partial material reads preserve good text and exact raw hashes', async () => {

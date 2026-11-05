@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { renderToStaticMarkup } from 'react-dom/server'
-import type { RunEvent } from '@lyyzka/lingxios/ui'
+import type { RunEvent } from '@lingxi-org/lingxios/ui'
 import { harnessToolParts } from '../../../../server/src/agent-runtime/message-projection'
 import { ResearchSources } from './ResearchSources'
 import { researchSources } from '@/lib/researchSources'

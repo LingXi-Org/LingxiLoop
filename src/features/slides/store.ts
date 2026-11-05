@@ -1,6 +1,7 @@
 import { toast } from 'sonner'
 import { create } from 'zustand'
 import { artifactsApi } from '@/features/artifacts/api'
+import { nativeTransport } from '@/features/artifacts/native/transport'
 import type { ArtifactSummary } from '@/features/artifacts/contracts'
 import { confirmSensitiveAction, promptSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
@@ -18,7 +19,7 @@ interface SlidesState {
   decks: ArtifactSummary[] | null
   error: string
   openId: string | null
-  /** One retained workspace avoids rebuilding its editor iframe on a quick return to the library. */
+  /** Retain the workspace shell when briefly returning to the library. */
   retainedId: string | null
   reopening: boolean
   load(projectId: string, signal?: AbortSignal): Promise<void>
@@ -30,6 +31,7 @@ interface SlidesState {
 }
 
 let reopenRequest: AbortController | null = null
+const renameDrafts = new Map<string, string>()
 
 /** The project's Slides decks, shared by the nested sidebar and the Slides page. */
 export const useSlides = create<SlidesState>((set, get) => ({
@@ -91,11 +93,19 @@ export const useSlides = create<SlidesState>((set, get) => ({
   },
   rename: async (deck) => {
     const projectId = get().projectId
-    const title = await promptSensitiveAction({ title: '重命名演示文稿', description: '新名称会对所有能查看它的成员显示。',
-      inputLabel: '名称', inputDefaultValue: deck.title, inputRequired: true, confirmLabel: '保存' })
-    if (!title || title === deck.title || !projectId) return
-    try { await artifactsApi.rename(deck.id, title); await get().load(projectId) }
-    catch (reason) { toast.error(userFacingError(reason, '名称没有保存，请重试。')) }
+    if (!projectId) return
+    try {
+      const { document } = await nativeTransport(deck.id).read()
+      const draft = renameDrafts.get(deck.id)
+      const title = await promptSensitiveAction({ title: '重命名演示文稿', description: draft ? `上次未保存的名称已保留。当前名称：${document.title}` : '新名称会对所有能查看它的成员显示。',
+        inputLabel: '名称', inputDefaultValue: draft ?? document.title, inputRequired: true, confirmLabel: '保存' })
+      if (!title || title === document.title) return
+      renameDrafts.set(deck.id, title)
+      await artifactsApi.rename(deck.id, title, document.versions['document/title'] ?? 0, crypto.randomUUID())
+      renameDrafts.delete(deck.id)
+      await get().load(projectId)
+    }
+    catch (reason) { toast.error(userFacingError(reason, '名称没有保存，请重试。'), { description: renameDrafts.has(deck.id) ? '未保存的名称已保留，再次选择重命名可继续。' : undefined }) }
   },
   remove: async (deck) => {
     const projectId = get().projectId

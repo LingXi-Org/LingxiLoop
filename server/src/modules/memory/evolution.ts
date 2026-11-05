@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util'
 import { z } from 'zod'
-import type { createLingxiOS, EvolutionBenchmark, EvolutionCase, EvolutionCandidate } from '@lyyzka/lingxios'
-import type { EvolutionEvaluator, WorkProcessorContext } from '@lyyzka/lingxios/worker'
+import type { createLingxiOS, EvolutionBenchmark, EvolutionCase, EvolutionCandidate } from '@lingxi-org/lingxios'
+import type { EvolutionEvaluator, WorkProcessorContext } from '@lingxi-org/lingxios/worker'
 import { agentDocumentSchemas } from '../documents/contracts.js'
 
 export const nativeEvolutionBenchmark: EvolutionBenchmark = {

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { readFile, readdir } from 'node:fs/promises'
 import type { Pool, PoolClient } from 'pg'
-import { packageResources, releaseVersions } from '@lyyzka/lingxios'
+import { packageResources, releaseVersions } from '@lingxi-org/lingxios'
 import { ensureEducationPlan } from '../modules/entitlements/public.js'
 import { pool } from './pool.js'
 import { assertMigrationRuntime, assertCurrentRuntimeProfile, assertFull54InstallBoundary, assertRetirementRuntimeVersion, loadLockedRuntimePackage } from './runtime-profile.js'
@@ -200,8 +200,10 @@ export async function migrateDatabase(
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
-  const full62=migrations.length===62&&migrations[61]?.name==='case_options'
-  if(full62&&(!['3.8.24','3.8.25'].includes(String(releaseVersions.runtime))||developmentQualification!==undefined))throw new Error('product62 requires exact formal3.8.24 or reviewed formal3.8.25 and installed product history')
+  const full63=migrations.length===63&&migrations[62]?.name==='native_artifact_documents'
+  if(full63&&(String(releaseVersions.runtime)!=='4.0.0'||developmentQualification!==undefined))throw new Error('product63 requires exact formal4.0.0 after the explicit runtime bridge and installed product62 history')
+  const full62=(migrations.length===62||full63)&&migrations[61]?.name==='case_options'
+  if(full62&&(!['3.8.24','3.8.25',...(full63?['4.0.0']:[])].includes(String(releaseVersions.runtime))||developmentQualification!==undefined))throw new Error('product62 requires exact formal3.8.24 or reviewed formal3.8.25 and installed product history')
   const full61=(migrations.length===61||full62)&&migrations[60]?.name==='slides_workspaces'
   if(full61&&!full62&&!['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime)))throw new Error('product61 requires exact formal20 or reviewed formal21/22/23/24 runtime')
   const runtimeOnly61=full61&&!full62&&['3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime))
@@ -222,7 +224,7 @@ export async function migrateDatabase(
   try {
     await client.query('SELECT pg_advisory_lock($1)', [LOCK_KEY])
     const tracked = await migrationTableExists(client)
-    if ((runtimeOnly61||full62)&&!tracked) throw new Error(`runtime${releaseVersions.runtime} requires already installed product${String(releaseVersions.runtime)==='3.8.25'?62:61}; it cannot run product migrations`)
+    if ((runtimeOnly61||full62)&&!tracked) throw new Error(`runtime${releaseVersions.runtime} requires already installed product${['3.8.25','4.0.0'].includes(String(releaseVersions.runtime))?62:61}; it cannot run product migrations`)
     if (runtimeOnly60&&!tracked) throw new Error(`runtime${releaseVersions.runtime} requires already installed product60; it cannot run product migrations`)
     if (!tracked) {
       const existingRelations = await publicRelationCount(client)
@@ -243,6 +245,21 @@ export async function migrateDatabase(
 
     const applied = await appliedMigrations(client)
     validateApplied(migrations, applied)
+    if(full63){
+      if(applied.length!==62&&applied.length!==63)throw new Error('product63 requires already installed product62 on exact formal4.0.0 after the explicit runtime bridge')
+      await assertRuntimeCurrent(client,14,'4.0.0')
+      if(applied.length===63)return appliedNow
+      const migration=migrations[62]!
+      await client.query('BEGIN')
+      try {
+        await client.query("SET LOCAL lock_timeout='5s'")
+        await client.query('SET LOCAL search_path TO public')
+        await client.query(migration.sql)
+        await client.query('INSERT INTO public.schema_migrations(version,name,checksum) VALUES($1,$2,$3)',[migration.version,migration.name,migration.checksum])
+        await client.query('COMMIT')
+      } catch(error) { await client.query('ROLLBACK');throw new Error('migration 63_native_artifact_documents failed',{cause:error}) }
+      return ['0063_native_artifact_documents']
+    }
     if(full62){
       if(String(releaseVersions.runtime)==='3.8.25'){
         if(applied.length!==62)throw new Error('runtime3.8.25 requires already installed product62; it cannot run product migrations')
@@ -403,8 +420,10 @@ export async function assertMigrationsCurrent(
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   // Product55/56/57/58/59/60 change product state only, on the same formally locked runtime.
-  const full62=migrations.length===62&&migrations[61]?.name==='case_options'
-  if(full62&&(!['3.8.24','3.8.25'].includes(String(releaseVersions.runtime))||developmentQualification!==undefined))throw new Error('product62 requires exact formal3.8.24 or reviewed formal3.8.25 and installed product history')
+  const full63=migrations.length===63&&migrations[62]?.name==='native_artifact_documents'
+  if(full63&&(String(releaseVersions.runtime)!=='4.0.0'||developmentQualification!==undefined))throw new Error('product63 requires exact formal4.0.0 after the explicit runtime bridge and installed product62 history')
+  const full62=(migrations.length===62||full63)&&migrations[61]?.name==='case_options'
+  if(full62&&(!['3.8.24','3.8.25',...(full63?['4.0.0']:[])].includes(String(releaseVersions.runtime))||developmentQualification!==undefined))throw new Error('product62 requires exact formal3.8.24 or reviewed formal3.8.25 and installed product history')
   const full61=(migrations.length===61||full62)&&migrations[60]?.name==='slides_workspaces'
   if(full61&&!full62&&!['3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime)))throw new Error('product61 requires exact formal20 or reviewed formal21/22/23/24 runtime')
   const runtimeOnly61=full61&&!full62&&['3.8.21','3.8.22','3.8.23','3.8.24'].includes(String(releaseVersions.runtime))

@@ -1,4 +1,4 @@
-import type { RunIdentity } from '@lyyzka/lingxios'
+import type { RunIdentity } from '@lingxi-org/lingxios'
 import type { Queryable } from '../db/queryable.js'
 import { auditInTransaction } from '../modules/identity/public.js'
 import { contextFailureDiagnosticSchema, type ContextFailureDiagnostic } from './context-diagnostics.js'

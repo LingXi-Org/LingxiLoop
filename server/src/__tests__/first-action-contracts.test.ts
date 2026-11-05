@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { assembleHarness, executionSnapshot, skillIndex, type TurnContext } from '@lyyzka/lingxios'
+import { assembleHarness, executionSnapshot, skillIndex, type TurnContext } from '@lingxi-org/lingxios'
 import { createProductHarness } from '../agent-runtime/harness.js'
 import { DESIGN_INCOMPLETE_NOTICE, ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { productSkills } from '../agent-runtime/system-skills.js'
@@ -9,6 +9,20 @@ import { artifactReferencePages, readArtifactReference } from '../modules/artifa
 import { runtimeModelConfiguration } from '../agent-runtime/runtime.js'
 import { designExplanationRules } from '../agent-runtime/skill-context.js'
 import { decideScaffold } from '../modules/learning/teaching-scaffold.js'
+import { createDocument, createNode, createPage, type ArtifactDocument } from '../../../shared/artifact-document.js'
+import { applyOperations, prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
+
+function nativeFixture() {
+  const document = createDocument('design', 'canvas'), page = createPage('existing')
+  page.nodes.title = { ...createNode('text', 'title'), text: 'Existing human content' }
+  page.nodeOrder = ['title']; document.pages[page.id] = page; document.pageOrder = [page.id]
+  return document
+}
+function authoredPage(id = 'explanation') {
+  const page = createPage(id, 'Explanation')
+  page.nodes.title = { ...createNode('text', 'title'), text: 'A saved explanation' }; page.nodeOrder = ['title']
+  return page
+}
 
 const tools = createProductTools(() => { throw new Error('not used') }).filter(tool => tool.action !== 'memory.summary')
 const harness = assembleHarness(createProductHarness(tools))
@@ -32,7 +46,7 @@ test('first decision contains current skill routes and exact dependent schemas b
   const ctx = context(), rules = policy.productRules({} as never, ctx)
   assert.match(rules, /skills\.load.*no delivery|no delivery.*skills\.load/)
   assert.match(rules, /claude-design/)
-  assert.match(rules, /format\.md/)
+  assert.match(rules, /native-model\.md/)
   assert.match(rules, /additionalProperties/)
   assert.equal(permits(ctx, 'design.read_reference'), false)
   assert.equal(permits(ctx, 'skills.load'), true)
@@ -43,12 +57,12 @@ test('first decision contains current skill routes and exact dependent schemas b
 
 test('failed, stale, changed and revoked selections never unlock guidance-dependent actions', () => {
   const ctx = context()
-  selected(ctx, false); assert.equal(permits(ctx, 'design.write_files'), false)
-  selected(ctx, true, { hash: 'changed' }); assert.equal(permits(ctx, 'design.write_files'), false)
-  selected(ctx, true); ctx.executionSteps![0].kind = 'skills__activate'; assert.equal(permits(ctx, 'design.write_files'), false)
-  selected(ctx, true); ctx.snapshotVersion!.requestVersion = 2; assert.equal(permits(ctx, 'design.write_files'), false)
+  selected(ctx, false); assert.equal(permits(ctx, 'design.apply_ops'), false)
+  selected(ctx, true, { hash: 'changed' }); assert.equal(permits(ctx, 'design.apply_ops'), false)
+  selected(ctx, true); ctx.executionSteps![0].kind = 'skills__activate'; assert.equal(permits(ctx, 'design.apply_ops'), false)
+  selected(ctx, true); ctx.snapshotVersion!.requestVersion = 2; assert.equal(permits(ctx, 'design.apply_ops'), false)
   ctx.snapshotVersion!.requestVersion = 1; ctx.grants = ctx.grants!.filter(grant => grant.name !== 'design')
-  assert.equal(permits(ctx, 'design.write_files'), false)
+  assert.equal(permits(ctx, 'design.apply_ops'), false)
   assert.doesNotMatch(policy.productRules({} as never, ctx), /Complete registered system skill.*claude-design/)
 })
 
@@ -66,20 +80,19 @@ test('the first directory survives runtime exposure narrowing without the retire
 test('reference admission and first description use the actual deployed directory', async () => {
   const reference = tools.find(tool => tool.action === 'design.read_reference')!
   assert.deepEqual((reference.parameters.properties.page as { enum: string[] }).enum, artifactReferencePages('design'))
-  assert.match(reference.description, /format\.md/)
-  assert.match(await readArtifactReference('design', String(reference.parse({ page: 'format.md' }).page)), /authoring format/)
+  assert.match(reference.description, /native-model\.md/)
+  assert.match(await readArtifactReference('design', String(reference.parse({ page: 'native-model.md' }).page)), /Native design model/)
   for (const page of ['canvas.md', 'artboard.md', 'design-component.md', 'index.md']) assert.throws(() => reference.parse({ page }))
-  await assert.rejects(readArtifactReference('design', 'canvas.md'), /pages:.*format.md/)
+  await assert.rejects(readArtifactReference('design', 'canvas.md'), /pages:.*native-model.md/)
 })
-test('Design file encoding guidance round-trips literal quotes, backslashes and newlines without changing Slides', () => {
-  const content = '<div title="QK" data-demo="a\\b">\nQK\n</div>'
-  const design = tools.find(tool => tool.action === 'design.write_files')!
-  const slides = tools.find(tool => tool.action === 'slides.write_files')!
-  const encoded = JSON.stringify({ content })
-  assert.ok(design.description.includes(encoded))
-  assert.equal(slides.description.includes(encoded), false)
-  const input = JSON.parse(JSON.stringify({ files: { 'project/Example.dc.html': { content, ifMatch: null } } }))
-  assert.deepEqual(design.parse(input), input)
+test('native operation admission round-trips quotes, TeX backslashes and newlines in both modes', () => {
+  const document = nativeFixture(), text = 'QK "attention"\na\\b and \\frac{1}{2}'
+  const input = JSON.parse(JSON.stringify(prepareBatch(document, [{ type: 'node.patch', pageId: 'existing', nodeId: 'title', patch: { text } }], 'quoted-text')))
+  for (const kind of ['design', 'slides']) {
+    const tool = tools.find(tool => tool.action === `${kind}.apply_ops`)!
+    assert.match(tool.description, /operationId/)
+    assert.deepEqual(tool.parse(input), input)
+  }
 })
 
 test('semantic Design guidance selects the exact skill without a keyword-based generic forced load', () => {
@@ -103,7 +116,7 @@ test('semantic Design guidance selects the exact skill without a keyword-based g
   const other = skillIndex(productSkills.find(skill => skill.name === 'research-evidence')!)
   ctx.executionSteps = [{ id: 'other', kind: 'skills__load', artifacts: [], requestVersion: 1, input: { arguments: JSON.stringify({name:other.name,version:other.version,hash:other.hash}) }, output: JSON.stringify({receipts:[{action:'skills.load',result:{ok:true}}]}) }]
   assert.match(designExplanationRules(ctx), /skills.load with exactly/)
-  assert.equal(permits(ctx, 'design.write_files'), false)
+  assert.equal(permits(ctx, 'design.apply_ops'), false)
   ctx.grants = ctx.grants!.filter(grant => grant.name !== 'design')
   assert.match(designExplanationRules(ctx), /Design is unavailable/)
   assert.doesNotMatch(designExplanationRules(ctx), /skills.load with exactly/)
@@ -129,7 +142,7 @@ test('semantic planning is scoped, bounded, and selects only the exact current D
   assert.match(policy.validateCompletion('', {status:'satisfied',checks:[],gaps:[]},ctx)!, /actual saved and checked/, 'later decisions cannot erase the first confirmed canvas requirement')
   ctx.executionSteps!.push({id:'wrong',kind:'skills__load',requestVersion:1,artifacts:[],input:{arguments:'{}'},output:'{}'})
   assert.equal(policy.requiredTool(ctx), undefined, 'wrong or failed load is never forced in a loop')
-  assert.equal(permits(ctx,'design.write_files'),false)
+  assert.equal(permits(ctx,'design.apply_ops'),false)
   planned('canvas',false); assert.equal(policy.requiredTool(ctx),undefined,'failed planning is bounded')
   ctx.executionSteps![0].requestVersion = 0
   assert.equal(policy.requiredTool(ctx),'design__plan_explanation','previous request cannot select this surface')
@@ -137,60 +150,73 @@ test('semantic planning is scoped, bounded, and selects only the exact current D
   assert.equal(policy.requiredTool(ctx),undefined)
 })
 
-test('a semantic canvas decision follows confirmed prerequisites through a bounded native save/check path', () => {
+test('a semantic canvas decision follows confirmed prerequisites through a bounded native operation/check path', () => {
   const ctx = context()
-  selected(ctx,true)
-  const receipt = (action:string,args:object,value:unknown={},ok=true) => ctx.executionSteps!.push({id:action,kind:action.replace('.','__'),requestVersion:1,artifacts:[],
-    input:{arguments:JSON.stringify(args)},output:JSON.stringify({receipts:[{action,result:{ok,value}}]})})
-  receipt('design.plan_explanation',{delivery:'canvas'},{delivery:'canvas'})
-  assert.equal(policy.requiredTool(ctx),'design__read_reference')
-  receipt('design.read_reference',{page:'format.md'},{})
-  ctx.executionSteps!.at(-1)!.output = JSON.stringify({truncated:true,observations:[{actionKey:'native-reference',sha256:'a'.repeat(64)}],preview:'untrusted text'})
-  assert.equal(policy.requiredTool(ctx),'design__current')
-  receipt('design.current',{},null)
-  assert.equal(policy.requiredTool(ctx),'design__ensure')
-  receipt('design.ensure',{}, {artifactId:'canvas',result:{files:{'project/canvas.json':{},'project/ds/slides-builtin/tokens.json':{}}}})
-  assert.equal(policy.requiredTool(ctx),'design__read_file')
-  receipt('design.read_file',{path:'project/canvas.json'})
-  assert.equal(policy.requiredTool(ctx),'design__read_file')
-  receipt('design.read_file',{path:'project/ds/slides-builtin/tokens.json'})
-  assert.equal(policy.requiredTool(ctx),'design__write_files')
-  receipt('design.write_files',{}, {},false)
-  assert.equal(policy.requiredTool(ctx),undefined,'failed native stages are not forced indefinitely')
-  receipt('design.write_files',{files:{'project/Example.dc.html':{content:'<x-dc><h1>A saved explanation</h1></x-dc>'}}})
-  assert.equal(policy.requiredTool(ctx),'design__check')
-  receipt('design.check',{}, {problems:1})
-  assert.equal(policy.requiredTool(ctx),'design__write_files')
-  receipt('design.write_files',{})
-  receipt('design.check',{}, {problems:1})
-  assert.equal(policy.requiredTool(ctx),undefined,'three writes bound automatic checker repair')
-  receipt('design.check',{}, {problems:0})
-  assert.equal(policy.requiredTool(ctx),undefined)
-  assert.ok(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx),'zero-problem empty index does not deliver an explanatory artboard')
-  ctx.executionSteps!.at(-1)!.output = JSON.stringify({receipts:[{action:'design.check',result:{ok:true,value:{problems:0,boardCount:1,checkedBoardPaths:['project/Example.dc.html']}}}]})
-  assert.equal(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx),null)
+  selected(ctx, true)
+  let document = nativeFixture()
+  const receipt = (action: string, args: object, value: unknown = {}, ok = true) => ctx.executionSteps!.push({ id: `${action}-${ctx.executionSteps!.length}`, kind: action.replace('.', '__'), requestVersion: 1, artifacts: [],
+    input: { arguments: JSON.stringify(args) }, output: JSON.stringify({ receipts: [{ action, result: { ok, value } }] }) })
+  const commit = (operations: ArtifactOperation[]) => {
+    const batch = prepareBatch(document, operations)
+    document = applyOperations(document, batch).document
+    receipt('design.apply_ops', batch, { artifactId: document.id, result: { operationId: batch.operationId, committedSeq: document.seq } })
+  }
+  receipt('design.plan_explanation', { delivery: 'canvas' }, { delivery: 'canvas' })
+  assert.equal(policy.requiredTool(ctx), 'design__read_reference')
+  receipt('design.read_reference', { page: 'native-model.md' }, {})
+  ctx.executionSteps!.at(-1)!.output = JSON.stringify({ truncated: true, observations: [{ actionKey: 'native-reference', sha256: 'a'.repeat(64) }], preview: 'untrusted text' })
+  assert.equal(policy.requiredTool(ctx), 'design__current')
+  receipt('design.current', {}, null)
+  assert.equal(policy.requiredTool(ctx), 'design__ensure')
+  receipt('design.ensure', {}, { artifactId: 'canvas', result: { files: { 'project/document.json': {}, 'project/pages/existing.json': {} } } })
+  assert.equal(policy.requiredTool(ctx), 'design__read_document')
+  receipt('design.read_document', {}, { document, pageVersions: { existing: 'a'.repeat(64) } })
+  assert.equal(policy.requiredTool(ctx), 'design__read_page')
+  receipt('design.read_page', { pageId: 'existing', version: 'a'.repeat(64) }, { page: document.pages.existing })
+  assert.equal(policy.requiredTool(ctx), 'design__apply_ops')
+  receipt('design.apply_ops', prepareBatch(document, [{ type: 'page.insert', page: authoredPage() }]), {}, false)
+  assert.equal(policy.requiredTool(ctx), undefined, 'failed native stages are not forced indefinitely')
+  commit([{ type: 'page.insert', page: authoredPage() }])
+  assert.equal(policy.requiredTool(ctx), 'design__check')
+  receipt('design.check', {}, { problems: 1 })
+  assert.equal(policy.requiredTool(ctx), 'design__apply_ops')
+  commit([{ type: 'node.patch', pageId: 'explanation', nodeId: 'title', patch: { text: 'Corrected explanation' } }])
+  receipt('design.check', {}, { problems: 1 })
+  assert.equal(policy.requiredTool(ctx), undefined, 'three attempted batches bound automatic checker repair')
+  receipt('design.check', {}, { problems: 0 })
+  assert.equal(policy.requiredTool(ctx), undefined)
+  assert.ok(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx), 'a zero-problem check without authored-page evidence does not deliver an explanation')
+  ctx.executionSteps!.at(-1)!.output = JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 0, boardCount: 2, checkedBoardPaths: ['project/pages/explanation.json'] } } }] })
+  assert.equal(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx), null)
 })
 
-test('existing canvases without design-system files skip absent prerequisites and index-only edits cannot deliver an explanation', () => {
+test('native metadata edits and subsequently deleted pages cannot deliver an explanation', () => {
   const ctx = context()
-  selected(ctx,true)
-  const receipt = (action:string,args:object,value:unknown={}) => ctx.executionSteps!.push({id:action,kind:action.replace('.','__'),requestVersion:1,artifacts:[],
-    input:{arguments:JSON.stringify(args)},output:JSON.stringify({receipts:[{action,result:{ok:true,value}}]})})
-  receipt('design.plan_explanation',{delivery:'canvas'},{delivery:'canvas'})
-  receipt('design.read_reference',{page:'format.md'})
-  receipt('design.current',{}, {files:{'project/canvas.json':{},'project/Old.dc.html':{}}})
-  receipt('design.read_file',{path:'project/canvas.json'})
-  assert.equal(policy.requiredTool(ctx),'design__write_files','never invent a tokens file absent from the actual listing')
-  receipt('design.write_files',{files:{'project/canvas.json':{content:'{"title":"New topic"}'}}})
-  receipt('design.check',{}, {problems:0,boardCount:1,checkedBoardPaths:['project/Old.dc.html']})
-  assert.match(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx)!,/artboard content has not been saved/)
-  receipt('design.write_files',{files:{'project/New.dc.html':{content:'<x-dc>A new explanation</x-dc>'}}})
-  receipt('design.write_files',{files:{'project/New.dc.html':{delete:true},'project/canvas.json':{content:'{"boards":{"Old.dc.html":{}}}'}}})
-  receipt('design.check',{paths:['project/New.dc.html']},{problems:0,boardCount:1,checkedBoardPaths:[]})
-  assert.match(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx)!,/subsequently deleted/)
-  receipt('design.edit_file',{path:'project/Old.dc.html',newString:'<p>The actual requested explanation</p>'})
-  receipt('design.check',{}, {problems:0,boardCount:1,checkedBoardPaths:['project/Old.dc.html']})
-  assert.equal(policy.validateCompletion('',{status:'satisfied',checks:[],gaps:[]},ctx),null)
+  selected(ctx, true)
+  let document: ArtifactDocument = nativeFixture()
+  const receipt = (action: string, args: object, value: unknown = {}) => ctx.executionSteps!.push({ id: `${action}-${ctx.executionSteps!.length}`, kind: action.replace('.', '__'), requestVersion: 1, artifacts: [],
+    input: { arguments: JSON.stringify(args) }, output: JSON.stringify({ receipts: [{ action, result: { ok: true, value } }] }) })
+  const commit = (operations: ArtifactOperation[]) => {
+    const batch = prepareBatch(document, operations)
+    document = applyOperations(document, batch).document
+    receipt('design.apply_ops', batch, { artifactId: document.id, result: { operationId: batch.operationId, committedSeq: document.seq } })
+  }
+  receipt('design.plan_explanation', { delivery: 'canvas' }, { delivery: 'canvas' })
+  receipt('design.read_reference', { page: 'native-model.md' })
+  receipt('design.current', {}, { files: { 'project/document.json': {}, 'project/pages/existing.json': {} } })
+  receipt('design.read_document', {}, { document, pageVersions: { existing: 'a'.repeat(64) } })
+  receipt('design.read_page', { pageId: 'existing', version: 'a'.repeat(64) }, { page: document.pages.existing })
+  assert.equal(policy.requiredTool(ctx), 'design__apply_ops', 'theme files are embedded in the observed model, not invented read_file prerequisites')
+  commit([{ type: 'document.patch', patch: { title: 'New topic' } }])
+  receipt('design.check', {}, { problems: 0, boardCount: 1, checkedBoardPaths: ['project/pages/existing.json'] })
+  assert.match(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx)!, /artboard content has not been saved/)
+  commit([{ type: 'page.insert', page: authoredPage('new_page') }])
+  commit([{ type: 'page.delete', pageId: 'new_page' }])
+  receipt('design.check', { paths: ['project/pages/new_page.json'] }, { problems: 0, boardCount: 1, checkedBoardPaths: [] })
+  assert.match(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx)!, /subsequently deleted/)
+  commit([{ type: 'node.patch', pageId: 'existing', nodeId: 'title', patch: { text: 'The actual requested explanation' } }])
+  receipt('design.check', {}, { problems: 0, boardCount: 1, checkedBoardPaths: ['project/pages/existing.json'] })
+  assert.equal(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx), null)
 })
 
 test('DeepSeek uses the explicitly qualified formal20 native-v3 binding', () => {
@@ -204,7 +230,8 @@ test('DeepSeek uses the explicitly qualified formal20 native-v3 binding', () => 
 
 test('a Design write cannot declare satisfaction without a subsequent successful zero-problem check', () => {
   const ctx = context(), assessment = { status: 'satisfied' as const, checks: [], gaps: [] }
-  ctx.executionSteps = [{ id: 'write', kind: 'design__write_files', artifacts: [], requestVersion: 1, input: {}, output: JSON.stringify({receipts:[{action:'design.write_files',result:{ok:true}}]}) }]
+  const batch = prepareBatch(nativeFixture(), [{ type: 'page.insert', page: authoredPage() }], 'authored-batch')
+  ctx.executionSteps = [{ id: 'write', kind: 'design__apply_ops', artifacts: [], requestVersion: 1, input: { arguments: JSON.stringify(batch) }, output: JSON.stringify({receipts:[{action:'design.apply_ops',result:{ok:true,value:{operationId:batch.operationId,committedSeq:1}}}]}) }]
   assert.ok(policy.validateCompletion('', assessment, ctx))
   ctx.executionSteps.push({ id: 'check', kind: 'design__check', artifacts: [], requestVersion: 1, input: {}, output: JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 2 } } }] }) })
   assert.ok(policy.validateCompletion('', assessment, ctx))
@@ -212,7 +239,7 @@ test('a Design write cannot declare satisfaction without a subsequent successful
   assert.equal(policy.validateCompletion('', assessment, ctx), null)
   assert.equal(policy.validateAssistantText('讲解画板已经保存，可以打开 Design 查看。',ctx),null)
   assert.equal(policy.publicTextSafety({text:'画板已完成。',isFinal:false,approvedThrough:0},ctx).safeThrough,6)
-  for (const output of [undefined, '{}', JSON.stringify({receipts:[{action:'design.write_files',result:{ok:false}}]}), JSON.stringify({receipts:[{action:'design.write_files',result:{ok:true,executionState:'unknown'}}]})]) {
+  for (const output of [undefined, '{}', JSON.stringify({receipts:[{action:'design.apply_ops',result:{ok:false,code:'version_conflict',executionState:'no_effect'}}]}), JSON.stringify({receipts:[{action:'design.apply_ops',result:{ok:true,executionState:'unknown'}}]})]) {
     const original = ctx.executionSteps[0].output
     ctx.executionSteps[0].output = output
     assert.match(policy.validateCompletion('', assessment, ctx)!, /save was not confirmed/)

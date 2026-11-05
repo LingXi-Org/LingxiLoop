@@ -1,4 +1,4 @@
-import type { ModelUsage } from '@lyyzka/lingxios/worker'
+import type { ModelUsage } from '@lingxi-org/lingxios/worker'
 
 // CN rates per million tokens from https://www.siliconflow.cn/pricing (2026-10-22).
 // The public component metadata explicitly uses realTimePriceCnyUnit / K tokens.

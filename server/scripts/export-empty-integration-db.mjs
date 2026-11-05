@@ -5,7 +5,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { Client } from 'pg'
-import { releaseVersions } from '@lyyzka/lingxios'
+import { releaseVersions } from '@lingxi-org/lingxios'
 
 assert.equal(process.env.CI, 'true')
 assert.equal(process.env.NODE_ENV, 'test')

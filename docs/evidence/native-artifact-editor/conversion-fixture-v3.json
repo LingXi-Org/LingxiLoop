@@ -1,0 +1,30 @@
+[
+  {
+    "kind": "slides",
+    "fixtureVersion": 3,
+    "semanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
+    "pages": 50,
+    "nativeImages": 50,
+    "isolatedBlocks": 1,
+    "isolatedSourceMatches": true,
+    "originalFilesUnchanged": true,
+    "sourceSha256": "9a9101842761abc977010dee3a715a2c49f080db188d7244f9e6ebaac2ffd07a",
+    "storedImageReferences": "50 manifest hash URLs",
+    "speakerNotes": 50,
+    "notesCorrespondence": "All50native/legacy initial page speaker notes match exactly"
+  },
+  {
+    "kind": "design",
+    "fixtureVersion": 3,
+    "semanticSha256": "1859698ab513381bad8dfeb41a504d61f29081d8048e42f7d5f1f7ac33aae708",
+    "pages": 50,
+    "nativeImages": 50,
+    "isolatedBlocks": 1,
+    "isolatedSourceMatches": true,
+    "originalFilesUnchanged": true,
+    "sourceSha256": "9a9101842761abc977010dee3a715a2c49f080db188d7244f9e6ebaac2ffd07a",
+    "storedImageReferences": "50 fixture HTTP references",
+    "speakerNotes": 0,
+    "notesCorrespondence": "All50native/legacy initial page speaker notes match exactly"
+  }
+]

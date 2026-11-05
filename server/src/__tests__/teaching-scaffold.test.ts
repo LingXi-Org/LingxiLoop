@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { decideScaffold, scaffoldViolation, type ScaffoldInput } from '../modules/learning/teaching-scaffold.js'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
-import type { TurnContext } from '@lyyzka/lingxios'
+import type { TurnContext } from '@lingxi-org/lingxios'
 
 const input: ScaffoldInput = { teacher: { instructions: '192.168.10.0/24，60、28、12、6台主机', criteria: ['学生自己提出连通性测试、解释预测结果并判断问题，AI允许样例。'] },
   messages: [{ id: 'one', text: 'TCP流控和拥塞控制都是接收方来不及接收？' }], assessment: 'unknown' }

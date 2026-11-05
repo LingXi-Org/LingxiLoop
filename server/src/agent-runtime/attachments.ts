@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { decodeSourceText, extractDocumentText, type RequestAttachment } from '@lyyzka/lingxios'
+import { decodeSourceText, extractDocumentText, type RequestAttachment } from '@lingxi-org/lingxios'
 import { canonicalUploadMime } from '../../../shared/upload-mime.js'
 import type { Queryable } from '../db/queryable.js'
 import { attachmentMetadata } from '../im/attachments.js'

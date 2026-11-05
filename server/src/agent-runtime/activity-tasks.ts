@@ -1,4 +1,4 @@
-import type { RunTraceSnapshot, RunTraceSpan } from '@lyyzka/lingxios'
+import type { RunTraceSnapshot, RunTraceSpan } from '@lingxi-org/lingxios'
 import { activityTasksSchema, type ActivityTasks } from '../../../src/lib/runActivity.js'
 import type { HarnessToolPart } from './message-projection.js'
 

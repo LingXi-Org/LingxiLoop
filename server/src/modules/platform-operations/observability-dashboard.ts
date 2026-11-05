@@ -6,7 +6,7 @@ import {
   type DataField,
   type QueryResult,
 } from '@openplait/core'
-import { releaseVersions, type createLingxiOS } from '@lyyzka/lingxios'
+import { releaseVersions, type createLingxiOS } from '@lingxi-org/lingxios'
 
 const datasource = { kind: 'PostgresDatasource', name: 'lingxiloop', scope: 'dashboard' as const }
 
@@ -73,7 +73,7 @@ const dashboard = (() => {
 })()
 
 function result(name: string, fields: DataField[], length: number): QueryResult {
-  const candidate = { frames: [{ name, fields, length }], metadata: { datasource: 'lingxiloop', adapterVersion: `@lyyzka/lingxios/${releaseVersions.runtime}`, rowsReturned: length } }
+  const candidate = { frames: [{ name, fields, length }], metadata: { datasource: 'lingxiloop', adapterVersion: `@lingxi-org/lingxios/${releaseVersions.runtime}`, rowsReturned: length } }
   const validated = validateQueryResult(candidate)
   if (!validated.valid) throw new Error(`invalid OpenPlait query result: ${JSON.stringify(validated.errors)}`)
   return validated.value

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 import { createNativeMessage, deserializeMessage } from '@/lib/nativeMessage'
 import { activityHistoryContext, beginActivityHistoryRequest, failActivityHistoryRequest, finishActivityHistoryRequest, initialActivityHistory, parseActivityPage } from './runActivityHistory'
-import { createRunView } from '@lyyzka/lingxios/ui'
+import { createRunView } from '@lingxi-org/lingxios/ui'
 
 mock.module('@/api/transport', { namedExports: { lingxiApiFetch: () => { throw new Error('unexpected transport') } } })
 mock.module('@/stores/auth', { namedExports: { getActiveCompanyId: () => 'company' } })

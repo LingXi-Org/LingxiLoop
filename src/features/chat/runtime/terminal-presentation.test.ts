@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { ThreadMessage } from '@assistant-ui/react'
-import { createRunView } from '@lyyzka/lingxios/ui'
+import { createRunView } from '@lingxi-org/lingxios/ui'
 import { savedPartialWork, terminalFailurePresentation } from './terminal-presentation'
 
 function reply(status = 'completed', version = 1) {

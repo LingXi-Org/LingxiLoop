@@ -1,4 +1,4 @@
-import type { BudgetDimension } from '@lyyzka/lingxios'
+import type { BudgetDimension } from '@lingxi-org/lingxios'
 
 export const executionBudgetMessages: Record<BudgetDimension, string> = {
   calls: '本轮模型调用次数已达上限，剩余工作未能继续。',

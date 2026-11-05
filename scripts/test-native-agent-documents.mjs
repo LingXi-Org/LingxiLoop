@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Pool } from 'pg'
 import { register } from 'tsx/esm/api'
-import { createLingxiOS } from '@lyyzka/lingxios'
-import { createWorker } from '@lyyzka/lingxios/worker'
+import { createLingxiOS } from '@lingxi-org/lingxios'
+import { createWorker } from '@lingxi-org/lingxios/worker'
 
 // Public package installation plus the product's actual schema, permissions and Yjs editor.
 const connectionString = process.env.LINGXIOS_NATIVE_TEST_DATABASE_URL

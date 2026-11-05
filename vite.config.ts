@@ -22,10 +22,10 @@ export default defineConfig({
     apply: 'build',
     transformIndexHtml: {
       order: 'post',
-      handler(html, { bundle }) {
-        if (!bundle) return html
+      handler(html, { bundle, filename }) {
+        if (!bundle || path.resolve(filename) !== path.resolve(__dirname, 'index.html')) return html
         const chunks = Object.values(bundle).filter((output) => output.type === 'chunk')
-        const entry = chunks.find((chunk) => chunk.isEntry)
+        const entry = chunks.find((chunk) => chunk.isEntry && chunk.facadeModuleId && path.resolve(chunk.facadeModuleId) === path.resolve(__dirname, 'index.html'))
         const skip = new Set([entry?.fileName, ...(entry?.imports ?? [])])
         const files = new Set<string>()
         const visit = (fileName: string) => {
@@ -69,6 +69,9 @@ export default defineConfig({
   }],
   // Retab format workers lazy-load their parsers as native ES modules.
   worker: { format: 'es' },
+  build: {
+    rollupOptions: { input: { index: path.resolve(__dirname, 'index.html'), artifactExport: path.resolve(__dirname, 'artifact-export.html') } },
+  },
   // Disposable API fixtures use distinct caches. Concurrent dev servers with
   // different proxy defines must not replace each other's optimized modules.
   cacheDir: process.env.LINGXILOOP_VITE_CACHE_DIR,

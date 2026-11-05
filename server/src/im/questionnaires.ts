@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { isDeepStrictEqual } from 'node:util'
 import { z } from 'zod'
-import type { ActionContext, ActionResult, createLingxiOS } from '@lyyzka/lingxios'
+import type { ActionContext, ActionResult, createLingxiOS } from '@lingxi-org/lingxios'
 import { pool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
 import { withTransaction } from '../db/transaction.js'

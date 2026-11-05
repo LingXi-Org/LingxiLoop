@@ -1,0 +1,15 @@
+{
+  "commit": "53316e458495765addc8f29a86a3075cf9f92aae",
+  "run": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/41986039935",
+  "jobId": 127106964138,
+  "image": "ghcr.io/lingxi-org/lingxiloop-server:fe3cde233ca15e36ba50f165",
+  "actualBuildExecuted": true,
+  "buildSucceeded": true,
+  "observedAt": "2026-11-05T07:17:09.7448348Z",
+  "nativeArtifactInventory": {
+    "retainedResources": 303,
+    "retiredEditorImplementations": 0,
+    "manifestSha256": "c3e39461569eb35724634b96386680f018cecb7b4547289c351aaedda2da283c"
+  },
+  "qualification": "The final Docker runtime-stage packaged-startup check verified the retained resource manifest and absence of retired editor implementations. This build is not a production deployment or browser network/performance measurement."
+}

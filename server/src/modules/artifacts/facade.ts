@@ -9,9 +9,11 @@ import { createArtifactApplication } from './application.js'
 import { acquireArtifactSharedFence, availableAgents, releaseArtifactSharedFence } from './repository.js'
 import { createArtifactExecution } from './execution.js'
 import { createArtifactRuntime } from './runtime.js'
-import type { SharedStateUpdate } from '@lyyzka/lingxios'
+import type { SharedStateUpdate } from '@lingxi-org/lingxios'
 import { ensureSlideWorkspace, slideEditingContext, slideWorkspaceConversation, restoreSlideRevision } from './slides-workspace.js'
 import { syncProductChannel } from '../../agent-runtime/conversations.js'
+import { readNativeDocument, restoreNativeRevision } from './native-document.js'
+import { listing } from './store.js'
 
 const collaboration = createArtifactRuntime(async () => (await import('../../agent-runtime/runtime.js')).lingxiOSControl())
 export const readArtifactCollaboration = (companyId: string,userId: string,artifactId: string,afterSeq = 0) => collaboration.readCollaboration(pool,companyId,userId,artifactId,afterSeq)
@@ -114,6 +116,12 @@ export async function openSlideWorkspace(companyId: string, artifactId: string, 
 }
 
 export async function restoreSlides(companyId: string, artifactId: string, seq: string, version: string, userId: string) {
+  if (await readNativeDocument(pool, artifactId)) {
+    const result = await withTransaction(pool, db => restoreNativeRevision(db, { companyId, artifactId, seq, version, actorId: userId }))
+    await publish(CH_ARTIFACTS, { type: 'artifact.changed', companyId, artifactId, kind: 'files.changed',
+      paths: ['project/document.json', ...result.changedPageIds.map(id => `project/pages/${id}.json`)], timestamp: new Date().toISOString() })
+    return { status: 200, body: { ...result, version: (await listing(pool, artifactId)).ver }, changed: result.changedPageIds }
+  }
   const outcome = await withTransaction(pool, db => restoreSlideRevision(db, artifactId, seq, version, userId))
   if (outcome.status === 200 && outcome.changed.length) {
     await publish(CH_ARTIFACTS, { type: 'artifact.changed', companyId, artifactId, artifactKind: 'slides', kind: 'files.changed',

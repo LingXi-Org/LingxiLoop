@@ -1,4 +1,4 @@
-import type { MemoryOptions } from '@lyyzka/lingxios'
+import type { MemoryOptions } from '@lingxi-org/lingxios'
 import { env } from '../../env.js'
 import { siliconFlowPricingForModel } from '../../agent-runtime/pricing.js'
 

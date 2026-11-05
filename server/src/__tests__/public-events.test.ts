@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { RunEvent } from '@lyyzka/lingxios/ui'
+import type { RunEvent } from '@lingxi-org/lingxios/ui'
 import { publicRunEvent, nativeRunEvents, publicToolValue } from '../agent-runtime/public-events.js'
 import { executionBudgetMessages } from '../../../src/lib/executionBudget.js'
 

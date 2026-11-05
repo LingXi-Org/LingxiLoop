@@ -2,7 +2,7 @@ import { readAdminModelStageCalls, runStageTiming } from './model-stage-timing.j
 import { agentRunTiming } from './agent-run-timing.js'
 import { Router } from 'express'
 import { z } from 'zod'
-import type { RunRecord } from '@lyyzka/lingxios'
+import type { RunRecord } from '@lingxi-org/lingxios'
 import { lingxiOSControl } from '../../agent-runtime/runtime.js'
 import { pool } from '../../db/pool.js'
 import { safe } from '../../http/async-handler.js'

@@ -1,4 +1,4 @@
-import type { HarnessProfile, ToolDefinition } from '@lyyzka/lingxios'
+import type { HarnessProfile, ToolDefinition } from '@lingxi-org/lingxios'
 import { productSkills } from './system-skills.js'
 export { productSkills } from './system-skills.js'
 import { activityTool } from './activity-tool.js'
@@ -26,7 +26,7 @@ export function createProductHarness(productTools: ToolDefinition[], memoryContr
       }
     },
   }))
-  return { id: 'lingxiloop', version: '3.8.24-design-1', mode: 'execute',
+  return { id: 'lingxiloop', version: '4.0.0-native-artifacts-1', mode: 'execute',
     rules: 'Select an applicable skill by its current name/version/hash. A skill with no delivery uses skills.load for both guidance and authoring; only a skill with delivery can use skills.activate. The complete registered body is supplied in the next prompt. Finish selection and read that guidance before calling dependent tools; never batch a selection with tools that need its instructions. Selection grants no permissions. Only a real delivery contract creates an activation obligation. explanation is optional and applies only to a registered explanationBeforeAuthoring workflow requested by the human; never add it to a skill without that workflow. '
       + publicAnswerGuidance,
     capabilities: [...new Set(tools.map(tool => tool.action.split('.')[0]))].map(id => ({ id,

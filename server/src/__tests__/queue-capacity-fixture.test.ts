@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import { setTimeout as delay } from 'node:timers/promises'
 import test from 'node:test'
-import { createLogger, MetricsRegistry, releaseVersions, type RunEvent, type WorkItem } from '@lyyzka/lingxios'
-import { createWorker, type HostPort, type ModelDriver } from '@lyyzka/lingxios/worker'
+import { createLogger, MetricsRegistry, releaseVersions, type RunEvent, type WorkItem } from '@lingxi-org/lingxios'
+import { createWorker, type HostPort, type ModelDriver } from '@lingxi-org/lingxios/worker'
 import { agentRunTiming } from '../modules/platform-operations/agent-run-timing.js'
 
 async function scenario(lanes: WorkItem['lane'][], modelMs = 25, processorMs = 10, recoveryMs = 0) {
@@ -66,7 +66,7 @@ async function scenario(lanes: WorkItem['lane'][], modelMs = 25, processorMs = 1
 }
 
 test('formal public Worker keeps interactive/background/mixed fixture load bounded and both phases separate', { timeout: 15000 }, async context => {
-  const locked = JSON.parse(readFileSync(new URL('../../../package-lock.json', import.meta.url), 'utf8')).packages['node_modules/@lyyzka/lingxios'].version
+  const locked = JSON.parse(readFileSync(new URL('../../../package-lock.json', import.meta.url), 'utf8')).packages['node_modules/@lingxi-org/lingxios'].version
   assert.equal(releaseVersions.runtime, locked)
   const interactive = await scenario(Array(6).fill('interactive'))
   const background = await scenario(Array(6).fill('background'))

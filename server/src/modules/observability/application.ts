@@ -1,4 +1,4 @@
-import type { createLingxiOS, RunSnapshot } from '@lyyzka/lingxios'
+import type { createLingxiOS, RunSnapshot } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { activityAgentNames } from './repository.js'
 

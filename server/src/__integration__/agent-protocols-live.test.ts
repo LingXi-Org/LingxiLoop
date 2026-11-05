@@ -1,7 +1,7 @@
 import { installModelWireSummary } from './_model-wire-summary.js'
 import { env } from '../env.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
-import type { RunStreamEvent } from '@lyyzka/lingxios/ui'
+import type { RunStreamEvent } from '@lingxi-org/lingxios/ui'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'

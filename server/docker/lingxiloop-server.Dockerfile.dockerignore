@@ -4,7 +4,6 @@
 !package-lock.json
 !.npmrc
 !server/src/**
-!server/assets/**
 !server/package.json
 !server/package-lock.json
 !server/.npmrc
@@ -14,22 +13,18 @@
 !server/scripts/check-packaged-startup.mjs
 # Frontend sources needed to build the SPA bundle inside the image.
 !src/**
-# The SPA needs the preview/session/worker, crop geometry and shared VM inputs. Build
-# probes and the already-bundled guest sources are not image inputs.
-!shared
-shared/**
+# The browser and server share the typed document and operation protocol.
+!shared/**
 !shared/retired-visualize.ts
 !shared/assistant-directive-parser.ts
-!shared/artifact-math.ts
 !shared/artifact-math-source.ts
-!shared/artifact-math-loader.ts
 !shared/design-flow-size.ts
 !shared/artifact-editor-origin.ts
-!shared/artifact-recovery.ts
 !shared/slides-editor-context.ts
 !shared/upload-mime.ts
 !public/**
 !index.html
+!artifact-export.html
 !vite.config.ts
 !tsconfig.json
 !tsconfig.node.json
@@ -41,11 +36,6 @@ shared/**
 !third_party/assistant-ui-elements/LICENSE
 !third_party/assistant-ui-with-artifacts/LICENSE
 !third_party/react-chat-elements/reply-message/LICENSE
-!scripts/build-artifact-math.mjs
-!scripts/build-slides-editor.mjs
-!scripts/build-design-editor.mjs
-!scripts/build-design-layout.mjs
-!scripts/design-copy.mjs
 !scripts/prune-pdfjs-server-runtime.mjs
 !scripts/prune-glibc-canvas-runtime.mjs
 # Don't bake source maps / built assets / huge logs into the layer.
@@ -74,3 +64,5 @@ src/**/__tests__
 **/.cache
 server/**/.env*
 server/**/.venv
+
+shared/**/*.test.ts

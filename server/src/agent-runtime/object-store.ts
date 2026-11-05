@@ -1,5 +1,5 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
-import type { RuntimeObjectStore } from '@lyyzka/lingxios'
+import type { RuntimeObjectStore } from '@lingxi-org/lingxios'
 import { env } from '../env.js'
 import { readStorageBodyBounded } from '../storage.js'
 

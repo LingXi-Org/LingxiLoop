@@ -1,4 +1,4 @@
-import type { ActionContext, ActionResult, RunIdentity } from '@lyyzka/lingxios'
+import type { ActionContext, ActionResult, RunIdentity } from '@lingxi-org/lingxios'
 import { pool, presentationPool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
 import { toolDisplay, toolDisplaySchema, type ToolDisplay } from '../../../src/lib/runActivity.js'

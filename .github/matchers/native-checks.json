@@ -1,0 +1,18 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "lingxiloop-typescript",
+      "pattern": [{ "regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning) (TS\\d+): (.*)$", "file": 1, "line": 2, "column": 3, "severity": 4, "code": 5, "message": 6 }]
+    },
+    {
+      "owner": "lingxiloop-node-tests",
+      "severity": "error",
+      "pattern": [{ "regexp": "^not ok [0-9]+ - (.+)$", "message": 1 }]
+    },
+    {
+      "owner": "lingxiloop-design-fixture",
+      "severity": "error",
+      "pattern": [{ "regexp": "^# ::error file=(server/src/__integration__/runtime-design-failure\\.test\\.ts)(?:,line=([0-9]+))?::(Native Design fixture failed at provider stage [0-9]+)$", "file": 1, "line": 2, "message": 3 }]
+    }
+  ]
+}

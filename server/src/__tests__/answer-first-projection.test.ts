@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createRunView, type RunEvent, type RunState } from '@lyyzka/lingxios/ui'
+import { createRunView, type RunEvent, type RunState } from '@lingxi-org/lingxios/ui'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
