@@ -26,7 +26,10 @@ export function nativeArtifactRuntimeConfiguration(env={},origin='https://localh
     LINGXIOS_REALTIME_REDIS_URL:`redis://127.0.0.1:26379/${baseline?3:4}`,
     LINGXIOS_CONTROL_HOST:'127.0.0.1',LINGXIOS_CONTROL_PORT:baseline?'24911':'24912',
     LINGXIOS_SERVICE_TOKEN:'native-artifact-local-service-test-only-credentials',
-    AGENT_OS_INPUT_COST_MICROS_PER_MILLION:'0',AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION:'0',
+    // The official runtime rejects zero monetary tariffs in production. This
+    // synthetic positive tariff is never charged: the provider is closed and
+    // no Worker is started by the performance fixture.
+    AGENT_OS_INPUT_COST_MICROS_PER_MILLION:'1',AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION:'1',
     AGENT_OS_EMBEDDING_INPUT_COST_MICROS_PER_MILLION:'0',AGENT_OS_EMBEDDING_DIMENSIONS:'1024',
   }
   for(const [name,value]of Object.entries(configuration))assert.ok(env[name]===undefined||env[name]===value,`acceptance refuses inherited ${name}`)
