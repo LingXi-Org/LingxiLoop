@@ -9,8 +9,8 @@
       "image": "design-1920-light.png",
       "width": 1920,
       "height": 1200,
-      "differentPixels": 19171,
-      "rawDifferentRatio": 0.008320746527777778,
+      "differentPixels": 20053,
+      "rawDifferentRatio": 0.008703559027777778,
       "conservativePixelPass": false
     },
     {
@@ -41,96 +41,96 @@
       "image": "design-768-light.png",
       "width": 768,
       "height": 1024,
-      "differentPixels": 30897,
-      "rawDifferentRatio": 0.039287567138671875,
+      "differentPixels": 30879,
+      "rawDifferentRatio": 0.039264678955078125,
       "conservativePixelPass": false
     },
     {
       "image": "design-768-dark.png",
       "width": 768,
       "height": 1024,
-      "differentPixels": 33779,
-      "rawDifferentRatio": 0.04295221964518229,
+      "differentPixels": 33761,
+      "rawDifferentRatio": 0.04292933146158854,
       "conservativePixelPass": false
     },
     {
       "image": "design-390-light.png",
       "width": 390,
       "height": 844,
-      "differentPixels": 14652,
-      "rawDifferentRatio": 0.04451330659861465,
+      "differentPixels": 14651,
+      "rawDifferentRatio": 0.04451026856240126,
       "conservativePixelPass": false
     },
     {
       "image": "design-390-dark.png",
       "width": 390,
       "height": 844,
-      "differentPixels": 16234,
-      "rawDifferentRatio": 0.04931947988820027,
+      "differentPixels": 16233,
+      "rawDifferentRatio": 0.04931644185198687,
       "conservativePixelPass": false
     },
     {
       "image": "slides-1920-light.png",
       "width": 1920,
       "height": 1200,
-      "differentPixels": 23687,
-      "rawDifferentRatio": 0.010280815972222222,
+      "differentPixels": 23618,
+      "rawDifferentRatio": 0.010250868055555555,
       "conservativePixelPass": false
     },
     {
       "image": "slides-1920-dark.png",
       "width": 1920,
       "height": 1200,
-      "differentPixels": 21033,
-      "rawDifferentRatio": 0.00912890625,
+      "differentPixels": 20743,
+      "rawDifferentRatio": 0.009003038194444445,
       "conservativePixelPass": false
     },
     {
       "image": "slides-1440-light.png",
       "width": 1440,
       "height": 1000,
-      "differentPixels": 23556,
-      "rawDifferentRatio": 0.016358333333333332,
+      "differentPixels": 23487,
+      "rawDifferentRatio": 0.016310416666666668,
       "conservativePixelPass": false
     },
     {
       "image": "slides-1440-dark.png",
       "width": 1440,
       "height": 1000,
-      "differentPixels": 20902,
-      "rawDifferentRatio": 0.014515277777777778,
+      "differentPixels": 20612,
+      "rawDifferentRatio": 0.014313888888888888,
       "conservativePixelPass": false
     },
     {
       "image": "slides-768-light.png",
       "width": 768,
       "height": 1024,
-      "differentPixels": 25217,
-      "rawDifferentRatio": 0.03206507364908854,
+      "differentPixels": 25143,
+      "rawDifferentRatio": 0.031970977783203125,
       "conservativePixelPass": false
     },
     {
       "image": "slides-768-dark.png",
       "width": 768,
       "height": 1024,
-      "differentPixels": 27594,
-      "rawDifferentRatio": 0.03508758544921875,
+      "differentPixels": 27574,
+      "rawDifferentRatio": 0.035062154134114586,
       "conservativePixelPass": false
     },
     {
       "image": "slides-390-light.png",
       "width": 390,
       "height": 844,
-      "differentPixels": 15419,
-      "rawDifferentRatio": 0.04684348037428606,
+      "differentPixels": 15402,
+      "rawDifferentRatio": 0.046791833758658405,
       "conservativePixelPass": false
     },
     {
       "image": "slides-390-dark.png",
       "width": 390,
       "height": 844,
-      "differentPixels": 15301,
-      "rawDifferentRatio": 0.04648499210110584,
+      "differentPixels": 15288,
+      "rawDifferentRatio": 0.046445497630331754,
       "conservativePixelPass": false
     }
   ]

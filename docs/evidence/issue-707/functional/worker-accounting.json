@@ -5,7 +5,7 @@
       "encoding": "identity",
       "workerTransferBytes": 1000203,
       "workerDecodedBytes": 1000054,
-      "importDurationMs": 2021.3,
+      "importDurationMs": 2032.9,
       "scriptRequests": 2,
       "inflight": 0
     },
@@ -13,7 +13,7 @@
       "encoding": "gzip",
       "workerTransferBytes": 1230,
       "workerDecodedBytes": 1000054,
-      "importDurationMs": 2023.0,
+      "importDurationMs": 2023.9,
       "scriptRequests": 2,
       "inflight": 0
     },
@@ -24,6 +24,5 @@
     }
   ],
   "performanceSamples": 0,
-  "qualified": false,
-  "scope": "普通与压缩单 Worker 精确计数通过；真实并发共享导入发生歧义时拒绝资格。自检同时覆盖一行不能复用两次、完整计数不能被晚到部分事件覆盖。"
+  "qualified": false
 }

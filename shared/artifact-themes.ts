@@ -86,8 +86,8 @@ export function artifactPageBackground(page: ArtifactPage, document: ThemeSelect
 export function artifactResolvedStyle(style: ArtifactStyle, document: ThemeSelection): ArtifactStyle {
   const theme = selectedTheme(document)
   return { ...style,
-    ...(style.color === undefined && style.themeColor ? { color: colorToken(theme, style.themeColor, '#222222') } : {}),
+    ...(style.color === undefined && style.themeColor ? { color: colorToken(theme, style.themeColor, style.themeColorFallback ?? '#222222') } : {}),
     ...(style.fill === undefined && style.themeFill ? { fill: colorToken(theme, style.themeFill, '#d6e6ff') } : {}),
-    ...(style.fontFamily === undefined && style.themeFont ? { fontFamily: fontToken(theme, style.themeFont, 'sans-serif') } : {}),
+    ...(style.fontFamily === undefined && style.themeFont ? { fontFamily: fontToken(theme, style.themeFont, style.themeFontFallback ?? 'sans-serif') } : {}),
   }
 }

@@ -11,6 +11,7 @@ import { artifactBlobRouter, artifactEditorRouter } from '../modules/artifacts/i
 import { GRANT_TTL_MS, issueGrant } from '../modules/artifacts/grants.js'
 import { artifactKind } from '../modules/artifacts/kinds.js'
 import { createNode, type ArtifactDocument } from '../../../shared/artifact-document.js'
+import { createTableNode } from '../../../shared/artifact-tables.js'
 import { prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
 import { readNativeDocument, submitNativeOperations } from '../modules/artifacts/native-document.js'
 import { withTransaction } from '../db/transaction.js'
@@ -257,6 +258,26 @@ test('a conversation Design opens as native data with all-or-nothing saves and i
   } finally {
     await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')`, [projectId, companyId, userId])
   }
+})
+
+test('native table headers persist through authorized operations and conflict independently from cell content', async () => {
+  const response=await api(`/projects/${projectId}/slides`,'POST',{title:'表格持久化验收'})
+  assert.equal(response.status,201)
+  const deck=await response.json() as {id:string},base=await document(deck.id),page=base.pages[base.pageOrder[0]]
+  const table=createTableNode('header-table',page),original=structuredClone(base)
+  assert.equal((await operate(deck.id,base,[{type:'node.insert',pageId:page.id,node:table}])).status,200)
+  const inserted=await document(deck.id)
+  assert.deepEqual(inserted.pages[page.id].nodes[table.id],table)
+  const cells=table.cells!.map((row,index)=>index===1?['中文正文',...row.slice(1)]:row)
+  assert.equal((await operate(deck.id,inserted,[{type:'node.patch',pageId:page.id,nodeId:table.id,patch:{tableHeader:false}}])).status,200)
+  assert.equal((await operate(deck.id,inserted,[{type:'node.patch',pageId:page.id,nodeId:table.id,patch:{cells}}])).status,200,'a header change must not conflict with independent cell text')
+  const saved=await document(deck.id)
+  assert.equal(saved.pages[page.id].nodes[table.id].tableHeader,false)
+  assert.equal(saved.pages[page.id].nodes[table.id].cells![1][0],'中文正文')
+  assert.equal((await operate(deck.id,inserted,[{type:'node.patch',pageId:page.id,nodeId:table.id,patch:{tableHeader:true}}])).status,409,'a stale header change cannot overwrite the saved choice')
+  assert.deepEqual(await document(deck.id),saved)
+  assert.deepEqual(base,original)
+  assert.equal((await api(`/artifacts/${deck.id}`,'DELETE')).status,200)
 })
 
 test('project Slides decks are listed, created as native documents, renamed with CAS and deleted', async () => {

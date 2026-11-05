@@ -24,7 +24,7 @@ class Handler(BaseHTTPRequestHandler):
         heading = '<h1 data-text-path="heading" style="font:24px system-ui">验收页面 1 ✓</h1>'
         if native: heading = '<div data-node-id="page-1-heading"><div class="native-text-content">' + heading + '</div></div>'
         body = heading + f'<img src="{image}" width="64" height="36"><span class="katex">公式</span>'
-        body = f'<div data-native-artifact-editor="{kind}"><div data-page-id="page-1">{body}</div></div>' if native else f'<div data-slides-editor><div data-slide-surface>{body}</div></div>' if kind == 'slides' else body
+        body = f'<div data-native-artifact-editor="{kind}" tabindex="0"><div data-page-id="page-1">{body}</div></div>' if native else f'<div data-slides-editor><div data-slide-surface>{body}</div></div>' if kind == 'slides' else body
         endpoint = '/api/artifacts/fixture/operations' if native else f'/artifact-editor/{kind}/fixture/__deck/publish'
         body += '<script>window.__fixtureUndoCount=0;window.__nativeArtifactInputAttempt={number:1,attempted:true};document.addEventListener("keydown",event=>{if(event.ctrlKey&&event.key==="z"){event.preventDefault();if(!event.isTrusted)throw Error("untrusted");window.__fixtureUndoCount++;document.querySelector("h1").textContent="验收页面 1";fetch(' + json.dumps(endpoint) + ',{method:"POST",headers:{"content-type":"application/json"},body:"{}"})}});</script>'
         encoded = ('<!doctype html><meta charset="utf-8">'+body).encode()

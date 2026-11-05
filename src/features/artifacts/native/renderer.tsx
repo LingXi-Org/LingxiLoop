@@ -103,7 +103,7 @@ export interface PageRenderProps {
   revisionSeq?:string
   cropEditingId?: string | null
 }
-function TableCell({ value, editing, onCommit }: { value: string; editing: boolean; onCommit(value: string): void }) {
+function TableCell({ value, editing, header, label, onCommit }: { value: string; editing: boolean; header: boolean; label: string; onCommit(value: string): void }) {
   const root = useRef<HTMLTableCellElement>(null)
   const [rendered, setRendered] = useState(value)
   const focused = useRef(false), dirty = useRef(false), composing = useRef(false), flushAfterComposition = useRef(false)
@@ -119,10 +119,11 @@ function TableCell({ value, editing, onCommit }: { value: string; editing: boole
     if (!focused.current) { baseline.current = value; draft.current = value; setRendered(value); if (root.current) root.current.textContent = value; dirty.current = false; markDirty(false) }
   }, [value, markDirty])
   const input = () => { draft.current = root.current?.textContent ?? ''; dirty.current = draft.current !== baseline.current; markDirty(dirty.current || composing.current) }
-  return <td ref={root} contentEditable={editing} suppressContentEditableWarning onFocus={() => { focused.current = true }} onInput={input}
+  const Cell=header?'th':'td'
+  return <Cell ref={root} scope={header?'col':undefined} aria-label={label} contentEditable={editing} suppressContentEditableWarning onFocus={() => { focused.current = true }} onInput={input}
     onCompositionStart={() => { composing.current = true; markDirty(true) }} onCompositionEnd={() => { composing.current = false; input(); if (flushAfterComposition.current) { flushAfterComposition.current = false; queueMicrotask(save) } }}
     onPaste={event => { event.preventDefault(); window.document.execCommand('insertText', false, event.clipboardData.getData('text/plain')) }}
-    onPointerDown={event => { if (editing) event.stopPropagation() }} onBlur={() => { focused.current = false; save(); if (!composing.current) { setRendered(latest.current.value); if (root.current) root.current.textContent = latest.current.value } }}>{rendered}</td>
+    onPointerDown={event => { if (editing) event.stopPropagation() }} onBlur={() => { focused.current = false; save(); if (!composing.current) { setRendered(latest.current.value); if (root.current) root.current.textContent = latest.current.value } }}>{rendered}</Cell>
 }
 function NodeContent({ node, document, page, compute, pageVersion, revisionSeq, editingId, cropEditingId, onTextChange, onFinishText, onCellChange, presenting }: PageRenderProps & { node: ArtifactNode }) {
   node = { ...node, ...(cropEditingId===node.id ? {crop:undefined} : {}), style: artifactResolvedStyle(node.style, document) }
@@ -149,7 +150,7 @@ function NodeContent({ node, document, page, compute, pageVersion, revisionSeq, 
     </svg>
     case 'drawing':
     case 'line': return <svg width="100%" height="100%" viewBox={`0 0 ${node.width} ${node.height}`} style={{ overflow: 'visible' }}><defs><marker id={`arrow-${node.id}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill={node.style.stroke ?? '#333'} /></marker></defs><polyline points={(node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ')} stroke={node.style.stroke ?? '#333'} strokeWidth={node.style.strokeWidth ?? 3} fill="none" markerEnd={node.lineEnd === 'none' || node.type === 'drawing' ? undefined : `url(#arrow-${node.id})`} markerStart={node.lineStart === 'arrow' ? `url(#arrow-${node.id})` : undefined} /></svg>
-    case 'table': return <table className="native-table"><tbody>{node.cells?.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, colIndex) => <TableCell key={colIndex} value={cell} editing={editingId === node.id && !!onCellChange} onCommit={text => onCellChange?.(node.id, rowIndex, colIndex, text)} />)}</tr>)}</tbody></table>
+    case 'table': return <table className="native-table" style={{gridTemplateColumns:`repeat(${Math.max(1,...(node.cells??[]).map(row=>row.length))},minmax(0,1fr))`}}><tbody>{node.cells?.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, colIndex) => <TableCell key={colIndex} value={cell} header={!!node.tableHeader&&rowIndex===0} label={`第 ${rowIndex+1} 行第 ${colIndex+1} 列`} editing={editingId === node.id && !!onCellChange} onCommit={text => onCellChange?.(node.id, rowIndex, colIndex, text)} />)}</tr>)}</tbody></table>
     case 'embed': return node.embed?.sourceHash ? <IsolatedEmbed pageVersion={pageVersion} revisionSeq={revisionSeq} documentId={document.id} pageId={page.id} node={node} presenting={presenting} /> : <div className="native-embed-wait">隔离内容等待保存</div>
     case 'group': return null
   }

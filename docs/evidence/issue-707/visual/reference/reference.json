@@ -19382,6 +19382,1023 @@
           "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
         }
       ]
+    },
+    {
+      "kind": "slides",
+      "state": "table-inserted",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "file": "slides-table-inserted.png",
+      "controls": [
+        {
+          "label": "Text",
+          "role": "button",
+          "rect": {
+            "x": 16,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Image or video",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Table",
+          "role": "button",
+          "rect": {
+            "x": 80,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Shapes",
+          "role": "button",
+          "rect": {
+            "x": 112,
+            "y": 16,
+            "width": 45,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Download",
+          "role": "button",
+          "rect": {
+            "x": 1135.328125,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Version history",
+          "role": "button",
+          "rect": {
+            "x": 1167.328125,
+            "y": 18,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "background-color 0.12s ease-out"
+        },
+        {
+          "label": "Share",
+          "role": "button",
+          "rect": {
+            "x": 1197.328125,
+            "y": 18,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "background-color 0.12s ease-out"
+        },
+        {
+          "label": "Comments",
+          "role": "button",
+          "rect": {
+            "x": 1225.328125,
+            "y": 14,
+            "width": 32,
+            "height": 32
+          },
+          "fontFamily": "\"Anthropic Sans\", ui-sans-serif, system-ui, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgb(11, 11, 11)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid color(srgb 0.0431373 0.0431373 0.0431373 / 0.1)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "pointer",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Comment options",
+          "role": "button",
+          "rect": {
+            "x": 1257.328125,
+            "y": 14,
+            "width": 16,
+            "height": 32
+          },
+          "fontFamily": "\"Anthropic Sans\", ui-sans-serif, system-ui, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgb(11, 11, 11)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid color(srgb 0.0431373 0.0431373 0.0431373 / 0.1)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "pointer",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Present",
+          "role": "button",
+          "rect": {
+            "x": 1277.328125,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Properties",
+          "role": "button",
+          "rect": {
+            "x": 1318.328125,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "71%, Zoom",
+          "role": "button",
+          "rect": {
+            "x": 1359.328125,
+            "y": 16,
+            "width": 64.671875,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Add slide",
+          "role": "button",
+          "rect": {
+            "x": 8,
+            "y": 874.25,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Speaker notes",
+          "role": "button",
+          "rect": {
+            "x": 40,
+            "y": 874.25,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Hide slide thumbnails",
+          "role": "button",
+          "rect": {
+            "x": 1404,
+            "y": 874.25,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        }
+      ],
+      "table": {
+        "cells": 9,
+        "firstHeader": "Column",
+        "cell": {
+          "fontWeight": "600",
+          "fontSize": "32px",
+          "lineHeight": "44.8px",
+          "padding": "11.2px 19.2px",
+          "background": "rgba(20, 20, 19, 0.08)",
+          "borderRight": "2px solid rgba(20, 20, 19, 0.22)"
+        },
+        "grid": {
+          "width": "900px",
+          "height": "209.516px",
+          "fontFamily": "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif"
+        },
+        "rect": {
+          "x": 132.19525146484375,
+          "y": 387.49053955078125,
+          "width": 635.8333129882812,
+          "height": 148.01885986328125,
+          "top": 387.49053955078125,
+          "right": 768.028564453125,
+          "bottom": 535.5093994140625,
+          "left": 132.19525146484375
+        },
+        "paper": {
+          "x": 41.765625,
+          "y": 80,
+          "width": 1356.4375,
+          "height": 763,
+          "top": 80,
+          "right": 1398.203125,
+          "bottom": 843,
+          "left": 41.765625
+        }
+      }
+    },
+    {
+      "kind": "slides",
+      "state": "table-inspector",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "file": "slides-table-inspector.png",
+      "controls": [
+        {
+          "label": "Text",
+          "role": "button",
+          "rect": {
+            "x": 16,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Image or video",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Table",
+          "role": "button",
+          "rect": {
+            "x": 80,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Shapes",
+          "role": "button",
+          "rect": {
+            "x": 112,
+            "y": 16,
+            "width": 45,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Download",
+          "role": "button",
+          "rect": {
+            "x": 799.328125,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Version history",
+          "role": "button",
+          "rect": {
+            "x": 831.328125,
+            "y": 18,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "background-color 0.12s ease-out"
+        },
+        {
+          "label": "Share",
+          "role": "button",
+          "rect": {
+            "x": 861.328125,
+            "y": 18,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "background-color 0.12s ease-out"
+        },
+        {
+          "label": "Comments",
+          "role": "button",
+          "rect": {
+            "x": 889.328125,
+            "y": 14,
+            "width": 32,
+            "height": 32
+          },
+          "fontFamily": "\"Anthropic Sans\", ui-sans-serif, system-ui, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgb(11, 11, 11)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid color(srgb 0.0431373 0.0431373 0.0431373 / 0.1)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "pointer",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Comment options",
+          "role": "button",
+          "rect": {
+            "x": 921.328125,
+            "y": 14,
+            "width": 16,
+            "height": 32
+          },
+          "fontFamily": "\"Anthropic Sans\", ui-sans-serif, system-ui, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgb(11, 11, 11)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid color(srgb 0.0431373 0.0431373 0.0431373 / 0.1)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "pointer",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Present",
+          "role": "button",
+          "rect": {
+            "x": 941.328125,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Properties",
+          "role": "button",
+          "rect": {
+            "x": 982.328125,
+            "y": 16,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgb(23, 87, 172)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "56%, Zoom",
+          "role": "button",
+          "rect": {
+            "x": 1023.328125,
+            "y": 16,
+            "width": 64.671875,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Add slide",
+          "role": "button",
+          "rect": {
+            "x": 8,
+            "y": 874.25,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Speaker notes",
+          "role": "button",
+          "rect": {
+            "x": 40,
+            "y": 874.25,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Hide slide thumbnails",
+          "role": "button",
+          "rect": {
+            "x": 1068,
+            "y": 874.25,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Properties",
+          "role": "tab",
+          "rect": {
+            "x": 1113,
+            "y": 12,
+            "width": 92,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "default",
+          "transition": "all"
+        },
+        {
+          "label": "Theme",
+          "role": "tab",
+          "rect": {
+            "x": 1205,
+            "y": 12,
+            "width": 69.328125,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "default",
+          "transition": "all"
+        },
+        {
+          "label": "Close panel",
+          "role": "button",
+          "rect": {
+            "x": 1404,
+            "y": 12,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Padding",
+          "role": "input",
+          "rect": {
+            "x": 1221,
+            "y": 95,
+            "width": 141.5,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "text",
+          "transition": "all"
+        },
+        {
+          "label": "Edit padding per side",
+          "role": "button",
+          "rect": {
+            "x": 1400,
+            "y": 95,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Columns",
+          "role": "input",
+          "rect": {
+            "x": 1221,
+            "y": 176,
+            "width": 187,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "text",
+          "transition": "all"
+        },
+        {
+          "label": "Rows",
+          "role": "input",
+          "rect": {
+            "x": 1221,
+            "y": 208,
+            "width": 187,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "text",
+          "transition": "all"
+        },
+        {
+          "label": "Resize: Shrink text to fit",
+          "role": "button",
+          "rect": {
+            "x": 1209,
+            "y": 240,
+            "width": 219,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(255, 255, 255, 0.5)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px inset",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "color 0.06s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), outline-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), text-decoration-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), fill 0.06s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.06s cubic-bezier(0.4, 0, 0.2, 1), --tw-gradient-from 0.06s cubic-bezier(0.4, 0, 0.2, 1), --tw-gradient-via 0.06s cubic-bezier(0.4, 0, 0.2, 1), --tw-gradient-to 0.06s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.06s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1), transform 0.06s cubic-bezier(0.4, 0, 0.2, 1), translate 0.06s cubic-bezier(0.4, 0, 0.2, 1), scale 0.06s cubic-bezier(0.4, 0, 0.2, 1), rotate 0.06s cubic-bezier(0.4, 0, 0.2, 1), filter 0.06s cubic-bezier(0.4, 0, 0.2, 1), -webkit-backdrop-filter 0.06s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.06s cubic-bezier(0.4, 0, 0.2, 1), display 0.06s cubic-bezier(0.4, 0, 0.2, 1), content-visibility 0.06s cubic-bezier(0.4, 0, 0.2, 1), overlay 0.06s cubic-bezier(0.4, 0, 0.2, 1), pointer-events 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Cell role: Default (body)",
+          "role": "button",
+          "rect": {
+            "x": 1209,
+            "y": 272,
+            "width": 219,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(255, 255, 255, 0.5)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px inset",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "color 0.06s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), outline-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), text-decoration-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), fill 0.06s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.06s cubic-bezier(0.4, 0, 0.2, 1), --tw-gradient-from 0.06s cubic-bezier(0.4, 0, 0.2, 1), --tw-gradient-via 0.06s cubic-bezier(0.4, 0, 0.2, 1), --tw-gradient-to 0.06s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.06s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1), transform 0.06s cubic-bezier(0.4, 0, 0.2, 1), translate 0.06s cubic-bezier(0.4, 0, 0.2, 1), scale 0.06s cubic-bezier(0.4, 0, 0.2, 1), rotate 0.06s cubic-bezier(0.4, 0, 0.2, 1), filter 0.06s cubic-bezier(0.4, 0, 0.2, 1), -webkit-backdrop-filter 0.06s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.06s cubic-bezier(0.4, 0, 0.2, 1), display 0.06s cubic-bezier(0.4, 0, 0.2, 1), content-visibility 0.06s cubic-bezier(0.4, 0, 0.2, 1), overlay 0.06s cubic-bezier(0.4, 0, 0.2, 1), pointer-events 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Col 1",
+          "role": "input",
+          "rect": {
+            "x": 1168.9375,
+            "y": 327,
+            "width": 89.5625,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "text",
+          "transition": "all"
+        },
+        {
+          "label": "Col 2",
+          "role": "input",
+          "rect": {
+            "x": 1326.4375,
+            "y": 327,
+            "width": 89.5625,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "text",
+          "transition": "all"
+        },
+        {
+          "label": "Col 3",
+          "role": "input",
+          "rect": {
+            "x": 1168.9375,
+            "y": 363,
+            "width": 89.5625,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "text",
+          "transition": "all"
+        },
+        {
+          "label": "Background: None",
+          "role": "button",
+          "rect": {
+            "x": 1209,
+            "y": 478,
+            "width": 187,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(255, 255, 255, 0.5)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px inset",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "color 0.06s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), outline-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), text-decoration-color 0.06s cubic-bezier(0.4, 0, 0.2, 1), fill 0.06s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.06s cubic-bezier(0.4, 0, 0.2, 1), --tw-gradient-from 0.06s cubic-bezier(0.4, 0, 0.2, 1), --tw-gradient-via 0.06s cubic-bezier(0.4, 0, 0.2, 1), --tw-gradient-to 0.06s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.06s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1), transform 0.06s cubic-bezier(0.4, 0, 0.2, 1), translate 0.06s cubic-bezier(0.4, 0, 0.2, 1), scale 0.06s cubic-bezier(0.4, 0, 0.2, 1), rotate 0.06s cubic-bezier(0.4, 0, 0.2, 1), filter 0.06s cubic-bezier(0.4, 0, 0.2, 1), -webkit-backdrop-filter 0.06s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.06s cubic-bezier(0.4, 0, 0.2, 1), display 0.06s cubic-bezier(0.4, 0, 0.2, 1), content-visibility 0.06s cubic-bezier(0.4, 0, 0.2, 1), overlay 0.06s cubic-bezier(0.4, 0, 0.2, 1), pointer-events 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Opacity",
+          "role": "input",
+          "rect": {
+            "x": 1221,
+            "y": 510,
+            "width": 44,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "text",
+          "transition": "all"
+        },
+        {
+          "label": "Radius",
+          "role": "input",
+          "rect": {
+            "x": 1221,
+            "y": 542,
+            "width": 141.5,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "text",
+          "transition": "all"
+        },
+        {
+          "label": "Edit radius per corner",
+          "role": "button",
+          "rect": {
+            "x": 1400,
+            "y": 542,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Add to Effects",
+          "role": "button",
+          "rect": {
+            "x": 1400,
+            "y": 619,
+            "width": 28,
+            "height": 28
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "radius": "8px",
+          "cursor": "default",
+          "transition": "box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1)"
+        },
+        {
+          "label": "Advanced",
+          "role": "button",
+          "rect": {
+            "x": 1105,
+            "y": 654,
+            "width": 335,
+            "height": 40
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "580",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px solid color(srgb 0.0431373 0.0431373 0.0431373 / 0.1)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "default",
+          "transition": "all"
+        }
+      ]
     }
   ]
 }

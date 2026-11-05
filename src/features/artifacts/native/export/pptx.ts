@@ -24,6 +24,9 @@ function packPptx(job: PptxJob, signal?: AbortSignal): Promise<ArrayBuffer> {
     worker.postMessage(job)
   })
 }
+function tableBlend(ink: string, background: string, opacity: number) {
+  return [0,2,4].map(offset=>Math.round(Number.parseInt(ink.slice(offset,offset+2),16)*opacity+Number.parseInt(background.slice(offset,offset+2),16)*(1-opacity)).toString(16).padStart(2,'0')).join('').toUpperCase()
+}
 function textRuns(node: ArtifactRichText): Array<{ text: string; options?: Record<string, unknown> }> {
   if (node.type === 'text') {
     const options: Record<string, unknown> = {}
@@ -106,7 +109,10 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
             const shape = ({ rect: style.borderRadius ? 'roundRect' : 'rect', ellipse: 'ellipse', triangle: 'triangle', diamond: 'diamond', arrow: 'rightArrow', 'arrow-right':'rightArrow','arrow-left':'leftArrow','arrow-up':'upArrow','arrow-down':'downArrow' } as const)[node.shape ?? 'rect']
             slide.addShape(shape, { ...box, rectRadius: Math.min(.5, (style.borderRadius ?? 0) / Math.min(node.width, node.height)), rotate: rotation, fill: { color: color(style.fill, 'D97757'), transparency: (1 - (style.opacity ?? 1)) * 100 }, line: style.stroke && style.strokeWidth ? { color: color(style.stroke), width: style.strokeWidth * .75 } : { transparency: 100 } })
           } else if (node.type === 'table' && !nodeHasMath(node)) {
-            slide.addTable((node.cells ?? []).map(row => row.map(text => ({ text }))), { ...box, fontSize, color: color(style.color), border: { type: 'solid', color: color(style.stroke, '73726C'), pt: 1 }, margin: 4, autoPage: false })
+            const ink=color(style.color),background=output.background,headerFill=tableBlend(ink,background,.08)
+            const border=(surface:string)=>({type:'solid',color:tableBlend(ink,surface,.22),pt:1})
+            const rows=(node.cells??[]).map((row,index)=>row.map((text,column)=>({text,options:{bold:node.tableHeader&&index===0?true:(style.fontWeight??400)>=600,...(node.tableHeader&&index===0?{fill:{color:headerFill}}:{}),...(node.tableHeader?{border:[index===0?border(background):border(index===1?headerFill:background),border(index===0?headerFill:background),border(index===0?headerFill:background),column===0?border(background):border(index===0?headerFill:background)]}:{})}})))
+            slide.addTable(rows,{...box,fontSize,fontFace:(style.fontFamily??'Arial').split(',')[0].replace(/["']/g,''),color:ink,valign:'top',border:border(background),margin:fontSize*.35,autoPage:false})
           } else {
             // Only unsupported nodes become pictures; ordinary objects on the page remain editable.
             const image=await capture()

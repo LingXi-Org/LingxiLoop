@@ -1,0 +1,133 @@
+{
+  "slideCount": 50,
+  "firstSlideEditableTables": 2,
+  "newTableRows": 3,
+  "newTableColumns": 3,
+  "headerBold": [
+    "1",
+    "1",
+    "1"
+  ],
+  "headerFills": [
+    "E8E8E4",
+    "E8E8E4",
+    "E8E8E4"
+  ],
+  "htmlSemanticHeaders": 3,
+  "independentPptx": {
+    "pages": 50,
+    "rendered": [
+      1,
+      25,
+      50
+    ],
+    "renderer": "pptxviewjs1.1.9"
+  },
+  "consoleErrors": 0,
+  "offlineFileOpening": {
+    "verified": false,
+    "failureCode": "ERR_BLOCKED_BY_ADMINISTRATOR",
+    "browser": "Chromium",
+    "attempted": true
+  },
+  "scope": "真实生产导出模块与受控五十页文档；不替代真实授权 API、完整离线打开或全部视觉属性验收",
+  "browser": "Chrome/154.0.8037.57",
+  "documentSha256": "1d7f396f2f0ceea066f05b1330677e44390706227155909e236df1959ca459cb",
+  "results": [
+    {
+      "format": "html",
+      "bytes": 42862251,
+      "milliseconds": 10749.89999999851,
+      "warnings": [
+        "验收页面 25 / page-25-isolated：交互内容以静态快照导出；原稿保留可执行源码与交互。"
+      ],
+      "immutable": true,
+      "mountedPages": 0
+    },
+    {
+      "format": "pdf",
+      "bytes": 6287062,
+      "milliseconds": 60836.800000000745,
+      "warnings": [
+        "验收页面 25 / page-25-isolated：交互内容以静态快照导出；原稿保留可执行源码与交互。"
+      ],
+      "immutable": true,
+      "mountedPages": 0
+    },
+    {
+      "format": "pptx",
+      "bytes": 16386457,
+      "milliseconds": 42929.89999999851,
+      "warnings": [
+        "验收页面 1 / page-1-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 2 / page-2-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 3 / page-3-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 4 / page-4-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 5 / page-5-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 6 / page-6-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 7 / page-7-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 8 / page-8-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 9 / page-9-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 10 / page-10-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 11 / page-11-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 12 / page-12-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 13 / page-13-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 14 / page-14-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 15 / page-15-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 16 / page-16-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 17 / page-17-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 18 / page-18-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 19 / page-19-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 20 / page-20-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 21 / page-21-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 22 / page-22-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 23 / page-23-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 24 / page-24-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 25 / page-25-isolated：交互内容以静态快照导出；原稿保留可执行源码与交互。",
+        "验收页面 25 / page-25-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 25 / page-25-isolated：复杂内容以图片导出；文档保留源数据。",
+        "验收页面 26 / page-26-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 27 / page-27-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 28 / page-28-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 29 / page-29-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 30 / page-30-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 31 / page-31-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 32 / page-32-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 33 / page-33-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 34 / page-34-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 35 / page-35-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 36 / page-36-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 37 / page-37-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 38 / page-38-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 39 / page-39-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 40 / page-40-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 41 / page-41-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 42 / page-42-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 43 / page-43-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 44 / page-44-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 45 / page-45-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 46 / page-46-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 47 / page-47-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 48 / page-48-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 49 / page-49-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 50 / page-50-formula：公式以图片导出；文档保留源数据。"
+      ],
+      "immutable": true,
+      "mountedPages": 0
+    }
+  ],
+  "artifacts": {
+    "fifty-pages.pptx": {
+      "sha256": "727a79c30a9c95d4657fa34bd821e5386208a7fa9b07fbe04bd0eee98354e810",
+      "bytes": 16386457
+    },
+    "fifty-pages.pdf": {
+      "sha256": "1b7c629a8e2ac51b2d2895dc6f582af15986b4059c1311095f1c4ec232473c17",
+      "bytes": 6287062
+    },
+    "fifty-pages.html": {
+      "sha256": "f395fd00ccfc61ab1409378dca9148f29ded1509f63110048b10d486d492f608",
+      "bytes": 42862251
+    }
+  }
+}

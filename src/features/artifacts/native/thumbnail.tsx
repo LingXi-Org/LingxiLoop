@@ -38,9 +38,9 @@ function imageKey(documentId: string, asset: ArtifactAsset) {
 interface PreviewNode {
   id: string; type: ArtifactNode['type']; x: number; y: number; width: number; height: number; rotation: number
   fill: string; color: string; stroke: string; strokeWidth: number; opacity: number; radius: number
-  fontSize: number; fontWeight: number; text: string; shape?: ArtifactNode['shape']; points?: string
+  fontSize: number; fontWeight: number; fontFamily: string; text: string; shape?: ArtifactNode['shape']; points?: string
   gradient?: ArtifactStyle['gradient']; shadow?: ArtifactStyle['shadow']; flipX?: boolean; flipY?: boolean
-  assetId?: string; imageKey?: string; crop?: ArtifactNode['crop']; svg?: string; cells?: string[][]; children?: PreviewNode[]
+  assetId?: string; imageKey?: string; crop?: ArtifactNode['crop']; svg?: string; cells?: string[][]; tableHeader?: boolean; children?: PreviewNode[]
 }
 interface Preview { width: number; height: number; background: string; nodes: PreviewNode[] }
 const previews = new PreviewCache<Preview>()
@@ -82,13 +82,13 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
       color: safeColor(style.color, '#222'),
       stroke: safeColor(style.stroke ?? style.borderColor, node.type === 'line' ? '#333' : 'transparent'),
       strokeWidth: style.strokeWidth ?? style.borderWidth ?? (node.type === 'line' ? 3 : 1),
-      opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
+      fontFamily:style.fontFamily??'sans-serif', opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
       text: (node.type === 'math' ? node.source ?? '' : node.text ?? plainText(node.richText)).slice(0, 512),
       shape: node.shape, crop: node.crop, gradient: style.gradient, shadow: style.shadow, flipX: node.flipX, flipY: node.flipY,
       ...(asset ? { assetId, imageKey: imageKey(document.id, asset) } : {}),
       ...(node.type === 'line' || node.type === 'drawing' ? { points: (node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ') } : {}),
       ...(node.type === 'svg' && node.svg && isSafeArtifactSvg(node.svg) ? { svg: node.svg } : {}),
-      ...(node.type === 'table' ? { cells: node.cells?.slice(0, 12).map(row => row.slice(0, 8).map(cell => cell.slice(0, 48))) } : {}),
+      ...(node.type === 'table' ? { tableHeader:node.tableHeader, cells: node.cells?.slice(0, 12).map(row => row.slice(0, 8).map(cell => cell.slice(0, 48))) } : {}),
     }
     if (node.type === 'group') {
       const members = children.get(node.id) ?? [], layout = node.layout
@@ -207,14 +207,16 @@ function PreviewShape({ node, document, loaded }: { node: PreviewNode; document:
   else if ((node.type === 'line' || node.type === 'drawing')) content = <polyline points={node.points} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} />
   else if (node.type === 'shape') {const {tag:Shape,attributes}=artifactShapeGeometry(node.shape,w,h,node.radius);content=<Shape {...attributes} {...paint} />}
   else if (node.type === 'table') {
-    const rows = node.cells ?? [], cols = Math.max(1, ...rows.map(row => row.length)), rowHeight = h / Math.max(1, rows.length), columnWidth = w / cols
-    content = rows.map((row, rowIndex) => row.map((cell, colIndex) => <g key={`${rowIndex}-${colIndex}`} transform={`translate(${colIndex * columnWidth} ${rowIndex * rowHeight})`}>
-      <rect width={columnWidth} height={rowHeight} fill={rowIndex === 0 ? '#e6e9ef' : '#fff'} stroke={node.stroke === 'transparent' ? '#adb5c2' : node.stroke} strokeWidth={1} />
-      <text x={4} y={Math.min(node.fontSize, rowHeight * .7)} fill={node.color} fontSize={Math.min(node.fontSize, rowHeight * .65)}>{cell.slice(0, 24)}</text>
-    </g>))
+    const rows=node.cells??[],cols=Math.max(1,...rows.map(row=>row.length)),rowHeight=Math.max(0,h-2)/Math.max(1,rows.length),columnWidth=Math.max(0,w-2)/cols
+    const stroke=`color-mix(in srgb,${node.color} 22%,transparent)`
+    content=<><path d={`M1 ${h} V1 H${w}`} fill="none" stroke={stroke} strokeWidth={2} />{rows.map((row,rowIndex)=>row.map((cell,colIndex)=><g key={`${rowIndex}-${colIndex}`} transform={`translate(${2+colIndex*columnWidth} ${2+rowIndex*rowHeight})`}>
+      <rect width={columnWidth} height={rowHeight} fill={rowIndex===0&&node.tableHeader?`color-mix(in srgb,${node.color} 8%,transparent)`:'transparent'} />
+      <path d={`M${columnWidth-1} 0 V${rowHeight-1} H0`} fill="none" stroke={stroke} strokeWidth={2} />
+      <text x={node.fontSize*.6} y={Math.min(node.fontSize*1.35,rowHeight-2)} fill={node.color} fontSize={Math.min(node.fontSize,rowHeight*.65)} fontWeight={rowIndex===0&&node.tableHeader?600:node.fontWeight}>{cell.slice(0,24)}</text>
+    </g>))}</>
   } else if (node.type === 'group') content = <><rect width={w} height={h} rx={node.radius} {...paint} />{node.children?.map(child => <PreviewShape key={child.id} node={child} document={document} loaded={loaded} />)}</>
   else content = <><rect width={w} height={h} rx={node.radius} {...paint} />{(node.type === 'embed' ? ['交互内容'] : node.text.split('\n').slice(0, 4)).map((line, index) => <text key={index} x={0} y={node.fontSize * (index * 1.2 + 1)} fill={node.color} fontSize={node.fontSize} fontWeight={node.fontWeight}>{line.slice(0, 100)}</text>)}</>
-  return <g transform={`translate(${node.x} ${node.y}) rotate(${node.rotation} ${w / 2} ${h / 2}) translate(${node.flipX ? w : 0} ${node.flipY ? h : 0}) scale(${node.flipX ? -1 : 1} ${node.flipY ? -1 : 1})`} opacity={node.opacity}>{node.gradient && <defs>{node.gradient.type === 'radial' ? <radialGradient id={gradientId}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</radialGradient> : <linearGradient id={gradientId} gradientTransform={`rotate(${node.gradient.angle-90} .5 .5)`}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</linearGradient>}</defs>}{content}</g>
+  return <g fontFamily={node.fontFamily} transform={`translate(${node.x} ${node.y}) rotate(${node.rotation} ${w / 2} ${h / 2}) translate(${node.flipX ? w : 0} ${node.flipY ? h : 0}) scale(${node.flipX ? -1 : 1} ${node.flipY ? -1 : 1})`} opacity={node.opacity}>{node.gradient && <defs>{node.gradient.type === 'radial' ? <radialGradient id={gradientId}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</radialGradient> : <linearGradient id={gradientId} gradientTransform={`rotate(${node.gradient.angle-90} .5 .5)`}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</linearGradient>}</defs>}{content}</g>
 }
 
 /** A lightweight visual summary; it never mounts an editor or executes an embed. */

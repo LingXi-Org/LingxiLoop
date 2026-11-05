@@ -43,6 +43,18 @@ try {
       }
     }finally{await page.close()}
   }
+  if(args['table-url']) {
+    const url=new URL(args['table-url']);assert.ok(['127.0.0.1','localhost'].includes(url.hostname))
+    const page=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'light',reducedMotion:'reduce'})
+    try {
+      await page.goto(url.href,{waitUntil:'networkidle'});await ready(page,'slides')
+      const cell=page.locator('[data-cell="0.0"]').first();await cell.waitFor();await page.evaluate(()=>document.fonts.ready)
+      const table=await cell.evaluate(e=>{const grid=e.parentElement,s=getComputedStyle(e),g=getComputedStyle(grid),paper=e.closest('[data-slide-surface]')?.getBoundingClientRect(),r=grid.getBoundingClientRect();return {cells:grid.querySelectorAll('[data-cell]').length,firstHeader:e.textContent,cell:{fontWeight:s.fontWeight,fontSize:s.fontSize,lineHeight:s.lineHeight,padding:s.padding,background:s.backgroundColor,borderRight:s.borderRight},grid:{width:g.width,height:g.height,fontFamily:g.fontFamily},rect:r.toJSON(),paper:paper?.toJSON()}})
+      assert.equal(table.cells,9);assert.equal(table.firstHeader,'Column')
+      await capture(page,'slides','table-inserted',1440,1000,'light');results.at(-1).table=table
+      await cell.click();await page.getByRole('button',{name:'Properties',exact:true}).first().click();await capture(page,'slides','table-inspector',1440,1000,'light')
+    }finally{await page.close()}
+  }
 }finally{await browser.close()}
 await writeFile(join(output,'reference.json'),JSON.stringify({referenceCommit:inventory.referenceCommit,fixture:'native-editor-visual-fixture.mjs',browser:browser.version(),screenshots:results},null,2)+'\n')
 console.log(JSON.stringify({referenceCommit:inventory.referenceCommit,screenshots:results.length,output}))

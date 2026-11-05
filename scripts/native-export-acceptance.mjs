@@ -13,6 +13,16 @@ const repository = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const output = resolve(process.argv[2] ?? '/workspace/scratch/native-export-acceptance')
 const temporary = await mkdtemp(join(tmpdir(), 'lingxi-export-'))
 const fixture = createFixture(process.env.NATIVE_EXPORT_KIND ?? 'slides')
+if(process.env.NATIVE_EXPORT_TABLE==='1') {
+  const {createTableNode}=await import('../shared/artifact-tables.ts')
+  const {applyOperations,prepareBatch}=await import('../shared/artifact-operations.ts')
+  const page=fixture.document.pages[fixture.document.pageOrder[0]],node=createTableNode('export-table',page)
+  fixture.document=applyOperations(fixture.document,prepareBatch(fixture.document,[{type:'node.insert',pageId:page.id,node}],'export-table-fixture')).document
+  const baseNativeSha256=fixture.manifest.nativeSha256
+  fixture.manifest.nativeSha256=createHash('sha256').update(JSON.stringify(fixture.document)).digest('hex')
+  fixture.manifest.exportVariant={name:'Chinese header table',nodeId:node.id,baseNativeSha256,documentSha256:fixture.manifest.nativeSha256}
+}
+
 await mkdir(output, { recursive: true })
 await mkdir(join(temporary, 'public/native-artifact-fixture'), { recursive: true })
 await cp(join(repository, 'public/fonts'), join(temporary, 'public/fonts'), { recursive: true })

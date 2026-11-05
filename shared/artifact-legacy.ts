@@ -224,8 +224,10 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
         return absolute ? 0 : height
       }
       if (tag === 'table') {
-        const cells = descendants(source, 'tr').map(row => row.children.filter(element).filter(cell => cell.tag === 'td' || cell.tag === 'th').map(textContent))
-        add({ ...createNode('table', nodeId(source.attrs.id)), ...common, height: pixels(css.height, box.height, cells.length * fontSize * 1.8), cells })
+        const tableRows = descendants(source, 'tr')
+        const cells = tableRows.map(row => row.children.filter(element).filter(cell => cell.tag === 'td' || cell.tag === 'th').map(textContent))
+        const tableHeader = tableRows[0]?.children.some(cell => element(cell) && cell.tag === 'th') ?? false
+        add({ ...createNode('table', nodeId(source.attrs.id)), ...common, height: pixels(css.height, box.height, cells.length * fontSize * 1.8), cells, ...(tableHeader ? { tableHeader: true } : {}) })
         return absolute ? 0 : cells.length * fontSize * 1.8
       }
       if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'blockquote', 'pre'].includes(tag) || source.children.every(child => !element(child) || ['span', 'b', 'strong', 'em', 'i', 'u', 's', 'a', 'br', 'code'].includes(child.tag.toLowerCase()))) {

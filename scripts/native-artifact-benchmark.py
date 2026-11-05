@@ -294,8 +294,9 @@ class Trace:
         self.unaccounted_script_resources = [entries[j] for j in unmatched if re.search(r"\.(?:m?js|cjs)$", urlsplit(entries[j]['url']).path)]
         for i,j in pairs:
             row, entry = rows[i], entries[j]
-            if not row.get('decodedObserved'):
-                row.update(decodedBytes=entry['decodedBytes'], decodedObserved=True, decodedBytesSource='PerformanceResourceTiming')
+            # A complete, uniquely matched ResourceTiming entry supersedes
+            # partial CDP chunks observed while a Worker target was attaching.
+            row.update(decodedBytes=entry['decodedBytes'], decodedObserved=True, decodedBytesSource='PerformanceResourceTiming')
             if row.get('transferPending'):
                 row.update(transferredBytes=row['observedResponseHeadersBytes'] + entry['encodedBytes'], transferPending=False, transferredBytesSource='PlaywrightHeaders+PerformanceResourceTiming')
 
@@ -303,7 +304,7 @@ class Trace:
         current = {row['requestOrdinal']: row for row in self.requests.values()}
         for row in snapshot:
             observed = current.get(row['requestOrdinal'], {})
-            if row.get('finished') and not row.get('decodedObserved') and observed.get('decodedObserved'):
+            if row.get('finished') and observed.get('decodedObserved') and (not row.get('decodedObserved') or observed.get('decodedBytesSource') == 'PerformanceResourceTiming'):
                 row.update(decodedBytes=observed['decodedBytes'], decodedObserved=True, decodedBytesSource=observed['decodedBytesSource'])
             if row.get('finished') and row.get('transferPending') and not observed.get('transferPending', True):
                 row.update(transferredBytes=observed['transferredBytes'], transferredBytesSource=observed['transferredBytesSource'], transferPending=False)
@@ -724,18 +725,34 @@ def cleanup_edit(page, kind, number, artifact_id):
     raise MeasurementFailure('fixture_restore_unconfirmed')
 
 
+
+def focus_native_keyboard(page, kind):
+    for frame in page.frames:
+        root=frame.locator(f'[data-native-artifact-editor="{kind}"]:visible').first
+        if not root.count(): continue
+        # Closing an editable can leave focus on body. Move through the real
+        # tab order without clicking a control or changing the camera/tool.
+        for tabs in range(65):
+            if root.evaluate("e=>document.hasFocus()&&e.contains(document.activeElement)&&document.activeElement.closest('[data-native-artifact-editor],[data-native-editor-boundary]')===e&&!document.activeElement.closest('input,textarea,[contenteditable=true]')"):
+                return {'focusTabs':tabs,'focusInsideEditor':True}
+            page.keyboard.press('Shift+Tab')
+        raise MeasurementFailure('native_keyboard_focus_unavailable')
+    return {'focusTabs':0,'legacyDocumentShortcut':True}
+
+
 def undo_edit(page, kind, number, artifact_id):
     saves = []
     prefixes = {legacy_save_prefix(frame) for frame in page.frames} - {None}
     listener = lambda response: saves.append(response.status) if any(save_request_matches(response, artifact_id, legacy_prefix=prefix) for prefix in prefixes or {None}) else None
     page.on("response", listener)
     try:
+        focus = focus_native_keyboard(page,kind)
         page.keyboard.press("Control+z")
         ready_heading(page, kind, number, timeout=20)
         deadline = time.monotonic() + 20
         while 200 not in saves and time.monotonic() < deadline: page.wait_for_timeout(50)
         if 200 not in saves: raise MeasurementFailure("undo_save_not_acknowledged")
-        return {"pageNumber": number, "originalHeadingRestored": True, "saveAcknowledged": True}
+        return {"pageNumber": number, "originalHeadingRestored": True, "saveAcknowledged": True, **focus}
     finally: page.remove_listener("response", listener)
 
 
@@ -1024,6 +1041,13 @@ def self_check():
     assert not trace.byte_conflicts
     trace.event('', 'loadingFinished', {'requestId':'late','timestamp':3.05,'encodedDataLength':120})
     assert trace.byte_conflicts == 1, 'conflicting completed observations cannot qualify'
+    partial = reconciliation_fixture([1000])
+    partial.requests['cdp']['decodedBytes'] = 500000
+    partial_snapshot = partial.snapshot()
+    partial.reconcile_decoded(SimpleNamespace(frames=[SimpleNamespace(evaluate=lambda _:[{'url':raw,'startEpochMs':1000,'encodedBytes':1000000,'decodedBytes':1000000}])],workers=[]))
+    partial.reconcile_snapshot(partial_snapshot)
+    assert script_totals(partial_snapshot)['decodedBytes'] == 1000000, 'editable snapshot must retain complete observed bytes'
+    assert script_totals(partial.snapshot())['decodedBytes'] == 1000000, 'complete RT must supersede partial CDP chunks'
     ambiguous = reconciliation_fixture([1000,1000])
     assert ambiguous.ambiguous_requests > 0, 'indistinguishable requests cannot qualify'
     assert safe_url(raw+'?v=1') == safe_url(raw+'?v=2') and resource_key(raw+'?v=1') != resource_key(raw+'?v=2')

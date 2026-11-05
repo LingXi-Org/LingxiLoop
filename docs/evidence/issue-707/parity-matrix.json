@@ -1597,16 +1597,16 @@
       },
       "implementation": "src/features/artifacts/native/NativeEditor.tsx",
       "screenshots": {
-        "reference": null,
-        "native": null,
+        "reference": "visual/reference/slides-table-inserted.png",
+        "native": "visual/native/slides-table-inserted.png",
         "matchedStateVerified": false
       },
-      "result": "与上游立即插入行为不一致",
+      "result": "已还原立即插入三行三列、中文标题行、尺寸与默认位置；完整视觉仍未通过",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/table-slides.json",
+        "scope": "实际 React 与共享操作链路，验证插入、中文单元格、共享撤销重做、重开和标题行；真实 API 新增回归待 CI"
       }
     },
     {
@@ -5553,12 +5553,12 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "尚未补齐完整表格编辑",
+      "result": "标题行保存、共享撤销及旧表格兼容已有局部回归；行列及单元格完整样式仍未补齐",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/table-slides.json",
+        "scope": "共享模型与 Slides 表格插入/编辑；Design 独立表格入口与完整状态未验收"
       }
     },
     {
@@ -5646,12 +5646,12 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "尚未补齐完整表格编辑",
+      "result": "标题行保存、共享撤销及旧表格兼容已有局部回归；行列及单元格完整样式仍未补齐",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/table-slides.json",
+        "scope": "共享模型与 Slides 表格插入/编辑；Design 独立表格入口与完整状态未验收"
       }
     },
     {
@@ -8951,7 +8951,7 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "静态正文及标签检查通过；动态状态持续补充",
+      "result": "菜单、提示、无障碍标签及新增表格默认内容已中文化；全部动态状态持续补充",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
@@ -9014,7 +9014,7 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "静态正文及标签检查通过；动态状态持续补充",
+      "result": "菜单、提示、无障碍标签及新增表格默认内容已中文化；全部动态状态持续补充",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {

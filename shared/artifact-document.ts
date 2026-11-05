@@ -21,6 +21,7 @@ export const artifactStyleSchema = z.object({
   fontSize: z.number().min(1).max(1000).optional(), fontWeight: z.number().int().min(100).max(1000).optional(),
   fontStyle: z.enum(['normal', 'italic']).optional(), textAlign: z.enum(['left', 'center', 'right', 'justify']).optional(),
   textDecoration: z.enum(['none', 'underline', 'line-through']).optional(), lineHeight: z.number().min(0.5).max(10).optional(),
+  themeColorFallback: color.optional(), themeFontFallback: z.string().max(200).refine(value => !/[<>;{}]/.test(value)).optional(),
   padding: positive.optional(), themeColor: z.string().max(128).optional(), themeFont: z.string().max(128).optional(), themeFill: z.string().max(128).optional(),
 }).strict()
 export type ArtifactStyle = z.infer<typeof artifactStyleSchema>
@@ -121,6 +122,7 @@ export const artifactNodeSchema = z.object({
   crop: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), width: z.number().min(0).max(1), height: z.number().min(0).max(1) }).strict().optional(),
   shape: z.enum(['rect', 'ellipse', 'triangle', 'diamond', 'arrow', 'arrow-right', 'arrow-left', 'arrow-up', 'arrow-down']).optional(),
   points: z.array(z.object({ x: finite, y: finite }).strict()).max(10_000).optional(),
+  tableHeader: z.boolean().optional(),
   cells: z.array(z.array(z.string().max(10_000)).max(100)).max(100).optional(),
   svg: z.string().refine(isSafeArtifactSvg, 'unsupported or unsafe SVG').optional(),
   embed: z.object({ source: z.string().max(4_000_000), format: z.enum(['html', 'jsx']), sourceHash: z.string().regex(/^[a-f0-9]{64}$/).optional(), resourceVersion: z.string().regex(/^local-[a-f0-9]{16}$/).optional(), originalPath: z.string().max(512).optional(), previewAssetId: artifactIdSchema.optional() }).strict().optional(),

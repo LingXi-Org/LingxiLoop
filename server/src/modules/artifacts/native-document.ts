@@ -235,7 +235,7 @@ function convertInWorker(source: Pick<SourceSnapshot, 'artifact' | 'files'>): Pr
     worker.once('message', (result: { result?: Conversion; error?: string }) => {
       clearTimeout(timeout)
       if (result.result) resolve(result.result)
-      else reject(new NativeDocumentError(422, 'conversion_failed', result.error ?? 'Cannot convert this document. The original files are unchanged.'))
+      else reject(new NativeDocumentError(422, 'conversion_failed', result.error ?? '无法转换此稿件，原始文件未更改。'))
       void worker.terminate()
     })
     worker.once('error', error => { clearTimeout(timeout); reject(error) })

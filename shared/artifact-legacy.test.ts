@@ -104,3 +104,15 @@ it('keeps x-embed contents byte-exact and converts surrounding nodes and stored 
   assert.equal(JSON.stringify(files), before)
   assert.equal('__legacyEmbedMustNotRun' in globalThis, false)
 })
+
+it('preserves authored header cells while body-only legacy tables stay body-only', () => {
+  for (const [cell,header] of [['th',true],['td',undefined]] as const) {
+    const source=`<section><table><tr><${cell}>标题</${cell}></tr><tr><td>正文</td></tr></table></section>`
+    const files={'project/deck.json':file(JSON.stringify({v:4,order:['first']})),'project/slides/first.html':file(source)}
+    const result=convertLegacyArtifact({id:'table-doc',kind:'slides',title:'表格',files})
+    const table=Object.values(result.document.pages.first.nodes).find(node=>node.type==='table')!
+    assert.equal(table.tableHeader,header)
+    assert.deepEqual(table.cells,[['标题'],['正文']])
+    assert.equal(files['project/slides/first.html'].content,source)
+  }
+})
