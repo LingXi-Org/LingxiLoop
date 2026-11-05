@@ -168,5 +168,11 @@
     "Complete frozen3.8.25 baseline vs candidate4.0.0 functional/performance acceptance; report the SDK version change as a changed experimental factor.",
     "Build final image and perform final candidate independent review."
   ],
-  "productionActionsPerformed": false
+  "productionActionsPerformed": false,
+  "ciInstallation": {
+    "run": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/41971122979",
+    "integrationJob": 127059492901,
+    "officialPackageInstall": "passed",
+    "evidence": "Scoped dependency installation completed successfully in the integration job. The owning bootstrap failed afterward; this is not migration or runtime acceptance."
+  }
 }

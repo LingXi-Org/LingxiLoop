@@ -28,6 +28,12 @@ browser bundles but cannot qualify the server.
 Historical `perf/issue-652` values describe different source revisions and a
 different, smaller sample. They are not relabelled as this refactor's baseline.
 
+The candidate now uses the user-approved `@lingxi-org/lingxios@4.0.0`.
+[CI run 41971122979](https://github.com/LingXi-Org/LingxiLoop/actions/runs/41971122979)
+installed that official package successfully; its server and integration bootstrap
+checks have not passed. Local package access and the original baseline dependency
+remain unavailable. This does not change the unverified performance gates above.
+
 ## Fixed input and measurement contract
 
 `scripts/native-artifact-fixture.mjs` creates equivalent legacy files and native

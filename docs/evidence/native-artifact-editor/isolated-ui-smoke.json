@@ -4,7 +4,7 @@
   "browser": "Chromium 154.0.8037.57 built on Debian GNU/Linux 13 (trixie)",
   "scope": {
     "react": "StrictMode, real NativeEditor and Worker modules",
-    "input": "Playwright trusted pointer and keyboard events",
+    "input": "Playwright trusted pointer/keyboard events; CDP Input.imeSetComposition and Input.insertText for Chinese composition",
     "fixture": "scripts/native-artifact-fixture.mjs; 50 pages, 50 PNG images, 50 formulas",
     "transport": "deterministic intercepted HTTP responses; real shared operation reducer; synthetic tenant context checked on authenticated image requests",
     "notVerified": [
@@ -53,12 +53,39 @@
       "command": "node --import tsx --test src/features/artifacts/native/*.test.ts src/features/artifacts/native/thumbnail.test.tsx",
       "passed": 21,
       "failed": 0
+    },
+    "chineseIme": {
+      "method": [
+        "CDP Input.imeSetComposition",
+        "CDP Input.insertText"
+      ],
+      "compositionUpdates": 3,
+      "compositionStartAndUpdatesTrusted": true,
+      "commitInputTrusted": true,
+      "compositionEndTrusted": [
+        false
+      ],
+      "waitDuringCompositionMs": [
+        800,
+        800
+      ],
+      "operationsDuringComposition": 0,
+      "operationsAfterCommit": 1,
+      "operationsPerBatch": 1,
+      "committedText": "中文输入完成",
+      "reloadedTextMatches": true,
+      "errors": [],
+      "chromiumCdpEndEventControl": {
+        "plainContenteditableCompositionEndTrusted": false,
+        "note": "This Chromium CDP path emits an untrusted compositionend even for a plain contenteditable control; compositionstart, updates and committed input events are trusted. No JavaScript dispatchEvent was used to generate input."
+      }
     }
   },
   "limits": [
     "Flex/grid siblings stay mounted together to preserve browser layout; active edits and selected groups remain mounted.",
     "Thumbnails are bounded visual summaries (96 nodes, 64x40), with cached downsampled images; never-loaded pages show their background until page data has loaded.",
-    "This diagnostic is not a substitute for the full product, persistence, export, or performance acceptance runs."
+    "This diagnostic is not a substitute for the full product, persistence, export, or performance acceptance runs.",
+    "Chinese composition is verified through Chromium CDP, including two pauses longer than the autosave debounce; native OS candidate windows and other browser/OS IMEs are not verified."
   ],
   "screenshots": [
     "isolated-slides.png",
@@ -68,6 +95,7 @@
     "/workspace/scratch/native-editor-smoke/all-pages.mts",
     "/workspace/scratch/native-editor-smoke/design.mts",
     "/workspace/scratch/native-editor-smoke/culling.mts",
-    "/workspace/scratch/native-editor-smoke/theme.mts"
+    "/workspace/scratch/native-editor-smoke/theme.mts",
+    "/workspace/scratch/native-editor-smoke/ime.mts"
   ]
 }

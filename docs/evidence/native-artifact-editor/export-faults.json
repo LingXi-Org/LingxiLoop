@@ -1,0 +1,225 @@
+{
+  "browser": "Chrome/154.0.8037.57",
+  "pages": [
+    "page-1",
+    "page-25",
+    "page-50"
+  ],
+  "fixtureSemanticSha256": "68859e9f939e90ee61d53702dce2652b60b1eb90296992b6b0c9391b877aa765",
+  "lazyModule": {
+    "failure": {
+      "format": "pdf",
+      "ok": false,
+      "error": {
+        "name": "TypeError",
+        "message": "Failed to fetch dynamically imported module: http://127.0.0.1:5327/assets/pdf-CPGistlA.js"
+      },
+      "progress": [],
+      "immutable": true,
+      "mountedPages": 0,
+      "workers": 0
+    },
+    "retry": {
+      "format": "pdf",
+      "ok": true,
+      "bytes": 376314,
+      "progress": [
+        {
+          "done": 1,
+          "total": 3
+        },
+        {
+          "done": 2,
+          "total": 3
+        },
+        {
+          "done": 3,
+          "total": 3
+        }
+      ],
+      "immutable": true,
+      "mountedPages": 0,
+      "workers": 0
+    }
+  },
+  "resourceFailure": {
+    "failure": {
+      "format": "pdf",
+      "ok": false,
+      "error": {
+        "name": "Error",
+        "message": "导出资源加载失败 (503)：image-25"
+      },
+      "progress": [
+        {
+          "done": 1,
+          "total": 3
+        }
+      ],
+      "immutable": true,
+      "mountedPages": 0,
+      "workers": 0
+    },
+    "retry": {
+      "format": "pdf",
+      "ok": true,
+      "bytes": 376314,
+      "progress": [
+        {
+          "done": 1,
+          "total": 3
+        },
+        {
+          "done": 2,
+          "total": 3
+        },
+        {
+          "done": 3,
+          "total": 3
+        }
+      ],
+      "immutable": true,
+      "mountedPages": 0,
+      "workers": 0
+    }
+  },
+  "midExportCancellation": [
+    {
+      "format": "html",
+      "failure": {
+        "format": "html",
+        "ok": false,
+        "error": {
+          "name": "AbortError",
+          "message": "signal is aborted without reason"
+        },
+        "progress": [
+          {
+            "done": 1,
+            "total": 3
+          }
+        ],
+        "immutable": true,
+        "mountedPages": 0,
+        "workers": 0
+      },
+      "retry": {
+        "format": "html",
+        "ok": true,
+        "bytes": 3941558,
+        "progress": [
+          {
+            "done": 1,
+            "total": 3
+          },
+          {
+            "done": 2,
+            "total": 3
+          },
+          {
+            "done": 3,
+            "total": 3
+          }
+        ],
+        "immutable": true,
+        "mountedPages": 0,
+        "workers": 0
+      }
+    },
+    {
+      "format": "pdf",
+      "failure": {
+        "format": "pdf",
+        "ok": false,
+        "error": {
+          "name": "AbortError",
+          "message": "signal is aborted without reason"
+        },
+        "progress": [
+          {
+            "done": 1,
+            "total": 3
+          }
+        ],
+        "immutable": true,
+        "mountedPages": 0,
+        "workers": 0
+      },
+      "retry": {
+        "format": "pdf",
+        "ok": true,
+        "bytes": 376314,
+        "progress": [
+          {
+            "done": 1,
+            "total": 3
+          },
+          {
+            "done": 2,
+            "total": 3
+          },
+          {
+            "done": 3,
+            "total": 3
+          }
+        ],
+        "immutable": true,
+        "mountedPages": 0,
+        "workers": 0
+      }
+    },
+    {
+      "format": "pptx",
+      "failure": {
+        "format": "pptx",
+        "ok": false,
+        "error": {
+          "name": "AbortError",
+          "message": "signal is aborted without reason"
+        },
+        "progress": [
+          {
+            "done": 1,
+            "total": 3
+          }
+        ],
+        "immutable": true,
+        "mountedPages": 0,
+        "workers": 0
+      },
+      "retry": {
+        "format": "pptx",
+        "ok": true,
+        "bytes": 982333,
+        "progress": [
+          {
+            "done": 1,
+            "total": 3
+          },
+          {
+            "done": 2,
+            "total": 3
+          },
+          {
+            "done": 3,
+            "total": 3
+          }
+        ],
+        "immutable": true,
+        "mountedPages": 0,
+        "workers": 0
+      }
+    }
+  ],
+  "injected": [
+    {
+      "pathname": "/assets/pdf-CPGistlA.js",
+      "status": 503
+    },
+    {
+      "pathname": "/native-artifact-fixture/image-25.png",
+      "status": 503
+    }
+  ],
+  "unexpectedErrors": []
+}

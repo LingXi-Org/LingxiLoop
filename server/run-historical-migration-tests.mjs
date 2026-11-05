@@ -7,6 +7,7 @@ import {basename,isAbsolute,join,sep} from 'node:path'
 import {execFile,spawn} from 'node:child_process'
 import {promisify} from 'node:util'
 import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal22TestFixture,withFormal23TestFixture,withFormal24TestFixture,withFormal25TestFixture,useHistoricalRuntimeScope} from './scripts/formal19-test-fixture.mjs'
+import {provisionHistoricalDependencies} from './scripts/historical-runtime-dependencies.mjs'
 const execute=promisify(execFile)
 const PATCH54=new Set(['runtime-patch-provenance.test.ts'])
 const PATCH57=new Set(['runtime-patch57-provenance.test.ts'])
@@ -199,6 +200,7 @@ export async function runHistoricalMigrationTests(root,files,env=process.env){
   await execute('tar',['-xzf',join(fixture,archive),'-C',packageRoot,'--strip-components=1'],{timeout:30_000})
   const actual=JSON.parse(await readFile(join(packageRoot,'package.json'),'utf8'))
   assert.equal(actual.name,'@lyyzka/lingxios');assert.equal(actual.version,record.version)
+  env.LINGXILOOP_HISTORICAL_DEPENDENCIES_DIR=await provisionHistoricalDependencies(root,fixture,packageRoot,env)
   const projection=await copyHistoricalFixtureSource(root,fixture)
   await useHistoricalRuntimeScope(fixture)
   console.log(`[integration historical] display fixture source ${projection.sourceCommit}; current migration code and tests retained`)

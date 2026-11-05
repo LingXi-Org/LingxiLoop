@@ -1,0 +1,34 @@
+{
+  "probe": {
+    "type": "fixture-probe",
+    "title": "原始 DC 组件",
+    "count": "Clicked 2",
+    "child": "子组件内容",
+    "buttons": 3,
+    "globalComponent": "组件按钮",
+    "globalProp": "true",
+    "globalBackground": "rgb(217, 119, 87)",
+    "isolated": true
+  },
+  "capture": {
+    "type": "image/png",
+    "bytes": 30546,
+    "nonceRejected": true,
+    "startedAt": 1793854168380,
+    "finishedAt": 1793854168536
+  },
+  "earlyCapture": {
+    "type": "image/png",
+    "bytes": 30546,
+    "nonceRejected": true,
+    "startedAt": 1793854165384,
+    "finishedAt": 1793854168514
+  },
+  "childRequestedAt": 1793854165371,
+  "childServedAt": 1793854168372,
+  "delayedChildMs": 3000,
+  "installedComponentLoads": 1,
+  "errors": [],
+  "runtimeBytes": 213973,
+  "sourcePreserved": true
+}

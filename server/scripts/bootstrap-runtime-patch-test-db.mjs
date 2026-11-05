@@ -9,8 +9,11 @@ import {fileURLToPath} from 'node:url'
 import {promisify} from 'node:util'
 import {Client} from 'pg'
 import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal24TestFixture,withFormal25TestFixture,useHistoricalRuntimeScope} from './formal19-test-fixture.mjs'
+import {bootstrapFailure,bootstrapFailureAnnotation} from './bootstrap-diagnostics.mjs'
+import {provisionHistoricalDependencies} from './historical-runtime-dependencies.mjs'
 
 const execute=promisify(execFile),root=fileURLToPath(new URL('../../',import.meta.url))
+let bootstrapPhase='bootstrap.target'
 export function assertRuntimePatchTestTarget(env){
  assert.equal(env.NODE_ENV,'test','bootstrap requires explicit test mode')
  const url=new URL(env.INTEGRATION_DATABASE_URL??'')
@@ -25,9 +28,12 @@ export function assertRuntimePatchTestTarget(env){
 }
 async function main(){
  const connection=assertRuntimePatchTestTarget(process.env)
+ bootstrapPhase='bootstrap.runtime-load'
  const {releaseVersions}=await import('@lingxi-org/lingxios')
+ bootstrapPhase='bootstrap.database-connect'
  const env={...process.env,DATABASE_URL:connection,INTEGRATION_DATABASE_URL:connection,DOTENV_CONFIG_PATH:'/dev/null'}
  const run=(code,cwd=root)=>{
+  bootstrapPhase='bootstrap.database-script'
   const result=spawnSync(process.execPath,['--import','tsx','--input-type=module'],{cwd,env,input:code,stdio:['pipe','inherit','inherit'],timeout:120000})
   assert.equal(result.status,0,'local test bootstrap child failed')
  }
@@ -150,19 +156,25 @@ async function main(){
   try{
    const record=JSON.parse(await readFile(join(root,'server/fixtures/runtime-patch-source-3.8.18.json'),'utf8'))
    assert.equal(record.version,'3.8.18');assert.match(record.resolved,/^https:\/\/npm\.pkg\.github\.com\/download\/@lyyzka\/lingxios\/3\.8\.18\/[a-f0-9]{40}$/)
+   bootstrapPhase='bootstrap.archive-download'
    let archive=env.LINGXILOOP_RUNTIME_PATCH_SOURCE_ARCHIVE
    if(archive)assert.ok(isAbsolute(archive),'explicit source archive must be absolute')
    else{
     const packed=await execute('npm',['pack',record.resolved,'--ignore-scripts','--json','--pack-destination',fixture,'--userconfig',env.LINGXILOOP_TEST_PACKAGE_USERCONFIG??join(root,'.npmrc'),'--loglevel','error','--fetch-retries=0','--fetch-timeout=60000'],{cwd:root,env,timeout:90000,maxBuffer:2*1024*1024})
     const [entry]=JSON.parse(packed.stdout);assert.equal(basename(entry.filename),entry.filename);archive=join(fixture,entry.filename)
    }
+   bootstrapPhase='bootstrap.archive-verify'
    assert.equal('sha512-'+createHash('sha512').update(await readFile(archive)).digest('base64'),record.integrity,'formal18 source archive integrity changed')
+   bootstrapPhase='bootstrap.source-copy'
    for(const path of ['server/src','src','shared'])await cp(join(root,path),join(fixture,path),{recursive:true})
    await useHistoricalRuntimeScope(fixture)
    const modules=join(fixture,'node_modules');await mkdir(join(modules,'@lyyzka/lingxios'),{recursive:true})
    for(const name of await readdir(join(root,'node_modules')))if(name!=='@lyyzka')await symlink(join(root,'node_modules',name),join(modules,name),'junction')
    for(const name of await readdir(join(root,'node_modules/@lyyzka')).catch(error=>{if(error.code==='ENOENT')return [];throw error}))if(name!=='lingxios')await symlink(join(root,'node_modules/@lyyzka',name),join(modules,'@lyyzka',name),'junction')
+   bootstrapPhase='bootstrap.package-extract'
    await execute('tar',['-xzf',archive,'--strip-components=1','-C',join(modules,'@lyyzka/lingxios')],{timeout:30000})
+   bootstrapPhase='bootstrap.historical-dependencies'
+   env.LINGXILOOP_HISTORICAL_DEPENDENCIES_DIR=await provisionHistoricalDependencies(root,fixture,join(modules,'@lyyzka/lingxios'),env)
    const key='@lyyzka/lingxios',manifest={name:'verified-formal18-product60-source-fixture',private:true,type:'module',dependencies:{[key]:record.version}}
    const lock={lockfileVersion:3,packages:{'':manifest,['node_modules/'+key]:record}}
    for(const prefix of ['', 'server/']){
@@ -176,5 +188,9 @@ async function main(){
  run("import assert from'node:assert/strict';import{migrateDatabase}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{assert.deepEqual(await migrateDatabase(),[]);console.log('[integration bootstrap] actual formal19 CAS; current60; no target migrations')}finally{await pool.end()}")
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{
- console.error(JSON.stringify({testBootstrap:'refused',code:typeof error.code==='string'?error.code:'BOOTSTRAP_REFUSED'}));process.exitCode=1
+ const failure=bootstrapFailure(error,bootstrapPhase)
+ console.error(JSON.stringify(failure))
+ const annotation=bootstrapFailureAnnotation(failure)
+ if(annotation)console.error(annotation)
+ process.exitCode=1
 })

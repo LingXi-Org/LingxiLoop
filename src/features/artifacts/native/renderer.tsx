@@ -69,7 +69,7 @@ function MathContent({ source, revision, compute }: { source: string; revision: 
   }, [source, revision, compute, attempt])
   if (result?.source !== source) return <span aria-busy="true">{source}</span>
   if (result.error) return <span className="native-math-error">{source}<button type="button" onClick={() => setAttempt(value => value + 1)}>重试公式</button></span>
-  // Only our locked KaTeX worker produces this markup, with trust:false.
+  // biome-ignore lint/security/noDangerouslySetInnerHtml: Only the locked KaTeX worker produces this markup, with trust:false; document HTML is isolated in a sandbox.
   return <span className="native-math" data-formula-ready="true" dangerouslySetInnerHTML={{ __html: result.html }} />
 }
 export interface PageRenderProps {

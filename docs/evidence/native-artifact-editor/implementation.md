@@ -7,10 +7,10 @@ is `d004312841026a4d90dfbd9e8292a55cc29a2e95`; the working branch is
 50-page inputs, hashes, cold-start protocol and outstanding performance gates.
 
 The user subsequently authorized upgrading the candidate to the published
-`@lingxi-org/lingxios@4.0.0`. That dependency/provenance change is in progress;
+`@lingxi-org/lingxios@4.0.0`. The dependency and explicit provenance bridge are implemented;
 the original `@lyyzka/lingxios@3.8.25` baseline remains frozen. Package access
-was unavailable for the baseline, and the new package has not yet qualified
-the candidate. Consequently the complete authenticated app, owning runtime
+remains unavailable locally for both releases. CI installed the formal 4.0.0
+package successfully, but the owning server/bootstrap checks have not passed. Consequently the complete authenticated app, owning runtime
 integrations, live Agent conversation and paired performance runs remain
 unverified. Public dependencies were installed at their lockfile versions for
 isolated checks and browser builds. No replacement SDK or fake runtime is
@@ -198,7 +198,7 @@ They expose progress and cancellation without changing the editing snapshot.
 | --- | --- |
 | HTML | Offline asset/font packing; executable blocks stay isolated. A 50-page file was generated; complete offline/browser behavior still needs the acceptance scenario. |
 | PDF | Page captures plus Chinese-capable text layer and links; flow pages split by selected paper ratio. A 50-page PDF and Chinese text extraction were verified. Representative-page fidelity and flow text selection/link placement remain to inspect. |
-| PPTX | Ordinary text, shapes, tables and notes retain native objects; formulas and complex nodes use reported image fallbacks. A 50-page package was generated; independent renderer/layout inspection remains pending. |
+| PPTX | Ordinary text, shapes, tables and notes retain native objects; formulas and complex nodes use reported image fallbacks. All 50 slides, notes and native objects were inspected; LibreOffice rendered 50 pages, with visual inspection of pages 1, 25 and 50. Formula/complex content uses explicit raster fallbacks. |
 
 Element culling, previews and theme Worker work were added after the first
 production-bundle smoke. The later focused checks cover their contracts, but

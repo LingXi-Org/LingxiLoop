@@ -54,7 +54,7 @@ const server = createServer(async (request, response) => {
       const name = pathname.split('/').at(-1)
       await writeFile(join(output, name.endsWith('.png') || name.endsWith('.html') ? name : `fifty-pages.${name}`), Buffer.concat(chunks)); response.end('saved'); return
     }
-    if (/^\/_saved\/fifty-pages\.(?:html|pdf|pptx)$/.test(pathname)) { response.end(await readFile(join(output, pathname.split('/').at(-1)))); return }
+    if (/^\/_saved\/(?:fifty-pages\.(?:html|pdf|pptx)|embed-offline\.html)$/.test(pathname)) { response.end(await readFile(join(output, pathname.split('/').at(-1)))); return }
     const file = resolve(temporary, 'dist', `.${decodeURIComponent(pathname === '/' ? '/index.html' : pathname)}`)
     if (!file.startsWith(join(temporary, 'dist') + '/')) throw Error('invalid path')
     response.setHeader('content-type', mime[extname(file)] ?? 'application/octet-stream')
@@ -108,25 +108,15 @@ try {
   const cancelled = await call('Runtime.evaluate', { expression: 'window.runCancelledExport()', awaitPromise: true, returnByValue: true })
   const rendered = await call('Runtime.evaluate', { expression: 'window.renderPptx()', awaitPromise: true, returnByValue: true, timeout: 120000 })
   if (rendered.exceptionDetails) throw Error(JSON.stringify(rendered.exceptionDetails))
-  await call('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
-  await call('Page.navigate', { url: `file://${join(output, 'fifty-pages.html')}` })
-  let offline
-  for (let attempt = 0; attempt < 200; attempt++) {
-    const response = await call('Runtime.evaluate', { expression: "location.protocol==='file:'&&document.querySelectorAll('main>article').length===50&&[...document.images].every(image=>image.complete&&image.naturalWidth>0)", returnByValue: true })
-    if (response.result?.value) { offline = true; break }
-    await new Promise(resolve => setTimeout(resolve, 100))
-  }
-  if (!offline) throw Error('HTML did not open offline with all 50 images')
-  const offlineInspect = await call('Runtime.evaluate', { expression: "({pages:document.querySelectorAll('main>article').length,images:document.images.length,formulas:document.querySelectorAll('.katex').length,samples:[1,25,50].map(number=>({page:number,text:document.querySelectorAll('main>article')[number-1].textContent.includes('验收页面 '+number)}))})", returnByValue: true })
-  const screenshot = await call('Page.captureScreenshot', { format: 'png' })
-  await writeFile(join(output, 'html-offline-page-1.png'), Buffer.from(screenshot.data, 'base64'))
-  await call('Page.navigate', { url: `file://${join(output, 'embed-offline.html')}` })
-  let embedOffline
-  for(let attempt=0;attempt<100;attempt++) {const result=await call('Runtime.evaluate',{expression:"location.pathname.endsWith('embed-offline.html')&&document.images.length===1&&[...document.images].every(image=>image.complete&&image.naturalWidth>0)&&!document.querySelector('iframe')&&!document.documentElement.outerHTML.includes('support.js')",returnByValue:true});if(result.result?.value){embedOffline=true;break}await new Promise(resolve=>setTimeout(resolve,100))}
-  if(!embedOffline)throw Error('isolated DC preview did not open offline')
-  const embedScreenshot=await call('Page.captureScreenshot',{format:'png'});await writeFile(join(output,'html-offline-embed.png'),Buffer.from(embedScreenshot.data,'base64'))
+  // Managed Chromium blocks file:// navigation. Do not substitute another origin
+  // for that acceptance gate; assert offline packaging separately and report it open.
+  const offlineHtml = await readFile(join(output, 'fifty-pages.html'), 'utf8')
+  const offlineEmbed = await readFile(join(output, 'embed-offline.html'), 'utf8')
+  const imageSources = [...offlineHtml.matchAll(/<img[^>]*src="([^"]*)"/g)].map(match => match[1])
+  if (imageSources.length !== 50 || imageSources.some(source => !source.startsWith('data:image/'))) throw Error('HTML images are not self-contained')
+  if (offlineEmbed.includes('support.js') || offlineEmbed.includes('{{title}}') || offlineEmbed.includes('<iframe') || !offlineEmbed.includes('data:image/png;base64,')) throw Error('isolated preview was not packaged offline')
   const artifacts = await Promise.all(['html', 'pdf', 'pptx'].map(async format => { const bytes = await readFile(join(output, `fifty-pages.${format}`)); return { format, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') } }))
-  const report = { browser: browser.Browser, fixture: fixture.manifest, results, artifacts, cancellation: cancelled.result.value, independentPptx: rendered.result.value, offlineHtml: offlineInspect.result.value, offlineEmbed:{...embedResult.result.value,opened:true,previewSha256:createHash('sha256').update(embedPreview).digest('hex')}, errors, browserLogs, requests: [...new Set(requests)] }
+  const report = { browser: browser.Browser, fixture: fixture.manifest, results, artifacts, cancellation: cancelled.result.value, independentPptx: rendered.result.value, offlineHtml:{packaging:'self-contained image/font data URLs',pages:50,images:imageSources.length,formulas:(offlineHtml.match(/class="katex"/g)??[]).length,fileOpening:'BLOCKED: managed Chromium file URL policy; not verified'}, offlineEmbed:{...embedResult.result.value,packaged:true,fileOpening:'BLOCKED: managed Chromium file URL policy; not verified',previewSha256:createHash('sha256').update(embedPreview).digest('hex')}, errors, browserLogs, requests: [...new Set(requests)] }
   await writeFile(join(output, 'report.json'), JSON.stringify(report, null, 2))
   console.log(`Evidence: ${output}`)
 } finally {

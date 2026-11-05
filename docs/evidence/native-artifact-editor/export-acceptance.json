@@ -1,0 +1,332 @@
+{
+  "browser": "Chrome/154.0.8037.57",
+  "results": [
+    {
+      "format": "html",
+      "bytes": 42846090,
+      "milliseconds": 5115.799999999814,
+      "warnings": [],
+      "immutable": true,
+      "mountedPages": 0
+    },
+    {
+      "format": "pdf",
+      "bytes": 6373618,
+      "milliseconds": 47785.60000000056,
+      "warnings": [],
+      "immutable": true,
+      "mountedPages": 0
+    },
+    {
+      "format": "pptx",
+      "bytes": 15940921,
+      "milliseconds": 64661.700000000186,
+      "warnings": [
+        "验收页面 1 / page-1-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 2 / page-2-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 3 / page-3-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 4 / page-4-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 5 / page-5-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 6 / page-6-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 7 / page-7-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 8 / page-8-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 9 / page-9-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 10 / page-10-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 11 / page-11-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 12 / page-12-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 13 / page-13-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 14 / page-14-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 15 / page-15-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 16 / page-16-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 17 / page-17-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 18 / page-18-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 19 / page-19-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 20 / page-20-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 21 / page-21-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 22 / page-22-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 23 / page-23-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 24 / page-24-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 25 / page-25-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 26 / page-26-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 27 / page-27-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 28 / page-28-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 29 / page-29-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 30 / page-30-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 31 / page-31-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 32 / page-32-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 33 / page-33-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 34 / page-34-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 35 / page-35-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 36 / page-36-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 37 / page-37-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 38 / page-38-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 39 / page-39-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 40 / page-40-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 41 / page-41-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 42 / page-42-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 43 / page-43-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 44 / page-44-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 45 / page-45-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 46 / page-46-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 47 / page-47-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 48 / page-48-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 49 / page-49-formula：公式以图片导出；文档保留源数据。",
+        "验收页面 50 / page-50-formula：公式以图片导出；文档保留源数据。"
+      ],
+      "immutable": true,
+      "mountedPages": 0
+    }
+  ],
+  "artifacts": [
+    {
+      "format": "html",
+      "bytes": 42846090,
+      "sha256": "5ebb9df5b7ffdc979053f2f4b453bec73c05b47c07e4cd703caba594e78c721d"
+    },
+    {
+      "format": "pdf",
+      "bytes": 6373618,
+      "sha256": "d7687de255ef3162de4a93e211eaef1aca03655c5ee2ece31c23d42143b89f35"
+    },
+    {
+      "format": "pptx",
+      "bytes": 15940921,
+      "sha256": "de5167c6530c5e61019cbeb9689d6a8a26c32710a5b4dd8d9e39d4b9efe12c18"
+    }
+  ],
+  "cancellation": {
+    "name": "AbortError",
+    "cancelled": true
+  },
+  "independentPptx": {
+    "pages": 50,
+    "rendered": [
+      1,
+      25,
+      50
+    ],
+    "renderer": "pptxviewjs1.1.9"
+  },
+  "offlineHtml": {
+    "packaging": "self-contained image/font data URLs",
+    "pages": 50,
+    "images": 50,
+    "formulas": 50,
+    "fileOpening": "BLOCKED: managed Chromium file URL policy; not verified"
+  },
+  "offlineEmbed": {
+    "bytes": 43814,
+    "warnings": [
+      "验收页面 1 / embed：交互内容以静态快照导出；原稿保留可执行源码与交互。"
+    ],
+    "packaged": true,
+    "fileOpening": "BLOCKED: managed Chromium file URL policy; not verified",
+    "previewSha256": "82db554947db09a4fb9fb89bd4bed7c9b0f120f814c604e5248316abcb6e0364"
+  },
+  "errors": [],
+  "browserLogs": [],
+  "inspection": {
+    "slides": 50,
+    "notes": 50,
+    "allPagesNativeObjects": true,
+    "all50FormulaImagesVisible": true,
+    "all50PhotoImagesUncropped": true,
+    "samples": [
+      {
+        "page": 1,
+        "nativeShapes": 3,
+        "nativeTables": 1,
+        "pictures": 2,
+        "notesPreserved": true,
+        "picturesInspected": [
+          {
+            "size": [
+              1280,
+              720
+            ],
+            "visibleBounds": [
+              0,
+              0,
+              1280,
+              720
+            ]
+          },
+          {
+            "size": [
+              920,
+              320
+            ],
+            "visibleBounds": [
+              315,
+              2,
+              601,
+              71
+            ]
+          }
+        ]
+      },
+      {
+        "page": 25,
+        "nativeShapes": 3,
+        "nativeTables": 1,
+        "pictures": 2,
+        "notesPreserved": true,
+        "picturesInspected": [
+          {
+            "size": [
+              1280,
+              720
+            ],
+            "visibleBounds": [
+              0,
+              0,
+              1280,
+              720
+            ]
+          },
+          {
+            "size": [
+              920,
+              320
+            ],
+            "visibleBounds": [
+              315,
+              2,
+              601,
+              71
+            ]
+          }
+        ]
+      },
+      {
+        "page": 50,
+        "nativeShapes": 3,
+        "nativeTables": 1,
+        "pictures": 2,
+        "notesPreserved": true,
+        "picturesInspected": [
+          {
+            "size": [
+              1280,
+              720
+            ],
+            "visibleBounds": [
+              0,
+              0,
+              1280,
+              720
+            ]
+          },
+          {
+            "size": [
+              920,
+              320
+            ],
+            "visibleBounds": [
+              318,
+              8,
+              608,
+              221
+            ]
+          }
+        ]
+      }
+    ],
+    "pdfPages": 50,
+    "pdfChineseTextPages": [
+      1,
+      25,
+      50
+    ]
+  },
+  "fixture": {
+    "version": 1,
+    "pages": 50,
+    "images": 50,
+    "formulas": 50,
+    "imageBytes": 30877750,
+    "semanticSha256": "68859e9f939e90ee61d53702dce2652b60b1eb90296992b6b0c9391b877aa765",
+    "nativeSha256": "d2a8d96f5740bd26e4d9e09bac110b555d2bedb60b12ab31ac3c3456ca159278"
+  },
+  "network": {
+    "uniqueRequests": 340,
+    "scriptPaths": [
+      "http://127.0.0.1:5325/assets/index-Bi1AMPMM.js",
+      "http://127.0.0.1:5325/assets/preload-helper-CLcXU_4U.js",
+      "http://127.0.0.1:5325/document.json",
+      "http://127.0.0.1:5325/assets/export-artifact-DN28jqqP.js",
+      "http://127.0.0.1:5325/assets/html-CB16GBP2.js",
+      "http://127.0.0.1:5325/assets/render-Ch_sCwmm.js",
+      "http://127.0.0.1:5325/assets/katex-HP8lGamR.js",
+      "http://127.0.0.1:5325/assets/katex.min-DXaO1tdm.js",
+      "http://127.0.0.1:5325/assets/pdf-CPGistlA.js",
+      "http://127.0.0.1:5325/assets/index-Cs9OzAhw.js",
+      "http://127.0.0.1:5325/assets/pdf.worker-CCeDUFOc.js",
+      "http://127.0.0.1:5325/assets/pptx-DYwlgP5j.js",
+      "http://127.0.0.1:5325/assets/pptx.worker-CAreH9pM.js",
+      "http://127.0.0.1:5325/assets/PptxViewJS.es-DEA-sGyA.js"
+    ]
+  },
+  "libreOffice": {
+    "renderer": "LibreOfficeDev 26.8.0.0.alpha0",
+    "pages": 50,
+    "rendered": [
+      1,
+      25,
+      50
+    ],
+    "chineseTextPages": [
+      1,
+      25,
+      50
+    ],
+    "pdfBytes": 5805605,
+    "pdfSha256": "27f2b3f2ebd11c3ca6d11e72189e2460952a510e578f79086eb369b5283b6812"
+  },
+  "visualInspection": {
+    "renderer": "LibreOffice",
+    "pages": [
+      1,
+      25,
+      50
+    ],
+    "observed": "Chinese text, full photograph, formula, rounded shape, table, background present; XML and extracted text preserve page labels and notes",
+    "limitations": [
+      "Direct file:// HTML opening blocked by managed Chromium policy; offline packaging assertions are separate.",
+      "PDF visual appearance is raster plus searchable Unicode text and links; text selection positions are not fully faithful.",
+      "PPTX formulas and complex nodes are pictures; ordinary text/shapes/tables/notes remain native.",
+      "This isolated export check is not the authenticated product API/Agent or cold-start performance acceptance."
+    ]
+  },
+  "faultAcceptance": {
+    "script": "node scripts/native-export-fault-acceptance.mjs",
+    "pages": [
+      "page-1",
+      "page-25",
+      "page-50"
+    ],
+    "browser": "Chrome/154.0.8037.57",
+    "lazyPdfChunk503": {
+      "initialFailure": true,
+      "sameWindowRetry": true,
+      "refreshRequired": false
+    },
+    "image503": {
+      "failedAfterPage": 1,
+      "retrySucceeded": true
+    },
+    "midExportCancellation": {
+      "formats": [
+        "html",
+        "pdf",
+        "pptx"
+      ],
+      "abortAfterPage": 1,
+      "allRetriesSucceeded": true
+    },
+    "allAttemptsPreservedDocument": true,
+    "allAttemptsReleasedDomAndWorkers": true,
+    "unexpectedErrors": [],
+    "rawReport": "export-faults.json"
+  }
+}

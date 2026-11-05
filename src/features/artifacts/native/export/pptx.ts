@@ -90,7 +90,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
             slide.addShape('line', { ...box, line: { color: color(style.stroke ?? style.color), width: (style.strokeWidth ?? 2) * .75 } })
           } else {
             // Only unsupported nodes become pictures; ordinary objects on the page remain editable.
-            const data = await toPng(element, { pixelRatio: 2, skipAutoScale: true, style: { position: 'relative', left: '0', top: '0', transform: 'none', margin: '0' } })
+            const data = await toPng(element, { pixelRatio: 2, skipAutoScale: true, style: { position: 'static', left: '0', top: '0', transform: 'none', margin: '0' } })
             resources.check()
             slide.addImage({ data, ...box, rotate: rotation })
             if (['math', 'svg', 'embed', 'text', 'table'].includes(node.type)) resources.warnings.add(`${page.title} / ${node.id}：${node.type === 'math' ? '公式' : '复杂内容'}以图片导出；文档保留源数据。`)

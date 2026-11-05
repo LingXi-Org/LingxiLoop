@@ -1,0 +1,26 @@
+✔ legacy JSX is syntax-transformed without executing source and React imports use the isolated runtime (70.355228ms)
+✔ JSON script data remains data and unsafe runtime URLs are rejected (2.890089ms)
+✔ documented DCLogic classes are registered without evaluating them on the server (21.822975ms)
+▶ legacy artifact conversion
+  ✔ preserves ordered pages, editable text, images, formula source and notes without changing originals (104.949867ms)
+  ✔ keeps executable Design source isolated and addressed by its original hash (11.271788ms)
+  ✔ never moves event handlers or unsafe SVG into native DOM nodes (1.501585ms)
+  ✔ refuses unknown format versions and missing referenced pages instead of losing data (0.806584ms)
+  ✔ converts static DC wrappers, empty decorative shapes, grid tracks and print metadata (7.73507ms)
+✔ legacy artifact conversion (131.365478ms)
+✔ offline HTML escapes authored text and preserves the fixed snapshot (24.470842ms)
+✔ image metadata never authorizes embedding a JSON API response or forged image bytes (7.354564ms)
+✔ cancellation occurs before loading resources or modifying a document (1.010724ms)
+✔ offline HTML uses the isolated content snapshot and reports loss of interactivity (47.113132ms)
+✔ formula output uses KaTeX and a malformed source remains readable with a warning (287.222683ms)
+✔ PDF page tree, Unicode text layer and links are understood by an independent parser (214.402096ms)
+✔ inline formulas in text and table cells render while prices and code stay literal (81.089553ms)
+✔ theme-bound defaults affect page, text and shape export while authored overrides remain fixed (3.892396ms)
+ℹ tests 16
+ℹ suites 1
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2252.744009

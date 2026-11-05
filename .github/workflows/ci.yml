@@ -294,6 +294,9 @@ jobs:
           cache-dependency-path: ${{ format('server/build/{0}/package-lock.json', matrix.component == 'web' && 'web-ci' || matrix.component == 'server' && 'server-ci' || matrix.component == 'release' && 'deploy-contract' || matrix.component) }}
       # Version synchronization reads JSON with Node builtins; it needs no packages.
       - if: matrix.component != 'open-notebook' && matrix.component != 'release'
+        name: Annotate compiler and test failures
+        run: echo "::add-matcher::.github/matchers/native-checks.json"
+      - if: matrix.component != 'open-notebook' && matrix.component != 'release'
         run: |
           node server/scripts/scoped-dependencies.mjs
           node --test server/scripts/scoped-dependencies.test.mjs
