@@ -260,7 +260,7 @@ export function CasesPage() {
   }
   const detail = Boolean(id || editing)
   const invalid = busy || !input.title.trim() || input.body.length > 200000 || input.summary.length > 2000
-  const body = (value: CaseInput) => <ProtectedFileLinks>{usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument} legacyFormat="markdown"/> : <Markdown body={value.body}/>}</ProtectedFileLinks>
+  const body = (value: CaseInput) => <ProtectedFileLinks>{usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument} legacyFormat="markdown" codeReadingView={<Markdown body={value.body}/>}/> : <Markdown body={value.body}/>}</ProtectedFileLinks>
   const managementMenu = canManage && <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label="案例管理" disabled={busy}><MoreHorizontal /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
     {view === 'reader' ? <DropdownMenuItem onSelect={() => navigate(id ?? undefined, 'manage')}>管理案例</DropdownMenuItem> : <>
       <DropdownMenuItem onSelect={() => navigate(article?.status === 'published' ? id ?? undefined : undefined, 'reader')}>阅读案例</DropdownMenuItem>

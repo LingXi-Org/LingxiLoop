@@ -1,12 +1,20 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import test from 'node:test'
-import { SMOKE_FILES, parseIntegrationArgs, selectIntegrationFiles } from '../server/integration-suite.mjs'
+import { SMOKE_FILES, parseIntegrationArgs, selectIntegrationFiles, integrationOwnerAllowanceMs } from '../server/integration-suite.mjs'
 import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact, copyProduct54FixtureSource, copyProduct57FixtureSource, assertProduct54FixtureTarget } from '../server/run-historical-migration-tests.mjs'
 import { createHash } from 'node:crypto'
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+
+test('only named durable queue owners add selected-run time without changing other modes',()=>{
+ const owners=['runtime-queue-interactive-capacity.test.ts','runtime-queue-background-capacity.test.ts','runtime-queue-capacity.test.ts','runtime-queue-lifecycle.test.ts']
+ assert.equal(integrationOwnerAllowanceMs('selected',[...SMOKE_FILES,...owners]),450_000)
+ assert.equal(integrationOwnerAllowanceMs('selected',[owners[0],owners[0]]),90_000)
+ for(const mode of ['smoke','full'])assert.equal(integrationOwnerAllowanceMs(mode,owners),0)
+ assert.equal(integrationOwnerAllowanceMs('selected',[...SMOKE_FILES,'runtime-queue-unknown.test.ts','toString','../runtime-queue-capacity.test.ts']),0)
+})
 
 // Failure model: today's projection imports new runtime UI exports which the
 // real historical3.8.2 package cannot expose. Pin the display and IM decoding leaves;
