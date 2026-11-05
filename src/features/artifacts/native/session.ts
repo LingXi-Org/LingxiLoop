@@ -60,6 +60,7 @@ export class NativeDocumentSession {
   private disposed = false
   constructor(readonly transport: NativeTransport) {}
   getSnapshot = () => this.state
+  getPageVersion = (pageId:string) => this.pageVersions[pageId]
   subscribe = (callback: () => void) => { this.listeners.add(callback); return () => this.listeners.delete(callback) }
   private update(patch: Partial<NativeState>) { if (this.disposed) return; this.state = { ...this.state, ...patch }; for (const listener of this.listeners) listener() }
   private accept(receipt: DocumentReceipt, acknowledged?: ArtifactOperationBatch) {

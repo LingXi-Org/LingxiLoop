@@ -71,6 +71,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let document = fixture.document
   if(options.checks==='legacy-colors')document.pages['page-1'].background='#f00'
   if(options.checks==='color-cas')document.pages['page-1'].background='#ff0000'
+  const historical=structuredClone(document),historyNode=Object.values(historical.pages['page-1'].nodes).find(node=>node.type==='text')
+  if(options.checks==='history')document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:historyNode.id,patch:{x:historyNode.x+80}}])).document
+  const revisionReads=[],revisionRestores=[],contextWrites=[]
   const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
   const initialPageHashes = Object.fromEntries(document.pageOrder.map(id => [id, pageHash(document.pages[id])]))
   const history = { version: 0, undo: null, redo: null }, receipts = [], errors = []
@@ -94,6 +97,18 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   })
   await page.route('**/api/artifacts/fixture/**', async route => {
     const request = route.request(), url = new URL(request.url())
+    if(url.pathname.endsWith('/editor-context'))contextWrites.push(request.postDataJSON())
+    if(url.pathname.endsWith('/revisions')){
+      revisionReads.push(true);await route.fulfill({status:200,json:{current:`fixture-${document.seq}`,revisions:[document.seq,0].map(seq=>({seq:String(seq),version:`fixture-${seq}`,actorId:'fixture-user',actorName:'测试用户',actorKind:'user',createdAt:new Date().toISOString(),changedPageIds:['page-1']}))}});return
+    }
+    if(url.pathname.includes('/revisions/0/document')){
+      await route.fulfill({status:200,json:{...snapshot(),document:historical,write:false,history:{version:0,undo:null,redo:null}}});return
+    }
+    if(url.pathname.endsWith('/revisions/0/restore')){
+      assert.equal(request.postDataJSON().version,`fixture-${document.seq}`);revisionRestores.push(true)
+      document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:historyNode.id,patch:{x:historyNode.x}}])).document
+      await route.fulfill({status:200,json:{version:`fixture-${document.seq}`}});return
+    }
     const grant = url.pathname.match(/^\/api\/artifacts\/fixture\/embeds\/([^/]+)\/([^/]+)\/grant$/)
     if (grant) {
       const node = document.pages[grant[1]]?.nodes[grant[2]]
@@ -239,6 +254,24 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('data-page-target')),'page-50','virtualized keyboard navigation must focus the newly rendered current page')
       assert.deepEqual(errors,[])
       return {kind:'isolated-filmstrip-navigation-diagnostic',mode:kind,referenceThumbnailSize:true,stableRangeSelection:true,virtualizedKeyboardFocus:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='history') {
+      assert.equal(revisionReads.length,0,'version history must load on demand')
+      await page.getByRole('button',{name:'版本历史',exact:true}).click()
+      const history=page.getByRole('dialog',{name:'版本历史',exact:true});await history.getByRole('button',{name:/^版本 0/}).click()
+      const writesBeforePreview=contextWrites.length
+      await history.getByRole('button',{name:'预览',exact:true}).click()
+      const preview=page.getByRole('dialog',{name:'历史版本预览',exact:true});await preview.locator('[data-revision="0"] [data-node-type=image] img').waitFor()
+      const node=preview.locator(`[data-node-id="${historyNode.id}"]`).first()
+      assert.equal(await node.evaluate(e=>Number.parseFloat(e.style.left)),historyNode.x)
+      await node.click();await page.keyboard.press('ArrowRight');assert.equal(receipts.length,0,'historical previews cannot enter the operation chain')
+      assert.equal(contextWrites.length,writesBeforePreview,'historical selection must not overwrite the current editor context')
+      await preview.getByRole('button',{name:'关闭',exact:true}).click()
+      await history.getByRole('button',{name:'恢复此版本',exact:true}).click()
+      await page.waitForFunction(({id,x})=>Number.parseFloat(document.querySelector(`[data-native-artifact-editor]:not([data-revision]) [data-node-id="${id}"]`)?.style.left)===x,{id:historyNode.id,x:historyNode.x})
+      assert.equal(revisionRestores.length,1);assert.equal(document.pages['page-1'].nodes[historyNode.id].x,historyNode.x)
+      assert.deepEqual(errors,[])
+      return {kind:'isolated-version-history-diagnostic',mode:kind,onDemand:true,readonlyPreview:true,restoredThroughExistingApi:true,consoleOrPageErrors:errors}
     }
     if(options.checks==='export-ink') {
       const ink=await page.evaluate(async root=>{

@@ -13,7 +13,7 @@ import { blobFile, putBlob, sha256 } from './store.js'
 import { NativeHistoryConflict } from './native-history.js'
 import {
   ensureNativeDocument, nativeDocumentChanges, NativeDocumentError, nativeWritesEnabled,
-  nativeSourceArchive, readNativeOriginal, readNativeOriginalBlob, readNativePage, readNativePageSnapshot, submitNativeOperations,
+  nativeSourceArchive, readNativeOriginal, readNativeOriginalBlob, readNativePage, readNativePageSnapshot, readNativeRevision, submitNativeOperations,
   type NativeOperationResult,
 } from './native-document.js'
 import { projectNativeSnapshot } from './native-projection.js'
@@ -49,6 +49,16 @@ nativeArtifactsRouter.get('/artifacts/:id/document', safe(async (req, res) => {
     const loaded = req.query.allPages === 'true' ? snapshot.document.pageOrder : requested
     res.set('Cache-Control', 'no-store').json({ ...projectNativeSnapshot(snapshot, loaded), write })
   } catch (error) { if (!respondError(res, error)) throw error }
+}))
+
+nativeArtifactsRouter.get('/artifacts/:id/revisions/:seq/document',safe(async(req,res)=>{
+  const artifactId=String(req.params.id),scope=await requireArtifact(req,artifactId)
+  const seq=z.string().regex(/^\d{1,18}$/).parse(req.params.seq)
+  try{
+    const snapshot=await readNativeRevision(pool,{artifactId,companyId:scope.companyId,seq})
+    const loaded=req.query.allPages==='true'||!Object.keys(snapshot.pageVersions).length?snapshot.document.pageOrder:snapshot.document.pageOrder.slice(0,1)
+    res.set('Cache-Control','no-store').json({...projectNativeSnapshot(snapshot,loaded),write:false})
+  }catch(error){if(!respondError(res,error))throw error}
 }))
 
 nativeArtifactsRouter.get('/artifacts/:id/pages/:pageId', safe(async (req, res) => {
@@ -136,8 +146,8 @@ nativeArtifactsRouter.get('/artifacts/:id/assets/:assetId', safe(async (req, res
 
 nativeArtifactsRouter.post('/artifacts/:id/embeds/:pageId/:nodeId/grant', safe(async (req, res) => {
   const artifactId = String(req.params.id), scope = await requireArtifact(req, artifactId)
-  const input = z.object({ sha256: z.string().regex(/^[a-f0-9]{64}$/), pageHash: z.string().regex(/^[a-f0-9]{64}$/).optional(), nonce: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/).optional() }).strict().parse(req.body)
-  const page = input.pageHash ? await readNativePage(pool, artifactId, String(req.params.pageId), input.pageHash)
+  const input = z.object({ sha256: z.string().regex(/^[a-f0-9]{64}$/), pageHash: z.string().regex(/^[a-f0-9]{64}$/).optional(), revisionSeq:z.string().regex(/^\d{1,18}$/).optional(), nonce: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/).optional() }).strict().parse(req.body)
+  const page = input.revisionSeq!==undefined ? (await readNativeRevision(pool,{artifactId,companyId:scope.companyId,seq:input.revisionSeq})).document.pages[String(req.params.pageId)] : input.pageHash ? await readNativePage(pool, artifactId, String(req.params.pageId), input.pageHash)
     : (await ensureNativeDocument({ db: pool, transaction }, { artifactId, companyId: scope.companyId, actorId: scope.userId, write: false })).document.pages[String(req.params.pageId)]
   const embed = page?.nodes[String(req.params.nodeId)]?.embed
   if (!embed) { res.sendStatus(404); return }
@@ -147,6 +157,7 @@ nativeArtifactsRouter.post('/artifacts/:id/embeds/:pageId/:nodeId/grant', safe(a
   const origin = env.NODE_ENV === 'production' ? await artifactEditorOrigin(grant, env.ARTIFACT_EDITOR_BASE) : ''
   const query = new URLSearchParams({ sha256: input.sha256, nonce: input.nonce ?? randomUUID() })
   if (input.pageHash) query.set('pageHash', input.pageHash)
+  if (input.revisionSeq!==undefined) query.set('revisionSeq',input.revisionSeq)
   res.set('Cache-Control', 'no-store').json({ url: `${origin}${prefix}?${query}`, expiresAt })
 }))
 

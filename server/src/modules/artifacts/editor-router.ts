@@ -13,7 +13,7 @@ import { ARTIFACT_KIND_DEFINITIONS, artifactKind, type ArtifactKindDefinition } 
 import { blobFile, contentTypeOf, isWireEntry, listing, putBlob, readProjectFile, type WireEntry } from './store.js'
 import { availableAgents } from './repository.js'
 import { slideWorkspaceConversation } from './slides-workspace.js'
-import { ensureNativeDocument, readNativeDocument, readNativeOriginal, readNativeOriginalResource, readNativePage } from './native-document.js'
+import { ensureNativeDocument, readNativeDocument, readNativeOriginal, readNativeOriginalResource, readNativePage, readNativeRevision } from './native-document.js'
 import { withTransaction } from '../../db/transaction.js'
 
 // Ported from baoyu-design server.mjs `startServer`/`route`: the same routes under
@@ -304,9 +304,11 @@ async function route(request: Request, response: Response, session: EditorSessio
   const nativeEmbed = /^native\/embeds\/([a-zA-Z0-9_-]{1,128})\/([a-zA-Z0-9_-]{1,128})$/.exec(rest)
   if (nativeEmbed) {
     const pageHash = typeof request.query.pageHash === 'string' ? request.query.pageHash : undefined
-    let page = await readNativePage(pool, artifactId, nativeEmbed[1], pageHash)
+    const revisionSeq=request.query.revisionSeq
+    if(revisionSeq!==undefined&&(typeof revisionSeq!=='string'||!/^\d{1,18}$/.test(revisionSeq))){response.sendStatus(400);return}
+    let page = revisionSeq!==undefined?(await readNativeRevision(pool,{artifactId,companyId,seq:revisionSeq})).document.pages[nativeEmbed[1]]??null:await readNativePage(pool, artifactId, nativeEmbed[1], pageHash)
     let original = (await readNativeDocument(pool, artifactId))?.original
-    if (!page && !pageHash) {
+    if (!page && !pageHash && revisionSeq===undefined) {
       const converted = await ensureNativeDocument({ db: pool, transaction: run => withTransaction(pool, run) }, { artifactId, companyId, actorId: userId, write: false })
       page = converted.document.pages[nativeEmbed[1]] ?? null
       original = converted.original

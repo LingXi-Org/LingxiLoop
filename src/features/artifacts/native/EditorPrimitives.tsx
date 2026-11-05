@@ -6,12 +6,14 @@ import {
   useState,
   type ReactNode,
   type ButtonHTMLAttributes,
+  type RefObject,
 } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
   Monitor,
   History,
+  Bot,
   ArrowDownToLine,
   Play,
   PanelRight,
@@ -67,6 +69,7 @@ const icons = {
   next: ChevronRight,
   presenter: Monitor,
   history: History,
+  agent:Bot,
   download: ArrowDownToLine,
   play: Play,
   panel: PanelRight,
@@ -358,4 +361,19 @@ export function Modal({
       {children}
     </dialog>
   )
+}
+
+export function FloatingPopover({anchor,label,className='',onClose,children}:{anchor:RefObject<HTMLElement|null>;label:string;className?:string;onClose(restoreFocus?:boolean):void;children:ReactNode}) {
+  const popup=useRef<HTMLDivElement>(null)
+  useLayoutEffect(()=>{
+    const element=popup.current,button=anchor.current;if(!element||!button)return
+    element.showPopover()
+    const update=()=>positionEditorPopover(element,button,'end'),observer=new ResizeObserver(update)
+    observer.observe(element);observer.observe(button)
+    const editor=button.closest('[data-native-artifact-editor]');if(editor)observer.observe(editor)
+    const toggle=(event:Event)=>{if((event as ToggleEvent).newState==='closed')onClose()}
+    element.addEventListener('toggle',toggle);window.addEventListener('resize',update);document.addEventListener('scroll',update,true);update();element.querySelector<HTMLButtonElement>('button')?.focus({preventScroll:true})
+    return()=>{observer.disconnect();element.removeEventListener('toggle',toggle);window.removeEventListener('resize',update);document.removeEventListener('scroll',update,true);queueMicrotask(()=>{if(!element.isConnected)element.hidePopover()})}
+  },[anchor,onClose])
+  return <div ref={popup} popover="auto" role="dialog" aria-label={label} className={`native-floating-popover ${className}`} onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();onClose(true)}}}>{children}</div>
 }

@@ -421,12 +421,10 @@ export async function nativeSourceArchive(db: Queryable, artifactId: string) {
   return { artifactId, files: Object.fromEntries(rows.map(row => [row.path, { sha256: row.sha256, contentType: row.content_type, base64: row.body.toString('base64') }])), originals, assets }
 }
 
-/** A retained file checkpoint is restored through native operations; original source manifests never change. */
-export async function restoreNativeRevision(db: Queryable, input: { artifactId: string; companyId: string; actorId: string; seq: string; version: string }) {
-  const artifact = await scopedArtifact(db, input.artifactId, input.companyId, true)
-  if ((await listing(db, input.artifactId)).ver !== input.version) throw new NativeDocumentError(409, 'version_conflict', 'The document changed. Refresh its revision before restoring.')
-  const current = await readNativeDocument(db, input.artifactId)
-  if (!current) throw new NativeDocumentError(409, 'native_document_required', 'Open this document before restoring history.')
+/** Read immutable checkpoint bytes without adopting them as the current document. */
+export async function readNativeRevision(db: Queryable, input: {artifactId:string;companyId:string;seq:string}):Promise<NativeDocumentSnapshot> {
+  const artifact=await scopedArtifact(db,input.artifactId,input.companyId)
+  let pageVersions:Record<string,string>={}
   const checkpoint = (await db.query<{ files: Record<string, ListedFile>; version: string }>('SELECT files,version FROM artifact_revisions WHERE artifact_id=$1 AND seq=$2', [input.artifactId, input.seq])).rows[0]
   if (!checkpoint) throw new NativeDocumentError(404, 'revision_not_found', 'Revision not found')
   const contents = await versionContents(db, input.artifactId, Object.values(checkpoint.files).map(file => file.sha256))
@@ -435,6 +433,7 @@ export async function restoreNativeRevision(db: Queryable, input: { artifactId: 
     const bytes = contents.get(checkpoint.files[NATIVE_DOCUMENT_PATH].sha256)
     if (!bytes) throw new NativeDocumentError(500, 'missing_revision', 'Revision content missing')
     const { pageFiles, ...metadata } = JSON.parse(bytes.toString('utf8')) as Manifest
+    pageVersions=pageFiles
     const pages: Record<string, ArtifactPage> = {}
     for (const [id, hash] of Object.entries(pageFiles)) {
       const page = contents.get(hash)
@@ -451,7 +450,18 @@ export async function restoreNativeRevision(db: Queryable, input: { artifactId: 
     }
     restored = (await convertInWorker({ artifact, files })).document
     stampLegacyResources(restored, checkpoint.version)
+    stampEmbeddedSources(restored,restored.pageOrder)
   }
+  return {document:restored,pageVersions,history:{version:0,undo:null,redo:null}}
+}
+
+/** A retained file checkpoint is restored through native operations; original source manifests never change. */
+export async function restoreNativeRevision(db: Queryable, input: { artifactId: string; companyId: string; actorId: string; seq: string; version: string }) {
+  await scopedArtifact(db, input.artifactId, input.companyId, true)
+  if ((await listing(db, input.artifactId)).ver !== input.version) throw new NativeDocumentError(409, 'version_conflict', 'The document changed. Refresh its revision before restoring.')
+  const current = await readNativeDocument(db, input.artifactId)
+  if (!current) throw new NativeDocumentError(409, 'native_document_required', 'Open this document before restoring history.')
+  const {document:restored}=await readNativeRevision(db,input)
   const operations: ArtifactOperation[] = []
   // Delete pages before replacing their resources; validation runs on the complete transaction.
   for (const pageId of current.document.pageOrder) operations.push({ type: 'page.delete', pageId } as ArtifactOperation)

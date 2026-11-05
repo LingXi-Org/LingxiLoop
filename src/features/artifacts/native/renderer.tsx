@@ -59,15 +59,15 @@ function AssetImage({ asset, artifactId, alt, style }: { asset: ArtifactAsset; a
   }, [asset.url, asset.sha256, artifactId, attempt])
   return failed ? <button type="button" onClick={() => setAttempt(value => value + 1)}>重试图片</button> : source ? <img src={source} alt={alt} draggable={false} decoding="async" style={style} /> : <span aria-busy="true" style={{ fontSize: 14 }}>加载图片…</span>
 }
-function IsolatedEmbed({ documentId, pageId, node, presenting }: { documentId: string; pageId: string; node: ArtifactNode; presenting?: boolean }) {
+function IsolatedEmbed({ documentId, pageId, node, presenting, pageVersion, revisionSeq }: { documentId: string; pageId: string; node: ArtifactNode; presenting?: boolean;pageVersion?:string;revisionSeq?:string }) {
   const [url, setUrl] = useState<string | null>(null), [failed, setFailed] = useState(false)
   useEffect(() => {
     if (!node.embed?.sourceHash) return
     const controller = new AbortController()
     setUrl(null); setFailed(false)
-    void http<{ url: string }>(`/artifacts/${encodeURIComponent(documentId)}/embeds/${encodeURIComponent(pageId)}/${encodeURIComponent(node.id)}/grant`, { method: 'POST', body: JSON.stringify({ sha256: node.embed.sourceHash }), signal: controller.signal }).then(grant => { if (!controller.signal.aborted) setUrl(grant.url) }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
+    void http<{ url: string }>(`/artifacts/${encodeURIComponent(documentId)}/embeds/${encodeURIComponent(pageId)}/${encodeURIComponent(node.id)}/grant`, { method: 'POST', body: JSON.stringify({ sha256: node.embed.sourceHash,...(pageVersion?{pageHash:pageVersion}:{}),...(revisionSeq!==undefined?{revisionSeq}:{}) }), signal: controller.signal }).then(grant => { if (!controller.signal.aborted) setUrl(grant.url) }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
     return () => controller.abort()
-  }, [documentId, pageId, node.id, node.embed?.sourceHash, node.embed?.resourceVersion])
+  }, [documentId, pageId, node.id, node.embed?.sourceHash, node.embed?.resourceVersion,pageVersion,revisionSeq])
   return url ? <iframe title={node.text ?? '隔离内容'} src={url} sandbox="allow-scripts" referrerPolicy="no-referrer" className="native-embed" style={{ pointerEvents: presenting ? 'auto' : 'none' }} /> : <div className="native-embed-wait">{failed ? '隔离内容暂时无法载入' : '正在载入隔离内容'}</div>
 }
 function MathContent({ source, revision, compute }: { source: string; revision: number; compute: NativeCompute }) {
@@ -99,6 +99,8 @@ export interface PageRenderProps {
   visibleNodeIds?: ReadonlySet<string>
   contentBottom?: number
   canvasOnly?: boolean
+  pageVersion?:string
+  revisionSeq?:string
   cropEditingId?: string | null
 }
 function TableCell({ value, editing, onCommit }: { value: string; editing: boolean; onCommit(value: string): void }) {
@@ -122,7 +124,7 @@ function TableCell({ value, editing, onCommit }: { value: string; editing: boole
     onPaste={event => { event.preventDefault(); window.document.execCommand('insertText', false, event.clipboardData.getData('text/plain')) }}
     onPointerDown={event => { if (editing) event.stopPropagation() }} onBlur={() => { focused.current = false; save(); if (!composing.current) { setRendered(latest.current.value); if (root.current) root.current.textContent = latest.current.value } }}>{rendered}</td>
 }
-function NodeContent({ node, document, page, compute, editingId, cropEditingId, onTextChange, onFinishText, onCellChange, presenting }: PageRenderProps & { node: ArtifactNode }) {
+function NodeContent({ node, document, page, compute, pageVersion, revisionSeq, editingId, cropEditingId, onTextChange, onFinishText, onCellChange, presenting }: PageRenderProps & { node: ArtifactNode }) {
   node = { ...node, ...(cropEditingId===node.id ? {crop:undefined} : {}), style: artifactResolvedStyle(node.style, document) }
   const gradient = node.style.gradient
   const fill = gradient ? `url(#native-gradient-${node.id})` : node.style.fill ?? '#d6e6ff'
@@ -148,7 +150,7 @@ function NodeContent({ node, document, page, compute, editingId, cropEditingId, 
     case 'drawing':
     case 'line': return <svg width="100%" height="100%" viewBox={`0 0 ${node.width} ${node.height}`} style={{ overflow: 'visible' }}><defs><marker id={`arrow-${node.id}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill={node.style.stroke ?? '#333'} /></marker></defs><polyline points={(node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ')} stroke={node.style.stroke ?? '#333'} strokeWidth={node.style.strokeWidth ?? 3} fill="none" markerEnd={node.lineEnd === 'none' || node.type === 'drawing' ? undefined : `url(#arrow-${node.id})`} markerStart={node.lineStart === 'arrow' ? `url(#arrow-${node.id})` : undefined} /></svg>
     case 'table': return <table className="native-table"><tbody>{node.cells?.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, colIndex) => <TableCell key={colIndex} value={cell} editing={editingId === node.id && !!onCellChange} onCommit={text => onCellChange?.(node.id, rowIndex, colIndex, text)} />)}</tr>)}</tbody></table>
-    case 'embed': return node.embed?.sourceHash ? <IsolatedEmbed documentId={document.id} pageId={page.id} node={node} presenting={presenting} /> : <div className="native-embed-wait">隔离内容等待保存</div>
+    case 'embed': return node.embed?.sourceHash ? <IsolatedEmbed pageVersion={pageVersion} revisionSeq={revisionSeq} documentId={document.id} pageId={page.id} node={node} presenting={presenting} /> : <div className="native-embed-wait">隔离内容等待保存</div>
     case 'group': return null
   }
 }

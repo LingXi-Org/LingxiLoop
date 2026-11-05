@@ -171,6 +171,15 @@ test('Slides selection context, concurrent field CAS, legacy write rejection and
   const agentLegacy = await publishArtifactFiles({ companyId, artifactId: deck.id, actorId: agentId, actorKind: 'agent', files })
   assert.equal(agentLegacy.status, 409); assert.equal(agentLegacy.body.code, 'editor_upgrade_required')
   assert.deepEqual(await document(deck.id), saved)
+  const previewResponse=await api(`/artifacts/${deck.id}/revisions/${before.revisions[0].seq}/document?allPages=true`)
+  assert.equal(previewResponse.status,200)
+  const preview=await previewResponse.json() as {document:ArtifactDocument;write:boolean;pageVersions:Record<string,string>}
+  assert.equal(preview.write,false)
+  assert.equal(preview.document.pages['page-1'].nodes.title.text,'Original')
+  assert.ok(preview.pageVersions['page-1'])
+  assert.deepEqual(await document(deck.id),saved,'preview never changes the current document or history')
+  assert.ok([403,404].includes((await api(`/artifacts/${deck.id}/revisions/${before.revisions[0].seq}/document`,'GET',undefined,{'x-company-id':'another-company'})).status))
+  assert.equal((await api(`/artifacts/${deck.id}/revisions/999999999999/document`)).status,404)
   assert.equal((await api(`/artifacts/${deck.id}/revisions/${before.revisions[0].seq}/restore`, 'POST', { version: before.current })).status, 409)
   const live = await (await api(`/artifacts/${deck.id}/revisions`)).json() as typeof before
   assert.equal((await api(`/artifacts/${deck.id}/revisions/${before.revisions[0].seq}/restore`, 'POST', { version: live.current })).status, 200)
