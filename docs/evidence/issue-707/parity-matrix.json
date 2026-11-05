@@ -94,14 +94,24 @@
       "screenshots": {
         "reference": "visual/reference/design-pages.png",
         "native": "visual/native/design-pages.png",
-        "matchedStateVerified": false
+        "matchedStateVerified": false,
+        "additional": [
+          "visual/reference/design-two-pages-light.png",
+          "visual/native/design-two-pages-light.png",
+          "visual/reference/design-page-rename-dark.png",
+          "visual/native/design-page-rename-dark.png"
+        ]
       },
-      "result": "未通过：原生 section 分组与来源独立画布页面模型不同，需扩展模型与菜单",
+      "result": "部分实现：独立画布页面模型、菜单、名称、删除、共享撤销、各页相机及窄容器通过局部回归；独立对象层、内部页面链接和完整视觉仍缺失。",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": [
+          "functional/canvas-pages-light.json",
+          "functional/canvas-pages-dark.json",
+          "functional/canvas-pages-cas.json"
+        ],
+        "scope": "实际 React、Worker、共享操作与受控 HTTP；真实 API 新用例待 CI，完整功能与视觉未通过"
       },
       "semanticEvidence": "source-design-pages.json"
     },

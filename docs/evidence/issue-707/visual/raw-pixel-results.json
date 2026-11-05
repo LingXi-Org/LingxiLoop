@@ -9,64 +9,64 @@
       "image": "design-1920-light.png",
       "width": 1920,
       "height": 1200,
-      "differentPixels": 19171,
-      "rawDifferentRatio": 0.008320746527777778,
+      "differentPixels": 19173,
+      "rawDifferentRatio": 0.008321614583333333,
       "conservativePixelPass": false
     },
     {
       "image": "design-1920-dark.png",
       "width": 1920,
       "height": 1200,
-      "differentPixels": 14175,
-      "rawDifferentRatio": 0.00615234375,
+      "differentPixels": 14225,
+      "rawDifferentRatio": 0.006174045138888889,
       "conservativePixelPass": false
     },
     {
       "image": "design-1440-light.png",
       "width": 1440,
       "height": 1000,
-      "differentPixels": 26244,
-      "rawDifferentRatio": 0.018225,
+      "differentPixels": 26246,
+      "rawDifferentRatio": 0.01822638888888889,
       "conservativePixelPass": false
     },
     {
       "image": "design-1440-dark.png",
       "width": 1440,
       "height": 1000,
-      "differentPixels": 22384,
-      "rawDifferentRatio": 0.015544444444444444,
+      "differentPixels": 22434,
+      "rawDifferentRatio": 0.015579166666666667,
       "conservativePixelPass": false
     },
     {
       "image": "design-768-light.png",
       "width": 768,
       "height": 1024,
-      "differentPixels": 30684,
-      "rawDifferentRatio": 0.0390167236328125,
+      "differentPixels": 30694,
+      "rawDifferentRatio": 0.039029439290364586,
       "conservativePixelPass": false
     },
     {
       "image": "design-768-dark.png",
       "width": 768,
       "height": 1024,
-      "differentPixels": 33761,
-      "rawDifferentRatio": 0.04292933146158854,
+      "differentPixels": 33770,
+      "rawDifferentRatio": 0.042940775553385414,
       "conservativePixelPass": false
     },
     {
       "image": "design-390-light.png",
       "width": 390,
       "height": 844,
-      "differentPixels": 14668,
-      "rawDifferentRatio": 0.044561915178028925,
+      "differentPixels": 14690,
+      "rawDifferentRatio": 0.04462875197472354,
       "conservativePixelPass": false
     },
     {
       "image": "design-390-dark.png",
       "width": 390,
       "height": 844,
-      "differentPixels": 16233,
-      "rawDifferentRatio": 0.04931644185198687,
+      "differentPixels": 16257,
+      "rawDifferentRatio": 0.049389354721108274,
       "conservativePixelPass": false
     },
     {

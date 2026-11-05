@@ -63,8 +63,12 @@ No production merge or deployment is included.
 
 [visual/manifest.json](visual/manifest.json) 绑定参考与原生截图、源码及夹具哈希；[visual/reference](visual/reference) 与 [visual/native](visual/native) 可直接并排审阅。原始差异报告不应用排除区，且明确 `qualified: false`。
 
-表格插入与标题行诊断可使用 `--mode=slides --checks=table`。当前视觉目录为 42 张来源截图、45 张原生状态截图及 1 张独立演示文稿预览；它们用于逐项审阅，默认图原始差异仍未通过门槛。表格真实 API 保存及冲突回归随 owning integration 执行；导出局部结果见 `functional/table-exports.json`，离线文件打开仍未验证。
+表格插入与标题行诊断使用 `--mode=slides --checks=table`，字体诊断使用 `--checks=fonts`，并发选择冲突使用 `--checks=font-cas`。默认选项与产品文案为中文，文稿数据保留原文。字体许可与资源见 `third_party/editor-fonts/manifest.json`。网页、PDF 与演示文稿的局部结果见 `functional`；离线文件打开仍未验证。
 
-字体诊断使用 `--checks=fonts`，并发选择冲突使用 `--checks=font-cas`。当前字体相关文案与默认选项均为中文，文档保存原始字体族数据。资源版本/许可见 `third_party/editor-fonts/manifest.json`。最新目录包含 45 张来源图、53 张原生界面图、2 张网页字体预览和 3 张独立演示文稿预览；完整视觉仍未通过。最新真实性能诊断失败收据见 `performance/79558e79-diagnostic.json`。
+Design 独立页面回归使用 `--mode=design --checks=canvas-pages`，深色增加 `--canvas-theme=dark`；并发重命名使用 `--checks=canvas-pages-cas`。来源先从固定版本创建单独的三画板临时项目，保留隐式默认页面，运行其原始入口，再以 `native-editor-reference-capture.mjs --reference-root=/absolute/pinned-checkout --pages-only=true --pages-url=http://127.0.0.1:PORT/design/TEMPORARY_SESSION/ --browser=/path/to/chromium --output=/tmp/reference-pages` 复现。它只编辑临时来源项目：新建一个页面及 800×600 空画板，捕获浅深两主题的菜单/动作/名称/删除确认，最后恢复第二页名称。已有第二页时名称须为 Page 2。发布包不进入产品。
+
+独立页面局部检查已覆盖每页相机、重命名/删除/撤销、窄容器、名称冲突与焦点恢复；独立对象层、内部页面链接及跨页完整交互仍未完成，见 `source-design-pages.json`。最新真实性能诊断失败收据是 `performance/be5ae0fb-diagnostic.json`；没有合格完整样本。
 
 脚本计量与撤销清理辅助回归见 `performance/measurement-helper-receipt.json`：排队脚本按 Chromium 实际网络起点匹配浏览器完成事件；并发歧义仍拒绝计量。撤销只在活动编辑区发送退出键，隐藏编辑器不触发工作区快捷键；真实失败收据保留可信按键及服务端状态，不包含文档正文。这些辅助检查没有产生性能样本，不能代替真实性能诊断。
+
+当前截图目录包含 53 张来源图和 68 张原生/独立导出预览图；所有哈希见清单，局部历史截图不等于当前候选完整验收。

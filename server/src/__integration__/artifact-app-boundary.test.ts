@@ -12,6 +12,7 @@ import { GRANT_TTL_MS, issueGrant } from '../modules/artifacts/grants.js'
 import { artifactKind } from '../modules/artifacts/kinds.js'
 import { createNode, type ArtifactDocument } from '../../../shared/artifact-document.js'
 import { createTableNode } from '../../../shared/artifact-tables.js'
+import { createCanvasPage, renameCanvasPage, deleteCanvasPage, moveCanvasArtboards } from '../../../shared/artifact-canvas-pages.js'
 import { prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
 import { readNativeDocument, submitNativeOperations } from '../modules/artifacts/native-document.js'
 import { withTransaction } from '../db/transaction.js'
@@ -278,6 +279,41 @@ test('native table headers persist through authorized operations and conflict in
   assert.deepEqual(await document(deck.id),saved)
   assert.deepEqual(base,original)
   assert.equal((await api(`/artifacts/${deck.id}`,'DELETE')).status,200)
+})
+
+test('Design canvas pages persist through authorized APIs with shared undo and metadata conflicts', async () => {
+  const room=randomUUID()
+  await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','画布页面验收',$4::jsonb)`,[room,companyId,projectId,JSON.stringify([userId,agentId])])
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)`,[room,companyId,JSON.stringify({channelType:2,members:[userId,agentId]})])
+  const created=await api(`/conversations/${room}/design`,'POST')
+  assert.equal(created.status,201)
+  const design=await created.json() as {id:string}
+  try {
+    const base=await document(design.id),original=structuredClone(base),board=base.pageOrder[0]
+    assert.ok(board)
+    assert.equal((await operate(design.id,base,createCanvasPage(base,'second-canvas'))).status,200)
+    const added=await document(design.id)
+    assert.equal(added.canvasPages?.[1]?.name,'页面 2')
+    assert.equal((await operate(design.id,added,renameCanvasPage(added,'second-canvas','流程图'))).status,200)
+    assert.equal((await operate(design.id,added,renameCanvasPage(added,'second-canvas','旧名称'))).status,409)
+    const renamed=await document(design.id)
+    assert.equal((await operate(design.id,renamed,moveCanvasArtboards(renamed,[board],'second-canvas'))).status,200)
+    const moved=await document(design.id)
+    assert.equal(moved.pages[board].canvasPageId,'second-canvas')
+    const projected=await(await api(`/artifacts/${design.id}/document`)).json() as {document:ArtifactDocument}
+    assert.deepEqual(projected.document.canvasPages,moved.canvasPages)
+    assert.equal(projected.document.pages[board].canvasPageId,'second-canvas')
+    const deletion=await operate(design.id,moved,deleteCanvasPage(moved,'second-canvas'))
+    assert.equal(deletion.status,200)
+    const receipt=await deletion.json() as {history:{version:number;undo:string}}
+    assert.equal((await document(design.id)).pages[board],undefined)
+    const undone=await api(`/artifacts/${design.id}/operations`,'POST',{operationId:randomUUID(),kind:'undo',targetOperationId:receipt.history.undo,expectedHistoryVersion:receipt.history.version})
+    assert.equal(undone.status,200)
+    const reopened=await document(design.id)
+    assert.deepEqual(reopened.canvasPages,moved.canvasPages)
+    assert.deepEqual(reopened.pages[board],moved.pages[board])
+    assert.deepEqual(base,original)
+  } finally { assert.equal((await api(`/artifacts/${design.id}`,'DELETE')).status,200) }
 })
 
 test('project Slides decks are listed, created as native documents, renamed with CAS and deleted', async () => {

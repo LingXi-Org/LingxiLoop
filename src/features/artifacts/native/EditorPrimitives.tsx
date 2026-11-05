@@ -192,6 +192,11 @@ export function Menu({
   text,
   disabled,
   onOpen,
+  className = '',
+  minimumWidth = 184,
+  badge,
+  keyboardFocusSelector,
+  offset = 4,
 }: {
   label: string
   icon?: EditorIconName
@@ -199,8 +204,14 @@ export function Menu({
   align?: 'start' | 'end'
   text?: string
   disabled?: boolean
+  className?: string
+  minimumWidth?: number
+  badge?: number
+  keyboardFocusSelector?:string
+  offset?:number
   onOpen?(): void
 }) {
+  const keyboardOpen=useRef(false)
   const root = useRef<HTMLDetailsElement>(null),
     popup = useRef<HTMLDivElement>(null)
   useEffect(() => { if (disabled && root.current) root.current.open = false }, [disabled])
@@ -213,7 +224,7 @@ export function Menu({
       return
     }
     if (!element.matches(':popover-open')) element.showPopover()
-    positionEditorPopover(element, details.querySelector('summary')!, align, 184)
+    positionEditorPopover(element, details.querySelector('summary')!, align, minimumWidth, offset)
   }
   useEffect(() => {
     const outside = (event: PointerEvent) => {
@@ -235,19 +246,20 @@ export function Menu({
       window.removeEventListener('resize', reposition)
       document.removeEventListener('scroll', reposition, true)
     }
-  }, [align])
+  }, [align,minimumWidth,offset])
   return (
     <details
-      className="native-menu"
+      className={`native-menu ${className}`}
       ref={root}
       data-align={align}
       onToggle={(event) => {
-        if (event.target === event.currentTarget) { position(); if (event.currentTarget.open) onOpen?.() }
+        if (event.target === event.currentTarget) { position(); if (event.currentTarget.open) {onOpen?.();if(keyboardOpen.current&&keyboardFocusSelector)popup.current?.querySelector<HTMLElement>(keyboardFocusSelector)?.focus()} }
       }}
       onKeyDown={(event) => {
         const element = root.current
         if (!element || disabled) return
         if (event.key === 'Escape') {
+          event.preventDefault()
           event.stopPropagation()
           element.open = false
           element.querySelector('summary')?.focus()
@@ -259,7 +271,7 @@ export function Menu({
           position()
           const items = Array.from(
             element.querySelectorAll<HTMLButtonElement>('button:not(:disabled),input,select'),
-          )
+          ).filter(item=>item.checkVisibility())
           const index = items.indexOf(document.activeElement as HTMLButtonElement)
           items[
             event.key === 'Home'
@@ -276,11 +288,13 @@ export function Menu({
         title={label}
         aria-disabled={disabled}
         onClick={(event) => {
+          keyboardOpen.current=event.detail===0
           if (disabled) event.preventDefault()
         }}
       >
+        {badge!==undefined&&<span className="native-menu-count">{badge}</span>}
         {icon && <EditorIcon name={icon} />}
-        {text && <span>{text}</span>}
+        {text && <span className="native-menu-text" title={text}>{text}</span>}
         {(!icon || text || icon === 'square' || icon === 'shapes') && (
           <EditorIcon name="chevron" size={12} />
         )}
@@ -337,16 +351,25 @@ export function Modal({
   onClose,
   children,
   editorBoundary,
+  className = '',
+  initialFocusSelector,
+  role = 'dialog',
+  showClose = true,
 }: {
   title: string
   onClose(): void
   children: ReactNode
   editorBoundary?:boolean
+  className?:string
+  initialFocusSelector?:string
+  role?:'dialog'|'alertdialog'
+  showClose?:boolean
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
     const element = ref.current
     if (element && !element.open) element.showModal()
+    if(initialFocusSelector)element?.querySelector<HTMLElement>(initialFocusSelector)?.focus()
     return () => {
       queueMicrotask(() => {
         if (element && !element.isConnected) element.close()
@@ -356,15 +379,17 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className="native-dialog"
+      role={role}
+      className={`native-dialog ${className}`}
       aria-label={title}
       data-native-editor-boundary={editorBoundary?'':undefined}
+      onKeyDown={event=>{if(event.key==='Escape')event.stopPropagation()}}
       onCancel={onClose}
       onClose={onClose}
     >
       <header>
         <h2>{title}</h2>
-        <IconButton icon="close" label="关闭" onClick={onClose} />
+        {showClose&&<IconButton icon="close" label="关闭" onClick={onClose} />}
       </header>
       {children}
     </dialog>

@@ -18,6 +18,7 @@ import { createFixture } from './native-artifact-fixture.mjs'
 import { createVisualFixture } from './native-editor-visual-fixture.mjs'
 import { applyOperations, prepareBatch } from '../shared/artifact-operations.ts'
 import { createTableNode } from '../shared/artifact-tables.ts'
+import { createCanvasPage, renameCanvasPage } from '../shared/artifact-canvas-pages.ts'
 import { createNode } from '../shared/artifact-document.ts'
 import {decodeCommentAnchor}from'../shared/artifact-comment-anchor.ts'
 
@@ -43,7 +44,7 @@ const mocks = {
 }
 for (const [name, source] of Object.entries(mocks)) await writeFile(join(workspace, `${name}.js`), source)
 await writeFile(join(workspace, 'index.html'), '<html><head><meta charset="UTF-8"></head><body style="margin:0"><div id="root" style="height:100vh"></div><script type="module" src="/entry.tsx"></script></body></html>')
-await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<React.StrictMode><NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'?'design':'slides'} title="原生编辑器验收" /></React.StrictMode>)`)
+await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<React.StrictMode>${options.checks==='canvas-pages'?'<div style={{height:"100%"}} data-fixture-workspace onKeyDown={event=>{if(event.key==="Escape"&&!event.defaultPrevented)event.currentTarget.hidden=true}}>':''}<NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'?'design':'slides'} title="原生编辑器验收" />${options.checks==='canvas-pages'?'</div>':''}</React.StrictMode>)`)
 let server, browser
 try {
   server = await createServer({ configFile: false, root: workspace, publicDir: join(root, 'public'), plugins: [react()], logLevel: 'error',
@@ -70,9 +71,10 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','canvas-pages','canvas-pages-cas']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
+  if(options.checks==='canvas-pages-cas')document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
   if(options.checks==='svg-font'){
     const node={...createNode('svg','font-svg'),svg:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 150"><text x="16" y="100" font-family="Merriweather" font-size="80" font-weight="700">Hello</text></svg>'}
     document.pages['page-1'].nodes[node.id]=node;document.pages['page-1'].nodeOrder.push(node.id)
@@ -96,7 +98,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let fixtureWrite=true
   const snapshot = () => ({ document, history, write: fixtureWrite, loadedPageIds: document.pageOrder,
     pageVersions: Object.fromEntries(document.pageOrder.map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
+  if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
   const editorFontRequests=[]
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
   page.setDefaultTimeout(30_000)
@@ -179,7 +182,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const ready = async index => {
     const canvas = page.locator(`[data-page-id="page-${index}"]`)
     if(!visualChecks.includes(options.checks)) await canvas.locator('[data-formula-ready=true]').waitFor()
-    await canvas.locator('[data-node-type=image] img').waitFor()
+    await canvas.locator('[data-node-type=image] img').waitFor().catch(async error=>{await page.screenshot({path:join(output,'failure.png')});await writeFile(join(output,'failure-state.json'),JSON.stringify(await page.evaluate(()=>({notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent),root:[...document.querySelectorAll('[data-native-artifact-editor]')].map(e=>({current:e.dataset.currentPage,canvas:e.dataset.canvasPageId})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON(),nodes:e.querySelectorAll('[data-node-id]').length})),geometry:window.__geometryLog?.slice(-8)})),null,2));throw error})
     await page.waitForFunction(index => {
       const image = window.document.querySelector(`[data-page-id="page-${index}"] [data-node-type=image] img`)
       return image?.complete && image.naturalWidth > 0
@@ -200,6 +203,83 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   try {
     await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     await ready(1)
+    if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='canvas-pages-cas') {
+      assert.equal(kind,'design')
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“页面 2”操作',{exact:true}).click();await page.getByRole('button',{name:'重命名页面',exact:true}).click()
+      const rename=page.getByRole('dialog',{name:'重命名页面',exact:true}),input=rename.getByLabel('页面名称',{exact:true})
+      await input.fill('本地页面名')
+      document=applyOperations(document,prepareBatch(document,renameCanvasPage(document,'canvas-second','远端页面名'))).document
+      await page.waitForRequest(request=>request.method()==='PUT'&&request.url().includes('/editor-context')&&request.postDataJSON()?.version===String(document.seq))
+      await rename.getByRole('button',{name:'重命名',exact:true}).click()
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='conflict',null,{timeout:5000})
+      assert.equal(document.canvasPages[1].name,'远端页面名');assert.equal(await input.inputValue(),'本地页面名');assert.equal(await input.getAttribute('readonly'),'');assert.match(await rename.getByRole('alert').innerText(),/名称已有新修改/);await input.press('Enter');assert.equal(await rename.isVisible(),true)
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-pages-cas-diagnostic',readonlyConflictKeepsDialogAndDraft:true,remoteNamePreserved:true,localDraftRetained:true,conflictShown:true,scope:'actual React and shared CAS; controlled HTTP fixture',consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-pages') {
+      assert.equal(kind,'design')
+      const canvasStates=[]
+      const captureCanvasState=async name=>{await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:join(output,`design-${name}.png`)});canvasStates.push({name,boards:await page.locator('[data-artboard-id]').evaluateAll(es=>es.map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()}))),controls:await page.locator('dialog,input,[popover]:popover-open').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>{const s=getComputedStyle(e);return{label:e.getAttribute('aria-label'),role:e.tagName,rect:e.getBoundingClientRect().toJSON(),fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,lineHeight:s.lineHeight,padding:s.padding,background:s.background,border:s.border,shadow:s.boxShadow}}))});await writeFile(join(output,'canvas-page-states.json'),JSON.stringify({scope:'matched canvas-page interaction diagnostics; visual qualification pending',states:canvasStates},null,2)+'\n')}
+      const firstZoom=await page.getByLabel('画布缩放',{exact:true}).innerText()
+      const saved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'新建页面',exact:true}).click();await saved()
+      assert.equal(document.canvasPages.length,2);const added=document.canvasPages[1].id
+      await page.waitForFunction(id=>document.querySelector('[data-native-artifact-editor]')?.getAttribute('data-canvas-page-id')===id,added)
+      const board=document.pageOrder.find(id=>!initialPageHashes[id]);assert.ok(board);assert.equal(document.pages[board].canvasPageId,added)
+      await page.locator(`[data-artboard-id="${board}"]`).waitFor()
+      assert.equal(await page.locator('.native-page-shell').count(),1,'new canvases have one blank artboard and do not leak the other canvas boards')
+      assert.deepEqual([document.pages[board].width,document.pages[board].height],[800,600])
+      const boardRect=await page.locator(`[data-artboard-id="${board}"]`).boundingBox()
+      for(const [key,value]of Object.entries({x:188.75,y:155.125,width:1062.5,height:796.875}))assert.ok(Math.abs(boardRect[key]-value)<=1,`new canvas ${key} matches pinned source geometry`)
+
+      const secondZoom=await page.getByLabel('画布缩放',{exact:true}).innerText()
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 1',exact:true}).click();await ready(1)
+      assert.equal(await page.getByLabel('画布缩放',{exact:true}).innerText(),firstZoom,'returning to a canvas restores its camera')
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 2',exact:true}).click();await page.locator(`[data-artboard-id="${board}"]`).waitFor()
+      assert.equal(await page.getByLabel('画布缩放',{exact:true}).innerText(),secondZoom)
+
+      await page.getByLabel('页面菜单',{exact:true}).press('Enter')
+      await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-pressed')==='true'&&document.activeElement.textContent.trim()==='页面 2',null,{timeout:5000})
+      await page.keyboard.press('Escape')
+      await page.getByLabel('页面菜单',{exact:true}).click();await captureCanvasState('two-pages');await page.getByLabel('页面菜单',{exact:true}).press('Home');await page.keyboard.press('ArrowDown')
+      assert.equal(await page.evaluate(()=>document.activeElement?.textContent?.trim()),'页面 2','arrow navigation must skip actions in closed nested popovers')
+      await page.keyboard.press('Escape')
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“页面 2”操作',{exact:true}).click();await captureCanvasState('page-actions');await page.getByRole('button',{name:'重命名页面',exact:true}).click()
+      const rename=page.getByRole('dialog',{name:'重命名页面',exact:true});await rename.waitFor();assert.equal(await rename.getByLabel('页面名称',{exact:true}).evaluate(e=>document.activeElement===e&&e.selectionStart===0&&e.selectionEnd===e.value.length),true,'rename opens with the entire current name selected');await captureCanvasState('page-rename');await rename.getByLabel('页面名称',{exact:true}).fill('流程图');await rename.getByLabel('页面名称',{exact:true}).dispatchEvent('keydown',{key:'Enter',keyCode:229,isComposing:true});assert.equal(await rename.isVisible(),true);await rename.getByLabel('页面名称',{exact:true}).dispatchEvent('keydown',{key:'Enter',keyCode:13,repeat:true});assert.equal(await rename.isVisible(),true);await rename.getByLabel('页面名称',{exact:true}).press('Enter');await saved()
+      assert.equal(document.canvasPages[1].name,'流程图')
+      const unchangedSeq=document.seq,unchangedReceipts=receipts.length
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“流程图”操作',{exact:true}).click();await page.getByRole('button',{name:'重命名页面',exact:true}).click();await page.getByLabel('页面名称',{exact:true}).press('Enter');await page.getByRole('dialog',{name:'重命名页面',exact:true}).waitFor({state:'detached'})
+      assert.equal(document.seq,unchangedSeq,'confirming the same name must not save or add an undo step');assert.equal(receipts.length,unchangedReceipts)
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“流程图”操作',{exact:true}).click();await page.getByRole('button',{name:'重命名页面',exact:true}).click()
+      await page.getByLabel('页面名称',{exact:true}).press('Escape');await page.getByRole('dialog',{name:'重命名页面',exact:true}).waitFor({state:'detached'})
+      assert.equal(await page.locator('[data-fixture-workspace]').isVisible(),true,'Escape must close the dialog without closing the surrounding Design workspace')
+      await page.reload({waitUntil:'domcontentloaded'});await ready(1)
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'流程图',exact:true}).click()
+      await page.locator(`[data-artboard-id="${board}"]`).waitFor();assert.equal(await page.locator('[data-artboard-id="page-1"]').count(),0)
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“流程图”操作',{exact:true}).click();await page.getByRole('button',{name:'删除页面',exact:true}).click()
+      const remove=page.getByRole('alertdialog',{name:'删除页面“流程图”？',exact:true});await remove.waitFor();assert.equal(await remove.getByRole('button',{name:'取消',exact:true}).evaluate(e=>document.activeElement===e),true);await captureCanvasState('page-delete');assert.match(await remove.innerText(),/1 个画板/);await remove.getByRole('button',{name:'删除页面',exact:true}).click();await saved()
+      assert.equal(document.pages[board],undefined);assert.equal(document.canvasPages.length,1)
+      await remove.waitFor({state:'detached'})
+      await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='页面菜单',null,{timeout:5000})
+      const undone=page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/operations')&&response.request().postDataJSON()?.kind==='undo'&&response.status()===200)
+      await page.keyboard.press('Control+z');await undone;await saved()
+      assert.ok(document.pages[board]);assert.equal(document.canvasPages.length,2)
+      for(const [id,hash]of Object.entries(initialPageHashes))assert.equal(pageHash(document.pages[id]),hash)
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'流程图',exact:true}).click()
+      await page.setViewportSize({width:390,height:844})
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“流程图”操作',{exact:true}).click();await page.getByRole('button',{name:'重命名页面',exact:true}).click()
+      const longName='这是用于检查窄容器的中文页面名称'.repeat(5)
+      await page.getByLabel('页面名称',{exact:true}).fill(longName);await page.getByRole('button',{name:'重命名',exact:true}).click();await saved()
+      const compactMenu=await page.getByLabel('页面菜单',{exact:true}).boundingBox()
+      assert.ok(compactMenu&&Math.abs(compactMenu.width-60)<=1,'two-page picker uses the source compact icon and count in a narrow container')
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel(`页面“${longName}”操作`,{exact:true}).click();await page.getByRole('button',{name:'重命名页面',exact:true}).click()
+      const compactDialog=page.getByRole('dialog',{name:'重命名页面',exact:true}),compactRect=await compactDialog.boundingBox()
+      assert.ok(compactRect&&compactRect.x>=0&&compactRect.x+compactRect.width<=390)
+      await captureCanvasState('page-rename-narrow');await compactDialog.getByRole('button',{name:'取消',exact:true}).click()
+      assert.deepEqual(errors,[]);assert.equal(await page.locator('.native-notice').count(),0)
+      return{kind:'isolated-canvas-pages-diagnostic',mode:kind,theme:options['canvas-theme']??'light',sourceNewBoardGeometryWithin1px:true,pageCamerasRestored:true,keyboardOpensOnCurrentPage:true,hiddenItemsSkipped:true,dialogFocusAndSelection:true,unchangedNameDoesNotSave:true,compositionEnterGuard:'controlled DOM events; actual OS input method remains unverified',escapeKeepsWorkspace:true,deleteCancelInitiallyFocused:true,narrowLongNameAndDialog:true,independentCanvasPages:true,newCanvasHasSourceSizedBlankBoard:true,otherCanvasesHidden:true,boardMembershipSaved:true,renameAndReopen:true,deleteAndSharedUndo:true,unchangedBoards:Object.keys(initialPageHashes).length,scope:'actual React, Workers and reducer; controlled HTTP fixture',consoleOrPageErrors:errors}
+    }
     if(options.checks==='menu-resize') {
       await page.setViewportSize({width:900,height:1000});await page.getByLabel('画布缩放',{exact:true}).click()
       await page.setViewportSize({width:390,height:844});await page.waitForTimeout(100)

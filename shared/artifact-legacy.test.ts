@@ -116,3 +116,20 @@ it('preserves authored header cells while body-only legacy tables stay body-only
     assert.equal(files['project/slides/first.html'].content,source)
   }
 })
+
+describe('Design canvas page conversion', () => {
+  it('preserves independent canvas pages and board membership without changing source snapshots', () => {
+    const files = {
+      'project/canvas.json':file(JSON.stringify({v:3,pages:[{id:'one',name:'第一页'},{id:'two',name:'流程图'}],boards:{'a.dc.html':{},'b.dc.html':{page:'two'},'c.dc.html':{page:'missing'}},order:['a.dc.html','b.dc.html','c.dc.html']})),
+      'project/a.dc.html':file('<p>画板甲</p>'),'project/b.dc.html':file('<p>画板乙</p>'),'project/c.dc.html':file('<p>画板丙</p>'),
+    }
+    const before=JSON.stringify(files)
+    const doc=convertLegacyArtifact({id:'design',kind:'design',title:'设计',files}).document
+    assert.deepEqual(doc.canvasPages,[{id:'one',name:'第一页'},{id:'two',name:'流程图'}])
+    assert.equal(doc.pages.a!.canvasPageId,'one')
+    assert.equal(doc.pages.b!.canvasPageId,'two')
+    assert.equal(doc.pages.c!.canvasPageId,'one')
+    assert.deepEqual(doc.pageOrder,['a','b','c'])
+    assert.equal(JSON.stringify(files),before)
+  })
+})

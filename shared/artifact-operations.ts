@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { canvasPages, canvasPageOf } from './artifact-canvas-pages.js'
 import {
   artifactAssetSchema, artifactDocumentSchema, artifactIdSchema, artifactNodeSchema, artifactPageSchema,
   artifactStyleSchema, artifactThemeSchema, validateArtifactDocument,
@@ -12,9 +13,9 @@ const unsetFieldSchema = z.string().refine(field => optionalNodeFields.has(field
 const indexSchema = z.number().int().min(0).max(10_000).optional()
 
 export const artifactOperationSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('document.patch'), patch: artifactDocumentSchema.pick({ title: true, themeId: true }).partial() }).strict(),
+  z.object({ type: z.literal('document.patch'), patch: artifactDocumentSchema.pick({ title: true, themeId: true, canvasPages: true }).partial(), unset: z.array(z.literal('canvasPages')).max(1).optional() }).strict(),
   z.object({ type: z.literal('page.insert'), page: artifactPageSchema, index: indexSchema }).strict(),
-  z.object({ type: z.literal('page.patch'), pageId: artifactIdSchema, patch: pagePatchSchema, unset: z.array(z.enum(['sizing', 'paper', 'themeBackground', 'section', 'guides', 'layoutGuides'])).max(6).optional() }).strict(),
+  z.object({ type: z.literal('page.patch'), pageId: artifactIdSchema, patch: pagePatchSchema, unset: z.array(z.enum(['sizing', 'paper', 'themeBackground', 'section', 'guides', 'layoutGuides', 'canvasPageId'])).max(7).optional() }).strict(),
   z.object({ type: z.literal('page.delete'), pageId: artifactIdSchema }).strict(),
   z.object({ type: z.literal('pages.reorder'), pageIds: z.array(artifactIdSchema).max(1000) }).strict(),
   z.object({ type: z.literal('node.insert'), pageId: artifactIdSchema, node: artifactNodeSchema, index: indexSchema }).strict(),
@@ -57,6 +58,7 @@ export const artifactVersionKey = {
   document: (field: string) => `document/${field}`,
   page: (pageId: string, field?: string) => `page/${pageId}${field ? `/${field}` : ''}`,
   node: (pageId: string, nodeId: string, field?: string) => `node/${pageId}/${nodeId}${field ? `/${field}` : ''}`,
+  canvasPage: (id: string) => `canvasPage/${id}/members`,
   theme: (themeId: string) => `theme/${themeId}`,
   asset: (assetId: string) => `asset/${assetId}`,
 }
@@ -135,18 +137,28 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
   for (const operation of operations) {
     switch (operation.type) {
       case 'document.patch': {
-        const previous: Record<string, unknown> = {}
-        for (const [field, value] of Object.entries(operation.patch)) {
+        const previous: Record<string, unknown> = {}, previousUnset: Array<'canvasPages'> = []
+        const fields: Array<[string, unknown]> = [...Object.entries(operation.patch), ...(operation.unset??[]).map(field=>[field, undefined] as [string, unknown])]
+        if (new Set(fields.map(([field])=>field)).size !== fields.length) throw new Error('A field cannot be patched and removed in one operation')
+        for (const [field, value] of fields) {
           requireKey(key.document(field)); change(key.document(field))
           if (field === 'themeId' && typeof value === 'string') requireKey(key.theme(value))
-          previous[field] = document[field as 'title' | 'themeId']
-          ;(document as unknown as Record<string, unknown>)[field] = value
+          if (field === 'canvasPages') {
+            const retained = new Set((value as ArtifactDocument['canvasPages'] ?? canvasPages({})).map(page=>page.id))
+            for (const removed of canvasPages(document).filter(page=>!retained.has(page.id))) requireKey(key.canvasPage(removed.id))
+          }
+          const record = document as unknown as Record<string, unknown>
+          if (record[field] === undefined) previousUnset.push(field as 'canvasPages')
+          else previous[field] = structuredClone(record[field])
+          if (value === undefined) delete record[field]
+          else record[field] = structuredClone(value)
         }
-        inverseGroups.push([{ type: 'document.patch', patch: previous }])
+        inverseGroups.push([{ type: 'document.patch', patch: previous, ...(previousUnset.length?{unset:previousUnset}:{}) }])
         break
       }
       case 'page.insert': {
         const id = operation.page.id
+        if (document.kind === 'design') { requireKey(key.document('canvasPages')); change(key.canvasPage(canvasPageOf(operation.page))) }
         requireKey(key.page(id, 'exists'), key.document('pageOrder'))
         if (Object.hasOwn(document.pages, id)) throw new Error(`Page already exists: ${id}`)
         document.pages[id] = structuredClone(operation.page)
@@ -165,9 +177,10 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
       }
       case 'page.patch': {
         const owner = page(operation.pageId)
+        const originalCanvasPage = canvasPageOf(owner)
         requireKey(key.page(owner.id, 'exists'))
         const previous: Record<string, unknown> = {}
-        const previousUnset: Array<'sizing' | 'paper' | 'themeBackground'> = []
+        const previousUnset: NonNullable<Extract<ArtifactOperation,{type:'page.patch'}>['unset']> = []
         const unsets = [...operation.unset ?? []]
         if (Object.hasOwn(operation.patch, 'background') && !Object.hasOwn(operation.patch, 'themeBackground') && !unsets.includes('themeBackground')) unsets.push('themeBackground')
         const fields: Array<[string, unknown]> = [...Object.entries(operation.patch), ...unsets.map((field): [string, unknown] => [field, undefined])]
@@ -175,16 +188,18 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
         for (const [field, value] of fields) {
           requireKey(key.page(owner.id, `field/${field}`)); change(key.page(owner.id, `field/${field}`), key.page(owner.id))
           const record = owner as unknown as Record<string, unknown>
-          if (record[field] === undefined) previousUnset.push(field as 'sizing' | 'paper' | 'themeBackground')
+          if (record[field] === undefined) previousUnset.push(field as typeof previousUnset[number])
           else previous[field] = record[field]
           if (value === undefined) delete record[field]
           else record[field] = value
         }
+        if (document.kind === 'design' && originalCanvasPage !== canvasPageOf(owner)) { requireKey(key.document('canvasPages')); change(key.canvasPage(originalCanvasPage),key.canvasPage(canvasPageOf(owner))) }
         inverseGroups.push([{ type: 'page.patch', pageId: owner.id, patch: previous, ...(previousUnset.length ? { unset: previousUnset } : {}) }])
         break
       }
       case 'page.delete': {
         const owner = page(operation.pageId)
+        if (document.kind === 'design') change(key.canvasPage(canvasPageOf(owner)))
         requireKey(key.page(owner.id), key.page(owner.id, 'exists'), key.document('pageOrder'))
         inverseGroups.push([{ type: 'page.insert', page: structuredClone(owner), index: document.pageOrder.indexOf(owner.id) }])
         document.pageOrder = document.pageOrder.filter(id => id !== owner.id)

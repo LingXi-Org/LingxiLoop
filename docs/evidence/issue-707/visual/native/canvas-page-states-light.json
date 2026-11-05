@@ -1,0 +1,281 @@
+{
+  "scope": "matched canvas-page interaction diagnostics; visual qualification pending",
+  "states": [
+    {
+      "name": "two-pages",
+      "boards": [
+        {
+          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "rect": {
+            "x": 188.75,
+            "y": 155.125,
+            "width": 1062.5,
+            "height": 796.875,
+            "top": 155.125,
+            "right": 1251.25,
+            "bottom": 952,
+            "left": 188.75
+          }
+        }
+      ],
+      "controls": [
+        {
+          "label": "页面菜单选项",
+          "role": "DIV",
+          "rect": {
+            "x": 17,
+            "y": 45,
+            "width": 240,
+            "height": 89,
+            "top": 45,
+            "right": 257,
+            "bottom": 134,
+            "left": 17
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "lineHeight": "19px",
+          "padding": "4px",
+          "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.12) 0px 8px 24px 0px, rgba(0, 0, 0, 0.08) 0px 2px 6px 0px"
+        }
+      ]
+    },
+    {
+      "name": "page-actions",
+      "boards": [
+        {
+          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "rect": {
+            "x": 188.75,
+            "y": 155.125,
+            "width": 1062.5,
+            "height": 796.875,
+            "top": 155.125,
+            "right": 1251.25,
+            "bottom": 952,
+            "left": 188.75
+          }
+        }
+      ],
+      "controls": [
+        {
+          "label": "页面菜单选项",
+          "role": "DIV",
+          "rect": {
+            "x": 17,
+            "y": 45,
+            "width": 240,
+            "height": 89,
+            "top": 45,
+            "right": 257,
+            "bottom": 134,
+            "left": 17
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "lineHeight": "19px",
+          "padding": "4px",
+          "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.12) 0px 8px 24px 0px, rgba(0, 0, 0, 0.08) 0px 2px 6px 0px"
+        },
+        {
+          "label": "页面“页面 2”操作选项",
+          "role": "DIV",
+          "rect": {
+            "x": 125,
+            "y": 103,
+            "width": 128,
+            "height": 56,
+            "top": 103,
+            "right": 253,
+            "bottom": 159,
+            "left": 125
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "lineHeight": "19px",
+          "padding": "4px",
+          "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.12) 0px 8px 24px 0px, rgba(0, 0, 0, 0.08) 0px 2px 6px 0px"
+        }
+      ]
+    },
+    {
+      "name": "page-rename",
+      "boards": [
+        {
+          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "rect": {
+            "x": 188.75,
+            "y": 155.125,
+            "width": 1062.5,
+            "height": 796.875,
+            "top": 155.125,
+            "right": 1251.25,
+            "bottom": 952,
+            "left": 188.75
+          }
+        }
+      ],
+      "controls": [
+        {
+          "label": "重命名页面",
+          "role": "DIALOG",
+          "rect": {
+            "x": 520,
+            "y": 426,
+            "width": 400,
+            "height": 148,
+            "top": 426,
+            "right": 920,
+            "bottom": 574,
+            "left": 520
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "lineHeight": "19px",
+          "padding": "0px",
+          "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(11, 11, 11, 0.08) 0px 4px 8px 0px, rgba(11, 11, 11, 0.08) 0px 12px 28px -2px"
+        },
+        {
+          "label": "页面名称",
+          "role": "INPUT",
+          "rect": {
+            "x": 536,
+            "y": 486,
+            "width": 368,
+            "height": 28,
+            "top": 486,
+            "right": 904,
+            "bottom": 514,
+            "left": 536
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "lineHeight": "20px",
+          "padding": "0px 12px",
+          "background": "rgba(255, 255, 255, 0.5) none repeat scroll 0% 0% / auto padding-box border-box",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "rgb(255, 255, 255) 0px 0px 0px 1px inset, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(37, 125, 224, 0.12) 0px 0px 6px 1px"
+        }
+      ]
+    },
+    {
+      "name": "page-delete",
+      "boards": [
+        {
+          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "rect": {
+            "x": 188.75,
+            "y": 155.125,
+            "width": 1062.5,
+            "height": 796.875,
+            "top": 155.125,
+            "right": 1251.25,
+            "bottom": 952,
+            "left": 188.75
+          }
+        }
+      ],
+      "controls": [
+        {
+          "label": "删除页面“流程图”？",
+          "role": "DIALOG",
+          "rect": {
+            "x": 520,
+            "y": 432,
+            "width": 400,
+            "height": 136,
+            "top": 432,
+            "right": 920,
+            "bottom": 568,
+            "left": 520
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "lineHeight": "19px",
+          "padding": "0px",
+          "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(11, 11, 11, 0.08) 0px 4px 8px 0px, rgba(11, 11, 11, 0.08) 0px 12px 28px -2px"
+        }
+      ]
+    },
+    {
+      "name": "page-rename-narrow",
+      "boards": [
+        {
+          "id": "f9b604e6-c042-4181-b19b-ccffca6e7d11",
+          "rect": {
+            "x": 85,
+            "y": 165.5625,
+            "width": 1062.5,
+            "height": 796.875,
+            "top": 165.5625,
+            "right": 1147.5,
+            "bottom": 962.4375,
+            "left": 85
+          }
+        }
+      ],
+      "controls": [
+        {
+          "label": "重命名页面",
+          "role": "DIALOG",
+          "rect": {
+            "x": 16,
+            "y": 348,
+            "width": 358,
+            "height": 148,
+            "top": 348,
+            "right": 374,
+            "bottom": 496,
+            "left": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "lineHeight": "19px",
+          "padding": "0px",
+          "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(11, 11, 11, 0.08) 0px 4px 8px 0px, rgba(11, 11, 11, 0.08) 0px 12px 28px -2px"
+        },
+        {
+          "label": "页面名称",
+          "role": "INPUT",
+          "rect": {
+            "x": 32,
+            "y": 408,
+            "width": 326,
+            "height": 28,
+            "top": 408,
+            "right": 358,
+            "bottom": 436,
+            "left": 32
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "lineHeight": "20px",
+          "padding": "0px 12px",
+          "background": "rgba(255, 255, 255, 0.5) none repeat scroll 0% 0% / auto padding-box border-box",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "rgb(255, 255, 255) 0px 0px 0px 1px inset, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(37, 125, 224, 0.12) 0px 0px 6px 1px"
+        }
+      ]
+    }
+  ]
+}

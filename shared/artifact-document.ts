@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { canvasPages, canvasPageOf, MAX_CANVAS_PAGES } from './artifact-canvas-pages.js'
 
 /** Native documents contain data only. Executable source belongs to an isolated embed. */
 export const ARTIFACT_DOCUMENT_SCHEMA_VERSION = 1 as const
@@ -138,6 +139,7 @@ export const artifactPageSchema = z.object({
   x: finite, y: finite, width: positive.positive(), height: positive.positive(),
   sizing: z.enum(['fixed', 'flow']).optional(), paper: z.enum(['A4', 'Letter', 'custom']).optional(),
   section: z.string().max(200).optional(),
+  canvasPageId: artifactIdSchema.optional(),
   guides: z.array(z.object({ axis: z.enum(['x', 'y']), position: finite }).strict()).max(100).optional(),
   layoutGuides: z.array(z.object({ kind: z.enum(['columns', 'rows', 'grid']), count: z.number().int().min(1).max(1000), size: positive, gutter: positive, margin: positive, color, hidden: z.boolean().optional() }).strict()).max(6).optional(),
   background: color, themeBackground: z.string().max(128).optional(), notes: z.string().max(100_000), skip: z.boolean(), transition: z.enum(['none', 'fade', 'slide']),
@@ -168,11 +170,15 @@ export const artifactAssetSchema = z.object({
 }).strict()
 export type ArtifactAsset = z.infer<typeof artifactAssetSchema>
 
+export const artifactCanvasPageSchema = z.object({id:artifactIdSchema,name:z.string().min(1).max(1000).refine(name=>Boolean(name.trim()))}).strict()
+export type ArtifactCanvasPage = z.infer<typeof artifactCanvasPageSchema>
+
 export const artifactDocumentSchema = z.object({
   schemaVersion: z.literal(ARTIFACT_DOCUMENT_SCHEMA_VERSION),
   id: artifactIdSchema, kind: z.enum(['design', 'slides']), title: z.string().max(1000), seq: version,
   themeId: artifactIdSchema.nullable(), themes: z.record(artifactIdSchema, artifactThemeSchema), assets: z.record(artifactIdSchema, artifactAssetSchema),
   pageOrder: z.array(artifactIdSchema).max(1000), pages: z.record(artifactIdSchema, artifactPageSchema),
+  canvasPages: z.array(artifactCanvasPageSchema).min(1).max(MAX_CANVAS_PAGES).optional(),
   versions: z.record(safeKey, version),
 }).strict()
 export type ArtifactDocument = z.infer<typeof artifactDocumentSchema>
@@ -193,6 +199,10 @@ export function createNode(type: ArtifactNodeType, id: string): ArtifactNode {
 export function validateArtifactDocument(input: unknown): ArtifactDocument {
   const document = artifactDocumentSchema.parse(input)
   const sameIds = (order: string[], entries: Record<string, unknown>) => order.length === new Set(order).size && order.length === Object.keys(entries).length && order.every(id => Object.hasOwn(entries, id))
+  const canvas = canvasPages(document)
+  if (new Set(canvas.map(page=>page.id)).size !== canvas.length) throw new Error('duplicate canvas page')
+  if (document.kind !== 'design' && (document.canvasPages || Object.values(document.pages).some(page=>page.canvasPageId))) throw new Error('canvas pages require a design document')
+  if (document.kind === 'design' && Object.values(document.pages).some(page=>!canvas.some(sheet=>sheet.id===canvasPageOf(page)))) throw new Error('unknown canvas page')
   if (!sameIds(document.pageOrder, document.pages)) throw new Error('page order must include every page exactly once')
   if (document.themeId !== null && !Object.hasOwn(document.themes, document.themeId)) throw new Error('unknown theme')
   for (const [id, theme] of Object.entries(document.themes)) if (id !== theme.id) throw new Error('theme id mismatch')

@@ -140,6 +140,12 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       }
     } catch { warnings.push(`${path}：无法解析主题，原始文件已保留。`) }
   }
+  if (input.kind === 'design' && Array.isArray(index.pages) && index.pages.length) {
+    document.canvasPages = index.pages.map((value, ordinal) => {
+      const source = object(value)
+      return {id:safeId(String(source.id ?? ''), `canvas_page_${ordinal}`),name:typeof source.name==='string'?source.name:`页面 ${ordinal+1}`}
+    })
+  }
   const boards = object(index.boards)
   const order = Array.isArray(index.order) ? index.order.filter((item): item is string => typeof item === 'string') : Object.keys(boards)
   for (const [ordinal, oldId] of order.entries()) {
@@ -153,6 +159,7 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
     if (input.kind === 'slides') { page.width = 1920; page.height = 1080 }
     else {
       const board = object(boards[oldId])
+      if (document.canvasPages) page.canvasPageId = document.canvasPages.find(sheet=>sheet.id===safeId(String(board.page??''), ''))?.id ?? document.canvasPages[0]!.id
       page.x = finite(board.x, (ordinal % 4) * 1360); page.y = finite(board.y, Math.floor(ordinal / 4) * 800)
       page.width = dimension(board.w ?? board.width, 1280); page.height = dimension(board.h ?? board.height, 720)
       if (typeof board.title === 'string') page.title = board.title

@@ -14,7 +14,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -26,13 +26,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -46,13 +46,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -66,13 +66,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -86,13 +86,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -106,13 +106,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -126,13 +126,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -146,13 +146,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -166,13 +166,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -186,13 +186,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -206,7 +206,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -226,7 +226,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -246,7 +246,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -266,7 +266,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -286,7 +286,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -306,7 +306,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -326,7 +326,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -346,7 +346,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -366,7 +366,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -386,7 +386,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -406,7 +406,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -422,7 +422,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -434,13 +434,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -454,13 +454,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -474,13 +474,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -494,13 +494,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -514,13 +514,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -534,13 +534,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -554,13 +554,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -574,13 +574,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -594,13 +594,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -614,7 +614,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -634,7 +634,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -654,7 +654,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -674,7 +674,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -694,7 +694,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -714,7 +714,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -734,7 +734,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -754,7 +754,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -774,7 +774,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -794,7 +794,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -814,7 +814,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -830,7 +830,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -842,13 +842,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -862,13 +862,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -882,13 +882,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -902,13 +902,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -922,13 +922,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -942,13 +942,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -962,13 +962,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -982,13 +982,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -1002,13 +1002,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -1022,7 +1022,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -1042,7 +1042,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -1062,7 +1062,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -1082,7 +1082,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -1102,7 +1102,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -1122,7 +1122,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -1142,7 +1142,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -1162,7 +1162,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -1182,7 +1182,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -1202,7 +1202,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -1222,7 +1222,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -1238,7 +1238,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -1250,13 +1250,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -1270,13 +1270,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -1290,13 +1290,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -1310,13 +1310,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -1330,13 +1330,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -1350,13 +1350,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -1370,13 +1370,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -1390,13 +1390,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -1410,13 +1410,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -1430,7 +1430,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -1450,7 +1450,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -1470,7 +1470,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -1490,7 +1490,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -1510,7 +1510,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -1530,7 +1530,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -1550,7 +1550,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -1570,7 +1570,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -1590,7 +1590,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -1610,7 +1610,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -1630,7 +1630,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -1646,7 +1646,7 @@
           "rect": {
             "x": 13,
             "y": 13,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -1658,13 +1658,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 87.828125,
+            "x": 86.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -1678,13 +1678,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 115.828125,
+            "x": 114.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -1698,13 +1698,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 143.828125,
+            "x": 142.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -1718,13 +1718,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 171.828125,
+            "x": 170.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -1738,13 +1738,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 199.828125,
+            "x": 198.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -1758,13 +1758,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 227.828125,
+            "x": 226.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -1778,13 +1778,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 253.828125,
+            "x": 252.828125,
             "y": 13,
             "width": 14,
             "height": 24
@@ -1798,13 +1798,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 273.828125,
+            "x": 272.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -1818,13 +1818,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 299.828125,
+            "x": 298.828125,
             "y": 13,
             "width": 14,
             "height": 24
@@ -1838,7 +1838,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -1858,7 +1858,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -1878,7 +1878,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -1898,7 +1898,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -1918,7 +1918,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -1938,7 +1938,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -1958,7 +1958,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -1978,7 +1978,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -1998,7 +1998,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -2018,7 +2018,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择画板 Page 2",
@@ -2038,7 +2038,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -2058,7 +2058,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择画板 Page 3",
@@ -2078,7 +2078,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -2094,7 +2094,7 @@
           "rect": {
             "x": 13,
             "y": 13,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -2106,13 +2106,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 87.828125,
+            "x": 86.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2126,13 +2126,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 115.828125,
+            "x": 114.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2146,13 +2146,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 143.828125,
+            "x": 142.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2166,13 +2166,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 171.828125,
+            "x": 170.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2186,13 +2186,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 199.828125,
+            "x": 198.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2206,13 +2206,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 227.828125,
+            "x": 226.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2226,13 +2226,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 253.828125,
+            "x": 252.828125,
             "y": 13,
             "width": 14,
             "height": 24
@@ -2246,13 +2246,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 273.828125,
+            "x": 272.828125,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2266,13 +2266,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 299.828125,
+            "x": 298.828125,
             "y": 13,
             "width": 14,
             "height": 24
@@ -2286,7 +2286,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -2306,7 +2306,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -2326,7 +2326,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -2346,7 +2346,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -2366,7 +2366,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -2386,7 +2386,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -2406,7 +2406,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -2426,7 +2426,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -2446,7 +2446,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -2466,7 +2466,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择画板 Page 2",
@@ -2486,7 +2486,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -2506,7 +2506,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择画板 Page 3",
@@ -2526,7 +2526,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -2542,7 +2542,7 @@
           "rect": {
             "x": 13,
             "y": 13,
-            "width": 43,
+            "width": 40,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -2554,13 +2554,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 65,
+            "x": 62,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2574,13 +2574,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 93,
+            "x": 90,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2594,13 +2594,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 121,
+            "x": 118,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2614,13 +2614,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 149,
+            "x": 146,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2634,13 +2634,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 177,
+            "x": 174,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2654,13 +2654,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 205,
+            "x": 202,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2674,13 +2674,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 231,
+            "x": 228,
             "y": 13,
             "width": 14,
             "height": 24
@@ -2694,13 +2694,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 251,
+            "x": 248,
             "y": 13,
             "width": 24,
             "height": 24
@@ -2714,13 +2714,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 277,
+            "x": 274,
             "y": 13,
             "width": 14,
             "height": 24
@@ -2734,7 +2734,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "更多编辑工具",
@@ -2754,7 +2754,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -2774,7 +2774,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -2794,7 +2794,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -2814,7 +2814,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -2834,7 +2834,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -2854,7 +2854,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -2874,7 +2874,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -2894,7 +2894,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -2914,7 +2914,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -2934,7 +2934,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择画板 Page 2",
@@ -2954,7 +2954,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -2974,7 +2974,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择画板 Page 3",
@@ -2994,7 +2994,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -3010,7 +3010,7 @@
           "rect": {
             "x": 13,
             "y": 13,
-            "width": 43,
+            "width": 40,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -3022,13 +3022,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 65,
+            "x": 62,
             "y": 13,
             "width": 24,
             "height": 24
@@ -3042,13 +3042,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 93,
+            "x": 90,
             "y": 13,
             "width": 24,
             "height": 24
@@ -3062,13 +3062,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 121,
+            "x": 118,
             "y": 13,
             "width": 24,
             "height": 24
@@ -3082,13 +3082,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 149,
+            "x": 146,
             "y": 13,
             "width": 24,
             "height": 24
@@ -3102,13 +3102,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 177,
+            "x": 174,
             "y": 13,
             "width": 24,
             "height": 24
@@ -3122,13 +3122,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 205,
+            "x": 202,
             "y": 13,
             "width": 24,
             "height": 24
@@ -3142,13 +3142,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 231,
+            "x": 228,
             "y": 13,
             "width": 14,
             "height": 24
@@ -3162,13 +3162,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 251,
+            "x": 248,
             "y": 13,
             "width": 24,
             "height": 24
@@ -3182,13 +3182,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 277,
+            "x": 274,
             "y": 13,
             "width": 14,
             "height": 24
@@ -3202,7 +3202,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "更多编辑工具",
@@ -3222,7 +3222,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -3242,7 +3242,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -3262,7 +3262,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -3282,7 +3282,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -3302,7 +3302,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -3322,7 +3322,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -3342,7 +3342,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -3362,7 +3362,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -3382,7 +3382,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -3402,7 +3402,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择画板 Page 2",
@@ -3422,7 +3422,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -3442,7 +3442,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择画板 Page 3",
@@ -3462,7 +3462,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -3479,7 +3479,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -3491,16 +3491,16 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "页面 1",
           "role": "button",
           "rect": {
-            "x": 22,
-            "y": 50,
-            "width": 174,
-            "height": 31
+            "x": 21,
+            "y": 49,
+            "width": 208,
+            "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
           "fontSize": "13px",
@@ -3511,16 +3511,36 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
-          "label": "添加画板",
+          "label": "页面“页面 1”操作",
+          "role": "summary",
+          "rect": {
+            "x": 229,
+            "y": 49,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "新建页面",
           "role": "button",
           "rect": {
-            "x": 22,
-            "y": 90,
-            "width": 174,
-            "height": 31
+            "x": 21,
+            "y": 82,
+            "width": 232,
+            "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
           "fontSize": "13px",
@@ -3531,93 +3551,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
-        },
-        {
-          "label": "重命名画板",
-          "role": "button",
-          "rect": {
-            "x": 22,
-            "y": 121,
-            "width": 174,
-            "height": 31
-          },
-          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
-          "fontSize": "13px",
-          "fontWeight": "400",
-          "color": "rgba(0, 0, 0, 0.9)",
-          "background": "rgba(0, 0, 0, 0)",
-          "border": "0px none rgba(0, 0, 0, 0.9)",
-          "shadow": "none",
-          "radius": "6px",
-          "cursor": "pointer",
-          "transition": "all"
-        },
-        {
-          "label": "图层",
-          "role": "button",
-          "rect": {
-            "x": 22,
-            "y": 152,
-            "width": 174,
-            "height": 31
-          },
-          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
-          "fontSize": "13px",
-          "fontWeight": "400",
-          "color": "rgba(0, 0, 0, 0.9)",
-          "background": "rgba(0, 0, 0, 0)",
-          "border": "0px none rgba(0, 0, 0, 0.9)",
-          "shadow": "none",
-          "radius": "6px",
-          "cursor": "pointer",
-          "transition": "all"
-        },
-        {
-          "label": "撤销⌘ Z",
-          "role": "button",
-          "rect": {
-            "x": 22,
-            "y": 192,
-            "width": 174,
-            "height": 31
-          },
-          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
-          "fontSize": "13px",
-          "fontWeight": "400",
-          "color": "rgba(0, 0, 0, 0.9)",
-          "background": "rgba(0, 0, 0, 0)",
-          "border": "0px none rgba(0, 0, 0, 0.9)",
-          "shadow": "none",
-          "radius": "6px",
-          "cursor": "default",
-          "transition": "all"
-        },
-        {
-          "label": "重做⌘ ⇧ Z",
-          "role": "button",
-          "rect": {
-            "x": 22,
-            "y": 223,
-            "width": 174,
-            "height": 31
-          },
-          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
-          "fontSize": "13px",
-          "fontWeight": "400",
-          "color": "rgba(0, 0, 0, 0.9)",
-          "background": "rgba(0, 0, 0, 0)",
-          "border": "0px none rgba(0, 0, 0, 0.9)",
-          "shadow": "none",
-          "radius": "6px",
-          "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -3631,13 +3571,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -3651,13 +3591,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -3671,13 +3611,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -3691,13 +3631,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -3711,13 +3651,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -3731,13 +3671,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -3751,13 +3691,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -3771,13 +3711,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -3791,7 +3731,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -3811,7 +3751,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -3831,7 +3771,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -3851,7 +3791,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -3871,7 +3811,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -3891,7 +3831,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -3911,7 +3851,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -3931,7 +3871,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -3951,7 +3891,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -3971,7 +3911,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -3991,7 +3931,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -4008,7 +3948,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -4020,13 +3960,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4040,13 +3980,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4060,13 +4000,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4080,13 +4020,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4100,13 +4040,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4120,13 +4060,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4140,13 +4080,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -4160,13 +4100,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔P",
           "role": "button",
           "rect": {
-            "x": 270.828125,
+            "x": 269.828125,
             "y": 50,
             "width": 174,
             "height": 31
@@ -4180,13 +4120,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "钢笔⇧ P",
           "role": "button",
           "rect": {
-            "x": 270.828125,
+            "x": 269.828125,
             "y": 81,
             "width": 174,
             "height": 31
@@ -4200,13 +4140,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4220,13 +4160,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -4240,7 +4180,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -4260,7 +4200,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -4280,7 +4220,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -4300,7 +4240,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -4320,7 +4260,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -4340,7 +4280,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -4360,7 +4300,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -4380,7 +4320,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -4400,7 +4340,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -4420,7 +4360,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -4440,7 +4380,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -4457,7 +4397,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -4469,13 +4409,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4489,13 +4429,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4509,13 +4449,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4529,13 +4469,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4549,13 +4489,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4569,13 +4509,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4589,13 +4529,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -4609,13 +4549,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4629,13 +4569,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -4649,13 +4589,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形R",
           "role": "button",
           "rect": {
-            "x": 316.828125,
+            "x": 315.828125,
             "y": 50,
             "width": 174,
             "height": 31
@@ -4669,13 +4609,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "椭圆O",
           "role": "button",
           "rect": {
-            "x": 316.828125,
+            "x": 315.828125,
             "y": 81,
             "width": 174,
             "height": 31
@@ -4689,13 +4629,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "箭头⇧ L",
           "role": "button",
           "rect": {
-            "x": 316.828125,
+            "x": 315.828125,
             "y": 112,
             "width": 174,
             "height": 31
@@ -4709,13 +4649,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "直线L",
           "role": "button",
           "rect": {
-            "x": 316.828125,
+            "x": 315.828125,
             "y": 143,
             "width": 174,
             "height": 31
@@ -4729,7 +4669,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -4749,7 +4689,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -4769,7 +4709,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -4789,7 +4729,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -4809,7 +4749,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -4829,7 +4769,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -4849,7 +4789,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -4869,7 +4809,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -4889,7 +4829,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -4909,7 +4849,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -4929,7 +4869,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -4946,7 +4886,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -4958,13 +4898,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4978,13 +4918,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -4998,13 +4938,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5018,13 +4958,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5038,13 +4978,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5058,13 +4998,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5078,13 +5018,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -5098,13 +5038,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5118,13 +5058,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -5138,7 +5078,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -5158,7 +5098,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便携文档",
@@ -5178,7 +5118,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "网页",
@@ -5198,7 +5138,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "演示文稿",
@@ -5218,7 +5158,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "当前画板 · 透明位图",
@@ -5238,7 +5178,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "当前画板 · 压缩位图",
@@ -5258,7 +5198,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "当前画板 · 矢量图",
@@ -5278,7 +5218,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -5298,7 +5238,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -5318,7 +5258,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -5338,7 +5278,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -5358,7 +5298,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -5378,7 +5318,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -5398,7 +5338,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -5418,7 +5358,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -5438,7 +5378,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -5458,7 +5398,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -5475,7 +5415,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -5487,13 +5427,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5507,13 +5447,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5527,13 +5467,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5547,13 +5487,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5567,13 +5507,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5587,13 +5527,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5607,13 +5547,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -5627,13 +5567,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -5647,13 +5587,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -5667,7 +5607,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -5687,7 +5627,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -5707,7 +5647,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -5727,7 +5667,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -5747,7 +5687,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -5767,7 +5707,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -5787,7 +5727,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -5807,7 +5747,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "适应全部画板⌘ 0",
@@ -5827,7 +5767,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "25%",
@@ -5847,7 +5787,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "50%",
@@ -5867,7 +5807,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "75%",
@@ -5887,7 +5827,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "100%",
@@ -5907,7 +5847,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "150%",
@@ -5927,7 +5867,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "200%",
@@ -5947,7 +5887,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "400%",
@@ -5967,7 +5907,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "讲者备注",
@@ -5987,7 +5927,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "布局参考线",
@@ -6007,7 +5947,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "图层",
@@ -6027,7 +5967,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -6047,7 +5987,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -6067,7 +6007,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -6087,7 +6027,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -6104,7 +6044,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -6116,13 +6056,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6136,13 +6076,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6156,13 +6096,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6176,13 +6116,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6196,13 +6136,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6216,13 +6156,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6236,13 +6176,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -6256,13 +6196,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6276,13 +6216,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -6296,7 +6236,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -6316,7 +6256,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -6336,7 +6276,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -6356,7 +6296,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -6376,7 +6316,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -6396,7 +6336,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -6416,7 +6356,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -6436,7 +6376,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -6456,7 +6396,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -6476,7 +6416,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -6496,7 +6436,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "关闭版本历史",
@@ -6516,7 +6456,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本 0：最初的版本",
@@ -6536,7 +6476,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -6553,7 +6493,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -6565,13 +6505,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6585,13 +6525,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6605,13 +6545,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6625,13 +6565,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6645,13 +6585,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6665,13 +6605,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6685,13 +6625,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -6705,13 +6645,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -6725,13 +6665,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -6745,7 +6685,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -6765,7 +6705,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -6785,7 +6725,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -6805,7 +6745,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -6825,7 +6765,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示全部评论 0",
@@ -6845,7 +6785,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -6865,7 +6805,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -6885,7 +6825,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -6905,7 +6845,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -6925,7 +6865,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -6945,7 +6885,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -6965,7 +6905,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -6982,7 +6922,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -6994,13 +6934,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7014,13 +6954,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7034,13 +6974,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7054,13 +6994,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7074,13 +7014,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7094,13 +7034,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7114,13 +7054,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -7134,13 +7074,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7154,13 +7094,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -7174,7 +7114,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -7194,7 +7134,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -7214,7 +7154,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -7234,7 +7174,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -7254,7 +7194,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -7274,7 +7214,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -7294,7 +7234,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -7314,7 +7254,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -7334,7 +7274,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -7354,7 +7294,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -7374,7 +7314,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -7391,7 +7331,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -7403,13 +7343,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7423,13 +7363,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7443,13 +7383,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7463,13 +7403,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7483,13 +7423,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7503,13 +7443,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7523,13 +7463,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -7543,13 +7483,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7563,13 +7503,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -7583,7 +7523,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -7603,7 +7543,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -7623,7 +7563,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -7643,7 +7583,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -7663,7 +7603,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -7683,7 +7623,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -7703,7 +7643,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -7723,7 +7663,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -7743,7 +7683,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -7763,7 +7703,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -7783,7 +7723,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论内容",
@@ -7803,7 +7743,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "发送",
@@ -7823,7 +7763,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -7840,7 +7780,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -7852,13 +7792,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7872,13 +7812,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7892,13 +7832,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7912,13 +7852,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7932,13 +7872,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7952,13 +7892,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -7972,13 +7912,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -7992,13 +7932,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -8012,13 +7952,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -8032,7 +7972,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -8052,7 +7992,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -8072,7 +8012,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -8092,7 +8032,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -8112,7 +8052,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -8132,7 +8072,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -8152,7 +8092,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -8172,7 +8112,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -8192,7 +8132,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -8212,7 +8152,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -8232,7 +8172,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论筛选",
@@ -8252,7 +8192,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "关闭评论",
@@ -8272,7 +8212,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -8289,7 +8229,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -8301,13 +8241,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -8321,13 +8261,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -8341,13 +8281,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -8361,13 +8301,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -8381,13 +8321,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -8401,13 +8341,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -8421,13 +8361,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -8441,13 +8381,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -8461,13 +8401,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -8481,7 +8421,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -8501,7 +8441,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -8521,7 +8461,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -8541,7 +8481,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -8561,7 +8501,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -8581,7 +8521,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -8601,7 +8541,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -8621,7 +8561,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -8641,7 +8581,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -8661,7 +8601,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -8681,7 +8621,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "属性",
@@ -8701,7 +8641,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "主题",
@@ -8721,7 +8661,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "关闭属性",
@@ -8741,7 +8681,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "无淡入滑入",
@@ -8761,7 +8701,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "背景",
@@ -8781,7 +8721,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "高级",
@@ -8801,7 +8741,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画板横坐标",
@@ -8821,7 +8761,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画板纵坐标",
@@ -8841,7 +8781,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "页面尺寸",
@@ -8861,7 +8801,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "页面高度模式",
@@ -8881,7 +8821,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "标题",
@@ -8901,7 +8841,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "宽",
@@ -8921,7 +8861,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "高",
@@ -8941,7 +8881,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "",
@@ -8961,10 +8901,10 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
-          "label": "删除页面",
+          "label": "删除画板",
           "role": "button",
           "rect": {
             "x": 1121,
@@ -8981,7 +8921,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "布局参考线",
@@ -9001,7 +8941,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加布局参考线",
@@ -9021,7 +8961,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -9038,7 +8978,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -9050,13 +8990,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9070,13 +9010,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9090,13 +9030,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9110,13 +9050,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9130,13 +9070,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9150,13 +9090,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9170,13 +9110,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -9190,13 +9130,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9210,13 +9150,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -9230,7 +9170,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -9250,7 +9190,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -9270,7 +9210,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -9290,7 +9230,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -9310,7 +9250,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -9330,7 +9270,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -9350,7 +9290,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -9370,7 +9310,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -9390,7 +9330,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -9410,7 +9350,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -9430,7 +9370,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "属性",
@@ -9450,7 +9390,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "主题",
@@ -9470,7 +9410,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "关闭属性",
@@ -9490,7 +9430,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "无淡入滑入",
@@ -9510,7 +9450,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "背景",
@@ -9530,7 +9470,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "主题",
@@ -9550,7 +9490,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "自定义",
@@ -9570,7 +9510,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "关闭颜色选择",
@@ -9590,7 +9530,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "颜色 #faf8f4",
@@ -9610,7 +9550,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "颜色 #18332b",
@@ -9630,7 +9570,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "颜色 #426b46",
@@ -9650,7 +9590,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "高级",
@@ -9670,7 +9610,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画板横坐标",
@@ -9690,7 +9630,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画板纵坐标",
@@ -9710,7 +9650,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "页面尺寸",
@@ -9730,7 +9670,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "页面高度模式",
@@ -9750,7 +9690,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "标题",
@@ -9770,7 +9710,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "宽",
@@ -9790,7 +9730,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "高",
@@ -9810,7 +9750,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "",
@@ -9830,10 +9770,10 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
-          "label": "删除页面",
+          "label": "删除画板",
           "role": "button",
           "rect": {
             "x": 1121,
@@ -9850,7 +9790,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "布局参考线",
@@ -9870,7 +9810,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加布局参考线",
@@ -9890,7 +9830,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -9907,7 +9847,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -9919,13 +9859,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9939,13 +9879,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9959,13 +9899,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9979,13 +9919,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -9999,13 +9939,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10019,13 +9959,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10039,13 +9979,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -10059,13 +9999,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10079,13 +10019,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -10099,7 +10039,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -10119,7 +10059,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -10139,7 +10079,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -10159,7 +10099,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -10179,7 +10119,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -10199,7 +10139,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -10219,7 +10159,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -10239,7 +10179,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -10259,7 +10199,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -10279,7 +10219,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -10299,7 +10239,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "属性",
@@ -10319,7 +10259,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "主题",
@@ -10339,7 +10279,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "关闭属性",
@@ -10359,7 +10299,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "无淡入滑入",
@@ -10379,7 +10319,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "背景",
@@ -10399,7 +10339,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "主题",
@@ -10419,7 +10359,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "自定义",
@@ -10439,7 +10379,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "关闭颜色选择",
@@ -10459,7 +10399,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "色相",
@@ -10479,7 +10419,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "颜色透明度",
@@ -10499,7 +10439,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "十六进制颜色",
@@ -10519,7 +10459,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "无颜色",
@@ -10539,7 +10479,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "高级",
@@ -10559,7 +10499,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画板横坐标",
@@ -10579,7 +10519,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画板纵坐标",
@@ -10599,7 +10539,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "页面尺寸",
@@ -10619,7 +10559,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "页面高度模式",
@@ -10639,7 +10579,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "标题",
@@ -10659,7 +10599,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "宽",
@@ -10679,7 +10619,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "高",
@@ -10699,7 +10639,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "",
@@ -10719,10 +10659,10 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
-          "label": "删除页面",
+          "label": "删除画板",
           "role": "button",
           "rect": {
             "x": 1121,
@@ -10739,7 +10679,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "布局参考线",
@@ -10759,7 +10699,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加布局参考线",
@@ -10779,7 +10719,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     },
@@ -10796,7 +10736,7 @@
           "rect": {
             "x": 17,
             "y": 17,
-            "width": 65.828125,
+            "width": 64.828125,
             "height": 24
           },
           "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
@@ -10808,13 +10748,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "选择 (V)",
           "role": "button",
           "rect": {
-            "x": 99.828125,
+            "x": 98.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10828,13 +10768,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "手型工具 (H)",
           "role": "button",
           "rect": {
-            "x": 127.828125,
+            "x": 126.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10848,13 +10788,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本",
           "role": "button",
           "rect": {
-            "x": 155.828125,
+            "x": 154.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10868,13 +10808,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "添加画板",
           "role": "button",
           "rect": {
-            "x": 183.828125,
+            "x": 182.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10888,13 +10828,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "便签 (N)",
           "role": "button",
           "rect": {
-            "x": 211.828125,
+            "x": 210.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10908,13 +10848,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "铅笔",
           "role": "button",
           "rect": {
-            "x": 239.828125,
+            "x": 238.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10928,13 +10868,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "绘图工具",
           "role": "summary",
           "rect": {
-            "x": 265.828125,
+            "x": 264.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -10948,13 +10888,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "矩形工具",
           "role": "button",
           "rect": {
-            "x": 285.828125,
+            "x": 284.828125,
             "y": 17,
             "width": 24,
             "height": 24
@@ -10968,13 +10908,13 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "插入图形",
           "role": "summary",
           "rect": {
-            "x": 311.828125,
+            "x": 310.828125,
             "y": 17,
             "width": 14,
             "height": 24
@@ -10988,7 +10928,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "导出格式",
@@ -11008,7 +10948,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "版本历史",
@@ -11028,7 +10968,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论",
@@ -11048,7 +10988,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "评论选项",
@@ -11068,7 +11008,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "放映",
@@ -11088,7 +11028,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "显示属性",
@@ -11108,7 +11048,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "画布缩放",
@@ -11128,7 +11068,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 1",
@@ -11148,7 +11088,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "调整元素左上角",
@@ -11168,7 +11108,7 @@
           "shadow": "none",
           "radius": "1px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "调整元素上边缘",
@@ -11188,7 +11128,7 @@
           "shadow": "none",
           "radius": "1px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "调整元素右上角",
@@ -11208,7 +11148,7 @@
           "shadow": "none",
           "radius": "1px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "调整元素右边缘",
@@ -11228,7 +11168,7 @@
           "shadow": "none",
           "radius": "1px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "调整元素右下角",
@@ -11248,7 +11188,7 @@
           "shadow": "none",
           "radius": "1px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "调整元素下边缘",
@@ -11268,7 +11208,7 @@
           "shadow": "none",
           "radius": "1px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "调整元素左下角",
@@ -11288,7 +11228,7 @@
           "shadow": "none",
           "radius": "1px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "调整元素左边缘",
@@ -11308,7 +11248,7 @@
           "shadow": "none",
           "radius": "1px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "旋转元素",
@@ -11328,7 +11268,7 @@
           "shadow": "none",
           "radius": "50%",
           "cursor": "crosshair",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 2",
@@ -11348,7 +11288,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "Page 3",
@@ -11368,7 +11308,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "属性",
@@ -11388,7 +11328,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "主题",
@@ -11408,7 +11348,7 @@
           "shadow": "none",
           "radius": "7px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "关闭属性",
@@ -11428,7 +11368,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "内边距",
@@ -11448,7 +11388,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本样式",
@@ -11468,7 +11408,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "字体",
@@ -11488,7 +11428,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "字重",
@@ -11508,7 +11448,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "字号",
@@ -11528,7 +11468,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "行高",
@@ -11548,7 +11488,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "字距",
@@ -11568,7 +11508,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "颜色",
@@ -11588,7 +11528,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本左对齐",
@@ -11608,7 +11548,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本居中",
@@ -11628,7 +11568,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本右对齐",
@@ -11648,7 +11588,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "文本两端对齐",
@@ -11668,7 +11608,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "填充",
@@ -11688,7 +11628,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "不透明度",
@@ -11708,7 +11648,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "圆角",
@@ -11728,7 +11668,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "描边",
@@ -11748,7 +11688,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "线宽",
@@ -11768,7 +11708,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "描边样式",
@@ -11788,7 +11728,7 @@
           "shadow": "none",
           "radius": "8px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "效果",
@@ -11808,7 +11748,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "渐变",
@@ -11828,7 +11768,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "填充类型",
@@ -11848,7 +11788,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "阴影",
@@ -11868,7 +11808,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "",
@@ -11888,7 +11828,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "高级",
@@ -11908,7 +11848,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "横坐标",
@@ -11928,7 +11868,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "纵坐标",
@@ -11948,7 +11888,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "宽",
@@ -11968,7 +11908,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "高",
@@ -11988,7 +11928,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "旋转",
@@ -12008,7 +11948,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "text",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "水平翻转",
@@ -12028,7 +11968,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "垂直翻转",
@@ -12048,7 +11988,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "置于顶层",
@@ -12068,7 +12008,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "置于底层",
@@ -12088,7 +12028,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "",
@@ -12108,7 +12048,7 @@
           "shadow": "none",
           "radius": "0px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "左对齐",
@@ -12128,7 +12068,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "水平居中",
@@ -12148,7 +12088,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "右对齐",
@@ -12168,7 +12108,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "顶部",
@@ -12188,7 +12128,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "垂直居中",
@@ -12208,7 +12148,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "底部",
@@ -12228,7 +12168,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "水平分布",
@@ -12248,7 +12188,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "垂直分布",
@@ -12268,7 +12208,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "default",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "删除元素",
@@ -12288,7 +12228,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         },
         {
           "label": "复制元素",
@@ -12308,7 +12248,7 @@
           "shadow": "none",
           "radius": "6px",
           "cursor": "pointer",
-          "transition": "all"
+          "transition": "none"
         }
       ]
     }
