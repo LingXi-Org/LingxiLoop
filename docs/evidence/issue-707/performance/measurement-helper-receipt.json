@@ -177,6 +177,7 @@
     "failedRequestRouteClasses": true,
     "unmatchedResourceMeasuredEpochs": true,
     "performanceSamples": 0,
-    "scope": "失败诊断证据完整性，不是性能资格"
+    "scope": "失败诊断证据完整性，不是性能资格",
+    "resourceIdentityJoin": "发现未匹配计时与请求行使用不同脱敏阶段，现统一 safe_url 后公开哈希；内部完整资源匹配不变。纯自检及真实普通/压缩 Worker 跨表身份检查通过。"
   }
 }

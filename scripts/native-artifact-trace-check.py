@@ -50,6 +50,13 @@ try:
             page.wait_for_timeout(100)
             trace.reconcile_decoded(page)
             rows = trace.snapshot()
+            timing_urls=[]
+            for target in [*page.frames,*page.workers]:
+                timing_urls.extend(target.evaluate("() => performance.getEntriesByType('resource').filter(e=>e.decodedBodySize>0).map(e=>({url:e.name}))"))
+            projected=benchmark['timing_observations'](timing_urls)
+            for original, public in zip(timing_urls,projected):
+                matches=[row for row in rows if row['_resourceKey']==benchmark['resource_key'](original['url'])]
+                assert matches and all(row['url']==public['url'] for row in matches), 'completed request and unmatched timing tables must share one public resource identity'
             entry = next(row for row in rows if row['url'] == safe_url('http://localhost' + path))
             imports = next(row for row in rows if row['url'] == safe_url('http://localhost/dependency.js'))
             assert not trace.inflight(), 'a completed worker must not leave a phantom request'

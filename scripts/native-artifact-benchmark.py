@@ -73,6 +73,11 @@ def failed_requests(rows):
     return [row for row in rows if row.get('status', 200) >= 400 or row.get('failed') and not row.get('canceled')]
 
 
+def timing_observations(rows):
+    # Match the same redacted identity used by the CDP/PW request tables.
+    return [{**row, 'url': safe_url(row['url'])} for row in rows]
+
+
 def editor_observations(page):
     states = []
     for frame in page.frames:
@@ -1244,6 +1249,7 @@ def self_check():
     assert len(parsed.pages) == 2 and parsed.pages[1]['text'] == 'two'
     assert failure_code(RuntimeError('cookie=secret')) == 'browser_or_measurement_error'
     assert request_route('https://private/api/artifacts/secret/document?token=private') == 'artifact-api'
+    assert timing_observations([{'url':raw,'responseEndEpochMs':1400}])[0]['url'] == safe_url(raw)
     assert failed_requests([{'status':403},{'failed':True},{'failed':True,'canceled':True},{'status':200}]) == [{'status':403},{'failed':True}]
     print(json.dumps({'selfCheck': 'passed', 'performanceSamples': 0, 'qualified': False}))
     return 0
@@ -1412,7 +1418,7 @@ def main():
                             if trace:
                                 rows = trace.snapshot()
                                 sample['failedRequests'] = failed_requests(rows)
-                                sample['unaccountedScriptTimings'] = trace.unaccounted_script_resources
+                                sample['unaccountedScriptTimings'] = timing_observations(trace.unaccounted_script_resources)
                                 sample['networkObservations'] = {'requests': len(rows), 'scripts': script_totals(rows), 'inflight': len(trace.inflight()),
                                     'failed': sum(row.get('status', 200) >= 400 or row.get('failed', False) and not row.get('canceled', False) for row in rows),
                                     'sourcePayloadTransferBytes': sum(row.get('transferredBytes', 0) for row in rows if row.get('sourcePayload')),
