@@ -1,0 +1,21 @@
+import { useEffect, useState } from 'react'
+
+export function SvgImage({source,alt,fontFamily,thumbnail}:{source:string;alt:string;fontFamily?:string;thumbnail?:{width:number;height:number}}) {
+  const key=`${fontFamily??''}\0${source}`,needsFonts=/<text(?:\s|>)/.test(source)
+  const [attempt,setAttempt]=useState(0)
+  const [result,setResult]=useState<{key:string;attempt:number;url?:string;failed?:boolean}>()
+  const current=result?.key===key&&result.attempt===attempt?result:undefined
+  useEffect(()=>{
+    if(!needsFonts)return
+    const controller=new AbortController()
+    void import('./svg-font-image').then(module=>module.svgFontImage(source,fontFamily,controller.signal)).then(url=>{
+      if(!controller.signal.aborted)setResult({key,attempt,url})
+    }).catch(()=>{if(!controller.signal.aborted)setResult({key,attempt,failed:true})})
+    return()=>controller.abort()
+  },[key,source,fontFamily,attempt,needsFonts])
+  const url=needsFonts?current?.url:`data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`
+  const failed=()=>setResult({key,attempt,failed:true})
+  if(thumbnail)return current?.failed?<text x={4} y={18} fontSize={12}>图形加载失败</text>:url?<image href={url} width={thumbnail.width} height={thumbnail.height} onError={failed} />:<g aria-busy="true"><rect width={thumbnail.width} height={thumbnail.height} fill="#e8eaee" /><text x={4} y={18} fontSize={12}>正在加载图形…</text></g>
+  if(current?.failed)return <button type="button" onClick={()=>setAttempt(value=>value+1)}>重试图形</button>
+  return url?<img src={url} alt={alt} draggable={false} className="native-svg-image" onError={failed} />:<span aria-busy="true" style={{fontSize:14}}>正在加载图形…</span>
+}

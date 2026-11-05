@@ -1,5 +1,7 @@
 import { artifactShapeGeometry } from '../../../../shared/artifact-shapes'
 import { editorFontFamily } from './editor-fonts'
+import { SvgImage } from './SvgImage'
+import { inheritedSvgFont } from './svg-presentation'
 import { memo, useEffect, useState, type ReactNode } from 'react'
 import { isSafeArtifactSvg, type ArtifactAsset, type ArtifactDocument, type ArtifactNode, type ArtifactPage, type ArtifactRichText, type ArtifactTheme, type ArtifactStyle } from '../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
@@ -41,7 +43,7 @@ interface PreviewNode {
   fill: string; color: string; stroke: string; strokeWidth: number; opacity: number; radius: number
   fontSize: number; fontWeight: number; fontFamily: string; text: string; shape?: ArtifactNode['shape']; points?: string
   gradient?: ArtifactStyle['gradient']; shadow?: ArtifactStyle['shadow']; flipX?: boolean; flipY?: boolean
-  assetId?: string; imageKey?: string; crop?: ArtifactNode['crop']; svg?: string; cells?: string[][]; tableHeader?: boolean; children?: PreviewNode[]
+  assetId?: string; imageKey?: string; crop?: ArtifactNode['crop']; svg?: string; svgFontFamily?:string; cells?: string[][]; tableHeader?: boolean; children?: PreviewNode[]
 }
 interface Preview { width: number; height: number; background: string; nodes: PreviewNode[] }
 const previews = new PreviewCache<Preview>()
@@ -88,7 +90,7 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
       shape: node.shape, crop: node.crop, gradient: style.gradient, shadow: style.shadow, flipX: node.flipX, flipY: node.flipY,
       ...(asset ? { assetId, imageKey: imageKey(document.id, asset) } : {}),
       ...(node.type === 'line' || node.type === 'drawing' ? { points: (node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ') } : {}),
-      ...(node.type === 'svg' && node.svg && isSafeArtifactSvg(node.svg) ? { svg: node.svg } : {}),
+      ...(node.type === 'svg' && node.svg && isSafeArtifactSvg(node.svg) ? { svg: node.svg, svgFontFamily:inheritedSvgFont(node,page,document) } : {}),
       ...(node.type === 'table' ? { tableHeader:node.tableHeader, cells: node.cells?.slice(0, 12).map(row => row.slice(0, 8).map(cell => cell.slice(0, 48))) } : {}),
     }
     if (node.type === 'group') {
@@ -204,7 +206,7 @@ function PreviewShape({ node, document, loaded }: { node: PreviewNode; document:
   const gradientId = `preview-gradient-${document.id}-${node.id}`
   const paint = { fill: node.gradient ? `url(#${gradientId})` : node.fill, stroke: node.stroke, strokeWidth: node.strokeWidth }
   if (node.type === 'image' || node.type === 'video' && node.imageKey || node.type === 'embed' && node.imageKey) content = <ThumbnailImage node={node} document={document} loaded={loaded} />
-  else if (node.type === 'svg' && node.svg) content = <image href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(node.svg)}`} width={w} height={h} />
+  else if (node.type === 'svg' && node.svg) content = <SvgImage source={node.svg} alt="图形" fontFamily={node.svgFontFamily} thumbnail={{width:w,height:h}} />
   else if ((node.type === 'line' || node.type === 'drawing')) content = <polyline points={node.points} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} />
   else if (node.type === 'shape') {const {tag:Shape,attributes}=artifactShapeGeometry(node.shape,w,h,node.radius);content=<Shape {...attributes} {...paint} />}
   else if (node.type === 'table') {

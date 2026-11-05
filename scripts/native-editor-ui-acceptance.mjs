@@ -71,7 +71,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','canvas-pages','canvas-pages-cas','canvas-flow']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','canvas-pages','canvas-pages-cas','canvas-flow']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   if(options.checks==='canvas-flow'){
@@ -85,9 +85,12 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     Object.assign(other,{canvasPageId:'canvas-second',x:0,y:options['flow-overlap']?0:700,width:800,height:600})
   }
   if(options.checks==='canvas-pages-cas')document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
-  if(options.checks==='svg-font'){
-    const node={...createNode('svg','font-svg'),svg:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 150"><text x="16" y="100" font-family="Merriweather" font-size="80" font-weight="700">Hello</text></svg>'}
+  if(['svg-font','svg-font-error','svg-font-cancel'].includes(options.checks)){
+    const node={...createNode('svg','font-svg'),svg:'<svg xmlns="http://www.w3.org/2000/svg" width="600" height="150" viewBox="0 0 600 150"><text x="16" y="100" font-family="Merriweather" font-size="80" font-weight="700">Hello</text></svg>'}
     document.pages['page-1'].nodes[node.id]=node;document.pages['page-1'].nodeOrder.push(node.id)
+    const group={...createNode('group','svg-font-group'),x:80,y:400,width:600,height:150,style:{fontFamily:'Merriweather'}}
+    const child={...node,id:'inherited-svg',parentId:group.id,x:0,y:0,svg:node.svg.replace(' font-family="Merriweather"','')}
+    for(const item of [group,child]){document.pages['page-1'].nodes[item.id]=item;document.pages['page-1'].nodeOrder.push(item.id)}
   }
   if(options.checks==='table-stability'){
     const page=document.pages['page-1'],table={...createTableNode('stable-table',page),tableHeader:false,cells:[['甲','乙'],['丙'],['丁','戊']]}
@@ -110,12 +113,14 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     pageVersions: Object.fromEntries(document.pageOrder.map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
+  let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0
   const editorFontRequests=[]
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
   page.setDefaultTimeout(30_000)
   await page.addInitScript(()=>{window.__geometryLog=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(['visible','update-pages'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
-  page.on('console', message => { if (message.type() === 'error'&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))) errors.push(message.text()) })
+  page.on('console', message => { if (message.type() === 'error'&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))) errors.push(message.text()) })
+  if(['svg-font-error','svg-font-cancel'].includes(options.checks))await page.route('**/fonts/editors/**',async route=>{if(svgFontsBlocked){svgFontFailures++;await route.fulfill({status:503,body:'字体暂时无法加载'});return}if(svgFontsHeld)await new Promise(resolve=>{const previous=releaseSvgFonts;releaseSvgFonts=()=>{previous?.();resolve()}});await route.continue().catch(()=>{})})
   await page.route('**/isolated-fixture/**', async route => {
     const [, pageId, nodeId] = new URL(route.request().url()).pathname.match(/^\/isolated-fixture\/([^/]+)\/([^/]+)$/) ?? []
     const source = document.pages[pageId]?.nodes[nodeId]?.embed?.source
@@ -379,8 +384,47 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual(errors,[])
       return{kind:'isolated-font-lazy-cancellation-diagnostic',mode:kind,cancelAction:editorCase,actualModuleHeld:true,pendingSessionCancelled:true,lateModuleDoesNotStealFocus:true,cachedReentryFocus:true,consoleOrPageErrors:errors}
     }
+    if(options.checks==='svg-font-error'){
+      const target=page.locator('[data-node-id="font-svg"]'),original=document.pages['page-1'].nodes['font-svg'].svg
+      await target.getByRole('button',{name:'重试图形',exact:true}).waitFor();assert.ok(svgFontFailures>0)
+      svgFontsBlocked=false;await target.getByRole('button',{name:'重试图形',exact:true}).click();await target.locator('img').waitFor()
+      assert.match(decodeURIComponent(await target.locator('img').getAttribute('src')),/@font-face/)
+      assert.equal(document.pages['page-1'].nodes['font-svg'].svg,original);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-svg-font-recovery-diagnostic',mode:kind,actualFontRequestFailed:true,chineseRetry:true,retryLoadedPackedImage:true,sourceAndHistoryUnchanged:true,scope:'actual React and local font fetch; controlled HTTP failure',consoleOrPageErrors:errors}
+    }
+    if(options.checks==='svg-font-cancel'){
+      if(!editorFontRequests.length)await page.waitForRequest(request=>new URL(request.url()).pathname.startsWith('/fonts/editors/'))
+      const source='<svg xmlns="http://www.w3.org/2000/svg" width="600" height="150"><rect width="600" height="150" fill="#123456"/></svg>'
+      document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'font-svg',patch:{svg:source}}])).document
+      await page.waitForFunction(value=>document.querySelector('[data-node-id="font-svg"] img')?.getAttribute('src')===value,`data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`)
+      svgFontsHeld=false;releaseSvgFonts?.();await page.waitForTimeout(300)
+      assert.equal(await page.locator('[data-node-id="font-svg"] img').getAttribute('src'),`data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`)
+      assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-svg-font-cancellation-diagnostic',mode:kind,fontFetchActuallyHeld:true,sourceChangedDuringLoad:true,lateImageDoesNotReplaceNewSource:true,scope:'actual React image and shared refresh; controlled HTTP font delay',consoleOrPageErrors:errors}
+    }
     if(options.checks==='svg-font'){
       const original=document.pages['page-1'].nodes['font-svg'].svg
+      const rendered=page.locator('[data-node-id="font-svg"] img')
+      await rendered.waitFor()
+      const imageSource=await rendered.getAttribute('src')
+      const inherited=page.locator('[data-node-id="inherited-svg"] img');await inherited.waitFor();assert.match(decodeURIComponent(await inherited.getAttribute('src')),/@font-face/,'SVG images must preserve an inherited group font')
+      assert.match(decodeURIComponent(imageSource),/@font-face/,'SVG image text must carry its actual registered font; parent CSS cannot style image internals')
+      const raster=await rendered.evaluate(async image=>{
+        await image.decode()
+        const loaded=await document.fonts.load('700 80px "LingxiLoopEditor Merriweather"','Hello')
+        const canvas=document.createElement('canvas');canvas.width=600;canvas.height=150
+        const context=canvas.getContext('2d'),bounds=()=>{const pixels=context.getImageData(0,0,600,150).data;let left=600,right=-1,top=150,bottom=-1;for(let y=0;y<150;y++)for(let x=0;x<600;x++)if(pixels[(y*600+x)*4+3]>0){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}return{left,right,top,bottom,width:right-left+1,height:bottom-top+1}}
+        context.drawImage(image,0,0,600,150);const actual=bounds()
+        context.clearRect(0,0,600,150);context.font='700 80px "LingxiLoopEditor Merriweather"';context.fillText('Hello',16,100)
+        return{actual,expected:bounds(),loadedFaces:loaded.filter(face=>face.status==='loaded').length}
+      })
+      assert.ok(raster.loadedFaces>0)
+      for(const axis of ['left','right','top','bottom'])assert.ok(Math.abs(raster.actual[axis]-raster.expected[axis])<=1,`SVG image must paint the actual font on ${axis}`)
+      if(kind==='slides'){
+        const thumbnail=page.locator('[data-page-target="page-1"] image[href^="data:image/svg+xml"]').first();await thumbnail.waitFor()
+        assert.match(decodeURIComponent(await thumbnail.getAttribute('href')),/@font-face/,'thumbnails must carry the same actual font')
+      }
+      await page.screenshot({path:join(output,`${kind}-svg-font-canvas.png`)})
       const result=await page.evaluate(async({root,snapshot})=>{
         const{renderPageHtml,EXPORT_PAGE_CSS}=await import(`/@fs${root}/src/features/artifacts/native/export/render.ts`)
         const{ExportResources}=await import(`/@fs${root}/src/features/artifacts/native/export/common.ts`)
@@ -391,7 +435,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       },{root,snapshot:document})
       assert.match(result.fontFamily,/LingxiLoopEditor Merriweather/);assert.equal(result.htmlPreservesText,true)
       assert.equal(document.pages['page-1'].nodes['font-svg'].svg,original);assert.deepEqual(errors,[])
-      return{kind:'isolated-svg-font-export-diagnostic',mode:kind,...result,sourceUnchanged:true,canvasFontQualified:false,scope:'actual static SVG export and font readiness; data-image canvas fonts remain a separate gate',consoleOrPageErrors:errors}
+      return{kind:'isolated-svg-font-export-diagnostic',mode:kind,...result,sourceUnchanged:true,canvasFontQualified:false,localFontPaintVerified:true,inheritedGroupFontEmbedded:true,inertImageRetained:true,raster,thumbnailFontEmbedded:kind==='slides',scope:'actual SVG image font packing, bitmap ink bounds versus a loaded local font, thumbnail and static SVG export; controlled HTTP fixture, not complete visual qualification',consoleOrPageErrors:errors}
     }
     if(options.checks==='font-cas'){
       await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'字体',exact:true}).click()
@@ -1016,7 +1060,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       openingTextWithoutChangesDoesNotSave: true, chineseIme, formulaEditedAndReopened: 25, imageCropEditedAndReopened: 50, themeSwitchedAndRestored: true,
       pageOrderChangedAndReopened: true, pageOrderSharedUndoRedo: true, agentSharedUndoRedo: true, changedPageIds, untouchedPageHashes: 47,
       agentPlainTextPatchVisible: true, isolatedInteraction, consoleOrPageErrors: errors }
-  } catch(error) { await page.screenshot({path:join(output,`${kind}-failure.png`)}); const diagnostic=await page.evaluate(()=>({geometry:window.__geometryLog,zoom:document.querySelector('[aria-label="画布缩放"]')?.textContent,stage:[...document.querySelectorAll('.native-stage')].map(e=>({scrollLeft:e.scrollLeft,scrollTop:e.scrollTop,w:e.clientWidth,h:e.clientHeight,scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})),notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent)}));await writeFile(join(output,`${kind}-failure.json`),JSON.stringify({message:String(error),errors,diagnostic},null,2));throw error } finally { releaseAcknowledgment?.(); await page.close() }
+  } catch(error) { await page.screenshot({path:join(output,`${kind}-failure.png`)}); const diagnostic=await page.evaluate(()=>({geometry:window.__geometryLog,zoom:document.querySelector('[aria-label="画布缩放"]')?.textContent,stage:[...document.querySelectorAll('.native-stage')].map(e=>({scrollLeft:e.scrollLeft,scrollTop:e.scrollTop,w:e.clientWidth,h:e.clientHeight,scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})),notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent)}));await writeFile(join(output,`${kind}-failure.json`),JSON.stringify({message:String(error),errors,diagnostic},null,2));throw error } finally { svgFontsHeld=false;releaseSvgFonts?.();releaseAcknowledgment?.(); await page.close() }
 }
 
 async function visualControls(page){return page.locator('button,[role=button],[role=tab],input,select,textarea,[role=menuitem],summary').evaluateAll(elements=>elements.filter(e=>e.getBoundingClientRect().width&&e.getBoundingClientRect().height&&getComputedStyle(e).visibility!=='hidden').map(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect();return {label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent?.slice(0,100),role:e.getAttribute('role')??e.tagName.toLowerCase(),rect:{x:r.x,y:r.y,width:r.width,height:r.height},fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,color:s.color,background:s.backgroundColor,border:s.border,shadow:s.boxShadow,radius:s.borderRadius,cursor:s.cursor,transition:s.transition}}))}

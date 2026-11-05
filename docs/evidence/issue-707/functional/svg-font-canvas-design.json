@@ -1,0 +1,33 @@
+{
+  "kind": "isolated-svg-font-export-diagnostic",
+  "mode": "design",
+  "fontFamily": "\"LingxiLoopEditor Merriweather\", serif",
+  "htmlPreservesText": true,
+  "sourceUnchanged": true,
+  "canvasFontQualified": false,
+  "localFontPaintVerified": true,
+  "inheritedGroupFontEmbedded": true,
+  "inertImageRetained": true,
+  "raster": {
+    "actual": {
+      "left": 19,
+      "right": 220,
+      "top": 33,
+      "bottom": 100,
+      "width": 202,
+      "height": 68
+    },
+    "expected": {
+      "left": 19,
+      "right": 220,
+      "top": 33,
+      "bottom": 100,
+      "width": 202,
+      "height": 68
+    },
+    "loadedFaces": 1
+  },
+  "thumbnailFontEmbedded": false,
+  "scope": "actual SVG image font packing, bitmap ink bounds versus a loaded local font, thumbnail and static SVG export; controlled HTTP fixture, not complete visual qualification",
+  "consoleOrPageErrors": []
+}

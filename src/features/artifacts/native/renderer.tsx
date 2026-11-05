@@ -8,6 +8,8 @@ import type { NativeCompute } from './compute'
 import { useLocalDraft } from './draft-context'
 import { appearance, nodeTransform } from '../../../../shared/artifact-appearance'
 import { editorFontFamily } from './editor-fonts'
+import { SvgImage } from './SvgImage'
+import { inheritedSvgFont } from './svg-presentation'
 import './editor-fonts.css'
 
 const RichTextEditor = lazy(() => import('./RichTextEditor'))
@@ -145,7 +147,7 @@ function NodeContent({ node, document, page, compute, pageVersion, revisionSeq, 
       const crop = node.crop ?? { x: 0, y: 0, width: 1, height: 1 }
       return asset ? <div className="native-image-crop"><AssetImage asset={asset} artifactId={document.id} alt={node.text ?? ''} style={{ width: `${100 / Math.max(.01, crop.width)}%`, height: `${100 / Math.max(.01, crop.height)}%`, maxWidth: 'none', transform: `translate(${-crop.x * 100}%,${-crop.y * 100}%)`, objectFit: 'cover' }} /></div> : <span role="img" aria-label="图片资源缺失">图片资源缺失</span>
     }
-    case 'svg': return <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(node.svg ?? '')}`} alt={node.text ?? '图形'} draggable={false} className="native-svg-image" />
+    case 'svg': return <SvgImage source={node.svg??''} alt={node.text??'图形'} fontFamily={inheritedSvgFont(node,page,document)} />
     case 'shape': return <svg viewBox={`0 0 ${node.width} ${node.height}`} width="100%" height="100%" aria-label="形状" style={{ overflow: 'visible' }}>
       {gradient && <defs>{gradient.type === 'radial' ? <radialGradient id={`native-gradient-${node.id}`}>{gradient.stops.map((stop,index) => <stop key={index} offset={stop.offset} stopColor={stop.color} />)}</radialGradient> : <linearGradient id={`native-gradient-${node.id}`} x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform={`rotate(${gradient.angle-90} .5 .5)`}>{gradient.stops.map((stop,index) => <stop key={index} offset={stop.offset} stopColor={stop.color} />)}</linearGradient>}</defs>}
       {(() => { const {tag: Shape,attributes}=artifactShapeGeometry(node.shape,node.width,node.height,node.style.borderRadius);return <Shape {...attributes} fill={fill} stroke={node.style.stroke} strokeWidth={node.style.strokeWidth} /> })()}
