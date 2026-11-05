@@ -88,6 +88,7 @@ jobs:
               - 'src/**'
               - 'public/**'
               - 'index.html'
+              - 'artifact-export.html'
               - 'vite.config.ts'
               - 'tsconfig.json'
               - 'tsconfig.node.json'
@@ -428,6 +429,8 @@ jobs:
           if-no-files-found: error
       - if: needs.changes.outputs.server != 'true'
         run: node --test scripts/test-selectors.test.mjs
+      - name: Annotate integration test failures
+        run: echo "::add-matcher::.github/matchers/native-checks.json"
       - run: npm run test:integration
         env:
           INTEGRATION_TEST_MODE: ${{ needs.changes.outputs.integration_mode }}

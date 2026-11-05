@@ -18,9 +18,12 @@ test('absent or malformed saved fields remain unobservable instead of looking co
 test('model sees the actual shallow resource contract and bounded incremental authoring guidance', () => {
   const slides = createArtifactTools('slides', async () => { throw new Error('not used') })
   assert.match(slides.find(tool => tool.action === 'slides.current')!.description, /top-level.*title.*slideCount/)
-  assert.match(slides.find(tool => tool.action === 'slides.check')!.description, /format.*not.*visual/i)
+  assert.match(slides.find(tool => tool.action === 'slides.current')!.description, /native document.*page order/)
+  assert.match(slides.find(tool => tool.action === 'slides.check')!.description, /structural.*does not verify.*browser rendering/i)
+  assert.match(slides.find(tool => tool.action === 'slides.read_page')!.description, /atSeq.*sourceVersion/)
   const skill = artifactSkills.find(skill => skill.name === 'claude-slides')!.body
   assert.match(skill, /not_observed/)
   assert.match(skill, /first editable slide/i)
-  assert.match(skill, /Preserve.*saved.*files/i)
+  assert.match(skill, /Preserve saved content and original files/i)
+  assert.match(skill, /slides\.apply_ops.*expectedVersions/)
 })

@@ -264,7 +264,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         return result(context, native, await native.api.getArtifactSnapshot(context.work.tenantId, artifact.id), artifact)
       }, verify,
     })] : []),
-    nativeTool(`${kind}.current`, agentArtifactSchemas.current, { description: `Read the ${label} of this conversation: title, project files with sha256, assignments and reports.${kind === 'slides' ? ' Lists every deck this conversation made in { deck, decks, editor }; top-level title and slideCount observe the saved deck.json title and order length. Missing/malformed index fields are omitted. These summary fields do not verify slide contents or rendering.' : ''}`, effect: 'read', approval: false, authorize,
+    nativeTool(`${kind}.current`, agentArtifactSchemas.current, { description: `Read the ${label} of this conversation: title, project files with sha256, assignments and reports.${kind === 'slides' ? ' Lists every deck this conversation made in { deck, decks, editor }; top-level title and slideCount observe the saved native document title and page order, or the legacy deck.json before conversion. Missing/malformed legacy index fields are omitted. These summary fields do not verify slide contents or rendering.' : ''}`, effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await scope(context, input), api = application(context).api
         const value = artifact ? await api.getArtifactSnapshot(context.work.tenantId, artifact.id) : null
