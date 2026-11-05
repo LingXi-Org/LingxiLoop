@@ -57,7 +57,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
         addTable: (...args: unknown[]) => output.commands.push({ kind: 'table', args }),
         addImage: (...args: unknown[]) => output.commands.push({ kind: 'image', args }),
       }
-      if (page.width !== first.width || page.height !== first.height) resources.warnings.add(`${page.title}：PPTX 使用第一页尺寸，其他画板等比缩放。`)
+      if (page.width !== first.width || page.height !== first.height) resources.warnings.add(`${page.title}：演示文稿使用第一页尺寸，其他画板等比缩放。`)
       const scale = Math.min(first.width / page.width, first.height / page.height)
       const mounted = await mountExportPage(page, resources)
       try {

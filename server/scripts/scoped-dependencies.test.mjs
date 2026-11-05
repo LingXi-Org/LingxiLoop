@@ -35,3 +35,13 @@ test('integration artifact builds retain the locked KaTeX renderer and styleshee
   assert.equal(manifest.dependencies.katex, '0.16.47')
   assert.equal(lock.packages['node_modules/katex'].version, manifest.dependencies.katex)
 })
+
+test('authenticated integration checks retain the actual control Worker login runtime', () => {
+  const files = new Map(generateProfiles())
+  const manifest = JSON.parse(files.get('server/build/integration/package.json'))
+  const lock = JSON.parse(files.get('server/build/integration/package-lock.json'))
+  for (const name of ['miniflare', 'better-auth', 'drizzle-orm', 'hono', 'zod']) {
+    assert.ok(manifest.dependencies[name], `${name} is required by the real sign-in fixture`)
+    assert.ok(lock.packages[`node_modules/${name}`])
+  }
+})

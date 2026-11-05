@@ -161,7 +161,7 @@ async function loadImage(asset: ArtifactAsset, artifactId: string, key: string, 
       const canvas = window.document.createElement('canvas')
       canvas.width = Math.max(1, Math.round(bitmap.width * scale)); canvas.height = Math.max(1, Math.round(bitmap.height * scale))
       const context = canvas.getContext('2d')
-      if (!context) throw new Error('Thumbnail canvas unavailable')
+      if (!context) throw new Error('无法生成页面缩略图。')
       context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
       const source = canvas.toDataURL('image/webp', .65)
       images.set(key, source, source.length * 2)

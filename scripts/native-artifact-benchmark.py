@@ -386,17 +386,17 @@ def heading_candidates(frame, kind, number):
 def normalize_native_view(page, frame, kind):
     """Use the real controls to compare the same camera/inspector state.
     All actions remain inside the measured cold-open interval."""
-    root = frame.locator('[data-native-artifact-editor]')
-    if not root.count(): return None
+    root = frame.locator(f'[data-native-artifact-editor="{kind}"]:visible').first
+    root.wait_for(state='visible', timeout=120000)
     actions = {"inspectorToggles": 0, "zoomActions": 0}
-    if frame.locator('.native-inspector:visible').count():
-        frame.locator('.native-toolbar').get_by_role('button', name=re.compile('^(属性|显示属性)$')).click()
+    if root.locator('.native-inspector:visible').count():
+        root.locator('.native-toolbar').get_by_role('button', name=re.compile('^(属性|显示属性)$')).click()
         actions['inspectorToggles'] += 1
     if kind == 'design':
-        board = frame.locator('[data-page-id="page-1"]').first
+        board = root.locator('[data-page-id="page-1"]:visible').first
         box = board.bounding_box()
         if not box or abs(box['width'] / 1920 - .5) > .005:
-            select = frame.locator('select[aria-label="画布缩放"]')
+            select = root.locator('select[aria-label="画布缩放"]')
             if select.count():
                 index = select.evaluate("e=>[...e.options].findIndex(o=>Number(o.value)===1)")
                 if index < 0: raise MeasurementFailure('page_navigation_control_missing')
@@ -404,10 +404,28 @@ def normalize_native_view(page, frame, kind):
                 for _ in range(index): page.keyboard.press('ArrowDown')
                 page.keyboard.press('Enter'); actions['zoomActions'] += index + 3
             else:
-                frame.get_by_label('画布缩放', exact=True).click()
-                frame.get_by_role('button', name='50%', exact=True).click(); actions['zoomActions'] += 2
-        frame.wait_for_function("Math.abs(document.querySelector('[data-page-id=\"page-1\"]').getBoundingClientRect().width/1920-.5)<.005")
+                root.get_by_label('画布缩放', exact=True).click()
+                root.get_by_role('button', name='50%', exact=True).click(); actions['zoomActions'] += 2
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            box = board.bounding_box()
+            if box and abs(box['width'] / 1920 - .5) < .005: break
+            page.wait_for_timeout(50)
+        else: raise MeasurementFailure('native_view_normalization_failed')
+        actions['observedScale'] = box['width'] / 1920
+    actions['inspectorClosed'] = not root.locator('.native-inspector:visible').count()
+    actions['container'] = {key: value for key,value in root.bounding_box().items() if key in ('width','height')}
+    if not actions['inspectorClosed']: raise MeasurementFailure('native_view_normalization_failed', actions)
     return actions
+
+
+def wait_native_frame(page, kind):
+    deadline = time.monotonic() + 120
+    while time.monotonic() < deadline:
+        for frame in page.frames:
+            if frame.locator(f'[data-native-artifact-editor="{kind}"]:visible').count(): return frame
+        page.wait_for_timeout(50)
+    raise MeasurementFailure('native_editor_not_ready')
 
 
 def ready_heading(page, kind, number, timeout=120):
@@ -970,9 +988,12 @@ def main():
                             else: page.locator(workbench(config, kind)['openSelector']).first.click()
                             if arm == 'baseline' and kind == 'design': navigate(page, kind, 1)
                             sample['phase'] = 'firstReadiness'
-                            for native_frame in page.frames:
-                                if native_frame.locator('[data-native-artifact-editor]').count():
-                                    sample['viewNormalization'] = normalize_native_view(page, native_frame, kind); break
+                            if args.fidelity:
+                                sample['viewNormalization'] = normalize_native_view(page, wait_native_frame(page, kind), kind)
+                            else:
+                                for native_frame in page.frames:
+                                    if native_frame.locator('[data-native-artifact-editor]:visible').count():
+                                        sample['viewNormalization'] = normalize_native_view(page, native_frame, kind); break
                             frame, heading, proof = ready_heading(page, kind, 1)
                             sample['readiness'] = [proof]; sample['phase'] = 'firstInput'
                             input_proof, requests_at_editable = edit_heading(page, frame, heading, trace, config['artifactIds'][kind], 1)

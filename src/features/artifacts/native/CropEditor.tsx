@@ -1,3 +1,4 @@
+import { resizeHandleLabels } from './editor-copy'
 import { useRef, useState, type PointerEvent } from 'react'
 import type { ArtifactDocument, ArtifactNode } from '../../../../shared/artifact-document'
 import { inverseVector } from '../../../../shared/artifact-geometry'
@@ -36,7 +37,7 @@ export default function CropEditor({ node, frame, pageId, scale, base, onCommit,
   }} style={{left:0,top:0,width:frame.width,height:frame.height,transform:`matrix(${matrix.join(',')})`,transformOrigin:'0 0'}}>
     <div className="native-crop-shade" />
     <div className="native-crop-region" style={{left:`${crop.x*100}%`,top:`${crop.y*100}%`,width:`${crop.width*100}%`,height:`${crop.height*100}%`}} onPointerDown={e=>down(e,'move')} onPointerMove={move} onPointerUp={e=>{e.stopPropagation();start.current=null}} onPointerCancel={()=>{start.current=null}}>
-      {(['nw','n','ne','e','se','s','sw','w'] as const).map(handle=><button key={handle} type="button" className={`native-resize-handle native-handle-${handle}`} style={{width:8/scale,height:8/scale}} aria-label={`裁剪边缘 ${handle}`} onPointerDown={e=>down(e,handle)} onPointerMove={move} onPointerUp={e=>{e.stopPropagation();start.current=null}} />)}
+      {(['nw','n','ne','e','se','s','sw','w'] as const).map(handle=><button key={handle} type="button" className={`native-resize-handle native-handle-${handle}`} style={{width:8/scale,height:8/scale}} aria-label={`裁剪${resizeHandleLabels[handle]}`} onPointerDown={e=>down(e,handle)} onPointerMove={move} onPointerUp={e=>{e.stopPropagation();start.current=null}} />)}
     </div>
     <div className="native-crop-toolbar" style={{transform:`scale(${1/scale})`}}><IconButton icon="check" label="完成裁剪" onClick={commit} /><IconButton icon="undo" label="移除裁剪" onClick={()=>{onCommit([{type:'node.patch',pageId,nodeId:node.id,patch:{},unset:['crop']}],snapshot.current);onClose()}} /><IconButton icon="close" label="取消裁剪" onClick={onClose} /></div>
   </div>

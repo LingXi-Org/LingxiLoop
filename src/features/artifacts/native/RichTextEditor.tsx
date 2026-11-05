@@ -1,3 +1,4 @@
+import { Bold, Italic, Underline } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -61,9 +62,9 @@ export default function RichTextEditor({ value, text, onChange, onFinish }: {
   if (!editor) return null
   return <div className="native-rich-editor" onPointerDown={event => event.stopPropagation()}>
     <div className="native-text-tools" role="toolbar" aria-label="文字格式" onMouseDown={event => event.preventDefault()}>
-      <button type="button" aria-label="加粗" aria-pressed={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><b>B</b></button>
-      <button type="button" aria-label="斜体" aria-pressed={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><i>I</i></button>
-      <button type="button" aria-label="下划线" onClick={() => editor.chain().focus().toggleUnderline().run()}><u>U</u></button>
+      <button type="button" aria-label="加粗" aria-pressed={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold size={16} aria-hidden="true" /></button>
+      <button type="button" aria-label="斜体" aria-pressed={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic size={16} aria-hidden="true" /></button>
+      <button type="button" aria-label="下划线" onClick={() => editor.chain().focus().toggleUnderline().run()}><Underline size={16} aria-hidden="true" /></button>
       <button type="button" aria-label="项目列表" onClick={() => editor.chain().focus().toggleBulletList().run()}>• 列表</button>
       <button type="button" aria-label="编号列表" onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. 列表</button>
       <button type="button" onClick={() => { save(); onFinish() }}>完成</button>

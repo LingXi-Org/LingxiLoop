@@ -187,7 +187,7 @@ export class NativeDocumentSession {
   private failure(error: unknown) {
     const status = statusOf(error)
     if ([401, 403, 404, 410].includes(status)) this.update({ document: null, write: false, loading: false, error: '当前无法访问此稿件，请检查权限。' })
-    else if (status === 422) this.update({ loading: false, write: false, error: error instanceof Error ? error.message : '此稿件格式暂不支持，可下载原始文件。' })
+    else if (status === 422) this.update({ loading: false, write: false, error: '此稿件格式暂不支持，可下载原始文件。' })
     else this.update({ loading: false, conflict: status === 409, error: status === 409 ? '同一内容已有新修改。本地修改已保留，请下载副本后重新载入。' : '修改尚未保存。请检查网络后重试。' })
   }
   private pump(): Promise<void> {

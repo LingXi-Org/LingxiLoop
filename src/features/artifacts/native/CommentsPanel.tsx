@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore, type RefObject } from 'react'
+import type { CommentDraftStore } from './comment-drafts'
 import { http } from '@/api/core/http'
 import { ws } from '@/api/core/realtime'
 import {
@@ -39,8 +40,10 @@ export default function CommentsPanel({
   threadId,
   drafts,
   onDraftChange,
+  observedThreads,
 }: {
-  drafts: Map<string, string>
+  observedThreads: EditorComment[]
+  drafts: CommentDraftStore
   onDraftChange(key: string, text: string | null): void
   anchorElement: RefObject<HTMLElement | null>
   threadId: string | null
@@ -55,7 +58,11 @@ export default function CommentsPanel({
 }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
     [error, setError] = useState(''),
-    [busy, setBusy] = useState(false)
+    [mutating, setBusy] = useState(false)
+  useSyncExternalStore(drafts.subscribe, drafts.getSnapshot)
+  useEffect(()=>{setSnapshot(value=>value ? {...value,threads:observedThreads}:value)},[observedThreads])
+  const busy = mutating || (threadId ? drafts.pendingForThread(threadId) : anchor ? drafts.pending(`new:${encodeCommentAnchor(anchor)}`) : false)
+  const threadBusy = (thread: EditorComment) => busy || drafts.pendingForThread(thread.id,thread.anchor)
   const [resolved, setResolved] = useState(false),
     [composerReset, setComposerReset] = useState(0)
   const [reply, setReply] = useState<string | null>(null),
@@ -88,6 +95,8 @@ export default function CommentsPanel({
     }
   }, [refresh, artifactId])
   async function mutate(path: string, method: string, body?: unknown, clearKey?: string) {
+    const ticket = clearKey ? drafts.begin(clearKey, (body as {text:string}).text) : undefined
+    if (clearKey && !ticket) return
     setBusy(true)
     setError('')
     let confirmed = false
@@ -98,7 +107,7 @@ export default function CommentsPanel({
       })
       confirmed = true
       if (clearKey) {
-        onDraftChange(clearKey, null)
+        drafts.finish(clearKey, ticket!, true)
         setComposerReset((v) => v + 1)
         setReply(null)
         setEditing(null)
@@ -106,6 +115,7 @@ export default function CommentsPanel({
       }
       await refresh()
     } catch {
+      if (clearKey && ticket && !confirmed) drafts.finish(clearKey,ticket,false)
       setError(
         confirmed
           ? '评论已保存，列表尚未更新。请重新加载。'
@@ -183,7 +193,7 @@ export default function CommentsPanel({
                       icon="check"
                       label={thread.status === 'resolved' ? '重新打开评论' : '解决评论'}
                       active={thread.status === 'resolved'}
-                      disabled={busy}
+                      disabled={threadBusy(thread)}
                       onClick={() =>
                         void mutate(`/${thread.id}`, 'PATCH', {
                           status: thread.status === 'resolved' ? 'open' : 'resolved',
@@ -193,6 +203,7 @@ export default function CommentsPanel({
                     <Menu label="评论操作" icon="more" align="end">
                       <MenuItem
                         icon="delete"
+                        disabled={threadBusy(thread)}
                         onClick={() => void mutate(`/${thread.id}`, 'DELETE')}
                       >
                         删除评论
@@ -218,6 +229,7 @@ export default function CommentsPanel({
                         <IconButton
                           icon="pencil"
                           label="编辑评论"
+                          disabled={threadBusy(thread)}
                           onClick={() => {
                             setEditing({ threadId: thread.id, messageId: message.id })
                             setReply(null)
@@ -232,9 +244,9 @@ export default function CommentsPanel({
                 <p className="native-comment-receipt">
                   {
                     {
-                      pending: '已发送，等待 Agent 接收',
-                      delivered: 'Agent 已接收',
-                      replied: 'Agent 已回复',
+                      pending: '已发送，等待智能体接收',
+                      delivered: '智能体已接收',
+                      replied: '智能体已回复',
                     }[thread.agent.status]
                   }
                 </p>
@@ -257,10 +269,10 @@ export default function CommentsPanel({
                     thread.agent?.status !== 'delivered' && (
                       <button
                         type="button"
-                        disabled={busy}
+                        disabled={threadBusy(thread)}
                         onClick={() => void mutate(`/${thread.id}/send`, 'POST')}
                       >
-                        发送给 Agent
+                        发送给智能体
                       </button>
                     )}
                 </footer>
@@ -287,7 +299,7 @@ export default function CommentsPanel({
                 draftKey={draftKey}
                 drafts={drafts}
                 initial={initial}
-                busy={busy}
+                busy={busy || drafts.pending(draftKey) || (composerThread ? drafts.pendingForThread(composerThread):false)}
                 editing={!!editing}
                 label={editing ? '编辑评论' : composerThread ? '回复评论' : label}
                 onDraftChange={onDraftChange}
@@ -336,7 +348,7 @@ function CommentComposer({
   onSubmit,
 }: {
   draftKey: string
-  drafts: Map<string, string>
+  drafts: CommentDraftStore
   initial: string
   label: string
   busy: boolean
@@ -345,7 +357,7 @@ function CommentComposer({
   onCancel(): void
   onSubmit(text: string): void
 }) {
-  const [text, setText] = useState(() => drafts.get(draftKey) ?? initial)
+  const text = drafts.get(draftKey) ?? initial
   return (
     <form
       className="native-comment-composer"
@@ -366,7 +378,6 @@ function CommentComposer({
         autoFocus
         onChange={(event) => {
           const value = event.target.value
-          setText(value)
           onDraftChange(draftKey, value === initial ? null : value)
         }}
       />

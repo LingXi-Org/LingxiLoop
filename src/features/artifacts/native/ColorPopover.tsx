@@ -317,7 +317,7 @@ export default function ColorPopover({
             }}
           />
           <label className="native-color-hex">
-            Hex
+            十六进制
             <input
               aria-label="十六进制颜色"
               value={hex}

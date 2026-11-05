@@ -8,5 +8,5 @@ scope.onmessage = event => {
   try {
     const bytes = encodeArtifactPdf(event.data.pages, event.data.title)
     scope.postMessage({ bytes: bytes.buffer }, [bytes.buffer])
-  } catch (error) { scope.postMessage({ error: error instanceof Error ? error.message : 'PDF export failed' }) }
+  } catch (error) { scope.postMessage({ error: error instanceof Error ? error.message : '便携文档导出失败。' }) }
 }

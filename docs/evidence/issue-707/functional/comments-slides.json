@@ -7,6 +7,8 @@
   "replyAndEditDraftsRetained": true,
   "explicitCancelClearsDraft": true,
   "pendingSubmitReadOnly": true,
+  "pendingReopenReadOnly": true,
+  "postAckDraftRetained": true,
   "failedReplyRecoverable": true,
   "pinSwitchKeepsPopover": true,
   "composerAutofocus": true,

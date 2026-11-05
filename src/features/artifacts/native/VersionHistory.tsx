@@ -126,9 +126,9 @@ export default function VersionHistory({
             first = index === snapshot.revisions.length - 1,
             name = first
               ? '最初的版本'
-              : revision.actorName || (revision.actorKind === 'agent' ? 'Agent' : '用户')
+              : revision.actorName || (revision.actorKind === 'agent' ? '智能体' : '用户')
           const changed = (revision.changedPageIds ?? [])
-              .map((id) => pageNames[id] ?? id)
+              .map((id) => pageNames[id] ?? '未知页面')
               .join('、'),
             expanded = selected === revision.seq && !current
           return (
@@ -185,7 +185,7 @@ export default function VersionHistory({
       )}
       {dirty && <p>保存当前修改后即可恢复版本。</p>}
       <p className="native-version-help">
-        Agent 表示由智能体保存的修改。恢复会创建新版本，后续修改仍可从历史记录中找回。
+        智能体 表示由智能体保存的修改。恢复会创建新版本，后续修改仍可从历史记录中找回。
       </p>
     </FloatingPopover>
   )

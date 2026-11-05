@@ -36,7 +36,7 @@ export async function exportArtifact(document: ArtifactDocument, options: Artifa
       if (connected) channel.port1.postMessage({ type: 'cancel' })
       // Give the renderer a turn to terminate workers/dispose DOM, then remove
       // its browsing context even if a network or screenshot operation stalls.
-      abortTimer ??= setTimeout(() => finish(options.signal?.reason ?? new DOMException('Export cancelled', 'AbortError')), connected ? 250 : 0)
+      abortTimer ??= setTimeout(() => finish(options.signal?.reason ?? new DOMException('已取消导出', 'AbortError')), connected ? 250 : 0)
     }
     function ready(event: MessageEvent) {
       if (connected || event.source !== frame.contentWindow || event.origin !== window.location.origin || event.data?.type !== 'lingxi-export:ready' || event.data.nonce !== nonce) return
@@ -70,10 +70,10 @@ export async function exportArtifact(document: ArtifactDocument, options: Artifa
           } catch (error) { if (!finished) channel.port1.postMessage({ type: 'asset-result', requestId: data.requestId, error: error instanceof Error ? error.message : '导出资源加载失败' }) }
         })()
       } else if (data?.type === 'result') {
-        if (options.signal?.aborted) finish(options.signal.reason ?? new DOMException('Export cancelled', 'AbortError'))
+        if (options.signal?.aborted) finish(options.signal.reason ?? new DOMException('已取消导出', 'AbortError'))
         else finish(undefined, data.result as ArtifactExportResult)
       } else if (data?.type === 'error') {
-        if (options.signal?.aborted) finish(options.signal.reason ?? new DOMException('Export cancelled', 'AbortError'))
+        if (options.signal?.aborted) finish(options.signal.reason ?? new DOMException('已取消导出', 'AbortError'))
         else { const error = new Error(data.message ?? '导出失败'); error.name = data.name ?? 'Error'; finish(error) }
       }
     }
