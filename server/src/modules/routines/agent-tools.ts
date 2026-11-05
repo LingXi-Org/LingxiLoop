@@ -1,5 +1,5 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
-import type { ActionContext, ToolDefinition } from '@lyyzka/lingxios'
+import type { ActionContext, ToolDefinition } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, compareResource } from '../../agents/tools.js'
 import { routineSchemas } from './contracts.js'

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
 import test from 'node:test'
-import { buildPromptContext, compileContext, type TurnContext } from '@lyyzka/lingxios'
+import { buildPromptContext, compileContext, type TurnContext } from '@lingxi-org/lingxios'
 import type OpenAI from 'openai'
 import { createOpenAIClient } from '../llm-client.js'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'

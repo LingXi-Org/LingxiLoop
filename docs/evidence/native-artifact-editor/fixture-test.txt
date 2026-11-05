@@ -1,0 +1,9 @@
+✔ 50-page acceptance fixture has distinct decoded images and source formulas on every page in both formats (17085.312763ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18148.646468

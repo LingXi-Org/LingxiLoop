@@ -1,5 +1,5 @@
 import { load } from 'cheerio'
-import { decodeSourceText } from '@lyyzka/lingxios'
+import { decodeSourceText } from '@lingxi-org/lingxios'
 import { researchUrl } from './address.js'
 import { fetchResearch } from './fetch.js'
 

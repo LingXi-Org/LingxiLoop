@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { NoEffectError, type ActionContext } from '@lyyzka/lingxios'
+import { NoEffectError, type ActionContext } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { productConversationId } from '../../agent-runtime/identity.js'
 import { resolveRequestReferences } from '../../agent-runtime/request-references.js'

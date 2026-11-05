@@ -7,7 +7,7 @@
  */
 import { createHash } from 'node:crypto'
 import { pathToFileURL } from 'node:url'
-import type { WorkConversation } from '@lyyzka/lingxios'
+import type { WorkConversation } from '@lingxi-org/lingxios'
 import type { Queryable } from '../server/src/db/queryable.js'
 import type { ImSendAcceptanceRow } from '../server/src/im/messages-repository.js'
 import { nativeMessageSchema } from '../server/src/im/message-types.js'

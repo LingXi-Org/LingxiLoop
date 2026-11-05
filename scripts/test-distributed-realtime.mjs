@@ -6,7 +6,7 @@ import { once } from 'node:events'
 import { readFile } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
 import { Pool } from 'pg'
-import { createLingxiOS, packageResources } from '@lyyzka/lingxios'
+import { createLingxiOS, packageResources } from '@lingxi-org/lingxios'
 import IORedis from 'ioredis'
 import { createRealtimeStore } from '../server/src/agent-runtime/realtime-store.ts'
 

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
-import type { ActionContext, ActionResult, RunIdentity } from '@lyyzka/lingxios'
+import type { ActionContext, ActionResult, RunIdentity } from '@lingxi-org/lingxios'
 import { knowledgeSearchLabels } from '../../../src/lib/knowledgeSearch.js'
 import { toolDisplay } from '../../../src/lib/runActivity.js'
 import { buildNativeRunTrace, buildRunTrace } from '../agent-runtime/run-trace.js'
-import type { RunTraceSnapshot } from '@lyyzka/lingxios'
+import type { RunTraceSnapshot } from '@lingxi-org/lingxios'
 
 // A completed tool invocation can still return an unavailable search/read.
 // Exercise the saved display and its authorized replay, not a copy-only helper.

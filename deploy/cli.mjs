@@ -19,8 +19,8 @@ import { fileURLToPath } from 'node:url'
 import { classifyPaths, workflowFilters } from '../scripts/ci-scope-paths.mjs'
 import { IMAGES, imageTag } from '../scripts/image-tag.mjs'
 import { assertRetirementReleaseAllowed, convergeRuntimePatch, runtimePatchPlan } from './runtime-patch.mjs'
+import { convergeHarnessCutover, harnessCutoverRequired } from './harness-cutover.mjs'
 import { knowledgeObservationRunId, knowledgeObservation, observePublicRunBudget } from './knowledge-observation.mjs'
-import { editorAssetPreparation } from './retain-editor-assets.mjs'
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)))
 const SIGILLO = ['-p', '01M1TZH9C21C1A9PFAR8E41553', '-c', 'prod']
@@ -69,16 +69,15 @@ async function main(command, requested) {
   const stacks = selectStacks(requested)
   const migrationPaths = git('ls-tree', '-r', '--name-only', 'HEAD', 'server/src/db/migrations/').split('\n').filter(Boolean)
   const patch = runtimePatchPlan(path => git('show', `HEAD:${path}`), migrationPaths)
+  const nativeHarness = migrationPaths.at(-1) === 'server/src/db/migrations/0063_native_artifact_documents.sql'
   assertRetirementReleaseAllowed(migrationPaths, command, process.env.LINGXILOOP_RETIREMENT_RELEASE_APPROVED, patch)
   const ssh = sshSession()
   const deployServers = async () => {
-    if (stacks.includes('app-a')) await editorAssetPreparation({
-      target: imageRef(images.SERVER_IMAGE),
-      helper: git('show', 'HEAD:deploy/retain-editor-assets.mjs'),
-      observe: slot => ssh.run(STACK_HOST[`app-${slot}`], `editor source ${slot}`,
-        `docker inspect -f '{{.Config.Image}}' lingxiloop-app-${slot}-lingxiloop-1 2>/dev/null || true`, true).then(value => value.trim()),
-      prepare: (slot, script) => ssh.run(STACK_HOST[`app-${slot}`], `retain editor assets ${slot}`, script),
-    })
+    if (nativeHarness && stacks.includes('app-a')) {
+      const { target, sources, nativeWritesEnabled } = await inspectHarnesses(ssh, images)
+      harnessCutoverRequired(target, sources, nativeWritesEnabled)
+      return runtimePatch(ssh, patch, images, () => harnessCutover(ssh, images, () => servers(ssh, stacks, images)))
+    }
     return patch && stacks.includes('app-a') ? runtimePatch(ssh, patch, images, () => servers(ssh, stacks, images)) : servers(ssh, stacks, images)
   }
   try {
@@ -94,17 +93,28 @@ async function main(command, requested) {
         if (!patch) throw new Error('runtime preflight requires the exact reviewed target package')
         return patchEntry(ssh, patch, images, 'preflight').then(result => console.log(JSON.stringify(result)))
       },
-      workers: () => workers(),
+      workers: async () => {
+        if (nativeHarness) {
+          const { target, sources, nativeWritesEnabled } = await inspectHarnesses(ssh, images)
+          if (harnessCutoverRequired(target, sources, nativeWritesEnabled)) throw new Error('publish the native Web client only after both API and background Worker slots use its harness')
+        }
+        await workers()
+      },
+      'harness-observe': async () => {
+        if (!nativeHarness) throw new Error('harness observation requires the reviewed native document release')
+        const { target, sources, nativeWritesEnabled } = await inspectHarnesses(ssh, images)
+        console.log(JSON.stringify({ observationOnly: true, cutoverRequired: harnessCutoverRequired(target, sources, nativeWritesEnabled), target, sources }))
+      },
       status: () => status(ssh),
       plan: async () => { await pull(ssh, stacks, images, { cleanup: false }); await plan(ssh, stacks, images) },
       up: async () => {
         await ensureImages(head, images)
         await pull(ssh, stacks, images)
-        if (patch) { await deployServers(); await workers() }
+        if (patch || nativeHarness) { await deployServers(); await workers() }
         else await Promise.all([deployServers(), workers()])
       },
     }
-    if (!steps[command]) throw new Error(`unknown command ${command}; use up|images|pull|plan|servers|workers|status|runtime-preflight|runtime-observe|knowledge-observe|capacity-observe`)
+    if (!steps[command]) throw new Error(`unknown command ${command}; use up|images|pull|plan|servers|workers|status|runtime-preflight|runtime-observe|harness-observe|knowledge-observe|capacity-observe`)
     await steps[command]()
   } finally { ssh.close() }
 }
@@ -236,6 +246,83 @@ async function runtimePatch(ssh, patch, images, convergeTarget) {
     apply: () => patchEntry(ssh, patch, images, 'apply'),
     observe: () => patchEntry(ssh, patch, images, 'observe'),
     restoreSource: startSource,
+    convergeTarget,
+  })
+}
+
+// Product-only harness changes still require a work boundary on the same SDK.
+// The receipt is assembled by the actual image; no edited hash grants a bypass.
+async function harnessTargetEntry(ssh, images, action) {
+  const receipt = action === 'receipt'
+  const files = [...stackFiles('app-a'), ['.env', Buffer.from(stackEnv('app-a', images))],
+    ['images.env', Buffer.from(`SERVER_IMAGE=${imageRef(images.SERVER_IMAGE)}\n`)],
+    ...(receipt ? [['receipt.mjs', Buffer.from(git('show', 'HEAD:deploy/harness-receipt.mjs'))]] : [])]
+  const script = [`d=/opt/lingxiloop/app-a; umask 077; f=$(mktemp -d); trap 'rm -rf "$f"' EXIT`,
+    ...files.map(([name, bytes]) => `base64 -d > "$f/${name}" <<'B64'\n${bytes.toString('base64')}\nB64`),
+    `target_database_url=$( . "$f/.env"; printf '%s' "$DATABASE_URL"); source_database_url=$( . "$d/.env"; printf '%s' "$DATABASE_URL"); test "$source_database_url" = "$target_database_url"`,
+    `docker compose --project-directory "$d" -f "$f/compose.yml" --env-file "$f/.env" --env-file "$f/images.env" run --rm --no-deps -T ${receipt
+      ? 'lingxiloop node --import tsx --input-type=module < "$f/receipt.mjs"'
+      : `db-migrate node --import tsx server/src/harness-cutover-bin.ts ${action}`}`,
+  ].join('\n')
+  const raw = await ssh.run('txy2', `harness ${action}`, script, true, 60_000)
+  const result = JSON.parse(raw.trim().split('\n').at(-1))
+  if (result.error || (!receipt && (result.action !== action || result.observationOnly !== true))) throw new Error(`harness ${action} refused; keep the pinned source`)
+  return result
+}
+
+async function inspectHarnesses(ssh, images) {
+  const script = git('show', 'HEAD:deploy/harness-receipt.mjs')
+  const instances = ['a', 'b'].flatMap(slot => ['lingxiloop', 'worker'].map(role => ({ slot, role })))
+  const observations = await Promise.allSettled(instances.map(async instance => {
+    const name = `lingxiloop-app-${instance.slot}-${instance.role}-1`
+    // Failed target convergence may leave old or new containers stopped. Read
+    // their immutable images in a network-disabled one-shot process; never
+    // start an old API/Worker merely to learn its contract. Environment bytes
+    // remain in a private host temp file and are never printed.
+    const raw = await ssh.run(STACK_HOST[`app-${instance.slot}`], `harness ${instance.slot} ${instance.role}`, [
+      `umask 077; f=$(mktemp -d); trap 'rm -rf "$f"' EXIT`,
+      `source_present=$(docker container ls -aq --no-trunc --filter 'name=^/${name}$'); if [ -z "$source_present" ]; then printf 'ABSENT\\n'; exit 0; fi`,
+      `source_id=$(docker inspect -f '{{.Id}}' ${name}); source_running=$(docker inspect -f '{{.State.Running}}' "$source_id"); printf '%s %s\\n' "$source_id" "$source_running"`,
+      `source_image=$(docker inspect -f '{{.Image}}' "$source_id"); docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$source_id" > "$f/source.env"`,
+      `docker run --rm -i --network none --env-file "$f/source.env" --entrypoint node "$source_image" --import tsx --input-type=module <<'HARNESS_RECEIPT_JS'\n${script}\nHARNESS_RECEIPT_JS`,
+    ].join('\n'), true, 60_000)
+    if (raw.trim() === 'ABSENT') return { ...instance, name, id: null, running: false, receipt: null }
+    const lines = raw.trim().split('\n'), [id, running] = lines[0].split(' '), receipt = JSON.parse(lines.at(-1))
+    if (!/^[a-f0-9]{64}$/.test(id) || !['true', 'false'].includes(running)) throw new Error('source harness container identity unavailable')
+    return { ...instance, name, id, running: running === 'true', receipt }
+  }))
+  const failures = observations.filter(result => result.status === 'rejected')
+  if (failures.length) throw new AggregateError(failures.map(result => result.reason), 'source harness observation incomplete; no instance changed')
+  const source = observations.map(result => result.value)
+  const target = await harnessTargetEntry(ssh, images, 'receipt')
+  return { target, sources: source.map(instance => instance.receipt), source, nativeWritesEnabled: process.env.NATIVE_ARTIFACT_WRITES_ENABLED === 'true' }
+}
+
+async function harnessCutover(ssh, images, convergeTarget) {
+  let source
+  const each = async (instances, run) => {
+    const results = await Promise.allSettled(instances.map(run))
+    const failures = results.filter(result => result.status === 'rejected')
+    if (failures.length) throw Object.assign(new AggregateError(failures.map(result => result.reason), 'harness source operation failed'),
+      { uncertain: failures.some(result => result.reason?.uncertain) })
+  }
+  const role = value => source.filter(instance => instance.role === value && instance.id)
+  await convergeHarnessCutover({
+    inspect: async () => {
+      const result = await inspectHarnesses(ssh, images); source = result.source
+      return result
+    },
+    preflight: () => harnessTargetEntry(ssh, images, 'preflight'),
+    snapshotSource: () => each(source, instance => ssh.run(STACK_HOST[`app-${instance.slot}`], 'verify pinned source',
+      instance.id ? `test "$(docker inspect -f '{{.Id}}' ${instance.name})" = '${instance.id}'`
+        : `source_present=$(docker container ls -aq --no-trunc --filter 'name=^/${instance.name}$'); test -z "$source_present"`)),
+    stopWorkers: () => each(role('worker'), instance => ssh.run(STACK_HOST[`app-${instance.slot}`], 'drain pinned worker', `docker stop -t 150 ${instance.id} >/dev/null`)),
+    stopIngress: () => each(role('lingxiloop'), instance => ssh.run(STACK_HOST[`app-${instance.slot}`], 'stop pinned API', `docker stop -t 30 ${instance.id} >/dev/null`)),
+    barrier: () => harnessTargetEntry(ssh, images, 'barrier'),
+    restoreSource: async () => {
+      for (const value of ['lingxiloop', 'worker']) await each(role(value).filter(instance => instance.running), instance => ssh.run(STACK_HOST[`app-${instance.slot}`], 'restore pinned source',
+        `docker start ${instance.id} >/dev/null\nfor attempt in $(seq 1 60); do state=$(docker inspect -f '{{.State.Health.Status}}' ${instance.id}); [ "$state" = healthy ] && break; [ "$attempt" -lt 60 ] || exit 1; sleep 2; done`))
+    },
     convergeTarget,
   })
 }

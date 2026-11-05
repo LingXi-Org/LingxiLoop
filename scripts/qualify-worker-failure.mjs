@@ -50,9 +50,9 @@ export async function qualifyWorkerFailure(argv = process.argv.slice(2), env = p
   // Do not silently execute against an older native runtime or a local package
   // build. The existing migration check also verifies the formal schema pin.
   const lock = JSON.parse(readFileSync(resolve(root, 'package-lock.json'), 'utf8'))
-    .packages?.['node_modules/@lyyzka/lingxios']
+    .packages?.['node_modules/@lingxi-org/lingxios']
   if (lock?.version !== '3.8.14'
-    || !lock.resolved?.startsWith('https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.14/')
+    || !lock.resolved?.startsWith('https://npm.pkg.github.com/download/@lingxi-org/lingxios/3.8.14/')
     || !/^sha512-[A-Za-z0-9+/]{86}==$/.test(lock.integrity ?? '')) {
     throw new Error('install the exact formally published LingxiOS 3.8.14 lock before qualification')
   }

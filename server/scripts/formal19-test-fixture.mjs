@@ -10,12 +10,13 @@ const execute=promisify(execFile)
 
 export const withFormal19TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.19',run)
 export const withFormal24TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.24',run)
+export const withFormal25TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.25',run)
 export const withFormal23TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.23',run)
 export const withFormal22TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.22',run)
 export const withFormal21TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.21',run)
 export const withFormal20TestFixture=(root,env,run)=>withFormalRuntimeTestFixture(root,env,'3.8.20',run)
 async function withFormalRuntimeTestFixture(root,env,version,run){
- assert.ok(['3.8.19','3.8.20','3.8.21','3.8.22','3.8.23','3.8.24'].includes(version))
+ assert.ok(['3.8.19','3.8.20','3.8.21','3.8.22','3.8.23','3.8.24','3.8.25'].includes(version))
  const userconfig=env.LINGXILOOP_TEST_PACKAGE_USERCONFIG??join(root,'.npmrc')
  const url=new URL(env.INTEGRATION_DATABASE_URL??'')
  assert.equal(env.NODE_ENV,'test')
@@ -36,15 +37,17 @@ async function withFormalRuntimeTestFixture(root,env,version,run){
   }
   assert.equal('sha512-'+createHash('sha512').update(await readFile(archive)).digest('base64'),record.integrity,`formal${version} source archive integrity changed`)
   for(const path of ['server/src','src','shared','server/scripts','server/fixtures'])await cp(join(root,path),join(fixture,path),{recursive:true})
-  // Formal source fixtures retain their reviewed product60/61 inventory.
-  if(version!=='3.8.24')await rm(join(fixture,'server/src/db/migrations/0062_case_options.sql'),{force:true})
+  await useHistoricalRuntimeScope(fixture)
+  // Formal source fixtures retain their reviewed product60/61/62 inventory.
+  await rm(join(fixture,'server/src/db/migrations/0063_native_artifact_documents.sql'),{force:true})
+  if(!['3.8.24','3.8.25'].includes(version))await rm(join(fixture,'server/src/db/migrations/0062_case_options.sql'),{force:true})
   // Historical formal19 fixtures contain the exact product60 source inventory.
   if(version==='3.8.19')await rm(join(fixture,'server/src/db/migrations/0061_slides_workspaces.sql'),{force:true})
   const modules=join(fixture,'node_modules'),sdk=join(modules,'@lyyzka/lingxios');await mkdir(sdk,{recursive:true})
   await execute('tar',['-xzf',archive,'--strip-components=1','-C',sdk],{timeout:30000})
   assert.equal(JSON.parse(await readFile(join(sdk,'package.json'),'utf8')).version,record.version)
   for(const name of await readdir(join(root,'node_modules')))if(!name.startsWith('.')&&name!=='@lyyzka')await symlink(join(root,'node_modules',name),join(modules,name),'junction')
-  for(const name of await readdir(join(root,'node_modules/@lyyzka')))if(name!=='lingxios')await symlink(join(root,'node_modules/@lyyzka',name),join(modules,'@lyyzka',name),'junction')
+  for(const name of await readdir(join(root,'node_modules/@lyyzka')).catch(error=>{if(error.code==='ENOENT')return [];throw error}))if(name!=='lingxios')await symlink(join(root,'node_modules/@lyyzka',name),join(modules,'@lyyzka',name),'junction')
   const key='@lyyzka/lingxios',manifest={name:`verified-formal${version}-test-source`,private:true,type:'module',dependencies:{[key]:record.version}}
   const lock={lockfileVersion:3,packages:{'':manifest,['node_modules/'+key]:record}}
   for(const prefix of ['', 'server/']){
@@ -53,4 +56,20 @@ async function withFormalRuntimeTestFixture(root,env,version,run){
   }
   return await run(fixture,{...env,DOTENV_CONFIG_PATH:'/dev/null',LINGXILOOP_TEST_PACKAGE_USERCONFIG:userconfig})
  }finally{await rm(fixture,{recursive:true,force:true})}
+}
+
+/** Only the disposable test host changes package references. Published SDK archives,
+ * migration SQL and immutable historical receipts are never rewritten. */
+export async function useHistoricalRuntimeScope(fixture){
+ const visit=async directory=>{
+  for(const entry of await readdir(directory,{withFileTypes:true}).catch(error=>{if(error.code==='ENOENT')return [];throw error})){
+   const path=join(directory,entry.name)
+   if(entry.isDirectory())await visit(path)
+   else if(entry.isFile()&&/\.(?:[cm]?js|tsx?)$/.test(entry.name)){
+    const source=await readFile(path,'utf8'),adapted=source.replace(/(['"`])@lingxi-org\/lingxios(?=\/|['"`])/g,'$1@lyyzka/lingxios')
+    if(adapted!==source)await writeFile(path,adapted)
+   }
+  }
+ }
+ for(const path of ['server/src','src','shared','server/scripts'])await visit(join(fixture,path))
 }

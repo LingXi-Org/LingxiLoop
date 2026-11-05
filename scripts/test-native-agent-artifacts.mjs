@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Pool } from 'pg'
 import { register } from 'tsx/esm/api'
-import { createLingxiOS, readRunReference } from '@lyyzka/lingxios'
-import { createWorker } from '@lyyzka/lingxios/worker'
+import { createLingxiOS, readRunReference } from '@lingxi-org/lingxios'
+import { createWorker } from '@lingxi-org/lingxios/worker'
 
 const url = process.env.LINGXIOS_NATIVE_TEST_DATABASE_URL
 assert.ok(url && /^native_/.test(new URL(url).pathname.slice(1)), 'requires an empty disposable database named native_*')

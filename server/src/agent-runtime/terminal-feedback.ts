@@ -1,4 +1,4 @@
-import type { createLingxiOS, RunIdentity, RunState, RuntimeOperationContext, TerminalFeedback, BudgetDimension } from '@lyyzka/lingxios'
+import type { createLingxiOS, RunIdentity, RunState, RuntimeOperationContext, TerminalFeedback, BudgetDimension } from '@lingxi-org/lingxios'
 import type { TerminalScope } from '../../../src/lib/terminalFeedback.js'
 import { executionBudgetMessages, readExecutionBudgetDimension } from '../../../src/lib/executionBudget.js'
 

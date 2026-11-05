@@ -28,11 +28,7 @@ export async function isolatedEditor(request: Request, base: string, backend: st
   }))
   const output = new Headers(response.headers)
   output.delete('set-cookie')
-  // Only the trusted editor shell gets DOM access to its own child frames.
-  // Project HTML retains its script-free CSP; the main-site response stays opaque.
-  const csp = output.get('content-security-policy')
-  if (editor && csp?.startsWith('sandbox allow-scripts ')) {
-    output.set('content-security-policy', csp.replace('sandbox allow-scripts ', 'sandbox allow-scripts allow-same-origin '))
-  }
+  // Executable content remains opaque, including direct navigation. The trusted
+  // React editor now lives in the application and needs no iframe DOM privilege.
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers: output })
 }

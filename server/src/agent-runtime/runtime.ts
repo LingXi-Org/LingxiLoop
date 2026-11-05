@@ -1,5 +1,5 @@
-import { assembleHarness, createLingxiOS, doctor, releaseVersions, type ModelCallObservation, type DeliveryContext } from '@lyyzka/lingxios'
-import { createWorker, type WorkerOptions } from '@lyyzka/lingxios/worker'
+import { assembleHarness, createLingxiOS, doctor, releaseVersions, type ModelCallObservation, type DeliveryContext } from '@lingxi-org/lingxios'
+import { createWorker, type WorkerOptions } from '@lingxi-org/lingxios/worker'
 import { execFileSync } from 'node:child_process'
 import { modelStageExtras } from './model-observation-timing.js'
 import { pool } from '../db/pool.js'

@@ -4,7 +4,7 @@ import { assistantTextViolation } from './assistant-text.js'
 import { publicTextSafety } from './public-text-safety.js'
 import { productConversationId, bindProductRun, assertFrozenAudience, inheritedRunPresentationVersion } from './identity.js'
 import { NoEffectError, DefaultRuntimePolicy, executionSnapshot, classifyToolFailure, modelFailure, type CapabilityGrant, type ContextMessage, type ContextProvider,
-  type CapabilityResolutionContext, type ToolDefinition, type TurnContext, type WorkItem } from '@lyyzka/lingxios'
+  type CapabilityResolutionContext, type ToolDefinition, type TurnContext, type WorkItem } from '@lingxi-org/lingxios'
 import { pool } from '../db/pool.js'
 import { nativeContext, audienceHumanIds, authorizeAudienceRead } from '../agents/tools.js'
 import { createPermissionService } from '../modules/access/public.js'
@@ -57,7 +57,7 @@ export async function loadRuntimeBinding(work: Pick<Work, 'tenantId' | 'principa
 }
 
 const ARTIFACT_NAMESPACES = new Set(['design','slides'])
-const verifierActions = new Set([...['design','slides'].flatMap(kind => ['current','read_file','check','read_reference','comments','submit_verification'].map(method => `${kind}.${method}`)),'learning.list_assignments','learning.get_assignment','learning.list_submissions',
+const verifierActions = new Set([...['design','slides'].flatMap(kind => ['current','read_document','read_page','read_file','check','read_reference','comments','submit_verification'].map(method => `${kind}.${method}`)),'learning.list_assignments','learning.get_assignment','learning.list_submissions',
   'knowledge.list_sources','knowledge.search','knowledge.read_source','research.search','research.read'])
 
 
@@ -288,7 +288,7 @@ export const DESIGN_INCOMPLETE_NOTICE = '画板尚未完成，以下先提供文
 function designCompletionIssue(context: TurnContext): string | undefined {
   const steps = (context.executionSteps ?? []).filter(step => step.requestVersion === context.snapshotVersion?.requestVersion)
   let write = -1
-  for (const [index, step] of steps.entries()) if (['design__write_files', 'design__edit_file'].includes(step.kind)) write = index
+  for (const [index, step] of steps.entries()) if (['design__apply_ops', 'design__write_files', 'design__edit_file'].includes(step.kind)) write = index
   if (explanationPlan(context) === 'canvas' && write < 0) return 'The recorded response decision requires an actual saved and checked explanatory Design artboard. No content write has completed. Finish the canvas, or report the actual limitation as partial; a text explanation or a plan alone cannot satisfy that decision.'
   if (write >= 0) {
     let saved = false
@@ -300,7 +300,7 @@ function designCompletionIssue(context: TurnContext): string | undefined {
     } catch { /* An attempted, failed or unknown save never proves delivery. */ }
     if (!saved) return 'The latest Design save was not confirmed successful. Resolve its actual failure and save the requested content, or report partial completion truthfully; checking the previous canvas cannot prove the requested change was saved.'
     const authored = authoredDesignPaths(context)
-    if (explanationPlan(context) === 'canvas' && !authored.length) return 'The explanatory artboard content has not been saved or was subsequently deleted. An index or token edit and a check of existing boards cannot deliver the requested explanation. Save actual .dc.html content, then check it, or report incomplete delivery truthfully.'
+    if (explanationPlan(context) === 'canvas' && !authored.length) return 'The explanatory artboard content has not been saved or was subsequently deleted. An index or token edit and a check of existing boards cannot deliver the requested explanation. Save actual native page content with apply_ops, then check it, or report incomplete delivery truthfully.'
     const check = steps.slice(write + 1).reverse().find(step => step.kind === 'design__check' && step.output !== undefined)
     let passed = false
     try {

@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
-import { acquireCircuit, type ModelFailure, modelFailure, recoveryPolicy } from '@lyyzka/lingxios'
+import { acquireCircuit, type ModelFailure, modelFailure, recoveryPolicy } from '@lingxi-org/lingxios'
 import type OpenAI from 'openai'
 import { siliconFlowCost, siliconFlowPricingForModel } from './agent-runtime/pricing.js'
 import { env } from './env.js'

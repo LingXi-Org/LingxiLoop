@@ -1,0 +1,73 @@
+{
+  "kind": "isolated-native-editor-ui-diagnostic",
+  "date": "2026-11-05",
+  "browser": "Chromium 154.0.8037.57 built on Debian GNU/Linux 13 (trixie)",
+  "scope": {
+    "react": "StrictMode, real NativeEditor and Worker modules",
+    "input": "Playwright trusted pointer and keyboard events",
+    "fixture": "scripts/native-artifact-fixture.mjs; 50 pages, 50 PNG images, 50 formulas",
+    "transport": "deterministic intercepted HTTP responses; real shared operation reducer; synthetic tenant context checked on authenticated image requests",
+    "notVerified": [
+      "real API authentication and authorization",
+      "database durability",
+      "real Agent runtime tool invocation",
+      "performance acceptance thresholds",
+      "browser IME input across operating systems"
+    ]
+  },
+  "results": {
+    "slides": {
+      "pagesTraversed": 50,
+      "imageAndFormulaOnEveryPage": true,
+      "mountedPagesAtEachStep": 1,
+      "page25MountedNodes": 6,
+      "manualTextSaved": true,
+      "reloadRetainedSavedText": true,
+      "plainTextAgentOperationVisibleAfterPolling": true,
+      "presentationArrowRight": "page-25 to page-26",
+      "consoleOrPageErrors": []
+    },
+    "design": {
+      "initialMountedBoards": 4,
+      "initialVisibleImages": 2,
+      "page25MountedBoards": 2,
+      "page25MountedNodes": 11,
+      "manualTextSaved": true,
+      "presentationArrowRight": "page-25 to page-26",
+      "consoleOrPageErrors": []
+    },
+    "denseDesign": {
+      "pageNodes": 506,
+      "offscreenFarNodesInitiallyMounted": 0,
+      "farNodesMountedAfterHorizontalPan": 153,
+      "activeRichTextEditorRetainedAfterPan": true,
+      "consoleOrPageErrors": []
+    },
+    "theme": {
+      "newPageBackgroundChanged": true,
+      "newDefaultTextColorChanged": true,
+      "newDefaultShapeFillChanged": true,
+      "consoleOrPageErrors": []
+    },
+    "focusedTests": {
+      "command": "node --import tsx --test src/features/artifacts/native/*.test.ts src/features/artifacts/native/thumbnail.test.tsx",
+      "passed": 21,
+      "failed": 0
+    }
+  },
+  "limits": [
+    "Flex/grid siblings stay mounted together to preserve browser layout; active edits and selected groups remain mounted.",
+    "Thumbnails are bounded visual summaries (96 nodes, 64x40), with cached downsampled images; never-loaded pages show their background until page data has loaded.",
+    "This diagnostic is not a substitute for the full product, persistence, export, or performance acceptance runs."
+  ],
+  "screenshots": [
+    "isolated-slides.png",
+    "isolated-design.png"
+  ],
+  "temporaryHarnesses": [
+    "/workspace/scratch/native-editor-smoke/all-pages.mts",
+    "/workspace/scratch/native-editor-smoke/design.mts",
+    "/workspace/scratch/native-editor-smoke/culling.mts",
+    "/workspace/scratch/native-editor-smoke/theme.mts"
+  ]
+}

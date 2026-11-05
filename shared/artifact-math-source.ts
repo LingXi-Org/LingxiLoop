@@ -1,4 +1,9 @@
-import splitAtDelimiters from 'katex/contrib/auto-render/splitAtDelimiters.ts'
+import delimiterModule from 'katex/contrib/auto-render/splitAtDelimiters'
+
+// KaTeX's published TypeScript helper is ESM in browsers and a nested default
+// when loaded by the Node test runner through its CommonJS package boundary.
+const splitAtDelimiters = typeof delimiterModule === 'function' ? delimiterModule : (delimiterModule as { default: typeof delimiterModule }).default
+export function splitArtifactMath(text: string) { return splitAtDelimiters(text, explicit) }
 
 const explicit = [
   {left:'$$',right:'$$',display:true},

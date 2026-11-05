@@ -1,4 +1,4 @@
-import type { RunEvent, RunStreamEvent } from '@lyyzka/lingxios/ui'
+import type { RunEvent, RunStreamEvent } from '@lingxi-org/lingxios/ui'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { publicActivitySchema, canonicalToolName } from '../../../src/lib/runActivity.js'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'

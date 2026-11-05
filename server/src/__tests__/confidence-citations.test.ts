@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { TurnContext } from '@lyyzka/lingxios'
+import type { TurnContext } from '@lingxi-org/lingxios'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { citationTextViolation } from '../agent-runtime/citations.js'
 

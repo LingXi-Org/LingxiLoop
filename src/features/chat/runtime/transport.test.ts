@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { setImmediate } from 'node:timers/promises'
 import { mock, test } from 'node:test'
 import type { WsEvent } from '@/api/contracts'
-import type { RunState, RunStreamEvent } from '@lyyzka/lingxios/ui'
+import type { RunState, RunStreamEvent } from '@lingxi-org/lingxios/ui'
 import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { RunStreamProjection } from '../../../../server/src/agent-runtime/assistant-transport'
 

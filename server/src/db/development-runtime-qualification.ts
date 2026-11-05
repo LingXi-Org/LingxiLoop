@@ -1,4 +1,4 @@
-import { releaseVersions } from '@lyyzka/lingxios'
+import { releaseVersions } from '@lingxi-org/lingxios'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { Client, type Pool } from 'pg'

@@ -1,7 +1,7 @@
 import { assistantTextViolation } from '../agent-runtime/assistant-text.js'
 import { z } from 'zod'
 import { productConversationId, assertFrozenAudience } from '../agent-runtime/identity.js'
-import { NoEffectError, type ActionContext, type ToolDefinition, type createLingxiOS } from '@lyyzka/lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition, type createLingxiOS } from '@lingxi-org/lingxios'
 import type { Queryable } from '../db/queryable.js'
 import { nativeTool, compareResource, authorizeAgent, authorizeAudienceRead } from '../agents/tools.js'
 import { queueNativeEvents, type NativeEvent } from '../agents/native-events.js'

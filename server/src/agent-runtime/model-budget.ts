@@ -1,4 +1,4 @@
-import type { WorkerOptions } from '@lyyzka/lingxios/worker'
+import type { WorkerOptions } from '@lingxi-org/lingxios/worker'
 
 /** Root-wide limits include generation, reviews, repairs, compaction and retries.
  * Explicit overrides also permit bounded low-budget failure qualification. */

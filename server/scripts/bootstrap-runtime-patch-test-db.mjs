@@ -8,15 +8,14 @@ import {basename,isAbsolute,join,resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {promisify} from 'node:util'
 import {Client} from 'pg'
-import {releaseVersions} from '@lyyzka/lingxios'
-import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal24TestFixture} from './formal19-test-fixture.mjs'
+import {withFormal19TestFixture,withFormal20TestFixture,withFormal21TestFixture,withFormal24TestFixture,withFormal25TestFixture,useHistoricalRuntimeScope} from './formal19-test-fixture.mjs'
 
 const execute=promisify(execFile),root=fileURLToPath(new URL('../../',import.meta.url))
 export function assertRuntimePatchTestTarget(env){
  assert.equal(env.NODE_ENV,'test','bootstrap requires explicit test mode')
  const url=new URL(env.INTEGRATION_DATABASE_URL??'')
  assert.ok(['postgres:','postgresql:'].includes(url.protocol)&&url.hostname==='127.0.0.1'
-  &&['5432','15432'].includes(url.port)&&!url.search&&!url.hash,'bootstrap requires an explicit local test service port')
+  &&['5432','15432','25432'].includes(url.port)&&!url.search&&!url.hash,'bootstrap requires an explicit local test service port')
  const database=decodeURIComponent(url.pathname.slice(1))
  assert.match(database,/^[A-Za-z0-9_]+$/)
  assert.match(database,/(?:^|_)test(?:_|$)/)
@@ -26,10 +25,24 @@ export function assertRuntimePatchTestTarget(env){
 }
 async function main(){
  const connection=assertRuntimePatchTestTarget(process.env)
+ const {releaseVersions}=await import('@lingxi-org/lingxios')
  const env={...process.env,DATABASE_URL:connection,INTEGRATION_DATABASE_URL:connection,DOTENV_CONFIG_PATH:'/dev/null'}
  const run=(code,cwd=root)=>{
   const result=spawnSync(process.execPath,['--import','tsx','--input-type=module'],{cwd,env,input:code,stdio:['pipe','inherit','inherit'],timeout:120000})
   assert.equal(result.status,0,'local test bootstrap child failed')
+ }
+ if(String(releaseVersions.runtime)==='4.0.0'){
+  const db=new Client({connectionString:connection,connectionTimeoutMillis:5000})
+  let installed
+  try{await db.connect();if((await db.query("SELECT to_regclass('public.lingxios_installation') AS name")).rows[0].name)installed=(await db.query('SELECT runtime_version FROM public.lingxios_installation WHERE singleton')).rows[0]?.runtime_version}finally{await db.end()}
+  if(installed!=='4.0.0'){
+   await withFormal25TestFixture(root,env,async(fixture,sourceEnv)=>{
+    await execute(process.execPath,['server/scripts/bootstrap-runtime-patch-test-db.mjs'],{cwd:fixture,env:sourceEnv,timeout:360000,maxBuffer:2*1024*1024})
+   })
+   run("import assert from'node:assert/strict';import{Pool}from'pg';import{loadRuntimePatchInventory,applyPublishedRuntimePatch}from'./server/src/db/runtime-patch.ts';import{loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH}from'./server/src/db/runtime-profile.ts';const db=new Pool({connectionString:process.env.DATABASE_URL,max:1});try{const locked=await loadLockedRuntimePackage();assert.equal(locked.runtime,'4.0.0');const migrations=await loadRuntimePatchInventory(62),source={runtime:'3.8.25',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:62,migrations},target={...source,runtime:'4.0.0',integrity:locked.integrity,tarball:locked.tarball};assert.equal((await applyPublishedRuntimePatch(db,source,target)).updated,1);console.log(JSON.stringify({qualification:'actual-formal25-to400-product62-cas',updated:1,source:source.runtime,target:target.runtime}))}finally{await db.end()}")
+  }else console.log('[integration bootstrap] reuse installed4.0.0; no source preparation or CAS executed')
+  run("import assert from'node:assert/strict';import{migrateDatabase}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{const applied=await migrateDatabase();assert.ok(applied.length===0||applied.length===1&&applied[0]==='0063_native_artifact_documents');assert.deepEqual(await migrateDatabase(),[]);console.log('[integration bootstrap] exact formal4.0.0 native-document migration and no-op startup verified',applied)}finally{await pool.end()}")
+  return
  }
  if(String(releaseVersions.runtime)==='3.8.25'){
   const db=new Client({connectionString:connection,connectionTimeoutMillis:5000})
@@ -41,7 +54,7 @@ async function main(){
    })
    run("import assert from'node:assert/strict';import{Pool}from'pg';import{loadRuntimePatchInventory,applyPublishedRuntimePatch}from'./server/src/db/runtime-patch.ts';import{loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH}from'./server/src/db/runtime-profile.ts';const db=new Pool({connectionString:process.env.DATABASE_URL,max:1});try{const locked=await loadLockedRuntimePackage();assert.equal(locked.runtime,'3.8.25');const migrations=await loadRuntimePatchInventory(62),source={runtime:'3.8.24',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:62,migrations},target={...source,runtime:'3.8.25',integrity:locked.integrity,tarball:locked.tarball};assert.equal((await applyPublishedRuntimePatch(db,source,target)).updated,1);console.log(JSON.stringify({qualification:'actual-formal24-to25-product62-cas',updated:1,source:source.runtime,target:target.runtime}))}finally{await db.end()}")
   }else console.log('[integration bootstrap] reuse installed25; no source preparation or CAS executed')
-  run("import assert from'node:assert/strict';import{migrateDatabase}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{assert.deepEqual(await migrateDatabase(),[]);assert.deepEqual(await migrateDatabase(),[]);console.log('[integration bootstrap] exact formal25/product62 no-op startup verified')}finally{await pool.end()}")
+  run("import assert from'node:assert/strict';import{migrateDatabase}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{assert.deepEqual(await migrateDatabase(),[]);console.log('[integration bootstrap] exact formal25/product62 read-only startup verified; source/CAS evidence is separate')}finally{await pool.end()}")
   return
  }
  if(String(releaseVersions.runtime)==='3.8.24'){
@@ -145,9 +158,10 @@ async function main(){
    }
    assert.equal('sha512-'+createHash('sha512').update(await readFile(archive)).digest('base64'),record.integrity,'formal18 source archive integrity changed')
    for(const path of ['server/src','src','shared'])await cp(join(root,path),join(fixture,path),{recursive:true})
+   await useHistoricalRuntimeScope(fixture)
    const modules=join(fixture,'node_modules');await mkdir(join(modules,'@lyyzka/lingxios'),{recursive:true})
    for(const name of await readdir(join(root,'node_modules')))if(name!=='@lyyzka')await symlink(join(root,'node_modules',name),join(modules,name),'junction')
-   for(const name of await readdir(join(root,'node_modules/@lyyzka')))if(name!=='lingxios')await symlink(join(root,'node_modules/@lyyzka',name),join(modules,'@lyyzka',name),'junction')
+   for(const name of await readdir(join(root,'node_modules/@lyyzka')).catch(error=>{if(error.code==='ENOENT')return [];throw error}))if(name!=='lingxios')await symlink(join(root,'node_modules/@lyyzka',name),join(modules,'@lyyzka',name),'junction')
    await execute('tar',['-xzf',archive,'--strip-components=1','-C',join(modules,'@lyyzka/lingxios')],{timeout:30000})
    const key='@lyyzka/lingxios',manifest={name:'verified-formal18-product60-source-fixture',private:true,type:'module',dependencies:{[key]:record.version}}
    const lock={lockfileVersion:3,packages:{'':manifest,['node_modules/'+key]:record}}

@@ -12,8 +12,9 @@ import {
   type ArtifactSummary,
 } from './contracts.js'
 import { insertArtifactMembers, toAssignment } from './assignments-application.js'
-import { artifactKind, type ArtifactKind } from './kinds.js'
-import { listing, publish } from './store.js'
+import type { ArtifactKind } from './kinds.js'
+import { listing } from './store.js'
+import { initializeNativeArtifact } from './native-document.js'
 import {
   ensureConversationDesignId,
   insertActivity,
@@ -44,14 +45,7 @@ export interface ArtifactWorkspacesApplicationContext {
 
 /** Publish the new artifact's index and static resources together; never used on open. */
 async function writeInitialIndex(db: Queryable, artifact: ArtifactRow, actorId: string) {
-  const definition = artifactKind(artifact.kind)
-  const index = definition.initialIndex(artifact.title, new Date().toISOString())
-  await publish(db, definition, artifact.id, {
-    ...Object.fromEntries(Object.entries(definition.initialResources ?? {}).map(([path, value]) => [path, {
-      base64: Buffer.from(`${JSON.stringify(value, null, 2)}\n`).toString('base64'), contentType: 'application/json', ifMatch: null,
-    }])),
-    [`project/${definition.indexFile}`]: { base64: Buffer.from(`${JSON.stringify(index, null, 2)}\n`).toString('base64'), contentType: 'application/json', ifMatch: null },
-  }, actorId)
+  await initializeNativeArtifact(db, artifact, actorId)
 }
 
 export function createArtifactWorkspacesApplication(context: ArtifactWorkspacesApplicationContext) {

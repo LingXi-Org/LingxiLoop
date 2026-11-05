@@ -1,4 +1,4 @@
-import type { DeliveryContext } from '@lyyzka/lingxios'
+import type { DeliveryContext } from '@lingxi-org/lingxios'
 import type { Pool, PoolClient } from 'pg'
 import type { Queryable } from '../db/queryable.js'
 

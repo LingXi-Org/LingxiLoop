@@ -16,8 +16,11 @@ export function parseRuntimePatchInput(raw:string):{source:RuntimePatchDescripto
   for(const m of d.migrations)check(m&&Object.keys(m).sort().join(',')==='checksum,name,version')
  }
  assertRuntimePatchDescriptors(value.source,value.target)
- check(/^sha512-[A-Za-z0-9+/]{86}==$/.test(value.target.integrity)&&
-  value.target.tarball.startsWith(`https://npm.pkg.github.com/download/@lyyzka/lingxios/${value.target.runtime}/`)&&/^[a-f0-9]{40}$/.test(value.target.tarball.slice(`https://npm.pkg.github.com/download/@lyyzka/lingxios/${value.target.runtime}/`.length)))
+ const organization=value.target.runtime==='4.0.0'
+ const prefix=`https://npm.pkg.github.com/download/${organization?'@lingxi-org':'@lyyzka'}/lingxios/${value.target.runtime}/`
+ check((organization?value.target.integrity==='sha1-iui7Npfsd+TwQUlFGjlctX2e3bg=':/^sha512-[A-Za-z0-9+/]{86}==$/.test(value.target.integrity))&&
+  value.target.tarball.startsWith(prefix)&&/^[a-f0-9]{40}$/.test(value.target.tarball.slice(prefix.length)))
+ if(organization)check(value.target.tarball===prefix+'8ae8bb3697ec77e4f04149451a395cb57d9eddb8')
  return value
 }
 async function main(){

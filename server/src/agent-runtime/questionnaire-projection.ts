@@ -1,4 +1,4 @@
-import type { RunIdentity } from '@lyyzka/lingxios'
+import type { RunIdentity } from '@lingxi-org/lingxios'
 import type { Queryable } from '../db/queryable.js'
 import { pool } from '../db/pool.js'
 

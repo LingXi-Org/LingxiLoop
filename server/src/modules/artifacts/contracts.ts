@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { artifactIdSchema } from '../../../../shared/artifact-document.js'
+import { artifactOperationBatchSchema } from '../../../../shared/artifact-operations.js'
 import type { AgentExecutionRole } from '../../agents/contracts.js'
 import type { ArtifactKind } from './kinds.js'
 import type { ListedFile } from './store.js'
@@ -112,7 +114,9 @@ const titleSchema = z.string().trim().min(1).max(200)
 const projectPathSchema = z.string().min(1).max(512).refine(path => !path.startsWith('/') && !path.includes('\\') && !path.split('/').includes('..'), 'invalid project path')
 
 export const artifactCreateRequestSchema = z.object({ title: titleSchema }).strict()
-export const artifactUpdateRequestSchema = z.object({ title: titleSchema }).strict()
+export const artifactUpdateRequestSchema = z.object({ title: titleSchema,
+  operationId: z.string().min(1).max(240).optional(), expectedVersion: z.number().int().nonnegative().safe().optional(),
+}).strict()
 export const artifactAssignmentRequestSchema = z.object({
   agentId: identifierSchema,
   assignment: z.string().trim().min(1).max(4_000),
@@ -133,6 +137,9 @@ const target = { artifactId: identifierSchema.optional() }
 
 export const agentArtifactSchemas = {
   current: z.object({ ...target }).strict(),
+  read_document: z.object({ ...target }).strict(),
+  read_page: z.object({ ...target, pageId: artifactIdSchema, version: z.string().regex(/^[a-f0-9]{64}$/).optional(), atSeq: z.number().int().nonnegative().safe().optional(), sourceVersion: z.string().min(1).max(200).optional() }).strict(),
+  apply_ops: artifactOperationBatchSchema.extend({ ...target, sourceVersion: z.string().min(1).max(200).optional() }).strict(),
   create: z.object({ title: titleSchema }).strict(),
   read_file: z.object({ ...target, path: projectPathSchema }).strict(),
   write_files: z.object({ ...target, files: z.record(projectPathSchema, z.union([

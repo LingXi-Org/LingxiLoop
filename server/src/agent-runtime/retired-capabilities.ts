@@ -1,4 +1,4 @@
-import type { RunVerificationContext, SkillDeliveryDecision, VerificationRecord } from '@lyyzka/lingxios'
+import type { RunVerificationContext, SkillDeliveryDecision, VerificationRecord } from '@lingxi-org/lingxios'
 
 export const RETIRED_VISUALIZE_NOTICE = '原 Visualize 已退役，本次未交付旧版交互内容。'
 

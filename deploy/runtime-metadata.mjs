@@ -1,7 +1,7 @@
 // Fixed metadata-only observation in the already deployed container.
 import { createHash } from 'node:crypto'
 import { Client } from 'pg'
-import { releaseVersions } from '@lyyzka/lingxios'
+import { releaseVersions } from '@lingxi-org/lingxios'
 
 const client = new Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 5000 })
 try {

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { decodeSourceText, extractDocumentText } from '@lyyzka/lingxios'
+import { decodeSourceText, extractDocumentText } from '@lingxi-org/lingxios'
 import { canonicalUploadMime } from '../../../../shared/upload-mime.js'
 import type { Queryable } from '../../db/queryable.js'
 import { pool } from '../../db/pool.js'

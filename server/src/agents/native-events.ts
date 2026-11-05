@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
-import type { ActionContext } from '@lyyzka/lingxios'
+import type { ActionContext } from '@lingxi-org/lingxios'
 import type { Queryable } from '../db/queryable.js'
 import type { DocumentChangedEvent, DocumentUpdateEvent } from '../modules/documents/contracts.js'
 import type { ConversationUpdatedEvent } from '../modules/conversations/contracts.js'

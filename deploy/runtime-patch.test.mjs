@@ -12,6 +12,30 @@ const fixture = (version = '3.8.17') => {
   return { files, paths, read: path => files[path] }
 }
 
+test('native documents require the exact organization4 bridge on unchanged product62 before63', () => {
+  const f = fixture('3.8.25')
+  for (const name of ['0059_retire_presentation_generation', '0060_native_artifacts', '0061_slides_workspaces', '0062_case_options', '0063_native_artifact_documents']) {
+    const path = `server/src/db/migrations/${name}.sql`; f.paths.push(path); f.files[path] = '-- additive fixture'
+  }
+  assert.throws(() => runtimePatchPlan(f.read, f.paths), /canonical organization4/)
+  const key = '@lingxi-org/lingxios', dependencies = { [key]: '4.0.0' }
+  const pkg = { version: '4.0.0', integrity: 'sha1-iui7Npfsd+TwQUlFGjlctX2e3bg=', resolved: 'https://npm.pkg.github.com/download/@lingxi-org/lingxios/4.0.0/8ae8bb3697ec77e4f04149451a395cb57d9eddb8' }
+  for (const file of ['package.json', 'server/package.json']) f.files[file] = JSON.stringify({ dependencies })
+  for (const file of ['package-lock.json', 'server/package-lock.json']) f.files[file] = JSON.stringify({ packages: { '': { dependencies }, ['node_modules/' + key]: pkg } })
+  const plan = runtimePatchPlan(f.read, f.paths)
+  assert.equal(plan.source.runtime, '3.8.25'); assert.equal(plan.target.runtime, '4.0.0')
+  assert.equal(plan.source.productVersion, 62); assert.equal(plan.target.migrations.length, 62)
+  assert.deepEqual(plan.source.migrations, plan.target.migrations)
+  assert.deepEqual(runtimePatchPlan(f.read, f.paths, { sourceRuntime: '3.8.25' }), plan)
+  assert.throws(() => runtimePatchPlan(f.read, f.paths, { sourceRuntime: '3.8.24' }), /formal3.8.25 source/)
+  for (const command of ['up', 'servers', 'workers']) assert.doesNotThrow(() => assertRetirementReleaseAllowed(f.paths, command, undefined, plan))
+  assert.throws(() => runtimePatchPlan(f.read, [...f.paths.slice(0, -1), 'server/src/db/migrations/0063_unknown.sql']))
+  f.files['server/package-lock.json'] = f.files['server/package-lock.json'].replace('sha1-', 'sha256-')
+  assert.throws(() => runtimePatchPlan(f.read, f.paths), /receipts differ/)
+  f.files['package.json'] = JSON.stringify({ dependencies: { '@lyyzka/lingxios': '3.8.24' } })
+  assert.throws(() => runtimePatchPlan(f.read, f.paths), /canonical organization4/)
+})
+
 test('case options use only formal24 and exact product62 without a runtime CAS', () => {
   const f = fixture('3.8.24')
   for (const name of ['0059_retire_presentation_generation', '0060_native_artifacts', '0061_slides_workspaces', '0062_case_options']) {

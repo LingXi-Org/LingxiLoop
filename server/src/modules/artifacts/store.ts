@@ -109,6 +109,8 @@ export async function publish(db: Queryable, definition: ArtifactKindDefinition,
   }
   const locked = await db.query<{ seq: string }>('SELECT seq FROM artifacts WHERE id=$1 FOR UPDATE', [artifactId])
   if (!locked.rows[0]) return { status: 404, body: { code: 'not_found', message: 'artifact not found' }, changed: [] }
+  const native = await db.query('SELECT 1 FROM artifact_document_state WHERE artifact_id=$1', [artifactId])
+  if (native.rows.length) return { status: 409, body: { code: 'editor_upgrade_required', message: 'This document uses the native editor. Keep your draft and refresh; submit versioned operations instead of replacing files.' }, changed: [] }
   const before = await listing(db, artifactId)
   if (requireMatch) {
     const missing = Object.entries(batch).filter(([path, entry]) => before.files[path] && entry?.ifMatch === undefined).map(([path]) => path)

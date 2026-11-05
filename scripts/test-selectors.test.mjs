@@ -27,7 +27,7 @@ test('historical fixture isolates pinned display leaves while retaining current 
  try {
   const source=join(root,'source'),fixture=join(root,'fixture')
   const retained=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db/migrate.ts','server/src/agent-runtime/identity.ts',
-   'server/src/__integration__/run-presentation-contract.test.ts','src/lib/runActivity.ts']
+   'server/src/__integration__/run-presentation-contract.test.ts','src/lib/runActivity.ts','shared/artifact-document.ts']
   const pinned=['server/src/agent-runtime/message-projection.ts','src/lib/nativeMessage.ts','server/src/im/wukong.ts','server/src/im/message-types.ts']
   for(const path of [...retained,...pinned]){
    await mkdir(join(source,path,'..'),{recursive:true})
@@ -68,7 +68,7 @@ test('product54 fixture copies the exact contiguous prefix and four current mani
  const root=await mkdtemp(join(tmpdir(),'product54-source-owner-'))
  try{
   const source=join(root,'source'),fixture=join(root,'fixture')
-  const paths=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db/runtime-patch.ts','src/lib/nativeMessage.ts']
+  const paths=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db/runtime-patch.ts','src/lib/nativeMessage.ts','shared/artifact-document.ts']
   for(const path of paths){await mkdir(join(source,path,'..'),{recursive:true});await writeFile(join(source,path),'exact current bytes '+path)}
   const migrations=join(source,'server/src/db/migrations');await mkdir(migrations,{recursive:true})
   for(let i=1;i<=55;i++)await writeFile(join(migrations,String(i).padStart(4,'0')+'_fixture.sql'),'-- migration '+i+'\n')
@@ -86,7 +86,7 @@ test('product57 fixture keeps CAS57 exact without removing product58 from the re
  const root=await mkdtemp(join(tmpdir(),'product57-source-owner-'))
  try{
   const source=join(root,'source'),fixture=join(root,'fixture')
-  const paths=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db/runtime-patch.ts','src/lib/nativeMessage.ts']
+  const paths=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db/runtime-patch.ts','src/lib/nativeMessage.ts','shared/artifact-document.ts']
   for(const path of paths){await mkdir(join(source,path,'..'),{recursive:true});await writeFile(join(source,path),'exact current bytes '+path)}
   const migrations=join(source,'server/src/db/migrations');await mkdir(migrations,{recursive:true})
   for(let i=1;i<=58;i++)await writeFile(join(migrations,String(i).padStart(4,'0')+'_fixture.sql'),'-- migration '+i+'\n')

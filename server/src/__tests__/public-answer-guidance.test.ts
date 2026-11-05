@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { assembleHarness, skillIndex, type TurnContext } from '@lyyzka/lingxios'
+import { assembleHarness, skillIndex, type TurnContext } from '@lingxi-org/lingxios'
 import { createProductHarness } from '../agent-runtime/harness.js'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { PUBLIC_ANSWER_RULES, KNOWLEDGE_CITATION_RULES } from '../agent-runtime/public-answer-rules.js'

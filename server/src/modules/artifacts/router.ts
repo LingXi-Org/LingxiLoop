@@ -33,9 +33,13 @@ import {
   artifactSteerRequestSchema,
   artifactUpdateRequestSchema,
 } from './contracts.js'
+import { nativeArtifactsRouter } from './native-router.js'
+import { ensureNativeDocument } from './native-document.js'
+import { withTransaction } from '../../db/transaction.js'
 
 export const artifactsRouter = Router()
 const api = artifactsRouter
+api.use(nativeArtifactsRouter)
 
 /* ============== Design: one canvas per conversation ============== */
 
@@ -72,20 +76,18 @@ api.post('/artifacts/:id/slides-workspace', safe(async (req, res) => {
 }))
 
 api.put('/artifacts/:id/editor-context', safe(async (req, res) => {
-  const { userId, kind } = await requireArtifact(req, String(req.params.id))
-  if (kind !== 'slides') { res.sendStatus(404); return }
+  const { userId } = await requireArtifact(req, String(req.params.id))
   res.json(await saveSlideEditorContext(pool, String(req.params.id), userId, req.body))
 }))
 
 api.get('/artifacts/:id/revisions', safe(async (req, res) => {
-  const { kind } = await requireArtifact(req, String(req.params.id))
-  if (kind !== 'slides') { res.sendStatus(404); return }
+  await requireArtifact(req, String(req.params.id))
   res.json(await slideRevisions(pool, String(req.params.id)))
 }))
 
 api.post('/artifacts/:id/revisions/:seq/restore', safe(async (req, res) => {
-  const { companyId, userId, kind } = await requireArtifact(req, String(req.params.id), true)
-  if (kind !== 'slides') { res.sendStatus(404); return }
+  const { companyId, userId } = await requireArtifact(req, String(req.params.id), true)
+  await ensureNativeDocument({ db: pool, transaction: run => withTransaction(pool, run) }, { artifactId: String(req.params.id), companyId, actorId: userId, write: true })
   const seq = z.string().regex(/^\d{1,18}$/).parse(req.params.seq)
   const { version } = z.object({ version: z.string().min(1).max(200) }).parse(req.body)
   const outcome = await restoreSlides(companyId, String(req.params.id), seq, version, userId)
@@ -100,8 +102,9 @@ api.get('/artifacts/:id', safe(async (req, res) => {
 }))
 
 api.patch('/artifacts/:id', safe(async (req, res) => {
-  const { companyId } = await requireArtifact(req, String(req.params.id), true)
-  res.json(await renameArtifact(companyId, String(req.params.id), artifactUpdateRequestSchema.parse(req.body).title))
+  const { companyId, userId } = await requireArtifact(req, String(req.params.id), true)
+  const input = artifactUpdateRequestSchema.parse(req.body)
+  res.json(await renameArtifact(companyId, String(req.params.id), input.title, userId, { operationId: input.operationId, expectedVersion: input.expectedVersion }))
 }))
 
 api.delete('/artifacts/:id', safe(async (req, res) => {

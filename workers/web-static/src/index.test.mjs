@@ -82,7 +82,7 @@ test('executable Design and Slides origins are grant-bound and never proxy authe
   } }), isolated, fetcher)
   assert.equal(result.status, 200)
   assert.equal(result.headers.get('set-cookie'), null)
-  assert.match(result.headers.get('content-security-policy'), /^sandbox allow-scripts allow-same-origin /)
+  assert.doesNotMatch(result.headers.get('content-security-policy'), /allow-same-origin/)
   for (const path of ['/api/auth/session', '/', '/assets/main.js', '/artifact-editor/design/other.grant/', '/artifact-editor/slides/other.grant/', '/artifact-editor/slides-assets/editor-ABCDEFGH.js']) {
     assert.equal((await handleRequest(new Request(origin + path), isolated, fetcher)).status, 404)
   }
@@ -90,7 +90,7 @@ test('executable Design and Slides origins are grant-bound and never proxy authe
   assert.equal(calls, 1)
   // The signed token names its kind; the backend rejects it under the other kind.
   const slides = await handleRequest(new Request(`${origin}/artifact-editor/slides/${token}/`, { headers: { cookie: 'session=private' } }), isolated, fetcher)
-  assert.match(slides.headers.get('content-security-policy'), /^sandbox allow-scripts allow-same-origin /)
+  assert.doesNotMatch(slides.headers.get('content-security-policy'), /allow-same-origin/)
   assert.equal(calls, 2)
   const main = await handleRequest(new Request(`https://loop.example.com/artifact-editor/design/${token}/`), isolated,
     async () => new Response('editor', { headers: { 'content-security-policy': 'sandbox allow-scripts allow-downloads' } }))

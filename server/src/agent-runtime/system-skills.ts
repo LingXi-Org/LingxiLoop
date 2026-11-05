@@ -1,4 +1,4 @@
-import type { SkillDefinition } from '@lyyzka/lingxios'
+import type { SkillDefinition } from '@lingxi-org/lingxios'
 import { GROUP_COLLABORATION_RULES } from './conversation-style.js'
 import { artifactSkills, cooperationSkill } from '../modules/artifacts/skills.js'
 import { PUBLIC_ANSWER_RULES, KNOWLEDGE_CITATION_RULES } from './public-answer-rules.js'

@@ -1,4 +1,4 @@
-import { readModelStageTimings, readPublicTextPublicationTiming, type RunIdentity } from '@lyyzka/lingxios'
+import { readModelStageTimings, readPublicTextPublicationTiming, type RunIdentity } from '@lingxi-org/lingxios'
 import type { AdminModelStageCall, RunStageTiming } from '../../../../shared/model-stage-timing.js'
 import type { Queryable } from '../../db/queryable.js'
 

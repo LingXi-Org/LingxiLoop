@@ -1,6 +1,6 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, type ActionContext, type ToolDefinition } from '@lyyzka/lingxios'
+import { NoEffectError, type ActionContext, type ToolDefinition } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, authorizeAudienceRead } from '../../agents/tools.js'
 import { queueNativeEvents } from '../../agents/native-events.js'

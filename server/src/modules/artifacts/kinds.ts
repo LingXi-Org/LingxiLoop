@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
-import slidesBuiltin from '../../../../third_party/baoyu-design/slides-source/builtin-style.json' with { type: 'json' }
+import slidesBuiltin from '../../../../third_party/baoyu-design/host/slides-builtin-style.json' with { type: 'json' }
 import builtinThemes from '../../../../third_party/baoyu-design/host/builtin-themes.json' with { type: 'json' }
 
 // Ported from JimLiu/baoyu-design@c15e76e skills/claude-{design,slides}/scripts/server.mjs:

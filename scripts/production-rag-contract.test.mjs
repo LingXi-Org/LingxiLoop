@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import ts from 'typescript'
 import { computeScope } from './ci-scope.mjs'
-import '../deploy/retain-editor-assets.test.mjs'
+import './native-artifact-retirement.test.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8').replaceAll('\r\n', '\n')
 
@@ -20,8 +20,9 @@ function pdfPruneFixture(t) {
   }
   const pdf = 'node_modules/pdfjs-dist/', office = 'node_modules/officeparser/'
   put('node_modules/.package-lock.json', '{"pdfjs-dist":{}}')
-  put('node_modules/@lyyzka/lingxios/package.json', '{"dependencies":{"pdfjs-dist":"6.3.289"}}')
-  put('node_modules/@lyyzka/lingxios/dist/src/context/document-worker.js', "import('pdfjs-dist/legacy/build/pdf.mjs'); import.meta.resolve('pdfjs-dist/package.json')")
+  put('node_modules/@lingxi-org/lingxios/package.json', '{"devDependencies":{"pdfjs-dist":"6.3.289"}}')
+  put('node_modules/@lingxi-org/lingxios/dist/src/context/document-text.js', "const parser = 'pdfjs-dist/legacy/build/pdf.mjs'; import.meta.resolve(parser)")
+  put('node_modules/@lingxi-org/lingxios/dist/src/context/document-worker.js', "import('pdfjs-dist/legacy/build/pdf.mjs'); import.meta.resolve('pdfjs-dist/package.json')")
   put(pdf + 'package.json', '{"name":"pdfjs-dist","version":"6.3.289","main":"build/pdf.mjs"}')
   for (const path of ['LICENSE', 'types/src/pdf.d.ts', 'build/pdf.mjs', 'build/pdf.worker.min.mjs',
     'legacy/build/pdf.mjs', 'legacy/build/pdf.worker.mjs', 'legacy/build/pdf.mjs.map',
@@ -151,18 +152,14 @@ test('server image includes the complete shared runtime import graph', () => {
 })
 
 // Retired runtime code must not return through Docker context or old packaging hooks.
-test('server image excludes the retired visualization runtime and packages Design independently', () => {
+test('server image ships the native editor and excludes retired editor builders', () => {
   const docker = read('server/docker/lingxiloop-server.Dockerfile')
-  assert.doesNotMatch(docker, /third_party\/zcode|visualize-runtime|chat\/visualize/)
-  assert.match(docker, /FROM web-deps AS design-build/)
-  assert.match(docker, /RUN node scripts\/build-design-editor\.mjs/)
-  assert.match(docker, /COPY --from=design-build \/app\/server\/assets\/design-editor \.\/server\/assets\/design-editor/)
+  assert.doesNotMatch(docker, /third_party\/zcode|visualize-runtime|chat\/visualize|AS design-build|AS slides-build|build-design-editor|build-slides-editor/)
   const commands = JSON.parse(read('package.json')).scripts
-  assert.equal(commands['build:visualize-runtime'], undefined)
-  assert.equal(commands['verify:visualize'], undefined)
-  assert.equal(commands.prebuild, 'npm run build:design-editor')
+  for (const name of ['build:visualize-runtime', 'verify:visualize', 'build:design-editor', 'build:slides-editor']) assert.equal(commands[name], undefined)
+  assert.doesNotMatch(commands.prebuild ?? '', /design-editor|slides-editor/)
   assert.doesNotMatch(read('vite.config.ts'), /visualize-public-assets|visualize-public-resources/)
-  assert.equal(read('public/licenses/visualize-compat.txt'), read('third_party/visualize-compat/LICENSE.md'), 'Static Worker distribution retains the passive parser Apache license')
+  assert.equal(read('public/licenses/visualize-compat.txt'), read('third_party/visualize-compat/LICENSE.md'))
 })
 
 // Failure: checkout resolves frontend imports that COPY or the build context omits.
@@ -192,35 +189,8 @@ test('SPA image includes the transitive source graph and pinned vendor license',
     const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
     return resolve(destination, suffix) === resolve(root, path)
   })
-  for (const name of ['design-build', 'spa-build']) {
-    const editorStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
-      .find(part => part.split('\n')[0].endsWith(` AS ${name}`))
-    assert.ok(editorStage, `${name} exists`)
-    for (const { source } of copiesOf(editorStage)) {
-      if (ts.sys.fileExists(resolve(root, source))) {
-        assert.ok(inContext(source), `${name} explicit COPY input excluded from Docker context: ${source}`)
-      }
-    }
-    // Follow the real builder's local import graph, including future helpers.
-    // A checkout can hide a missing Docker COPY for a transitive build module.
-    const pending = ['scripts/build-design-editor.mjs'], visited = new Set()
-    while (pending.length) {
-      const path = pending.pop()
-      if (visited.has(path)) continue
-      visited.add(path)
-      assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing transitive Design build input: ${path}`)
-      for (const item of ts.preProcessFile(read(path), true, true).importedFiles) {
-        if (!item.fileName.startsWith('.')) continue
-        const target = relative(root, resolve(root, path, '..', item.fileName)).replaceAll('\\', '/')
-        assert.ok(ts.sys.fileExists(resolve(root, target)), `Missing Design build module: ${target}`)
-        pending.push(target)
-      }
-    }
-    for (const path of ['scripts/design-copy.mjs', 'third_party/baoyu-design/host/design-zh-CN.json',
-      'third_party/baoyu-design/host/slides-zh-CN.json', 'third_party/baoyu-design/host/design-theme.css',
-      'src/styles/fonts.css', 'public/fonts/mingli/inter-OFL.txt']) {
-      assert.ok(packaged(path, copiesOf(editorStage)), `${name} missing Design host input: ${path}`)
-    }
+  for (const { source } of copiesOf(stage)) {
+    if (ts.sys.fileExists(resolve(root, source))) assert.ok(inContext(source), `SPA explicit COPY input excluded: ${source}`)
   }
   for (const path of ['server/package.json', 'server/package-lock.json', 'server/build/web/package.json',
     'server/build/web/package-lock.json', 'server/scripts/check-packaged-startup.mjs']) {

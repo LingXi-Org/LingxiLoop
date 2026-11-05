@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildPromptContext, type TurnContext } from '@lyyzka/lingxios'
+import { buildPromptContext, type TurnContext } from '@lingxi-org/lingxios'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { homeworkTeachingRules } from '../modules/learning/homework-teaching.js'
 import { homeworkHelpRules } from '../modules/learning/homework-help.js'

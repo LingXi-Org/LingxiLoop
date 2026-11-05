@@ -2,7 +2,7 @@ import { createNativeMessage, deserializeMessage, serializeMessage } from '../..
 import assert from 'node:assert/strict'
 import { beforeEach, mock, test } from 'node:test'
 import type { ThreadMessage } from '@assistant-ui/react'
-import type { RunState, RunStreamEvent } from '@lyyzka/lingxios/ui'
+import type { RunState, RunStreamEvent } from '@lingxi-org/lingxios/ui'
 import type { ImEnvelope } from '@/lib/im/wukong'
 import { convertEnvelope } from './converter'
 import { applyRunSnapshot, needsRunStream } from './run-updates'
@@ -19,7 +19,7 @@ function project(item: RunStreamEvent, runId = 'run', canControl = true) {
   return projection.apply(item)
 }
 function applyRunUpdate(state: typeof EMPTY_CONVERSATION_CHAT_STATE, target: { conversationId: string; agentId: string; runId: string; threadId?: string },
-  item: RunStreamEvent, participant?: (typeof participants)['agent'], response?: { events: import('@lyyzka/lingxios/ui').RunEvent[]; canControl: boolean }) {
+  item: RunStreamEvent, participant?: (typeof participants)['agent'], response?: { events: import('@lingxi-org/lingxios/ui').RunEvent[]; canControl: boolean }) {
   if (response) {
     if (!projections.has(target.runId)) { const projection = new RunStreamProjection(target.runId, response.canControl); projection.apply(item); projections.set(target.runId, projection) }
     for (const event of response.events) project({ type: 'event', event }, target.runId)

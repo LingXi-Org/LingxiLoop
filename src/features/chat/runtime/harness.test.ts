@@ -1,7 +1,7 @@
 import { createNativeMessage } from '../../../lib/nativeMessage'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { consumeAssistantMessage, createRunView, consumeRunEvent, consumeRunState, consumeRunStreamEvent, type ResponseEnvelope } from '@lyyzka/lingxios/ui'
+import { consumeAssistantMessage, createRunView, consumeRunEvent, consumeRunState, consumeRunStreamEvent, type ResponseEnvelope } from '@lingxi-org/lingxios/ui'
 import type { ImEnvelope } from '@/lib/im/wukong'
 import type { Participant } from '@/types'
 import { convertEnvelope } from './converter'

@@ -1,7 +1,7 @@
 import type { Queryable } from '../../db/queryable.js'
 import { readAdminModelStageCalls, runStageTiming } from './model-stage-timing.js'
 import { pool } from '../../db/pool.js'
-import type { createLingxiOS } from '@lyyzka/lingxios'
+import type { createLingxiOS } from '@lingxi-org/lingxios'
 import { agentRunTiming } from './agent-run-timing.js'
 import { HttpError } from '../../http/errors.js'
 

@@ -33,8 +33,8 @@ test('explanation routing and publication keep actual native generation and fail
     assert.ok(scope.integration_files.includes('runtime-teaching-scaffold.test.ts'),path)
   }
 })
-test('Design sizing sources retain their editor build and artifact integration owners', () => {
-  for (const path of ['shared/design-flow-size.ts', 'scripts/build-design-layout.mjs', 'scripts/design-flow-size.test.mjs']) {
+test('native artifact sources retain browser and artifact integration owners', () => {
+  for (const path of ['shared/artifact-document.ts', 'shared/artifact-operations.ts', 'shared/artifact-legacy.ts']) {
     const scope = computeScope(classifyPaths([path]))
     assert.equal(scope.web, true, path)
     assert.equal(scope.integration, true, path)
@@ -56,7 +56,15 @@ test('runtime patch and deployment changes retain both product60 patch qualifica
   for (const path of ['server/src/db/runtime-patch.ts', 'deploy/runtime-patch.mjs']) {
     const scope = computeScope(classifyPaths([path]))
     assert.equal(scope.integration_mode, 'selected')
-    for (const file of ['runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts', 'runtime-patch61-22-provenance.test.ts', 'runtime-patch61-23-provenance.test.ts', 'runtime-patch61-23-from21-provenance.test.ts', 'runtime-patch61-24-provenance.test.ts', 'runtime-patch62-25-provenance.test.ts']) assert.ok(scope.integration_files.includes(file), path + ':' + file)
+    for (const file of ['runtime-patch60-provenance.test.ts', 'runtime-patch60-20-provenance.test.ts', 'runtime-patch61-21-provenance.test.ts', 'runtime-patch61-22-provenance.test.ts', 'runtime-patch61-23-provenance.test.ts', 'runtime-patch61-23-from21-provenance.test.ts', 'runtime-patch61-24-provenance.test.ts', 'runtime-patch62-25-provenance.test.ts', 'runtime-patch62-40-provenance.test.ts']) assert.ok(scope.integration_files.includes(file), path + ':' + file)
+  }
+})
+test('harness release and product contract edits retain the real PostgreSQL drain barrier owner', () => {
+  for (const path of ['server/src/db/harness-cutover.ts', 'server/src/harness-cutover-bin.ts',
+    'server/src/agent-runtime/harness.ts', 'deploy/harness-cutover.mjs', 'deploy/harness-receipt.mjs']) {
+    const scope = computeScope(classifyPaths([path]))
+    assert.equal(scope.integration_mode, 'selected')
+    assert.ok(scope.integration_files.includes('harness-cutover.test.ts'), path)
   }
 })
 

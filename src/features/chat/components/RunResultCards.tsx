@@ -1,5 +1,5 @@
 import { DownloadIcon, PackageIcon } from 'lucide-react'
-import type { ResponseEnvelope } from '@lyyzka/lingxios/ui'
+import type { ResponseEnvelope } from '@lingxi-org/lingxios/ui'
 import { File } from '@/components/assistant-ui/elements/file'
 import { CardSurface, conversationCardSize } from '@/components/assistant-ui/elements/surfaces'
 import { Button } from '@/components/ui/button'

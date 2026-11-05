@@ -1,4 +1,4 @@
-import { NoEffectError } from '@lyyzka/lingxios'
+import { NoEffectError } from '@lingxi-org/lingxios'
 import { nativeTool, authorizeAudienceRead } from '../agents/tools.js'
 import { publicActivitySchema } from '../../../src/lib/runActivity.js'
 import { productConversationId, assertFrozenAudience } from './identity.js'

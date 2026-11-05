@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { after, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
-import { skillIndex } from '@lyyzka/lingxios'
-import { createWorker } from '@lyyzka/lingxios/worker'
+import { skillIndex } from '@lingxi-org/lingxios'
+import { createWorker } from '@lingxi-org/lingxios/worker'
 import { pool } from '../db/pool.js'
 import { DESIGN_INCOMPLETE_NOTICE, ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
@@ -12,6 +12,9 @@ import { lingxiOSControl, runtimeModelConfiguration } from '../agent-runtime/run
 import { nativeText } from '../im/message-types.js'
 import { ensureConversationDesign } from '../modules/artifacts/facade.js'
 import { artifactSkills } from '../modules/artifacts/skills.js'
+import { readNativeDocument } from '../modules/artifacts/native-document.js'
+import { createNode } from '../../../shared/artifact-document.js'
+import { prepareBatch, artifactVersionKey } from '../../../shared/artifact-operations.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
@@ -28,8 +31,14 @@ test('failed native Design save rejects false partial completion before publicat
   await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)', [channelId, companyId, JSON.stringify({ channelType: 2, members })])
   const canvas = await ensureConversationDesign(companyId, channelId, userId)
   const original = (await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows
-  const currentIndex = original.find(file => file.path === 'project/canvas.json'); assert.ok(currentIndex)
-  const tokens = original.find(file => /^project\/ds\/[^/]+\/tokens\.json$/.test(file.path)); assert.ok(tokens)
+  const snapshot = await readNativeDocument(pool, canvas.id); assert.ok(snapshot)
+  const pageId = snapshot.document.pageOrder[0]!
+  const batch = prepareBatch(snapshot.document, [
+    { type: 'page.patch', pageId, patch: { title: 'Uncommitted browser explanation' } },
+    { type: 'node.insert', pageId, node: { ...createNode('text', 'browser-flow'), text: 'Uncommitted browser explanation' } },
+  ], 'conflicting-save')
+  const titleVersion = artifactVersionKey.page(pageId, 'field/title')
+  batch.expectedVersions[titleVersion] = (snapshot.document.versions[titleVersion] ?? 0) + 1
   const index = skillIndex(artifactSkills.find(skill => skill.name === 'claude-design')!)
   const falseClaim = '浏览器流程画板已经准备好了，所有内容已保存并检查通过。'
   const explanation = '浏览器先通过 DNS 找到地址，再建立连接，服务器返回内容，最后浏览器解析并渲染页面。'
@@ -42,16 +51,13 @@ test('failed native Design save rejects false partial completion before publicat
       const business: Array<{ name: string; args: unknown }> = []
       if (calls === 1) { assert.equal(input.tool_choice?.function?.name, 'design__plan_explanation'); business.push({ name: 'design__plan_explanation', args: { delivery: 'canvas' } }) }
       if (calls === 2) { assert.equal(input.tool_choice?.function?.name, 'skills__load'); business.push({ name: 'skills__load', args: { name: index.name, version: index.version, hash: index.hash } }) }
-      if (calls === 3) business.push({ name: 'design__read_reference', args: { page: 'format.md' } })
+      if (calls === 3) business.push({ name: 'design__read_reference', args: { page: 'native-model.md' } })
       if (calls === 4) business.push({ name: 'design__current', args: {} })
-      if (calls === 5) business.push({ name: 'design__read_file', args: { path: 'project/canvas.json' } })
-      if (calls === 6) business.push({ name: 'design__read_file', args: { path: tokens.path } })
-      if (calls === 7) business.push({ name: 'design__write_files', args: { files: {
-        // A schema-valid CAS conflict exercises the real native transactional
-        // failure. Neither the current index nor the new board may change.
-        'project/canvas.json': { content: currentIndex.body.toString('utf8'), ifMatch: '0'.repeat(64) },
-        'project/BrowserFlow.dc.html': { content: '<div>Uncommitted browser explanation</div>', ifMatch: null },
-      } } })
+      if (calls === 5) business.push({ name: 'design__read_document', args: {} })
+      if (calls === 6) business.push({ name: 'design__read_page', args: { pageId, version: snapshot.pageVersions[pageId] } })
+      // One schema-valid stale target rejects the entire operation batch:
+      // neither its page title nor its new node may enter the saved document.
+      if (calls === 7) business.push({ name: 'design__apply_ops', args: batch })
       if (calls <= 7) assert.equal(input.tool_choice?.function?.name, business[0]?.name, 'each native prerequisite uses one published required tool selection')
       if (calls === 8) {
         assert.ok(JSON.stringify(input.messages).includes('version_conflict'),'model must receive the supported conflict code')
@@ -101,7 +107,7 @@ test('failed native Design save rejects false partial completion before publicat
     assert.equal(final.message?.body, fallback); assert.ok(final.message.body.includes(explanation)); assert.equal(final.message.body.includes(falseClaim), false)
     const receipts = (await pool.query(`SELECT i.intent->'action'->>'action' AS action,r.result FROM lingxios.agent_action_intents i
       JOIN lingxios.agent_action_ledger r USING(idempotency_key) WHERE i.intent->>'workId'=$1 ORDER BY i.recorded_at,i.idempotency_key`, [identity.runId])).rows
-    const writes = receipts.filter(receipt => receipt.action === 'design.write_files')
+    const writes = receipts.filter(receipt => receipt.action === 'design.apply_ops')
     assert.equal(writes.length, 1); assert.equal(writes[0].result.ok, false)
     assert.equal(writes[0].result.code, 'version_conflict'); assert.equal(writes[0].result.executionState, 'no_effect')
     assert.equal(writes[0].result.diagnostics.category, 'version')

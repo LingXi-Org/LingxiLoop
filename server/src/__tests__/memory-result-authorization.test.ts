@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
-import type { ActionContext, createLingxiOS } from '@lyyzka/lingxios'
+import type { ActionContext, createLingxiOS } from '@lingxi-org/lingxios'
 import type { PermissionRequest } from '../modules/access/public.js'
 
 // Failure model: explicit result producer model plus teacher scope restrictions.

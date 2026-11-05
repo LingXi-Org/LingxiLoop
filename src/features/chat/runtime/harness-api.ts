@@ -1,5 +1,5 @@
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
-import type { ResponseEnvelope, RunState } from '@lyyzka/lingxios/ui'
+import type { ResponseEnvelope, RunState } from '@lingxi-org/lingxios/ui'
 import { API, http } from '@/api/core/http'
 import { lingxiApiFetch } from '@/api/transport'
 import { getActiveCompanyId } from '@/stores/auth'

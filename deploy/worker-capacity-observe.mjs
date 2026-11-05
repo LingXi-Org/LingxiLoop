@@ -1,6 +1,6 @@
 // Run inside an existing Worker. Only its public loopback health/metrics are read;
 // no control-plane startup, database connection, model call or mutation.
-import { releaseVersions } from '@lyyzka/lingxios'
+import { releaseVersions } from '@lingxi-org/lingxios'
 
 const numeric = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
 const integer = value => Number.isSafeInteger(value) && value >= 0 ? value : null

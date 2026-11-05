@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
-import { assembleHarness, type ActionContext, type MemoryIdentity, type createLingxiOS } from '@lyyzka/lingxios'
+import { assembleHarness, type ActionContext, type MemoryIdentity, type createLingxiOS } from '@lingxi-org/lingxios'
 import { generativeComponentSchemas } from '../../../src/lib/nativeMessage.js'
 const access = await import('../modules/access/public.js')
 mock.module('../modules/access/public.js', { namedExports: { ...access,

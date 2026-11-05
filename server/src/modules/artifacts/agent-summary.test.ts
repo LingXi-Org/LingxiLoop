@@ -1,0 +1,29 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import { createDocument, createPage } from '../../../../shared/artifact-document.js'
+import { agentDocumentSummary } from './agent-summary.js'
+
+test('50-page Agent overview excludes embedded assets, original themes and node versions without losing global preconditions', () => {
+  const document = createDocument('slides', 'summary')
+  document.themes.large = { id: 'large', name: 'Theme', tokens: { text: '#000' }, originalTokens: { source: 'x'.repeat(100_000) } }
+  document.assets.image = { id: 'image', contentType: 'image/png', url: `data:image/png;base64,${'A'.repeat(100_000)}` }
+  document.versions = { 'document/title': 1, 'theme/large': 2, 'asset/image': 3, 'asset/image/references': 4 }
+  for (let index = 0; index < 50; index++) {
+    const page = createPage(`p${index}`)
+    document.pages[page.id] = page; document.pageOrder.push(page.id)
+    for (let node = 0; node < 50; node++) document.versions[`node/${page.id}/n${node}/field/text`] = 5
+  }
+  const summary = agentDocumentSummary({ document, history: { version: 0, undo: null, redo: null }, pageVersions: {} })
+  assert.equal(Object.keys(summary.document.pages).length, 50)
+  assert.deepEqual(summary.document.versions, { 'document/title': 1, 'theme/large': 2, 'asset/image': 3, 'asset/image/references': 4 })
+  assert.equal(summary.document.themes.large.tokenCount, 1)
+  assert.equal(summary.document.assets.image.contentType, 'image/png')
+  assert.ok(JSON.stringify(summary).length < 16_000)
+})
+
+test('only ephemeral legacy summaries advertise a source snapshot token', () => {
+  const document = createDocument('design', 'legacy-summary')
+  const snapshot = { document, history: { version: 0, undo: null, redo: null }, pageVersions: {}, original: { version: 'local-0123456789abcdef', files: {}, warnings: [] } }
+  assert.equal(agentDocumentSummary(snapshot).sourceVersion, snapshot.original.version)
+  assert.equal(agentDocumentSummary({ ...snapshot, pageVersions: { one: 'a'.repeat(64) } }).sourceVersion, undefined)
+})

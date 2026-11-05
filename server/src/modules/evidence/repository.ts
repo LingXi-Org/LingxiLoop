@@ -1,4 +1,4 @@
-import { readRunReference } from '@lyyzka/lingxios'
+import { readRunReference } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import type {
   CreateEvidenceClaimInput,

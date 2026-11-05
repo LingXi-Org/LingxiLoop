@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import { after, test } from 'node:test'
 import { createServer } from 'node:http'
-import { readFile, mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
-import { releaseVersions, skillIndex } from '@lyyzka/lingxios'
-import { createWorker } from '@lyyzka/lingxios/worker'
+import { releaseVersions, skillIndex } from '@lingxi-org/lingxios'
+import { createWorker } from '@lingxi-org/lingxios/worker'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { nativeText } from '../im/message-types.js'
@@ -16,6 +16,9 @@ import { artifactSkills } from '../modules/artifacts/skills.js'
 import { createProductTools } from '../agent-runtime/tools.js'
 import { ensureConversationDesign } from '../modules/artifacts/facade.js'
 import { checkArtifact } from '../modules/artifacts/check.js'
+import { readNativeDocument } from '../modules/artifacts/native-document.js'
+import { createNode } from '../../../shared/artifact-document.js'
+import { prepareBatch } from '../../../shared/artifact-operations.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
@@ -35,7 +38,7 @@ const sampleId = (process.env.DESIGN_EXPLANATION_SAMPLE ?? 'explicit') as keyof 
 assert.ok(Object.hasOwn(explanationSamples, sampleId), 'unknown Design explanation sample')
 const expectsCanvas = !live || !['greeting','fact','textOnly'].includes(sampleId)
 for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLength ? 'a recovered truncation never qualifies as zero-failure artifact delivery' : live ? `real provider completes ${sampleId} with ${expectsCanvas ? 'a checked cold Design canvas' : 'text only'}`
-  : 'native Worker loads guidance before reference, existing-file read, artboard write and check', { timeout: live ? 540_000 : 40_000 }, async () => {
+  : 'native Worker loads guidance before versioned document/page reads, partial edit and check', { timeout: live ? 540_000 : 40_000 }, async () => {
   if (live) {
     assert.equal(env.OPENAI_MODEL, 'deepseek-ai/DeepSeek-V4.1-Flash')
     assert.equal(new URL(env.OPENAI_BASE_URL).hostname, 'api.siliconflow.cn')
@@ -49,7 +52,8 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
   await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','FlashAttention',$4::jsonb)", [channelId, companyId, projectId, JSON.stringify(members)])
   await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)', [channelId, companyId, JSON.stringify({ channelType: 2, members })])
   const seededCanvas = live ? null : await ensureConversationDesign(companyId, channelId, userId)
-  const fixture = await readFile(new URL('./fixtures/design/flashattention.dc.html', import.meta.url), 'utf8')
+  const seededSnapshot = seededCanvas ? await readNativeDocument(pool, seededCanvas.id) : null
+  const nativePageId = seededSnapshot?.document.pageOrder[0] ?? 'page-1'
   const index = skillIndex(artifactSkills.find(skill => skill.name === 'claude-design')!)
   let calls = 0, lengthInjected = false, handlerError: unknown
   const decisions: Array<{ call: number; names: string[]; fullGuidance: boolean; referenceSchema: boolean; requiredTool: string | null }> = []
@@ -59,13 +63,13 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     const instructions = input.messages.filter(message => message.role === 'system').map(message => message.content ?? '').join('\n')
     const names = input.tools.map(tool => tool.function.name)
     const reference = input.tools.find(tool => tool.function.name === 'design__read_reference')
-    const fullGuidance = instructions.includes('Complete registered system skill') && instructions.includes('One artboard: the skeleton')
-    const referenceSchema = reference?.function.parameters.properties?.page?.enum?.includes('format.md') === true
+    const fullGuidance = instructions.includes('Complete registered system skill') && instructions.includes('Manual editing and Agent batches share')
+    const referenceSchema = reference?.function.parameters.properties?.page?.enum?.includes('native-model.md') === true
     const requiredTool = typeof input.tool_choice === 'object' ? input.tool_choice.function?.name ?? null : null
     decisions.push({ call: calls, names: names.filter(name => name.startsWith('design__') || name.startsWith('skills__')), fullGuidance, referenceSchema, requiredTool })
     if (calls === 1) {
       assert.equal(names.some(name => name.startsWith('design__') && index.actions.some(action => action.replace('.', '__') === name)), false)
-      assert.ok(instructions.includes(index.hash)); assert.ok(instructions.includes('format.md'))
+      assert.ok(instructions.includes(index.hash)); assert.ok(instructions.includes('native-model.md'))
       assert.ok(instructions.includes('skills.load')); assert.ok(instructions.includes('no delivery'))
       assert.equal(requiredTool, 'design__plan_explanation', 'semantic planning precedes exact skill selection')
       assert.ok(instructions.includes('meaning and complexity'))
@@ -79,7 +83,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       if (recoveredLength && !lengthInjected && phase === 6) {
         lengthInjected = true
         response.writeHead(200, { 'content-type': 'text/event-stream' })
-        response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'truncated-write', type: 'function', function: { name: 'design__write_files', arguments: '{"files":' } }] }, finish_reason: 'length' }], usage: { prompt_tokens: 10, completion_tokens: 16384 } })}\n\ndata: [DONE]\n\n`)
+        response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'truncated-write', type: 'function', function: { name: 'design__apply_ops', arguments: '{"operations":' } }] }, finish_reason: 'length' }], usage: { prompt_tokens: 10, completion_tokens: 16384 } })}\n\ndata: [DONE]\n\n`)
         return
       }
       const business: Array<{ name: string; args: unknown }> = []
@@ -87,19 +91,25 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       if (phase === 1) business.push({ name: 'skills__load', args: { name: index.name, version: index.version, hash: index.hash } })
       if (phase === 2) {
         assert.equal(decisions.at(-1)!.fullGuidance, true); assert.equal(decisions.at(-1)!.referenceSchema, true)
-        business.push({ name: 'design__read_reference', args: { page: 'format.md' } })
+        business.push({ name: 'design__read_reference', args: { page: 'native-model.md' } })
       }
       if (phase === 3) business.push({ name: 'design__current', args: {} })
-      if (phase === 4) business.push({ name: 'design__read_file', args: { path: 'project/canvas.json' } })
-      if (phase === 5) business.push({ name: 'design__read_file', args: { path: 'project/ds/slides-builtin/tokens.json' } })
-      if (phase === 6) {
-        const file = (await pool.query("SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path='project/canvas.json'", [seededCanvas!.id])).rows[0]
-        const content = JSON.parse(file.body.toString('utf8'))
-        content.boards['FlashAttention.dc.html'] = { x: 0, y: 0, w: 1200, h: 820, title: 'FlashAttention' }
-        content.order = ['FlashAttention.dc.html']
-        business.push({ name: 'design__write_files', args: { files: { 'project/canvas.json': { content: JSON.stringify(content), ifMatch: file.sha256 }, 'project/FlashAttention.dc.html': { content: fixture, ifMatch: null } } } })
+      if (phase === 4) business.push({ name: 'design__read_document', args: {} })
+      if (phase === 5) {
+        assert.ok(seededSnapshot)
+        business.push({ name: 'design__read_page', args: { pageId: nativePageId, version: seededSnapshot.pageVersions[nativePageId] } })
       }
-      if (phase === 7) business.push({ name: 'design__check', args: {paths:['project/FlashAttention.dc.html']} })
+      if (phase === 6) {
+        const snapshot = await readNativeDocument(pool, seededCanvas!.id); assert.ok(snapshot)
+        const title = { ...createNode('text', 'flash-title'), text: 'FlashAttention：让注意力计算少搬运数据', x: 60, y: 60, width: 1120, height: 80, style: { fontSize: 36 } }
+        const body = { ...createNode('text', 'flash-body'), text: '把 Q、K、V 分块放入高速缓存，逐块计算并更新结果；避免把完整注意力矩阵反复写入显存。计算结果保持精确，节省的是内存读写。', x: 60, y: 180, width: 1120, height: 180, style: { fontSize: 24 } }
+        const formula = { ...createNode('math', 'flash-formula'), source: String.raw`\operatorname{softmax}(QK^T/\sqrt{d})V`, x: 60, y: 420, width: 1120, height: 160 }
+        business.push({ name: 'design__apply_ops', args: prepareBatch(snapshot.document, [
+          { type: 'page.patch', pageId: nativePageId, patch: { title: 'FlashAttention' } },
+          ...[title, body, formula].map(node => ({ type: 'node.insert' as const, pageId: nativePageId, node })),
+        ], `flashattention-${calls}`) })
+      }
+      if (phase === 7) business.push({ name: 'design__check', args: { paths: [`project/pages/${nativePageId}.json`] } })
       const output = { index: 0, id: `answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: phase === 8 ? 'FlashAttention 讲解已写入画板，格式检查通过。' : '', commentary: '', outcome: phase === 8 ? { status: 'satisfied', gaps: [] } : null }) } }
       const selecting = phase !== 8
       const toolCalls = [...(selecting ? [] : [output]), ...business.map((item, index) => ({ index: index + (selecting ? 0 : 1), id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
@@ -233,7 +243,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       .length + modelFailures.filter(row => row.diagnostics?.kind === 'protocol').length
     const canvas = (await pool.query("SELECT id FROM artifacts WHERE company_id=$1 AND conversation_id=$2 AND kind='design'", [companyId,channelId])).rows[0]
     const files = canvas ? (await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows : []
-    const checked = canvas ? await checkArtifact(pool, { id: canvas.id, kind: 'design' }) as { problems: number } : {problems: -1}
+    const checked = canvas ? await checkArtifact(pool, { id: canvas.id, kind: 'design' }) as { problems: number; checkedPageIds?: string[] } : { problems: -1, checkedPageIds: [] }
     const routing = receipts.filter(row => row.action === 'design.plan_explanation')
     // Judge the delivered tools/files, not an advisory planning label. A model
     // may initially choose text then proactively author the required canvas.
@@ -242,15 +252,16 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       && receipts.filter(row => row.action === 'skills.load' && row.args.name === 'claude-design').length === (expectsCanvas ? 1 : 0)
       && !receipts.some(row => row.action.startsWith('visualize.') || row.args.name === 'visualize')
     const deliveredOutcome = correctRouting && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
-      && (expectsCanvas ? checked.problems === 0 && files.some(row=>row.path.endsWith('.dc.html')) : !canvas)
+      && (expectsCanvas ? checked.problems === 0 && (checked.checkedPageIds?.length ?? 0) > 0 : !canvas)
     const evidence = { qualification: recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', plannedSurface:routing[0]?.args.delivery??null, coldCanvas: live, correctRouting, deliveredOutcome, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool, maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
       accepted: correctRouting && failures.length === 0 && modelFailures.length === 0 && failedModelAttempts.length === 0 && wireContractFailures.length === 0 && protocolFailures === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
-        && (expectsCanvas ? checked.problems === 0 && receipts.some(row => row.action === 'design.check') && files.some(row => row.path.endsWith('.dc.html'))
+        && (expectsCanvas ? checked.problems === 0 && receipts.some(row => row.action === 'design.check') && (checked.checkedPageIds?.length ?? 0) > 0
           : !canvas && receipts.every(row => !row.action.startsWith('design.') || row.action === 'design.plan_explanation')),
       elapsedMs: Date.now() - started, decisions, wire, actions: receipts.map(row => ({ action: row.action, ok: row.result.ok, code: row.result.code ?? null,
         ...(row.action === 'skills.load' ? {name:row.args.name} : {}),
         ...(row.action === 'design.plan_explanation' ? {delivery:row.args.delivery} : {}),
-        ...(row.action === 'design.read_file' ? {path:row.args.path} : {}),
+        ...(row.action === 'design.read_page' ? { pageId: row.args.pageId, version: row.args.version } : {}),
+        ...(row.action === 'design.apply_ops' ? { operationId: row.args.operationId, operationCount: row.args.operations?.length } : {}),
         ...(row.action === 'design.read_reference' ? { page: row.args.page } : {}) })),
       contractFailures: failures.map(row => ({ action: row.action, code: row.result.code })), protocolFailures, providerFailures: modelFailures.filter(row => !row.budget && row.diagnostics?.kind !== 'protocol').length,
       budgetFailures: modelFailures.filter(row => row.budget).map(row => row.budget),
@@ -277,10 +288,11 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     assert.equal(receipts.some(row => row.action.startsWith('visualize.') || row.args.name === 'visualize'), false)
     assert.equal(receipts.some(row => row.action === 'skills.activate' && row.args.name === 'claude-design'), false)
     if (expectsCanvas) {
-      assert.ok(receipts.some(row => row.action === 'design.read_reference' && row.args.page === 'format.md'))
-      assert.ok(receipts.some(row => row.action === 'design.read_file' && row.args.path === 'project/canvas.json'))
-      assert.ok(receipts.some(row => row.action === 'design.write_files')); assert.ok(receipts.some(row => row.action === 'design.check'))
-      assert.ok(files.some(row => row.path.endsWith('.dc.html') && (live ? row.body.byteLength > 100 : /FlashAttention/i.test(row.body.toString('utf8')))))
+      assert.ok(receipts.some(row => row.action === 'design.read_reference' && row.args.page === 'native-model.md'))
+      assert.ok(receipts.some(row => row.action === 'design.read_document'))
+      assert.ok(receipts.some(row => row.action === 'design.read_page'))
+      assert.ok(receipts.some(row => row.action === 'design.apply_ops')); assert.ok(receipts.some(row => row.action === 'design.check'))
+      assert.ok(files.some(row => /^project\/pages\/[^/]+\.json$/.test(row.path) && (live ? (checked.checkedPageIds?.length ?? 0) > 0 : /FlashAttention/i.test(row.body.toString('utf8')))))
       assert.equal(checked.problems, 0)
     } else {
       assert.equal(canvas, undefined)

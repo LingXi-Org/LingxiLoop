@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { Pool } from 'pg'
-import { packageResources, releaseVersions } from '@lyyzka/lingxios'
+import { packageResources, releaseVersions } from '@lingxi-org/lingxios'
 import { assertMigrationsCurrent, migrateDatabase } from '../db/migrate.js'
 import { applyPublishedRuntimePatch, assertRuntimePatchDescriptors, loadRuntimePatchInventory,
   observePublishedRuntimePatch, preflightPublishedRuntimePatch, readRuntimePatchBarrier } from '../db/runtime-patch.js'

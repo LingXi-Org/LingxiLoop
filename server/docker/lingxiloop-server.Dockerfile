@@ -34,14 +34,14 @@ COPY scripts/prune-pdfjs-server-runtime.mjs /tmp/prune-pdfjs-server-runtime.mjs
 COPY scripts/prune-glibc-canvas-runtime.mjs /tmp/prune-glibc-canvas-runtime.mjs
 COPY server/scripts/prune-officeparser-runtime.mjs /tmp/prune-officeparser-runtime.mjs
 COPY server/src/modules/learning/homework-presentation.ts /tmp/homework-presentation.ts
-RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; const expected=JSON.parse(fs.readFileSync("/tmp/qualified-package.json")).dependencies["@lyyzka/lingxios"]; assert.match(expected,/^\d+\.\d+\.\d+$/); assert.equal(JSON.parse(fs.readFileSync("package.json")).dependencies["@lyyzka/lingxios"],expected,"server runtime must match root qualification");'
+RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; const expected=JSON.parse(fs.readFileSync("/tmp/qualified-package.json")).dependencies["@lingxi-org/lingxios"]; assert.match(expected,/^\d+\.\d+\.\d+$/); assert.equal(JSON.parse(fs.readFileSync("package.json")).dependencies["@lingxi-org/lingxios"],expected,"server runtime must match root qualification");'
 RUN --mount=type=secret,id=npm_token \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer-offline \
     && node /tmp/prune-pdfjs-server-runtime.mjs /app/node_modules/pdfjs-dist --apply \
     && node /tmp/prune-officeparser-runtime.mjs /app/node_modules /tmp/homework-presentation.ts --apply \
     && node /tmp/prune-glibc-canvas-runtime.mjs /app/node_modules --apply \
     && node --input-type=module -e 'for (const name of ["pdfjs-dist", "pdfjs-dist/legacy/build/pdf.mjs"]) { const { getDocument } = await import(name); if (typeof getDocument !== "function") throw Error(`Broken PDF.js entry: ${name}`); }'
-RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; import {releaseVersions} from "@lyyzka/lingxios"; assert.equal(releaseVersions.runtime,JSON.parse(fs.readFileSync("/tmp/qualified-package.json")).dependencies["@lyyzka/lingxios"],"installed image runtime must match root qualification");'
+RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; import {releaseVersions} from "@lingxi-org/lingxios"; assert.equal(releaseVersions.runtime,JSON.parse(fs.readFileSync("/tmp/qualified-package.json")).dependencies["@lingxi-org/lingxios"],"installed image runtime must match root qualification");'
 
 # ─── stage 2: build the web SPA bundle ──────────────────────────────
 # Separate stage with the locked Web dependency graph, including vite, tsc,
@@ -63,30 +63,12 @@ COPY server/build/web/package.json server/build/web/package-lock.json .npmrc ./
 RUN --mount=type=secret,id=npm_token \
     --mount=type=cache,id=lingxiloop-web-npm,target=/root/.npm,sharing=locked \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
-# The runtime renderer builds its isolated editor theme and local fonts.
-# CI selects target runtime after the static ingress handoff.
-FROM web-deps AS design-build
-COPY scripts/build-artifact-math.mjs scripts/build-design-editor.mjs scripts/build-design-layout.mjs scripts/design-copy.mjs ./scripts/
-COPY shared/artifact-math.ts shared/artifact-math-source.ts shared/artifact-math-loader.ts shared/artifact-recovery.ts shared/design-flow-size.ts ./shared/
-COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
-COPY third_party/baoyu-design/host/design-zh-CN.json third_party/baoyu-design/host/slides-zh-CN.json ./third_party/baoyu-design/host/
-COPY third_party/baoyu-design/host/design-theme.css ./third_party/baoyu-design/host/
-COPY src/styles/fonts.css ./src/styles/
-COPY public/fonts/mingli ./public/fonts/mingli
-RUN node scripts/build-design-editor.mjs
-
-FROM web-deps AS slides-build
-COPY third_party/baoyu-design ./third_party/baoyu-design
-COPY shared/artifact-recovery.ts ./shared/
-COPY scripts/build-slides-editor.mjs ./scripts/
-RUN node scripts/build-slides-editor.mjs
-
 FROM web-deps AS spa-build
 WORKDIR /app
-# Preserve the Web and Design build entrypoints after the scoped install.
+# Preserve the Web build entrypoint after the scoped install.
 COPY package.json ./
 COPY src ./src
-COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts shared/retired-visualize.ts shared/assistant-directive-parser.ts shared/upload-mime.ts ./shared/
+COPY shared ./shared
 COPY public ./public
 COPY index.html ./
 COPY vite.config.ts ./
@@ -96,11 +78,7 @@ COPY postcss.config.js ./
 COPY tailwind.config.ts ./
 # StreamingText imports the pinned upstream range helper; include its license and provenance.
 COPY third_party/assistant-ui/streaming-text ./third_party/assistant-ui/streaming-text
-COPY scripts/build-artifact-math.mjs scripts/build-design-editor.mjs scripts/build-design-layout.mjs scripts/design-copy.mjs ./scripts/
-COPY shared/artifact-math.ts shared/artifact-math-source.ts shared/artifact-math-loader.ts shared/artifact-recovery.ts shared/design-flow-size.ts ./shared/
-COPY third_party/baoyu-design/upstream/claude-design/scripts/editor ./third_party/baoyu-design/upstream/claude-design/scripts/editor
-COPY third_party/baoyu-design/host/design-zh-CN.json third_party/baoyu-design/host/slides-zh-CN.json ./third_party/baoyu-design/host/
-COPY third_party/baoyu-design/host/design-theme.css ./third_party/baoyu-design/host/
+COPY third_party/baoyu-design/host ./third_party/baoyu-design/host
 RUN npm run build
 
 # ─── stage 3: runtime ───────────────────────────────────────────────
@@ -126,7 +104,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/package-lock.json ./
 # Ship only runtime sources/resources and the exact provenance manifests.
 COPY server/src ./server/src
-COPY shared/artifact-editor-origin.ts shared/slides-editor-context.ts shared/retired-visualize.ts shared/assistant-directive-parser.ts ./shared/
+COPY shared ./shared
 COPY server/package.json server/package-lock.json ./server/
 COPY server/scripts/check-packaged-startup.mjs ./server/scripts/
 COPY shared/upload-mime.ts ./shared/
@@ -137,11 +115,9 @@ COPY shared/upload-mime.ts ./shared/
 COPY src/types.ts ./src/types.ts
 COPY src/lib/conversationRunSummary.ts ./src/lib/
 COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/artifactSources.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/uploadError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/knowledgeSearch.ts src/lib/executionBudget.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
-# Design and Slides serve the vendored editor pages and run the vendored checker unchanged.
+# Only retained design rules, themes, format references and attribution are shipped.
 COPY third_party/baoyu-design ./third_party/baoyu-design
 COPY third_party/visualize-compat ./third_party/visualize-compat
-COPY --from=design-build /app/server/assets/design-editor ./server/assets/design-editor
-COPY --from=slides-build /app/server/assets/slides-editor ./server/assets/slides-editor
 
 ENV NODE_ENV=production \
     LINGXILOOP_VERSION=${LINGXILOOP_VERSION} \

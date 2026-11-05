@@ -1,0 +1,23 @@
+{
+  "version": "3.8.25",
+  "resolved": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.25/5ef53bfc80d4b481580ad26731065244bcdd6cd2",
+  "integrity": "sha512-uZaidlmNBclhbbqjsGLGqSfCtxmLlTKu07zeiR7IOGy8KtoSdS4jheH8wrtC4Ll2bElYmCnKgxcksuiLRQdCqg==",
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/core": "1.3.0",
+    "@langchain/langgraph": "1.5.2",
+    "@streamparser/json": "0.0.26",
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1",
+    "mammoth": "1.12.2",
+    "pdfjs-dist": "6.3.289"
+  },
+  "bin": {
+    "lingxios-doctor": "dist/src/cli/doctor.js",
+    "lingxios-eval": "dist/src/cli/eval.js",
+    "lingxios-worker": "dist/src/worker/main.js"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

@@ -1,4 +1,4 @@
-import { readModelStageTimings } from '@lyyzka/lingxios'
+import { readModelStageTimings } from '@lingxi-org/lingxios'
 
 /** Closed SDK projection only; old/unfenced observations cannot impersonate a
  * measured current call. Existing latency, token and cost fields are untouched. */

@@ -1,4 +1,4 @@
-import type { ModelStageTimings, PublicTextPublicationTiming } from '@lyyzka/lingxios'
+import type { ModelStageTimings, PublicTextPublicationTiming } from '@lingxi-org/lingxios'
 
 export interface AdminModelStageCall {
   callId: string

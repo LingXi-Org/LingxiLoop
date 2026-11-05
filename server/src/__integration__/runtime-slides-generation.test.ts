@@ -3,8 +3,8 @@ import { after, test } from 'node:test'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
-import { releaseVersions } from '@lyyzka/lingxios'
-import { createWorker } from '@lyyzka/lingxios/worker'
+import { releaseVersions } from '@lingxi-org/lingxios'
+import { createWorker } from '@lingxi-org/lingxios/worker'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { nativeText } from '../im/message-types.js'
@@ -13,6 +13,8 @@ import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { checkArtifact } from '../modules/artifacts/check.js'
+import { checkArtifactDocument } from '../../../shared/artifact-check.js'
+import type { ArtifactDocument, ArtifactPage } from '../../../shared/artifact-document.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
@@ -21,14 +23,14 @@ const strategy = process.env.SLIDES_SAVE_STRATEGY ?? 'incremental'
 assert.ok(['incremental','whole'].includes(strategy))
 const content = '请制作一份可编辑的6页Slides演示文稿，主题是“TCP怎样可靠传输数据”。对象是计算机专业一年级学生。6页依次讲：1目标与不保证的边界；2序号与字节流；3确认与累计确认；4超时重传和重复确认；5滑动窗口与流量控制；6完整传输小例子与总结。每页一个明确标题、2到3条简洁要点，可用一个简单图示帮助理解；不要封面凑页数，不用外部图片或视频，不需要网络检索。采用内置默认设计风格。必须保存实际页面并运行Slides格式检查，最后如实告诉我保存和检查结果。'
 const policy = strategy === 'incremental'
-  ? '保存策略：先把第1页的完整可编辑HTML和仅列出已完成页的有效deck.json一起保存，之后每批最多新增2页并同步索引；保留已保存内容，不要整稿重写。'
-  : '保存策略：先准备完整6页，再把6个完整页面和有效deck.json放在同一次write_files中保存。保留有效默认样式。'
+  ? '保存策略：先读取 native-model.md、read_document 和需要修改的 read_page，用带版本校验的 apply_ops 填充初始空白页；之后每批最多新增2页，pageOrder 只包含已完成页面，最终正好6页。保留已保存内容，不要整稿重写。'
+  : '保存策略：先读取 native-model.md、read_document 和初始页的 read_page，准备完整6页的原生节点，再在同一次 apply_ops 中填充初始页并创建另外5页，最终 pageOrder 正好6页。保留默认主题及观察到的目标版本。'
 after(async()=>{await teardownAll()})
 
 test(`real-provider Slides ${strategy} generation and measured native delivery`,{skip:!live,timeout:540_000},async()=>{
   assert.equal(env.OPENAI_MODEL,'deepseek-ai/DeepSeek-V4.1-Flash')
   assert.equal(new URL(env.OPENAI_BASE_URL).hostname,'api.siliconflow.cn')
-  assert.equal(releaseVersions.runtime,'3.8.25')
+  assert.equal(releaseVersions.runtime,'4.0.0')
   const directory=process.env.SLIDES_EVIDENCE_PATH
   assert.ok(directory,'explicit evidence path required')
   await mkdir(directory,{recursive:true})
@@ -73,23 +75,30 @@ test(`real-provider Slides ${strategy} generation and measured native delivery`,
     let firstSaved: {elapsedMs:number|null;revisionTimestampMs:number|null;seq:string;pages:number}|null=null
     for(const revision of revisions){
       try{
-        const text=bodies.get(revision.files['project/deck.json']?.sha256)?.toString('utf8')
-        const index=JSON.parse(text??'{}')
-        if(Array.isArray(index.order)&&index.order.length>0&&index.order.every((id:unknown)=>typeof id==='string'
-          && (bodies.get(revision.files[`project/slides/${id}.html`]?.sha256)?.length??0)>0)){
-          firstSaved={elapsedMs:null,revisionTimestampMs:elapsed(revision.created_at),seq:String(revision.seq),pages:index.order.length};break
+        const text=bodies.get(revision.files['project/document.json']?.sha256)?.toString('utf8')
+        const manifest=JSON.parse(text??'{}') as Omit<ArtifactDocument,'pages'> & {pageFiles?:Record<string,string>}
+        if(!Array.isArray(manifest.pageOrder)||manifest.pageOrder.length===0||!manifest.pageFiles)continue
+        const {pageFiles,...metadata}=manifest
+        const pages:Record<string,ArtifactPage>={}
+        for(const id of manifest.pageOrder){
+          const bytes=bodies.get(pageFiles[id]??'')
+          if(bytes)pages[id]=JSON.parse(bytes.toString('utf8')) as ArtifactPage
         }
-      }catch{ /* Incomplete saved indices are not editable-page readiness. */ }
+        const report=checkArtifactDocument({...metadata,pages})
+        if(report.problems===0&&report.checkedPageIds.length===manifest.pageOrder.length){
+          firstSaved={elapsedMs:null,revisionTimestampMs:elapsed(revision.created_at),seq:String(revision.seq),pages:manifest.pageOrder.length};break
+        }
+      }catch{ /* Blank or incomplete native snapshots are not editable-page readiness. */ }
     }
     if(firstSaved){
       const completed=events.find(row=>row.kind==='tool.completed'&&row.data.result?.status==='completed'
         &&row.data.result.value?.artifactId===deck?.id&&String(row.data.result.value?.result?.seq)===firstSaved!.seq)
       firstSaved.elapsedMs=elapsed(completed?.recorded_at)
     }
-    let checked: {problems?:number}|null=null
-    if(deck)try{checked=await checkArtifact(pool,{id:deck.id,kind:'slides'}) as {problems:number}}catch{checked=null}
+    let checked: {problems?:number;checkedPageIds?:string[]}|null=null
+    if(deck)try{checked=await checkArtifact(pool,{id:deck.id,kind:'slides'}) as {problems:number;checkedPageIds?:string[]}}catch{checked=null}
     let order: string[]=[]
-    try{order=JSON.parse(files.find(row=>row.path==='project/deck.json')?.body.toString('utf8')??'{}').order??[]}catch{}
+    try{order=JSON.parse(files.find(row=>row.path==='project/document.json')?.body.toString('utf8')??'{}').pageOrder??[]}catch{}
     const failures=receipts.filter(row=>!row.result?.ok||row.result.executionState==='unknown'||row.result.approval)
     const answerEvent=events.find(row=>row.kind==='public.text.delta'&&row.data.purpose==='answer'&&typeof row.data.text==='string'&&row.data.text.trim())
     const operationEvent=events.find(row=>row.kind==='public.text.operation'&&row.data.purpose==='answer')
@@ -107,13 +116,15 @@ test(`real-provider Slides ${strategy} generation and measured native delivery`,
       calls:calls.map(row=>({model:row.model,inputTokens:row.input_tokens,cachedInputTokens:row.cached_input_tokens,outputTokens:row.output_tokens,latencyMs:row.latency_ms,status:row.status,operation:row.extras.operation??null,firstContentMs:row.extras.firstContentMs??null,
         failure:row.extras.failure?{category:row.extras.failure.category,retryable:row.extras.failure.retryable,status:row.extras.failure.status??null}:null})),
       actions:receipts.map(row=>({action:row.action,ok:row.result?.ok??false,code:row.result?.code??null,elapsedMs:elapsed(row.recorded_at),
-        ...(row.action==='slides.write_files'?{fileCount:Object.keys(row.args.files??{}).length,pageFiles:Object.keys(row.args.files??{}).filter(path=>path.startsWith('project/slides/')).length}: {})})),
+        ...(row.action==='slides.apply_ops'?{operationId:row.args.operationId,operationCount:row.args.operations?.length??0,changedPages:[...new Set((row.args.operations??[]).map((operation:{pageId?:string;page?:{id:string}})=>operation.pageId??operation.page?.id).filter(Boolean))].length}: {})})),
       failures:failures.map(row=>({action:row.action,code:row.result?.code??null,executionState:row.result?.executionState??null,diagnostics:row.result?.diagnostics??null,
-        ...(row.action==='slides.write_files'?{args:row.args}: {})})),
+        ...(row.action==='slides.apply_ops'?{operationId:row.args.operationId,operationCount:row.args.operations?.length??0}: {})})),
       formatProblems:checked?.problems??null,pageCount:order.length,files:files.map(row=>({path:row.path,sha256:row.sha256})),
       assistantText,runError,browserValidated:false,productionRequestCovered:false,
       accepted:!runError&&failures.length===0&&work.status==='succeeded'&&state?.run.goalOutcome?.status==='satisfied'
-        &&state?.delivery==='delivered'&&order.length===6&&checked?.problems===0}
+        &&state?.delivery==='delivered'&&order.length===6&&checked?.problems===0&&checked.checkedPageIds?.length===6
+        &&receipts.some(row=>row.action==='slides.read_document')&&receipts.some(row=>row.action==='slides.read_page')
+        &&receipts.some(row=>row.action==='slides.apply_ops')}
     await writeFile(`${directory}/result.json`,JSON.stringify(evidence,null,2)+'\n')
     for(const file of files)await writeFile(`${directory}/${file.path.replaceAll('/','-')}`,file.body)
     await writeFile(`${directory}/revisions.json`,JSON.stringify(revisions.map(row=>({seq:row.seq,elapsedMs:elapsed(row.created_at),fileCount:Object.keys(row.files).length})),null,2)+'\n')

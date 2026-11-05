@@ -1,5 +1,5 @@
 import { fileTools } from './file-tools.js'
-import type { createLingxiOS, ToolDefinition } from '@lyyzka/lingxios'
+import type { createLingxiOS, ToolDefinition } from '@lingxi-org/lingxios'
 import { documentTools } from '../modules/documents/public.js'
 import { createArtifactTools } from '../modules/artifacts/index.js'
 import { learningTools, teacherTools } from '../modules/learning/public.js'

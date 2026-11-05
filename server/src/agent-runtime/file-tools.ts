@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { NoEffectError, type ActionContext, type RequestAttachment } from '@lyyzka/lingxios'
+import { NoEffectError, type ActionContext, type RequestAttachment } from '@lingxi-org/lingxios'
 import { nativeTool, authorizeAudienceRead, audienceHumanIds } from '../agents/tools.js'
 import { productConversationId } from './identity.js'
 import { unavailableAttachmentIds, parseAttachmentRefId } from './attachments.js'

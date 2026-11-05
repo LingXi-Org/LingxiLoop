@@ -1,0 +1,172 @@
+{
+  "format": "native-artifact-runtime-upgrade-source-audit/v1",
+  "observedAt": "2026-11-05T04:45:50.430073+00:00",
+  "qualification": "source-and-publication-metadata-only; actual package installation and database bridge not qualified",
+  "authorization": "User explicitly requested @lingxi-org/lingxios@4.0.0 after the original same-SDK plan; frozen editor baseline remains3.8.25.",
+  "source": {
+    "repository": "https://github.com/LingXi-Org/LingxiOS",
+    "baseline": {
+      "tag": "v3.8.25",
+      "commit": "8a4657d584eefdb16fc9ef7e4973d93488686d7a",
+      "package": "@lyyzka/lingxios",
+      "version": "3.8.25"
+    },
+    "candidate": {
+      "tag": "v4.0.0",
+      "commit": "6f709b4e41993cf0eb65c40679bc22bc9a67012b",
+      "package": "@lingxi-org/lingxios",
+      "version": "4.0.0"
+    },
+    "method": "Read exact GitHub tagged trees and individual blobs with gh api; compare blob identities directly. No source build or SDK substitution."
+  },
+  "publishedPackage": {
+    "registry": "https://npm.pkg.github.com",
+    "tag": "latest",
+    "buildRun": "https://github.com/LingXi-Org/LingxiOS/actions/runs/41967769726",
+    "publishRun": "https://github.com/LingXi-Org/LingxiOS/actions/runs/41967834715",
+    "buildConclusion": "success",
+    "publishConclusion": "success",
+    "tarballName": "lingxi-org-lingxios-4.0.0.tgz",
+    "shasum": "8ae8bb3697ec77e4f04149451a395cb57d9eddb8",
+    "integrityUsed": "sha1-iui7Npfsd+TwQUlFGjlctX2e3bg=",
+    "integrityBasis": "Exact published npm notice shasum encoded as standard SRI; publish log truncates SHA512 so no SHA512 was fabricated.",
+    "reportedPackageBytesApprox": 430800,
+    "reportedUnpackedBytesApprox": 1900000,
+    "reportedFileCount": 369,
+    "resolvedUrl": "https://npm.pkg.github.com/download/@lingxi-org/lingxios/4.0.0/8ae8bb3697ec77e4f04149451a395cb57d9eddb8",
+    "resolvedUrlBasis": "GitHub Packages canonical download URL formed from observed name/version/published shasum; registry endpoint and archive bytes are not locally verified.",
+    "registryReadStatus": 401,
+    "organizationPackageApiStatus": 403,
+    "buildAndPublishArtifactCounts": [
+      0,
+      0
+    ],
+    "archiveDownloaded": false,
+    "archiveDigestVerified": false,
+    "installedPackageExecuted": false
+  },
+  "database": {
+    "allDatabaseResourceBlobsIdentical": true,
+    "schemaVersion": 14,
+    "schemaSha256": "c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f",
+    "protocol": {
+      "controlPlane": 11,
+      "kernel": 2,
+      "assistantMessage": 2,
+      "publicText": 3,
+      "runTrace": 1
+    },
+    "migrationImplication": "No SDK schema DDL. Explicit reviewed3.8.25→4.0.0 runtime-provenance CAS on unchanged product62, followed by additive product63; never auto-adopt mismatched runtime."
+  },
+  "unchangedPublicAndBindingSources": [
+    {
+      "path": "src/index.ts",
+      "sameBlob": true,
+      "gitBlob": "047f88ec61997521cec0711f97f4bb94d5e20d92"
+    },
+    {
+      "path": "src/worker/index.ts",
+      "sameBlob": true,
+      "gitBlob": "8ca7902e221f2e4257c4c3d217f24f6f1c2d7992"
+    },
+    {
+      "path": "src/ui/index.ts",
+      "sameBlob": true,
+      "gitBlob": "b3d63a1aaa616f522d030c6b95b0051cee6b6d3a"
+    },
+    {
+      "path": "src/eval/index.ts",
+      "sameBlob": true,
+      "gitBlob": "815e2256a8b3eea6ab1c9d4811de96b376ecd856"
+    },
+    {
+      "path": "src/app/resources.ts",
+      "sameBlob": true,
+      "gitBlob": "5d19724d6ae492e64693778bd85add64b6d68fe9"
+    },
+    {
+      "path": "src/protocol/constants.ts",
+      "sameBlob": true,
+      "gitBlob": "6c9d0ef4a0b66142cc279e005704647ef37ad791"
+    },
+    {
+      "path": "src/harness/profile.ts",
+      "sameBlob": true,
+      "gitBlob": "adb5954250d48511d9559e4ff53f457ed725065f"
+    },
+    {
+      "path": "src/tools/contracts.ts",
+      "sameBlob": true,
+      "gitBlob": "1501979a3e3baa4f81c7b03dd831407198bb5a63"
+    },
+    {
+      "path": "src/app/index.ts",
+      "sameBlob": true,
+      "gitBlob": "78d24cc57426ed6d7f2e5dace5f353391d516b19"
+    },
+    {
+      "path": "db/schema.sql",
+      "sameBlob": true,
+      "gitBlob": "26b44a2e1c9a0930afb73dc967b1620abf4239f6"
+    }
+  ],
+  "changedRuntimeSources": [
+    {
+      "path": "src/context/document-text.ts",
+      "old": "bc5c3562245fa970b2eb08b80b069b44cf156e2c",
+      "new": "97372956de3c3a1c7765bb5b427f88a679a41421"
+    },
+    {
+      "path": "src/model/public-answer-tool.ts",
+      "old": "559cc31ccad7f8b7985a3ec9ee622f4f789a9420",
+      "new": "4c52effae8dbc58591332353a43e223158281b0f"
+    },
+    {
+      "path": "src/runtime/answer-segments.ts",
+      "old": "826eed50b8df5735be35ec39ca1ff4e76e8a8280",
+      "new": "22443cdb9fc8758e0c09ed7128b3523d66f89bb3"
+    },
+    {
+      "path": "src/runtime/failure-diagnostics.ts",
+      "old": "16b63d8f39d83dc96c62bdf2d895aa62e95e260c",
+      "new": "cc758360fa49c83012953d7097d5ad5fd366e180"
+    },
+    {
+      "path": "src/runtime/public-text.ts",
+      "old": "1a25e57fb72a00fd8c8fe42251edf2fc31315306",
+      "new": "1109dac56a3acd5e1a19ba16955a74a7b65521e7"
+    },
+    {
+      "path": "src/skills/explanation-stage.ts",
+      "old": "9a63610ebbf3ad39f575993adce2d50b17ee51e8",
+      "new": "54f130368b711123534050e990a393602747ef07"
+    },
+    {
+      "path": "src/versions.ts",
+      "old": "abdafe2fdb436cbc430b2dbd0344506877e9c745",
+      "new": "9db0df0a9e504b1fa8378768e58838395ad5c875"
+    }
+  ],
+  "behaviorChanges": [
+    "PDF and DOCX parsers become optional; host explicitly pins mammoth1.12.2 and pdfjs-dist6.3.289 to preserve extraction.",
+    "LangChain/LangGraph internal helpers replaced in public answer tool schema, answer segment list, cumulative public text and explanation stage routing.",
+    "Runtime failure diagnostics normalize Windows paths.",
+    "Published runtime identifier changes to4.0.0; public export files and existing behavior binding algorithms are byte-identical."
+  ],
+  "hostChecksActuallyRun": [
+    "npm install --package-lock-only --offline --ignore-scripts --no-audit --no-fund (root and server): passed; does not download or execute SDK",
+    "node server/scripts/scoped-dependencies.mjs --write; node server/scripts/scoped-dependencies.mjs: profiles generated and matched",
+    "node --test scripts/production-rag-contract.test.mjs deploy/runtime-patch.test.mjs deploy/harness-cutover.test.mjs:62 passed",
+    "node --test scripts/ci-scope.test.mjs:11 passed",
+    "node --check deploy/cli.mjs; git diff --check:passed"
+  ],
+  "requiredBeforeQualification": [
+    "Download exact official archive and verify its published checksum.",
+    "Install and execute the official package; complete frontend/backend type checks and production builds.",
+    "Generate actual harness receipts for candidate and deployed source images.",
+    "Run runtime-patch62-40-provenance, harness-cutover and native-artifact-documents-migration against PostgreSQL.",
+    "Complete frozen3.8.25 baseline vs candidate4.0.0 functional/performance acceptance; report the SDK version change as a changed experimental factor.",
+    "Build final image and perform final candidate independent review."
+  ],
+  "productionActionsPerformed": false
+}

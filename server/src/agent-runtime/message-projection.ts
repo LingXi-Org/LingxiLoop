@@ -1,7 +1,7 @@
 import { generativeComponentSchemas } from '../../../src/lib/nativeMessage.js'
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { createHash } from 'node:crypto'
-import { publicAnswerSegments, responseSegments, type PublicTextPart, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
+import { publicAnswerSegments, responseSegments, type PublicTextPart, type RunEvent, type RunView } from '@lingxi-org/lingxios/ui'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'

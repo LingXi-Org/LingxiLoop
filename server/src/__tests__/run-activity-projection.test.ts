@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createRunView, type RunEvent } from '@lyyzka/lingxios/ui'
+import { createRunView, type RunEvent } from '@lingxi-org/lingxios/ui'
 import { harnessToolParts, runMessageParts } from '../agent-runtime/message-projection.js'
 import { publicRunEvent, publicToolValue } from '../agent-runtime/public-events.js'
 import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'

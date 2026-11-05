@@ -26,6 +26,7 @@ import {
 import { listing, publish, readProjectFile, sha256, type WireEntry } from './store.js'
 import { createArtifactWorkspacesApplication } from './workspaces-application.js'
 import { slideWorkspaceConversation } from './slides-workspace.js'
+import { ensureNativeDocument, NativeDocumentError, submitNativeRename } from './native-document.js'
 
 export function createArtifactApplication(infrastructure: ArtifactInfrastructure) {
   const { db, transaction, withArtifactFence, missingChannelMessageIds, publishEvent, deliverComment } = infrastructure
@@ -263,10 +264,15 @@ export function createArtifactApplication(infrastructure: ArtifactInfrastructure
     missingChannelMessageIds,
   })
 
-  async function renameArtifact(companyId: string, artifactId: string, title: string) {
-    await requireArtifact(companyId, artifactId)
-    await db.query('UPDATE artifacts SET title=$3,updated_at=NOW() WHERE id=$1 AND company_id=$2', [artifactId, companyId, title.trim().slice(0, 200)])
-    await publishArtifact(companyId, { kind: 'artifact.updated', artifactId })
+  async function renameArtifact(companyId: string, artifactId: string, title: string, actorId?: string, observed?: { operationId?: string; expectedVersion?: number }) {
+    const artifact = await requireArtifact(companyId, artifactId)
+    if (!observed?.operationId || observed.expectedVersion === undefined) throw new NativeDocumentError(409, 'version_required', 'Read the document title version before renaming it. Your entered title has not been saved.')
+    const author = actorId ?? artifact.created_by
+    await ensureNativeDocument({ db, transaction }, { companyId, artifactId, actorId: author, write: true })
+    // The caller's observed title version is both the CAS token and a stable revision lower bound.
+    // Do not read a fresh title version here: doing so would overwrite a concurrent Agent rename.
+    await transaction(run => submitNativeRename(run, { companyId, artifactId, actorId: author, title, ...observed }))
+    await publishArtifact(companyId, { kind: 'files.changed', artifactId, paths: ['project/document.json'] })
     return workspaceApplication.getArtifactSnapshot(companyId, artifactId)
   }
 

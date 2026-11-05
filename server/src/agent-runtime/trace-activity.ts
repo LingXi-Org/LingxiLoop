@@ -1,4 +1,4 @@
-import type { RunIdentity } from '@lyyzka/lingxios'
+import type { RunIdentity } from '@lingxi-org/lingxios'
 import type { Queryable } from '../db/queryable.js'
 import type { PublicLlmTrace } from './run-trace.js'
 import { readModelOperation,tracePricingSchema } from '../../../src/lib/runTrace.js'

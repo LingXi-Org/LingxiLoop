@@ -1,0 +1,1522 @@
+{
+  "format": "baoyu-design-retained-resources/v1",
+  "commit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "source": "https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "files": [
+    {
+      "path": "LICENSE",
+      "bytes": 1325,
+      "sha256": "9be8148aa0237d67a619feb0973383ba82a37460263ad828ad3d06560ac7f9b6"
+    },
+    {
+      "path": "distribution/.claude/skills/release-skills/SKILL.md",
+      "bytes": 20165,
+      "sha256": "f320492bbc9ced7d00d07c55c4adf5b20e34214a42bf037b68ccaa4a6c62e377"
+    },
+    {
+      "path": "distribution/.github/workflows/dsh-plugin-index.yml",
+      "bytes": 2381,
+      "sha256": "8fba32ff42db3d4fd1969b9d4ea87768f18001e6eb2214df4c4546cc2adb602a"
+    },
+    {
+      "path": "distribution/.github/workflows/publish-dsh-plugins.yml",
+      "bytes": 2792,
+      "sha256": "75c87bca5583ea899af029df918b6046b51c5b5139a92cdb4a4ec2f3cfc094b0"
+    },
+    {
+      "path": "distribution/.github/workflows/tests.yml",
+      "bytes": 560,
+      "sha256": "2af7f9fb6086c138c7001eb9c664391dfbbce444854c4fed084280de45ec0372"
+    },
+    {
+      "path": "distribution/.gitignore",
+      "bytes": 2233,
+      "sha256": "84e38c09acdd52d65fa2c6f7f935be95f692047330574cf30ca90642bb0ddf34"
+    },
+    {
+      "path": "distribution/CHANGELOG.md",
+      "bytes": 36630,
+      "sha256": "abec18244041c14436a0c84dd3af837e56d8ff62c29310e683f0ed39b0c805b3"
+    },
+    {
+      "path": "distribution/CHANGELOG.zh.md",
+      "bytes": 35500,
+      "sha256": "cce0f94ef39c0049517ce0f0e3435dd1d93c4c4b057bb988639389ef61d6b3d5"
+    },
+    {
+      "path": "distribution/NOTICE.md",
+      "bytes": 6810,
+      "sha256": "d95acea8ec4e45b505b804a4bf7e6320cf0239d65cfeab97edccc952b75132d8"
+    },
+    {
+      "path": "distribution/README.md",
+      "bytes": 22398,
+      "sha256": "a6bf0470833dd263eb60e2403e09d6f06e3d8185fe1845f42520257660baeedb"
+    },
+    {
+      "path": "distribution/README.zh-CN.md",
+      "bytes": 22718,
+      "sha256": "3fd061db7378be9ac9ec671ad259b393350c0e0f4cafd63432b60f8392614c03"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/SKILL.md",
+      "bytes": 11101,
+      "sha256": "c0d18f9f89150589684c41755192ce742f50a975c0a54d3d9a6b16e13779f11f"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/assets/vision-probe.png",
+      "bytes": 263,
+      "sha256": "5e565a8d6a1479f98c190fd3c56ec06470ae43b614287dd449c1077624c3cf1e"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/design-system-checker.md",
+      "bytes": 1961,
+      "sha256": "38b7cf7749f602576ece5605f87687999332bf6219ace1a4af6d7518371c82a5"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/fork-verifier-agent.md",
+      "bytes": 3981,
+      "sha256": "14f2d6284e91b52393787667f84b5fe6cb24c660162d627495e5c6c56696ed25"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-pptx/.gitignore",
+      "bytes": 20,
+      "sha256": "295aa1f18923880afebb2e08aa70a8c4f285cc52baea238b8d2864d10e45d825"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-pptx/package-lock.json",
+      "bytes": 21053,
+      "sha256": "c73f3e0b74b10b50b47f7c998e97ab154398c3be3d8f02920999d7ddc8cd7419"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-pptx/package.json",
+      "bytes": 1229,
+      "sha256": "25d511ae2e0241086af8fa368864f013d15b05cf9f66c90da408e8ce7ed22249"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-pptx/tsconfig.json",
+      "bytes": 495,
+      "sha256": "958d9f215fb8ee8c6c737afc49630f5c5cdb709beb60a7b73b57cdebb1f691f5"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/LICENSE",
+      "bytes": 1081,
+      "sha256": "7a2bfe96150786ed1908b8e63f98ebab88875c1e79e28faff6649e0f11f77e52"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/VENDOR.md",
+      "bytes": 4012,
+      "sha256": "68367242e8e7d1fac200edd91df17a848bcb70b7e12b5f343d882c340ddf48e7"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-pptx/vendor/pptxgenjs/package.json",
+      "bytes": 279,
+      "sha256": "11bd62ca7ec90e2934c6e776450cd24030e0e88bfa33f07b0e2ca0bd2874be67"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-video/.gitignore",
+      "bytes": 20,
+      "sha256": "295aa1f18923880afebb2e08aa70a8c4f285cc52baea238b8d2864d10e45d825"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-video/package-lock.json",
+      "bytes": 16668,
+      "sha256": "5ae5379a66cfc45ab45e4731b5edded1d9e08710529b0fef9b9179c6269c603b"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-video/package.json",
+      "bytes": 778,
+      "sha256": "3b548ce41602d3cfe313bfa7b1df367276d62d99256280fd6068132af9f8f2c5"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/gen-video/tsconfig.json",
+      "bytes": 414,
+      "sha256": "643ea702c2befee7a0a3fcb6802b953b62016f949d77261fa08e3a86abaf8aa2"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/tests/fixtures/minimal.fig",
+      "bytes": 528,
+      "sha256": "a5e4e181fb984392afd32b0eabe4bfc7305a57df5408d2ea1c3bd02235a768a5"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/agents/vision-probe-agent.md",
+      "bytes": 1310,
+      "sha256": "7837d30c1eca7ccb2471b6387ad8f0d2e452dfd5b13e73f98e21643250a5a1db"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/3d-object.md",
+      "bytes": 4282,
+      "sha256": "12953200adda97bd6c41d74d57fd3395832b440e9b70520676e3d59cfccb7d43"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/LICENSE-frontend-design.txt",
+      "bytes": 10174,
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/animated-video.md",
+      "bytes": 13383,
+      "sha256": "dbcd3fb0fb48cc55dc375a03d02dc4f4036ec4cef2ac79548b036c1dff9c123a"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/ask-the-user.md",
+      "bytes": 16983,
+      "sha256": "eed013f87585b98d9427ee77e5130828bb4ef8dcbcf94be23ee5ad56e5b47e84"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/claude-api-in-prototypes.md",
+      "bytes": 1101,
+      "sha256": "7b1f790460e33058b718e3072f33330f80e82f3c39ddeb7e43e4927b2fe58ed9"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/create-design-system.md",
+      "bytes": 19020,
+      "sha256": "c51e3939eaf5f413704c0688c022cbb16de6f8b70ce661fdc3a2869382990088"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/data-science.md",
+      "bytes": 22110,
+      "sha256": "c29492570fdf569642c754278b84e5a9c52403a175cbfde498773df83bb78970"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/data-visualization.md",
+      "bytes": 9720,
+      "sha256": "58ff647cb0e46c8f61cf84dad895612ead3437a1bc06ea0729835f7f6de2dc66"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/design-components.md",
+      "bytes": 3397,
+      "sha256": "c01ea7e682b4eaed0a34ff07e05608149b63e696b2ae74354db94ebb7b1d900c"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/design-feedback.md",
+      "bytes": 6255,
+      "sha256": "2eebf12b5f2924d1306878324335610c96b69c38b189160df639c5959e22595d"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/design-system-authoring-guide.md",
+      "bytes": 22344,
+      "sha256": "04a2fd1bf2c12ab4b2e5101bca082ede76c973cb62bfecb8dcac1be14215e91d"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/design-system-preview.md",
+      "bytes": 5970,
+      "sha256": "7459de34a36e8ce38fdd4e7a9c59b5f183a9a4a22c6c624ce687d2abf220891f"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/experiment-workflow.md",
+      "bytes": 11623,
+      "sha256": "bb16d966bbef6d922ea0f5d66f12509a1d98d723b84cc1ee68f95633202adfd1"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/export-as-pptx-editable.md",
+      "bytes": 9999,
+      "sha256": "0d6bf6a7585415caa927c8c9d3feaebed7b0df2612445f46635fd8b183ec51c6"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/export-as-pptx-screenshots.md",
+      "bytes": 3015,
+      "sha256": "e0d40453ca742bc533ed693d2fdd3d88281a6cadf1a9e553d6d56f9b15147cf3"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/export-as-video.md",
+      "bytes": 6050,
+      "sha256": "7df8820c33a37e5e770f37b0fe13bcf30da9082cd98348bc27c69795fd9cbdf6"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/export-pptx-editable.md",
+      "bytes": 6107,
+      "sha256": "50678ad813da288f6b04465631f89b3b3c99343809019e9674d9a4cc915374df"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/export-pptx-screenshots.md",
+      "bytes": 1884,
+      "sha256": "13f3a714b95e6f004726e5a75a299e84d3722c7fc06f736def31a49c9c87a57e"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/exportable-video.md",
+      "bytes": 2360,
+      "sha256": "9b8427a4329d094ed1f069dde26ca1179d997ec6e0f45e654de2f462de958b7b"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/flier.md",
+      "bytes": 2113,
+      "sha256": "8a53212fc1511d04fab1c5f80617b84b77037d426c89c3318fb6e1cc86b89d8d"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/frontend-design.md",
+      "bytes": 2927,
+      "sha256": "5e0cdc92ee4075d5c1bdbded391991938f5b7b678fc1cdfb248d97b58de2520d"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/gemini-image.md",
+      "bytes": 604,
+      "sha256": "20a5c7b6b004b600e064c497d15268053aa39fa5d108f4c831105590c652e1f8"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/generate-images.md",
+      "bytes": 6588,
+      "sha256": "acbbbad683996f4b86e431e65a8fa5e693686b02499f4f5ed8d2aa03a84a77b9"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/google-slides-safe.md",
+      "bytes": 821,
+      "sha256": "7187fcf47bd7e991cf3869c1899fd961a74d8f526928dc0aad90c5c2341d5f01"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/handoff-to-claude-code.md",
+      "bytes": 4103,
+      "sha256": "95f48a3fab9c0983f79d66cc8ba77a1d25f9c2ce985d2e90acb6b9c1764bc1a3"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/hi-fi-design.md",
+      "bytes": 3360,
+      "sha256": "a6d4d78ba4dc1567a4aa31269dca9b15be888ddba0f09c594814cc8dad425baa"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/html-email.md",
+      "bytes": 2606,
+      "sha256": "95152b23307cd49616acb4047c1c686542da5e28045808c6d1b4afc2922d0ee2"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/import-from-figma.md",
+      "bytes": 10837,
+      "sha256": "7fe33ccadd0b6db66a45447ea2ae9c6b3f589f3aa3429ffe476bd1f6fd3cacf8"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/import-from-github.md",
+      "bytes": 2480,
+      "sha256": "09a366d16ad0f8a26fa55e9972e2d4b97187bc495ed01c781fe67ee0dbe7ff88"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/import-from-html.md",
+      "bytes": 2121,
+      "sha256": "b0a94e7c1b10f2bb34d37d6b08c1ac27ba2885ea66db7bde4be63fc314ce27f2"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/interactive-prototype.md",
+      "bytes": 423,
+      "sha256": "69f1bdb5d1d43005e06b6e84abe2ec112bf205e28a2c88b304127affea6543ec"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/low-level-tweaks-api.md",
+      "bytes": 2032,
+      "sha256": "9a36407fa0aa111ce51b4d4c984be0265868e887db87f845c6ffdde708ae73d2"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/make-a-deck.md",
+      "bytes": 22907,
+      "sha256": "84d37725d5026959a1cc774e175ddfae4c4df559b8ad05e085aeca2981b7cd24"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/make-a-doc.md",
+      "bytes": 2635,
+      "sha256": "822b7846038f6c2390bbb4817d716e33808d0b1c634a5140da7707c2cf56fc76"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/make-tweakable.md",
+      "bytes": 369,
+      "sha256": "5447f8ec64309d1e1a15ce19dc288d04fdc57c4926f882d2917f2542dc698c55"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/maps-geography.md",
+      "bytes": 2870,
+      "sha256": "6caceaeddd48fdd4cf6ff76168d82a0155fb083cad4b084e64324a230c089ca1"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/mobile-prototype.md",
+      "bytes": 3382,
+      "sha256": "1b9e43553980b289d69e494a13c63c7eafb380b690a5c5a70b9191a6782e1d6b"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/options-stack.md",
+      "bytes": 1170,
+      "sha256": "35876fb848948dcaaac27dc2bc99b5206c0fb9d05bb9ffb60421e9e819772350"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/read-pdf.md",
+      "bytes": 857,
+      "sha256": "6ae244b3ca7ba9be494e95df75cabfae0040c0f370b941d644c7074e5dbf60a0"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/save-as-pdf.md",
+      "bytes": 5513,
+      "sha256": "36bd1bfcbb7534537e679064ede988f6780016dbfdaaf19078a4618736f6a989"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/save-as-standalone-html.md",
+      "bytes": 5841,
+      "sha256": "e59d1c68cc0dd7d3cbedcfa816590a6457a4b4f8bcf082983a8d9d12838a6138"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/send-to-canva.md",
+      "bytes": 3630,
+      "sha256": "10d9802fcb300f6f34a07801e4caacdab91acd5bd58d631d22c1e4921859bc08"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/send-to-figma.md",
+      "bytes": 1866,
+      "sha256": "366a669f72f2dd5c7c56315c2fab98ca52e595d7b58661d1a771517a4ee48bb1"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/social-media-content.md",
+      "bytes": 11074,
+      "sha256": "47f6a6c4a6b3d949795eb2ddb9732c7b642cb2aab9f1a30c3d7e9a311dce189b"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/something-cool.md",
+      "bytes": 999,
+      "sha256": "800d405db1b66f4c4175cf4b8dafa197516d8c7e63cfbfe730506d7f1ffcc4f2"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/sound-effects.md",
+      "bytes": 599,
+      "sha256": "1aafe4de90b1850bddd62759f4a8d6fa7c58671430ca8d4a647e3a16922fc171"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/speaker-notes.md",
+      "bytes": 1499,
+      "sha256": "204ff098d5769df113bc10c11391c8ea8e4b85dd9e86250695d71e3e4bbecaf1"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/trifold-brochure.md",
+      "bytes": 2696,
+      "sha256": "4ae5f456feabcd7c8d62081cf433f5098d5df44e3630ddae7c18cdac879489c9"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/tweaks-protocol.md",
+      "bytes": 2200,
+      "sha256": "fa486d5bc340256b23ae136fedc28052844572d2832904257d78dc0d0b0ce935"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/use-design-system.md",
+      "bytes": 18668,
+      "sha256": "3e15c3ab2d6d4e0fccc8bd1eb679d7f6896c0449a2fce35a85be6fa1e82493d5"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/watercolor-illustration.md",
+      "bytes": 12482,
+      "sha256": "63f7874c490257b796ed037e716b60b4a473ba89476d062d184b143e4d62851f"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/web-research.md",
+      "bytes": 2000,
+      "sha256": "175e38a902b4dddaac3d2bfcac8a291686c84184b54e8d8831b40ee0edbbbda0"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/website-landing-page.md",
+      "bytes": 4119,
+      "sha256": "e5b4bd8a06ad5bd3ca54c906b33da415d3ec6004ddb749faa539222fd7165337"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/built-in-skills/wireframe.md",
+      "bytes": 847,
+      "sha256": "c98e5d3e4822be61f484335c6b4386811a517a151498ee4a89a251dddaf3f008"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/project-types.json",
+      "bytes": 2104,
+      "sha256": "b7034ece1422e073147cae8ae7d8fbc74f1ba424d73d008b42401a43622ee5e2"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/references/claude.md",
+      "bytes": 17095,
+      "sha256": "e77d4fd32878506f25a46598a81803217e9e5ae6b83677c43d8df8d0e97b599d"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/references/codex.md",
+      "bytes": 7305,
+      "sha256": "d80e49abaa3599f52bd74de2ce2b3136d09b5241f6f0bc4c0a55fc6307c41fcf"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/references/cursor.md",
+      "bytes": 10911,
+      "sha256": "68dcd2b73a7c49f834d139f6310284c279b107015a251aa48ae51ce4445c4d52"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/references/upstream-sync/apply-report.json",
+      "bytes": 21720,
+      "sha256": "e177aa9bb979d4da206e6efc67af6d78a0500d9143f2ea7a1b76ea1833deb8fa"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/references/upstream-sync/built-in-skills.json",
+      "bytes": 229769,
+      "sha256": "dc0292dcfc6ec1c1486bb0101801b897ae0580de6898b9089aa4e8269767e722"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/references/upstream-sync/provenance.json",
+      "bytes": 3661,
+      "sha256": "a093cd29cadbf3f4683380dbc4da93bc8d32ded9f74f8e1217d5288a8f93e6b6"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/references/upstream-sync/starter-components.json",
+      "bytes": 16181,
+      "sha256": "07f3873b8f2ec31c7e4a8c0c4fc1d725c316d6a5c5720380451c0ab4f34d458d"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/references/upstream-system-prompt.md",
+      "bytes": 32765,
+      "sha256": "29ab217be7e1a58ad879c0e68d6bf8e9c1f3c098554462c7d06a103d925afb09"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/starter-components/anim-demo.html",
+      "bytes": 8051,
+      "sha256": "eec6a0e4f21c00cbd2702247891dcf34e29e8e6512b8c712e80c02edc7f996ae"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/starter-components/deck-stage-patch.md",
+      "bytes": 62492,
+      "sha256": "de3628af0141c512c7226ea35c5578840d2856d6e61a97da18ab5f2cd8a68cc1"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/starter-components/design-canvas-patch.md",
+      "bytes": 6208,
+      "sha256": "db112014899440d276ea638508b5dd6a6ef8453eabd650265e7eead2c41ea093"
+    },
+    {
+      "path": "distribution/archive/baoyu-design/system-prompt.md",
+      "bytes": 47230,
+      "sha256": "824503e1db292e62bb696549d91e20d5e83730975b753f5995831c99c9778aa1"
+    },
+    {
+      "path": "distribution/assets/gen-pptx-pipeline-zh.svg",
+      "bytes": 6019,
+      "sha256": "1c7ed141769878207e03530229d91e2b1a0b29ff78b05acc518591548732676c"
+    },
+    {
+      "path": "distribution/assets/gen-pptx-pipeline.svg",
+      "bytes": 5346,
+      "sha256": "b9a60d7a5b78d851634f204074d13d9132d6db4a49d2eaa25264d309242a1d6a"
+    },
+    {
+      "path": "distribution/assets/screenshots/claude-dashboard.webp",
+      "bytes": 57596,
+      "sha256": "7f890f1dd3dc60b812ff63bcc47abc77a5d9126fc8351a7200698729f36b9a06"
+    },
+    {
+      "path": "distribution/assets/screenshots/claude-design-canvas.webp",
+      "bytes": 57004,
+      "sha256": "2d30693f60ce3a520aaafcb0274b010cef5ee48d2964612accd905482ff613f3"
+    },
+    {
+      "path": "distribution/assets/screenshots/claude-design-system-editor.webp",
+      "bytes": 78426,
+      "sha256": "96cacdeca3fdd68d5b5b3e38966295bfdcbdfb93cb9bd4760310f481dc00e5ca"
+    },
+    {
+      "path": "distribution/assets/screenshots/claude-motion-player.webp",
+      "bytes": 40560,
+      "sha256": "6a76ca73713a20aee55e74e85989793668a6321633af5bfc56e6d89d884b1353"
+    },
+    {
+      "path": "distribution/assets/screenshots/claude-slides-editor.webp",
+      "bytes": 48414,
+      "sha256": "0c38e1d8b5b6a94e9f02faa8e51bf2647f68f9a37bc258188503bc8f3a761b86"
+    },
+    {
+      "path": "distribution/assets/screenshots/figma-import-chakra-preview.webp",
+      "bytes": 93050,
+      "sha256": "8a5c082f3115c88e67877da384b55b777730ac7e7090a7317445970f086aba93"
+    },
+    {
+      "path": "distribution/dsh-plugins/README.md",
+      "bytes": 9609,
+      "sha256": "91f3dbc43e9adcd0f04fc704a6136e0858214243fd6dfb086eea3d971655a51d"
+    },
+    {
+      "path": "distribution/dsh-plugins/README.zh-CN.md",
+      "bytes": 9509,
+      "sha256": "ba1dc31d2423785b039213def140e195dd24c31c304dbcd0968a32174a3fc121"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/LICENSE",
+      "bytes": 1325,
+      "sha256": "9be8148aa0237d67a619feb0973383ba82a37460263ad828ad3d06560ac7f9b6"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/NOTICE.md",
+      "bytes": 6810,
+      "sha256": "d95acea8ec4e45b505b804a4bf7e6320cf0239d65cfeab97edccc952b75132d8"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/README.md",
+      "bytes": 3062,
+      "sha256": "489eaafb60f8428c9ed126b7139f52641684b54881e27030181db31b75f9bf04"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/cordis.patch.yml",
+      "bytes": 354,
+      "sha256": "314f76114edb880e422f3e3b3529ce3c75a35c814ea9e68855cb2517286d1688"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/docs/DETAIL.md",
+      "bytes": 1896,
+      "sha256": "8a5dc542f04ba872fa829a6b5f824a4dd9847691209bd7b56b9242193c258958"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/docs/DETAIL.zh.md",
+      "bytes": 2017,
+      "sha256": "fb744e785ae74ff2afd0b0a0a87968cd7c9290b0883fdb71f286ef3d1a7a421f"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/icon.svg",
+      "bytes": 569,
+      "sha256": "093dcc7090e7c7244026e24cb1bc8fbef783c766c94114bec9d2d771d8e36127"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/locale/en.json",
+      "bytes": 375,
+      "sha256": "99015de5916f2ac64a0041f41342ae4cb5b332c260214565bfc75e6b6d3e4cf3"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/locale/zh.json",
+      "bytes": 363,
+      "sha256": "2c741b01327f3d62d1902684ed30edf07c743ea5f3e9b4518dda80c7e785cec2"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/package.json",
+      "bytes": 1845,
+      "sha256": "96013f34ace43700db58c1e73f650195120854faa5e4b3ed14c76e8099a472a5"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/SKILL.md",
+      "bytes": 32492,
+      "sha256": "f36d3a425e6f999f5b720f68341804bff62565f839cb469ce7a914dfc34ac286"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/admin-setup.md",
+      "bytes": 7116,
+      "sha256": "ca4966c83115555b475640a3d9ec4f0156043d64bc64205c26a5443406e3eafc"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/dependent-calls.md",
+      "bytes": 3254,
+      "sha256": "df7abd2bef8ee8f175ca0aa2dfabe6f80fe7dd0a133cfd494f2ebfad6157bdf0"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/design-defaults.md",
+      "bytes": 16017,
+      "sha256": "7962034b9695661c28b7455805921f0892eb739cb16a874ba4b4601386c4d4b4"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/design-system.md",
+      "bytes": 7384,
+      "sha256": "87d1bfe00f37efe2ef8cb603ea835adbb008c8f3217ce0feb3dc939eaa601129"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/exporting.md",
+      "bytes": 3246,
+      "sha256": "5e815d915fd14d1b50615c814146ea3a8c7e20ec5d28289b227e99f8ac6198e6"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/features.md",
+      "bytes": 16011,
+      "sha256": "d0370db398c0ff5a3b918cf6a58d61a8819ec7ebc1b1fe830374de00d1749a8f"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/one-writer.md",
+      "bytes": 5066,
+      "sha256": "d95da9905cffa235eb422fb950fe5ead4983bbc8a93428139cd3ef8575b3f548"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/read-aloud.md",
+      "bytes": 8069,
+      "sha256": "22ecedb1fc943e7592a2efa4bd23e6ffe4fedba669477c911c10ff979ce6e5f6"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/remix.md",
+      "bytes": 5373,
+      "sha256": "667492bb8235a1393b6fa227a96368fd5600f2ab94591e2c82f9c09ff3c38210"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/sources.md",
+      "bytes": 15983,
+      "sha256": "892e5dd98e4a93cca415ec49320e3343b0182e37a9d9a9ac3206a141bcde92aa"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/visual-short-script.md",
+      "bytes": 11861,
+      "sha256": "7dd241e36c648a34b0804b1e9aa1a949955ebbc95c9c1d9f3c9340cf12d0052a"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/visual-short-skeleton.md",
+      "bytes": 10934,
+      "sha256": "a0e8510873eb1f7a1818963a016939854f683676b42320d50694f32909df4a22"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-dashboard/skills/claude-dashboard/artifact-type/reference/visual-short.md",
+      "bytes": 15094,
+      "sha256": "47c1eb9cd4b2fea6aeaf45a36593fbca876ad680506ce2f5b36779ee9ff89400"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/LICENSE",
+      "bytes": 1325,
+      "sha256": "9be8148aa0237d67a619feb0973383ba82a37460263ad828ad3d06560ac7f9b6"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/NOTICE.md",
+      "bytes": 6810,
+      "sha256": "d95acea8ec4e45b505b804a4bf7e6320cf0239d65cfeab97edccc952b75132d8"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/README.md",
+      "bytes": 2973,
+      "sha256": "e8d790e3cc3f289227e8dac3aa0180e5700837653a06d6b0e2fe045e23c314cf"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/cordis.patch.yml",
+      "bytes": 342,
+      "sha256": "eab23e5a673bf79daa111b22e3bd64d78e72a41198c620f7d80b0b780856ed10"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/docs/DETAIL.md",
+      "bytes": 1809,
+      "sha256": "1671031adf013424acc5b8be2ff218ce20920e441f8fff24947eb0c38bea5390"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/docs/DETAIL.zh.md",
+      "bytes": 1902,
+      "sha256": "d016ad55711c934789d162d2da1a13bbb5298dc0c72650c83f814289abb0573a"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/icon.svg",
+      "bytes": 714,
+      "sha256": "f96d1b969f2149fb1fa458f4a725e251b50ebf6f3c198110d8f4a27c1cd4b32a"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/locale/en.json",
+      "bytes": 323,
+      "sha256": "b094d5515fa72130514fa405242ffa81122db0e8b37c918d036a77cccb646962"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/locale/zh.json",
+      "bytes": 330,
+      "sha256": "3e331e5e31103ec27444d4ce3a9ae0d31f12ecf1750b0e1edddb5bed377288c3"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/package.json",
+      "bytes": 1819,
+      "sha256": "ce744337ec345d7ab59427a3874f8f393302967052ccd6dfdecd2cb24766c2bc"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/SKILL.md",
+      "bytes": 30872,
+      "sha256": "b5d81acd3f1cc69ed53ad7f3c16bfce404829fc56d3830131f2bb8bffa894cab"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/brand-colors.md",
+      "bytes": 2234,
+      "sha256": "f451f1e68b640f2bbe4d15420339ddcb7a84595cb7d12e888caa1a6bd5bd4b3a"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/brand-typography.md",
+      "bytes": 1534,
+      "sha256": "d3aa7f635e355d674680a54fe305d4efc66463c25ec04e0a1243f8937a9ece20"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/craft.md",
+      "bytes": 15996,
+      "sha256": "73b64cfb2ffb7f0bded39bbd0a71c9795fe887764eb9d18edfa913f31f0ba538"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/design-system-components.md",
+      "bytes": 12348,
+      "sha256": "be6d36c90371cd28dccc509d4e1cf7bd65f1b8253de8cd4d084123303dcebdb7"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/diagrams.md",
+      "bytes": 9638,
+      "sha256": "c5747e7ab8d8bd04e7ac484f10be02728b9f8f2df1c024024d1d218be9bb20a7"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/format.md",
+      "bytes": 11295,
+      "sha256": "b509b31cc2db41a7ddc247f67b164c0f6f755e3f07d909ad3baf20a27718b771"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/make-from-this.md",
+      "bytes": 2014,
+      "sha256": "8089c8f1771fd14a5690f83112174af1fe42fdd2809709b03e4f0579ab94e645"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/print.md",
+      "bytes": 5827,
+      "sha256": "f2b00538b800f8c3d1456baa916c72db1f2ab82c0ea886b0a3ef8c7a7d3e7c07"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/questions.md",
+      "bytes": 4419,
+      "sha256": "34139a6b25e7b6048b8c98afbb7892116c9c3dc7369f22b5cf9c88d06cab108e"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design/skills/claude-design/artifact-type/reference/view-state.md",
+      "bytes": 8779,
+      "sha256": "2b40c2de9bda3130f15d5c4fb5ec8529224d2eea8bf7df6426205dd52bbcb87c"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/LICENSE",
+      "bytes": 1325,
+      "sha256": "9be8148aa0237d67a619feb0973383ba82a37460263ad828ad3d06560ac7f9b6"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/NOTICE.md",
+      "bytes": 6810,
+      "sha256": "d95acea8ec4e45b505b804a4bf7e6320cf0239d65cfeab97edccc952b75132d8"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/README.md",
+      "bytes": 3115,
+      "sha256": "4201ab48b58437a9cc8042da1d22641ab05526be87f4d1891f27fd198cf8cb0f"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/cordis.patch.yml",
+      "bytes": 370,
+      "sha256": "16d4edc9dff13d607dd4b5698a189a971afc9a8cb20b7207a75039f034310a5c"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/docs/DETAIL.md",
+      "bytes": 2017,
+      "sha256": "908691c64bcf73cb42805a5f88fcaabe3198c25440d80cd5d86c3a58a5bb1f1d"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/docs/DETAIL.zh.md",
+      "bytes": 2159,
+      "sha256": "48355ea473278a4f2f41f663d2f2459073b529824580fd424d67db708676dccb"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/icon.svg",
+      "bytes": 650,
+      "sha256": "34a54c87305548c9ffe29081840b79d4080ac133c40364d071933fb1e2efdbac"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/locale/en.json",
+      "bytes": 336,
+      "sha256": "2900cc781caa6cc0e52da2fe2847c48aa5a19f7ea10df31984d011a250982568"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/locale/zh.json",
+      "bytes": 355,
+      "sha256": "6608a6b4112df8857a59560eb1f1ba136cf1c1af35020bd8489390bc9ae7bc43"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/package.json",
+      "bytes": 1884,
+      "sha256": "2aa34f4b1d435b5b3a24045828534a9571b7d47dcfe44a787faec705c8ae049f"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/skills/claude-design-system/SKILL.md",
+      "bytes": 30566,
+      "sha256": "7b7ec7bb51dc08a9fdccbab4cde0f401e0d128fad354df64ac1a03b6e8069f4b"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/skills/claude-design-system/artifact-type/demo.json",
+      "bytes": 164928,
+      "sha256": "ba5c9dc5778930275d1acb91048fed12d18acbf1e85f4d54292b3a9deadc2843"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/skills/claude-design-system/artifact-type/reference/cover.md",
+      "bytes": 6698,
+      "sha256": "d5957e8a4c430a87d8d3c5f28526d0f966dfc28f539039f25252becb32528e3d"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/skills/claude-design-system/artifact-type/reference/craft.md",
+      "bytes": 10784,
+      "sha256": "84f4bbe30bffc7ddcdb9e2ebdacdd441c3acc71fcd09e487e5f61f4e893189fa"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/skills/claude-design-system/artifact-type/reference/format.md",
+      "bytes": 16206,
+      "sha256": "fc2a291c26517dbbfe81e18a8efefa40f56f6e570f2f7629cd7006ac41fd1b2e"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/skills/claude-design-system/artifact-type/reference/from-code.md",
+      "bytes": 13328,
+      "sha256": "bac86e3ae10362835e48470b07c3f9e462440e569d3824baf0c341c1fb22eb8a"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/skills/claude-design-system/artifact-type/reference/from-design-tool.md",
+      "bytes": 16116,
+      "sha256": "8033bfe399da68c8aee6ff6df05df41d494723216abce16e39642e491503fcd0"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-design-system/skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json",
+      "bytes": 11291,
+      "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/LICENSE",
+      "bytes": 1325,
+      "sha256": "9be8148aa0237d67a619feb0973383ba82a37460263ad828ad3d06560ac7f9b6"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/NOTICE.md",
+      "bytes": 6810,
+      "sha256": "d95acea8ec4e45b505b804a4bf7e6320cf0239d65cfeab97edccc952b75132d8"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/README.md",
+      "bytes": 2891,
+      "sha256": "7fd561f6b751c8d2651790c9f8e17f34716825348c07a47e8d6e5cff5902f628"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/cordis.patch.yml",
+      "bytes": 342,
+      "sha256": "ba764ec6ffb85c4d9edae5b4ca0e35dfa2c6bbb8680cdc2867408905a2b023da"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/docs/DETAIL.md",
+      "bytes": 2395,
+      "sha256": "c3027b9485163b7fd60a438f92079dec6db529ad40bec5a62e0b21e50c09feee"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/docs/DETAIL.zh.md",
+      "bytes": 2538,
+      "sha256": "39afb94be157645e63f2c67be5c5299251de1a641660c1eaf63a42559a5fb2c3"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/icon.svg",
+      "bytes": 458,
+      "sha256": "9719629019d44d9185fc4e23b95d84b635ce7d1e966501e980f78b323cfe8002"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/locale/en.json",
+      "bytes": 355,
+      "sha256": "033d6e2afa0ad6add0c3a059fbcd770240f809f22cf8c670e3d7851612076731"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/locale/zh.json",
+      "bytes": 355,
+      "sha256": "95c4f74d28f57f44844ceea11f6eca9a20dd99ce6c9f9144624ca656f5b2cdd7"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/package.json",
+      "bytes": 1858,
+      "sha256": "f2415541c5f4e0576dcc8d9367fadceb76645ef6610b122f7107df0a5134417f"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/SKILL.md",
+      "bytes": 55024,
+      "sha256": "6d5acf660f9310c30a12e0c07fbaef9562f68c5e9eeb8bb372899ab4ce33d38d"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/by-hand.md",
+      "bytes": 13274,
+      "sha256": "f716358ec70d0954a2f9f8459f93a07d1457cec0a32ee8a5d33ab0dcfd7f3c05"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/film-api.md",
+      "bytes": 16021,
+      "sha256": "d00b57285fa79f383255fdcfa4dab06f42f23d6ee156b411bfffffd449b6ad07"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/finalize.md",
+      "bytes": 16010,
+      "sha256": "45cb11d7b915996f715345b6789f60ba3b94d1905dc30f0cf245ddae1597b592"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/motion.md",
+      "bytes": 16103,
+      "sha256": "0fb1ee2b93da9f44ca16fbce7a8ad651f883e4888a35e0ade408387813f76976"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/plan.md",
+      "bytes": 13859,
+      "sha256": "46783a4b51264b8c994e1d28391777b161e90f8d5d314e375b07702c7f1358b3"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/questions.md",
+      "bytes": 15693,
+      "sha256": "01ec4d02fd13426357b245f5b6d26a3e6f03df78795011d6b9fa5104e644c5f7"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/recreate-ui.md",
+      "bytes": 8367,
+      "sha256": "d3b5ee67a5fa4595bc02013794c01c3b109903eb60d2227481ddb656251baa65"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/render-offline.md",
+      "bytes": 14359,
+      "sha256": "8d714fc5e9ec679f9d902593343e7836d5d28387415179a974b894ddd6e9618c"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/rough-cut.md",
+      "bytes": 16020,
+      "sha256": "1c17191476bb441e00c54c3a9550b7fef9409fb8fe08fc87f8361d40b26ae9d2"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/sound.md",
+      "bytes": 6772,
+      "sha256": "1432c48e89b9bb9aa3cdbdc178557f658ba42cf86a71a62d2e13130273d65824"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/styles.md",
+      "bytes": 14895,
+      "sha256": "16135ff088490698cf616f9f632ef65be5f05955fbd25ab37934433ce526c83d"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-motion/skills/claude-motion/artifact-type/reference/walkthrough.md",
+      "bytes": 4653,
+      "sha256": "3570dec626dd093392e4c723e8c48da256af02379019768bef7ab865ada9513c"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/LICENSE",
+      "bytes": 1325,
+      "sha256": "9be8148aa0237d67a619feb0973383ba82a37460263ad828ad3d06560ac7f9b6"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/NOTICE.md",
+      "bytes": 6810,
+      "sha256": "d95acea8ec4e45b505b804a4bf7e6320cf0239d65cfeab97edccc952b75132d8"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/README.md",
+      "bytes": 2939,
+      "sha256": "ca96cb01098ff7e97398883eb0b9ed9201dc25736b1ed914299367837c0d63d3"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/cordis.patch.yml",
+      "bytes": 342,
+      "sha256": "5531fc81d7bf47c1fa258ef234e4c46d01f53443ed4444fcec48a834291c9d6f"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/docs/DETAIL.md",
+      "bytes": 1789,
+      "sha256": "f56051e2236c4808ee50c1cfe40f1b4ae77ca45d2be906358b69b340ff5245aa"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/docs/DETAIL.zh.md",
+      "bytes": 1901,
+      "sha256": "2dd3379593107208f58d594773de57cee197e00b9a65ec9f606c6f0933eede35"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/icon.svg",
+      "bytes": 567,
+      "sha256": "ab80dca6343519461fed7a875b6493190ae9bbb6b40b77e18cd237b4b5811353"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/locale/en.json",
+      "bytes": 285,
+      "sha256": "6523378f6027360d0fe68f7f57ff5380096c69422e995b45fa2071fc3068c330"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/locale/zh.json",
+      "bytes": 295,
+      "sha256": "9345421ca9a2060ed940e9a9ba6037be73f8cbab2c68ffc676a1356a19f23248"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/package.json",
+      "bytes": 1807,
+      "sha256": "d2dfef60d5bd7daae613574299b456287d667504739c0abab2465f4071b9ef08"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/SKILL.md",
+      "bytes": 29190,
+      "sha256": "251662dcf746ca7dfe9bed91cd856cacf0a01af2dc475c6b4fb7a77428ded0fe"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/craft.md",
+      "bytes": 11598,
+      "sha256": "49c67a742f35985216586de4cb1fe6c295b2616a1b42ab55ec9332870c715b8b"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/deck-files.md",
+      "bytes": 16021,
+      "sha256": "b10bccc76c0420f994d8ebd6ce25b0da288825ae40afd63be96f5799220efba5"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/diagram-recipes.md",
+      "bytes": 14555,
+      "sha256": "9ff69058b0ef21c12cf4f89c1a5c434335cc3208b8742200e663686e425cc3ae"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/diagrams.md",
+      "bytes": 15934,
+      "sha256": "b9ecc6d915bb76df18e8d57617a99b867225445504b74966632985236d8d5164"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/fonts.md",
+      "bytes": 13656,
+      "sha256": "43aebf54206513e64d7bad93ba0ddaec69cb5c6b3fe1a7a53ce255173024ae59"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/format.md",
+      "bytes": 16245,
+      "sha256": "32c7498c320dea867c35cf27020923b1a0073a2759c8f4013c6de3b602b4045c"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/images.md",
+      "bytes": 8005,
+      "sha256": "4f97d6a815c98e03629a1cf83d2f44e678a334e38bcf83275430e8fc18c81186"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/layout.md",
+      "bytes": 11145,
+      "sha256": "744fc7fd7b40db8b5b041358f2f2914741fe500e61808860c4103015a5c0e7ec"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/photo-library.md",
+      "bytes": 3412,
+      "sha256": "0442116083ca87d517da1ccf41b05c3e16c33169b5983293bc4a4a669cf7fd06"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/questions.md",
+      "bytes": 4273,
+      "sha256": "70ba904f7bcb4084398cc74d22af1e2bb8cfd931163974f95266992a7a8ce3b7"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/styles.md",
+      "bytes": 7994,
+      "sha256": "9bee74605ed03ea28f3c41c3d1fb65c9e959e1a78cc3bedc2773800cc55194c2"
+    },
+    {
+      "path": "distribution/dsh-plugins/dsh-claude-slides/skills/claude-slides/artifact-type/reference/view-state.md",
+      "bytes": 9654,
+      "sha256": "b81f6ddd448ca8fb052bafa7c2f646347d7ef5267bca428a18648623db1cac95"
+    },
+    {
+      "path": "distribution/package.json",
+      "bytes": 163,
+      "sha256": "15af86e4e7832ba67daabb6473ee0ffb55c4867094be4cc15b595b2adaaf8849"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/SKILL.md",
+      "bytes": 32492,
+      "sha256": "f36d3a425e6f999f5b720f68341804bff62565f839cb469ce7a914dfc34ac286"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/admin-setup.md",
+      "bytes": 7116,
+      "sha256": "ca4966c83115555b475640a3d9ec4f0156043d64bc64205c26a5443406e3eafc"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/dependent-calls.md",
+      "bytes": 3254,
+      "sha256": "df7abd2bef8ee8f175ca0aa2dfabe6f80fe7dd0a133cfd494f2ebfad6157bdf0"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/design-defaults.md",
+      "bytes": 16017,
+      "sha256": "7962034b9695661c28b7455805921f0892eb739cb16a874ba4b4601386c4d4b4"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/design-system.md",
+      "bytes": 7384,
+      "sha256": "87d1bfe00f37efe2ef8cb603ea835adbb008c8f3217ce0feb3dc939eaa601129"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/exporting.md",
+      "bytes": 3246,
+      "sha256": "5e815d915fd14d1b50615c814146ea3a8c7e20ec5d28289b227e99f8ac6198e6"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/features.md",
+      "bytes": 16011,
+      "sha256": "d0370db398c0ff5a3b918cf6a58d61a8819ec7ebc1b1fe830374de00d1749a8f"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/one-writer.md",
+      "bytes": 5066,
+      "sha256": "d95da9905cffa235eb422fb950fe5ead4983bbc8a93428139cd3ef8575b3f548"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/read-aloud.md",
+      "bytes": 8069,
+      "sha256": "22ecedb1fc943e7592a2efa4bd23e6ffe4fedba669477c911c10ff979ce6e5f6"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/remix.md",
+      "bytes": 5373,
+      "sha256": "667492bb8235a1393b6fa227a96368fd5600f2ab94591e2c82f9c09ff3c38210"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/sources.md",
+      "bytes": 15983,
+      "sha256": "892e5dd98e4a93cca415ec49320e3343b0182e37a9d9a9ac3206a141bcde92aa"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/visual-short-script.md",
+      "bytes": 11861,
+      "sha256": "7dd241e36c648a34b0804b1e9aa1a949955ebbc95c9c1d9f3c9340cf12d0052a"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/visual-short-skeleton.md",
+      "bytes": 10934,
+      "sha256": "a0e8510873eb1f7a1818963a016939854f683676b42320d50694f32909df4a22"
+    },
+    {
+      "path": "distribution/skills/claude-dashboard/artifact-type/reference/visual-short.md",
+      "bytes": 15094,
+      "sha256": "47c1eb9cd4b2fea6aeaf45a36593fbca876ad680506ce2f5b36779ee9ff89400"
+    },
+    {
+      "path": "distribution/skills/claude-design-system/SKILL.md",
+      "bytes": 30566,
+      "sha256": "7b7ec7bb51dc08a9fdccbab4cde0f401e0d128fad354df64ac1a03b6e8069f4b"
+    },
+    {
+      "path": "distribution/skills/claude-design-system/artifact-type/demo.json",
+      "bytes": 164928,
+      "sha256": "ba5c9dc5778930275d1acb91048fed12d18acbf1e85f4d54292b3a9deadc2843"
+    },
+    {
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/cover.md",
+      "bytes": 6698,
+      "sha256": "d5957e8a4c430a87d8d3c5f28526d0f966dfc28f539039f25252becb32528e3d"
+    },
+    {
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/craft.md",
+      "bytes": 10784,
+      "sha256": "84f4bbe30bffc7ddcdb9e2ebdacdd441c3acc71fcd09e487e5f61f4e893189fa"
+    },
+    {
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/format.md",
+      "bytes": 16206,
+      "sha256": "fc2a291c26517dbbfe81e18a8efefa40f56f6e570f2f7629cd7006ac41fd1b2e"
+    },
+    {
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/from-code.md",
+      "bytes": 13328,
+      "sha256": "bac86e3ae10362835e48470b07c3f9e462440e569d3824baf0c341c1fb22eb8a"
+    },
+    {
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/from-design-tool.md",
+      "bytes": 16116,
+      "sha256": "8033bfe399da68c8aee6ff6df05df41d494723216abce16e39642e491503fcd0"
+    },
+    {
+      "path": "distribution/skills/claude-design-system/artifact-type/reference/sample-seazar-tokens.json",
+      "bytes": 11291,
+      "sha256": "a17410b515e73b1a36d6b3b9164575bb1fcd8b0931ecb7f5f5b2c8bdfcf5bfa6"
+    },
+    {
+      "path": "distribution/skills/claude-motion/SKILL.md",
+      "bytes": 55024,
+      "sha256": "6d5acf660f9310c30a12e0c07fbaef9562f68c5e9eeb8bb372899ab4ce33d38d"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/by-hand.md",
+      "bytes": 13274,
+      "sha256": "f716358ec70d0954a2f9f8459f93a07d1457cec0a32ee8a5d33ab0dcfd7f3c05"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/film-api.md",
+      "bytes": 16021,
+      "sha256": "d00b57285fa79f383255fdcfa4dab06f42f23d6ee156b411bfffffd449b6ad07"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/finalize.md",
+      "bytes": 16010,
+      "sha256": "45cb11d7b915996f715345b6789f60ba3b94d1905dc30f0cf245ddae1597b592"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/motion.md",
+      "bytes": 16103,
+      "sha256": "0fb1ee2b93da9f44ca16fbce7a8ad651f883e4888a35e0ade408387813f76976"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/plan.md",
+      "bytes": 13859,
+      "sha256": "46783a4b51264b8c994e1d28391777b161e90f8d5d314e375b07702c7f1358b3"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/questions.md",
+      "bytes": 15693,
+      "sha256": "01ec4d02fd13426357b245f5b6d26a3e6f03df78795011d6b9fa5104e644c5f7"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/recreate-ui.md",
+      "bytes": 8367,
+      "sha256": "d3b5ee67a5fa4595bc02013794c01c3b109903eb60d2227481ddb656251baa65"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/render-offline.md",
+      "bytes": 14359,
+      "sha256": "8d714fc5e9ec679f9d902593343e7836d5d28387415179a974b894ddd6e9618c"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/rough-cut.md",
+      "bytes": 16020,
+      "sha256": "1c17191476bb441e00c54c3a9550b7fef9409fb8fe08fc87f8361d40b26ae9d2"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/sound.md",
+      "bytes": 6772,
+      "sha256": "1432c48e89b9bb9aa3cdbdc178557f658ba42cf86a71a62d2e13130273d65824"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/styles.md",
+      "bytes": 14895,
+      "sha256": "16135ff088490698cf616f9f632ef65be5f05955fbd25ab37934433ce526c83d"
+    },
+    {
+      "path": "distribution/skills/claude-motion/artifact-type/reference/walkthrough.md",
+      "bytes": 4653,
+      "sha256": "3570dec626dd093392e4c723e8c48da256af02379019768bef7ab865ada9513c"
+    },
+    {
+      "path": "distribution/skills/dataviz/SKILL.md",
+      "bytes": 7601,
+      "sha256": "e9e805e804f30f441e7edd12b88a6763f2e40d34e49107d03d659914ab91d881"
+    },
+    {
+      "path": "distribution/skills/dataviz/references/anti-patterns.md",
+      "bytes": 6152,
+      "sha256": "8526a6c662c62dcd5cae2ef5402f83583cde06e495cf44f8d77ec8508ed6d967"
+    },
+    {
+      "path": "distribution/skills/dataviz/references/choosing-a-form.md",
+      "bytes": 3086,
+      "sha256": "fbd8d8fb385670569c16cdcfe3d0e05281d0a33f892ef09a54b5c5780dc548e2"
+    },
+    {
+      "path": "distribution/skills/dataviz/references/color-formula.md",
+      "bytes": 8509,
+      "sha256": "6924caad41a9a19c14764a95e97430a30a9891abac13c6a1a5dd5a01727b5187"
+    },
+    {
+      "path": "distribution/skills/dataviz/references/components.md",
+      "bytes": 2108,
+      "sha256": "ce463ae52c62e499cc6cc52100ffe47fa4e1851a1725e5bd76892b0f6f31185d"
+    },
+    {
+      "path": "distribution/skills/dataviz/references/interaction.md",
+      "bytes": 3741,
+      "sha256": "2050b65e1a0d919627db870215f423956e17f82c1285eb336537b732cb0c7893"
+    },
+    {
+      "path": "distribution/skills/dataviz/references/marks-and-anatomy.md",
+      "bytes": 6103,
+      "sha256": "0659e4a8fc65ddc3f56bf369dbdbfa60b0f94bb385f22ba88dc5daddd7c68845"
+    },
+    {
+      "path": "distribution/skills/dataviz/references/palette.md",
+      "bytes": 9523,
+      "sha256": "b0eb3882e9cf8467a2979c4f63a69f2f83510318e7ebeb7a07e0ebd89189bba1"
+    },
+    {
+      "path": "distribution/skills/motion-director/SKILL.md",
+      "bytes": 20134,
+      "sha256": "66a9bb4e63e9dacdfdd11761afc0449da4d90aaf3ae01c6dc91879ba25bd1cf0"
+    },
+    {
+      "path": "distribution/skills/motion-director/guides/brief.md",
+      "bytes": 7859,
+      "sha256": "f830f75683e0d8e774bdf4bb8a52ad6a7b5182930185a120c702e254bd41ab66"
+    },
+    {
+      "path": "distribution/skills/motion-director/guides/picture.md",
+      "bytes": 11999,
+      "sha256": "565910faf688eb1a74bd59509631aac5a1c66a1d01a7d81d50e6676ab3b96bd7"
+    },
+    {
+      "path": "distribution/skills/motion-director/guides/review.md",
+      "bytes": 8199,
+      "sha256": "2f7a3e0fc6728cc49cf0c873f0ee45d77103324e76823489b16992c896bd29ad"
+    },
+    {
+      "path": "distribution/skills/motion-director/guides/revise.md",
+      "bytes": 3991,
+      "sha256": "8bd076f26f1cfcaf54f71859e7d3dc7904e8fa7e48cd18ff499c76d08511b08c"
+    },
+    {
+      "path": "distribution/skills/motion-director/guides/script.md",
+      "bytes": 10458,
+      "sha256": "d821cf024e5858fe184447f3fc678a9645a95a11ba958526c38b28b4bed59efd"
+    },
+    {
+      "path": "distribution/skills/motion-director/guides/voice.md",
+      "bytes": 8539,
+      "sha256": "a1d7d5c147a75780908fae7e94653edf272ee209f723963db0bbd1c535e5a473"
+    },
+    {
+      "path": "host/builtin-themes.json",
+      "bytes": 20353,
+      "sha256": "b7831f1355c6c4a689b69b9601d7393cbe461b07fd624867ad949d3f6b95b4bb"
+    },
+    {
+      "path": "host/slides-builtin-style.json",
+      "bytes": 3246,
+      "sha256": "7860b109573122ba4d9a0d46d5e05a7b07b4f4f92707384d890af1e7d8c18702"
+    },
+    {
+      "path": "upstream/claude-design/SKILL.md",
+      "bytes": 30872,
+      "sha256": "b5d81acd3f1cc69ed53ad7f3c16bfce404829fc56d3830131f2bb8bffa894cab"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/brand-colors.md",
+      "bytes": 2234,
+      "sha256": "f451f1e68b640f2bbe4d15420339ddcb7a84595cb7d12e888caa1a6bd5bd4b3a"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/brand-typography.md",
+      "bytes": 1534,
+      "sha256": "d3aa7f635e355d674680a54fe305d4efc66463c25ec04e0a1243f8937a9ece20"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/craft.md",
+      "bytes": 15996,
+      "sha256": "73b64cfb2ffb7f0bded39bbd0a71c9795fe887764eb9d18edfa913f31f0ba538"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/design-system-components.md",
+      "bytes": 12348,
+      "sha256": "be6d36c90371cd28dccc509d4e1cf7bd65f1b8253de8cd4d084123303dcebdb7"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/diagrams.md",
+      "bytes": 9638,
+      "sha256": "c5747e7ab8d8bd04e7ac484f10be02728b9f8f2df1c024024d1d218be9bb20a7"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/format.md",
+      "bytes": 11295,
+      "sha256": "b509b31cc2db41a7ddc247f67b164c0f6f755e3f07d909ad3baf20a27718b771"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/make-from-this.md",
+      "bytes": 2014,
+      "sha256": "8089c8f1771fd14a5690f83112174af1fe42fdd2809709b03e4f0579ab94e645"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/print.md",
+      "bytes": 5827,
+      "sha256": "f2b00538b800f8c3d1456baa916c72db1f2ab82c0ea886b0a3ef8c7a7d3e7c07"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/questions.md",
+      "bytes": 4419,
+      "sha256": "34139a6b25e7b6048b8c98afbb7892116c9c3dc7369f22b5cf9c88d06cab108e"
+    },
+    {
+      "path": "upstream/claude-design/artifact-type/reference/view-state.md",
+      "bytes": 8779,
+      "sha256": "2b40c2de9bda3130f15d5c4fb5ec8529224d2eea8bf7df6426205dd52bbcb87c"
+    },
+    {
+      "path": "upstream/claude-slides/SKILL.md",
+      "bytes": 29190,
+      "sha256": "251662dcf746ca7dfe9bed91cd856cacf0a01af2dc475c6b4fb7a77428ded0fe"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/craft.md",
+      "bytes": 11598,
+      "sha256": "49c67a742f35985216586de4cb1fe6c295b2616a1b42ab55ec9332870c715b8b"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/deck-files.md",
+      "bytes": 16021,
+      "sha256": "b10bccc76c0420f994d8ebd6ce25b0da288825ae40afd63be96f5799220efba5"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/diagram-recipes.md",
+      "bytes": 14555,
+      "sha256": "9ff69058b0ef21c12cf4f89c1a5c434335cc3208b8742200e663686e425cc3ae"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/diagrams.md",
+      "bytes": 15934,
+      "sha256": "b9ecc6d915bb76df18e8d57617a99b867225445504b74966632985236d8d5164"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/fonts.md",
+      "bytes": 13656,
+      "sha256": "43aebf54206513e64d7bad93ba0ddaec69cb5c6b3fe1a7a53ce255173024ae59"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/format.md",
+      "bytes": 16245,
+      "sha256": "32c7498c320dea867c35cf27020923b1a0073a2759c8f4013c6de3b602b4045c"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/google-fonts-families.json",
+      "bytes": 26440,
+      "sha256": "82a204043c9adf9d3134fa1850513921b4269a3358671a2d6d8831f447b2ed4c"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/google-fonts-notices.json",
+      "bytes": 60582,
+      "sha256": "b764de9e3b7a62974d60604d0a051a014a9a8e070001835a0964782473b6af64"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/google-fonts-reserved.json",
+      "bytes": 7403,
+      "sha256": "ce9fc8edddf7222dab49edbdae00b8f7f2bc9c99c8832648e61dd93a0140f9be"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/images.md",
+      "bytes": 8005,
+      "sha256": "4f97d6a815c98e03629a1cf83d2f44e678a334e38bcf83275430e8fc18c81186"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/layout.md",
+      "bytes": 11145,
+      "sha256": "744fc7fd7b40db8b5b041358f2f2914741fe500e61808860c4103015a5c0e7ec"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/photo-library.md",
+      "bytes": 3412,
+      "sha256": "0442116083ca87d517da1ccf41b05c3e16c33169b5983293bc4a4a669cf7fd06"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/questions.md",
+      "bytes": 4273,
+      "sha256": "70ba904f7bcb4084398cc74d22af1e2bb8cfd931163974f95266992a7a8ce3b7"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/styles.md",
+      "bytes": 7994,
+      "sha256": "9bee74605ed03ea28f3c41c3d1fb65c9e959e1a78cc3bedc2773800cc55194c2"
+    },
+    {
+      "path": "upstream/claude-slides/artifact-type/reference/view-state.md",
+      "bytes": 9654,
+      "sha256": "b81f6ddd448ca8fb052bafa7c2f646347d7ef5267bca428a18648623db1cac95"
+    }
+  ]
+}

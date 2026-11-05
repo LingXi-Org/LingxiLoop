@@ -1,4 +1,4 @@
-import type { PublicTextSafetyInput, PublicTextSafetyDecision } from '@lyyzka/lingxios'
+import type { PublicTextSafetyInput, PublicTextSafetyDecision } from '@lingxi-org/lingxios'
 
 const english = [
   ...['think','structure','craft','write'].map(verb => `let me ${verb}`),

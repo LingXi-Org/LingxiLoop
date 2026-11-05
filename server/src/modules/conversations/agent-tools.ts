@@ -1,6 +1,6 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
 import { z } from 'zod'
-import type { ActionContext, ToolDefinition } from '@lyyzka/lingxios'
+import type { ActionContext, ToolDefinition } from '@lingxi-org/lingxios'
 import { nativeTool, compareResource, authorizeAudienceRead } from '../../agents/tools.js'
 import { queueNativeEvents, type NativeEvent } from '../../agents/native-events.js'
 import type { Queryable } from '../../db/queryable.js'

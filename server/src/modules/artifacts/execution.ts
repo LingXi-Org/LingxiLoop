@@ -1,4 +1,4 @@
-import type { RunIdentity, RunSnapshot, createLingxiOS } from '@lyyzka/lingxios'
+import type { RunIdentity, RunSnapshot, createLingxiOS } from '@lingxi-org/lingxios'
 import type { Queryable } from '../../db/queryable.js'
 import type { ArtifactRow } from './repository-types.js'
 

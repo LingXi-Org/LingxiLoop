@@ -269,7 +269,7 @@ test('[integration] T11 teacher criteria persist and reload only for the authori
         agentId: thread.agentId, channelId: thread.channelId, teacherId: teacher.userId,
         homeworkRevision: task.revision, requirementsHash: task.visibleHash })
       const items = policy.dynamicContextItems({ work: { agentId: thread.agentId }, persona: { name: 'Tutor', role: 'assistant' },
-        messages: [], dynamic: { homeworkContext: context } } as unknown as import('@lyyzka/lingxios').TurnContext)
+        messages: [], dynamic: { homeworkContext: context } } as unknown as import('@lingxi-org/lingxios').TurnContext)
       assert.ok(items.some(item => 'content' in item && typeof item.content === 'string' && item.content.includes(JSON.stringify(task.criteria))))
     }
     assert.equal((await homework.start(student, courseId, task.id)).channelId, thread.channelId, 'reopen retains the task binding')
@@ -320,7 +320,7 @@ async function nativeAssessment(id: string, thread: { channelId: string; agentId
       conversation: { conversationId: thread.channelId, policyVersion: 1, source: { messageId: messageIds[0], version: 1 }, internal: false,
         audience: { visibility: 'conversation', participantIds: [student.userId, thread.agentId] } } },
     action: { runId, cellId: 'assess', callIndex: 0, action: tool.action, args: data, idempotencyKey: `${runId}-assess` },
-  } as unknown as import('@lyyzka/lingxios').ActionContext
+  } as unknown as import('@lingxi-org/lingxios').ActionContext
   const result = await transaction(async db => { const action = { ...context, database: db }; await tool.authorize(action, data); return tool.execute(action, data) })
   assert.equal(result.ok, true)
   const value = (result as { value: { homeworkId: string; assessmentId: string; evidenceRevision: number; returnEpoch: number; status: 'PENDING' | 'READY' } }).value
@@ -1436,7 +1436,7 @@ test('[integration] teacher draft creation reuses the original committed request
           source: { messageId: source, version: 1 }, internal: false,
           audience: { visibility: 'conversation', participantIds: [teacher.userId, colleague.userId, binding.agentId] } } },
       action: { runId, cellId: 'draft', callIndex: 0, action: tool.action, args: data, idempotencyKey: `${runId}-draft` },
-    } as unknown as import('@lyyzka/lingxios').ActionContext
+    } as unknown as import('@lingxi-org/lingxios').ActionContext
     await tool.authorize(context, data)
     const result = await tool.execute(context, data)
     assert.ok(result.ok)
@@ -1510,7 +1510,7 @@ test('[integration] native teacher revisions update the same draft and require f
         conversation: { conversationId: binding.roomId, policyVersion: 1, source: { messageId: 'homework-teacher-message', version: 1 }, internal: false,
           audience: { visibility: 'conversation', participantIds: [teacher.userId, colleague.userId, binding.agentId] } } },
       action: { runId: 'homework-teacher-tool', cellId: 'draft', callIndex: 0, action: selectedTool.action, args: data, idempotencyKey: 'native-draft-edit' },
-    } as unknown as import('@lyyzka/lingxios').ActionContext
+    } as unknown as import('@lingxi-org/lingxios').ActionContext
     return transaction(async db => {
       const action = { ...context, database: db }; await selectedTool.authorize(action, data)
       const result = await selectedTool.execute(action, data)
@@ -1593,7 +1593,7 @@ test('[integration] native homework overview bounds long reports, aggregates the
         conversation: { conversationId: binding.roomId, policyVersion: 1, source: { messageId: 'homework-overview-message', version: 1 }, internal: false,
           audience: { visibility: 'conversation', participantIds: [teacher.userId, binding.agentId] } } },
       action: { runId: 'homework-overview-tool', cellId: 'overview', callIndex: 0, action: tool.action, args: data, idempotencyKey: 'native-overview' },
-    } as unknown as import('@lyyzka/lingxios').ActionContext
+    } as unknown as import('@lingxi-org/lingxios').ActionContext
     const result = await transaction(async db => { const action = { ...context, database: db }; await tool.authorize(action, data); return tool.execute(action, data) })
     assert.ok(JSON.stringify(result).length < 8000, 'The entire native result must fit its actual runtime output budget')
     assert.doesNotMatch(JSON.stringify(result), /peer-private-unsubmitted-sentinel|answerHash|materialHashes|evidenceRevision/)
@@ -1667,7 +1667,7 @@ test('[integration] learner native reads page full requirements and real materia
         conversation: { conversationId: channelId, policyVersion: 1, source: { messageId: 'homework-learner-message', version: 1 }, internal: false,
           audience: { visibility: 'conversation', participantIds: [student.userId, thread.agentId] } } },
       action: { runId: 'homework-learner-read', cellId: 'read', callIndex: 0, action: tool.action, args: data, idempotencyKey: 'native-learner-read' },
-    } as unknown as import('@lyyzka/lingxios').ActionContext
+    } as unknown as import('@lingxi-org/lingxios').ActionContext
     const result = await transaction(async db => { const action = { ...context, database: db }; await tool.authorize(action, data); return tool.execute(action, data) })
     assert.ok(JSON.stringify(result).length < 8000, 'Full native result must fit the runtime output budget')
     return (result as { value: Page }).value

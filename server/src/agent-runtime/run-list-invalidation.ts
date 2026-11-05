@@ -1,4 +1,4 @@
-import { isGoalOutcome, type createLingxiOS, type DeliveryPort, type RunIdentity } from '@lyyzka/lingxios'
+import { isGoalOutcome, type createLingxiOS, type DeliveryPort, type RunIdentity } from '@lingxi-org/lingxios'
 
 type Read = () => Promise<Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readRun'>>
 

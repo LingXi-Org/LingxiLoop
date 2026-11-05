@@ -86,27 +86,22 @@ The required source-form notice and license URL are preserved in both files.
 
 ## baoyu-design Design and Slides
 
-The Design and Slides artifacts vendor `skills/claude-design` and
-`skills/claude-slides` from
+The native Design and Slides editor retains design rules, theme tokens, static
+examples and format references from
 [JimLiu/baoyu-design](https://github.com/JimLiu/baoyu-design/tree/016b39d7fdcc30bfacee31ea5541498ac53921c6)
-at commit `016b39d7fdcc30bfacee31ea5541498ac53921c6` (v2.8.0), byte for byte,
-under `third_party/baoyu-design/upstream/`. `third_party/baoyu-design/manifest.json`
-records every file's upstream path, size, SHA-256 and Git blob SHA-1.
+at commit `016b39d7fdcc30bfacee31ea5541498ac53921c6` (v2.8.0).
+`third_party/baoyu-design/retained-manifest.json` records the retained resources'
+byte counts and SHA-256 hashes. This is a resource subset; the former bundled
+editors, recovered application source, compiler and duplicate editor archives
+have been removed.
 
 The repository is MIT licensed, Copyright (c) Jim Liu; the license is retained at
-`third_party/baoyu-design/LICENSE`. Per upstream's own provenance notes, the
-prebuilt editor bundles, `artifact.mjs`, `compiler.cjs` and `dc-runtime.js` are
-built from its BaoCut sources, and the `artifact-type/reference/` pages follow the
-claude.ai Design and Slides artifact types. The editors' bundled dependencies
-keep their own licenses in `scripts/editor/third-party-licenses.txt` and
-`scripts/editor/node/third-party-licenses.txt` under each vendored skill.
-
-The complete 542-file baoyu-design distribution is retained and inventoried in
-`third_party/baoyu-design/complete-manifest.json`; remaining files are under
-`distribution/`. The Slides editor is rebuilt from recovered named application
-modules in `slides-source/`, with the original MIT and dependency licenses.
-The executable reconstruction removes video features at the user's request;
-byte-identical upstream archives are unchanged.
+`third_party/baoyu-design/LICENSE`. The original `artifact-type/reference/`
+pages follow the claude.ai Design and Slides artifact types. The Claude-style
+built-in tokens were extracted from the pinned Slides distribution, while Ember
+and Seazar are the upstream design-system examples; their source pointers remain
+in the retained token files. Native compatibility adapters preserve these format
+semantics without importing the former editor runtime.
 
 ## Bible Strong Avatar
 

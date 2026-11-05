@@ -1,4 +1,4 @@
-import type { RunRecord } from '@lyyzka/lingxios'
+import type { RunRecord } from '@lingxi-org/lingxios'
 import type { AgentRunTiming } from '../../../../shared/agent-run-timing.js'
 
 type RunTimingInput = Pick<RunRecord, 'id' | 'status' | 'fence' | 'requestVersion' | 'attempts' | 'availableAt' | 'executionMs'> & { heartbeatAt?: string | null }
