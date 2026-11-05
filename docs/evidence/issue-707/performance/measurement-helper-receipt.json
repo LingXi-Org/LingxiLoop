@@ -7,7 +7,7 @@
         "encoding": "identity",
         "workerTransferBytes": 1000203,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2025.3,
+        "importDurationMs": 2023.0,
         "scriptRequests": 2,
         "inflight": 0
       },
@@ -15,7 +15,7 @@
         "encoding": "gzip",
         "workerTransferBytes": 1230,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2028.8,
+        "importDurationMs": 2026.1,
         "scriptRequests": 2,
         "inflight": 0
       },
@@ -27,7 +27,7 @@
       {
         "encoding": "queued",
         "scriptRequests": 12,
-        "maxNetworkStartSkewMs": 609.8,
+        "maxNetworkStartSkewMs": 612.2,
         "scriptDecodedBytes": 240492
       }
     ],
@@ -141,5 +141,15 @@
     "qualified": false
   },
   "performanceSamples": 0,
-  "qualified": false
+  "qualified": false,
+  "lateQueuedClock": {
+    "queueMs": 250,
+    "fallbackAndCdpMerge": true,
+    "editableSnapshotIdentityPreserved": true,
+    "duplicateSnapshotDeduplicated": true,
+    "requests": 1,
+    "transferredBytes": 1000120,
+    "decodedBytes": 1000000,
+    "scope": "冻结回归中的确定性真实事件字段；不属于产品性能样本"
+  }
 }

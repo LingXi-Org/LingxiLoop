@@ -254,6 +254,23 @@ class Trace:
         except Exception: pass
 
     def reconcile_finished(self):
+        # A completed PW fallback may predate a queued request's CDP events.
+        # Once response timing exposes the network clock, merge only mutually
+        # unique matches and keep the ordinal already captured at editable.
+        fallback = [(key, row) for key, row in self.requests.items() if row.get('fromPlaywright')]
+        cdp = [(key, row) for key, row in self.requests.items() if not row.get('fromPlaywright') and '_playwrightKey' not in row]
+        pairs, _left, _right, ambiguous = pair_observations([row for _, row in cdp], [row for _, row in fallback], playwright_start=True)
+        self.ambiguous_requests = max(self.ambiguous_requests, len(ambiguous))
+        for i, j in pairs:
+            _, row = cdp[i]
+            old_key, old = fallback[j]
+            row['_playwrightKey'] = old['_playwrightKey']
+            row['_mergedRequestOrdinals'] = [row['requestOrdinal'], *row.get('_mergedRequestOrdinals', []), *old.get('_mergedRequestOrdinals', [])]
+            row['requestOrdinal'] = old['requestOrdinal']
+            if old.get('decodedObserved') and (not row.get('decodedObserved') or old.get('decodedBytesSource') == 'PerformanceResourceTiming'):
+                for field in ('decodedBytes', 'decodedObserved', 'decodedBytesSource'):
+                    if field in old: row[field] = old[field]
+            del self.requests[old_key]
         # A worker can resolve a static import before its target emits any CDP
         # request event. Retain the actual Playwright completion instead of
         # silently dropping that script from the accounting.
@@ -309,12 +326,20 @@ class Trace:
 
     def reconcile_snapshot(self, snapshot):
         current = {row['requestOrdinal']: row for row in self.requests.values()}
-        for row in snapshot:
+        for row in self.requests.values():
+            for ordinal in row.get('_mergedRequestOrdinals', []): current[ordinal] = row
+        retained, seen = [], set()
+        # If both aliases were captured, retain the observed completion.
+        for row in sorted(snapshot, key=lambda item: not item.get('finished', False)):
             observed = current.get(row['requestOrdinal'], {})
+            ordinal = observed.get('requestOrdinal', row['requestOrdinal'])
+            if ordinal in seen: continue
+            seen.add(ordinal); retained.append(row); row['requestOrdinal'] = ordinal
             if row.get('finished') and observed.get('decodedObserved') and (not row.get('decodedObserved') or observed.get('decodedBytesSource') == 'PerformanceResourceTiming'):
                 row.update(decodedBytes=observed['decodedBytes'], decodedObserved=True, decodedBytesSource=observed['decodedBytesSource'])
             if row.get('finished') and row.get('transferPending') and not observed.get('transferPending', True):
                 row.update(transferredBytes=observed['transferredBytes'], transferredBytesSource=observed['transferredBytesSource'], transferPending=False)
+        snapshot[:] = retained
 
     def forced_gc(self, page):
         before = len(self.errors)
@@ -1124,13 +1149,24 @@ def self_check():
     assert len(queued.snapshot()) == 1, 'PW network-start timing must not duplicate the same queued CDP request'
     assert script_totals(queued.snapshot())['transferredBytes'] == 1000120
     late_clock = reconciliation_fixture([1000]);late_clock.requests.clear()
-    late_clock.finished_requests[0]['startEpochMs']=1050
-    late_clock.snapshot()
+    late_clock.finished_requests[0]['startEpochMs']=1250
+    fallback_snapshot = late_clock.snapshot()
+    fallback_ordinal = fallback_snapshot[0]['requestOrdinal']
     late_clock.event('', 'requestWillBeSent', {'requestId':'queued-late','request':{'url':raw},'timestamp':10,'wallTime':1,'type':'Script'})
-    late_clock.event('', 'responseReceived', {'requestId':'queued-late','response':{'headers':{},'status':200,'mimeType':'text/javascript','timing':{'requestTime':10.05}}})
+    duplicate_snapshot = late_clock.snapshot()
+    assert len(duplicate_snapshot) == 2
+    late_clock.event('', 'responseReceived', {'requestId':'queued-late','response':{'headers':{},'status':200,'mimeType':'text/javascript','timing':{'requestTime':10.25}}})
     assert len(late_clock.snapshot()) == 1
     assert late_clock.requests[':queued-late']['startEpochMs'] == 1000
-    assert abs(late_clock.requests[':queued-late']['_playwrightStartEpochMs']-1050) < .01
+    assert abs(late_clock.requests[':queued-late']['_playwrightStartEpochMs']-1250) < .01
+    late_clock.event('', 'loadingFinished', {'requestId':'queued-late','timestamp':12,'encodedDataLength':1000120})
+    late_clock.reconcile_decoded(SimpleNamespace(frames=[SimpleNamespace(evaluate=lambda _:[{'url':raw,'startEpochMs':1000,'encodedBytes':1000000,'decodedBytes':1000000}])],workers=[]))
+    for snapshot in (fallback_snapshot, duplicate_snapshot, list(reversed(duplicate_snapshot))):
+        late_clock.reconcile_snapshot(snapshot)
+        totals = script_totals(snapshot)
+        assert len(snapshot) == 1 and snapshot[0]['requestOrdinal'] == fallback_ordinal
+        assert totals['transferredBytes'] == 1000120 and totals['decodedBytes'] == 1000000 and not totals['missingDecoded']
+    assert not late_clock.ambiguous_requests and not late_clock.unaccounted_script_resources and not late_clock.byte_conflicts
     ambiguous = reconciliation_fixture([1000,1000])
     assert ambiguous.ambiguous_requests > 0, 'indistinguishable requests cannot qualify'
     assert safe_url(raw+'?v=1') == safe_url(raw+'?v=2') and resource_key(raw+'?v=1') != resource_key(raw+'?v=2')
