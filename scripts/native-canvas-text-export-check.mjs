@@ -20,7 +20,7 @@ import {createDocument,createPage} from ${JSON.stringify(join(root,'shared/artif
 import {createCanvasText,canvasFontPatch,canvasTextMetrics} from ${JSON.stringify(join(root,'shared/artifact-canvas-typography.ts'))};
 import {exportArtifact} from ${JSON.stringify(join(root,'src/features/artifacts/native/export-artifact.ts'))};
 window.check=async format=>{
- const doc=createDocument('slides','fixture','中文标题'),page=createPage('p'),node=createCanvasText('title','text');node.text='画布中文标题';node.x=20;node.y=20;node.style={...node.style,...canvasFontPatch(node,{fontSize:72}),fontFamily:${JSON.stringify(fixtureFont)}};node.height=canvasTextMetrics(72).minHeight;page.nodes={title:node};page.nodeOrder=['title'];doc.pages={p:page};doc.pageOrder=['p'];
+ const doc=createDocument('slides','fixture','中文标题'),page=createPage('p'),node=createCanvasText('title','text');node.text='画布中文标题';node.x=20;node.y=20;node.style={...node.style,...canvasFontPatch(node,{fontSize:72}),fontFamily:${JSON.stringify(fixtureFont)}};node.height=canvasTextMetrics(72).minHeight;const uniform=createCanvasText('uniform','text');uniform.text='统一内边距标题';uniform.x=20;uniform.y=180;uniform.style={...uniform.style,padding:30,paddingX:30,paddingY:30,fontFamily:${JSON.stringify(fixtureFont)}};page.nodes={title:node,uniform};page.nodeOrder=['title','uniform'];doc.pages={p:page};doc.pageOrder=['p'];
  const before=JSON.stringify(doc),result=await exportArtifact(doc,{format}),bytes=new Uint8Array(await result.blob.arrayBuffer());let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);
  let nonWhitePixels;if(format==='png'){const bitmap=await createImageBitmap(result.blob),canvas=new OffscreenCanvas(bitmap.width,bitmap.height),context=canvas.getContext('2d');context.drawImage(bitmap,0,0);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;nonWhitePixels=0;for(let i=0;i<pixels.length;i+=4)if(pixels[i+3]&&(pixels[i]<235||pixels[i+1]<235||pixels[i+2]<235))nonWhitePixels++;bitmap.close()}return{base64:btoa(binary),bytes:bytes.length,nonWhitePixels,unchanged:before===JSON.stringify(doc),realms:document.querySelectorAll('[data-artifact-export-realm]').length,mountedPages:document.querySelectorAll('.artifact-export-page').length};
 };window.ready=true;`)
@@ -34,14 +34,14 @@ window.check=async format=>{
   for(const format of ['html','pdf','pptx','svg','png']){
     const result=await page.evaluate(format=>window.check(format),format),bytes=Buffer.from(result.base64,'base64');delete result.base64
     assert.equal(result.unchanged,true);assert.equal(result.realms,0);assert.equal(result.mountedPages,0);assert.ok(bytes.length>100)
-    if(format==='html'){const html=bytes.toString('utf8');assert.match(html,/padding-inline:24px/);assert.match(html,/padding-block:16px/);assert.match(html,/max-width:2000px/);assert.ok(Math.abs(Number(/line-height:([^;"\s]+)/.exec(/data-node-id="title" style="([^"]+)"/.exec(html)?.[1]??'')?.[1])-1.102)<1e-12)}
+    if(format==='html'){const html=bytes.toString('utf8');assert.match(html,/padding:16px 24px/);assert.match(html,/max-width:2000px/);assert.match(html,/padding:30px 30px/);assert.ok(Math.abs(Number(/line-height:([^;"\s]+)/.exec(/data-node-id="title" style="([^"]+)"/.exec(html)?.[1]??'')?.[1])-1.102)<1e-12)}
     if(format==='svg')await writeFile(output+'.svg',bytes)
     if(format==='pdf')assert.equal(bytes.subarray(0,5).toString(),'%PDF-')
     if(format==='png'){await writeFile(output+'.png',bytes);assert.equal(bytes.subarray(1,4).toString(),'PNG');assert.equal(bytes.readUInt32BE(16),2560);assert.equal(bytes.readUInt32BE(20),1440);assert.ok(result.nonWhitePixels>500)}
-    if(format==='pptx'){const archive=await JSZip.loadAsync(bytes),xml=await archive.file('ppt/slides/slide1.xml').async('string');assert.match(xml,/spc="-108"/);assert.match(xml,/spcPct val="110200"/);assert.match(xml,/lIns="228600"/);assert.match(xml,/tIns="152400"/)}
+    if(format==='pptx'){const archive=await JSZip.loadAsync(bytes),xml=await archive.file('ppt/slides/slide1.xml').async('string');assert.match(xml,/spc="-108"/);assert.match(xml,/spcPct val="110200"/);assert.match(xml,/lIns="228600"/);assert.match(xml,/tIns="152400"/);const uniform=xml.match(/<p:sp>[\s\S]*?<\/p:sp>/g).find(part=>part.includes('统一内边距标题'));for(const side of ['lIns','rIns','tIns','bIns'])assert.ok(uniform.includes(side+'="285750"'))}
     rows.push({format,...result})
   }
   assert.deepEqual(errors,[])
-  const report={kind:'isolated-production-canvas-text-export',scope:'真实生产构建及隔离导出；固定夹具，不代替授权API、离线文件打开、完整视觉或性能验收',browser:browser.version(),fixtureFont,paddingAndTypography:true,rows,consoleOrPageErrors:errors}
+  const report={kind:'isolated-production-canvas-text-export',scope:'真实生产构建及隔离导出；固定夹具，不代替授权API、离线文件打开、完整视觉或性能验收',browser:browser.version(),fixtureFont,paddingAndTypography:true,uniformPadding:true,rows,consoleOrPageErrors:errors}
   await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report))
 }finally{await browser?.close();await new Promise(r=>server?server.close(r):r());await rm(temporary,{recursive:true,force:true})}

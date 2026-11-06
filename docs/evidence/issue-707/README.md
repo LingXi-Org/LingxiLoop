@@ -108,3 +108,5 @@ a0ee1b66 真实性能诊断42152419298已失败并保留哈希核验收据：两
 生产构建的独立文字导出检查为 `PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs node --import tsx scripts/native-canvas-text-export-check.mjs /tmp/text-export.json`；校验网页样式、便携文档签名、演示文稿实际XML内边距/行高/字距、矢量及双倍PNG尺寸/墨迹，并检查原稿、帧及DOM清理。演示文稿库数组内边距的实际顺序与其文档示例不一致，已按真实XML修正。140及154结果见 `functional/canvas-text-export-*.json`，此固定夹具不替代真实API、离线打开或视觉资格。140本机宿主字体异常及仅进程fontconfig对照见 `reviews/local-fontconfig-control.json`；排除宿主系统WOFF2后默认字体测量和PNG恢复，不修改产品或系统。显式思源黑体在本机140的网页字体NetworkError仍待定位，不能与该系统字体原因合并。
 
 本轮35项聚焦单元、77文件lint、两种编辑器各50页/47页哈希、深色自由画布回归通过；完整本地类型仍受官方SDK缺失阻塞，完成日志中原生/共享模型无类型错误。本候选尚待独立审查及owning CI。真实诊断42164941507固定671166f5执行中，不属于新候选通过证据。
+
+2e17fbb0 owning CI42168211101全绿；独立审查通过混合/纯形状网格、深滚视角、标题及五种导出，另发现统一内边距与横纵字段优先级造成重开外观变化，见 `reviews/2e17fbb0.json`。现统一内边距动作显式更新两个轴，原生/网页/演示文稿共用一次最终内边距解析，不再受DOM更新历史影响；不同轴显示中文“混合”。先前真实回归失败，修复后浅深色设置30→保存→重开→HTML一致，生产140实际PPTX四边也均为30对应的点值，五种导出及清理通过。30项聚焦单元、75文件lint、深色自由画布及两50页/47哈希回归通过；完成类型日志无原生/共享错误，全量仍缺官方SDK。新候选待复审和CI。显式思源黑体在同一进程fontconfig修正后也五种生产导出通过，见 `functional/canvas-text-export-noto-140.json`；历史网页字体错误不再作为当前失败门槛，仍不推断正式CI根因。

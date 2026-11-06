@@ -1,3 +1,4 @@
+import {resolvedPadding} from '../../../../../shared/artifact-appearance'
 import { trackExportWorker, releaseExportWorker } from './worker-lifecycle'
 import type { ArtifactDocument, ArtifactRichText } from '../../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../../shared/artifact-themes'
@@ -104,7 +105,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
           } else if ((node.type === 'text' || node.type === 'note') && !nodeHasMath(node)) {
             slide.addText(node.richText ? textRuns(node.richText) : node.text ?? '', { ...box, fontSize, fontFace: (style.fontFamily ?? 'Arial').split(',')[0]!.replace(/["']/g, ''),
               color: color(style.color), bold: (style.fontWeight ?? 400) >= 600, italic: style.fontStyle === 'italic', align: style.textAlign ?? 'left',
-              lineSpacingMultiple:style.lineHeight, charSpacing:style.letterSpacing===undefined?undefined:style.letterSpacing*.75*scale, margin:[style.paddingX??style.padding??0,style.paddingX??style.padding??0,style.paddingY??style.padding??0,style.paddingY??style.padding??0].map(value=>value*.75*scale), ...(node.type==='note' && style.fill ? {fill:{color:color(style.fill,'FFF3B0')}} : {}), breakLine: false, valign: 'top', rotate: rotation, transparency: (1 - (style.opacity ?? 1)) * 100 })
+              lineSpacingMultiple:style.lineHeight, charSpacing:style.letterSpacing===undefined?undefined:style.letterSpacing*.75*scale, margin:(()=>{const padding=resolvedPadding(style)??{x:0,y:0};return[padding.x,padding.x,padding.y,padding.y].map(value=>value*.75*scale)})(), ...(node.type==='note' && style.fill ? {fill:{color:color(style.fill,'FFF3B0')}} : {}), breakLine: false, valign: 'top', rotate: rotation, transparency: (1 - (style.opacity ?? 1)) * 100 })
           } else if (node.type === 'shape') {
             const shape = ({ rect: style.borderRadius ? 'roundRect' : 'rect', ellipse: 'ellipse', triangle: 'triangle', diamond: 'diamond', arrow: 'rightArrow', 'arrow-right':'rightArrow','arrow-left':'leftArrow','arrow-up':'upArrow','arrow-down':'downArrow' } as const)[node.shape ?? 'rect']
             slide.addShape(shape, { ...box, rectRadius: Math.min(.5, (style.borderRadius ?? 0) / Math.min(node.width, node.height)), rotate: rotation, fill: { color: color(style.fill, 'D97757'), transparency: (1 - (style.opacity ?? 1)) * 100 }, line: style.stroke && style.strokeWidth ? { color: color(style.stroke), width: style.strokeWidth * .75 } : { transparency: 100 } })

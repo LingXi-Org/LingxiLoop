@@ -1,0 +1,47 @@
+{
+  "kind": "isolated-production-canvas-text-export",
+  "scope": "真实生产构建及隔离导出；固定夹具，不代替授权API、离线文件打开、完整视觉或性能验收",
+  "browser": "140.0.7339.16",
+  "fixtureFont": "system-ui",
+  "paddingAndTypography": true,
+  "uniformPadding": true,
+  "rows": [
+    {
+      "format": "html",
+      "bytes": 4070,
+      "unchanged": true,
+      "realms": 0,
+      "mountedPages": 0
+    },
+    {
+      "format": "pdf",
+      "bytes": 24036,
+      "unchanged": true,
+      "realms": 0,
+      "mountedPages": 0
+    },
+    {
+      "format": "pptx",
+      "bytes": 46052,
+      "unchanged": true,
+      "realms": 0,
+      "mountedPages": 0
+    },
+    {
+      "format": "svg",
+      "bytes": 20235,
+      "unchanged": true,
+      "realms": 0,
+      "mountedPages": 0
+    },
+    {
+      "format": "png",
+      "bytes": 104603,
+      "nonWhitePixels": 42827,
+      "unchanged": true,
+      "realms": 0,
+      "mountedPages": 0
+    }
+  ],
+  "consoleOrPageErrors": []
+}

@@ -13,3 +13,13 @@ export function appearance(style: ArtifactStyle) {
 export function nodeTransform(node: ArtifactNode) {
   return `rotate(${node.rotation}deg) scale(${node.flipX ? -1 : 1},${node.flipY ? -1 : 1})`
 }
+
+/** Resolve once: explicit axes override the uniform value, then contextual defaults. */
+export function resolvedPadding(style:ArtifactStyle,fallback?:{x:number;y:number}) {
+  if(style.padding===undefined&&style.paddingX===undefined&&style.paddingY===undefined&&!fallback)return undefined
+  return{x:style.paddingX??style.padding??fallback?.x??0,y:style.paddingY??style.padding??fallback?.y??0}
+}
+export function paddingCss(style:ArtifactStyle,fallback?:{x:number;y:number}) {
+  const padding=resolvedPadding(style,fallback)
+  return padding?`${padding.y}px ${padding.x}px`:undefined
+}

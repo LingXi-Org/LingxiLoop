@@ -31,5 +31,13 @@
     }
   ],
   "productOrSystemChanged": false,
-  "separateUnresolved": "显式思源黑体网页字体在本地140出现NetworkError，尚未归因；默认系统字体导出已在进程修正环境通过。"
+  "separateUnresolved": "显式思源黑体网页字体在本地140出现NetworkError，尚未归因；默认系统字体导出已在进程修正环境通过。",
+  "laterVerification": {
+    "explicitFont": "Noto Sans SC",
+    "browser": "140.0.7339.16",
+    "sameProcessConfiguration": true,
+    "fiveProductionExports": "通过",
+    "evidence": "../functional/canvas-text-export-noto-140.json",
+    "scope": "不推断历史NetworkError或正式CI的唯一原因。"
+  }
 }

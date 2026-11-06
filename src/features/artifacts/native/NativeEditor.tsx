@@ -1,3 +1,4 @@
+import {resolvedPadding} from '../../../../shared/artifact-appearance'
 import {designPageLink,readDesignLink} from '../../../../shared/artifact-links'
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import { http } from '@/api/core/http'
@@ -42,7 +43,7 @@ const CropEditor = lazy(() => import('./CropEditor'))
 
 const id = () => crypto.randomUUID()
 function download(blob: Blob, filename: string) { const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; link.click(); setTimeout(() => URL.revokeObjectURL(url), 30_000) }
-function Field({ label, value, onChange, type = 'text', min, max }: { label: string; value: string | number; onChange(value: string): void; type?: string; min?: number; max?: number }) {
+function Field({ label, value, onChange, type = 'text', min, max, placeholder }: { label: string; value: string | number; onChange(value: string): void; type?: string; min?: number; max?: number;placeholder?:string }) {
   const [draft, setDraft] = useState(String(value))
   const focused = useRef(false), dirty = useRef(false), composing = useRef(false), flushAfterComposition = useRef(false)
   const latest = useRef({ draft, value: String(value), onChange }); latest.current = { draft, value: String(value), onChange }
@@ -54,7 +55,7 @@ function Field({ label, value, onChange, type = 'text', min, max }: { label: str
   const markDirty = useLocalDraft(save)
   useEffect(() => { if (!focused.current) { setDraft(String(value)); latest.current.draft = String(value); dirty.current = false; markDirty(false) } }, [value, markDirty])
   const change = (value: string) => { latest.current.draft = value; setDraft(value); dirty.current = value !== latest.current.value; markDirty(dirty.current || composing.current) }
-  return type==='color'?<ColorField label={label} value={String(value)} onChange={onChange} />:<label className="native-field"><span>{label}</span><input aria-label={label} type={type} min={min} max={max} value={draft} onFocus={() => { focused.current = true }} onChange={event => change(event.target.value)} onCompositionStart={() => { composing.current = true; markDirty(true) }} onCompositionEnd={event => { composing.current = false; change(event.currentTarget.value); if (flushAfterComposition.current) { flushAfterComposition.current = false; queueMicrotask(save) } }} onBlur={() => { focused.current = false; save(); if (!composing.current) setDraft(latest.current.value) }} onKeyDown={event => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) event.currentTarget.blur() }} /></label>
+  return type==='color'?<ColorField label={label} value={String(value)} onChange={onChange} />:<label className="native-field"><span>{label}</span><input aria-label={label} placeholder={placeholder} type={type} min={min} max={max} value={draft} onFocus={() => { focused.current = true }} onChange={event => change(event.target.value)} onCompositionStart={() => { composing.current = true; markDirty(true) }} onCompositionEnd={event => { composing.current = false; change(event.currentTarget.value); if (flushAfterComposition.current) { flushAfterComposition.current = false; queueMicrotask(save) } }} onBlur={() => { focused.current = false; save(); if (!composing.current) setDraft(latest.current.value) }} onKeyDown={event => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) event.currentTarget.blur() }} /></label>
 }
 function TextAreaField({ value, label, placeholder, disabled, onFocus, onCommit }: { value: string; label: string; placeholder?: string; disabled?: boolean; onFocus?(): void; onCommit(value: string): void }) {
   const [draft, setDraft] = useState(value)
@@ -174,6 +175,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const current = doc && pageId && (boardIds.includes(pageId)||pageId===canvasContentId) ? pageId===canvasContentId?renderedCanvasContent:doc.pages[pageId] : undefined
   const selectedNodes = current ? selected.flatMap(value => current.nodes[value] ? [current.nodes[value]] : []) : []
   const primary = selectedNodes.length === 1 ? selectedNodes[0] : undefined
+  const primaryPadding=primary?resolvedPadding(primary.style,primary.type==='note'&&current?.id===canvasContentId?{x:12,y:10}:{x:0,y:0}):undefined
   const palette=useMemo(()=>Array.from(new Set((current?[artifactPageBackground(current,doc!),...current.nodeOrder.flatMap(id=>{const style=artifactResolvedStyle(current.nodes[id].style,doc!);return [style.color,style.fill,style.backgroundColor]})]:[]).filter((c):c is string=>!!c))).slice(0,32),[current,doc?.themeId,doc?.themes])
   const canvasWritable=state.write&&!state.conflict&&!presenting
   const writable = state.write && !state.conflict && !presenting && (!current || state.loadedPageIds.includes(current.id))
@@ -577,7 +579,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
       <div hidden={inspectorTab!=='properties'}><fieldset disabled={!writable}>
         {primary ? <>
           <section className="native-property-section"><h3>布局</h3>
-            <Field label="内边距" type="number" min={0} value={primary.style.padding??0} onChange={v=>patchNode({style:{padding:Math.max(0,Number(v))}})} />
+            <Field label="内边距" type="number" min={0} value={primaryPadding?.x===primaryPadding?.y?primaryPadding?.x??0:''} placeholder={primaryPadding?.x!==primaryPadding?.y?'混合':undefined} onChange={v=>{const padding=Math.max(0,Number(v));patchNode({style:{padding,paddingX:padding,paddingY:padding}})}} />
             {primary.type==='group'&&<><label className="native-field"><span>布局</span><select aria-label="布局" value={primary.layout?.mode??'absolute'} onChange={e=>patchNode({layout:{...primary.layout,mode:e.target.value as 'absolute'|'flex'|'grid'}})}><option value="absolute">自由布局</option><option value="flex">弹性布局</option><option value="grid">网格布局</option></select></label>
               {primary.layout?.mode==='flex'&&<label className="native-field"><span>方向</span><select aria-label="布局方向" value={primary.layout.direction??'row'} onChange={e=>patchNode({layout:{...primary.layout!,direction:e.target.value as 'row'|'column'}})}><option value="row">水平</option><option value="column">垂直</option></select></label>}
               {primary.layout?.mode==='grid'&&<Field label="列数" type="number" min={1} max={100} value={primary.layout.columns??2} onChange={v=>patchNode({layout:{...primary.layout!,columns:Math.max(1,Math.min(100,Math.round(Number(v))))}})} />}
