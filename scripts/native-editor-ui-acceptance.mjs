@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { mkdtemp, mkdir, writeFile, readFile, rm, realpath } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm, realpath, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { createRequire } from 'node:module'
@@ -27,7 +27,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -41,6 +41,7 @@ const { chromium } = await import(modulePath.startsWith('/') ? pathToFileURL(mod
 const dependencyRoot = await realpath(join(root, 'node_modules'))
 const workspace = await mkdtemp(join(tmpdir(), 'lingxi-native-ui-'))
 await mkdir(output, { recursive: true })
+if(options.checks==='slides-skipped-export')await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
 const mocks = {
   http: `export async function http(path,init){const response=await fetch('/api'+path,{...init,headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok)throw Object.assign(new Error(await response.text()),{status:response.status});return response.json()}`,
   realtime: 'export const ws={on:()=>()=>{}}',
@@ -55,6 +56,9 @@ await writeFile(join(workspace,'artifact-export.html'),(await readFile(join(root
 let server, browser
 try {
   server = await createServer({ configFile: false, root: workspace, publicDir: join(root, 'public'), plugins: [react()], logLevel: 'error',
+    cacheDir:join(workspace,'.vite'),
+    // Late CommonJS discovery reloads the fixture during PPTX export, even with HMR off.
+    optimizeDeps: options.checks==='slides-skipped-export'?{noDiscovery:true,include:['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime','pptxgenjs','html-to-image','jszip','katex']}:undefined,
     resolve: { alias: [
       ...Object.entries({ '@/api/core/http': 'http', '@/api/core/realtime': 'realtime', '@/api/transport': 'transport', '@/stores/auth': 'auth', '@/lib/workspaceSession': 'workspaceSession' }).map(([find, name]) => ({ find, replacement: join(workspace, `${name}.js`) })),
       { find: 'react', replacement: dirname(require.resolve('react/package.json')) },
@@ -78,11 +82,20 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
+  if (options.checks === 'slides-skipped-export') {
+    const skipped = document.pages['page-2']
+    skipped.skip = true
+    skipped.notes = '不应导出的跳过页备注'
+    const embed = { ...createNode('embed', 'skipped-embed'), embed: { format: 'html', source: '<p>不应执行的跳过页内容</p>' } }
+    skipped.nodes[embed.id] = embed
+    skipped.nodeOrder.push(embed.id)
+    if (options['export-case'] === 'all-skipped') for (const page of Object.values(document.pages)) page.skip = true
+  }
   if(options.checks==='slide-speaker'){document.pages['page-1'].notes='第一点：介绍设计。\n第二点：说明交互。';document.pages['page-2'].skip=true}
   if(options.checks==='slide-speaker'&&options['speaker-case']==='executable-preview'){
     const page=document.pages['page-1'],original=page.nodes['page-1-image'],source='<script>parent.postMessage({type:"native-speaker-program-start"},"*")</script><p>隔离内容</p>'
@@ -176,6 +189,11 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const snapshot = () => ({ document:delayedPageId&&!canvasBodyLoaded?{...document,pages:{...document.pages,[delayedPageId]:{...document.pages[delayedPageId],nodes:{},nodeOrder:[]}}}:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds:delayedPageId&&!canvasBodyLoaded?artifactPageIds(document).filter(id=>id!==delayedPageId):options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ hasTouch:options['speaker-case']==='coarse', viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:options.checks==='slide-transitions'?'no-preference':'reduce' })
+  if (options.checks === 'slides-skipped-export') await page.addInitScript(() => {
+    window.__exportDownloadAttempts = []
+    const click = HTMLAnchorElement.prototype.click
+    HTMLAnchorElement.prototype.click = function(...args) { if(this.download)window.__exportDownloadAttempts.push({name:this.download,at:performance.now()});return click.apply(this,args) }
+  })
   if(options['speaker-case']==='executable-preview')await page.addInitScript(()=>{window.__speakerProgramStarts=0;window.addEventListener('message',event=>{if(event.data?.type==='native-speaker-program-start')window.__speakerProgramStarts++})})
   if(options.checks==='canvas-layout-cache')await page.addInitScript(()=>{window.__naturalProbePeak=0;new MutationObserver(()=>{window.__naturalProbePeak=Math.max(window.__naturalProbePeak,document.querySelectorAll('[data-native-measure-node]').length)}).observe(document,{childList:true,subtree:true})})
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
@@ -187,6 +205,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let expectedVectorDenied=false;let vectorModuleBlocked=options.checks==='canvas-vector-load',vectorModuleRequests=0
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
   page.on('request',request=>{const path=new URL(request.url()).pathname;if(path.includes('/CanvasPenTool.tsx'))vectorModuleRequests++;if(path.includes('/CanvasPointEditor.tsx'))pointModuleRequests++;if(path.includes('/BoardPreview.tsx'))boardModuleRequests++;if(path.includes('/SlidesPresentation.tsx'))presentationModuleRequests++;if(path.includes('/SlidesSpeaker.tsx'))speakerModuleRequests++})
+  const exportNavigations=[]
+  if(options.checks==='slides-skipped-export')page.on('framenavigated',frame=>{if(frame===page.mainFrame())exportNavigations.push(new URL(frame.url()).pathname)})
   page.setDefaultTimeout(30_000)
   if(options['presentation-portrait']==='true')await page.addInitScript(()=>{const original=window.setTimeout;window.setTimeout=(fn,delay,...args)=>original(fn,[570,670,730].includes(delay)?delay*10:delay,...args)})
   await page.addInitScript(()=>{window.__geometryLog=[];window.__geometryMessages=0;window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')window.__penRequests++;if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
@@ -792,6 +812,55 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'全窗口查看画板 Page 2','加载失败后焦点应返回原画板按钮')
       boardModuleBlocked=false;await page.reload();await ready(1);await open();await page.getByRole('region',{name:'画板全窗口预览'}).waitFor();await page.keyboard.press('Escape');assert.equal(receipts.length,0);assert.deepEqual(errors,[])
       return{kind:'isolated-board-preview-loading-diagnostic',lazyUntilOpened:true,chineseLoadFailure:true,focusRestored:true,refreshRecovered:true,noDocumentWrites:true,consoleOrPageErrors:errors}
+    }
+    if (options.checks === 'slides-skipped-export') {
+      const before = JSON.stringify(document), exports = [], navigationCountBeforeExport = exportNavigations.length
+      await page.getByLabel('导出格式', { exact: true }).click()
+      if (options['export-case'] === 'all-skipped') {
+        for (const name of ['便携文档', '网页', '演示文稿']) {
+          const item = page.getByRole('button', { name, exact: true })
+          assert.equal(await item.isDisabled(), true)
+          assert.equal(await item.getAttribute('title'), '所有页面均已跳过，请先恢复至少一页。')
+        }
+        assert.equal(await page.getByRole('button', { name: '当前页面 · 透明位图', exact: true }).isDisabled(), false)
+        assert.equal(receipts.length, 0)
+        assert.deepEqual(errors, [])
+        return { kind: 'isolated-slides-skipped-export-disabled', wholeDeckDisabled: true, selectedImageStillAvailable: true, chineseReason: true, consoleOrPageErrors: errors }
+      }
+      await page.keyboard.press('Escape')
+      const { default: JSZip } = await import('jszip')
+      for (const [name, format] of [['网页', 'html'], ['便携文档', 'pdf'], ['演示文稿', 'pptx']]) {
+        await page.getByLabel('导出格式', { exact: true }).click()
+        const downloading = page.waitForEvent('download')
+        await page.getByRole('button', { name, exact: true }).click()
+        let file
+        try { file = await downloading } catch (error) {
+          await writeFile(join(output, 'export-failure.json'), JSON.stringify({format, exportNavigations, attempts: await page.evaluate(() => window.__exportDownloadAttempts), errors, notice: await page.locator('.native-notice').allTextContents(), alerts: await page.getByRole('alert').allTextContents(), status: await page.getByRole('status').allTextContents()}, null, 2))
+          throw error
+        }
+        const bytes = await readFile(await file.path())
+        assert.ok(file.suggestedFilename().endsWith(`.${format}`))
+        if (format === 'html') {
+          const html = bytes.toString()
+          assert.equal((html.match(/<article(?:\s|>)/g) ?? []).length, 2)
+          assert.ok(!html.includes('LingxiLoop 2') && !html.includes('不应导出') && !html.includes('不应执行'))
+        } else if (format === 'pdf') assert.equal((bytes.toString('latin1').match(/\/Type \/Page\b/g) ?? []).length, 2)
+        else {
+          const archive = await JSZip.loadAsync(bytes)
+          const slides = Object.keys(archive.files).filter(path => /^ppt\/slides\/slide\d+\.xml$/.test(path))
+          assert.equal(slides.length, 2)
+          const text = (await Promise.all(Object.values(archive.files).filter(file => file.name.endsWith('.xml')).map(file => file.async('string')))).join('')
+          assert.ok(!text.includes('LingxiLoop 2') && !text.includes('不应导出'))
+        }
+        exports.push({ format, pages: 2, bytes: bytes.length })
+        await page.waitForFunction(() => !document.querySelector('[data-artifact-export-realm]'))
+      }
+      assert.equal(JSON.stringify(document), before)
+      assert.equal(receipts.length, 0)
+      assert.deepEqual(errors, [])
+      assert.equal(exportNavigations.length, navigationCountBeforeExport, '导出期间测试页不能重载')
+      assert.equal(await page.evaluate(() => window.__exportDownloadAttempts.length), 3)
+      return { kind: 'isolated-slides-skipped-export', noFixtureReload: true, exports, skippedEmbedNeverCaptured: true, sourceSnapshotUnchanged: true, consoleOrPageErrors: errors }
     }
     if(options.checks==='canvas-board-export'){
       const board=page.locator('[data-artboard-id=page-2]'),before=JSON.stringify(document),exports=[]

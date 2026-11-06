@@ -1,0 +1,115 @@
+{
+  "candidate": "f14839dafb789416a96eb4db9c8ad6354f694479",
+  "runId": 42313214033,
+  "jobId": 128219452635,
+  "conclusion": "failure",
+  "failedStep": "Verify real worker script accounting before production measurements",
+  "failure": "scripts/native-canvas-text-export-check.mjs:45 用正则要求data-node-id后紧跟style；运动身份属性加入后未能读取行高",
+  "performanceSamples": 0,
+  "qualified": false,
+  "correction": "用DOM读取同一节点的style.lineHeight，保留1.102行高、内边距、曲线路径、真实五格式与清理断言",
+  "localAfter": [
+    {
+      "kind": "isolated-production-canvas-text-export",
+      "scope": "真实生产构建及隔离导出；固定夹具，不代替授权API、离线文件打开、完整视觉或性能验收",
+      "browser": "154.0.8037.57",
+      "fixtureFont": "system-ui",
+      "paddingAndTypography": true,
+      "uniformPadding": true,
+      "penPath": true,
+      "vectorPath": true,
+      "editedVectorPath": true,
+      "paddedEditedVector": true,
+      "rows": [
+        {
+          "format": "html",
+          "bytes": 11617,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "pdf",
+          "bytes": 33246,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "pptx",
+          "bytes": 105021,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "svg",
+          "bytes": 66136,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "png",
+          "bytes": 149603,
+          "nonWhitePixels": 54659,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        }
+      ],
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-production-canvas-text-export",
+      "scope": "真实生产构建及隔离导出；固定夹具，不代替授权API、离线文件打开、完整视觉或性能验收",
+      "browser": "140.0.7339.16",
+      "fixtureFont": "system-ui",
+      "paddingAndTypography": true,
+      "uniformPadding": true,
+      "penPath": true,
+      "vectorPath": true,
+      "editedVectorPath": true,
+      "paddedEditedVector": true,
+      "rows": [
+        {
+          "format": "html",
+          "bytes": 11617,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "pdf",
+          "bytes": 33246,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "pptx",
+          "bytes": 105021,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "svg",
+          "bytes": 61096,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "png",
+          "bytes": 149603,
+          "nonWhitePixels": 54659,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        }
+      ],
+      "consoleOrPageErrors": []
+    }
+  ]
+}

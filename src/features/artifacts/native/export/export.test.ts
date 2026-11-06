@@ -50,6 +50,31 @@ test('offline HTML escapes authored text and preserves the fixed snapshot', asyn
   assert.equal(result.filename, '导出测试.html')
 })
 
+test('整份幻灯片导出排除跳过页，包括备注与不能读取的媒体；原文档不变', async () => {
+  const document = fixture(), skipped = createPage('skipped', '跳过页')
+  skipped.skip = true
+  skipped.notes = '不应出现在导出文件中的跳过页备注'
+  const embed = { ...createNode('embed', 'skipped-embed'), embed: { format: 'html' as const, source: '<p>不可执行的跳过页内容</p>' } }
+  skipped.nodes[embed.id] = embed
+  skipped.nodeOrder = [embed.id]
+  document.pages[skipped.id] = skipped
+  document.pageOrder.unshift(skipped.id)
+  const before = JSON.stringify(document)
+  const result = await exportArtifact(document, { format: 'html', resolveAsset: async () => { throw new Error('不应读取跳过页素材') } })
+  const html = await result.blob.text()
+  assert.equal((html.match(/<article(?:\s|>)/g) ?? []).length, 1)
+  assert.ok(!html.includes(skipped.notes))
+  assert.ok(!html.includes('不可执行的跳过页内容'))
+  assert.equal(JSON.stringify(document), before)
+})
+
+test('全部跳过时整份幻灯片导出给出中文说明', async () => {
+  const document = fixture()
+  document.pages.page!.skip = true
+  for (const format of ['html', 'pdf', 'pptx'] as const)
+    await assert.rejects(exportArtifact(document, { format }), /所有页面均已跳过，请先恢复至少一页/)
+})
+
 test('HTML retains slide transition and motion identity as escaped data for offline playback', async () => {
   const document=fixture(),page=document.pages.page!
   page.transition='magic';page.nodes.text!.motionId='original-heading'

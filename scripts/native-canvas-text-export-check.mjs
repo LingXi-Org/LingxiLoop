@@ -42,7 +42,7 @@ window.check=async format=>{
   for(const format of ['html','pdf','pptx','svg','png']){
     const result=await page.evaluate(format=>window.check(format),format),bytes=Buffer.from(result.base64,'base64');delete result.base64
     assert.equal(result.unchanged,true);assert.equal(result.realms,0);assert.equal(result.mountedPages,0);assert.ok(bytes.length>100)
-    if(format==='html'){const html=bytes.toString('utf8');assert.match(html,/padding:16px 24px/);assert.match(html,/max-width:2000px/);assert.match(html,/padding:30px 30px/);assert.ok(Math.abs(Number(/line-height:([^;"\s]+)/.exec(/data-node-id="title" style="([^"]+)"/.exec(html)?.[1]??'')?.[1])-1.102)<1e-12)}
+    if(format==='html'){const html=bytes.toString('utf8');assert.match(html,/padding:16px 24px/);assert.match(html,/max-width:2000px/);assert.match(html,/padding:30px 30px/);assert.ok(Math.abs(Number(await page.evaluate(html=>new DOMParser().parseFromString(html,"text/html").querySelector('[data-node-id="title"]')?.style.lineHeight,html))-1.102)<1e-12)}
     if(format==='html')for(const node of [penFixture,vectorFixture,editedVectorFixture])assert.ok(bytes.toString('utf8').includes(`d="${node.d}"`))
     if(format==='svg'){for(const node of [penFixture,vectorFixture,editedVectorFixture])assert.ok(bytes.toString('utf8').includes(node.d));await writeFile(output+'.svg',bytes)}
     if(format==='pdf')assert.equal(bytes.subarray(0,5).toString(),'%PDF-')
