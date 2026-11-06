@@ -127,7 +127,7 @@ const icons = {
 export type EditorIconName = keyof typeof icons
 export function EditorIcon({ name, size = 18 }: { name: EditorIconName; size?: number }) {
   const Icon = icons[name]
-  return <Icon size={size} strokeWidth={1.6} aria-hidden="true" />
+  return <Icon data-native-icon={name} size={size} strokeWidth={1.6} aria-hidden="true" />
 }
 export function IconButton({
   icon,
@@ -192,6 +192,7 @@ export function Menu({
   children,
   align = 'start',
   text,
+  readoutSizer,
   disabled,
   onOpen,
   className = '',
@@ -205,6 +206,7 @@ export function Menu({
   children: ReactNode
   align?: 'start' | 'end'
   text?: string
+  readoutSizer?: string
   disabled?: boolean
   className?: string
   minimumWidth?: number
@@ -296,9 +298,9 @@ export function Menu({
       >
         {badge!==undefined&&<span className="native-menu-count">{badge}</span>}
         {icon && <EditorIcon name={icon} />}
-        {text && <span className="native-menu-text" title={text}>{text}</span>}
+        {text && <span className="native-menu-text" title={text} data-readout-sizer={readoutSizer}>{text}</span>}
         {(!icon || text || icon === 'square' || icon === 'shapes') && (
-          <EditorIcon name="chevron" size={12} />
+          readoutSizer ? <span className="native-menu-readout-caret"><EditorIcon name="chevron" size={16} /></span> : <EditorIcon name="chevron" size={12} />
         )}
       </summary>
       <div

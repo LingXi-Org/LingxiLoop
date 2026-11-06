@@ -28,6 +28,7 @@ const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
+assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
 const mode = options.mode ?? 'both'
 assert.ok(['design', 'slides', 'both'].includes(mode), '--mode must be design, slides or both')
 const output = resolve(options.output ?? join(tmpdir(), 'lingxi-native-ui-results'))
@@ -563,8 +564,20 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       }else if(editorCase==='tab'){await page.keyboard.press('Tab');await page.keyboard.press('Tab')}
       if(options['point-matched']==='true'){
         const awaitMedia=()=>page.waitForFunction(()=>{const boards=[...document.querySelectorAll('[data-artboard-id]')];return boards.length===3&&boards.every(board=>{const image=board.querySelector('[data-node-type=image] img');return image?.complete&&image.naturalWidth>0||!!board.querySelector('.native-board-thumbnail svg image[href^="data:image/"]')})});await awaitMedia()
-        const geometry={controls:await page.locator('.native-toolbar button,.native-board-label').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>{const b=e.getBoundingClientRect(),s=getComputedStyle(e);return{label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent,rect:b.toJSON(),font:s.font,padding:s.padding,border:s.border,background:s.background,color:s.color,shadow:s.boxShadow,radius:s.borderRadius}})),anchors:await editor.locator('[data-vector-part^="a:"]').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{id:e.dataset.vectorPart,x:b.x+b.width/2,y:b.y+b.height/2}})),boards:await page.locator('[data-artboard-id]').evaluateAll(es=>es.map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})))}
+        const geometry={controls:await page.locator('.native-toolbar button,.native-toolbar summary,.native-board-label').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>{const b=e.getBoundingClientRect(),s=getComputedStyle(e);return{label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent,rect:b.toJSON(),font:s.font,padding:s.padding,border:s.border,background:s.background,color:s.color,shadow:s.boxShadow,radius:s.borderRadius}})),anchors:await editor.locator('[data-vector-part^="a:"]').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{id:e.dataset.vectorPart,x:b.x+b.width/2,y:b.y+b.height/2}})),boards:await page.locator('[data-artboard-id]').evaluateAll(es=>es.map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})))}
         await writeFile(join(output,'matched-geometry.json'),JSON.stringify(geometry,null,2)+'\n')
+        if(options['source-toolbar']==='true'){
+          const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8')).runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
+          assert.ok(reference,'源码工具栏尺寸与主题样本必须存在')
+          const find=(rows,label)=>rows.find(row=>row.label===label),originalPage=reference.controls.find(row=>row.label.endsWith(', pages')),nativePage=find(geometry.controls,'页面菜单'),localizedWidth=nativePage.rect.width-originalPage.rect.width
+          const pairs=[['选择 (V)','Select'],['手型工具 (H)','Hand'],['文本','Text'],['添加画板','Artboard'],['便签 (N)','Note'],['铅笔','Pencil'],['绘图工具','More drawing tools'],['矩形工具','Rectangle'],['插入图形','More shapes'],['导出格式','Export'],['版本历史','Version history'],['评论','Comments'],['评论选项','Comment options'],['放映','Play'],['显示属性','Properties'],['画布缩放',reference.controls.find(row=>row.label.endsWith(', Zoom')).label]]
+          for(const [nativeLabel,sourceLabel]of pairs){
+            const actual=find(geometry.controls,nativeLabel),expected=find(reference.controls,sourceLabel);assert.ok(actual&&expected,`${nativeLabel}必须可见`)
+            const translation=pairs.findIndex(pair=>pair[0]===nativeLabel)<9?localizedWidth:sourceLabel==='Export'||sourceLabel==='Version history'?26:0
+            for(const key of ['x','y','width','height'])assert.ok(Math.abs(actual.rect[key]-expected.rect[key]-(key==='x'?translation:0))<=1,`${nativeLabel}的${key}须与源码相差1px以内（登记中文页名宽度和已删除分享入口的正常重排）`)
+          }
+        }
+
         if(options['source-camera']==='true'){
           const sample=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8')).runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
           assert.ok(sample)
@@ -599,7 +612,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.keyboard.press('Escape');await editor.waitFor({state:'detached'});assert.equal(await node.evaluate(e=>getComputedStyle(e).visibility),'visible')
       const saved=structuredClone(document.pages['canvas-vector-body'].nodes['editable-path']);await page.reload({waitUntil:'domcontentloaded'});await ready(1);assert.deepEqual(document.pages['canvas-vector-body'].nodes['editable-path'],saved)
       assert.deepEqual(errors,[])
-      return{kind:'isolated-canvas-vector-edit-diagnostic',scenario:editorCase,entry:editorCase==='keyboard-enter'?'选择后回车':'双击路径',...(options['source-camera']==='true'?{sourceCameraWithin1CssPx:true,trustedFitRestoresSameZoom:true}:{}),sourceAnchorCount:true,...(['initial','tab','keyboard-enter','cancel','undo-point'].includes(editorCase)?{originalGeometryPreserved:true,...(editorCase==='undo-point'?{sharedUndo:true}:{unchangedDoesNotSave:true})}:{oneGestureOneBatch:true,sourceGeometryWithin1CssPx:true,sharedUndoRedo:true}),savedAndReopened:true,scope:'真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉',consoleOrPageErrors:errors}
+      return{kind:'isolated-canvas-vector-edit-diagnostic',scenario:editorCase,entry:editorCase==='keyboard-enter'?'选择后回车':'双击路径',...(options['source-camera']==='true'?{sourceCameraWithin1CssPx:true,...(options['source-toolbar']==='true'?{sourceToolbarWithin1CssPx:true}:{}),trustedFitRestoresSameZoom:true}:{}),sourceAnchorCount:true,...(['initial','tab','keyboard-enter','cancel','undo-point'].includes(editorCase)?{originalGeometryPreserved:true,...(editorCase==='undo-point'?{sharedUndo:true}:{unchangedDoesNotSave:true})}:{oneGestureOneBatch:true,sourceGeometryWithin1CssPx:true,sharedUndoRedo:true}),savedAndReopened:true,scope:'真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-vector-retention'){
       const choosePen=async()=>{await page.getByLabel('绘图工具',{exact:true}).click();await page.getByRole('group',{name:'绘图工具选项',exact:true}).getByRole('button',{name:/^钢笔/}).click();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})}

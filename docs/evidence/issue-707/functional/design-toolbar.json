@@ -1,0 +1,168 @@
+{
+  "kind": "设计工具栏同文档局部几何回归",
+  "beforeFix": "缩放数值未预留100%宽度、分隔线留白过大；新增源码几何断言先在选择按钮位置失败。",
+  "source": "source-design-toolbar.json",
+  "cases": [
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "light",
+      "result": {
+        "kind": "isolated-canvas-vector-edit-diagnostic",
+        "scenario": "initial",
+        "entry": "双击路径",
+        "sourceCameraWithin1CssPx": true,
+        "sourceToolbarWithin1CssPx": true,
+        "trustedFitRestoresSameZoom": true,
+        "sourceAnchorCount": true,
+        "originalGeometryPreserved": true,
+        "unchangedDoesNotSave": true,
+        "savedAndReopened": true,
+        "scope": "真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉",
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "dark",
+      "result": {
+        "kind": "isolated-canvas-vector-edit-diagnostic",
+        "scenario": "initial",
+        "entry": "双击路径",
+        "sourceCameraWithin1CssPx": true,
+        "sourceToolbarWithin1CssPx": true,
+        "trustedFitRestoresSameZoom": true,
+        "sourceAnchorCount": true,
+        "originalGeometryPreserved": true,
+        "unchangedDoesNotSave": true,
+        "savedAndReopened": true,
+        "scope": "真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉",
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "result": {
+        "kind": "isolated-canvas-vector-edit-diagnostic",
+        "scenario": "initial",
+        "entry": "双击路径",
+        "sourceCameraWithin1CssPx": true,
+        "sourceToolbarWithin1CssPx": true,
+        "trustedFitRestoresSameZoom": true,
+        "sourceAnchorCount": true,
+        "originalGeometryPreserved": true,
+        "unchangedDoesNotSave": true,
+        "savedAndReopened": true,
+        "scope": "真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉",
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "result": {
+        "kind": "isolated-canvas-vector-edit-diagnostic",
+        "scenario": "initial",
+        "entry": "双击路径",
+        "sourceCameraWithin1CssPx": true,
+        "sourceToolbarWithin1CssPx": true,
+        "trustedFitRestoresSameZoom": true,
+        "sourceAnchorCount": true,
+        "originalGeometryPreserved": true,
+        "unchangedDoesNotSave": true,
+        "savedAndReopened": true,
+        "scope": "真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉",
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "result": {
+        "kind": "isolated-canvas-vector-edit-diagnostic",
+        "scenario": "initial",
+        "entry": "双击路径",
+        "sourceCameraWithin1CssPx": true,
+        "sourceToolbarWithin1CssPx": true,
+        "trustedFitRestoresSameZoom": true,
+        "sourceAnchorCount": true,
+        "originalGeometryPreserved": true,
+        "unchangedDoesNotSave": true,
+        "savedAndReopened": true,
+        "scope": "真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉",
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "result": {
+        "kind": "isolated-canvas-vector-edit-diagnostic",
+        "scenario": "initial",
+        "entry": "双击路径",
+        "sourceCameraWithin1CssPx": true,
+        "sourceToolbarWithin1CssPx": true,
+        "trustedFitRestoresSameZoom": true,
+        "sourceAnchorCount": true,
+        "originalGeometryPreserved": true,
+        "unchangedDoesNotSave": true,
+        "savedAndReopened": true,
+        "scope": "真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉",
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "result": {
+        "kind": "isolated-canvas-vector-edit-diagnostic",
+        "scenario": "initial",
+        "entry": "双击路径",
+        "sourceCameraWithin1CssPx": true,
+        "sourceToolbarWithin1CssPx": true,
+        "trustedFitRestoresSameZoom": true,
+        "sourceAnchorCount": true,
+        "originalGeometryPreserved": true,
+        "unchangedDoesNotSave": true,
+        "savedAndReopened": true,
+        "scope": "真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉",
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "result": {
+        "kind": "isolated-canvas-vector-edit-diagnostic",
+        "scenario": "initial",
+        "entry": "双击路径",
+        "sourceCameraWithin1CssPx": true,
+        "sourceToolbarWithin1CssPx": true,
+        "trustedFitRestoresSameZoom": true,
+        "sourceAnchorCount": true,
+        "originalGeometryPreserved": true,
+        "unchangedDoesNotSave": true,
+        "savedAndReopened": true,
+        "scope": "真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉",
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "otherLocalChecks": [
+    "70项聚焦单元",
+    "NativeEditor和EditorPrimitives聚焦lint",
+    "原页面菜单完整受控流程"
+  ],
+  "typecheck": "76项私有SDK缺包及级联错误；原生/共享零错误；不计完整通过。",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

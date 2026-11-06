@@ -119,7 +119,7 @@ jobs:
             task_width=${task_size%x*}
             task_height=${task_size#*x}
             for task_theme in light dark; do
-              node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true --width="$task_width" --height="$task_height" --canvas-theme="$task_theme" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-$task_size-$task_theme"
+              node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true --source-toolbar=true --width="$task_width" --height="$task_height" --canvas-theme="$task_theme" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-$task_size-$task_theme"
             done
           done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=viewport-loading --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-viewport-loading"

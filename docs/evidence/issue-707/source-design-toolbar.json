@@ -1,0 +1,100 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourceFile": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "locations": {
+    "zoom": "function OU(e)，CanvasZoomControl 使用 readoutSizer:p(100)",
+    "readout": "SessionStripPopover 的 readoutSizer 与 data-sizer 隐藏伪元素",
+    "toolbar": "两组运行时浮动工具栏外框"
+  },
+  "runtime": {
+    "light": [
+      {
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 322.3125,
+          "height": 34,
+          "top": 12,
+          "right": 334.3125,
+          "bottom": 46,
+          "left": 12
+        },
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 0px inset, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.06) 0px 1px 2px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.08) 0px 2px 8px 0px",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "padding": "1px 5px",
+        "radius": "10px",
+        "gap": "normal",
+        "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box"
+      },
+      {
+        "rect": {
+          "x": 1161.875,
+          "y": 12,
+          "width": 266.125,
+          "height": 34,
+          "top": 12,
+          "right": 1428,
+          "bottom": 46,
+          "left": 1161.875
+        },
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 0px inset, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.06) 0px 1px 2px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.08) 0px 2px 8px 0px",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "padding": "1px 5px",
+        "radius": "10px",
+        "gap": "4px",
+        "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box"
+      }
+    ],
+    "dark": [
+      {
+        "rect": {
+          "x": 12,
+          "y": 12,
+          "width": 322.3125,
+          "height": 34,
+          "top": 12,
+          "right": 334.3125,
+          "bottom": 46,
+          "left": 12
+        },
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 0px 0px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.06) 0px 1px 2px 0px, rgba(0, 0, 0, 0.24) 0px 2px 8px 0px",
+        "border": "0px solid rgba(255, 255, 255, 0.04)",
+        "padding": "1px 5px",
+        "radius": "10px",
+        "gap": "normal",
+        "background": "rgb(31, 31, 31) none repeat scroll 0% 0% / auto padding-box border-box"
+      },
+      {
+        "rect": {
+          "x": 1161.875,
+          "y": 12,
+          "width": 266.125,
+          "height": 34,
+          "top": 12,
+          "right": 1428,
+          "bottom": 46,
+          "left": 1161.875
+        },
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 0px 0px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.06) 0px 1px 2px 0px, rgba(0, 0, 0, 0.24) 0px 2px 8px 0px",
+        "border": "0px solid rgba(255, 255, 255, 0.04)",
+        "padding": "1px 5px",
+        "radius": "10px",
+        "gap": "4px",
+        "background": "rgb(31, 31, 31) none repeat scroll 0% 0% / auto padding-box border-box"
+      }
+    ]
+  },
+  "sizes": "16个控件×四尺寸×两主题，完整位置和尺寸仍以 source-design-fit-camera.json 的八组运行值为准。",
+  "registeredReplacements": [
+    {
+      "kind": "中文页名",
+      "rule": "页面菜单保留自然文本宽度，后续左侧控件按其与原英文页名的宽度差正常重排。"
+    },
+    {
+      "kind": "删除无服务分享入口",
+      "rule": "原历史/分享组合内相邻间距为2px；去掉24px分享按钮后，右侧工具栏导出/历史起点右移26px，评论及其后控件保持位置。"
+    }
+  ],
+  "remaining": "图标细节、画板动作与边框、其他状态及完整视觉仍未通过。"
+}

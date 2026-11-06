@@ -96,3 +96,26 @@
 .native-free-canvas-shell [data-native-canvas-title]{color:rgba(0,0,0,.9)}.dark .native-free-canvas-shell [data-native-canvas-title],.native-editor[data-theme=dark] .native-free-canvas-shell [data-native-canvas-title]{color:rgba(255,255,255,.93)}.native-free-canvas-shell [data-native-canvas-title]>.native-text-content{height:auto}
 
 .native-free-canvas-shell [data-native-canvas-title]>.native-rich-editor{height:auto;width:max-content;max-width:100%;min-width:1px}.native-free-canvas-shell [data-native-canvas-title]>.native-rich-editor .tiptap{min-width:1px}
+
+/* 固定 v2.8.0 的工具栏外框与缩放读数；仅作用于设计编辑器。 */
+.native-kind-design .native-toolbar-island{gap:4px;padding:5px;border:0;border-radius:10px;box-shadow:0 0 0 1px rgb(0 0 0 / .08),0 1px 2px rgb(11 11 11 / .06),0 2px 8px rgb(11 11 11 / .08)}
+.dark .native-kind-design .native-toolbar-island{box-shadow:inset 0 0 0 1px rgb(255 255 255 / .04),0 1px 2px rgb(11 11 11 / .06),0 2px 8px rgb(0 0 0 / .24)}
+.native-kind-design .native-toolbar-separator{margin-inline:2px}
+.native-kind-design .native-toolbar .native-icon-button{padding:0;font-weight:435}
+.native-kind-design .native-toolbar .native-history-trigger>.native-icon-button{font-size:14px;line-height:14px;font-weight:400}
+.native-kind-design .native-toolbar .native-comments-tools>.native-icon-button{font-weight:400}
+.native-kind-design .native-export-menu>summary{width:24px;padding:1px 0}
+.native-kind-design .native-zoom-menu>summary{gap:4px;padding:1px 8px;font-variant-numeric:tabular-nums}
+.native-kind-design .native-zoom-menu .native-menu-text{display:inline-flex;flex-direction:column;align-items:center}
+.native-kind-design .native-zoom-menu .native-menu-text::before{content:attr(data-readout-sizer);visibility:hidden;height:0}
+.native-kind-design .native-zoom-menu .native-menu-readout-caret{display:flex;align-items:center;justify-content:center;width:12px;height:12px;margin-inline:-2px;color:rgb(0 0 0 / .467)}
+.dark .native-kind-design .native-zoom-menu .native-menu-readout-caret{color:rgb(255 255 255 / .467)}
+
+.native-kind-design .native-toolbar{inset-block-start:12px;inset-inline-start:12px;inset-inline-end:calc(12px + var(--native-sidebar-width,0px))}
+.native-kind-design .native-toolbar .native-menu>summary{font-size:13px}
+@container(max-width:520px){.native-kind-design .native-toolbar{inset-inline-start:8px;inset-inline-end:8px}}
+
+.native-kind-design .native-toolbar .native-icon-button>svg{width:16px;height:16px}
+.native-kind-design .native-toolbar .native-icon-button>svg[data-native-icon=select]{fill:currentColor;stroke-width:0}
+.native-kind-design .native-toolbar button[aria-pressed=true]{background:rgb(228 239 251)}
+.dark .native-kind-design .native-toolbar button[aria-pressed=true]{background:rgb(31 42 54);color:rgb(106 171 241)}
