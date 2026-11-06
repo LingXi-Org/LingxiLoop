@@ -272,3 +272,6 @@ JSZip沿用锁文件3.10.1，仅在隔离导出环境按需加载，MIT署名已
 
 [8a1d134e复审](reviews/8a1d134e.json)关闭纸张外闪现但发现临时克隆冻结异步图片。
 [异步内容回归](functional/slides-magic-live-content.json)验证140/154运动中的真实图片已解码、占位清除及退出清理；仍待新候选正式CI和独立复审。
+
+[4a48187d复审](reviews/4a48187d.json)关闭图片问题，发现目标新增隔离内容重复执行。
+[目标隔离单实例回归](functional/slides-magic-executable-target.json)通过140/154真实动画启动计数，目标含embed完整子树保持原位且不进入运动镜像。

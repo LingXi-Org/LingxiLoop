@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
-import { createPage } from '../../../../shared/artifact-document'
-import { navigationTransition, transitionTiming, transitionRect } from './presentation-transition'
+import { createNode, createPage } from '../../../../shared/artifact-document'
+import {
+  executableRootIds,
+  navigationTransition,
+  transitionTiming,
+  transitionRect,
+} from './presentation-transition'
 
 const reference = JSON.parse(
   readFileSync(
@@ -58,4 +63,21 @@ test('magic geometry is relative to each slide and independent of preview scalin
       transform: 'none',
     },
   )
+})
+
+test('目标组后续加载的隔离内容也只能保留一个真实执行根', () => {
+  const page = createPage('target')
+  const group = createNode('group', 'root'),
+    nested = { ...createNode('group', 'nested'), parentId: 'root' },
+    embed = { ...createNode('embed', 'program'), parentId: 'nested' },
+    image = createNode('image', 'image')
+  page.nodes = { root: group, nested, program: embed, image }
+  page.nodeOrder = ['root', 'nested', 'program', 'image']
+  assert.deepEqual([...executableRootIds(page)], ['root'])
+  const earlier = {
+    ...page,
+    nodes: { root: group, nested, image },
+    nodeOrder: ['root', 'nested', 'image'],
+  }
+  assert.equal(executableRootIds(earlier).size, 0)
 })

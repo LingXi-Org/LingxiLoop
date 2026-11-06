@@ -1,0 +1,36 @@
+{
+  "scope": "含可执行内容的目标匹配根保持单实例，不进入运动镜像",
+  "review": "reviews/4a48187d.json",
+  "before": {
+    "starts": 2,
+    "currentIframes": 1,
+    "overlayIframes": 1
+  },
+  "after": [
+    {
+      "browserMajor": "140",
+      "receipt": {
+        "kind": "isolated-motion-executable-target",
+        "observation": {
+          "starts": 1,
+          "maximumOverlayIframes": 0,
+          "currentIframes": 1
+        },
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "receipt": {
+        "kind": "isolated-motion-executable-target",
+        "observation": {
+          "starts": 1,
+          "maximumOverlayIframes": 0,
+          "currentIframes": 1
+        },
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "qualified": false
+}

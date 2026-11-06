@@ -33,6 +33,19 @@ export function transitionRect(
   }
 }
 
+/** Executable descendants keep their one live root instead of entering a DOM mirror. */
+export function executableRootIds(page: ArtifactPage): Set<string> {
+  const roots = new Set<string>()
+  for (const node of Object.values(page.nodes))
+    if (node.type === 'embed') {
+      let ancestor = node
+      while (ancestor.parentId && page.nodes[ancestor.parentId])
+        ancestor = page.nodes[ancestor.parentId]
+      roots.add(ancestor.id)
+    }
+  return roots
+}
+
 /** Only two rendered slides participate; cancellation releases every animation. */
 export function animateSlideTransition(
   old: HTMLElement,
@@ -112,10 +125,11 @@ export function animateSlideTransition(
   } else {
     if (veil) animate(veil, [{ opacity: 1 }, { opacity: 0 }])
     const newOrigin = next.getBoundingClientRect()
+    const executable = executableRootIds(to)
     const matching = new Map(
         to.nodeOrder.flatMap((id) => {
           const n = to.nodes[id]
-          return n && !n.parentId && !n.hidden && n.scope !== 'canvas'
+          return n && !n.parentId && !n.hidden && n.scope !== 'canvas' && !executable.has(id)
             ? [[n.motionId ?? n.id, n] as const]
             : []
         }),

@@ -87,6 +87,12 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     const page=document.pages['page-2'];page.width=options['presentation-portrait']==='true'?540:960;page.height=options['presentation-portrait']==='true'?960:540
     for(const id of page.nodeOrder)page.nodes[id].motionId=id.replace('page-2-','page-1-')
     page.nodes['page-2-heading'].x=164
+    if(options['presentation-executable-target']==='true'){
+      const a=document.pages['page-1'],b=document.pages['page-2'],source='<script>parent.postMessage({type:"native-motion-embed-start"},"*")</script><p>隔离内容</p>'
+      const old=a.nodes['page-1-image'];a.nodes['page-1-child']={...old,id:'page-1-child',parentId:old.id,x:0,y:0};a.nodeOrder.push('page-1-child');a.nodes[old.id]={...old,type:'group'};delete a.nodes[old.id].assetId
+      const target=b.nodes['page-2-image'];b.nodes[target.id]={...target,type:'group'};delete b.nodes[target.id].assetId;b.nodes['page-2-embed']={...createNode('embed','page-2-embed'),parentId:target.id,x:0,y:0,width:640,height:360,embed:{format:'html',source,sourceHash:createHash('sha256').update(source).digest('hex')}};b.nodeOrder.push('page-2-embed')
+    }
+
     if(options['presentation-offpaper']==='true'){page.nodes.offpaper={...createNode('shape','offpaper'),x:-240,y:600,width:140,height:140,style:{fill:'#ff0000'}};page.nodeOrder.push('offpaper')}
   }
   if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-board-preview','canvas-board-export','canvas-board-preview-load','canvas-play-menu'].includes(options.checks)){
@@ -291,6 +297,14 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await page.goto(`${baseUrl}/?kind=${kind}${options.checks==='canvas-links'?'&project=fixture-project&view=conversations&conversation=fixture-room':''}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='slide-transitions'&&options['presentation-executable-target']==='true'){
+      await page.evaluate(()=>{window.__motionEmbedStarts=0;window.__overlayEmbedPeak=0;window.addEventListener('message',event=>{if(event.data?.type==='native-motion-embed-start')window.__motionEmbedStarts++});new MutationObserver(()=>{window.__overlayEmbedPeak=Math.max(window.__overlayEmbedPeak,document.querySelectorAll('.native-magic-overlay iframe').length)}).observe(document.body,{childList:true,subtree:true})})
+      await page.getByLabel('显示属性',{exact:true}).click();await page.locator('.native-transition-menu>summary').click();await page.getByRole('menuitemradio',{name:'神奇移动',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+      await page.getByRole('button',{name:'放映',exact:true}).click();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await show.press('ArrowRight');await page.waitForFunction(()=>window.__motionEmbedStarts>=1);await page.waitForFunction(()=>!document.querySelector('.native-slides-presentation-outgoing'));await page.waitForTimeout(250)
+      const observation=await page.evaluate(()=>({starts:window.__motionEmbedStarts,maximumOverlayIframes:window.__overlayEmbedPeak,currentIframes:document.querySelectorAll('.native-slides-presentation-current iframe').length}))
+      assert.deepEqual(observation,{starts:1,maximumOverlayIframes:0,currentIframes:1},'目标配对组新增隔离内容时也必须只执行一次')
+      await show.press('Escape');assert.deepEqual(errors,[]);return{kind:'isolated-motion-executable-target',observation,consoleOrPageErrors:errors}
+    }
     if(options.checks==='slide-transitions'){
       assert.equal(kind,'slides')
       if(options['presentation-mixed-sizes']==='true'){
