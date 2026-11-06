@@ -91,34 +91,47 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 14px;
-  border: 0;
-  border-radius: 20px;
-  background: var(--chat-composer-surface);
+  max-inline-size: 752px;
+  margin-inline: auto;
+  padding: 9px 9px 9px 8px;
+  border: 1px solid var(--input);
+  border-radius: 26px;
+  background: var(--card);
   color: var(--foreground);
   font-family: var(--font-sans);
-  box-shadow: var(--chat-composer-shadow), inset 0 0 0 1px var(--chat-outline);
-  transition: box-shadow 200ms;
+  box-shadow: 0 1px 2px rgb(20 20 18 / 4%), 0 4px 14px rgb(20 20 18 / 5%);
+  transition: box-shadow 200ms, border-color 200ms;
 }
-.chat-composer:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
+/* A quote or pending attachments turn the pill into a panel. */
+.chat-composer:has([data-composer-quote], .chat-composer-attachments:not(:empty)) {
+  padding: 8px;
+  border-color: transparent;
+  border-radius: 20px;
+  box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgb(20 20 18 / 4%), 0 8px 22px -8px rgb(20 20 18 / 12%);
+}
+.chat-composer:focus-within { border-color: color-mix(in srgb, var(--brand) 45%, var(--input)); outline: none; }
+.chat-composer-row { display: flex; align-items: flex-end; gap: 8px; min-block-size: 34px; }
 .chat-composer-input {
   position: relative;
+  flex: 1;
+  align-self: center;
   min-inline-size: 0;
-  min-block-size: 48px;
   max-block-size: 384px;
   overflow-y: auto;
-  padding-inline: 6px 0;
+  padding-block: 6px;
   font-family: inherit;
-  font-size: var(--chat-composer-size);
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 22px;
   outline: none;
 }
-.chat-composer-input .aui-lexical-input { min-block-size: 48px; outline: none; }
-.chat-composer-input .aui-lexical-placeholder { position: absolute; inset-block-start: 0; pointer-events: none; color: var(--muted-foreground); }
-.chat-composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-block-start: 4px; }
-.chat-composer-control { inline-size: 32px; block-size: 32px; border-radius: 8px; }
+.chat-composer-input .aui-lexical-input { min-block-size: 22px; outline: none; }
+.chat-composer-input .aui-lexical-placeholder { position: absolute; inset-block-start: 6px; pointer-events: none; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-inline-size: 100%; }
+.chat-composer-control { flex: 0 0 34px; inline-size: 34px; block-size: 34px; border-radius: 17px; }
+.chat-composer-add { color: var(--fg2); background: transparent; }
+.chat-composer-add:hover { background: var(--accent); color: var(--foreground); }
 .chat-composer-send { background: var(--brand); color: var(--brand-foreground); }
 .chat-composer-send:hover { background: color-mix(in srgb, var(--brand) 90%, var(--foreground)); }
+.chat-composer-send:disabled { background: var(--accent); color: var(--muted-foreground); opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .chat-composer { transition: none; } }
 
 /* Code surfaces follow the active mode, including editable native blocks. */

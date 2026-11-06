@@ -1,13 +1,14 @@
+import { toast } from 'sonner'
+import { Avatar } from '@/components/Avatar'
+import { useParticipants } from '@/features/agents/state'
 import { useEffect, useRef, useState } from 'react'
 import { ApiError } from '@/api/core/http'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
-import type { Conversation } from '@/types'
+import type { Conversation, Participant } from '@/types'
 import { conversationsApi } from '../api'
 import type { ConversationMembership } from '../contracts'
 import { captureConversationScope, useConversations } from '../store'
@@ -22,9 +23,23 @@ const restrictions = {
 export function ConversationMembersButton({ conversation }: { conversation: Conversation }) {
   const [open, setOpen] = useState(false)
   return <>
-    <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={() => setOpen(true)} aria-label="管理群成员">成员</Button>
+    <MembersStackButton conversation={conversation} onClick={() => setOpen(true)} />
     {open && <ConversationMembersDialog conversation={conversation} onClose={() => setOpen(false)} />}
   </>
+}
+
+function MembersStackButton({ conversation, onClick }: { conversation: Conversation; onClick: () => void }) {
+  const byId = useParticipants(state => state.byId)
+  const people = conversation.members.map(id => byId[id]).filter((person): person is Participant => Boolean(person)).slice(0, 3)
+  return <button type="button" onClick={onClick} aria-label={`群成员 · ${conversation.members.length} 人`}
+    className="inline-flex h-8 shrink-0 items-center gap-2 rounded-full pe-2.5 ps-[5px] text-[12.5px] text-fg2 shadow-[inset_0_0_0_1px_var(--border)] hover:bg-accent/60 focus-visible:outline-2 focus-visible:outline-ring max-md:min-h-11">
+    <span aria-hidden="true" className="inline-flex">
+      {people.map((person, index) => <span key={person.id} className="inline-flex rounded-full shadow-[0_0_0_2px_var(--background)]" style={{ marginInlineStart: index ? -6 : 0 }}>
+        <Avatar p={person} size={22} animated={false} ringColor="var(--background)" />
+      </span>)}
+    </span>
+    {conversation.members.length}
+  </button>
 }
 
 export function ConversationMembersDialog({ conversation, onClose }: { conversation: Conversation; onClose: () => void }) {
@@ -68,7 +83,9 @@ function Members({ conversation, onClose, meId }: { conversation: Conversation; 
       const result = remove ? await conversationsApi.removeMember(conversation.id, id) : await conversationsApi.addMember(conversation.id, id)
       committed = true
       if (!current()) return
-      setNotice(remove ? '成员已移除，原消息和学习证据保留。' : '成员已加入，可查看本群历史。')
+      const name = state.members.find(person => person.id === id)?.name ?? state.candidates.find(person => person.id === id)?.name ?? '成员'
+      setNotice(remove ? null : `${name}已加入，可以查看本群历史`)
+      if (remove) toast(`已移除${name}，原消息和学习证据会保留`, { action: { label: '撤销', onClick: () => void change(id, false) } })
       if ('publication' in result && result.publication === 'queued') setNotice('成员变更已保存，正在更新会话。')
       await refresh()
       await useConversations.getState().reload()
@@ -83,43 +100,81 @@ function Members({ conversation, onClose, meId }: { conversation: Conversation; 
       if (current()) setBusy(null)
     }
   }
+  const byId = useParticipants(state => state.byId)
   const candidates = state?.candidates.filter(p => p.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) ?? []
+  const row = 'flex min-w-0 items-center gap-2.5 rounded-lg px-2 py-[7px]'
+  const avatarOf = (person: { id: string; name: string; kind: string }) => byId[person.id]
+    ? <Avatar p={byId[person.id]!} size={28} animated={false} />
+    : <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-full border border-input bg-accent text-xs font-semibold text-fg2">{person.name.slice(0, 1)}</span>
+  const role = (person: { kind: string }) => person.kind === 'agent' ? '智能体' : '成员'
   return <Dialog open onOpenChange={open => { if (!open && busy === null) onClose() }}>
-    <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-hidden">
-      <DialogHeader className="shrink-0 pe-8">
-        <DialogTitle>群成员</DialogTitle>
-        <DialogDescription>{conversation.title}。新成员可查看本群已有消息；不会获得其他私聊或任务会话的访问权。</DialogDescription>
-      </DialogHeader>
-      {!state && !error && <ResourceSkeleton variant="list" count={3} compact label="正在加载群成员" />}
-      {state && <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-        {state.restriction && <p className="text-sm text-muted-foreground">{restrictions[state.restriction]}</p>}
-        <section aria-label="当前成员" className="space-y-1">
-          <p className="text-sm font-medium">当前成员 · {state.members.length}</p>
-          {state.members.map(p => <div key={p.id} className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1">
-            <span className="min-w-0 flex-1 break-words text-sm">{p.name}{p.id === meId ? '（我）' : ''}{p.departed_at ? '（已离开学习区）' : ''}</span>
-            <span className="shrink-0 text-xs text-muted-foreground">{p.kind === 'agent' ? '智能体' : '成员'}</span>
-            {state.canManage && p.id !== meId && <Button variant="ghost" size="sm" disabled={busy !== null} aria-label={`移除${p.name}`} onClick={() => void change(p.id, true)}>{busy === p.id ? '处理中…' : '移除'}</Button>}
-          </div>)}
-        </section>
-        {state.canManage && <section aria-label="添加成员" className="space-y-2">
-          <p className="text-sm font-medium">添加成员或智能体</p>
-          <Input aria-label="搜索可添加的成员" placeholder="搜索成员或智能体" value={query} onChange={e => setQuery(e.target.value)} disabled={busy !== null} />
-          {candidates.length === 0 && <p className="text-sm text-muted-foreground">没有可添加的匹配成员。教师或学生需先加入本课程。</p>}
-          {candidates.map(p => <div key={p.id} className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1">
-            <span className="min-w-0 flex-1 break-words text-sm">{p.name}</span>
-            <span className="shrink-0 text-xs text-muted-foreground">{p.kind === 'agent' ? '智能体' : '成员'}</span>
-            <Button variant="outline" size="sm" disabled={busy !== null || state.members.length >= 50} aria-label={`添加${p.name}`} onClick={() => void change(p.id, false)}>{busy === p.id ? '处理中…' : '添加'}</Button>
-          </div>)}
-        </section>}
-      </div>}
-      {notice && <p role="status" className="shrink-0 text-sm text-muted-foreground">{notice}</p>}
-      {error && <p role="alert" className="shrink-0 text-sm text-destructive">{error}</p>}
-      <DialogFooter className="shrink-0">
+    <DialogContent showCloseButton={false} className="flex max-h-[calc(100dvh-2rem)] w-[460px] max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden rounded-2xl border-0 p-0 shadow-[0_0_0_1px_var(--border),0_24px_60px_-12px_rgb(20_20_18/25%)]">
+      <div className="flex shrink-0 items-start gap-2 px-[18px] pb-3 pt-[18px]">
+        <DialogHeader className="flex-1 gap-0.5 text-start">
+          <DialogTitle className="text-base font-semibold">群成员</DialogTitle>
+          <DialogDescription className="text-[12.5px]">{conversation.title}{state ? ` · ${state.members.length} 人` : ''}</DialogDescription>
+        </DialogHeader>
+        <DialogClose disabled={busy !== null} aria-label="关闭" className="grid size-[30px] place-items-center rounded-lg text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </DialogClose>
+      </div>
+      {!state && !error && <div className="px-[18px] pb-4"><ResourceSkeleton variant="list" count={3} compact label="正在加载群成员" /></div>}
+      {error && !state && <div className="px-[18px] pb-[18px]"><DialogError text={error} /></div>}
+      {state && <>
+        {state.canManage && <div className="shrink-0 px-[18px] pb-3">
+          <label className="flex h-9 items-center gap-2 rounded-[9px] px-3 text-muted-foreground shadow-[0_0_0_1px_var(--input)] focus-within:shadow-[0_0_0_1px_var(--brand),0_0_0_4px_var(--brand-surface)]">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-[15px] shrink-0"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input aria-label="搜索可添加的成员" placeholder="添加成员或智能体" value={query} onChange={e => setQuery(e.target.value)} disabled={busy !== null}
+              className="min-w-0 flex-1 border-0 bg-transparent text-[13.5px] text-foreground outline-none placeholder:text-muted-foreground" />
+          </label>
+        </div>}
+        {notice && <p role="status" className="mx-[18px] mb-2.5 flex shrink-0 items-center gap-2 rounded-[9px] bg-brand-surface px-2.5 py-2 text-[12.5px] text-brand">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5 shrink-0"><path d="m5 12 5 5 9-10" /></svg>{notice}
+        </p>}
+        {error && <div className="mx-[18px] mb-2.5 shrink-0"><DialogError text={error} /></div>}
+        <div className="min-h-0 flex-1 overflow-y-auto px-2.5 pb-3">
+          {state.restriction && <p className="px-2 pb-2 text-[12.5px] text-muted-foreground">{restrictions[state.restriction]}</p>}
+          {state.canManage && query.trim() && <section aria-label="添加成员" className="pb-2">
+            <p className="px-2 pb-1 pt-1 text-[11.5px] text-muted-foreground">可添加</p>
+            {candidates.length === 0 && <p className="px-2 py-2 text-[12.5px] text-muted-foreground">没有可添加的匹配成员。教师或学生需先加入本课程。</p>}
+            {candidates.map(p => <div key={p.id} className={row}>
+              {avatarOf(p)}
+              <span className="flex min-w-0 flex-1 flex-col"><span className="truncate text-[13.5px]">{p.name}</span><span className="text-xs text-muted-foreground">{role(p)}</span></span>
+              <button type="button" disabled={busy !== null || state.members.length >= 50} aria-label={`添加${p.name}`} onClick={() => void change(p.id, false)}
+                className="h-7 shrink-0 rounded-lg bg-brand-surface px-2.5 text-[12.5px] font-medium text-brand hover:brightness-95 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40">{busy === p.id ? '处理中…' : '添加'}</button>
+            </div>)}
+          </section>}
+          <section aria-label="当前成员">
+            <p className="px-2 pb-1 pt-1 text-[11.5px] text-muted-foreground">当前成员</p>
+            {state.members.map(p => <div key={p.id} className={row}>
+              {avatarOf(p)}
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-[13.5px]">{p.name}{p.id === meId ? '（我）' : ''}</span>
+                <span className="text-xs text-muted-foreground">{p.departed_at ? '已离开学习区' : role(p)}</span>
+              </span>
+              {state.canManage && p.id !== meId && <button type="button" disabled={busy !== null} aria-label={`移除${p.name}`} onClick={() => void change(p.id, true)}
+                className="h-7 shrink-0 rounded-lg px-2 text-[12.5px] text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40">{busy === p.id ? '处理中…' : '移除'}</button>}
+            </div>)}
+          </section>
+        </div>
+      </>}
+      <DialogFooter className="m-0 shrink-0 flex-row justify-end gap-1.5 border-t border-border bg-transparent px-4 py-3">
         {state?.restriction === 'managed_context' && workspace && <NewConversationDialog companyId={workspace.companyId} projectId={workspace.projectId}
           isMobile={false} onCreated={id => { if (current()) { useApp.getState().selectConversation(id); onClose() } }}
-          trigger={<Button type="button" variant="outline">新建普通群聊</Button>} />}
-        <Button type="button" disabled={busy !== null} onClick={onClose}>完成</Button>
+          trigger={<button type="button" className="h-[34px] rounded-[10px] px-3 text-[13.5px] font-medium text-fg2 shadow-[inset_0_0_0_1px_var(--input)] hover:bg-accent">新建普通群聊</button>} />}
+        <button type="button" disabled={busy !== null} onClick={onClose} className="h-[34px] rounded-[10px] bg-brand px-3.5 text-[13.5px] font-medium text-brand-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-40">完成</button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
+}
+
+/** Inline failure row shared by conversation dialogs. */
+export function DialogError({ text, onRetry }: { text: string; onRetry?: () => void }) {
+  return <div role="alert" className="flex items-center gap-2.5 rounded-[10px] bg-[rgb(200_70_59/6%)] px-3 py-2.5">
+    <span aria-hidden="true" className="grid size-6 shrink-0 place-items-center rounded-[7px] bg-[rgb(200_70_59/12%)] text-[#C8463B]">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-3.5"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>
+    </span>
+    <span className="min-w-0 flex-1 text-[13px] text-foreground">{text}</span>
+    {onRetry && <button type="button" onClick={onRetry} className="h-7 shrink-0 rounded-lg bg-[rgb(200_70_59/10%)] px-2.5 text-[12.5px] font-semibold text-[#C8463B] focus-visible:outline-2 focus-visible:outline-ring">重试</button>}
+  </div>
 }

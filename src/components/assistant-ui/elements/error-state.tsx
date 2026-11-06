@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react'
-import { CircleAlertIcon, RefreshCwIcon } from 'lucide-react'
+import { RefreshCwIcon } from 'lucide-react'
+import { StatusNotice } from './status-notice'
 import { cn } from '@/lib/utils'
 import { ShimmerLabel } from './surfaces'
 
@@ -12,16 +13,7 @@ export function ErrorState({ title, detail, retrying, onRetry, retryLabel = '重
     <RefreshCwIcon aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground motion-safe:animate-spin" />
     <ShimmerLabel className="relative inline-block text-muted-foreground">{retryingLabel}</ShimmerLabel>
   </div>
-  return <div data-slot="error-state" key="error" role="alert" className={cn(
-    'fade-in animate-in flex w-full items-start gap-2.5 rounded-2xl bg-destructive/[0.06] px-4 py-3 text-sm duration-300 motion-reduce:animate-none dark:bg-destructive/10', className,
-  )} {...props}>
-    <CircleAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-destructive/80" />
-    <div className="min-w-0 flex-1">
-      <p className="font-medium text-destructive">{title}</p>
-      <p className="mt-0.5 text-[13px] leading-snug text-destructive">{detail}</p>
-    </div>
-    {onRetry && <button type="button" onClick={onRetry} disabled={disabled} className="ms-auto flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-destructive outline-none transition-colors hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-destructive disabled:opacity-40 max-md:min-h-11 dark:text-destructive">
-      <RefreshCwIcon aria-hidden="true" className="size-3" />{retryLabel}
-    </button>}
-  </div>
+  return <StatusNotice data-slot="error-state" key="error" tone="error" title={title} detail={detail}
+    action={onRetry ? { label: retryLabel, onClick: onRetry, disabled } : undefined}
+    className={cn('fade-in animate-in duration-300 motion-reduce:animate-none', className)} {...props} />
 }

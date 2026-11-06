@@ -132,6 +132,13 @@ const indexedComponents = {
   ])) },
 }
 
+/** 3 分 31 秒 · 42 秒 · 0.8 秒 */
+export function formatRunDuration(ms: number) {
+  if (ms < 10_000) return `${(ms / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 1 })} 秒`
+  const seconds = Math.round(ms / 1000)
+  return seconds < 60 ? `${seconds} 秒` : `${Math.floor(seconds / 60)} 分 ${seconds % 60} 秒`
+}
+
 export function NativeMessageContent({ Text = DefaultText, footer = null, mediaFooter = null, attention = null }: {
   Text?: TextMessagePartComponent; footer?: ReactNode; mediaFooter?: ReactNode; attention?: ReactNode
 }) {
@@ -183,7 +190,7 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
     : 'complete'
   const statusLabel = status === 'error' || status === 'cancelled'
     ? terminalFailurePresentation(message)?.statusLabel ?? (status === 'cancelled' ? '已取消' : '执行未完成')
-    : { running: '处理中', 'requires-action': '等待处理', complete: '处理过程', incomplete: '未完成' }[status]
+    : { running: '处理中', 'requires-action': '等待处理', complete: '活动记录', incomplete: '未完成' }[status]
   const attachments = message.role === 'user' ? message.attachments : []
   const inlineImages = message.role === 'user' ? presentation.filter(item => item.region === 'body' && isImagePart(item.part)) : []
   const attachmentImages = attachments.flatMap(attachment => attachment.content.flatMap((part, index) => isImagePart(part) ? [{ attachment, part, index }] : []))
@@ -204,7 +211,7 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
     </div>}
     {!readOnly && terminalTrace && target && <TerminalRunTrace key={JSON.stringify([target,terminalTrace])} target={target} reference={terminalTrace} />}
     {(entries.length > 0 || commentary || trace || tasks?.length || historyControls) && <RunActivity status={status} statusLabel={statusLabel} entries={entries} tasks={tasks} historyControls={historyControls}
-      durationLabel={trace?.root.durationMs !== null && trace?.root.durationMs !== undefined ? `${(trace.root.durationMs / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 秒` : undefined}
+      durationLabel={trace?.root.durationMs !== null && trace?.root.durationMs !== undefined ? formatRunDuration(trace.root.durationMs) : undefined}
       onInspectTask={id => setTraceSelection(current => ({ scope: traceScope, id, version: current.version + 1 }))}
       open={activityOpen} onOpenChange={open => { setActivityOpen(open); if (open && history.entries.length === 0 && history.hasMore && !history.isLoading) history.loadMore() }}
       trace={trace ? <TraceWaterfall key={trace.root.id} trace={trace} selectedSpanId={selectedTraceSpanId}

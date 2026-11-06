@@ -1,9 +1,6 @@
 import { ThreadPrimitive, useAui, useAuiState } from '@assistant-ui/react'
-import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { Button } from '@/components/ui/button'
 import { useConversations } from '@/features/conversations/store'
 import { useConversationUi } from '@/stores/conversationUi'
 import { messagesApi } from '../api'
@@ -242,11 +239,11 @@ export function ConversationThread({
             if ((event.target as Element).closest('input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]')) return
             markUserInput()
           }}
-          className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
+          className="chat-thread-scroll chat-thread-fade relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable_both-edges] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
           {/* Align the reading column with the reference composer. */}
-          <div data-chat-message-column className="@container/chat mx-auto flex min-h-full w-full max-w-3xl shrink-0 flex-col [--chat-extra-space:2rem]">
+          <div data-chat-message-column className="@container/chat mx-auto flex min-h-full w-full max-w-[848px] shrink-0 flex-col px-6 pt-1 [--chat-extra-space:1.5rem] max-sm:px-3">
             {!threadRootId && (
-              <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
+              <div ref={sentinelRef} className="flex min-h-10 w-full shrink-0 items-center justify-center text-xs text-muted-foreground">
                 {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
                   <ConversationStart createdAt={chrome.first?.createdAt} timestampMissing={chrome.first?.timestampMissing === true} />
                 )}
@@ -259,17 +256,17 @@ export function ConversationThread({
           </div>
         </ScrollFadeContainer>
         </ThreadPrimitive.Viewport>
-      {showJumpControl && <Button type="button" variant="outline" size="icon"
-        className="absolute bottom-3 end-5 z-30 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground md:size-9"
-        aria-label="滚动到底部" data-chat-scroll-bottom onClick={() => scrollToBottom(false)}>
-        <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
-      </Button>}
+      {showJumpControl && <button type="button"
+        className="absolute bottom-3 start-1/2 z-30 grid size-8 -translate-x-1/2 place-items-center rounded-full border border-input bg-background text-fg2 shadow-[0_2px_8px_rgb(20_20_18/8%)] hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring max-md:size-11 rtl:translate-x-1/2"
+        aria-label="回到最新" data-chat-scroll-bottom onClick={() => scrollToBottom(false)}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="m6 9 6 6 6-6" /></svg>
+      </button>}
       </div>
-      {!readOnly && <div className="relative z-20 shrink-0 bg-background pt-2 md:pt-4" data-chat-composer-bar>
+      {!readOnly && <div className="relative z-20 shrink-0 bg-background px-6 pb-4 pt-1 max-sm:px-3 max-sm:pb-2" data-chat-composer-bar>
         <ConversationComposer
           conversationId={conversationId}
           compact={compact}
-          placeholder={threadRootId ? '在帖子中回复…' : undefined}
+          placeholder={threadRootId ? '回复这条消息' : undefined}
         />
       </div>}
     </ThreadPrimitive.Root>

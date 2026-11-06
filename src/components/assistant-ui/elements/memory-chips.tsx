@@ -3,7 +3,7 @@
 import type { ComponentProps } from "react";
 import { BrainIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { field, ghostButton, mono } from "./surfaces";
+import { ghostButton } from "./surfaces";
 
 export type MemoryChange = "added" | "updated" | "existing";
 
@@ -27,13 +27,13 @@ export function MemoryChips({
   return (
     <div
       data-slot="memory-chips"
-      className={cn("flex w-full max-w-sm flex-col gap-2", className)}
+      className={cn("flex w-full max-w-[620px] flex-col gap-2", className)}
 
       {...props}
     >
       <div className="flex items-center gap-1.5">
-        <BrainIcon className="text-muted-foreground size-3.5" />
-        <span className={cn(mono, "text-muted-foreground")}>
+        <span aria-hidden className="grid size-5 place-items-center rounded-md bg-[rgb(123_92_201/12%)] text-[#7B5CC9]"><BrainIcon className="size-3" /></span>
+        <span className="text-xs text-muted-foreground">
           {fresh > 0 ? `已更新 ${fresh} 条记忆` : "记忆"}
         </span>
       </div>
@@ -43,10 +43,10 @@ export function MemoryChips({
           <span
             key={chip.id}
             className={cn(
-              "fade-in zoom-in-95 animate-in fill-mode-both group flex items-center gap-1 rounded-full py-1 pr-1 pl-2.5 text-xs duration-300",
+              "fade-in zoom-in-95 animate-in fill-mode-both group flex h-7 items-center gap-1 rounded-full pe-1 ps-2.5 text-[12.5px] duration-300",
               chip.change === "existing"
-                ? cn(field, "text-muted-foreground")
-                : "bg-info/12 text-info",
+                ? "text-fg2 shadow-[inset_0_0_0_1px_var(--border)]"
+                : "bg-brand-surface text-brand",
             )}
           >
             {chip.text}

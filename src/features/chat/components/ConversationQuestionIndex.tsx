@@ -74,7 +74,7 @@ export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoading
   }, [activeId, questions, isMobile])
 
   if (isMobile || (!questions.length && !hasMoreOlder)) return null
-  return <aside data-question-index data-source="assistant-ui-conversation-map" className="flex w-11 shrink-0 flex-col py-3">
+  return <aside data-question-index data-source="assistant-ui-conversation-map" className="order-last flex w-11 shrink-0 flex-col py-7">
     {hasMoreOlder && <Tooltip>
       <TooltipTrigger asChild>
         <button type="button" className="chat-question-index-button shrink-0" aria-label={loadFailed ? '加载失败，重试更早的提问' : '加载更早的提问'}
@@ -89,8 +89,8 @@ export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoading
       <ConversationMap entries={questions.map(question => ({ id: question.id, title: question.preview }))}
         activeId={activeId ?? undefined} visibleIds={visibleIds} onSelect={onNavigate} side="right"
         aria-label="当前对话提问索引"
-        className="min-h-full gap-1 [--foreground:var(--primary)] [&>button:focus-visible]:!outline-solid [&>button:focus-visible]:!outline-2 [&>button:focus-visible]:!outline-ring motion-reduce:[&_*]:!transition-none"
-        style={{ height: questions.length * 18 }} />
+        className="min-h-full gap-2.5 [--foreground:var(--brand)] [--muted-foreground:var(--input)] [&>button:focus-visible]:!outline-solid [&>button:focus-visible]:!outline-2 [&>button:focus-visible]:!outline-ring motion-reduce:[&_*]:!transition-none"
+        style={{ height: questions.length * 12 }} />
     </div>
   </aside>
 }

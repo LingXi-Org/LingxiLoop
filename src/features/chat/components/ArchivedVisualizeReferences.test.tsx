@@ -7,7 +7,7 @@ const references = [{ path: '/work/diagram.html', title: '<script>alert(1)</scri
 
 test('historical cards are inert, escaped, and offer scoped export rather than a live guest', () => {
   const html = renderToStaticMarkup(<ArchivedVisualizeReferences references={references} conversationId="room" sourceMessageId="source" readOnly={false} />)
-  assert.match(html, /交互功能已停用/)
+  assert.match(html, /已不能在线打开/)
   assert.match(html, /下载历史内容/)
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/)
   assert.doesNotMatch(html, /\/work\/diagram.html/)
@@ -19,7 +19,7 @@ test('read-only and not-yet-delivered references never expose an export action',
   for (const props of [{ readOnly: true, conversationId: 'room', sourceMessageId: 'source' },
     { readOnly: false, conversationId: 'room' }, { readOnly: false, sourceMessageId: 'source' }]) {
     const html = renderToStaticMarkup(<ArchivedVisualizeReferences references={references} {...props} />)
-    assert.match(html, /交互功能已停用/)
+    assert.match(html, /已不能在线打开/)
     assert.doesNotMatch(html, /<button/)
   }
 })

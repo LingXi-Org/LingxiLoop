@@ -165,7 +165,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
 
-  if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> }
+  if (infoParticipantId) { drawerTitle = '资料'; drawerContent = <InfoPane onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> }
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
 
@@ -178,7 +178,9 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   const mobileChatOpen = !dashboardOpen && !learningSpaces.pending && isMobile && mobileConversationOpen && Boolean(selectedConversation)
   const drawerWidth = isMobile
     ? ' data-[vaul-drawer-direction=right]:w-screen data-[vaul-drawer-direction=right]:max-w-none'
-    : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
+    : infoParticipantId ? ' w-[min(92vw,360px)] rounded-s-2xl sm:[--drawer-content-width:min(92vw,360px)]'
+      : openThread ? ' w-[min(92vw,400px)] rounded-s-2xl sm:[--drawer-content-width:min(92vw,400px)]'
+        : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
   return (
     <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-cases-shell={shellModule === 'cases' || undefined} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
@@ -192,11 +194,11 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
         />}
       <div className={`flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)] ${isMobile ? '' : 'pe-2 pt-2'}`}>
         {navigationError && <Alert variant="destructive" className="mb-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
-        <div data-ui-page={view} data-shell-module={shellModule} aria-busy={navigationPending || undefined} className={`relative ${isMobile ? '' : 'mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
+        <div data-ui-page={view} data-shell-module={shellModule} aria-busy={navigationPending || undefined} className={`relative ${isMobile ? '' : 'mb-2 rounded-[14px] border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
           <ShellNavContext.Provider value={mobileNav}>
           <ShellNavTriggerContext.Provider value={!isMobile && shellModule === 'chat' ? <Button type="button" variant="ghost" size="icon"
             aria-label={sidebarOpen ? '收起会话列表' : '展开会话列表'} aria-expanded={sidebarOpen} aria-controls="conversations"
-            onClick={() => setSidebarOpen(value => !value)} className="shrink-0 text-muted-foreground"><PanelLeft className="size-4" /></Button> : null}>
+            onClick={() => setSidebarOpen(value => !value)} className="size-8 shrink-0 rounded-lg text-muted-foreground hover:bg-accent"><PanelLeft className="size-4" strokeWidth={1.7} /></Button> : null}>
           <div key={`conversation:${scope}`} style={shellModule === 'slides' || directPage ? { position: 'absolute', inset: 0, visibility: 'hidden', opacity: 0, pointerEvents: 'none' } : undefined} inert={shellModule === 'slides' || directPage} aria-hidden={shellModule === 'slides' || directPage} className="h-full min-h-0 min-w-0">
           <ResizablePanelGroup
             id="desktop-conversation-layout"

@@ -2,7 +2,7 @@ import { RecommendationCard } from '@/components/assistant-ui/elements/recommend
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { lazy, Suspense, useState } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
-import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
+import { GenerationProgress } from '@/components/assistant-ui/elements/progress-card'
 import { artifactProgress } from '../runtime/task-progress'
 import { PollCard } from '@/components/assistant-ui/elements/poll-card'
 import {
@@ -138,7 +138,10 @@ export function ElicitationFormTool({ args, result, addResult, initialAnswers = 
 
 export function ArtifactProgressTool({ args }: Pick<CardProps, 'args'>) {
   const names = useParticipants(state => state.byId)
-  return <ProgressTracker {...artifactProgress(args, names)} />
+  const progress = artifactProgress(args, names)
+  const title = typeof args.kind === 'string' && args.kind === 'slides' ? '正在生成演示文稿' : '正在生成画板'
+  return <GenerationProgress title={title} subtitle={typeof args.title === 'string' ? args.title : undefined} steps={progress.steps}
+    outcome={progress.choice ? { kind: progress.choice.outcome as 'success' | 'failed' | 'partial' | 'cancelled', summary: progress.choice.summary } : undefined} />
 }
 
 // The homework editor brings the forum/content pipeline; only its own tool call loads it.

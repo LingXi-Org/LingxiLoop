@@ -62,29 +62,28 @@ export function ConversationSearch({
 
   const move = (delta: number) => setMatchIndex((index) => (index + delta + matches.length) % Math.max(1, matches.length))
   return (
-    <div className="chat-find-toolbar mx-2 mt-2 flex items-center gap-2 rounded-xl border border-border/40 bg-muted/30 px-2 py-1.5 text-foreground">
-      <div className="flex flex-1 items-center gap-2 rounded-3xl bg-muted px-3 py-1 text-[13px] text-muted-foreground focus-within:ring-1 focus-within:ring-ring">
-        <ISearch className="size-3.5" strokeWidth={2} />
-        <Input
-          ref={inputRef}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') { onClose(); return }
-            if (event.key === 'Enter') { event.preventDefault(); move(event.shiftKey ? -1 : 1) }
-            if (event.key === 'ArrowUp') { event.preventDefault(); move(-1) }
-            if (event.key === 'ArrowDown') { event.preventDefault(); move(1) }
-          }}
-          placeholder="搜索当前会话…"
-          className="h-8 min-w-0 flex-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-        />
-        <span className="shrink-0 font-mono text-[11px] tabular-nums">
-          {matches.length === 0 ? (query.trim() ? '无匹配' : '') : `${matchIndex + 1} / ${matches.length}`}
-        </span>
-      </div>
-      <Button type="button" variant="ghost" size="icon-lg" disabled={matches.length === 0} onClick={() => move(-1)} aria-label="上一个匹配">↑</Button>
-      <Button type="button" variant="ghost" size="icon-lg" disabled={matches.length === 0} onClick={() => move(1)} aria-label="下一个匹配">↓</Button>
-      <Button type="button" variant="ghost" size="icon-lg" onClick={onClose} aria-label="关闭搜索">×</Button>
+    <div role="search" className="chat-find-toolbar mx-auto mt-1 flex h-10 w-[calc(100%-56px)] max-w-[700px] items-center gap-2 rounded-[10px] bg-card ps-3 pe-1.5 text-foreground shadow-[var(--popover-shadow)] max-sm:w-[calc(100%-24px)]">
+      <ISearch className="size-[15px] shrink-0 text-muted-foreground" strokeWidth={1.6} />
+      <Input
+        ref={inputRef}
+        value={query}
+        aria-label="在对话中搜索"
+        onChange={(event) => setQuery(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') { onClose(); return }
+          if (event.key === 'Enter') { event.preventDefault(); move(event.shiftKey ? -1 : 1) }
+          if (event.key === 'ArrowUp') { event.preventDefault(); move(-1) }
+          if (event.key === 'ArrowDown') { event.preventDefault(); move(1) }
+        }}
+        placeholder="搜索当前会话…"
+        className="h-8 min-w-0 flex-1 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 dark:bg-transparent"
+      />
+      <span className="shrink-0 text-xs tabular-nums text-muted-foreground" aria-live="polite">
+        {matches.length === 0 ? (query.trim() ? '无匹配' : '') : `${matchIndex + 1} / ${matches.length}`}
+      </span>
+      <Button type="button" variant="ghost" size="icon" className="size-7 rounded-lg text-muted-foreground hover:bg-accent max-md:size-11" disabled={matches.length === 0} onClick={() => move(-1)} aria-label="上一个匹配"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="m18 15-6-6-6 6" /></svg></Button>
+      <Button type="button" variant="ghost" size="icon" className="size-7 rounded-lg text-muted-foreground hover:bg-accent max-md:size-11" disabled={matches.length === 0} onClick={() => move(1)} aria-label="下一个匹配"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="m6 9 6 6 6-6" /></svg></Button>
+      <Button type="button" variant="ghost" size="icon" className="size-7 rounded-lg text-muted-foreground hover:bg-accent max-md:size-11" onClick={onClose} aria-label="关闭搜索"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M18 6 6 18M6 6l12 12" /></svg></Button>
     </div>
   )
 }

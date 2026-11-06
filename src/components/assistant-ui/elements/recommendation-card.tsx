@@ -3,11 +3,10 @@
 import { CheckIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { conversationCardSize, inkButton, mono, paper } from "./surfaces";
+import { ActionTicket, ticketGhost, ticketPrimary } from "./approval-card";
 
 export type RecommendationState = "idle" | "accepted";
 
-const CONFIDENCE_BARS = [0, 1, 2];
 
 export function RecommendationCard({
   state,
@@ -37,70 +36,17 @@ export function RecommendationCard({
   onAccept?: () => void;
   onAlternatives?: () => void;
 }) {
+  const icon = <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-3.5"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" /></svg>;
   return (
-    <div
-      data-slot="recommendation-card"
-      className={cn(
-        paper,
-        conversationCardSize.standard,
-        "flex flex-col gap-3 rounded-[20px] p-4",
-        className,
-      )}
-
-      {...props}
-    >
-      <p className="text-sm font-medium">{question}</p>
-      <p className="text-foreground/55 text-[13px] leading-relaxed">
-        {children}
-      </p>
-
-      <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
-        {state === "idle" ? (
-          <>
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="flex items-end gap-0.5" aria-hidden>
-                {CONFIDENCE_BARS.map((bar) => (
-                  <span
-                    key={bar}
-                    className="w-1 rounded-full bg-primary/70"
-                    style={{ height: 6 + bar * 3 }}
-                  />
-                ))}
-              </span>
-              <span className={cn(mono, "text-foreground/40")}>
-                {confidenceLabel}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onAlternatives}
-                className="text-foreground/55 hover:bg-foreground/[0.06] hover:text-foreground/90 h-8 rounded-full px-3.5 text-xs font-medium transition-[background-color,color,scale] duration-150 active:scale-[0.96]"
-              >
-                其他方案
-              </button>
-              <button
-                type="button"
-                onClick={onAccept}
-                className={cn(
-                  inkButton,
-                  "flex h-8 items-center rounded-full px-3.5 text-xs font-medium",
-                )}
-              >
-                接受
-              </button>
-            </div>
-          </>
-        ) : (
-          <div
-            key="accepted"
-            className="fade-in animate-in text-foreground/55 flex items-center gap-2 text-xs duration-300"
-          >
-            <CheckIcon className="size-3.5 text-primary" />
-            {acceptedLabel}
-          </div>
-        )}
-      </div>
+    <div data-slot="recommendation-card" className={cn("w-full max-w-[640px]", className)} {...props}>
+      <ActionTicket kind={<>{icon}下一步建议 · {confidenceLabel}</>} title={question} subtitle={children}
+        footer={state === "idle" ? <>
+          <span className="flex-1" />
+          {onAlternatives && <button type="button" onClick={onAlternatives} className={ticketGhost}>换一个建议</button>}
+          <button type="button" onClick={onAccept} className={ticketPrimary}>开始</button>
+        </> : <div key="accepted" role="status" className="fade-in animate-in flex items-center gap-2 text-xs text-muted-foreground duration-300">
+          <CheckIcon className="size-3.5 text-brand" />{acceptedLabel}
+        </div>} />
     </div>
   );
 }

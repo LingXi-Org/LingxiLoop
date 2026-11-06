@@ -20,14 +20,14 @@ export function ResearchSources({ calls, lifecycle }: { calls: readonly HarnessT
       const source = result.sources[0]!
       return <section key={call.toolCallId} aria-label="联网搜索来源" className="grid min-w-0 gap-2">
         <WebSearch query={query ?? '公开资料'} results={result.sources.map(source => ({ title: source.title, domain: new URL(source.url).hostname, url: source.url }))} visibleResults={0} summaryOnly searching={false} cycle={0} />
-        {result.sources.length === 1 ? <div className="grid min-w-0 gap-1"><LinkPreview id={`${call.toolCallId}:source:0`}
+        {result.sources.length === 1 ? <div className="grid w-[520px] min-w-0 max-w-full gap-1"><LinkPreview id={`${call.toolCallId}:source:0`}
           href={source.url} title={source.title} description={source.snippet} domain={new URL(source.url).hostname.replace(/^www\./, '')}
           image={source.image} locale="zh-CN" className="min-w-0 max-w-none break-words" />
           {sourceLocation(source) && <p className="text-xs text-muted-foreground">{sourceLocation(source)}</p>}</div>
-          : result.sources.map((source, index) => <div key={`${call.toolCallId}:source:${index}`} className="grid min-w-0 gap-1"><Citation id={`${call.toolCallId}:source:${index}`}
+          : <div data-source-cards className="flex min-w-0 flex-wrap gap-2.5">{result.sources.map((source, index) => <div key={`${call.toolCallId}:source:${index}`} className="grid w-[250px] min-w-0 max-w-full gap-1"><Citation id={`${call.toolCallId}:source:${index}`}
           href={source.url} title={source.title} snippet={source.snippet} locale="zh-CN" type="webpage"
           className="min-w-0 max-w-none break-words" />
-          {sourceLocation(source) && <p className="text-xs text-muted-foreground">{sourceLocation(source)}</p>}</div>)}
+          {sourceLocation(source) && <p className="text-xs text-muted-foreground">{sourceLocation(source)}</p>}</div>)}</div>}
       </section>
     }
     if (!result && ['queued', 'leased'].includes(lifecycle ?? '')) return <WebSearch key={call.toolCallId} query={query ?? '公开资料'} results={[]} visibleResults={0} searching cycle={0} />
