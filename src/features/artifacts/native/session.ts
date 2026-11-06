@@ -125,12 +125,14 @@ export class NativeDocumentSession {
   }
   async open() {
     const generation = ++this.refreshGeneration
+    const unresolvedFailure=!!this.state.error&&(this.queue.length>0||this.rejectedDrafts.size>0)
     this.update({ loading: this.state.document === null, error: '' })
     try {
       const receipt = await this.transport.read(this.controller.signal)
       if (generation !== this.refreshGeneration || this.disposed) return
       this.update({ write: receipt.write !== false })
       this.accept(receipt)
+      if(unresolvedFailure&&!this.state.conflict&&(this.queue.length||this.rejectedDrafts.size))this.update({error:'本地修改尚未保存，请重试保存，或下载本地副本。'})
     } catch (error) { if (!this.controller.signal.aborted) this.failure(error) }
   }
   async ensurePage(pageId: string) {

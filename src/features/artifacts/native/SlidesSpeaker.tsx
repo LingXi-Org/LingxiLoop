@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import { createPortal } from 'react-dom'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
 import type { NativeCompute } from './compute'
 import { EditorIcon } from './EditorPrimitives'
 import { PageContent } from './renderer'
-import TextAreaField from './TextAreaField'
+import SpeakerNotesField from './SpeakerNotesField'
+import type { SpeakerNoteDraftStore, CommitSpeakerNote } from './speaker-note-drafts'
 import { slideTitleSnippet, speakerPreviewPage } from './slide-speaker-state'
 import styles from './slides-speaker.css?inline'
 
@@ -17,7 +26,14 @@ interface Props {
   loadedPageIds: string[]
   writable: boolean
   getNotesBase(): ArtifactDocument
-  onNotesCommit(id: string, notes: string, base: ArtifactDocument): void
+  onNotesCommit: CommitSpeakerNote
+  noteDrafts: SpeakerNoteDraftStore
+  saveError: string
+  saveConflict: boolean
+  saving: boolean
+  onDownloadRecovery(): void
+  onRecover(): void
+  onCheckAccess(): void
   ensurePage(id: string): Promise<void>
   onNavigate(id: string): void
   onClose(): void
@@ -80,6 +96,13 @@ export default function SlidesSpeaker({
   writable,
   getNotesBase,
   onNotesCommit,
+  noteDrafts,
+  saveError,
+  saveConflict,
+  saving,
+  onDownloadRecovery,
+  onRecover,
+  onCheckAccess,
   ensurePage,
   onNavigate,
   onClose,
@@ -90,8 +113,11 @@ export default function SlidesSpeaker({
     [wide, setWide] = useState(win.innerWidth >= 640)
   const [clock, setClock] = useState({ running: true, start: Date.now(), elapsed: 0 }),
     [now, setNow] = useState(Date.now())
-  const base = useRef<ArtifactDocument | null>(null),
-    root = useRef<HTMLElement>(null)
+  const root = useRef<HTMLElement>(null)
+  const draftVersion = useSyncExternalStore(noteDrafts.subscribe, noteDrafts.getSnapshot)
+  const localNote = noteDrafts.get(pageId)
+  const recoveryGeneration = noteDrafts.resetGeneration
+  useLayoutEffect(() => setEditing(false), [recoveryGeneration])
   const pages = doc.pageOrder.filter((id) => !doc.pages[id].skip),
     index = pages.indexOf(pageId),
     page = doc.pages[pageId]
@@ -157,8 +183,8 @@ export default function SlidesSpeaker({
         : 'LingxiLoop · 讲者备注'
   }, [closed, win, index, pages.length, presenting])
   useEffect(() => {
-    if (!writable) setEditing(false)
-  }, [writable])
+    if (!writable && !noteDrafts.get(pageId)) setEditing(false)
+  }, [writable, noteDrafts, pageId, draftVersion])
   useLayoutEffect(() => {
     if (editing) {
       const field = root.current?.querySelector('textarea')
@@ -257,6 +283,52 @@ export default function SlidesSpeaker({
     return () => win.removeEventListener('keydown', keyDown)
   }, [win])
   if (closed) return null
+  const blockedLocal = !writable && (noteDrafts.size > 0 || saving)
+  const recoveryState =
+    saveError ||
+    localNote?.deferUntilSave ||
+    blockedLocal ||
+    (!editing && noteDrafts.size > 0) ||
+    saving ? (
+      <aside
+        className="native-speaker-save-state"
+        role={saveError || blockedLocal ? 'alert' : 'status'}
+      >
+        <p>
+          {saveError ||
+            (blockedLocal
+              ? '当前无法保存，本地修改已保留。可下载副本或重新检查权限。'
+              : undefined) ||
+            (noteDrafts.size > 0
+              ? !writable
+                ? '当前无法保存，本地备注草稿已保留。可复制文字或下载本地副本。'
+                : '本地备注草稿尚未保存。'
+              : '正在保存修改…')}
+        </p>
+        <div>
+          {blockedLocal && (
+            <button type="button" onClick={onCheckAccess}>
+              重新检查权限
+            </button>
+          )}
+          {(saveError || noteDrafts.size > 0 || blockedLocal) && (
+            <button type="button" onClick={onDownloadRecovery}>
+              下载本地副本
+            </button>
+          )}
+          {(saveConflict || blockedLocal || saveError) && (
+            <button type="button" onClick={onRecover}>
+              保留副本并重新载入
+            </button>
+          )}
+          {writable && !saveConflict && (saveError || noteDrafts.size > 0) && (
+            <button type="button" onClick={onSave}>
+              重试保存
+            </button>
+          )}
+        </div>
+      </aside>
+    ) : null
   if (!presenting)
     return createPortal(
       <section
@@ -284,9 +356,12 @@ export default function SlidesSpeaker({
               <p className="native-speaker-dim" style={{ margin: '0 0 1em', fontSize: '.75em' }}>
                 正在等待放映。在主窗口点击“放映”后，幻灯片会在主窗口播放，此窗口将同步显示计时器、当前页、接下来的一页和讲者备注。
               </p>
-              {page?.notes.trim() || <span className="native-speaker-dim">本页没有讲者备注。</span>}
+              {(localNote?.text ?? page?.notes ?? '').trim() || (
+                <span className="native-speaker-dim">本页没有讲者备注。</span>
+              )}
             </div>
           </div>
+          {recoveryState}
         </div>
       </section>,
       win.document.body,
@@ -428,20 +503,13 @@ export default function SlidesSpeaker({
           </button>
         </header>
         {editing ? (
-          <TextAreaField
-            key={pageId}
-            className="native-speaker-notes"
-            label="讲者备注"
-            value={page?.notes ?? ''}
-            disabled={!writable}
-            placeholder="添加讲者备注"
-            onFocus={() => {
-              base.current = getNotesBase()
-            }}
-            onCommit={(notes) => {
-              onNotesCommit(pageId, notes, base.current ?? getNotesBase())
-              base.current = getNotesBase()
-            }}
+          <SpeakerNotesField
+            key={`${pageId}:${recoveryGeneration}`}
+            page={page}
+            store={noteDrafts}
+            writable={writable}
+            getBase={getNotesBase}
+            commit={onNotesCommit}
           />
         ) : (
           <div
@@ -452,10 +520,13 @@ export default function SlidesSpeaker({
             tabIndex={0}
           >
             <div>
-              {page?.notes || <span className="native-speaker-dim">本页没有讲者备注。</span>}
+              {localNote
+                ? localNote.text
+                : page?.notes || <span className="native-speaker-dim">本页没有讲者备注。</span>}
             </div>
           </div>
         )}
+        {recoveryState}
         {!wide && (
           <div className="native-speaker-next">
             {next ? (

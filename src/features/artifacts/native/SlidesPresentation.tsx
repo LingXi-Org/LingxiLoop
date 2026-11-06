@@ -1,3 +1,4 @@
+import type { SpeakerNoteDraftStore, CommitSpeakerNote } from './speaker-note-drafts'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
 import { artifactPageBackground } from '../../../../shared/artifact-themes'
@@ -23,7 +24,14 @@ interface Props {
   speakerWindow: Window | null
   notesWritable: boolean
   getNotesBase(): ArtifactDocument
-  onNotesCommit(id: string, notes: string, base: ArtifactDocument): void
+  onNotesCommit: CommitSpeakerNote
+  noteDrafts: SpeakerNoteDraftStore
+  saveError: string
+  saveConflict: boolean
+  saving: boolean
+  onDownloadRecovery(): void
+  onRecover(): void
+  onCheckAccess(): void
   ensurePage(id: string): Promise<void>
   onNavigate(id: string): void
   onClose(): void
@@ -70,6 +78,13 @@ export default function SlidesPresentation({
   notesWritable,
   getNotesBase,
   onNotesCommit,
+  noteDrafts,
+  saveError,
+  saveConflict,
+  saving,
+  onDownloadRecovery,
+  onRecover,
+  onCheckAccess,
   ensurePage,
   onNavigate,
   onClose,
@@ -404,6 +419,13 @@ export default function SlidesPresentation({
           writable={notesWritable}
           getNotesBase={getNotesBase}
           onNotesCommit={onNotesCommit}
+          noteDrafts={noteDrafts}
+          saveError={saveError}
+          saveConflict={saveConflict}
+          saving={saving}
+          onDownloadRecovery={onDownloadRecovery}
+          onRecover={onRecover}
+          onCheckAccess={onCheckAccess}
           ensurePage={ensurePage}
           onNavigate={(id) =>
             void go(id, pages.indexOf(id) < index, Math.abs(pages.indexOf(id) - index) === 1)

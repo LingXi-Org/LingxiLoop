@@ -217,3 +217,12 @@ test('a loaded canvas body survives an unrelated compact board refresh at the sa
   assert.ok(session.getSnapshot().loadedPageIds.includes('contents'))
   session.dispose()
 })
+
+test('写入被拒绝后重读文档仍须显示未保存状态，恢复权限后复用原操作提交',async()=>{
+ let document=fixture(),write=true,denied=true;const ids:string[]=[]
+ const receipt=():DocumentReceipt=>({document,write,history:{version:document.seq,undo:null,redo:null}})
+ const transport:NativeTransport={read:async()=>receipt(),all:async()=>receipt(),page:async id=>({page:document.pages[id],version:String(document.seq)}),changed:async()=>false,history:async()=>receipt(),commit:async batch=>{ids.push(batch.operationId);if(denied)throw Object.assign(new Error('写入已拒绝'),{status:403});document=applyOperations(document,batch).document;return receipt()}}
+ const session=new NativeDocumentSession(transport);await session.open();session.dispatch([{type:'page.patch',pageId:'page-one',patch:{notes:'拒绝后保留的本地备注'}}]);await assert.rejects(session.flush());write=false;await session.retry()
+ assert.equal(session.getSnapshot().write,false);assert.equal(session.getSnapshot().pending,1);assert.match(session.getSnapshot().error,/尚未保存/);assert.equal(session.getSnapshot().document?.pages['page-one'].notes,'拒绝后保留的本地备注');assert.equal(document.pages['page-one'].notes,'')
+ write=true;denied=false;await session.open();await session.retry();assert.equal(document.pages['page-one'].notes,'拒绝后保留的本地备注');assert.equal(session.getSnapshot().pending,0);assert.equal(session.getSnapshot().error,'');assert.equal(new Set(ids).size,1);session.dispose()
+})
