@@ -97,6 +97,7 @@ jobs:
           python scripts/native-artifact-worker-clock-check.py
           python scripts/native-artifact-pss-check.py
           python scripts/native-artifact-cleanup-check.py
+          python scripts/native-artifact-navigation-check.py
           python scripts/native-artifact-export-control-check.py
           node scripts/native-artifact-proxy-check.mjs
           python scripts/native-embed-capture-check.py

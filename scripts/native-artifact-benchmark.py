@@ -870,9 +870,18 @@ def navigate(page, kind, number):
                     if item and bounds and item['x'] >= bounds['x'] and item['y'] >= bounds['y'] and item['x'] + item['width'] <= bounds['x'] + bounds['width'] and item['y'] + item['height'] <= bounds['y'] + bounds['height']:
                         target.first.click(); return {"control": "nativeDesignBoard", "wheelEvents": wheel_count}
                 scroll = stage.evaluate('e=>({x:e.scrollLeft,y:e.scrollTop})')
-                # Shared fixture geometry: five columns, 2080 × 1240 spacing,
-                # at the measured 50% camera. Never assign product scroll/state.
-                x, y = (number-1) % 5 * 1040, (number-1) // 5 * 620
+                # Calibrate fixture world coordinates from a mounted board's
+                # actual CSS position. Canvas padding and centering can change.
+                # Only read DOM geometry; movement still uses trusted wheels.
+                mounted = stage.locator('.native-page-shell[data-artboard-id]').evaluate_all(r"""nodes=>nodes.map(e=>({number:Number(/^page-(\d+)$/.exec(e.dataset.artboardId)?.[1]),x:parseFloat(e.style.left),y:parseFloat(e.style.top),width:parseFloat(e.style.width)})).find(p=>Number.isInteger(p.number)&&p.number>=1&&p.number<=50&&[p.x,p.y,p.width].every(Number.isFinite)&&p.width>0)||null""")
+                if mounted:
+                    scale = mounted['width'] / 1920
+                    x = mounted['x'] + ((number-1) % 5 - (mounted['number']-1) % 5) * 2080 * scale - 48
+                    y = mounted['y'] + ((number-1) // 5 - (mounted['number']-1) // 5) * 1240 * scale - 80
+                else:
+                    # The frozen baseline predates mounted-board metadata and
+                    # uses its original camera without the newer canvas padding.
+                    x, y = (number-1) % 5 * 1040, (number-1) // 5 * 620
                 stage.hover(); page.mouse.wheel(max(-600,min(600,x-scroll['x'])),max(-600,min(600,y-scroll['y'])))
                 # Scrolling can unmount an isolated page iframe. Restart with
                 # a fresh frame list instead of visiting that detached snapshot.
