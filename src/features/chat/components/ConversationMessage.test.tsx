@@ -194,7 +194,7 @@ test('attachments retain delivery feedback without a timestamp', () => {
     attachment.metadata.custom.delivery = delivery
     const $ = load(renderToStaticMarkup(<Preview messages={[attachment]} />))
     assert.equal($('time').length, 0)
-    assert.equal($('[data-slot="attachment-card"] [role="status"]').attr('aria-label'), delivery === 'sending' ? '发送中' : delivery === 'sent' ? '已送达' : '发送失败')
+    assert.equal($('[data-slot="attachment-card"] + [data-message-footer] [role="status"]').attr('aria-label'), delivery === 'sending' ? '发送中' : delivery === 'sent' ? '已送达' : '发送失败')
   }
 })
 

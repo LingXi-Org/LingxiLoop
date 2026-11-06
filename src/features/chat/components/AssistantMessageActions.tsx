@@ -116,13 +116,8 @@ export function AssistantMessageActions() {
       detail={savedWork ? savedPartialWorkText : '答复尚未完成，可以继续生成。'}
       action={{ label: savedWork ? '继续生成' : '重试', onClick: () => void regenerate(), disabled: retryDisabled }} />}
     {(message.content.length > 0 || metadata.replyBranches) && <ActionBarPrimitive.Root ref={root} data-slot="message-actions" role="toolbar" aria-label="智能助教回复操作" className="-ms-1.5 mt-1 flex flex-wrap items-center gap-0.5 text-muted-foreground">
-    {metadata.replyBranches && <MessageBranches variants={metadata.replyBranches.ids} index={metadata.replyBranches.index}
-      onIndexChange={index => {
-        const branch = metadata.replyBranches!
-        selectBranch(branch.key, branch.ids[index], branch.ids.at(-1)!)
-      }} className="[&>p]:hidden" />}
     <button type="button" aria-label={copied ? '已复制回复' : '复制回复'} disabled={!rawText} onClick={() => void copy()}
-      className={cn(buttonClassName, 'grid place-items-center', copied && 'text-success')}>
+      className={cn(buttonClassName, 'grid place-items-center', copied && 'text-brand')}>
       <CopyIcon aria-hidden="true" className={cn(iconSwap, 'size-3.5', copied ? iconSwapOut : iconSwapIn)} />
       <CheckIcon aria-hidden="true" className={cn(iconSwap, 'size-3.5', copied ? iconSwapIn : iconSwapOut)} />
     </button>
@@ -148,6 +143,11 @@ export function AssistantMessageActions() {
         </ActionBarPrimitive.ExportMarkdown>
       </ActionBarMorePrimitive.Content>
     </ActionBarMorePrimitive.Root>
+    {metadata.replyBranches && <><span aria-hidden="true" className="mx-1.5 h-4 w-px bg-border" /><MessageBranches variants={metadata.replyBranches.ids} index={metadata.replyBranches.index}
+      onIndexChange={index => {
+        const branch = metadata.replyBranches!
+        selectBranch(branch.key, branch.ids[index], branch.ids.at(-1)!)
+      }} className="[&>p]:hidden" /></>}
     </ActionBarPrimitive.Root>}
   </>
 }

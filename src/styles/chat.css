@@ -753,3 +753,48 @@ input:focus, textarea:focus, button:focus { outline: none; }
 .im-markdown [data-streamdown='table-wrapper'] > div:not(:first-child) { border: 0; border-radius: 0; background: transparent; }
 .im-markdown [data-streamdown='table'] { border: 0; }
 .im-markdown [data-streamdown='table'] > :is(thead, tbody) { border: 0; }
+
+/* File-type palette (附件、预览与来源 · 文件类型). */
+.file-kind-icon { background: var(--kind-bg); color: var(--kind-fg); }
+[data-file-kind='pdf'] { --kind-fg: #C8463B; --kind-bg: #FCEDEB; }
+[data-file-kind='doc'] { --kind-fg: #2F62C9; --kind-bg: #EBF1FC; }
+[data-file-kind='sheet'] { --kind-fg: #1F8A5B; --kind-bg: #E7F5EE; }
+[data-file-kind='slides'] { --kind-fg: #D2652A; --kind-bg: #FDF0E6; }
+[data-file-kind='image'] { --kind-fg: #C2417A; --kind-bg: #FBEAF2; }
+[data-file-kind='audio'] { --kind-fg: #7B5CC9; --kind-bg: #F1EDFB; }
+[data-file-kind='video'] { --kind-fg: #2B8A9E; --kind-bg: #E6F4F7; }
+[data-file-kind='other'] { --kind-fg: #6B6B66; --kind-bg: #F1F1EE; }
+.dark [data-file-kind='pdf'] { --kind-fg: #E58A80; --kind-bg: #2C1B19; }
+.dark [data-file-kind='doc'] { --kind-fg: #8FB0EE; --kind-bg: #1A2232; }
+.dark [data-file-kind='sheet'] { --kind-fg: #6CC59A; --kind-bg: #172720; }
+.dark [data-file-kind='slides'] { --kind-fg: #EDA175; --kind-bg: #2E2017; }
+.dark [data-file-kind='image'] { --kind-fg: #E38BB1; --kind-bg: #2C1A23; }
+.dark [data-file-kind='audio'] { --kind-fg: #B19BEA; --kind-bg: #221D31; }
+.dark [data-file-kind='video'] { --kind-fg: #7CC6D5; --kind-bg: #172629; }
+.dark [data-file-kind='other'] { --kind-fg: #9A9A95; --kind-bg: #232325; }
+
+/* Card surface shared by file cards, rich elements and action cards. */
+.lx-card {
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgb(20 20 18 / 4%), 0 6px 18px -6px rgb(20 20 18 / 8%);
+}
+.dark .lx-card { box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgb(0 0 0 / 30%), 0 6px 18px -6px rgb(0 0 0 / 40%); }
+.action-ticket { box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgb(20 20 18 / 4%), 0 10px 28px -8px rgb(20 20 18 / 12%); }
+.dark .action-ticket { box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgb(0 0 0 / 30%), 0 10px 28px -8px rgb(0 0 0 / 45%); }
+
+/* Sources: 250px source cards, 520px link preview, both on the shared card surface. */
+[data-source-cards] [data-slot='citation'], [data-slot='link-preview'] { min-width: 0; max-width: none; }
+:is([data-source-cards] [data-slot='citation'], [data-slot='link-preview']) > a {
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgb(20 20 18 / 4%), 0 6px 18px -6px rgb(20 20 18 / 8%);
+}
+:is([data-source-cards] [data-slot='citation'], [data-slot='link-preview']) > a:hover { box-shadow: 0 0 0 1px var(--input), 0 1px 2px rgb(20 20 18 / 4%), 0 6px 18px -6px rgb(20 20 18 / 12%); }
+[data-source-cards] [data-slot='citation'] > a > div { padding: 12px 14px; gap: 8px; }
+[data-source-cards] [data-slot='citation'] h3 { font-size: 13.5px; line-height: 1.5; }
+[data-source-cards] [data-slot='citation'] h3 + p { display: none; }
+[data-slot='link-preview'] > a > div { padding: 14px; }
+[data-slot='link-preview'] h3 { font-size: 14.5px; }
+.citation-excerpt mark, .citation-claim-active { background: linear-gradient(transparent 60%, #F6E2B8 60%); }
+.dark :is(.citation-excerpt mark, .citation-claim-active) { background: linear-gradient(transparent 60%, rgb(229 181 101 / 30%) 60%); }

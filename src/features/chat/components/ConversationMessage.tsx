@@ -175,8 +175,9 @@ function MessageTextPart() {
       )}
     >
       {isHuman && ownsQuote && metadata.quote && <MessageQuotePreview quote={metadata.quote} />}
-      {isAgent ? <>{markdown}{footer}</> : <MessageFooterContents inset={false}>{markdown}</MessageFooterContents>}
+      {isAgent ? <>{markdown}{footer}</> : metadata.isMine ? markdown : <MessageFooterContents inset={false}>{markdown}</MessageFooterContents>}
     </div>
+    {!isAgent && metadata.isMine && footer}
     {isMobile && <MobileMessageActions metadata={metadata} getText={getText} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
   </div>
 }
@@ -245,7 +246,7 @@ export function ConversationMessage() {
         {custom.delivery === 'sending' ? <span aria-hidden="true" className="size-2.5 rounded-full border-[1.5px] border-input border-t-muted-foreground motion-safe:animate-spin" />
           : custom.delivery === 'sent' ? <CheckCheck aria-hidden="true" className="size-3.5" strokeWidth={1.8} />
           : <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-[13px]"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>}
-        <span className={custom.delivery === 'sent' ? 'sr-only group-hover/message:not-sr-only' : undefined}>{deliveryLabel}</span>
+        <span>{deliveryLabel}</span>
       </span>
     </div>
   ) : null
