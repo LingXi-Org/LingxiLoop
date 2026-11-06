@@ -1,0 +1,103 @@
+{
+  "scope": "Magic覆盖层异步图片更新及取消清理的受控回归",
+  "review": "reviews/8a1d134e.json",
+  "qualified": false,
+  "after": [
+    {
+      "browserMajor": "140",
+      "receipt": {
+        "kind": "isolated-mixed-slide-transitions",
+        "records": [
+          {
+            "kind": "fade",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "push",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "magic",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": true
+          }
+        ],
+        "offlineMagicScreenGeometryContinuous": true,
+        "consoleOrPageErrors": []
+      },
+      "offpaperNative": {
+        "ink": 0,
+        "clip": {
+          "x": 188.75001525878906,
+          "y": 625,
+          "width": 145.8333282470703,
+          "height": 145.83331298828125
+        }
+      },
+      "offpaperOffline": {
+        "ink": 0,
+        "clip": {
+          "x": 214.25,
+          "y": 643,
+          "width": 138.83334350585938,
+          "height": 138.83331298828125
+        }
+      },
+      "liveImage": {
+        "originalAndMotionImageDecoded": true,
+        "motionLoadingPlaceholderCount": 0
+      },
+      "normalAndCanceledOverlayCount": 0
+    },
+    {
+      "browserMajor": "154",
+      "receipt": {
+        "kind": "isolated-mixed-slide-transitions",
+        "records": [
+          {
+            "kind": "fade",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "push",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "magic",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": true
+          }
+        ],
+        "offlineMagicScreenGeometryContinuous": true,
+        "consoleOrPageErrors": []
+      },
+      "offpaperNative": {
+        "ink": 0,
+        "clip": {
+          "x": 188.75001525878906,
+          "y": 625,
+          "width": 145.8333282470703,
+          "height": 145.83331298828125
+        }
+      },
+      "offpaperOffline": {
+        "ink": 0,
+        "clip": {
+          "x": 214.25,
+          "y": 643,
+          "width": 138.83334350585938,
+          "height": 138.83331298828125
+        }
+      },
+      "liveImage": {
+        "originalAndMotionImageDecoded": true,
+        "motionLoadingPlaceholderCount": 0
+      },
+      "normalAndCanceledOverlayCount": 0
+    }
+  ]
+}

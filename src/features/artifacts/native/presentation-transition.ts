@@ -48,6 +48,7 @@ export function animateSlideTransition(
   const animations: Animation[] = [],
     timing = transitionTiming(kind)
   const hidden: Array<[HTMLElement, string]> = []
+  const mirrors: MutationObserver[] = []
   let overlay: HTMLElement | undefined
   const mixedAspect = from.width * to.height !== to.width * from.height
   const lift = (element: HTMLElement) => {
@@ -84,6 +85,18 @@ export function animateSlideTransition(
     overlay.append(clone)
     hidden.push([element, element.style.visibility])
     element.style.visibility = 'hidden'
+    // React can finish loading images, formulas or SVG fonts after this layout.
+    // Mirror their live descendants while the temporary root owns the motion.
+    const mirror = new MutationObserver(() => {
+      clone.replaceChildren(...Array.from(element.childNodes, (child) => child.cloneNode(true)))
+    })
+    mirror.observe(element, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true,
+    })
+    mirrors.push(mirror)
     return clone
   }
   const animate = (element: HTMLElement, frames: Keyframe[]) =>
@@ -153,6 +166,7 @@ export function animateSlideTransition(
   return () => {
     disposed = true
     clearTimeout(timeout)
+    for (const mirror of mirrors) mirror.disconnect()
     for (const animation of animations) animation.cancel()
     for (const [element, visibility] of hidden) element.style.visibility = visibility
     overlay?.closest('.native-magic-overlay')?.remove()
