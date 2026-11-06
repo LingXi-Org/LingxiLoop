@@ -1,4 +1,6 @@
 import {usePenPreview} from './use-pen-preview'
+import type {CanvasPenHandle,VectorStart} from './CanvasPenTool'
+import type {PenGeometry} from '../../../../shared/artifact-pen'
 import {resolvedPadding} from '../../../../shared/artifact-appearance'
 import {designPageLink,readDesignLink} from '../../../../shared/artifact-links'
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
@@ -85,6 +87,7 @@ function editorOwnsEvent(root:HTMLElement,target:EventTarget|null) {
   return target instanceof Element&&target.closest('[data-native-artifact-editor],[data-native-editor-boundary]')===root
 }
 let penModule:Promise<typeof import('../../../../shared/artifact-pen')>|undefined
+let vectorModule:Promise<typeof import('./CanvasPenTool')>|undefined
 interface Props { revisionSeq?:string; artifactId: string; kind: 'design' | 'slides'; title: string; visible?: boolean; agentWorking?: boolean; exitPresentation?: number; onEditorContext?(context: SlideEditorContext): void }
 export default function NativeEditor({ revisionSeq, artifactId, kind, title, visible = true, agentWorking = false, exitPresentation = 0, onEditorContext }: Props) {
   const session = useMemo(() => new NativeDocumentSession(nativeTransport(artifactId,revisionSeq)), [artifactId,revisionSeq])
@@ -121,13 +124,23 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const [marquee, setMarquee] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [exporting, setExporting] = useState('')
   const [notice, setNotice] = useState('')
+  const [announcement,setAnnouncement]=useState({id:0,text:''})
   const [inspectorTab, setInspectorTab] = useState<'properties'|'theme'>('properties')
   const [inspectorOpen, setInspectorOpen] = useState(false)
   const [resolvedTheme, setResolvedTheme] = useState<{ source: ThemeTokens; tokens: ThemeTokens } | null>(null)
   const [tool, setTool] = useState('select')
+  const [lastDrawingTool,setLastDrawingTool]=useState<'pencil'|'pen'>('pencil')
+  useEffect(()=>{if(tool==='pencil'||tool==='pen')setLastDrawingTool(tool)},[tool])
+  const vectorTool=useRef<CanvasPenHandle|null>(null),[CanvasVectorTool,setCanvasVectorTool]=useState<typeof import('./CanvasPenTool').default|null>(null),[vectorLoadFailed,setVectorLoadFailed]=useState(false)
+  useEffect(()=>{
+    if(!visible||tool!=='pen'||CanvasVectorTool)return
+    let active=true;vectorModule??=import('./CanvasPenTool')
+    void vectorModule.then(module=>{if(active){setCanvasVectorTool(()=>module.default);setNotice(value=>value==='正在加载钢笔工具…'?'':value)}}).catch(()=>{if(active){setVectorLoadFailed(true);setNotice('钢笔工具未能加载，请刷新页面后重试。')}})
+    return()=>{active=false}
+  },[visible,tool,CanvasVectorTool])
   const penFitter=useRef<typeof import('../../../../shared/artifact-pen')|null>(null),[penLoading,setPenLoading]=useState(false),[penLoadFailed,setPenLoadFailed]=useState(false)
   useEffect(()=>{
-    if(!visible||!['pencil','pen'].includes(tool)||penFitter.current){setPenLoading(false);return}
+    if(!visible||tool!=='pencil'||penFitter.current){setPenLoading(false);return}
     let active=true;setPenLoading(true);setPenLoadFailed(false)
     penModule??=import('../../../../shared/artifact-pen')
     void penModule.then(module=>{if(active){penFitter.current=module;setPenLoading(false);setNotice(value=>value==='正在加载绘图工具…'?'':value)}}).catch(()=>{if(active){setPenLoading(false);setPenLoadFailed(true);setNotice('绘图工具未能加载，请刷新页面后重试。')}})
@@ -391,12 +404,21 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     const value=id()
     try{session.dispatch(createCanvasContents(base,activeCanvasId,value),base);return session.getSnapshot().document?.pages[value]}catch(error){setNotice(editorError(error,'画布内容尚未创建，请重试。'))}
   }
-  function canvasWorldPoint(event:ReactPointerEvent){const rect=viewportRef.current!.querySelector('.native-board-space')!.getBoundingClientRect();return{x:(event.clientX-rect.left-canvasInset.x)/scale+origin.x-64,y:(event.clientY-rect.top-canvasInset.y)/scale+origin.y-64}}
+  function canvasWorldPoint(event:{clientX:number;clientY:number}){const rect=viewportRef.current!.querySelector('.native-board-space')!.getBoundingClientRect();return{x:(event.clientX-rect.left-canvasInset.x)/scale+origin.x-64,y:(event.clientY-rect.top-canvasInset.y)/scale+origin.y-64}}
+  function commitCanvasVector(geometry:PenGeometry,start:VectorStart){
+    if(!canvasWritable)return false
+    const base=start.document,sheet=canvasPages(base).find(sheet=>sheet.id===start.canvasPageId)
+    if(!sheet)return false
+    const bodyId=sheet.contentId??id(),node=canvasPenNode(id(),geometry)!,operations:ArtifactOperation[]=[...(!sheet.contentId?createCanvasContents(base,sheet.id,bodyId):[]),{type:'node.insert',pageId:bodyId,node:{...node,scope:'canvas'}}]
+    try{session.dispatch(operations,base);setPageId(bodyId);setSelected([node.id]);return true}catch(error){setNotice(editorError(error,'路径尚未保存，请处理冲突后重试。'));return false}
+  }
+  function vectorPointerDown(event:ReactPointerEvent){if(vectorTool.current)vectorTool.current.down(event);else{event.preventDefault();event.stopPropagation();setNotice(vectorLoadFailed?'钢笔工具未能加载，请刷新页面后重试。':'正在加载钢笔工具…')}}
   function pointerDown(event: ReactPointerEvent, page: ArtifactPage, canvas = false) {
     if (presenting || event.button > 1) return
     pendingComment.current=null
     if ((event.target as HTMLElement).closest('button,input,textarea')) return
-    if(kind==='design'&&['pencil','pen'].includes(tool)&&!penFitter.current){event.preventDefault();setNotice(penLoadFailed?'绘图工具未能加载，请刷新页面后重试。':'正在加载绘图工具…');return}
+    if(kind==='design'&&tool==='pen'&&event.button===0){vectorPointerDown(event);return}
+    if(kind==='design'&&tool==='pencil'&&!penFitter.current){event.preventDefault();setNotice(penLoadFailed?'绘图工具未能加载，请刷新页面后重试。':'正在加载绘图工具…');return}
     if(!canvas&&kind==='design'&&page.id!==canvasContentId&&['text','note','pencil','pen','arrow','line','shape'].includes(tool)){const body=canvasBodyForInsert();if(body)pointerDown(event,body,true);return}
     if (!(event.target as HTMLElement).closest('[contenteditable="true"]')) editorRoot.current?.focus({preventScroll:true})
     if (tool === 'comment') { const target=(event.target as HTMLElement).closest<HTMLElement>('[data-node-id]'), shell=viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${page.id}"]`);const rect=canvas?event.currentTarget.getBoundingClientRect():shell?.getBoundingClientRect();if(rect){setPageId(page.id);const point=canvas?canvasWorldPoint(event):{x:(event.clientX-rect.left)/scale,y:(event.clientY-rect.top)/scale},node=target?.dataset.nodeId?page.nodes[target.dataset.nodeId]:undefined;pendingComment.current=node?anchorInFrame(page.id,node.id,readNodeFrame(viewportRef.current,page,node,scale),point):commentAnchorAtPoint(page,undefined,point)}event.preventDefault();return }
@@ -425,7 +447,8 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   }
   function canvasPointerDown(event:ReactPointerEvent) {
     if(!canvasMode||event.target!==event.currentTarget)return
-    if(kind==='design'&&['pencil','pen'].includes(tool)&&!penFitter.current){event.preventDefault();setNotice(penLoadFailed?'绘图工具未能加载，请刷新页面后重试。':'正在加载绘图工具…');return}
+    if(kind==='design'&&tool==='pen'&&event.button===0){vectorPointerDown(event);return}
+    if(kind==='design'&&tool==='pencil'&&!penFitter.current){event.preventDefault();setNotice(penLoadFailed?'绘图工具未能加载，请刷新页面后重试。':'正在加载绘图工具…');return}
     let page=current
     if(kind==='design'){
       const base=session.getSnapshot().document
@@ -442,6 +465,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if(page)pointerDown(event,page,true)
   }
   function pointerMove(event: ReactPointerEvent) {
+    if(kind==='design'&&tool==='pen'){vectorTool.current?.move(event);return}
     event.stopPropagation()
     const active = gesture.current; if (!active) return
     const dx = (event.clientX - active.startX) / scale, dy = (event.clientY - active.startY) / scale
@@ -454,6 +478,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (!element) continue; if (active.type === 'move') element.style.translate = `${dx}px ${dy}px`; else { element.style.width = `${Math.max(16, node.width + dx)}px`; element.style.height = node.type==='note'&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)?'auto':`${Math.max(16, node.height + dy)}px` } }
   }
   function pointerUp(event: ReactPointerEvent|null, cancel = false) {
+    if(kind==='design'&&tool==='pen'&&event){vectorTool.current?.up(event,cancel);return}
     event?.stopPropagation()
     if(pendingComment.current){const anchor=pendingComment.current;pendingComment.current=null;if(!cancel)setTimeout(()=>openComment(anchor),0);return}
     const active = gesture.current; if (!active) return
@@ -469,7 +494,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     else if (!cancel && active.moved && (active.type === 'move' || active.type === 'resize')) dispatch(active.nodes.map(node => ({ type: 'node.patch', pageId: active.pageId, nodeId: node.id, patch: active.type === 'move' ? { x: node.path?Math.round((node.x+dx)*10)/10:Math.round(node.x + dx), y: node.path?Math.round((node.y+dy)*10)/10:Math.round(node.y + dy) } : ((({ x, y, width, height, points }) => ({ x, y, width, height, ...(points?{points}:{}) }))(resizeSelection(active.nodes, active.handle ?? 'se', dx, dy).find(item => item.id === node.id)!)) })), active.base)
     setPreview(null); setMarquee(null)
   }
-  const penResult=usePenPreview(gesture.current?.scope==='canvas'&&['pencil','pen'].includes(gesture.current.tool??'')?drawingPreview:null,scale,doc?.seq??0,compute,setNotice)
+  const penResult=usePenPreview(gesture.current?.scope==='canvas'&&gesture.current.tool==='pencil'?drawingPreview:null,scale,doc?.seq??0,compute,setNotice)
   const penPreview=penResult?.points===drawingPreview&&penResult.scale===scale?penResult.geometry:null
   const pageSelection = selectedPages.length ? selectedPages : current ? [current.id] : []
   const choosePage = (value: string, multiple = false, range = false) => {
@@ -502,11 +527,12 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   if (!doc) return <div className="native-loading" role="alert">{state.error || '稿件暂时无法打开'}{notice && <p>{notice}</p>}<button type="button" onClick={() => void session.open()}>重试</button><button type="button" onClick={() => void downloadSource()}>下载原始文件</button></div>
   const boardWidth = Math.max(viewport.width, ...boardIds.map(value => (displayPages[value].x - origin.x + doc.pages[value].width + 128) * scale))
   const boardHeight = Math.max(viewport.height, ...boardIds.map(value => (displayPages[value].y - origin.y + doc.pages[value].height + 128) * scale))
-  return <EditorColorSessionContext.Provider value={()=>{inspectorBase.current=session.getSnapshot().document}}><EditorPaletteContext.Provider value={palette}><DraftContext.Provider value={drafts}><section ref={editorRoot} data-revision={revisionSeq} data-view={view} data-compact={compact} data-compact-rail-open={compactRailOpen} data-tool={tool} data-pen-ready={!!penFitter.current} data-inspector-open={inspectorOpen && !presenting} data-comments-open={commentsOpen && !presenting} style={{'--native-inv-scale':1/scale,'--native-sidebar-width': `${!presenting ? (inspectorOpen ? 336 : 0) : 0}px`} as CSSProperties} className={`native-editor native-kind-${kind} ${presenting ? 'native-presenting' : ''}`} data-native-artifact-editor={kind} data-current-page={pageId} data-canvas-page-id={kind==='design'?activeCanvasId:undefined} data-save-state={state.conflict ? 'conflict' : state.pending ? 'pending' : draftCount ? 'draft' : 'saved'} aria-label={`${title}编辑器`} hidden={!visible} tabIndex={0}
+  return <EditorColorSessionContext.Provider value={()=>{inspectorBase.current=session.getSnapshot().document}}><EditorPaletteContext.Provider value={palette}><DraftContext.Provider value={drafts}><section ref={editorRoot} data-revision={revisionSeq} data-view={view} data-compact={compact} data-compact-rail-open={compactRailOpen} data-tool={tool} data-pen-ready={!!penFitter.current} data-vector-ready={!!CanvasVectorTool} data-inspector-open={inspectorOpen && !presenting} data-comments-open={commentsOpen && !presenting} style={{'--native-inv-scale':1/scale,'--native-sidebar-width': `${!presenting ? (inspectorOpen ? 336 : 0) : 0}px`} as CSSProperties} className={`native-editor native-kind-${kind} ${presenting ? 'native-presenting' : ''}`} data-native-artifact-editor={kind} data-current-page={pageId} data-canvas-page-id={kind==='design'?activeCanvasId:undefined} data-save-state={state.conflict ? 'conflict' : state.pending ? 'pending' : draftCount ? 'draft' : 'saved'} aria-label={`${title}编辑器`} hidden={!visible} tabIndex={0}
     onKeyDown={event => {
       if(!editorOwnsEvent(event.currentTarget,event.target))return
+      if(kind==='design'&&tool==='pen'&&!event.nativeEvent.isComposing&&!(event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')&&(!(event.target as HTMLElement).closest('button,summary')||event.key==='Escape'||(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z')&&vectorTool.current?.key(event))return
       if(kind==='design'&&(event.ctrlKey||event.metaKey)&&event.altKey&&!event.shiftKey&&event.key.toLowerCase()==='l'&&!event.nativeEvent.isComposing){event.preventDefault();void copyCanvasLink(activeCanvasId);return}
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); flushText(); void session.retry(); return }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); drafts.flush('save'); void session.retry(); return }
       const typing = (event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !(event.target as HTMLElement).closest('input,textarea') && !event.nativeEvent.isComposing) { event.preventDefault(); flushText(); setEditingId(null); void session.undoRedo(event.shiftKey ? 'redo' : 'undo'); return }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y' && !(event.target as HTMLElement).closest('input,textarea') && !event.nativeEvent.isComposing) { event.preventDefault(); flushText(); setEditingId(null); void session.undoRedo('redo'); return }
@@ -545,7 +571,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
           <hr /><MenuItem icon="plus" disabled={!canvasWritable} onClick={addCanvasPage}>新建页面</MenuItem>
         </Menu><span className="native-toolbar-separator" /></>}<ToolbarTools>{kind==='design'&&<><IconButton icon="select" label="选择 (V)" active={tool === 'select'} onClick={() => setTool('select')} /><IconButton icon="hand" label="手型工具 (H)" active={tool === 'hand'} onClick={() => setTool('hand')} /></>}
         <IconButton icon="text" label="文本" active={tool === 'text'} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool(v => v === 'text' ? 'select' : 'text')} />
-        {kind === 'design' ? <><IconButton icon="frame" label="添加画板" disabled={!writable} onClick={addPage} /><IconButton icon="note" label="便签 (N)" active={tool === 'note'} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool('note')} /><span className="native-split-tool"><IconButton icon="pencil" label="铅笔" aria-busy={penLoading} active={tool === 'pencil'} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool('pencil')} /><Menu label="绘图工具"><MenuItem icon="pencil" shortcut="P" onClick={() => setTool('pencil')}>铅笔</MenuItem><MenuItem icon="pen" shortcut="⇧ P" onClick={() => setTool('pen')}>钢笔</MenuItem></Menu></span></> : <><IconButton icon="image" label="图片或视频" disabled={!writable || !current} onClick={() => fileInput.current?.click()} /><IconButton icon="table" label="插入表格" disabled={!writable||!current} onClick={()=>addNode('table')} /></>}
+        {kind === 'design' ? <><IconButton icon="frame" label="添加画板" disabled={!writable} onClick={addPage} /><IconButton icon="note" label="便签 (N)" active={tool === 'note'} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool('note')} /><span className="native-split-tool"><IconButton icon={lastDrawingTool==='pen'?'pen':'pencil'} label={lastDrawingTool==='pen'?'钢笔':'铅笔'} aria-busy={lastDrawingTool==='pen'?tool==='pen'&&!CanvasVectorTool&&!vectorLoadFailed:penLoading} active={tool === lastDrawingTool} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool(lastDrawingTool)} /><Menu label="绘图工具"><MenuItem icon="pencil" shortcut="P" onClick={() => setTool('pencil')}>铅笔</MenuItem><MenuItem icon="pen" shortcut="⇧ P" onClick={() => setTool('pen')}>钢笔</MenuItem></Menu></span></> : <><IconButton icon="image" label="图片或视频" disabled={!writable || !current} onClick={() => fileInput.current?.click()} /><IconButton icon="table" label="插入表格" disabled={!writable||!current} onClick={()=>addNode('table')} /></>}
         <span className={kind==='design'?'native-split-tool native-shape-split':undefined}>{kind==='design'&&<IconButton icon={shapeTool==='ellipse'?'ellipse':'square'} label="矩形工具" active={tool==='shape'} disabled={!writable||kind!=='design'&&!current} onClick={()=>setTool('shape')} />}
         <Menu label="插入图形" icon={kind === 'design' ? undefined : 'shapes'} disabled={!writable || kind!=='design'&&!current}>
           {kind==='design'?<>
@@ -596,6 +622,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
               {!presenting && tool==='select' && page.id === pageId && <div className="native-interaction-layer" data-interaction-layer>{selectedNodes.filter(node => node.id !== editingId && node.id !== cropping?.id).map(node => { let x = node.x, y = node.y; let parent = node.parentId ? page.nodes[node.parentId] : undefined; while (parent) { x += parent.x; y += parent.y; parent = parent.parentId ? page.nodes[parent.parentId] : undefined } return <div key={node.id} className="native-selection" style={{ left: x + (preview && !preview.resize ? preview.dx : 0), top: y + (preview && !preview.resize ? preview.dy : 0), width: Math.max(16, node.width + (preview?.resize ? preview.dx : 0)), height: Math.max(16, node.height + (preview?.resize ? preview.dy : 0)), transform: `rotate(${node.rotation}deg)`, borderWidth: 1.5 / scale }}>{writable && !node.locked && <>{(['nw','n','ne','e','se','s','sw','w'] as const).map(handle => <button type="button" key={handle} className={`native-resize-handle native-handle-${handle}`} style={{ width: 7 / scale, height: 7 / scale }} aria-label={`调整元素${resizeHandleLabels[handle]}`} onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'resize', handle, startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: selectedNodes.filter(item => !item.locked), moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event, true)} />)}<button type="button" className="native-rotate-handle" style={{ width: 10/scale, height: 10/scale, top: -24/scale }} aria-label="旋转元素" onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'rotate', startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: [node], moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event,true)} /></>}</div> })}{marquee && <div className="native-marquee" style={marquee as CSSProperties} />}</div>}
             </div>}
           </div>)}
+          {kind==='design'&&!presenting&&tool==='pen'&&CanvasVectorTool&&<CanvasVectorTool ref={vectorTool} scale={scale} offsetX={canvasInset.x+(64-origin.x)*scale} offsetY={canvasInset.y+(64-origin.y)*scale} writable={canvasWritable&&(!canvasContentId||state.loadedPageIds.includes(canvasContentId))} toWorld={canvasWorldPoint} begin={()=>{flushText();setSelected([]);setEditingId(null);const document=session.getSnapshot().document;return document?{document,canvasPageId:activeCanvasId}:undefined}} commit={commitCanvasVector} done={()=>setTool('select')} announce={text=>setAnnouncement(current=>({id:current.id+1,text}))} error={setNotice} focus={()=>editorRoot.current?.focus({preventScroll:true})} />}
         </div>
       </div>
       {!presenting && view === 'grid' && <PageRail grid document={doc} current={pageId} selected={pageSelection} loadedPageIds={state.loadedPageIds} previews={state.previews} writable={writable} onSelect={choosePage} onOpen={value => { selectPage(value); setView('slide') }} onReorder={pageIds => dispatch([{ type: 'pages.reorder', pageIds }])} onAction={pageAction} onVisible={()=>{}} />}
@@ -673,5 +700,6 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     {dialog==='canvas-delete'&&<Modal role="alertdialog" showClose={false} initialFocusSelector="[data-canvas-delete-cancel]" editorBoundary className="native-canvas-page-dialog native-canvas-delete" title={`删除页面“${canvasSheets.find(sheet=>sheet.id===canvasDialogId)?.name??dialogText}”？`} onClose={closeCanvasDialog}><p>此页面包含 {doc.pageOrder.filter(id=>canvasPageOf(doc.pages[id])===canvasDialogId).length} 个画板，页面内的画板、便签和其他对象也会删除。删除后可撤销恢复。</p>{canvasDialogError&&<p role="alert">{canvasDialogError}</p>}<div className="native-inspector-actions"><button data-canvas-delete-cancel type="button" disabled={canvasDeleting} onClick={closeCanvasDialog}>取消</button><button type="button" className="native-canvas-delete-confirm" disabled={!canvasWritable||canvasDeleting||canvasSheets.length<2} onClick={()=>void removeCanvasPage()}>{canvasDeleting?'正在删除…':'删除页面'}</button></div></Modal>}
     {dialog === 'layouts' && <Modal title="版式" onClose={() => setDialog(null)}><div className="native-layout-picker">{SLIDE_LAYOUTS.map(layout => <button type="button" key={layout.id} onClick={() => { const page = {...createPage(id(), `页面 ${doc.pageOrder.length+1}`),...(current?{width:current.width,height:current.height,background:current.background,themeBackground:current.themeBackground,section:current.section}:{})}; const nodes = layoutSlide(layout.id,page,id); page.nodes=Object.fromEntries(nodes.map(n => [n.id,n])); page.nodeOrder=nodes.map(n => n.id); dispatch([{type:'page.insert',page,index:current ? doc.pageOrder.indexOf(current.id)+1 : undefined}]); setPageId(page.id); setView('slide'); setSelected([]); setDialog(null) }}><span className={`native-layout-preview native-layout-${layout.id}`} aria-hidden="true">{(() => { const p=createPage(`preview-${layout.id}`); const nodes=layoutSlide(layout.id,p,()=>id()); p.nodes=Object.fromEntries(nodes.map(n=>[n.id,n])); p.nodeOrder=nodes.map(n=>n.id); return <PageThumbnail page={p} document={doc} loaded /> })()}</span>{layout.title}</button>)}</div></Modal>}
     {(dialog === 'rename' || dialog === 'section') && <Modal title={dialog === 'rename' ? '重命名画板' : '添加节'} onClose={() => setDialog(null)}><form className="native-name-form" onSubmit={e => { e.preventDefault(); if (!dialogText.trim()) return; dispatch(pageSelection.map(pageId => ({type:'page.patch',pageId,patch:dialog === 'rename' ? {title:dialogText.trim()} : {section:dialogText.trim()}}))); setDialog(null) }}><label>名称<input aria-label="名称" autoFocus value={dialogText} maxLength={dialog === 'section' ? 200 : 1000} onChange={e => setDialogText(e.target.value)} /></label><button className="native-primary" type="submit">保存</button></form></Modal>}
+    <span className="native-visually-hidden" aria-live="polite" aria-atomic="true"><span key={announcement.id}>{announcement.text}</span></span>
   </section></DraftContext.Provider></EditorPaletteContext.Provider></EditorColorSessionContext.Provider>
 }

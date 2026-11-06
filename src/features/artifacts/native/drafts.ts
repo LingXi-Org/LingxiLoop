@@ -1,4 +1,5 @@
-type DraftEntry = { flush(): void; dirty: boolean }
+export type DraftFlushReason = 'save'
+type DraftEntry = { flush(reason?:DraftFlushReason): void; dirty: boolean }
 
 /** Transient control drafts belong to one editor instance, outside document history. */
 export class NativeDrafts {
@@ -15,7 +16,7 @@ export class NativeDrafts {
 
   private changed() { for (const listener of [...this.listeners]) listener() }
 
-  register(key: symbol, flush: () => void): () => void {
+  register(key: symbol, flush: (reason?:DraftFlushReason) => void): () => void {
     const entry = { flush, dirty: this.entries.get(key)?.dirty ?? false }
     this.entries.set(key, entry)
     let disposed = false
@@ -41,9 +42,9 @@ export class NativeDrafts {
   }
 
   /** A composing control may retain its draft; only that control acknowledges it. */
-  flush() {
+  flush(reason?:DraftFlushReason) {
     for (const [key, entry] of [...this.entries]) {
-      if (this.entries.get(key) === entry) entry.flush()
+      if (this.entries.get(key) === entry) entry.flush(reason)
     }
   }
 }

@@ -112,3 +112,11 @@ a0ee1b66 真实性能诊断42152419298已失败并保留哈希核验收据：两
 2e17fbb0 owning CI42168211101全绿；独立审查通过混合/纯形状网格、深滚视角、标题及五种导出，另发现统一内边距与横纵字段优先级造成重开外观变化，见 `reviews/2e17fbb0.json`。现统一内边距动作显式更新两个轴，原生/网页/演示文稿共用一次最终内边距解析，不再受DOM更新历史影响；不同轴显示中文“混合”。先前真实回归失败，修复后浅深色设置30→保存→重开→HTML一致，生产140实际PPTX四边也均为30对应的点值，五种导出及清理通过。30项聚焦单元、75文件lint、深色自由画布及两50页/47哈希回归通过；完成类型日志无原生/共享错误，全量仍缺官方SDK。新候选待复审和CI。显式思源黑体在同一进程fontconfig修正后也五种生产导出通过，见 `functional/canvas-text-export-noto-140.json`；历史网页字体错误不再作为当前失败门槛，仍不推断正式CI根因。
 
 4931ab86 owning CI42169464212已绿；独立复审确认统一30修复，另发现显式14/11碰巧等于来源指标时被字号联动覆盖，见 `reviews/4931ab86.json`。现尊重已有统一内边距的显式自定义，保留两轴；初始来源指标仍可联动，不新增字段。先新增单元/真实UI回归并观察失败，修复后14浅色和11深色在字号24→72、保存重开及HTML导出中均保持。29项聚焦单元、75文件lint通过；全量类型缺官方SDK但完成日志中原生/共享无错。此候选待独立复审与owning CI。
+
+钢笔逐点创建见 [source-design-vector.json](source-design-vector.json) 与
+[局部结果](functional/canvas-vector-receipt.json)。`--checks=canvas-vector`
+复跑15个实际源码交互案例；深色增加 `--canvas-theme=dark`。
+`--checks=canvas-vector-load` 验证按需加载失败后的中文提示、编辑器保留和刷新恢复。
+纯数学对照可复现：`node --import tsx scripts/native-canvas-vector-oracle.mjs /path/to/pinned/index-CYLuwRoc.js /tmp/vector-oracle.json`。
+该脚本先校验固定哈希，只在参考环境执行原版纯函数，不进入产品包。
+控制点编辑与完整同态视觉尚未通过，D10继续保留未完成标记。

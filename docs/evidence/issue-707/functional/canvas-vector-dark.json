@@ -1,0 +1,214 @@
+{
+  "cases": [
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "backspace",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "closed",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "draft-delete",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "draft-redo",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "draft-save",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "draft-undo",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "first-handle",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "middle-handle",
+      "sourceGeometryExact": true,
+      "previewStyle": {
+        "stroke": "rgb(37, 125, 224)",
+        "strokeWidth": "1px",
+        "nearby": [
+          {
+            "tag": "line",
+            "r": null,
+            "width": null,
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "rgb(31, 31, 31)",
+            "strokeWidth": "3px"
+          },
+          {
+            "tag": "line",
+            "r": null,
+            "width": null,
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "rgb(37, 125, 224)",
+            "strokeWidth": "1px"
+          },
+          {
+            "tag": "circle",
+            "r": "4",
+            "width": null,
+            "fill": "rgb(31, 31, 31)",
+            "stroke": "rgb(37, 125, 224)",
+            "strokeWidth": "1.25px"
+          },
+          {
+            "tag": "circle",
+            "r": "4",
+            "width": null,
+            "fill": "rgb(31, 31, 31)",
+            "stroke": "rgb(37, 125, 224)",
+            "strokeWidth": "1.25px"
+          },
+          {
+            "tag": "circle",
+            "r": "10",
+            "width": null,
+            "fill": "none",
+            "stroke": "rgb(37, 125, 224)",
+            "strokeWidth": "1px"
+          },
+          {
+            "tag": "rect",
+            "r": null,
+            "width": "7",
+            "fill": "rgb(37, 125, 224)",
+            "stroke": "none",
+            "strokeWidth": "1px"
+          },
+          {
+            "tag": "rect",
+            "r": null,
+            "width": "7",
+            "fill": "rgb(37, 125, 224)",
+            "stroke": "none",
+            "strokeWidth": "1px"
+          }
+        ]
+      },
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "near-point",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "open-enter",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "open-escape",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "oversize",
+      "sourceOversizeDiscarded": true,
+      "noDocumentWrites": true,
+      "chineseWarning": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "shift-angle",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "single-escape",
+      "sourceSinglePointDiscarded": true,
+      "textDoubleClickStaysDrawing": true,
+      "committedBatches": 0,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-diagnostic",
+      "scenario": "switch-tool",
+      "sourceGeometryExact": true,
+      "atomicPathCreation": true,
+      "sharedUndoRedo": true,
+      "savedAndReopened": true,
+      "scope": "真实 React、原生操作和可信鼠标键盘；HTTP 夹具，不代替完整控制点编辑、视觉或授权 API 验收",
+      "consoleOrPageErrors": []
+    }
+  ],
+  "visualQualified": false,
+  "functionalQualified": false
+}

@@ -2,6 +2,16 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { NativeDrafts } from './drafts'
 
+test('explicit saving flushes editable controls while an unfinished pen keeps its transient points',()=>{
+  const drafts=new NativeDrafts(),field=Symbol('field'),pen=Symbol('pen')
+  let fieldSaves=0,completedPaths=0
+  drafts.register(field,()=>{fieldSaves++;drafts.mark(field,false)})
+  const unmount=drafts.register(pen,reason=>{if(!reason){completedPaths++;drafts.mark(pen,false)}})
+  drafts.mark(field,true);drafts.mark(pen,true);drafts.flush('save')
+  assert.equal(fieldSaves,1);assert.equal(completedPaths,0);assert.equal(drafts.getSnapshot(),1)
+  unmount();assert.equal(completedPaths,1);assert.equal(drafts.getSnapshot(),0)
+})
+
 test('separate editor draft registries isolate save callbacks and dirty snapshots', () => {
   const first = new NativeDrafts(), second = new NativeDrafts(), key = Symbol('control')
   let firstSaves = 0, secondSaves = 0, firstNotifications = 0, secondNotifications = 0

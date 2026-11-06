@@ -519,20 +519,21 @@
             }
           }
         ],
-        "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明"
+        "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明",
+        "vectorSource": "source-design-vector.json"
       },
-      "implementation": "src/features/artifacts/native/NativeEditor.tsx",
+      "implementation": "src/features/artifacts/native/CanvasPenTool.tsx",
       "screenshots": {
         "reference": "visual/reference/design-drawing.png",
         "native": "visual/native/design-drawing.png",
         "matchedStateVerified": false
       },
-      "result": "尚缺上游完整钢笔路径行为",
+      "result": "逐点创建路径、对称切线、闭合、草稿快捷键和持久化局部通过；现有路径控制点编辑及完整同态视觉仍未通过",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/canvas-vector-receipt.json",
+        "scope": "固定源码几何150组、真实鼠标键盘15场景、两种主题预览样式、加载恢复、原子创建、共享撤销、保存重开和五格式局部导出；不代替完整路径编辑、授权API和性能门槛。"
       }
     },
     {

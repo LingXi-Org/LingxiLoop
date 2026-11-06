@@ -82,7 +82,7 @@ function fit(points:PenPoint[],tolerance:number):number[]|null {
 }
 
 /** Split at coordinate extrema so normalized control boxes stay within limits. */
-function splitExtrema(curve:number[]):number[]{
+export function splitPenExtrema(curve:number[]):number[]{
   if(curve.length===4)return[...curve]
   const out=curve.slice(0,2)
   for(let i=2;i+5<curve.length;i+=6){
@@ -122,7 +122,7 @@ export function fitCanvasPen(points:PenPoint[],tolerance:number,preview=false):P
   for(let error=tolerance;error>0&&Number.isFinite(error)&&error<=16*tolerance;error*=2){
     const curve=fit(local.map(p=>({x:p.x*scale,y:p.y*scale})),error*scale)
     if(!curve||curve.length<=4||preview&&curve.length*2>MAX_PATH)break
-    const flattened=splitExtrema(curve)
+    const flattened=splitPenExtrema(curve)
     if(flattened.length*2>MAX_PATH)continue
     let bounds=normalize(flattened)
     if(preview){if(bounds.d.length>MAX_PATH)break;return{x:round(origin.x+bounds.x),y:round(origin.y+bounds.y),w:Math.max(2,bounds.w),h:Math.max(2,bounds.h),d:bounds.d}}
