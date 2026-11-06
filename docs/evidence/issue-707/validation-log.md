@@ -260,3 +260,20 @@
 - 本轮 path 令每个 inline apply_ops schema 从34221增至35221字节，两种编辑器合计增加2000；已有会话在这一边界失败。只为 design/slides.apply_ops 启用 Zod 的本地重复定义引用，保留 io=input、原 schema.parse、授权、验证、工具动作和共享操作处理。每个 schema 为18252字节，两个合计减少33938；不扩大200000窗口、不改 SDK 或预算。独立 Ajv/Zod 样本对照支持等价，正式 Agent 与授权 API 仍须新 CI 验证。
 - 已先复现旧 schema 同一有限路径定义展开4次，新表达仅1次；新增正式工具合约检查本地引用闭合、合法路径操作及非法坐标/跨租户输入拒绝。纯 schema 检查通过，正式 SDK 合约测试待 CI，不能算本地已通过。
 - 数值诊断首次用了 ES2023 findLast，752f0d71 的正式 Server 类型检查因此失败；已改用当前目标支持的 reverse/find，不扩大编译目标或掩盖失败。
+
+## 控制点编辑局部回归
+
+固定来源、模块偏移、纯数学及实际浏览器状态见 `source-design-vector-edit.json`。
+`functional/canvas-vector-edit-receipt.json` 记录 150 组源码数学对照、浅深各 17 个实际浏览器场景、
+6 个并发场景、5 个恢复/平移/双触点场景、中文按需加载失败和生产隔离五格式导出。
+41 个聚焦单元和 11 文件 lint 通过；原有钢笔创建 15 项、保留 8 项、两类编辑器 50 页和
+可见区域旧响应零加载回归通过。双触点输入来自真实浏览器协议，未验证实体移动设备。
+本地 typecheck 仍为私有 SDK 缺失引起的 76 项，native/shared 零项，不能记录全量通过。
+参考图片和原生图片包含不同完整文档，只有局部几何对照；完整视觉标记继续为 false。
+
+`reviews/bc751dc3.json` 归档计量修正的独立只读复审，未发现 P1/P2；owning CI
+[42206920154](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42206920154)通过。
+该冻结提交的诊断 [42207308942](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42207308942)
+失败；`performance/bc751dc3-receipt.json` 保留原始状态、导出、分角色 PSS 及门槛。
+Slides 此轮真实 50 页和 HTML/PDF/PPTX 均通过，冷启动及 PSS 仍未达标；Design 因遍历脚本
+旧坐标遗漏平移留白而在第二页失败。未重新归类失败样本，未把该单轮当作最终十组证据。

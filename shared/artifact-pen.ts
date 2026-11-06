@@ -8,7 +8,7 @@ const round=(value:number)=>Math.round(value*10)/10
 
 /** Least-squares cubic fitting with chord parameters and Newton refinement.
  * Geometry follows the pinned Design oracle; no upstream runtime is imported. */
-function fit(points:PenPoint[],tolerance:number):number[]|null {
+export function fitPenPoints(points:PenPoint[],tolerance:number):number[]|null {
   const p=points.filter((point,index)=>!index||point.x!==points[index-1].x||point.y!==points[index-1].y).map(point=>({...point}))
   if(p.length<2)return null
   if(p.length===2)return[p[0].x,p[0].y,p[1].x,p[1].y]
@@ -120,7 +120,7 @@ export function fitCanvasPen(points:PenPoint[],tolerance:number,preview=false):P
   if(points.length<2)return null
   const origin={x:Math.min(...points.map(p=>Math.floor(p.x))),y:Math.min(...points.map(p=>Math.floor(p.y)))},local=points.map(p=>({x:p.x-origin.x,y:p.y-origin.y})),largest=Math.max(1,...local.flatMap(p=>[p.x,p.y])),scale=Math.min(1,MAX_COORDINATE/largest)
   for(let error=tolerance;error>0&&Number.isFinite(error)&&error<=16*tolerance;error*=2){
-    const curve=fit(local.map(p=>({x:p.x*scale,y:p.y*scale})),error*scale)
+    const curve=fitPenPoints(local.map(p=>({x:p.x*scale,y:p.y*scale})),error*scale)
     if(!curve||curve.length<=4||preview&&curve.length*2>MAX_PATH)break
     const flattened=splitPenExtrema(curve)
     if(flattened.length*2>MAX_PATH)continue

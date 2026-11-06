@@ -132,3 +132,18 @@ a0ee1b66 真实性能诊断42152419298已失败并保留哈希核验收据：两
 新增原始启动浏览器检查 `python scripts/native-artifact-worker-clock-check.py --browser=/path/to/pinned/chromium`
 和真实进程检查 `python scripts/native-artifact-pss-check.py`，仍不产生合格性能样本。
 后续诊断只读取现有图片元素并报告自然尺寸面积、缩略图数量和进程角色；这些计数不能直接等同于位图缓存占用。
+
+控制点编辑新增对照见 [source-design-vector-edit.json](source-design-vector-edit.json)。
+原版实测确认，逐点绘制结束后仍使用钢笔，切换选择工具后双击路径或按回车进入控制点编辑；
+此前“完成后进入控制点编辑”的描述不能作为原版自动进入的依据。
+局部回归包含锚点和切线、对称切线拉出、断开、角度约束、插点、删除、制表键、
+连续微调、取消、编辑中保存及共享撤销重做；使用 `--checks=canvas-vector-edit`。
+变换冲突、父组合移动及下载后重新载入使用 `--checks=canvas-vector-edit-cas`，
+权限与平移使用 `--checks=canvas-vector-edit-retention`，工具按需加载失败使用 `--checks=canvas-vector-edit-load`。
+纯数学可复现：`node --import tsx scripts/native-canvas-vector-edit-oracle.mjs /path/to/pinned/index-CYLuwRoc.js /tmp/vector-edit-oracle.json`。
+这些记录不能替代完整菜单、相同完整文档的四尺寸双主题视觉、真实授权服务和性能门槛。
+
+计量修正的独立审查见 [bc751dc3](reviews/bc751dc3.json)。
+[该冻结提交的真实诊断](performance/bc751dc3-receipt.json)失败：Design 遍历脚本旧坐标未包含新增平移留白，
+无法定位第二个画板；Slides 的 50 页及三格式导出通过，但冷启动和内存仍超目标。
+这是历史单轮诊断，未重新归类失败样本，也不作为当前未提交实现的性能通过证据。

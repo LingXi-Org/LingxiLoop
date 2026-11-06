@@ -2,7 +2,7 @@ import {createCanvasContents} from '../../../../shared/artifact-canvas-pages'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createDocument, createNode, createPage } from '../../../../shared/artifact-document'
-import { applyOperations, prepareBatch } from '../../../../shared/artifact-operations'
+import { applyOperations, prepareBatch,artifactVersionKey } from '../../../../shared/artifact-operations'
 import { NativeDocumentSession, type DocumentReceipt, type NativeTransport } from './session'
 
 function fixture() {
@@ -33,6 +33,55 @@ function harness() {
   }
   return { session: new NativeDocumentSession(transport), transport, ids, get document() { return document }, failNext() { failures++ }, blockNext(fn: () => Promise<void>) { block = fn }, remote(text: string) { document = applyOperations(document, prepareBatch(document, [{ type: 'node.patch', pageId: 'page-one', nodeId: 'page-one-text', patch: { text } }])).document } }
 }
+
+test('geometry read dependencies reject a peer transform arriving after the client snapshot',async()=>{
+  let document=fixture()
+  const receipt=():DocumentReceipt=>({document,write:true,history:{version:0,undo:null,redo:null}})
+  const transport:NativeTransport={read:async()=>receipt(),all:async()=>receipt(),page:async id=>({page:document.pages[id],version:String(document.seq)}),changed:async()=>false,history:async()=>receipt(),commit:async batch=>{try{document=applyOperations(document,batch).document;return receipt()}catch(error){throw Object.assign(error as Error,{status:409})}}}
+  const session=new NativeDocumentSession(transport);await session.open();const base=session.getSnapshot().document!
+  document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-one',nodeId:'page-one-text',patch:{rotation:90}}])).document
+  const readKey=artifactVersionKey.node('page-one','page-one-text','field/rotation')
+  session.dispatch([{type:'node.patch',pageId:'page-one',nodeId:'page-one-text',patch:{width:450}}],base,[readKey])
+  await assert.rejects(session.flush())
+  assert.equal(session.getSnapshot().conflict,true);assert.equal(document.pages['page-one'].nodes['page-one-text'].rotation,90);assert.equal(document.pages['page-one'].nodes['page-one-text'].width,320)
+  assert.equal(session.recovery().operations[0].expectedVersions[readKey],0)
+  assert.equal(base.pages['page-one'].nodes['page-one-text'].rotation,0);session.dispose()
+})
+
+test('geometry read dependencies allow an unrelated peer color to merge',async()=>{
+  let document=fixture()
+  const receipt=():DocumentReceipt=>({document,write:true,history:{version:0,undo:null,redo:null}})
+  const transport:NativeTransport={read:async()=>receipt(),all:async()=>receipt(),page:async id=>({page:document.pages[id],version:String(document.seq)}),changed:async()=>false,history:async()=>receipt(),commit:async batch=>{document=applyOperations(document,batch).document;return receipt()}}
+  const session=new NativeDocumentSession(transport);await session.open();const base=session.getSnapshot().document!
+  document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-one',nodeId:'page-one-text',patch:{style:{color:'#ff0000'}}}])).document
+  session.dispatch([{type:'node.patch',pageId:'page-one',nodeId:'page-one-text',patch:{width:450}}],base,[artifactVersionKey.node('page-one','page-one-text','field/rotation')])
+  await session.flush();assert.equal(document.pages['page-one'].nodes['page-one-text'].width,450);assert.equal(document.pages['page-one'].nodes['page-one-text'].style.color,'#ff0000');session.dispose()
+})
+
+test('控制点坐标依赖随自己的旋转确认版本转换，仍拒绝后来的远程旋转',async()=>{
+  for(const remoteAfter of [false,true]){
+    let document=fixture(),unblock!:()=>void,calls=0
+    const gate=new Promise<void>(resolve=>{unblock=resolve}),readKey=artifactVersionKey.node('page-one','page-one-text','field/rotation'),expected:number[]=[]
+    const receipt=():DocumentReceipt=>({document,write:true,history:{version:document.seq,undo:null,redo:null}})
+    const transport:NativeTransport={read:async()=>receipt(),all:async()=>receipt(),page:async id=>({page:document.pages[id],version:String(document.seq)}),changed:async()=>false,history:async()=>receipt(),commit:async batch=>{
+      if(++calls===1)await gate
+      expected.push(batch.expectedVersions[readKey])
+      try{document=applyOperations(document,batch).document}catch(error){throw Object.assign(error as Error,{status:409})}
+      const committedSeq=document.seq
+      if(calls===1&&remoteAfter)document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-one',nodeId:'page-one-text',patch:{rotation:180}}])).document
+      return{...receipt(),committedSeq}
+    }}
+    const session=new NativeDocumentSession(transport);await session.open()
+    session.dispatch([{type:'node.patch',pageId:'page-one',nodeId:'page-one-text',patch:{rotation:90}}])
+    const base=session.getSnapshot().document!;assert.equal(base.versions[readKey],1)
+    session.dispatch([{type:'node.patch',pageId:'page-one',nodeId:'page-one-text',patch:{width:450}}],base,[readKey])
+    document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-one',nodeId:'page-one-text',patch:{style:{color:'#ff0000'}}}])).document
+    unblock()
+    if(remoteAfter){await assert.rejects(session.flush());assert.equal(session.getSnapshot().conflict,true);assert.equal(document.pages['page-one'].nodes['page-one-text'].rotation,180);assert.equal(document.pages['page-one'].nodes['page-one-text'].width,320)}
+    else{await session.flush();assert.deepEqual(expected,[0,2]);assert.equal(document.pages['page-one'].nodes['page-one-text'].width,450);assert.equal(session.getSnapshot().conflict,false)}
+    assert.equal(document.pages['page-one'].nodes['page-one-text'].style.color,'#ff0000');session.dispose()
+  }
+})
 
 test('lost acknowledgment retries original operation id exactly once and keeps draft', async () => {
   const h = harness(); await h.session.open(); h.failNext()

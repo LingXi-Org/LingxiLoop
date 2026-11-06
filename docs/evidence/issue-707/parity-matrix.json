@@ -520,7 +520,8 @@
           }
         ],
         "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明",
-        "vectorSource": "source-design-vector.json"
+        "vectorSource": "source-design-vector.json",
+        "pointSource": "source-design-vector-edit.json"
       },
       "implementation": "src/features/artifacts/native/CanvasPenTool.tsx",
       "screenshots": {
@@ -528,13 +529,15 @@
         "native": "visual/native/design-drawing.png",
         "matchedStateVerified": false
       },
-      "result": "逐点创建路径、对称切线、闭合、草稿快捷键和持久化局部通过；现有路径控制点编辑及完整同态视觉仍未通过",
+      "result": "逐点创建及路径锚点和切线编辑局部通过；完整状态、完整同态视觉和性能仍未通过",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": "functional/canvas-vector-receipt.json",
-        "scope": "固定源码几何150组、真实鼠标键盘15场景、两种主题预览样式、加载恢复、原子创建、共享撤销、保存重开和五格式局部导出；不代替完整路径编辑、授权API和性能门槛。"
-      }
+        "scope": "创建及控制点数学各150组；控制点浅深各17场景、变换并发6场景、权限恢复和平移、按需加载及五格式导出局部验证。不代替完整状态、授权API、四尺寸双主题视觉和十组性能门槛。",
+        "pointReceipt": "functional/canvas-vector-edit-receipt.json"
+      },
+      "pointImplementation": "src/features/artifacts/native/CanvasPointEditor.tsx"
     },
     {
       "id": "D11-design",

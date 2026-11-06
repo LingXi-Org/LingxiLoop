@@ -1,0 +1,113 @@
+{
+  "scope": "现有路径控制点编辑局部验收；完整四尺寸双主题视觉、真实授权服务、完整可达状态及十组性能仍未通过",
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "source": "../source-design-vector-edit.json",
+  "math": {
+    "file": "canvas-vector-edit-oracle.json",
+    "cases": 150,
+    "passed": true,
+    "operations": [
+      "解析",
+      "规范化",
+      "移动锚点",
+      "切换平滑点",
+      "拉出对称切线",
+      "删除",
+      "切线移动和断开",
+      "最近线段",
+      "插点",
+      "制表键顺序",
+      "控制柄可见性"
+    ]
+  },
+  "light": {
+    "file": "canvas-vector-edit-light.json",
+    "cases": 17,
+    "browser": "154",
+    "passed": true
+  },
+  "dark": {
+    "file": "canvas-vector-edit-dark.json",
+    "cases": 17,
+    "browser": "140.0.7339.16",
+    "fontEnvironment": "../reviews/local-fontconfig-control.json",
+    "passed": true
+  },
+  "concurrency": {
+    "file": "canvas-vector-edit-cas.json",
+    "cases": 6,
+    "passed": true
+  },
+  "retention": {
+    "file": "canvas-vector-edit-retention.json",
+    "cases": 5,
+    "passed": true
+  },
+  "loading": {
+    "file": "canvas-vector-edit-load.json",
+    "passed": true
+  },
+  "exports": {
+    "file": "canvas-vector-edit-export.json",
+    "formats": [
+      "html",
+      "pdf",
+      "pptx",
+      "svg",
+      "png"
+    ],
+    "productionBuild": true,
+    "passed": true
+  },
+  "focusedUnits": {
+    "cases": 41,
+    "passed": true
+  },
+  "regressions": {
+    "originalSteelPenCreation": 15,
+    "originalSteelPenRetention": 8,
+    "fiftyPagesEachEditor": true,
+    "staleViewportLoads": 0
+  },
+  "lint": {
+    "files": 11,
+    "passed": true,
+    "warnings": 0
+  },
+  "localTypecheck": {
+    "passed": false,
+    "sdkUnavailable": true,
+    "errors": 76,
+    "nativeOrSharedErrors": 0
+  },
+  "screenshots": {
+    "reference": [
+      "../visual/reference/design-point-initial.png",
+      "../visual/reference/design-point-handle.png",
+      "../visual/reference/design-point-break.png",
+      "../visual/reference/design-point-cancel.png"
+    ],
+    "native": [
+      "../visual/native/design-point-initial-light.png",
+      "../visual/native/design-point-handle-light.png",
+      "../visual/native/design-point-break-light.png",
+      "../visual/native/design-point-cancel-light.png",
+      "../visual/native/design-point-initial-dark.png",
+      "../visual/native/design-point-handle-dark.png",
+      "../visual/native/design-point-break-dark.png",
+      "../visual/native/design-point-cancel-dark.png"
+    ],
+    "matchedFullDocument": false
+  },
+  "concreteRegressions": [
+    "双击和回车入口原缺失",
+    "对端旋转和路径修改时旧坐标提交",
+    "父组合空闲移动后覆盖层未更新",
+    "下载并重载后旧控制点草稿仍残留",
+    "权限恢复后键盘焦点未恢复",
+    "第二触点落在空白处导致活动编辑器卸载"
+  ],
+  "visualQualified": false,
+  "performanceQualified": false,
+  "functionalQualified": false
+}

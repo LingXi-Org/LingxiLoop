@@ -1,0 +1,910 @@
+{
+  "schemaVersion": 1,
+  "phase": "diagnostic",
+  "baselineCommit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "candidateCommit": "bc751dc3b1eac998a54fe398f207445da6bf572e",
+  "diagnosticPassed": false,
+  "qualified": false,
+  "checkpoint": {
+    "phase": "measurement",
+    "status": "failed",
+    "code": "CHILD_FAILED"
+  },
+  "sourceArtifact": {
+    "run": 42207308942,
+    "artifact": 13500113070,
+    "sha256": "02fbd3ca9ffd30a51f12599b723035cbe4813e67052494369d4c7ef0109ddd84"
+  },
+  "summary": {
+    "baseline:design:fullNavigation": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 3,
+      "editableMs": {
+        "p50": 9885.8,
+        "p75": 9885.8,
+        "p95": 9885.8
+      },
+      "scriptTransferBytes": {
+        "p50": 1279443,
+        "p75": 1279443,
+        "p95": 1279443
+      },
+      "scriptDecodedBytes": {
+        "p50": 4052309,
+        "p75": 4052309,
+        "p95": 4052309
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 404115456,
+        "p75": 404115456,
+        "p95": 404115456
+      },
+      "firstInputMs": {
+        "p50": 17.300000000046566,
+        "p75": 17.300000000046566,
+        "p95": 17.300000000046566
+      },
+      "inputFeedbackP95Ms": 19.4000000001397
+    },
+    "baseline:design": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 3,
+      "editableMs": {
+        "p50": 9885.8,
+        "p75": 9885.8,
+        "p95": 9885.8
+      },
+      "scriptTransferBytes": {
+        "p50": 1279443,
+        "p75": 1279443,
+        "p95": 1279443
+      },
+      "scriptDecodedBytes": {
+        "p50": 4052309,
+        "p75": 4052309,
+        "p95": 4052309
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 404115456,
+        "p75": 404115456,
+        "p95": 404115456
+      },
+      "firstInputMs": {
+        "p50": 17.300000000046566,
+        "p75": 17.300000000046566,
+        "p95": 17.300000000046566
+      },
+      "inputFeedbackP95Ms": 19.4000000001397
+    },
+    "baseline:design:workbenchOpen": {
+      "successfulSamples": 1,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": 6806.6,
+        "p75": 6806.6,
+        "p95": 6806.6
+      },
+      "scriptTransferBytes": {
+        "p50": 242587,
+        "p75": 242587,
+        "p95": 242587
+      },
+      "scriptDecodedBytes": {
+        "p50": 750442,
+        "p75": 750442,
+        "p95": 750442
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 404822426,
+        "p75": 404822426,
+        "p95": 404822426
+      },
+      "firstInputMs": {
+        "p50": 33.10000000009313,
+        "p75": 33.10000000009313,
+        "p95": 33.10000000009313
+      },
+      "inputFeedbackP95Ms": 33.10000000009313
+    },
+    "candidate:design:fullNavigation": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 0,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:design": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 0,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:design:workbenchOpen": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 0,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "baseline:slides:fullNavigation": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 3,
+      "editableMs": {
+        "p50": 6634.3,
+        "p75": 6634.3,
+        "p95": 6634.3
+      },
+      "scriptTransferBytes": {
+        "p50": 1303840,
+        "p75": 1303840,
+        "p95": 1303840
+      },
+      "scriptDecodedBytes": {
+        "p50": 4110639,
+        "p75": 4110639,
+        "p95": 4110639
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 291150233,
+        "p75": 291150233,
+        "p95": 291150233
+      },
+      "firstInputMs": {
+        "p50": 17,
+        "p75": 17,
+        "p95": 17
+      },
+      "inputFeedbackP95Ms": 18.700000000186265
+    },
+    "baseline:slides": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 3,
+      "editableMs": {
+        "p50": 6634.3,
+        "p75": 6634.3,
+        "p95": 6634.3
+      },
+      "scriptTransferBytes": {
+        "p50": 1303840,
+        "p75": 1303840,
+        "p95": 1303840
+      },
+      "scriptDecodedBytes": {
+        "p50": 4110639,
+        "p75": 4110639,
+        "p95": 4110639
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 291150233,
+        "p75": 291150233,
+        "p95": 291150233
+      },
+      "firstInputMs": {
+        "p50": 17,
+        "p75": 17,
+        "p95": 17
+      },
+      "inputFeedbackP95Ms": 18.700000000186265
+    },
+    "baseline:slides:workbenchOpen": {
+      "successfulSamples": 1,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": 4627.8,
+        "p75": 4627.8,
+        "p95": 4627.8
+      },
+      "scriptTransferBytes": {
+        "p50": 642527,
+        "p75": 642527,
+        "p95": 642527
+      },
+      "scriptDecodedBytes": {
+        "p50": 2011938,
+        "p75": 2011938,
+        "p95": 2011938
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 290919424,
+        "p75": 290919424,
+        "p95": 290919424
+      },
+      "firstInputMs": {
+        "p50": 32.39999999990687,
+        "p75": 32.39999999990687,
+        "p95": 32.39999999990687
+      },
+      "inputFeedbackP95Ms": 32.39999999990687
+    },
+    "candidate:slides:fullNavigation": {
+      "successfulSamples": 1,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": 9892.2,
+        "p75": 9892.2,
+        "p95": 9892.2
+      },
+      "scriptTransferBytes": {
+        "p50": 1354341,
+        "p75": 1354341,
+        "p95": 1354341
+      },
+      "scriptDecodedBytes": {
+        "p50": 4249161,
+        "p75": 4249161,
+        "p95": 4249161
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 378213990,
+        "p75": 378213990,
+        "p95": 378213990
+      },
+      "firstInputMs": {
+        "p50": 33.199999999953434,
+        "p75": 33.199999999953434,
+        "p95": 33.199999999953434
+      },
+      "inputFeedbackP95Ms": 34.5
+    },
+    "candidate:slides": {
+      "successfulSamples": 1,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": 9892.2,
+        "p75": 9892.2,
+        "p95": 9892.2
+      },
+      "scriptTransferBytes": {
+        "p50": 1354341,
+        "p75": 1354341,
+        "p95": 1354341
+      },
+      "scriptDecodedBytes": {
+        "p50": 4249161,
+        "p75": 4249161,
+        "p95": 4249161
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 378213990,
+        "p75": 378213990,
+        "p95": 378213990
+      },
+      "firstInputMs": {
+        "p50": 33.199999999953434,
+        "p75": 33.199999999953434,
+        "p95": 33.199999999953434
+      },
+      "inputFeedbackP95Ms": 34.5
+    },
+    "candidate:slides:workbenchOpen": {
+      "successfulSamples": 1,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": 7679.6,
+        "p75": 7679.6,
+        "p95": 7679.6
+      },
+      "scriptTransferBytes": {
+        "p50": 690820,
+        "p75": 690820,
+        "p95": 690820
+      },
+      "scriptDecodedBytes": {
+        "p50": 2146086,
+        "p75": 2146086,
+        "p95": 2146086
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 337587814,
+        "p75": 337587814,
+        "p95": 337587814
+      },
+      "firstInputMs": {
+        "p50": 33.800000000046566,
+        "p75": 33.800000000046566,
+        "p95": 33.800000000046566
+      },
+      "inputFeedbackP95Ms": 33.800000000046566
+    }
+  },
+  "gates": [
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "editableMs",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "scriptTransferBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "pssDeltaBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "inputFeedbackP95",
+      "maximumMs": 100,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "editableMs",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "scriptTransferBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "pssDeltaBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "inputFeedbackP95",
+      "maximumMs": 100,
+      "passed": false
+    }
+  ],
+  "samples": [
+    {
+      "run": 1,
+      "arm": "candidate",
+      "kind": "design",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "failureStage": "traversal",
+      "failureCode": "page_navigation_control_missing",
+      "performanceEligible": false,
+      "editableMs": 9054.4,
+      "scriptTransferBytes": 1330175,
+      "scriptDecodedBytes": 4191042,
+      "visitedPages": 1,
+      "exports": [],
+      "afterTraversalDocumentState": null
+    },
+    {
+      "run": 1,
+      "arm": "candidate",
+      "kind": "design",
+      "mode": "workbenchOpen",
+      "status": "failed",
+      "failureStage": "traversal",
+      "failureCode": "page_navigation_control_missing",
+      "performanceEligible": false,
+      "editableMs": 5814.6,
+      "scriptTransferBytes": 290707,
+      "scriptDecodedBytes": 883837,
+      "visitedPages": 1,
+      "exports": [],
+      "afterTraversalDocumentState": null
+    },
+    {
+      "run": 1,
+      "arm": "candidate",
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "status": "passed",
+      "performanceEligible": true,
+      "editableMs": 9892.2,
+      "scriptTransferBytes": 1354341,
+      "scriptDecodedBytes": 4249161,
+      "pssDeltaBytes": 378213990,
+      "visitedPages": 50,
+      "exports": [
+        {
+          "format": "html",
+          "status": "passed",
+          "bytes": 42914927,
+          "durationMs": 71581,
+          "pages": 50,
+          "sha256": "7303da2bd781afa3792ea2e592714c3937e24d013c07cbf461c35f1b6d7f4875",
+          "signatureVerified": true,
+          "pageContentVerified": true
+        },
+        {
+          "format": "pdf",
+          "status": "passed",
+          "bytes": 6268333,
+          "durationMs": 92413,
+          "pages": 50,
+          "sha256": "285a01d5c6cdfa82f362737d7b202b88e002e4490f9513fbd021286c754ca973",
+          "signatureVerified": true
+        },
+        {
+          "format": "pptx",
+          "status": "passed",
+          "bytes": 16378843,
+          "durationMs": 92256,
+          "pages": 50,
+          "sha256": "d5de3f6d9d311abaf25236ce915c96fbeb6d3a12309bbad65381f11ea5cd7f3b",
+          "signatureVerified": true
+        }
+      ],
+      "afterTraversalDocumentState": [
+        {
+          "mountedPages": 1,
+          "mountedNodes": 6,
+          "mountedThumbnails": 8,
+          "htmlImages": 3,
+          "readyHtmlImages": 3,
+          "readyImageNaturalPixels": 275400,
+          "readyVisibleImageNaturalPixels": 275400,
+          "svgImages": 8,
+          "svgDataImages": 8,
+          "svgBlobImages": 0,
+          "svgLogicalPixels": 1843200,
+          "rootJsHeapBytes": 40460254
+        }
+      ],
+      "afterTraversalPssMedianBytesByRole": {
+        "root": 128562176,
+        "renderer": 553745408,
+        "gpu": 60982272,
+        "utility": 85523456,
+        "other": 31032320
+      }
+    },
+    {
+      "run": 1,
+      "arm": "candidate",
+      "kind": "slides",
+      "mode": "workbenchOpen",
+      "status": "passed",
+      "performanceEligible": true,
+      "editableMs": 7679.6,
+      "scriptTransferBytes": 690820,
+      "scriptDecodedBytes": 2146086,
+      "pssDeltaBytes": 337587814,
+      "visitedPages": 50,
+      "exports": [],
+      "afterTraversalDocumentState": [
+        {
+          "mountedPages": 1,
+          "mountedNodes": 6,
+          "mountedThumbnails": 8,
+          "htmlImages": 3,
+          "readyHtmlImages": 3,
+          "readyImageNaturalPixels": 275400,
+          "readyVisibleImageNaturalPixels": 275400,
+          "svgImages": 8,
+          "svgDataImages": 8,
+          "svgBlobImages": 0,
+          "svgLogicalPixels": 1843200,
+          "rootJsHeapBytes": 58050513
+        }
+      ],
+      "afterTraversalPssMedianBytesByRole": {
+        "root": 126739456,
+        "renderer": 515446784,
+        "gpu": 61404160,
+        "utility": 84656128,
+        "other": 31048704
+      }
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "design",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "failureStage": "validation",
+      "failureCode": "export_diagnostic_incomplete",
+      "performanceEligible": true,
+      "editableMs": 9885.8,
+      "scriptTransferBytes": 1279443,
+      "scriptDecodedBytes": 4052309,
+      "pssDeltaBytes": 404115456,
+      "visitedPages": 50,
+      "exports": [
+        {
+          "format": "html",
+          "status": "failed",
+          "bytes": null,
+          "durationMs": 180108,
+          "failureCode": "browser_timeout"
+        },
+        {
+          "format": "pdf",
+          "status": "failed",
+          "bytes": null,
+          "durationMs": 180106,
+          "failureCode": "browser_timeout"
+        },
+        {
+          "format": "pptx",
+          "status": "failed",
+          "bytes": null,
+          "durationMs": 180126,
+          "failureCode": "browser_timeout"
+        }
+      ],
+      "afterTraversalDocumentState": [
+        {
+          "mountedPages": 2,
+          "mountedNodes": 6,
+          "mountedThumbnails": 13,
+          "htmlImages": 3,
+          "readyHtmlImages": 3,
+          "readyImageNaturalPixels": 275400,
+          "readyVisibleImageNaturalPixels": 275400,
+          "svgImages": 13,
+          "svgDataImages": 13,
+          "svgBlobImages": 0,
+          "svgLogicalPixels": 2995200,
+          "rootJsHeapBytes": 30820253
+        }
+      ],
+      "afterTraversalPssMedianBytesByRole": {
+        "root": 127306752,
+        "renderer": 607951872,
+        "gpu": 45113344,
+        "utility": 93949952,
+        "other": 28505088
+      }
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "design",
+      "mode": "workbenchOpen",
+      "status": "passed",
+      "performanceEligible": true,
+      "editableMs": 6806.6,
+      "scriptTransferBytes": 242587,
+      "scriptDecodedBytes": 750442,
+      "pssDeltaBytes": 404822426,
+      "visitedPages": 50,
+      "exports": [],
+      "afterTraversalDocumentState": [
+        {
+          "mountedPages": 2,
+          "mountedNodes": 6,
+          "mountedThumbnails": 13,
+          "htmlImages": 3,
+          "readyHtmlImages": 3,
+          "readyImageNaturalPixels": 275400,
+          "readyVisibleImageNaturalPixels": 275400,
+          "svgImages": 13,
+          "svgDataImages": 13,
+          "svgBlobImages": 0,
+          "svgLogicalPixels": 2995200,
+          "rootJsHeapBytes": 35458328
+        }
+      ],
+      "afterTraversalPssMedianBytesByRole": {
+        "root": 128646144,
+        "renderer": 606761984,
+        "gpu": 45200384,
+        "utility": 95107072,
+        "other": 28606464
+      }
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "failureStage": "validation",
+      "failureCode": "export_diagnostic_incomplete",
+      "performanceEligible": true,
+      "editableMs": 6634.3,
+      "scriptTransferBytes": 1303840,
+      "scriptDecodedBytes": 4110639,
+      "pssDeltaBytes": 291150233,
+      "visitedPages": 50,
+      "exports": [
+        {
+          "format": "html",
+          "status": "failed",
+          "bytes": null,
+          "durationMs": 180107,
+          "failureCode": "browser_timeout"
+        },
+        {
+          "format": "pdf",
+          "status": "failed",
+          "bytes": null,
+          "durationMs": 180108,
+          "failureCode": "browser_timeout"
+        },
+        {
+          "format": "pptx",
+          "status": "failed",
+          "bytes": null,
+          "durationMs": 180108,
+          "failureCode": "browser_timeout"
+        }
+      ],
+      "afterTraversalDocumentState": [
+        {
+          "mountedPages": 1,
+          "mountedNodes": 6,
+          "mountedThumbnails": 13,
+          "htmlImages": 3,
+          "readyHtmlImages": 3,
+          "readyImageNaturalPixels": 275400,
+          "readyVisibleImageNaturalPixels": 275400,
+          "svgImages": 13,
+          "svgDataImages": 13,
+          "svgBlobImages": 0,
+          "svgLogicalPixels": 2995200,
+          "rootJsHeapBytes": 34931211
+        }
+      ],
+      "afterTraversalPssMedianBytesByRole": {
+        "root": 129952768,
+        "renderer": 477230080,
+        "gpu": 49473536,
+        "utility": 85002240,
+        "other": 30837760
+      }
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "slides",
+      "mode": "workbenchOpen",
+      "status": "passed",
+      "performanceEligible": true,
+      "editableMs": 4627.8,
+      "scriptTransferBytes": 642527,
+      "scriptDecodedBytes": 2011938,
+      "pssDeltaBytes": 290919424,
+      "visitedPages": 50,
+      "exports": [],
+      "afterTraversalDocumentState": [
+        {
+          "mountedPages": 1,
+          "mountedNodes": 6,
+          "mountedThumbnails": 13,
+          "htmlImages": 3,
+          "readyHtmlImages": 3,
+          "readyImageNaturalPixels": 275400,
+          "readyVisibleImageNaturalPixels": 275400,
+          "svgImages": 13,
+          "svgDataImages": 13,
+          "svgBlobImages": 0,
+          "svgLogicalPixels": 2995200,
+          "rootJsHeapBytes": 43833447
+        }
+      ],
+      "afterTraversalPssMedianBytesByRole": {
+        "root": 127922176,
+        "renderer": 478993408,
+        "gpu": 49842176,
+        "utility": 84828160,
+        "other": 30718976
+      }
+    }
+  ],
+  "scope": "历史冻结提交的单轮诊断，不是当前控制点实现的十组性能验收。失败样本不重新归类。"
+}

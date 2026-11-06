@@ -107,6 +107,11 @@ jobs:
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-load --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-load"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-retention --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-retention"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --canvas-theme=dark --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-dark"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit-cas --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-cas"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit-retention --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-retention"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit-load --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-load"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=viewport-loading --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-viewport-loading"
       - name: Build both production applications before any measurements
         run: |

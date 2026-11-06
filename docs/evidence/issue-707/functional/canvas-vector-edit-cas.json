@@ -1,0 +1,59 @@
+{
+  "scope": "真实浏览器与原生操作链路，受控HTTP；双触点由浏览器协议输入，未验证真实移动设备或授权API",
+  "cases": [
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "parent-active",
+      "remotePreserved": true,
+      "recoveryContainsPointDraft": true,
+      "unmountRetained": true,
+      "conflictProtected": true,
+      "scope": "真实React、原生session及共享CAS；受控HTTP，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "parent-idle",
+      "parentMoveFollowed": true,
+      "subsequentEditSaved": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "path",
+      "remotePreserved": true,
+      "recoveryContainsPointDraft": true,
+      "unmountRetained": true,
+      "conflictProtected": true,
+      "scope": "真实React、原生session及共享CAS；受控HTTP，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "reload",
+      "remotePreserved": true,
+      "recoveryContainsPointDraft": true,
+      "unmountRetained": true,
+      "conflictProtected": true,
+      "scope": "真实React、原生session及共享CAS；受控HTTP，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "rotation",
+      "remotePreserved": true,
+      "recoveryContainsPointDraft": true,
+      "unmountRetained": true,
+      "conflictProtected": true,
+      "scope": "真实React、原生session及共享CAS；受控HTTP，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "style",
+      "unrelatedStyleMerged": true,
+      "scope": "真实React、原生session及共享CAS；受控HTTP，不代替真实授权API",
+      "consoleOrPageErrors": []
+    }
+  ]
+}

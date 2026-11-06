@@ -160,7 +160,7 @@ export class NativeDocumentSession {
       if (await this.transport.changed(this.committed.seq, this.controller.signal)) await this.open()
     } catch (error) { if (!this.controller.signal.aborted && [401, 403, 404, 410].includes(statusOf(error))) this.failure(error) }
   }
-  dispatch(operations: ArtifactOperation[], baseDocument?: ArtifactDocument) {
+  dispatch(operations: ArtifactOperation[], baseDocument?: ArtifactDocument, readKeys:readonly string[]=[] ) {
     if (!operations.length || !this.state.document || !this.state.write) return
     if (this.state.conflict) {
       const key = operations.map(operation => `${operation.type}:${'pageId' in operation ? operation.pageId : ''}:${'nodeId' in operation ? operation.nodeId : ''}`).join('|')
@@ -169,6 +169,7 @@ export class NativeDocumentSession {
       return
     }
     const batch = prepareBatch(baseDocument ?? this.state.document, operations)
+    for(const key of readKeys)batch.expectedVersions[key]=(baseDocument??this.state.document).versions[key]??0
     if (baseDocument) for (const [key, anchor] of this.snapshotAnchors.get(baseDocument) ?? []) {
       if (key in batch.expectedVersions) batch.expectedVersions[key] = anchor.version
     }

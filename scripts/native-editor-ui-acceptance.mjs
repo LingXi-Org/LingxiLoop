@@ -18,7 +18,8 @@ import { createFixture } from './native-artifact-fixture.mjs'
 import { createVisualFixture } from './native-editor-visual-fixture.mjs'
 import { applyOperations, prepareBatch } from '../shared/artifact-operations.ts'
 import { createTableNode } from '../shared/artifact-tables.ts'
-import { createCanvasPage, renameCanvasPage, artifactPageIds } from '../shared/artifact-canvas-pages.ts'
+import { createCanvasPage, createCanvasContents, canvasPages, renameCanvasPage, artifactPageIds } from '../shared/artifact-canvas-pages.ts'
+import {canvasPenNode} from '../shared/artifact-editor-actions.ts'
 import { createPage, createNode } from '../shared/artifact-document.ts'
 import { importCanvasAnnotations } from '../shared/artifact-canvas-import.ts'
 import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-anchor.ts'
@@ -60,7 +61,7 @@ try {
   const baseUrl = `http://127.0.0.1:${address.port}`
   browser = await chromium.launch({ headless: true, ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox'] })
   for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
-    for (const editorCase of options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
+    for (const editorCase of options.checks === 'canvas-vector-edit-retention' ? options['vector-case']?[options['vector-case']]:['readonly','denied','space','middle','touch'] : options.checks === 'canvas-vector-edit-cas' ? options['vector-case']?[options['vector-case']]:['rotation','path','style','reload','parent-idle','parent-active'] : options.checks === 'canvas-vector-edit' ? options['vector-case']?[options['vector-case']]:['initial','anchor-drag','nudge','smooth','delete','insert','tab','pull','shift-drag','handle','break','cancel','group-nudge','save-in-mode','undo-point','redo-point','keyboard-enter'] : options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
       const result = await verifyMode(kind, browser, baseUrl, editorCase)
       await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
       console.log(JSON.stringify(options.checks==='parity'?{...result,screenshots:result.screenshots.map(({controls,...row})=>row)}:result))
@@ -73,9 +74,18 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
+  if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load'].includes(options.checks)){
+    const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name==='open-enter').added[0]
+    const node=canvasPenNode('editable-path',{x:2497.1,y:-1360.9,w:reference.w,h:reference.h,d:reference.d})
+    document=applyOperations(document,prepareBatch(document,[...createCanvasContents(document,canvasPages(document)[0].id,'canvas-vector-body'),{type:'node.insert',pageId:'canvas-vector-body',node:{...node,scope:'canvas'}}])).document
+  }
+  if(options.checks==='canvas-vector-edit-cas'&&editorCase.startsWith('parent-')){
+    const page=document.pages['canvas-vector-body'],node=page.nodes['editable-path'],group={...createNode('group','editable-parent'),x:node.x,y:node.y,width:node.width,height:node.height,scope:'canvas'}
+    document=applyOperations(document,prepareBatch(document,[{type:'node.insert',pageId:page.id,node:group},{type:'node.patch',pageId:page.id,nodeId:node.id,patch:{x:0,y:0,parentId:group.id}}])).document
+  }
   if(options.checks==='canvas-pen'){const geometry=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-pen.json'),'utf8')).cases[0].result,node={...createNode('drawing','thumbnail-pen'),x:100,y:600,width:geometry.w,height:geometry.h,path:{d:geometry.d,width:geometry.w,height:geometry.h},style:{stroke:'#8a8378',strokeWidth:2}};document.pages['page-3'].nodes[node.id]=node;document.pages['page-3'].nodeOrder.push(node.id)}
   if(['canvas-import','canvas-layout-cache'].includes(options.checks)){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[]);if(options.checks==='canvas-layout-cache'){const body=document.pages[document.canvasPages[0].contentId];body.nodes['imported-note'].text='中文自动换行'.repeat(100);body.nodes['imported-note'].height=832;body.nodes['imported-note'].style.fontSize=32;body.nodes.unrelated={...createNode('shape','unrelated'),x:0,y:0};body.nodeOrder.push('unrelated');if(options['inherit-font']==='true'){const note=body.nodes['imported-note'];note.text='i'.repeat(2000);if(options['inherit-keyword'])note.style.fontFamily=options['inherit-keyword'];else delete note.style.fontFamily;const group={...createNode('group','inherited-group'),x:0,y:0,width:1000,height:8000,style:{fontFamily:'monospace'}};body.nodes[group.id]=group;body.nodeOrder.unshift(group.id);note.parentId=group.id;if(options['layout-case']){group.x=note.x;group.y=note.y;group.width=120;group.height=180;group.layout={mode:options['layout-case'],direction:'row',columns:1,align:'start'};note.x=0;note.y=0;note.text='a '.repeat(400);if(options['grid-second-row']==='true'){group.width=480;group.height=3000;group.layout={mode:'grid',columns:2,gap:20,align:'start'};for(let i=1;i<(options['grid-mixed']==='true'||options['grid-shapes-only']==='true'?6:4);i++){const sibling={...structuredClone(note),id:`grid-note-${i}`};if(options['grid-shapes-only']==='true'||options['grid-mixed']==='true'&&i>=2){sibling.type='shape';sibling.shape='rect';sibling.height=3128;delete sibling.text}body.nodes[sibling.id]=sibling;body.nodeOrder.push(sibling.id)}if(options['grid-shapes-only']==='true'){note.type='shape';note.shape='rect';note.height=3128;delete note.text}}}}}}
   if(options.checks==='canvas-empty')document={...document,pageOrder:[],pages:{}}
@@ -128,15 +138,17 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
   let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0,svgModuleBlocked=options.checks==='svg-font-module',svgModuleRequests=0
   const editorFontRequests=[]
+  let pointModuleBlocked=options.checks==='canvas-vector-edit-load',pointModuleRequests=0
   let expectedVectorDenied=false;let vectorModuleBlocked=options.checks==='canvas-vector-load',vectorModuleRequests=0
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
-  page.on('request',request=>{if(new URL(request.url()).pathname.includes('/CanvasPenTool.tsx'))vectorModuleRequests++})
+  page.on('request',request=>{const path=new URL(request.url()).pathname;if(path.includes('/CanvasPenTool.tsx'))vectorModuleRequests++;if(path.includes('/CanvasPointEditor.tsx'))pointModuleRequests++})
   page.setDefaultTimeout(30_000)
   await page.addInitScript(()=>{window.__geometryLog=[];window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(message?.task?.kind==='pen')window.__penRequests++;if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
   if(options.checks==='viewport-loading')await page.addInitScript(()=>{window.__holdVisible=false;window.__heldVisible=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.visibleIds=new Set();this.addEventListener('message',event=>{if(this.visibleIds.delete(event.data?.id)&&window.__holdVisible){event.stopImmediatePropagation();window.__heldVisible.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='visible')this.visibleIds.add(message.id);return super.postMessage(message,...args)}}})
   if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
-  page.on('console', message => { if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))) errors.push(message.text()) })
+  page.on('console', message => { if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
+  if(options.checks==='canvas-vector-edit-load')await page.route('**/CanvasPointEditor.tsx*',async route=>{if(pointModuleBlocked)await route.fulfill({status:503,body:'控制点工具未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-load')await page.route('**/CanvasPenTool.tsx*',async route=>{if(vectorModuleBlocked)await route.fulfill({status:503,body:'钢笔工具未能加载'});else await route.continue()})
   if(options.checks==='svg-font-module')await page.route('**/svg-font-image.ts*',async route=>{svgModuleRequests++;if(svgModuleBlocked)await route.fulfill({status:503,body:'图形工具暂时无法加载'});else await route.continue()})
   if(['svg-font-error','svg-font-cancel'].includes(options.checks))await page.route('**/fonts/editors/**',async route=>{if(svgFontsBlocked){svgFontFailures++;await route.fulfill({status:503,body:'字体暂时无法加载'});return}if(svgFontsHeld)await new Promise(resolve=>{const previous=releaseSvgFonts;releaseSvgFonts=()=>{previous?.();resolve()}});await route.continue().catch(()=>{})})
@@ -348,6 +360,161 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       vectorModuleBlocked=false;await page.reload();await ready(1);await choose();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})
       await page.mouse.click(600,300);await page.keyboard.press('Escape');assert.equal(document.seq,0);assert.deepEqual(errors,[])
       return{kind:'isolated-canvas-vector-loading-diagnostic',lazyBeforeSelection:true,chineseLoadFailure:true,editorRetained:true,noDocumentWrites:true,reopenedToolRecovered:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-vector-edit-load'){
+      const node=page.locator('[data-node-id=editable-path]'),before=structuredClone(document.pages['canvas-vector-body'].nodes['editable-path'])
+      assert.equal(pointModuleRequests,0)
+      const open=async()=>{const b=await node.boundingBox();await page.mouse.dblclick(b.x+b.width*.25,b.y+b.height*.4)}
+      await open();await page.locator('.native-notice').filter({hasText:'控制点工具未能加载，请刷新页面后重试。'}).waitFor();assert.ok(pointModuleRequests>0)
+      assert.equal(await node.evaluate(e=>getComputedStyle(e).visibility),'visible');assert.deepEqual(document.pages['canvas-vector-body'].nodes['editable-path'],before);assert.equal(receipts.length,0)
+      pointModuleBlocked=false;await page.reload();await ready(1);await open();await page.locator('[data-native-vector-editor]').waitFor({state:'attached'});await page.keyboard.press('Escape')
+      assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-vector-edit-loading-diagnostic',lazyUntilOpened:true,chineseFailure:true,visiblePathPreserved:true,refreshRecovered:true,noWrites:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-vector-edit-retention'){
+      const node=page.locator('[data-node-id=editable-path]'),box=await node.boundingBox();await page.mouse.dblclick(box.x+box.width*.25,box.y+box.height*.4)
+      const editor=page.locator('[data-native-vector-editor]');await editor.waitFor({state:'attached'})
+      const original=structuredClone(document.pages['canvas-vector-body'].nodes['editable-path']),anchor=await editor.locator('[data-vector-part="a:0:1"]').boundingBox()
+      if(editorCase==='touch'){
+        const cdp=await page.context().newCDPSession(page);await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:2})
+        await page.evaluate(()=>{window.__pointTouchTrusted=[];addEventListener('pointerdown',event=>{if(event.pointerType==='touch')window.__pointTouchTrusted.push(event.isTrusted)},true)})
+        const first={id:1,x:anchor.x+anchor.width/2,y:anchor.y+anchor.height/2},second={id:2,x:first.x+100,y:first.y+100}
+        await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[first]})
+        first.x+=12;first.y+=8;await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[first]})
+        await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[first,second]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[second]})
+        first.x+=18;first.y+=12;await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[first]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]})
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,1,'lifting a second finger must not discard the first finger path gesture');assert.equal(await editor.count(),1,'a secondary finger must not unmount the active point editor');const completed=await editor.locator('[data-vector-part="a:0:1"]').boundingBox();assert.ok(Math.abs(completed.x+completed.width/2-first.x)<=1&&Math.abs(completed.y+completed.height/2-first.y)<=1,'the first finger reaches its final position after the second finger lifts');assert.notEqual(document.pages['canvas-vector-body'].nodes['editable-path'].path.d,original.path.d);assert.deepEqual(await page.evaluate(()=>window.__pointTouchTrusted),[true,true]);await cdp.detach();assert.deepEqual(errors,[])
+        return{kind:'isolated-canvas-vector-edit-retention-diagnostic',scenario:editorCase,trustedTwoFingerInput:true,activeFingerPreserved:true,oneSharedGesture:true,consoleOrPageErrors:errors}
+      }
+      if(editorCase==='space'||editorCase==='middle'){
+        const before=await page.locator('.native-stage').evaluate(e=>({x:e.scrollLeft,y:e.scrollTop}))
+        if(editorCase==='space')await page.keyboard.down('Space')
+        await page.mouse.move(anchor.x+anchor.width/2,anchor.y+anchor.height/2);await page.mouse.down({button:editorCase==='middle'?'middle':'left'});await page.mouse.move(anchor.x+anchor.width/2-100,anchor.y+anchor.height/2-80,{steps:8});await page.mouse.up({button:editorCase==='middle'?'middle':'left'})
+        if(editorCase==='space')await page.keyboard.up('Space')
+        assert.notDeepEqual(await page.locator('.native-stage').evaluate(e=>({x:e.scrollLeft,y:e.scrollTop})),before)
+        assert.deepEqual(document.pages['canvas-vector-body'].nodes['editable-path'],original);assert.equal(receipts.length,0);assert.equal(await editor.locator('[data-vector-part^="a:"]').count(),3)
+      }else{
+        await page.mouse.move(anchor.x+anchor.width/2,anchor.y+anchor.height/2);await page.mouse.down();await page.mouse.move(anchor.x+anchor.width/2+30,anchor.y+anchor.height/2+20,{steps:8})
+        if(editorCase==='denied'){
+          expectedVectorDenied=true;let denied=true
+          await page.route('**/api/artifacts/fixture/changes*',async route=>{if(denied)await route.fulfill({status:403,json:{error:'当前无法访问此稿件'}});else await route.fallback()})
+          await page.locator('.native-loading[role=alert]').waitFor();await page.mouse.up();assert.equal(receipts.length,0)
+          const pending=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click();const download=await pending,recovery=JSON.parse(await readFile(await download.path(),'utf8'));assert.equal(recovery.vectorEditDrafts.length,1)
+          denied=false;await page.getByRole('button',{name:'重试',exact:true}).click();await editor.waitFor({state:'attached'})
+          await page.waitForFunction(()=>document.activeElement?.matches('[data-native-artifact-editor]'),null,{timeout:1000})
+          assert.equal(await page.locator('[data-native-artifact-editor]').evaluate(e=>document.activeElement===e),true,'restoring point edits after access recovery must restore canvas keyboard focus')
+        }else{
+          fixtureWrite=false;document=applyOperations(document,prepareBatch(document,[{type:'document.patch',patch:{title:'权限变更'}}])).document
+          await page.locator('.native-save-status').filter({hasText:'仅查看'}).waitFor();await page.mouse.up();await page.getByRole('button',{name:'选择 (V)',exact:true}).click();await editor.waitFor({state:'detached'})
+          assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'draft');assert.equal(receipts.length,0)
+          fixtureWrite=true;document=applyOperations(document,prepareBatch(document,[{type:'document.patch',patch:{title:'权限恢复'}}])).document
+          await page.waitForFunction(()=>!document.querySelector('.native-save-status').textContent.includes('仅查看'))
+          const reopened=await node.boundingBox();await page.mouse.dblclick(reopened.x+reopened.width*.25,reopened.y+reopened.height*.4);await editor.waitFor({state:'attached'})
+        }
+        assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'draft');assert.equal(await editor.locator('[data-vector-part^="a:"]').count(),3)
+        await page.keyboard.press('Control+s');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,1)
+        assert.notEqual(document.pages['canvas-vector-body'].nodes['editable-path'].path.d,original.path.d)
+      }
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-vector-edit-retention-diagnostic',scenario:editorCase,...(['space','middle'].includes(editorCase)?{pansFromControlTarget:true,noDocumentWrites:true}:{draftRetained:true,savedAfterRecovery:true,focusRecovered:true}),scope:'真实React和可信输入，受控HTTP权限；不代替授权API验收',consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-vector-edit-cas'){
+      const node=page.locator('[data-node-id=editable-path]'),box=await node.boundingBox();assert.ok(box)
+      await page.mouse.dblclick(box.x+box.width*.25,box.y+box.height*.4)
+      const editor=page.locator('[data-native-vector-editor]');await editor.waitFor({state:'attached'})
+      if(editorCase==='parent-idle'){
+        const parent=document.pages['canvas-vector-body'].nodes['editable-parent']
+        document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'canvas-vector-body',nodeId:parent.id,patch:{x:parent.x+100}}])).document
+        await page.waitForFunction(x=>Number.parseFloat(document.querySelector('[data-node-id=editable-parent]').style.left)===x,parent.x+100)
+        const model=await node.locator('svg path').first().evaluate(path=>{const at=new DOMPoint(226.19,0).matrixTransform(path.getScreenCTM());return{x:at.x,y:at.y}}),control=await editor.locator('[data-vector-part="a:0:1"]').boundingBox()
+        assert.ok(Math.abs(model.x-control.x-control.width/2)<=1&&Math.abs(model.y-control.y-control.height/2)<=1,'an idle overlay must follow a peer moving its parent before accepting another edit')
+        await page.mouse.move(control.x+control.width/2,control.y+control.height/2);await page.mouse.down();await page.mouse.move(control.x+control.width/2+30,control.y+control.height/2+20,{steps:8});await page.mouse.up()
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,1);assert.equal(document.pages['canvas-vector-body'].nodes[parent.id].x,parent.x+100);assert.deepEqual(errors,[])
+        return{kind:'isolated-canvas-vector-edit-cas-diagnostic',scenario:editorCase,parentMoveFollowed:true,subsequentEditSaved:true,consoleOrPageErrors:errors}
+      }
+      const anchor=await editor.locator('[data-vector-part="a:0:1"]').boundingBox()
+      await page.mouse.move(anchor.x+anchor.width/2,anchor.y+anchor.height/2);await page.mouse.down();await page.mouse.move(anchor.x+anchor.width/2+30,anchor.y+anchor.height/2+20,{steps:8})
+      const original=structuredClone(document.pages['canvas-vector-body'].nodes['editable-path'])
+      const patch=editorCase==='rotation'||editorCase==='reload'?{rotation:90}:editorCase==='path'?{path:{...original.path,d:original.path.d.replace('226.19 0','250 0')}}:{style:{stroke:'#ff0000'}}
+      document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'canvas-vector-body',nodeId:editorCase==='parent-active'?'editable-parent':'editable-path',patch:editorCase==='parent-active'?{rotation:90}:patch}])).document
+      if(editorCase==='parent-active')await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id=editable-parent]')).transform.startsWith('matrix(0, 1, -1, 0'))
+      else if(editorCase==='rotation'||editorCase==='reload')await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id=editable-path]')).transform.startsWith('matrix(0, 1, -1, 0'))
+      else if(editorCase==='path')await page.waitForFunction(()=>document.querySelector('[data-node-id=editable-path] svg path')?.getAttribute('d').includes('250 0'))
+      else await page.waitForFunction(()=>document.querySelector('[data-native-vector-editor] > path')?.getAttribute('stroke')==='#ff0000')
+      await page.mouse.up();await page.waitForFunction(()=>['conflict','saved'].includes(document.querySelector('[data-save-state]')?.dataset.saveState))
+      if(editorCase==='style'){
+        assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'saved');assert.equal(receipts.length,1);assert.equal(document.pages['canvas-vector-body'].nodes['editable-path'].style.stroke,'#ff0000');assert.notEqual(document.pages['canvas-vector-body'].nodes['editable-path'].path.d,original.path.d)
+      }else{
+        assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'conflict','point geometry cannot commit through a changed transform or path')
+        assert.equal(receipts.length,0)
+        if(editorCase==='rotation'||editorCase==='reload'){assert.equal(document.pages['canvas-vector-body'].nodes['editable-path'].rotation,90);assert.equal(document.pages['canvas-vector-body'].nodes['editable-path'].path.d,original.path.d)}
+        else if(editorCase==='parent-active')assert.equal(document.pages['canvas-vector-body'].nodes['editable-parent'].rotation,90)
+        else assert.equal(document.pages['canvas-vector-body'].nodes['editable-path'].path.d,patch.path.d)
+        await page.getByRole('button',{name:'选择 (V)',exact:true}).click();await editor.waitFor({state:'detached'})
+        const pending=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click();const download=await pending,recovery=JSON.parse(await readFile(await download.path(),'utf8'))
+        assert.equal(recovery.vectorEditDrafts.length,1);assert.equal(recovery.vectorEditDrafts[0].path.contours[0].anchors.length,3)
+        if(editorCase==='reload'){
+          const backedUp=page.waitForEvent('download');await page.getByRole('button',{name:'保留副本并重新载入',exact:true}).click();const backup=await backedUp,contents=JSON.parse(await readFile(await backup.path(),'utf8'));assert.equal(contents.vectorEditDrafts.length,1)
+          await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+          assert.equal(await page.getByRole('button',{name:'丢弃未保存路径',exact:true}).count(),0,'explicitly downloading and reloading must clear the backed-up point draft')
+          const afterReload=await node.locator('svg path').first().evaluate(path=>{const p=path.getPointAtLength(path.getTotalLength()*.25).matrixTransform(path.getScreenCTM());return{x:p.x,y:p.y}});await page.mouse.dblclick(afterReload.x,afterReload.y);await editor.waitFor({state:'attached'});await page.keyboard.press('Control+s')
+          assert.equal(receipts.length,0);assert.equal(document.pages['canvas-vector-body'].nodes['editable-path'].rotation,90)
+        }
+      }
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-vector-edit-cas-diagnostic',scenario:editorCase,...(editorCase==='style'?{unrelatedStyleMerged:true}:{remotePreserved:true,recoveryContainsPointDraft:true,unmountRetained:true,conflictProtected:true}),scope:'真实React、原生session及共享CAS；受控HTTP，不代替真实授权API',consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-vector-edit'){
+      const node=page.locator('[data-node-id=editable-path]');await node.waitFor()
+      const before=structuredClone(document.pages['canvas-vector-body'].nodes['editable-path']);let undoExpected=before
+      const box=await node.boundingBox();assert.ok(box)
+      if(editorCase==='keyboard-enter'){await page.mouse.click(box.x+box.width*.25,box.y+box.height*.4);await page.keyboard.press('Enter')}else await page.mouse.dblclick(box.x+box.width*.25,box.y+box.height*.4)
+      const editor=page.locator('[data-native-vector-editor]');await editor.waitFor({state:'attached',timeout:3000})
+      assert.equal(await editor.locator('[data-vector-part^="a:"]').count(),3)
+      const anchor=editor.locator('[data-vector-part="a:0:1"]')
+      if(editorCase==='anchor-drag'){
+        const target=await anchor.boundingBox();await page.mouse.move(target.x+target.width/2,target.y+target.height/2);await page.mouse.down();await page.mouse.move(target.x+target.width/2+30,target.y+target.height/2+20,{steps:8});await page.mouse.up()
+      }else if(['pull','shift-drag','handle','break','cancel'].includes(editorCase)){
+        let target=anchor
+        if(editorCase==='handle'||editorCase==='break'){await anchor.click();await page.keyboard.press('Enter');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');target=editor.locator('[data-vector-part="c:0:2"]');undoExpected=structuredClone(document.pages['canvas-vector-body'].nodes['editable-path'])}
+        if(editorCase==='pull'||editorCase==='break')await page.keyboard.down('Alt')
+        if(editorCase==='shift-drag')await page.keyboard.down('Shift')
+        const r=await target.boundingBox(),dx=['pull','handle','break'].includes(editorCase)?20:30,dy=editorCase==='pull'?-20:['handle','break'].includes(editorCase)?-10:20
+        await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2+dx,r.y+r.height/2+dy,{steps:8})
+        if(editorCase==='cancel')await page.keyboard.press('Escape')
+        await page.mouse.up()
+        if(editorCase==='pull'||editorCase==='break')await page.keyboard.up('Alt')
+        if(editorCase==='shift-drag')await page.keyboard.up('Shift')
+      }else if(['group-nudge','save-in-mode','undo-point','redo-point'].includes(editorCase)){
+        await anchor.click()
+        if(editorCase==='group-nudge'){for(let i=0;i<3;i++)await page.keyboard.down('ArrowRight');await page.keyboard.up('ArrowRight')}
+        else{await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');if(editorCase==='save-in-mode')await page.keyboard.press('Control+s');else{await page.keyboard.press('Control+z');await page.waitForFunction(d=>document.querySelector('[data-node-id=editable-path] svg path')?.getAttribute('d')===d,before.path.d);await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');if(editorCase==='redo-point')await page.keyboard.press('Control+Shift+z')}}
+      }else if(['nudge','smooth','delete'].includes(editorCase)){await anchor.click();await page.keyboard.press(editorCase==='nudge'?'ArrowRight':editorCase==='smooth'?'Enter':'Delete')}
+      else if(editorCase==='insert'){
+        const a=await editor.locator('[data-vector-part="a:0:0"]').boundingBox(),b=await anchor.boundingBox()
+        await page.mouse.click((a.x+a.width/2+b.x+b.width/2)/2,(a.y+a.height/2+b.y+b.height/2)/2)
+      }else if(editorCase==='tab'){await page.keyboard.press('Tab');await page.keyboard.press('Tab')}
+      if(['initial','handle','break','cancel'].includes(editorCase))await page.screenshot({path:join(output,`design-point-${editorCase}-${options['canvas-theme']??'light'}.png`)})
+      const source=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector-edit.json'),'utf8')).runtimeCases.find(sample=>sample.name===editorCase)
+      assert.equal(await editor.locator('[data-vector-part^="a:"]').count(),source.state.parts.filter(p=>p.part.startsWith('a')).length)
+      if(['initial','tab','keyboard-enter','cancel','undo-point'].includes(editorCase)){assert.equal(receipts.length,editorCase==='undo-point'?1:0);assert.deepEqual(document.pages['canvas-vector-body'].nodes['editable-path'],before)}
+      else{
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+        assert.equal(receipts.length,['handle','break'].includes(editorCase)?2:1,'each complete point gesture creates one shared operation batch')
+        const result=document.pages['canvas-vector-body'].nodes['editable-path'],expected=source.savedNodes[0][1],scale=box.width/before.width
+        assert.ok(Math.abs(result.width-expected.w)*scale<=1&&Math.abs(result.height-expected.h)*scale<=1)
+        const actualCommands=result.path.d.match(/[MLC]/g),expectedCommands=expected.d.match(/[MLC]/g);assert.deepEqual(actualCommands,expectedCommands)
+        const actualNumbers=result.path.d.match(/-?\d+(?:\.\d+)?/g).map(Number),expectedNumbers=expected.d.match(/-?\d+(?:\.\d+)?/g).map(Number)
+        assert.equal(actualNumbers.length,expectedNumbers.length);assert.ok(actualNumbers.every((value,i)=>Math.abs(value-expectedNumbers[i])*scale<=1),'stored point geometry stays within one source CSS pixel for the same relative trusted gesture')
+        await page.keyboard.press('Control+z');await page.waitForFunction(d=>document.querySelector('[data-node-id=editable-path] svg path')?.getAttribute('d')===d,undoExpected.path.d);await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+        assert.deepEqual(document.pages['canvas-vector-body'].nodes['editable-path'],undoExpected)
+        await page.keyboard.press('Control+Shift+z');await page.waitForFunction(d=>document.querySelector('[data-node-id=editable-path] svg path')?.getAttribute('d')===d,result.path.d);await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+        assert.deepEqual(document.pages['canvas-vector-body'].nodes['editable-path'],result)
+      }
+      await page.keyboard.press('Escape');await editor.waitFor({state:'detached'});assert.equal(await node.evaluate(e=>getComputedStyle(e).visibility),'visible')
+      const saved=structuredClone(document.pages['canvas-vector-body'].nodes['editable-path']);await page.reload({waitUntil:'domcontentloaded'});await ready(1);assert.deepEqual(document.pages['canvas-vector-body'].nodes['editable-path'],saved)
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-vector-edit-diagnostic',scenario:editorCase,entry:editorCase==='keyboard-enter'?'选择后回车':'双击路径',sourceAnchorCount:true,...(['initial','tab','keyboard-enter','cancel','undo-point'].includes(editorCase)?{originalGeometryPreserved:true,...(editorCase==='undo-point'?{sharedUndo:true}:{unchangedDoesNotSave:true})}:{oneGestureOneBatch:true,sourceGeometryWithin1CssPx:true,sharedUndoRedo:true}),savedAndReopened:true,scope:'真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-vector-retention'){
       const choosePen=async()=>{await page.getByLabel('绘图工具',{exact:true}).click();await page.getByRole('group',{name:'绘图工具选项',exact:true}).getByRole('button',{name:/^钢笔/}).click();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})}
