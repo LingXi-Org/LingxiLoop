@@ -99,7 +99,9 @@ const labels = new Set(['baseline', 'candidate', 'design', 'slides', 'passed', '
 const dottedVersion = /^\d{1,3}(?:\.\d{1,6}){1,4}$/
 const linuxKernelPattern = String.raw`\d{1,3}\.\d{1,3}\.\d{1,4}(?:[.-]\d{1,6})?(?:-(?:generic|azure|aws|amd64|cloud-amd64))?\+?`
 const linuxPlatform = new RegExp(`^Linux-${linuxKernelPattern}-(?:x86_64|aarch64)-with-glibc\\d{1,3}\\.\\d{1,3}$`)
-const requestTables = new Set(['inflightRequests', 'requestsAtEditable', 'requestsAtIdle', 'requestsAtStable', 'requestsAtOpen', 'requestsBeforeOpen', 'failedRequests', 'unaccountedScriptTimings'])
+const networkErrorCodes = new Set(['ERR_ABORTED', 'ERR_FAILED', 'ERR_CONNECTION_REFUSED', 'ERR_CONNECTION_RESET', 'ERR_CONNECTION_CLOSED', 'ERR_CONNECTION_ABORTED', 'ERR_CONNECTION_TIMED_OUT', 'ERR_NETWORK_CHANGED', 'ERR_INTERNET_DISCONNECTED', 'ERR_NAME_NOT_RESOLVED', 'ERR_CERT_AUTHORITY_INVALID', 'ERR_CERT_COMMON_NAME_INVALID', 'ERR_CERT_DATE_INVALID', 'ERR_CERT_INVALID', 'ERR_SSL_PINNED_KEY_NOT_IN_CERT_CHAIN', 'ERR_SSL_VERSION_OR_CIPHER_MISMATCH', 'ERR_SSL_PROTOCOL_ERROR', 'ERR_TIMED_OUT', 'ERR_BLOCKED_BY_CLIENT', 'ERR_BLOCKED_BY_RESPONSE', 'ERR_HTTP_RESPONSE_CODE_FAILURE', 'ERR_EMPTY_RESPONSE', 'ERR_PROXY_CONNECTION_FAILED', 'ERR_TUNNEL_CONNECTION_FAILED', 'ERR_ADDRESS_UNREACHABLE', 'ERR_CACHE_MISS', 'ERR_TOO_MANY_REDIRECTS', 'ERR_UNSAFE_REDIRECT', 'ERR_HTTP2_PROTOCOL_ERROR', 'ERR_INCOMPLETE_CHUNKED_ENCODING', 'ERR_CONTENT_LENGTH_MISMATCH', 'ERR_CONTENT_DECODING_FAILED', 'other'])
+const networkBlockedReasons = new Set(['other', 'csp', 'mixed-content', 'origin', 'inspector', 'subresource-filter', 'content-type', 'coep-frame-resource-needs-coep-header', 'corp-not-same-origin', 'corp-not-same-site'])
+const requestTables = new Set(['inflightRequests', 'requestsAtEditable', 'requestsAtIdle', 'requestsAtStable', 'requestsAtOpen', 'requestsBeforeOpen', 'failedRequests', 'unaccountedScriptTimings','scriptResourceTimings'])
 const requestTypes = new Set(['Script', 'Document', 'Stylesheet', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'Media', 'WebSocket', 'EventSource', 'Ping', 'Preflight', 'Manifest'])
 export function publicRequest(row) {
   const safe = { resourceHash: createHash('sha256').update(typeof row.url === 'string' ? row.url : '').digest('hex'),
@@ -107,7 +109,11 @@ export function publicRequest(row) {
     type: requestTypes.has(row.type) ? row.type : 'Other',
     targetType: ['page', 'iframe', 'worker', 'service_worker', 'shared_worker'].includes(row.targetType) ? row.targetType : 'other' }
   if (['artifact-api','project-api','conversation-api','auth-api','product-api','static-script','static-media','editor-reference','other'].includes(row.routeClass)) safe.routeClass=row.routeClass
-  for (const key of ['start', 'startEpochMs', 'requestOrdinal', 'status', 'transferredBytes', 'decodedBytes', 'declaredEncodedBodyBytes', 'observedResponseHeadersBytes', 'finishedEpochMs', 'end', 'responseEndEpochMs', 'requestStartEpochMs']) if (typeof row[key] === 'number' && Number.isFinite(row[key])) safe[key] = row[key]
+  if(networkErrorCodes.has(row.networkErrorCode))safe.networkErrorCode=row.networkErrorCode
+  if(networkBlockedReasons.has(row.blockedReason))safe.blockedReason=row.blockedReason
+  if(['page','iframe','worker'].includes(row.timingContext))safe.timingContext=row.timingContext
+  if(['script','link','css','fetch','xmlhttprequest','other'].includes(row.initiatorType))safe.initiatorType=row.initiatorType
+  for (const key of ['start', 'startEpochMs', 'requestOrdinal', 'status', 'transferredBytes', 'decodedBytes', 'declaredEncodedBodyBytes', 'observedResponseHeadersBytes', 'finishedEpochMs', 'end', 'responseEndEpochMs', 'requestStartEpochMs','timeOriginEpochMs','contextOrdinal','encodedBytes']) if (typeof row[key] === 'number' && Number.isFinite(row[key])) safe[key] = row[key]
   for (const key of ['network', 'scriptPath', 'sourcePayload', 'retiredEditor', 'cache', 'decodedObserved', 'finished', 'failed', 'canceled', 'transferPending']) if (typeof row[key] === 'boolean') safe[key] = row[key]
   if (['identity', 'gzip', 'br', 'deflate', 'zstd'].includes(row.encoding)) safe.encoding = row.encoding
   if (['Network.dataReceived', 'PerformanceResourceTiming'].includes(row.decodedBytesSource)) safe.decodedBytesSource = row.decodedBytesSource
@@ -123,7 +129,8 @@ export function publicEvidence(value, key = '') {
       return /^[a-f0-9]{64}$/.test(hash ?? '') ? [[kind, hash]] : []
     })),
   }]))
-  if (['nativeFailure','passwordForm'].includes(key) && typeof value === 'boolean') return value
+  if (['nativeFailure','passwordForm','browserErrorPage'].includes(key) && typeof value === 'boolean') return value
+  if (['unaccountedResources','ambiguousRequests','sourcePayloadTransferBytes','sourcePayloadDecodedBytes'].includes(key) && typeof value==='number') return Number.isFinite(value)?value:null
   if (key === 'textVerified' && typeof value === 'boolean') return value
   if (key === 'networkRequests' && typeof value === 'number') return Number.isFinite(value) ? value : null
   if (key === 'offlineHtml' && value && typeof value === 'object') return publicEvidence(value)

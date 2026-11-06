@@ -23,8 +23,10 @@ assets = {'/plain-worker.js': source, '/gzip-worker.js': gzip.compress(source, m
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_args): pass
     def do_GET(self):
+        if self.path.split('?')[0]=='/broken.js':
+            self.close_connection=True;self.connection.close();return
         path = self.path.split('?')[0]
-        body = assets.get(path, b'<script>let ready=0;if(location.hash==="#queued"){for(let i=0;i<12;i++){const s=document.createElement("script");s.src="/queued-"+i+".js";s.onload=()=>{if(++ready===12)document.documentElement.dataset.ready="yes"};document.head.append(s)}}else{const urls=location.hash==="#concurrent"?["/plain-worker.js?one","/plain-worker.js?two"]:[location.hash.slice(1)];for(const url of urls)new Worker(url,{type:"module"}).onmessage=()=>{if(++ready===urls.length)document.documentElement.dataset.ready="yes"}}</script>')
+        body = assets.get(path, b'<script>let ready=0;if(location.hash==="#network-failure"){const s=document.createElement("script");s.src="/broken.js";s.onerror=()=>document.documentElement.dataset.ready="yes";document.head.append(s)}else if(location.hash==="#queued"){for(let i=0;i<12;i++){const s=document.createElement("script");s.src="/queued-"+i+".js";s.onload=()=>{if(++ready===12)document.documentElement.dataset.ready="yes"};document.head.append(s)}}else{const urls=location.hash==="#concurrent"?["/plain-worker.js?one","/plain-worker.js?two"]:[location.hash.slice(1)];for(const url of urls)new Worker(url,{type:"module"}).onmessage=()=>{if(++ready===urls.length)document.documentElement.dataset.ready="yes"}}</script>')
         if path.startswith('/queued-') and path.endswith('.js'):
             time.sleep(.35)
             body = queued_source
@@ -104,6 +106,19 @@ try:
         assert not totals(rows)['missingDecoded'] and not totals(rows)['missingTransfer']
         assert not trace.ambiguous_requests and not trace.unaccounted_script_resources
         results.append({'encoding':'queued','scriptRequests':totals(rows)['requests'],'maxNetworkStartSkewMs':round(max(skews),1),'scriptDecodedBytes':totals(rows)['decodedBytes']})
+        context.close()
+        context=browser.new_context();page=context.new_page();trace=Trace(context,page)
+        page.goto(f'http://127.0.0.1:{server.server_port}/#network-failure',wait_until='domcontentloaded')
+        page.wait_for_function('document.documentElement.dataset.ready==="yes"',timeout=30000)
+        failed=benchmark['failed_requests'](trace.snapshot())
+        codes={row.get('networkErrorCode') for row in failed}
+        assert codes and codes <= {'ERR_EMPTY_RESPONSE','ERR_CONNECTION_CLOSED','ERR_CONNECTION_RESET'}, codes
+        try: page.goto(f'http://127.0.0.1:{server.server_port}/broken.js',wait_until='domcontentloaded',timeout=10000)
+        except Exception: pass
+        page.wait_for_timeout(100)
+        state=benchmark['editor_observations'](page)
+        assert state[0]['browserErrorPage'] and not state[0]['productRootPresent']
+        results.append({'encoding':'networkFailure','networkErrorCodes':sorted(codes),'browserErrorPage':True,'rawBrowserErrorLogged':False})
         context.close()
         browser.close()
 finally:

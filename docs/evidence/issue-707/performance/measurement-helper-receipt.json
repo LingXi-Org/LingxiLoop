@@ -179,5 +179,54 @@
     "performanceSamples": 0,
     "scope": "失败诊断证据完整性，不是性能资格",
     "resourceIdentityJoin": "发现未匹配计时与请求行使用不同脱敏阶段，现统一 safe_url 后公开哈希；内部完整资源匹配不变。纯自检及真实普通/压缩 Worker 跨表身份检查通过。"
+  },
+  "networkFailureEvidence": {
+    "tests": 19,
+    "selfCheck": "passed",
+    "browser": {
+      "check": "worker-entry-network-accounting",
+      "results": [
+        {
+          "encoding": "identity",
+          "workerTransferBytes": 1000203,
+          "workerDecodedBytes": 1000054,
+          "importDurationMs": 2022.3,
+          "scriptRequests": 2,
+          "inflight": 0
+        },
+        {
+          "encoding": "gzip",
+          "workerTransferBytes": 1230,
+          "workerDecodedBytes": 1000054,
+          "importDurationMs": 2023.9,
+          "scriptRequests": 2,
+          "inflight": 0
+        },
+        {
+          "encoding": "concurrent",
+          "refusedAsAmbiguous": true,
+          "ambiguousRequests": 2
+        },
+        {
+          "encoding": "queued",
+          "scriptRequests": 12,
+          "maxNetworkStartSkewMs": 597.4,
+          "scriptDecodedBytes": 240492
+        },
+        {
+          "encoding": "networkFailure",
+          "networkErrorCodes": [
+            "ERR_EMPTY_RESPONSE"
+          ],
+          "browserErrorPage": true,
+          "rawBrowserErrorLogged": false
+        }
+      ],
+      "performanceSamples": 0,
+      "qualified": false
+    },
+    "scope": "固定错误码与证据过滤；不改变字节统计、匹配窗口或正式AB/BA门槛",
+    "diagnosticCandidateFirst": true,
+    "performanceSamples": 0
   }
 }

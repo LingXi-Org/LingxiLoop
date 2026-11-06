@@ -28,6 +28,8 @@ KINDS = ("design", "slides")
 FORMATS = ("html", "pdf", "pptx")
 MARKER = " ✓"
 
+NETWORK_ERRORS = {'ERR_INTERNET_DISCONNECTED', 'ERR_NAME_NOT_RESOLVED', 'ERR_HTTP2_PROTOCOL_ERROR', 'ERR_INCOMPLETE_CHUNKED_ENCODING', 'ERR_SSL_VERSION_OR_CIPHER_MISMATCH', 'ERR_CONNECTION_CLOSED', 'ERR_TIMED_OUT', 'ERR_SSL_PINNED_KEY_NOT_IN_CERT_CHAIN', 'ERR_CERT_INVALID', 'ERR_TUNNEL_CONNECTION_FAILED', 'ERR_SSL_PROTOCOL_ERROR', 'ERR_CERT_AUTHORITY_INVALID', 'ERR_CONNECTION_ABORTED', 'ERR_BLOCKED_BY_CLIENT', 'ERR_FAILED', 'ERR_CONNECTION_REFUSED', 'ERR_UNSAFE_REDIRECT', 'ERR_CERT_DATE_INVALID', 'ERR_CONNECTION_RESET', 'ERR_NETWORK_CHANGED', 'ERR_ADDRESS_UNREACHABLE', 'ERR_ABORTED', 'ERR_EMPTY_RESPONSE', 'ERR_TOO_MANY_REDIRECTS', 'ERR_CONTENT_LENGTH_MISMATCH', 'ERR_CONNECTION_TIMED_OUT', 'ERR_CONTENT_DECODING_FAILED', 'ERR_PROXY_CONNECTION_FAILED', 'ERR_BLOCKED_BY_RESPONSE', 'ERR_HTTP_RESPONSE_CODE_FAILURE', 'ERR_CACHE_MISS', 'ERR_CERT_COMMON_NAME_INVALID'}
+BLOCKED_REASONS = {'other', 'coep-frame-resource-needs-coep-header', 'content-type', 'corp-not-same-origin', 'subresource-filter', 'origin', 'mixed-content', 'corp-not-same-site', 'csp', 'inspector'}
 
 class MeasurementFailure(RuntimeError):
     def __init__(self, code, observations=None):
@@ -69,6 +71,13 @@ def request_route(raw):
     return 'other'
 
 
+def arm_sequence(run, diagnostic, arms):
+    order = list(arms)
+    # Diagnose the candidate failure first; qualified AB/BA order is unchanged.
+    if diagnostic and 'candidate' in order: return ['candidate', *[arm for arm in order if arm != 'candidate']]
+    return order if run % 2 == 0 else order[::-1]
+
+
 def failed_requests(rows):
     return [row for row in rows if row.get('status', 200) >= 400 or row.get('failed') and not row.get('canceled')]
 
@@ -82,7 +91,7 @@ def editor_observations(page):
     states = []
     for frame in page.frames:
         try:
-            states.append(frame.evaluate("""() => ({nativeEditors:document.querySelectorAll('[data-native-artifact-editor]').length,nativeFailure:!!document.querySelector('.native-loading[role=alert]'),nativeLoading:!!document.querySelector('.native-loading[role=status]'),designWorkspaceOpen:!!document.querySelector('[data-design-workspace][data-design-open=true]'),passwordForm:!!document.querySelector('input[type=password]')})"""))
+            states.append(frame.evaluate("""() => ({nativeEditors:document.querySelectorAll('[data-native-artifact-editor]').length,nativeFailure:!!document.querySelector('.native-loading[role=alert]'),nativeLoading:!!document.querySelector('.native-loading[role=status]'),designWorkspaceOpen:!!document.querySelector('[data-design-workspace][data-design-open=true]'),passwordForm:!!document.querySelector('input[type=password]'),browserErrorPage:document.documentURI.startsWith('chrome-error:'),productRootPresent:!!document.querySelector('#root')})"""))
         except Exception: pass
     return states
 
@@ -148,6 +157,7 @@ class Trace:
         self.request_sequence = 0
         self.finished_requests = []
         self.unaccounted_script_resources = []
+        self.script_resource_timings = []
         self.ambiguous_requests = 0
         self.byte_conflicts = 0
         context.on("requestfinished", self.record_finished)
@@ -261,7 +271,9 @@ class Trace:
                     self.byte_conflicts += 1
                 row.update(finished=True, end=value['timestamp'], transferredBytes=value['encodedDataLength'],transferPending=False,transferredBytesSource='Network.loadingFinished')
             elif method == "loadingFailed":
-                row.update(finished=True, failed=True, canceled=value.get("canceled", False))
+                code = value.get('errorText', '').removeprefix('net::')
+                row.update(finished=True, failed=True, canceled=value.get("canceled", False), networkErrorCode=code if code in NETWORK_ERRORS else 'other')
+                if value.get('blockedReason') in BLOCKED_REASONS: row['blockedReason'] = value['blockedReason']
 
     def record_finished(self, request):
         # Chromium omits the worker entry's CDP response/body/finished events.
@@ -341,10 +353,15 @@ class Trace:
         # Cached requests can omit dataReceived. Use measured ResourceTiming,
         # never Content-Length/gzip estimates or downloaded source bodies.
         entries = []
-        for frame in [*page.frames, *page.workers]:
+        frames = page.frames
+        for ordinal, frame in enumerate([*frames, *page.workers]):
             try:
-                entries.extend(frame.evaluate("() => performance.getEntriesByType('resource').filter(row=>row.decodedBodySize>0).map(row=>({url:row.name,startEpochMs:performance.timeOrigin+row.startTime,responseEndEpochMs:performance.timeOrigin+row.responseEnd,requestStartEpochMs:performance.timeOrigin+row.requestStart,decodedBytes:row.decodedBodySize,encodedBytes:row.encodedBodySize}))"))
+                observed = frame.evaluate("() => performance.getEntriesByType('resource').filter(row=>row.decodedBodySize>0).map(row=>({url:row.name,startEpochMs:performance.timeOrigin+row.startTime,responseEndEpochMs:performance.timeOrigin+row.responseEnd,requestStartEpochMs:performance.timeOrigin+row.requestStart,timeOriginEpochMs:performance.timeOrigin,initiatorType:row.initiatorType,decodedBytes:row.decodedBodySize,encodedBytes:row.encodedBodySize}))")
+                context_type = 'worker' if ordinal >= len(frames) else 'page' if frame == getattr(page,'main_frame',frames[0] if frames else None) else 'iframe'
+                for entry in observed: entry.update(timingContext=context_type, contextOrdinal=ordinal)
+                entries.extend(observed)
             except Exception: pass
+        self.script_resource_timings = [entry for entry in entries if re.search(r"\.(?:m?js|cjs)$", urlsplit(entry['url']).path)]
         for entry in entries: entry['_resourceKey'] = resource_key(entry['url'])
         rows = [row for row in self.requests.values() if script_request(row) and row.get('finished')]
         pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries)
@@ -1159,7 +1176,7 @@ def self_check():
         trace = Trace.__new__(Trace)
         trace.requests = {'cdp':{'url':safe_url(raw),'_resourceKey':key,'startEpochMs':1000,'type':'Script','network':True,'scriptPath':True,'requestOrdinal':1,'finished':True,'status':200,'transferredBytes':1000120,'decodedBytes':1000000,'decodedObserved':True}}
         trace.finished_requests = [{'url':safe_url(raw),'_resourceKey':key,'_requestIdentity':i,'startEpochMs':start,'finishedEpochMs':start+2000,'headersBytes':120,'bodyBytes':1000000,'status':200,'type':'Script','network':True,'scriptPath':True,'targetType':'worker'} for i,start in enumerate(starts)]
-        trace.request_sequence = 1; trace.ambiguous_requests = 0; trace.byte_conflicts = 0; trace.targets = {}
+        trace.request_sequence = 1; trace.ambiguous_requests = 0; trace.byte_conflicts = 0; trace.targets = {}; trace.script_resource_timings=[]
         frame = SimpleNamespace(evaluate=lambda _script:[{'url':raw,'startEpochMs':start,'encodedBytes':1000000,'decodedBytes':1000000} for start in starts])
         trace.reconcile_decoded(SimpleNamespace(frames=[frame],workers=[]))
         return trace
@@ -1249,6 +1266,15 @@ def self_check():
     assert len(parsed.pages) == 2 and parsed.pages[1]['text'] == 'two'
     assert failure_code(RuntimeError('cookie=secret')) == 'browser_or_measurement_error'
     assert request_route('https://private/api/artifacts/secret/document?token=private') == 'artifact-api'
+    assert arm_sequence(0,True,['baseline','candidate']) == ['candidate','baseline']
+    assert arm_sequence(0,False,['baseline','candidate']) == ['baseline','candidate']
+    assert arm_sequence(1,False,['baseline','candidate']) == ['candidate','baseline']
+    network = reconciliation_fixture([])
+    network.requests[':failed']={'network':True}
+    network.event('', 'loadingFailed', {'requestId':'failed','errorText':'net::ERR_CONNECTION_RESET','canceled':False})
+    assert network.requests[':failed']['networkErrorCode']=='ERR_CONNECTION_RESET'
+    network.event('', 'loadingFailed', {'requestId':'failed','errorText':'private-token','blockedReason':'csp'})
+    assert network.requests[':failed']['networkErrorCode']=='other' and network.requests[':failed']['blockedReason']=='csp'
     assert timing_observations([{'url':raw,'responseEndEpochMs':1400}])[0]['url'] == safe_url(raw)
     assert failed_requests([{'status':403},{'failed':True},{'failed':True,'canceled':True},{'status':200}]) == [{'status':403},{'failed':True}]
     print(json.dumps({'selfCheck': 'passed', 'performanceSamples': 0, 'qualified': False}))
@@ -1289,7 +1315,7 @@ def main():
     report = {'schemaVersion': 2, 'scope': 'fullAuthenticatedProduct', 'requestedRuns': runs, 'diagnostic': args.diagnostic,
         'qualified': False, 'diagnosticPassed': False, 'startedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
         'environment': {'platform': platform.platform(), 'viewport': [1440, 1000], 'network': {'latencyMs': 20, 'downloadMbps': 4, 'uploadMbps': 3},
-            'cpuRate': 1, 'coldProcessPerSample': True, 'authenticatedCookieOnly': True, 'hostIdleMs': args.host_idle_ms,
+            'firstArm':arm_sequence(0,args.diagnostic,configs)[0], 'cpuRate': 1, 'coldProcessPerSample': True, 'authenticatedCookieOnly': True, 'hostIdleMs': args.host_idle_ms,
             'scriptIdleWindowMs': args.idle_ms, 'naturalCloseWindowMs': args.natural_close_ms, 'exportPeakIntervalMs': 100},
         'fidelity': args.fidelity, 'arms': {arm: {'commit': config.get('commit') if re.fullmatch('[a-f0-9]{40}', config.get('commit', '')) else None,
                       'fixtureSemanticHashes': {kind: config.get('fixtureManifests', {}).get(kind, {}).get('semanticSha256') for kind in kinds}}
@@ -1311,7 +1337,7 @@ def main():
     with sync_playwright() as pw:
         aborted = False
         for run in range(runs):
-            for arm in (list(configs) if run % 2 == 0 else list(configs)[::-1]):
+            for arm in arm_sequence(run,args.diagnostic,configs):
                 config = configs[arm]
                 for kind in kinds:
                     host, host_failure = None, None
@@ -1369,6 +1395,8 @@ def main():
                             idle_delta = script_delta(requests_at_editable, stable)
                             sample.update(idleScriptTransferBytes=idle_delta['transferredBytes'], idleScriptDecodedBytes=idle_delta['decodedBytes'])
                             sample['scriptAccounting'] = {**script_totals(stable), 'unaccountedResources':len(trace.unaccounted_script_resources), 'ambiguousRequests':trace.ambiguous_requests, 'byteConflicts':trace.byte_conflicts}
+                            sample['unaccountedScriptTimings'] = timing_observations(trace.unaccounted_script_resources)
+                            sample['scriptResourceTimings'] = timing_observations(trace.script_resource_timings)
                             sample['phase'] = 'undo'; sample['undoProofs'] = [undo_edit(page, kind, 1, config['artifactIds'][kind])]; pending_undo = None
                             sample['visitedPages'] = [1]; sample['navigation'] = []
                             if args.skip_traversal: raise MeasurementFailure('traversal_intentionally_unverified')
@@ -1418,7 +1446,8 @@ def main():
                             if trace:
                                 rows = trace.snapshot()
                                 sample['failedRequests'] = failed_requests(rows)
-                                sample['unaccountedScriptTimings'] = timing_observations(trace.unaccounted_script_resources)
+                                sample.setdefault('unaccountedScriptTimings', timing_observations(trace.unaccounted_script_resources))
+                                sample.setdefault('scriptResourceTimings', timing_observations(trace.script_resource_timings))
                                 sample['networkObservations'] = {'requests': len(rows), 'scripts': script_totals(rows), 'inflight': len(trace.inflight()),
                                     'failed': sum(row.get('status', 200) >= 400 or row.get('failed', False) and not row.get('canceled', False) for row in rows),
                                     'sourcePayloadTransferBytes': sum(row.get('transferredBytes', 0) for row in rows if row.get('sourcePayload')),
