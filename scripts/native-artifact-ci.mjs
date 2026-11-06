@@ -1,4 +1,4 @@
-import {checkedServiceFailure,measurementFailure}from'./native-artifact-failure.mjs'
+import {checkedServiceFailure,checkedTransportFailures,measurementFailure}from'./native-artifact-failure.mjs'
 /** CI-only real product orchestration. No API mocks, runtime substitutions or model calls.
  * Cookies, TLS keys, downloads and raw service output stay in RUNNER_TEMP. The
  * artifact projection below is deliberately an allowlist, not a log redactor. */
@@ -19,7 +19,7 @@ const database = arm => `postgresql://postgres:native-artifact-local-test-only@1
 const delay = milliseconds => new Promise(resolveDelay => setTimeout(resolveDelay, milliseconds))
 const phases = new Set(['guard', 'bootstrap', 'bootstrap-baseline', 'bootstrap-candidate', 'serve-baseline', 'serve-candidate', 'measurement', 'complete'])
 const serviceStages = new Set(['database-connect', 'database-ready', 'tenant-seeding', 'web-starting', 'im-starting', 'auth-starting', 'auth-ready', 'object-storage-ready', 'design-created', 'slides-created', 'fixture-design', 'fixture-slides', 'fixture-slides-assets', 'ready'])
-const codes = new Set(['ERR_ASSERTION', 'ERR_MODULE_NOT_FOUND', 'MODULE_NOT_FOUND', 'ENOENT', 'ENOSPC', 'E401', 'E403', 'E404', 'ECONNREFUSED', 'ETIMEDOUT', 'SERVICE_TIMEOUT', 'CHILD_FAILED', 'DIAGNOSTIC_FAILED', 'MEASUREMENT_FAILED'])
+const codes = new Set(['ERR_ASSERTION', 'ERR_MODULE_NOT_FOUND', 'MODULE_NOT_FOUND', 'ENOENT', 'ENOSPC', 'E401', 'E403', 'E404', 'ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'ERR_STREAM_PREMATURE_CLOSE', 'ETIMEDOUT', 'SERVICE_TIMEOUT', 'CHILD_FAILED', 'DIAGNOSTIC_FAILED', 'MEASUREMENT_FAILED'])
 const safeCode = error => codes.has(error?.code) ? error.code : 'CHILD_FAILED'
 const measurementStages = new Set(['configuration', 'fixture', 'host', 'launch', 'workbenchPreparation', 'open', 'firstReadiness', 'firstInput', 'idleObservation', 'undo', 'traversal', 'export', 'closeReclamation', 'validation', 'complete'])
 const failureCodes = new Set(['native_keyboard_focus_unavailable', 'fixture_restore_unconfirmed', 'native_view_normalization_failed', 'native_editor_not_ready', 'fixture_mismatch', 'browser_startup_failed', 'cdp_setup_failed', 'current_page_media_or_fonts_not_ready', 'decoded_script_accounting_incomplete', 'editor_close_control_missing', 'editor_close_not_observed', 'export_control_missing', 'export_diagnostic_incomplete', 'export_download_empty', 'export_download_failed', 'export_page_count_mismatch', 'export_signature_invalid', 'matching_edit_save_not_acknowledged', 'native_export_control_missing', 'natural_reclamation_pss_incomplete', 'network_did_not_settle', 'network_failure_observed', 'page_exception_observed', 'page_navigation_control_missing', 'pss_incomplete', 'retired_editor_loaded', 'traversal_intentionally_unverified', 'trusted_input_proof_failed', 'undo_save_not_acknowledged', 'export_pss_incomplete', 'process_or_filesystem_error', 'browser_timeout', 'browser_or_measurement_error'])
@@ -290,7 +290,7 @@ async function summarize(config) {
   const servicePhases = {}
   for (const arm of ['baseline', 'candidate']) {
     const state = await readFile(join(config.privateRoot, `${arm}-service-status.json`), 'utf8').then(JSON.parse).catch(() => null)
-    if (state && serviceStages.has(state.phase)) servicePhases[arm] = { phase: state.phase, fault:checkedServiceFailure(state.fault), ...(state.failed ? { code: codes.has(state.code) ? state.code : 'CHILD_FAILED' } : {}) }
+    if (state && serviceStages.has(state.phase)) servicePhases[arm] = { phase: state.phase, fault:checkedServiceFailure(state.fault),transportFailures:checkedTransportFailures(state.transportFailures), ...(state.failed ? { code: codes.has(state.code) ? state.code : 'CHILD_FAILED' } : {}) }
   }
   const safe = { schemaVersion: 1, phase: config.phase, baselineCommit: config.baselineCommit,
     candidateCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),

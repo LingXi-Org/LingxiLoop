@@ -67,7 +67,7 @@ No production merge or deployment is included.
 
 Design 独立页面回归使用 `--mode=design --checks=canvas-pages`，深色增加 `--canvas-theme=dark`；并发重命名使用 `--checks=canvas-pages-cas`。来源先从固定版本创建单独的三画板临时项目，保留隐式默认页面，运行其原始入口，再以 `native-editor-reference-capture.mjs --reference-root=/absolute/pinned-checkout --pages-only=true --pages-url=http://127.0.0.1:PORT/design/TEMPORARY_SESSION/ --browser=/path/to/chromium --output=/tmp/reference-pages` 复现。它只编辑临时来源项目：新建一个页面及 800×600 空画板，捕获浅深两主题的菜单/动作/名称/删除确认，最后恢复第二页名称。已有第二页时名称须为 Page 2。发布包不进入产品。
 
-独立页面局部检查已覆盖每页相机、重命名/删除/撤销、窄容器、名称冲突与焦点恢复；独立对象层已接入便签和绘图的局部编辑/保存/撤销及节点和世界坐标评论；来源全部自由对象、内部页面链接及跨页完整交互仍未完成，见 `source-design-pages.json`。最新真实性能诊断失败收据是 `performance/412ffc0d-diagnostic.json`；没有合格完整样本。
+独立页面局部检查已覆盖每页相机、重命名/删除/撤销、窄容器、名称冲突与焦点恢复；独立对象层已接入便签和绘图的局部编辑/保存/撤销及节点和世界坐标评论；来源全部自由对象、内部页面链接及跨页完整交互仍未完成，见 `source-design-pages.json`。最新真实性能诊断失败收据是 `performance/07e33d30-diagnostic.json`；没有合格完整样本。
 
 脚本计量与撤销清理辅助回归见 `performance/measurement-helper-receipt.json`：排队脚本按 Chromium 实际网络起点匹配浏览器完成事件；并发歧义仍拒绝计量。撤销只在活动编辑区发送退出键，隐藏编辑器不触发工作区快捷键；真实失败收据保留可信按键及服务端状态，不包含文档正文。这些辅助检查没有产生性能样本，不能代替真实性能诊断。
 
@@ -80,3 +80,5 @@ SVG 图片的本地字体使用 `--checks=svg-font`；失败重试与迟到源�
 自由画布内容回归为 `--mode=design --checks=canvas-contents`，深色加 `--canvas-theme=dark`。验证长段中文便签背景自动增高/缩短、独立存储、共享撤销、自由绘图、节点及空白世界坐标评论、删除画板不删除自由内容。来源保存探针和已知缺口见 `source-design-annotations.json`；该局部状态截图尚未同态配对。
 
 便签自然布局与世界相机修复：`functional/natural-layout-*.json` 覆盖中文、英文大写、制表符实际换行后的背景、Worker 边界及评论定位；这些只读测量不写入文档。弱引用节点缓存最多保留八个页面；缩放及自动布局只影响视图。实际拖动后保留自然高度，1440→390→1440 及切走页面后修改负坐标对象不会改变已记忆世界视角。空画布可直接创建中文便签。浅深色流程及两种编辑器各 50 页回归已运行，均保留 47 个未编辑页面哈希。此证据不是完整视觉验收或真实性能通过。局部 23 项模型、布局、相机和中文文案回归通过，75 个原生编辑器文件 lint 通过；本地全量类型检查仍受官方 SDK 未安装阻塞。
+
+07e33d30 真实性能诊断已完成但失败：Design 走完 50 页、三次真实输入和撤销，当前脚本计量完整；导出仍超时，后续服务退出。不能认定原始退出根因。随后对冻结代理的 Node 22 HTTPS/TCP 重置复现发现上传和响应流未处理错误，现以 pipeline 和双向取消修复；五种连接/压缩传输检查及九种新旧导出控件下载检查通过。固定阶段、错误码及已知脚本行可进入脱敏收据，不记录原始错误、地址、凭据或内容。计量工具回归通过不等于产品导出或性能合格。

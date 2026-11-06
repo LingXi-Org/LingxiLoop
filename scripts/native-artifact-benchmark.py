@@ -985,7 +985,7 @@ def export_control(page, arm, kind, format_name):
         menu = frame.locator('summary[aria-label="导出格式"]')
         if menu.count():
             menu.click()
-            frame.get_by_role('button', name={'html':'HTML 网页','pdf':'PDF','pptx':'PowerPoint'}[format_name], exact=True).click()
+            frame.get_by_role('button', name=re.compile({'html':r'^(?:HTML 网页|网页)$','pdf':r'^(?:PDF|便携文档)$','pptx':r'^(?:PowerPoint|演示文稿)$'}[format_name])).click()
             return
     if arm == "candidate": raise MeasurementFailure("native_export_control_missing")
     for frame in page.frames:
