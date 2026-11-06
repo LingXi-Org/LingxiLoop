@@ -143,7 +143,7 @@
     "src/features/artifacts/native/native-editor.css": "9a8bf244ce5a619ce512afe67e60ebf93c4105609b89479190168c09b3f1097d",
     "src/features/artifacts/native/CommentsPanel.tsx": "bc0e01b100c7940082e776bda638af88525f528b801825a8c14d71a89f217a95",
     "src/features/artifacts/native/editor-copy.ts": "abfd904e0f3ced4b0e9e5717cc6bac48de370a10c3d9e927355182abbefefa3b",
-    "scripts/native-editor-ui-acceptance.mjs": "053dd59b1081a1738a8fd9e5cda6ac3b3855e2ecf29688ca1de5215f6839f046",
+    "scripts/native-editor-ui-acceptance.mjs": "c85ad228d6737ebf4be863a4fe8b38851eb698cb0213ffb2b778f7599989530a",
     "scripts/native-editor-reference-capture.mjs": "802667b18628ddb40162738caa2a29194a1d003fc2a1b5a5def42dbddac1dc49",
     "scripts/native-editor-visual-fixture.mjs": "0f914a4dd4bff805075874e011fa3fa6d98aed382ec9fb29e7190f1a4562f401",
     "shared/artifact-tables.ts": "4c5157f2c73df044942281ce339028cd7ea60c29f33a81b99fe7bdacfdc34db3",
@@ -166,9 +166,10 @@
     "shared/artifact-legacy.ts": "73bc8aa91c6ed3c85d5950ee78862a4e9104b3db5aded9e7f7d1374ceb792293",
     "src/features/artifacts/native/popover-position.ts": "c5743412a0177ecceaa407efeec4a36b83fe2d3c8fd7d8bf1a23da2e68afab45",
     "server/src/modules/artifacts/native-document.ts": "3aa0c4d919948590fdb8d520fade3a5d037e4d168f729eddebd8af6150e1df88",
-    "src/features/artifacts/native/SvgImage.tsx": "8d710e8c3a3ce6729d3321887c2ed596ed9e977257b2d2ae225568ab76ea091c",
+    "src/features/artifacts/native/SvgImage.tsx": "4a81b808ec7c66cfbd286c803b24be18864c2529568ac71cb6918d32ebf7f541",
     "src/features/artifacts/native/svg-font-image.ts": "9d248d3192f76072ceff0305fe457570aa3cfc43a91abb1ae688d6a636a1f085",
     "src/features/artifacts/native/artifact-realm.ts": "6089576dde6d2d52731813453c7e187604fce0a953d2a3604f9787d463083710",
-    "src/features/artifacts/native/svg-image-cache.ts": "1aa06c6f0226032f99c1df15ddfac3b324042b6d124bee2362b358d58c84cfda"
+    "src/features/artifacts/native/svg-image-cache.ts": "1aa06c6f0226032f99c1df15ddfac3b324042b6d124bee2362b358d58c84cfda",
+    "src/features/artifacts/native/svg-image-recovery.ts": "29a06dbff6f2153e513f513dd26c2f0b563dcc9bca07e08d742efec11f9e226c"
   }
 }

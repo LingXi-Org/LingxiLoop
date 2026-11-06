@@ -399,7 +399,28 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.match(decodeURIComponent(await target.locator('img').getAttribute('src')),/@font-face/)
       if(kind==='slides')await page.locator('[data-page-target="page-1"] image[href^="data:image/svg+xml"]').first().waitFor()
       assert.equal(await page.locator('[data-artifact-export-realm]').count(),0);assert.equal(navigations,0);assert.equal(pageHash(document),original);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
-      return{kind:'isolated-svg-font-module-recovery',mode:kind,actualModule503:true,newModuleRequestOnRetry:true,packedImageRecovered:true,editorNotReloaded:true,realmDisposed:true,sourceAndHistoryUnchanged:true,scope:'actual browser ESM cache and real trusted renderer; controlled HTTP outage',consoleOrPageErrors:errors}
+      let evictionRecovery=null
+      if(options['svg-eviction']){
+        const originalSource=document.pages['page-1'].nodes['font-svg'].svg
+        await page.evaluate(()=>{window.__svgRealmPeak=0;window.__svgRealmWatch=setInterval(()=>{window.__svgRealmPeak=Math.max(window.__svgRealmPeak,document.querySelectorAll('[data-artifact-export-realm]').length)},5)})
+        for(let index=0;index<9;index++){
+          const svg=originalSource.replace('Hello',`示例 ${index}`)
+          document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'font-svg',patch:{svg}}])).document
+          await page.waitForFunction(text=>document.querySelector('[data-node-id="font-svg"] img')?.getAttribute('src')?.includes(encodeURIComponent(text)),`示例 ${index}`)
+        }
+        document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'font-svg',patch:{hidden:true}}])).document
+        await target.waitFor({state:'detached'})
+        const beforeRemount=svgModuleRequests
+        document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'font-svg',patch:{svg:originalSource},unset:['hidden']}])).document
+        await target.locator('img').waitFor({timeout:20000})
+        assert.match(decodeURIComponent(await target.locator('img').getAttribute('src')),/Hello/)
+        assert.ok(svgModuleRequests>beforeRemount,'an evicted image must recover in a new instance without repeating a poisoned parent import')
+        const peak=await page.evaluate(()=>{clearInterval(window.__svgRealmWatch);return window.__svgRealmPeak});assert.ok(peak<=1,'only one SVG recovery realm may run at a time')
+        await page.waitForFunction(()=>document.querySelectorAll('[data-artifact-export-realm]').length===0)
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        evictionRecovery={differentSources:9,remountedAfterEviction:true,noSecondRetryNeeded:true,maxRecoveryRealms:peak,remoteFixtureSourceRestored:true}
+      }
+      return{kind:'isolated-svg-font-module-recovery',mode:kind,actualModule503:true,newModuleRequestOnRetry:true,packedImageRecovered:true,editorNotReloaded:true,realmDisposed:true,sourceAndHistoryUnchanged:true,evictionRecovery,scope:'actual browser ESM cache and real trusted renderer; controlled HTTP outage',consoleOrPageErrors:errors}
     }
     if(options.checks==='svg-font-error'){
       const target=page.locator('[data-node-id="font-svg"]'),original=document.pages['page-1'].nodes['font-svg'].svg

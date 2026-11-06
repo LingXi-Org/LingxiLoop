@@ -7,6 +7,13 @@
   "editorNotReloaded": true,
   "realmDisposed": true,
   "sourceAndHistoryUnchanged": true,
+  "evictionRecovery": {
+    "differentSources": 9,
+    "remountedAfterEviction": true,
+    "noSecondRetryNeeded": true,
+    "maxRecoveryRealms": 1,
+    "remoteFixtureSourceRestored": true
+  },
   "scope": "actual browser ESM cache and real trusted renderer; controlled HTTP outage",
   "consoleOrPageErrors": []
 }
