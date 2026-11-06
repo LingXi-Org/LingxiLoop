@@ -1,0 +1,35 @@
+{
+  "candidateCommit": "59be9a5a17a82bd83a0f596dff5f687852a4009b",
+  "reviewer": "/root/independent_review",
+  "mode": "独立只读",
+  "findings": [],
+  "independentlyRun": [
+    "37项共享模型、导入及分组测试",
+    "1000个固定源码随机分组对照",
+    "23项编排合约",
+    "生成依赖清单一致性",
+    "Chrome154播放菜单及返回焦点",
+    "Chrome140固定和动态参考播放菜单、390深色相机与工具栏",
+    "原画板标题预览焦点"
+  ],
+  "owningCI": {
+    "run": 42265507764,
+    "conclusion": "success",
+    "integrationJob": 128056422315,
+    "newPostgreSQLPersistenceTest": "通过：设计播放属性真实持久化、复制与撤销重做，并保留历史页哈希",
+    "deploy": "skipped"
+  },
+  "diagnostic": {
+    "run": 42265534399,
+    "job": 128056364205,
+    "conclusion": "failure",
+    "step": "Verify real worker script accounting before production measurements",
+    "failure": "播放菜单x：原生1197.828125，旧golden1202；该命令漏传同环境source-runtime",
+    "productionMeasurementStarted": false,
+    "qualifiedSamples": 0,
+    "followup": "下一候选给播放菜单命令也传同环境参考，不放宽1px门槛。"
+  },
+  "visualQualified": false,
+  "performanceQualified": false,
+  "realAuthorizationQualified": false
+}

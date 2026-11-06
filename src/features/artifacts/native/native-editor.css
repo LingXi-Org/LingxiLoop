@@ -120,7 +120,7 @@
 .native-kind-design .native-toolbar button[aria-pressed=true]{background:rgb(228 239 251)}
 .dark .native-kind-design .native-toolbar button[aria-pressed=true]{background:rgb(31 42 54);color:rgb(106 171 241)}
 
-.native-board-heading{position:absolute;inset-inline:0;top:-26px;height:20px;min-width:116px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.native-board-heading{position:absolute;inset-inline:0;top:-28px;height:24px;min-width:116px;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .native-board-heading>.native-board-label{position:static;min-width:64px;overflow:hidden;text-overflow:ellipsis;padding:0;height:16px;min-height:16px;line-height:16px;font-weight:400}
 .native-board-heading-actions{display:flex;align-items:center;gap:6px;margin-inline-start:auto;flex:none}
 .native-board-heading-actions>.native-icon-button,.native-board-heading-actions .native-menu>summary{width:20px;height:20px;min-height:20px;padding:0;border:0;border-radius:5px;font-size:12px;line-height:17px;color:var(--native-muted)}
@@ -168,3 +168,5 @@
 
 .dark .native-play-menu-heading,.native-editor[data-theme=dark] .native-play-menu-heading{color:rgba(255,255,255,.57)}
 .native-kind-design .native-toolbar .native-play-menu>summary{width:24px;padding:1px 0}.native-kind-design .native-toolbar .native-play-menu>summary>svg{width:16px;height:16px}
+
+.native-board-heading>.native-board-label{text-align:start;font-size:12px;min-height:16px!important}

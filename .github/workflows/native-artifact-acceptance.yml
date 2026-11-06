@@ -130,17 +130,18 @@ jobs:
           for task_case in save-retry keyboard-isolation module-cancel; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-$task_case=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-$task_case"
           done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=asset-colors --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-asset-colors"
           for task_editor in design slides; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode="$task_editor" --checks=asset-reads --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-asset-reads-$task_editor"
           done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-export"
           node --import tsx scripts/native-canvas-fit-oracle.mjs --reference-root="${{ github.workspace }}/reference" --capture=true --play-menu=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-reference-geometry"
-          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-play-menu --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-play-menu"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-play-menu --source-runtime="$RUNNER_TEMP/native-reference-geometry/results.json" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-play-menu"
           for task_size in 1920x1200 1440x1000 768x1024 390x844; do
             task_width=${task_size%x*}
             task_height=${task_size#*x}
             for task_theme in light dark; do
-              node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true --source-toolbar=true --source-runtime="$RUNNER_TEMP/native-reference-geometry/results.json" --width="$task_width" --height="$task_height" --canvas-theme="$task_theme" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-$task_size-$task_theme"
+              node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true --source-toolbar=true --source-surfaces=true --source-runtime="$RUNNER_TEMP/native-reference-geometry/results.json" --width="$task_width" --height="$task_height" --canvas-theme="$task_theme" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-$task_size-$task_theme"
             done
           done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=viewport-loading --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-viewport-loading"

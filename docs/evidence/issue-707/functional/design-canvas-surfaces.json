@@ -1,0 +1,205 @@
+{
+  "scope": "固定参考及受控HTTP的局部颜色、缩略画板和标题回归；非完整资格",
+  "regressionBefore": {
+    "thumbnailColor": {
+      "width": 32,
+      "height": 18,
+      "thumbnailWidth": 32,
+      "thumbnailHeight": 18,
+      "changedPixels": 574,
+      "maxChannelDelta": 33
+    },
+    "thumbnailShadow": "每个画板在缩略视图也应保留参考阴影：断言失败，实际无阴影表面",
+    "title": {
+      "fontSize": "13px",
+      "height": "20px",
+      "failure": "画板标题控件y应符合源码"
+    }
+  },
+  "after": {
+    "thumbnailColorChrome154": {
+      "width": 32,
+      "height": 18,
+      "thumbnailWidth": 32,
+      "thumbnailHeight": 18,
+      "changedPixels": 0,
+      "maxChannelDelta": 0
+    },
+    "thumbnailColorChrome140": {
+      "width": 32,
+      "height": 18,
+      "thumbnailWidth": 32,
+      "thumbnailHeight": 18,
+      "changedPixels": 0,
+      "maxChannelDelta": 0
+    },
+    "surfaceTitleCameraToolbarChecks": 8,
+    "localUnits": 9,
+    "orchestrationContracts": 15,
+    "lint": "两个改动源文件通过",
+    "typecheck": "仍为76项缺少正式私有SDK的级联错误，native/shared无错误",
+    "fiftyPageSlides": {
+      "pages": 50,
+      "unchangedPageHashes": 47,
+      "maxMountedPages": 1,
+      "maxMountedNodes": 7,
+      "isolatedInteraction": true
+    },
+    "fiftyPageDesign": {
+      "pages": 50,
+      "unchangedPageHashes": 47,
+      "maxMountedPages": 6,
+      "maxMountedNodes": 24,
+      "isolatedInteraction": true
+    },
+    "staleViewportLoads": {
+      "chrome140": 0,
+      "chrome154": 0
+    },
+    "mainAndThumbnailInFlightReads": {
+      "design": 1,
+      "slides": 1
+    },
+    "boardHeaderPreviewAndComments": true
+  },
+  "bounds": {
+    "previewMaxWidth": 160,
+    "previewMaxHeight": 90,
+    "cacheEntries": 128,
+    "cacheBytes": 2097152,
+    "decodesInFlight": 2,
+    "noAdditionalPageContentMounted": true,
+    "bitmapClosed": true
+  },
+  "visual": {
+    "masks": [],
+    "antialiasExclusions": false,
+    "rows": [
+      {
+        "width": 1920,
+        "height": 1200,
+        "theme": "light",
+        "reference": "visual/canvas-surfaces/reference/design-1920-1200-light.png",
+        "before": "visual/canvas-surfaces/before/design-1920-1200-light.png",
+        "native": "visual/canvas-surfaces/native/design-1920-1200-light.png",
+        "beforeRawDifferentRatio": 0.008046440972222223,
+        "rawDifferentRatio": 0.007850260416666666,
+        "differentPixels": 18087,
+        "conservativePixelPass": false,
+        "sourceSurfaceAndTitleGeometry": true,
+        "sourceFontSize": "12px",
+        "sourceTitleControlHeight": "16px"
+      },
+      {
+        "width": 1920,
+        "height": 1200,
+        "theme": "dark",
+        "reference": "visual/canvas-surfaces/reference/design-1920-1200-dark.png",
+        "before": "visual/canvas-surfaces/before/design-1920-1200-dark.png",
+        "native": "visual/canvas-surfaces/native/design-1920-1200-dark.png",
+        "beforeRawDifferentRatio": 0.006796440972222222,
+        "rawDifferentRatio": 0.006628472222222222,
+        "differentPixels": 15272,
+        "conservativePixelPass": false,
+        "sourceSurfaceAndTitleGeometry": true,
+        "sourceFontSize": "12px",
+        "sourceTitleControlHeight": "16px"
+      },
+      {
+        "width": 1440,
+        "height": 1000,
+        "theme": "light",
+        "reference": "visual/canvas-surfaces/reference/design-1440-1000-light.png",
+        "before": "visual/canvas-surfaces/before/design-1440-1000-light.png",
+        "native": "visual/canvas-surfaces/native/design-1440-1000-light.png",
+        "beforeRawDifferentRatio": 0.010020833333333333,
+        "rawDifferentRatio": 0.009697916666666667,
+        "differentPixels": 13965,
+        "conservativePixelPass": false,
+        "sourceSurfaceAndTitleGeometry": true,
+        "sourceFontSize": "12px",
+        "sourceTitleControlHeight": "16px"
+      },
+      {
+        "width": 1440,
+        "height": 1000,
+        "theme": "dark",
+        "reference": "visual/canvas-surfaces/reference/design-1440-1000-dark.png",
+        "before": "visual/canvas-surfaces/before/design-1440-1000-dark.png",
+        "native": "visual/canvas-surfaces/native/design-1440-1000-dark.png",
+        "beforeRawDifferentRatio": 0.008805555555555556,
+        "rawDifferentRatio": 0.008526388888888889,
+        "differentPixels": 12278,
+        "conservativePixelPass": false,
+        "sourceSurfaceAndTitleGeometry": true,
+        "sourceFontSize": "12px",
+        "sourceTitleControlHeight": "16px"
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "theme": "light",
+        "reference": "visual/canvas-surfaces/reference/design-768-1024-light.png",
+        "before": "visual/canvas-surfaces/before/design-768-1024-light.png",
+        "native": "visual/canvas-surfaces/native/design-768-1024-light.png",
+        "beforeRawDifferentRatio": 0.026393890380859375,
+        "rawDifferentRatio": 0.015046437581380209,
+        "differentPixels": 11833,
+        "conservativePixelPass": false,
+        "sourceSurfaceAndTitleGeometry": true,
+        "sourceFontSize": "12px",
+        "sourceTitleControlHeight": "16px"
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "theme": "dark",
+        "reference": "visual/canvas-surfaces/reference/design-768-1024-dark.png",
+        "before": "visual/canvas-surfaces/before/design-768-1024-dark.png",
+        "native": "visual/canvas-surfaces/native/design-768-1024-dark.png",
+        "beforeRawDifferentRatio": 0.025452931722005207,
+        "rawDifferentRatio": 0.012635548909505209,
+        "differentPixels": 9937,
+        "conservativePixelPass": false,
+        "sourceSurfaceAndTitleGeometry": true,
+        "sourceFontSize": "12px",
+        "sourceTitleControlHeight": "16px"
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "reference": "visual/canvas-surfaces/reference/design-390-844-light.png",
+        "before": "visual/canvas-surfaces/before/design-390-844-light.png",
+        "native": "visual/canvas-surfaces/native/design-390-844-light.png",
+        "beforeRawDifferentRatio": 0.025662291894519382,
+        "rawDifferentRatio": 0.020880422894640906,
+        "differentPixels": 6873,
+        "conservativePixelPass": false,
+        "sourceSurfaceAndTitleGeometry": true,
+        "sourceFontSize": "12px",
+        "sourceTitleControlHeight": "16px"
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "reference": "visual/canvas-surfaces/reference/design-390-844-dark.png",
+        "before": "visual/canvas-surfaces/before/design-390-844-dark.png",
+        "native": "visual/canvas-surfaces/native/design-390-844-dark.png",
+        "beforeRawDifferentRatio": 0.023790861587070118,
+        "rawDifferentRatio": 0.017368453031960142,
+        "differentPixels": 5717,
+        "conservativePixelPass": false,
+        "sourceSurfaceAndTitleGeometry": true,
+        "sourceFontSize": "12px",
+        "sourceTitleControlHeight": "16px"
+      }
+    ],
+    "qualified": false
+  },
+  "knownRemainingDifference": "选择松散路径后，原生当前页面为独立画布内容，参考保留的画板高亮描边尚未对齐；全部悬停、焦点及正常动画也未穷尽。",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

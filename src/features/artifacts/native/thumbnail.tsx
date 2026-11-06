@@ -167,7 +167,7 @@ async function loadImage(asset: ArtifactAsset, artifactId: string, key: string, 
       const context = canvas.getContext('2d')
       if (!context) throw new Error('无法生成页面缩略图。')
       context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-      const source = canvas.toDataURL('image/webp', .65)
+      const source = canvas.toDataURL('image/png')
       images.set(key, source, source.length * 2)
       canvas.width = 0; canvas.height = 0
       return source
