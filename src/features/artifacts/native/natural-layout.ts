@@ -5,13 +5,15 @@ const inheritedTypography=['fontFamily','fontWeight','fontStyle','letterSpacing'
 /** Native nodes always set their own size/line height; these properties inherit through groups. */
 export function naturalNodeStyle(page:ArtifactPage,node:ArtifactNode,document?:ArtifactDocument):ArtifactStyle {
   const resolve=(source:ArtifactNode)=>document?artifactResolvedStyle(source.style,document):{...source.style}
+  const needsFamily=(value:unknown)=>value===undefined||typeof value==='string'&&/^(?:inherit|unset|revert|revert-layer)?$/i.test(value.trim())
   const style=resolve(node),seen=new Set<string>()
+  if(needsFamily(style.fontFamily))delete style.fontFamily
   let parentId=node.parentId
   while(parentId&&!seen.has(parentId)){
     seen.add(parentId)
     const parent=page.nodes[parentId];if(!parent)break
     const inherited=resolve(parent)
-    for(const key of inheritedTypography)if(style[key]===undefined&&inherited[key]!==undefined)Object.assign(style,{[key]:inherited[key]})
+    for(const key of inheritedTypography)if(style[key]===undefined&&inherited[key]!==undefined&&(key!=='fontFamily'||!needsFamily(inherited[key])))Object.assign(style,{[key]:inherited[key]})
     parentId=parent.parentId
   }
   return style

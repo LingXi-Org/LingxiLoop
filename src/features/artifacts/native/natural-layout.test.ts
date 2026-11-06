@@ -81,3 +81,18 @@ test('probe and cache typography include inherited group fonts but preserve chil
   const explicit={...note,style:{...note.style,fontFamily:'sans-serif',fontWeight:400,fontStyle:'normal',letterSpacing:0}}
   assert.equal(naturalNodeStyle(page,explicit).fontFamily,'sans-serif');assert.equal(naturalNodeStyle(page,explicit).fontWeight,400)
 })
+
+test('inherited font keywords follow child and intermediate ancestors and invalidate on the resolved family',()=>{
+  const page=createPage('contents'),outer={...createNode('group','outer'),style:{fontFamily:'monospace'}},middle={...createNode('group','middle'),parentId:'outer',style:{fontFamily:'unset'}},note={...createNode('note','note'),parentId:'middle',text:'i'.repeat(2000),width:240,height:832,style:{fontSize:32,fontFamily:'inherit'}}
+  page.nodes={outer,middle,note};page.nodeOrder=['outer','middle','note']
+  for(const keyword of ['inherit','unset','revert','revert-layer',' InHerIt ','']){
+    const current={...note,style:{...note.style,fontFamily:keyword}}
+    assert.equal(naturalNodeStyle(page,current).fontFamily,'monospace')
+  }
+  assert.equal(naturalNodeStyle(page,{...note,style:{fontFamily:'initial'}}).fontFamily,'initial')
+  assert.equal(naturalNodeStyle(page,{...note,style:{fontFamily:'"inherit"'}}).fontFamily,'"inherit"')
+  const sizes=new NaturalNodeSizes();sizes.set(note,{width:240,height:8463},naturalNodeStyle(page,note))
+  const changed=structuredClone(page);changed.nodes.outer!.style.fontFamily='sans-serif'
+  assert.equal(naturalNodeStyle(changed,changed.nodes.note!).fontFamily,'sans-serif')
+  assert.equal(withNaturalLayout(changed,sizes),changed)
+})
