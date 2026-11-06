@@ -20,6 +20,9 @@ image = 'data:image/svg+xml;base64,' + base64.b64encode(b'<svg xmlns="http://www
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_args): pass
     def do_GET(self):
+        if self.path == '/navigation-detach':
+            encoded = ("<!doctype html><meta charset='utf-8'><div data-native-artifact-editor='design'><div class='native-stage' style='height:800px;width:1000px;position:relative;overflow:auto'><iframe srcdoc='<p>隔离内容</p>'></iframe></div></div><script>document.querySelector('.native-stage').addEventListener('wheel',event=>{event.preventDefault();window.__navigationWheelTrusted=event.isTrusted;document.querySelector('iframe')?.remove();if(document.querySelector('[data-page-id]'))return;const shell=document.createElement('div');shell.dataset.pageId='page-26';shell.style='position:absolute;top:100px;left:100px';shell.innerHTML='<button class=\"native-board-label\">第二十六页</button>';shell.querySelector('button').onclick=event=>window.__navigationClickTrusted=event.isTrusted;event.currentTarget.append(shell)},{passive:false})</script>").encode()
+            self.send_response(200);self.send_header('Content-Type','text/html;charset=utf-8');self.send_header('Content-Length',str(len(encoded)));self.end_headers();self.wfile.write(encoded);return
         native, kind = '/native/' in self.path, 'slides' if '/slides/' in self.path else 'design'
         denied=self.path.endswith('/denied')
         editing=self.path.endswith(('/active','/finish'))
@@ -99,7 +102,15 @@ try:
         else:raise AssertionError('a hidden native editor cannot become a legacy shortcut target')
         assert page.evaluate('window.__fixtureUndoCount')==1
         page.close()
+        page=browser.new_page(viewport={'width':1440,'height':1000})
+        page.goto(f'http://127.0.0.1:{server.server_port}/navigation-detach',wait_until='networkidle')
+        assert len(page.frames)==2
+        navigation=benchmark['navigate'](page,'design',26)
+        assert navigation['control']=='nativeDesignBoard' and navigation['wheelEvents']>=1
+        assert len(page.frames)==1 and page.evaluate('window.__navigationWheelTrusted&&window.__navigationClickTrusted')
+        navigation_result={'iframeRemovedDuringTrustedWheel':True,'newFrameSnapshotUsed':True,'trustedPageControlClicked':True}
+        page.close()
         browser.close()
 finally:
     server.shutdown()
-print(json.dumps({'check':'failed-input-cleanup-selector','results':results,'completionResults':completion_results,'deniedUndoEvidence':probe,'closedEditorEvidence':closed_probe,'scope':'isolated measurement helper fixture, not product undo acceptance','performanceSamples':0,'qualified':False}))
+print(json.dumps({'check':'failed-input-cleanup-selector','results':results,'completionResults':completion_results,'deniedUndoEvidence':probe,'closedEditorEvidence':closed_probe,'navigationDetach':navigation_result,'scope':'isolated measurement helper fixture, not product undo acceptance','performanceSamples':0,'qualified':False}))

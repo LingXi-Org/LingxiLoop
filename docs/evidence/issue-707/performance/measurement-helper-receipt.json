@@ -1,13 +1,22 @@
 {
-  "scope": "测量辅助程序的真实浏览器回归；不代表产品性能或撤销验收",
-  "trace": {
+  "scope": "仅计量辅助回归，不是产品性能样本",
+  "baseCommit": "373d8fd572190b1627837f99f2cf39c49a4c381b",
+  "performanceSamples": 0,
+  "qualified": false,
+  "contracts": {
+    "tests": 19,
+    "passed": 19,
+    "failed": 0
+  },
+  "selfCheck": "通过：非脚本歧义不污染脚本资格；脚本当前歧义仍拒绝；后续精确时钟可解除歧义但保留历史；106.964ms未匹配仍拒绝",
+  "realTrace": {
     "check": "worker-entry-network-accounting",
     "results": [
       {
         "encoding": "identity",
         "workerTransferBytes": 1000203,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2022.8,
+        "importDurationMs": 2022.5,
         "scriptRequests": 2,
         "inflight": 0
       },
@@ -15,26 +24,34 @@
         "encoding": "gzip",
         "workerTransferBytes": 1230,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2024.6,
+        "importDurationMs": 2024.7,
         "scriptRequests": 2,
         "inflight": 0
       },
       {
         "encoding": "concurrent",
         "refusedAsAmbiguous": true,
-        "ambiguousRequests": 2
+        "ambiguousRequests": 4
       },
       {
         "encoding": "queued",
         "scriptRequests": 12,
-        "maxNetworkStartSkewMs": 604.6,
+        "maxNetworkStartSkewMs": 601.9,
         "scriptDecodedBytes": 240492
+      },
+      {
+        "encoding": "networkFailure",
+        "networkErrorCodes": [
+          "ERR_EMPTY_RESPONSE"
+        ],
+        "browserErrorPage": true,
+        "rawBrowserErrorLogged": false
       }
     ],
     "performanceSamples": 0,
     "qualified": false
   },
-  "cleanup": {
+  "realCleanupAndNavigation": {
     "check": "failed-input-cleanup-selector",
     "results": [
       {
@@ -150,83 +167,19 @@
       "rootKeyTrusted": false,
       "rootKeyPrevented": false
     },
+    "navigationDetach": {
+      "iframeRemovedDuringTrustedWheel": true,
+      "newFrameSnapshotUsed": true,
+      "trustedPageControlClicked": true
+    },
     "scope": "isolated measurement helper fixture, not product undo acceptance",
     "performanceSamples": 0,
     "qualified": false
   },
-  "performanceSamples": 0,
-  "qualified": false,
-  "lateQueuedClock": {
-    "queueMs": 250,
-    "fallbackAndCdpMerge": true,
-    "editableSnapshotIdentityPreserved": true,
-    "duplicateSnapshotDeduplicated": true,
-    "requests": 1,
-    "transferredBytes": 1000120,
-    "decodedBytes": 1000000,
-    "scope": "冻结回归中的确定性真实事件字段；不属于产品性能样本"
-  },
-  "wireConflictRejectedInBothOrders": true,
-  "unresolvedObservations": [
-    "真实 Worker 回归曾出现 CDP/PW 请求起点与 ResourceTiming 起点相差超过现有 100ms 匹配范围，导致 missingDecoded 拒绝；未放宽时间容差。随后同脚本完成回归，但不能认为该时序问题已经消除。"
-  ],
-  "failureEvidence": {
-    "checks": 18,
-    "status": "passed",
-    "realBrowserStateProbe": true,
-    "failedRequestRouteClasses": true,
-    "unmatchedResourceMeasuredEpochs": true,
-    "performanceSamples": 0,
-    "scope": "失败诊断证据完整性，不是性能资格",
-    "resourceIdentityJoin": "发现未匹配计时与请求行使用不同脱敏阶段，现统一 safe_url 后公开哈希；内部完整资源匹配不变。纯自检及真实普通/压缩 Worker 跨表身份检查通过。"
-  },
-  "networkFailureEvidence": {
-    "tests": 19,
-    "selfCheck": "passed",
-    "browser": {
-      "check": "worker-entry-network-accounting",
-      "results": [
-        {
-          "encoding": "identity",
-          "workerTransferBytes": 1000203,
-          "workerDecodedBytes": 1000054,
-          "importDurationMs": 2022.3,
-          "scriptRequests": 2,
-          "inflight": 0
-        },
-        {
-          "encoding": "gzip",
-          "workerTransferBytes": 1230,
-          "workerDecodedBytes": 1000054,
-          "importDurationMs": 2023.9,
-          "scriptRequests": 2,
-          "inflight": 0
-        },
-        {
-          "encoding": "concurrent",
-          "refusedAsAmbiguous": true,
-          "ambiguousRequests": 2
-        },
-        {
-          "encoding": "queued",
-          "scriptRequests": 12,
-          "maxNetworkStartSkewMs": 597.4,
-          "scriptDecodedBytes": 240492
-        },
-        {
-          "encoding": "networkFailure",
-          "networkErrorCodes": [
-            "ERR_EMPTY_RESPONSE"
-          ],
-          "browserErrorPage": true,
-          "rawBrowserErrorLogged": false
-        }
-      ],
-      "performanceSamples": 0,
-      "qualified": false
-    },
-    "scope": "固定错误码与证据过滤；不改变字节统计、匹配窗口或正式AB/BA门槛",
-    "diagnosticCandidateFirst": true,
-    "performanceSamples": 0
+  "sourceSha256": {
+    "scripts/native-artifact-benchmark.py": "88472b8a33224099a15d601518336ab48cfddcbd08c5cd9579d372fefb58fbae",
+    "scripts/native-artifact-ci.mjs": "39540983c763beb48d960458f691feb1427d92b21112ef84b7ec71af8b1d3721",
+    "scripts/native-artifact-ci.test.mjs": "d629166f0dd2f1360f8d85abffa34c88c92407642793fb0a190aa6c31f689fd5",
+    "scripts/native-artifact-cleanup-check.py": "d818ed20a03bf321731f2c7d264bc6c37e5395453e5a1650fadb6560d84ae7b0"
   }
 }

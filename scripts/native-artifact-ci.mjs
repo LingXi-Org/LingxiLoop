@@ -130,7 +130,7 @@ export function publicEvidence(value, key = '') {
     })),
   }]))
   if (['nativeFailure','passwordForm','browserErrorPage'].includes(key) && typeof value === 'boolean') return value
-  if (['unaccountedResources','ambiguousRequests','sourcePayloadTransferBytes','sourcePayloadDecodedBytes'].includes(key) && typeof value==='number') return Number.isFinite(value)?value:null
+  if (['unaccountedResources','ambiguousRequests','historicalAmbiguousObservations','sourcePayloadTransferBytes','sourcePayloadDecodedBytes'].includes(key)) return typeof value==='number'?(Number.isFinite(value)?value:null):undefined
   if (key === 'textVerified' && typeof value === 'boolean') return value
   if (key === 'networkRequests' && typeof value === 'number') return Number.isFinite(value) ? value : null
   if (key === 'offlineHtml' && value && typeof value === 'object') return publicEvidence(value)

@@ -159,6 +159,9 @@ class Trace:
         self.unaccounted_script_resources = []
         self.script_resource_timings = []
         self.ambiguous_requests = 0
+        self.historical_ambiguous_observations = 0
+        self._finished_script_ambiguities = 0
+        self._resource_script_ambiguities = 0
         self.byte_conflicts = 0
         context.on("requestfinished", self.record_finished)
         for method in ("requestWillBeSent", "responseReceived", "dataReceived", "loadingFinished", "loadingFailed"):
@@ -232,7 +235,7 @@ class Trace:
             prior = [(old_key, row) for old_key,row in self.requests.items() if row.get('fromPlaywright') and row['_resourceKey'] == resource_key(value['request']['url']) and abs(row['startEpochMs'] - value.get('wallTime',0)*1000) < 100]
             exact = [(k,r) for k,r in prior if abs(r['startEpochMs'] - value.get('wallTime',0)*1000) < .01]
             if len(exact) == 1: prior = exact
-            if len(prior) > 1: self.ambiguous_requests += 1
+            if len(prior) > 1: self.observe_ambiguity(len(prior))
             if len(prior) == 1:
                 old_key, row = prior[0]
                 del self.requests[old_key]
@@ -293,6 +296,10 @@ class Trace:
                 "scriptPath": bool(re.search(r"\.(?:m?js|cjs)$", urlsplit(request.url).path))})
         except Exception: pass
 
+    def observe_ambiguity(self, count):
+        # Preserve diagnostic history separately from current script accounting.
+        self.historical_ambiguous_observations = max(getattr(self, 'historical_ambiguous_observations', 0), count)
+
     def reconcile_finished(self):
         # A completed PW fallback may predate a queued request's CDP events.
         # Once response timing exposes the network clock, merge only mutually
@@ -300,7 +307,8 @@ class Trace:
         fallback = [(key, row) for key, row in self.requests.items() if row.get('fromPlaywright')]
         cdp = [(key, row) for key, row in self.requests.items() if not row.get('fromPlaywright') and '_playwrightKey' not in row]
         pairs, _left, _right, ambiguous = pair_observations([row for _, row in cdp], [row for _, row in fallback], playwright_start=True)
-        self.ambiguous_requests = max(self.ambiguous_requests, len(ambiguous))
+        self.observe_ambiguity(len(ambiguous))
+        unresolved_scripts = sum(script_request(fallback[j][1]) for j in ambiguous)
         for i, j in pairs:
             _, row = cdp[i]
             old_key, old = fallback[j]
@@ -318,7 +326,10 @@ class Trace:
         entries = [entry for entry in self.finished_requests if entry['_requestIdentity'] not in assigned]
         rows = [row for row in self.requests.values() if '_playwrightKey' not in row]
         pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries, playwright_start=True)
-        self.ambiguous_requests = max(self.ambiguous_requests, len(ambiguous))
+        self.observe_ambiguity(len(ambiguous))
+        unresolved_scripts += sum(script_request(entries[j]) for j in ambiguous)
+        self._finished_script_ambiguities = unresolved_scripts
+        self.ambiguous_requests = unresolved_scripts + getattr(self, '_resource_script_ambiguities', 0)
         for i,j in pairs: rows[i]['_playwrightKey'] = entries[j]['_requestIdentity']
         for j in unmatched - ambiguous:
             entry = entries[j]
@@ -365,7 +376,9 @@ class Trace:
         for entry in entries: entry['_resourceKey'] = resource_key(entry['url'])
         rows = [row for row in self.requests.values() if script_request(row) and row.get('finished')]
         pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries)
-        self.ambiguous_requests = max(self.ambiguous_requests, len(ambiguous))
+        self.observe_ambiguity(len(ambiguous))
+        self._resource_script_ambiguities = len(ambiguous)
+        self.ambiguous_requests = getattr(self, '_finished_script_ambiguities', 0) + len(ambiguous)
         self.unaccounted_script_resources = [entries[j] for j in unmatched if re.search(r"\.(?:m?js|cjs)$", urlsplit(entries[j]['url']).path)]
         for i,j in pairs:
             row, entry = rows[i], entries[j]
@@ -674,7 +687,9 @@ def navigate(page, kind, number):
                 # at the measured 50% camera. Never assign product scroll/state.
                 x, y = (number-1) % 5 * 1040, (number-1) // 5 * 620
                 stage.hover(); page.mouse.wheel(max(-600,min(600,x-scroll['x'])),max(-600,min(600,y-scroll['y'])))
-                wheel_count += 1; page.wait_for_timeout(80); continue
+                # Scrolling can unmount an isolated page iframe. Restart with
+                # a fresh frame list instead of visiting that detached snapshot.
+                wheel_count += 1; page.wait_for_timeout(80); break
             if kind == "slides":
                 target = frame.locator(f'[role="option"][data-slide-id="page-{number}"]')
                 if target.count():
@@ -1241,6 +1256,28 @@ def self_check():
     assert cdp_first_conflict.byte_conflicts == 1, 'CDP-first completion must check the same complete PW wire observation'
     ambiguous = reconciliation_fixture([1000,1000])
     assert ambiguous.ambiguous_requests > 0, 'indistinguishable requests cannot qualify'
+    def transient_ambiguity(kind):
+        trace=Trace.__new__(Trace)
+        observed_url='https://fixture.invalid/resource' if kind=='Fetch' else raw
+        observed_key=resource_key(observed_url)
+        trace.requests={str(i):{'url':safe_url(observed_url),'_resourceKey':observed_key,'startEpochMs':start,'type':kind,'network':True,'scriptPath':kind=='Script','requestOrdinal':i+1,'finished':True,'status':200,'transferredBytes':120,'decodedBytes':100,'decodedObserved':True} for i,start in enumerate([1000,1020])}
+        trace.finished_requests=[{'url':safe_url(observed_url),'_resourceKey':observed_key,'_requestIdentity':i,'startEpochMs':start,'finishedEpochMs':2000,'headersBytes':20,'bodyBytes':100,'status':200,'type':kind,'network':True,'scriptPath':kind=='Script','targetType':'page'} for i,start in enumerate([1007,1013])]
+        trace.request_sequence=2;trace.ambiguous_requests=0;trace.byte_conflicts=0
+        trace.reconcile_finished()
+        return trace
+    fetch_only=transient_ambiguity('Fetch')
+    assert fetch_only.ambiguous_requests==0, 'unresolved Fetch aliases are not script-byte ambiguities'
+    resolving=transient_ambiguity('Script')
+    assert resolving.ambiguous_requests>0, 'unresolved concurrent script aliases must still reject'
+    for i,row in enumerate(resolving.requests.values()):row['_playwrightStartEpochMs']=resolving.finished_requests[i]['startEpochMs']
+    resolving.reconcile_finished()
+    assert len(resolving.requests)==2 and all('_playwrightKey' in row for row in resolving.requests.values())
+    assert resolving.ambiguous_requests==0 and resolving.historical_ambiguous_observations>0, 'later exact clocks resolve provisional ambiguity without deleting historical evidence'
+    invalid_timing=reconciliation_fixture([1000]);invalid_timing.requests['cdp']['decodedBytes']=500000
+    invalid_timing.reconcile_decoded(SimpleNamespace(frames=[SimpleNamespace(evaluate=lambda _:[{'url':raw,'startEpochMs':1106.964,'responseEndEpochMs':1006.964,'encodedBytes':1000000,'decodedBytes':1000000}])],workers=[]))
+    assert len(invalid_timing.unaccounted_script_resources)==1
+    assert invalid_timing.requests['cdp']['decodedBytes']==500000, 'an unmatched ResourceTiming cannot overwrite measured bytes or widen the 100 ms matching window'
+
     assert safe_url(raw+'?v=1') == safe_url(raw+'?v=2') and resource_key(raw+'?v=1') != resource_key(raw+'?v=2')
     assert safe_url('https://token-artifact.localhost/artifact-editor/design/secret-grant/?cookie=secret') == safe_url('https://other/artifact-editor/design/secret-grant/?other=value')
     for url in ('blob:https://secret/token', 'data:text/javascript,secret', 'https://u:secret@h/_blob/secret', 'https://h/artifact-editor/slides/secret'):
@@ -1394,7 +1431,7 @@ def main():
                             stable = trace.snapshot(); sample['requestsAtStable'] = stable
                             idle_delta = script_delta(requests_at_editable, stable)
                             sample.update(idleScriptTransferBytes=idle_delta['transferredBytes'], idleScriptDecodedBytes=idle_delta['decodedBytes'])
-                            sample['scriptAccounting'] = {**script_totals(stable), 'unaccountedResources':len(trace.unaccounted_script_resources), 'ambiguousRequests':trace.ambiguous_requests, 'byteConflicts':trace.byte_conflicts}
+                            sample['scriptAccounting'] = {**script_totals(stable), 'unaccountedResources':len(trace.unaccounted_script_resources), 'ambiguousRequests':trace.ambiguous_requests, 'historicalAmbiguousObservations':trace.historical_ambiguous_observations, 'byteConflicts':trace.byte_conflicts}
                             sample['unaccountedScriptTimings'] = timing_observations(trace.unaccounted_script_resources)
                             sample['scriptResourceTimings'] = timing_observations(trace.script_resource_timings)
                             sample['phase'] = 'undo'; sample['undoProofs'] = [undo_edit(page, kind, 1, config['artifactIds'][kind])]; pending_undo = None
