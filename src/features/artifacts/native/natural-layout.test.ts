@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {createNode,createPage} from '../../../../shared/artifact-document'
+import {createNode,createPage,createDocument} from '../../../../shared/artifact-document'
 import {NaturalLayouts,NaturalNodeSizes,withNaturalLayout,naturalMeasurementBatch,naturalNodeStyle} from './natural-layout'
 import {elementBounds} from './visibility'
 
@@ -70,15 +70,15 @@ test('cache misses request at most eight inert measurements and stop after their
 })
 
 test('probe and cache typography include inherited group fonts but preserve child overrides',()=>{
-  const page=createPage('contents'),note={...createNode('note','note'),text:'i'.repeat(2000),parentId:'group',width:240,height:832,style:{fontSize:32}},group={...createNode('group','group'),style:{fontFamily:'monospace',fontWeight:700,fontStyle:'italic',letterSpacing:2}}
+  const page=createPage('contents'),note={...createNode('note','note'),text:'i'.repeat(2000),parentId:'group',width:240,height:832,style:{fontSize:32}},group={...createNode('group','group'),style:{fontFamily:'monospace',fontWeight:700,fontStyle:'italic' as const,letterSpacing:2}}
   page.nodes={group,note};page.nodeOrder=['group','note']
   const inherited=naturalNodeStyle(page,note),sizes=new NaturalNodeSizes()
   assert.equal(inherited.fontFamily,'monospace');assert.equal(inherited.fontWeight,700);assert.equal(inherited.fontStyle,'italic');assert.equal(inherited.letterSpacing,2)
-  sizes.set(note,{width:240,height:8463},inherited)
+  sizes.set(note,{width:240,height:8463},inherited,0)
   assert.equal(withNaturalLayout(structuredClone(page),sizes).nodes.note!.height,8463)
   const changed=structuredClone(page);changed.nodes.group!.style.fontFamily='sans-serif'
   assert.equal(withNaturalLayout(changed,sizes),changed,'changing only an ancestor font invalidates the child measurement')
-  const explicit={...note,style:{...note.style,fontFamily:'sans-serif',fontWeight:400,fontStyle:'normal',letterSpacing:0}}
+  const explicit={...note,style:{...note.style,fontFamily:'sans-serif',fontWeight:400,fontStyle:'normal' as const,letterSpacing:0}}
   assert.equal(naturalNodeStyle(page,explicit).fontFamily,'sans-serif');assert.equal(naturalNodeStyle(page,explicit).fontWeight,400)
 })
 
@@ -91,8 +91,18 @@ test('inherited font keywords follow child and intermediate ancestors and invali
   }
   assert.equal(naturalNodeStyle(page,{...note,style:{fontFamily:'initial'}}).fontFamily,'initial')
   assert.equal(naturalNodeStyle(page,{...note,style:{fontFamily:'"inherit"'}}).fontFamily,'"inherit"')
-  const sizes=new NaturalNodeSizes();sizes.set(note,{width:240,height:8463},naturalNodeStyle(page,note))
+  const sizes=new NaturalNodeSizes();sizes.set(note,{width:240,height:8463},naturalNodeStyle(page,note),0)
   const changed=structuredClone(page);changed.nodes.outer!.style.fontFamily='sans-serif'
   assert.equal(naturalNodeStyle(changed,changed.nodes.note!).fontFamily,'sans-serif')
   assert.equal(withNaturalLayout(changed,sizes),changed)
+})
+
+test('a flow-group measurement remains an atomic sibling layout and changes invalidate the cached box',()=>{
+  const page=createPage('contents'),group={...createNode('group','group'),width:120,height:180,layout:{mode:'flex' as const,direction:'row' as const,align:'start' as const}},note={...createNode('note','note'),parentId:'group',text:'a '.repeat(400),width:240,height:832}
+  page.nodes={group,note};page.nodeOrder=['group','note']
+  const sizes=new NaturalNodeSizes(),document={...createDocument('design','design','布局'),seq:1}
+  assert.deepEqual(naturalMeasurementBatch(page,sizes,document).map(node=>node.id),['note'])
+  sizes.set(note,{width:120,height:9308},naturalNodeStyle(page,note),1)
+  assert.equal(withNaturalLayout(page,sizes,document).nodes.note!.width,120)
+  assert.equal(withNaturalLayout(page,sizes,{...document,seq:2}),page)
 })

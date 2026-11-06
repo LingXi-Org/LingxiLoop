@@ -10,7 +10,7 @@ import { useLocalDraft } from './draft-context'
 import { appearance, nodeTransform } from '../../../../shared/artifact-appearance'
 import { editorFontFamily } from './editor-fonts'
 import { SvgImage } from './SvgImage'
-import {naturalNodeStyle} from './natural-layout'
+import {expandVisibleNodes} from './visibility'
 import { inheritedSvgFont } from './svg-presentation'
 import './editor-fonts.css'
 
@@ -93,6 +93,7 @@ function MathContent({ source, revision, compute }: { source: string; revision: 
   return <span className="native-math" data-formula-ready="true" dangerouslySetInnerHTML={{ __html: result.html }} />
 }
 export interface PageRenderProps {
+  measureOnly?:boolean
   document: ArtifactDocument
   page: ArtifactPage
   compute: NativeCompute
@@ -131,9 +132,11 @@ function TableCell({ value, editing, header, label, row, column, onCommit }: { v
     onPaste={event => { event.preventDefault(); window.document.execCommand('insertText', false, event.clipboardData.getData('text/plain')) }}
     onPointerDown={event => { if (editing) event.stopPropagation() }} onBlur={() => { focused.current = false; save(); if (!composing.current) { setRendered(latest.current.value); if (root.current) root.current.textContent = latest.current.value } }}>{rendered}</td>
 }
-/** Same note typography, inert and clipped; at most eight probes are mounted. */
-export function NaturalNoteMeasurements({page,nodes,document}:{page:ArtifactPage;nodes:ArtifactNode[];document:ArtifactDocument}){
-  return <div className="native-free-canvas-shell native-natural-measurements" data-natural-measure-page={page.id} aria-hidden="true" inert>{nodes.map(node=><div key={node.id} className="native-node native-node-note" data-native-measure-node={node.id} style={{...nativeStyle(naturalNodeStyle(page,node,document),document),position:'absolute',left:0,top:0,width:node.width,height:'auto',minHeight:40,boxSizing:'border-box'}}><div className="native-text-content">{node.richText?richTextContent(node.richText):node.text}</div></div>)}</div>
+/** Flow groups are atomic layout units, matching ordinary visibility expansion.
+ * Non-text content stays unloaded; direct notes are measured eight at a time. */
+export function NaturalNoteMeasurements({page,nodes,document,compute}:{page:ArtifactPage;nodes:ArtifactNode[];document:ArtifactDocument;compute:NativeCompute}){
+  const visibleNodeIds=expandVisibleNodes(page,nodes.map(node=>node.id))
+  return <div className="native-free-canvas-shell native-natural-measurements" data-natural-measure-page={page.id} aria-hidden="true" inert><PageContent page={page} document={document} compute={compute} visibleNodeIds={visibleNodeIds} measureOnly /></div>
 }
 function NodeContent({ node, document, page, compute, pageVersion, revisionSeq, editingId, cropEditingId, onTextChange, onFinishText, onCellChange, presenting }: PageRenderProps & { node: ArtifactNode }) {
   node = { ...node, ...(cropEditingId===node.id ? {crop:undefined} : {}), style: artifactResolvedStyle(node.style, document) }
@@ -193,8 +196,8 @@ export const PageContent = memo(function PageContent(props: PageRenderProps) {
   const independent=Boolean(canvasContentOwner(document,page.id))
   const children = new Map<string | null, ArtifactNode[]>()
   for (const id of page.nodeOrder) { const node = page.nodes[id]; if (!node || node.hidden || (!independent && node.parentId === null && (node.scope === 'canvas') !== !!props.canvasOnly) || (props.visibleNodeIds && !props.visibleNodeIds.has(id))) continue; const group = children.get(node.parentId) ?? []; group.push(node); children.set(node.parentId, group) }
-  const render = (node: ArtifactNode, flow: boolean): ReactNode => <div key={node.id} className={`native-node native-node-${node.type}`} data-node-id={node.id} data-node-type={node.type} data-native-natural-height={independent&&node.type==='note'?true:undefined} style={{ ...nativeStyle(node.style, document), position: flow ? 'relative' : 'absolute', left: flow ? undefined : node.x, top: flow ? undefined : node.y, width: node.width, height: independent&&node.type==='note'?'auto':page.sizing === 'flow' && node.type === 'group' && node.layout?.mode !== 'absolute' ? 'auto' : node.height, minHeight: independent&&node.type==='note'?40:page.sizing === 'flow' && node.type === 'group' ? node.height : undefined, transform: nodeTransform(node), transformOrigin: 'center', boxSizing: 'border-box', ...(node.type === 'group' && node.layout?.mode !== 'absolute' ? { display: node.layout?.mode, flexDirection: node.layout?.direction, gap: node.layout?.gap, alignItems: node.layout?.align, justifyContent: node.layout?.justify, gridTemplateColumns: node.layout?.mode === 'grid' ? `repeat(${node.layout.columns ?? 1},minmax(0,1fr))` : undefined } : {}), ...(node.type === 'shape' || node.type === 'line' || node.type === 'drawing' ? { backgroundColor: undefined, backgroundImage: undefined, border: undefined } : {}) }}>
-    <NodeContent {...props} node={node} />{children.get(node.id)?.map(child => render(child, node.layout?.mode === 'flex' || node.layout?.mode === 'grid'))}
+  const render = (node: ArtifactNode, flow: boolean): ReactNode => <div key={node.id} className={`native-node native-node-${node.type}`} data-node-id={props.measureOnly?undefined:node.id} data-node-type={props.measureOnly?undefined:node.type} data-native-measure-node={props.measureOnly&&node.type==='note'?node.id:undefined} data-native-natural-height={!props.measureOnly&&independent&&node.type==='note'?true:undefined} style={{ ...nativeStyle(node.style, document), position: flow ? 'relative' : 'absolute', left: flow ? undefined : node.x, top: flow ? undefined : node.y, width: node.width, height: independent&&node.type==='note'?'auto':page.sizing === 'flow' && node.type === 'group' && node.layout?.mode !== 'absolute' ? 'auto' : node.height, minHeight: independent&&node.type==='note'?40:page.sizing === 'flow' && node.type === 'group' ? node.height : undefined, transform: nodeTransform(node), transformOrigin: 'center', boxSizing: 'border-box', ...(node.type === 'group' && node.layout?.mode !== 'absolute' ? { display: node.layout?.mode, flexDirection: node.layout?.direction, gap: node.layout?.gap, alignItems: node.layout?.align, justifyContent: node.layout?.justify, gridTemplateColumns: node.layout?.mode === 'grid' ? `repeat(${node.layout.columns ?? 1},minmax(0,1fr))` : undefined } : {}), ...(node.type === 'shape' || node.type === 'line' || node.type === 'drawing' ? { backgroundColor: undefined, backgroundImage: undefined, border: undefined } : {}) }}>
+    {!props.measureOnly||['note','text'].includes(node.type)?<NodeContent {...props} node={node} />:['shape','line','drawing'].includes(node.type)?<svg width="100%" height="100%" viewBox={`0 0 ${node.width} ${node.height}`} />:null}{children.get(node.id)?.map(child => render(child, node.layout?.mode === 'flex' || node.layout?.mode === 'grid'))}
   </div>
   return <div ref={root} className={`native-page-content ${props.canvasOnly ? 'native-canvas-content' : ''}`} data-content-layer style={{ width: page.width, height: page.height, background: props.canvasOnly ? 'transparent' : artifactPageBackground(page, document) }}>{children.get(null)?.map(node => render(node, false))}</div>
 })

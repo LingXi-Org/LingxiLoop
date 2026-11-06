@@ -19,8 +19,15 @@ export function naturalNodeStyle(page:ArtifactPage,node:ArtifactNode,document?:A
   return style
 }
 
+export function hasFlowAncestor(page:ArtifactPage,node:ArtifactNode){
+  const seen=new Set<string>();let parentId=node.parentId
+  while(parentId&&!seen.has(parentId)){seen.add(parentId);const parent=page.nodes[parentId];if(!parent)break;if(parent.layout?.mode==='flex'||parent.layout?.mode==='grid')return true;parentId=parent.parentId}
+  return false
+}
+export const layoutRevision=(node:ArtifactNode,document?:ArtifactDocument)=>node.parentId?document?.seq??0:undefined
+
 export interface NaturalNodeSize {width:number;height:number}
-const signature=(node:ArtifactNode,style:ArtifactStyle)=>JSON.stringify([node.width,node.text,node.richText,style])
+const signature=(node:ArtifactNode,style:ArtifactStyle,layout?:number)=>JSON.stringify([node.width,node.text,node.richText,style,layout])
 
 /** Exact layout dependencies survive the reducer's whole-page structuredClone.
  * Each page retains at most 256 measurements and 512 KiB of dependency strings. */
@@ -28,18 +35,18 @@ export class NaturalNodeSizes {
   private entries=new Map<string,{signature:string;size:NaturalNodeSize}>()
   private characters=0
   private current=new WeakMap<ArtifactNode,{style:string;size:NaturalNodeSize}>()
-  get(node:ArtifactNode,style:ArtifactStyle=node.style){
-    const styleKey=JSON.stringify(style),current=this.current.get(node)
+  get(node:ArtifactNode,style:ArtifactStyle=node.style,layout?:number){
+    const styleKey=JSON.stringify([style,layout]),current=this.current.get(node)
     if(current?.style===styleKey)return current.size
     const entry=this.entries.get(node.id)
-    if(!entry||entry.signature!==signature(node,style))return undefined
+    if(!entry||entry.signature!==signature(node,style,layout))return undefined
     this.entries.delete(node.id);this.entries.set(node.id,entry)
     this.current.set(node,{style:styleKey,size:entry.size})
     return entry.size
   }
-  set(node:ArtifactNode,size:NaturalNodeSize,style:ArtifactStyle=node.style){
-    this.current.set(node,{style:JSON.stringify(style),size})
-    const key=signature(node,style),old=this.entries.get(node.id)
+  set(node:ArtifactNode,size:NaturalNodeSize,style:ArtifactStyle=node.style,layout?:number){
+    this.current.set(node,{style:JSON.stringify([style,layout]),size})
+    const key=signature(node,style,layout),old=this.entries.get(node.id)
     if(old){this.characters-=old.signature.length;this.entries.delete(node.id)}
     if(key.length>262144)return
     this.entries.set(node.id,{signature:key,size});this.characters+=key.length
@@ -66,7 +73,7 @@ export function withNaturalLayout(page:ArtifactPage,sizes?:NaturalNodeSizes,docu
   if(!sizes)return page
   let changed=false
   const nodes={...page.nodes}
-  for(const id of page.nodeOrder){const node=page.nodes[id]!,size=node.type==='note'?sizes.get(node,naturalNodeStyle(page,node,document)):undefined
+  for(const id of page.nodeOrder){const node=page.nodes[id]!,size=node.type==='note'?sizes.get(node,naturalNodeStyle(page,node,document),layoutRevision(node,document)):undefined
     if(size&&(Math.abs(size.width-node.width)>.001||Math.abs(size.height-node.height)>.001)){nodes[id]={...node,...size};changed=true}
   }
   return changed?{...page,nodes}:page
@@ -77,7 +84,7 @@ export function naturalMeasurementBatch(page:ArtifactPage|undefined,sizes:Natura
   if(!page||!sizes||!document)return []
   const batch:ArtifactNode[]=[]
   for(const id of page.nodeOrder){const node=page.nodes[id]!
-    if(node.type==='note'&&!node.hidden&&!sizes.get(node,naturalNodeStyle(page,node,document)))batch.push(node)
+    if(node.type==='note'&&!node.hidden&&!sizes.get(node,naturalNodeStyle(page,node,document),layoutRevision(node,document))){if(hasFlowAncestor(page,node))return[node];batch.push(node)}
     if(batch.length===8)break
   }
   return batch

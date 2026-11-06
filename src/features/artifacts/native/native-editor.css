@@ -90,3 +90,5 @@
 .native-kind-design .native-empty{pointer-events:none}.native-kind-design .native-empty button{pointer-events:auto}.native-free-canvas-shell .native-node-note{tab-size:8}
 
 .native-stage>.native-natural-measurements{position:absolute;left:0;top:0;width:0;height:0;overflow:hidden!important;visibility:hidden;pointer-events:none!important;contain:layout style size}
+
+.native-free-canvas-shell .native-node-note>.native-text-content{height:auto}

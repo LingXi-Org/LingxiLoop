@@ -67,7 +67,7 @@ No production merge or deployment is included.
 
 Design 独立页面回归使用 `--mode=design --checks=canvas-pages`，深色增加 `--canvas-theme=dark`；并发重命名使用 `--checks=canvas-pages-cas`。来源先从固定版本创建单独的三画板临时项目，保留隐式默认页面，运行其原始入口，再以 `native-editor-reference-capture.mjs --reference-root=/absolute/pinned-checkout --pages-only=true --pages-url=http://127.0.0.1:PORT/design/TEMPORARY_SESSION/ --browser=/path/to/chromium --output=/tmp/reference-pages` 复现。它只编辑临时来源项目：新建一个页面及 800×600 空画板，捕获浅深两主题的菜单/动作/名称/删除确认，最后恢复第二页名称。已有第二页时名称须为 Page 2。发布包不进入产品。
 
-独立页面局部检查已覆盖每页相机、重命名/删除/撤销、窄容器、名称冲突与焦点恢复；独立对象层已接入便签和绘图的局部编辑/保存/撤销及节点和世界坐标评论；来源全部自由对象、内部页面链接及跨页完整交互仍未完成，见 `source-design-pages.json`。最新真实性能诊断失败收据是 `performance/07e33d30-diagnostic.json`；没有合格完整样本。
+独立页面局部检查已覆盖每页相机、重命名/删除/撤销、窄容器、名称冲突与焦点恢复；独立对象层已接入便签和绘图的局部编辑/保存/撤销及节点和世界坐标评论；来源全部自由对象、内部页面链接及跨页完整交互仍未完成，见 `source-design-pages.json`。最新真实性能诊断失败收据是 `performance/a0ee1b66-diagnostic.json`；没有合格完整样本。
 
 脚本计量与撤销清理辅助回归见 `performance/measurement-helper-receipt.json`：排队脚本按 Chromium 实际网络起点匹配浏览器完成事件；并发歧义仍拒绝计量。撤销只在活动编辑区发送退出键，隐藏编辑器不触发工作区快捷键；真实失败收据保留可信按键及服务端状态，不包含文档正文。这些辅助检查没有产生性能样本，不能代替真实性能诊断。
 
@@ -92,3 +92,7 @@ SVG 图片的本地字体使用 `--checks=svg-font`；失败重试与迟到源�
 独立复审 f2a47f87 确认独立便签正常淘汰及24项离屏批处理已修复，但组合继承字体存在 P2，见 `reviews/f2a47f87.json`。现补测与缓存统一解析祖先继承字体、字重、斜体、字距和对齐，子节点显式值保持优先；只改父组合字体也使旧测量失效。`functional/natural-layout-inherited-eviction.json` 实测2000个字符、父组合等宽字体、存高832/实际高8463，访问九个其他画布后返回，位置和高度保持，探针峰值1且已卸载。27项模型/布局/中文文案单元、75文件lint及制表符评论/Worker回归通过；本地官方SDK类型阻塞仍在，原生文件无类型错误。f2a47f87 owning CI（42154589397）已绿，当前继承修复待独立候选复审。
 
 4838051e 复审另确认合法继承字体关键字 P2；现在继承解析包含子节点和中间祖先的 inherit/unset，initial 及带引号的字体名保持本义。实际继承/重置两种长便签淘汰回归通过，位置与高度保持，存高未变；28 项定向单元和75文件lint通过。本候选仍待独立复审。来源字体公式与新建文字/旧版缺省标题的不同默认值已单独记录于 `source-design-annotations.json`，不把这项逆向记录误报为已实现。
+
+aaa18b4c 独立复审确认关键字修复，另在 flex/grid 流式组合复现相对便签正文百分比高度造成的 P2。现在正文参与自然高度，补测复用实际 PageContent 和既有整组布局展开；普通便签仍八个一批，流式组合按已有不可分割单元补测，媒体/执行内容不加载，组合上下文版本改变则重新测量。实际 flex 缩宽120px与grid宽240px、滚动后及正常缓存淘汰返回均通过，原存高832不变，见 `functional/natural-layout-flex.json` 与 `natural-layout-grid.json`。29项定向单元、75文件lint与制表符评论/Worker通过。4838051e/aaa18b4c 的 Web CI 因测试 fontStyle 字符串推断错误失败；现已修正，当前本地原生文件无类型错误，但全量仍因官方SDK缺失受阻。此前文档中相应“无原生类型错误”的旧结论不成立，以失败日志和新候选CI为准。
+
+a0ee1b66 真实性能诊断42152419298已失败并保留哈希核验收据：两服务全程ready、四个workbench模式50页及当前脚本计量通过，但完整冷启动导出超时、一次基线空浏览器PSS缺失及一次Design关闭回收超时。没有合格完整冷启动样本，未启动十组配对。导出根因尚未确认；需要增加固定类别的导出状态及导出后网络计量，不可只看此前稳定期网络数据。

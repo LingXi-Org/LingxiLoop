@@ -82,9 +82,10 @@
     "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
     "offsetUnit": "UTF-16 code units",
     "locations": {
-      "annotationTextStyle": 2587077,
-      "fontMetrics": 2588256,
-      "textStyleCSS": 3827529
+      "legacyTextDefaults": 2586999,
+      "annotationTextStyle": 2587160,
+      "fontMetrics": 2588262,
+      "textStyleCSS": 3828428
     },
     "fontMetrics": {
       "lineHeight": "clamp(1.45 - (fontSize - 14) * 0.006, 1.1, 1.45)",
