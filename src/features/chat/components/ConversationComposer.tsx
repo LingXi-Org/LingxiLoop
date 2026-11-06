@@ -7,7 +7,6 @@ import {
 import { Alert02Icon, Cancel01Icon, Loading03Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AtSignIcon, BarChart3Icon, PaperclipIcon } from 'lucide-react'
 import { PollComposer } from '@/components/PollComposer'
 import {
   Attachment,
@@ -33,7 +32,7 @@ import { canCancelRun } from '../runtime/harness'
 import { getLingxiMessageMetadata } from '../runtime/model'
 import { userFacingError } from '@/lib/userFacingError'
 
-const actionClassName = 'h-auto min-h-11 w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-start whitespace-normal motion-reduce:transition-none'
+const actionClassName = 'flex w-full items-center gap-2.5 rounded-lg px-2 py-[7px] text-start hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:opacity-40 max-md:min-h-11'
 
 export function ConversationComposer({
   conversationId,
@@ -189,7 +188,7 @@ export function ConversationComposer({
           </PopoverAnchor>
           <PopoverContent
             side="top" align="start" sideOffset={8} collisionPadding={12} aria-label="添加"
-            className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-24px)] max-h-[var(--radix-popover-content-available-height)] gap-0 overflow-y-auto rounded-xl p-1.5 motion-reduce:animate-none"
+            className="flex w-[300px] max-w-[calc(100vw-24px)] max-h-[var(--radix-popover-content-available-height)] flex-col gap-px overflow-y-auto rounded-xl border-0 p-1.5 shadow-[var(--popover-shadow)] motion-reduce:animate-none"
             onCloseAutoFocus={(event) => {
               event.preventDefault()
               const action = afterMenuClose.current
@@ -198,19 +197,18 @@ export function ConversationComposer({
               else addRef.current?.focus({ preventScroll: true })
             }}
           >
-            <p className="px-3 pb-1.5 pt-1 text-xs text-muted-foreground">添加</p>
-              <Button type="button" variant="ghost" className={actionClassName} disabled={attachmentDisabled} onClick={() => { fileInputRef.current?.click(); chooseAction(focusInput) }}>
-                <PaperclipIcon className="size-5" aria-hidden />
-                <span className="flex min-w-0 flex-wrap items-baseline gap-x-2"><span>上传文件</span><span className="text-xs font-normal text-muted-foreground">添加图片或文件</span></span>
-              </Button>
-            <Button type="button" variant="ghost" className={actionClassName} onClick={() => chooseAction(() => insertMentionRef.current?.())}>
-              <AtSignIcon className="size-5" aria-hidden />
-              <span className="flex min-w-0 flex-wrap items-baseline gap-x-2"><span>提及成员</span><span className="text-xs font-normal text-muted-foreground">选择要提醒的人</span></span>
-            </Button>
-            <Button type="button" variant="ghost" className={actionClassName} onClick={() => chooseAction(openPoll)}>
-              <BarChart3Icon className="size-5" aria-hidden />
-              <span className="flex min-w-0 flex-wrap items-baseline gap-x-2"><span>发起投票</span><span className="text-xs font-normal text-muted-foreground">邀请成员参与投票</span></span>
-            </Button>
+            <button type="button" disabled={attachmentDisabled} onClick={() => { fileInputRef.current?.click(); chooseAction(focusInput) }} className={actionClassName}>
+              <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-lg" style={{ background: 'color-mix(in srgb, #3B6FD8 12%, transparent)', color: '#3B6FD8' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7" /></svg></span>
+              <span className="flex min-w-0 flex-1 flex-col"><span className="text-[13.5px] text-foreground">上传文件</span><span className="text-xs text-muted-foreground">PDF、文档、图片、音视频</span></span>
+            </button>
+            <button type="button" onClick={() => chooseAction(() => insertMentionRef.current?.())} className={actionClassName}>
+              <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-lg" style={{ background: 'color-mix(in srgb, #1F8A5B 12%, transparent)', color: '#1F8A5B' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><circle cx="12" cy="12" r="4" /><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1" /></svg></span>
+              <span className="flex min-w-0 flex-1 flex-col"><span className="text-[13.5px] text-foreground">提及成员</span><span className="text-xs text-muted-foreground">老师、同学或 agent</span></span>
+            </button>
+            <button type="button" onClick={() => chooseAction(openPoll)} className={actionClassName}>
+              <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-lg" style={{ background: 'color-mix(in srgb, #7B5CC9 12%, transparent)', color: '#7B5CC9' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M4 20h16M6 16V8M12 16V4M18 16v-6" /></svg></span>
+              <span className="flex min-w-0 flex-1 flex-col"><span className="text-[13.5px] text-foreground">发起投票</span><span className="text-xs text-muted-foreground">单选或多选，可设截止时间</span></span>
+            </button>
           </PopoverContent>
           </Popover>
         </ComposerTriggers>

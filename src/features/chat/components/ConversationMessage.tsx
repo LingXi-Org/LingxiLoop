@@ -3,8 +3,6 @@ import {
   useAui,
   useAuiState,
 } from '@assistant-ui/react'
-import { Copy01Icon, ReplyIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckCheck } from 'lucide-react'
 import { type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { RunActivityPillSlot } from '@/components/assistant-ui/elements/run-activity'
@@ -30,6 +28,7 @@ import { chatLatency } from '../runtime/latency'
 import { copyMessageText, MessageActions, useMessageCopyText } from './MessageActions'
 import { AssistantMessageActions } from './AssistantMessageActions'
 import { MessageQuotePreview } from './QuotePreview'
+import { EmojiPicker } from './EmojiPicker'
 
 function FailedSendActions({ metadata }: { metadata: LingxiMessageMetadata }) {
   const [busy, setBusy] = useState(false)
@@ -46,7 +45,7 @@ function FailedSendActions({ metadata }: { metadata: LingxiMessageMetadata }) {
   </div>
 }
 
-const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '🙏', '🔥'] as const
+const QUICK_REACTIONS = ['👍', '❤️', '😂', '🤔', '🎉', '👀'] as const
 
 function MobileMessageActions({
   metadata,
@@ -63,43 +62,28 @@ function MobileMessageActions({
   const messageId = useAuiState((state) => state.message.id)
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="bottom">
-      <DrawerContent className="pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <DrawerContent className="gap-3.5 rounded-t-[22px] px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
         <DrawerTitle className="sr-only">消息操作</DrawerTitle>
         <DrawerDescription className="sr-only">快速回应、回复或复制这条消息</DrawerDescription>
-        <div className="grid grid-cols-6 gap-1 px-4 pt-4" role="listbox" aria-label="快速回应">
+        <p className="line-clamp-2 rounded-xl bg-formula px-3 py-2.5 text-[13.5px] text-fg2">{getText()}</p>
+        <div className="flex justify-between" role="listbox" aria-label="快速回应">
           {QUICK_REACTIONS.map((emoji) => (
-            <Button
-              key={emoji}
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              className="size-11 rounded-2xl"
-              role="option"
-              aria-label={`使用 ${emoji} 回应`}
-              onClick={() => {
-                onOpenChange(false)
-                void chatTransport.toggleReaction(metadata.conversationId, messageId, emoji)
-              }}
-            >
-              <TwEmoji emoji={emoji} size={20} />
-            </Button>
+            <button key={emoji} type="button" role="option" aria-selected={false} aria-label={`使用 ${emoji} 回应`}
+              className="grid size-11 place-items-center rounded-full bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+              onClick={() => { onOpenChange(false); void chatTransport.toggleReaction(metadata.conversationId, messageId, emoji) }}>
+              <TwEmoji emoji={emoji} size={22} />
+            </button>
           ))}
         </div>
-        <div className="mt-3 grid gap-1 px-4 pb-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-12 justify-start rounded-2xl"
-            onClick={() => {
-              aui.thread.composer().setQuote({ messageId: metadata.clientMessageId, text: getText() })
-              onOpenChange(false)
-            }}
-          >
-            <HugeiconsIcon icon={ReplyIcon} strokeWidth={2} />回复
-          </Button>
-          <Button type="button" variant="ghost" className="h-12 justify-start rounded-2xl" onClick={() => { void copyMessageText(getText()); onOpenChange(false) }}>
-            <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />复制
-          </Button>
+        <div className="overflow-hidden rounded-[14px] bg-formula">
+          <button type="button" className="flex h-[50px] w-full items-center gap-3 px-4 text-[15px] focus-visible:bg-accent focus-visible:outline-none"
+            onClick={() => { aui.thread.composer().setQuote({ messageId: metadata.clientMessageId, text: getText() }); onOpenChange(false) }}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-fg2"><path d="M9 14 4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 6 6v5" /></svg>回复
+          </button>
+          <button type="button" className="flex h-[50px] w-full items-center gap-3 border-t border-border px-4 text-[15px] focus-visible:bg-accent focus-visible:outline-none"
+            onClick={() => { void copyMessageText(getText()); onOpenChange(false) }}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4 text-fg2"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>复制
+          </button>
         </div>
       </DrawerContent>
     </Drawer>
@@ -207,6 +191,12 @@ function Reactions({ metadata, messageId }: { metadata: LingxiMessageMetadata; m
           <span>{reaction.count}</span>
         </Button>
       ))}
+      <EmojiPicker onPick={emoji => void chatTransport.toggleReaction(metadata.conversationId, messageId, emoji)}>
+        <button type="button" aria-label="添加表情" title="添加表情"
+          className="grid size-6 place-items-center rounded-full border border-dashed border-input text-muted-foreground hover:border-brand hover:bg-brand-surface hover:text-brand focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:border-brand data-[state=open]:bg-brand-surface data-[state=open]:text-brand">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-[13px]"><circle cx="12" cy="12" r="9" /><path d="M8.5 14a4 4 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>
+        </button>
+      </EmojiPicker>
     </div>
   )
 }

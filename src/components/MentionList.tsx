@@ -10,7 +10,7 @@
  *
  * Keyboard: ↑ ↓ to move, Enter / Tab to commit, Esc to dismiss.
  */
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import { Fragment, forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import type { Participant } from '@/types'
 import { Avatar } from './Avatar'
 import { participantRoleZh } from '@/lib/participantRole'
@@ -61,19 +61,19 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-popover px-3 py-2 text-xs text-muted-foreground shadow-lg">
+      <div className="rounded-xl bg-popover px-3 py-2 text-xs text-muted-foreground shadow-[var(--popover-shadow)]">
         没有匹配
       </div>
     )
   }
 
   return (
-    <ItemGroup className="min-w-[220px] max-h-[280px] gap-0 overflow-y-auto rounded-lg border border-border bg-popover py-1 shadow-lg">
-      {items.map((p, i) => (
+    <ItemGroup className="w-[260px] max-h-[280px] gap-px overflow-y-auto rounded-xl bg-popover p-1.5 shadow-[var(--popover-shadow)]">
+      {items.map((p, i) => (<Fragment key={p.id}>
+        {(i === 0 || items[i - 1]!.kind !== p.kind) && <div role="presentation" className="px-2 pb-1 pt-1.5 text-[11.5px] text-muted-foreground">{p.kind === 'agent' ? 'Agent' : '成员'}</div>}
         <Item
           role="option"
           aria-selected={i === selectedIndex}
-          key={p.id}
           // Capture click before TipTap clears the suggestion popup on
           // blur (mouseDown fires before blur; click fires after, by
           // which time the suggestion state is already torn down).
@@ -83,21 +83,19 @@ export const MentionList = forwardRef<MentionListHandle, MentionListProps>(funct
           }}
           onMouseEnter={() => setSelectedIndex(i)}
           className={cn(
-            'flex-nowrap rounded-none border-0 px-3 py-1.5 text-left text-sm',
-            i === selectedIndex
-              ? 'bg-accent text-accent-foreground'
-              : 'text-popover-foreground hover:bg-accent',
+            'flex-nowrap gap-2.5 rounded-lg border-0 px-2 py-[7px] text-left',
+            i === selectedIndex ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent',
           )}
         >
           <ItemMedia><Avatar p={p} size={24} animated={false} /></ItemMedia>
           <ItemContent className="min-w-0">
-            <ItemTitle className="block w-full truncate font-medium leading-tight">{p.name}</ItemTitle>
-            <ItemDescription className="line-clamp-1 text-[11px] leading-tight text-muted-foreground">
+            <ItemTitle className="block w-full truncate text-[13.5px] font-normal leading-tight">{p.name}</ItemTitle>
+            <ItemDescription className="line-clamp-1 text-xs leading-tight text-muted-foreground">
               {participantRoleZh(p)}
             </ItemDescription>
           </ItemContent>
         </Item>
-      ))}
+      </Fragment>))}
     </ItemGroup>
   )
 })

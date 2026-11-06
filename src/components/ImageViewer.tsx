@@ -126,7 +126,7 @@ export function ImageViewer({ src, name, onClose, onCloseAutoFocus }: ImageViewe
       <DialogContent
         showCloseButton={false}
         onCloseAutoFocus={onCloseAutoFocus}
-        className="fixed inset-0 top-0 left-0 z-[1000] flex h-screen max-h-none w-screen max-w-none translate-x-0 translate-y-0 select-none items-center justify-center overflow-hidden rounded-none bg-foreground/95 p-0 text-background ring-0 backdrop-blur-sm sm:max-w-none"
+        className="fixed inset-0 top-0 left-0 z-[1000] flex h-screen max-h-none w-screen max-w-none translate-x-0 translate-y-0 select-none items-center justify-center overflow-hidden rounded-none border-0 bg-[rgb(18_18_17/92%)] p-0 text-white ring-0 backdrop-blur-sm sm:max-w-none"
         onClick={onClose}
       >
       <DialogTitle className="sr-only">预览 {name}</DialogTitle>
@@ -165,29 +165,20 @@ export function ImageViewer({ src, name, onClose, onCloseAutoFocus }: ImageViewe
         onReset={reset}
         onCopy={copy}
         onDownload={download}
-        onClose={onClose}
       />
 
-      {name && (
-        // No pill background — the chip's bg + internal padding made the
-        // text read as centered. Bare text on the dark backdrop reads
-        // unambiguously left-aligned and removes the visual "indent".
-        <div
-          className="absolute max-w-[min(50vw,520px)] truncate py-1 font-mono text-[12.5px] text-background/90"
-          style={{
-            top: 20,
-            left: 20,
-            textShadow: '0 1px 2px rgba(0,0,0,0.6)',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {name}
-        </div>
-      )}
+      <div className="absolute inset-x-0 top-0 flex h-[52px] items-center gap-2.5 pe-2.5 ps-4 text-white" onClick={(e) => e.stopPropagation()}>
+        <span className="min-w-0 flex-1 truncate text-[13.5px]">{name}</span>
+        <kbd className="rounded-[5px] border border-white/20 px-[5px] font-sans text-[11.5px] text-white/55">Esc</kbd>
+        <button type="button" aria-label="关闭（Esc）" title="关闭（Esc）" onClick={onClose}
+          className="grid size-[34px] place-items-center rounded-[9px] text-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
+      </div>
 
       {toast && (
         <div
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 rounded-full bg-background px-3.5 py-1.5 text-[12.5px] text-foreground shadow-lg"
+          className="absolute bottom-20 left-1/2 -translate-x-1/2 rounded-xl bg-[#1A1A19] px-3 py-2 text-[13px] text-white shadow-[0_10px_28px_rgb(20_20_18/25%)]"
           onClick={(e) => e.stopPropagation()}
         >
           {toast}
@@ -199,7 +190,7 @@ export function ImageViewer({ src, name, onClose, onCloseAutoFocus }: ImageViewe
 }
 
 function Toolbar({
-  scale, onZoomIn, onZoomOut, onReset, onCopy, onDownload, onClose,
+  scale, onZoomIn, onZoomOut, onReset, onCopy, onDownload,
 }: {
   scale: number
   onZoomIn: () => void
@@ -207,47 +198,37 @@ function Toolbar({
   onReset: () => void
   onCopy: () => void
   onDownload: () => void
-  onClose: () => void
 }) {
   return (
     <div
-      className="absolute flex items-center gap-0.5 rounded-full bg-background/90 px-1.5 py-1 text-foreground shadow-lg backdrop-blur-md"
-      style={{ top: 20, right: 20 }}
+      className="absolute bottom-[18px] left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-xl bg-white/10 p-1 text-white backdrop-blur-md"
       onClick={(e) => e.stopPropagation()}
     >
       <ToolBtn title="缩小 (−)" onClick={onZoomOut}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="8" y1="11" x2="14" y2="11" />
         </svg>
       </ToolBtn>
-      <span className="w-12 select-none text-center font-mono text-[11px] tabular-nums text-foreground">
-        {Math.round(scale * 100)}%
-      </span>
       <ToolBtn title="放大 (+)" onClick={onZoomIn}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
         </svg>
       </ToolBtn>
       <ToolBtn title="重置 (0)" onClick={onReset}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" />
         </svg>
       </ToolBtn>
+      <span className="min-w-11 select-none text-center font-mono text-[11.5px] tabular-nums text-white/80">{Math.round(scale * 100)}%</span>
       <Sep />
       <ToolBtn title="复制图像" onClick={onCopy}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
         </svg>
       </ToolBtn>
       <ToolBtn title="下载" onClick={onDownload}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-        </svg>
-      </ToolBtn>
-      <Sep />
-      <ToolBtn title="关闭（Esc）" onClick={onClose}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </ToolBtn>
     </div>
@@ -267,7 +248,7 @@ function ToolBtn({ children, title, onClick }: {
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="size-8 rounded-full text-foreground hover:bg-accent hover:text-accent-foreground"
+      className="size-[34px] rounded-[9px] text-white hover:bg-white/15 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
     >
       {children}
     </Button>
@@ -275,7 +256,7 @@ function ToolBtn({ children, title, onClick }: {
 }
 
 function Sep() {
-  return <span className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+  return <span className="mx-1 h-4 w-px bg-white/20" aria-hidden="true" />
 }
 
 async function toPng(blob: Blob): Promise<Blob> {
