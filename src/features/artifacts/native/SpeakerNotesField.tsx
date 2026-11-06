@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useLayoutEffect, useRef, useSyncExternalStore } from 'react'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
 import type { CommitSpeakerNote, SpeakerNoteDraftStore } from './speaker-note-drafts'
 interface Props {
@@ -9,22 +9,17 @@ interface Props {
   commit: CommitSpeakerNote
 }
 export default function SpeakerNotesField({ page, store, writable, getBase, commit }: Props) {
-  const version = useSyncExternalStore(store.subscribe, store.getSnapshot)
-  const [text, setText] = useState(() => store.get(page.id)?.text ?? page.notes)
-  const base = useRef(store.get(page.id)?.base ?? getBase()),
-    focused = useRef(false),
-    composing = useRef(false),
-    flushAfterComposition = useRef(false)
+  useSyncExternalStore(store.subscribe, store.getSnapshot)
+  // Text and its CAS snapshot always travel together. The store retains the first
+  // local-edit snapshot; a clean field follows the current document, even focused.
+  const draft = store.get(page.id)
+  const text = draft?.text ?? page.notes
+  const base = draft?.base ?? getBase()
+  const composing = useRef(false), flushAfterComposition = useRef(false)
   const lifetime = useRef<object | null>(null)
   const latest = useRef({ page, store, commit })
   latest.current = { page, store, commit }
   const flush = () => store.flush(commit, page.id)
-  useEffect(() => {
-    if (!focused.current) {
-      setText(store.get(page.id)?.text ?? page.notes)
-      base.current = store.get(page.id)?.base ?? getBase()
-    }
-  }, [page.notes, page.id, store, version, getBase])
   useLayoutEffect(() => {
     const token = {}
     lifetime.current = token
@@ -39,8 +34,7 @@ export default function SpeakerNotesField({ page, store, writable, getBase, comm
       })
   }, [])
   const change = (value: string) => {
-    setText(value)
-    store.set(page.id, value, base.current, composing.current)
+    store.set(page.id, value, base, composing.current)
   }
   return (
     <textarea
@@ -51,14 +45,12 @@ export default function SpeakerNotesField({ page, store, writable, getBase, comm
       value={text}
       readOnly={!writable}
       onFocus={() => {
-        focused.current = true
-        base.current = store.get(page.id)?.base ?? getBase()
-        if (store.get(page.id)?.composing) store.set(page.id, text, base.current, false)
+        if (store.get(page.id)?.composing) store.set(page.id, text, base, false)
       }}
       onChange={(event) => change(event.target.value)}
       onCompositionStart={() => {
         composing.current = true
-        store.set(page.id, text, base.current, true)
+        store.set(page.id, text, base, true)
       }}
       onCompositionEnd={(event) => {
         const requested = store.get(page.id)?.flushRequested
@@ -70,7 +62,6 @@ export default function SpeakerNotesField({ page, store, writable, getBase, comm
         }
       }}
       onBlur={() => {
-        focused.current = false
         if (composing.current) {
           flushAfterComposition.current = true
           return

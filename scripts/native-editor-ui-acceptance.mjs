@@ -348,6 +348,44 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       if(options['speaker-case']==='skipped-current'){
         await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('[data-current-page]').dataset.currentPage==='page-3');assert.equal(await speaker.locator('[data-speaker-position]').innerText(),'第 2 / 2 页');await page.getByRole('button',{name:'退出放映',exact:true}).click();await speaker.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(speaker.isClosed(),false);await speaker.close();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-skipped-current',startedAtNextPresentable:true,consoleOrPageErrors:errors}
       }
+      if (options['speaker-case'] === 'notes-repeat-save') {
+        await speaker.getByRole('region', { name: '讲者备注', exact: true }).waitFor()
+        await speaker.getByRole('switch', { name: '编辑备注', exact: true }).click()
+        const field = speaker.getByRole('textbox', { name: '讲者备注', exact: true })
+        const first = '第一次按快捷键保存的备注。', second = `${first}继续输入并再次保存。`
+        for (const [index, text] of [first, second].entries()) {
+          await field.fill(text)
+          await field.press('Control+s')
+          await page.waitForFunction(() => ['saved', 'conflict'].includes(document.querySelector('[data-save-state]')?.dataset.saveState))
+          assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'), 'saved')
+          assert.equal(document.pages['page-1'].notes, text)
+          assert.equal(receipts.length, index + 1)
+          assert.equal(await field.evaluate(element => element.ownerDocument.activeElement === element), true)
+        }
+        assert.equal(await speaker.getByRole('alert').count(), 0)
+        assert.deepEqual(errors, [])
+        return { kind: 'isolated-speaker-repeat-save', bothSavesCommitted: true, focusRetained: true, noSelfConflict: true, consoleOrPageErrors: errors }
+      }
+      if (options['speaker-case'] === 'notes-stale-refocus') {
+        await speaker.getByRole('region', { name: '讲者备注', exact: true }).waitFor()
+        await speaker.getByRole('switch', { name: '编辑备注', exact: true }).click()
+        const field = speaker.getByRole('textbox', { name: '讲者备注', exact: true }), remote = '远端已经保存的全新备注。'
+        const refreshed = page.waitForRequest(request => new URL(request.url()).pathname.endsWith('/editor-context') && request.postDataJSON()?.version === '1')
+        document = applyOperations(document, prepareBatch(document, [{ type: 'page.patch', pageId: 'page-1', patch: { notes: remote } }])).document
+        await refreshed
+        await speaker.getByRole('button', { name: '暂停', exact: true }).click()
+        await field.focus()
+        assert.equal(await field.inputValue(), remote, '无本地草稿时重新聚焦必须显示远端备注')
+        await field.press('End')
+        await field.press('!')
+        await field.press('Control+s')
+        await page.waitForFunction(() => document.querySelector('[data-save-state]')?.dataset.saveState === 'saved')
+        assert.equal(document.pages['page-1'].notes, `${remote}!`)
+        assert.equal(receipts.length, 1)
+        assert.equal(await speaker.getByRole('alert').count(), 0)
+        assert.deepEqual(errors, [])
+        return { kind: 'isolated-speaker-stale-refocus', remoteTextRetained: true, editUsesMatchingBase: true, consoleOrPageErrors: errors }
+      }
       if(options['speaker-case']==='notes-compose-close'){
         await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor();await speaker.getByRole('switch',{name:'编辑备注',exact:true}).click();const field=speaker.getByRole('textbox',{name:'讲者备注',exact:true}),local='窗口关闭后保留的中文组字草稿。';await field.dispatchEvent('compositionstart');await field.fill(local);await speaker.close();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='draft');assert.equal(receipts.length,0);await page.getByRole('button',{name:'退出放映',exact:true}).click();await page.getByLabel('放映',{exact:true}).click();const opening=page.waitForEvent('popup');await page.getByRole('menuitem',{name:'使用演讲者视图放映',exact:true}).click();const resumed=await opening;await resumed.getByRole('region',{name:'讲者备注',exact:true}).filter({hasText:local}).waitFor();assert.equal(receipts.length,0,'重开不能偷偷提交未结束的组字');await resumed.getByRole('button',{name:'重试保存',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(receipts.length,1);assert.equal(document.pages['page-1'].notes,local);assert.deepEqual(errors,[]);return{kind:'isolated-speaker-composition-close',draftSurvivesPopup:true,notPrematurelyCommitted:true,explicitSaveWorks:true,consoleOrPageErrors:errors}
       }
