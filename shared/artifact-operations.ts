@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { canvasPages, canvasPageOf } from './artifact-canvas-pages.js'
+import { canvasPages, canvasPageOf, canvasContentOwner } from './artifact-canvas-pages.js'
 import {
   artifactAssetSchema, artifactDocumentSchema, artifactIdSchema, artifactNodeSchema, artifactPageSchema,
   artifactStyleSchema, artifactThemeSchema, validateArtifactDocument, validateArtifactCanvasPages,
@@ -159,12 +159,13 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
       case 'page.insert': {
         const id = operation.page.id
         if (document.kind === 'design') { requireKey(key.document('canvasPages')); change(key.canvasPage(canvasPageOf(operation.page))) }
-        requireKey(key.page(id, 'exists'), key.document('pageOrder'))
+        const content=Boolean(canvasContentOwner(document,id))||operation.page.width===0&&operation.page.height===0
+        requireKey(key.page(id, 'exists'));if(!content)requireKey(key.document('pageOrder'))
         if (Object.hasOwn(document.pages, id)) throw new Error(`Page already exists: ${id}`)
         document.pages[id] = structuredClone(operation.page)
-        document.pageOrder.splice(operation.index ?? document.pageOrder.length, 0, id)
+        if(!content)document.pageOrder.splice(operation.index ?? document.pageOrder.length, 0, id)
         pageIds.add(id)
-        change(key.page(id, 'exists'), key.page(id), key.document('pageOrder'), key.page(id, 'nodeOrder'))
+        change(key.page(id, 'exists'), key.page(id), key.page(id, 'nodeOrder'));if(!content)change(key.document('pageOrder'))
         for (const item of Object.values(operation.page.nodes)) change(key.node(id, item.id, 'exists'), key.node(id, item.id))
         for (const item of Object.values(operation.page.nodes)) {
           if (item.posterAssetId) requireKey(key.asset(item.posterAssetId))
@@ -200,11 +201,12 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
       case 'page.delete': {
         const owner = page(operation.pageId)
         if (document.kind === 'design') change(key.canvasPage(canvasPageOf(owner)))
-        requireKey(key.page(owner.id), key.page(owner.id, 'exists'), key.document('pageOrder'))
-        inverseGroups.push([{ type: 'page.insert', page: structuredClone(owner), index: document.pageOrder.indexOf(owner.id) }])
+        const content=!document.pageOrder.includes(owner.id)
+        requireKey(key.page(owner.id), key.page(owner.id, 'exists'));if(content)requireKey(key.document('canvasPages'));else requireKey(key.document('pageOrder'))
+        inverseGroups.push([{ type: 'page.insert', page: structuredClone(owner), ...(!content?{index:document.pageOrder.indexOf(owner.id)}:{}) }])
         document.pageOrder = document.pageOrder.filter(id => id !== owner.id)
         delete document.pages[owner.id]
-        change(key.page(owner.id), key.page(owner.id, 'exists'), key.document('pageOrder'))
+        change(key.page(owner.id), key.page(owner.id, 'exists'));if(!content)change(key.document('pageOrder'))
         for (const item of Object.values(owner.nodes)) {
           change(key.node(owner.id, item.id), key.node(owner.id, item.id, 'exists'))
           changedAssetReferences(item)
@@ -352,7 +354,8 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
   // Validation is bounded to affected pages, except removing an asset which can invalidate any page.
   const validateAll = operations.some(operation => operation.type === 'asset.delete')
   const validatePages = validateAll ? document.pages : Object.fromEntries([...pageIds].filter(id => Object.hasOwn(document.pages, id)).map(id => [id, document.pages[id]!]))
-  validateArtifactDocument({ ...document, pageOrder: document.pageOrder.filter(id => Object.hasOwn(validatePages, id)), pages: validatePages })
+  const validationCanvas=document.canvasPages?.map(sheet=>{if(sheet.contentId&&!Object.hasOwn(validatePages,sheet.contentId)){const{contentId:_content,...metadata}=sheet;return metadata}return sheet})
+  validateArtifactDocument({ ...document, ...(validationCanvas?{canvasPages:validationCanvas}:{}), pageOrder: document.pageOrder.filter(id => Object.hasOwn(validatePages, id)), pages: validatePages })
   if (document.seq >= Number.MAX_SAFE_INTEGER) throw new Error('Document revision exhausted')
   document.seq++
   for (const field of changed) document.versions[field] = document.seq

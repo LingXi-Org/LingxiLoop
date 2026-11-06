@@ -1,3 +1,4 @@
+import {artifactPageIds} from '../../../../shared/artifact-canvas-pages.js'
 import { raw, Router, type Response } from 'express'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
@@ -46,7 +47,7 @@ nativeArtifactsRouter.get('/artifacts/:id/document', safe(async (req, res) => {
   try {
     const snapshot = await ensureNativeDocument({ db: pool, transaction }, { artifactId, companyId: scope.companyId, actorId: scope.userId, write })
     const requested = typeof req.query.pages === 'string' ? req.query.pages.split(',').filter(Boolean) : [snapshot.document.pageOrder[0]].filter((id): id is string => Boolean(id))
-    const loaded = req.query.allPages === 'true' ? snapshot.document.pageOrder : requested
+    const loaded = req.query.allPages === 'true' ? artifactPageIds(snapshot.document) : requested
     res.set('Cache-Control', 'no-store').json({ ...projectNativeSnapshot(snapshot, loaded), write })
   } catch (error) { if (!respondError(res, error)) throw error }
 }))
@@ -56,7 +57,7 @@ nativeArtifactsRouter.get('/artifacts/:id/revisions/:seq/document',safe(async(re
   const seq=z.string().regex(/^\d{1,18}$/).parse(req.params.seq)
   try{
     const snapshot=await readNativeRevision(pool,{artifactId,companyId:scope.companyId,seq})
-    const loaded=req.query.allPages==='true'||!Object.keys(snapshot.pageVersions).length?snapshot.document.pageOrder:snapshot.document.pageOrder.slice(0,1)
+    const loaded=req.query.allPages==='true'||!Object.keys(snapshot.pageVersions).length?artifactPageIds(snapshot.document):snapshot.document.pageOrder.slice(0,1)
     res.set('Cache-Control','no-store').json({...projectNativeSnapshot(snapshot,loaded),write:false})
   }catch(error){if(!respondError(res,error))throw error}
 }))

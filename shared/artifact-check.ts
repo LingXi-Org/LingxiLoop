@@ -1,4 +1,5 @@
-import { artifactDocumentSchema, type ArtifactDocument, type ArtifactNode, type ArtifactRichText } from './artifact-document.js'
+import {artifactPageIds,canvasContentOwner} from './artifact-canvas-pages.js'
+import { artifactDocumentSchema, validateArtifactCanvasPages, type ArtifactDocument, type ArtifactNode, type ArtifactRichText } from './artifact-document.js'
 
 export interface ArtifactCheckIssue {
   severity: 'error' | 'warning'
@@ -57,13 +58,14 @@ export function checkArtifactDocument(input: unknown, requestedPaths?: readonly 
   result.pageCount = document.pageOrder.length
   result.boardCount = document.kind === 'design' ? result.pageCount : 0
   const sameKeys = (order: string[], values: Record<string, unknown>) => order.length === new Set(order).size && order.length === Object.keys(values).length && order.every(id => Object.hasOwn(values, id))
-  if (!sameKeys(document.pageOrder, document.pages)) add('page_order', '页面顺序必须包含每个页面，且不能重复。')
+  if (!sameKeys(artifactPageIds(document), document.pages)) add('page_order', '页面顺序必须包含每个页面，且不能重复。')
+  try{validateArtifactCanvasPages(document)}catch{add('canvas_page','画布页面或独立内容归属无效。')}
   if (document.themeId !== null && !Object.hasOwn(document.themes, document.themeId)) add('missing_theme', `主题不存在：${document.themeId}`)
   for (const [id, theme] of Object.entries(document.themes)) if (id !== theme.id) add('theme_id', '主题 ID 与索引不一致。')
   for (const [id, asset] of Object.entries(document.assets)) if (id !== asset.id) add('asset_id', '资源 ID 与索引不一致。')
   for (const [pageId, page] of Object.entries(document.pages)) {
     if (page.id !== pageId) add('page_id', '页面 ID 与索引不一致。', pageId)
-    if (page.width <= 0 || page.height <= 0) add('page_size', '页面尺寸必须大于零。', pageId)
+    if (!canvasContentOwner(document,pageId) && (page.width <= 0 || page.height <= 0)) add('page_size', '页面尺寸必须大于零。', pageId)
     if (!sameKeys(page.nodeOrder, page.nodes)) add('node_order', '元素顺序必须包含每个元素，且不能重复。', pageId)
     for (const [nodeId, node] of Object.entries(page.nodes)) {
       if (node.id !== nodeId) add('node_id', '元素 ID 与索引不一致。', pageId, nodeId)
@@ -91,9 +93,9 @@ export function checkArtifactDocument(input: unknown, requestedPaths?: readonly 
       }
     }
   }
-  const requested = requestedPaths === undefined ? document.pageOrder : [...new Set(requestedPaths.slice(0, 32).flatMap(path => {
+  const requested = requestedPaths === undefined ? artifactPageIds(document) : [...new Set(requestedPaths.slice(0, 32).flatMap(path => {
     const match = /^project\/pages\/([a-zA-Z0-9_-]{1,128})\.json$/.exec(path)
-    return match && document.pageOrder.includes(match[1]!) ? [match[1]!] : []
+    return match && artifactPageIds(document).includes(match[1]!) ? [match[1]!] : []
   }))]
   for (const id of requested) {
     const page = document.pages[id]
@@ -117,7 +119,7 @@ export function checkArtifactDocument(input: unknown, requestedPaths?: readonly 
     }
     if (issues.some(issue => issue.severity === 'error' && (!issue.pageId || issue.pageId === id))) continue
     result.checkedPageIds.push(id)
-    if (document.kind === 'design') result.checkedBoardPaths.push(`project/pages/${id}.json`)
+    if (document.kind === 'design' && !canvasContentOwner(document,id)) result.checkedBoardPaths.push(`project/pages/${id}.json`)
   }
   return result
 }

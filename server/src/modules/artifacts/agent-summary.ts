@@ -17,7 +17,7 @@ export function agentDocumentSummary(snapshot: NativeDocumentSnapshot) {
       }])),
       versions: Object.fromEntries(Object.entries(versions).filter(([key]) => /^(document|theme|asset)\//.test(key))),
       pages: Object.fromEntries(Object.entries(pages).map(([id, page]) => [id, {
-        id, title: page.title, width: page.width, height: page.height, x: page.x, y: page.y, nodeCount: page.nodeOrder.length,
+        id, title: page.title, width: page.width, height: page.height, x: page.x, y: page.y, ...(page.canvasPageId?{canvasPageId:page.canvasPageId}:{}), nodeCount: page.nodeOrder.length,
       }])),
     },
   }

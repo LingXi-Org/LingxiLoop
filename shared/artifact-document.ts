@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { canvasPages, canvasPageOf, MAX_CANVAS_PAGES } from './artifact-canvas-pages.js'
+import { canvasPages, canvasPageOf, artifactPageIds, MAX_CANVAS_PAGES } from './artifact-canvas-pages.js'
 
 /** Native documents contain data only. Executable source belongs to an isolated embed. */
 export const ARTIFACT_DOCUMENT_SCHEMA_VERSION = 1 as const
@@ -136,7 +136,7 @@ export type ArtifactNodeType = ArtifactNode['type']
 
 export const artifactPageSchema = z.object({
   id: artifactIdSchema, title: z.string().max(1000),
-  x: finite, y: finite, width: positive.positive(), height: positive.positive(),
+  x: finite, y: finite, width: positive, height: positive,
   sizing: z.enum(['fixed', 'flow']).optional(), paper: z.enum(['A4', 'Letter', 'custom']).optional(),
   section: z.string().max(200).optional(),
   canvasPageId: artifactIdSchema.optional(),
@@ -170,7 +170,7 @@ export const artifactAssetSchema = z.object({
 }).strict()
 export type ArtifactAsset = z.infer<typeof artifactAssetSchema>
 
-export const artifactCanvasPageSchema = z.object({id:artifactIdSchema,name:z.string().min(1).max(1000).refine(name=>Boolean(name.trim()))}).strict()
+export const artifactCanvasPageSchema = z.object({id:artifactIdSchema,name:z.string().min(1).max(1000).refine(name=>Boolean(name.trim())),contentId:artifactIdSchema.optional()}).strict()
 export type ArtifactCanvasPage = z.infer<typeof artifactCanvasPageSchema>
 
 export const artifactDocumentSchema = z.object({
@@ -196,11 +196,18 @@ export function createNode(type: ArtifactNodeType, id: string): ArtifactNode {
 }
 
 /** Canvas membership is a document-wide metadata relation, even when page bodies are unchanged. */
-export function validateArtifactCanvasPages(document: Pick<ArtifactDocument,'kind'|'canvasPages'|'pages'>): void {
+export function validateArtifactCanvasPages(document: Pick<ArtifactDocument,'kind'|'canvasPages'|'pages'|'pageOrder'>): void {
   const canvas = canvasPages(document), ids = new Set(canvas.map(page=>page.id))
   if (ids.size !== canvas.length) throw new Error('画布页面标识重复。')
   if (document.kind !== 'design' && (document.canvasPages || Object.values(document.pages).some(page=>page.canvasPageId))) throw new Error('画布页面只适用于设计稿件。')
   if (document.kind === 'design' && Object.values(document.pages).some(page=>!ids.has(canvasPageOf(page)))) throw new Error('画板所属页面不存在。')
+  const contents=canvas.flatMap(page=>page.contentId?[page.contentId]:[])
+  const all=artifactPageIds(document)
+  if(new Set(all).size!==all.length||all.length!==Object.keys(document.pages).length||all.some(id=>!Object.hasOwn(document.pages,id)))throw new Error('画板与画布内容索引不一致。')
+  if(document.pageOrder.some(id=>document.pages[id]&&(document.pages[id]!.width<=0||document.pages[id]!.height<=0)))throw new Error('画板尺寸必须大于零。')
+  if(new Set(contents).size!==contents.length||contents.some(id=>document.pageOrder.includes(id)))throw new Error('画布内容不能共用或列入画板顺序。')
+  for(const sheet of canvas)if(sheet.contentId&&(!document.pages[sheet.contentId]||canvasPageOf(document.pages[sheet.contentId]!)!==sheet.id))throw new Error('画布内容归属无效。')
+  for(const sheet of canvas)if(sheet.contentId){const page=document.pages[sheet.contentId]!;if(page.x!==0||page.y!==0||page.width!==0||page.height!==0)throw new Error('独立画布内容不能具有画板边界。')}
 }
 
 /** Referential validation also applies after a batch, allowing create+link in one transaction. */
@@ -208,7 +215,7 @@ export function validateArtifactDocument(input: unknown): ArtifactDocument {
   const document = artifactDocumentSchema.parse(input)
   const sameIds = (order: string[], entries: Record<string, unknown>) => order.length === new Set(order).size && order.length === Object.keys(entries).length && order.every(id => Object.hasOwn(entries, id))
   validateArtifactCanvasPages(document)
-  if (!sameIds(document.pageOrder, document.pages)) throw new Error('page order must include every page exactly once')
+  if (!sameIds(artifactPageIds(document), document.pages)) throw new Error('page order must include every page exactly once')
   if (document.themeId !== null && !Object.hasOwn(document.themes, document.themeId)) throw new Error('unknown theme')
   for (const [id, theme] of Object.entries(document.themes)) if (id !== theme.id) throw new Error('theme id mismatch')
   for (const [id, asset] of Object.entries(document.assets)) if (id !== asset.id) throw new Error('asset id mismatch')

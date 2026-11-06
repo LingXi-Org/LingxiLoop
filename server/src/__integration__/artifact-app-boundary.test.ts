@@ -12,7 +12,7 @@ import { GRANT_TTL_MS, issueGrant } from '../modules/artifacts/grants.js'
 import { artifactKind } from '../modules/artifacts/kinds.js'
 import { createNode, type ArtifactDocument } from '../../../shared/artifact-document.js'
 import { createTableNode } from '../../../shared/artifact-tables.js'
-import { createCanvasPage, renameCanvasPage, deleteCanvasPage, moveCanvasArtboards } from '../../../shared/artifact-canvas-pages.js'
+import { createCanvasPage, renameCanvasPage, deleteCanvasPage, moveCanvasArtboards, createCanvasContents } from '../../../shared/artifact-canvas-pages.js'
 import { prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
 import { readNativeDocument, submitNativeOperations } from '../modules/artifacts/native-document.js'
 import { withTransaction } from '../db/transaction.js'
@@ -337,6 +337,49 @@ test('Design canvas pages persist through authorized APIs with shared undo and m
     assert.deepEqual((await document(design.id)).canvasPages,moved.canvasPages)
     assert.deepEqual(base,original)
   } finally { assert.equal((await api(`/artifacts/${design.id}`,'DELETE')).status,200) }
+})
+
+test('Design free canvas objects use independent files, lazy reads, durable comments and shared undo', async () => {
+  const room=randomUUID()
+  await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','独立画布内容验收',$4::jsonb)`,[room,companyId,projectId,JSON.stringify([userId,agentId])])
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)`,[room,companyId,JSON.stringify({channelType:2,members:[userId,agentId]})])
+  const created=await api(`/conversations/${room}/design`,'POST');assert.equal(created.status,201)
+  const design=await created.json() as {id:string}
+  try{
+    const base=await document(design.id),board=base.pageOrder[0],canvas='canvas-page-1',content='free-content'
+    const before=await(await api(`/artifacts/${design.id}/revisions`)).json() as {current:string;revisions:Array<{seq:string}>}
+    const note={...createNode('note','free-note'),x:688,y:-778,width:240,height:40,text:'画布便签'}
+    assert.equal((await operate(design.id,base,[...createCanvasContents(base,canvas,content),{type:'node.insert',pageId:content,node:note}])).status,200)
+    const saved=await document(design.id)
+    assert.deepEqual(saved.pageOrder,[board]);assert.equal(saved.pages[content].nodes[note.id].text,'画布便签')
+    const projected=await(await api(`/artifacts/${design.id}/document`)).json() as {document:ArtifactDocument;loadedPageIds:string[];pageVersions:Record<string,string>}
+    assert.equal(projected.document.canvasPages?.[0].contentId,content)
+    assert.deepEqual(projected.document.pages[content].nodes,{})
+    assert.equal(projected.loadedPageIds.includes(content),false)
+    const hash=projected.pageVersions[content]
+    const body=await(await api(`/artifacts/${design.id}/pages/${content}?hash=${hash}`)).json() as {page:ArtifactDocument['pages'][string]}
+    assert.deepEqual(body.page,saved.pages[content])
+    assert.ok([403,404].includes((await api(`/artifacts/${design.id}/pages/${content}?hash=${hash}`,'GET',undefined,{'x-company-id':'another-company'})).status))
+    const comments=await api(`/artifacts/${design.id}/comments`,'POST',{anchor:encodeCommentAnchor({pageId:content,nodeId:note.id,x:.5,y:.25}),label:'画布便签',text:'请检查画布说明'})
+    assert.equal(comments.status,201)
+    const thread=await comments.json() as {thread:{id:string;anchor:string}}
+    assert.equal(thread.thread.anchor,encodeCommentAnchor({pageId:content,nodeId:note.id,x:.5,y:.25}))
+    assert.equal((await operate(design.id,saved,[{type:'page.patch',pageId:board,patch:{x:500,y:200}}])).status,200)
+    const moved=await document(design.id)
+    assert.deepEqual(moved.pages[content],saved.pages[content])
+    const afterMove=await(await api(`/artifacts/${design.id}/document`)).json() as typeof projected
+    assert.equal(afterMove.pageVersions[content],hash,'moving a board must not rewrite independent canvas content')
+    const list=await(await api(`/artifacts/${design.id}/comments`)).json() as {threads:Array<{id:string;anchor:string}>}
+    assert.equal(list.threads.find(value=>value.id===thread.thread.id)?.anchor,thread.thread.anchor)
+    const deletion=await operate(design.id,moved,[{type:'page.delete',pageId:board}]);assert.equal(deletion.status,200)
+    const empty=await document(design.id);assert.deepEqual(empty.pageOrder,[]);assert.deepEqual(empty.pages[content],saved.pages[content])
+    const live=await(await api(`/artifacts/${design.id}/revisions`)).json() as typeof before
+    const restoration=await api(`/artifacts/${design.id}/revisions/${before.revisions[0].seq}/restore`,'POST',{version:live.current});assert.equal(restoration.status,200)
+    const old=await document(design.id);assert.equal(old.pages[content],undefined);assert.equal(old.canvasPages,undefined)
+    const receipt=await restoration.json() as {history:{version:number;undo:string}}
+    assert.equal((await api(`/artifacts/${design.id}/operations`,'POST',{operationId:randomUUID(),kind:'undo',targetOperationId:receipt.history.undo,expectedHistoryVersion:receipt.history.version})).status,200)
+    const undo=await document(design.id);assert.deepEqual(undo.pageOrder,[]);assert.deepEqual(undo.pages[content],saved.pages[content])
+  }finally{assert.equal((await api(`/artifacts/${design.id}`,'DELETE')).status,200)}
 })
 
 test('project Slides decks are listed, created as native documents, renamed with CAS and deleted', async () => {

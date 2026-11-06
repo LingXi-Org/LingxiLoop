@@ -1,3 +1,4 @@
+import {createCanvasContents} from '../../../../shared/artifact-canvas-pages'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createDocument, createNode, createPage } from '../../../../shared/artifact-document'
@@ -149,5 +150,21 @@ test('a captured active editor base follows its own ACK but never a later remote
   assert.throws(() => session.dispatch([{ type: 'node.patch', pageId: 'page-one', nodeId: 'page-one-text', patch: { text: 'abc' } }], nextEditorBase), /targets changed/)
   assert.equal(document.pages['page-one'].nodes['page-one-text'].text, 'Agent final')
   assert.equal((session.recovery().operations[0].operations[0] as { patch: { text: string } }).patch.text, 'abc')
+  session.dispose()
+})
+
+
+test('a loaded canvas body survives an unrelated compact board refresh at the same immutable hash',async()=>{
+  const initial=fixture();initial.kind='design'
+  let document=applyOperations(initial,prepareBatch(initial,[...createCanvasContents(initial,'canvas-page-1','contents'),{type:'node.insert',pageId:'contents',node:{...createNode('note','free'),text:'保留画布内容'}}])).document
+  const receipt=():DocumentReceipt=>({document:{...document,pages:{...document.pages,contents:{...document.pages.contents,nodeOrder:[],nodes:{}}}},pageVersions:{'page-one':'board1','page-two':'board2',contents:'unchanged-body'},loadedPageIds:['page-one'],history:{version:0,undo:null,redo:null},write:true})
+  const transport:NativeTransport={read:async()=>receipt(),all:async()=>({...receipt(),document}),page:async()=>({page:document.pages.contents,version:'unchanged-body'}),changed:async()=>true,commit:async()=>receipt(),history:async()=>receipt()}
+  const session=new NativeDocumentSession(transport)
+  await session.open();await session.ensurePage('contents')
+  assert.equal(session.getSnapshot().document!.pages.contents.nodes.free.text,'保留画布内容')
+  document=applyOperations(document,prepareBatch(document,[{type:'page.patch',pageId:'page-one',patch:{x:500}}])).document
+  await session.refresh()
+  assert.equal(session.getSnapshot().document!.pages.contents.nodes.free.text,'保留画布内容')
+  assert.ok(session.getSnapshot().loadedPageIds.includes('contents'))
   session.dispose()
 })

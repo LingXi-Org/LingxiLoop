@@ -1,3 +1,4 @@
+import {artifactPageIds} from '../../../../shared/artifact-canvas-pages'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
 import { applyOperations, prepareBatch, type ArtifactOperation, type ArtifactOperationBatch } from '../../../../shared/artifact-operations'
 
@@ -65,9 +66,9 @@ export class NativeDocumentSession {
   private update(patch: Partial<NativeState>) { if (this.disposed) return; this.state = { ...this.state, ...patch }; for (const listener of this.listeners) listener() }
   private accept(receipt: DocumentReceipt, acknowledged?: ArtifactOperationBatch) {
     if (this.committed && receipt.document.seq < this.committed.seq) return
-    const loaded = new Set(receipt.loadedPageIds ?? receipt.document.pageOrder)
+    const loaded = new Set(receipt.loadedPageIds ?? artifactPageIds(receipt.document))
     const pages = { ...receipt.document.pages }
-    for (const pageId of receipt.document.pageOrder) {
+    for (const pageId of artifactPageIds(receipt.document)) {
       if (!loaded.has(pageId) && this.committed?.pages[pageId] && this.state.loadedPageIds.includes(pageId) && this.pageVersions[pageId] === receipt.pageVersions?.[pageId]) {
         pages[pageId] = this.committed.pages[pageId]
         loaded.add(pageId)
