@@ -1,0 +1,11 @@
+{
+  "kind": "isolated-private-canvas-link-diagnostic",
+  "trustedClipboard": true,
+  "nonActivePageTarget": true,
+  "refreshRestoresPage": true,
+  "copyShortcut": true,
+  "deletedPageChineseFeedback": true,
+  "noDocumentWrites": true,
+  "scope": "actual React/Worker and clipboard; controlled HTTP fixture, not host authentication acceptance",
+  "consoleOrPageErrors": []
+}

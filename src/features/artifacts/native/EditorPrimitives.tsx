@@ -63,9 +63,11 @@ import {
   ScanLine,
   Palette,
   Search,
+  Link2,
 } from 'lucide-react'
 
 const icons = {
+  link:Link2,
   search: Search,
   previous: ChevronLeft,
   next: ChevronRight,

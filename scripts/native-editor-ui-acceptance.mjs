@@ -45,7 +45,7 @@ const mocks = {
 }
 for (const [name, source] of Object.entries(mocks)) await writeFile(join(workspace, `${name}.js`), source)
 await writeFile(join(workspace, 'index.html'), '<html><head><meta charset="UTF-8"></head><body style="margin:0"><div id="root" style="height:100vh"></div><script type="module" src="/entry.tsx"></script></body></html>')
-await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<React.StrictMode>${options.checks==='canvas-pages'?'<div style={{height:"100%"}} data-fixture-workspace onKeyDown={event=>{if(event.key==="Escape"&&!event.defaultPrevented)event.currentTarget.hidden=true}}>':''}<NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'?'design':'slides'} title="原生编辑器验收" />${options.checks==='canvas-pages'?'</div>':''}</React.StrictMode>)`)
+await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<React.StrictMode>${options.checks==='canvas-pages'?'<div style={{height:"100%"}} data-fixture-workspace onKeyDown={event=>{if(event.key==="Escape"&&!event.defaultPrevented)event.currentTarget.hidden=true}}>':''}<NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'||new URLSearchParams(location.search).has('design')?'design':'slides'} title="原生编辑器验收" />${options.checks==='canvas-pages'?'</div>':''}</React.StrictMode>)`)
 await writeFile(join(workspace,'artifact-export.html'),(await readFile(join(root,'artifact-export.html'),'utf8')).replace('/src/features/artifacts/native/export/realm-entry.ts',`/@fs${root}/src/features/artifacts/native/export/realm-entry.ts`))
 let server, browser
 try {
@@ -73,7 +73,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   if(['canvas-import','canvas-layout-cache'].includes(options.checks)){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[]);if(options.checks==='canvas-layout-cache'){const body=document.pages[document.canvasPages[0].contentId];body.nodes['imported-note'].text='中文自动换行'.repeat(100);body.nodes['imported-note'].height=832;body.nodes['imported-note'].style.fontSize=32;body.nodes.unrelated={...createNode('shape','unrelated'),x:0,y:0};body.nodeOrder.push('unrelated')}}
@@ -109,6 +109,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historical=structuredClone(document),historyNode=Object.values(historical.pages['page-1']?.nodes??{}).find(node=>node.type==='text')
   if(options.checks==='history')document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:historyNode.id,patch:{x:historyNode.x+80}}])).document
   const revisionReads=[],revisionRestores=[],contextWrites=[]
+  if(options.checks==='canvas-links'){document.canvasPages=[{id:'canvas-page-1',name:'页面 1'},{id:'linked-page',name:'链接目标页面'}];document.pages['page-2'].canvasPageId='linked-page'}
   let commentThreads=options.checks==='canvas-import'?[{id:'imported-comment',anchor:encodeCommentAnchor({pageId:document.canvasPages[0].contentId,nodeId:'imported-note',x:.5,y:.5}),label:'导入便签评论',status:'open',messages:[{id:'imported-message',text:'中文评论定位验收',author:{kind:'user',id:'fixture-user',name:'验收用户'},at:'2026-11-06T00:00:00.000Z'}]}]:[];let commentSequence=0;let holdCommentAck=false,releaseCommentAck=null,rejectCommentReply=false,expectedCommentError=false
   const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
   const initialPageHashes = Object.fromEntries(document.pageOrder.map(id => [id, pageHash(document.pages[id])]))
@@ -225,7 +226,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await ready(index)
   }
   try {
-    await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
+    await page.goto(`${baseUrl}/?kind=${kind}${options.checks==='canvas-links'?'&project=fixture-project&view=conversations&conversation=fixture-room':''}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
     if(options.checks==='canvas-empty'){
@@ -237,6 +238,26 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(Object.values(document.pages[document.canvasPages[0].contentId].nodes)[0].text,'空画布第一条便签')
       assert.deepEqual(errors,[])
       return{kind:'isolated-empty-canvas-diagnostic',firstStickyWithoutArtboard:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-links'){
+      await page.context().grantPermissions(['clipboard-read','clipboard-write'])
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“链接目标页面”操作',{exact:true}).click()
+      await page.getByRole('button',{name:'复制页面链接',exact:true}).click();await page.getByRole('status').filter({hasText:'页面链接已复制。'}).waitFor()
+      const copied=await page.evaluate(()=>navigator.clipboard.readText()),link=new URL(copied)
+      assert.equal(link.searchParams.get('design'),'fixture');assert.equal(link.searchParams.get('canvasPage'),'linked-page')
+      assert.deepEqual([...link.searchParams.keys()],['project','view','conversation','design','canvasPage'])
+      await page.goto(copied,{waitUntil:'domcontentloaded'});await page.locator('[data-artboard-id="page-2"]').waitFor()
+      assert.equal(await page.locator('[data-canvas-page-id]').getAttribute('data-canvas-page-id'),'linked-page')
+      assert.equal(await page.locator('[data-artboard-id="page-1"]').count(),0)
+      await page.reload();await page.locator('[data-artboard-id="page-2"]').waitFor()
+      await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+Alt+l')
+      await page.getByRole('status').filter({hasText:'页面链接已复制。'}).waitFor()
+      assert.equal((new URL(await page.evaluate(()=>navigator.clipboard.readText()))).searchParams.get('canvasPage'),'linked-page')
+      link.searchParams.set('canvasPage','deleted-page');await page.goto(link.href,{waitUntil:'domcontentloaded'})
+      await page.getByRole('status').filter({hasText:'链接中的页面已删除或不存在，已打开第一个页面。'}).waitFor()
+      await page.locator('[data-artboard-id="page-1"]').waitFor()
+      assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-private-canvas-link-diagnostic',trustedClipboard:true,nonActivePageTarget:true,refreshRestoresPage:true,copyShortcut:true,deletedPageChineseFeedback:true,noDocumentWrites:true,scope:'actual React/Worker and clipboard; controlled HTTP fixture, not host authentication acceptance',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-layout-cache'){
       const bodyId=document.canvasPages[0].contentId,target=page.locator(`[data-page-id="${bodyId}"] [data-node-id="imported-note"]`)
