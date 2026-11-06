@@ -13,6 +13,7 @@ export function nativeModelReference(kind: 'design' | 'slides') {
     + '每个画布页面可用 contentId 引用 pages 中独立的无边界内容体；其 x/y/width/height 均为 0，不列入 pageOrder。画布便签、文字和绘图使用该内容体内的普通节点及世界坐标，不能挂在画板上。'
     + '独立画布便签使用文本自然高度；保存的 height 只用于初始视区估算。浏览器以实际字体、折行及制表符测量呈现与选择边界，纯查看不写回稿件。'
     + '画布标题使用 text 节点及可选 textSizing=content，width 表示内容宽度上限（默认2000），按内容测量宽高；未设置该字段的旧文字保持固定尺寸。style.paddingX/paddingY 分别表示横纵内边距，未设置时沿用 padding。新建标题字号24、常规字重；便签字号14、宽240。字号改变时使用来源对应行高、内边距和字距。'
+    + '绘图节点可选 path={d,width,height}；d 仅含有限的 M/L/C 局部路径指令，字符不超过24000，局部坐标不超过8000，逻辑宽高为2至8000。节点宽高缩放时保留 path 的逻辑坐标；旧 points 绘图继续读取。描边沿用 style.stroke 和 style.strokeWidth。'
     + '首次创建内容体时，在同一批次 document.patch 设置 canvasPages.contentId 并 page.insert 插入内容体；删除内容体时必须同批移除对应引用。保存、read_page 和节点操作沿用普通页面路径。\n\n'
     + '## Versions\n\nUnconverted legacy summaries contain sourceVersion and no pageVersions. Pass that sourceVersion to read_page and apply_ops instead of atSeq; it checks the exact immutable original across conversion. Once converted, use native pageVersions/atSeq. Read field versions from the same snapshot; absent keys have version 0. Include only required keys, not every document version. '
     + 'For node.patch include page/PAGE/exists, node/PAGE/NODE/exists and node/PAGE/NODE/field/FIELD for each changed field. Style leaves use field/style.color etc. '

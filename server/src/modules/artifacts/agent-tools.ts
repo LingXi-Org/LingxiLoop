@@ -247,7 +247,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
           seq: committed.seq, committedSeq: committed.committedSeq, changedPageIds: committed.changedPageIds,
           versions: committed.document.versions, history: committed.history, deduplicated: committed.deduplicated } } }
       },
-    }),
+    }, { reused: 'ref' }),
     ...(kind === 'design' ? [nativeTool('design.plan_explanation', z.object({ delivery: z.enum(['canvas', 'text', 'other']) }).strict(), {
       description: 'Choose the response surface from the meaning of the current human request before answering. Choose canvas by default for an introduction, connected concepts, mechanisms, processes, relationships, multi-dimensional comparisons, tradeoffs or another broad/complex explanation, even without canvas keywords. A prose answer or Markdown comparison table accompanies the saved canvas for these requests. Reserve text for greetings, a single direct fact or explicit text-only requests. Choose other when the person requested a different deliverable or an operation rather than an explanation. This records a semantic decision only: it neither creates content nor proves delivery.',
       effect: 'read', approval: false, authorize,

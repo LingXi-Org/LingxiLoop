@@ -12,6 +12,23 @@ const control = async () => { throw new Error('schema tests must not access runt
 const design = createArtifactTools('design', control), slides = createArtifactTools('slides', control)
 const report = { finding: 'Observed finding', evidenceRefs: [{ kind: 'file', id: 'project/pages/main.json' }], confidence: 0.8 }
 
+test('native operation schemas retain self-contained references and admit the same bounded pen data',()=>{
+  const document=createDocument('design','canvas'),page=createPage('p');document.pages.p=page;document.pageOrder=['p']
+  const node={...createNode('drawing','pen'),path:{d:'M0 0 C10 0 20 30 40 30',width:40,height:30}}
+  const batch=prepareBatch(document,[{type:'node.insert',pageId:'p',node}],'pen-edit')
+  for(const tools of [design,slides]){
+    const tool=tools.find(tool=>tool.action.endsWith('.apply_ops'))!,parameters=tool.parameters as Record<string,unknown>,references:string[]=[]
+    let pathDefinitions=0
+    const walk=(value:unknown)=>{if(!value||typeof value!=='object')return;const properties=Reflect.get(value,'properties');if(properties&&typeof properties==='object'&&Object.hasOwn(properties,'d')&&Object.hasOwn(properties,'width')&&Object.hasOwn(properties,'height'))pathDefinitions++;for(const[key,item]of Object.entries(value)){if(key==='$ref'&&typeof item==='string')references.push(item);else walk(item)}}
+    walk(parameters);assert.ok(references.length>0,'the repeated node schema must not expand separately for every operation')
+    assert.equal(pathDefinitions,1,'insert, replace, patch and page operations share the bounded path definition')
+    for(const reference of references){assert.ok(reference.startsWith('#/'));let target:unknown=parameters;for(const key of reference.slice(2).split('/'))target=target&&typeof target==='object'?Reflect.get(target,key.replace(/~1/g,'/').replace(/~0/g,'~')):undefined;assert.ok(target&&typeof target==='object',`unresolved local reference: ${reference}`)}
+    assert.deepEqual(tool.parse(batch),batch)
+    assert.throws(()=>tool.parse({...batch,operations:[{type:'node.insert',pageId:'p',node:{...node,path:{...node.path,d:'M0 0 L-1 2'}}}]}))
+    assert.throws(()=>tool.parse({...batch,companyId:'other'}))
+  }
+})
+
 test('Slides retains common native tools and adds deck creation and real design-system tools', () => {
   const methods = (tools: typeof design) => tools.map(tool => tool.action.split('.')[1])
   assert.deepEqual(methods(slides).filter(method => !['create', 'design_systems', 'install_design_system'].includes(method)), methods(design).filter(method => !['ensure','plan_explanation'].includes(method)))

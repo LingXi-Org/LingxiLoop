@@ -253,3 +253,10 @@
 
 - Web、Server、admin/control、发布合约的正式检查通过；两个 owning CI（42179460064、42179466080）均失败在既有 `basic-process-recovery.test.ts:158` 的 `message after terminal recovery` 20 秒等待，单独重跑失败 job 仍失败。当前没有归因证据，不视为偶发通过，也不放宽等待/断言；为失败点补充公开运行状态、投递状态和模型调用计数的最小观测，不打印消息、提示或认证信息。后续原生授权 API 测试因该失败提前退出而尚未完成本候选检查。
 - 独立只读复审发现两个计量 P2：基线导出豁免未检查嵌套故障码，可把 `export_pss_incomplete` 纳入资格；汇总先过滤资格后再计失败导出，可能漏掉候选的三项真实失败。后续修正仅允许已知 `browser_timeout`，7 类其他/缺失嵌套码全部拒绝；失败统计基于同组全部样本，分位数仍只使用合格计量数据。Python 与 Node 反例通过，候选三项导出失败仍计为 3 且无计量资格。
+
+## 752f0d71 上下文预算定位及操作 schema 修正
+
+- 公开 `readDiagnostics` 确认失败发生于 `turn_execution`，绑定状态 saved、`HardLimitExceededError`；公开 `readEvents` 的纯数值拆分确认：estimatedTokens=181007，hardLimitTokens=180000，contextWindowTokens=200000，reservedTokens=8704，toolSchemaTokens=142791，historyTokens=6847，instructionsTokens=18105。官方编译行号对应完整输入加预留输出的 `context_budget` 分支，不是 mandatory overhead 分支。没有读取或记录提示、消息或凭据。
+- 本轮 path 令每个 inline apply_ops schema 从34221增至35221字节，两种编辑器合计增加2000；已有会话在这一边界失败。只为 design/slides.apply_ops 启用 Zod 的本地重复定义引用，保留 io=input、原 schema.parse、授权、验证、工具动作和共享操作处理。每个 schema 为18252字节，两个合计减少33938；不扩大200000窗口、不改 SDK 或预算。独立 Ajv/Zod 样本对照支持等价，正式 Agent 与授权 API 仍须新 CI 验证。
+- 已先复现旧 schema 同一有限路径定义展开4次，新表达仅1次；新增正式工具合约检查本地引用闭合、合法路径操作及非法坐标/跨租户输入拒绝。纯 schema 检查通过，正式 SDK 合约测试待 CI，不能算本地已通过。
+- 数值诊断首次用了 ES2023 findLast，752f0d71 的正式 Server 类型检查因此失败；已改用当前目标支持的 reverse/find，不扩大编译目标或掩盖失败。

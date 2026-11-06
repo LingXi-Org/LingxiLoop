@@ -160,7 +160,7 @@ test('process crash after native write preserves receipts; disconnected replacem
       // the diagnostic, never the message, prompt, credentials or run payload.
       try {
         const run = await api.readRun(last), state = await api.readRunState(last), failure = (await api.readDiagnostics(last))?.runtimeFailure
-        const events = await api.readEvents(last, 0), budget = events.events.findLast(event => event.kind === 'run.failed')?.data.compactionDiagnostics
+        const events = await api.readEvents(last, 0), budget = [...events.events].reverse().find(event => event.kind === 'run.failed')?.data.compactionDiagnostics
         const numbers = (value: unknown, fields: string[]) => Object.fromEntries(fields.flatMap(key => {
           const entry = value && typeof value === 'object' ? Reflect.get(value, key) : undefined
           return typeof entry === 'number' && Number.isFinite(entry) ? [[key, entry]] : []
