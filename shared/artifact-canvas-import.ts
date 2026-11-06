@@ -6,6 +6,29 @@ const coordinate=(value:unknown,fallback=0)=>typeof value==='number'&&Number.isF
 const dimension=(value:unknown,fallback:number)=>Math.max(1,coordinate(value,fallback))
 const identity=(value:string)=>(['__proto__','constructor','prototype'].includes(value)?`canvas_${value}`:value.replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,110))||'canvas_object'
 
+/** Conservative system-font wrapping before the browser can measure imported notes. */
+export function canvasNoteHeight(text:string,width:number,size:number) {
+  const available=Math.max(size,width-24)
+  const advance=(value:string)=>{
+    if(/\p{Mark}/u.test(value))return 0
+    if(/\s/u.test(value))return size*.35
+    if(/[ilI.,'!:;|]/.test(value))return size*.35
+    if(/[MW@#%&]/.test(value))return size
+    if(/^[\x00-\x7f]$/.test(value))return size*.65
+    return size
+  }
+  let lines=0
+  for(const paragraph of text.split(/\r?\n/)){
+    let used=0;lines++
+    for(const token of paragraph.match(/\s+|\S+/gu)??[]){
+      const points=Array.from(token),length=points.reduce((sum,point)=>sum+advance(point),0)
+      if(length<=available){if(used&&used+length>available){lines++;used=0}used+=length}
+      else for(const point of points){const length=advance(point);if(used&&used+length>available+.001){lines++;used=0}used+=length}
+    }
+  }
+  return Math.min(1_000_000,Math.max(40,Math.ceil(lines*size*1.45+20)))
+}
+
 /** Source canvas.json notes are independent world objects, never board speaker notes. */
 export function importCanvasAnnotations(document:ArtifactDocument,input:unknown,warnings:string[]) {
   if(document.kind!=='design')return
@@ -18,7 +41,7 @@ export function importCanvasAnnotations(document:ArtifactDocument,input:unknown,
       const sizes:Record<string,number>={s:14,m:24,l:40,xl:72,xxl:120},sourceSize=typeof source.size==='string'?sizes[source.size]:source.size,large=kind==='title1'||kind==='text'&&coordinate(sourceSize,14)>=40
       const size=Math.max(8,Math.min(400,typeof source.size==='string'?sizes[source.size]??(large?72:14):coordinate(source.size,large?72:14)))
       const width=dimension(source.w,large?640:240)
-      node={...createNode(large?'text':'note',identity(sourceId)),text,width,height:Math.max(large?size*1.1:40,text.split('\n').length*size*(large?1.1:1.45)+(large?0:20)),style:{fontFamily:'system-ui',fontSize:size,lineHeight:large?1.1:1.45,fontWeight:source.bold===true||large&&source.bold!==false?700:400,fontStyle:source.italic===true?'italic':'normal',color:large?'#141413':'#4a4220',...(large?{}:{fill:'#fef3a2',padding:10,borderRadius:2})}}
+      node={...createNode(large?'text':'note',identity(sourceId)),text,width,height:large?Math.max(size*1.1,text.split('\n').length*size*1.1):canvasNoteHeight(text,width,size),style:{fontFamily:'system-ui',fontSize:size,lineHeight:large?1.1:1.45,fontWeight:source.bold===true||large&&source.bold!==false?700:400,fontStyle:source.italic===true?'italic':'normal',color:large?'#141413':'#4a4220',...(large?{}:{fill:'#fef3a2',padding:10,borderRadius:2})}}
     }else if(kind==='rect'||kind==='oval'){
       node={...createNode('shape',identity(sourceId)),shape:kind==='oval'?'ellipse':'rect',width:dimension(source.w,kind==='oval'?96:120),height:dimension(source.h,kind==='oval'?96:120),style:{fill:'#b6b0a7',borderRadius:kind==='rect'?8:0}}
     }else{

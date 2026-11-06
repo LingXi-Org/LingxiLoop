@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createDocument, createPage, createNode, validateArtifactDocument } from './artifact-document.js'
 import { applyOperations, prepareBatch, ArtifactOperationConflict } from './artifact-operations.js'
-import { duplicatePages, distributeNodes, resizeSelection, layoutSlide, drawingNode, ungroupNodes, appendDrawingPoint } from './artifact-editor-actions.js'
+import { duplicatePages, distributeNodes, resizeSelection, layoutSlide, drawingNode, canvasShapeNode, ungroupNodes, appendDrawingPoint } from './artifact-editor-actions.js'
 
 function fixture() {
   const doc = createDocument('slides', 'fixture'), page = createPage('first')
@@ -70,4 +70,19 @@ test('long stroke sampling keeps the gesture origin and latest point within its 
   let points=[{x:10,y:20}]
   for(let i=1;i<6000;i++) points=appendDrawingPoint(points,{x:10+i,y:20+i})
   assert.deepEqual(points[0],{x:10,y:20});assert.deepEqual(points.at(-1),{x:6009,y:6019});assert.ok(points.length<=2000)
+})
+
+
+test('canvas rectangles and ellipses preserve pointer bounds in every drag direction through persistence and undo',()=>{
+  const doc=createDocument('design','canvas-shapes'),page=createPage('board');doc.pageOrder=[page.id];doc.pages[page.id]=page
+  const start={x:-300,y:400}
+  for(const end of [{x:-200,y:500},{x:-400,y:500},{x:-400,y:300},{x:-200,y:300}]){
+    const node=canvasShapeNode('drawn','rect',start,end),result=applyOperations(doc,prepareBatch(doc,[{type:'node.insert',pageId:page.id,node}]))
+    assert.deepEqual([node.x,node.y,node.width,node.height],[Math.min(start.x,end.x),Math.min(start.y,end.y),100,100])
+    const reopened=validateArtifactDocument(JSON.parse(JSON.stringify(result.document)))
+    assert.deepEqual(reopened.pages[page.id]!.nodes.drawn,node)
+    assert.deepEqual(applyOperations(result.document,prepareBatch(result.document,result.inverse)).document.pages,doc.pages)
+  }
+  assert.deepEqual([canvasShapeNode('rect','rect',start).width,canvasShapeNode('oval','ellipse',start).width],[120,96])
+  const thin=canvasShapeNode('thin','rect',start,{x:-300,y:500});assert.equal(thin.width,2)
 })

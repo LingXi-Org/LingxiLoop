@@ -150,3 +150,12 @@ it('imports source canvas notes as independent world objects without altering bo
   assert.equal(JSON.stringify(files),before)
   assert.deepEqual(result.originals,Object.fromEntries(Object.entries(files).map(([path,value])=>[path,value.sha256])))
 })
+
+
+it('imported Chinese sticky backgrounds include automatic wrapping and explicit blank lines',()=>{
+  const text='中文自动换行'.repeat(50),files={'project/canvas.json':file(JSON.stringify({v:3,order:[],notes:{wrapped:{text,w:240,x:0,y:0},lines:{text:'甲\n\n乙',w:240}}}))}
+  const doc=convertLegacyArtifact({id:'wrapped-notes',kind:'design',title:'中文便签',files}).document,body=doc.pages[doc.canvasPages![0]!.contentId!]!
+  assert.equal(body.nodes.wrapped!.height,426)
+  assert.equal(body.nodes.lines!.height,81)
+  assert.equal(body.nodes.wrapped!.text,text)
+})

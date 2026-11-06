@@ -10,6 +10,15 @@
   "freeDrawing": true,
   "nodeAndWorldComments": true,
   "boardDeletionKeepsFreeContent": true,
+  "chineseNoteAutoHeight": true,
+  "rotatedNoteHeight": true,
+  "draggedRectangle": true,
+  "negativeWorldPan": true,
+  "undoWaitsForResponse": true,
+  "negativePanScreenX": [
+    -1057.41943359375,
+    342.58056640625
+  ],
   "scope": "actual React, Workers and shared operations; controlled HTTP fixture",
   "consoleOrPageErrors": []
 }

@@ -47,6 +47,12 @@ export function duplicatePages(document: ArtifactDocument, selected: string[], n
   }
   return ops
 }
+/** Source Design rectangles and ellipses use world-space drag bounds, or a default size on click. */
+export function canvasShapeNode(id:string,shape:'rect'|'ellipse',start:{x:number;y:number},end?:{x:number;y:number}):ArtifactNode {
+  const size=shape==='ellipse'?96:120
+  const x=Math.round(end?Math.min(start.x,end.x):start.x),y=Math.round(end?Math.min(start.y,end.y):start.y)
+  return {...createNode('shape',id),shape,x,y,width:end?Math.max(2,Math.round(Math.abs(end.x-start.x))):size,height:end?Math.max(2,Math.round(Math.abs(end.y-start.y))):size,style:{fill:'#b6b0a7',borderRadius:shape==='rect'?8:0}}
+}
 export function drawingNode(id: string, points: Array<{ x: number; y: number }>, tool: 'pencil' | 'pen' | 'arrow' | 'line'): ArtifactNode {
   const x = Math.min(...points.map(p => p.x)), y = Math.min(...points.map(p => p.y))
   return { ...createNode(tool === 'arrow' || tool === 'line' ? 'line' : 'drawing', id), x, y,

@@ -138,15 +138,15 @@
     "slides-table-inspector.png": "d65e156bacff19c519749fe55d50e004ac0f2a902f1cc8a5bbf432d647423898",
     "slides-zoom.png": "b5c916e2c1954f05531b1d1bd344abbdbc3a27d03f9485382601411efd61a1ed",
     "slides.json": "388bf55d92a58b3ff30d0fbb21587f52b73b339de9ea2d61d87fb30613d4e00b",
-    "design-free-content-dark.png": "eea8926fd2d84ad762b482668a0b631f817fee9bc6d5e6fc3fd456fd634b3aab",
-    "design-free-content-light.png": "94139dbfa9447a5e4146bf8596ba870fc0b7e9a3cbf67a3f0a0ecbe368dd76a1"
+    "design-free-content-dark.png": "84f6303627103b5413d6f678d090d63f81d62e153be9884b09747a11ba130fff",
+    "design-free-content-light.png": "9f5d82ce17920be43343d9a8d585d9ac0d2cf77f01b5434f2ec69c938e6298a9"
   },
   "implementationSources": {
-    "src/features/artifacts/native/NativeEditor.tsx": "0f8467745034d2b0647fd761b70df43090b276b053a29c461896bcd473d81268",
+    "src/features/artifacts/native/NativeEditor.tsx": "da6445e68e9fa9fd36846d01e5a3cbe00d907186b0b7bf212b397a661e369384",
     "src/features/artifacts/native/native-editor.css": "2ed451e980f7b330e9b01c96ffd91445c5ea46ce38f7589fe70ebc2a0888cbf7",
     "src/features/artifacts/native/CommentsPanel.tsx": "bc0e01b100c7940082e776bda638af88525f528b801825a8c14d71a89f217a95",
     "src/features/artifacts/native/editor-copy.ts": "abfd904e0f3ced4b0e9e5717cc6bac48de370a10c3d9e927355182abbefefa3b",
-    "scripts/native-editor-ui-acceptance.mjs": "7b4634fee7422108bee11220d97c4bad365be8fb7ee820f88cf202c1a6504756",
+    "scripts/native-editor-ui-acceptance.mjs": "d72d81c0af272752d5d138b0219ee441e9abf3587233b52c3a8a3e6d821b9694",
     "scripts/native-editor-reference-capture.mjs": "802667b18628ddb40162738caa2a29194a1d003fc2a1b5a5def42dbddac1dc49",
     "scripts/native-editor-visual-fixture.mjs": "0f914a4dd4bff805075874e011fa3fa6d98aed382ec9fb29e7190f1a4562f401",
     "shared/artifact-tables.ts": "4c5157f2c73df044942281ce339028cd7ea60c29f33a81b99fe7bdacfdc34db3",
