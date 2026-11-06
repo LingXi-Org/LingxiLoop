@@ -25,8 +25,19 @@ export function ConversationLoadState({ loading, empty, running, error, recoveri
     </span>
     <span aria-hidden="true" className="h-px min-w-0 flex-1 bg-border" />
   </div>
-  if (recovering) return <p role="status" className="px-6 py-4 text-center text-sm text-muted-foreground">正在同步任务状态…</p>
+  if (recovering) return <div role="status" className="grid flex-1 place-items-center py-16">
+    <div className="flex flex-col items-center gap-2.5 text-center">
+      <span aria-hidden="true" className="size-[22px] rounded-full border-[2.5px] border-[rgb(59_111_216/20%)] border-t-[#3B6FD8] motion-safe:animate-spin" />
+      <span className="text-[13.5px] text-fg2">正在同步任务状态…</span>
+      {thread && <span className="text-xs text-muted-foreground">回复串里暂无回复</span>}
+    </div>
+  </div>
   if (running) return <span role="status" className="sr-only">正在回复</span>
-  if (empty) return <div role="status" className="grid flex-1 place-items-center px-8 py-20 text-center text-sm text-muted-foreground">{thread ? '尚无回复' : '开始一段新对话'}</div>
+  if (empty) return <div role="status" className="grid flex-1 place-items-center px-8 py-20 text-center">
+    <div className="flex flex-col items-center gap-2">
+      <span className="text-sm font-medium text-foreground">{thread ? '尚无回复' : '开始一段新对话'}</span>
+      {!thread && <span className="text-[12.5px] text-muted-foreground">输入 / 查看可用命令，@ 提及成员</span>}
+    </div>
+  </div>
   return null
 }

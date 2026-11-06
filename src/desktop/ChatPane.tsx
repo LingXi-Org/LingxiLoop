@@ -13,7 +13,8 @@ import { useUiCommand } from '@/stores/uiCommands'
 import { useAuth } from '@/stores/auth'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { NewConversationDialog } from '@/features/conversations/components/NewConversationDialog'
-import { Button } from '@/components/ui/button'
+import { Avatar } from '@/components/Avatar'
+import { useParticipants } from '@/features/agents/state'
 
 const ConversationThread = lazy(() => import('@/features/chat/components/ConversationThread').then(module => ({ default: module.ConversationThread })))
 
@@ -23,17 +24,28 @@ function EmptyConversation({ onChooseWorkspace }: { onChooseWorkspace?: () => vo
   const projectId = useWorkspace((state) => state.selectedId)
   const canCreate = useWorkspace((state) => state.list.find((project) => project.id === state.selectedId)?.status === 'ACTIVE')
   const total = conversations.length
+  const participants = useParticipants((state) => state.byId)
+  const agents = Object.values(participants).filter(person => person.kind === 'agent').slice(0, 3)
+  const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+  const secondary = 'h-9 rounded-[10px] bg-card px-3.5 text-[13.5px] font-medium text-foreground shadow-[inset_0_0_0_1px_var(--input)] hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring'
+  const primary = 'h-9 rounded-[10px] bg-brand px-4 text-[13.5px] font-medium text-brand-foreground hover:bg-[color-mix(in_srgb,var(--brand)_90%,var(--foreground))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
   return (
-    <main className="chat-surface select-none grid h-full min-w-0 place-items-center bg-background">
-      <div data-empty-conversation className="flex max-w-sm flex-col items-center gap-3 px-8 text-center">
-        <img src="/logo.png" alt="" className="size-14 rounded-2xl opacity-90" draggable={false} />
-        <h1 className="text-xl font-semibold text-foreground">{total > 0 ? '选择一个会话开始交流' : '开始一段新对话'}</h1>
-        <p className="text-sm leading-6 text-muted-foreground">
-          {total > 0 ? `共有 ${total} 个会话，你也可以搜索已有消息。` : '选择一位伙伴交流，或邀请多位成员一起讨论。'}
-        </p>
-        {total > 0 ? <Button className="mt-2 min-h-11" onClick={() => useApp.getState().selectConversation(conversations[0].id)}>打开最近对话</Button>
-          : companyId && projectId && canCreate ? <NewConversationDialog companyId={companyId} projectId={projectId} isMobile={false} onCreated={(id) => useApp.getState().selectConversation(id)} trigger={<Button className="mt-2 min-h-11">新建对话</Button>} />
-            : onChooseWorkspace ? <Button className="mt-2 min-h-11" onClick={onChooseWorkspace}>选择工作区</Button> : null}
+    <main className="chat-surface grid h-full min-w-0 place-items-center bg-background bg-[radial-gradient(var(--border)_1px,transparent_1px)] [background-size:22px_22px]">
+      <div data-empty-conversation className="flex max-w-sm flex-col items-center gap-3.5 px-8 text-center">
+        {agents.length > 0 ? <div aria-hidden="true" className="flex">
+          {agents.map((agent, index) => <span key={agent.id} className="inline-flex" style={{ marginInlineStart: index ? -10 : 0, transform: `rotate(${[-8, 4, -4][index]}deg)` }}>
+            <Avatar p={agent} size={44} animated={false} ringColor="var(--background)" />
+          </span>)}
+        </div> : <img src="/logo.png" alt="" className="size-14 rounded-2xl opacity-90" draggable={false} />}
+        <h1 className="m-0 text-xl font-semibold tracking-[-0.01em] text-foreground">{total > 0 ? '选一个会话开始' : '开始一段新对话'}</h1>
+        <p className="m-0 text-[13.5px] text-muted-foreground">{total > 0 ? '或者直接问智能助教，从一道题开始' : '选择一位伙伴交流，或邀请多位成员一起讨论'}</p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {total > 0 && <button type="button" className={primary} onClick={() => useApp.getState().selectConversation(conversations[0].id)}>打开最近对话</button>}
+          {companyId && projectId && canCreate ? <NewConversationDialog companyId={companyId} projectId={projectId} isMobile={false} onCreated={(id) => useApp.getState().selectConversation(id)}
+            trigger={<button type="button" className={total > 0 ? secondary : primary}>新建对话</button>} />
+            : total === 0 && onChooseWorkspace ? <button type="button" className={primary} onClick={onChooseWorkspace}>选择工作区</button> : null}
+        </div>
+        {total > 0 && <span className="text-xs text-muted-foreground">{mac ? '⌘ K' : 'Ctrl K'} 搜索与命令</span>}
       </div>
     </main>
   )

@@ -266,7 +266,7 @@ export function ConversationThread({
         <ConversationComposer
           conversationId={conversationId}
           compact={compact}
-          placeholder={threadRootId ? '在帖子中回复…' : undefined}
+          placeholder={threadRootId ? '回复这条消息' : undefined}
         />
       </div>}
     </ThreadPrimitive.Root>

@@ -3,10 +3,8 @@ import { ApiError } from '@/api/core/http'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Avatar } from '@/components/Avatar'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { participantRoleZh } from '@/lib/participantRole'
 import { useParticipants } from '@/features/agents/state'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { userFacingError } from '@/lib/userFacingError'
@@ -111,41 +109,73 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
         </Button>}
       </DialogTrigger>
-      <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-hidden">
-        <DialogHeader className="shrink-0 pe-8">
-          <DialogTitle>新建对话</DialogTitle>
-          <DialogDescription>选择一位参与者开始私聊，选择多位参与者创建群聊。</DialogDescription>
-        </DialogHeader>
-        <form id={formId} className="flex min-h-0 flex-1 flex-col gap-3" onSubmit={(event) => { event.preventDefault(); void submit() }} aria-busy={busy}>
-          <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索参与者" aria-label="搜索参与者" disabled={busy || Boolean(createdId)} />
-          <div className="min-h-0 flex-1 overflow-y-auto" role="group" aria-label="参与者">
+      <DialogContent showCloseButton={false} className="flex max-h-[calc(100dvh-2rem)] w-[460px] max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden rounded-2xl border-0 p-0 shadow-[0_0_0_1px_var(--border),0_24px_60px_-12px_rgb(20_20_18/25%)]">
+        <div className="flex shrink-0 items-start gap-2 px-[18px] pb-3 pt-[18px]">
+          <DialogHeader className="flex-1 gap-0.5 text-start">
+            <DialogTitle className="text-base font-semibold">新建对话</DialogTitle>
+            <DialogDescription className="text-[12.5px]">选一个人开始私信，选多个人自动变成群聊</DialogDescription>
+          </DialogHeader>
+          <DialogClose disabled={busy} aria-label="关闭" className="grid size-[30px] place-items-center rounded-lg text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </DialogClose>
+        </div>
+        <form id={formId} className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => { event.preventDefault(); void submit() }} aria-busy={busy}>
+          <div className="flex shrink-0 flex-col gap-2.5 px-[18px] pb-3">
+            <label className="flex h-9 items-center gap-2 rounded-[9px] px-3 text-muted-foreground shadow-[0_0_0_1px_var(--input)] focus-within:shadow-[0_0_0_1px_var(--brand),0_0_0_4px_var(--brand-surface)]">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-[15px] shrink-0"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索成员或智能助教" aria-label="搜索参与者" disabled={busy || Boolean(createdId)}
+                className="min-w-0 flex-1 border-0 bg-transparent text-[13.5px] text-foreground outline-none placeholder:text-muted-foreground" />
+            </label>
+            {selectedIds.length > 0 && <div className="flex flex-wrap gap-1.5" aria-label="已选择">
+              {selectedIds.map(id => byId[id] && <span key={id} className="inline-flex h-[26px] items-center gap-[5px] rounded-full bg-accent pe-1.5 ps-[3px] text-[12.5px]">
+                <Avatar p={byId[id]!} size={20} animated={false} ringColor="transparent" />{byId[id]!.name}
+                <button type="button" aria-label={`取消选择${byId[id]!.name}`} disabled={busy || Boolean(createdId)} onClick={() => setSelectedIds(current => current.filter(item => item !== id))}
+                  className="grid size-4 place-items-center rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+              </span>)}
+            </div>}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-2.5 pb-2" role="group" aria-label="参与者">
             {!loaded && <ResourceSkeleton variant="list" count={4} compact label="正在加载参与者" />}
-            {loaded && visible.length === 0 && <p className="p-4 text-center text-sm text-muted-foreground">{query.trim() ? '没有找到匹配的参与者' : '暂无可选择的参与者'}</p>}
-            {visible.map((participant) => {
-              const checked = selectedIds.includes(participant.id)
-              return (
-                <label key={participant.id} className="flex cursor-pointer items-center gap-3 rounded-xl p-2 hover:bg-muted has-disabled:cursor-default has-disabled:opacity-50">
-                  <Checkbox checked={checked} disabled={busy || Boolean(createdId) || (!checked && selectedIds.length >= 49)} onCheckedChange={(value) => {
-                    setSelectedIds((current) => value === true ? [...current, participant.id] : current.filter((id) => id !== participant.id))
-                  }} />
-                  <Avatar p={participant} size={32} />
-                  <span className="min-w-0 flex-1 truncate text-sm">{participant.name}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{participant.kind === 'agent' ? '智能助教' : '成员'}</span>
-                </label>
-              )
+            {loaded && visible.length === 0 && <p className="p-4 text-center text-[12.5px] text-muted-foreground">{query.trim() ? '没有找到匹配的参与者' : '暂无可选择的参与者'}</p>}
+            {(['agent', 'human'] as const).map(kind => {
+              const group = visible.filter(participant => (participant.kind === 'agent') === (kind === 'agent'))
+              if (!group.length) return null
+              return <div key={kind} role="group" aria-label={kind === 'agent' ? '智能助教' : '成员'}>
+                <p className="px-2 pb-1 pt-2 text-[11.5px] text-muted-foreground">{kind === 'agent' ? '智能助教' : '成员'}</p>
+                {group.map((participant) => {
+                  const checked = selectedIds.includes(participant.id)
+                  const disabled = busy || Boolean(createdId) || (!checked && selectedIds.length >= 49)
+                  return <label key={participant.id} className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-[7px] has-disabled:cursor-default has-disabled:opacity-50 ${checked ? 'bg-[rgb(46_125_91/5%)]' : 'hover:bg-accent/60'}`}>
+                    <Avatar p={participant} size={28} animated={false} />
+                    <span className="flex min-w-0 flex-1 flex-col"><span className="truncate text-[13.5px]">{participant.name}</span><span className="text-xs text-muted-foreground">{participantRoleZh(participant) ?? (participant.kind === 'agent' ? '智能助教' : '成员')}</span></span>
+                    <input type="checkbox" className="peer sr-only" checked={checked} disabled={disabled}
+                      onChange={(event) => setSelectedIds((current) => event.target.checked ? [...current, participant.id] : current.filter((id) => id !== participant.id))} />
+                    <span aria-hidden="true" className={`grid size-[18px] shrink-0 place-items-center rounded-[5px] peer-focus-visible:outline-2 peer-focus-visible:outline-ring ${checked ? 'bg-brand text-white' : 'shadow-[inset_0_0_0_1.5px_var(--input)]'}`}>
+                      {checked && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="size-3"><path d="m5 12 5 5 9-10" /></svg>}
+                    </span>
+                  </label>
+                })}
+              </div>
             })}
           </div>
-          <p className="shrink-0 text-xs text-muted-foreground" aria-live="polite">已选择 {selectedIds.length} / 49 人</p>
-          {selectedIds.length > 1 && <div className="shrink-0 space-y-2">
-            <Label htmlFor={titleId}>群聊名称（可选）</Label>
-            <Input id={titleId} value={title} onChange={(event) => setTitle(event.target.value)} maxLength={80} placeholder="默认使用参与者姓名" disabled={busy || Boolean(createdId)} />
+          {selectedIds.length > 1 && <div className="flex shrink-0 flex-col gap-1.5 px-[18px] pb-3.5 pt-1">
+            <label htmlFor={titleId} className="text-[12.5px] text-fg2">群名称 <span className="text-muted-foreground">（可选）</span></label>
+            <input id={titleId} value={title} onChange={(event) => setTitle(event.target.value)} maxLength={80} disabled={busy || Boolean(createdId)}
+              placeholder={selectedIds.map(id => byId[id]?.name).filter(Boolean).join('、') || '默认使用参与者姓名'}
+              className="h-9 rounded-[9px] border-0 bg-transparent px-3 text-[13.5px] shadow-[0_0_0_1px_var(--input)] outline-none placeholder:text-muted-foreground focus-visible:shadow-[0_0_0_1px_var(--brand),0_0_0_4px_var(--brand-surface)]" />
           </div>}
-          {selectedIds.length > 0 && !selectionValid && <p role="alert" className="shrink-0 text-sm text-destructive">所选参与者已不可用或不属于当前项目，请重新选择。</p>}
-          {error && <p role="alert" className="shrink-0 text-sm text-destructive">{error}</p>}
+          {selectedIds.length > 0 && !selectionValid && <p role="alert" className="mx-[18px] mb-2 shrink-0 text-xs text-destructive">所选参与者已不可用或不属于当前项目，请重新选择。</p>}
+          {error && <p role="alert" className="mx-[18px] mb-2 shrink-0 text-xs text-destructive">{error}</p>}
         </form>
-        <DialogFooter className="shrink-0">
-          <Button type="button" variant="outline" disabled={busy} onClick={() => changeOpen(false)}>取消</Button>
-          <Button type="submit" form={formId} disabled={busy || (!createdId && !selectionValid)}>{busy ? '正在打开…' : createdId ? '重试刷新' : selectedIds.length > 1 ? '创建群聊' : '开始对话'}</Button>
+        <DialogFooter className="m-0 shrink-0 flex-row items-center justify-end gap-1.5 border-t border-border bg-transparent px-4 py-3">
+          <span className="me-auto text-xs text-muted-foreground" aria-live="polite">已选择 {selectedIds.length} / 49</span>
+          <button type="button" disabled={busy} onClick={() => changeOpen(false)} className="h-[34px] rounded-[10px] px-3 text-[13.5px] font-medium text-fg2 hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">取消</button>
+          <button type="submit" form={formId} disabled={busy || (!createdId && !selectionValid)}
+            className="h-[34px] rounded-[10px] bg-brand px-3.5 text-[13.5px] font-medium text-brand-foreground hover:bg-[color-mix(in_srgb,var(--brand)_90%,var(--foreground))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-40">
+            {busy ? '正在打开…' : createdId ? '重试刷新' : selectedIds.length > 1 ? `创建群聊 · ${selectedIds.length} 人` : '开始对话'}
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

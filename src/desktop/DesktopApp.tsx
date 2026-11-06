@@ -165,7 +165,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   let drawerTitle = '会话详情'
   let drawerContent: React.ReactNode = null
 
-  if (infoParticipantId) { drawerTitle = '成员资料'; drawerContent = <InfoPane onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> }
+  if (infoParticipantId) { drawerTitle = '资料'; drawerContent = <InfoPane onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> }
   else if (openThread) { drawerTitle = '回复串'; drawerContent = <ThreadDrawer /> }
   else if (documentId) { drawerTitle = '文档'; drawerContent = <DocumentPeekPane /> }
 
@@ -178,7 +178,9 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   const mobileChatOpen = !dashboardOpen && !learningSpaces.pending && isMobile && mobileConversationOpen && Boolean(selectedConversation)
   const drawerWidth = isMobile
     ? ' data-[vaul-drawer-direction=right]:w-screen data-[vaul-drawer-direction=right]:max-w-none'
-    : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
+    : infoParticipantId ? ' w-[min(92vw,360px)] rounded-s-2xl sm:[--drawer-content-width:min(92vw,360px)]'
+      : openThread ? ' w-[min(92vw,400px)] rounded-s-2xl sm:[--drawer-content-width:min(92vw,400px)]'
+        : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
   return (
     <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-cases-shell={shellModule === 'cases' || undefined} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>

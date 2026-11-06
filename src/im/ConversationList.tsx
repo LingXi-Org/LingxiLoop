@@ -112,12 +112,17 @@ export function PinnedConversationContent({ conversation, mode }: { conversation
   const { color, surface } = pinnedTint(conversation)
   const agents = members.filter(person => person.kind === 'agent').length
   const memberMeta = conversation.kind === 'group' ? `${members.length + 1} 位成员` : agents ? `${agents} 位 agent` : ''
+  if (mode === 'row') return <>
+    <ConversationAvatar conversation={conversation} size={24} />
+    <span className="relative min-w-0 flex-1 truncate text-[13px] font-medium">{conversation.title}</span>
+    <ConversationUnread conversation={conversation} />
+  </>
   if (mode === 'tile') return <>
     <ConversationAvatar conversation={conversation} size={28} />
     <span className="relative w-full truncate text-center text-[11.5px] font-medium">{conversation.title}</span>
     <span className="absolute end-1 top-1"><ConversationUnread conversation={conversation} /></span>
   </>
-  const peek = PEEK[mode]
+  const peek = PEEK[mode as keyof typeof PEEK]
   return <>
     {mode === 'wide' ? <>
       <span className="relative flex min-w-0 items-center gap-2">

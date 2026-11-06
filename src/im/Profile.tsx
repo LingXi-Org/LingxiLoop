@@ -1,7 +1,5 @@
-import { Button } from '@/components/ui/button'
 import { type AgentActionProps, useOpenAgent } from '@/features/agents/useOpenAgent'
 import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/Avatar'
 import { IMail } from '@/components/icons'
 import { cn } from '@/lib/utils'
@@ -18,21 +16,13 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  avail: 'var(--avail)',
-  working: 'var(--working)',
-  thinking: 'var(--thinking)',
-  waiting: 'var(--waiting)',
-  resting: 'var(--resting)',
+  avail: '#1F8A5B',
+  working: '#2B8A9E',
+  thinking: '#3B6FD8',
+  waiting: '#B7791F',
+  resting: '#56606C',
 }
-
-function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="border-b border-[var(--im-divider-weak)] px-5 py-4 last:border-b-0">
-      <h3 className="mb-3 text-xs font-medium text-muted-foreground">{title}</h3>
-      {children}
-    </section>
-  )
-}
+const TOOL_TONE = ['#2B8A9E', '#1F8A5B', '#7B5CC9', '#D2652A']
 
 /** Participant profile for the responsive Web/Desktop shell. */
 export function ParticipantProfile({
@@ -69,60 +59,47 @@ export function ParticipantProfile({
 
   return (
     <div className="im-profile relative flex h-full min-h-0 flex-col overflow-hidden bg-background">
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="flex items-center gap-4 border-b border-[var(--im-divider-weak)] px-5 py-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto overscroll-contain px-[18px] py-[22px]">
+        <div className="flex items-center gap-3.5">
           <Avatar p={participant} size={56} ringColor="var(--background)" />
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate font-heading text-base font-semibold text-foreground">{participant.name}</h2>
-            <p className="truncate text-sm text-muted-foreground">{roleLabel}</p>
-            <Badge variant="outline" className="mt-2 gap-1.5 font-normal text-muted-foreground">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <h2 className="m-0 truncate text-lg font-semibold text-foreground">{participant.name}</h2>
+            <span className="inline-flex h-6 w-fit items-center gap-1.5 rounded-full px-2.5 text-xs font-medium" style={{ background: `color-mix(in srgb, ${statusColor} 10%, transparent)`, color: statusColor }}>
               <span aria-hidden="true" className="size-1.5 rounded-full" style={{ background: statusColor }} />
               {STATUS_LABEL[participant.status] ?? '空闲'}
-            </Badge>
+            </span>
           </div>
         </div>
-
-        <ProfileSection title="操作">
-          {isSelf ? null : isAgent ? (
-            <div className="grid gap-2">
-              <Button type="button" onClick={() => void open()} disabled={opening} className="min-h-11" data-agent-action={isManaged ? 'teaching' : 'conversation'}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                {opening ? '正在打开…' : retryingRefresh ? '重试刷新' : actionLabel}
-              </Button>
-              {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-              {error && !retryingRefresh && actions.onChooseWorkspace && <Button type="button" variant="outline" onClick={chooseWorkspace}>选择工作区</Button>}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-border px-4 py-3 text-sm leading-relaxed text-muted-foreground">
-              请在所属课程或学习任务中与该成员联系。
-            </div>
-          )}
-        </ProfileSection>
-
-        {participant.email && (
-          <ProfileSection title="邮箱">
-            <Button type="button" variant="secondary" onClick={() => void copyEmail()} className="flex w-full items-center gap-2.5 px-3 text-left font-mono text-xs">
-              <IMail className="size-4 shrink-0 text-primary" />
-              <span className="min-w-0 flex-1 truncate">{participant.email}</span>
-              <span className={cn('text-xs font-medium', copied ? 'text-primary' : 'text-muted-foreground')}>{copied ? '已复制' : '复制'}</span>
-            </Button>
-          </ProfileSection>
-        )}
-
-        {isAgent && toolLabels.length > 0 && (
-          <ProfileSection title="可用工具">
-            <div className="flex flex-wrap gap-1.5">
-              {toolLabels.map((tool) => <Badge key={tool} variant="secondary">{tool}</Badge>)}
-            </div>
-          </ProfileSection>
-        )}
-
-        {participant.bio && (
-          <ProfileSection title={`关于 ${participant.name}`}>
-            <p className="text-sm leading-relaxed text-muted-foreground">{participant.bio}</p>
-          </ProfileSection>
-        )}
-        <div className="h-[max(24px,env(safe-area-inset-bottom))]" />
+        <p className="m-0 text-[13px] leading-[1.7] text-fg2">{participant.bio || roleLabel}</p>
+        {participant.email && <div className="flex h-9 items-center gap-2 rounded-[9px] bg-formula ps-2.5 pe-1">
+          <IMail className="size-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate text-[13px]">{participant.email}</span>
+          <button type="button" onClick={() => void copyEmail()} aria-label={copied ? '已复制邮箱' : '复制邮箱'} title={copied ? '已复制' : '复制'}
+            className={cn('grid size-7 place-items-center rounded-lg hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring', copied ? 'text-brand' : 'text-muted-foreground')}>
+            {copied ? <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="size-4"><path d="m5 12 5 5 9-10" /></svg>
+              : <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>}
+          </button>
+        </div>}
+        {isAgent && toolLabels.length > 0 && <div className="flex flex-col gap-2">
+          <span className="text-xs text-muted-foreground">可用工具与扩展能力</span>
+          <div className="flex flex-wrap gap-1.5">
+            {toolLabels.map((tool, index) => <span key={tool} className="inline-flex h-7 items-center gap-1.5 rounded-full pe-2.5 ps-1 text-[12.5px] shadow-[inset_0_0_0_1px_var(--border)]">
+              <span aria-hidden="true" className="grid size-5 place-items-center rounded-md" style={{ background: `color-mix(in srgb, ${TOOL_TONE[index % TOOL_TONE.length]} 12%, transparent)`, color: TOOL_TONE[index % TOOL_TONE.length] }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-3"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-2.4z" /></svg>
+              </span>{tool}
+            </span>)}
+          </div>
+        </div>}
+        {!isSelf && (isAgent ? <div className="flex flex-col gap-2 pt-1">
+          <button type="button" onClick={() => void open()} disabled={opening} data-agent-action={isManaged ? 'teaching' : 'conversation'}
+            className="h-9 rounded-[10px] bg-brand text-[13.5px] font-medium text-brand-foreground hover:bg-[color-mix(in_srgb,var(--brand)_90%,var(--foreground))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50 max-md:min-h-11">
+            {opening ? '正在打开…' : retryingRefresh ? '重试刷新' : actionLabel}
+          </button>
+          {error && <p role="alert" className="m-0 text-xs text-destructive">{error}</p>}
+          {error && !retryingRefresh && actions.onChooseWorkspace && <button type="button" onClick={chooseWorkspace}
+            className="h-9 rounded-[10px] bg-card text-[13.5px] font-medium shadow-[inset_0_0_0_1px_var(--input)] hover:bg-accent">选择工作区</button>}
+        </div> : <p className="m-0 rounded-[10px] bg-formula px-3 py-2.5 text-[12.5px] leading-relaxed text-muted-foreground">请在所属课程或学习任务中与该成员联系。</p>)}
+        <div className="h-[max(8px,env(safe-area-inset-bottom))]" />
       </div>
     </div>
   )
