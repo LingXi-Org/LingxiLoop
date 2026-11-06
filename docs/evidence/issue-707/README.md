@@ -120,3 +120,8 @@ a0ee1b66 真实性能诊断42152419298已失败并保留哈希核验收据：两
 纯数学对照可复现：`node --import tsx scripts/native-canvas-vector-oracle.mjs /path/to/pinned/index-CYLuwRoc.js /tmp/vector-oracle.json`。
 该脚本先校验固定哈希，只在参考环境执行原版纯函数，不进入产品包。
 控制点编辑与完整同态视觉尚未通过，D10继续保留未完成标记。
+
+`f3b28ddf` 独立审查发现的三项P2及修正局部结果分别见
+[审查](reviews/f3b28ddf.json)、[草稿恢复与平移回归](functional/canvas-vector-retention.json)。
+复现命令使用 `--mode=design --checks=canvas-vector-retention`；覆盖只读切工具、
+403自动卸载、跨画布隔离、Space和中键实际平移。恢复副本包含未提交控制点及其原始基线。

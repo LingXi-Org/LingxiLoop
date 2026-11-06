@@ -6,7 +6,7 @@ test('explicit saving flushes editable controls while an unfinished pen keeps it
   const drafts=new NativeDrafts(),field=Symbol('field'),pen=Symbol('pen')
   let fieldSaves=0,completedPaths=0
   drafts.register(field,()=>{fieldSaves++;drafts.mark(field,false)})
-  const unmount=drafts.register(pen,reason=>{if(!reason){completedPaths++;drafts.mark(pen,false)}})
+  const unmount=drafts.register(pen,reason=>{if(reason!=='save'){completedPaths++;drafts.mark(pen,false)}})
   drafts.mark(field,true);drafts.mark(pen,true);drafts.flush('save')
   assert.equal(fieldSaves,1);assert.equal(completedPaths,0);assert.equal(drafts.getSnapshot(),1)
   unmount();assert.equal(completedPaths,1);assert.equal(drafts.getSnapshot(),0)

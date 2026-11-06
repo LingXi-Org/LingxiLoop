@@ -26,6 +26,7 @@ import {cameraScroll,worldCamera,type CanvasPoint} from './canvas-camera'
 import { editorError, nodeTypeLabels, resizeHandleLabels } from './editor-copy'
 import { NativeDrafts } from './drafts'
 import { CommentDraftStore } from './comment-drafts'
+import {VectorDraftStore} from './vector-drafts'
 import { DraftContext, useLocalDraft } from './draft-context'
 import type { ThemeTokens } from './compute'
 import { IconButton, Menu, MenuItem, Modal, EditorIcon, ToolbarTools } from './EditorPrimitives'
@@ -162,6 +163,10 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const commentAttachment=useRef<HTMLSpanElement>(null)
   const [activeCommentThread,setActiveCommentThread]=useState<string|null>(null)
   const [commentAttachmentPoint,setCommentAttachmentPoint]=useState<{x:number;y:number}|null>(null)
+  const vectorDrafts=useMemo(()=>new VectorDraftStore(),[artifactId]),vectorDraftToken=useRef(Symbol('vector-drafts'))
+  useSyncExternalStore(vectorDrafts.subscribe,vectorDrafts.getSnapshot)
+  useLayoutEffect(()=>drafts.register(vectorDraftToken.current,()=>{}),[drafts])
+  useLayoutEffect(()=>vectorDrafts.subscribe(()=>drafts.mark(vectorDraftToken.current,vectorDrafts.size>0)),[vectorDrafts,drafts])
   const commentDrafts=useMemo(()=>new CommentDraftStore(),[artifactId]),commentDraftToken=useRef(Symbol('comment-drafts'))
   useLayoutEffect(()=>drafts.register(commentDraftToken.current,()=>{}),[drafts])
   useLayoutEffect(()=>commentDrafts.subscribe(()=>drafts.mark(commentDraftToken.current,commentDrafts.size>0)),[commentDrafts,drafts])
@@ -235,7 +240,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const origin = useMemo(() => ({ x: doc ? Math.min(0, ...boardIds.map(value => displayPages[value].x),...freeBounds.map(value=>value.x)) : 0, y: doc ? Math.min(0, ...boardIds.map(value => displayPages[value].y),...freeBounds.map(value=>value.y)) : 0 }), [boardIds, displayPages,freeBounds])
   const canvasExtent = useMemo(()=>({width:doc ? Math.max(0,...boardIds.map(id=>displayPages[id].x-origin.x+displayPages[id].width+128),...freeBounds.map(value=>value.x-origin.x+value.width+128))*scale : 0,height:doc ? Math.max(0,...boardIds.map(id=>displayPages[id].y-origin.y+displayPages[id].height+128),...freeBounds.map(value=>value.y-origin.y+value.height+128))*scale : 0}),[doc,displayPages,origin,scale,freeBounds])
   const baseCanvasInset = {x:Math.max(0,(viewport.width-canvasExtent.width)/2),y:54+20*scale+(kind==='design'&&canvasExtent.height-128*scale<=viewport.height-54?(viewport.height-54-canvasExtent.height)/2:Math.max(0,(viewport.height-54-canvasExtent.height)/2))}
-  const panPadding=canvasMode&&canvasContent?{x:viewport.width*2,y:viewport.height*2}:{x:0,y:0}
+  const panPadding=canvasMode&&kind==='design'?{x:viewport.width*2,y:viewport.height*2}:{x:0,y:0}
   const canvasInset={x:baseCanvasInset.x+panPadding.x,y:baseCanvasInset.y+panPadding.y}
   const boardQuery=useMemo(()=>{
     const rect={x:(viewport.x-canvasInset.x)/scale+origin.x-64,y:(viewport.y-canvasInset.y)/scale+origin.y-64,width:viewport.width/scale+128,height:viewport.height/scale+128}
@@ -385,7 +390,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if (selectedNodes.length > 1) { bounds.width = Math.max(...selectedNodes.map(node => node.x + node.width)) - bounds.x; bounds.height = Math.max(...selectedNodes.map(node => node.y + node.height)) - bounds.y }
     dispatch(selectedNodes.map(node => ({ type: 'node.patch', pageId: current.id, nodeId: node.id, patch: direction === 'left' ? { x: bounds.x } : direction === 'center' ? { x: bounds.x + (bounds.width - node.width) / 2 } : direction === 'right' ? { x: bounds.x + bounds.width - node.width } : direction === 'top' ? { y: bounds.y } : direction === 'middle' ? { y: bounds.y + (bounds.height - node.height) / 2 } : { y: bounds.y + bounds.height - node.height } })))
   }
-  const recovery=()=>({...session.recovery(),commentDrafts:commentDrafts.recovery()})
+  const recovery=()=>({...session.recovery(),commentDrafts:commentDrafts.recovery(),vectorDrafts:vectorDrafts.recovery()})
   async function downloadSource() { try { const source = await http<unknown>(`/artifacts/${encodeURIComponent(artifactId)}/source`); download(new Blob([JSON.stringify(source)], { type: 'application/json' }), `${title}.lingxi-source.json`) } catch { setNotice('原始文件暂时无法下载，请重试。') } }
   async function doExport(format: ArtifactExportFormat) {
     flushText(); setEditingId(null); setNotice(''); const controller = new AbortController(); exportingAbort.current = controller; setExporting('正在准备导出')
@@ -406,7 +411,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   }
   function canvasWorldPoint(event:{clientX:number;clientY:number}){const rect=viewportRef.current!.querySelector('.native-board-space')!.getBoundingClientRect();return{x:(event.clientX-rect.left-canvasInset.x)/scale+origin.x-64,y:(event.clientY-rect.top-canvasInset.y)/scale+origin.y-64}}
   function commitCanvasVector(geometry:PenGeometry,start:VectorStart){
-    if(!canvasWritable)return false
+    if(!canvasWritable||!session.getSnapshot().write||session.getSnapshot().conflict)return false
     const base=start.document,sheet=canvasPages(base).find(sheet=>sheet.id===start.canvasPageId)
     if(!sheet)return false
     const bodyId=sheet.contentId??id(),node=canvasPenNode(id(),geometry)!,operations:ArtifactOperation[]=[...(!sheet.contentId?createCanvasContents(base,sheet.id,bodyId):[]),{type:'node.insert',pageId:bodyId,node:{...node,scope:'canvas'}}]
@@ -417,7 +422,8 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if (presenting || event.button > 1) return
     pendingComment.current=null
     if ((event.target as HTMLElement).closest('button,input,textarea')) return
-    if(kind==='design'&&tool==='pen'&&event.button===0){vectorPointerDown(event);return}
+    if(event.button===1||space.current||tool==='hand'){if(previousCanvasMapping.current)previousCanvasMapping.current.awaitingLayout=false;event.preventDefault();gesture.current={base:session.getSnapshot().document!,type:'pan',startX:event.clientX,startY:event.clientY,pageId:page.id,nodes:[],moved:false,scrollX:viewportRef.current?.scrollLeft,scrollY:viewportRef.current?.scrollTop};event.currentTarget.setPointerCapture(event.pointerId);return}
+    if(kind==='design'&&tool==='pen'&&event.button===0&&!space.current){vectorPointerDown(event);return}
     if(kind==='design'&&tool==='pencil'&&!penFitter.current){event.preventDefault();setNotice(penLoadFailed?'绘图工具未能加载，请刷新页面后重试。':'正在加载绘图工具…');return}
     if(!canvas&&kind==='design'&&page.id!==canvasContentId&&['text','note','pencil','pen','arrow','line','shape'].includes(tool)){const body=canvasBodyForInsert();if(body)pointerDown(event,body,true);return}
     if (!(event.target as HTMLElement).closest('[contenteditable="true"]')) editorRoot.current?.focus({preventScroll:true})
@@ -447,7 +453,8 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   }
   function canvasPointerDown(event:ReactPointerEvent) {
     if(!canvasMode||event.target!==event.currentTarget)return
-    if(kind==='design'&&tool==='pen'&&event.button===0){vectorPointerDown(event);return}
+    if((event.button===1||space.current||tool==='hand')&&doc){if(previousCanvasMapping.current)previousCanvasMapping.current.awaitingLayout=false;event.preventDefault();gesture.current={base:doc,type:'pan',startX:event.clientX,startY:event.clientY,pageId:current?.id??'',nodes:[],moved:false,scrollX:viewportRef.current?.scrollLeft,scrollY:viewportRef.current?.scrollTop};event.currentTarget.setPointerCapture(event.pointerId);return}
+    if(kind==='design'&&tool==='pen'&&event.button===0&&!space.current){vectorPointerDown(event);return}
     if(kind==='design'&&tool==='pencil'&&!penFitter.current){event.preventDefault();setNotice(penLoadFailed?'绘图工具未能加载，请刷新页面后重试。':'正在加载绘图工具…');return}
     let page=current
     if(kind==='design'){
@@ -465,7 +472,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if(page)pointerDown(event,page,true)
   }
   function pointerMove(event: ReactPointerEvent) {
-    if(kind==='design'&&tool==='pen'){vectorTool.current?.move(event);return}
+    if(kind==='design'&&tool==='pen'&&gesture.current?.type!=='pan'){vectorTool.current?.move(event);return}
     event.stopPropagation()
     const active = gesture.current; if (!active) return
     const dx = (event.clientX - active.startX) / scale, dy = (event.clientY - active.startY) / scale
@@ -478,7 +485,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (!element) continue; if (active.type === 'move') element.style.translate = `${dx}px ${dy}px`; else { element.style.width = `${Math.max(16, node.width + dx)}px`; element.style.height = node.type==='note'&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)?'auto':`${Math.max(16, node.height + dy)}px` } }
   }
   function pointerUp(event: ReactPointerEvent|null, cancel = false) {
-    if(kind==='design'&&tool==='pen'&&event){vectorTool.current?.up(event,cancel);return}
+    if(kind==='design'&&tool==='pen'&&event&&gesture.current?.type!=='pan'){vectorTool.current?.up(event,cancel);return}
     event?.stopPropagation()
     if(pendingComment.current){const anchor=pendingComment.current;pendingComment.current=null;if(!cancel)setTimeout(()=>openComment(anchor),0);return}
     const active = gesture.current; if (!active) return
@@ -524,7 +531,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const reorderLayer = (front: boolean) => { if (current && writable) dispatch([{ type: 'nodes.reorder', pageId: current.id, nodeIds: front ? [...current.nodeOrder.filter(id => !selected.includes(id)), ...current.nodeOrder.filter(id => selected.includes(id))] : [...current.nodeOrder.filter(id => selected.includes(id)), ...current.nodeOrder.filter(id => !selected.includes(id))] }]) }
   const distribute = (axis: 'horizontal' | 'vertical') => { if (current) dispatch(distributeNodes(selectedNodes, axis).map(n => ({ type: 'node.patch', pageId: current.id, nodeId: n.id, patch: { x: n.x, y: n.y } }))) }
   if (visible && (!authorized || state.loading) && !state.error) return <div role="status" className="native-loading">正在打开{title}…</div>
-  if (!doc) return <div className="native-loading" role="alert">{state.error || '稿件暂时无法打开'}{notice && <p>{notice}</p>}<button type="button" onClick={() => void session.open()}>重试</button><button type="button" onClick={() => void downloadSource()}>下载原始文件</button></div>
+  if (!doc) return <div className="native-loading" role="alert">{state.error || '稿件暂时无法打开'}{notice && <p>{notice}</p>}<button type="button" onClick={() => void session.open()}>重试</button><button type="button" onClick={() => void downloadSource()}>下载原始文件</button>{vectorDrafts.size>0&&<button type="button" onClick={()=>download(new Blob([JSON.stringify(recovery())],{type:'application/json'}),`${title}.lingxi-recovery.json`)}>下载本地副本</button>}</div>
   const boardWidth = Math.max(viewport.width, ...boardIds.map(value => (displayPages[value].x - origin.x + doc.pages[value].width + 128) * scale))
   const boardHeight = Math.max(viewport.height, ...boardIds.map(value => (displayPages[value].y - origin.y + doc.pages[value].height + 128) * scale))
   return <EditorColorSessionContext.Provider value={()=>{inspectorBase.current=session.getSnapshot().document}}><EditorPaletteContext.Provider value={palette}><DraftContext.Provider value={drafts}><section ref={editorRoot} data-revision={revisionSeq} data-view={view} data-compact={compact} data-compact-rail-open={compactRailOpen} data-tool={tool} data-pen-ready={!!penFitter.current} data-vector-ready={!!CanvasVectorTool} data-inspector-open={inspectorOpen && !presenting} data-comments-open={commentsOpen && !presenting} style={{'--native-inv-scale':1/scale,'--native-sidebar-width': `${!presenting ? (inspectorOpen ? 336 : 0) : 0}px`} as CSSProperties} className={`native-editor native-kind-${kind} ${presenting ? 'native-presenting' : ''}`} data-native-artifact-editor={kind} data-current-page={pageId} data-canvas-page-id={kind==='design'?activeCanvasId:undefined} data-save-state={state.conflict ? 'conflict' : state.pending ? 'pending' : draftCount ? 'draft' : 'saved'} aria-label={`${title}编辑器`} hidden={!visible} tabIndex={0}
@@ -600,7 +607,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
       <span className="native-save-status" role="status">{!state.write ? '仅查看' : state.conflict ? '有冲突，修改未保存' : state.pending ? `正在保存 ${state.pending} 项修改` : draftCount ? '有未保存的修改' : ''}{agentWorking ? ' · 智能体正在编辑' : ''}</span>
       <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/svg+xml,video/mp4,video/webm,video/ogg" hidden onChange={event => { const file = event.target.files?.[0]; if (file) void uploadImage(file); event.target.value = '' }} />
     </header>}
-    {(state.error || notice || exporting) && <div className="native-notice" role={state.error ? 'alert' : 'status'}>{state.error || notice || exporting}{exporting && <button type="button" onClick={() => exportingAbort.current?.abort()}>取消导出</button>}{state.error && <><button type="button" onClick={() => download(new Blob([JSON.stringify(recovery())], { type: 'application/json' }), `${title}.lingxi-recovery.json`)}>下载本地副本</button>{state.conflict ? <button type="button" onClick={() => { download(new Blob([JSON.stringify(recovery())], { type: 'application/json' }), `${title}.lingxi-recovery.json`); void session.discardAfterRecovery() }}>保留副本并重新载入</button> : <button type="button" onClick={() => void session.retry()}>重试保存</button>}</>}{notice && <button type="button" onClick={() => setNotice('')}>关闭</button>}</div>}
+    {(state.error || notice || exporting || vectorDrafts.blocked) && <div className="native-notice" role={state.error ? 'alert' : 'status'}>{state.error || notice || exporting || '未保存的钢笔路径已保留。请返回原页面并选择钢笔继续编辑，或下载本地副本。'}{exporting && <button type="button" onClick={() => exportingAbort.current?.abort()}>取消导出</button>}{(state.error||vectorDrafts.blocked) && <><button type="button" onClick={() => download(new Blob([JSON.stringify(recovery())], { type: 'application/json' }), `${title}.lingxi-recovery.json`)}>下载本地副本</button>{vectorDrafts.blocked&&<button type="button" onClick={()=>{vectorTool.current?.discard();vectorDrafts.clear();setTool('select')}}>丢弃未保存路径</button>}{state.conflict ? <button type="button" onClick={() => { download(new Blob([JSON.stringify(recovery())], { type: 'application/json' }), `${title}.lingxi-recovery.json`); void session.discardAfterRecovery() }}>保留副本并重新载入</button> : <button type="button" onClick={() => void session.retry()}>重试保存</button>}</>}{notice && <button type="button" onClick={() => setNotice('')}>关闭</button>}</div>}
     <div className="native-workspace">
       {!presenting && layersOpen && current && <aside className="native-layers" aria-label="图层"><header><h3>图层</h3><IconButton icon="close" label="关闭图层" onClick={() => setLayersOpen(false)} /></header>{[...current.nodeOrder].reverse().map(value => { const n = current.nodes[value]; return <div className="native-layer" key={value} data-selected={selected.includes(value)}><button type="button" style={{ paddingInlineStart: n.parentId ? 24 : 8 }} onClick={e => setSelected(e.shiftKey ? [...new Set([...selected,value])] : [value])}><EditorIcon name={n.type === 'text' ? 'text' : n.type === 'image' ? 'image' : n.type === 'group' ? 'layers' : n.type === 'note' ? 'note' : 'square'} size={15} /><span>{n.name || n.text || nodeTypeLabels[n.type]}</span></button><IconButton icon="eye" label={n.hidden ? '显示图层' : '隐藏图层'} active={!n.hidden} disabled={!writable} onClick={() => dispatch([{ type:'node.patch',pageId:current.id,nodeId:value,patch:{hidden:!n.hidden} }])} /><IconButton icon="lock" label={n.locked ? '解锁图层' : '锁定图层'} active={n.locked} disabled={!writable} onClick={() => dispatch([{type:'node.patch',pageId:current.id,nodeId:value,patch:{locked:!n.locked}}])} /></div> })}</aside>}
 
@@ -622,7 +629,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
               {!presenting && tool==='select' && page.id === pageId && <div className="native-interaction-layer" data-interaction-layer>{selectedNodes.filter(node => node.id !== editingId && node.id !== cropping?.id).map(node => { let x = node.x, y = node.y; let parent = node.parentId ? page.nodes[node.parentId] : undefined; while (parent) { x += parent.x; y += parent.y; parent = parent.parentId ? page.nodes[parent.parentId] : undefined } return <div key={node.id} className="native-selection" style={{ left: x + (preview && !preview.resize ? preview.dx : 0), top: y + (preview && !preview.resize ? preview.dy : 0), width: Math.max(16, node.width + (preview?.resize ? preview.dx : 0)), height: Math.max(16, node.height + (preview?.resize ? preview.dy : 0)), transform: `rotate(${node.rotation}deg)`, borderWidth: 1.5 / scale }}>{writable && !node.locked && <>{(['nw','n','ne','e','se','s','sw','w'] as const).map(handle => <button type="button" key={handle} className={`native-resize-handle native-handle-${handle}`} style={{ width: 7 / scale, height: 7 / scale }} aria-label={`调整元素${resizeHandleLabels[handle]}`} onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'resize', handle, startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: selectedNodes.filter(item => !item.locked), moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event, true)} />)}<button type="button" className="native-rotate-handle" style={{ width: 10/scale, height: 10/scale, top: -24/scale }} aria-label="旋转元素" onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'rotate', startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: [node], moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event,true)} /></>}</div> })}{marquee && <div className="native-marquee" style={marquee as CSSProperties} />}</div>}
             </div>}
           </div>)}
-          {kind==='design'&&!presenting&&tool==='pen'&&CanvasVectorTool&&<CanvasVectorTool ref={vectorTool} scale={scale} offsetX={canvasInset.x+(64-origin.x)*scale} offsetY={canvasInset.y+(64-origin.y)*scale} writable={canvasWritable&&(!canvasContentId||state.loadedPageIds.includes(canvasContentId))} toWorld={canvasWorldPoint} begin={()=>{flushText();setSelected([]);setEditingId(null);const document=session.getSnapshot().document;return document?{document,canvasPageId:activeCanvasId}:undefined}} commit={commitCanvasVector} done={()=>setTool('select')} announce={text=>setAnnouncement(current=>({id:current.id+1,text}))} error={setNotice} focus={()=>editorRoot.current?.focus({preventScroll:true})} />}
+          {kind==='design'&&!presenting&&tool==='pen'&&CanvasVectorTool&&<CanvasVectorTool key={activeCanvasId} drafts={vectorDrafts} canvasPageId={activeCanvasId} ref={vectorTool} scale={scale} offsetX={canvasInset.x+(64-origin.x)*scale} offsetY={canvasInset.y+(64-origin.y)*scale} writable={canvasWritable&&(!canvasContentId||state.loadedPageIds.includes(canvasContentId))} toWorld={canvasWorldPoint} begin={()=>{flushText();setSelected([]);setEditingId(null);const document=session.getSnapshot().document;return document?{document,canvasPageId:activeCanvasId}:undefined}} commit={commitCanvasVector} done={()=>setTool('select')} announce={text=>setAnnouncement(current=>({id:current.id+1,text}))} error={setNotice} focus={()=>editorRoot.current?.focus({preventScroll:true})} />}
         </div>
       </div>
       {!presenting && view === 'grid' && <PageRail grid document={doc} current={pageId} selected={pageSelection} loadedPageIds={state.loadedPageIds} previews={state.previews} writable={writable} onSelect={choosePage} onOpen={value => { selectPage(value); setView('slide') }} onReorder={pageIds => dispatch([{ type: 'pages.reorder', pageIds }])} onAction={pageAction} onVisible={()=>{}} />}

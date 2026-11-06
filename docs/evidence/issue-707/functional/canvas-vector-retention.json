@@ -1,0 +1,88 @@
+{
+  "scope": "f3b独立审查三项P2的局部修正；受控HTTP不代替真实授权API",
+  "review": "../reviews/f3b28ddf.json",
+  "cases": [
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "denied",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "readonlyUnmountRetained": true,
+      "recoveryCopyContainsPoints": true,
+      "permissionRestored": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "middle",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "viewportPanned": true,
+      "noDraftMutation": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "page",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "readonlyUnmountRetained": true,
+      "recoveryCopyContainsPoints": true,
+      "permissionRestored": true,
+      "canvasIsolation": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "permission",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "readonlyUnmountRetained": true,
+      "recoveryCopyContainsPoints": true,
+      "permissionRestored": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "space",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "viewportPanned": true,
+      "noDraftMutation": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    }
+  ],
+  "implementation": [
+    "按稳定画布身份保存未入操作链路的控制点及原始基线",
+    "工具或画布卸载后仍计入脏草稿，恢复副本包含控制点",
+    "提交时读取实际session的权限和冲突状态，403不能被当作成功",
+    "区分实际卸载与React严格模式effect重放，恢复草稿不自动提交",
+    "Space与中键平移优先，尚无自由对象时也保留平移空间"
+  ],
+  "regressionBeforeFix": [
+    "只读后切选择：saveState=saved，预期draft",
+    "Space拖动：4点，预期3点",
+    "独立审查复现跨画布误写及403自动卸载丢失"
+  ],
+  "checks": {
+    "standardLightCases": 15,
+    "standardDarkCases": 15,
+    "focusedUnits": 67,
+    "webLint": "通过，43个既有警告",
+    "webTypecheck": "已运行；76项正式SDK缺失关联错误，native/shared无错误",
+    "fiftyPages": [
+      "canvas-vector-retained-50-design.json",
+      "canvas-vector-retained-50-slides.json"
+    ],
+    "viewport": "canvas-vector-retained-viewport.json"
+  },
+  "independentFixReview": "待冻结后复审",
+  "visualQualified": false,
+  "functionalQualified": false,
+  "performanceQualified": false
+}

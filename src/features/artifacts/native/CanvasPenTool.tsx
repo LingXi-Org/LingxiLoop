@@ -1,14 +1,15 @@
-import {forwardRef,useEffect,useImperativeHandle,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react'
-import type {ArtifactDocument} from '../../../../shared/artifact-document'
+import {forwardRef,useEffect,useLayoutEffect,useImperativeHandle,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react'
 import {appendVectorPoint,canvasVectorGeometry,canCloseVectorDraft,constrainVectorAngle,vectorDraftPath,type VectorDraftPoint} from '../../../../shared/artifact-vector'
 import type {PenGeometry,PenPoint} from '../../../../shared/artifact-pen'
 import {useLocalDraft} from './draft-context'
+import type {VectorDraftStore,VectorStart} from './vector-drafts'
+export type {VectorStart} from './vector-drafts'
 
-export interface VectorStart {document:ArtifactDocument;canvasPageId:string}
 interface Key {key:string;shiftKey:boolean;ctrlKey:boolean;metaKey:boolean;preventDefault():void;stopPropagation():void}
-export interface CanvasPenHandle {down(event:ReactPointerEvent):void;move(event:ReactPointerEvent):void;up(event:ReactPointerEvent,cancel?:boolean):void;key(event:Key):boolean}
+export interface CanvasPenHandle {down(event:ReactPointerEvent):void;move(event:ReactPointerEvent):void;up(event:ReactPointerEvent,cancel?:boolean):void;key(event:Key):boolean;discard():void}
 export interface CanvasPenProps {
   scale:number;offsetX:number;offsetY:number;writable:boolean
+  drafts:VectorDraftStore;canvasPageId:string
   toWorld(event:{clientX:number;clientY:number}):PenPoint
   begin():VectorStart|undefined
   commit(geometry:PenGeometry,start:VectorStart):boolean
@@ -20,18 +21,21 @@ export interface CanvasPenProps {
 
 /** Point drafts are transient; a completed path enters the shared operation chain once. */
 const CanvasPenTool=forwardRef<CanvasPenHandle,CanvasPenProps>(function CanvasPenTool(props,ref){
-  const points=useRef<VectorDraftPoint[]>([]),start=useRef<VectorStart|null>(null),pointer=useRef<{id:number;x:number;y:number;kind:'append'|'close'}|null>(null)
-  const [draft,setDraft]=useState<VectorDraftPoint[]>([]),[hover,setHover]=useState<PenPoint|null>(null),hoverRaw=useRef<PenPoint|null>(null)
+  const restored=props.drafts.get(props.canvasPageId)
+  const points=useRef<VectorDraftPoint[]>(restored?.points??[]),start=useRef<VectorStart|null>(restored?.start??null),pointer=useRef<{id:number;x:number;y:number;kind:'append'|'close'}|null>(null)
+  const [draft,setDraft]=useState<VectorDraftPoint[]>(restored?.points??[]),[hover,setHover]=useState<PenPoint|null>(null),hoverRaw=useRef<PenPoint|null>(null)
   const latest=useRef(props);latest.current=props
-  const mark=useLocalDraft(reason=>{if(reason!=='save')finish(false)})
-  function update(next:VectorDraftPoint[]){points.current=next;setDraft(next);mark(next.length>0)}
+  const mounted=useRef(false)
+  useLayoutEffect(()=>{mounted.current=true;return()=>{mounted.current=false}},[])
+  useLocalDraft(reason=>{if(reason==='unmount'){queueMicrotask(()=>{if(!mounted.current)finish(false)})}else if(reason!=='save')finish(false)})
+  function update(next:VectorDraftPoint[]){points.current=next;setDraft(next);if(next.length&&start.current)props.drafts.set(props.canvasPageId,{points:next,start:start.current});else props.drafts.delete(props.canvasPageId)}
   function clear(){pointer.current=null;start.current=null;hoverRaw.current=null;setHover(null);update([])}
   function finish(explicit:boolean,closed=false){
     if(points.current.length>=2&&start.current){
-      if(!latest.current.writable)return false
+      if(!latest.current.writable){props.drafts.block(props.canvasPageId);return false}
       const geometry=canvasVectorGeometry(points.current,closed)
       if(!geometry){latest.current.error('路径过大，无法保留。请画小一些，或分段绘制。');clear();if(explicit)latest.current.done();return true}
-      if(!latest.current.commit(geometry,start.current))return false
+      if(!latest.current.commit(geometry,start.current)){props.drafts.block(props.canvasPageId);return false}
       latest.current.announce(closed?'已完成闭合路径。':'已完成开放路径。')
     }
     clear();if(explicit)latest.current.done();return true
@@ -42,6 +46,7 @@ const CanvasPenTool=forwardRef<CanvasPenHandle,CanvasPenProps>(function CanvasPe
     return()=>{window.removeEventListener('keydown',shift);window.removeEventListener('keyup',shift)}
   },[])
   useImperativeHandle(ref,()=>({
+    discard:clear,
     down(event){
       event.preventDefault();event.stopPropagation();if(!props.writable||event.button!==0)return
       props.focus();const raw=props.toWorld(event),old=points.current,point=event.shiftKey&&old.length?constrainVectorAngle(old.at(-1)!,raw):raw

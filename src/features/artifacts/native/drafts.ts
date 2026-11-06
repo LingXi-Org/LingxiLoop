@@ -1,4 +1,4 @@
-export type DraftFlushReason = 'save'
+export type DraftFlushReason = 'save'|'unmount'
 type DraftEntry = { flush(reason?:DraftFlushReason): void; dirty: boolean }
 
 /** Transient control drafts belong to one editor instance, outside document history. */
@@ -23,7 +23,7 @@ export class NativeDrafts {
     return () => {
       if (disposed || this.entries.get(key) !== entry) return
       disposed = true
-      try { entry.flush() }
+      try { entry.flush('unmount') }
       finally {
         if (this.entries.get(key) === entry) {
           this.entries.delete(key)

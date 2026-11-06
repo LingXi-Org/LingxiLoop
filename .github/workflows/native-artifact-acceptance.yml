@@ -104,6 +104,7 @@ jobs:
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-pen --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-pen"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-load --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-load"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-retention --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-retention"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=viewport-loading --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-viewport-loading"
       - name: Build both production applications before any measurements
         run: |

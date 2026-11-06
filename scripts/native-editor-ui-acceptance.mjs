@@ -60,7 +60,7 @@ try {
   const baseUrl = `http://127.0.0.1:${address.port}`
   browser = await chromium.launch({ headless: true, ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox'] })
   for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
-    for (const editorCase of options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
+    for (const editorCase of options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','page','denied','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
       const result = await verifyMode(kind, browser, baseUrl, editorCase)
       await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
       console.log(JSON.stringify(options.checks==='parity'?{...result,screenshots:result.screenshots.map(({controls,...row})=>row)}:result))
@@ -73,7 +73,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   if(options.checks==='canvas-pen'){const geometry=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-pen.json'),'utf8')).cases[0].result,node={...createNode('drawing','thumbnail-pen'),x:100,y:600,width:geometry.w,height:geometry.h,path:{d:geometry.d,width:geometry.w,height:geometry.h},style:{stroke:'#8a8378',strokeWidth:2}};document.pages['page-3'].nodes[node.id]=node;document.pages['page-3'].nodeOrder.push(node.id)}
@@ -89,6 +89,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     first.nodeOrder=[heading.id,image.id,shape.id];first.nodes={[heading.id]:heading,[image.id]:image,[shape.id]:shape}
     Object.assign(other,{canvasPageId:'canvas-second',x:0,y:options['flow-overlap']?0:700,width:800,height:600})
   }
+  if(options.checks==='canvas-vector-retention'&&editorCase==='page'){document.canvasPages=[{id:'canvas-page-1',name:'页面 1'},{id:'second',name:'页面 2'}];document.pages['page-3'].canvasPageId='second'}
   if(options.checks==='canvas-pages-cas')document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
   if(['svg-font','svg-font-error','svg-font-cancel','svg-font-module'].includes(options.checks)){
     const node={...createNode('svg','font-svg'),svg:'<svg xmlns="http://www.w3.org/2000/svg" width="600" height="150" viewBox="0 0 600 150"><text x="16" y="100" font-family="Merriweather" font-size="80" font-weight="700">Hello</text></svg>'}
@@ -127,7 +128,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
   let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0,svgModuleBlocked=options.checks==='svg-font-module',svgModuleRequests=0
   const editorFontRequests=[]
-  let vectorModuleBlocked=options.checks==='canvas-vector-load',vectorModuleRequests=0
+  let expectedVectorDenied=false;let vectorModuleBlocked=options.checks==='canvas-vector-load',vectorModuleRequests=0
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
   page.on('request',request=>{if(new URL(request.url()).pathname.includes('/CanvasPenTool.tsx'))vectorModuleRequests++})
   page.setDefaultTimeout(30_000)
@@ -135,7 +136,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options.checks==='viewport-loading')await page.addInitScript(()=>{window.__holdVisible=false;window.__heldVisible=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.visibleIds=new Set();this.addEventListener('message',event=>{if(this.visibleIds.delete(event.data?.id)&&window.__holdVisible){event.stopImmediatePropagation();window.__heldVisible.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='visible')this.visibleIds.add(message.id);return super.postMessage(message,...args)}}})
   if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
-  page.on('console', message => { if (message.type() === 'error'&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))) errors.push(message.text()) })
+  page.on('console', message => { if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))) errors.push(message.text()) })
   if(options.checks==='canvas-vector-load')await page.route('**/CanvasPenTool.tsx*',async route=>{if(vectorModuleBlocked)await route.fulfill({status:503,body:'钢笔工具未能加载'});else await route.continue()})
   if(options.checks==='svg-font-module')await page.route('**/svg-font-image.ts*',async route=>{svgModuleRequests++;if(svgModuleBlocked)await route.fulfill({status:503,body:'图形工具暂时无法加载'});else await route.continue()})
   if(['svg-font-error','svg-font-cancel'].includes(options.checks))await page.route('**/fonts/editors/**',async route=>{if(svgFontsBlocked){svgFontFailures++;await route.fulfill({status:503,body:'字体暂时无法加载'});return}if(svgFontsHeld)await new Promise(resolve=>{const previous=releaseSvgFonts;releaseSvgFonts=()=>{previous?.();resolve()}});await route.continue().catch(()=>{})})
@@ -222,11 +223,18 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       return image?.complete && image.naturalWidth > 0
     }, index)
   }
+  const scrollCanvasTo=async point=>{
+    const mounted=await page.locator('[data-artboard-id]').first().evaluate(element=>({id:element.dataset.artboardId,x:Number.parseFloat(element.style.left),y:Number.parseFloat(element.style.top),width:Number.parseFloat(element.style.width)}))
+    const reference=document.pages[mounted.id],scale=mounted.width/reference.width
+    await page.locator('.native-stage').evaluate((element,point)=>element.scrollTo({left:point.x,top:point.y,behavior:'instant'}),{x:mounted.x+(point.x-reference.x)*scale-48,y:mounted.y+(point.y-reference.y)*scale-80})
+  }
   const select = async index => {
     if (kind === 'design') {
       if (!(await page.getByLabel('画布缩放',{exact:true}).innerText()).includes('50%')) { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'50%',exact:true}).click() }
       const p = document.pages[`page-${index}`]
-      await page.locator('.native-stage').evaluate((element,point) => { element.scrollLeft=point.x*.5; element.scrollTop=point.y*.5 },p)
+      // Derive the world-to-scroll offset from an actual mounted board. The
+      // canvas can reserve space for negative coordinates without any objects.
+      await scrollCanvasTo(p)
       await page.locator(`[data-page-id="page-${index}"] .native-board-label`).click()
       await ready(index); return
     }
@@ -251,7 +259,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await ready(1)
       await page.waitForFunction(()=>document.querySelectorAll('[data-artboard-id]').length>0)
       assert.ok(pageReads.length<5,'the resolved zoom query loads only nearby pages')
-      await page.locator('.native-stage').evaluate((element,p)=>element.scrollTo({left:p.x,top:p.y,behavior:'instant'}),document.pages['page-50'])
+      await scrollCanvasTo(document.pages['page-50'])
       await ready(50);assert.ok(pageReads.includes('page-50'));assert.ok(pageReads.length<8)
       for(const id of document.pageOrder)assert.equal(pageHash(document.pages[id]),initialPageHashes[id])
       assert.equal(document.seq,0);assert.deepEqual(errors,[])
@@ -340,6 +348,59 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       vectorModuleBlocked=false;await page.reload();await ready(1);await choose();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})
       await page.mouse.click(600,300);await page.keyboard.press('Escape');assert.equal(document.seq,0);assert.deepEqual(errors,[])
       return{kind:'isolated-canvas-vector-loading-diagnostic',lazyBeforeSelection:true,chineseLoadFailure:true,editorRetained:true,noDocumentWrites:true,reopenedToolRecovered:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-vector-retention'){
+      const choosePen=async()=>{await page.getByLabel('绘图工具',{exact:true}).click();await page.getByRole('group',{name:'绘图工具选项',exact:true}).getByRole('button',{name:/^钢笔/}).click();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})}
+      await choosePen()
+      for(const [x,y] of [[500,450],[700,300],[900,500]])await page.mouse.click(x,y)
+      assert.equal(await page.locator('[data-native-vector-tool] rect').count(),3)
+      if(editorCase==='denied'){
+        let denied=true;expectedVectorDenied=true
+        await page.route('**/api/artifacts/fixture/changes*',async route=>{if(denied)await route.fulfill({status:403,json:{error:'当前无法访问此稿件'}});else await route.fallback()})
+        await page.locator('.native-loading[role=alert]').filter({hasText:'当前无法访问'}).waitFor()
+        assert.equal(receipts.length,0);assert.equal(await page.locator('[data-native-vector-tool]').count(),0)
+        const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click();const download=await downloadPromise,recovery=JSON.parse(await readFile(await download.path(),'utf8'));assert.equal(Object.values(recovery.vectorDrafts)[0].points.length,3)
+        denied=false;await page.getByRole('button',{name:'重试',exact:true}).click();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'});assert.equal(await page.locator('[data-native-vector-tool] rect').count(),3)
+        assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'draft');assert.equal(receipts.length,0)
+        await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Enter');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,1)
+      }else if(editorCase==='permission'||editorCase==='page'){
+        fixtureWrite=false;document=applyOperations(document,prepareBatch(document,[{type:'document.patch',patch:{title:'远端权限刷新'}}])).document
+        await page.locator('.native-save-status').filter({hasText:'仅查看'}).waitFor()
+        if(editorCase==='page'){
+          await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('group',{name:'页面菜单选项',exact:true}).getByRole('button',{name:'页面 2',exact:true}).click()
+          await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]').dataset.canvasPageId==='second')
+          assert.equal(await page.locator('[data-native-vector-tool] rect').count(),0,'another canvas cannot inherit the original path')
+        }else{
+          await page.getByRole('button',{name:'选择 (V)',exact:true}).click()
+          await page.waitForFunction(()=>!document.querySelector('[data-native-vector-tool]'))
+        }
+        assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'draft','a blocked tool unmount must retain the dirty pen draft')
+        const copy=page.getByRole('button',{name:'下载本地副本',exact:true});await copy.waitFor()
+        const downloadPromise=page.waitForEvent('download');await copy.click();const download=await downloadPromise,path=await download.path();const recovery=JSON.parse(await readFile(path,'utf8'))
+        assert.equal(Object.values(recovery.vectorDrafts)[0].points.length,3)
+        fixtureWrite=true;document=applyOperations(document,prepareBatch(document,[{type:'document.patch',patch:{title:'权限恢复'}}])).document
+        await page.waitForFunction(()=>!document.querySelector('.native-save-status').textContent.includes('仅查看'))
+        if(editorCase==='page'){
+          await page.mouse.click(700,500);assert.equal(await page.locator('[data-native-vector-tool] rect').count(),1)
+          await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('group',{name:'页面菜单选项',exact:true}).getByRole('button',{name:'页面 1',exact:true}).click()
+          await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]').dataset.canvasPageId==='canvas-page-1')
+        }else await choosePen()
+        assert.equal(await page.locator('[data-native-vector-tool] rect').count(),3)
+        await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Enter')
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+        assert.equal(receipts.length,1);assert.equal(Object.values(document.pages[document.canvasPages[0].contentId].nodes).filter(node=>node.path).length,1)
+      }else{
+        const before=await page.locator('.native-stage').evaluate(e=>({x:e.scrollLeft,y:e.scrollTop}))
+        if(editorCase==='space')await page.keyboard.down('Space')
+        await page.mouse.move(800,600);await page.mouse.down({button:editorCase==='middle'?'middle':'left'});await page.mouse.move(650,500,{steps:8});await page.mouse.up({button:editorCase==='middle'?'middle':'left'})
+        if(editorCase==='space')await page.keyboard.up('Space')
+        assert.equal(await page.locator('[data-native-vector-tool] rect').count(),3,'panning must not append a pen anchor')
+        const after=await page.locator('.native-stage').evaluate(e=>({x:e.scrollLeft,y:e.scrollTop}));assert.notDeepEqual(after,before,'the trusted gesture pans the actual viewport')
+        assert.equal(receipts.length,0);assert.equal(document.seq,0)
+        await page.keyboard.press('Enter');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,1)
+      }
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-vector-retention-diagnostic',scenario:editorCase,pointsRetained:true,oneSharedCommit:true,...(['permission','page','denied'].includes(editorCase)?{readonlyUnmountRetained:true,recoveryCopyContainsPoints:true,permissionRestored:true,...(editorCase==='page'?{canvasIsolation:true}:{})}:{viewportPanned:true,noDraftMutation:true}),scope:'真实React与可信输入，受控HTTP权限回执，不代替真实授权API',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-vector'){
       const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name===editorCase)
@@ -613,7 +674,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual(errors,[])
       return{kind:'isolated-canvas-flow-diagnostic',mode:kind,otherCanvasOverlaps:!!options['flow-overlap'],height:document.pages['page-1'].height,otherCanvasHashUnchanged:true,scope:'actual React, Worker geometry, content measurement and shared operations; controlled HTTP fixture',consoleOrPageErrors:errors}
     }
-    if(options.checks==='canvas-pages-cas') {
+    if(options.checks==='canvas-vector-retention'&&editorCase==='page'){document.canvasPages=[{id:'canvas-page-1',name:'页面 1'},{id:'second',name:'页面 2'}];document.pages['page-3'].canvasPageId='second'}
+  if(options.checks==='canvas-pages-cas') {
       assert.equal(kind,'design')
       await page.getByLabel('页面菜单',{exact:true}).click();await page.getByLabel('页面“页面 2”操作',{exact:true}).click();await page.getByRole('button',{name:'重命名页面',exact:true}).click()
       const rename=page.getByRole('dialog',{name:'重命名页面',exact:true}),input=rename.getByLabel('页面名称',{exact:true})
