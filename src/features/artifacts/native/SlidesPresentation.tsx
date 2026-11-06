@@ -205,13 +205,6 @@ export default function SlidesPresentation({
       className="native-slides-presentation"
       data-native-editor-boundary
       data-transition={transition?.kind}
-      data-magic-overflow={
-        transition?.kind === 'magic' &&
-        page &&
-        transition.from.width * page.height !== page.width * transition.from.height
-          ? true
-          : undefined
-      }
       aria-label="幻灯片放映"
       tabIndex={0}
       onKeyDown={keyDown}

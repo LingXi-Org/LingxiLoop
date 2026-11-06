@@ -1,0 +1,202 @@
+{
+  "scope": "混合长宽比 Magic 运动层与普通页面裁切；受控暂停帧功能回归，非完整视觉/性能资格",
+  "sourceReview": "reviews/ab0f6263.json",
+  "before": {
+    "nativeOffpaperRedPixels": 21461,
+    "offlineOffpaperRedPixels": 19182
+  },
+  "after": [
+    {
+      "browserMajor": "140",
+      "receipt": {
+        "kind": "isolated-mixed-slide-transitions",
+        "records": [
+          {
+            "kind": "fade",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "push",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "magic",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": true
+          }
+        ],
+        "offlineMagicScreenGeometryContinuous": true,
+        "consoleOrPageErrors": []
+      },
+      "observations": {
+        "offpaper-native-midpoint": {
+          "ink": 0,
+          "clip": {
+            "x": 188.75001525878906,
+            "y": 625,
+            "width": 145.8333282470703,
+            "height": 145.83331298828125
+          }
+        },
+        "offpaper-offline-midpoint": {
+          "ink": 0,
+          "clip": {
+            "x": 214.25,
+            "y": 643,
+            "width": 138.83334350585938,
+            "height": 138.83331298828125
+          }
+        },
+        "portrait-native-ink": {
+          "ink": 3425,
+          "heading": {
+            "x": 48,
+            "y": 125,
+            "width": 864,
+            "height": 57
+          },
+          "incoming": {
+            "x": 438.75,
+            "y": 0,
+            "width": 562.5,
+            "height": 999.9999389648438
+          }
+        },
+        "portrait-native-reverse-ink": {
+          "ink": 1660,
+          "reverseHeading": {
+            "x": 609.5833129882812,
+            "y": 41.666664123535156,
+            "width": 1199.9999389648438,
+            "height": 79.16666412353516
+          }
+        },
+        "portrait-offline-ink": {
+          "ink": 3230,
+          "before": {
+            "x": 48,
+            "y": 149,
+            "width": 864,
+            "height": 57
+          },
+          "incoming": {
+            "x": 452.25,
+            "y": 48,
+            "width": 535.5,
+            "height": 952
+          }
+        },
+        "portrait-offline-reverse-ink": {
+          "ink": 1708,
+          "reverseHeading": {
+            "x": 614.88330078125,
+            "y": 87.66667175292969,
+            "width": 1142.4000244140625,
+            "height": 75.36665344238281
+          }
+        }
+      }
+    },
+    {
+      "browserMajor": "154",
+      "receipt": {
+        "kind": "isolated-mixed-slide-transitions",
+        "records": [
+          {
+            "kind": "fade",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "push",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "magic",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": true
+          }
+        ],
+        "offlineMagicScreenGeometryContinuous": true,
+        "consoleOrPageErrors": []
+      },
+      "observations": {
+        "offpaper-native-midpoint": {
+          "ink": 0,
+          "clip": {
+            "x": 188.75001525878906,
+            "y": 625,
+            "width": 145.8333282470703,
+            "height": 145.83331298828125
+          }
+        },
+        "offpaper-offline-midpoint": {
+          "ink": 0,
+          "clip": {
+            "x": 214.25,
+            "y": 643,
+            "width": 138.83334350585938,
+            "height": 138.83331298828125
+          }
+        },
+        "portrait-native-ink": {
+          "ink": 3425,
+          "heading": {
+            "x": 48,
+            "y": 125,
+            "width": 864,
+            "height": 57
+          },
+          "incoming": {
+            "x": 438.75,
+            "y": 0,
+            "width": 562.5,
+            "height": 999.9999389648438
+          }
+        },
+        "portrait-native-reverse-ink": {
+          "ink": 1660,
+          "reverseHeading": {
+            "x": 609.5833129882812,
+            "y": 41.666664123535156,
+            "width": 1199.9999389648438,
+            "height": 79.16666412353516
+          }
+        },
+        "portrait-offline-ink": {
+          "ink": 3230,
+          "before": {
+            "x": 48,
+            "y": 149,
+            "width": 864,
+            "height": 57
+          },
+          "incoming": {
+            "x": 452.25,
+            "y": 48,
+            "width": 535.5,
+            "height": 952
+          }
+        },
+        "portrait-offline-reverse-ink": {
+          "ink": 1708,
+          "reverseHeading": {
+            "x": 614.88330078125,
+            "y": 87.66667175292969,
+            "width": 1142.4000244140625,
+            "height": 75.36665344238281
+          }
+        }
+      }
+    }
+  ],
+  "checks": {
+    "units": 76,
+    "meteringContracts": 15,
+    "lintExit": 0
+  },
+  "qualification": false
+}

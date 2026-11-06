@@ -1,0 +1,71 @@
+{
+  "commit": "ab0f62638475a9c7285dcb13691043becf6f0cb5",
+  "baseCommit": "3b967c6ec5170fa2eff2ecfabfd74951ba49a45b",
+  "reviewer": "/root/independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "findings": [
+    {
+      "id": "magic-unpaired-offpaper-flash",
+      "severity": "P2",
+      "title": "仅让配对移动对象越过纸张，保留其余目标内容的裁切",
+      "file": "src/features/artifacts/native/slides-presentation.css",
+      "line": 126,
+      "related": [
+        {
+          "file": "src/features/artifacts/native/export/html-presentation.ts",
+          "line": 13
+        }
+      ],
+      "failure": "不同长宽比的Magic临时把整个目标页设为overflow:visible。目标页未配对且完全位于纸张外的对象仍进入淡入动画，于是本应被纸张裁掉的对象会在黑色留白中出现，转场结束恢复裁切时又突然消失。实际1920×1080→540×960，在目标加入x=-240,y=600,w=140,h=140的未配对红色矩形，暂停动画t=240ms：原生纸张外21461个红像素，离线19182；离线保持纸张裁切的同文档对照为0。",
+      "smallestCorrection": "保留普通目标页及未配对节点的纸张裁切，只让需要连续运动的配对对象在专用动画覆盖层越界；增加中间帧实际像素检查，不只测配对标题的t=0。",
+      "reproduction": [
+        "/tmp/lingxi-review-ab-leak.mjs",
+        "/tmp/lingxi-review-ab-leak.json",
+        "/tmp/lingxi-review-offpaper-false.png",
+        "/tmp/lingxi-review-offpaper-true.png",
+        "/tmp/lingxi-review-probe-area/probe.mjs",
+        "/tmp/lingxi-review-ab-offpaper-native/offpaper-native-midpoint.png"
+      ]
+    }
+  ],
+  "closedPreviousFindings": [
+    "magic-portrait-clipping：现有横竖页配对标题正反向实际可见性及结束裁切恢复回归在Chrome140/154通过；本报告的新发现涉及未配对纸张外内容。"
+  ],
+  "independentChecks": [
+    {
+      "check": "转场与导出单元测试",
+      "result": "passed",
+      "count": 16
+    },
+    {
+      "check": "Chrome154既有presentation-portrait正反向原生与离线回归",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-ab-portrait154/slides.json"
+    },
+    {
+      "check": "Chrome154增加未配对纸张外对象后，既有portrait断言仍通过，但中点截图检出新闪现",
+      "result": "failed",
+      "nativeOutsideRedPixels": 21461,
+      "offlineOutsideRedPixels": 19182,
+      "offlineClippedControlRedPixels": 0
+    },
+    {
+      "check": "提交中的性能ZIP完整性",
+      "result": "passed",
+      "sha256": "2fb06f1cd2a2069496eb8622307211616d371fb99e43b86f56424bb59d8ca09d",
+      "archiveBytes": 1036829,
+      "rawResultBytes": 17327911
+    },
+    {
+      "check": "Chrome140既有presentation-portrait正反向原生与离线回归",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-ab-portrait140/slides.json"
+    }
+  ],
+  "unverified": [
+    "未运行全量视觉、完整功能矩阵、真实授权评论/Agent浏览器流程。",
+    "未自行重新运行官方CI或十组交替AB/BA性能。提交中的单组诊断明确qualified=false，未将其误报为最终资格。",
+    "本次只审查ab0f6263相对3b967c6e，不给其祖先全部行为背书。"
+  ]
+}

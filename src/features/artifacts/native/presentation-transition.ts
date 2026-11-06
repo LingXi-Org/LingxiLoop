@@ -48,6 +48,44 @@ export function animateSlideTransition(
   const animations: Animation[] = [],
     timing = transitionTiming(kind)
   const hidden: Array<[HTMLElement, string]> = []
+  let overlay: HTMLElement | undefined
+  const mixedAspect = from.width * to.height !== to.width * from.height
+  const lift = (element: HTMLElement) => {
+    if (!mixedAspect) return element
+    if (!overlay) {
+      const stage = next.closest<HTMLElement>('.native-slides-presentation-stage')!
+      const frame = document.createElement('div')
+      frame.className = 'native-slides-presentation-frame native-magic-overlay'
+      frame.setAttribute('aria-hidden', 'true')
+      frame.inert = true
+      Object.assign(frame.style, {
+        width: `${to.width * scale}px`,
+        height: `${to.height * scale}px`,
+        overflow: 'visible',
+        zIndex: '3',
+        pointerEvents: 'none',
+      })
+      const container = document.createElement('div')
+      container.className = 'native-slides-presentation-scale'
+      Object.assign(container.style, {
+        width: `${to.width}px`,
+        height: `${to.height}px`,
+        transform: `scale(${scale})`,
+      })
+      overlay = next
+        .querySelector<HTMLElement>(':scope > .native-page-content')!
+        .cloneNode(false) as HTMLElement
+      Object.assign(overlay.style, { background: 'transparent', overflow: 'visible' })
+      container.append(overlay)
+      frame.append(container)
+      stage.append(frame)
+    }
+    const clone = element.cloneNode(true) as HTMLElement
+    overlay.append(clone)
+    hidden.push([element, element.style.visibility])
+    element.style.visibility = 'hidden'
+    return clone
+  }
   const animate = (element: HTMLElement, frames: Keyframe[]) =>
     animations.push(element.animate(frames, timing))
   if (kind === 'fade') animate(old, [{ opacity: 1 }, { opacity: 0 }])
@@ -95,7 +133,7 @@ export function animateSlideTransition(
             0.5,
         )
       )
-        animate(element, [start, end])
+        animate(lift(element), [start, end])
     }
     for (const node of matching.values())
       if (!paired.has(node.id)) {
@@ -117,5 +155,6 @@ export function animateSlideTransition(
     clearTimeout(timeout)
     for (const animation of animations) animation.cancel()
     for (const [element, visibility] of hidden) element.style.visibility = visibility
+    overlay?.closest('.native-magic-overlay')?.remove()
   }
 }
