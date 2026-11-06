@@ -403,6 +403,7 @@ class Trace:
             ordinal = observed.get('requestOrdinal', row['requestOrdinal'])
             if ordinal in seen: continue
             seen.add(ordinal); retained.append(row); row['requestOrdinal'] = ordinal
+            if script_request(observed): row['scriptObserved'] = True
             if row.get('finished') and observed.get('decodedObserved') and (not row.get('decodedObserved') or observed.get('decodedBytesSource') == 'PerformanceResourceTiming'):
                 row.update(decodedBytes=observed['decodedBytes'], decodedObserved=True, decodedBytesSource=observed['decodedBytesSource'])
             if row.get('finished') and row.get('transferPending') and not observed.get('transferPending', True):
@@ -1292,6 +1293,21 @@ def self_check():
     alias.finished_requests=alias.finished_requests[:1];alias.finished_requests[0].update(startEpochMs=1000,mime='text/javascript')
     alias.reconcile_finished()
     assert alias.requests['0']['scriptObserved'] and script_totals(alias.snapshot())['requests']==1
+    late_mime=Trace.__new__(Trace)
+    late_mime.requests={'cdp':{'url':safe_url(mime_url),'_resourceKey':resource_key(mime_url),'type':'Fetch','network':True,'scriptPath':False,'startEpochMs':1000,'requestOrdinal':1,'finished':True,'status':200,'transferredBytes':120,'decodedBytes':100,'decodedObserved':True}}
+    late_mime.finished_requests=[];late_mime.request_sequence=1;late_mime.ambiguous_requests=0;late_mime.byte_conflicts=0
+    before_mime=late_mime.snapshot()
+    late_mime.finished_requests=[{'url':safe_url(mime_url),'_resourceKey':resource_key(mime_url),'_requestIdentity':0,'startEpochMs':1250,'finishedEpochMs':2000,'headersBytes':20,'bodyBytes':100,'status':200,'type':'Fetch','mime':'text/javascript','network':True,'scriptPath':False,'targetType':'page'}]
+    duplicate_mime=late_mime.snapshot()
+    assert script_totals(before_mime)['requests']==0 and script_totals(duplicate_mime)['requests']==1
+    late_mime.requests['cdp']['_playwrightStartEpochMs']=1250
+    late_mime.reconcile_decoded(SimpleNamespace(frames=[SimpleNamespace(evaluate=lambda _:[{'url':mime_url,'startEpochMs':1000,'encodedBytes':100,'decodedBytes':100}])],workers=[]))
+    for old_snapshot in (before_mime,duplicate_mime,list(reversed(duplicate_mime))):
+        late_mime.reconcile_snapshot(old_snapshot)
+        assert len(old_snapshot)==1 and script_totals(old_snapshot)['requests']==1
+        assert script_totals(old_snapshot)['transferredBytes']==120 and script_totals(old_snapshot)['decodedBytes']==100
+        assert old_snapshot[0]['finished'] and not old_snapshot[0].get('transferPending')
+
 
     resolving=transient_ambiguity('Script')
     assert resolving.ambiguous_requests>0, 'unresolved concurrent script aliases must still reject'
@@ -1299,6 +1315,7 @@ def self_check():
     resolving.reconcile_finished()
     assert len(resolving.requests)==2 and all('_playwrightKey' in row for row in resolving.requests.values())
     assert resolving.ambiguous_requests==0 and resolving.historical_ambiguous_observations>0, 'later exact clocks resolve provisional ambiguity without deleting historical evidence'
+    assert script_delta(before_mime,duplicate_mime)['transferredBytes']==0, 'late identity must not charge pre-open bytes to workbench opening'
     invalid_timing=reconciliation_fixture([1000]);invalid_timing.requests['cdp']['decodedBytes']=500000
     invalid_timing.reconcile_decoded(SimpleNamespace(frames=[SimpleNamespace(evaluate=lambda _:[{'url':raw,'startEpochMs':1106.964,'responseEndEpochMs':1006.964,'encodedBytes':1000000,'decodedBytes':1000000}])],workers=[]))
     assert len(invalid_timing.unaccounted_script_resources)==1
@@ -1451,7 +1468,8 @@ def main():
                             sample['phase'] = 'idleObservation'
                             wait_quiet(page, trace, max(0, args.idle_ms - (time.time() * 1000 - input_proof['editableEpochMs'])))
                             sample['idleObservedAfterEditableMs'] = round(time.time() * 1000 - input_proof['editableEpochMs'])
-                            trace.reconcile_decoded(page); trace.reconcile_snapshot(requests_at_editable)
+                            trace.reconcile_decoded(page); trace.reconcile_snapshot(preopen); trace.reconcile_snapshot(requests_at_editable)
+                            if mode=='workbenchOpen': sample['preOpenScriptBytes']=script_totals(preopen)
                             reconciled = script_delta(preopen, requests_at_editable)
                             sample.update(scriptTransferBytes=reconciled['transferredBytes'], scriptDecodedBytes=reconciled['decodedBytes'])
                             stable = trace.snapshot(); sample['requestsAtStable'] = stable

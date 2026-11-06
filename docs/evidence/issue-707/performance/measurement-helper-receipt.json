@@ -16,7 +16,7 @@
         "encoding": "identity",
         "workerTransferBytes": 1000203,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2025.4,
+        "importDurationMs": 2028.8,
         "scriptRequests": 2,
         "inflight": 0
       },
@@ -24,19 +24,19 @@
         "encoding": "gzip",
         "workerTransferBytes": 1230,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2022.6,
+        "importDurationMs": 2030.8,
         "scriptRequests": 2,
         "inflight": 0
       },
       {
         "encoding": "concurrent",
         "refusedAsAmbiguous": true,
-        "ambiguousRequests": 2
+        "ambiguousRequests": 4
       },
       {
         "encoding": "queued",
         "scriptRequests": 12,
-        "maxNetworkStartSkewMs": 601.9,
+        "maxNetworkStartSkewMs": 599.2,
         "scriptDecodedBytes": 240492
       },
       {
@@ -183,7 +183,7 @@
     "qualified": false
   },
   "sourceSha256": {
-    "scripts/native-artifact-benchmark.py": "430b29394f44027bad34b573e758e9840d6a5dc55c9ca0c26074f65828b35773",
+    "scripts/native-artifact-benchmark.py": "9427fc3b6a9ab6e0beaf07fcad8a3b8506b23bc0f33eb4129176d7cc7536fffe",
     "scripts/native-artifact-ci.mjs": "4ff132137bcc4c6aae44ab19b73ef92bd17c61d0b2c29f6d033df6253f7dd33a",
     "scripts/native-artifact-ci.test.mjs": "8d4bb68af10b4091262c04940a7625ee483d8f942db7c8aaeebfd0c3fa2c6de7",
     "scripts/native-artifact-cleanup-check.py": "d818ed20a03bf321731f2c7d264bc6c37e5395453e5a1650fadb6560d84ae7b0",
@@ -196,5 +196,11 @@
     "alias合并保留可信脚本身份",
     "真实无扩展Fetch JavaScript MIME被计量",
     "脱敏保留script分类而不发布MIME或headers"
+  ],
+  "lateIdentitySnapshotCoverage": [
+    "editable旧快照晚到MIME后仍计入实际已有脚本字节",
+    "CDP/PW双别名两种顺序去重后不丢脚本身份",
+    "不复制晚到finished状态或替换原时点wire字节",
+    "pre-open同步身份后不把原已加载脚本误计成打开增量"
   ]
 }
