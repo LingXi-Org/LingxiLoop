@@ -1,9 +1,8 @@
 "use client";
 
-import { FileTextIcon } from "lucide-react";
+import { FileKindIcon, fileKind } from "./file-kind";
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
-import { conversationCardSize, field, mono, paper } from "./surfaces";
 
 export interface DocumentAnchor {
   page: number;
@@ -37,21 +36,17 @@ export function DocumentReference({
     <div
       data-slot="document-reference"
       className={cn(
-        paper,
-        conversationCardSize.standard,
-        "flex flex-col gap-3 rounded-2xl p-3.5",
+        "lx-card flex w-full max-w-[440px] flex-col gap-3 p-3.5",
         className,
       )}
 
       {...props}
     >
       <div className="flex items-center gap-2.5">
-        <span className="bg-foreground/[0.05] text-foreground/45 flex size-8 shrink-0 items-center justify-center rounded-lg">
-          <FileTextIcon className="size-3.5" />
-        </span>
+        <FileKindIcon kind={fileKind('', title)} size={28} />
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-[13.5px] font-medium">{title}</span>
-          <span className={cn(mono, "text-foreground/30")}>
+          <span className="text-[11.5px] text-muted-foreground">
             {[pages ? `${pages} 页` : '', anchors.length ? `${anchors.length} 处引用` : '文档来源'].filter(Boolean).join(' · ')}
           </span>
         </div>
@@ -68,14 +63,14 @@ export function DocumentReference({
             className={cn(
               "flex flex-col gap-1 rounded-xl px-2.5 py-2 text-start transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default motion-reduce:transition-none",
               anchor.page === activePage
-                ? field
-                : "hover:bg-foreground/[0.035]",
+                ? "bg-formula"
+                : "hover:bg-formula",
             )}
           >
-            <span className={cn(mono, "text-foreground/30")}>
+            <span className="text-[11.5px] text-muted-foreground">
               第 {anchor.page} 页
             </span>
-            <span className="text-foreground/65 border-foreground/15 border-s-2 ps-2 text-xs leading-relaxed break-words">
+            <span className="font-serif text-[13px] leading-[1.7] text-fg2 break-words">
               {anchor.quote}
             </span>
           </button>

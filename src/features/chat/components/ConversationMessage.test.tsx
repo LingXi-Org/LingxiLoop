@@ -120,7 +120,7 @@ test('native run parts have one process disclosure while answers and current dec
   assert.equal($('[data-slot="run-activity"]').length, 1)
   assert.equal($('[data-slot="tool-group-root"]').length, 0)
   assert.equal($.text().split('公开答复').length - 1, 1)
-  assert.ok($.text().includes('等待有权限的成员审批。'))
+  assert.ok($.text().includes('等待有权限的成员审批'))
   assert.doesNotMatch($('[data-message-region="attention"]').text(), /这一步未完成/)
   assert.doesNotMatch($('[data-slot="run-activity"]').text(), /公开答复|等待有权限的成员审批|这一步未完成/)
   assert.equal($('[data-native-part="tool-call"]').length, 1, 'ordinary and failed tools stay in the initially collapsed process')
@@ -479,7 +479,7 @@ test('knowledge results use one compact tool row while preserving source and ter
     assert.match($('[data-slot="tool-call"] button').text(), new RegExp(label))
     assert.match($.text(), /正文及引用仍保留/)
     assert.doesNotMatch($.text(), /PRIVATE_SOURCE_CANARY/)
-    if (sourceStatus === 'unavailable' || resultStatus === 'failed') assert.match($('[role="alert"]').text(), /这一步未完成/)
+    if (sourceStatus === 'unavailable' || resultStatus === 'failed') assert.match($('[data-slot="tool-call"][data-tone="failed"]').text(), /这一步未完成/)
   }
 })
 

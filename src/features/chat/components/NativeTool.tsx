@@ -1,6 +1,6 @@
 import { useAui, useAuiState, type ToolCallMessagePartProps, type ToolCallMessagePartStatus } from '@assistant-ui/react'
 import { type ReactNode, useRef, useState } from 'react'
-import { ToolCall } from '@/components/assistant-ui/elements/tool-call'
+import { ToolCall, ToolFields, type ToolHint, type ToolTone } from '@/components/assistant-ui/elements/tool-call'
 import { toolDisplaySchema, canonicalToolName, resolveToolDisplay } from '@/lib/runActivity'
 import { ElicitationForm } from '@/components/assistant-ui/elements/elicitation-form'
 import { MessageFooterContents } from '@/components/assistant-ui/message-footer'
@@ -8,7 +8,6 @@ import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { userFacingError } from '@/lib/userFacingError'
 import { chatTransport } from '../runtime/transport'
 import { knowledgeSourceState } from '../runtime/task-progress'
-import { ApprovalRequestCard } from './ApprovalRequestCard'
 import { MessagePartBoundary } from './MessagePartBoundary'
 import { TOOL_DETAILS } from './ToolRenderers'
 import { ResearchSources } from './ResearchSources'
@@ -91,36 +90,61 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
 
   if (/^(email|calendar)\./.test(toolName)) return <p className="whitespace-pre-wrap text-sm text-muted-foreground">邮件和日历功能已停止支持；此记录仅供查看。</p>
 
+  const approvalNeeded = Boolean(pending && ownsGate && permitted && !approval?.options?.length)
+  const tone: ToolTone = failed ? 'failed' : cancelled ? 'idle' : pending ? 'attention' : interrupt && !ended ? 'input'
+    : /(write|create|update|draft|publish|send|save|edit|delete)/i.test(toolName) ? 'write' : 'read'
+  const hint: ToolHint | undefined = accepted && (pending || interrupt) ? { tone: 'syncing', text: '已提交，正在同步任务状态…' }
+    : approvalNeeded ? { tone: 'attention', text: '需要批准' }
+    : pending && ownsGate && !permitted ? { tone: 'waiting', text: '等待有权限的成员审批' }
+    : interrupt && ownsInput && !permitted ? { tone: 'waiting', text: '等待有权限的成员补充信息' }
+    : failed ? { tone: 'failed', text: '这一步未完成' }
+    : undefined
+  const timing = props.timing
+  const seconds = timing?.completedAt !== undefined ? (timing.completedAt - timing.startedAt) / 1000 : undefined
+  const clock = (ms: number) => new Date(ms).toLocaleTimeString('zh-CN', { hour12: false })
+  const fields = [
+    ...(publicInput.success ? publicInput.data ?? [] : []),
+    ...(display.summary ? [{ label: 'summary', value: display.summary }] : []),
+    ...(timing?.completedAt !== undefined ? [{ label: 'time', value: `${clock(timing.startedAt)} → ${clock(timing.completedAt)}` }] : []),
+  ]
+  const open = detailsOpen || approvalNeeded
+
   return <section aria-label={display.title} data-tool-state={displayStatus.type} className="grid min-w-0 gap-2 text-sm">
     <MessageFooterContents inset={false}>
-      <ToolCall label={label} activeLabel="正在处理" query={display.title} request={display.purpose}
-        result={display.summary ?? (status.type === 'running' ? '正在执行这一步。' : '这一步尚未完成。')}
-        running={displayStatus.type === 'running'} outcome={failed ? 'failed' : sourceState?.status === 'processing' || sourceState?.status === 'queued' ? 'pending' : displayStatus.type === 'complete' ? 'complete' : 'pending'}
-        open={detailsOpen} onOpenChange={setDetailsOpen} />
-      {detailsOpen && <div className="grid gap-2 ps-5 text-sm text-muted-foreground">
-        {publicInput.success && publicInput.data?.map(field => <p key={field.label}><span className="font-medium">{field.label}：</span>{field.value}</p>)}
-        {props.timing?.completedAt !== undefined && <p>耗时 {((props.timing.completedAt - props.timing.startedAt) / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 秒</p>}
-      </div>}
+      <ToolCall name={display.title} code={toolName} statusLabel={label} tone={tone} running={displayStatus.type === 'running'}
+        duration={seconds !== undefined ? `${seconds.toLocaleString('zh-CN', { maximumFractionDigits: 1 })}s` : undefined}
+        hint={hint} open={open} onOpenChange={setDetailsOpen}>
+        {display.purpose && <p className="text-[12.5px] leading-[1.6] text-fg2">{display.purpose}</p>}
+        {approval?.approved === true && <span className="inline-flex items-center gap-1.5">
+          <span className="h-[18px] rounded-full bg-[rgb(31_138_91/10%)] px-1.5 text-[11px] font-medium leading-[18px] text-[#1F8A5B]">{approval.isAutomatic ? '自动批准' : '已批准'}</span>
+          {approval.reason && <span className="text-[12.5px] text-muted-foreground">{approval.reason}</span>}
+        </span>}
+        {approval && approval.approved !== true && approval.reason && <p className="text-[12.5px] leading-[1.6] text-fg2"><span className="text-muted-foreground">理由 · </span>{approval.reason}</p>}
+        {approval?.options?.length ? <div role="radiogroup" aria-label="审批选项" aria-readonly="true" className="flex flex-col gap-1.5">
+          {approval.options.map(option => {
+            const chosen = approval.optionId === option.id
+            return <div key={option.id} role="radio" aria-checked={chosen} className={chosen ? 'flex gap-2.5 rounded-[10px] bg-[rgb(46_125_91/5%)] px-3 py-[9px] shadow-[inset_0_0_0_1px_rgb(46_125_91/40%)]' : 'flex gap-2.5 rounded-[10px] px-3 py-[9px] shadow-[inset_0_0_0_1px_var(--border)]'}>
+              <span aria-hidden="true" className={chosen ? 'mt-0.5 size-4 shrink-0 rounded-full border-[5px] border-brand' : 'mt-0.5 size-4 shrink-0 rounded-full border-[1.5px] border-input'} />
+              <span className="flex min-w-0 flex-col gap-px">
+                <span className="text-[13px] font-medium">{option.label ?? option.kind}</span>
+                {option.description && <span className="text-xs text-muted-foreground">{option.description}</span>}
+                {option.grants?.length ? <span className="text-[11.5px] text-muted-foreground">权限范围 · <code className="font-mono text-[11px] text-fg2">{option.grants.join(' · ')}</code></span> : null}
+              </span>
+            </div>
+          })}
+          {pending && <p className="text-xs text-muted-foreground">此审批选项暂不支持在消息中提交。</p>}
+        </div> : null}
+        <ToolFields fields={fields} />
+        {approvalNeeded && <div className="flex justify-end gap-1.5">
+          <button type="button" disabled={busy || accepted} onClick={() => void approve(false)} className="h-[30px] rounded-[9px] px-2.5 text-[13px] font-medium text-fg2 hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40 max-md:min-h-11">拒绝</button>
+          <button type="button" disabled={busy || accepted} onClick={() => void approve(true)} className="h-[30px] rounded-[9px] bg-brand px-3.5 text-[13px] font-medium text-brand-foreground hover:bg-[color-mix(in_srgb,var(--brand)_90%,var(--foreground))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-40 max-md:min-h-11">批准</button>
+        </div>}
+      </ToolCall>
       {hasRichTool(toolName) && (result !== undefined || displayStatus.type === 'running') && <MessagePartBoundary resetKey={result} running={displayStatus.type === 'running'}>
         {Detail && <Detail {...canonicalProps} readOnly={readOnly} />}
         {/^memory(?:\.|__)/.test(toolName) && resultStatus === 'completed' && !isError && memory.success && <MemoryTool memory={memory.data} readOnly={readOnly} />}
         {toolName === 'research.search' && <ResearchSources calls={[canonicalProps]} lifecycle={lifecycle} />}
       </MessagePartBoundary>}
-      {failed && <p role="alert" className="text-xs text-destructive">这一步未完成，请重试。</p>}
-      {approval && <div className="space-y-2">
-        {approval.approved === true && <p role="status" className="text-xs text-muted-foreground">已批准{approval.isAutomatic ? '（自动审批）' : ''}</p>}
-        {approval.reason && <p className="text-xs text-muted-foreground">{approval.reason}</p>}
-        {approval.options?.length ? <div className="rounded-xl border border-border/60 p-3">
-          <p className="mb-2 text-xs text-muted-foreground">{pending ? '此审批选项暂不支持在消息中提交。' : '审批选项'}</p>
-          {approval.options.map(option => <div key={option.id} className="mb-2 last:mb-0">
-            <p>{option.label ?? option.kind}{approval.optionId === option.id ? ' · 已选择' : ''}</p>
-            {option.description && <p className="mt-1 text-xs text-muted-foreground">{option.description}</p>}
-            {option.grants?.length ? <p className="mt-1 break-words text-xs text-muted-foreground">权限范围：{option.grants.join('、')}</p> : null}
-          </div>)}
-        </div> : pending && ownsGate && permitted && <ApprovalRequestCard approvalId={approval.id} sender={String(custom.senderName ?? '助手')} busy={busy || accepted}
-          onApprove={() => approve(true)} onDeny={() => approve(false)} />}
-        {pending && ownsGate && !permitted && <p className="text-xs text-muted-foreground">等待有权限的成员审批。</p>}
-      </div>}
       {interrupt && ownsInput && !ended && !questionnaireWait && <fieldset disabled={!permitted || busy || accepted} className="min-w-0">
         <ElicitationForm server="补充信息" message={typeof interrupt.payload === 'object' && interrupt.payload && 'prompt' in interrupt.payload
           && typeof interrupt.payload.prompt === 'string' ? interrupt.payload.prompt : '请补充信息以继续任务。'}
@@ -128,8 +152,6 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
           state={accepted ? 'accepted' : 'request'} acceptDisabled={!permitted || busy || !answer.trim()} acceptLabel={busy ? '正在提交…' : '提交'}
           onFieldChange={(_, value) => setAnswer(String(value))} onAccept={() => void resume()} />
       </fieldset>}
-      {interrupt && ownsInput && !permitted && <p className="text-xs text-muted-foreground">等待有权限的成员补充信息。</p>}
-      {accepted && (pending || interrupt) && <p role="status" className="text-xs text-muted-foreground">已提交，正在同步任务状态…</p>}
       {children}
       {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
     </MessageFooterContents>

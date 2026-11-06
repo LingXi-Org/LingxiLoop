@@ -57,7 +57,10 @@ export function Avatar({ p, size = 44, statusOverride, ringColor = 'var(--paper)
           src={cachedSrc ?? ''}
           alt={p.name}
           className="absolute inset-0 w-full h-full object-cover rounded-full"
-          loading={AVATAR_IMG_LOADING}
+          width={size}
+          height={size}
+          decoding="async"
+          loading={cachedSrc?.startsWith('data:') ? undefined : AVATAR_IMG_LOADING}
           onError={onError}
         />
       ) : (

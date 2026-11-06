@@ -185,23 +185,26 @@ function ReasoningTrigger({
     <CollapsibleTrigger
       data-slot="reasoning-trigger"
       className={cn(
-        "aui-reasoning-trigger group/trigger flex h-[26px] w-fit max-w-[75%] items-center gap-1 rounded-full bg-accent ps-2 pe-2.5 text-[12.5px] text-fg2 outline-none hover:bg-accent/70 focus-visible:ring-2 focus-visible:ring-ring",
+        "aui-reasoning-trigger group/trigger flex h-7 w-fit max-w-[75%] items-center gap-1.5 rounded-full bg-[rgb(183_121_31/8%)] ps-1 pe-2.5 text-[12.5px] text-fg2 outline-none hover:bg-[rgb(183_121_31/13%)] focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
       {...props}
     >
-      <ChevronRightIcon
-        data-slot="reasoning-trigger-chevron"
-        aria-hidden="true"
-        strokeWidth={2}
-        className="aui-reasoning-trigger-chevron size-[13px] shrink-0 transition-transform duration-150 group-data-open/trigger:rotate-90 group-data-panel-open/trigger:rotate-90 motion-reduce:transition-none"
-      />
+      <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center rounded-md bg-[rgb(183_121_31/12%)] text-[#B7791F]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-3"><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z" /></svg>
+      </span>
       <span
         data-slot="reasoning-trigger-label"
         className={cn("aui-reasoning-trigger-label-wrapper inline-block leading-none tabular-nums", active && "shimmer motion-reduce:animate-none")}
       >
         {label}
       </span>
+      <ChevronRightIcon
+        data-slot="reasoning-trigger-chevron"
+        aria-hidden="true"
+        strokeWidth={2}
+        className="aui-reasoning-trigger-chevron size-3 shrink-0 text-muted-foreground transition-transform duration-150 group-data-open/trigger:rotate-90 group-data-panel-open/trigger:rotate-90 motion-reduce:transition-none"
+      />
     </CollapsibleTrigger>
   );
 }
@@ -217,7 +220,7 @@ function ReasoningContent({
     <CollapsibleContent
       data-slot="reasoning-content"
       className={cn(
-        "aui-reasoning-content text-muted-foreground relative overflow-hidden text-sm outline-none",
+        "aui-reasoning-content relative overflow-hidden text-sm outline-none",
         "group/collapsible-content ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:animate-none",
         "data-closed:animate-collapsible-up",
         "data-open:animate-collapsible-down",
@@ -228,7 +231,6 @@ function ReasoningContent({
       )}
       {...props}
     >
-      <ReasoningFade side="top" />
       {children}
       {isPreview ? <ReasoningFade /> : null}
     </CollapsibleContent>
@@ -243,6 +245,17 @@ function ReasoningText({
   const isPreview = useContext(ReasoningPreviewContext);
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [folded, setFolded] = useState(true);
+  const [overflowing, setOverflowing] = useState(false);
+  useEffect(() => {
+    const content = contentRef.current;
+    if (isPreview || !content) return;
+    const measure = () => setOverflowing(content.scrollHeight > 112);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [isPreview]);
 
   useEffect(() => {
     if (!isPreview) return;
@@ -289,11 +302,13 @@ function ReasoningText({
   }, [isPreview]);
 
   return (
+    <>
     <div
       ref={scrollRef}
       data-slot="reasoning-text"
       className={cn(
-        "aui-reasoning-text relative z-0 max-h-64 overflow-y-auto ps-6 pt-2 pb-2 leading-relaxed text-pretty",
+        "aui-reasoning-text relative z-0 ms-[9px] mt-2 border-s border-[rgb(183_121_31/35%)] py-0.5 ps-[21px] text-[13.5px] leading-[1.75] text-fg2 text-pretty",
+        isPreview ? "max-h-64 overflow-y-auto" : folded ? "max-h-[104px] overflow-hidden" : "",
         "transform-gpu transition-[transform,opacity] ease-[cubic-bezier(0.32,0.72,0,1)]",
         "motion-reduce:animate-none",
         "group-data-open/collapsible-content:animate-in",
@@ -310,10 +325,16 @@ function ReasoningText({
       )}
       {...props}
     >
-      <div ref={contentRef} className="aui-reasoning-text-content space-y-4">
+      <div ref={contentRef} className="aui-reasoning-text-content flex flex-col gap-2.5">
         {children}
       </div>
+      {!isPreview && folded && <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-11 bg-[linear-gradient(transparent,var(--background))]" />}
     </div>
+    {!isPreview && overflowing && <button type="button" onClick={() => setFolded(value => !value)}
+      className="ms-[30px] mt-1 h-6 text-[12.5px] font-medium text-[#B7791F] hover:underline focus-visible:outline-2 focus-visible:outline-ring dark:text-[#E5B565]">
+      {folded ? '展开全部' : '收起'}
+    </button>}
+    </>
   );
 }
 
