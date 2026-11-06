@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import {artifactResolvedStyle} from '../../../../shared/artifact-themes'
+import {naturalNodeStyle} from './natural-layout'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
 import type { Bounds, NativeCompute } from './compute'
 import { elementBounds, expandVisibleNodes } from './visibility'
@@ -23,7 +23,7 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
         if(!node||node.type!=='note'||!element.getClientRects().length)continue
         const style=getComputedStyle(element),width=Number.parseFloat(style.width),height=Number.parseFloat(style.height)
         if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)continue
-        const effective=naturalDocument?artifactResolvedStyle(node.style,naturalDocument):node.style,old=naturalSizes.get(node,effective)
+        const effective=naturalNodeStyle(naturalSource,node,naturalDocument),old=naturalSizes.get(node,effective)
         if(!old||Math.abs(old.width-width)>.01||Math.abs(old.height-height)>.01){naturalSizes.set(node,{width,height},effective);changed=true}
       }
       if(changed)onNaturalLayout()

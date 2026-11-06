@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {createNode,createPage} from '../../../../shared/artifact-document'
-import {NaturalLayouts,NaturalNodeSizes,withNaturalLayout,naturalMeasurementBatch} from './natural-layout'
+import {NaturalLayouts,NaturalNodeSizes,withNaturalLayout,naturalMeasurementBatch,naturalNodeStyle} from './natural-layout'
 import {elementBounds} from './visibility'
 
 test('natural note geometry reaches visibility calculations without changing stored content or fixed objects',()=>{
@@ -67,4 +67,17 @@ test('cache misses request at most eight inert measurements and stop after their
   for(const node of Object.values(page.nodes))sizes.set(node,{width:240,height:4659})
   assert.deepEqual(naturalMeasurementBatch(page,sizes,document),[])
   assert.equal(JSON.stringify(page),original)
+})
+
+test('probe and cache typography include inherited group fonts but preserve child overrides',()=>{
+  const page=createPage('contents'),note={...createNode('note','note'),text:'i'.repeat(2000),parentId:'group',width:240,height:832,style:{fontSize:32}},group={...createNode('group','group'),style:{fontFamily:'monospace',fontWeight:700,fontStyle:'italic',letterSpacing:2}}
+  page.nodes={group,note};page.nodeOrder=['group','note']
+  const inherited=naturalNodeStyle(page,note),sizes=new NaturalNodeSizes()
+  assert.equal(inherited.fontFamily,'monospace');assert.equal(inherited.fontWeight,700);assert.equal(inherited.fontStyle,'italic');assert.equal(inherited.letterSpacing,2)
+  sizes.set(note,{width:240,height:8463},inherited)
+  assert.equal(withNaturalLayout(structuredClone(page),sizes).nodes.note!.height,8463)
+  const changed=structuredClone(page);changed.nodes.group!.style.fontFamily='sans-serif'
+  assert.equal(withNaturalLayout(changed,sizes),changed,'changing only an ancestor font invalidates the child measurement')
+  const explicit={...note,style:{...note.style,fontFamily:'sans-serif',fontWeight:400,fontStyle:'normal',letterSpacing:0}}
+  assert.equal(naturalNodeStyle(page,explicit).fontFamily,'sans-serif');assert.equal(naturalNodeStyle(page,explicit).fontWeight,400)
 })

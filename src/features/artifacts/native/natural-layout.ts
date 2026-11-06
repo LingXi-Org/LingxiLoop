@@ -1,6 +1,22 @@
 import type {ArtifactDocument,ArtifactNode,ArtifactPage,ArtifactStyle} from '../../../../shared/artifact-document'
 import {artifactResolvedStyle} from '../../../../shared/artifact-themes'
 
+const inheritedTypography=['fontFamily','fontWeight','fontStyle','letterSpacing','textAlign','textDecoration'] as const
+/** Native nodes always set their own size/line height; these properties inherit through groups. */
+export function naturalNodeStyle(page:ArtifactPage,node:ArtifactNode,document?:ArtifactDocument):ArtifactStyle {
+  const resolve=(source:ArtifactNode)=>document?artifactResolvedStyle(source.style,document):{...source.style}
+  const style=resolve(node),seen=new Set<string>()
+  let parentId=node.parentId
+  while(parentId&&!seen.has(parentId)){
+    seen.add(parentId)
+    const parent=page.nodes[parentId];if(!parent)break
+    const inherited=resolve(parent)
+    for(const key of inheritedTypography)if(style[key]===undefined&&inherited[key]!==undefined)Object.assign(style,{[key]:inherited[key]})
+    parentId=parent.parentId
+  }
+  return style
+}
+
 export interface NaturalNodeSize {width:number;height:number}
 const signature=(node:ArtifactNode,style:ArtifactStyle)=>JSON.stringify([node.width,node.text,node.richText,style])
 
@@ -48,7 +64,7 @@ export function withNaturalLayout(page:ArtifactPage,sizes?:NaturalNodeSizes,docu
   if(!sizes)return page
   let changed=false
   const nodes={...page.nodes}
-  for(const id of page.nodeOrder){const node=page.nodes[id]!,size=node.type==='note'?sizes.get(node,document?artifactResolvedStyle(node.style,document):node.style):undefined
+  for(const id of page.nodeOrder){const node=page.nodes[id]!,size=node.type==='note'?sizes.get(node,naturalNodeStyle(page,node,document)):undefined
     if(size&&(Math.abs(size.width-node.width)>.001||Math.abs(size.height-node.height)>.001)){nodes[id]={...node,...size};changed=true}
   }
   return changed?{...page,nodes}:page
@@ -59,7 +75,7 @@ export function naturalMeasurementBatch(page:ArtifactPage|undefined,sizes:Natura
   if(!page||!sizes||!document)return []
   const batch:ArtifactNode[]=[]
   for(const id of page.nodeOrder){const node=page.nodes[id]!
-    if(node.type==='note'&&!node.hidden&&!sizes.get(node,artifactResolvedStyle(node.style,document)))batch.push(node)
+    if(node.type==='note'&&!node.hidden&&!sizes.get(node,naturalNodeStyle(page,node,document)))batch.push(node)
     if(batch.length===8)break
   }
   return batch
