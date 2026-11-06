@@ -193,3 +193,27 @@ HTML/PDF/PPTX 各50页导出均通过；冻结基线的六项已知导出超时�
 [未掩码像素差异](visual/toolbar/raw-pixel-results.json)改善到0.798%/0.673%、0.991%/0.870%、
 2.608%/2.516%、2.457%/2.272%（按1920、1440、768、390浅/深），八组仍全部超0.5%。
 参考截图沿用visual/fit-camera/reference，没有放大登记替换区域去掩盖其他差异；这不是完整视觉通过。
+
+
+[ee844146 独立复审](reviews/ee844146.json)未发现新P1/P2，owning CI 42240544136通过。
+旧Design窄宽入口的公式前置等待、interactions过期“历史记录”标签仍失败，未当作通过证据。
+
+[画板全窗口预览来源](source-design-board-preview.json)记录固定版本四尺寸双主题、800×600小画板、
+单选组键盘行为、重新进入默认适应、单板导出命名及六组画板阅读顺序。
+原生新增画板标题动作、按需全窗口预览、原始CSS像素填满与最多1倍适应；返回和Escape保留原画布相机。
+复用原生渲染、可见区域Worker、评论及版本服务；评论跟随预览坐标，远端删除退出并回焦编辑器。
+单画板导出支持一倍/双倍位图、一页便携文档和独立网页压缩包；Design PDF按源码阅读顺序导出，不改原文档。
+JSZip沿用锁文件3.10.1，仅在隔离导出环境按需加载，MIT署名已保留。没有分发上游运行时或私有图标字体。
+
+[局部功能结果](functional/design-board-preview.json)覆盖四尺寸双主题、小画板、只读、延迟页面、远端删除、
+模块失败恢复、评论与键盘单选组；Chrome140补跑评论和模块失败。真实浏览器检查一倍/双倍PNG尺寸、
+一页PDF及只包含当前画板的HTML压缩包通过；88项聚焦单元、10文件lint通过。
+原两模式评论、两模式各50页与47页未修改哈希复跑通过。本地typecheck仍有76项私有SDK缺失及级联错误，原生/共享零错误。
+
+全窗口[适应](visual/board-preview/fit/difference/raw-pixel-results.json)八组原始像素仍超0.5%；
+[填满](visual/board-preview/fill/difference/raw-pixel-results.json)六组原始像素在0.5%内，390两组仍超限。
+未掩码、未剔除抗锯齿，保留原版分享入口及英文Fill/Fit与原生已登记替换的差异；不作为完整视觉通过。
+复杂响应式body样式、滚动、全部快捷键和正常动画仍待继续核对。
+
+参考可复现：原相机oracle命令增加 `--capture=true --board-preview=true`，资源哈希全部校验；
+原生使用 `--checks=canvas-board-preview --preview-page=1` 对照同一完整文档和同一画板。

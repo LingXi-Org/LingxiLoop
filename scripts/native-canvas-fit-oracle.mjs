@@ -21,7 +21,7 @@ const sourceFit=Function('e','r',source.slice(start,end)+';return _')({viewportS
 phase='数学对照'
 for(const sample of golden.cases){const expected=sourceFit(sample.bounds,{w:sample.width,h:sample.height,top:golden.constants.viewportTop});assert.deepEqual(fitDesignCamera(sample.boards,sample.annotations,sample.width,sample.height),expected);assert.deepEqual(expected,sample.result)}
 await mkdir(output,{recursive:true})
-const report={sourceCommit:golden.sourceCommit,mathCases:golden.cases.length,mathPassed:true,runtime:[],scope:'固定源码纯数学和可选参考运行，不替代完整视觉、授权服务或性能门槛'}
+const report={sourceCommit:golden.sourceCommit,mathCases:golden.cases.length,mathPassed:true,runtime:[],boardPreview:[],scope:'固定源码纯数学和可选参考运行，不替代完整视觉、授权服务或性能门槛'}
 if(args.capture==='true'){
   phase='参考资源校验'
   const inventory=JSON.parse(await readFile(new URL('../docs/evidence/issue-707/source-inventory.json',import.meta.url),'utf8'))
@@ -50,11 +50,29 @@ if(args.capture==='true'){
       await page.mouse.dblclick(at.x,at.y);const editor=page.locator('[data-mega-chrome="pen-anchors"]');await editor.waitFor({state:'attached'})
       const image=`design-fit-${width}-${height}-${theme}.png`;await page.screenshot({path:join(output,image)})
       report.runtime.push({width,height,theme,image,anchors:await editor.locator('[data-pen-part^="a"]').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{id:e.dataset.penPart,x:b.x+b.width/2,y:b.y+b.height/2}})),boards:await page.locator('[data-mega-artboard]').evaluateAll(es=>es.map(e=>({id:e.getAttribute('data-mega-artboard'),rect:e.getBoundingClientRect().toJSON()}))),controls:await page.locator('button,[role=button]').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>{const b=e.getBoundingClientRect(),s=getComputedStyle(e);return{label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent,rect:b.toJSON(),fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,lineHeight:s.lineHeight,padding:s.padding,border:s.border,background:s.background,color:s.color,shadow:s.boxShadow,radius:s.borderRadius}}))})
+      if(args['board-preview']==='true'){
+        const exportButton=page.getByRole('button',{name:'Export artboard Page 1',exact:true})
+        if(width===390)await exportButton.press('Enter');else await exportButton.click()
+        const exportMenu=await page.locator('[role=menuitem],[role=menuitemradio],[role=menuitemcheckbox]').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>({label:e.getAttribute('aria-label')??e.textContent,role:e.getAttribute('role'),rect:e.getBoundingClientRect().toJSON()})))
+        await page.screenshot({path:join(output,`artboard-export-menu-${width}-${height}-${theme}.png`)});await page.keyboard.press('Escape')
+        const open=page.getByRole('button',{name:'Open artboard Page 1 full window',exact:true})
+        await open.click()
+        await page.waitForTimeout(300)
+        const fit=await page.locator('[data-mega-artboard]').first().boundingBox()
+        const controls=await page.locator('button,[role=button]').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>({label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent,rect:e.getBoundingClientRect().toJSON()})))
+        await page.screenshot({path:join(output,`artboard-full-window-${width}-${height}-${theme}.png`)})
+        const surfaces=await page.locator('[data-mega-artboard],[data-mega-artboard] *').evaluateAll(es=>es.filter(e=>{const r=e.getBoundingClientRect();return r.width>100&&r.height>100&&getComputedStyle(e).boxShadow!=='none'}).map(e=>{const s=getComputedStyle(e);return{rect:e.getBoundingClientRect().toJSON(),width:s.width,height:s.height,transform:s.transform,shadow:s.boxShadow,border:s.border,background:s.backgroundColor}}))
+        await page.getByText('Fill',{exact:true}).click();await page.waitForTimeout(300)
+        const fill=await page.locator('[data-mega-artboard]').first().boundingBox()
+        await page.screenshot({path:join(output,`artboard-fill-${width}-${height}-${theme}.png`)})
+
+        report.boardPreview.push({width,height,theme,fit,fill,controls,exportMenu,surfaces,trigger:width===390?'回车；相邻标题可能遮挡导出按钮':'点击'})
+      }
     }finally{await page?.close();if(child&&child.exitCode===null){const exited=once(child,'exit');child.kill('SIGTERM');await exited}}
   }}finally{await browser.close()}
 }
 await writeFile(join(output,'results.json'),JSON.stringify(report,null,2)+'\n')
-console.log(JSON.stringify({mathCases:report.mathCases,runtimeCases:report.runtime.length,mathPassed:true}))
+console.log(JSON.stringify({mathCases:report.mathCases,runtimeCases:report.runtime.length,boardPreviewCases:report.boardPreview.length,mathPassed:true}))
 
 }
 void main().catch(error=>{console.error(JSON.stringify({failed:true,phase,name:error?.name??'Error'}));process.exitCode=1})

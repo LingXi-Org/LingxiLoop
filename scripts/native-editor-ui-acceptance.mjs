@@ -76,10 +76,10 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
-  if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load'].includes(options.checks)){
+  if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-board-preview','canvas-board-export','canvas-board-preview-load'].includes(options.checks)){
     const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name==='open-enter').added[0]
     const node=canvasPenNode('editable-path',{x:2497.1,y:-1360.9,w:reference.w,h:reference.h,d:reference.d})
     document=applyOperations(document,prepareBatch(document,[...createCanvasContents(document,canvasPages(document)[0].id,'canvas-vector-body'),{type:'node.insert',pageId:'canvas-vector-body',node:{...node,scope:'canvas'}}])).document
@@ -91,6 +91,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options.checks==='canvas-vector-edit-cas'&&editorCase.startsWith('padding')){
     const page=document.pages['canvas-vector-body'],node=page.nodes['editable-path'];document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:page.id,nodeId:node.id,patch:{style:{padding:30,paddingX:30,paddingY:30},...(editorCase==='padding-rotated'?{rotation:27,flipX:true}: {})}}])).document
   }
+  if(options.checks==='canvas-board-preview'&&options['preview-small']==='true'){document.pages['page-2'].width=800;document.pages['page-2'].height=600}
   if(options.checks==='canvas-fit-body'){
     document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'positioned'))).document
     document=applyOperations(document,prepareBatch(document,[...createCanvasContents(document,'positioned','positioned-body'),{type:'node.insert',pageId:'positioned-body',node:{...createNode('shape','positioned-object'),x:3000,y:4000,width:800,height:600,scope:'canvas',style:{fill:'#ff0000'}}}])).document
@@ -139,27 +140,30 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let holdAcknowledgment = false, releaseAcknowledgment = null
   let historyEntry = null
   const historyRequests = []
-  let fixtureWrite=true
+  let fixtureWrite=options['preview-readonly']!=='true'
   const pageReads=[]
   let releaseCanvasBody,canvasBodyLoaded=false,notifyCanvasBody
   const canvasBodyRequested=new Promise(resolve=>{notifyCanvasBody=resolve})
-  const snapshot = () => ({ document:options.checks==='canvas-fit-body'&&!canvasBodyLoaded?{...document,pages:{...document.pages,'positioned-body':{...document.pages['positioned-body'],nodes:{},nodeOrder:[]}}}:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds:options.checks==='canvas-fit-body'&&!canvasBodyLoaded?artifactPageIds(document).filter(id=>id!=='positioned-body'):options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
+  const delayedPageId=options.checks==='canvas-fit-body'?'positioned-body':options['preview-body-delay']==='true'?'page-2':null
+  const snapshot = () => ({ document:delayedPageId&&!canvasBodyLoaded?{...document,pages:{...document.pages,[delayedPageId]:{...document.pages[delayedPageId],nodes:{},nodeOrder:[]}}}:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds:delayedPageId&&!canvasBodyLoaded?artifactPageIds(document).filter(id=>id!==delayedPageId):options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
   if(options.checks==='canvas-layout-cache')await page.addInitScript(()=>{window.__naturalProbePeak=0;new MutationObserver(()=>{window.__naturalProbePeak=Math.max(window.__naturalProbePeak,document.querySelectorAll('[data-native-measure-node]').length)}).observe(document,{childList:true,subtree:true})})
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
   let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0,svgModuleBlocked=options.checks==='svg-font-module',svgModuleRequests=0
   const editorFontRequests=[]
+  let boardModuleBlocked=options.checks==='canvas-board-preview-load',boardModuleRequests=0
   let pointModuleBlocked=options.checks==='canvas-vector-edit-load',pointModuleRequests=0
   let expectedVectorDenied=false;let vectorModuleBlocked=options.checks==='canvas-vector-load',vectorModuleRequests=0
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
-  page.on('request',request=>{const path=new URL(request.url()).pathname;if(path.includes('/CanvasPenTool.tsx'))vectorModuleRequests++;if(path.includes('/CanvasPointEditor.tsx'))pointModuleRequests++})
+  page.on('request',request=>{const path=new URL(request.url()).pathname;if(path.includes('/CanvasPenTool.tsx'))vectorModuleRequests++;if(path.includes('/CanvasPointEditor.tsx'))pointModuleRequests++;if(path.includes('/BoardPreview.tsx'))boardModuleRequests++})
   page.setDefaultTimeout(30_000)
-  await page.addInitScript(()=>{window.__geometryLog=[];window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(message?.task?.kind==='pen')window.__penRequests++;if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
+  await page.addInitScript(()=>{window.__geometryLog=[];window.__geometryMessages=0;window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')window.__penRequests++;if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
   if(options.checks==='viewport-loading')await page.addInitScript(()=>{window.__holdVisible=false;window.__heldVisible=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.visibleIds=new Set();this.addEventListener('message',event=>{if(this.visibleIds.delete(event.data?.id)&&window.__holdVisible){event.stopImmediatePropagation();window.__heldVisible.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='visible')this.visibleIds.add(message.id);return super.postMessage(message,...args)}}})
-  if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
+  if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
-  page.on('console', message => { if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
+  page.on('console', message => { if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(options.checks==='canvas-board-preview-load'&&message.location().url.includes('/BoardPreview.tsx'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
+  if(options.checks==='canvas-board-preview-load')await page.route('**/BoardPreview.tsx*',async route=>{if(boardModuleBlocked)await route.fulfill({status:503,body:'全窗口预览未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-edit-load')await page.route('**/CanvasPointEditor.tsx*',async route=>{if(pointModuleBlocked)await route.fulfill({status:503,body:'控制点工具未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-load')await page.route('**/CanvasPenTool.tsx*',async route=>{if(vectorModuleBlocked)await route.fulfill({status:503,body:'钢笔工具未能加载'});else await route.continue()})
   if(options.checks==='svg-font-module')await page.route('**/svg-font-image.ts*',async route=>{svgModuleRequests++;if(svgModuleBlocked)await route.fulfill({status:503,body:'图形工具暂时无法加载'});else await route.continue()})
@@ -214,7 +218,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await route.fulfill({ status: 200, contentType: 'image/png', body: image.bytes }); return
     }
     let result = snapshot()
-    if(options.checks==='canvas-fit-body'&&url.pathname.endsWith('/pages/positioned-body')){pageReads.push('positioned-body');await new Promise(resolve=>{releaseCanvasBody=resolve;notifyCanvasBody()});canvasBodyLoaded=true;await route.fulfill({status:200,json:{page:document.pages['positioned-body']}});return}
+    if(delayedPageId&&url.pathname.endsWith('/pages/'+delayedPageId)){pageReads.push(delayedPageId);await new Promise(resolve=>{releaseCanvasBody=resolve;notifyCanvasBody()});canvasBodyLoaded=true;await route.fulfill({status:200,json:{page:document.pages[delayedPageId]}});return}
     if(options.checks==='viewport-loading'&&url.pathname.includes('/pages/')){const id=url.pathname.split('/pages/')[1];pageReads.push(id);await route.fulfill({status:200,json:{page:document.pages[id]}});return}
     if (url.pathname.endsWith('/operations')) {
       const batch = request.postDataJSON()
@@ -373,6 +377,68 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       vectorModuleBlocked=false;await page.reload();await ready(1);await choose();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})
       await page.mouse.click(600,300);await page.keyboard.press('Escape');assert.equal(document.seq,0);assert.deepEqual(errors,[])
       return{kind:'isolated-canvas-vector-loading-diagnostic',lazyBeforeSelection:true,chineseLoadFailure:true,editorRetained:true,noDocumentWrites:true,reopenedToolRecovered:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-board-preview-load'){
+      assert.equal(boardModuleRequests,0,'进入预览前不加载预览模块')
+      const open=()=>page.locator('[data-artboard-id=page-2]').getByRole('button',{name:'全窗口查看画板 Page 2',exact:true}).click()
+      await open();await page.locator('.native-notice').filter({hasText:'全窗口预览未能加载，请刷新页面后重试。'}).waitFor();assert.ok(boardModuleRequests>0);assert.equal(await page.getByRole('region',{name:'画板全窗口预览'}).count(),0)
+      await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='全窗口查看画板 Page 2',undefined,{timeout:3000})
+      assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'全窗口查看画板 Page 2','加载失败后焦点应返回原画板按钮')
+      boardModuleBlocked=false;await page.reload();await ready(1);await open();await page.getByRole('region',{name:'画板全窗口预览'}).waitFor();await page.keyboard.press('Escape');assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-board-preview-loading-diagnostic',lazyUntilOpened:true,chineseLoadFailure:true,focusRestored:true,refreshRecovered:true,noDocumentWrites:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-board-export'){
+      const board=page.locator('[data-artboard-id=page-2]'),before=JSON.stringify(document),exports=[]
+      const choose=async(name)=>{await board.getByLabel('导出画板 Page 2',{exact:true}).click();const download=page.waitForEvent('download');await page.getByRole('group',{name:'导出画板 Page 2选项',exact:true}).getByRole('button',{name}).click();const result=await download;return{filename:result.suggestedFilename(),bytes:await readFile(await result.path())}}
+      for(const [label,ratio]of[['透明位图 · 原始尺寸',1],['透明位图 · 双倍尺寸',2]]){
+        const output=await choose(new RegExp('^'+label));assert.equal(output.bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');assert.equal(output.bytes.readUInt32BE(16),1920*ratio);assert.equal(output.bytes.readUInt32BE(20),1080*ratio);exports.push({format:'png',ratio,width:1920*ratio,height:1080*ratio,bytes:output.bytes.length})
+      }
+      const pdf=await choose(/^便携文档/);assert.equal(pdf.filename,'Page 2.pdf');assert.ok(pdf.bytes.subarray(0,5).toString()==='%PDF-');assert.equal((pdf.bytes.toString('latin1').match(/\/Type \/Page\b/g)??[]).length,1);exports.push({format:'pdf',pages:1,bytes:pdf.bytes.length})
+      const zipped=await choose(/^网页压缩包/),{default:JSZip}=await import('jszip'),archive=await JSZip.loadAsync(zipped.bytes)
+      assert.equal(zipped.filename,'Page 2-html.zip');assert.deepEqual(Object.keys(archive.files),['Page 2.html']);const html=await archive.file('Page 2.html').async('string');assert.ok(html.includes('LingxiLoop 2'));assert.ok(!html.includes('LingxiLoop 1')&&!html.includes('LingxiLoop 3'));assert.equal((html.match(/<article(?:\s|>)/g)??[]).length,1)
+      assert.equal(JSON.stringify(document),before);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-board-export-diagnostic',exports,archiveHasOnlySelectedBoard:true,originalSnapshotUnchanged:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-board-preview'){
+      const previewOrdinal=Number(options['preview-page']??2),previewId=`page-${previewOrdinal}`
+      const stage=page.locator('.native-stage'),before=await stage.evaluate(e=>({x:e.scrollLeft,y:e.scrollTop})),board=page.locator(`[data-artboard-id="${previewId}"]`)
+      await board.getByRole('button',{name:`全窗口查看画板 Page ${previewOrdinal}`,exact:true}).click()
+      const preview=page.getByRole('region',{name:'画板全窗口预览',exact:true});await preview.waitFor()
+      if(options['preview-readonly']==='true'){assert.ok(await preview.getByRole('button',{name:'评论',exact:true}).isDisabled());await page.keyboard.press('Delete');await page.keyboard.press('Control+z');assert.equal(receipts.length,0)}
+      if(options['preview-body-delay']==='true'){
+        await preview.getByText('正在加载画板…',{exact:true}).waitFor();await canvasBodyRequested
+        await preview.getByRole('button',{name:'返回画布',exact:true}).click();await preview.waitFor({state:'detached'})
+        const response=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/artifacts/fixture/pages/page-2');releaseCanvasBody();await response
+        await page.locator('[data-artboard-id=page-2] [data-node-id=page-2-heading]').waitFor();assert.equal(await preview.count(),0,'延迟回包不能重新打开已经关闭的预览')
+        await board.getByRole('button',{name:`全窗口查看画板 Page ${previewOrdinal}`,exact:true}).click();await preview.waitFor();await preview.getByText(`LingxiLoop ${previewOrdinal}`,{exact:true}).waitFor();assert.deepEqual(pageReads,['page-2'])
+      }
+      const artboard=preview.locator('[data-preview-artboard]');await artboard.waitFor()
+      if(options['preview-deleted']==='true'){document=applyOperations(document,prepareBatch(document,[{type:'page.delete',pageId:previewId}])).document;await preview.waitFor({state:'detached'});await page.waitForFunction(()=>document.activeElement===document.querySelector('[data-native-artifact-editor]'),undefined,{timeout:3000});assert.equal(receipts.length,0);assert.deepEqual(errors,[]);return{kind:'isolated-board-preview-deleted-diagnostic',peerDeletionClosesPreview:true,editorFocusRestored:true,noLocalDocumentWrites:true,consoleOrPageErrors:errors}}
+      assert.equal(await preview.getByRole('radiogroup',{name:'画板预览缩放',exact:true}).count(),1,'填满与适应使用源码的单选组语义与键盘行为')
+      await preview.getByText(`LingxiLoop ${previewOrdinal}`,{exact:true}).waitFor();const idleStart=await page.evaluate(()=>window.__geometryMessages);await page.waitForTimeout(500);assert.ok((await page.evaluate(()=>window.__geometryMessages))-idleStart<12,'静止预览不应持续向Worker发送重复可见性查询')
+      const source=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-board-preview.json'),'utf8')),sample=source.runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light')),fit=options['preview-small']==='true'?source.smallArtboard.fit:sample.fit
+      for(const [key,value]of Object.entries(fit).filter(([key])=>['x','y','width','height'].includes(key)))assert.ok(Math.abs((await artboard.boundingBox())[key]-value)<=1,`全窗口适应视图的${key}应符合固定源码`)
+      if(options['preview-comments']==='true'){
+        await preview.getByRole('button',{name:'评论',exact:true}).click();const heading=await preview.locator(`[data-node-id="${previewId}-heading"]`).boundingBox();await page.mouse.click(heading.x+heading.width/2,heading.y+heading.height/2)
+        const form=page.locator('.native-comment-composer');await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('请检查这个画板');await form.getByRole('button',{name:'发送',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.native-board-preview .native-comment-pin').length===1)
+        const anchor=decodeCommentAnchor(commentThreads[0].anchor);assert.equal(anchor.pageId,previewId);assert.equal(anchor.nodeId,`${previewId}-heading`);assert.ok(Math.abs(anchor.x-.5)<.01&&Math.abs(anchor.y-.5)<.01);assert.equal(commentThreads[0].label,`Page ${previewOrdinal}`)
+        await page.getByRole('button',{name:'关闭评论',exact:true}).click()
+        const point=await preview.locator('.native-comment-pin').boundingBox();assert.ok(Math.abs(point.x-heading.x-heading.width/2)<40&&Math.abs(point.y-heading.y-heading.height/2)<40)
+      }
+      await writeFile(join(output,'board-fit-metrics.json'),JSON.stringify(await preview.locator('.native-board-preview-title,.native-board-preview-frame,.native-page-scaled').evaluateAll(es=>es.map(e=>{const s=getComputedStyle(e);return{kind:e.className,rect:e.getBoundingClientRect().toJSON(),width:s.width,color:s.color,opacity:s.opacity,visibility:s.visibility,shadow:s.boxShadow,background:s.backgroundColor,text:e.classList.contains('native-board-preview-title')?e.textContent:undefined}})),null,2))
+      await page.screenshot({path:join(output,`design-board-fit-${options['canvas-theme']??'light'}.png`)})
+      await preview.getByRole('radio',{name:'适应',exact:true}).focus();await page.keyboard.press('ArrowLeft');assert.equal(await preview.getByRole('radio',{name:'填满',exact:true}).getAttribute('aria-checked'),'true')
+      for(const [key,value]of Object.entries(sample.fill).filter(([key])=>['x','y','width','height'].includes(key)))assert.ok(Math.abs((await artboard.boundingBox())[key]-value)<=1)
+      const heading=await preview.getByText(`LingxiLoop ${previewOrdinal}`,{exact:true}).boundingBox();assert.ok(Math.abs(heading.x-64)<=1&&Math.abs(heading.y-80)<=1,'填满保留原始CSS尺寸并裁剪溢出')
+      await preview.getByRole('radio',{name:'填满',exact:true}).click()
+      await page.screenshot({path:join(output,`design-board-fill-${options['canvas-theme']??'light'}.png`)})
+      await page.keyboard.press('ArrowRight');assert.equal(await preview.getByRole('radio',{name:'适应',exact:true}).getAttribute('aria-checked'),'true')
+      await preview.getByRole('button',{name:'返回画布',exact:true}).click();await preview.waitFor({state:'detached'})
+      const after=await stage.evaluate(e=>({x:e.scrollLeft,y:e.scrollTop}));assert.deepEqual(after,before,'返回保留进入前画布位置')
+      await board.getByRole('button',{name:`全窗口查看画板 Page ${previewOrdinal}`,exact:true}).click();await preview.waitFor()
+      await page.keyboard.press('Escape');await preview.waitFor({state:'detached'})
+      assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-board-preview-diagnostic',fitMatchesSourceWithin1CssPx:true,fillPreservesNaturalCssAndClips:true,radioGroupArrowNavigation:true,...(options['preview-readonly']==='true'?{readonlyCommentsDisabled:true}:{}),...(options['preview-body-delay']==='true'?{partialBodyLoadingVisible:true,closedPreviewNotReopenedByLateBody:true,oneLazyBodyRead:true}:{}),...(options['preview-comments']==='true'?{previewCommentUsesStableBoardNodeAndLocalCoordinates:true}:{}),backAndEscapeRestoreCamera:true,noDocumentWrites:true,consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-fit-body'){
       const select=async name=>{await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name,exact:true}).click()}

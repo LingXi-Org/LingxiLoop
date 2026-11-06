@@ -31,6 +31,8 @@ window.addEventListener('message', event => {
       try {
         const result = data.type==='svg-font-image'?await(await import('../svg-font-image')).svgFontImage(data.source,data.fontFamily,controller.signal):await executeExport(data.document as ArtifactDocument, {
           format: data.format as ArtifactExportFormat, signal: controller.signal,
+          pixelRatio: data.pixelRatio === 1 ? 1 : 2,
+          htmlArchive: data.htmlArchive === true,
           resolveAsset: asset => new Promise<Blob>((resolve, reject) => {
             controller.signal.throwIfAborted()
             const requestId = String(++serial); assets.set(requestId, { resolve, reject })

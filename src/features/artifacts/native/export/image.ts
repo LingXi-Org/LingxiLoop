@@ -13,7 +13,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
       const { toPng, toJpeg, toSvg } = await import('html-to-image')
       resources.check()
       const render = options.format === 'svg' ? toSvg : options.format === 'jpeg' ? toJpeg : toPng
-      const url = await render(mounted.element, { pixelRatio: 2, skipAutoScale: true, backgroundColor: page.background })
+      const url = await render(mounted.element, { pixelRatio: options.pixelRatio ?? 2, skipAutoScale: true, backgroundColor: page.background })
       resources.check()
       const blob = await fetch(url, { signal: options.signal }).then(response => response.blob())
       resources.progress(1)

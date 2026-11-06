@@ -141,3 +141,17 @@ test('table headers remain semantic and editable in export without promoting old
   const original=await renderPageHtml(plain,new ExportResources(document,{format:'html'}))
   assert.doesNotMatch(original,/<th[ >]/)
 })
+
+
+test('画板网页归档包含可离线打开的单页文件，并保留文档快照', async () => {
+  const document=fixture(),before=JSON.stringify(document)
+  const result=await exportArtifact(document,{format:'html',htmlArchive:true})
+  assert.equal(result.blob.type,'application/zip')
+  assert.equal(result.filename,'导出测试-html.zip')
+  const {default:JSZip}=await import('jszip'),archive=await JSZip.loadAsync(await result.blob.arrayBuffer())
+  assert.deepEqual(Object.keys(archive.files),['导出测试.html'])
+  const html=await archive.file('导出测试.html')!.async('string')
+  assert.ok(html.startsWith('<!doctype html>'));assert.ok(html.includes('中文 text'))
+  assert.ok(html.includes('&lt;script&gt;doNotExecute()&lt;/script&gt;'))
+  assert.equal(JSON.stringify(document),before)
+})

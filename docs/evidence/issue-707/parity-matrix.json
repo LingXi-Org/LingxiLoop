@@ -228,13 +228,14 @@
         "native": "visual/native/design-1440-light.png",
         "matchedStateVerified": false
       },
-      "result": "缺少上游标题动作",
+      "result": "局部交互及几何通过，完整视觉与功能资格待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
-      }
+        "receipt": "functional/design-board-preview.json",
+        "scope": "画板标题动作、全窗口预览和单板导出的局部回归；复杂文档及全部视觉/状态仍未通过。"
+      },
+      "nativePreviewImplementation": "src/features/artifacts/native/BoardPreview.tsx"
     },
     {
       "id": "D06-design",
@@ -281,13 +282,14 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "缺少上游标题动作",
+      "result": "局部交互及几何通过，完整视觉与功能资格待验收",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
-      }
+        "receipt": "functional/design-board-preview.json",
+        "scope": "画板标题动作、全窗口预览和单板导出的局部回归；复杂文档及全部视觉/状态仍未通过。"
+      },
+      "nativePreviewImplementation": "src/features/artifacts/native/BoardPreview.tsx"
     },
     {
       "id": "D07-design",

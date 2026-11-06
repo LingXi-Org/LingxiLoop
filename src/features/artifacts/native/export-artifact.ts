@@ -4,6 +4,8 @@ import type { ArtifactAsset, ArtifactDocument } from '../../../../shared/artifac
 export type ArtifactExportFormat = 'html' | 'pdf' | 'pptx' | 'png' | 'jpeg' | 'svg'
 export interface ArtifactExportOptions {
   format: ArtifactExportFormat
+  pixelRatio?: 1 | 2
+  htmlArchive?: boolean
   resolveAsset?: (asset: ArtifactAsset, signal?: AbortSignal) => Promise<Blob>
   signal?: AbortSignal
   onProgress?: (completed: number, total: number) => void
@@ -15,7 +17,7 @@ export async function exportArtifact(document: ArtifactDocument, options: Artifa
   options.signal?.throwIfAborted()
   const snapshot = structuredClone(document)
   if (typeof window === 'undefined') return (await import('./export/execute')).executeExport(snapshot, options)
-  return runArtifactRealm({type:'start',document:snapshot,format:options.format},options)
+  return runArtifactRealm({type:'start',document:snapshot,format:options.format,pixelRatio:options.pixelRatio,htmlArchive:options.htmlArchive},options)
 }
 
 export function downloadArtifactExport(result: ArtifactExportResult) {

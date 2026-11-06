@@ -1,7 +1,7 @@
 import type { ArtifactDocument } from '../../../../shared/artifact-document'
 import type { ArtifactExportFormat, ArtifactExportOptions, ArtifactExportResult } from './export-artifact'
 
-type ExportTask={type:'start';document:ArtifactDocument;format:ArtifactExportFormat}
+type ExportTask={type:'start';document:ArtifactDocument;format:ArtifactExportFormat;pixelRatio?:1|2;htmlArchive?:boolean}
 type SvgFontTask={type:'svg-font-image';source:string;fontFamily?:string}
 type RealmOptions=Pick<ArtifactExportOptions,'signal'|'resolveAsset'|'onProgress'>
 

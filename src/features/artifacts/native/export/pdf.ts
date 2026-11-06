@@ -1,3 +1,4 @@
+import { artboardsInReadingOrder } from '../canvas-reading-order'
 import { trackExportWorker, releaseExportWorker } from './worker-lifecycle'
 import type { ArtifactDocument } from '../../../../../shared/artifact-document'
 import { artifactPageBackground } from '../../../../../shared/artifact-themes'
@@ -28,7 +29,8 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
   const pages: PdfPageImage[] = []
   try {
     const { toJpeg } = await import('html-to-image')
-    for (const [index, id] of document.pageOrder.entries()) {
+    const pageIds = document.kind === 'design' ? artboardsInReadingOrder(document.pageOrder.map(id => document.pages[id]!)).map(page => page.id) : document.pageOrder
+    for (const [index, id] of pageIds.entries()) {
       resources.check()
       const page = document.pages[id]!, mounted = await mountExportPage(page, resources)
       const background = artifactPageBackground(page, document)

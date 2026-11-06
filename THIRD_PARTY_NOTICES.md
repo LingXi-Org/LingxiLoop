@@ -355,3 +355,33 @@ SIL Open Font License 1.1；原始署名和许可随字体发布于
 `public/fonts/editors/*-OFL.txt`。来源、版本、发布包完整性值、每个文件的
 SHA-256 及字体别名适配见 [字体说明](third_party/editor-fonts/README.md)
 和 [资源清单](third_party/editor-fonts/manifest.json)。没有分发原版私有图标字体。
+
+
+## JSZip 3.10.1
+
+画板网页压缩包在隔离导出环境按需使用 [JSZip](https://github.com/Stuk/jszip/tree/v3.10.1)。
+版本沿用现有锁文件中的 3.10.1，本项目选择其 MIT 许可。
+[上游许可](https://github.com/Stuk/jszip/blob/v3.10.1/LICENSE.markdown)全文中的 MIT 部分如下：
+
+The MIT License
+===============
+
+Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
