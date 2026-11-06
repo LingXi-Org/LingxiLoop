@@ -4,7 +4,7 @@ import { createElement, Fragment, lazy, memo, Suspense, useEffect, useLayoutEffe
 import type { ArtifactAsset, ArtifactDocument, ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
 import { http } from '@/api/core/http'
-import { fetchArtifactAsset } from './assets'
+import { useArtifactAssetRead } from './asset-read-context'
 import type { NativeCompute } from './compute'
 import { useLocalDraft } from './draft-context'
 import { appearance, nodeTransform, paddingCss } from '../../../../shared/artifact-appearance'
@@ -44,27 +44,29 @@ export function nativeStyle(source: ArtifactStyle, document: ArtifactDocument): 
 function AssetVideo({ asset, documentId, presenting, style }: { asset: ArtifactAsset; documentId: string; presenting?: boolean; style?: CSSProperties }) {
   const [source, setSource] = useState<string | null>(null), [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const readAsset = useArtifactAssetRead()
   useEffect(() => {
     const controller = new AbortController(); let url: string | undefined
     setSource(null); setFailed(false)
-    void fetchArtifactAsset(asset, documentId, controller.signal).then(blob => { if (!controller.signal.aborted) { url = URL.createObjectURL(blob); setSource(url) } }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
+    void readAsset(asset, documentId, controller.signal).then(blob => { if (!controller.signal.aborted) { url = URL.createObjectURL(blob); setSource(url) } }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
     return () => { controller.abort(); if (url) URL.revokeObjectURL(url) }
-  }, [asset.url, asset.sha256, documentId, attempt])
+  }, [asset.url, asset.sha256, documentId, attempt, readAsset])
   return failed ? <button type="button" onClick={() => setAttempt(v => v + 1)}>重试视频</button> : source ? <video src={source} controls={presenting} preload="metadata" playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', ...style }} /> : <span aria-busy="true">加载视频…</span>
 }
 function AssetImage({ asset, artifactId, alt, style }: { asset: ArtifactAsset; artifactId: string; alt: string; style: CSSProperties }) {
   const [source, setSource] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const readAsset = useArtifactAssetRead()
   useEffect(() => {
     const controller = new AbortController(); let objectUrl: string | undefined
     setSource(null); setFailed(false)
-    void fetchArtifactAsset(asset, artifactId, controller.signal).then(blob => {
+    void readAsset(asset, artifactId, controller.signal).then(blob => {
       if (controller.signal.aborted) return
       objectUrl = URL.createObjectURL(blob); setSource(objectUrl)
     }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
     return () => { controller.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl) }
-  }, [asset.url, asset.sha256, artifactId, attempt])
+  }, [asset.url, asset.sha256, artifactId, attempt, readAsset])
   return failed ? <button type="button" onClick={() => setAttempt(value => value + 1)}>重试图片</button> : source ? <img src={source} alt={alt} draggable={false} decoding="async" style={style} /> : <span aria-busy="true" style={{ fontSize: 14 }}>加载图片…</span>
 }
 function IsolatedEmbed({ documentId, pageId, node, presenting, pageVersion, revisionSeq }: { documentId: string; pageId: string; node: ArtifactNode; presenting?: boolean;pageVersion?:string;revisionSeq?:string }) {

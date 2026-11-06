@@ -25,6 +25,8 @@ import { NativeCompute } from './compute'
 import { NativeDocumentSession } from './session'
 import { nativeTransport } from './transport'
 import { fetchArtifactAsset } from './assets'
+import { createAssetReads } from './asset-reads'
+import { ArtifactAssetReadContext } from './asset-read-context'
 import { PageContent,NaturalNoteMeasurements } from './renderer'
 import { useVisibleElements } from './use-visibility'
 import { elementBounds } from './visibility'
@@ -105,6 +107,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const saveDocument=useCallback(()=>{drafts.flush('save');void session.retry()},[drafts,session])
   const doc = state.document
   const compute = useMemo(() => new NativeCompute(), [artifactId])
+  const assetReads = useMemo(() => createAssetReads(fetchArtifactAsset), [artifactId])
   const [authorized, setAuthorized] = useState(false)
   const [pageId, setPageId] = useState<string | null>(null)
   const [canvasPageId,setCanvasPageId]=useState<string|null>(()=>{const link=readDesignLink(new URLSearchParams(window.location.search));return kind==='design'&&link?.artifactId===artifactId?link.canvasPageId??null:null})
@@ -243,7 +246,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const currentRef = useRef(current); currentRef.current = current
   const selectedRef = useRef(selected); selectedRef.current = selected
   const dispatch = useCallback((ops: ArtifactOperation[], base?: ArtifactDocument) => { try { session.dispatch(ops, base) } catch (error) { setNotice(editorError(error, '无法应用修改，请重试。')) } }, [session])
-  useEffect(() => { const token = {}; lifetime.current = token; return () => { queueMicrotask(() => { if (lifetime.current === token) { session.dispose(); compute.dispose(); exportingAbort.current?.abort() } }) } }, [session, compute])
+  useEffect(() => { const token = {}; lifetime.current = token; return () => { queueMicrotask(() => { if (lifetime.current === token) { session.dispose(); compute.dispose(); assetReads.dispose(); exportingAbort.current?.abort() } }) } }, [session, compute, assetReads])
   useLayoutEffect(() => { let active = true; setAuthorized(false); if (visible) void session.open().then(() => { if (active) setAuthorized(!!session.getSnapshot().document) }); return () => { active = false } }, [session, visible])
   useEffect(() => { if (!visible) return; const timer = setInterval(() => void session.refresh(), agentWorking ? 700 : 2000); return () => clearInterval(timer) }, [session, visible, agentWorking])
   const refreshComments=useCallback((signal?:AbortSignal)=>http<{threads:EditorComment[]}>(`/artifacts/${encodeURIComponent(artifactId)}/comments`,{signal}).then(value=>{if(!signal?.aborted&&Array.isArray(value.threads))setCommentThreads(value.threads)}),[artifactId])
@@ -613,13 +616,13 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   if (!doc) return <div className="native-loading" role="alert">{state.error || '稿件暂时无法打开'}{notice && <p>{notice}</p>}<button type="button" onClick={() => void session.open()}>重试</button><button type="button" onClick={() => void downloadSource()}>下载原始文件</button>{(vectorDrafts.size>0||vectorEditDrafts.size>0)&&<button type="button" onClick={()=>download(new Blob([JSON.stringify(recovery())],{type:'application/json'}),`${title}.lingxi-recovery.json`)}>下载本地副本</button>}</div>
   const boardWidth = Math.max(viewport.width, ...boardIds.map(value => (displayPages[value].x - origin.x + doc.pages[value].width + 128) * scale))
   const boardHeight = Math.max(viewport.height, ...boardIds.map(value => (displayPages[value].y - origin.y + doc.pages[value].height + 128) * scale))
-  return <EditorColorSessionContext.Provider value={()=>{inspectorBase.current=session.getSnapshot().document}}><EditorPaletteContext.Provider value={palette}><DraftContext.Provider value={drafts}><section ref={editorRoot} data-board-preview={!!focusedBoardId} data-revision={revisionSeq} data-view={view} data-compact={compact} data-compact-rail-open={compactRailOpen} data-tool={tool} data-pen-ready={!!penFitter.current} data-vector-ready={!!CanvasVectorTool} data-inspector-open={inspectorOpen && !presenting} data-comments-open={commentsOpen && !presenting} style={{'--native-inv-scale':1/scale,'--native-sidebar-width': `${!presenting ? (inspectorOpen ? 336 : 0) : 0}px`} as CSSProperties} className={`native-editor native-kind-${kind} ${presenting ? 'native-presenting' : ''}`} data-native-artifact-editor={kind} data-current-page={pageId} data-canvas-page-id={kind==='design'?activeCanvasId:undefined} data-save-state={state.conflict ? 'conflict' : state.pending ? 'pending' : draftCount ? 'draft' : 'saved'} aria-label={`${title}编辑器`} hidden={!visible} tabIndex={focusedBoardId?-1:0}
+  return <ArtifactAssetReadContext.Provider value={assetReads.read}><EditorColorSessionContext.Provider value={()=>{inspectorBase.current=session.getSnapshot().document}}><EditorPaletteContext.Provider value={palette}><DraftContext.Provider value={drafts}><section ref={editorRoot} data-board-preview={!!focusedBoardId} data-revision={revisionSeq} data-view={view} data-compact={compact} data-compact-rail-open={compactRailOpen} data-tool={tool} data-pen-ready={!!penFitter.current} data-vector-ready={!!CanvasVectorTool} data-inspector-open={inspectorOpen && !presenting} data-comments-open={commentsOpen && !presenting} style={{'--native-inv-scale':1/scale,'--native-sidebar-width': `${!presenting ? (inspectorOpen ? 336 : 0) : 0}px`} as CSSProperties} className={`native-editor native-kind-${kind} ${presenting ? 'native-presenting' : ''}`} data-native-artifact-editor={kind} data-current-page={pageId} data-canvas-page-id={kind==='design'?activeCanvasId:undefined} data-save-state={state.conflict ? 'conflict' : state.pending ? 'pending' : draftCount ? 'draft' : 'saved'} aria-label={`${title}编辑器`} hidden={!visible} tabIndex={focusedBoardId?-1:0}
     onKeyDown={event => {
       if(!editorOwnsEvent(event.currentTarget,event.target))return
       if(focusedBoardId){
         if(!event.nativeEvent.isComposing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();event.stopPropagation();drafts.flush('save');void session.retry()}
         else if(!event.nativeEvent.isComposing&&event.key==='Escape'){event.preventDefault();event.stopPropagation();closeBoardPreview()}
-        else if(['Delete','Backspace'].includes(event.key)||(event.ctrlKey||event.metaKey)&&['z','y'].includes(event.key.toLowerCase())){event.preventDefault();event.stopPropagation()}
+        else if(!(event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')&&(['Delete','Backspace'].includes(event.key)||(event.ctrlKey||event.metaKey)&&['z','y'].includes(event.key.toLowerCase()))){event.preventDefault();event.stopPropagation()}
         return
       }
       if(pointEditing&&!event.nativeEvent.isComposing&&!(event.target as HTMLElement).closest('input,textarea,[contenteditable="true"],button,summary')&&pointEditor.current?.key(event))return
@@ -798,5 +801,5 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     {dialog === 'layouts' && <Modal title="版式" onClose={() => setDialog(null)}><div className="native-layout-picker">{SLIDE_LAYOUTS.map(layout => <button type="button" key={layout.id} onClick={() => { const page = {...createPage(id(), `页面 ${doc.pageOrder.length+1}`),...(current?{width:current.width,height:current.height,background:current.background,themeBackground:current.themeBackground,section:current.section}:{})}; const nodes = layoutSlide(layout.id,page,id); page.nodes=Object.fromEntries(nodes.map(n => [n.id,n])); page.nodeOrder=nodes.map(n => n.id); dispatch([{type:'page.insert',page,index:current ? doc.pageOrder.indexOf(current.id)+1 : undefined}]); setPageId(page.id); setView('slide'); setSelected([]); setDialog(null) }}><span className={`native-layout-preview native-layout-${layout.id}`} aria-hidden="true">{(() => { const p=createPage(`preview-${layout.id}`); const nodes=layoutSlide(layout.id,p,()=>id()); p.nodes=Object.fromEntries(nodes.map(n=>[n.id,n])); p.nodeOrder=nodes.map(n=>n.id); return <PageThumbnail page={p} document={doc} loaded /> })()}</span>{layout.title}</button>)}</div></Modal>}
     {(dialog === 'rename' || dialog === 'section') && <Modal title={dialog === 'rename' ? '重命名画板' : '添加节'} onClose={() => setDialog(null)}><form className="native-name-form" onSubmit={e => { e.preventDefault(); if (!dialogText.trim()) return; dispatch(pageSelection.map(pageId => ({type:'page.patch',pageId,patch:dialog === 'rename' ? {title:dialogText.trim()} : {section:dialogText.trim()}}))); setDialog(null) }}><label>名称<input aria-label="名称" autoFocus value={dialogText} maxLength={dialog === 'section' ? 200 : 1000} onChange={e => setDialogText(e.target.value)} /></label><button className="native-primary" type="submit">保存</button></form></Modal>}
     <span className="native-visually-hidden" aria-live="polite" aria-atomic="true"><span key={announcement.id}>{announcement.text}</span></span>
-  </section></DraftContext.Provider></EditorPaletteContext.Provider></EditorColorSessionContext.Provider>
+  </section></DraftContext.Provider></EditorPaletteContext.Provider></EditorColorSessionContext.Provider></ArtifactAssetReadContext.Provider>
 }

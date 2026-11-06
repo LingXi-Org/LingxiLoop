@@ -124,6 +124,9 @@ jobs:
           for task_case in save-retry keyboard-isolation module-cancel; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-$task_case=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-$task_case"
           done
+          for task_editor in design slides; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode="$task_editor" --checks=asset-reads --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-asset-reads-$task_editor"
+          done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-export"
           for task_size in 1920x1200 1440x1000 768x1024 390x844; do
             task_width=${task_size%x*}

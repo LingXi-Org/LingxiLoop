@@ -1,3 +1,5 @@
+import { useArtifactAssetRead } from './asset-read-context'
+import type { AssetRead } from './asset-reads'
 import { artifactShapeGeometry } from '../../../../shared/artifact-shapes'
 import { editorFontFamily } from './editor-fonts'
 import { SvgImage } from './SvgImage'
@@ -131,7 +133,7 @@ function scheduleImage<T>(signal: AbortSignal, work: () => Promise<T>): Promise<
     let started = false
     const task: ImageTask = {
       start() {
-        if (signal.aborted) { reject(new DOMException('Cancelled', 'AbortError')); return }
+        if (signal.aborted) { reject(new DOMException('资源读取已取消', 'AbortError')); return }
         started = true; activeImages++
         signal.removeEventListener('abort', task.cancel)
         void work().then(resolve, reject).finally(() => { activeImages--; pumpImages() })
@@ -141,7 +143,7 @@ function scheduleImage<T>(signal: AbortSignal, work: () => Promise<T>): Promise<
         const index = imageQueue.indexOf(task)
         if (index >= 0) imageQueue.splice(index, 1)
         signal.removeEventListener('abort', task.cancel)
-        reject(new DOMException('Cancelled', 'AbortError'))
+        reject(new DOMException('资源读取已取消', 'AbortError'))
       },
     }
     if (signal.aborted) { task.cancel(); return }
@@ -149,17 +151,16 @@ function scheduleImage<T>(signal: AbortSignal, work: () => Promise<T>): Promise<
     imageQueue.push(task); pumpImages()
   })
 }
-async function loadImage(asset: ArtifactAsset, artifactId: string, key: string, signal: AbortSignal) {
+async function loadImage(asset: ArtifactAsset, artifactId: string, key: string, signal: AbortSignal, readAsset: AssetRead) {
   return scheduleImage(signal, async () => {
     const cached = images.get(key)
     if (cached) return cached
-    const { fetchArtifactAsset } = await import('./assets')
-    const blob = await fetchArtifactAsset(asset, artifactId, signal)
-    if (signal.aborted) throw new DOMException('Cancelled', 'AbortError')
+    const blob = await readAsset(asset, artifactId, signal)
+    if (signal.aborted) throw new DOMException('资源读取已取消', 'AbortError')
     const ratio = asset.width && asset.height ? Math.min(1, 160 / asset.width, 90 / asset.height) : null
     const bitmap = await createImageBitmap(blob, ratio ? { resizeWidth: Math.max(1, Math.round(asset.width! * ratio)), resizeHeight: Math.max(1, Math.round(asset.height! * ratio)), resizeQuality: 'low' } : undefined)
     try {
-      if (signal.aborted) throw new DOMException('Cancelled', 'AbortError')
+      if (signal.aborted) throw new DOMException('资源读取已取消', 'AbortError')
       const scale = Math.min(1, 160 / bitmap.width, 90 / bitmap.height)
       const canvas = window.document.createElement('canvas')
       canvas.width = Math.max(1, Math.round(bitmap.width * scale)); canvas.height = Math.max(1, Math.round(bitmap.height * scale))
@@ -180,6 +181,7 @@ function ThumbnailImage({ node, document, loaded }: { node: PreviewNode; documen
     return source && node.imageKey ? { key: node.imageKey, source } : null
   })
   const asset = node.assetId ? document.assets[node.assetId] : undefined
+  const readAsset = useArtifactAssetRead()
   useEffect(() => {
     const key = node.imageKey
     if (!key) return
@@ -187,11 +189,11 @@ function ThumbnailImage({ node, document, loaded }: { node: PreviewNode; documen
     if (cached) { setState({ key, source: cached }); return }
     if (!loaded || !asset) return
     const controller = new AbortController()
-    void loadImage(asset, document.id, key, controller.signal).then(source => {
+    void loadImage(asset, document.id, key, controller.signal, readAsset).then(source => {
       if (!controller.signal.aborted) setState({ key, source })
     }).catch(() => { /* An unavailable image remains a neutral thumbnail shape. */ })
     return () => controller.abort()
-  }, [node.imageKey, asset, loaded, document.id])
+  }, [node.imageKey, asset, loaded, document.id, readAsset])
   const source = state && state.key === node.imageKey ? state.source : node.imageKey ? images.get(node.imageKey) : undefined
   if (!source) return <rect width={node.width} height={node.height} fill="#e1e5eb" />
   const crop = node.crop ?? { x: 0, y: 0, width: 1, height: 1 }

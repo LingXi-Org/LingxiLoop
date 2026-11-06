@@ -76,7 +76,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-board-preview','canvas-board-export','canvas-board-preview-load'].includes(options.checks)){
@@ -141,6 +141,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let historyEntry = null
   const historyRequests = []
   let fixtureWrite=options['preview-readonly']!=='true'
+  let holdImageReads=options.checks==='asset-reads',releaseImageReads
+  const imageReadGate=new Promise(resolve=>{releaseImageReads=resolve}),physicalImageReads=[]
   const pageReads=[]
   let releaseCanvasBody,canvasBodyLoaded=false,notifyCanvasBody
   const canvasBodyRequested=new Promise(resolve=>{notifyCanvasBody=resolve})
@@ -214,6 +216,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if (url.pathname.includes('/assets/')) {
       assert.equal(request.headers()['x-company-id'], 'fixture-company')
       assert.equal(request.headers()['x-project-id'], 'fixture-project')
+      if(options.checks==='asset-reads'){physicalImageReads.push(url.pathname);if(holdImageReads)await imageReadGate}
       const image = fixture.images[Number(url.pathname.split('-').at(-1)) - 1]
       await route.fulfill({ status: 200, contentType: 'image/png', body: image.bytes }); return
     }
@@ -246,6 +249,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const ready = async index => {
     const canvas = page.locator(`[data-page-id="page-${index}"]`)
     if(!visualChecks.includes(options.checks)) await canvas.locator('[data-formula-ready=true]').waitFor()
+    if(holdImageReads){await canvas.locator('[data-node-type=image] [aria-busy=true]').waitFor();return}
     await canvas.locator('[data-node-type=image] img').waitFor().catch(async error=>{await page.screenshot({path:join(output,'failure.png')});await writeFile(join(output,'failure-state.json'),JSON.stringify(await page.evaluate(()=>({notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent),root:[...document.querySelectorAll('[data-native-artifact-editor]')].map(e=>({current:e.dataset.currentPage,canvas:e.dataset.canvasPageId})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON(),nodes:e.querySelectorAll('[data-node-id]').length})),geometry:window.__geometryLog?.slice(-8)})),null,2));throw error})
     await page.waitForFunction(index => {
       const image = window.document.querySelector(`[data-page-id="page-${index}"] [data-node-type=image] img`)
@@ -378,6 +382,11 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.mouse.click(600,300);await page.keyboard.press('Escape');assert.equal(document.seq,0);assert.deepEqual(errors,[])
       return{kind:'isolated-canvas-vector-loading-diagnostic',lazyBeforeSelection:true,chineseLoadFailure:true,editorRetained:true,noDocumentWrites:true,reopenedToolRecovered:true,consoleOrPageErrors:errors}
     }
+    if(options.checks==='asset-reads'){
+      await page.locator('[data-page-id=page-1] [data-node-type=image] [aria-busy=true]').waitFor();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.waitForTimeout(100)
+      const during=physicalImageReads.length;holdImageReads=false;releaseImageReads();await ready(1);assert.equal(during,1,'同一编辑器的主图与缩略图应只发出一个正在进行的同图请求');assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-asset-read-diagnostic',oneInFlightImageForMainAndThumbnails:true,imageDecoded:true,noDocumentWrites:true,physicalImageReads:during,consoleOrPageErrors:errors}
+    }
     if(options.checks==='canvas-board-preview-load'){
       assert.equal(boardModuleRequests,0,'进入预览前不加载预览模块')
       const open=()=>page.locator('[data-artboard-id=page-2]').getByRole('button',{name:'全窗口查看画板 Page 2',exact:true}).click()
@@ -451,7 +460,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       for(const [key,value]of Object.entries(fit).filter(([key])=>['x','y','width','height'].includes(key)))assert.ok(Math.abs((await artboard.boundingBox())[key]-value)<=1,`全窗口适应视图的${key}应符合固定源码`)
       if(options['preview-comments']==='true'){
         await preview.getByRole('button',{name:'评论',exact:true}).click();const heading=await preview.locator(`[data-node-id="${previewId}-heading"]`).boundingBox();await page.mouse.click(heading.x+heading.width/2,heading.y+heading.height/2)
-        const form=page.locator('.native-comment-composer');await form.getByRole('textbox',{name:'评论内容',exact:true}).fill('请检查这个画板');await form.getByRole('button',{name:'发送',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.native-board-preview .native-comment-pin').length===1)
+        const form=page.locator('.native-comment-composer'),input=form.getByRole('textbox',{name:'评论内容',exact:true});await input.fill('abc');await input.press('End');await input.pressSequentially('d');await input.press('Control+z');assert.equal(await input.inputValue(),'abc','评论输入框应保留原生撤销');await input.press('End');await input.press('Backspace');assert.equal(await input.inputValue(),'ab','预览评论应允许退格删字');await input.press('Home');await input.press('Delete');assert.equal(await input.inputValue(),'b','预览评论应允许向后删字');assert.equal(receipts.length,0,'评论中的编辑键不能修改文档');await input.fill('请检查这个画板');await form.getByRole('button',{name:'发送',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.native-board-preview .native-comment-pin').length===1)
         const anchor=decodeCommentAnchor(commentThreads[0].anchor);assert.equal(anchor.pageId,previewId);assert.equal(anchor.nodeId,`${previewId}-heading`);assert.ok(Math.abs(anchor.x-.5)<.01&&Math.abs(anchor.y-.5)<.01);assert.equal(commentThreads[0].label,`Page ${previewOrdinal}`)
         await page.getByRole('button',{name:'关闭评论',exact:true}).click()
         const point=await preview.locator('.native-comment-pin').boundingBox();assert.ok(Math.abs(point.x-heading.x-heading.width/2)<40&&Math.abs(point.y-heading.y-heading.height/2)<40)
