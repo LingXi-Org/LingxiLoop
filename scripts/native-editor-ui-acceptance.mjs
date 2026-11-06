@@ -27,7 +27,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -78,11 +78,19 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
+  if(options.checks==='slide-speaker'){document.pages['page-1'].notes='第一点：介绍设计。\n第二点：说明交互。';document.pages['page-2'].skip=true}
+  if(options.checks==='slide-speaker'&&options['speaker-case']==='executable-preview'){
+    const page=document.pages['page-1'],original=page.nodes['page-1-image'],source='<script>parent.postMessage({type:"native-speaker-program-start"},"*")</script><p>隔离内容</p>'
+    page.nodes['speaker-embed']={...original,id:'speaker-embed',type:'embed',embed:{format:'html',source,sourceHash:createHash('sha256').update(source).digest('hex'),previewAssetId:original.assetId}};delete page.nodes['speaker-embed'].assetId;page.nodeOrder.push('speaker-embed')
+  }
+  if(options.checks==='slide-speaker'&&options['speaker-case']==='visual'){document.pages['page-1'].notes='第一点：介绍设计。 第二点：说明交互。';document.pages['page-2'].skip=false}
+  if(options.checks==='slide-speaker'&&options['speaker-case']==='no-notes')for(const page of Object.values(document.pages))page.notes=''
+  if(options.checks==='slide-speaker'&&options['speaker-case']==='all-skipped')for(const page of Object.values(document.pages))page.skip=true
   if(options['presentation-mixed-sizes']==='true'){
     const page=document.pages['page-2'];page.width=options['presentation-portrait']==='true'?540:960;page.height=options['presentation-portrait']==='true'?960:540
     for(const id of page.nodeOrder)page.nodes[id].motionId=id.replace('page-2-','page-1-')
@@ -156,26 +164,28 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let holdAcknowledgment = false, releaseAcknowledgment = null
   let historyEntry = null
   const historyRequests = []
-  let fixtureWrite=options['preview-readonly']!=='true'
+  let fixtureWrite=options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
   let holdImageReads=options.checks==='asset-reads',releaseImageReads
   const imageReadGate=new Promise(resolve=>{releaseImageReads=resolve}),physicalImageReads=[]
   const pageReads=[]
   let releaseCanvasBody,canvasBodyLoaded=false,notifyCanvasBody
   const canvasBodyRequested=new Promise(resolve=>{notifyCanvasBody=resolve})
-  const delayedPageId=options.checks==='canvas-fit-body'?'positioned-body':options['preview-body-delay']==='true'?'page-2':null
+  let speakerPreviewFailure=options['speaker-case']==='preview-error'
+  const delayedPageId=speakerPreviewFailure?'page-3':options.checks==='canvas-fit-body'?'positioned-body':options['preview-body-delay']==='true'?'page-2':null
   const snapshot = () => ({ document:delayedPageId&&!canvasBodyLoaded?{...document,pages:{...document.pages,[delayedPageId]:{...document.pages[delayedPageId],nodes:{},nodeOrder:[]}}}:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds:delayedPageId&&!canvasBodyLoaded?artifactPageIds(document).filter(id=>id!==delayedPageId):options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
-  const page = await browser.newPage({ viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:options.checks==='slide-transitions'?'no-preference':'reduce' })
+  const page = await browser.newPage({ hasTouch:options['speaker-case']==='coarse', viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:options.checks==='slide-transitions'?'no-preference':'reduce' })
+  if(options['speaker-case']==='executable-preview')await page.addInitScript(()=>{window.__speakerProgramStarts=0;window.addEventListener('message',event=>{if(event.data?.type==='native-speaker-program-start')window.__speakerProgramStarts++})})
   if(options.checks==='canvas-layout-cache')await page.addInitScript(()=>{window.__naturalProbePeak=0;new MutationObserver(()=>{window.__naturalProbePeak=Math.max(window.__naturalProbePeak,document.querySelectorAll('[data-native-measure-node]').length)}).observe(document,{childList:true,subtree:true})})
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
   let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0,svgModuleBlocked=options.checks==='svg-font-module',svgModuleRequests=0
   const editorFontRequests=[]
-  let presentationModuleRequests=0
+  let presentationModuleRequests=0,speakerModuleRequests=0
   let boardModuleBlocked=options.checks==='canvas-board-preview-load',boardModuleRequests=0
   let pointModuleBlocked=options.checks==='canvas-vector-edit-load',pointModuleRequests=0
   let expectedVectorDenied=false;let vectorModuleBlocked=options.checks==='canvas-vector-load',vectorModuleRequests=0
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
-  page.on('request',request=>{const path=new URL(request.url()).pathname;if(path.includes('/CanvasPenTool.tsx'))vectorModuleRequests++;if(path.includes('/CanvasPointEditor.tsx'))pointModuleRequests++;if(path.includes('/BoardPreview.tsx'))boardModuleRequests++;if(path.includes('/SlidesPresentation.tsx'))presentationModuleRequests++})
+  page.on('request',request=>{const path=new URL(request.url()).pathname;if(path.includes('/CanvasPenTool.tsx'))vectorModuleRequests++;if(path.includes('/CanvasPointEditor.tsx'))pointModuleRequests++;if(path.includes('/BoardPreview.tsx'))boardModuleRequests++;if(path.includes('/SlidesPresentation.tsx'))presentationModuleRequests++;if(path.includes('/SlidesSpeaker.tsx'))speakerModuleRequests++})
   page.setDefaultTimeout(30_000)
   if(options['presentation-portrait']==='true')await page.addInitScript(()=>{const original=window.setTimeout;window.setTimeout=(fn,delay,...args)=>original(fn,[570,670,730].includes(delay)?delay*10:delay,...args)})
   await page.addInitScript(()=>{window.__geometryLog=[];window.__geometryMessages=0;window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')window.__penRequests++;if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
@@ -239,6 +249,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await route.fulfill({ status: 200, contentType: 'image/png', body: image.bytes }); return
     }
     let result = snapshot()
+    if(options['speaker-case']==='preview-error'&&url.pathname.endsWith('/pages/page-3')){pageReads.push('page-3');if(speakerPreviewFailure){await route.fulfill({status:503,json:{error:'页面加载失败'}});return}canvasBodyLoaded=true;await route.fulfill({status:200,json:{page:document.pages['page-3']}});return}
     if(delayedPageId&&url.pathname.endsWith('/pages/'+delayedPageId)){pageReads.push(delayedPageId);await new Promise(resolve=>{releaseCanvasBody=resolve;notifyCanvasBody()});canvasBodyLoaded=true;await route.fulfill({status:200,json:{page:document.pages[delayedPageId]}});return}
     if(options.checks==='viewport-loading'&&url.pathname.includes('/pages/')){const id=url.pathname.split('/pages/')[1];pageReads.push(id);await route.fulfill({status:200,json:{page:document.pages[id]}});return}
     if (url.pathname.endsWith('/operations')) {
@@ -279,6 +290,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     const reference=document.pages[mounted.id],scale=mounted.width/reference.width
     await page.locator('.native-stage').evaluate((element,point)=>element.scrollTo({left:point.x,top:point.y,behavior:'instant'}),{x:mounted.x+(point.x-reference.x)*scale-48,y:mounted.y+(point.y-reference.y)*scale-80})
   }
+  const startSlides=async()=>{await page.getByLabel('放映',{exact:true}).click();await page.getByRole('menuitem',{name:'放映',exact:true}).click()}
   const select = async index => {
     if (kind === 'design') {
       if (!(await page.getByLabel('画布缩放',{exact:true}).innerText()).includes('50%')) { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'50%',exact:true}).click() }
@@ -300,10 +312,117 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(options.checks==='slide-transitions'&&options['presentation-executable-target']==='true'){
       await page.evaluate(()=>{window.__motionEmbedStarts=0;window.__overlayEmbedPeak=0;window.addEventListener('message',event=>{if(event.data?.type==='native-motion-embed-start')window.__motionEmbedStarts++});new MutationObserver(()=>{window.__overlayEmbedPeak=Math.max(window.__overlayEmbedPeak,document.querySelectorAll('.native-magic-overlay iframe').length)}).observe(document.body,{childList:true,subtree:true})})
       await page.getByLabel('显示属性',{exact:true}).click();await page.locator('.native-transition-menu>summary').click();await page.getByRole('menuitemradio',{name:'神奇移动',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
-      await page.getByRole('button',{name:'放映',exact:true}).click();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await show.press('ArrowRight');await page.waitForFunction(()=>window.__motionEmbedStarts>=1);await page.waitForFunction(()=>!document.querySelector('.native-slides-presentation-outgoing'));await page.waitForTimeout(250)
+      await startSlides();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await show.press('ArrowRight');await page.waitForFunction(()=>window.__motionEmbedStarts>=1);await page.waitForFunction(()=>!document.querySelector('.native-slides-presentation-outgoing'));await page.waitForTimeout(250)
       const observation=await page.evaluate(()=>({starts:window.__motionEmbedStarts,maximumOverlayIframes:window.__overlayEmbedPeak,currentIframes:document.querySelectorAll('.native-slides-presentation-current iframe').length}))
       assert.deepEqual(observation,{starts:1,maximumOverlayIframes:0,currentIframes:1},'目标配对组新增隔离内容时也必须只执行一次')
       await show.press('Escape');assert.deepEqual(errors,[]);return{kind:'isolated-motion-executable-target',observation,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='slide-speaker'){
+      assert.equal(kind,'slides');assert.equal(speakerModuleRequests,0,'演讲者组件在普通编辑时不加载')
+      if(options['speaker-case']==='coarse'){await page.getByRole('button',{name:'放映',exact:true}).click();await page.getByRole('region',{name:'幻灯片放映',exact:true}).waitFor();assert.equal(await page.locator('.native-presentation-notes').innerText(),'第一点：介绍设计。\n第二点：说明交互。');assert.equal(page.context().pages().length,1);assert.equal(speakerModuleRequests,0);assert.deepEqual(errors,[]);return{kind:'isolated-speaker-coarse-pointer',directPresentationWithDockedNotes:true,noPopup:true,consoleOrPageErrors:errors}}
+      if(options['speaker-case']==='executable-preview'){await page.waitForFunction(()=>window.__speakerProgramStarts>=1);await page.evaluate(()=>{window.__speakerProgramStarts=0})}
+      if(options['speaker-case']==='all-skipped'){assert.equal(await page.getByLabel('放映',{exact:true}).getAttribute('aria-disabled'),'true');assert.equal(speakerModuleRequests,0);return{kind:'isolated-speaker-all-skipped',presentDisabled:true,consoleOrPageErrors:errors}}
+      if(options['speaker-case']==='skipped-current')await select(2)
+      if(options['speaker-case']==='blocked')await page.evaluate(()=>{window.open=()=>null})
+      if(options['speaker-case']==='module-error')await page.route('**/SlidesSpeaker.tsx*',route=>route.abort('failed'))
+      await page.getByLabel('放映',{exact:true}).click()
+      const speakerAction=page.getByRole('menuitem',{name:'使用演讲者视图放映',exact:true})
+      await speakerAction.waitFor({timeout:5000})
+      if(options['speaker-case']==='no-notes'){assert.equal(await speakerAction.isDisabled(),true);assert.equal(speakerModuleRequests,0);return{kind:'isolated-speaker-no-notes',speakerDisabled:true,consoleOrPageErrors:errors}}
+      if(options['speaker-case']==='blocked'){
+        await speakerAction.click();await page.getByRole('region',{name:'幻灯片放映',exact:true}).waitFor();assert.equal(await page.locator('.native-presentation-notes').innerText(),'第一点：介绍设计。\n第二点：说明交互。');assert.equal(speakerModuleRequests,0);await page.getByRole('button',{name:'退出放映',exact:true}).click();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-blocked',dockedNotesFallback:true,consoleOrPageErrors:errors}
+      }
+      const popupPromise=page.waitForEvent('popup')
+      await speakerAction.click()
+      const speaker=await popupPromise
+      speaker.on('pageerror',error=>errors.push(error.message))
+      if(options['speaker-case']==='module-error'){
+        await page.getByRole('alert').filter({hasText:'演讲者视图未能加载'}).waitFor();assert.equal(speaker.isClosed(),true);assert.equal(await page.getByRole('region',{name:'幻灯片放映',exact:true}).isVisible(),true);return{kind:'isolated-speaker-module-error',audienceViewRetained:true,popupClosed:true,expectedNetworkErrors:errors.filter(text=>text==='Failed to load resource: net::ERR_FAILED'),consoleOrPageErrors:errors.filter(text=>text!=='Failed to load resource: net::ERR_FAILED')}
+      }
+      if(options['speaker-case']==='skipped-current'){
+        await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('[data-current-page]').dataset.currentPage==='page-3');assert.equal(await speaker.locator('[data-speaker-position]').innerText(),'第 2 / 2 页');await page.getByRole('button',{name:'退出放映',exact:true}).click();await speaker.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(speaker.isClosed(),false);await speaker.close();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-skipped-current',startedAtNextPresentable:true,consoleOrPageErrors:errors}
+      }
+      if(options['speaker-case']==='readonly'){
+        await speaker.getByRole('switch',{name:'编辑备注',exact:true}).waitFor();assert.equal(await speaker.getByRole('switch',{name:'编辑备注',exact:true}).isDisabled(),true);const original=JSON.stringify(document);await speaker.getByRole('button',{name:'下一页',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-current-page]').dataset.currentPage==='page-3');assert.equal(JSON.stringify(document),original);await page.getByRole('button',{name:'退出放映',exact:true}).click();await speaker.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(speaker.isClosed(),false);await speaker.close();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-readonly',notesDisabled:true,navigationRetained:true,documentUnchanged:true,consoleOrPageErrors:errors}
+      }
+      if(options['speaker-case']==='preview-error'){
+        const retry=speaker.getByRole('button',{name:'重新加载下一页预览',exact:true});await retry.waitFor();await speaker.screenshot({path:join(output,'speaker-preview-error.png')});assert.equal(pageReads.filter(id=>id==='page-3').length,1);speakerPreviewFailure=false;await retry.click();await speaker.getByRole('button',{name:'转到下一页',exact:true}).waitFor();await speaker.locator('[data-node-id="page-3-image"] img').waitFor();assert.equal(pageReads.filter(id=>id==='page-3').length,2);const expectedNetworkErrors=errors.filter(text=>/Failed to load resource:.*503/.test(text)),unexpected=errors.filter(text=>!/Failed to load resource:.*503/.test(text));assert.deepEqual(unexpected,[]);return{kind:'isolated-speaker-preview-recovery',attempts:2,recovered:true,expectedNetworkErrors,consoleOrPageErrors:unexpected}
+      }
+      if(options['speaker-case']==='executable-preview'){
+        await speaker.locator('[data-node-id="speaker-embed"] img').waitFor();await page.waitForFunction(()=>window.__speakerProgramStarts>=1);await speaker.waitForTimeout(150);assert.equal(await speaker.locator('iframe').count(),0);assert.equal(await page.evaluate(()=>window.__speakerProgramStarts),1);assert.equal(await page.locator('.native-slides-presentation-current iframe').count(),1);assert.equal(document.pages['page-1'].nodes['speaker-embed'].type,'embed');assert.deepEqual(errors,[]);return{kind:'isolated-speaker-executable-preview',speakerUsesStaticSnapshot:true,speakerIframes:0,audienceIframes:1,programStarts:1,originalUnchanged:true,consoleOrPageErrors:errors}
+      }
+      if(options['speaker-case']==='visual'){
+        await speaker.getByRole('button',{name:'暂停',exact:true}).click();await speaker.getByRole('button',{name:'重置',exact:true}).click();const screenshots=[]
+        assert.equal(await speaker.getByRole('button',{name:'转到下一页',exact:true}).getAttribute('title'),'LingxiLoop 2','相同文档的预览标题应来自幻灯片正文标题')
+        for(const [width,height]of [[1000,640],[1920,1200],[1440,1000],[768,1024],[390,844]]){
+          await speaker.setViewportSize({width,height});await speaker.waitForFunction(w=>document.querySelector('.native-speaker').classList.contains('native-speaker-wide')===(w>=640),width)
+          if(width>=640)await speaker.waitForFunction(()=>{const preview=document.querySelector('.native-speaker-current [data-speaker-preview]'),content=preview?.querySelector('.native-page-content');return content&&Math.abs(content.getBoundingClientRect().width-preview.clientWidth)<1&&[...document.images].length>=2&&[...document.images].every(img=>img.complete&&img.naturalWidth>0)})
+          await speaker.evaluate(()=>document.fonts.ready);await speaker.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+          await speaker.screenshot({path:join(output,width+'x'+height+'.png')});screenshots.push({width,height,file:width+'x'+height+'.png'})
+        }
+        assert.deepEqual(errors,[]);return{kind:'isolated-speaker-visual-states',screenshots,qualification:false,consoleOrPageErrors:errors}
+      }
+      if(options['speaker-case']==='close-draft'){
+        await speaker.getByRole('switch',{name:'编辑备注',exact:true}).click();await speaker.getByRole('textbox',{name:'讲者备注',exact:true}).fill('关闭讲者窗口前保留的中文备注。');await speaker.close();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(document.pages['page-1'].notes,'关闭讲者窗口前保留的中文备注。');assert.equal(await page.getByRole('region',{name:'幻灯片放映',exact:true}).isVisible(),true);assert.deepEqual(errors,[]);return{kind:'isolated-speaker-close-draft',savedOnClose:true,audienceContinues:true,consoleOrPageErrors:errors}
+      }
+      await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor()
+      await writeFile(join(output,'speaker-layout.json'),JSON.stringify(await speaker.locator('.native-speaker,.native-speaker-left,.native-speaker-bar,.native-speaker-clock,.native-speaker-current>.native-speaker-preview,.native-speaker-adjacent,.native-speaker-head,.native-speaker-notes').evaluateAll(es=>es.map(e=>{const style=getComputedStyle(e);return{class:e.className,rect:e.getBoundingClientRect().toJSON(),fontSize:style.fontSize,lineHeight:style.lineHeight}})),null,2))
+      assert.deepEqual(speaker.viewportSize(),{width:1000,height:640})
+      await page.locator('.native-slides-presentation').waitFor()
+      assert.equal(await speaker.getByRole('region',{name:'讲者备注',exact:true}).innerText(),'第一点：介绍设计。\n第二点：说明交互。')
+      await speaker.getByRole('button',{name:'暂停',exact:true}).hover();assert.equal(await speaker.getByRole('button',{name:'暂停',exact:true}).evaluate(element=>getComputedStyle(element).backgroundColor),'rgba(255, 255, 255, 0.1)');assert.equal(await speaker.getByRole('button',{name:'上一页',exact:true}).evaluate(element=>getComputedStyle(element).opacity),'1')
+      await speaker.getByRole('button',{name:'暂停',exact:true}).click()
+      const paused=await speaker.locator('[data-speaker-clock]').innerText()
+      await speaker.waitForTimeout(1100)
+      assert.equal(await speaker.locator('[data-speaker-clock]').innerText(),paused)
+      await speaker.getByRole('button',{name:'重置',exact:true}).click()
+      assert.equal(await speaker.locator('[data-speaker-clock]').innerText(),'0:00')
+      await speaker.getByRole('button',{name:'继续',exact:true}).click()
+      await speaker.getByRole('switch',{name:'编辑备注',exact:true}).click()
+      const notes=speaker.getByRole('textbox',{name:'讲者备注',exact:true})
+      const text='中文演讲备注：第一部分。'
+      await notes.fill(text)
+      await notes.dispatchEvent('compositionstart')
+      await notes.fill(text+'正在输入')
+      await page.keyboard.press('Control+s')
+      assert.notEqual(document.pages['page-1'].notes,text+'正在输入','中文组字未结束时不得提前提交')
+      await notes.dispatchEvent('compositionend')
+      await notes.press('Escape')
+      await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor()
+      assert.equal(await page.getByRole('region',{name:'幻灯片放映',exact:true}).isVisible(),true,'讲者备注中的Escape只结束编辑，不关闭放映')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+      assert.equal(document.pages['page-1'].notes,text+'正在输入')
+      await speaker.getByRole('button',{name:'下一页',exact:true}).click()
+      await page.waitForFunction(()=>document.querySelector('[data-current-page]').dataset.currentPage==='page-3')
+      assert.equal(await speaker.locator('[data-speaker-position]').innerText(),'第 2 / 2 页')
+      await speaker.keyboard.press('ArrowLeft')
+      await page.waitForFunction(()=>document.querySelector('[data-current-page]').dataset.currentPage==='page-1')
+      await speaker.getByRole('region',{name:'讲者备注',exact:true}).filter({hasText:text}).waitFor()
+      await speaker.screenshot({path:join(output,'speaker-wide.png')})
+      await speaker.keyboard.press('Tab');await speaker.getByRole('region',{name:'讲者备注',exact:true}).focus();const focus=await speaker.getByRole('region',{name:'讲者备注',exact:true}).evaluate(element=>({visible:element.matches(':focus-visible'),outline:getComputedStyle(element).outlineWidth,outlineStyle:getComputedStyle(element).outlineStyle,shadow:getComputedStyle(element).boxShadow}));await writeFile(join(output,'speaker-focus.json'),JSON.stringify({focus,styles:await speaker.getByRole('region',{name:'讲者备注',exact:true}).evaluate(element=>({class:element.className,forced:matchMedia('(forced-colors:active)').matches,matches:[...document.styleSheets].flatMap(sheet=>{try{return [...sheet.cssRules].filter(rule=>rule.selectorText&&element.matches(rule.selectorText)).map(rule=>rule.cssText)}catch{return []}})}))},null,2));assert.equal(focus.visible,true);assert.equal(focus.outlineStyle,'none');assert.match(focus.shadow,/inset/);
+      await speaker.setViewportSize({width:390,height:844})
+      await speaker.waitForFunction(()=>!document.querySelector('[data-speaker-preview]'))
+      assert.equal(await speaker.locator('[data-speaker-preview]').first().isVisible(),false)
+      await speaker.screenshot({path:join(output,'speaker-narrow.png')})
+      await speaker.close()
+      assert.equal(await page.locator('.native-slides-presentation').isVisible(),true,'关闭讲者窗口继续主窗口放映')
+      await page.getByRole('button',{name:'退出放映',exact:true}).click()
+      await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+z')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+      assert.equal(document.pages['page-1'].notes,'第一点：介绍设计。\n第二点：说明交互。')
+      await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+Shift+z')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+      await page.reload();await ready(1)
+      await page.getByLabel('放映',{exact:true}).click()
+      const secondPopup=page.waitForEvent('popup');await page.getByRole('menuitem',{name:'使用演讲者视图放映',exact:true}).click()
+      const reopened=await secondPopup
+      await reopened.getByRole('region',{name:'讲者备注',exact:true}).filter({hasText:text}).waitFor()
+      await page.getByRole('button',{name:'退出放映',exact:true}).click();await reopened.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(reopened.isClosed(),false);await reopened.screenshot({path:join(output,'speaker-waiting.png')})
+      await select(3);await reopened.getByRole('region',{name:'讲者备注等待视图',exact:true}).filter({hasText:'LingxiLoop 3'}).waitFor()
+      const popupCount=page.context().pages().length;await startSlides();await reopened.getByRole('button',{name:'暂停',exact:true}).waitFor();assert.equal(page.context().pages().length,popupCount,'已有讲者窗口应随再次放映恢复，不新增窗口')
+      await page.getByRole('button',{name:'退出放映',exact:true}).click();await reopened.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();await reopened.close()
+      assert.ok(speakerModuleRequests>0);assert.deepEqual(errors,[])
+      return{kind:'isolated-slide-speaker',popupSize:{width:1000,height:640},timer:true,sharedNavigation:true,skippedPageOmitted:true,notesSaveReopenUndoRedo:true,compositionProtected:true,compactPreviewHidden:true,waitingViewFollowsSelection:true,existingWindowReused:true,consoleOrPageErrors:errors}
     }
     if(options.checks==='slide-transitions'){
       assert.equal(kind,'slides')
@@ -326,7 +445,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
           await page.evaluate(()=>{window.__mixedRecords=[];window.__mixedAnimations=[];const animate=Element.prototype.animate;Element.prototype.animate=function(frames,timing){const result=animate.call(this,frames,timing);result.pause();result.currentTime=0;window.__mixedRecords.push({id:this.getAttribute('data-node-id'),frames,timing});window.__mixedAnimations.push(result);return result}})
           for(const [label,kind]of [['淡入淡出','fade'],['推移','push'],['神奇移动','magic']]){
             await page.locator('.native-transition-menu>summary').click();await page.getByRole('menuitemradio',{name:label,exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
-            await page.getByRole('button',{name:'放映',exact:true}).click();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await show.focus()
+            await startSlides();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await show.focus()
             const before=await show.locator('.native-slides-presentation-current').boundingBox(),heading=await show.locator('[data-node-id="page-1-heading"]').boundingBox()
             await page.evaluate(()=>{window.__mixedRecords=[];window.__mixedAnimations=[]});await page.keyboard.press('ArrowRight');await show.locator('.native-slides-presentation-outgoing').waitFor();await page.evaluate(()=>{for(const animation of window.__mixedAnimations){animation.pause();animation.currentTime=0}})
             const outgoing=await show.locator('.native-slides-presentation-outgoing').boundingBox(),incoming=await show.locator('.native-slides-presentation-current').boundingBox(),animations=await page.evaluate(()=>window.__mixedRecords)
@@ -369,7 +488,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         const root=page.locator('[data-native-artifact-editor]')
         await page.locator('[data-node-id="page-1-shape"]').click();await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
         const saved=JSON.stringify(document)
-        await page.getByRole('button',{name:'放映',exact:true}).click();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await show.focus()
+        await startSlides();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await show.focus()
         const trail=[]
         for(let n=0;n<20;n++){await page.keyboard.press('Tab');const state=await page.evaluate(()=>({tag:document.activeElement?.tagName,outerRoot:document.activeElement?.matches('[data-native-artifact-editor]'),label:document.activeElement?.getAttribute('aria-label')}));trail.push(state);if(state.outerRoot)break}
         await page.keyboard.press('Control+z');await page.waitForTimeout(150)
@@ -379,16 +498,16 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await root.focus();for(const key of ['Control+z','Control+y','Delete','Backspace'])await page.keyboard.press(key)
         await page.context().grantPermissions(['clipboard-read','clipboard-write'],{origin:baseUrl});await page.evaluate(()=>navigator.clipboard.writeText('放映期间不能插入的文字'));await page.keyboard.press('Control+v');await page.waitForTimeout(150)
         assert.deepEqual(historyRequests,[]);assert.equal(JSON.stringify(document),saved);assert.equal(await show.count(),1)
-        await page.keyboard.press('Control+s');await page.keyboard.press('Escape');await page.getByRole('button',{name:'放映',exact:true}).waitFor();assert.equal(await root.getAttribute('tabindex'),'0');assert.equal(JSON.stringify(document),saved);assert.deepEqual(errors,[])
+        await page.keyboard.press('Control+s');await page.keyboard.press('Escape');await page.getByLabel('放映',{exact:true}).waitFor();assert.equal(await root.getAttribute('tabindex'),'0');assert.equal(JSON.stringify(document),saved);assert.deepEqual(errors,[])
         return{kind:'isolated-presentation-keyboard-isolation',trustedTabCannotUndo:true,programmaticOuterFocusCannotEditOrPaste:true,rootExcludedFromTabOrder:true,saveAndEscapePreserved:true,consoleOrPageErrors:errors}
       }
       if(options['presentation-focus-return']==='true'){
         const focus=[]
         for(let opening=0;opening<2;opening++){
-          await page.getByRole('button',{name:'放映',exact:true}).click();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await page.waitForTimeout(100)
+          await startSlides();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await page.waitForTimeout(100)
           focus.push(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')))
           assert.equal(focus.at(-1),'幻灯片放映','冷/热模块放映均须保留键盘焦点')
-          await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-2');await page.keyboard.press('Escape');await page.getByRole('button',{name:'放映',exact:true}).waitFor();await select(1)
+          await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-2');await page.keyboard.press('Escape');await page.getByLabel('放映',{exact:true}).waitFor();await select(1)
         }
         assert.deepEqual(errors,[]);return{kind:'isolated-presentation-focus-return',coldAndWarmFocus:focus,keyboardNavigationWithoutForcedFocus:true,consoleOrPageErrors:errors}
       }
@@ -418,7 +537,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.getByLabel('显示属性',{exact:true}).click()
       for(const [label,kind,duration]of [['淡入淡出','fade',320],['推移','push',420],['神奇移动','magic',480]]){
         await choose(label)
-        await page.getByRole('button',{name:'放映',exact:true}).click()
+        await startSlides()
         const presentation=page.getByRole('region',{name:'幻灯片放映',exact:true});await presentation.waitFor();await presentation.focus();await presentation.press('Control+s')
         await page.evaluate(()=>{window.__slideAnimations=[]});await page.keyboard.press('ArrowRight')
         await page.waitForFunction(id=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')===id,copyId)
@@ -432,9 +551,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await page.waitForFunction(()=>window.__slideAnimations.length>0);const backward=await page.evaluate(()=>window.__slideAnimations)
         assert.ok(backward.every(row=>row.timing.duration===duration));if(kind==='push'){assert.match(forward[0].frames[1].transform,/-1920px/);assert.match(backward[0].frames[1].transform,/1920px/)}
         await page.waitForFunction(()=>!document.querySelector('.native-slides-presentation-outgoing'))
-        await presentation.press('Escape');await page.getByRole('button',{name:'放映',exact:true}).waitFor();records.push({kind,duration,forwardAnimations:forward.length,backwardAnimations:backward.length})
+        await presentation.press('Escape');await page.getByLabel('放映',{exact:true}).waitFor();records.push({kind,duration,forwardAnimations:forward.length,backwardAnimations:backward.length})
       }
-      await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'放映',exact:true}).click();const presentation=page.getByRole('region',{name:'幻灯片放映',exact:true});await presentation.waitFor();await page.evaluate(()=>{window.__slideAnimations=[]});await presentation.focus();await page.keyboard.press('ArrowRight');await page.waitForFunction(id=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')===id,copyId);assert.deepEqual(await page.evaluate(()=>window.__slideAnimations),[])
+      await page.emulateMedia({reducedMotion:'reduce'});await startSlides();const presentation=page.getByRole('region',{name:'幻灯片放映',exact:true});await presentation.waitFor();await page.evaluate(()=>{window.__slideAnimations=[]});await presentation.focus();await page.keyboard.press('ArrowRight');await page.waitForFunction(id=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')===id,copyId);assert.deepEqual(await page.evaluate(()=>window.__slideAnimations),[])
       await presentation.getByRole('button',{name:'讲者备注',exact:true}).click();assert.equal(await presentation.getByRole('textbox').count(),0)
       await presentation.press('Home');await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-1');await presentation.press('End');await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-3');await presentation.press('2');await page.waitForFunction(id=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')===id,copyId);await presentation.press('Escape')
       const {exportArtifact}=await import('../src/features/artifacts/native/export-artifact.ts')
@@ -1897,7 +2016,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await image.dblclick();assert.equal(await image.locator('img').evaluate(e=>e.style.width),'100%','reopened crop must show the full source image')
       await page.getByRole('button',{name:'取消裁剪',exact:true}).click()
       if(kind==='design'){await page.getByLabel('播放',{exact:true}).click();await page.getByRole('group',{name:'播放选项',exact:true}).getByRole('button',{name:document.pages['page-2'].title,exact:true}).click();const preview=page.getByRole('region',{name:'画板全窗口预览',exact:true});await preview.waitFor();await preview.getByRole('button',{name:'返回画布',exact:true}).click()}else{
-      await page.getByRole('button',{name:'放映',exact:true}).click()
+      await startSlides()
       await page.getByRole('button',{name:'下一页',exact:true}).focus();await page.keyboard.press('ArrowRight')
       await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-2')
       await page.getByRole('button',{name:'退出放映',exact:true}).focus();await page.keyboard.press('Escape')
@@ -2111,7 +2230,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     let isolatedInteraction = false
     if (document.pages['page-25'].nodes['page-25-isolated']) {
       await select(25)
-      if(kind==='design'){await page.getByLabel('播放',{exact:true}).click();await page.getByRole('group',{name:'播放选项',exact:true}).getByRole('button',{name:document.pages['page-25'].title,exact:true}).click();await page.getByRole('region',{name:'画板全窗口预览',exact:true}).waitFor()}else await page.getByRole('button', { name: '放映', exact: true }).click()
+      if(kind==='design'){await page.getByLabel('播放',{exact:true}).click();await page.getByRole('group',{name:'播放选项',exact:true}).getByRole('button',{name:document.pages['page-25'].title,exact:true}).click();await page.getByRole('region',{name:'画板全窗口预览',exact:true}).waitFor()}else await startSlides()
       const iframe = (kind==='design'?page.getByRole('region',{name:'画板全窗口预览',exact:true}):page).locator('[data-node-id="page-25-isolated"] iframe')
       await iframe.waitFor()
       assert.equal(await iframe.getAttribute('sandbox'), 'allow-scripts')
@@ -2121,10 +2240,14 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         if (document.readyState === 'complete') resolve()
         else window.addEventListener('load', () => resolve(), { once: true })
       }))
+      // Wait for the iframe's first painted frame before trusted hit testing.
+      await image.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
       // Frame descendants report unscaled coordinates in this Chromium/Playwright
       // combination. Send trusted pointer input at the iframe's rendered centre.
       const frameBounds = await iframe.boundingBox()
       assert.ok(frameBounds)
+      await writeFile(join(output,'isolated-hit.json'),JSON.stringify({frameBounds,hit:await page.evaluate(({x,y})=>{const target=document.elementFromPoint(x,y);return{tag:target?.tagName,class:target?.className,outer:target?.outerHTML.slice(0,400)}},{x:frameBounds.x+frameBounds.width/2,y:frameBounds.y+frameBounds.height/2}),iframe:await iframe.evaluate(element=>({box:element.getBoundingClientRect().toJSON(),pointer:getComputedStyle(element).pointerEvents,inert:element.closest('[inert]')?.className}))},null,2))
       await page.mouse.click(frameBounds.x + frameBounds.width / 2, frameBounds.y + frameBounds.height / 2)
       await image.evaluate(element => new Promise((resolve, reject) => {
         const deadline = performance.now() + 3000

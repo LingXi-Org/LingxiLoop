@@ -1,0 +1,333 @@
+{
+  "scope": "受控HTTP与真实原生操作链路；不是已授权真实API、完整视觉、实体输入法或性能资格",
+  "source": "source-slides-speaker.json",
+  "qualified": false,
+  "checks": {
+    "unitTests": 85,
+    "meteringContracts": 15,
+    "lintExit": 0,
+    "localTypecheck": {
+      "passed": false,
+      "missingPublishedSdkAndCascadeErrors": 76,
+      "newNativeOrSharedErrors": 0
+    }
+  },
+  "runs": [
+    {
+      "browserMajor": "140",
+      "check": "演讲者窗口定向流程与焦点",
+      "receipt": {
+        "kind": "isolated-slide-speaker",
+        "popupSize": {
+          "width": 1000,
+          "height": 640
+        },
+        "timer": true,
+        "sharedNavigation": true,
+        "skippedPageOmitted": true,
+        "notesSaveReopenUndoRedo": true,
+        "compositionProtected": true,
+        "compactPreviewHidden": true,
+        "waitingViewFollowsSelection": true,
+        "existingWindowReused": true,
+        "consoleOrPageErrors": []
+      },
+      "focus": {
+        "visible": true,
+        "outline": "0px",
+        "outlineStyle": "none",
+        "shadow": "rgba(250, 249, 245, 0.3) 0px 0px 0px 1px inset"
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "演讲者窗口定向流程与焦点",
+      "receipt": {
+        "kind": "isolated-slide-speaker",
+        "popupSize": {
+          "width": 1000,
+          "height": 640
+        },
+        "timer": true,
+        "sharedNavigation": true,
+        "skippedPageOmitted": true,
+        "notesSaveReopenUndoRedo": true,
+        "compositionProtected": true,
+        "compactPreviewHidden": true,
+        "waitingViewFollowsSelection": true,
+        "existingWindowReused": true,
+        "consoleOrPageErrors": []
+      },
+      "focus": {
+        "visible": true,
+        "outline": "3px",
+        "outlineStyle": "none",
+        "shadow": "rgba(250, 249, 245, 0.3) 0px 0px 0px 1px inset"
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "readonly",
+      "receipt": {
+        "kind": "isolated-speaker-readonly",
+        "notesDisabled": true,
+        "navigationRetained": true,
+        "documentUnchanged": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "skipped-current",
+      "receipt": {
+        "kind": "isolated-speaker-skipped-current",
+        "startedAtNextPresentable": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "preview-error",
+      "receipt": {
+        "kind": "isolated-speaker-preview-recovery",
+        "attempts": 2,
+        "recovered": true,
+        "expectedNetworkErrors": [
+          "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+        ],
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "executable-preview",
+      "receipt": {
+        "kind": "isolated-speaker-executable-preview",
+        "speakerUsesStaticSnapshot": true,
+        "speakerIframes": 0,
+        "audienceIframes": 1,
+        "programStarts": 1,
+        "originalUnchanged": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "module-error",
+      "receipt": {
+        "kind": "isolated-speaker-module-error",
+        "audienceViewRetained": true,
+        "popupClosed": true,
+        "expectedNetworkErrors": [
+          "Failed to load resource: net::ERR_FAILED"
+        ],
+        "consoleOrPageErrors": [
+          "Failed to read the 'caches' property from 'Window': Cache storage isn't available on detached context. No browser interface broker."
+        ]
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "no-notes",
+      "receipt": {
+        "kind": "isolated-speaker-no-notes",
+        "speakerDisabled": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "all-skipped",
+      "receipt": {
+        "kind": "isolated-speaker-all-skipped",
+        "presentDisabled": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "blocked",
+      "receipt": {
+        "kind": "isolated-speaker-blocked",
+        "dockedNotesFallback": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "coarse",
+      "receipt": {
+        "kind": "isolated-speaker-coarse-pointer",
+        "directPresentationWithDockedNotes": true,
+        "noPopup": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "check": "close-draft",
+      "receipt": {
+        "kind": "isolated-speaker-close-draft",
+        "savedOnClose": true,
+        "audienceContinues": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "140",
+      "check": "演讲者窗口定向流程、局部样式和焦点",
+      "receipt": {
+        "kind": "isolated-slide-speaker",
+        "popupSize": {
+          "width": 1000,
+          "height": 640
+        },
+        "timer": true,
+        "sharedNavigation": true,
+        "skippedPageOmitted": true,
+        "notesSaveReopenUndoRedo": true,
+        "compositionProtected": true,
+        "compactPreviewHidden": true,
+        "waitingViewFollowsSelection": true,
+        "existingWindowReused": true,
+        "consoleOrPageErrors": []
+      },
+      "hoverBackground": "rgba(255, 255, 255, 0.1)",
+      "disabledOpacity": "1"
+    },
+    {
+      "browserMajor": "154",
+      "check": "演讲者窗口定向流程、局部样式和焦点",
+      "receipt": {
+        "kind": "isolated-slide-speaker",
+        "popupSize": {
+          "width": 1000,
+          "height": 640
+        },
+        "timer": true,
+        "sharedNavigation": true,
+        "skippedPageOmitted": true,
+        "notesSaveReopenUndoRedo": true,
+        "compositionProtected": true,
+        "compactPreviewHidden": true,
+        "waitingViewFollowsSelection": true,
+        "existingWindowReused": true,
+        "consoleOrPageErrors": []
+      },
+      "hoverBackground": "rgba(255, 255, 255, 0.1)",
+      "disabledOpacity": "1"
+    }
+  ],
+  "fiftyPages": [
+    {
+      "kind": "isolated-native-editor-ui-diagnostic",
+      "mode": "slides",
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 1,
+      "maxMountedNodes": 7,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-native-editor-ui-diagnostic",
+      "mode": "design",
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "1859698ab513381bad8dfeb41a504d61f29081d8048e42f7d5f1f7ac33aae708",
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 6,
+      "maxMountedNodes": 24,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": []
+    }
+  ],
+  "interactions": [
+    {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "slides",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": true,
+      "designPlayMenuOpensPreview": false,
+      "drawing": false,
+      "layouts": true,
+      "multiplePages": true,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "design",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": false,
+      "designPlayMenuOpensPreview": true,
+      "drawing": true,
+      "layouts": false,
+      "multiplePages": false,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    }
+  ]
+}

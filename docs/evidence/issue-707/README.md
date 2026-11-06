@@ -275,3 +275,8 @@ JSZip沿用锁文件3.10.1，仅在隔离导出环境按需加载，MIT署名已
 
 [4a48187d复审](reviews/4a48187d.json)关闭图片问题，发现目标新增隔离内容重复执行。
 [目标隔离单实例回归](functional/slides-magic-executable-target.json)通过140/154真实动画启动计数，目标含embed完整子树保持原位且不进入运动镜像。
+
+[f22bd84b独立复审](reviews/f22bd84b.json)局部通过，正式CI42298755400 owning web/server/integration等通过，deploy跳过。
+[原版演讲者窗口](source-slides-speaker.json)及[五尺寸截图叠加](functional/slides-speaker-raw-pixels.json)已归档。
+原生窗口接入计时、导航、中文备注与等待复用，使用共享React与文档操作；可执行内容的预览只读取静态快照。
+S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒体/错误状态仍待补齐；原始像素未掩盖中文或图标差异。

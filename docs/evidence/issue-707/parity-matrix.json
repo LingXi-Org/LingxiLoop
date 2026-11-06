@@ -2934,7 +2934,16 @@
         "当前页",
         "下一页",
         "备注",
-        "计时"
+        "计时",
+        "暂停/继续/重置",
+        "只读",
+        "窗口受阻后备注停靠",
+        "触屏直接放映",
+        "退出等待及再次复用",
+        "跟随选页",
+        "预览重试",
+        "隔离内容静态预览",
+        "中文组字与保存重开"
       ],
       "reference": {
         "path": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
@@ -2942,20 +2951,29 @@
         "lookup": "Presenter",
         "offsetUnit": "UTF-16 code units",
         "matches": [],
-        "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明"
+        "reachability": "固定原版已实际运行：放映菜单→带讲者备注放映→独立窗口；退出后保留等待备注窗口，source-slides-speaker.json记录来源与生命周期。"
       },
-      "implementation": "src/features/artifacts/native/NativeEditor.tsx",
+      "implementation": "src/features/artifacts/native/SlidesSpeaker.tsx",
       "screenshots": {
-        "reference": null,
-        "native": null,
+        "reference": "visual/slides-speaker/reference-1000x640.png",
+        "native": "visual/slides-speaker/native-1000x640.png",
         "matchedStateVerified": false
       },
-      "result": "尚未还原完整演讲者视图",
+      "result": "已接入按需加载的共享React演讲者窗口、计时/导航/备注/等待复用；原版全屏进入及完整放映控件、全部焦点/错误/媒体视觉状态和像素排除核验仍未完成，保持未取得资格。",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/slides-speaker.json",
+        "scope": "受控HTTP+真实共享操作链路，非真实授权API/数据库端到端；完整状态与资格仍待后续。"
+      },
+      "readableReference": {
+        "path": "skills/claude-slides/scripts/editor/node/compiler.cjs",
+        "sha256": "78d5448dacb104d91c905e4473f13e113e7dad6b558d4671e795a0ae45718bb5",
+        "functions": {
+          "SpeakerNotesPanel": 237905,
+          "CompactSpeakerNotes": 238735,
+          "startPresentation": 265206
+        }
       }
     },
     {
@@ -9261,6 +9279,10 @@
     {
       "area": "图标",
       "reason": "当前原生图标与上游字体仍存在差异；未批准排除，继续纳入验收"
+    },
+    {
+      "area": "演讲者窗口中文文案",
+      "reason": "继续/暂停/重置、页码、讲者备注、编辑、前后页标题及等待放映说明全部中文；只登记替换，不自动排除任何像素或图标。"
     }
   ],
   "removedServiceEntrances": [

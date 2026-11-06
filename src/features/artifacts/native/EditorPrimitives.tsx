@@ -194,6 +194,7 @@ export function Menu({
   text,
   readoutSizer,
   disabled,
+  disabledReason,
   onOpen,
   className = '',
   minimumWidth = 184,
@@ -209,6 +210,7 @@ export function Menu({
   text?: string
   readoutSizer?: string
   disabled?: boolean
+  disabledReason?: string
   className?: string
   minimumWidth?: number
   badge?: number
@@ -291,7 +293,7 @@ export function Menu({
     >
       <summary
         aria-label={label}
-        title={label}
+        title={disabled ? disabledReason ?? label : label}
         aria-disabled={disabled}
         onClick={(event) => {
           keyboardOpen.current=event.detail===0

@@ -1,0 +1,56 @@
+{
+  "commit": "f22bd84bd1007cc11befffce38aa5de1cb9ebaa7",
+  "baseCommit": "4a48187d7b814e4939439143187d22ff21b1c739",
+  "reviewer": "/root/independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": true,
+  "scope": "仅审查本提交相对4a48187d的目标可执行根排除修复；不代表完整还原验收通过。",
+  "findings": [],
+  "closedPreviousFindings": [
+    "magic-live-mirror-duplicates-isolated-execution：目标所有嵌套embed沿父链归属的根在建立Magic matching之前排除；它们不会进入lift或MutationObserver镜像。Chrome140/154真实未暂停动画均仅启动1次，覆盖层iframe峰值0，当前iframe1。"
+  ],
+  "independentChecks": [
+    {
+      "check": "转场/导出定向单测",
+      "result": "passed",
+      "count": 17,
+      "includes": "嵌套embed目标根沿完整父链识别及无embed对照"
+    },
+    {
+      "check": "Chrome154真实未暂停目标group新增embed",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-f22-executable154/slides.json",
+      "observation": {
+        "starts": 1,
+        "maximumOverlayIframes": 0,
+        "currentIframes": 1
+      }
+    },
+    {
+      "check": "Chrome140真实未暂停目标group新增embed",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-f22-executable140/slides.json",
+      "observation": {
+        "starts": 1,
+        "maximumOverlayIframes": 0,
+        "currentIframes": 1
+      }
+    },
+    {
+      "check": "Chrome154横竖页正反向、原生/离线配对标题可见性、异步图片同步、未配对纸张外裁切、完成与Escape覆盖层清理",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-f22-clipping154/slides.json",
+      "consoleOrPageErrors": []
+    }
+  ],
+  "analysis": [
+    "executableRootIds只读取已校验页面模型，不改变文档或创建额外授权入口。",
+    "可执行目标根被排除后，唯一真实PageContent仍负责挂载与原隔离grant/sandbox；本提交没有移除隔离属性或改变服务授权。",
+    "本次不改变非执行目标镜像生命周期。4a48187d审查已实际验证正常完成和中途Escape均断开镜像观察器；本次154回归继续验证覆盖层完成/取消移除。"
+  ],
+  "unverified": [
+    "未独立重跑完整正式CI、全部77项单测或最终十组交替性能，不把父线程结果列为独立运行。",
+    "完整功能/视觉对照矩阵、真实授权评论及Agent浏览器全流程、最终性能门槛仍未通过；本次局部复审不能解除这些门槛。",
+    "父线程未提交的演讲者视图不在冻结提交或本次范围内。"
+  ]
+}

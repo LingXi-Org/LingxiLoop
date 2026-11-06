@@ -1,0 +1,337 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceResourceHashesVerified": 12,
+  "browserVersion": "140.0.7339.16",
+  "scope": "固定原版演讲者窗口，暂停并重置计时器；不代表完整编辑器视觉或服务/性能资格",
+  "screenshots": [
+    {
+      "width": 1000,
+      "height": 640,
+      "file": "1000x640.png"
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "file": "1920x1200.png"
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "file": "1440x1000.png"
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "file": "768x1024.png"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "file": "390x844.png"
+    }
+  ],
+  "size": {
+    "width": 1000,
+    "height": 640
+  },
+  "body": "0:00\nResume\nReset\nSlide 1 / 3\n\n\nLingxiLoop 1\nNext · LingxiLoop 2\nLingxiLoop 2\nSpeaker notes\nEdit\n第一点：介绍设计。 第二点：说明交互。",
+  "layout": [
+    {
+      "class": "sn sn-wide",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1000,
+        "height": 640,
+        "top": 0,
+        "right": 1000,
+        "bottom": 640,
+        "left": 0
+      },
+      "fontSize": "16px",
+      "lineHeight": "24px",
+      "boxSizing": "border-box",
+      "fontFamily": "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif",
+      "border": "0px"
+    },
+    {
+      "class": "sn-left",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 580,
+        "height": 640,
+        "top": 0,
+        "right": 580,
+        "bottom": 640,
+        "left": 0
+      },
+      "fontSize": "16px",
+      "lineHeight": "24px",
+      "boxSizing": "border-box",
+      "fontFamily": "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif",
+      "border": "0px 1px 0px 0px"
+    },
+    {
+      "class": "sn-bar",
+      "rect": {
+        "x": 16,
+        "y": 12,
+        "width": 547,
+        "height": 42,
+        "top": 12,
+        "right": 563,
+        "bottom": 54,
+        "left": 16
+      },
+      "fontSize": "14px",
+      "lineHeight": "21px",
+      "boxSizing": "border-box",
+      "fontFamily": "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif",
+      "border": "0px"
+    },
+    {
+      "class": "sn-clock sn-paused",
+      "rect": {
+        "x": 16,
+        "y": 12,
+        "width": 56.03125,
+        "height": 42,
+        "top": 12,
+        "right": 72.03125,
+        "bottom": 54,
+        "left": 16
+      },
+      "fontSize": "28px",
+      "lineHeight": "42px",
+      "boxSizing": "border-box",
+      "fontFamily": "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif",
+      "border": "0px"
+    },
+    {
+      "class": "sn-slot sn-cur",
+      "rect": {
+        "x": 16,
+        "y": 66,
+        "width": 547,
+        "height": 307.6875,
+        "top": 66,
+        "right": 563,
+        "bottom": 373.6875,
+        "left": 16
+      },
+      "fontSize": "16px",
+      "lineHeight": "24px",
+      "boxSizing": "border-box",
+      "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+      "border": "1px"
+    },
+    {
+      "class": "sn-navrow",
+      "rect": {
+        "x": 16,
+        "y": 385.6875,
+        "width": 547,
+        "height": 170.96875,
+        "top": 385.6875,
+        "right": 563,
+        "bottom": 556.65625,
+        "left": 16
+      },
+      "fontSize": "16px",
+      "lineHeight": "24px",
+      "boxSizing": "border-box",
+      "fontFamily": "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif",
+      "border": "0px"
+    },
+    {
+      "class": "sn-head",
+      "rect": {
+        "x": 580,
+        "y": 0,
+        "width": 420,
+        "height": 56,
+        "top": 0,
+        "right": 1000,
+        "bottom": 56,
+        "left": 580
+      },
+      "fontSize": "13px",
+      "lineHeight": "19.5px",
+      "boxSizing": "border-box",
+      "fontFamily": "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif",
+      "border": "0px 0px 1px"
+    },
+    {
+      "class": "sn-notes",
+      "rect": {
+        "x": 580,
+        "y": 56,
+        "width": 420,
+        "height": 584,
+        "top": 56,
+        "right": 1000,
+        "bottom": 640,
+        "left": 580
+      },
+      "fontSize": "16px",
+      "lineHeight": "26px",
+      "boxSizing": "border-box",
+      "fontFamily": "system-ui, -apple-system, \"Helvetica Neue\", Arial, sans-serif",
+      "border": "0px"
+    }
+  ],
+  "controls": [
+    {
+      "role": null,
+      "tag": "BUTTON",
+      "label": null,
+      "title": null,
+      "text": "Resume",
+      "rect": {
+        "x": 88.03125,
+        "y": 17,
+        "width": 75.171875,
+        "height": 32,
+        "top": 17,
+        "right": 163.203125,
+        "bottom": 49,
+        "left": 88.03125
+      },
+      "font": "",
+      "fontWeight": "400",
+      "background": "rgba(255, 255, 255, 0.04)",
+      "color": "rgba(250, 249, 245, 0.85)"
+    },
+    {
+      "role": null,
+      "tag": "BUTTON",
+      "label": null,
+      "title": null,
+      "text": "Reset",
+      "rect": {
+        "x": 175.203125,
+        "y": 17,
+        "width": 59.671875,
+        "height": 32,
+        "top": 17,
+        "right": 234.875,
+        "bottom": 49,
+        "left": 175.203125
+      },
+      "font": "",
+      "fontWeight": "400",
+      "background": "rgba(255, 255, 255, 0.1)",
+      "color": "rgb(250, 249, 245)"
+    },
+    {
+      "role": null,
+      "tag": "BUTTON",
+      "label": "Previous slide",
+      "title": "First slide",
+      "text": "",
+      "rect": {
+        "x": 471,
+        "y": 13,
+        "width": 40,
+        "height": 40,
+        "top": 13,
+        "right": 511,
+        "bottom": 53,
+        "left": 471
+      },
+      "font": "",
+      "fontWeight": "400",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgba(250, 249, 245, 0.25)"
+    },
+    {
+      "role": null,
+      "tag": "BUTTON",
+      "label": "Next slide",
+      "title": "Next slide",
+      "text": "",
+      "rect": {
+        "x": 523,
+        "y": 13,
+        "width": 40,
+        "height": 40,
+        "top": 13,
+        "right": 563,
+        "bottom": 53,
+        "left": 523
+      },
+      "font": "",
+      "fontWeight": "400",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgba(250, 249, 245, 0.75)"
+    },
+    {
+      "role": null,
+      "tag": "BUTTON",
+      "label": "Go to previous slide",
+      "title": null,
+      "text": "",
+      "rect": {
+        "x": 16,
+        "y": 406.1875,
+        "width": 267.5,
+        "height": 150.46875,
+        "top": 406.1875,
+        "right": 283.5,
+        "bottom": 556.65625,
+        "left": 16
+      },
+      "font": "",
+      "fontWeight": "400",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgba(250, 249, 245, 0.9)"
+    },
+    {
+      "role": null,
+      "tag": "BUTTON",
+      "label": "Go to next slide",
+      "title": "LingxiLoop 2",
+      "text": "LingxiLoop 2",
+      "rect": {
+        "x": 295.5,
+        "y": 406.1875,
+        "width": 267.5,
+        "height": 150.46875,
+        "top": 406.1875,
+        "right": 563,
+        "bottom": 556.65625,
+        "left": 295.5
+      },
+      "font": "",
+      "fontWeight": "400",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgba(250, 249, 245, 0.9)"
+    },
+    {
+      "role": "switch",
+      "tag": "BUTTON",
+      "label": "Edit notes",
+      "title": "Edit the notes from here",
+      "text": "Edit",
+      "rect": {
+        "x": 914.71875,
+        "y": 7.5,
+        "width": 77.28125,
+        "height": 40,
+        "top": 7.5,
+        "right": 992,
+        "bottom": 47.5,
+        "left": 914.71875
+      },
+      "font": "",
+      "fontWeight": "400",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgb(165, 162, 155)"
+    }
+  ],
+  "afterPresentationExit": {
+    "popupClosed": false,
+    "body": "Speaker notes\nLingxiLoop 1\n\nWaiting for the presentation. Press Present in the main window: the presentation plays there (full screen where it can) and this window follows along with the clock, the slide on screen, what comes next and its notes.\n\n第一点：介绍设计。 第二点：说明交互。"
+  }
+}

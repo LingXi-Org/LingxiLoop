@@ -1,0 +1,46 @@
+{
+  "scope": "固定文档的演讲者窗口五个尺寸，中文替换尚未做像素排除；不代表全部状态资格",
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "browser": "Chrome140",
+  "fontEnvironment": "FONTCONFIG_FILE=/tmp/review-font-environment/compatible.conf；固定验证会话字体配置，未改产品字体",
+  "masks": [],
+  "antialiasExclusions": false,
+  "qualified": false,
+  "results": [
+    {
+      "width": 1000,
+      "height": 640,
+      "differentPixels": 4147,
+      "rawDifferentRatio": 0.0064796875,
+      "conservativePixelPass": false
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "differentPixels": 5493,
+      "rawDifferentRatio": 0.002384114583333333,
+      "conservativePixelPass": true
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 5079,
+      "rawDifferentRatio": 0.0035270833333333335,
+      "conservativePixelPass": true
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "differentPixels": 4070,
+      "rawDifferentRatio": 0.005175272623697917,
+      "conservativePixelPass": false
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "differentPixels": 3326,
+      "rawDifferentRatio": 0.010104508445740673,
+      "conservativePixelPass": false
+    }
+  ]
+}
