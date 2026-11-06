@@ -159,9 +159,12 @@ test('process crash after native write preserves receipts; disconnected replacem
       // Keep the failed gate intact; only bounded public state and counts enter
       // the diagnostic, never the message, prompt, credentials or run payload.
       try {
-        const run = await api.readRun(last), state = await api.readRunState(last)
+        const run = await api.readRun(last), state = await api.readRunState(last), failure = (await api.readDiagnostics(last))?.runtimeFailure
         t.diagnostic(JSON.stringify({ phase: 'terminal-recovery-followup-timeout', status: run?.status ?? null,
-          delivery: state?.delivery ?? null, modelCalls: finalWorker.calls, workerExitCode: finalWorker.child.exitCode }))
+          delivery: state?.delivery ?? null, modelCalls: finalWorker.calls, workerExitCode: finalWorker.child.exitCode,
+          runtimeFailure: failure ? { phase: failure.phase, bindingState: failure.bindingState, errorName: failure.errorName,
+            reason: failure.reason, category: failure.category, httpStatus: failure.httpStatus, causeCode: failure.causeCode,
+            sqlState: failure.sqlState, systemCode: failure.systemCode, frames: failure.frames } : null }))
       } catch { t.diagnostic('terminal-recovery-followup-state-unavailable') }
       throw error
     })
