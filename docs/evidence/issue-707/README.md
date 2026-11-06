@@ -125,3 +125,10 @@ a0ee1b66 真实性能诊断42152419298已失败并保留哈希核验收据：两
 [审查](reviews/f3b28ddf.json)、[草稿恢复与平移回归](functional/canvas-vector-retention.json)。
 复现命令使用 `--mode=design --checks=canvas-vector-retention`；覆盖只读切工具、
 403自动卸载、跨画布隔离、Space和中键实际平移。恢复副本包含未提交控制点及其原始基线。
+
+4ab的真实失败归档已登记于 [性能收据](performance/4abf9704-receipt.json)，
+包括实际50页PPTX下载后因PSS不完整而失败的记录；历史资格不重分类。
+计量修正的局部结果见 [Worker/进程收据](functional/measurement-clock-pss-receipt.json)。
+新增原始启动浏览器检查 `python scripts/native-artifact-worker-clock-check.py --browser=/path/to/pinned/chromium`
+和真实进程检查 `python scripts/native-artifact-pss-check.py`，仍不产生合格性能样本。
+后续诊断只读取现有图片元素并报告自然尺寸面积、缩略图数量和进程角色；这些计数不能直接等同于位图缓存占用。

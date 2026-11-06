@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "realZombieExcluded": true,
+  "reapedChildAccepted": true,
+  "unreadableLiveChildRejected": true,
+  "unreadableRootRejected": true,
+  "scope": "真实OS进程计量回归，不代替产品性能验收"
+}

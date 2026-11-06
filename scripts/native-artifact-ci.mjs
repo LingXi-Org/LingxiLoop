@@ -122,7 +122,7 @@ export function publicRequest(row) {
   if(['page','iframe','worker'].includes(row.timingContext))safe.timingContext=row.timingContext
   if(['script','link','css','fetch','xmlhttprequest','other'].includes(row.initiatorType))safe.initiatorType=row.initiatorType
   for (const key of ['start', 'startEpochMs', 'requestOrdinal', 'status', 'transferredBytes', 'decodedBytes', 'declaredEncodedBodyBytes', 'observedResponseHeadersBytes', 'finishedEpochMs', 'end', 'responseEndEpochMs', 'requestStartEpochMs','timeOriginEpochMs','contextOrdinal','encodedBytes']) if (typeof row[key] === 'number' && Number.isFinite(row[key])) safe[key] = row[key]
-  for (const key of ['network', 'scriptPath', 'scriptObserved', 'sourcePayload', 'retiredEditor', 'cache', 'decodedObserved', 'finished', 'failed', 'canceled', 'transferPending']) if (typeof row[key] === 'boolean') safe[key] = row[key]
+  for (const key of ['network', 'scriptPath', 'scriptObserved', 'sourcePayload', 'retiredEditor', 'cache', 'decodedObserved', 'finished', 'failed', 'canceled', 'transferPending', 'unaccountedRedirect']) if (typeof row[key] === 'boolean') safe[key] = row[key]
   if (['identity', 'gzip', 'br', 'deflate', 'zstd'].includes(row.encoding)) safe.encoding = row.encoding
   if (['Network.dataReceived', 'PerformanceResourceTiming'].includes(row.decodedBytesSource)) safe.decodedBytesSource = row.decodedBytesSource
   if (['Network.loadingFinished', 'PlaywrightRequestSizes', 'PlaywrightHeaders+PerformanceResourceTiming'].includes(row.transferredBytesSource)) safe.transferredBytesSource = row.transferredBytesSource
@@ -153,7 +153,8 @@ export function publicEvidence(value, key = '') {
   if (key === 'requests' && typeof value === 'number') return Number.isFinite(value) ? value : null
   if (key === 'failureCode') return failureCodes.has(value) ? value : undefined
   if (key === 'failureStage' || key === 'phase' && measurementStages.has(value)) return measurementStages.has(value) ? value : undefined
-  if (['failureObservations', 'failureCleanup'].includes(key) && value && typeof value === 'object') return publicEvidence(value)
+  if (['failureObservations', 'failureCleanup', 'pssReadFailures'].includes(key) && value && typeof value === 'object') return publicEvidence(value)
+  if (['htmlImages','readyHtmlImages'].includes(key)) return Number.isSafeInteger(value)&&value>=0?value:undefined
   if (/cookie|token|secret|password|authorization|headers|source|prompt|html|url|error|failure|request|command|stack|authentication|path|text|message|download|^arms$/i.test(key)) return undefined
   if (typeof value === 'number') return Number.isFinite(value) ? value : null
   if (typeof value === 'boolean' || value === null) return value

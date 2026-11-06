@@ -96,6 +96,25 @@ def editor_observations(page):
     return states
 
 
+def document_observations(page):
+    """Read existing elements only; never create/decode/fetch diagnostic images."""
+    states = []
+    for frame in page.frames:
+        try:
+            states.append(frame.evaluate(r"""() => {
+              const images=[...document.images],ready=images.filter(e=>e.complete&&e.naturalWidth>0),svg=[...document.querySelectorAll('svg image')];
+              const visible=e=>{const r=e.getBoundingClientRect();return e.checkVisibility()&&r.right>0&&r.bottom>0&&r.left<innerWidth&&r.top<innerHeight};
+              return {mountedPages:document.querySelectorAll('[data-page-id]').length,mountedNodes:document.querySelectorAll('[data-node-id]').length,
+                mountedThumbnails:document.querySelectorAll('[data-page-target]').length,htmlImages:images.length,readyHtmlImages:ready.length,
+                readyImageNaturalPixels:ready.reduce((sum,e)=>sum+e.naturalWidth*e.naturalHeight,0),readyVisibleImageNaturalPixels:ready.filter(visible).reduce((sum,e)=>sum+e.naturalWidth*e.naturalHeight,0),
+                svgImages:svg.length,svgDataImages:svg.filter(e=>e.href.baseVal.startsWith('data:')).length,svgBlobImages:svg.filter(e=>e.href.baseVal.startsWith('blob:')).length,
+                svgLogicalPixels:svg.reduce((sum,e)=>sum+e.width.baseVal.value*e.height.baseVal.value,0),
+                rootJsHeapBytes:performance.memory?.usedJSHeapSize??null};
+            }"""))
+        except Exception: pass
+    return states
+
+
 def failure_code(error):
     if isinstance(error, MeasurementFailure):
         return error.code
@@ -112,19 +131,24 @@ def resource_key(raw):
     return hashlib.sha256(urlsplit(raw)._replace(fragment='').geturl().encode()).hexdigest()
 
 
-def pair_observations(left, right, playwright_start=False):
+def pair_observations(left, right, playwright_start=False, worker_creation=False):
     """One-to-one time/resource matches. Ambiguous observations fail closed."""
     remaining_left, remaining_right = set(range(len(left))), set(range(len(right)))
     pairs = []
-    def start(row):
-        return row.get('_playwrightStartEpochMs', row['startEpochMs']) if playwright_start else row['startEpochMs']
+    def starts(row):
+        network = row.get('_playwrightStartEpochMs', row['startEpochMs']) if playwright_start else row['startEpochMs']
+        if worker_creation and '_workerTimeOriginEpochMs' in row:
+            return [network, row['_workerTimeOriginEpochMs']]
+        return [network]
+    def matches(i, j, tolerance):
+        return left[i]['_resourceKey'] == right[j]['_resourceKey'] and any(abs(start - right[j]['startEpochMs']) < tolerance for start in starts(left[i]))
     for tolerance in (.01, 100):
-        candidates = {i: [j for j in remaining_right if left[i]['_resourceKey'] == right[j]['_resourceKey'] and abs(start(left[i]) - right[j]['startEpochMs']) < tolerance] for i in remaining_left}
+        candidates = {i: [j for j in remaining_right if matches(i, j, tolerance)] for i in remaining_left}
         reverse = {j: [i for i, matches in candidates.items() if j in matches] for j in remaining_right}
         matched = [(i, matches[0]) for i,matches in candidates.items() if len(matches) == 1 and len(reverse[matches[0]]) == 1]
         for i,j in matched:
             pairs.append((i,j)); remaining_left.remove(i); remaining_right.remove(j)
-    ambiguous = {j for j in remaining_right if any(left[i]['_resourceKey'] == right[j]['_resourceKey'] and abs(start(left[i]) - right[j]['startEpochMs']) < 100 for i in remaining_left)}
+    ambiguous = {j for j in remaining_right if any(matches(i, j, 100) for i in remaining_left)}
     return pairs, remaining_left, remaining_right, ambiguous
 
 
@@ -138,7 +162,7 @@ def script_totals(rows):
     return {"transferredBytes": sum(row.get("transferredBytes", 0) for row in scripts),
             "decodedBytes": sum(row.get("decodedBytes", 0) for row in scripts),
             "requests": len(scripts), "inflight": sum(not row.get("finished") for row in scripts),
-            "missingTransfer": sum(bool(row.get("transferPending")) for row in scripts),
+            "missingTransfer": sum(bool(row.get("transferPending") or row.get("unaccountedRedirect")) for row in scripts),
             "missingDecoded": sum(bool(row.get("finished")) and not row.get("decodedObserved")
                                   and 200 <= row.get("status", 0) < 300 and row.get("declaredEncodedBodyBytes") != 0 for row in scripts)}
 
@@ -164,8 +188,9 @@ class Trace:
         self._finished_script_ambiguities = 0
         self._resource_script_ambiguities = 0
         self.byte_conflicts = 0
+        self.extra_response_statuses = {}
         context.on("requestfinished", self.record_finished)
-        for method in ("requestWillBeSent", "responseReceived", "dataReceived", "loadingFinished", "loadingFailed"):
+        for method in ("requestWillBeSent", "responseReceived", "responseReceivedExtraInfo", "dataReceived", "loadingFinished", "loadingFailed"):
             self.cdp.on("Network." + method, lambda params, name=method: self.event("", name, params))
         self.cdp.on("Target.attachedToTarget", lambda value: self.attach("", value))
         self.cdp.on("Target.detachedFromTarget", lambda value: self.detach("", value))
@@ -194,11 +219,14 @@ class Trace:
         if not route or self.targets[route]["type"] in ("page", "iframe"):
             self.send(route, "Emulation.setCPUThrottlingRate", {"rate": 1})
         self.send(route, "Target.setAutoAttach", {"autoAttach": True, "waitForDebuggerOnStart": True, "flatten": False})
+        if route and self.targets[route]['type'] == 'worker':
+            self.send(route, "Runtime.enable")
         self.send(route, "Runtime.runIfWaitingForDebugger")
 
     def attach(self, parent, value):
         route = (parent + "/" if parent else "") + value["sessionId"]
-        self.targets[route] = {"type": value["targetInfo"]["type"], "active": True}
+        self.targets[route] = {"type": value["targetInfo"]["type"], "active": True,
+                               '_entryRequestKey': parent + ':' + value['targetInfo']['targetId']}
         try: self.configure(route)
         except Exception as error:
             gone = False
@@ -228,6 +256,17 @@ class Trace:
             self.errors.append({"targetType": self.targets.get(route, {}).get("type", "unknown"),
                                 "command": command, "code": message["error"].get("code")})
         method, params = message.get("method", ""), message.get("params", {})
+        target = self.targets.get(route, {})
+        if command == 'Runtime.evaluate' and target.get('type') == 'worker':
+            clock = message.get('result', {}).get('result', {}).get('value', {})
+            origin = clock.get('timeOriginEpochMs') if isinstance(clock, dict) else None
+            if isinstance(origin, (int, float)) and math.isfinite(origin) and origin > 0 and isinstance(clock.get('url'), str):
+                target['_workerTimeOriginEpochMs'] = origin
+                target['_workerResourceKey'] = resource_key(clock['url'])
+        if method == 'Runtime.executionContextCreated' and target.get('type') == 'worker' and not target.get('_clockRequested'):
+            target['_clockRequested'] = True
+            self.send(route, 'Runtime.evaluate', {'expression':'({timeOriginEpochMs:performance.timeOrigin,url:self.location.href})',
+                      'contextId':params['context']['id'], 'returnByValue':True})
         if method == "Target.attachedToTarget": self.attach(route, params)
         elif method == "Target.detachedFromTarget": self.detach(route, params)
         elif method == "Target.receivedMessageFromTarget": self.message(route, params)
@@ -235,6 +274,10 @@ class Trace:
 
     def event(self, route, method, value):
         key = route + ":" + value.get("requestId", "")
+        if method == 'responseReceivedExtraInfo':
+            # Do not retain headers: only status codes identify hidden Worker legs.
+            self.extra_response_statuses.setdefault(key, []).append(value.get('statusCode', 0))
+            return
         if method == "requestWillBeSent":
             # Preserve redirected transfers instead of overwriting them.
             if key in self.requests and value.get("redirectResponse"):
@@ -362,8 +405,24 @@ class Trace:
                 observedResponseHeadersBytes=entry['headersBytes'], transferredBytes=entry['headersBytes'] + entry['bodyBytes'],
                 transferPending=entry['bodyBytes'] == 0, transferredBytesSource='PlaywrightRequestSizes')
 
+    def bind_worker_observations(self):
+        # ExtraInfo retains status codes for redirect legs hidden elsewhere.
+        for key, statuses in self.extra_response_statuses.items():
+            if key in self.requests and any(300 <= status < 400 and status != 304 for status in statuses):
+                self.requests[key]['unaccountedRedirect'] = True
+        for target in self.targets.values():
+            if target.get('type') != 'worker': continue
+            key = target.get('_entryRequestKey')
+            row = self.requests.get(key)
+            if not row: continue
+            # Target ID must equal this actual parent request ID, and the
+            # live Worker's own location must identify that same resource.
+            if target.get('_workerResourceKey') == row['_resourceKey'] and '_workerTimeOriginEpochMs' in target:
+                row['_workerTimeOriginEpochMs'] = target['_workerTimeOriginEpochMs']
+
     def snapshot(self):
         self.reconcile_finished()
+        self.bind_worker_observations()
         return [dict(row) for row in self.requests.values()]
 
     def inflight(self):
@@ -373,6 +432,7 @@ class Trace:
 
     def reconcile_decoded(self, page):
         self.reconcile_finished()
+        self.bind_worker_observations()
         # Cached requests can omit dataReceived. Use measured ResourceTiming,
         # never Content-Length/gzip estimates or downloaded source bodies.
         entries = []
@@ -390,7 +450,7 @@ class Trace:
         for entry in entries:
             if entry['_resourceKey'] in script_keys: entry['scriptObserved'] = True
         self.script_resource_timings = [entry for entry in entries if entry.get('scriptObserved') or re.search(r'\.(?:m?js|cjs)$',urlsplit(entry['url']).path)]
-        pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries)
+        pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries, worker_creation=True)
         self.observe_ambiguity(len(ambiguous))
         self._resource_script_ambiguities = len(ambiguous)
         self.ambiguous_requests = getattr(self, '_finished_script_ambiguities', 0) + len(ambiguous)
@@ -415,6 +475,7 @@ class Trace:
             if ordinal in seen: continue
             seen.add(ordinal); retained.append(row); row['requestOrdinal'] = ordinal
             if script_request(observed): row['scriptObserved'] = True
+            if observed.get('unaccountedRedirect'): row['unaccountedRedirect'] = True
             if row.get('finished') and observed.get('decodedObserved') and (not row.get('decodedObserved') or observed.get('decodedBytesSource') == 'PerformanceResourceTiming'):
                 row.update(decodedBytes=observed['decodedBytes'], decodedObserved=True, decodedBytesSource=observed['decodedBytesSource'])
             if row.get('finished') and row.get('transferPending') and not observed.get('transferPending', True):
@@ -436,7 +497,7 @@ class Trace:
         return {"status": "observed" if not failed else "incomplete", "targets": len(routes), "failedTargets": failed}
 
 
-def process_pss(root_pid):
+def process_pss(root_pid, classify_roles=False):
     parents = {}
     for path in Path("/proc").glob("[0-9]*/stat"):
         try:
@@ -448,16 +509,41 @@ def process_pss(root_pid):
         children = {pid for pid, parent in parents.items() if parent in family}
         if children <= family: break
         family |= children
-    total, live, unreadable = 0, 0, 0
+    total, live, unreadable, exited = 0, 0, 0, 0
+    roles = {name: {'bytes':0,'processes':0} for name in ('root','renderer','gpu','utility','other')}
+    failures = {'root':0,'liveChild':0,'unknownChild':0}
     for pid in family:
         try:
             match = re.search(r"^Pss:\s+(\d+) kB$", Path(f"/proc/{pid}/smaps_rollup").read_text(), re.M)
-            if match: total += int(match[1]) * 1024; live += 1
-            else: unreadable += 1
+            if match:
+                amount = int(match[1]) * 1024
+                total += amount; live += 1
+                if classify_roles:
+                    try: command = Path(f'/proc/{pid}/cmdline').read_bytes()
+                    except OSError: command = b''
+                    role = 'root' if pid == root_pid else 'renderer' if b'--type=renderer' in command else 'gpu' if b'--type=gpu-process' in command else 'utility' if b'--type=utility' in command else 'other'
+                    roles[role]['bytes'] += amount; roles[role]['processes'] += 1
+            else:
+                unreadable += 1
+                failures['root' if pid == root_pid else 'unknownChild'] += 1
         except OSError:
-            if Path(f"/proc/{pid}").exists(): unreadable += 1
-    if unreadable or not live: raise MeasurementFailure("pss_incomplete")
-    return {"bytes": total, "processes": live}
+            # A reaped or confirmed zombie child has no resident memory. /proc
+            # persists for zombies until waitpid; existence alone is insufficient.
+            # Never excuse an unreadable root or a live/unknown-state child.
+            if pid == root_pid:
+                unreadable += 1
+                failures['root'] += 1
+                continue
+            try:
+                state = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[0]
+                if state in ("Z", "X"): exited += 1
+                else: unreadable += 1; failures['liveChild'] += 1
+            except (OSError, ValueError, IndexError):
+                if Path(f"/proc/{pid}").exists(): unreadable += 1; failures['unknownChild'] += 1
+                else: exited += 1
+    if unreadable or not live: raise MeasurementFailure("pss_incomplete", {'pssReadFailures':failures,'readableProcesses':live,'exitedChildren':exited})
+    return {"bytes": total, "processes": live, 'exitedChildren':exited,
+            **({'processRoles':roles} if classify_roles else {})}
 
 
 class PssSampler:
@@ -465,6 +551,7 @@ class PssSampler:
     def __init__(self, pid, interval_ms=100):
         self.pid, self.interval_ms = pid, interval_ms
         self.rows, self.failures = [], 0
+        self.failure_roles = {'root':0,'liveChild':0,'unknownChild':0}
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self.run, daemon=True)
 
@@ -472,13 +559,17 @@ class PssSampler:
         started = time.monotonic()
         while not self.stop_event.is_set():
             try: self.rows.append({"elapsedMs": round((time.monotonic() - started) * 1000), **process_pss(self.pid)})
-            except MeasurementFailure: self.failures += 1
+            except MeasurementFailure as error:
+                self.failures += 1
+                for role, count in (error.observations or {}).get('pssReadFailures', {}).items():
+                    if role in self.failure_roles: self.failure_roles[role] += count
             self.stop_event.wait(self.interval_ms / 1000)
 
     def __enter__(self): self.thread.start(); return self
     def __exit__(self, *_): self.stop_event.set(); self.thread.join(timeout=5)
     def report(self):
         return {"intervalMs": self.interval_ms, "samples": self.rows, "failedSamples": self.failures,
+                'unreadableProcesses':self.failure_roles,
                 "peakBytes": max((row["bytes"] for row in self.rows), default=None)}
 
 
@@ -546,7 +637,7 @@ def wait_quiet(page, trace, minimum_ms, timeout_ms=120000):
 
 def pss_observations(page, pid, count=5):
     rows = []
-    for _ in range(count): rows.append(process_pss(pid)); page.wait_for_timeout(200)
+    for _ in range(count): rows.append(process_pss(pid, classify_roles=True)); page.wait_for_timeout(200)
     return {"bytes": round(sum(row["bytes"] for row in rows) / len(rows)), "observations": rows,
             "spreadBytes": max(row["bytes"] for row in rows) - min(row["bytes"] for row in rows)}
 
@@ -1246,7 +1337,7 @@ def self_check():
             return {'targetInfo':{'targetId':'frame'}}
     for live in (False, True):
         trace = object.__new__(Trace); trace.cdp = TargetCatalog(live)
-        trace.targets = {}; trace.pending = {}; trace.errors = []; trace.configuration_detaches = 0
+        trace.targets = {}; trace.extra_response_statuses = {}; trace.pending = {}; trace.errors = []; trace.configuration_detaches = 0
         def vanished(_route): raise RuntimeError('No session with given id')
         trace.configure = vanished
         trace.attach('', {'sessionId':'session','targetInfo':{'type':'iframe','targetId':'frame'}})
@@ -1262,7 +1353,7 @@ def self_check():
         trace = Trace.__new__(Trace)
         trace.requests = {'cdp':{'url':safe_url(raw),'_resourceKey':key,'startEpochMs':1000,'type':'Script','network':True,'scriptPath':True,'requestOrdinal':1,'finished':True,'status':200,'transferredBytes':1000120,'decodedBytes':1000000,'decodedObserved':True}}
         trace.finished_requests = [{'url':safe_url(raw),'_resourceKey':key,'_requestIdentity':i,'startEpochMs':start,'finishedEpochMs':start+2000,'headersBytes':120,'bodyBytes':1000000,'status':200,'type':'Script','network':True,'scriptPath':True,'targetType':'worker'} for i,start in enumerate(starts)]
-        trace.request_sequence = 1; trace.ambiguous_requests = 0; trace.byte_conflicts = 0; trace.targets = {}; trace.script_resource_timings=[]
+        trace.request_sequence = 1; trace.ambiguous_requests = 0; trace.byte_conflicts = 0; trace.targets = {}; trace.extra_response_statuses = {}; trace.script_resource_timings=[]
         frame = SimpleNamespace(evaluate=lambda _script:[{'url':raw,'startEpochMs':start,'encodedBytes':1000000,'decodedBytes':1000000} for start in starts])
         trace.reconcile_decoded(SimpleNamespace(frames=[frame],workers=[]))
         return trace
@@ -1328,7 +1419,7 @@ def self_check():
     ambiguous = reconciliation_fixture([1000,1000])
     assert ambiguous.ambiguous_requests > 0, 'indistinguishable requests cannot qualify'
     def transient_ambiguity(kind):
-        trace=Trace.__new__(Trace)
+        trace=Trace.__new__(Trace);trace.targets={};trace.extra_response_statuses={}
         observed_url='https://fixture.invalid/resource' if kind=='Fetch' else raw
         observed_key=resource_key(observed_url)
         trace.requests={str(i):{'url':safe_url(observed_url),'_resourceKey':observed_key,'startEpochMs':start,'type':kind,'network':True,'scriptPath':kind=='Script','requestOrdinal':i+1,'finished':True,'status':200,'transferredBytes':120,'decodedBytes':100,'decodedObserved':True} for i,start in enumerate([1000,1020])}
@@ -1346,7 +1437,7 @@ def self_check():
     for row in right_mime.finished_requests:row['mime']='application/javascript'
     right_mime.reconcile_finished()
     assert right_mime.ambiguous_requests>0
-    mime_fallback=Trace.__new__(Trace);mime_fallback.requests={};mime_fallback.finished_requests=[];mime_fallback.request_sequence=0;mime_fallback.ambiguous_requests=0;mime_fallback.byte_conflicts=0
+    mime_fallback=Trace.__new__(Trace);mime_fallback.targets={};mime_fallback.extra_response_statuses={};mime_fallback.requests={};mime_fallback.finished_requests=[];mime_fallback.request_sequence=0;mime_fallback.ambiguous_requests=0;mime_fallback.byte_conflicts=0
     mime_url='https://fixture.invalid/generated-script'
     frame=SimpleNamespace();frame.page=SimpleNamespace(main_frame=frame)
     request=SimpleNamespace(url=mime_url,frame=frame,resource_type='fetch',timing={'startTime':1007,'responseEnd':10},response=lambda:SimpleNamespace(status=200,headers={'content-type':'application/javascript; charset=utf-8'}),sizes=lambda:{'responseHeadersSize':20,'responseBodySize':100})
@@ -1359,7 +1450,7 @@ def self_check():
     alias.finished_requests=alias.finished_requests[:1];alias.finished_requests[0].update(startEpochMs=1000,mime='text/javascript')
     alias.reconcile_finished()
     assert alias.requests['0']['scriptObserved'] and script_totals(alias.snapshot())['requests']==1
-    late_mime=Trace.__new__(Trace)
+    late_mime=Trace.__new__(Trace);late_mime.targets={};late_mime.extra_response_statuses={}
     late_mime.requests={'cdp':{'url':safe_url(mime_url),'_resourceKey':resource_key(mime_url),'type':'Fetch','network':True,'scriptPath':False,'startEpochMs':1000,'requestOrdinal':1,'finished':True,'status':200,'transferredBytes':120,'decodedBytes':100,'decodedObserved':True}}
     late_mime.finished_requests=[];late_mime.request_sequence=1;late_mime.ambiguous_requests=0;late_mime.byte_conflicts=0
     before_mime=late_mime.snapshot()
@@ -1386,6 +1477,32 @@ def self_check():
     invalid_timing.reconcile_decoded(SimpleNamespace(frames=[SimpleNamespace(evaluate=lambda _:[{'url':raw,'startEpochMs':1106.964,'responseEndEpochMs':1006.964,'encodedBytes':1000000,'decodedBytes':1000000}])],workers=[]))
     assert len(invalid_timing.unaccounted_script_resources)==1
     assert invalid_timing.requests['cdp']['decodedBytes']==500000, 'an unmatched ResourceTiming cannot overwrite measured bytes or widen the 100 ms matching window'
+
+    def worker_clock_fixture(origins, timings, target_identity=True, location_identity=True, cached=False):
+        trace=Trace.__new__(Trace);trace.requests={};trace.targets={};trace.extra_response_statuses={};trace.finished_requests=[];trace.request_sequence=len(origins);trace.ambiguous_requests=0;trace.byte_conflicts=0
+        for i,origin in enumerate(origins):
+            trace.requests[':worker-'+str(i)]={'url':safe_url(raw),'_resourceKey':key,'startEpochMs':1000+i*5,'type':'Script','network':True,'scriptPath':True,'requestOrdinal':i,'finished':True,'status':200,'transferredBytes':0 if cached else 120,'transferPending':not cached,'observedResponseHeadersBytes':120}
+            trace.targets[str(i)]={'type':'worker','_entryRequestKey':':worker-'+str(i) if target_identity else ':missing','_workerResourceKey':key if location_identity else resource_key(raw+'?other'),'_workerTimeOriginEpochMs':origin}
+        trace.reconcile_decoded(SimpleNamespace(frames=[SimpleNamespace(evaluate=lambda _:[{'url':raw,'startEpochMs':start,'encodedBytes':72,'decodedBytes':4441} for start in timings])],workers=[]))
+        return trace
+    bound=worker_clock_fixture([1260],[1264])
+    assert script_totals(bound.snapshot())['decodedBytes']==4441 and script_totals(bound.snapshot())['transferredBytes']==192
+    assert not bound.unaccounted_script_resources and not bound.ambiguous_requests
+    for identity in [(False,True),(True,False)]:
+        unknown=worker_clock_fixture([1260],[1264],*identity)
+        assert script_totals(unknown.snapshot())['missingTransfer']==1 and len(unknown.unaccounted_script_resources)==1
+    concurrent=worker_clock_fixture([1260,1265],[1264,1269])
+    assert concurrent.ambiguous_requests==2 and script_totals(concurrent.snapshot())['missingTransfer']==2
+    cached=worker_clock_fixture([1260],[1264],cached=True)
+    assert script_totals(cached.snapshot())['transferredBytes']==0 and script_totals(cached.snapshot())['decodedBytes']==4441
+    early_bound=bound.snapshot()
+    bound.extra_response_statuses[':worker-0']=[302,200]
+    assert script_totals(bound.snapshot())['missingTransfer']==1
+    bound.reconcile_snapshot(early_bound)
+    assert script_totals(early_bound)['missingTransfer']==1
+    bound.extra_response_statuses[':worker-0']=[304]
+    bound.requests[':worker-0'].pop('unaccountedRedirect')
+    assert script_totals(bound.snapshot())['missingTransfer']==0
 
     assert safe_url(raw+'?v=1') == safe_url(raw+'?v=2') and resource_key(raw+'?v=1') != resource_key(raw+'?v=2')
     assert safe_url('https://token-artifact.localhost/artifact-editor/design/secret-grant/?cookie=secret') == safe_url('https://other/artifact-editor/design/secret-grant/?other=value')
@@ -1528,7 +1645,8 @@ def main():
                             input_proof, requests_at_editable = edit_heading(page, frame, heading, trace, config['artifactIds'][kind], 1)
                             sample.update(firstInputMs=input_proof['ms'], saveAfterPaintMs=input_proof['saveAfterPaintMs'],
                                 editableMs=round(input_proof['editableEpochMs'] - started_ms, 1), inputProofs=[input_proof],
-                                inputSamplesMs=[input_proof['ms']], requestsAtEditable=requests_at_editable, firstEditablePss=process_pss(process.pid))
+                                inputSamplesMs=[input_proof['ms']], requestsAtEditable=requests_at_editable, firstEditablePss=process_pss(process.pid, classify_roles=True))
+                            sample['firstDocumentState'] = document_observations(page)
                             byte_delta = script_delta(preopen, requests_at_editable)
                             sample.update(scriptTransferBytes=byte_delta['transferredBytes'], scriptDecodedBytes=byte_delta['decodedBytes'])
                             sample['phase'] = 'idleObservation'
@@ -1539,6 +1657,7 @@ def main():
                             reconciled = script_delta(preopen, requests_at_editable)
                             sample.update(scriptTransferBytes=reconciled['transferredBytes'], scriptDecodedBytes=reconciled['decodedBytes'])
                             stable = trace.snapshot(); sample['requestsAtStable'] = stable
+                            sample['stableDocumentState'] = document_observations(page)
                             idle_delta = script_delta(requests_at_editable, stable)
                             sample.update(idleScriptTransferBytes=idle_delta['transferredBytes'], idleScriptDecodedBytes=idle_delta['decodedBytes'])
                             sample['scriptAccounting'] = {**script_totals(stable), 'unaccountedResources':len(trace.unaccounted_script_resources), 'ambiguousRequests':trace.ambiguous_requests, 'historicalAmbiguousObservations':trace.historical_ambiguous_observations, 'byteConflicts':trace.byte_conflicts}
@@ -1559,6 +1678,7 @@ def main():
                                     sample['undoProofs'].append(undo_edit(page, kind, number, config['artifactIds'][kind])); pending_undo = None
                             page.wait_for_timeout(1000)
                             sample['afterTraversalPss'] = pss_observations(page, process.pid)
+                            sample['afterTraversalDocumentState'] = document_observations(page)
                             sample['pssDeltaBytes'] = sample['afterTraversalPss']['bytes'] - host['bytes']
                             sample['blankSubtractedPssBytes'] = sample['afterTraversalPss']['bytes'] - sample['emptyBrowserPss']['bytes']
                             sample['phase'] = 'export'
@@ -1594,6 +1714,9 @@ def main():
                             if trace:
                                 rows = trace.snapshot()
                                 sample['failedRequests'] = failed_requests(rows)
+                                if sample.get('failureCode'):
+                                    sample.setdefault('failureObservations', {})['inflightRequests'] = trace.inflight()[:32]
+                                    if resources: sample['failureObservations']['documentState'] = document_observations(resources[2])
                                 sample.setdefault('unaccountedScriptTimings', timing_observations(trace.unaccounted_script_resources))
                                 sample.setdefault('scriptResourceTimings', timing_observations(trace.script_resource_timings))
                                 sample['networkObservations'] = {'requests': len(rows), 'scripts': script_totals(rows), 'inflight': len(trace.inflight()),

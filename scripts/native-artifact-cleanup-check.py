@@ -49,6 +49,14 @@ try:
             page = browser.new_page(viewport={'width':1440,'height':1000})
             url = f'http://127.0.0.1:{server.server_port}/' + (f'native/{kind}/'+('active' if editing else '') if native else f'artifact-editor/{kind}/fixture/')
             page.goto(url,wait_until='networkidle')
+            observed_requests=[]
+            page.on('request', lambda request: observed_requests.append(request))
+            state=benchmark['document_observations'](page)
+            assert len(state)==1 and state[0]['htmlImages']==1 and state[0]['readyHtmlImages']==1
+            assert state[0]['readyImageNaturalPixels']==640*360
+            assert state[0]['readyVisibleImageNaturalPixels']==640*360
+            assert not observed_requests, 'diagnostics must not fetch or decode additional images'
+            assert all(value is None or isinstance(value,(int,float)) for value in state[0].values())
             if native:
                 observed=benchmark['editor_observations'](page)
                 assert observed[0]['nativeEditors']==1 and not observed[0]['nativeFailure'] and not observed[0]['nativeLoading'] and not observed[0]['passwordForm']

@@ -1,0 +1,48 @@
+{
+  "check": "worker-entry-network-accounting",
+  "results": [
+    {
+      "encoding": "identity",
+      "workerTransferBytes": 1000203,
+      "workerDecodedBytes": 1000054,
+      "importDurationMs": 2023.4,
+      "scriptRequests": 2,
+      "inflight": 0
+    },
+    {
+      "encoding": "gzip",
+      "workerTransferBytes": 1230,
+      "workerDecodedBytes": 1000054,
+      "importDurationMs": 2020.6,
+      "scriptRequests": 2,
+      "inflight": 0
+    },
+    {
+      "encoding": "concurrent",
+      "refusedAsAmbiguous": true,
+      "ambiguousRequests": 2
+    },
+    {
+      "encoding": "queued",
+      "scriptRequests": 12,
+      "maxNetworkStartSkewMs": 602.3,
+      "scriptDecodedBytes": 240492
+    },
+    {
+      "encoding": "mimeFetch",
+      "extensionlessFetchCountedAsScript": true,
+      "scriptRequests": 1,
+      "scriptDecodedBytes": 28
+    },
+    {
+      "encoding": "networkFailure",
+      "networkErrorCodes": [
+        "ERR_EMPTY_RESPONSE"
+      ],
+      "browserErrorPage": true,
+      "rawBrowserErrorLogged": false
+    }
+  ],
+  "performanceSamples": 0,
+  "qualified": false
+}

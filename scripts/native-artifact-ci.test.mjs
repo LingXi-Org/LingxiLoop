@@ -3,6 +3,14 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { BASELINE, baselineFor, compactReceipt, configuration, FIDELITY_BASELINE, performanceSampleEligible, publicEvidence, publicRequest, verifyDiagnosticPrerequisite } from './native-artifact-ci.mjs'
 
+test('redirect refusals and numeric process/image evidence retain no private inputs',()=>{
+  const safe=publicEvidence({failureObservations:{pssReadFailures:{root:1,liveChild:2,unknownChild:0,command:'private'},documentState:[{htmlImages:10,readyImageNaturalPixels:230400,src:'private'}],inflightRequests:[{url:'https://private.invalid/worker.js?token=private',unaccountedRedirect:true,_entryRequestKey:'private',headers:'private'}]}})
+  assert.deepEqual(safe.failureObservations.pssReadFailures,{root:1,liveChild:2,unknownChild:0})
+  assert.deepEqual(safe.failureObservations.documentState,[{htmlImages:10,readyImageNaturalPixels:230400}])
+  assert.equal(safe.failureObservations.inflightRequests[0].unaccountedRedirect,true)
+  assert.doesNotMatch(JSON.stringify(safe),/private|token|headers|entryRequestKey/)
+})
+
 const env = {
   GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_REF_TYPE: 'branch', GITHUB_REF: 'refs/heads/codex/shared-artifact-editor',
   GITHUB_SHA: 'a'.repeat(40), GITHUB_REPOSITORY: 'LingXi-Org/LingxiLoop', NATIVE_ARTIFACT_PHASE: 'diagnostic',

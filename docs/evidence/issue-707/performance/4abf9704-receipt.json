@@ -1,0 +1,1159 @@
+{
+  "schemaVersion": 1,
+  "phase": "diagnostic",
+  "baselineCommit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "candidateCommit": "4abf9704fcafecf759e03bdba06b9c364fd2bb15",
+  "environment": {
+    "operatingSystem": "linux",
+    "architecture": "x64",
+    "kernelRelease": "7.0.0-1017-azure",
+    "distribution": "ubuntu",
+    "distributionVersion": "24.04",
+    "node": "v22.23.4",
+    "expectedRuntime": {
+      "baseline": "4.0.0",
+      "candidate": "4.0.0"
+    },
+    "installedRuntime": {
+      "baseline": "4.0.0",
+      "candidate": "4.0.0"
+    },
+    "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "network": {
+      "latencyMs": 20,
+      "uploadMbps": 3
+    },
+    "firstArm": "candidate",
+    "cpuRate": 1,
+    "coldProcessPerSample": true,
+    "hostIdleMs": 12000,
+    "scriptIdleWindowMs": 5000,
+    "naturalCloseWindowMs": 10000,
+    "exportPeakIntervalMs": 100,
+    "browser": "140.0.7339.16"
+  },
+  "diagnosticPassed": false,
+  "qualified": false,
+  "checkpoint": {
+    "phase": "measurement",
+    "status": "failed",
+    "code": "CHILD_FAILED"
+  },
+  "exportObservationsPassed": false,
+  "summary": {
+    "baseline:design:fullNavigation": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 3,
+      "editableMs": {
+        "p50": 10294.9,
+        "p75": 10294.9,
+        "p95": 10294.9
+      },
+      "scriptTransferBytes": {
+        "p50": 1279443,
+        "p75": 1279443,
+        "p95": 1279443
+      },
+      "scriptDecodedBytes": {
+        "p50": 4052309,
+        "p75": 4052309,
+        "p95": 4052309
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 410103603,
+        "p75": 410103603,
+        "p95": 410103603
+      },
+      "firstInputMs": {
+        "p50": 26,
+        "p75": 26,
+        "p95": 26
+      },
+      "inputFeedbackP95Ms": 29.399999999906868
+    },
+    "baseline:design": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 3,
+      "editableMs": {
+        "p50": 10294.9,
+        "p75": 10294.9,
+        "p95": 10294.9
+      },
+      "scriptTransferBytes": {
+        "p50": 1279443,
+        "p75": 1279443,
+        "p95": 1279443
+      },
+      "scriptDecodedBytes": {
+        "p50": 4052309,
+        "p75": 4052309,
+        "p95": 4052309
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 410103603,
+        "p75": 410103603,
+        "p95": 410103603
+      },
+      "firstInputMs": {
+        "p50": 26,
+        "p75": 26,
+        "p95": 26
+      },
+      "inputFeedbackP95Ms": 29.399999999906868
+    },
+    "baseline:design:workbenchOpen": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 0,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:design:fullNavigation": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 0,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:design": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 0,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:design:workbenchOpen": {
+      "successfulSamples": 1,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": 5809.8,
+        "p75": 5809.8,
+        "p95": 5809.8
+      },
+      "scriptTransferBytes": {
+        "p50": 289597,
+        "p75": 289597,
+        "p95": 289597
+      },
+      "scriptDecodedBytes": {
+        "p50": 878808,
+        "p75": 878808,
+        "p95": 878808
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 378719642,
+        "p75": 378719642,
+        "p95": 378719642
+      },
+      "firstInputMs": {
+        "p50": 52,
+        "p75": 52,
+        "p95": 52
+      },
+      "inputFeedbackP95Ms": 52
+    },
+    "baseline:slides:fullNavigation": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 3,
+      "editableMs": {
+        "p50": 6722,
+        "p75": 6722,
+        "p95": 6722
+      },
+      "scriptTransferBytes": {
+        "p50": 1303840,
+        "p75": 1303840,
+        "p95": 1303840
+      },
+      "scriptDecodedBytes": {
+        "p50": 4110639,
+        "p75": 4110639,
+        "p95": 4110639
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 292707533,
+        "p75": 292707533,
+        "p95": 292707533
+      },
+      "firstInputMs": {
+        "p50": 17.899999999906868,
+        "p75": 17.899999999906868,
+        "p95": 17.899999999906868
+      },
+      "inputFeedbackP95Ms": 34.3000000002794
+    },
+    "baseline:slides": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 3,
+      "editableMs": {
+        "p50": 6722,
+        "p75": 6722,
+        "p95": 6722
+      },
+      "scriptTransferBytes": {
+        "p50": 1303840,
+        "p75": 1303840,
+        "p95": 1303840
+      },
+      "scriptDecodedBytes": {
+        "p50": 4110639,
+        "p75": 4110639,
+        "p95": 4110639
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 292707533,
+        "p75": 292707533,
+        "p95": 292707533
+      },
+      "firstInputMs": {
+        "p50": 17.899999999906868,
+        "p75": 17.899999999906868,
+        "p95": 17.899999999906868
+      },
+      "inputFeedbackP95Ms": 34.3000000002794
+    },
+    "baseline:slides:workbenchOpen": {
+      "successfulSamples": 1,
+      "performanceEligibleSamples": 1,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": 4569.3,
+        "p75": 4569.3,
+        "p95": 4569.3
+      },
+      "scriptTransferBytes": {
+        "p50": 642527,
+        "p75": 642527,
+        "p95": 642527
+      },
+      "scriptDecodedBytes": {
+        "p50": 2011938,
+        "p75": 2011938,
+        "p95": 2011938
+      },
+      "idleScriptTransferBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "idleScriptDecodedBytes": {
+        "p50": 0,
+        "p75": 0,
+        "p95": 0
+      },
+      "pssDeltaBytes": {
+        "p50": 293095834,
+        "p75": 293095834,
+        "p95": 293095834
+      },
+      "firstInputMs": {
+        "p50": 20.100000000093132,
+        "p75": 20.100000000093132,
+        "p95": 20.100000000093132
+      },
+      "inputFeedbackP95Ms": 32.200000000186265
+    },
+    "candidate:slides:fullNavigation": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 0,
+      "failedExportObservations": 1,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:slides": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 0,
+      "failedExportObservations": 1,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:slides:workbenchOpen": {
+      "successfulSamples": 0,
+      "performanceEligibleSamples": 0,
+      "failedExportObservations": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    }
+  },
+  "gates": [
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "editableMs",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "scriptTransferBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "pssDeltaBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "inputFeedbackP95",
+      "maximumMs": 100,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "editableMs",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "scriptTransferBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "pssDeltaBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "inputFeedbackP95",
+      "maximumMs": 100,
+      "passed": false
+    }
+  ],
+  "samples": [
+    {
+      "run": 1,
+      "arm": "candidate",
+      "kind": "design",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "performanceEligible": false,
+      "phase": "traversal",
+      "failureStage": "traversal",
+      "failureCode": "current_page_media_or_fonts_not_ready",
+      "editableMs": 8794.3,
+      "scriptTransferBytes": 1329049,
+      "scriptDecodedBytes": 4186013,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "firstInputMs": 35.10000000009313,
+      "failureObservations": {
+        "frames": 1,
+        "matchingHeadings": 1,
+        "pageNumber": 18,
+        "headingMatches": true,
+        "headingVisible": true,
+        "decodedImages": 0,
+        "formulaElements": 2,
+        "fontChecks": 119,
+        "fontsReady": true,
+        "editorState": [
+          {
+            "nativeEditors": 1,
+            "visibleNativeEditors": 1,
+            "slidesWorkspaceVisible": false,
+            "exportBusy": false,
+            "exportProgress": null,
+            "nativeFailure": false,
+            "nativeLoading": false,
+            "designWorkspaceOpen": true,
+            "passwordForm": false,
+            "browserErrorPage": false,
+            "productRootPresent": true
+          }
+        ]
+      },
+      "viewNormalization": {
+        "inspectorToggles": 0,
+        "zoomActions": 2,
+        "observedScale": 0.5,
+        "inspectorClosed": true,
+        "container": {
+          "width": 619,
+          "height": 926
+        }
+      }
+    },
+    {
+      "run": 1,
+      "arm": "candidate",
+      "kind": "design",
+      "mode": "workbenchOpen",
+      "status": "passed",
+      "performanceEligible": true,
+      "phase": "complete",
+      "editableMs": 5809.8,
+      "scriptTransferBytes": 289597,
+      "scriptDecodedBytes": 878808,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "pssDeltaBytes": 378719642,
+      "firstInputMs": 52,
+      "viewNormalization": {
+        "inspectorToggles": 0,
+        "zoomActions": 2,
+        "observedScale": 0.5,
+        "inspectorClosed": true,
+        "container": {
+          "width": 619,
+          "height": 926
+        }
+      }
+    },
+    {
+      "run": 1,
+      "arm": "candidate",
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "performanceEligible": false,
+      "phase": "validation",
+      "failureStage": "validation",
+      "failureCode": "decoded_script_accounting_incomplete",
+      "editableMs": 9588.2,
+      "scriptTransferBytes": 1351244,
+      "scriptDecodedBytes": 4239681,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "pssDeltaBytes": 372721050,
+      "firstInputMs": 22.300000000046566,
+      "failureObservations": {
+        "editorState": [
+          {
+            "nativeEditors": 1,
+            "visibleNativeEditors": 0,
+            "slidesWorkspaceVisible": true,
+            "exportBusy": false,
+            "exportProgress": null,
+            "nativeFailure": false,
+            "nativeLoading": false,
+            "designWorkspaceOpen": false,
+            "passwordForm": false,
+            "browserErrorPage": false,
+            "productRootPresent": true
+          }
+        ]
+      },
+      "viewNormalization": {
+        "inspectorToggles": 0,
+        "zoomActions": 0,
+        "inspectorClosed": true,
+        "container": {
+          "width": 819,
+          "height": 926
+        }
+      },
+      "exports": [
+        {
+          "format": "html",
+          "status": "passed",
+          "bytes": 42914927,
+          "pages": 50,
+          "durationMs": 72448,
+          "peakPssBytes": 1233258496,
+          "hostSubtractedPeakPssBytes": 768544768,
+          "offlineHtml": {
+            "directFileOpen": true,
+            "networkOffline": true,
+            "networkRequests": 0,
+            "pages": 50,
+            "pagesWithDecodedImages": 50,
+            "pagesWithFormula": 50,
+            "textVerified": true,
+            "fontsReady": true,
+            "fontStylesChecked": 9,
+            "fontFacesLoaded": 4,
+            "sameBrowserVersion": true,
+            "verified": true
+          },
+          "editorStateAfterExport": [
+            {
+              "nativeEditors": 1,
+              "visibleNativeEditors": 1,
+              "slidesWorkspaceVisible": false,
+              "exportBusy": false,
+              "exportProgress": null,
+              "nativeFailure": false,
+              "nativeLoading": false,
+              "designWorkspaceOpen": false,
+              "passwordForm": false,
+              "browserErrorPage": false,
+              "productRootPresent": true
+            }
+          ]
+        },
+        {
+          "format": "pdf",
+          "status": "passed",
+          "bytes": 6268333,
+          "pages": 50,
+          "durationMs": 91593,
+          "peakPssBytes": 1565328384,
+          "hostSubtractedPeakPssBytes": 1100614656,
+          "editorStateAfterExport": [
+            {
+              "nativeEditors": 1,
+              "visibleNativeEditors": 1,
+              "slidesWorkspaceVisible": false,
+              "exportBusy": false,
+              "exportProgress": null,
+              "nativeFailure": false,
+              "nativeLoading": false,
+              "designWorkspaceOpen": false,
+              "passwordForm": false,
+              "browserErrorPage": false,
+              "productRootPresent": true
+            }
+          ]
+        },
+        {
+          "format": "pptx",
+          "status": "failed",
+          "failureCode": "export_pss_incomplete",
+          "bytes": 16378843,
+          "pages": 50,
+          "durationMs": 92069,
+          "peakPssBytes": 1813469184,
+          "hostSubtractedPeakPssBytes": 1348755456,
+          "editorStateAfterExport": [
+            {
+              "nativeEditors": 1,
+              "visibleNativeEditors": 1,
+              "slidesWorkspaceVisible": false,
+              "exportBusy": false,
+              "exportProgress": null,
+              "nativeFailure": false,
+              "nativeLoading": false,
+              "designWorkspaceOpen": false,
+              "passwordForm": false,
+              "browserErrorPage": false,
+              "productRootPresent": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "arm": "candidate",
+      "kind": "slides",
+      "mode": "workbenchOpen",
+      "status": "failed",
+      "performanceEligible": false,
+      "phase": "validation",
+      "failureStage": "validation",
+      "failureCode": "decoded_script_accounting_incomplete",
+      "editableMs": 7295.3,
+      "scriptTransferBytes": 687734,
+      "scriptDecodedBytes": 2136606,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "pssDeltaBytes": 369808179,
+      "firstInputMs": 18.0999999998603,
+      "failureObservations": {
+        "editorState": [
+          {
+            "nativeEditors": 1,
+            "visibleNativeEditors": 0,
+            "slidesWorkspaceVisible": true,
+            "exportBusy": false,
+            "exportProgress": null,
+            "nativeFailure": false,
+            "nativeLoading": false,
+            "designWorkspaceOpen": false,
+            "passwordForm": false,
+            "browserErrorPage": false,
+            "productRootPresent": true
+          }
+        ]
+      },
+      "viewNormalization": {
+        "inspectorToggles": 0,
+        "zoomActions": 0,
+        "inspectorClosed": true,
+        "container": {
+          "width": 819,
+          "height": 926
+        }
+      }
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "design",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "performanceEligible": true,
+      "phase": "validation",
+      "failureStage": "validation",
+      "failureCode": "export_diagnostic_incomplete",
+      "editableMs": 10294.9,
+      "scriptTransferBytes": 1279443,
+      "scriptDecodedBytes": 4052309,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "pssDeltaBytes": 410103603,
+      "firstInputMs": 26,
+      "failureObservations": {
+        "editorState": [
+          {
+            "nativeEditors": 1,
+            "visibleNativeEditors": 0,
+            "slidesWorkspaceVisible": false,
+            "exportBusy": false,
+            "exportProgress": null,
+            "nativeFailure": false,
+            "nativeLoading": false,
+            "designWorkspaceOpen": false,
+            "passwordForm": false,
+            "browserErrorPage": false,
+            "productRootPresent": true
+          }
+        ]
+      },
+      "viewNormalization": {
+        "inspectorToggles": 1,
+        "zoomActions": 0,
+        "observedScale": 0.5,
+        "inspectorClosed": true,
+        "container": {
+          "width": 619,
+          "height": 926
+        }
+      },
+      "exports": [
+        {
+          "format": "html",
+          "status": "failed",
+          "failureCode": "browser_timeout",
+          "bytes": null,
+          "durationMs": 180108,
+          "peakPssBytes": 909418496,
+          "hostSubtractedPeakPssBytes": 430218445,
+          "editorStateAfterExport": [
+            {
+              "nativeEditors": 1,
+              "visibleNativeEditors": 1,
+              "slidesWorkspaceVisible": false,
+              "exportBusy": false,
+              "exportProgress": null,
+              "nativeFailure": false,
+              "nativeLoading": false,
+              "designWorkspaceOpen": true,
+              "passwordForm": false,
+              "browserErrorPage": false,
+              "productRootPresent": true
+            }
+          ]
+        },
+        {
+          "format": "pdf",
+          "status": "failed",
+          "failureCode": "browser_timeout",
+          "bytes": null,
+          "durationMs": 180107,
+          "peakPssBytes": 829958144,
+          "hostSubtractedPeakPssBytes": 350758093,
+          "editorStateAfterExport": [
+            {
+              "nativeEditors": 1,
+              "visibleNativeEditors": 1,
+              "slidesWorkspaceVisible": false,
+              "exportBusy": false,
+              "exportProgress": null,
+              "nativeFailure": false,
+              "nativeLoading": false,
+              "designWorkspaceOpen": true,
+              "passwordForm": false,
+              "browserErrorPage": false,
+              "productRootPresent": true
+            }
+          ]
+        },
+        {
+          "format": "pptx",
+          "status": "failed",
+          "failureCode": "browser_timeout",
+          "bytes": null,
+          "durationMs": 180106,
+          "peakPssBytes": 746857472,
+          "hostSubtractedPeakPssBytes": 267657421,
+          "editorStateAfterExport": [
+            {
+              "nativeEditors": 1,
+              "visibleNativeEditors": 1,
+              "slidesWorkspaceVisible": false,
+              "exportBusy": false,
+              "exportProgress": null,
+              "nativeFailure": false,
+              "nativeLoading": false,
+              "designWorkspaceOpen": true,
+              "passwordForm": false,
+              "browserErrorPage": false,
+              "productRootPresent": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "design",
+      "mode": "workbenchOpen",
+      "status": "failed",
+      "performanceEligible": false,
+      "phase": "launch",
+      "failureStage": "launch",
+      "failureCode": "pss_incomplete",
+      "failureObservations": {
+        "editorState": [
+          {
+            "nativeEditors": 0,
+            "visibleNativeEditors": 0,
+            "slidesWorkspaceVisible": false,
+            "exportBusy": false,
+            "exportProgress": null,
+            "nativeFailure": false,
+            "nativeLoading": false,
+            "designWorkspaceOpen": false,
+            "passwordForm": false,
+            "browserErrorPage": false,
+            "productRootPresent": false
+          }
+        ]
+      }
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "performanceEligible": true,
+      "phase": "validation",
+      "failureStage": "validation",
+      "failureCode": "export_diagnostic_incomplete",
+      "editableMs": 6722,
+      "scriptTransferBytes": 1303840,
+      "scriptDecodedBytes": 4110639,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "pssDeltaBytes": 292707533,
+      "firstInputMs": 17.899999999906868,
+      "failureObservations": {
+        "editorState": [
+          {
+            "nativeEditors": 1,
+            "visibleNativeEditors": 0,
+            "slidesWorkspaceVisible": true,
+            "exportBusy": false,
+            "exportProgress": null,
+            "nativeFailure": false,
+            "nativeLoading": false,
+            "designWorkspaceOpen": false,
+            "passwordForm": false,
+            "browserErrorPage": false,
+            "productRootPresent": true
+          }
+        ]
+      },
+      "viewNormalization": {
+        "inspectorToggles": 1,
+        "zoomActions": 0,
+        "inspectorClosed": true,
+        "container": {
+          "width": 819,
+          "height": 926
+        }
+      },
+      "exports": [
+        {
+          "format": "html",
+          "status": "failed",
+          "failureCode": "browser_timeout",
+          "bytes": null,
+          "durationMs": 180132,
+          "peakPssBytes": 776101888,
+          "hostSubtractedPeakPssBytes": 311532544,
+          "editorStateAfterExport": [
+            {
+              "nativeEditors": 1,
+              "visibleNativeEditors": 1,
+              "slidesWorkspaceVisible": false,
+              "exportBusy": false,
+              "exportProgress": null,
+              "nativeFailure": false,
+              "nativeLoading": false,
+              "designWorkspaceOpen": false,
+              "passwordForm": false,
+              "browserErrorPage": false,
+              "productRootPresent": true
+            }
+          ]
+        },
+        {
+          "format": "pdf",
+          "status": "failed",
+          "failureCode": "browser_timeout",
+          "bytes": null,
+          "durationMs": 180107,
+          "peakPssBytes": 718000128,
+          "hostSubtractedPeakPssBytes": 253430784,
+          "editorStateAfterExport": [
+            {
+              "nativeEditors": 1,
+              "visibleNativeEditors": 1,
+              "slidesWorkspaceVisible": false,
+              "exportBusy": false,
+              "exportProgress": null,
+              "nativeFailure": false,
+              "nativeLoading": false,
+              "designWorkspaceOpen": false,
+              "passwordForm": false,
+              "browserErrorPage": false,
+              "productRootPresent": true
+            }
+          ]
+        },
+        {
+          "format": "pptx",
+          "status": "failed",
+          "failureCode": "browser_timeout",
+          "bytes": null,
+          "durationMs": 180108,
+          "peakPssBytes": 667375616,
+          "hostSubtractedPeakPssBytes": 202806272,
+          "editorStateAfterExport": [
+            {
+              "nativeEditors": 1,
+              "visibleNativeEditors": 1,
+              "slidesWorkspaceVisible": false,
+              "exportBusy": false,
+              "exportProgress": null,
+              "nativeFailure": false,
+              "nativeLoading": false,
+              "designWorkspaceOpen": false,
+              "passwordForm": false,
+              "browserErrorPage": false,
+              "productRootPresent": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "slides",
+      "mode": "workbenchOpen",
+      "status": "passed",
+      "performanceEligible": true,
+      "phase": "complete",
+      "editableMs": 4569.3,
+      "scriptTransferBytes": 642527,
+      "scriptDecodedBytes": 2011938,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "pssDeltaBytes": 293095834,
+      "firstInputMs": 20.100000000093132,
+      "viewNormalization": {
+        "inspectorToggles": 1,
+        "zoomActions": 0,
+        "inspectorClosed": true,
+        "container": {
+          "width": 819,
+          "height": 926
+        }
+      }
+    }
+  ],
+  "sourceArchive": {
+    "run": 42180810959,
+    "artifact": 13488297811,
+    "sha256": "6e8fe84345ba9e7c39e3b2e9f22d5775626c1d5b6038e768eb0634a2e65afbc4"
+  },
+  "note": "保持原归档失败状态和资格，不以计量修正追认历史样本；十组AB/BA尚未通过。"
+}
