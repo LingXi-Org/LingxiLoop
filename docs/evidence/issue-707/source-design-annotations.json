@@ -1,0 +1,81 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourceFile": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "locations": [
+    {
+      "symbol": "function Fr(",
+      "offset": 2543105,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "function oc(",
+      "offset": 2544832,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "W={note:",
+      "offset": 2586999,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "Xe={rect:",
+      "offset": 2589022,
+      "offsetUnit": "UTF-16 code units"
+    }
+  ],
+  "actualSavedSourceAnnotations": {
+    "note-mymb0c": {
+      "text": "画布便签",
+      "w": 240,
+      "x": 688,
+      "y": -778
+    },
+    "shape-azq1wd": {
+      "h": 452,
+      "kind": "rect",
+      "w": 452,
+      "x": 1366,
+      "y": -1102
+    },
+    "shape-czgp9h": {
+      "kind": "arrow",
+      "x": 2045,
+      "x2": 2724,
+      "y": -1264,
+      "y2": -812
+    }
+  },
+  "measuredNote": {
+    "fontSize": 14,
+    "lineHeight": 1.45,
+    "padding": "10px 12px",
+    "minimumHeight": 40,
+    "fill": "#fef3a2",
+    "text": "#4a4220",
+    "radius": 2
+  },
+  "measuredDefaultRectangle": {
+    "fill": "#b6b0a7",
+    "radius": 8
+  },
+  "nativeLocations": [
+    "shared/artifact-canvas-import.ts",
+    "shared/artifact-canvas-pages.ts",
+    "src/features/artifacts/native/NativeEditor.tsx",
+    "src/features/artifacts/native/renderer.tsx"
+  ],
+  "nativeFunctionalEvidence": [
+    "functional/canvas-contents-light.json",
+    "functional/canvas-contents-dark.json"
+  ],
+  "screenshotStatesPaired": false,
+  "visualQualified": false,
+  "remaining": [
+    "自由图形的完整拖绘及专用工具条",
+    "来源调色板、标题缩放和裁切边界",
+    "线箭头、路径、媒体、链接的来源转换",
+    "自由对象在各格式中的选区导出",
+    "完整来源同态截图和差异门槛"
+  ]
+}

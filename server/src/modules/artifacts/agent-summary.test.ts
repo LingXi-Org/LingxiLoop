@@ -27,3 +27,15 @@ test('only ephemeral legacy summaries advertise a source snapshot token', () => 
   assert.equal(agentDocumentSummary(snapshot).sourceVersion, snapshot.original.version)
   assert.equal(agentDocumentSummary({ ...snapshot, pageVersions: { one: 'a'.repeat(64) } }).sourceVersion, undefined)
 })
+
+test('canvas metadata and membership CAS tokens remain available without reading node payloads',()=>{
+  const document=createDocument('design','canvas-agent'),page=createPage('board')
+  page.canvasPageId='sheet';document.pageOrder=[page.id];document.pages[page.id]=page
+  document.canvasPages=[{id:'sheet',name:'第一张画布'}]
+  document.versions={'document/canvasPages':3,'canvasPage/sheet/members':5,'page/board/field/canvasPageId':7}
+  const summary=agentDocumentSummary({document,history:{version:0,undo:null,redo:null},pageVersions:{}})
+  assert.equal(summary.document.pages.board.canvasPageId,'sheet')
+  assert.equal(summary.document.versions['canvasPage/sheet/members'],5)
+  assert.equal(summary.document.versions['document/canvasPages'],3)
+  assert.equal(summary.document.versions['page/board/field/canvasPageId'],undefined)
+})

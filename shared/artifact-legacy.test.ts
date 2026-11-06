@@ -133,3 +133,20 @@ describe('Design canvas page conversion', () => {
     assert.equal(JSON.stringify(files),before)
   })
 })
+
+it('imports source canvas notes as independent world objects without altering board bodies or original files',()=>{
+  const index={v:3,order:['first.dc.html'],boards:{'first.dc.html':{w:1920,h:1080}},pages:[],notes:{'note-source':{text:'画布便签',w:240,x:688,y:-778},'shape-source':{kind:'rect',w:452,h:452,x:1366,y:-1102}}}
+  const files={'project/canvas.json':file(JSON.stringify(index)),'project/first.dc.html':file('<p>原始画板正文</p>')},before=JSON.stringify(files)
+  const result=convertLegacyArtifact({id:'canvas',kind:'design',title:'设计稿',files}),doc=result.document
+  const contentId=doc.canvasPages?.[0].contentId
+  assert.ok(contentId)
+  assert.deepEqual(doc.pageOrder,['first'])
+  const content=doc.pages[contentId]!
+  assert.deepEqual([content.x,content.y,content.width,content.height],[0,0,0,0])
+  assert.equal(content.nodes['note-source']!.text,'画布便签')
+  assert.deepEqual([content.nodes['note-source']!.x,content.nodes['note-source']!.y,content.nodes['note-source']!.width],[688,-778,240])
+  assert.equal(content.nodes['shape-source']!.shape,'rect')
+  assert.equal(doc.pages.first!.nodes['note-source'],undefined)
+  assert.equal(JSON.stringify(files),before)
+  assert.deepEqual(result.originals,Object.fromEntries(Object.entries(files).map(([path,value])=>[path,value.sha256])))
+})

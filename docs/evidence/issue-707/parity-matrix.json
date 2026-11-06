@@ -365,6 +365,14 @@
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
+      },
+      "localEvidence": {
+        "files": [
+          "functional/canvas-contents-light.json",
+          "functional/canvas-contents-dark.json",
+          "source-design-annotations.json"
+        ],
+        "scope": "独立无边界内容体、便签中文长短文本、绘图、共享撤销、节点及世界坐标评论已局部验证；专用工具、来源全部外观与同态截图仍未通过"
       }
     },
     {
@@ -408,8 +416,8 @@
       },
       "implementation": "src/features/artifacts/native/NativeEditor.tsx",
       "screenshots": {
-        "reference": null,
-        "native": null,
+        "reference": "visual/reference/design-free-note-light.png",
+        "native": "visual/native/design-free-content-light.png",
         "matchedStateVerified": false
       },
       "result": "待完整交互验收",
@@ -418,6 +426,14 @@
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
+      },
+      "localEvidence": {
+        "files": [
+          "functional/canvas-contents-light.json",
+          "functional/canvas-contents-dark.json",
+          "source-design-annotations.json"
+        ],
+        "scope": "独立无边界内容体、便签中文长短文本、绘图、共享撤销、节点及世界坐标评论已局部验证；专用工具、来源全部外观与同态截图仍未通过"
       }
     },
     {
@@ -461,6 +477,14 @@
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
+      },
+      "localEvidence": {
+        "files": [
+          "functional/canvas-contents-light.json",
+          "functional/canvas-contents-dark.json",
+          "source-design-annotations.json"
+        ],
+        "scope": "独立无边界内容体、便签中文长短文本、绘图、共享撤销、节点及世界坐标评论已局部验证；专用工具、来源全部外观与同态截图仍未通过"
       }
     },
     {

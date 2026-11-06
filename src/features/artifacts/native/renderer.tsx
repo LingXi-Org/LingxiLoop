@@ -1,3 +1,4 @@
+import { canvasContentOwner } from '../../../../shared/artifact-canvas-pages'
 import { artifactShapeGeometry } from '../../../../shared/artifact-shapes'
 import { createElement, Fragment, lazy, memo, Suspense, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { ArtifactAsset, ArtifactDocument, ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../shared/artifact-document'
@@ -184,8 +185,9 @@ export const PageContent = memo(function PageContent(props: PageRenderProps) {
     measure()
     return () => { observer.disconnect(); clearTimeout(timer) }
   }, [page, props.onFlowSize, props.visibleNodeIds, props.contentBottom])
+  const independent=Boolean(canvasContentOwner(document,page.id))
   const children = new Map<string | null, ArtifactNode[]>()
-  for (const id of page.nodeOrder) { const node = page.nodes[id]; if (!node || node.hidden || (node.parentId === null && (node.scope === 'canvas') !== !!props.canvasOnly) || (props.visibleNodeIds && !props.visibleNodeIds.has(id))) continue; const group = children.get(node.parentId) ?? []; group.push(node); children.set(node.parentId, group) }
+  for (const id of page.nodeOrder) { const node = page.nodes[id]; if (!node || node.hidden || (!independent && node.parentId === null && (node.scope === 'canvas') !== !!props.canvasOnly) || (props.visibleNodeIds && !props.visibleNodeIds.has(id))) continue; const group = children.get(node.parentId) ?? []; group.push(node); children.set(node.parentId, group) }
   const render = (node: ArtifactNode, flow: boolean): ReactNode => <div key={node.id} className={`native-node native-node-${node.type}`} data-node-id={node.id} data-node-type={node.type} style={{ ...nativeStyle(node.style, document), position: flow ? 'relative' : 'absolute', left: flow ? undefined : node.x, top: flow ? undefined : node.y, width: node.width, height: page.sizing === 'flow' && node.type === 'group' && node.layout?.mode !== 'absolute' ? 'auto' : node.height, minHeight: page.sizing === 'flow' && node.type === 'group' ? node.height : undefined, transform: nodeTransform(node), transformOrigin: 'center', boxSizing: 'border-box', ...(node.type === 'group' && node.layout?.mode !== 'absolute' ? { display: node.layout?.mode, flexDirection: node.layout?.direction, gap: node.layout?.gap, alignItems: node.layout?.align, justifyContent: node.layout?.justify, gridTemplateColumns: node.layout?.mode === 'grid' ? `repeat(${node.layout.columns ?? 1},minmax(0,1fr))` : undefined } : {}), ...(node.type === 'shape' || node.type === 'line' || node.type === 'drawing' ? { backgroundColor: undefined, backgroundImage: undefined, border: undefined } : {}) }}>
     <NodeContent {...props} node={node} />{children.get(node.id)?.map(child => render(child, node.layout?.mode === 'flex' || node.layout?.mode === 'grid'))}
   </div>

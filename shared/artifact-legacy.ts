@@ -4,6 +4,7 @@ import {
   type ArtifactDocument, type ArtifactNode, type ArtifactRichText, type ArtifactStyle,
 } from './artifact-document'
 import { projectArtifactThemes } from './artifact-themes'
+import { importCanvasAnnotations } from './artifact-canvas-import'
 
 /** Compatibility is a data conversion boundary. This module never evaluates imported source. */
 export interface LegacyArtifactInput {
@@ -273,5 +274,6 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
     // The imported root remains a declarative container. DOM flex/grid performs final text layout.
     convert(section, null, { x: 0, y: 0, width: page.width, height: page.height }, 0)
   }
+  importCanvasAnnotations(document,index.notes,warnings)
   return { document: validateArtifactDocument(document), originals, warnings: [...new Set(warnings)] }
 }

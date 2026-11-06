@@ -23,3 +23,17 @@ test('pinning a point on a rotated mirrored nested node inverts every transform'
   const restored=commentAnchorAtPoint(page,'t',point)
   assert.ok(Math.abs(restored.x-original.x)<1e-10);assert.ok(Math.abs(restored.y-original.y)<1e-10)
 })
+
+test('empty canvas comments keep unbounded world coordinates while node anchors stay relative',()=>{
+  const page={...createPage('canvas-content'),width:0,height:0}
+  const point={x:-680,y:1234}
+  const anchor=commentAnchorAtPoint(page,undefined,point)
+  assert.deepEqual(commentPoint(decodeCommentAnchor(encodeCommentAnchor(anchor))!,page),point)
+  assert.equal(anchor.space,'world')
+  assert.equal(commentPoint(anchor,createPage('board')),null)
+  page.nodes.note={...createNode('note','note'),x:-900,y:1100,width:240,height:200};page.nodeOrder=['note']
+  const relative=commentAnchorAtPoint(page,'note',{x:-780,y:1200})
+  assert.deepEqual(relative,{pageId:page.id,nodeId:'note',x:.5,y:.5})
+  assert.deepEqual(commentPoint(relative,page),{x:-780,y:1200})
+  assert.equal(decodeCommentAnchor('native:'+encodeURIComponent(JSON.stringify({...anchor,nodeId:'note'}))),null)
+})

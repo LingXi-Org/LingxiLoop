@@ -18,7 +18,7 @@ import { createFixture } from './native-artifact-fixture.mjs'
 import { createVisualFixture } from './native-editor-visual-fixture.mjs'
 import { applyOperations, prepareBatch } from '../shared/artifact-operations.ts'
 import { createTableNode } from '../shared/artifact-tables.ts'
-import { createCanvasPage, renameCanvasPage } from '../shared/artifact-canvas-pages.ts'
+import { createCanvasPage, renameCanvasPage, artifactPageIds } from '../shared/artifact-canvas-pages.ts'
 import { createNode } from '../shared/artifact-document.ts'
 import {decodeCommentAnchor}from'../shared/artifact-comment-anchor.ts'
 
@@ -72,7 +72,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   if(options.checks==='canvas-flow'){
@@ -114,8 +114,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let historyEntry = null
   const historyRequests = []
   let fixtureWrite=true
-  const snapshot = () => ({ document, history, write: fixtureWrite, loadedPageIds: document.pageOrder,
-    pageVersions: Object.fromEntries(document.pageOrder.map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
+  const snapshot = () => ({ document, history, write: fixtureWrite, loadedPageIds: artifactPageIds(document),
+    pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
   let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0,svgModuleBlocked=options.checks==='svg-font-module',svgModuleRequests=0
@@ -225,6 +225,76 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='canvas-contents') {
+      assert.equal(kind,'design')
+      const saved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      await page.getByRole('button',{name:'便签 (N)',exact:true}).click()
+      await page.mouse.click(200,240)
+      await page.locator('[contenteditable=true]').last().waitFor()
+      await page.keyboard.insertText('独立画布便签')
+      await page.getByRole('button',{name:'完成',exact:true}).click();await saved()
+      const bodyId=document.canvasPages?.[0].contentId
+      assert.ok(bodyId,'blank canvas inserts belong to independent content, not the current board')
+      assert.equal(document.pageOrder.includes(bodyId),false)
+      const body=document.pages[bodyId],note=Object.values(body.nodes).find(n=>n.type==='note'),noteId=note?.id
+      assert.ok(note);assert.equal(note.text,'独立画布便签')
+      assert.deepEqual([body.x,body.y,body.width,body.height],[0,0,0,0])
+      const free=page.locator(`[data-page-id="${bodyId}"]`)
+      assert.equal(await free.getAttribute('data-artboard-id'),null)
+      await free.locator(`[data-node-id="${noteId}"]`).waitFor()
+      const bounds=await free.locator(`[data-node-id="${noteId}"]`).boundingBox()
+      assert.ok(Math.abs(bounds.x-200)<=1&&Math.abs(bounds.y-240)<=1,`expanding world bounds preserves the clicked camera location: ${JSON.stringify({bounds,note})}`)
+      await page.mouse.dblclick(bounds.x+12,bounds.y+bounds.height/2)
+      const textEditor=page.getByRole('textbox',{name:'编辑文本',exact:true})
+      await textEditor.waitFor();await textEditor.press('Control+a');await page.keyboard.insertText(Array.from({length:10},()=> '中文便签内容').join('\n'))
+      await page.getByRole('button',{name:'完成',exact:true}).click();await saved()
+      assert.ok(document.pages[bodyId].nodes[noteId].height>=220,'the sticky background grows with real multiline input')
+      const grown=await free.locator(`[data-node-id="${noteId}"]`).boundingBox()
+      await page.mouse.dblclick(grown.x+12,grown.y+grown.height/2)
+      await textEditor.waitFor();await textEditor.press('Control+a');await page.keyboard.insertText('独立画布便签')
+      await page.getByRole('button',{name:'完成',exact:true}).click();await saved()
+      assert.ok(document.pages[bodyId].nodes[noteId].height<=42,'shorter text shrinks a sticky back to its natural height')
+      for(const[id,hash]of Object.entries(initialPageHashes))assert.equal(pageHash(document.pages[id]),hash)
+      await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('ArrowRight');await saved()
+      assert.equal(document.pages[bodyId].nodes[noteId].x,note.x+1)
+      await page.keyboard.press('Control+z');await saved();assert.equal(document.pages[bodyId].nodes[noteId].x,note.x)
+      await page.keyboard.press('Control+y');await saved();assert.equal(document.pages[bodyId].nodes[noteId].x,note.x+1)
+      await page.getByRole('button',{name:'铅笔',exact:true}).click()
+      await page.mouse.move(300,240);await page.mouse.down();await page.mouse.move(360,280,{steps:8});await page.mouse.up();await saved()
+      assert.ok(Object.values(document.pages[bodyId].nodes).some(n=>n.type==='drawing'))
+      assert.equal(document.canvasPages.length,1,'drawing reuses the same independent body')
+      await page.getByRole('button',{name:'选择 (V)',exact:true}).click()
+      await page.getByRole('button',{name:'评论',exact:true}).click()
+      const noteBox=await free.locator(`[data-node-id="${noteId}"]`).boundingBox()
+      await page.mouse.click(noteBox.x+noteBox.width/2,noteBox.y+noteBox.height/2)
+      const composer=page.locator('.native-comment-composer')
+      await composer.getByRole('textbox',{name:'评论内容',exact:true}).fill('检查独立便签')
+      await composer.getByRole('button',{name:'发送',exact:true}).click();await page.getByText('检查独立便签',{exact:true}).waitFor()
+      const nodeAnchor=decodeCommentAnchor(commentThreads[0].anchor)
+      assert.equal(nodeAnchor.pageId,bodyId);assert.equal(nodeAnchor.nodeId,noteId)
+      await page.getByRole('button',{name:'关闭评论',exact:true}).click()
+      if(await page.locator('[data-native-artifact-editor]').getAttribute('data-tool')!=='comment')await page.getByRole('button',{name:'评论',exact:true}).click()
+      await page.mouse.click(400,240)
+      await composer.getByRole('textbox',{name:'评论内容',exact:true}).fill('检查空白画布')
+      await composer.getByRole('button',{name:'发送',exact:true}).click();await page.getByText('检查空白画布',{exact:true}).waitFor()
+      const worldAnchor=decodeCommentAnchor(commentThreads[1].anchor)
+      assert.equal(worldAnchor.pageId,bodyId);assert.equal(worldAnchor.space,'world');assert.ok(worldAnchor.y<0)
+      await page.getByRole('button',{name:'关闭评论',exact:true}).click()
+      await page.getByRole('button',{name:'选择 (V)',exact:true}).click()
+      await page.locator('[data-artboard-id="page-1"] .native-board-label').click()
+      await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      await page.locator('.native-inspector summary').getByText('高级',{exact:true}).click()
+      await page.getByRole('button',{name:'删除画板',exact:true}).click();await saved()
+      assert.equal(document.pages['page-1'],undefined);assert.ok(document.pages[bodyId].nodes[noteId])
+      await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+z');await saved()
+      assert.deepEqual(document.pages['page-1'],fixture.document.pages['page-1'])
+      for(const[id,hash]of Object.entries(initialPageHashes))if(id!=='page-1')assert.equal(pageHash(document.pages[id]),hash)
+      await page.reload();await ready(1);await page.locator(`[data-node-id="${noteId}"]`).waitFor()
+      assert.equal(document.pages[bodyId].nodes[noteId].text,'独立画布便签')
+      await page.screenshot({path:join(output,'design-canvas-contents.png')})
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-contents-diagnostic',mode:kind,independentBody:true,boardOrderUnchanged:true,boardHashesUnchanged:true,cameraStableOnInsert:true,savedAndReopened:true,sharedUndoRedo:true,freeDrawing:true,nodeAndWorldComments:true,boardDeletionKeepsFreeContent:true,scope:'actual React, Workers and shared operations; controlled HTTP fixture',consoleOrPageErrors:errors}
+    }
     if(options.checks==='canvas-flow') {
       assert.equal(kind,'design')
       await page.getByRole('button',{name:'显示属性',exact:true}).click()

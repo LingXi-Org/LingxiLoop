@@ -15,7 +15,7 @@ export function agentDocumentSummary(snapshot: NativeDocumentSnapshot) {
       assets: Object.fromEntries(Object.entries(assets).map(([id, asset]) => [id, {
         id, contentType: asset.contentType, sha256: asset.sha256, width: asset.width, height: asset.height,
       }])),
-      versions: Object.fromEntries(Object.entries(versions).filter(([key]) => /^(document|theme|asset)\//.test(key))),
+      versions: Object.fromEntries(Object.entries(versions).filter(([key]) => /^(document|theme|asset|canvasPage)\//.test(key))),
       pages: Object.fromEntries(Object.entries(pages).map(([id, page]) => [id, {
         id, title: page.title, width: page.width, height: page.height, x: page.x, y: page.y, ...(page.canvasPageId?{canvasPageId:page.canvasPageId}:{}), nodeCount: page.nodeOrder.length,
       }])),

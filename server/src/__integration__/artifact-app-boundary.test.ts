@@ -364,6 +364,12 @@ test('Design free canvas objects use independent files, lazy reads, durable comm
     assert.equal(comments.status,201)
     const thread=await comments.json() as {thread:{id:string;anchor:string}}
     assert.equal(thread.thread.anchor,encodeCommentAnchor({pageId:content,nodeId:note.id,x:.5,y:.25}))
+    const worldAnchor=encodeCommentAnchor({pageId:content,x:-600,y:1200,space:'world'})
+    const worldComment=await api(`/artifacts/${design.id}/comments`,'POST',{anchor:worldAnchor,label:'空白画布',text:'请检查画布位置'})
+    assert.equal(worldComment.status,201)
+    const worldThread=await worldComment.json() as {thread:{id:string;anchor:string}}
+    assert.equal(worldThread.thread.anchor,worldAnchor)
+
     assert.equal((await operate(design.id,saved,[{type:'page.patch',pageId:board,patch:{x:500,y:200}}])).status,200)
     const moved=await document(design.id)
     assert.deepEqual(moved.pages[content],saved.pages[content])
@@ -371,6 +377,7 @@ test('Design free canvas objects use independent files, lazy reads, durable comm
     assert.equal(afterMove.pageVersions[content],hash,'moving a board must not rewrite independent canvas content')
     const list=await(await api(`/artifacts/${design.id}/comments`)).json() as {threads:Array<{id:string;anchor:string}>}
     assert.equal(list.threads.find(value=>value.id===thread.thread.id)?.anchor,thread.thread.anchor)
+    assert.equal(list.threads.find(value=>value.id===worldThread.thread.id)?.anchor,worldAnchor)
     const deletion=await operate(design.id,moved,[{type:'page.delete',pageId:board}]);assert.equal(deletion.status,200)
     const empty=await document(design.id);assert.deepEqual(empty.pageOrder,[]);assert.deepEqual(empty.pages[content],saved.pages[content])
     const live=await(await api(`/artifacts/${design.id}/revisions`)).json() as typeof before

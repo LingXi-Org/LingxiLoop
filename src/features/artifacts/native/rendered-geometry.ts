@@ -5,7 +5,7 @@ export interface RenderedNodeFrame { matrix: ArtifactMatrix; width: number; heig
 /** CSS flex/grid owns child offsets. Infer translation from the painted box,
  * retaining the authored linear transform for rotation and mirroring. */
 export function readNodeFrame(root: HTMLElement | null, page: ArtifactPage, node: ArtifactNode, scale: number): RenderedNodeFrame {
-  const matrix=nodeMatrix(page,node),surface=root?.querySelector<HTMLElement>(`[data-artboard-id="${page.id}"]`)
+  const matrix=nodeMatrix(page,node),surface=root?.querySelector<HTMLElement>(`[data-page-id="${page.id}"]`)
   const element=surface?.querySelector<HTMLElement>(`[data-node-id="${node.id}"]`)
   if(!element || !surface || !scale) return {matrix,width:node.width,height:node.height}
   const rect=element.getBoundingClientRect(),origin=surface.getBoundingClientRect(),width=element.offsetWidth,height=element.offsetHeight
