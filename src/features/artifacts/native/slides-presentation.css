@@ -122,3 +122,11 @@
   z-index: 2;
   pointer-events: none;
 }
+/* Different aspect ratios can move a matched object outside the target paper. */
+.native-slides-presentation[data-magic-overflow="true"]
+.native-slides-presentation-frame:not(.native-slides-presentation-outgoing-frame),
+.native-slides-presentation[data-magic-overflow="true"]
+  .native-slides-presentation-current
+  > .native-page-content {
+  overflow: visible;
+}

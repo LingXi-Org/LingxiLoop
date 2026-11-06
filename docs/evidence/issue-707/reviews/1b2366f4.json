@@ -25,6 +25,10 @@
   },
   "diagnostic": {
     "runId": 42277918007,
-    "status": "运行中，结果未计入已通过"
+    "status": "completed",
+    "diagnosticPassed": true,
+    "qualified": false,
+    "receipt": "performance/1b2366f4-diagnostic.json",
+    "scope": "每编辑器每模式每侧仅1组；六项基线导出超时仍保留失败，未取得最终十组资格"
   }
 }
