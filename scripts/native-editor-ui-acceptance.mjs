@@ -162,7 +162,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options.checks==='viewport-loading')await page.addInitScript(()=>{window.__holdVisible=false;window.__heldVisible=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.visibleIds=new Set();this.addEventListener('message',event=>{if(this.visibleIds.delete(event.data?.id)&&window.__holdVisible){event.stopImmediatePropagation();window.__heldVisible.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='visible')this.visibleIds.add(message.id);return super.postMessage(message,...args)}}})
   if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
-  page.on('console', message => { if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(options.checks==='canvas-board-preview-load'&&message.location().url.includes('/BoardPreview.tsx'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
+  page.on('console', message => { if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(options['preview-save-retry']==='true'&&message.location().url.includes('/operations')&&message.text().includes('503'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(options.checks==='canvas-board-preview-load'&&message.location().url.includes('/BoardPreview.tsx'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
   if(options.checks==='canvas-board-preview-load')await page.route('**/BoardPreview.tsx*',async route=>{if(boardModuleBlocked)await route.fulfill({status:503,body:'全窗口预览未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-edit-load')await page.route('**/CanvasPointEditor.tsx*',async route=>{if(pointModuleBlocked)await route.fulfill({status:503,body:'控制点工具未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-load')await page.route('**/CanvasPenTool.tsx*',async route=>{if(vectorModuleBlocked)await route.fulfill({status:503,body:'钢笔工具未能加载'});else await route.continue()})
@@ -400,6 +400,37 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       return{kind:'isolated-board-export-diagnostic',exports,archiveHasOnlySelectedBoard:true,originalSnapshotUnchanged:true,consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-board-preview'){
+      if(options['preview-module-cancel']==='true'){
+        let release;const held=new Promise(resolve=>{release=resolve});await page.route('**/BoardPreview.tsx*',async route=>{await held;await route.continue()})
+        const requested=page.waitForRequest(request=>new URL(request.url()).pathname.endsWith('/BoardPreview.tsx'))
+        const loaded=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/BoardPreview.tsx'))
+        try{
+          await page.locator('[data-artboard-id=page-2]').getByRole('button',{name:'全窗口查看画板 Page 2',exact:true}).click();await requested;await page.getByText('正在加载全窗口预览…',{exact:true}).waitFor();await page.keyboard.press('Escape')
+          assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('data-board-preview'),'false','模块尚未加载时仍可退出预览')
+        }finally{release()}
+        await loaded;await page.waitForTimeout(100)
+        assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('data-board-preview'),'false');assert.equal(await page.getByRole('region',{name:'画板全窗口预览'}).count(),0)
+        assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'全窗口查看画板 Page 2');assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-board-preview-module-cancel-diagnostic',escapeCancelsBeforeModuleLoads:true,lateModuleDoesNotOpenOrStealFocus:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      if(options['preview-keyboard-isolation']==='true'){
+        const shape=page.locator('[data-artboard-id=page-2] [data-node-id=page-2-shape]');await shape.click();await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,1)
+        await page.locator('[data-artboard-id=page-2]').getByRole('button',{name:'全窗口查看画板 Page 2',exact:true}).click();const preview=page.getByRole('region',{name:'画板全窗口预览'});await preview.waitFor();const saved=JSON.stringify(document)
+        await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+z');await page.waitForTimeout(100);assert.deepEqual(historyRequests,[],'外层编辑器被程序回焦时，预览仍须阻止撤销底层文档');assert.equal(JSON.stringify(document),saved)
+        assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('tabindex'),'-1')
+        await page.context().grantPermissions(['clipboard-read','clipboard-write'],{origin:baseUrl});await page.evaluate(()=>navigator.clipboard.writeText('预览期间不能插入的文字'));await page.keyboard.press('Control+v');await page.waitForTimeout(100);assert.equal(JSON.stringify(document),saved);assert.equal(receipts.length,1)
+        return{kind:'isolated-board-preview-keyboard-diagnostic',outerFocusCannotUndoLiveDocument:true,outerFocusCannotPasteIntoLiveDocument:true,rootExcludedFromTabOrder:true,consoleOrPageErrors:errors}
+      }
+      if(options['preview-save-retry']==='true'){
+        let deny=true,posts=0;await page.route('**/api/artifacts/fixture/operations',async route=>{posts++;if(deny)await route.fulfill({status:503,json:{error:'临时保存失败'}});else await route.fallback()})
+        await page.locator('[data-artboard-id=page-2] [data-node-id=page-2-shape]').click();await page.keyboard.press('ArrowRight');await page.locator('.native-notice').filter({hasText:'修改尚未保存'}).waitFor();assert.equal(posts,1);deny=false
+        await page.locator('[data-artboard-id=page-2]').getByRole('button',{name:'全窗口查看画板 Page 2',exact:true}).click();const preview=page.getByRole('region',{name:'画板全窗口预览'});await preview.waitFor()
+        await page.evaluate(()=>{window.__previewSaves=[];addEventListener('keydown',event=>{if(event.ctrlKey&&event.key==='s')setTimeout(()=>window.__previewSaves.push({prevented:event.defaultPrevented,trusted:event.isTrusted}))},true)})
+        await page.keyboard.press('Control+s');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved',undefined,{timeout:3000});assert.equal(posts,2)
+        assert.deepEqual(await page.evaluate(()=>window.__previewSaves.at(-1)),{prevented:true,trusted:true});const saved=JSON.stringify(document)
+        await page.keyboard.press('Delete');await page.keyboard.press('Control+z');assert.equal(posts,2);assert.equal(JSON.stringify(document),saved);assert.equal(await preview.count(),1);assert.deepEqual(historyRequests,[])
+        return{kind:'isolated-board-preview-save-diagnostic',trustedSavePreventedBrowserDefault:true,failedOperationRetriedAndAcknowledgedInsidePreview:true,previewDoesNotDeleteOrUndo:true,successfulWrites:receipts.length,consoleOrPageErrors:errors}
+      }
       const previewOrdinal=Number(options['preview-page']??2),previewId=`page-${previewOrdinal}`
       const stage=page.locator('.native-stage'),before=await stage.evaluate(e=>({x:e.scrollLeft,y:e.scrollTop})),board=page.locator(`[data-artboard-id="${previewId}"]`)
       await board.getByRole('button',{name:`全窗口查看画板 Page ${previewOrdinal}`,exact:true}).click()

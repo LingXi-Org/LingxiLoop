@@ -1,0 +1,56 @@
+{
+  "scope": "受控HTTP与可信键盘输入的局部回归，不代替真实授权API或最终完整资格。",
+  "findings": "../reviews/d6071707.json",
+  "chromium154": {
+    "save-retry": {
+      "kind": "isolated-board-preview-save-diagnostic",
+      "trustedSavePreventedBrowserDefault": true,
+      "failedOperationRetriedAndAcknowledgedInsidePreview": true,
+      "previewDoesNotDeleteOrUndo": true,
+      "successfulWrites": 1,
+      "consoleOrPageErrors": []
+    },
+    "keyboard-isolation": {
+      "kind": "isolated-board-preview-keyboard-diagnostic",
+      "outerFocusCannotUndoLiveDocument": true,
+      "outerFocusCannotPasteIntoLiveDocument": true,
+      "rootExcludedFromTabOrder": true,
+      "consoleOrPageErrors": []
+    },
+    "module-cancel": {
+      "kind": "isolated-board-preview-module-cancel-diagnostic",
+      "escapeCancelsBeforeModuleLoads": true,
+      "lateModuleDoesNotOpenOrStealFocus": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    }
+  },
+  "chromium140": {
+    "save-retry": {
+      "kind": "isolated-board-preview-save-diagnostic",
+      "trustedSavePreventedBrowserDefault": true,
+      "failedOperationRetriedAndAcknowledgedInsidePreview": true,
+      "previewDoesNotDeleteOrUndo": true,
+      "successfulWrites": 1,
+      "consoleOrPageErrors": []
+    },
+    "keyboard-isolation": {
+      "kind": "isolated-board-preview-keyboard-diagnostic",
+      "outerFocusCannotUndoLiveDocument": true,
+      "outerFocusCannotPasteIntoLiveDocument": true,
+      "rootExcludedFromTabOrder": true,
+      "consoleOrPageErrors": []
+    },
+    "module-cancel": {
+      "kind": "isolated-board-preview-module-cancel-diagnostic",
+      "escapeCancelsBeforeModuleLoads": true,
+      "lateModuleDoesNotOpenOrStealFocus": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    }
+  },
+  "dependencyProfiles": "由root锁文件重新生成8个web/admin清单条目；一致性与对应单元检查通过。",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

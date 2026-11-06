@@ -161,3 +161,5 @@
 .dark .native-board-preview-header{box-shadow:inset 0 -1px 0 rgb(255 255 255 / .04)}
 
 .native-board-preview-fit>[role=radio]:focus-visible{outline:2px solid var(--native-accent);outline-offset:2px}
+
+.native-kind-design[data-board-preview=true]>.native-notes{visibility:hidden}

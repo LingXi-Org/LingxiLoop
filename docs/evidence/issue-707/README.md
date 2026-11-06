@@ -217,3 +217,10 @@ JSZip沿用锁文件3.10.1，仅在隔离导出环境按需加载，MIT署名已
 
 参考可复现：原相机oracle命令增加 `--capture=true --board-preview=true`，资源哈希全部校验；
 原生使用 `--checks=canvas-board-preview --preview-page=1` 对照同一完整文档和同一画板。
+
+
+[d6071707 独立审查](reviews/d6071707.json)发现三项P2：预览CtrlS未进入保存重试、Tab到外层根节点可撤销文档、
+模块尚未加载时Escape无法退出。新增回归先复现，随后转接已有保存链路、保护根节点编辑/粘贴事件、移除其Tab入口，
+并提供轻量可取消加载外框，关闭后忽略晚到模块。[Chrome140/154各三项回归](functional/design-board-preview-review-fixes.json)通过，
+保留评论等独立边界及原有草稿/冲突保护。等待新冻结提交独立复审。
+该提交CI 42257955030失败在分组依赖清单一致性检查，构建及后续检查跳过；已按根锁文件补齐生成清单并通过局部检查。

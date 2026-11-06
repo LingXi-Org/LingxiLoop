@@ -121,6 +121,9 @@ jobs:
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-body-delay=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-delay"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-deleted=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-deleted"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview-load --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-load"
+          for task_case in save-retry keyboard-isolation module-cancel; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-$task_case=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-$task_case"
+          done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-export"
           for task_size in 1920x1200 1440x1000 768x1024 390x844; do
             task_width=${task_size%x*}

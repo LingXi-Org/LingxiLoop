@@ -26,11 +26,12 @@ export interface BoardPreviewProps {
   commenting: boolean
   error: string
   onClose(): void
+  onSave(): void
   onView(view: BoardPreviewView): void
   onComment(anchor: NativeCommentAnchor, threadId?: string): void
   onError(error: string): void
 }
-export default function BoardPreview({ document, page, compute, loaded, pageVersion, revisionSeq, viewportRef, actions, comments, commenting, error, onClose, onView, onComment, onError }: BoardPreviewProps) {
+export default function BoardPreview({ document, page, compute, loaded, pageVersion, revisionSeq, viewportRef, actions, comments, commenting, error, onClose, onSave, onView, onComment, onError }: BoardPreviewProps) {
   const root = useRef<HTMLElement>(null)
   const [fit, setFit] = useState(true)
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -50,6 +51,7 @@ export default function BoardPreview({ document, page, compute, loaded, pageVers
   const visible = useVisibleElements({ pages, revision: document.seq, viewport, scale, root: viewportRef, compute, pageId: page.id, selected: EMPTY_SELECTION, editingId: null, onError })
   return <section ref={root} className="native-board-preview" data-native-editor-boundary role="region" aria-label="画板全窗口预览" onKeyDown={event => {
     if ((event.target as Element).closest('[data-native-editor-boundary]') !== event.currentTarget) return
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's' && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); onSave(); return }
     if (event.key === 'Escape' && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); onClose(); return }
   }}>
     <header className="native-board-preview-header">
