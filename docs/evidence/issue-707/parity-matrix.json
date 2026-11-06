@@ -236,7 +236,8 @@
         "scope": "画板标题动作、全窗口预览和单板导出的局部回归；复杂文档及全部视觉/状态仍未通过。"
       },
       "nativePreviewImplementation": "src/features/artifacts/native/BoardPreview.tsx",
-      "surfaceEvidence": "functional/design-canvas-surfaces.json"
+      "surfaceEvidence": "functional/design-canvas-surfaces.json",
+      "focusEvidence": "functional/focus-recovery.json"
     },
     {
       "id": "D06-design",
@@ -291,7 +292,8 @@
         "scope": "画板标题动作、全窗口预览和单板导出的局部回归；复杂文档及全部视觉/状态仍未通过。"
       },
       "nativePreviewImplementation": "src/features/artifacts/native/BoardPreview.tsx",
-      "surfaceEvidence": "functional/design-canvas-surfaces.json"
+      "surfaceEvidence": "functional/design-canvas-surfaces.json",
+      "focusEvidence": "functional/focus-recovery.json"
     },
     {
       "id": "D07-design",

@@ -135,6 +135,9 @@ jobs:
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode="$task_editor" --checks=asset-reads --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-asset-reads-$task_editor"
           done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-export"
+          for task_completion in button escape; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=undo-focus --completion="$task_completion" --width=619 --height=926 --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-undo-focus-$task_completion"
+          done
           node --import tsx scripts/native-canvas-fit-oracle.mjs --reference-root="${{ github.workspace }}/reference" --capture=true --play-menu=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-reference-geometry"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-play-menu --source-runtime="$RUNNER_TEMP/native-reference-geometry/results.json" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-play-menu"
           for task_size in 1920x1200 1440x1000 768x1024 390x844; do
