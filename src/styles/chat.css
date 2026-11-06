@@ -798,3 +798,15 @@ input:focus, textarea:focus, button:focus { outline: none; }
 [data-slot='link-preview'] h3 { font-size: 14.5px; }
 .citation-excerpt mark, .citation-claim-active { background: linear-gradient(transparent 60%, #F6E2B8 60%); }
 .dark :is(.citation-excerpt mark, .citation-claim-active) { background: linear-gradient(transparent 60%, rgb(229 181 101 / 30%) 60%); }
+
+/* Skeleton shimmer (骨架屏 boards). */
+.lx-sk {
+  background-color: var(--skeleton);
+  background-image: linear-gradient(90deg, rgb(255 255 255 / 0%) 0, rgb(255 255 255 / 65%) 50%, rgb(255 255 255 / 0%) 100%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: lx-sk 1.6s ease-in-out infinite;
+}
+.dark .lx-sk { background-image: linear-gradient(90deg, rgb(255 255 255 / 0%) 0, rgb(255 255 255 / 6%) 50%, rgb(255 255 255 / 0%) 100%); }
+@keyframes lx-sk { 0% { background-position: 150% 0; } 100% { background-position: -50% 0; } }
+@media (prefers-reduced-motion: reduce) { .lx-sk { animation: none; } }

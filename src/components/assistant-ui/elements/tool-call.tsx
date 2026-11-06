@@ -7,13 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./collapsible-root";
-import {
-  collapsePanel,
-  field,
-  mono,
-  ShimmerLabel,
-  SwapLabel,
-} from "./surfaces";
+import { collapsePanel, ShimmerLabel, SwapLabel } from "./surfaces";
 
 export interface ToolCallProps {
   label: string;
@@ -45,50 +39,28 @@ export function ToolCall({
       data-slot="tool-call"
       open={open}
       onOpenChange={onOpenChange}
-      className={cn("w-full max-w-sm", className)}
+      className={cn("w-full max-w-[400px]", className)}
     >
-      <CollapsibleTrigger className="group/trigger text-muted-foreground hover:text-foreground/90 focus-visible:ring-ring/50 focus-visible:ring-2 flex w-full items-center gap-2 rounded-md py-1 text-[13.5px] transition-colors outline-none">
-        <ChevronRightIcon className="size-3.5 shrink-0 opacity-60 transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-open/trigger:rotate-90 group-data-panel-open/trigger:rotate-90 motion-reduce:transition-none" />
-        <SwapLabel
-          active={running ? 0 : 1}
-          className="shrink-0 text-start whitespace-nowrap"
-        >
-          <ShimmerLabel
-            active={running}
-            className="relative inline-block leading-none"
-          >
-            {activeLabel}
-          </ShimmerLabel>
+      <CollapsibleTrigger className="group/trigger focus-visible:ring-ring/50 flex h-7 w-full items-center gap-2 rounded-md text-[13px] outline-none focus-visible:ring-2">
+        <span aria-hidden="true" className={cn("grid size-5 shrink-0 place-items-center rounded-md",
+          outcome === "failed" && !running ? "bg-[rgb(200_70_59/12%)] text-[#C8463B]" : "bg-[rgb(43_138_158/12%)] text-[#2B8A9E]")}>
+          {outcome === "failed" && !running ? <CircleAlertIcon strokeWidth={1.9} className="size-3" />
+            : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="size-3"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>}
+        </span>
+        <SwapLabel active={running ? 0 : 1} className={cn("shrink-0 text-start whitespace-nowrap", outcome === "failed" && !running ? "text-[#C8463B]" : "text-foreground")}>
+          <ShimmerLabel active={running} className="relative inline-block leading-none">{activeLabel}</ShimmerLabel>
           <>{label}</>
         </SwapLabel>
-        <span
-          className={cn(
-            mono,
-            "bg-foreground/[0.06] text-foreground/70 min-w-0 truncate rounded-md px-1.5 py-0.5",
-          )}
-        >
-          {query}
-        </span>
-        <span className="ms-auto flex w-4 shrink-0 items-center justify-end">
-          {!running && outcome === 'complete' && (
-            <CheckIcon className="fade-in zoom-in-90 animate-in size-3.5 text-success duration-200" />
-          )}
-          {!running && outcome === 'failed' && <CircleAlertIcon aria-label="未完成" className="size-3.5 text-destructive" />}
-        </span>
+        <code className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">{query}</code>
+        <span className="flex-1" />
+        {!running && outcome === "complete" && <CheckIcon aria-label="已完成" className="fade-in zoom-in-90 animate-in size-3 shrink-0 text-brand duration-200" />}
+        {!running && outcome === "failed" && <span className="sr-only">未完成</span>}
+        <ChevronRightIcon aria-hidden="true" strokeWidth={2} className="size-3 shrink-0 text-input transition-transform duration-150 group-data-open/trigger:rotate-90 group-data-panel-open/trigger:rotate-90 motion-reduce:transition-none" />
       </CollapsibleTrigger>
       <CollapsibleContent className={cn(collapsePanel, "outline-none")}>
-        <div className={cn(field, "mt-2 overflow-hidden rounded-2xl text-xs")}>
-          <div className="px-3.5 pt-2.5 pb-2">
-            <p className={cn(mono, "text-muted-foreground mb-1")}>操作目的</p>
-            <p className="text-muted-foreground font-mono break-words">
-              {request}
-            </p>
-          </div>
-          <div className="bg-foreground/[0.06] mx-3.5 h-px" />
-          <div className="px-3.5 pt-2 pb-2.5">
-            <p className={cn(mono, "text-muted-foreground mb-1")}>结果</p>
-            <p className="text-foreground/90 break-words">{result}</p>
-          </div>
+        <div className="ms-[9px] mt-0.5 grid grid-cols-[34px_minmax(0,1fr)] gap-x-1.5 gap-y-1 border-s border-border py-1 ps-[19px] font-mono text-[11.5px] leading-[1.6]">
+          <span className="text-muted-foreground">in</span><span className="break-words text-fg2">{request}</span>
+          <span className="text-muted-foreground">out</span><span className="break-words text-fg2">{result}</span>
         </div>
       </CollapsibleContent>
     </Collapsible>

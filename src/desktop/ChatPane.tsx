@@ -3,7 +3,7 @@ import { useEntrance } from '@/hooks/use-entrance'
 import { DesignButton } from '@/features/design/DesignButton'
 import { DesignWorkspace } from '@/features/design/DesignWorkspace'
 import { ConversationSearch } from '@/features/chat/components/ConversationSearch'
-import { ResourceSkeleton } from '@/components/ResourceSkeleton'
+import { ConversationSkeleton } from '@/features/chat/components/ConversationSkeleton'
 import { ConversationRuntimeProvider } from '@/features/chat/runtime'
 import { useConversations } from '@/features/conversations/store'
 import { ConversationHeader } from '@/im/ConversationHeader'
@@ -81,7 +81,7 @@ export function ChatPane({
           <ConversationSearch conversationId={conversationId} open={searchOpen} onClose={() => setSearchOpen(false)} rootRef={rootRef} />
         </div>
         <div className="chat-thread-layout min-h-0 min-w-0">
-          <Suspense fallback={<ResourceSkeleton variant="detail" label="正在打开会话" />}>
+          <Suspense fallback={<div className="mx-auto flex h-full w-full max-w-[848px] flex-col overflow-hidden px-6 max-sm:px-3"><ConversationSkeleton /></div>}>
             <ConversationThread conversationId={conversationId} readOnly={conversation.readOnly} />
           </Suspense>
         </div>
