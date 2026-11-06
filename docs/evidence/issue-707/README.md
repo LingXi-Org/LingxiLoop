@@ -159,7 +159,7 @@ Design 性能遍历改为从实际已挂载画板的 CSS 位置校准世界偏�
 [收据](performance/navigation-padding-receipt.json)只证明工具回归，不是性能通过证据。
 
 [557e0bba 独立复审](reviews/557e0bba.json) 已关闭取消和内边距两项 P2，未发现新增 P1/P2；
-owning CI 42222584755 通过，部署跳过。该冻结提交的真实诊断 42222610717 正在测量，未代表后续实现通过。
+owning CI 42222584755 通过，部署跳过。该冻结提交的真实诊断 42222610717 已完成，见下文；未代表后续实现通过。
 
 [适配相机来源](source-design-fit-camera.json) 与 [局部结果](functional/canvas-fit-receipt.json)
 使用相同三画板、相同钢笔路径、四尺寸双主题；补齐了此前参考文档包含其他注释的问题。
@@ -173,3 +173,14 @@ owning CI 42222584755 通过，部署跳过。该冻结提交的真实诊断 422
 该命令在独立临时项目运行原版，等待三画板正文、字体和图片就绪，只写无签名地址的指标及截图。
 原生对应使用 `--checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true`
 并指定 `--width`、`--height`、`--canvas-theme`。
+
+
+[88c10856 独立审查](reviews/88c10856.json) 发现首次切入未加载画布内容时缓存空投影视角的 P2。
+先用延迟接口复现“内容返回后仍空白”，再将首次适配延后到真实内容加载；尚未适配的临时视角不进入缓存。
+[三场景局部回归](functional/canvas-fit-body.json)在 Chrome 140/154 均通过：等待加载、加载中切回及平移后的视角恢复。
+原页面、链接、非原点画板和同文档相机流程、70项聚焦单元复跑通过。等待新的冻结提交独立复审。
+
+[557e0bba 真实诊断](performance/557e0bba-receipt.json)完成：候选 Design/Slides 均真实遍历50页，
+HTML/PDF/PPTX 各50页导出均通过；冻结基线的六项已知导出超时保留失败，未重写结果。
+这仍只有每种编辑器一组冷样本和一组工作区样本，不满足十组门槛；Slides 冷启动约增42.6%、增量PSS约增25.2%，
+仍需定位修正。完整视觉、真实性能及最终候选均未验收通过。

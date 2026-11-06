@@ -1,0 +1,41 @@
+{
+  "candidateCommit": "88c10856deba88a3157b8fa6ab806ebe4b886bd5",
+  "reviewer": "/root/independent_review",
+  "mode": "独立只读",
+  "findings": [
+    {
+      "priority": "P2",
+      "location": "src/features/artifacts/native/NativeEditor.tsx:369",
+      "problem": "首次切到尚未加载画布内容的页面会缓存空投影视角；真实内容加载后未重新适配，只有远处自由对象的页面显示空白",
+      "observed": {
+        "pageReads": [
+          "positioned-body"
+        ],
+        "beforeFitVisibleObjects": 0,
+        "afterTrustedFitVisibleObjects": 1,
+        "documentWrites": 0
+      },
+      "fixVerification": "等待后续冻结提交复审"
+    }
+  ],
+  "independentlyRun": [
+    "31项聚焦单元",
+    "28项源码相机数学",
+    "1440浅色和390深色相机与平移后适配",
+    "非原点画板切页",
+    "页面菜单",
+    "Design 50页与47页哈希未变"
+  ],
+  "unverified": [
+    "真实授权API",
+    "完整视觉",
+    "十组性能门槛"
+  ],
+  "owningCI": {
+    "run": 42235288951,
+    "conclusion": "success",
+    "deploy": "skipped"
+  },
+  "visualQualified": false,
+  "performanceQualified": false
+}

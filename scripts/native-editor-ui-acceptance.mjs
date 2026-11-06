@@ -62,7 +62,7 @@ try {
   const baseUrl = `http://127.0.0.1:${address.port}`
   browser = await chromium.launch({ headless: true, ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox'] })
   for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
-    for (const editorCase of options.checks === 'canvas-vector-edit-retention' ? options['vector-case']?[options['vector-case']]:['readonly','denied','space','middle','touch'] : options.checks === 'canvas-vector-edit-cas' ? options['vector-case']?[options['vector-case']]:['rotation','path','style','reload','parent-idle','parent-active','parent-cancel','parent-cancel-click','padding','padding-rotated','padding-change','padding-active'] : options.checks === 'canvas-vector-edit' ? options['vector-case']?[options['vector-case']]:['initial','anchor-drag','nudge','smooth','delete','insert','tab','pull','shift-drag','handle','break','cancel','group-nudge','save-in-mode','undo-point','redo-point','keyboard-enter'] : options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
+    for (const editorCase of options.checks==='canvas-fit-body'?options['fit-case']?[options['fit-case']]:['first','rapid','restored']:options.checks === 'canvas-vector-edit-retention' ? options['vector-case']?[options['vector-case']]:['readonly','denied','space','middle','touch'] : options.checks === 'canvas-vector-edit-cas' ? options['vector-case']?[options['vector-case']]:['rotation','path','style','reload','parent-idle','parent-active','parent-cancel','parent-cancel-click','padding','padding-rotated','padding-change','padding-active'] : options.checks === 'canvas-vector-edit' ? options['vector-case']?[options['vector-case']]:['initial','anchor-drag','nudge','smooth','delete','insert','tab','pull','shift-drag','handle','break','cancel','group-nudge','save-in-mode','undo-point','redo-point','keyboard-enter'] : options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
       const result = await verifyMode(kind, browser, baseUrl, editorCase)
       await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
       console.log(JSON.stringify(options.checks==='parity'?{...result,screenshots:result.screenshots.map(({controls,...row})=>row)}:result))
@@ -75,7 +75,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load'].includes(options.checks)){
@@ -89,6 +89,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   }
   if(options.checks==='canvas-vector-edit-cas'&&editorCase.startsWith('padding')){
     const page=document.pages['canvas-vector-body'],node=page.nodes['editable-path'];document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:page.id,nodeId:node.id,patch:{style:{padding:30,paddingX:30,paddingY:30},...(editorCase==='padding-rotated'?{rotation:27,flipX:true}: {})}}])).document
+  }
+  if(options.checks==='canvas-fit-body'){
+    document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'positioned'))).document
+    document=applyOperations(document,prepareBatch(document,[...createCanvasContents(document,'positioned','positioned-body'),{type:'node.insert',pageId:'positioned-body',node:{...createNode('shape','positioned-object'),x:3000,y:4000,width:800,height:600,scope:'canvas',style:{fill:'#ff0000'}}}])).document
   }
   if(options.checks==='canvas-fit-switch')document=applyOperations(document,prepareBatch(document,[...createCanvasPage(document,'positioned'),{type:'page.insert',page:{...createPage('positioned-board','独立画板'),x:3000,y:4000,width:800,height:600,canvasPageId:'positioned'}}])).document
   if(options.checks==='canvas-pen'){const geometry=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-pen.json'),'utf8')).cases[0].result,node={...createNode('drawing','thumbnail-pen'),x:100,y:600,width:geometry.w,height:geometry.h,path:{d:geometry.d,width:geometry.w,height:geometry.h},style:{stroke:'#8a8378',strokeWidth:2}};document.pages['page-3'].nodes[node.id]=node;document.pages['page-3'].nodeOrder.push(node.id)}
@@ -136,7 +140,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historyRequests = []
   let fixtureWrite=true
   const pageReads=[]
-  const snapshot = () => ({ document:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds: options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
+  let releaseCanvasBody,canvasBodyLoaded=false,notifyCanvasBody
+  const canvasBodyRequested=new Promise(resolve=>{notifyCanvasBody=resolve})
+  const snapshot = () => ({ document:options.checks==='canvas-fit-body'&&!canvasBodyLoaded?{...document,pages:{...document.pages,'positioned-body':{...document.pages['positioned-body'],nodes:{},nodeOrder:[]}}}:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds:options.checks==='canvas-fit-body'&&!canvasBodyLoaded?artifactPageIds(document).filter(id=>id!=='positioned-body'):options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
   if(options.checks==='canvas-layout-cache')await page.addInitScript(()=>{window.__naturalProbePeak=0;new MutationObserver(()=>{window.__naturalProbePeak=Math.max(window.__naturalProbePeak,document.querySelectorAll('[data-native-measure-node]').length)}).observe(document,{childList:true,subtree:true})})
@@ -207,6 +213,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await route.fulfill({ status: 200, contentType: 'image/png', body: image.bytes }); return
     }
     let result = snapshot()
+    if(options.checks==='canvas-fit-body'&&url.pathname.endsWith('/pages/positioned-body')){pageReads.push('positioned-body');await new Promise(resolve=>{releaseCanvasBody=resolve;notifyCanvasBody()});canvasBodyLoaded=true;await route.fulfill({status:200,json:{page:document.pages['positioned-body']}});return}
     if(options.checks==='viewport-loading'&&url.pathname.includes('/pages/')){const id=url.pathname.split('/pages/')[1];pageReads.push(id);await route.fulfill({status:200,json:{page:document.pages[id]}});return}
     if (url.pathname.endsWith('/operations')) {
       const batch = request.postDataJSON()
@@ -365,6 +372,27 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       vectorModuleBlocked=false;await page.reload();await ready(1);await choose();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})
       await page.mouse.click(600,300);await page.keyboard.press('Escape');assert.equal(document.seq,0);assert.deepEqual(errors,[])
       return{kind:'isolated-canvas-vector-loading-diagnostic',lazyBeforeSelection:true,chineseLoadFailure:true,editorRetained:true,noDocumentWrites:true,reopenedToolRecovered:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-fit-body'){
+      const select=async name=>{await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name,exact:true}).click()}
+      const first=await page.locator('[data-artboard-id=page-1]').boundingBox(),requested=page.waitForRequest(request=>new URL(request.url()).pathname==='/api/artifacts/fixture/pages/positioned-body')
+      await select('页面 2');await requested;await canvasBodyRequested;assert.equal(receipts.length,0)
+      if(editorCase==='rapid'){await select('页面 1');await ready(1)}
+      const response=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/artifacts/fixture/pages/positioned-body');releaseCanvasBody();await response
+      if(editorCase==='rapid'){
+        assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('data-canvas-page-id'),'canvas-page-1')
+        const kept=await page.locator('[data-artboard-id=page-1]').boundingBox();assert.ok(['x','y','width','height'].every(key=>Math.abs(kept[key]-first[key])<=1))
+        await select('页面 2')
+      }
+      const object=page.locator('[data-node-id=positioned-object]');await object.waitFor({state:'attached',timeout:3000});const box=await object.boundingBox()
+      for(const [key,value]of Object.entries({x:153.3333333333333,y:102,width:1133.3333333333335,height:850}))assert.ok(Math.abs(box[key]-value)<=1,'the first view must fit the loaded canvas body, not its empty projection')
+      if(editorCase==='restored'){
+        await page.mouse.move(100,120);await page.mouse.down({button:'middle'});await page.mouse.move(120,140,{steps:5});await page.mouse.up({button:'middle'})
+        const moved=await object.boundingBox();assert.ok(Math.hypot(moved.x-box.x,moved.y-box.y)>10)
+        await select('页面 1');await ready(1);await select('页面 2');await object.waitFor({state:'attached'});const restored=await object.boundingBox();assert.ok(['x','y','width','height'].every(key=>Math.abs(restored[key]-moved[key])<=1))
+      }
+      assert.deepEqual(pageReads,['positioned-body']);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-fit-partial-canvas-diagnostic',scenario:editorCase,loadedContentBeforeRememberingFirstFit:true,objectWithin1CssPx:true,...(editorCase==='rapid'?{staleLoadDoesNotSwitchCanvas:true}:editorCase==='restored'?{userCameraRestored:true}:{}),noWrites:true,consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-fit-switch'){
       await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 2',exact:true}).click()
