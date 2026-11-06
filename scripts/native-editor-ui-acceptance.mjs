@@ -73,10 +73,10 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
-  if(options.checks==='canvas-import'){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[])}
+  if(['canvas-import','canvas-layout-cache'].includes(options.checks)){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[]);if(options.checks==='canvas-layout-cache'){const body=document.pages[document.canvasPages[0].contentId];body.nodes['imported-note'].text='中文自动换行'.repeat(100);body.nodes['imported-note'].height=832;body.nodes['imported-note'].style.fontSize=32;body.nodes.unrelated={...createNode('shape','unrelated'),x:0,y:0};body.nodeOrder.push('unrelated')}}
   if(options.checks==='canvas-empty')document={...document,pageOrder:[],pages:{}}
   if(options.checks==='canvas-flow'){
     document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
@@ -237,6 +237,25 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(Object.values(document.pages[document.canvasPages[0].contentId].nodes)[0].text,'空画布第一条便签')
       assert.deepEqual(errors,[])
       return{kind:'isolated-empty-canvas-diagnostic',firstStickyWithoutArtboard:true,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-layout-cache'){
+      const bodyId=document.canvasPages[0].contentId,target=page.locator(`[data-page-id="${bodyId}"] [data-node-id="imported-note"]`)
+      await page.waitForFunction(()=>{const note=document.querySelector('[data-node-id="imported-note"]');return note&&note.offsetHeight>2500})
+      await page.locator('.native-stage').hover();await page.mouse.wheel(0,650)
+      await page.waitForFunction(()=>{const note=document.querySelector('[data-node-id="imported-note"]');return note&&note.getBoundingClientRect().y<0})
+      const before=await target.boundingBox();assert.ok(before.y+before.height>100)
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'新建页面',exact:true}).click()
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      await page.waitForFunction(id=>document.querySelector('[data-canvas-page-id]')?.dataset.canvasPageId===id,document.canvasPages[1].id)
+      const next=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:bodyId,nodeId:'unrelated',patch:{x:1}}])).document
+      const observed=page.waitForRequest(request=>request.url().endsWith('/editor-context')&&request.postDataJSON()?.version===String(next.seq));document=next;await observed
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 1',exact:true}).click()
+      await target.waitFor();const after=await target.boundingBox()
+      assert.ok(Math.abs(before.x-after.x)<=1&&Math.abs(before.y-after.y)<=1&&Math.abs(before.height-after.height)<=1,'unrelated page cloning retains actual visible note geometry')
+      assert.equal(document.pages[bodyId].nodes['imported-note'].height,832,'readonly layout does not persist measured height')
+      assert.equal(document.pages[bodyId].nodes['imported-note'].text.length,600)
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-natural-layout-cache-diagnostic',wholePageCloneKeepsVisibleNote:true,storedHeightUnchanged:true,before,after,scope:'controlled HTTP fixture; actual React, Worker and trusted wheel/page controls',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-import'){
       const contentId=document.canvasPages[0].contentId,node=page.locator(`[data-page-id="${contentId}"] [data-node-id="imported-note"]`)

@@ -101,7 +101,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const naturalLayouts=useRef(new NaturalLayouts()),[naturalRevision,setNaturalRevision]=useState(0)
   const naturalSizes=useMemo(()=>canvasContentId?naturalLayouts.current.forPage(canvasContentId):undefined,[canvasContentId])
   const onNaturalLayout=useCallback(()=>setNaturalRevision(value=>value+1),[])
-  const renderedCanvasContent=useMemo(()=>canvasContent?withNaturalLayout(canvasContent,naturalSizes):undefined,[canvasContent,naturalSizes,naturalRevision])
+  const renderedCanvasContent=useMemo(()=>canvasContent?withNaturalLayout(canvasContent,naturalSizes,doc??undefined):undefined,[canvasContent,naturalSizes,naturalRevision,doc])
   const boardIds=useMemo(()=>doc?.pageOrder.filter(id=>kind!=='design'||canvasPageOf(doc.pages[id])===activeCanvasId)??[],[doc,kind,activeCanvasId])
   const freeBounds=useMemo(()=>renderedCanvasContent?elementBounds(renderedCanvasContent):[],[renderedCanvasContent])
   const [selected, setSelected] = useState<string[]>([])
@@ -241,7 +241,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   }, [doc, boardIds, displayPages, visible, authorized, canvasMode, current, visibleBoards, editingId, selected.length, draftCount, cropping])
   const detailedBoards = useMemo(() => canvasMode && scale < .15 ? boards.filter(p=>p.id===pageId||!!editingId&&p.nodes[editingId]) : boards,[boards,canvasMode,scale,pageId,editingId])
   const detailedSurfaces=useMemo(()=>canvasMode&&renderedCanvasContent?[...detailedBoards,renderedCanvasContent]:detailedBoards,[canvasMode,detailedBoards,renderedCanvasContent])
-  const visibleElements = useVisibleElements({ pages: detailedSurfaces, revision: doc?.seq ?? 0, viewport, scale, root: viewportRef, compute, pageId, selected, editingId, onError: setNotice,naturalSource:canvasContent,naturalSizes,onNaturalLayout })
+  const visibleElements = useVisibleElements({ pages: detailedSurfaces, revision: doc?.seq ?? 0, viewport, scale, root: viewportRef, compute, pageId, selected, editingId, onError: setNotice,naturalSource:canvasContent,naturalSizes,naturalDocument:doc??undefined,onNaturalLayout })
   useLayoutEffect(()=>{if(!commentThreads.length)return;const positions:Record<string,{pageId:string;x:number;y:number}>={};for(const thread of commentThreads){const anchor=decodeCommentAnchor(thread.anchor),page=anchor?.pageId===canvasContentId?renderedCanvasContent:anchor?doc?.pages[anchor.pageId]:undefined;if(!anchor||!page)continue;const node=anchor.nodeId?page.nodes[anchor.nodeId]:undefined;const point=node?pointInFrame(anchor,readNodeFrame(viewportRef.current,page,node,scale)):commentPoint(anchor,page);if(point)positions[thread.id]={pageId:page.id,...point}}setCommentPositions(old=>JSON.stringify(old)===JSON.stringify(positions)?old:positions)},[commentThreads,doc,viewport,scale,preview,canvasContentId,renderedCanvasContent,visibleElements])
   useLayoutEffect(()=>{
     if(!commentsOpen||!commentAnchor||!doc)return

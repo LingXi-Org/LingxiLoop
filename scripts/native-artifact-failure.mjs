@@ -3,7 +3,7 @@
 const scriptFiles=new Set(['native-artifact-serve.mjs'])
 const transportStages=new Set(['upload','response','upgrade','request'])
 const transportCodes=new Set(['ECONNRESET','EPIPE','ERR_STREAM_PREMATURE_CLOSE','ABORT_ERR'])
-const knownSource=source=>typeof source==='string'&&/^[a-zA-Z0-9_/.:-]+:[1-9][0-9]{0,6}$/.test(source)&&(files.has(source.split(':')[0])||scriptFiles.has(source.split(':')[0]))
+const knownSource=source=>typeof source==='string'&&/^[a-zA-Z0-9_/.-]+:[1-9][0-9]{0,6}$/.test(source)&&(files.has(source.split(':')[0])||scriptFiles.has(source.split(':')[0]))
 const files=new Set(['web.ts','storage.ts','im/wukong.ts','agent-runtime/runtime.ts','agent-runtime/context.ts','agent-runtime/pricing.ts','agent-runtime/model-budget.ts'])
 export function serviceFailure(error) {
   const sources=Array.from(String(error?.stack??'').matchAll(/\/server\/src\/([a-zA-Z0-9_/-]+\.ts):(\d+):\d+/g)).filter(match=>files.has(match[1])).slice(0,4).map(match=>`${match[1]}:${Number(match[2])}`)

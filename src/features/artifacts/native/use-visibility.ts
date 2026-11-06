@@ -1,11 +1,12 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import type { ArtifactPage } from '../../../../shared/artifact-document'
+import {artifactResolvedStyle} from '../../../../shared/artifact-themes'
+import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
 import type { Bounds, NativeCompute } from './compute'
 import { elementBounds, expandVisibleNodes } from './visibility'
 import type {NaturalNodeSizes} from './natural-layout'
 
-export function useVisibleElements({ pages, revision, viewport, scale, root, compute, pageId, selected, editingId, onError, naturalSource, naturalSizes, onNaturalLayout }: {
-  naturalSource?:ArtifactPage;naturalSizes?:NaturalNodeSizes;onNaturalLayout?():void
+export function useVisibleElements({ pages, revision, viewport, scale, root, compute, pageId, selected, editingId, onError, naturalSource, naturalSizes, naturalDocument, onNaturalLayout }: {
+  naturalDocument?:ArtifactDocument;naturalSource?:ArtifactPage;naturalSizes?:NaturalNodeSizes;onNaturalLayout?():void
   pages: ArtifactPage[]; revision: number; viewport: { x: number; y: number; width: number; height: number }; scale: number
   root: RefObject<HTMLDivElement | null>; compute: NativeCompute; pageId: string | null; selected: string[]; editingId: string | null; onError(message: string): void
 }) {
@@ -22,8 +23,8 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
         if(!node||node.type!=='note'||!element.getClientRects().length)continue
         const style=getComputedStyle(element),width=Number.parseFloat(style.width),height=Number.parseFloat(style.height)
         if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)continue
-        const old=naturalSizes.get(node)
-        if(!old||Math.abs(old.width-width)>.01||Math.abs(old.height-height)>.01){naturalSizes.set(node,{width,height});changed=true}
+        const effective=naturalDocument?artifactResolvedStyle(node.style,naturalDocument):node.style,old=naturalSizes.get(node,effective)
+        if(!old||Math.abs(old.width-width)>.01||Math.abs(old.height-height)>.01){naturalSizes.set(node,{width,height},effective);changed=true}
       }
       if(changed)onNaturalLayout()
     }
@@ -31,7 +32,7 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
     for(const element of notes)observer.observe(element)
     measure()
     return()=>observer.disconnect()
-  },[naturalSource,naturalSizes,root,onNaturalLayout,visible])
+  },[naturalSource,naturalSizes,naturalDocument,root,onNaturalLayout,visible])
   useLayoutEffect(() => {
     const controller = new AbortController()
     const container = root.current

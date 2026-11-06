@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {createNode,createPage} from '../../../../shared/artifact-document'
-import {NaturalLayouts,withNaturalLayout} from './natural-layout'
+import {NaturalLayouts,NaturalNodeSizes,withNaturalLayout} from './natural-layout'
 import {elementBounds} from './visibility'
 
 test('natural note geometry reaches visibility calculations without changing stored content or fixed objects',()=>{
@@ -30,4 +30,30 @@ test('natural layout caches evict pages and keep recent page identities within t
   assert.notEqual(evicted,zero)
   assert.equal(layouts.forPage('first'),first)
   assert.equal(layouts.size,8)
+})
+
+test('natural note sizes survive unrelated page cloning but invalidate text, width and effective font changes',()=>{
+  const page=createPage('contents'),note={...createNode('note','note'),text:'中文自动换行'.repeat(100),width:240,height:832}
+  page.nodes={note};page.nodeOrder=['note']
+  const sizes=new NaturalLayouts().forPage(page.id);sizes.set(note,{width:240,height:4659})
+  const cloned=structuredClone(page)
+  assert.equal(withNaturalLayout(cloned,sizes).nodes.note!.height,4659,'unrelated operations clone the whole body')
+  for(const patch of [{text:'新文字'},{width:400},{style:{...note.style,fontSize:48}}]){
+    const changed={...cloned,nodes:{note:{...cloned.nodes.note!,...patch}}}
+    assert.equal(withNaturalLayout(changed,sizes),changed,'changed layout dependencies cannot reuse old dimensions')
+  }
+  const moved={...cloned,nodes:{note:{...cloned.nodes.note!,x:-500,y:900,rotation:45}}}
+  assert.equal(withNaturalLayout(moved,sizes).nodes.note!.height,4659)
+})
+
+test('exact dependency caches have bounded entry count and retained text',()=>{
+  const sizes=new NaturalNodeSizes()
+  for(let i=0;i<400;i++)sizes.set({...createNode('note',`note-${i}`),text:'中文'.repeat(500)},{width:240,height:400})
+  assert.ok(sizes.size<=256);assert.ok(sizes.dependencyCharacters<=262144)
+  const large={...createNode('note','large'),text:'中文'.repeat(200000)}
+  sizes.set(large,{width:240,height:20000});assert.equal(sizes.get(large),undefined)
+  assert.ok(sizes.dependencyCharacters<=262144)
+  const node=createNode('note','effective-font');sizes.set(node,{width:240,height:100},{fontSize:14})
+  assert.equal(sizes.get(structuredClone(node),{fontSize:14})?.height,100)
+  assert.equal(sizes.get(node,{fontSize:32}),undefined)
 })
