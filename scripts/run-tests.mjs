@@ -68,6 +68,8 @@ const testsByScope = {
     'src/features/artifacts/native/compute-geometry.test.ts',
     'src/features/artifacts/native/compute-bulk.test.ts',
     'src/features/artifacts/native/visibility.test.ts',
+    'src/features/artifacts/native/natural-layout.test.ts',
+    'src/features/artifacts/native/canvas-camera.test.ts',
     'src/features/artifacts/native/rendered-geometry.test.ts',
     'src/features/artifacts/native/thumbnail.test.tsx',
     'src/features/artifacts/native/svg-image-cache.test.ts',

@@ -15,6 +15,8 @@ import { fetchArtifactAsset } from './assets'
 import { PageContent } from './renderer'
 import { useVisibleElements } from './use-visibility'
 import { elementBounds } from './visibility'
+import {NaturalLayouts,withNaturalLayout} from './natural-layout'
+import {cameraScroll,worldCamera,type CanvasPoint} from './canvas-camera'
 import { editorError, nodeTypeLabels, resizeHandleLabels } from './editor-copy'
 import { NativeDrafts } from './drafts'
 import { CommentDraftStore } from './comment-drafts'
@@ -72,7 +74,7 @@ function initialCanvasZoom(pages: Array<Pick<ArtifactPage,'x'|'y'|'width'|'heigh
   const w=Math.max(...pages.map(page=>page.x+page.width))-x,h=Math.max(...pages.map(page=>page.y+page.height))-y
   return Math.max(.04,Math.min(4,Math.min((width-96)/w,(height-150)/(h+40))*2))
 }
-type CanvasView={zoom:number;x:number;y:number}
+type CanvasView={zoom:number;x?:number;y?:number}
 interface Gesture { base: ArtifactDocument; type: 'move' | 'resize' | 'marquee' | 'pan' | 'draw' | 'rotate'; startX: number; startY: number; pageId: string; nodes: ArtifactNode[]; moved: boolean; handle?: ResizeHandle; points?: Array<{ x: number; y: number }>; tool?: string; angle?: number; scope?: 'canvas'|'artboard'; canvas?:boolean; scrollX?: number; scrollY?: number }
 function editorOwnsEvent(root:HTMLElement,target:EventTarget|null) {
   return target instanceof Element&&target.closest('[data-native-artifact-editor],[data-native-editor-boundary]')===root
@@ -96,8 +98,12 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const activeCanvasId=canvasSheets.find(sheet=>sheet.id===canvasPageId)?.id??canvasSheets[0].id
   const canvasContentId=kind==='design'?canvasSheets.find(sheet=>sheet.id===activeCanvasId)?.contentId:undefined
   const canvasContent=canvasContentId?doc?.pages[canvasContentId]:undefined
+  const naturalLayouts=useRef(new NaturalLayouts()),[naturalRevision,setNaturalRevision]=useState(0)
+  const naturalSizes=useMemo(()=>canvasContentId?naturalLayouts.current.forPage(canvasContentId):undefined,[canvasContentId])
+  const onNaturalLayout=useCallback(()=>setNaturalRevision(value=>value+1),[])
+  const renderedCanvasContent=useMemo(()=>canvasContent?withNaturalLayout(canvasContent,naturalSizes):undefined,[canvasContent,naturalSizes,naturalRevision])
   const boardIds=useMemo(()=>doc?.pageOrder.filter(id=>kind!=='design'||canvasPageOf(doc.pages[id])===activeCanvasId)??[],[doc,kind,activeCanvasId])
-  const freeBounds=useMemo(()=>canvasContent?elementBounds(canvasContent):[],[canvasContent])
+  const freeBounds=useMemo(()=>renderedCanvasContent?elementBounds(renderedCanvasContent):[],[renderedCanvasContent])
   const [selected, setSelected] = useState<string[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [presenting, setPresenting] = useState(false)
@@ -162,7 +168,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const toggleCompactRail=(open:boolean)=>{compactRailFocus.current=true;setCompactRailOpen(open)}
   const initialCamera = useRef(false)
   const geometry = useRef(new Map<string, string>())
-  const current = doc && pageId && (boardIds.includes(pageId)||pageId===canvasContentId) ? doc.pages[pageId] : undefined
+  const current = doc && pageId && (boardIds.includes(pageId)||pageId===canvasContentId) ? pageId===canvasContentId?renderedCanvasContent:doc.pages[pageId] : undefined
   const selectedNodes = current ? selected.flatMap(value => current.nodes[value] ? [current.nodes[value]] : []) : []
   const primary = selectedNodes.length === 1 ? selectedNodes[0] : undefined
   const palette=useMemo(()=>Array.from(new Set((current?[artifactPageBackground(current,doc!),...current.nodeOrder.flatMap(id=>{const style=artifactResolvedStyle(current.nodes[id].style,doc!);return [style.color,style.fill,style.backgroundColor]})]:[]).filter((c):c is string=>!!c))).slice(0,32),[current,doc?.themeId,doc?.themes])
@@ -201,18 +207,20 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const baseCanvasInset = {x:Math.max(0,(viewport.width-canvasExtent.width)/2),y:54+20*scale+(kind==='design'&&canvasExtent.height-128*scale<=viewport.height-54?(viewport.height-54-canvasExtent.height)/2:Math.max(0,(viewport.height-54-canvasExtent.height)/2))}
   const panPadding=canvasMode&&canvasContent?{x:viewport.width*2,y:viewport.height*2}:{x:0,y:0}
   const canvasInset={x:baseCanvasInset.x+panPadding.x,y:baseCanvasInset.y+panPadding.y}
-  const previousCanvasMapping=useRef<{id:string;scale:number;width:number;height:number;x:number;y:number;padX:number;padY:number}|null>(null)
+  const previousCanvasMapping=useRef<{id:string;scale:number;width:number;height:number;x:number;y:number;padX:number;padY:number;world:CanvasPoint}|null>(null)
   useLayoutEffect(()=>{
-    const next={id:activeCanvasId,scale,width:viewport.width,height:viewport.height,x:canvasInset.x+(64-origin.x)*scale,y:canvasInset.y+(64-origin.y)*scale,padX:panPadding.x,padY:panPadding.y},old=previousCanvasMapping.current,element=viewportRef.current
-    previousCanvasMapping.current=next
+    const element=viewportRef.current
     if(!canvasMode||!element)return
+    const next={id:activeCanvasId,scale,width:viewport.width,height:viewport.height,x:canvasInset.x+(64-origin.x)*scale,y:canvasInset.y+(64-origin.y)*scale,padX:panPadding.x,padY:panPadding.y},old=previousCanvasMapping.current
     const pending=pendingCanvasView.current
-    if(pending){pendingCanvasView.current=null;element.scrollTo({left:pending.x+panPadding.x,top:pending.y+panPadding.y});return}
-    if(old?.id===next.id){
-      const sameCamera=old.scale===scale&&old.width===next.width&&old.height===next.height
-      const dx=sameCamera?next.x-old.x:next.padX-old.padX,dy=sameCamera?next.y-old.y:next.padY-old.padY
-      if(dx||dy)element.scrollTo({left:element.scrollLeft+dx,top:element.scrollTop+dy})
-    }else if(!canvasViews.current.has(activeCanvasId))element.scrollTo({left:panPadding.x,top:panPadding.y})
+    let target:CanvasPoint|undefined
+    if(pending){pendingCanvasView.current=null;target=pending.x!==undefined&&pending.y!==undefined?cameraScroll({x:pending.x,y:pending.y},next):{x:panPadding.x,y:panPadding.y}}
+    else if(old?.id===next.id){
+      if(old.scale===scale)target=cameraScroll(old.world,next)
+      else{const before=cameraScroll(old.world,old);target={x:before.x-old.padX+next.padX,y:before.y-old.padY+next.padY}}
+    }else if(!canvasViews.current.has(activeCanvasId))target={x:panPadding.x,y:panPadding.y}
+    if(target&&(Math.abs(element.scrollLeft-target.x)>.01||Math.abs(element.scrollTop-target.y)>.01))element.scrollTo({left:target.x,top:target.y,behavior:'instant'})
+    previousCanvasMapping.current={...next,world:worldCamera({x:element.scrollLeft,y:element.scrollTop},next)}
   },[activeCanvasId,canvasMode,scale,viewport.width,viewport.height,origin.x,origin.y,canvasInset.x,canvasInset.y,panPadding.x,panPadding.y])
   useEffect(() => {
     if (!doc) return
@@ -232,18 +240,18 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     return [...ids].flatMap(value => boardIds.includes(value) && displayPages[value] ? [displayPages[value]] : [])
   }, [doc, boardIds, displayPages, visible, authorized, canvasMode, current, visibleBoards, editingId, selected.length, draftCount, cropping])
   const detailedBoards = useMemo(() => canvasMode && scale < .15 ? boards.filter(p=>p.id===pageId||!!editingId&&p.nodes[editingId]) : boards,[boards,canvasMode,scale,pageId,editingId])
-  const detailedSurfaces=useMemo(()=>canvasMode&&canvasContent?[...detailedBoards,canvasContent]:detailedBoards,[canvasMode,detailedBoards,canvasContent])
-  const visibleElements = useVisibleElements({ pages: detailedSurfaces, revision: doc?.seq ?? 0, viewport, scale, root: viewportRef, compute, pageId, selected, editingId, onError: setNotice })
-  useLayoutEffect(()=>{if(!commentThreads.length)return;const positions:Record<string,{pageId:string;x:number;y:number}>={};for(const thread of commentThreads){const anchor=decodeCommentAnchor(thread.anchor),page=anchor?doc?.pages[anchor.pageId]:undefined;if(!anchor||!page)continue;const node=anchor.nodeId?page.nodes[anchor.nodeId]:undefined;const point=node?pointInFrame(anchor,readNodeFrame(viewportRef.current,page,node,scale)):commentPoint(anchor,page);if(point)positions[thread.id]={pageId:page.id,...point}}setCommentPositions(old=>JSON.stringify(old)===JSON.stringify(positions)?old:positions)},[commentThreads,doc,viewport,scale,preview])
+  const detailedSurfaces=useMemo(()=>canvasMode&&renderedCanvasContent?[...detailedBoards,renderedCanvasContent]:detailedBoards,[canvasMode,detailedBoards,renderedCanvasContent])
+  const visibleElements = useVisibleElements({ pages: detailedSurfaces, revision: doc?.seq ?? 0, viewport, scale, root: viewportRef, compute, pageId, selected, editingId, onError: setNotice,naturalSource:canvasContent,naturalSizes,onNaturalLayout })
+  useLayoutEffect(()=>{if(!commentThreads.length)return;const positions:Record<string,{pageId:string;x:number;y:number}>={};for(const thread of commentThreads){const anchor=decodeCommentAnchor(thread.anchor),page=anchor?.pageId===canvasContentId?renderedCanvasContent:anchor?doc?.pages[anchor.pageId]:undefined;if(!anchor||!page)continue;const node=anchor.nodeId?page.nodes[anchor.nodeId]:undefined;const point=node?pointInFrame(anchor,readNodeFrame(viewportRef.current,page,node,scale)):commentPoint(anchor,page);if(point)positions[thread.id]={pageId:page.id,...point}}setCommentPositions(old=>JSON.stringify(old)===JSON.stringify(positions)?old:positions)},[commentThreads,doc,viewport,scale,preview,canvasContentId,renderedCanvasContent,visibleElements])
   useLayoutEffect(()=>{
     if(!commentsOpen||!commentAnchor||!doc)return
-    const page=doc.pages[commentAnchor.pageId],shell=viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${commentAnchor.pageId}"]`),root=editorRoot.current
+    const page=commentAnchor.pageId===canvasContentId?renderedCanvasContent:doc.pages[commentAnchor.pageId],shell=viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${commentAnchor.pageId}"]`),root=editorRoot.current
     if(!page||!shell||!root)return
     const node=commentAnchor.nodeId?page.nodes[commentAnchor.nodeId]:undefined,point=node?pointInFrame(commentAnchor,readNodeFrame(viewportRef.current,page,node,scale)):commentPoint(commentAnchor,page)
     if(!point)return
     const rect=shell.getBoundingClientRect(),bounds=root.getBoundingClientRect(),next={x:rect.left-bounds.left+point.x*scale,y:rect.top-bounds.top+point.y*scale}
     setCommentAttachmentPoint(old=>old&&old.x===next.x&&old.y===next.y?old:next)
-  },[commentsOpen,commentAnchor,doc,viewport,scale,preview,boards])
+  },[commentsOpen,commentAnchor,doc,viewport,scale,preview,boards,canvasContentId,renderedCanvasContent,visibleElements])
   const beginCrop=(node:ArtifactNode,page:ArtifactPage)=>{setCroppingFrame(readNodeFrame(viewportRef.current,page,node,scale));setCropping(node)}
   const themeTokens = doc?.themeId ? doc.themes[doc.themeId]?.tokens : undefined
   useEffect(() => {
@@ -293,8 +301,8 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     dispatch(next.artboards.flatMap(board => { const p = document.pages[board.file]; return p.height !== board.h || p.y !== board.y ? [{ type: 'page.patch' as const, pageId: p.id, patch: { height: board.h, y: board.y } }] : [] }))
   }, [session, dispatch])
   const rememberCanvasView=(value:string,view:CanvasView)=>{canvasViews.current.delete(value);canvasViews.current.set(value,view);while(canvasViews.current.size>MAX_CANVAS_PAGES){const oldest=canvasViews.current.keys().next().value;if(oldest!==undefined)canvasViews.current.delete(oldest)}}
-  const chooseCanvasPage=(value:string)=>{const element=viewportRef.current;rememberCanvasView(activeCanvasId,{zoom,x:(element?.scrollLeft??0)-panPadding.x,y:(element?.scrollTop??0)-panPadding.y});const next=canvasViews.current.get(value)??{zoom:initialCanvasZoom(doc?.pageOrder.filter(id=>canvasPageOf(doc.pages[id])===value).map(id=>doc.pages[id])??[],viewport.width,viewport.height),x:0,y:0};rememberCanvasView(value,next);pendingCanvasView.current=next;flushText();setEditingId(null);setCropping(null);setSelected([]);setCanvasPageId(value);setPageId(doc?.pageOrder.find(id=>canvasPageOf(doc.pages[id])===value)??null);setZoom(next.zoom);if(value===activeCanvasId){element?.scrollTo({left:next.x+panPadding.x,top:next.y+panPadding.y});pendingCanvasView.current=null}}
-  const addCanvasPage=()=>{const base=session.getSnapshot().document;if(!base)return;try{const value=id(),board={...createPage(id(),'画板 1'),width:800,height:600,canvasPageId:value};delete board.themeBackground;rememberCanvasView(value,{zoom:initialCanvasZoom([board],viewport.width,viewport.height),x:0,y:0});session.dispatch([...createCanvasPage(base,value),{type:'page.insert',page:board}],base);chooseCanvasPage(value);setPageId(board.id)}catch(error){setNotice(editorError(error,'页面尚未创建，请重试。'))}}
+  const chooseCanvasPage=(value:string)=>{const element=viewportRef.current;rememberCanvasView(activeCanvasId,{zoom,...previousCanvasMapping.current?.world});const next=canvasViews.current.get(value)??{zoom:initialCanvasZoom(doc?.pageOrder.filter(id=>canvasPageOf(doc.pages[id])===value).map(id=>doc.pages[id])??[],viewport.width,viewport.height)};rememberCanvasView(value,next);pendingCanvasView.current=next;flushText();setEditingId(null);setCropping(null);setSelected([]);setCanvasPageId(value);setPageId(doc?.pageOrder.find(id=>canvasPageOf(doc.pages[id])===value)??null);setZoom(next.zoom);if(value===activeCanvasId){const mapping=previousCanvasMapping.current,point=mapping&&next.x!==undefined&&next.y!==undefined?cameraScroll({x:next.x,y:next.y},mapping):{x:panPadding.x,y:panPadding.y};element?.scrollTo({left:point.x,top:point.y});pendingCanvasView.current=null}}
+  const addCanvasPage=()=>{const base=session.getSnapshot().document;if(!base)return;try{const value=id(),board={...createPage(id(),'画板 1'),width:800,height:600,canvasPageId:value};delete board.themeBackground;rememberCanvasView(value,{zoom:initialCanvasZoom([board],viewport.width,viewport.height)});session.dispatch([...createCanvasPage(base,value),{type:'page.insert',page:board}],base);chooseCanvasPage(value);setPageId(board.id)}catch(error){setNotice(editorError(error,'页面尚未创建，请重试。'))}}
   const closeCanvasDialog=()=>{setDialog(null);requestAnimationFrame(()=>editorRoot.current?.querySelector<HTMLElement>('[aria-label="页面菜单"]')?.focus({preventScroll:true}))}
   const openCanvasDialog=(value:string,action:'canvas-rename'|'canvas-delete')=>{canvasDialogBase.current=session.getSnapshot().document;setCanvasDialogId(value);setDialogText(canvasSheets.find(sheet=>sheet.id===value)?.name??'');setCanvasDialogError('');setDialog(action)}
   const renameCanvasPageAction=()=>{const base=canvasDialogBase.current,live=session.getSnapshot();if(!base||!canvasDialogId||!dialogText.trim()||!canvasWritable||!live.write||live.conflict)return;if(canvasPages(base).find(sheet=>sheet.id===canvasDialogId)?.name===dialogText.trim()){closeCanvasDialog();return}try{session.dispatch(renameCanvasPage(base,canvasDialogId,dialogText),base);closeCanvasDialog()}catch(error){setCanvasDialogError(session.getSnapshot().conflict?'页面名称已有新修改。你的输入已保留，请取消后处理保存冲突。':editorError(error,'页面尚未重命名，请重试。'))}}
@@ -413,7 +421,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if (active.type === 'pan') { viewportRef.current?.scrollTo((active.scrollX ?? 0) - (event.clientX - active.startX), (active.scrollY ?? 0) - (event.clientY - active.startY)); return }
     if (active.type === 'marquee') { const rect = (event.currentTarget as HTMLElement).getBoundingClientRect(); setMarquee({ x: (Math.min(active.startX, event.clientX) - rect.left) / scale-(active.canvas?64-origin.x+canvasInset.x/scale:0), y: (Math.min(active.startY, event.clientY) - rect.top) / scale-(active.canvas?64-origin.y+canvasInset.y/scale:0), width: Math.abs(dx), height: Math.abs(dy) }); return }
     setPreview({ dx, dy, resize: active.type === 'resize' })
-    for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (!element) continue; if (active.type === 'move') element.style.translate = `${dx}px ${dy}px`; else { element.style.width = `${Math.max(16, node.width + dx)}px`; element.style.height = `${Math.max(16, node.height + dy)}px` } }
+    for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (!element) continue; if (active.type === 'move') element.style.translate = `${dx}px ${dy}px`; else { element.style.width = `${Math.max(16, node.width + dx)}px`; element.style.height = node.type==='note'&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)?'auto':`${Math.max(16, node.height + dy)}px` } }
   }
   function pointerUp(event: ReactPointerEvent, cancel = false) {
     event.stopPropagation()
@@ -421,7 +429,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     const active = gesture.current; if (!active) return
     gesture.current = null
     const dx = (event.clientX - active.startX) / scale, dy = (event.clientY - active.startY) / scale
-    for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (element) { element.style.translate = ''; element.style.width = `${node.width}px`; element.style.height = `${node.height}px` } }
+    for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (element) { element.style.translate = ''; element.style.width = `${node.width}px`; element.style.height = node.type==='note'&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)?'auto':`${node.height}px` } }
     if (active.type === 'draw') {
       if(!cancel&&active.points&&(active.points.length>1||active.tool==='shape')){const node=active.tool==='shape'?canvasShapeNode(id(),shapeTool==='ellipse'?'ellipse':'rect',active.points[0],active.moved?active.points.at(-1):undefined):drawingNode(id(),active.points,active.tool as 'pencil'|'pen'|'arrow'|'line');dispatch([{type:'node.insert',pageId:active.pageId,node:{...node,scope:active.scope}}],active.base);setSelected([node.id]);if(active.tool==='shape')setTool('select')}
       setDrawingPreview(null);return
@@ -453,7 +461,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     const pages = [...boardIds.map(value => doc.pages[value]),...freeBounds]; if (!pages.length) return
     const w = Math.max(...pages.map(p => p.x + p.width)) - origin.x + 128, h = Math.max(...pages.map(p => p.y + p.height)) - origin.y + 128
     setZoom(Math.max(.04, Math.min(4, Math.min((viewport.width-64)/w, (viewport.height-100)/h) * 2)))
-    viewportRef.current?.scrollTo({ left: panPadding.x, top: panPadding.y })
+    viewportRef.current?.scrollTo({ left: panPadding.x, top: panPadding.y });const mapping=previousCanvasMapping.current,element=viewportRef.current;if(mapping&&element)mapping.world=worldCamera({x:element.scrollLeft,y:element.scrollTop},mapping)
   }
   const startPresentation = (notes = false) => { flushText(); setEditingId(null); setNotesOpen(notes); setPresenting(true); setZoom(1) }
   const reorderLayer = (front: boolean) => { if (current && writable) dispatch([{ type: 'nodes.reorder', pageId: current.id, nodeIds: front ? [...current.nodeOrder.filter(id => !selected.includes(id)), ...current.nodeOrder.filter(id => selected.includes(id))] : [...current.nodeOrder.filter(id => selected.includes(id)), ...current.nodeOrder.filter(id => !selected.includes(id))] }]) }
@@ -537,10 +545,10 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     <div className="native-workspace">
       {!presenting && layersOpen && current && <aside className="native-layers" aria-label="图层"><header><h3>图层</h3><IconButton icon="close" label="关闭图层" onClick={() => setLayersOpen(false)} /></header>{[...current.nodeOrder].reverse().map(value => { const n = current.nodes[value]; return <div className="native-layer" key={value} data-selected={selected.includes(value)}><button type="button" style={{ paddingInlineStart: n.parentId ? 24 : 8 }} onClick={e => setSelected(e.shiftKey ? [...new Set([...selected,value])] : [value])}><EditorIcon name={n.type === 'text' ? 'text' : n.type === 'image' ? 'image' : n.type === 'group' ? 'layers' : n.type === 'note' ? 'note' : 'square'} size={15} /><span>{n.name || n.text || nodeTypeLabels[n.type]}</span></button><IconButton icon="eye" label={n.hidden ? '显示图层' : '隐藏图层'} active={!n.hidden} disabled={!writable} onClick={() => dispatch([{ type:'node.patch',pageId:current.id,nodeId:value,patch:{hidden:!n.hidden} }])} /><IconButton icon="lock" label={n.locked ? '解锁图层' : '锁定图层'} active={n.locked} disabled={!writable} onClick={() => dispatch([{type:'node.patch',pageId:current.id,nodeId:value,patch:{locked:!n.locked}}])} /></div> })}</aside>}
 
-      <div className="native-stage" ref={viewportRef} hidden={view === 'grid' && !presenting} onScroll={event => { const x = event.currentTarget.scrollLeft, y = event.currentTarget.scrollTop; setViewport(value => ({ ...value, x, y })) }} onWheel={event => { if (event.ctrlKey || event.metaKey) { event.preventDefault(); setZoom(value => Math.max(.15, Math.min(4, value * (event.deltaY > 0 ? .9 : 1.1)))) } }}>
-        {!boardIds.length && !canvasContent?.nodeOrder.length && <div className="native-empty"><p>{kind === 'design' ? '添加第一个画板' : '添加第一页'}</p><button type="button" disabled={!writable} onClick={addPage}>开始编辑</button></div>}
+      <div className="native-stage" ref={viewportRef} hidden={view === 'grid' && !presenting} onScroll={event => { const element=event.currentTarget,x=element.scrollLeft,y=element.scrollTop,mapping=previousCanvasMapping.current;if(mapping&&mapping.id===activeCanvasId&&mapping.width===element.clientWidth&&mapping.height===element.clientHeight)mapping.world=worldCamera({x,y},mapping);setViewport(value=>({...value,x,y})) }} onWheel={event => { if (event.ctrlKey || event.metaKey) { event.preventDefault(); setZoom(value => Math.max(.15, Math.min(4, value * (event.deltaY > 0 ? .9 : 1.1)))) } }}>
+        {!boardIds.length && !canvasContent?.nodeOrder.length && (kind!=='design'||tool==='select'||tool==='hand') && <div className="native-empty"><p>{kind === 'design' ? '添加第一个画板' : '添加第一页'}</p><button type="button" disabled={!writable} onClick={addPage}>开始编辑</button></div>}
         <div onPointerDown={canvasPointerDown} onPointerMove={pointerMove} onPointerUp={e => pointerUp(e)} onPointerCancel={e => pointerUp(e,true)} className={`native-board-space ${!canvasMode ? 'native-single-page' : ''}`} style={canvasMode ? { width: Math.max(boardWidth,canvasExtent.width+2*baseCanvasInset.x)+2*panPadding.x, height: Math.max(boardHeight,canvasExtent.height+baseCanvasInset.y)+2*panPadding.y } : { minWidth: '100%', minHeight: '100%' }}>
-          {(canvasMode&&canvasContent?[...boards,canvasContent]:boards).map(page => <div key={page.id} className={`native-page-shell ${page.id===canvasContentId?'native-free-canvas-shell':''} ${presenting ? `native-transition-${page.transition}` : ''}`} data-page-id={!canvasMode || scale>=.15 || page.id===pageId || page.id===canvasContentId ? page.id : undefined} data-artboard-id={page.id===canvasContentId?undefined:page.id} data-current={page.id===pageId} style={{ width: page.width * scale, height: page.height * scale, ...(canvasMode ? { position: 'absolute', left: (page.x - origin.x + 64) * scale+canvasInset.x, top: (page.y - origin.y + 64) * scale+canvasInset.y } : {}) }}>
+          {(canvasMode&&renderedCanvasContent?[...boards,renderedCanvasContent]:boards).map(page => <div key={page.id} className={`native-page-shell ${page.id===canvasContentId?'native-free-canvas-shell':''} ${presenting ? `native-transition-${page.transition}` : ''}`} data-page-id={!canvasMode || scale>=.15 || page.id===pageId || page.id===canvasContentId ? page.id : undefined} data-artboard-id={page.id===canvasContentId?undefined:page.id} data-current={page.id===pageId} style={{ width: page.width * scale, height: page.height * scale, ...(canvasMode ? { position: 'absolute', left: (page.x - origin.x + 64) * scale+canvasInset.x, top: (page.y - origin.y + 64) * scale+canvasInset.y } : {}) }}>
             {canvasMode && page.id!==canvasContentId && <button type="button" className="native-board-label" onClick={() => selectPage(page.id)}>{page.title}</button>}
             {canvasMode && page.id!==canvasContentId && scale < .15 && page.id!==pageId ? <button type="button" className="native-board-thumbnail" data-page-target={page.id} aria-label={`选择画板 ${page.title}`} onClick={()=>selectPage(page.id)} onDoubleClick={()=>{setZoom(1);selectPage(page.id)}}><PageThumbnail page={state.loadedPageIds.includes(page.id) ? page : state.previews?.[page.id] ?? page} document={doc} loaded={state.loadedPageIds.includes(page.id)||!!state.previews?.[page.id]} /></button> : <div className="native-page-scaled" style={{ width: page.width, height: page.height, transform: `scale(${scale})` }} onPointerDown={event => pointerDown(event, page)} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event, true)} onDoubleClick={event => { const target = (event.target as HTMLElement).closest<HTMLElement>('[data-node-id]'); const node = target && page.nodes[target.dataset.nodeId ?? '']; if (node && writable && (node.type==='image'||node.type==='video')) { setPageId(page.id); setSelected([node.id]); beginCrop(node,page); return } if (node && writable && (node.type === 'text' || node.type === 'note' || node.type === 'table')) { if (editingId === node.id && textPage.current === page.id) return; setPageId(page.id); setSelected([node.id]); textBase.current = session.getSnapshot().document; textPage.current = page.id; setEditingId(node.id); if(node.type==='table'){const cell=(event.target as HTMLElement).closest<HTMLElement>('td,th');if(cell)setTimeout(()=>{if(cell.isConnected&&cell.isContentEditable)cell.focus({preventScroll:true})},0)} } }}>
               <PageContent document={renderDocument ?? doc} page={page} pageVersion={session.getPageVersion(page.id)} revisionSeq={revisionSeq} cropEditingId={cropping?.id} compute={compute} visibleNodeIds={visibleElements[page.id]?.ids ?? new Set()} contentBottom={visibleElements[page.id]?.bottom} editingId={page.id === pageId ? editingId : null} onTextChange={changeText} onFinishText={finishText} onCellChange={changeCell} onFlowSize={flowSize} presenting={presenting} />

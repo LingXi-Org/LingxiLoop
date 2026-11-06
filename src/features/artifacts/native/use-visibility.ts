@@ -2,13 +2,36 @@ import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import type { ArtifactPage } from '../../../../shared/artifact-document'
 import type { Bounds, NativeCompute } from './compute'
 import { elementBounds, expandVisibleNodes } from './visibility'
+import type {NaturalNodeSizes} from './natural-layout'
 
-export function useVisibleElements({ pages, revision, viewport, scale, root, compute, pageId, selected, editingId, onError }: {
+export function useVisibleElements({ pages, revision, viewport, scale, root, compute, pageId, selected, editingId, onError, naturalSource, naturalSizes, onNaturalLayout }: {
+  naturalSource?:ArtifactPage;naturalSizes?:NaturalNodeSizes;onNaturalLayout?():void
   pages: ArtifactPage[]; revision: number; viewport: { x: number; y: number; width: number; height: number }; scale: number
   root: RefObject<HTMLDivElement | null>; compute: NativeCompute; pageId: string | null; selected: string[]; editingId: string | null; onError(message: string): void
 }) {
   const cache = useRef(new Map<string, { page: ArtifactPage; bounds: Bounds[] }>())
   const [visible, setVisible] = useState<Record<string, { page: ArtifactPage; ids: Set<string>; bottom: number }>>({})
+  useLayoutEffect(()=>{
+    const container=root.current
+    if(!container||!naturalSource||!naturalSizes||!onNaturalLayout)return
+    const notes=Array.from(container.querySelectorAll<HTMLElement>(`[data-page-id="${naturalSource.id}"] [data-native-natural-height]`))
+    const measure=()=>{
+      let changed=false
+      for(const element of notes){
+        const node=naturalSource.nodes[element.dataset.nodeId??'']
+        if(!node||node.type!=='note'||!element.getClientRects().length)continue
+        const style=getComputedStyle(element),width=Number.parseFloat(style.width),height=Number.parseFloat(style.height)
+        if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)continue
+        const old=naturalSizes.get(node)
+        if(!old||Math.abs(old.width-width)>.01||Math.abs(old.height-height)>.01){naturalSizes.set(node,{width,height});changed=true}
+      }
+      if(changed)onNaturalLayout()
+    }
+    const observer=new ResizeObserver(measure)
+    for(const element of notes)observer.observe(element)
+    measure()
+    return()=>observer.disconnect()
+  },[naturalSource,naturalSizes,root,onNaturalLayout,visible])
   useLayoutEffect(() => {
     const controller = new AbortController()
     const container = root.current

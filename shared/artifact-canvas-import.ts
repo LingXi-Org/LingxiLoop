@@ -6,14 +6,17 @@ const coordinate=(value:unknown,fallback=0)=>typeof value==='number'&&Number.isF
 const dimension=(value:unknown,fallback:number)=>Math.max(1,coordinate(value,fallback))
 const identity=(value:string)=>(['__proto__','constructor','prototype'].includes(value)?`canvas_${value}`:value.replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,110))||'canvas_object'
 
-/** Conservative system-font wrapping before the browser can measure imported notes. */
+/** Initial visibility hint; the browser measures natural note layout without rewriting the model. */
 export function canvasNoteHeight(text:string,width:number,size:number) {
   const available=Math.max(size,width-24)
-  const advance=(value:string)=>{
+  const advance=(value:string,at=0)=>{
+    if(value==='\t'){const stop=size*.4*8;return stop-at%stop}
     if(/\p{Mark}/u.test(value))return 0
-    if(/\s/u.test(value))return size*.35
-    if(/[ilI.,'!:;|]/.test(value))return size*.35
+    if(/\s/u.test(value))return size*.4
+    if(/[ilI]/.test(value))return size*.35
+    if(/[.,'!:;|]/.test(value))return size*.45
     if(/[MW@#%&]/.test(value))return size
+    if(/[A-Z]/.test(value))return size*.85
     if(/^[\x00-\x7f]$/.test(value))return size*.65
     return size
   }
@@ -21,9 +24,10 @@ export function canvasNoteHeight(text:string,width:number,size:number) {
   for(const paragraph of text.split(/\r?\n/)){
     let used=0;lines++
     for(const token of paragraph.match(/\s+|\S+/gu)??[]){
-      const points=Array.from(token),length=points.reduce((sum,point)=>sum+advance(point),0)
-      if(length<=available){if(used&&used+length>available){lines++;used=0}used+=length}
-      else for(const point of points){const length=advance(point);if(used&&used+length>available+.001){lines++;used=0}used+=length}
+      const points=Array.from(token),lengthAt=(at:number)=>points.reduce((sum,point)=>sum+advance(point,at+sum),0)
+      const length=lengthAt(used)
+      if(length<=available){if(used&&used+length>available){lines++;used=0}used+=lengthAt(used)}
+      else for(const point of points){let length=advance(point,used);if(used&&used+length>available+.001){lines++;used=0;length=advance(point,0)}used+=length}
     }
   }
   return Math.min(1_000_000,Math.max(40,Math.ceil(lines*size*1.45+20)))

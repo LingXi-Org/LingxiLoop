@@ -21,7 +21,7 @@ import { createTableNode } from '../shared/artifact-tables.ts'
 import { createCanvasPage, renameCanvasPage, artifactPageIds } from '../shared/artifact-canvas-pages.ts'
 import { createNode } from '../shared/artifact-document.ts'
 import { importCanvasAnnotations } from '../shared/artifact-canvas-import.ts'
-import {decodeCommentAnchor}from'../shared/artifact-comment-anchor.ts'
+import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-anchor.ts'
 
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -73,10 +73,11 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
-  if(options.checks==='canvas-import')importCanvasAnnotations(document,{'imported-note':{text:'中文自动换行'.repeat(50),w:240,x:688,y:-778}},[])
+  if(options.checks==='canvas-import'){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[])}
+  if(options.checks==='canvas-empty')document={...document,pageOrder:[],pages:{}}
   if(options.checks==='canvas-flow'){
     document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
     document.pageOrder=['page-1','page-2'];delete document.pages['page-3']
@@ -105,10 +106,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   }
   if(options.checks==='legacy-colors')document.pages['page-1'].background='#f00'
   if(options.checks==='color-cas')document.pages['page-1'].background='#ff0000'
-  const historical=structuredClone(document),historyNode=Object.values(historical.pages['page-1'].nodes).find(node=>node.type==='text')
+  const historical=structuredClone(document),historyNode=Object.values(historical.pages['page-1']?.nodes??{}).find(node=>node.type==='text')
   if(options.checks==='history')document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:historyNode.id,patch:{x:historyNode.x+80}}])).document
   const revisionReads=[],revisionRestores=[],contextWrites=[]
-  let commentThreads=[];let commentSequence=0;let holdCommentAck=false,releaseCommentAck=null,rejectCommentReply=false,expectedCommentError=false
+  let commentThreads=options.checks==='canvas-import'?[{id:'imported-comment',anchor:encodeCommentAnchor({pageId:document.canvasPages[0].contentId,nodeId:'imported-note',x:.5,y:.5}),label:'导入便签评论',status:'open',messages:[{id:'imported-message',text:'中文评论定位验收',author:{kind:'user',id:'fixture-user',name:'验收用户'},at:'2026-11-06T00:00:00.000Z'}]}]:[];let commentSequence=0;let holdCommentAck=false,releaseCommentAck=null,rejectCommentReply=false,expectedCommentError=false
   const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
   const initialPageHashes = Object.fromEntries(document.pageOrder.map(id => [id, pageHash(document.pages[id])]))
   const history = { version: 0, undo: null, redo: null }, receipts = [], errors = []
@@ -124,7 +125,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const editorFontRequests=[]
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
   page.setDefaultTimeout(30_000)
-  await page.addInitScript(()=>{window.__geometryLog=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(['visible','update-pages'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
+  await page.addInitScript(()=>{window.__geometryLog=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
   page.on('console', message => { if (message.type() === 'error'&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))) errors.push(message.text()) })
   if(options.checks==='svg-font-module')await page.route('**/svg-font-image.ts*',async route=>{svgModuleRequests++;if(svgModuleBlocked)await route.fulfill({status:503,body:'图形工具暂时无法加载'});else await route.continue()})
@@ -225,16 +226,31 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   }
   try {
     await page.goto(`${baseUrl}/?kind=${kind}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
-    await ready(1)
+    if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='canvas-empty'){
+      await page.getByRole('button',{name:'便签 (N)',exact:true}).click();await page.mouse.click(200,240)
+      await page.getByRole('textbox',{name:'编辑文本',exact:true}).waitFor()
+      await page.keyboard.insertText('空画布第一条便签');await page.getByRole('button',{name:'完成',exact:true}).click()
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+      assert.deepEqual(document.pageOrder,[]);assert.ok(document.canvasPages?.[0].contentId)
+      assert.equal(Object.values(document.pages[document.canvasPages[0].contentId].nodes)[0].text,'空画布第一条便签')
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-empty-canvas-diagnostic',firstStickyWithoutArtboard:true,consoleOrPageErrors:errors}
+    }
     if(options.checks==='canvas-import'){
       const contentId=document.canvasPages[0].contentId,node=page.locator(`[data-page-id="${contentId}"] [data-node-id="imported-note"]`)
       await node.waitFor();await page.evaluate(()=>document.fonts.ready)
       const measured=await node.evaluate(element=>{const content=element.querySelector('.native-text-content'),style=getComputedStyle(element);return{height:element.offsetHeight,textHeight:content.scrollHeight,padding:Number.parseFloat(style.paddingTop)+Number.parseFloat(style.paddingBottom)}})
-      assert.ok(measured.height>=measured.textHeight+measured.padding-1,'imported background contains automatic Chinese line wrapping')
+      assert.ok(measured.height>=measured.textHeight+measured.padding-1,'imported background contains actual automatic text wrapping')
+      await page.waitForFunction(({id,height})=>window.__geometryLog.some(message=>message.direction==='request'&&message.task?.kind==='elements'&&message.task.pageId===id&&message.task.elements.some(node=>node.id==='imported-note'&&Math.abs(node.height-height-4)<=1)),{id:contentId,height:measured.height})
+
+      const pin=page.getByRole('button',{name:'评论 1：导入便签评论',exact:true})
+      await pin.waitFor()
+      await page.waitForFunction(({id})=>{const node=document.querySelector(`[data-page-id="${id}"] [data-node-id="imported-note"]`),pin=document.querySelector('.native-comment-pin');if(!node||!pin)return false;const n=node.getBoundingClientRect(),p=pin.getBoundingClientRect();return Math.abs(p.left-n.left-n.width/2)<=1&&Math.abs(p.top-n.top-n.height/2)<=1},{id:contentId})
       assert.equal(receipts.length,0,'merely viewing imported notes must not create edits')
       assert.deepEqual(errors,[])
-      return{kind:'isolated-canvas-import-diagnostic',mode:kind,automaticChineseWrapping:true,readonlyMeasurementDoesNotWrite:true,measured,consoleOrPageErrors:errors}
+      return{kind:'isolated-canvas-import-diagnostic',mode:kind,sample:options['import-case']??'chinese',automaticTextWrapping:true,actualWorkerBounds:true,commentFollowsActualHeight:true,readonlyMeasurementDoesNotWrite:true,measured,consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-contents') {
       assert.equal(kind,'design')
@@ -256,6 +272,12 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await free.locator(`[data-node-id="${noteId}"]`).waitFor()
       const bounds=await free.locator(`[data-node-id="${noteId}"]`).boundingBox()
       assert.ok(Math.abs(bounds.x-200)<=1&&Math.abs(bounds.y-240)<=1,`expanding world bounds preserves the clicked camera location: ${JSON.stringify({bounds,note})}`)
+      for(const viewport of [{width:390,height:844},{width:1440,height:1000}]){
+        await page.setViewportSize(viewport);await page.waitForFunction(width=>document.querySelector('.native-stage')?.clientWidth===width,viewport.width)
+        const resized=await free.locator(`[data-node-id="${noteId}"]`).boundingBox()
+        assert.ok(Math.abs(resized.x-bounds.x)<=1&&Math.abs(resized.y-bounds.y)<=1,'source world camera survives narrow-container round trips')
+      }
+
       await page.mouse.dblclick(bounds.x+12,bounds.y+bounds.height/2)
       const textEditor=page.getByRole('textbox',{name:'编辑文本',exact:true})
       await textEditor.waitFor();await textEditor.press('Control+a');await page.keyboard.insertText(Array.from({length:10},()=> '中文便签内容').join('\n'))
@@ -277,11 +299,15 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.getByRole('spinbutton',{name:'旋转',exact:true}).fill('0');await page.keyboard.press('Tab');await saved()
       await page.getByRole('button',{name:'关闭属性',exact:true}).click()
 
+      const dragBox=await free.locator(`[data-node-id="${noteId}"]`).boundingBox()
+      await page.mouse.move(dragBox.x+12,dragBox.y+dragBox.height/4);await page.mouse.down();await page.mouse.move(dragBox.x+27,dragBox.y+dragBox.height/4+10,{steps:6});await page.mouse.up();await saved()
+      assert.equal(await free.locator(`[data-node-id="${noteId}"]`).evaluate(element=>element.style.height),'auto','a real note drag must restore natural CSS layout')
+      const moveStartX=document.pages[bodyId].nodes[noteId].x
       for(const[id,hash]of Object.entries(initialPageHashes))assert.equal(pageHash(document.pages[id]),hash)
       await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('ArrowRight');await saved()
-      assert.equal(document.pages[bodyId].nodes[noteId].x,note.x+1)
-      await historyKey('undo','Control+z');assert.equal(document.pages[bodyId].nodes[noteId].x,note.x)
-      await historyKey('redo','Control+y');assert.equal(document.pages[bodyId].nodes[noteId].x,note.x+1)
+      assert.equal(document.pages[bodyId].nodes[noteId].x,moveStartX+1)
+      await historyKey('undo','Control+z');assert.equal(document.pages[bodyId].nodes[noteId].x,moveStartX)
+      await historyKey('redo','Control+y');assert.equal(document.pages[bodyId].nodes[noteId].x,moveStartX+1)
       await page.getByRole('button',{name:'铅笔',exact:true}).click()
       await page.mouse.move(300,240);await page.mouse.down();await page.mouse.move(360,280,{steps:8});await page.mouse.up();await saved()
       assert.ok(Object.values(document.pages[bodyId].nodes).some(n=>n.type==='drawing'))
@@ -324,10 +350,18 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.getByRole('button',{name:'关闭属性',exact:true}).click()
       const visibleNote=await free.locator(`[data-node-id="${noteId}"]`).boundingBox()
       await page.mouse.click(visibleNote.x+12,visibleNote.y+visibleNote.height/2)
+      const beforeInactive=await free.locator(`[data-node-id="${noteId}"]`).boundingBox()
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'新建页面',exact:true}).click();await saved()
+      const secondCanvas=document.canvasPages[1].id
+      await page.waitForFunction(id=>document.querySelector('[data-native-artifact-editor]')?.getAttribute('data-canvas-page-id')===id,secondCanvas)
       const remote={...createNode('note','remote-negative'),x:-5000,y:document.pages[bodyId].nodes[noteId].y,width:240,height:40,text:'远端中文便签',style:{fill:'#fef3a2',fontSize:14}}
       const next=applyOperations(document,prepareBatch(document,[{type:'node.insert',pageId:bodyId,node:remote}])).document
       const remoteObserved=page.waitForRequest(request=>request.url().endsWith('/editor-context')&&request.postDataJSON()?.version===String(next.seq))
       document=next;await remoteObserved
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 1',exact:true}).click()
+      await free.waitFor({state:'attached'});await free.locator(`[data-node-id="${noteId}"]`).waitFor();const afterInactive=await free.locator(`[data-node-id="${noteId}"]`).boundingBox()
+      assert.ok(Math.abs(afterInactive.x-beforeInactive.x)<=1&&Math.abs(afterInactive.y-beforeInactive.y)<=1,'cached cameras use world coordinates when inactive content changes the origin')
+      await page.mouse.click(afterInactive.x+12,afterInactive.y+afterInactive.height/2)
       await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+a')
       const negative=free.locator('[data-node-id="remote-negative"]');await negative.waitFor({state:'attached'})
       const beforePan=await negative.boundingBox()
@@ -339,7 +373,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(document.pages[bodyId].nodes[noteId].text,'旋转后中文短文')
       await page.screenshot({path:join(output,'design-canvas-contents.png')})
       assert.deepEqual(errors,[])
-      return{kind:'isolated-canvas-contents-diagnostic',mode:kind,independentBody:true,boardOrderUnchanged:true,boardHashesUnchanged:true,cameraStableOnInsert:true,savedAndReopened:true,sharedUndoRedo:true,freeDrawing:true,nodeAndWorldComments:true,boardDeletionKeepsFreeContent:true,chineseNoteAutoHeight:true,rotatedNoteHeight:true,draggedRectangle:true,negativeWorldPan:true,undoWaitsForResponse:true,negativePanScreenX:[beforePan.x,afterPan.x],scope:'actual React, Workers and shared operations; controlled HTTP fixture',consoleOrPageErrors:errors}
+      return{kind:'isolated-canvas-contents-diagnostic',mode:kind,independentBody:true,boardOrderUnchanged:true,boardHashesUnchanged:true,cameraStableOnInsert:true,savedAndReopened:true,sharedUndoRedo:true,freeDrawing:true,nodeAndWorldComments:true,boardDeletionKeepsFreeContent:true,chineseNoteAutoHeight:true,rotatedNoteHeight:true,draggedRectangle:true,negativeWorldPan:true,resizeWorldCamera:true,inactiveCanvasWorldCamera:true,undoWaitsForResponse:true,negativePanScreenX:[beforePan.x,afterPan.x],scope:'actual React, Workers and shared operations; controlled HTTP fixture',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-flow') {
       assert.equal(kind,'design')
