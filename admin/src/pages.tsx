@@ -86,7 +86,7 @@ export function AdminLayout() {
       <SidebarHeader className="p-3">
         <Link to="/" className="flex min-w-0 items-center gap-3 rounded-2xl p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm"><ShieldIcon className="size-5" /></span>
-          <span className="min-w-0"><strong className="block truncate font-heading text-lg font-semibold tracking-tight">LingxiLoop<span className="text-primary">.</span></strong><span className="block truncate text-xs text-sidebar-foreground/60">管理工作空间</span></span>
+          <span className="min-w-0"><strong className="block truncate font-heading text-lg font-semibold tracking-tight">灵犀<span className="text-primary">.</span></strong><span className="block truncate text-xs text-sidebar-foreground/60">管理工作空间</span></span>
         </Link>
       </SidebarHeader>
       <AdminNavigation />
@@ -94,7 +94,7 @@ export function AdminLayout() {
         <div className="flex items-center gap-3 border-b px-2 pb-4"><RecordAvatar record={{ id: identity.data?.id ?? 'admin', name: identity.data?.name ?? '管理员', image: identity.data?.image }} /><div className="min-w-0"><p className="truncate text-sm font-semibold">{identity.data?.name ?? '平台管理员'}</p><p className="truncate text-xs text-muted-foreground">{identity.data?.email ?? '管理工作空间'}</p></div></div>
         {!companyMode && <div className="flex items-center justify-between gap-3 rounded-xl bg-sidebar-accent/70 px-3 py-2 text-xs">
           <span className="flex min-w-0 items-center gap-2"><span className={`size-2 shrink-0 rounded-full ${health.query.isLoading ? 'bg-muted-foreground' : dependencyOk ? 'bg-primary' : 'bg-destructive'}`} /><span className="truncate">{health.query.isLoading ? '正在检查依赖' : dependencyOk ? '全部依赖正常' : '依赖存在异常'}</span></span>
-          <Badge variant="outline" className="bg-sidebar">LIVE</Badge>
+          <Badge variant="outline" className="bg-sidebar">实时</Badge>
         </div>}
         <SidebarMenu>
           <SidebarMenuItem><SidebarMenuButton asChild><a href={import.meta.env.DEV ? "http://localhost:5180" : "https://loop.lingxilearn.cn"}>返回主应用</a></SidebarMenuButton></SidebarMenuItem>
@@ -115,7 +115,7 @@ export function AdminLayout() {
           <Button variant="ghost" size="icon" onClick={() => setDark(!dark)} aria-label={dark ? '切换浅色模式' : '切换深色模式'}>{dark ? <SunIcon /> : <MoonIcon />}</Button>
         </div>
       </header>
-      <main ref={contentRef} id="admin-main" tabIndex={-1} className="admin-content"><div ref={pageRef} data-ui-page="admin"><ManagementOutlet /></div><footer className="admin-footer"><span>© {new Date().getFullYear()} LingxiLoop</span><span>管理工作空间</span></footer></main>
+      <main ref={contentRef} id="admin-main" tabIndex={-1} className="admin-content"><div ref={pageRef} data-ui-page="admin"><ManagementOutlet /></div><footer className="admin-footer"><span>© {new Date().getFullYear()} 灵犀</span><span>管理工作空间</span></footer></main>
     </SidebarInset>
   </SidebarProvider>
 }
@@ -282,7 +282,7 @@ function EmptyPanel({ message }: { message: string }) {
 }
 
 export function LoginPage() {
-  return <div className="admin-login"><aside className="admin-login-story"><Link to="/" className="flex items-center gap-3 text-xl font-semibold"><ShieldIcon />LingxiLoop.</Link><div><Badge variant="outline">管理工作空间</Badge><h1>每一份洞察，<br />都成为更好的决策。</h1><p>连接团队、学习与 AI 协作，<br />在一个清晰的工作空间里掌握全局。</p><div className="admin-login-visual" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /></div></div><p className="text-xs">面向团队的统一管理中心</p></aside><div className="admin-login-form"><AuthScreen /></div></div>
+  return <div className="admin-login"><aside className="admin-login-story"><Link to="/" className="flex items-center gap-3 text-xl font-semibold"><ShieldIcon />灵犀。</Link><div><Badge variant="outline">管理工作空间</Badge><h1>每一份洞察，<br />都成为更好的决策。</h1><p>连接团队、学习与 AI 协作，<br />在一个清晰的工作空间里掌握全局。</p><div className="admin-login-visual" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /></div></div><p className="text-xs">面向团队的统一管理中心</p></aside><div className="admin-login-form"><AuthScreen /></div></div>
 }
 
 export function ForbiddenPage() {

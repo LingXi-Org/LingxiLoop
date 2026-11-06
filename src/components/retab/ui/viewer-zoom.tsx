@@ -49,16 +49,16 @@ export function ZoomActions({
 }) {
   return (
     <>
-      <IconButton label="Zoom out" onClick={() => zoom(1 / 1.2)}>
+      <IconButton label="缩小" onClick={() => zoom(1 / 1.2)}>
         <Minus />
       </IconButton>
       <span className="text-muted-foreground w-12 text-center text-xs tabular-nums">
         {Math.round(scale * 100)}%
       </span>
-      <IconButton label="Zoom in" onClick={() => zoom(1.2)}>
+      <IconButton label="放大" onClick={() => zoom(1.2)}>
         <Plus />
       </IconButton>
-      <IconButton label="Actual size" onClick={reset}>
+      <IconButton label="实际大小" onClick={reset}>
         <Maximize />
       </IconButton>
     </>

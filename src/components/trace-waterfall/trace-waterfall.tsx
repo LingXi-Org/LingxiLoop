@@ -12,14 +12,14 @@ import { TimelineRowMetrics } from './TimelineRowMetrics'
 const ms = (value: number|null) => value === null ? '—' : `${Math.round(value).toLocaleString('zh-CN')} ms`
 const tokens = (value: number|null) => value === null ? '—' : value.toLocaleString('zh-CN')
 const labels = { running: '运行中',waiting: '等待处理',complete: '已完成',partial: '未完成',blocked: '受阻',cancelled: '已取消',error: '失败',unknown: '结果未知' }
-const kindLabels = { agent: 'Agent',llm: 'LLM',embedding: 'Embedding',tool: 'Tool' }
+const kindLabels = { agent: '智能体',llm: '大语言模型',embedding: '向量化',tool: '工具' }
 const icons = { agent: BotIcon,llm: SparklesIcon,embedding: DatabaseIcon,tool: WrenchIcon }
 const hues = { agent: 'bg-chart-1',llm: 'bg-chart-2',embedding: 'bg-chart-3',tool: 'bg-chart-4' }
 function flatten(span: TraceSpan): TraceSpan[] { return [span,...span.children.flatMap(flatten)] }
 type WorkFilter = 'all'|'model'|'tool'|'skill'|'retrieval'|'subtask'
 const workGroup = (span: TraceSpan) => span.kind === 'llm' || span.kind === 'embedding' ? 'model'
   : span.workKind ?? (span.kind === 'tool' ? 'tool' : 'agent')
-const groupLabels = { model: '模型',...workKindLabels,agent: 'Agent' }
+const groupLabels = { model: '模型',...workKindLabels,agent: '智能体' }
 function filterTree(span: TraceSpan,filter: WorkFilter): TraceSpan|null {
   if (filter === 'all' || workGroup(span) === filter) return span
   const children = span.children.flatMap(child=>{ const visible = filterTree(child,filter);return visible ? [visible] : [] })

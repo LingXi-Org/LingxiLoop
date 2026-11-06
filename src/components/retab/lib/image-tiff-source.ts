@@ -186,7 +186,7 @@ export class TiffWorkerClient {
         this.fail(
           error instanceof Error
             ? error
-            : new ImageDecodeError("Image decode failed"),
+            : new ImageDecodeError("无法读取图片内容"),
         );
         return;
       }

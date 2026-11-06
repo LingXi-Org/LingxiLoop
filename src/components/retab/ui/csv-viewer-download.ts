@@ -65,7 +65,7 @@ export function createCsvExportAction({
 }): ViewerDownloadAction {
   return {
     id: "csv-export-table",
-    label: "Export table",
+    label: "导出表格",
     fileName,
     origin: "derived",
     isDisabled,
@@ -98,7 +98,7 @@ export function csvViewerDownloadActions({
   if (resource) {
     actions.push({
       ...resource.originalDownload,
-      label: "Download original",
+      label: "下载原文件",
     });
   }
   actions.push(

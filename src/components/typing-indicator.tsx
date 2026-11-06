@@ -31,7 +31,7 @@ export function TypingIndicator({
         data-slot="typing-indicator"
         data-variant="bare"
         role="status"
-        aria-label="正在回复"
+        aria-label="助手正在输入"
         className={cn("flex items-center", className)}
         {...props}
       >
@@ -49,7 +49,7 @@ export function TypingIndicator({
     >
       <div
         role="status"
-        aria-label="正在回复"
+        aria-label="助手正在输入"
         className="flex gap-1"
       >
         {dots}

@@ -107,7 +107,7 @@ export function XlsxViewerSession({
             onZoomOut: zoomOut,
             onZoomIn: zoomIn,
             onFit: resetZoom,
-            fitLabel: "Actual size",
+            fitLabel: "实际大小",
           }}
           downloads={controlsDownloadActions}
         />
@@ -179,7 +179,7 @@ function useXlsxControlsRegistration({
         onZoomOut: zoomOut,
         onZoomIn: zoomIn,
         onFit: resetZoom,
-        fitLabel: "Actual size",
+        fitLabel: "实际大小",
       },
       downloads: controlsDownloadActions,
     }),

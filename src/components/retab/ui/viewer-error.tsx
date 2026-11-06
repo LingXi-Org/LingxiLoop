@@ -61,7 +61,7 @@ export function ViewerErrorState({
           {showRetry ? (
             <Button variant="outline" size="sm" onClick={onRetry}>
               <RotateCcw className="mr-1.5 size-4" />
-              Retry
+              重试
             </Button>
           ) : null}
           {showDownload ? (

@@ -56,7 +56,7 @@ export function XlsxViewerSheet({
       key={sheetIndex}
       rowCount={sheet?.rowCount ?? 0}
       columnCount={sheet?.columnCount ?? 0}
-      sheetName={sheet?.name ?? `Sheet ${sheetIndex + 1}`}
+      sheetName={sheet?.name ?? `工作表 ${sheetIndex + 1}`}
       getCell={getCell}
       scale={scale}
       activeCell={resolveXlsxActiveCell(activeCell, sheetIndex)}
