@@ -4,7 +4,7 @@ import {constrainVectorAngle} from '../../../../shared/artifact-vector'
 import {breakVectorTangent,deleteVectorPoint,mapEditableVector,moveVectorPart,nearestVectorSegment,parseEditableVector,pullVectorHandles,splitVectorSegment,toggleVectorSmooth,vectorControlVisible,vectorPartPoint,vectorSvgPath,vectorTabParts,type EditableVector,type VectorPart} from '../../../../shared/artifact-vector-edit'
 import type {PenPoint} from '../../../../shared/artifact-pen'
 import {useLocalDraft} from './draft-context'
-import {vectorNodePatch,vectorReadKeys,type VectorNodePatch} from './vector-node-geometry'
+import {vectorNodePatch,vectorReadKeys,vectorNodeInset,type VectorNodePatch} from './vector-node-geometry'
 import type {VectorEditBase,VectorEditDraft,VectorEditDraftStore} from './vector-edit-drafts'
 
 interface Key {key:string;shiftKey:boolean;ctrlKey:boolean;metaKey:boolean;altKey:boolean;preventDefault():void;stopPropagation():void}
@@ -27,7 +27,8 @@ interface Gesture {before:EditableVector;base:VectorEditBase;prior?:VectorEditDr
 const samePart=(a:VectorPart|undefined,b:VectorPart|undefined)=>!!a&&!!b&&a.contour===b.contour&&a.anchor===b.anchor&&a.part===b.part
 const arrows:Record<string,[number,number]>={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}
 function parsed(node:ArtifactNode,base:VectorEditBase,scale:number):EditableVector {
-  const local=node.path?parseEditableVector(node.path.d,{ox:0,oy:0,sx:base.frame.width/node.path.width,sy:base.frame.height/node.path.height},1.25/scale):null
+  const inset=vectorNodeInset(node)
+  const local=node.path?parseEditableVector(node.path.d,{ox:inset.x,oy:inset.y,sx:Math.max(0,base.frame.width-2*inset.x)/node.path.width,sy:Math.max(0,base.frame.height-2*inset.y)/node.path.height},1.25/scale):null
   const m=base.frame.matrix
   return local?mapEditableVector(local,p=>({x:m[0]*p.x+m[2]*p.y+m[4],y:m[1]*p.x+m[3]*p.y+m[5]})):{contours:[]}
 }
@@ -39,6 +40,7 @@ function parts(path:EditableVector,selection?:VectorPart):VectorPart[]{
   })})
   return list
 }
+const pathSignature=(node:ArtifactNode,base:VectorEditBase)=>JSON.stringify([node.x,node.y,node.width,node.height,node.rotation,node.flipX,node.flipY,node.path,base.frame,vectorNodeInset(node)])
 const CanvasPointEditor=forwardRef<CanvasPointHandle,Props>(function CanvasPointEditor(props,ref){
   const initial=useRef<{base:VectorEditBase;path:EditableVector}|null>(null)
   if(!initial.current){const restored=props.drafts.get(props.pageId,props.node.id),base=restored??props.capture();if(base)initial.current={base,path:restored?.path??parsed(props.node,base,props.view().scale)}}
@@ -51,10 +53,10 @@ const CanvasPointEditor=forwardRef<CanvasPointHandle,Props>(function CanvasPoint
   useLayoutEffect(()=>{const next=props.view();setView(old=>old.scale===next.scale&&old.offsetX===next.offsetX&&old.offsetY===next.offsetY?old:next)},[props.view])
   useEffect(()=>{
     const base=props.capture();if(!base)return
-    const signature=JSON.stringify([props.node.x,props.node.y,props.node.width,props.node.height,props.node.rotation,props.node.flipX,props.node.flipY,props.node.path,base.frame])
+    const signature=pathSignature(props.node,base)
     if(signature===ownSignature.current)return
-    ownSignature.current=signature
     if(active.current||props.drafts.get(props.pageId,props.node.id))return
+    ownSignature.current=signature
     const next=parsed(props.node,base,props.view().scale);pathRef.current=next;setPath(next)
     const sel=selected.current;if(sel&&!next.contours[sel.contour]?.anchors[sel.anchor])choose(undefined)
   },[props.node,props.capture,props.drafts,props.pageId,props.view])
@@ -83,8 +85,17 @@ const CanvasPointEditor=forwardRef<CanvasPointHandle,Props>(function CanvasPoint
   }
   function cancel(){
     const gesture=active.current;if(!gesture)return;active.current=null
-    pathRef.current=gesture.before;setPath(gesture.before)
-    if(gesture.prior)props.drafts.set(gesture.prior);else props.drafts.delete(props.pageId,props.node.id)
+    let next=gesture.before
+    if(gesture.prior)props.drafts.set(gesture.prior)
+    else{
+      props.drafts.delete(props.pageId,props.node.id)
+      const base=latest.current.capture(),node=base?.document.pages[props.pageId]?.nodes[props.node.id]
+      if(base&&node){
+        const signature=pathSignature(node,base)
+        if(signature!==ownSignature.current){next=parsed(node,base,latest.current.view().scale);ownSignature.current=signature}
+      }
+    }
+    pathRef.current=next;setPath(next)
   }
   function discard(){active.current=null;props.drafts.delete(props.pageId,props.node.id)}
   useEffect(()=>{

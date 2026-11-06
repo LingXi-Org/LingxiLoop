@@ -1,6 +1,40 @@
 {
-  "scope": "真实浏览器与原生操作链路，受控HTTP；双触点由浏览器协议输入，未验证真实移动设备或授权API",
+  "scope": "真实浏览器及原生操作链路，受控HTTP；不代替授权API、实体移动设备或完整视觉",
   "cases": [
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "padding-active",
+      "remotePreserved": true,
+      "recoveryContainsPointDraft": true,
+      "unmountRetained": true,
+      "conflictProtected": true,
+      "scope": "真实React、原生session及共享CAS；受控HTTP，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "padding-change",
+      "contentBoxAligned": true,
+      "paddingPreserved": true,
+      "paintedEndpointsPreserved": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "padding-rotated",
+      "contentBoxAligned": true,
+      "paddingPreserved": true,
+      "paintedEndpointsPreserved": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "padding",
+      "contentBoxAligned": true,
+      "paddingPreserved": true,
+      "paintedEndpointsPreserved": true,
+      "consoleOrPageErrors": []
+    },
     {
       "kind": "isolated-canvas-vector-edit-cas-diagnostic",
       "scenario": "parent-active",
@@ -9,6 +43,22 @@
       "unmountRetained": true,
       "conflictProtected": true,
       "scope": "真实React、原生session及共享CAS；受控HTTP，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "parent-cancel-click",
+      "cancelRebasedToPeerParent": true,
+      "unselectedPointsPreserved": true,
+      "oneNextEditSaved": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-edit-cas-diagnostic",
+      "scenario": "parent-cancel",
+      "cancelRebasedToPeerParent": true,
+      "unselectedPointsPreserved": true,
+      "oneNextEditSaved": true,
       "consoleOrPageErrors": []
     },
     {

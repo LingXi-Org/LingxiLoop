@@ -35,7 +35,7 @@
   },
   "concurrency": {
     "file": "canvas-vector-edit-cas.json",
-    "cases": 6,
+    "cases": 12,
     "passed": true
   },
   "retention": {
@@ -60,7 +60,7 @@
     "passed": true
   },
   "focusedUnits": {
-    "cases": 41,
+    "cases": 65,
     "passed": true
   },
   "regressions": {
@@ -105,9 +105,13 @@
     "父组合空闲移动后覆盖层未更新",
     "下载并重载后旧控制点草稿仍残留",
     "权限恢复后键盘焦点未恢复",
-    "第二触点落在空白处导致活动编辑器卸载"
+    "第二触点落在空白处导致活动编辑器卸载",
+    "父组合变换后取消手势，下一次编辑改动未选点",
+    "合法内边距路径进入编辑时跳位及内容盒保存映射"
   ],
   "visualQualified": false,
   "performanceQualified": false,
-  "functionalQualified": false
+  "functionalQualified": false,
+  "review": "../reviews/7f8aa377.json",
+  "reviewFixScope": "两项P2已通过新增局部回归，等待后续冻结提交独立复审"
 }

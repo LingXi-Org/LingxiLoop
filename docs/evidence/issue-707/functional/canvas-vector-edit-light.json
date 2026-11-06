@@ -1,5 +1,5 @@
 {
-  "scope": "真实 React、原生操作链路与受控 HTTP；不代替授权 API 或完整视觉验收",
+  "scope": "真实浏览器及原生操作链路，受控HTTP；不代替授权API、实体移动设备或完整视觉",
   "cases": [
     {
       "kind": "isolated-canvas-vector-edit-diagnostic",
