@@ -106,3 +106,12 @@ test('a flow-group measurement remains an atomic sibling layout and changes inva
   assert.equal(withNaturalLayout(page,sizes,document).nodes.note!.width,120)
   assert.equal(withNaturalLayout(page,sizes,{...document,seq:2}),page)
 })
+
+test('grid row offsets reach spatial bounds without mutating the authored zero positions',()=>{
+  const page=createPage('contents'),group={...createNode('group','group'),x:688,y:-778,width:480,height:3000,layout:{mode:'grid' as const,columns:2,gap:20,align:'start' as const}}
+  page.nodes={group};page.nodeOrder=['group'];const document={...createDocument('design','d','布局'),seq:1},sizes=new NaturalNodeSizes()
+  for(let i=0;i<4;i++){const node={...createNode('note',`note-${i}`),parentId:'group',x:0,y:0,width:240,height:832};page.nodes[node.id]=node;page.nodeOrder.push(node.id);sizes.set(node,{width:240,height:3128,x:i%2*250,y:Math.floor(i/2)*1510},naturalNodeStyle(page,node),1)}
+  const original=JSON.stringify(page),view=withNaturalLayout(page,sizes,document),second=elementBounds(view).find(node=>node.id==='note-2')!
+  assert.equal(view.nodes['note-2']!.y,1510);assert.equal(second.y,group.y+1510-2)
+  assert.equal(page.nodes['note-2']!.y,0);assert.equal(JSON.stringify(page),original)
+})

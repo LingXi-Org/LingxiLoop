@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import {naturalNodeStyle,layoutRevision} from './natural-layout'
+import {naturalNodeStyle,layoutRevision,isFlowChild} from './natural-layout'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
+import {readElementFrame,layoutPosition} from './rendered-geometry'
 import type { Bounds, NativeCompute } from './compute'
 import { elementBounds, expandVisibleNodes } from './visibility'
 import type {NaturalNodeSizes} from './natural-layout'
@@ -20,11 +21,18 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
       let changed=false
       for(const element of notes){
         const node=naturalSource.nodes[element.dataset.nodeId??element.dataset.nativeMeasureNode??'']
-        if(!node||node.type!=='note'||!element.getClientRects().length)continue
+        if(!node||!element.getClientRects().length)continue
+        const probing=!!element.closest('[data-natural-measure-page]')
+        if(node.type!=='note'&&(!isFlowChild(naturalSource,node)||probing))continue
         const style=getComputedStyle(element),width=Number.parseFloat(style.width),height=Number.parseFloat(style.height)
         if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)continue
+        let position:{x:number;y:number}|undefined
+        if(isFlowChild(naturalSource,node)){
+          const surface=element.closest<HTMLElement>('[data-page-id],[data-natural-measure-page]'),parentElement=element.parentElement?.closest<HTMLElement>('[data-node-id],[data-native-layout-node]'),parent=node.parentId?naturalSource.nodes[node.parentId]:undefined
+          if(surface&&parentElement&&parent){const zoom=probing?1:scale;position=layoutPosition(node,readElementFrame(surface,element,naturalSource,node,zoom),readElementFrame(surface,parentElement,naturalSource,parent,zoom))}
+        }
         const effective=naturalNodeStyle(naturalSource,node,naturalDocument),old=naturalSizes.get(node,effective,layoutRevision(node,naturalDocument))
-        if(!old||Math.abs(old.width-width)>.01||Math.abs(old.height-height)>.01){naturalSizes.set(node,{width,height},effective,layoutRevision(node,naturalDocument));changed=true}
+        if(!old||Math.abs(old.width-width)>.01||Math.abs(old.height-height)>.01||position&&(old.x===undefined||old.y===undefined||Math.abs(old.x-position.x)>.01||Math.abs(old.y-position.y)>.01)){naturalSizes.set(node,{width,height,...position},effective,layoutRevision(node,naturalDocument));changed=true}
       }
       if(changed)onNaturalLayout()
     }
@@ -32,7 +40,7 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
     for(const element of notes)observer.observe(element)
     measure()
     return()=>observer.disconnect()
-  },[naturalSource,naturalSizes,naturalDocument,naturalRevision,root,onNaturalLayout,visible])
+  },[naturalSource,naturalSizes,naturalDocument,naturalRevision,root,onNaturalLayout,visible,scale])
   useLayoutEffect(() => {
     const controller = new AbortController()
     const container = root.current

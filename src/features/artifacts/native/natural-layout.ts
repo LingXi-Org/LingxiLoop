@@ -19,6 +19,7 @@ export function naturalNodeStyle(page:ArtifactPage,node:ArtifactNode,document?:A
   return style
 }
 
+export const isFlowChild=(page:ArtifactPage,node:ArtifactNode)=>!!node.parentId&&['flex','grid'].includes(page.nodes[node.parentId]?.layout?.mode??'')
 export function hasFlowAncestor(page:ArtifactPage,node:ArtifactNode){
   const seen=new Set<string>();let parentId=node.parentId
   while(parentId&&!seen.has(parentId)){seen.add(parentId);const parent=page.nodes[parentId];if(!parent)break;if(parent.layout?.mode==='flex'||parent.layout?.mode==='grid')return true;parentId=parent.parentId}
@@ -26,7 +27,7 @@ export function hasFlowAncestor(page:ArtifactPage,node:ArtifactNode){
 }
 export const layoutRevision=(node:ArtifactNode,document?:ArtifactDocument)=>node.parentId?document?.seq??0:undefined
 
-export interface NaturalNodeSize {width:number;height:number}
+export interface NaturalNodeSize {width:number;height:number;x?:number;y?:number}
 const signature=(node:ArtifactNode,style:ArtifactStyle,layout?:number)=>JSON.stringify([node.width,node.text,node.richText,style,layout])
 
 /** Exact layout dependencies survive the reducer's whole-page structuredClone.
@@ -73,8 +74,8 @@ export function withNaturalLayout(page:ArtifactPage,sizes?:NaturalNodeSizes,docu
   if(!sizes)return page
   let changed=false
   const nodes={...page.nodes}
-  for(const id of page.nodeOrder){const node=page.nodes[id]!,size=node.type==='note'?sizes.get(node,naturalNodeStyle(page,node,document),layoutRevision(node,document)):undefined
-    if(size&&(Math.abs(size.width-node.width)>.001||Math.abs(size.height-node.height)>.001)){nodes[id]={...node,...size};changed=true}
+  for(const id of page.nodeOrder){const node=page.nodes[id]!,size=node.type==='note'||isFlowChild(page,node)?sizes.get(node,naturalNodeStyle(page,node,document),layoutRevision(node,document)):undefined
+    if(size&&(Math.abs(size.width-node.width)>.001||Math.abs(size.height-node.height)>.001||size.x!==undefined&&Math.abs(size.x-node.x)>.001||size.y!==undefined&&Math.abs(size.y-node.y)>.001)){nodes[id]={...node,...size};changed=true}
   }
   return changed?{...page,nodes}:page
 }
