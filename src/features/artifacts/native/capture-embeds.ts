@@ -10,7 +10,10 @@ async function capture(document: ArtifactDocument, pageId: string, nodeId: strin
   frame.sandbox.add('allow-scripts')
   frame.referrerPolicy = 'no-referrer'
   frame.title = '导出隔离内容'
-  frame.style.cssText = `position:fixed;left:-100000px;top:0;width:${Math.max(1, width)}px;height:${Math.max(1, height)}px;border:0;pointer-events:none`
+  frame.tabIndex=-1;frame.inert=true;frame.setAttribute('aria-hidden','true')
+  // Offscreen frames cannot advance the component runtime's animation frames.
+  // A transparent viewport frame stays opaque and never receives user input.
+  frame.style.cssText = `position:fixed;left:0;top:0;opacity:0;width:${Math.max(1, width)}px;height:${Math.max(1, height)}px;border:0;pointer-events:none`
   const grant = await http<{ url: string }>(`/artifacts/${encodeURIComponent(document.id)}/embeds/${encodeURIComponent(pageId)}/${encodeURIComponent(nodeId)}/grant`, { method: 'POST', body: JSON.stringify({ sha256: hash, nonce, pageHash }), signal })
   if (signal?.aborted) throw new DOMException('Export cancelled', 'AbortError')
   frame.src = grant.url

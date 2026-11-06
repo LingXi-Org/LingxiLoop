@@ -1,6 +1,6 @@
 {
   "scope": "仅计量辅助回归，不是产品性能样本",
-  "baseCommit": "81487bee4a97b4bc4f773978fd5c6526ae5fc55a",
+  "baseCommit": "194d46dbbfd1f1115e720a4fc87869e71450fc0d",
   "performanceSamples": 0,
   "qualified": false,
   "contracts": {
@@ -16,7 +16,7 @@
         "encoding": "identity",
         "workerTransferBytes": 1000203,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2027.1,
+        "importDurationMs": 2030.7,
         "scriptRequests": 2,
         "inflight": 0
       },
@@ -24,7 +24,7 @@
         "encoding": "gzip",
         "workerTransferBytes": 1230,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2021.2,
+        "importDurationMs": 2026.0,
         "scriptRequests": 2,
         "inflight": 0
       },
@@ -36,7 +36,7 @@
       {
         "encoding": "queued",
         "scriptRequests": 12,
-        "maxNetworkStartSkewMs": 605.0,
+        "maxNetworkStartSkewMs": 601.7,
         "scriptDecodedBytes": 240492
       },
       {
@@ -528,12 +528,21 @@
     "passed": 5
   },
   "sourceHashes": {
-    "scripts/native-artifact-benchmark.py": "ba43a34708126919b73d6b5e14df50781ed276a3a76753421647a5b2ca9813eb",
+    "scripts/native-artifact-benchmark.py": "76e1c614d823760ce86ec0601b3a0ff7a5368eeb4704d118f75743934e365070",
     "scripts/native-artifact-serve.mjs": "7deae108d95a4e4201612c2ed04c159a1b0ef6b586f950d27c50ad5b1a9d05e4",
     "scripts/native-artifact-failure.mjs": "bc8886da705f7bcb9f2b98217bedd260288626b47f6e8707306bc0d181771a81",
     "scripts/native-artifact-ci.mjs": "2779e60eaaf45a0dd010a2bfce44f51e266663e741a2ab6cfe0f0d01a39483c8",
     "scripts/native-artifact-proxy-check.mjs": "d3d25a58b13287bd357b95b362a6c70510eac890767cfb4d35a9672f976c3ae7",
     "scripts/native-artifact-export-control-check.py": "786452c7f4e0d399e9f092916c3b6182123610889e809d217fd1cfa4169d7ecc"
   },
-  "publicSourceValidation": "固定文件名后只允许单个数字行号；额外冒号/任意文字已纳入实际回归。"
+  "publicSourceValidation": "固定文件名后只允许单个数字行号；额外冒号/任意文字已纳入实际回归。",
+  "captureRegression": {
+    "result": "通过",
+    "browser": "140.0.7339.16",
+    "opaque": true,
+    "activeAbortCleaned": true,
+    "callbackErrors": 0,
+    "confirmedSetupDetaches": 1,
+    "scope": "受控HTTP夹具，不是真实性能或授权API通过"
+  }
 }

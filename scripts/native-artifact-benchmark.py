@@ -154,6 +154,7 @@ class Trace:
         self.cdp = context.new_cdp_session(page)
         self.requests, self.targets, self.errors, self.pending = {}, {}, [], {}
         self.sequence = 0
+        self.configuration_detaches = 0
         self.request_sequence = 0
         self.finished_requests = []
         self.unaccounted_script_resources = []
@@ -198,7 +199,17 @@ class Trace:
     def attach(self, parent, value):
         route = (parent + "/" if parent else "") + value["sessionId"]
         self.targets[route] = {"type": value["targetInfo"]["type"], "active": True}
-        self.configure(route)
+        try: self.configure(route)
+        except Exception as error:
+            gone = False
+            if "No session with given id" in str(error) or "No target with given id" in str(error):
+                target_id = value["targetInfo"].get("targetId")
+                if target_id:
+                    try: self.cdp.send("Target.getTargetInfo", {"targetId":target_id})
+                    except Exception as missing: gone = "No target with given id" in str(missing)
+            self.detach(parent, value)
+            if gone: self.configuration_detaches += 1
+            else: self.errors.append({"targetType": value["targetInfo"]["type"], "command": "Target.configure", "code": -1})
 
     def detach(self, parent, value):
         route = (parent + "/" if parent else "") + value["sessionId"]
@@ -1186,6 +1197,22 @@ def summarize(report, kinds, arms, diagnostic):
 
 
 def self_check():
+    # A real opaque capture can finish while CDP is configuring its target.
+    # Confirm the target is gone; a live target/configuration error still fails.
+    class TargetCatalog:
+        def __init__(self, live): self.live = live
+        def send(self, method, params):
+            assert method == 'Target.getTargetInfo' and params == {'targetId':'frame'}
+            if not self.live: raise RuntimeError('No target with given id')
+            return {'targetInfo':{'targetId':'frame'}}
+    for live in (False, True):
+        trace = object.__new__(Trace); trace.cdp = TargetCatalog(live)
+        trace.targets = {}; trace.pending = {}; trace.errors = []; trace.configuration_detaches = 0
+        def vanished(_route): raise RuntimeError('No session with given id')
+        trace.configure = vanished
+        trace.attach('', {'sessionId':'session','targetInfo':{'type':'iframe','targetId':'frame'}})
+        assert not trace.targets['session']['active'] and not trace.pending
+        assert len(trace.errors) == int(live) and trace.configuration_detaches == int(not live)
 
     # Independent-review counterexample: one observed CDP request must not
     # consume two actual Worker completions/resource timing entries.
@@ -1500,6 +1527,7 @@ def main():
                                 sample['exports'] = [measure_export(page, process, trace, arm, kind, name, host, args.export_timeout_ms, args.browser, args.fidelity) for name in FORMATS]
                             sample['phase'] = 'closeReclamation'
                             sample['reclamation'] = measure_reclamation(page, process, trace, config, kind, args, host)
+                            sample['confirmedTargetSetupDetaches'] = trace.configuration_detaches
                             sample['cdpErrors'] = [row for row in trace.errors if row.get('command') != 'HeapProfiler.collectGarbage']
                             sample['retiredRequests'] = [row['url'] for row in trace.snapshot() if arm == 'candidate' and row.get('retiredEditor')]
                             sample['failedRequests'] = failed_requests(trace.snapshot())
