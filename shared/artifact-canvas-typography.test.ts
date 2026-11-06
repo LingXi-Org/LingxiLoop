@@ -53,3 +53,12 @@ test('source legacy titles retain their defaults while explicit source text stay
   assert.equal(nodes.find(node=>node.id==='note')!.type,'note')
   assert.deepEqual(warnings,[])
 })
+
+test('explicit uniform padding remains custom even when an axis equals a source default',()=>{
+  for(const padding of [11,14]){
+    const node=createCanvasText('t','text');node.style={...node.style,padding,paddingX:padding,paddingY:padding}
+    const patch=canvasFontPatch(node,{fontSize:72})
+    assert.equal(patch.paddingX,undefined);assert.equal(patch.paddingY,undefined)
+    const changed={...node.style,...patch};assert.equal(changed.paddingX,padding);assert.equal(changed.paddingY,padding)
+  }
+})

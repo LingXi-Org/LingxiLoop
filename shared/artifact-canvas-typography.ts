@@ -13,6 +13,9 @@ export function createCanvasText(id:string,type:'text'|'note'):ArtifactNode {
 export function canvasFontPatch(node:ArtifactNode,patch:ArtifactStyle):ArtifactStyle {
   if(patch.fontSize===undefined)return patch
   const before=canvasTextMetrics(node.style.fontSize??(node.type==='note'?14:24)),after=canvasTextMetrics(patch.fontSize),result={...patch}
-  for(const key of ['lineHeight','paddingX','paddingY','letterSpacing'] as const)if(patch[key]===undefined&&(node.style[key]===undefined||Math.abs(node.style[key]!-before[key])<.00001))result[key]=after[key]
+  for(const key of ['lineHeight','paddingX','paddingY','letterSpacing'] as const){
+    if((key==='paddingX'||key==='paddingY')&&node.style.padding!==undefined)continue
+    if(patch[key]===undefined&&(node.style[key]===undefined||Math.abs(node.style[key]!-before[key])<.00001))result[key]=after[key]
+  }
   return result
 }
