@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { after, before, test } from 'node:test'
 import { Pool } from 'pg'
 import { createNode, createPage } from '../../../shared/artifact-document.js'
+import { duplicatePages } from '../../../shared/artifact-editor-actions.js'
 import { type ArtifactOperation, prepareBatch } from '../../../shared/artifact-operations.js'
 import { withTransaction } from '../db/transaction.js'
 import { artifactKind } from '../modules/artifacts/kinds.js'
@@ -415,4 +416,22 @@ test('unknown schema remains read-only and no operation can silently downgrade i
   await db.query('UPDATE artifact_document_state SET schema_version=2 WHERE artifact_id=$1', [item.id])
   await assert.rejects(readNativeDocument(db, item.id), { code: 'unsupported_schema' })
   await assert.rejects(apply(item.id, prepareBatch(current.document, [{ type: 'document.patch', patch: { title: 'Wrong version' } }])), { code: 'unsupported_schema' })
+})
+
+
+test('设计播放属性真实持久化、复制与撤销重做，并保留历史页哈希', async () => {
+  const item=await artifact('design'),initial=await snapshot(item.id),before=JSON.stringify(initial.document)
+  const edited=await apply(item.id,prepareBatch(initial.document,[{type:'page.patch',pageId:'page-1',patch:{interactive:true,frameless:true}}],'playback-flags'))
+  const reopened=await snapshot(item.id)
+  assert.equal(reopened.document.pages['page-1'].interactive,true);assert.equal(reopened.document.pages['page-1'].frameless,true)
+  assert.notEqual(reopened.pageVersions['page-1'],initial.pageVersions['page-1']);assert.equal(JSON.stringify(initial.document),before)
+  const pinned=await readNativePageSnapshot(db,item.id,'page-1',initial.pageVersions['page-1'],initial.document.seq)
+  assert.equal(pinned?.page.interactive,undefined);assert.equal(pinned?.page.frameless,undefined)
+  const undone=await apply(item.id,{operationId:'undo-playback-flags',kind:'undo',targetOperationId:'playback-flags',expectedHistoryVersion:edited.history.version})
+  assert.equal(undone.document.pages['page-1'].interactive,undefined);assert.equal(undone.document.pages['page-1'].frameless,undefined)
+  const redone=await apply(item.id,{operationId:'redo-playback-flags',kind:'redo',targetOperationId:'playback-flags',expectedHistoryVersion:undone.history.version})
+  assert.equal(redone.document.pages['page-1'].interactive,true);assert.equal(redone.document.pages['page-1'].frameless,true)
+  let next=0;const copied=await apply(item.id,prepareBatch(redone.document,duplicatePages(redone.document,['page-1'],()=>`playback-copy-${++next}`),'copy-playback-board'))
+  const duplicate=copied.document.pages[copied.document.pageOrder[1]]
+  assert.equal(duplicate.interactive,true);assert.equal(duplicate.frameless,true)
 })

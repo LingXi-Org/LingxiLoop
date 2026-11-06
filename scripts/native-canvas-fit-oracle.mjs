@@ -21,7 +21,7 @@ const sourceFit=Function('e','r',source.slice(start,end)+';return _')({viewportS
 phase='数学对照'
 for(const sample of golden.cases){const expected=sourceFit(sample.bounds,{w:sample.width,h:sample.height,top:golden.constants.viewportTop});assert.deepEqual(fitDesignCamera(sample.boards,sample.annotations,sample.width,sample.height),expected);assert.deepEqual(expected,sample.result)}
 await mkdir(output,{recursive:true})
-const report={sourceCommit:golden.sourceCommit,mathCases:golden.cases.length,mathPassed:true,runtime:[],boardPreview:[],scope:'固定源码纯数学和可选参考运行，不替代完整视觉、授权服务或性能门槛'}
+const report={sourceCommit:golden.sourceCommit,mathCases:golden.cases.length,mathPassed:true,runtime:[],boardPreview:[],playMenu:[],scope:'固定源码纯数学和可选参考运行，不替代完整视觉、授权服务或性能门槛'}
 if(args.capture==='true'){
   phase='参考资源校验'
   const inventory=JSON.parse(await readFile(new URL('../docs/evidence/issue-707/source-inventory.json',import.meta.url),'utf8'))
@@ -50,6 +50,14 @@ if(args.capture==='true'){
       await page.mouse.dblclick(at.x,at.y);const editor=page.locator('[data-mega-chrome="pen-anchors"]');await editor.waitFor({state:'attached'})
       const image=`design-fit-${width}-${height}-${theme}.png`;await page.screenshot({path:join(output,image)})
       report.runtime.push({width,height,theme,image,anchors:await editor.locator('[data-pen-part^="a"]').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{id:e.dataset.penPart,x:b.x+b.width/2,y:b.y+b.height/2}})),boards:await page.locator('[data-mega-artboard]').evaluateAll(es=>es.map(e=>({id:e.getAttribute('data-mega-artboard'),rect:e.getBoundingClientRect().toJSON()}))),controls:await page.locator('button,[role=button]').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>{const b=e.getBoundingClientRect(),s=getComputedStyle(e);return{label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent,rect:b.toJSON(),fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,lineHeight:s.lineHeight,padding:s.padding,border:s.border,background:s.background,color:s.color,shadow:s.boxShadow,radius:s.borderRadius}}))})
+      if(args['play-menu']==='true'){
+        await page.getByRole('button',{name:'Play',exact:true}).click()
+        const menu=page.getByRole('menu');await menu.waitFor();const snapshot=await menu.evaluate(e=>{const describe=e=>{const s=getComputedStyle(e);return{rect:e.getBoundingClientRect().toJSON(),fontSize:s.fontSize,fontWeight:s.fontWeight,lineHeight:s.lineHeight,color:s.color,padding:s.padding,radius:s.borderRadius,border:s.border,shadow:s.boxShadow,background:s.backgroundColor}};return{...describe(e),heading:describe(e.querySelector('[role=group]>div')),items:[...e.querySelectorAll('[role=menuitem]')].map(item=>({label:item.textContent,...describe(item)}))}})
+        await page.screenshot({path:join(output,`play-menu-${width}-${height}-${theme}.png`)})
+        await page.getByRole('menuitem',{name:'Page 2',exact:true}).click();await page.getByRole('button',{name:'Back to canvas',exact:true}).waitFor();assert.equal(await page.getByRole('radio').count(),2)
+        await page.getByRole('button',{name:'Back to canvas',exact:true}).click();await page.getByRole('button',{name:'Play',exact:true}).waitFor()
+        report.playMenu.push({width,height,theme,snapshot,staticSelectionOpensBoardPreview:true})
+      }
       if(args['board-preview']==='true'){
         const exportButton=page.getByRole('button',{name:'Export artboard Page 1',exact:true})
         if(width===390)await exportButton.press('Enter');else await exportButton.click()

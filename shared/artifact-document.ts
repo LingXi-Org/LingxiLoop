@@ -141,6 +141,7 @@ export const artifactPageSchema = z.object({
   x: finite, y: finite, width: positive, height: positive,
   sizing: z.enum(['fixed', 'flow']).optional(), paper: z.enum(['A4', 'Letter', 'custom']).optional(),
   section: z.string().max(200).optional(),
+  interactive: z.boolean().optional(), frameless: z.boolean().optional(),
   canvasPageId: artifactIdSchema.optional(),
   guides: z.array(z.object({ axis: z.enum(['x', 'y']), position: finite }).strict()).max(100).optional(),
   layoutGuides: z.array(z.object({ kind: z.enum(['columns', 'rows', 'grid']), count: z.number().int().min(1).max(1000), size: positive, gutter: positive, margin: positive, color, hidden: z.boolean().optional() }).strict()).max(6).optional(),

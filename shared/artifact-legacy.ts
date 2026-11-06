@@ -164,6 +164,8 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       page.x = finite(board.x, (ordinal % 4) * 1360); page.y = finite(board.y, Math.floor(ordinal / 4) * 800)
       page.width = dimension(board.w ?? board.width, 1280); page.height = dimension(board.h ?? board.height, 720)
       if (typeof board.title === 'string') page.title = board.title
+      if (typeof board.is_interactive === 'boolean') page.interactive = board.is_interactive
+      if (typeof board.frameless === 'boolean') page.frameless = board.frameless
       if (board.print === 'flow' || board.print === 'fixed') page.sizing = board.print
       if (board.paper === 'a4') page.paper = 'A4'
       else if (board.paper === 'letter') page.paper = 'Letter'

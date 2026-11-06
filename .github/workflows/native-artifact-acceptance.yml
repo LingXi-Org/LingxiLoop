@@ -69,6 +69,12 @@ jobs:
           path: baseline
           ref: ${{ inputs.profile == 'fidelity' && '72162f582fe49e9cbdb03f760e29e3683f9c5c99' || 'd004312841026a4d90dfbd9e8292a55cc29a2e95' }}
           persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          repository: jimliu/baoyu-design
+          ref: 016b39d7fdcc30bfacee31ea5541498ac53921c6
+          path: reference
+          persist-credentials: false
       - uses: actions/setup-node@v5
         with: { node-version: '22' }
       - name: Configure private acceptance directory
@@ -128,11 +134,13 @@ jobs:
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode="$task_editor" --checks=asset-reads --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-asset-reads-$task_editor"
           done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-export"
+          node --import tsx scripts/native-canvas-fit-oracle.mjs --reference-root="${{ github.workspace }}/reference" --capture=true --play-menu=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-reference-geometry"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-play-menu --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-play-menu"
           for task_size in 1920x1200 1440x1000 768x1024 390x844; do
             task_width=${task_size%x*}
             task_height=${task_size#*x}
             for task_theme in light dark; do
-              node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true --source-toolbar=true --width="$task_width" --height="$task_height" --canvas-theme="$task_theme" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-$task_size-$task_theme"
+              node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true --source-toolbar=true --source-runtime="$RUNNER_TEMP/native-reference-geometry/results.json" --width="$task_width" --height="$task_height" --canvas-theme="$task_theme" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-$task_size-$task_theme"
             done
           done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=viewport-loading --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-viewport-loading"
@@ -187,6 +195,19 @@ jobs:
           name: native-artifact-${{ inputs.phase }}-${{ github.sha }}
           path: native-artifact-results/
           if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-editor-reference-geometry-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/native-reference-geometry/*.json
+            ${{ runner.temp }}/native-reference-geometry/*.png
+            ${{ runner.temp }}/native-fit-*/*.json
+            ${{ runner.temp }}/native-fit-*/*.png
+            ${{ runner.temp }}/native-play-menu/*.json
+            ${{ runner.temp }}/native-play-menu/*.png
+          if-no-files-found: ignore
           retention-days: 7
       - name: Remove ephemeral services and private login state
         if: always()

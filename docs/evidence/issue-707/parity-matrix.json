@@ -9104,6 +9104,51 @@
         "receipt": null,
         "scope": "待逐项执行并登记"
       }
+    },
+    {
+      "id": "D23-design",
+      "editor": "design",
+      "control": "播放画板菜单",
+      "trigger": "播放→选择交互原型或静态画板→返回",
+      "states": [
+        "静态画板",
+        "交互原型",
+        "无框排除",
+        "键盘进入",
+        "全窗口预览",
+        "返回焦点"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "lookup": "groupNavigableArtboards / Static artboards",
+        "offsetUnit": "UTF-16 code units",
+        "matches": [
+          {
+            "start": 5393614,
+            "end": 5393979,
+            "owner": {
+              "name": "IU：阅读顺序与分组",
+              "start": 5393614,
+              "end": 5393979
+            }
+          }
+        ],
+        "reachability": "独立参考八种容器与主题实际点击播放菜单，选择静态项进入全窗口预览；另探测原型分组及无框排除"
+      },
+      "implementation": "src/features/artifacts/native/canvas-playback.ts",
+      "screenshots": {
+        "reference": "visual/play-menu/reference/design-1440-1000-light.png",
+        "native": "visual/play-menu/native/design-1440-1000-light.png",
+        "matchedStateVerified": false
+      },
+      "result": "分组、局部交互与几何通过，完整状态及像素验收待完成",
+      "visualQualified": false,
+      "functionalQualified": false,
+      "testEvidence": {
+        "receipt": "functional/design-play-menu.json",
+        "scope": "不代表真实脚本交互、全部原型状态和完整视觉通过"
+      }
     }
   ],
   "registeredReplacements": [

@@ -27,6 +27,8 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
+const supportedChecks = ['canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
 const mode = options.mode ?? 'both'
@@ -76,10 +78,12 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
+  const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
+  if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
-  if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-board-preview','canvas-board-export','canvas-board-preview-load'].includes(options.checks)){
+  if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-board-preview','canvas-board-export','canvas-board-preview-load','canvas-play-menu'].includes(options.checks)){
     const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name==='open-enter').added[0]
     const node=canvasPenNode('editable-path',{x:2497.1,y:-1360.9,w:reference.w,h:reference.h,d:reference.d})
     document=applyOperations(document,prepareBatch(document,[...createCanvasContents(document,canvasPages(document)[0].id,'canvas-vector-body'),{type:'node.insert',pageId:'canvas-vector-body',node:{...node,scope:'canvas'}}])).document
@@ -382,6 +386,20 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.mouse.click(600,300);await page.keyboard.press('Escape');assert.equal(document.seq,0);assert.deepEqual(errors,[])
       return{kind:'isolated-canvas-vector-loading-diagnostic',lazyBeforeSelection:true,chineseLoadFailure:true,editorRetained:true,noDocumentWrites:true,reopenedToolRecovered:true,consoleOrPageErrors:errors}
     }
+    if(options.checks==='canvas-play-menu'){
+      const before=JSON.stringify(document),board=page.locator('[data-artboard-id="page-1"]'),bounds=await board.boundingBox();assert.ok(bounds)
+      const play=page.getByLabel('播放',{exact:true});await play.click();const menu=page.getByRole('group',{name:'播放选项',exact:true});await menu.waitFor();assert.equal(await menu.getByRole('button').count(),3);assert.equal(await menu.getByRole('group',{name:'静态画板',exact:true}).count(),1);assert.equal(await page.locator('.native-presenting').count(),0,'设计播放先打开画板菜单')
+      const source=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-playback.json'),'utf8')),sample=(cameraReference.playMenu??source.runtime).find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
+      const metrics=await menu.evaluate(e=>({rect:e.getBoundingClientRect().toJSON(),heading:e.querySelector('.native-play-menu-heading').getBoundingClientRect().toJSON(),items:[...e.querySelectorAll('button')].map(item=>({label:item.textContent,rect:item.getBoundingClientRect().toJSON()}))}));await writeFile(join(output,'play-menu-metrics.json'),JSON.stringify(metrics,null,2));assert.ok(sample)
+      for(const [actual,expected]of[[metrics.rect,sample.snapshot.rect],[metrics.heading,sample.snapshot.heading.rect],...metrics.items.map((item,i)=>[item.rect,sample.snapshot.items[i].rect])])for(const key of ['x','y','width','height'])assert.ok(Math.abs(actual[key]-expected[key])<=1,`播放菜单${key}应符合固定源码：原生${actual[key]}，参考${expected[key]}`)
+      await page.screenshot({path:join(output,`design-play-menu-${options['canvas-theme']??'light'}.png`)})
+      await menu.getByRole('button',{name:'Page 2',exact:true}).click();const preview=page.getByRole('region',{name:'画板全窗口预览',exact:true});await preview.waitFor();await preview.getByText('LingxiLoop 2',{exact:true}).waitFor();assert.equal(await preview.getByRole('radio').count(),2);await page.keyboard.press('Escape');await preview.waitFor({state:'detached'});assert.equal(await play.evaluate(e=>e===document.activeElement),true,'退出菜单打开的预览应回到播放入口')
+      const after=await board.boundingBox();for(const key of ['x','y','width','height'])assert.ok(Math.abs(bounds[key]-after[key])<=1);assert.equal(JSON.stringify(document),before);assert.equal(receipts.length,0)
+      document=applyOperations(document,prepareBatch(document,[{type:'page.patch',pageId:'page-1',patch:{interactive:true}},{type:'page.patch',pageId:'page-3',patch:{frameless:true}}])).document
+      await play.focus();await page.keyboard.press('Enter');await menu.waitFor();await menu.getByRole('group',{name:'交互原型',exact:true}).waitFor();assert.equal(await menu.getByRole('button').count(),2);assert.equal(await menu.getByRole('group',{name:'交互原型',exact:true}).getByRole('button',{name:'Page 1',exact:true}).count(),1);assert.equal(await menu.getByRole('group',{name:'静态画板',exact:true}).getByRole('button',{name:'Page 2',exact:true}).count(),1)
+      await page.keyboard.press('Home');assert.equal(await page.evaluate(()=>document.activeElement?.textContent),'Page 1');await page.keyboard.press('Enter');await preview.waitFor();await preview.getByText('LingxiLoop 1',{exact:true}).waitFor();await preview.getByRole('button',{name:'返回画布',exact:true}).click();assert.equal(await play.evaluate(e=>e===document.activeElement),true);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-design-play-menu-diagnostic',staticAndPrototypeGroups:true,framelessExcluded:true,selectionOpensFullWindowPreview:true,keyboardNavigation:true,backAndEscapeRestoreCameraAndPlayFocus:true,noDocumentWrites:true,consoleOrPageErrors:errors}
+    }
     if(options.checks==='asset-reads'){
       await page.locator('[data-page-id=page-1] [data-node-type=image] [aria-busy=true]').waitFor();await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.waitForTimeout(100)
       const during=physicalImageReads.length;holdImageReads=false;releaseImageReads();await ready(1);assert.equal(during,1,'同一编辑器的主图与缩略图应只发出一个正在进行的同图请求');assert.equal(receipts.length,0);assert.deepEqual(errors,[])
@@ -673,19 +691,19 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         const geometry={controls:await page.locator('.native-toolbar button,.native-toolbar summary,.native-board-label').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>{const b=e.getBoundingClientRect(),s=getComputedStyle(e);return{label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent,rect:b.toJSON(),font:s.font,padding:s.padding,border:s.border,background:s.background,color:s.color,shadow:s.boxShadow,radius:s.borderRadius}})),anchors:await editor.locator('[data-vector-part^="a:"]').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{id:e.dataset.vectorPart,x:b.x+b.width/2,y:b.y+b.height/2}})),boards:await page.locator('[data-artboard-id]').evaluateAll(es=>es.map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})))}
         await writeFile(join(output,'matched-geometry.json'),JSON.stringify(geometry,null,2)+'\n')
         if(options['source-toolbar']==='true'){
-          const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8')).runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
+          const reference=cameraReference.runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
           assert.ok(reference,'源码工具栏尺寸与主题样本必须存在')
           const find=(rows,label)=>rows.find(row=>row.label===label),originalPage=reference.controls.find(row=>row.label.endsWith(', pages')),nativePage=find(geometry.controls,'页面菜单'),localizedWidth=nativePage.rect.width-originalPage.rect.width
-          const pairs=[['选择 (V)','Select'],['手型工具 (H)','Hand'],['文本','Text'],['添加画板','Artboard'],['便签 (N)','Note'],['铅笔','Pencil'],['绘图工具','More drawing tools'],['矩形工具','Rectangle'],['插入图形','More shapes'],['导出格式','Export'],['版本历史','Version history'],['评论','Comments'],['评论选项','Comment options'],['放映','Play'],['显示属性','Properties'],['画布缩放',reference.controls.find(row=>row.label.endsWith(', Zoom')).label]]
+          const pairs=[['选择 (V)','Select'],['手型工具 (H)','Hand'],['文本','Text'],['添加画板','Artboard'],['便签 (N)','Note'],['铅笔','Pencil'],['绘图工具','More drawing tools'],['矩形工具','Rectangle'],['插入图形','More shapes'],['导出格式','Export'],['版本历史','Version history'],['评论','Comments'],['评论选项','Comment options'],['播放','Play'],['显示属性','Properties'],['画布缩放',reference.controls.find(row=>row.label.endsWith(', Zoom')).label]]
           for(const [nativeLabel,sourceLabel]of pairs){
             const actual=find(geometry.controls,nativeLabel),expected=find(reference.controls,sourceLabel);assert.ok(actual&&expected,`${nativeLabel}必须可见`)
             const translation=pairs.findIndex(pair=>pair[0]===nativeLabel)<9?localizedWidth:sourceLabel==='Export'||sourceLabel==='Version history'?26:0
-            for(const key of ['x','y','width','height'])assert.ok(Math.abs(actual.rect[key]-expected.rect[key]-(key==='x'?translation:0))<=1,`${nativeLabel}的${key}须与源码相差1px以内（登记中文页名宽度和已删除分享入口的正常重排）`)
+            for(const key of ['x','y','width','height'])assert.ok(Math.abs(actual.rect[key]-expected.rect[key]-(key==='x'?translation:0))<=1,`${nativeLabel}的${key}须与同环境源码相差1px以内；原生${actual.rect[key]}，参考${expected.rect[key]}，登记重排${key==='x'?translation:0}`)
           }
         }
 
         if(options['source-camera']==='true'){
-          const sample=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8')).runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
+          const sample=cameraReference.runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
           assert.ok(sample)
           assert.ok(geometry.anchors.every((point,i)=>Math.hypot(point.x-sample.anchors[i].x,point.y-sample.anchors[i].y)<=1),'the same source document must place each control point within one CSS pixel')
           assert.ok(geometry.boards.every((board,i)=>['x','y','width','height'].every(key=>Math.abs(board.rect[key]-sample.boards[i].rect[key])<=1)),'fitted artboards must match source position and size within one CSS pixel')
@@ -1144,7 +1162,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       return {kind:'isolated-menu-resize-diagnostic',mode:kind,windowAndContainerResize:true,scope:'real native popover and editor container'}
     }
     if(options.checks==='narrow') {
-      await page.setViewportSize({width:390,height:844});await ready(1);await page.waitForTimeout(150)
+      await page.setViewportSize({width:390,height:844});await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]')?.clientWidth===390);if(kind==='slides')await ready(1);await page.waitForTimeout(150)
       const islands=await page.locator('.native-toolbar-island').evaluateAll(nodes=>nodes.map(e=>e.getBoundingClientRect().toJSON()))
       assert.ok(Math.abs(islands[0].top-islands[1].top)<=1,'narrow toolbars must stay on the same row')
       if(kind==='slides') {
@@ -1657,21 +1675,21 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if (options.checks === 'interactions') {
       const waitSaved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
-      const before=document.pages['page-1'].nodeOrder.length
+      const before=artifactPageIds(document).reduce((count,id)=>count+document.pages[id].nodeOrder.length,0),artboardBeforeText=pageHash(document.pages['page-1'])
       await page.getByRole('button',{name:'文本',exact:true}).click()
       const box=await page.locator('[data-page-id="page-1"] .native-page-scaled').boundingBox();assert.ok(box)
       const scale=box.width/document.pages['page-1'].width
       await page.mouse.click(box.x+120*scale,box.y+820*scale)
-      const input=page.locator('[data-native-text-editor]');await input.waitFor();await input.fill('Native action regression');await input.press('Control+s');await waitSaved();await input.press('Escape')
-      assert.equal(document.pages['page-1'].nodeOrder.length,before+1)
-      assert.ok(Object.values(document.pages['page-1'].nodes).some(n=>n.text==='Native action regression'))
+      const input=page.locator('[data-native-text-editor]');await input.waitFor();await input.fill('原生编辑操作回归');await input.press('Control+s');await waitSaved();await input.press('Escape')
+      assert.equal(artifactPageIds(document).reduce((count,id)=>count+document.pages[id].nodeOrder.length,0),before+1)
+      const textPage=kind==='design'?document.pages[document.canvasPages[0].contentId]:document.pages['page-1'];assert.ok(Object.values(textPage.nodes).some(n=>n.text==='原生编辑操作回归'));if(kind==='design')assert.equal(pageHash(document.pages['page-1']),artboardBeforeText,'设计文字属于独立画布，不改写原画板')
       const shape=page.locator('[data-node-id="page-1-shape"]');await shape.click()
       await page.locator('.native-property-disclosure>summary').filter({hasText:'效果'}).click()
       await page.locator('.native-inspector-section').filter({has:page.locator('summary',{hasText:'渐变'})}).locator('summary').click()
       await page.getByLabel('填充类型',{exact:true}).selectOption('linear');await waitSaved()
       assert.equal(document.pages['page-1'].nodes['page-1-shape'].style.gradient.type,'linear')
       const y=document.pages['page-1'].nodes['page-1-shape'].y
-      await page.getByLabel('历史记录',{exact:true}).click();await page.keyboard.press('ArrowDown');await page.keyboard.press('ArrowDown');await page.keyboard.press('Escape')
+      await page.getByLabel('版本历史',{exact:true}).click();await page.keyboard.press('ArrowDown');await page.keyboard.press('ArrowDown');await page.keyboard.press('Escape')
       assert.equal(document.pages['page-1'].nodes['page-1-shape'].y,y,'menu navigation must not move an object')
       const image=page.locator('[data-node-id="page-1-image"]');await image.dblclick()
       const handle=page.getByLabel('裁剪右下角',{exact:true});await handle.waitFor();const edge=await handle.boundingBox();assert.ok(edge)
@@ -1680,16 +1698,17 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.ok(document.pages['page-1'].nodes['page-1-image'].crop.width<1)
       await image.dblclick();assert.equal(await image.locator('img').evaluate(e=>e.style.width),'100%','reopened crop must show the full source image')
       await page.getByRole('button',{name:'取消裁剪',exact:true}).click()
+      if(kind==='design'){await page.getByLabel('播放',{exact:true}).click();await page.getByRole('group',{name:'播放选项',exact:true}).getByRole('button',{name:document.pages['page-2'].title,exact:true}).click();const preview=page.getByRole('region',{name:'画板全窗口预览',exact:true});await preview.waitFor();await preview.getByRole('button',{name:'返回画布',exact:true}).click()}else{
       await page.getByRole('button',{name:'放映',exact:true}).click()
       await page.getByRole('button',{name:'下一页',exact:true}).focus();await page.keyboard.press('ArrowRight')
       await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-2')
       await page.getByRole('button',{name:'退出放映',exact:true}).focus();await page.keyboard.press('Escape')
-      assert.equal(await page.locator('.native-presenting').count(),0);await select(1)
+      assert.equal(await page.locator('.native-presenting').count(),0)}await select(1)
       let drawing=false,layouts=false,multiplePages=false
       if(kind==='design') {
-        await page.getByRole('button',{name:'铅笔',exact:true}).click()
+        await page.getByRole('button',{name:'铅笔',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]')?.dataset.penReady==='true')
         await page.mouse.move(box.x+800*scale,box.y+820*scale);await page.mouse.down();await page.mouse.move(box.x+900*scale,box.y+880*scale,{steps:12});await page.mouse.up();await waitSaved()
-        const stroke=Object.values(document.pages['page-1'].nodes).find(n=>n.type==='drawing');assert.ok(stroke);assert.ok(stroke.points.length>2);drawing=true
+        const stroke=Object.values(document.pages[document.canvasPages[0].contentId].nodes).find(n=>n.type==='drawing');assert.ok(stroke);assert.match(stroke.path?.d??'',/^M.+[LC]/);assert.equal(stroke.scope,'canvas');drawing=true
       } else {
         await page.getByRole('button',{name:/^添加页面/}).click();await page.getByRole('button',{name:'标题与正文',exact:true}).click();await waitSaved()
         const created=document.pages[document.pageOrder[1]];assert.equal(created.nodeOrder.length,2);layouts=true
@@ -1700,7 +1719,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       }
       assert.deepEqual(errors,[])
       await page.screenshot({path:join(output,`${kind}-interactions.png`)})
-      return {kind:'isolated-native-editor-interaction-diagnostic',mode:kind,textInsertion:true,gradientSaved:true,menuKeysDoNotNudge:true,cropReopensFullSource:true,presentationKeysFromControls:true,drawing,layouts,multiplePages,scope:'controlled HTTP shared reducer fixture, not authenticated product integration',consoleOrPageErrors:errors}
+      return {kind:'isolated-native-editor-interaction-diagnostic',mode:kind,textInsertion:true,gradientSaved:true,menuKeysDoNotNudge:true,cropReopensFullSource:true,presentationKeysFromControls:kind==='slides',designPlayMenuOpensPreview:kind==='design',drawing,layouts,multiplePages,scope:'controlled HTTP shared reducer fixture, not authenticated product integration',consoleOrPageErrors:errors}
     }
     if (options.checks === 'cas') {
       const table = editorCase === 'table', nodeId = table ? 'page-1-table' : 'page-1-heading'

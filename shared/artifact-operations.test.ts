@@ -275,3 +275,13 @@ test('theme style helpers reject executable token strings and unresolved aliases
   assert.equal(artifactPageBackground(before.pages.first!, before), '#ffffff')
   assert.equal(artifactResolvedStyle(createNode('shape', 'shape').style, before).fill, '#d6e6ff')
 })
+
+test('设计播放属性经保存重开、字段版本和共享撤销重做保留，旧快照不变',()=>{
+  let document=createDocument('design','playback');const page=createPage('board','画板');document.pages[page.id]=page;document.pageOrder=[page.id]
+  const before=JSON.stringify(document),batch=prepareBatch(document,[{type:'page.patch',pageId:page.id,patch:{interactive:true,frameless:true}}]),applied=applyOperations(document,batch)
+  const reopened=validateArtifactDocument(JSON.parse(JSON.stringify(applied.document)))
+  assert.equal(reopened.pages.board!.interactive,true);assert.equal(reopened.pages.board!.frameless,true);assert.equal(JSON.stringify(document),before)
+  for(const field of ['interactive','frameless']){assert.equal(batch.expectedVersions[`page/board/field/${field}`],0);assert.equal(reopened.versions[`page/board/field/${field}`],reopened.seq)}
+  const undo=applyOperations(reopened,prepareBatch(reopened,applied.inverse));assert.equal(undo.document.pages.board!.interactive,undefined);assert.equal(undo.document.pages.board!.frameless,undefined)
+  document=applyOperations(undo.document,prepareBatch(undo.document,undo.inverse)).document;assert.equal(document.pages.board!.interactive,true);assert.equal(document.pages.board!.frameless,true)
+})

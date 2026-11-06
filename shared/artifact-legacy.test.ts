@@ -159,3 +159,13 @@ it('imported Chinese sticky backgrounds include automatic wrapping and explicit 
   assert.equal(body.nodes.lines!.height,81)
   assert.equal(body.nodes.wrapped!.text,text)
 })
+
+it('设计播放元数据保留原型和无框标记，旧文件默认静态且原始文件不变',()=>{
+  const files={'project/canvas.json':file(JSON.stringify({v:3,order:['原型.dc.html','无框.dc.html','静态.dc.html'],boards:{'原型.dc.html':{is_interactive:true},'无框.dc.html':{frameless:true},'静态.dc.html':{}}})),...Object.fromEntries(['原型','无框','静态'].map(name=>[`project/${name}.dc.html`,file('<p>保留内容</p>')]))}
+  const before=JSON.stringify(files),result=convertLegacyArtifact({id:'playback',kind:'design',title:'播放',files}).document
+  assert.equal(result.pages[result.pageOrder[0]!]!.interactive,true)
+  assert.equal(result.pages[result.pageOrder[1]!]!.frameless,true)
+  assert.equal(result.pages[result.pageOrder[2]!]!.interactive,undefined)
+  assert.equal(result.pages[result.pageOrder[2]!]!.frameless,undefined)
+  assert.equal(JSON.stringify(files),before)
+})
