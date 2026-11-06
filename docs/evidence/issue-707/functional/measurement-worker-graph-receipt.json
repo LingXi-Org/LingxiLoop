@@ -1,0 +1,33 @@
+{
+  "scope": "仅计量工具回归，无真实性能样本",
+  "review": "../reviews/75f5b589.json",
+  "regressionBeforeFix": "A网络/创建1000/1260，B1264/1310，RT1264/1314，精确网络优先可交换首屏字节，原算法缺失和歧义均0；新完整候选图拒绝双解",
+  "changes": [
+    "带Worker创建时钟的同资源连通候选分量整体处理，不先用精确时钟删除冲突边",
+    "仅在存在完整且唯一的一对一对应时补齐字节；增广路径求一组完整匹配，再检测交替环，零解或多解均拒绝",
+    "原无Worker创建通道的网络时钟策略保持原有语义",
+    "原始启动顺序创建相同URL模块Worker的唯一对应能够通过，两次实际wire bytes合计5522",
+    "实际复现Chrome退出后临时profile清理ENOTEMPTY；只对该错误有界重试，持久或其他错误继续失败"
+  ],
+  "checks": {
+    "smallGraphOracle": {
+      "graphs": 530,
+      "method": "独立枚举1/2/3阶全部二分图及其所有排列，与唯一匹配算法比较",
+      "passed": true
+    },
+    "byteSwapCounterexample": "拒绝，不把全量总数正确当作单请求正确",
+    "sequentialUnique": "通过",
+    "raw140": "measurement-worker-graph-140.json",
+    "raw154": "measurement-worker-graph-154.json",
+    "originalNetworkCases": {
+      "cases": 6,
+      "passed": true
+    },
+    "realProcessPss": "通过",
+    "cleanupFailureGuards": "临时ENOTEMPTY恢复；持续ENOTEMPTY和EACCES仍失败",
+    "pythonSelfCheck": "通过"
+  },
+  "performanceSamples": 0,
+  "qualified": false,
+  "independentReview": "待冻结后只读复审"
+}

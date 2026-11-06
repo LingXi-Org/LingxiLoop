@@ -8,6 +8,8 @@ are written to the public report. --self-check exercises only pure data helpers.
 """
 import argparse
 import base64
+from collections import deque
+import errno
 import hashlib
 import json
 import math
@@ -131,6 +133,44 @@ def resource_key(raw):
     return hashlib.sha256(urlsplit(raw)._replace(fragment='').geturl().encode()).hexdigest()
 
 
+def unique_perfect_pairs(graph):
+    """Return the sole complete bipartite assignment, or refuse zero/many solutions."""
+    rights = {right for choices in graph.values() for right in choices}
+    if len(rights) != len(graph): return None
+    matched = {}
+    for initial in graph:
+        queue, back, end = deque([initial]), {initial:None}, None
+        while queue and end is None:
+            current = queue.popleft()
+            for right in graph[current]:
+                if right not in matched:
+                    end = (current, right)
+                    break
+                following = matched[right]
+                if following not in back:
+                    back[following] = (current, right)
+                    queue.append(following)
+        if end is None: return None
+        while end is not None:
+            current, right = end
+            matched[right] = current
+            end = back[current]
+    # A second perfect assignment exists exactly when an alternating cycle
+    # exists. Topological elimination detects it without recursive searches.
+    outgoing = {current:{matched[right] for right in choices if matched[right] != current} for current,choices in graph.items()}
+    degree = dict.fromkeys(graph, 0)
+    for choices in outgoing.values():
+        for current in choices: degree[current] += 1
+    queue = deque(current for current,count in degree.items() if count == 0)
+    removed = 0
+    while queue:
+        current = queue.popleft(); removed += 1
+        for following in outgoing[current]:
+            degree[following] -= 1
+            if degree[following] == 0: queue.append(following)
+    return [(current,right) for right,current in matched.items()] if removed == len(graph) else None
+
+
 def pair_observations(left, right, playwright_start=False, worker_creation=False):
     """One-to-one time/resource matches. Ambiguous observations fail closed."""
     remaining_left, remaining_right = set(range(len(left))), set(range(len(right)))
@@ -142,6 +182,36 @@ def pair_observations(left, right, playwright_start=False, worker_creation=False
         return [network]
     def matches(i, j, tolerance):
         return left[i]['_resourceKey'] == right[j]['_resourceKey'] and any(abs(start - right[j]['startEpochMs']) < tolerance for start in starts(left[i]))
+    worker_left, worker_right, worker_paired_left, worker_paired_right, worker_ambiguous = set(), set(), set(), set(), set()
+    if worker_creation:
+        worker_keys = {row['_resourceKey'] for row in left if '_workerTimeOriginEpochMs' in row}
+        worker_left = {i for i in remaining_left if left[i]['_resourceKey'] in worker_keys}
+        worker_right = {j for j in remaining_right if right[j]['_resourceKey'] in worker_keys}
+        graph = {i:[j for j in worker_right if matches(i,j,100)] for i in worker_left}
+        reverse = {j:[i for i,choices in graph.items() if j in choices] for j in worker_right}
+        visited = set()
+        for initial in worker_left:
+            if initial in visited or not graph[initial]: continue
+            queue, component, component_right = deque([initial]), {initial}, set()
+            visited.add(initial)
+            while queue:
+                current = queue.popleft()
+                for j in graph[current]:
+                    if j in component_right: continue
+                    component_right.add(j)
+                    for i in reverse[j]:
+                        if i not in component:
+                            component.add(i); visited.add(i); queue.append(i)
+            assignment = unique_perfect_pairs({i:graph[i] for i in component})
+            if assignment is None:
+                worker_ambiguous |= component_right
+            else:
+                pairs.extend(assignment)
+                worker_paired_left |= component
+                worker_paired_right |= component_right
+        # Never let exact-time greediness prune conflicting Worker clock edges.
+        remaining_left -= worker_left
+        remaining_right -= worker_right
     for tolerance in (.01, 100):
         candidates = {i: [j for j in remaining_right if matches(i, j, tolerance)] for i in remaining_left}
         reverse = {j: [i for i, matches in candidates.items() if j in matches] for j in remaining_right}
@@ -149,7 +219,7 @@ def pair_observations(left, right, playwright_start=False, worker_creation=False
         for i,j in matched:
             pairs.append((i,j)); remaining_left.remove(i); remaining_right.remove(j)
     ambiguous = {j for j in remaining_right if any(matches(i, j, 100) for i in remaining_left)}
-    return pairs, remaining_left, remaining_right, ambiguous
+    return pairs, remaining_left | (worker_left-worker_paired_left), remaining_right | (worker_right-worker_paired_right), ambiguous | worker_ambiguous
 
 
 def script_request(row):
@@ -608,7 +678,17 @@ def close(resources):
             process.terminate()
             try: process.wait(timeout=5)
             except subprocess.TimeoutExpired: process.kill(); process.wait()
-        if directory: directory.cleanup()
+        if directory:
+            # Chrome children can finish writing the owned profile just after
+            # the root exits. Retry only this observed ENOTEMPTY cleanup race;
+            # persistent failures and all other filesystem errors still fail.
+            for attempt in range(6):
+                try:
+                    directory.cleanup()
+                    break
+                except OSError as error:
+                    if error.errno != errno.ENOTEMPTY or attempt == 5: raise
+                    time.sleep(.05)
 
 
 def workbench(config, kind):
@@ -1488,6 +1568,37 @@ def self_check():
     bound=worker_clock_fixture([1260],[1264])
     assert script_totals(bound.snapshot())['decodedBytes']==4441 and script_totals(bound.snapshot())['transferredBytes']==192
     assert not bound.unaccounted_script_resources and not bound.ambiguous_requests
+    swap_left=[{'_resourceKey':key,'startEpochMs':1000,'_workerTimeOriginEpochMs':1260},{'_resourceKey':key,'startEpochMs':1264,'_workerTimeOriginEpochMs':1310}]
+    swap_right=[{'_resourceKey':key,'startEpochMs':1264},{'_resourceKey':key,'startEpochMs':1314}]
+    swap_pairs,_,_,swap_ambiguous=pair_observations(swap_left,swap_right,worker_creation=True)
+    assert not swap_pairs and swap_ambiguous=={0,1}, 'exact network priority must not exchange cold bytes across two possible Worker-clock assignments'
+    chain_left=[swap_left[0],{'_resourceKey':key,'startEpochMs':1265,'_workerTimeOriginEpochMs':1520}]
+    chain_right=[swap_right[0],{'_resourceKey':key,'startEpochMs':1524}]
+    chain_pairs,chain_missing_left,chain_missing_right,chain_ambiguous=pair_observations(chain_left,chain_right,worker_creation=True)
+    assert set(chain_pairs)=={(0,0),(1,1)} and not chain_missing_left and not chain_missing_right and not chain_ambiguous
+    # Independent exhaustive oracle: enumerate every small bipartite graph and
+    # all possible complete assignments, including graphs with no solution.
+    from itertools import permutations
+    for size in (1,2,3):
+        for mask in range(1 << (size*size)):
+            graph={i:[j for j in range(size) if mask & (1 << (i*size+j))] for i in range(size)}
+            possible=[tuple(enumerate(order)) for order in permutations(range(size)) if all(order[i] in graph[i] for i in range(size))]
+            actual=unique_perfect_pairs(graph)
+            assert (set(actual)==set(possible[0])) if len(possible)==1 else actual is None
+    class CleanupProbe:
+        def __init__(self, code, transient=False): self.code, self.transient, self.calls = code, transient, 0
+        def cleanup(self):
+            self.calls += 1
+            if not self.transient or self.calls == 1: raise OSError(self.code, 'controlled cleanup failure')
+    transient=CleanupProbe(errno.ENOTEMPTY, True)
+    close((None,None,None,None,transient))
+    assert transient.calls > 1
+    for code in (errno.ENOTEMPTY,errno.EACCES):
+        persistent=CleanupProbe(code)
+        try: close((None,None,None,None,persistent))
+        except OSError as error: assert error.errno == code
+        else: raise AssertionError('persistent cleanup failures must still reject the run')
+        if code == errno.EACCES: assert persistent.calls == 1
     for identity in [(False,True),(True,False)]:
         unknown=worker_clock_fixture([1260],[1264],*identity)
         assert script_totals(unknown.snapshot())['missingTransfer']==1 and len(unknown.unaccounted_script_resources)==1
