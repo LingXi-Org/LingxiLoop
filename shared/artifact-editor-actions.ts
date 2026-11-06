@@ -1,3 +1,4 @@
+import type {PenGeometry} from './artifact-pen.js'
 import { createNode, type ArtifactDocument, type ArtifactNode, type ArtifactPage } from './artifact-document.js'
 import type { ArtifactOperation } from './artifact-operations.js'
 
@@ -9,8 +10,9 @@ export function selectionBounds(nodes: ArtifactNode[]) {
 export function resizeSelection(nodes: ArtifactNode[], handle: ResizeHandle, dx: number, dy: number): ArtifactNode[] {
   if (!nodes.length) return []
   const b = selectionBounds(nodes)
-  const width = Math.max(8, b.width + (handle.includes('w') ? -dx : handle.includes('e') ? dx : 0))
-  const height = Math.max(8, b.height + (handle.includes('n') ? -dy : handle.includes('s') ? dy : 0))
+  const minimum=nodes.every(node=>!!node.path)?2:8
+  const width = Math.max(minimum, b.width + (handle.includes('w') ? -dx : handle.includes('e') ? dx : 0))
+  const height = Math.max(minimum, b.height + (handle.includes('n') ? -dy : handle.includes('s') ? dy : 0))
   const x = handle.includes('w') ? b.x + b.width - width : b.x, y = handle.includes('n') ? b.y + b.height - height : b.y
   const sx = width / Math.max(1, b.width), sy = height / Math.max(1, b.height)
   return nodes.map(n => ({ ...n, x: x + (n.x - b.x) * sx, y: y + (n.y - b.y) * sy, width: Math.max(1, n.width * sx), height: Math.max(1, n.height * sy), ...(n.points ? {points:n.points.map(p=>({x:p.x*sx,y:p.y*sy}))} : {}) }))
@@ -75,4 +77,15 @@ export function layoutSlide(layout: string, page: ArtifactPage, nextId: () => st
   if (layout === 'two-columns') nodes.push(text('添加正文', w * .08, h * .35, w * .38, h * .5, 28), text('添加正文', w * .54, h * .35, w * .38, h * .5, 28))
   else nodes.push(text('添加正文', w * .08, h * .35, w * .84, h * .5, 32))
   return nodes
+}
+
+/** Free canvas sampling stays in screen pixels and retains at most 3000 points. */
+export function appendCanvasPenPoint(points:Array<{x:number;y:number}>,point:{x:number;y:number},scale:number){
+  const last=points.at(-1)
+  if(last&&((point.x-last.x)*scale)**2+((point.y-last.y)*scale)**2<4)return points
+  const next=[...points,point]
+  return next.length>3000?next.filter((_,index)=>index%2===0):next
+}
+export function canvasPenNode(id:string,geometry:PenGeometry|null):ArtifactNode|null {
+  return geometry?{...createNode('drawing',id),x:geometry.x,y:geometry.y,width:geometry.w,height:geometry.h,path:{d:geometry.d,width:geometry.w,height:geometry.h},style:{stroke:'#8a8378',strokeWidth:2}}:null
 }

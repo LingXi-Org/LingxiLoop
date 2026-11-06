@@ -1,3 +1,4 @@
+import {isArtifactPenPath} from './artifact-path.js'
 import {canvasTextMetrics,createCanvasText} from './artifact-canvas-typography.js'
 import {canvasPages, canvasPageOf} from './artifact-canvas-pages.js'
 import {createNode, createPage, type ArtifactDocument, type ArtifactNode} from './artifact-document.js'
@@ -48,6 +49,10 @@ export function importCanvasAnnotations(document:ArtifactDocument,input:unknown,
       const width=title?dimension(source.maxW,2000):dimension(source.w,240),{minHeight,...metrics}=canvasTextMetrics(size)
       const template=createCanvasText(identity(sourceId),title?'text':'note')
       node={...template,text,width,height:Math.max(minHeight,canvasNoteHeight(text,width,size)),style:{...template.style,...metrics,fontSize:size,fontWeight:source.bold===true||title&&source.bold!==false?700:400,fontStyle:source.italic===true?'italic':'normal'}}
+    }else if(kind==='pen'){
+      const width=dimension(source.w,2),height=dimension(source.h,2)
+      if(typeof source.d!=='string'||!isArtifactPenPath(source.d)||width>8000||height>8000){warnings.push(`画布对象“${sourceId}”的路径格式尚未转换，原始文件已保留。`);continue}
+      node={...createNode('drawing',identity(sourceId)),width:Math.max(2,width),height:Math.max(2,height),path:{d:source.d,width:Math.max(2,width),height:Math.max(2,height)},style:{stroke:'#8a8378',strokeWidth:2}}
     }else if(kind==='rect'||kind==='oval'){
       node={...createNode('shape',identity(sourceId)),shape:kind==='oval'?'ellipse':'rect',width:dimension(source.w,kind==='oval'?96:120),height:dimension(source.h,kind==='oval'?96:120),style:{fill:'#b6b0a7',borderRadius:kind==='rect'?8:0}}
     }else{

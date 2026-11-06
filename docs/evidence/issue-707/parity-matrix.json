@@ -482,9 +482,14 @@
         "files": [
           "functional/canvas-contents-light.json",
           "functional/canvas-contents-dark.json",
-          "source-design-annotations.json"
+          "source-design-annotations.json",
+          "source-design-pen.json",
+          "functional/canvas-pen-140.json",
+          "functional/canvas-pen-oracle.json",
+          "functional/canvas-pen-export-140.json",
+          "functional/source-pen-cancel.json"
         ],
-        "scope": "独立无边界内容体、便签中文长短文本、绘图、共享撤销、节点及世界坐标评论已局部验证；专用工具、来源全部外观与同态截图仍未通过"
+        "scope": "原生曲线数学与固定源码 150 组对照一致；真实绘制、按路径命中、预览背压、Esc 取消、保存重开、共享撤销、缩略图及五格式导出局部验证。专用钢笔、控制点编辑、来源全部外观与同态视觉门槛仍未通过。"
       }
     },
     {

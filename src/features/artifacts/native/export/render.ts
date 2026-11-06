@@ -102,6 +102,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
       case 'drawing':
       case 'line': {
         css += ';background:none;border:none'
+        if(node.path){content=`<svg xmlns="http://www.w3.org/2000/svg" style="overflow:visible" viewBox="0 0 ${node.path.width} ${node.path.height}" preserveAspectRatio="none"><path d="${escapeHtml(node.path.d)}" fill="none" stroke="${escapeHtml(style.stroke??'#8a8378')}" stroke-width="${style.strokeWidth??2}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;break}
         const points = node.points?.length ? node.points : [{ x: 0, y: 0 }, { x: node.width, y: node.height }]
         const markerId = `marker-${page.id}-${node.id}`
         const marker = `<defs><marker id="${markerId}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${escapeHtml(style.stroke ?? '#333')}"/></marker></defs>`

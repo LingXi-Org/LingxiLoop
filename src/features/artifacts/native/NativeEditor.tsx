@@ -1,3 +1,4 @@
+import {usePenPreview} from './use-pen-preview'
 import {resolvedPadding} from '../../../../shared/artifact-appearance'
 import {designPageLink,readDesignLink} from '../../../../shared/artifact-links'
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
@@ -32,7 +33,7 @@ import { FontField, FontVariantField } from './FontField'
 import { editorFontFacePatch, type EditorFont } from './editor-fonts'
 import { readNodeFrame, anchorInFrame, pointInFrame, type RenderedNodeFrame } from './rendered-geometry'
 import { PageRail } from './PageRail'
-import { duplicatePages, distributeNodes, resizeSelection, drawingNode, canvasShapeNode, ungroupNodes, appendDrawingPoint, layoutSlide, SLIDE_LAYOUTS, type ResizeHandle } from '../../../../shared/artifact-editor-actions'
+import { duplicatePages, distributeNodes, resizeSelection, drawingNode, canvasShapeNode, ungroupNodes, appendDrawingPoint, appendCanvasPenPoint, canvasPenNode, layoutSlide, SLIDE_LAYOUTS, type ResizeHandle } from '../../../../shared/artifact-editor-actions'
 import { decodeCommentAnchor, commentPoint, commentAnchorAtPoint, type NativeCommentAnchor } from '../../../../shared/artifact-comment-anchor'
 import type { EditorComment } from './CommentsPanel'
 import type { ArtifactExportFormat } from './export-artifact'
@@ -42,6 +43,7 @@ const CommentsPanel = lazy(() => import('./CommentsPanel'))
 const CropEditor = lazy(() => import('./CropEditor'))
 
 const id = () => crypto.randomUUID()
+const EMPTY_BOARDS:string[]=[]
 function download(blob: Blob, filename: string) { const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = filename; link.click(); setTimeout(() => URL.revokeObjectURL(url), 30_000) }
 function Field({ label, value, onChange, type = 'text', min, max, placeholder }: { label: string; value: string | number; onChange(value: string): void; type?: string; min?: number; max?: number;placeholder?:string }) {
   const [draft, setDraft] = useState(String(value))
@@ -82,6 +84,7 @@ interface Gesture { base: ArtifactDocument; type: 'move' | 'resize' | 'marquee' 
 function editorOwnsEvent(root:HTMLElement,target:EventTarget|null) {
   return target instanceof Element&&target.closest('[data-native-artifact-editor],[data-native-editor-boundary]')===root
 }
+let penModule:Promise<typeof import('../../../../shared/artifact-pen')>|undefined
 interface Props { revisionSeq?:string; artifactId: string; kind: 'design' | 'slides'; title: string; visible?: boolean; agentWorking?: boolean; exitPresentation?: number; onEditorContext?(context: SlideEditorContext): void }
 export default function NativeEditor({ revisionSeq, artifactId, kind, title, visible = true, agentWorking = false, exitPresentation = 0, onEditorContext }: Props) {
   const session = useMemo(() => new NativeDocumentSession(nativeTransport(artifactId,revisionSeq)), [artifactId,revisionSeq])
@@ -113,7 +116,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const [presenting, setPresenting] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [viewport, setViewport] = useState({ width: 0, height: 0, x: 0, y: 0 })
-  const [visibleBoards, setVisibleBoards] = useState<string[]>([])
+  const [visibleBoardResult, setVisibleBoardResult] = useState<{key:string;ids:string[]}>({key:'',ids:[]})
   const [preview, setPreview] = useState<{ dx: number; dy: number; resize?: boolean } | null>(null)
   const [marquee, setMarquee] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [exporting, setExporting] = useState('')
@@ -122,6 +125,15 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const [inspectorOpen, setInspectorOpen] = useState(false)
   const [resolvedTheme, setResolvedTheme] = useState<{ source: ThemeTokens; tokens: ThemeTokens } | null>(null)
   const [tool, setTool] = useState('select')
+  const penFitter=useRef<typeof import('../../../../shared/artifact-pen')|null>(null),[penLoading,setPenLoading]=useState(false),[penLoadFailed,setPenLoadFailed]=useState(false)
+  useEffect(()=>{
+    if(!visible||!['pencil','pen'].includes(tool)||penFitter.current){setPenLoading(false);return}
+    let active=true;setPenLoading(true);setPenLoadFailed(false)
+    penModule??=import('../../../../shared/artifact-pen')
+    void penModule.then(module=>{if(active){penFitter.current=module;setPenLoading(false);setNotice(value=>value==='正在加载绘图工具…'?'':value)}}).catch(()=>{if(active){setPenLoading(false);setPenLoadFailed(true);setNotice('绘图工具未能加载，请刷新页面后重试。')}})
+    return()=>{active=false}
+  },[tool,visible])
+
   const [shapeTool, setShapeTool] = useState<ArtifactNode['shape']>('rect')
   const [view, setView] = useState<'slide' | 'grid' | 'canvas'>('slide')
   const [railOpen, setRailOpen] = useState(true), [notesOpen, setNotesOpen] = useState(false)
@@ -212,6 +224,13 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const baseCanvasInset = {x:Math.max(0,(viewport.width-canvasExtent.width)/2),y:54+20*scale+(kind==='design'&&canvasExtent.height-128*scale<=viewport.height-54?(viewport.height-54-canvasExtent.height)/2:Math.max(0,(viewport.height-54-canvasExtent.height)/2))}
   const panPadding=canvasMode&&canvasContent?{x:viewport.width*2,y:viewport.height*2}:{x:0,y:0}
   const canvasInset={x:baseCanvasInset.x+panPadding.x,y:baseCanvasInset.y+panPadding.y}
+  const boardQuery=useMemo(()=>{
+    const rect={x:(viewport.x-canvasInset.x)/scale+origin.x-64,y:(viewport.y-canvasInset.y)/scale+origin.y-64,width:viewport.width/scale+128,height:viewport.height/scale+128}
+    return{rect,key:JSON.stringify([boardIds.map(id=>{const p=displayPages[id];return[id,p.x,p.y,p.width,p.height]}),rect])}
+  },[boardIds,displayPages,viewport.x,viewport.y,viewport.width,viewport.height,canvasInset.x,canvasInset.y,scale,origin.x,origin.y])
+  // A fit-view result must never become a detail-view loading list while the
+  // new Worker query is pending. Keep only the result for this exact geometry.
+  const visibleBoards=visibleBoardResult.key===boardQuery.key?visibleBoardResult.ids:EMPTY_BOARDS
   const previousCanvasMapping=useRef<{id:string;scale:number;width:number;height:number;x:number;y:number;padX:number;padY:number;world:CanvasPoint;awaitingLayout?:boolean}|null>(null)
   useLayoutEffect(()=>{
     const element=viewportRef.current
@@ -234,10 +253,10 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     const controller = new AbortController()
     void compute.updatePages(upserts, removed, doc.seq).then(() => {
       if (!canvasMode) return
-      return compute.visible({ x: (viewport.x-canvasInset.x) / scale + origin.x - 64, y: (viewport.y-canvasInset.y) / scale + origin.y - 64, width: viewport.width / scale + 128, height: viewport.height / scale + 128 }, doc.seq, controller.signal).then(setVisibleBoards)
+      return compute.visible(boardQuery.rect, doc.seq, controller.signal).then(ids=>setVisibleBoardResult({key:boardQuery.key,ids}))
     }).catch(error => { if (error?.name !== 'AbortError') setNotice('画板计算暂时不可用，请重试。') })
     return () => controller.abort()
-  }, [doc, boardIds, displayPages, canvasMode, viewport, scale, origin, compute, canvasInset.x, canvasInset.y])
+  }, [doc, boardIds, displayPages, canvasMode, boardQuery, compute])
   const boards = useMemo(() => {
     if (!doc || !visible || !authorized) return []
     if (!canvasMode) return current ? [current] : []
@@ -377,6 +396,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if (presenting || event.button > 1) return
     pendingComment.current=null
     if ((event.target as HTMLElement).closest('button,input,textarea')) return
+    if(kind==='design'&&['pencil','pen'].includes(tool)&&!penFitter.current){event.preventDefault();setNotice(penLoadFailed?'绘图工具未能加载，请刷新页面后重试。':'正在加载绘图工具…');return}
     if(!canvas&&kind==='design'&&page.id!==canvasContentId&&['text','note','pencil','pen','arrow','line','shape'].includes(tool)){const body=canvasBodyForInsert();if(body)pointerDown(event,body,true);return}
     if (!(event.target as HTMLElement).closest('[contenteditable="true"]')) editorRoot.current?.focus({preventScroll:true})
     if (tool === 'comment') { const target=(event.target as HTMLElement).closest<HTMLElement>('[data-node-id]'), shell=viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${page.id}"]`);const rect=canvas?event.currentTarget.getBoundingClientRect():shell?.getBoundingClientRect();if(rect){setPageId(page.id);const point=canvas?canvasWorldPoint(event):{x:(event.clientX-rect.left)/scale,y:(event.clientY-rect.top)/scale},node=target?.dataset.nodeId?page.nodes[target.dataset.nodeId]:undefined;pendingComment.current=node?anchorInFrame(page.id,node.id,readNodeFrame(viewportRef.current,page,node,scale),point):commentAnchorAtPoint(page,undefined,point)}event.preventDefault();return }
@@ -385,6 +405,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
       const rect = event.currentTarget.getBoundingClientRect(), point = canvas?canvasWorldPoint(event):{ x: (event.clientX - rect.left) / scale, y: (event.clientY - rect.top) / scale }
       setPageId(page.id)
       if (['pencil', 'pen', 'arrow', 'line','shape'].includes(tool)) {
+        if(canvas&&['pencil','pen'].includes(tool)&&!penFitter.current){event.preventDefault();setNotice(penLoadFailed?'绘图工具未能加载，请刷新页面后重试。':'正在加载绘图工具…');return}
         gesture.current = { base: session.getSnapshot().document!, type: 'draw', pageId: page.id, startX: event.clientX, startY: event.clientY, nodes: [], moved: false, points: [point], tool, scope: canvas ? 'canvas' : 'artboard' }; setDrawingPreview([point]); event.currentTarget.setPointerCapture(event.pointerId)
       } else if (tool === 'frame') addPage()
       else { const type = tool === 'note' ? 'note' : tool === 'shape' ? 'shape' : 'text'; const node = { ...(canvas&&(type==='text'||type==='note')?createCanvasText(id(),type):createNode(type, id())), x: point.x, y: point.y, ...(canvas ? {scope: 'canvas' as const} : {}), ...(type === 'shape' ? { shape: shapeTool } : {}) }; dispatch([{ type: 'node.insert', pageId: page.id, node }]); setSelected([node.id]); textBase.current = session.getSnapshot().document; textPage.current = page.id; setEditingId(type === 'text' || type === 'note' ? node.id : null); setTool('select') }
@@ -404,6 +425,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   }
   function canvasPointerDown(event:ReactPointerEvent) {
     if(!canvasMode||event.target!==event.currentTarget)return
+    if(kind==='design'&&['pencil','pen'].includes(tool)&&!penFitter.current){event.preventDefault();setNotice(penLoadFailed?'绘图工具未能加载，请刷新页面后重试。':'正在加载绘图工具…');return}
     let page=current
     if(kind==='design'){
       const base=session.getSnapshot().document
@@ -424,29 +446,31 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     const active = gesture.current; if (!active) return
     const dx = (event.clientX - active.startX) / scale, dy = (event.clientY - active.startY) / scale
     if (Math.hypot(dx, dy) > 3) { active.moved = true; if (!event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId) }
-    if (active.type === 'draw') { const start = active.points![0]; const p = { x: start.x + dx, y: start.y + dy }; active.points = ['arrow','line','shape'].includes(active.tool!) ? [start, p] : appendDrawingPoint(active.points!,p); setDrawingPreview(active.points); return }
+    if (active.type === 'draw') { const start = active.points![0]; const p = { x: start.x + dx, y: start.y + dy }; active.points = ['arrow','line','shape'].includes(active.tool!) ? [start, p] : active.scope==='canvas'?appendCanvasPenPoint(active.points!,p,scale):appendDrawingPoint(active.points!,p); setDrawingPreview(active.points); return }
     if (active.type === 'rotate') { const node = active.nodes[0]; const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (element) { const r = element.getBoundingClientRect(); active.angle = node.rotation + (Math.atan2(event.clientY - (r.top+r.height/2), event.clientX - (r.left+r.width/2)) - Math.atan2(active.startY - (r.top+r.height/2), active.startX - (r.left+r.width/2))) * 180 / Math.PI; element.style.rotate = `${active.angle - node.rotation}deg` } return }
     if (active.type === 'pan') { viewportRef.current?.scrollTo((active.scrollX ?? 0) - (event.clientX - active.startX), (active.scrollY ?? 0) - (event.clientY - active.startY)); return }
     if (active.type === 'marquee') { const rect = (event.currentTarget as HTMLElement).getBoundingClientRect(); setMarquee({ x: (Math.min(active.startX, event.clientX) - rect.left) / scale-(active.canvas?64-origin.x+canvasInset.x/scale:0), y: (Math.min(active.startY, event.clientY) - rect.top) / scale-(active.canvas?64-origin.y+canvasInset.y/scale:0), width: Math.abs(dx), height: Math.abs(dy) }); return }
     setPreview({ dx, dy, resize: active.type === 'resize' })
     for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (!element) continue; if (active.type === 'move') element.style.translate = `${dx}px ${dy}px`; else { element.style.width = `${Math.max(16, node.width + dx)}px`; element.style.height = node.type==='note'&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)?'auto':`${Math.max(16, node.height + dy)}px` } }
   }
-  function pointerUp(event: ReactPointerEvent, cancel = false) {
-    event.stopPropagation()
+  function pointerUp(event: ReactPointerEvent|null, cancel = false) {
+    event?.stopPropagation()
     if(pendingComment.current){const anchor=pendingComment.current;pendingComment.current=null;if(!cancel)setTimeout(()=>openComment(anchor),0);return}
     const active = gesture.current; if (!active) return
     gesture.current = null
-    const dx = (event.clientX - active.startX) / scale, dy = (event.clientY - active.startY) / scale
+    const dx = ((event?.clientX??active.startX) - active.startX) / scale, dy = ((event?.clientY??active.startY) - active.startY) / scale
     for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (element) { const authored=active.base.pages[active.pageId]?.nodes[node.id]??node; element.style.translate = ''; element.style.width = authored.textSizing==='content'?'max-content':`${authored.width}px`; element.style.height = isNaturalText(authored)&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)||authored.type==='group'&&active.base.pages[active.pageId]?.sizing==='flow'&&authored.layout?.mode!=='absolute'?'auto':`${authored.height}px` } }
     if (active.type === 'draw') {
-      if(!cancel&&active.points&&(active.points.length>1||active.tool==='shape')){const node=active.tool==='shape'?canvasShapeNode(id(),shapeTool==='ellipse'?'ellipse':'rect',active.points[0],active.moved?active.points.at(-1):undefined):drawingNode(id(),active.points,active.tool as 'pencil'|'pen'|'arrow'|'line');dispatch([{type:'node.insert',pageId:active.pageId,node:{...node,scope:active.scope}}],active.base);setSelected([node.id]);if(active.tool==='shape')setTool('select')}
+      if(!cancel&&active.points&&(active.points.length>1||active.tool==='shape')){const node=active.tool==='shape'?canvasShapeNode(id(),shapeTool==='ellipse'?'ellipse':'rect',active.points[0],active.moved?active.points.at(-1):undefined):active.scope==='canvas'&&['pencil','pen'].includes(active.tool??'')?canvasPenNode(id(),penFitter.current!.fitCanvasPen(active.points,1.25/scale)):drawingNode(id(),active.points,active.tool as 'pencil'|'pen'|'arrow'|'line');if(node){dispatch([{type:'node.insert',pageId:active.pageId,node:{...node,scope:active.scope}}],active.base);setSelected([node.id])}if(active.tool==='shape')setTool('select')}
       setDrawingPreview(null);return
     }
     if (active.type === 'rotate') { const node = active.nodes[0]; const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (element) element.style.rotate = ''; if (!cancel && active.angle !== undefined) dispatch([{ type: 'node.patch', pageId: active.pageId, nodeId: node.id, patch: { rotation: Math.round(active.angle) } }], active.base); return }
     if (!cancel && active.moved && active.type === 'marquee' && marquee && doc) { const page = doc.pages[active.pageId]; setSelected(page.nodeOrder.filter(value => { const n = page.nodes[value]; return !n.parentId && n.x >= marquee.x && n.y >= marquee.y && n.x + n.width <= marquee.x + marquee.width && n.y + n.height <= marquee.y + marquee.height })) }
-    else if (!cancel && active.moved && (active.type === 'move' || active.type === 'resize')) dispatch(active.nodes.map(node => ({ type: 'node.patch', pageId: active.pageId, nodeId: node.id, patch: active.type === 'move' ? { x: Math.round(node.x + dx), y: Math.round(node.y + dy) } : ((({ x, y, width, height, points }) => ({ x, y, width, height, ...(points?{points}:{}) }))(resizeSelection(active.nodes, active.handle ?? 'se', dx, dy).find(item => item.id === node.id)!)) })), active.base)
+    else if (!cancel && active.moved && (active.type === 'move' || active.type === 'resize')) dispatch(active.nodes.map(node => ({ type: 'node.patch', pageId: active.pageId, nodeId: node.id, patch: active.type === 'move' ? { x: node.path?Math.round((node.x+dx)*10)/10:Math.round(node.x + dx), y: node.path?Math.round((node.y+dy)*10)/10:Math.round(node.y + dy) } : ((({ x, y, width, height, points }) => ({ x, y, width, height, ...(points?{points}:{}) }))(resizeSelection(active.nodes, active.handle ?? 'se', dx, dy).find(item => item.id === node.id)!)) })), active.base)
     setPreview(null); setMarquee(null)
   }
+  const penResult=usePenPreview(gesture.current?.scope==='canvas'&&['pencil','pen'].includes(gesture.current.tool??'')?drawingPreview:null,scale,doc?.seq??0,compute,setNotice)
+  const penPreview=penResult?.points===drawingPreview&&penResult.scale===scale?penResult.geometry:null
   const pageSelection = selectedPages.length ? selectedPages : current ? [current.id] : []
   const choosePage = (value: string, multiple = false, range = false) => {
     if (range && pageId && doc) { const anchor=pageSelectionAnchor.current&&doc.pages[pageSelectionAnchor.current]?pageSelectionAnchor.current:pageId;pageSelectionAnchor.current=anchor;const a = doc.pageOrder.indexOf(anchor), b = doc.pageOrder.indexOf(value); setSelectedPages(doc.pageOrder.slice(Math.min(a, b), Math.max(a, b) + 1)) }
@@ -478,7 +502,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   if (!doc) return <div className="native-loading" role="alert">{state.error || '稿件暂时无法打开'}{notice && <p>{notice}</p>}<button type="button" onClick={() => void session.open()}>重试</button><button type="button" onClick={() => void downloadSource()}>下载原始文件</button></div>
   const boardWidth = Math.max(viewport.width, ...boardIds.map(value => (displayPages[value].x - origin.x + doc.pages[value].width + 128) * scale))
   const boardHeight = Math.max(viewport.height, ...boardIds.map(value => (displayPages[value].y - origin.y + doc.pages[value].height + 128) * scale))
-  return <EditorColorSessionContext.Provider value={()=>{inspectorBase.current=session.getSnapshot().document}}><EditorPaletteContext.Provider value={palette}><DraftContext.Provider value={drafts}><section ref={editorRoot} data-revision={revisionSeq} data-view={view} data-compact={compact} data-compact-rail-open={compactRailOpen} data-tool={tool} data-inspector-open={inspectorOpen && !presenting} data-comments-open={commentsOpen && !presenting} style={{'--native-sidebar-width': `${!presenting ? (inspectorOpen ? 336 : 0) : 0}px`} as CSSProperties} className={`native-editor native-kind-${kind} ${presenting ? 'native-presenting' : ''}`} data-native-artifact-editor={kind} data-current-page={pageId} data-canvas-page-id={kind==='design'?activeCanvasId:undefined} data-save-state={state.conflict ? 'conflict' : state.pending ? 'pending' : draftCount ? 'draft' : 'saved'} aria-label={`${title}编辑器`} hidden={!visible} tabIndex={0}
+  return <EditorColorSessionContext.Provider value={()=>{inspectorBase.current=session.getSnapshot().document}}><EditorPaletteContext.Provider value={palette}><DraftContext.Provider value={drafts}><section ref={editorRoot} data-revision={revisionSeq} data-view={view} data-compact={compact} data-compact-rail-open={compactRailOpen} data-tool={tool} data-pen-ready={!!penFitter.current} data-inspector-open={inspectorOpen && !presenting} data-comments-open={commentsOpen && !presenting} style={{'--native-inv-scale':1/scale,'--native-sidebar-width': `${!presenting ? (inspectorOpen ? 336 : 0) : 0}px`} as CSSProperties} className={`native-editor native-kind-${kind} ${presenting ? 'native-presenting' : ''}`} data-native-artifact-editor={kind} data-current-page={pageId} data-canvas-page-id={kind==='design'?activeCanvasId:undefined} data-save-state={state.conflict ? 'conflict' : state.pending ? 'pending' : draftCount ? 'draft' : 'saved'} aria-label={`${title}编辑器`} hidden={!visible} tabIndex={0}
     onKeyDown={event => {
       if(!editorOwnsEvent(event.currentTarget,event.target))return
       if(kind==='design'&&(event.ctrlKey||event.metaKey)&&event.altKey&&!event.shiftKey&&event.key.toLowerCase()==='l'&&!event.nativeEvent.isComposing){event.preventDefault();void copyCanvasLink(activeCanvasId);return}
@@ -486,7 +510,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
       const typing = (event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !(event.target as HTMLElement).closest('input,textarea') && !event.nativeEvent.isComposing) { event.preventDefault(); flushText(); setEditingId(null); void session.undoRedo(event.shiftKey ? 'redo' : 'undo'); return }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y' && !(event.target as HTMLElement).closest('input,textarea') && !event.nativeEvent.isComposing) { event.preventDefault(); flushText(); setEditingId(null); void session.undoRedo('redo'); return }
-      if (!event.nativeEvent.isComposing && event.key==='Escape') { setCropping(null);setTool('select');setContextMenu(null);setEditingId(null);if(presenting){event.preventDefault();event.stopPropagation();flushText();setPresenting(false);if(window.document.fullscreenElement)void window.document.exitFullscreen()}return }
+      if (!event.nativeEvent.isComposing && event.key==='Escape') { if(gesture.current||pendingComment.current){event.preventDefault();event.stopPropagation();pointerUp(null,true)}setCropping(null);setTool('select');setContextMenu(null);setEditingId(null);if(presenting){event.preventDefault();event.stopPropagation();flushText();setPresenting(false);if(window.document.fullscreenElement)void window.document.exitFullscreen()}return }
       if (presenting && !typing && ['ArrowRight','PageDown','ArrowLeft','PageUp'].includes(event.key)) {event.preventDefault();navigatePresentation(event.key==='ArrowRight'||event.key==='PageDown'?1:-1);return}
       if (typing || event.nativeEvent.isComposing || (event.target as HTMLElement).closest('button,summary,a,[role=menu],[role=dialog]')) return
       if (event.key === ' ') { event.preventDefault(); space.current = true }
@@ -521,7 +545,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
           <hr /><MenuItem icon="plus" disabled={!canvasWritable} onClick={addCanvasPage}>新建页面</MenuItem>
         </Menu><span className="native-toolbar-separator" /></>}<ToolbarTools>{kind==='design'&&<><IconButton icon="select" label="选择 (V)" active={tool === 'select'} onClick={() => setTool('select')} /><IconButton icon="hand" label="手型工具 (H)" active={tool === 'hand'} onClick={() => setTool('hand')} /></>}
         <IconButton icon="text" label="文本" active={tool === 'text'} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool(v => v === 'text' ? 'select' : 'text')} />
-        {kind === 'design' ? <><IconButton icon="frame" label="添加画板" disabled={!writable} onClick={addPage} /><IconButton icon="note" label="便签 (N)" active={tool === 'note'} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool('note')} /><span className="native-split-tool"><IconButton icon="pencil" label="铅笔" active={tool === 'pencil'} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool('pencil')} /><Menu label="绘图工具"><MenuItem icon="pencil" shortcut="P" onClick={() => setTool('pencil')}>铅笔</MenuItem><MenuItem icon="pen" shortcut="⇧ P" onClick={() => setTool('pen')}>钢笔</MenuItem></Menu></span></> : <><IconButton icon="image" label="图片或视频" disabled={!writable || !current} onClick={() => fileInput.current?.click()} /><IconButton icon="table" label="插入表格" disabled={!writable||!current} onClick={()=>addNode('table')} /></>}
+        {kind === 'design' ? <><IconButton icon="frame" label="添加画板" disabled={!writable} onClick={addPage} /><IconButton icon="note" label="便签 (N)" active={tool === 'note'} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool('note')} /><span className="native-split-tool"><IconButton icon="pencil" label="铅笔" aria-busy={penLoading} active={tool === 'pencil'} disabled={!writable || kind!=='design'&&!current} onClick={() => setTool('pencil')} /><Menu label="绘图工具"><MenuItem icon="pencil" shortcut="P" onClick={() => setTool('pencil')}>铅笔</MenuItem><MenuItem icon="pen" shortcut="⇧ P" onClick={() => setTool('pen')}>钢笔</MenuItem></Menu></span></> : <><IconButton icon="image" label="图片或视频" disabled={!writable || !current} onClick={() => fileInput.current?.click()} /><IconButton icon="table" label="插入表格" disabled={!writable||!current} onClick={()=>addNode('table')} /></>}
         <span className={kind==='design'?'native-split-tool native-shape-split':undefined}>{kind==='design'&&<IconButton icon={shapeTool==='ellipse'?'ellipse':'square'} label="矩形工具" active={tool==='shape'} disabled={!writable||kind!=='design'&&!current} onClick={()=>setTool('shape')} />}
         <Menu label="插入图形" icon={kind === 'design' ? undefined : 'shapes'} disabled={!writable || kind!=='design'&&!current}>
           {kind==='design'?<>
@@ -566,7 +590,8 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
               {!presenting && cropping && page.id === pageId && <Suspense fallback={null}><CropEditor key={cropping.id} node={cropping} frame={croppingFrame??readNodeFrame(viewportRef.current,page,cropping,scale)} pageId={page.id} scale={scale} base={session.getSnapshot().document!} onCommit={dispatch} onClose={()=>setCropping(null)} /></Suspense>}
               {!presenting && guidesOpen && page.guides?.map((guide,index) => <div key={index} className={`native-guide native-guide-${guide.axis}`} style={guide.axis === 'x' ? { left: guide.position } : { top: guide.position }} />)}
               {!presenting && guidesOpen && page.layoutGuides?.filter(g=>!g.hidden).map((guide,index)=>{const horizontal=guide.kind==='rows',dimension=horizontal?page.height:page.width,step=guide.kind==='grid'?Math.max(1,guide.size):Math.max(1,(dimension-2*guide.margin+guide.gutter)/guide.count),size=guide.kind==='grid'?1:Math.max(1,step-guide.gutter);return guide.kind==='grid' ? <svg key={`layout-${index}`} className="native-layout-guide" width={page.width} height={page.height}><defs><pattern id={`guide-${page.id}-${index}`} width={step} height={step} patternUnits="userSpaceOnUse"><path d={`M ${step} 0 L 0 0 0 ${step}`} fill="none" stroke={guide.color} strokeWidth="1" /></pattern></defs><rect width="100%" height="100%" fill={`url(#guide-${page.id}-${index})`} /></svg> : <div key={`layout-${index}`} className="native-layout-guide">{Array.from({length:guide.count},(_,i)=><div key={i} style={{position:'absolute',background:guide.color,...(horizontal?{top:guide.margin+i*step,left:0,width:page.width,height:size}:{left:guide.margin+i*step,top:0,width:size,height:page.height})}} />)}</div>})}
-              {!presenting && drawingPreview && page.id === pageId && <svg className="native-drawing-preview" width={page.width} height={page.height}>{gesture.current?.tool==='shape'?(()=>{const first=drawingPreview[0],last=drawingPreview.at(-1)!,x=Math.min(first.x,last.x),y=Math.min(first.y,last.y),w=Math.abs(last.x-first.x),h=Math.abs(last.y-first.y);return shapeTool==='ellipse'?<ellipse cx={x+w/2} cy={y+h/2} rx={w/2} ry={h/2} fill="#b6b0a7" />:<rect x={x} y={y} width={w} height={h} rx={8} fill="#b6b0a7" />})():<polyline points={drawingPreview.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="currentColor" strokeWidth="2" />}</svg>}
+              {!presenting&&penPreview&&page.id===pageId&&<svg data-native-path-preview aria-hidden="true" className="native-drawing-preview" width={penPreview.w} height={penPreview.h} style={{left:penPreview.x,top:penPreview.y}} viewBox={`0 0 ${penPreview.w} ${penPreview.h}`}><path d={penPreview.d} fill="none" stroke="#8a8378" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /></svg>}
+              {!presenting && !penPreview && drawingPreview && page.id === pageId && <svg className="native-drawing-preview" width={page.width} height={page.height}>{gesture.current?.tool==='shape'?(()=>{const first=drawingPreview[0],last=drawingPreview.at(-1)!,x=Math.min(first.x,last.x),y=Math.min(first.y,last.y),w=Math.abs(last.x-first.x),h=Math.abs(last.y-first.y);return shapeTool==='ellipse'?<ellipse cx={x+w/2} cy={y+h/2} rx={w/2} ry={h/2} fill="#b6b0a7" />:<rect x={x} y={y} width={w} height={h} rx={8} fill="#b6b0a7" />})():<polyline points={drawingPreview.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="currentColor" strokeWidth="2" />}</svg>}
               {!presenting && commentThreads.filter(t => t.status === 'open').map((thread,index) => { const anchor = decodeCommentAnchor(thread.anchor); const point = anchor?.pageId === page.id ? commentPositions[thread.id] ?? commentPoint(anchor,page) : null; return point && <button type="button" key={thread.id} className="native-comment-pin" aria-label={`评论 ${index+1}：${thread.label}`} style={{ left: point.x, top: point.y, transform: `scale(${1/scale})` }} onClick={() => {openComment(anchor,thread.id)}}>{index+1}</button> })}
               {!presenting && tool==='select' && page.id === pageId && <div className="native-interaction-layer" data-interaction-layer>{selectedNodes.filter(node => node.id !== editingId && node.id !== cropping?.id).map(node => { let x = node.x, y = node.y; let parent = node.parentId ? page.nodes[node.parentId] : undefined; while (parent) { x += parent.x; y += parent.y; parent = parent.parentId ? page.nodes[parent.parentId] : undefined } return <div key={node.id} className="native-selection" style={{ left: x + (preview && !preview.resize ? preview.dx : 0), top: y + (preview && !preview.resize ? preview.dy : 0), width: Math.max(16, node.width + (preview?.resize ? preview.dx : 0)), height: Math.max(16, node.height + (preview?.resize ? preview.dy : 0)), transform: `rotate(${node.rotation}deg)`, borderWidth: 1.5 / scale }}>{writable && !node.locked && <>{(['nw','n','ne','e','se','s','sw','w'] as const).map(handle => <button type="button" key={handle} className={`native-resize-handle native-handle-${handle}`} style={{ width: 7 / scale, height: 7 / scale }} aria-label={`调整元素${resizeHandleLabels[handle]}`} onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'resize', handle, startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: selectedNodes.filter(item => !item.locked), moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event, true)} />)}<button type="button" className="native-rotate-handle" style={{ width: 10/scale, height: 10/scale, top: -24/scale }} aria-label="旋转元素" onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'rotate', startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: [node], moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event,true)} /></>}</div> })}{marquee && <div className="native-marquee" style={marquee as CSSProperties} />}</div>}
             </div>}

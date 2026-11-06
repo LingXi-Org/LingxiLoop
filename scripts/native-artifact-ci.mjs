@@ -49,6 +49,14 @@ async function downloadDiagnosticReceipt(env, artifactName) {
     return JSON.parse(await readFile(join(directory, 'results.json'), 'utf8'))
   } finally { await rm(directory, { recursive: true, force: true }) }
 }
+export function performanceSampleEligible(sample,fidelity=false){
+  if(sample.status==='passed')return true
+  const exports=sample.exports??[]
+  return fidelity&&sample.arm==='baseline'&&sample.mode==='fullNavigation'&&sample.run===1
+    &&sample.status==='failed'&&sample.failureStage==='validation'&&sample.failureCode==='export_diagnostic_incomplete'
+    &&exports.length===3&&new Set(exports.map(row=>row.format)).size===3&&exports.every(row=>['html','pdf','pptx'].includes(row.format)&&['passed','failed'].includes(row.status))&&exports.some(row=>row.status==='failed')
+}
+
 export async function verifyDiagnosticPrerequisite(env = process.env, fetcher = fetch, receiptReader = downloadDiagnosticReceipt) {
   assert.equal(env.GITHUB_EVENT_NAME, 'workflow_dispatch')
   assert.equal(env.GITHUB_REF_TYPE, 'branch')
@@ -89,7 +97,7 @@ export async function verifyDiagnosticPrerequisite(env = process.env, fetcher = 
   for (const arm of ['baseline', 'candidate']) for (const kind of ['design', 'slides']) for (const mode of ['fullNavigation', 'workbenchOpen']) {
     const matching = samples.filter(sample => sample.arm === arm && sample.kind === kind && sample.mode === mode)
     assert.equal(matching.length, 1)
-    assert.equal(matching[0].status, 'passed')
+    assert.equal(performanceSampleEligible(matching[0],env.NATIVE_ARTIFACT_PROFILE==='fidelity'), true)
   }
 }
 
@@ -101,7 +109,7 @@ const linuxKernelPattern = String.raw`\d{1,3}\.\d{1,3}\.\d{1,4}(?:[.-]\d{1,6})?(
 const linuxPlatform = new RegExp(`^Linux-${linuxKernelPattern}-(?:x86_64|aarch64)-with-glibc\\d{1,3}\\.\\d{1,3}$`)
 const networkErrorCodes = new Set(['ERR_ABORTED', 'ERR_FAILED', 'ERR_CONNECTION_REFUSED', 'ERR_CONNECTION_RESET', 'ERR_CONNECTION_CLOSED', 'ERR_CONNECTION_ABORTED', 'ERR_CONNECTION_TIMED_OUT', 'ERR_NETWORK_CHANGED', 'ERR_INTERNET_DISCONNECTED', 'ERR_NAME_NOT_RESOLVED', 'ERR_CERT_AUTHORITY_INVALID', 'ERR_CERT_COMMON_NAME_INVALID', 'ERR_CERT_DATE_INVALID', 'ERR_CERT_INVALID', 'ERR_SSL_PINNED_KEY_NOT_IN_CERT_CHAIN', 'ERR_SSL_VERSION_OR_CIPHER_MISMATCH', 'ERR_SSL_PROTOCOL_ERROR', 'ERR_TIMED_OUT', 'ERR_BLOCKED_BY_CLIENT', 'ERR_BLOCKED_BY_RESPONSE', 'ERR_HTTP_RESPONSE_CODE_FAILURE', 'ERR_EMPTY_RESPONSE', 'ERR_PROXY_CONNECTION_FAILED', 'ERR_TUNNEL_CONNECTION_FAILED', 'ERR_ADDRESS_UNREACHABLE', 'ERR_CACHE_MISS', 'ERR_TOO_MANY_REDIRECTS', 'ERR_UNSAFE_REDIRECT', 'ERR_HTTP2_PROTOCOL_ERROR', 'ERR_INCOMPLETE_CHUNKED_ENCODING', 'ERR_CONTENT_LENGTH_MISMATCH', 'ERR_CONTENT_DECODING_FAILED', 'other'])
 const networkBlockedReasons = new Set(['other', 'csp', 'mixed-content', 'origin', 'inspector', 'subresource-filter', 'content-type', 'coep-frame-resource-needs-coep-header', 'corp-not-same-origin', 'corp-not-same-site'])
-const requestTables = new Set(['inflightRequests', 'requestsAtEditable', 'requestsAtIdle', 'requestsAtStable', 'requestsAtOpen', 'requestsBeforeOpen', 'failedRequests', 'unaccountedScriptTimings','scriptResourceTimings'])
+const requestTables = new Set(['inflightRequests', 'requestsAtEditable', 'requestsAtIdle', 'requestsAtStable', 'requestsAtOpen', 'requestsBeforeOpen', 'failedRequests', 'unaccountedScriptTimings','scriptResourceTimings','requestsAfterExport'])
 const requestTypes = new Set(['Script', 'Document', 'Stylesheet', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'Media', 'WebSocket', 'EventSource', 'Ping', 'Preflight', 'Manifest'])
 export function publicRequest(row) {
   const safe = { resourceHash: createHash('sha256').update(typeof row.url === 'string' ? row.url : '').digest('hex'),
@@ -178,11 +186,11 @@ async function executionEnvironment(config) {
 }
 
 export function compactReceipt(safe) {
-  const fields = ['run', 'arm', 'kind', 'mode', 'status', 'phase', 'failureStage', 'failureCode', 'editableMs', 'scriptTransferBytes', 'scriptDecodedBytes', 'idleScriptTransferBytes', 'idleScriptDecodedBytes', 'pssDeltaBytes', 'firstInputMs', 'failureObservations', 'viewNormalization']
-  const exportFields = ['format', 'status', 'failureCode', 'bytes', 'pages', 'durationMs', 'peakPssBytes', 'hostSubtractedPeakPssBytes', 'offlineHtml']
+  const fields = ['run', 'arm', 'kind', 'mode', 'status', 'performanceEligible', 'phase', 'failureStage', 'failureCode', 'editableMs', 'scriptTransferBytes', 'scriptDecodedBytes', 'idleScriptTransferBytes', 'idleScriptDecodedBytes', 'pssDeltaBytes', 'firstInputMs', 'failureObservations', 'viewNormalization']
+  const exportFields = ['format', 'status', 'failureCode', 'bytes', 'pages', 'durationMs', 'peakPssBytes', 'hostSubtractedPeakPssBytes', 'offlineHtml','editorStateAfterExport']
   return { schemaVersion: safe.schemaVersion, phase: safe.phase, baselineCommit: safe.baselineCommit, candidateCommit: safe.candidateCommit,
     environment: { ...safe.executionEnvironment, ...safe.measurement?.environment },
-    diagnosticPassed: safe.diagnosticPassed, qualified: safe.qualified, checkpoint: safe.checkpoint,
+    diagnosticPassed: safe.diagnosticPassed, qualified: safe.qualified, checkpoint: safe.checkpoint, exportObservationsPassed:safe.measurement?.exportObservationsPassed,
     ...(safe.measurementFault?{measurementFault:safe.measurementFault}:{}),
     ...(safe.measurement?.setupFailure ? { setupFailure: safe.measurement.setupFailure } : {}),
     summary: safe.measurement?.summary ?? {}, gates: safe.measurement?.gates ?? [],

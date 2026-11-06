@@ -73,9 +73,10 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
+  if(options.checks==='canvas-pen'){const geometry=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-pen.json'),'utf8')).cases[0].result,node={...createNode('drawing','thumbnail-pen'),x:100,y:600,width:geometry.w,height:geometry.h,path:{d:geometry.d,width:geometry.w,height:geometry.h},style:{stroke:'#8a8378',strokeWidth:2}};document.pages['page-3'].nodes[node.id]=node;document.pages['page-3'].nodeOrder.push(node.id)}
   if(['canvas-import','canvas-layout-cache'].includes(options.checks)){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[]);if(options.checks==='canvas-layout-cache'){const body=document.pages[document.canvasPages[0].contentId];body.nodes['imported-note'].text='中文自动换行'.repeat(100);body.nodes['imported-note'].height=832;body.nodes['imported-note'].style.fontSize=32;body.nodes.unrelated={...createNode('shape','unrelated'),x:0,y:0};body.nodeOrder.push('unrelated');if(options['inherit-font']==='true'){const note=body.nodes['imported-note'];note.text='i'.repeat(2000);if(options['inherit-keyword'])note.style.fontFamily=options['inherit-keyword'];else delete note.style.fontFamily;const group={...createNode('group','inherited-group'),x:0,y:0,width:1000,height:8000,style:{fontFamily:'monospace'}};body.nodes[group.id]=group;body.nodeOrder.unshift(group.id);note.parentId=group.id;if(options['layout-case']){group.x=note.x;group.y=note.y;group.width=120;group.height=180;group.layout={mode:options['layout-case'],direction:'row',columns:1,align:'start'};note.x=0;note.y=0;note.text='a '.repeat(400);if(options['grid-second-row']==='true'){group.width=480;group.height=3000;group.layout={mode:'grid',columns:2,gap:20,align:'start'};for(let i=1;i<(options['grid-mixed']==='true'||options['grid-shapes-only']==='true'?6:4);i++){const sibling={...structuredClone(note),id:`grid-note-${i}`};if(options['grid-shapes-only']==='true'||options['grid-mixed']==='true'&&i>=2){sibling.type='shape';sibling.shape='rect';sibling.height=3128;delete sibling.text}body.nodes[sibling.id]=sibling;body.nodeOrder.push(sibling.id)}if(options['grid-shapes-only']==='true'){note.type='shape';note.shape='rect';note.height=3128;delete note.text}}}}}}
   if(options.checks==='canvas-empty')document={...document,pageOrder:[],pages:{}}
   if(options.checks==='canvas-flow'){
@@ -118,7 +119,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let historyEntry = null
   const historyRequests = []
   let fixtureWrite=true
-  const snapshot = () => ({ document, history, write: fixtureWrite, loadedPageIds: artifactPageIds(document),
+  const pageReads=[]
+  const snapshot = () => ({ document:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds: options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
   if(options.checks==='canvas-layout-cache')await page.addInitScript(()=>{window.__naturalProbePeak=0;new MutationObserver(()=>{window.__naturalProbePeak=Math.max(window.__naturalProbePeak,document.querySelectorAll('[data-native-measure-node]').length)}).observe(document,{childList:true,subtree:true})})
@@ -127,7 +129,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const editorFontRequests=[]
   page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/fonts/editors/'))editorFontRequests.push(new URL(request.url()).pathname)})
   page.setDefaultTimeout(30_000)
-  await page.addInitScript(()=>{window.__geometryLog=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
+  await page.addInitScript(()=>{window.__geometryLog=[];window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){if(message?.task?.kind==='pen')window.__penRequests++;if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
+  if(options.checks==='viewport-loading')await page.addInitScript(()=>{window.__holdVisible=false;window.__heldVisible=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.visibleIds=new Set();this.addEventListener('message',event=>{if(this.visibleIds.delete(event.data?.id)&&window.__holdVisible){event.stopImmediatePropagation();window.__heldVisible.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='visible')this.visibleIds.add(message.id);return super.postMessage(message,...args)}}})
+  if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
   page.on('console', message => { if (message.type() === 'error'&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))) errors.push(message.text()) })
   if(options.checks==='svg-font-module')await page.route('**/svg-font-image.ts*',async route=>{svgModuleRequests++;if(svgModuleBlocked)await route.fulfill({status:503,body:'图形工具暂时无法加载'});else await route.continue()})
@@ -182,6 +186,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await route.fulfill({ status: 200, contentType: 'image/png', body: image.bytes }); return
     }
     let result = snapshot()
+    if(options.checks==='viewport-loading'&&url.pathname.includes('/pages/')){const id=url.pathname.split('/pages/')[1];pageReads.push(id);await route.fulfill({status:200,json:{page:document.pages[id]}});return}
     if (url.pathname.endsWith('/operations')) {
       const batch = request.postDataJSON()
       try {
@@ -230,6 +235,25 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await page.goto(`${baseUrl}/?kind=${kind}${options.checks==='canvas-links'?'&project=fixture-project&view=conversations&conversation=fixture-room':''}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='viewport-loading'){
+      assert.equal(kind,'design')
+      await page.waitForFunction(()=>document.querySelectorAll('.native-board-thumbnail').length===49)
+      assert.deepEqual(pageReads,[],'fit view loads only the current page')
+      await page.evaluate(()=>{window.__holdVisible=true})
+      await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:'100%',exact:true}).click()
+      await page.waitForFunction(()=>window.__heldVisible.length>0)
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+      assert.deepEqual(pageReads,[],'a pending zoom query must not load pages from the previous fit viewport')
+      await page.evaluate(()=>{window.__holdVisible=false;for(const release of window.__heldVisible.splice(0))release()})
+      await ready(1)
+      await page.waitForFunction(()=>document.querySelectorAll('[data-artboard-id]').length>0)
+      assert.ok(pageReads.length<5,'the resolved zoom query loads only nearby pages')
+      await page.locator('.native-stage').evaluate((element,p)=>element.scrollTo({left:p.x,top:p.y,behavior:'instant'}),document.pages['page-50'])
+      await ready(50);assert.ok(pageReads.includes('page-50'));assert.ok(pageReads.length<8)
+      for(const id of document.pageOrder)assert.equal(pageHash(document.pages[id]),initialPageHashes[id])
+      assert.equal(document.seq,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-viewport-loading-diagnostic',pages:50,staleViewportLoads:0,resolvedPageReads:pageReads,originalDocumentUnchanged:true,consoleOrPageErrors:errors,scope:'真实 React、Worker 与缩放控件；延迟交付真实 Worker 响应，HTTP 夹具不代替授权 API 或性能验收'}
+    }
     if(options.checks==='canvas-empty'){
       await page.getByRole('button',{name:'便签 (N)',exact:true}).click();await page.mouse.click(200,240)
       await page.getByRole('textbox',{name:'编辑文本',exact:true}).waitFor()
@@ -302,6 +326,46 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(document.pages[bodyId].nodes['imported-note'].text.length,options['layout-case']?800:options['inherit-font']==='true'?2000:600)
       assert.deepEqual(errors,[])
       return{kind:'isolated-natural-layout-cache-diagnostic',wholePageCloneKeepsVisibleNote:true,normalCacheEvictionRecovered:options['evict-pages']==='true',storedHeightUnchanged:true,inheritedFont:options['inherit-font']==='true',inheritedKeyword:options['inherit-keyword']??null,layoutCase:options['layout-case']??null,probePeak,before,after,scope:'controlled HTTP fixture; actual React, Worker and trusted wheel/page controls',consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-pen'){
+      await page.getByRole('button',{name:'铅笔',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]').dataset.penReady==='true')
+      await page.mouse.move(220,200);await page.mouse.down();await page.mouse.move(250,210,{steps:4});await page.mouse.move(270,190,{steps:4});await page.mouse.move(320,215,{steps:4})
+      await page.locator('[data-native-path-preview] path').waitFor();const preview=await page.locator('[data-native-path-preview] path').getAttribute('d');assert.match(preview,/ C/)
+      await page.mouse.up();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+      const bodyId=document.canvasPages[0].contentId,node=Object.values(document.pages[bodyId].nodes).find(node=>node.type==='drawing'),target=page.locator(`[data-page-id="${bodyId}"] [data-node-id="${node.id}"]`),original=structuredClone(node)
+      assert.ok(node.path);assert.match(node.path.d,/ C/);assert.equal(node.style.stroke,'#8a8378');assert.equal(node.style.strokeWidth,2)
+      assert.equal(await target.locator('path').first().getAttribute('d'),node.path.d);assert.equal(await target.locator('path').first().getAttribute('vector-effect'),'non-scaling-stroke')
+      assert.ok(await page.evaluate(()=>window.__penRequests>0))
+      assert.equal(node.path.d,'M0 45.2 C45.2 60.3 90.5 75.4 135.7 90.5 C165.9 60.3 196 30.2 226.2 0 C301.6 37.7 377 75.4 452.4 113.1')
+      await page.getByRole('button',{name:'选择 (V)',exact:true}).click()
+      const point=await target.locator('path').first().evaluate(path=>{const p=path.getPointAtLength(40).matrixTransform(path.getScreenCTM());return{x:p.x,y:p.y}})
+      await page.mouse.click(point.x,point.y);await page.locator('.native-selection').waitFor()
+      const box=await target.boundingBox();await page.mouse.click(box.x+box.width/2,box.y+box.height-7);assert.equal(await page.locator('.native-selection').count(),0,'empty path box space passes through to the canvas')
+      await page.screenshot({path:join(output,'design-canvas-pen.png')})
+
+      const history=async kind=>{await page.locator('[data-native-artifact-editor]').focus();await Promise.all([page.waitForResponse(response=>response.url().endsWith('/operations')&&response.request().postDataJSON()?.kind===kind&&response.ok()),page.keyboard.press(kind==='undo'?'ControlOrMeta+z':'ControlOrMeta+Shift+z')]);await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')}
+      await history('undo');assert.equal(document.pages[bodyId].nodes[node.id],undefined);await history('redo');assert.deepEqual(document.pages[bodyId].nodes[node.id],original)
+      await page.reload();await ready(1);await target.waitFor();assert.deepEqual(document.pages[bodyId].nodes[node.id],original)
+      await page.getByRole('button',{name:'铅笔',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]').dataset.penReady==='true')
+      await page.evaluate(()=>{window.__holdPen=true});const requestsBefore=await page.evaluate(()=>window.__penRequests)
+      await page.mouse.move(420,300);await page.mouse.down();await page.mouse.move(500,320,{steps:24});await page.waitForFunction(()=>window.__heldPen.length>0)
+      assert.equal(await page.evaluate(()=>window.__penRequests),requestsBefore+1,'pointer events retain one in-flight preview while its real reply is delayed')
+      await page.mouse.up();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+      await page.evaluate(()=>{window.__holdPen=false;for(const release of window.__heldPen.splice(0))release()})
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+      assert.equal(await page.locator('[data-native-path-preview]').count(),0,'a completed gesture ignores a late preview')
+      assert.equal(Object.values(document.pages[bodyId].nodes).filter(node=>node.type==='drawing').length,2)
+      await history('undo');assert.equal(Object.values(document.pages[bodyId].nodes).filter(node=>node.type==='drawing').length,1)
+      await page.getByRole('button',{name:'铅笔',exact:true}).click();await page.locator('[data-native-artifact-editor]').focus()
+      const beforeCancel=document.seq;await page.mouse.move(420,340);await page.mouse.down();await page.mouse.move(510,360,{steps:12});await page.keyboard.press('Escape');await page.mouse.up()
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+      assert.equal(document.seq,beforeCancel,'Escape cancels the active drawing without a native operation')
+      assert.equal(await page.locator('[data-native-path-preview]').count(),0)
+      await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:'25%',exact:true}).click();await page.locator('[data-native-artifact-editor]').focus();for(let i=0;i<3;i++)await page.keyboard.press('ControlOrMeta+-')
+      const thumbnail=page.locator('[data-artboard-id="page-3"] .native-board-thumbnail path[d]');await thumbnail.waitFor()
+      assert.equal(await thumbnail.getAttribute('d'),document.pages['page-3'].nodes['thumbnail-pen'].path.d)
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-pen-diagnostic',sourceCurve:true,workerPreview:true,boundedPreviewRequests:true,latePreviewDiscarded:true,escapeCancelled:true,sourceStroke:true,strokeHitArea:true,sourcePathExact:true,thumbnailPath:true,oneGestureOneUndo:true,savedAndReopened:true,path:node.path,scope:'actual React/Worker and trusted drawing; controlled HTTP fixture, not complete source visual or performance qualification',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-title'){
       await page.getByRole('button',{name:'文本',exact:true}).click();await page.mouse.click(200,240)
@@ -408,6 +472,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await historyKey('undo','Control+z');assert.equal(document.pages[bodyId].nodes[noteId].x,moveStartX)
       await historyKey('redo','Control+y');assert.equal(document.pages[bodyId].nodes[noteId].x,moveStartX+1)
       await page.getByRole('button',{name:'铅笔',exact:true}).click()
+      await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]').dataset.penReady==='true')
       await page.mouse.move(300,240);await page.mouse.down();await page.mouse.move(360,280,{steps:8});await page.mouse.up();await saved()
       assert.ok(Object.values(document.pages[bodyId].nodes).some(n=>n.type==='drawing'))
       assert.equal(document.canvasPages.length,1,'drawing reuses the same independent body')

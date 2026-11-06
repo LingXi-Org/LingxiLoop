@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { canvasPages, canvasPageOf, artifactPageIds, MAX_CANVAS_PAGES } from './artifact-canvas-pages.js'
+import {isArtifactPenPath} from './artifact-path.js'
 
 /** Native documents contain data only. Executable source belongs to an isolated embed. */
 export const ARTIFACT_DOCUMENT_SCHEMA_VERSION = 1 as const
@@ -123,6 +124,7 @@ export const artifactNodeSchema = z.object({
   crop: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), width: z.number().min(0).max(1), height: z.number().min(0).max(1) }).strict().optional(),
   shape: z.enum(['rect', 'ellipse', 'triangle', 'diamond', 'arrow', 'arrow-right', 'arrow-left', 'arrow-up', 'arrow-down']).optional(),
   points: z.array(z.object({ x: finite, y: finite }).strict()).max(10_000).optional(),
+  path: z.object({d:z.string().max(24000).refine(isArtifactPenPath,'绘图路径格式无效'),width:z.number().finite().min(2).max(8000),height:z.number().finite().min(2).max(8000)}).strict().optional(),
   tableHeader: z.boolean().optional(),
   cells: z.array(z.array(z.string().max(10_000)).max(100)).max(100).optional(),
   svg: z.string().refine(isSafeArtifactSvg, 'unsupported or unsafe SVG').optional(),

@@ -1,13 +1,20 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { BASELINE, baselineFor, compactReceipt, configuration, FIDELITY_BASELINE, publicEvidence, publicRequest, verifyDiagnosticPrerequisite } from './native-artifact-ci.mjs'
+import { BASELINE, baselineFor, compactReceipt, configuration, FIDELITY_BASELINE, performanceSampleEligible, publicEvidence, publicRequest, verifyDiagnosticPrerequisite } from './native-artifact-ci.mjs'
 
 const env = {
   GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_REF_TYPE: 'branch', GITHUB_REF: 'refs/heads/codex/shared-artifact-editor',
   GITHUB_SHA: 'a'.repeat(40), GITHUB_REPOSITORY: 'LingXi-Org/LingxiLoop', NATIVE_ARTIFACT_PHASE: 'diagnostic',
   RUNNER_TEMP: '/tmp/runner', NATIVE_ARTIFACT_PRIVATE: '/tmp/runner/native-private', NATIVE_ARTIFACT_PUBLIC: '/workspace/results', NATIVE_ARTIFACT_BASELINE_ROOT: '/workspace/baseline',
 }
+test('fixed baseline export observations stay failed while completed performance samples can be compared',()=>{
+  const sample={arm:'baseline',mode:'fullNavigation',run:1,status:'failed',failureStage:'validation',failureCode:'export_diagnostic_incomplete',exports:['html','pdf','pptx'].map(format=>({format,status:'failed'}))}
+  assert.equal(performanceSampleEligible(sample,true),true)
+  assert.equal(sample.status,'failed')
+  assert.equal(performanceSampleEligible(sample,false),false)
+  for(const patch of [{arm:'candidate'},{run:2},{mode:'workbenchOpen'},{failureStage:'closeReclamation'},{failureCode:'pss_incomplete'},{exports:[]},{exports:[...sample.exports.slice(0,2),sample.exports[0]]},{exports:sample.exports.map(row=>({...row,status:'unsupported'}))}])assert.equal(performanceSampleEligible({...sample,...patch},true),false)
+})
 test('acceptance keeps credential state outside the uploaded directory', () => {
   assert.equal(configuration(env).privateRoot, '/tmp/runner/native-private')
   for (const patch of [{ NATIVE_ARTIFACT_PRIVATE: '/workspace/results/private' }, { NATIVE_ARTIFACT_PUBLIC: '/tmp/runner' }, { NATIVE_ARTIFACT_PHASE: 'deploy' }]) assert.throws(() => configuration({ ...env, ...patch }))
@@ -31,6 +38,11 @@ test('ten pairs require an actual successful diagnostic from the same SHA and wo
   for (const patch of [{ head_sha: 'b'.repeat(40) }, { conclusion: 'failure' }, { path: '.github/workflows/other.yml' }, { display_title: 'LingxiLoop CI' }]) await assert.rejects(verifyDiagnosticPrerequisite(paired, reply({ ...receipt, ...patch }), async () => artifact))
   for (const patch of [{ candidateCommit: 'b'.repeat(40) }, { phase: 'paired' }, { diagnosticPassed: false }, { measurement: { diagnosticPassed: true, samples: [] } }]) await assert.rejects(verifyDiagnosticPrerequisite(paired, reply(), async () => ({ ...artifact, ...patch })))
   await assert.rejects(verifyDiagnosticPrerequisite(paired, reply(receipt, true), async () => artifact))
+  const fidelityArtifact={...artifact,baselineCommit:FIDELITY_BASELINE,measurement:{...artifact.measurement,samples:artifact.measurement.samples.map(sample=>sample.arm==='baseline'&&sample.mode==='fullNavigation'?{...sample,run:1,status:'failed',failureStage:'validation',failureCode:'export_diagnostic_incomplete',exports:['html','pdf','pptx'].map(format=>({format,status:'failed'}))}:sample)}}
+  const fidelityEnv={...paired,NATIVE_ARTIFACT_PROFILE:'fidelity'}
+  await verifyDiagnosticPrerequisite(fidelityEnv,reply(),async()=>fidelityArtifact)
+  await assert.rejects(verifyDiagnosticPrerequisite(fidelityEnv,reply(),async()=>({...fidelityArtifact,baselineCommit:BASELINE})))
+  await assert.rejects(verifyDiagnosticPrerequisite(fidelityEnv,reply(),async()=>({...fidelityArtifact,measurement:{...fidelityArtifact.measurement,samples:fidelityArtifact.measurement.samples.map(sample=>sample.arm==='candidate'&&sample.mode==='fullNavigation'?{...sample,status:'failed',failureStage:'validation',failureCode:'export_diagnostic_incomplete'}:sample)}})))
 })
 test('artifact projection retains numeric measurements while dropping secrets, free text and URLs recursively', () => {
   const output = publicEvidence({ qualified: false, samples: [{ arm: 'baseline', kind: 'slides', status: 'passed', editableMs: 321, token: 'secret', cookie: 'x=y', failure: 'private message', source: '<script>', requests: [{ transferredBytes: 42, url: 'https://private.example/token' }], hostile: 'prompt text', nested: { authorization: 'secret', pss: { bytes: 456 }, decodedBytes: 123 } }], headers: { secret: 42 }, commit: 'a'.repeat(40), 'evil\nkey': 'passed' })

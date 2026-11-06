@@ -41,7 +41,7 @@ function imageKey(documentId: string, asset: ArtifactAsset) {
 interface PreviewNode {
   id: string; type: ArtifactNode['type']; x: number; y: number; width: number; height: number; rotation: number
   fill: string; color: string; stroke: string; strokeWidth: number; opacity: number; radius: number
-  fontSize: number; fontWeight: number; fontFamily: string; text: string; shape?: ArtifactNode['shape']; points?: string
+  fontSize: number; fontWeight: number; fontFamily: string; text: string; shape?: ArtifactNode['shape']; path?: ArtifactNode['path']; points?: string
   gradient?: ArtifactStyle['gradient']; shadow?: ArtifactStyle['shadow']; flipX?: boolean; flipY?: boolean
   assetId?: string; imageKey?: string; crop?: ArtifactNode['crop']; svg?: string; svgFontFamily?:string; cells?: string[][]; tableHeader?: boolean; children?: PreviewNode[]
 }
@@ -89,7 +89,7 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
       text: (node.type === 'math' ? node.source ?? '' : node.text ?? plainText(node.richText)).slice(0, 512),
       shape: node.shape, crop: node.crop, gradient: style.gradient, shadow: style.shadow, flipX: node.flipX, flipY: node.flipY,
       ...(asset ? { assetId, imageKey: imageKey(document.id, asset) } : {}),
-      ...(node.type === 'line' || node.type === 'drawing' ? { points: (node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ') } : {}),
+      ...(node.type === 'line' || node.type === 'drawing' ? { path:node.path, points: (node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ') } : {}),
       ...(node.type === 'svg' && node.svg && isSafeArtifactSvg(node.svg) ? { svg: node.svg, svgFontFamily:inheritedSvgFont(node,page,document) } : {}),
       ...(node.type === 'table' ? { tableHeader:node.tableHeader, cells: node.cells?.slice(0, 12).map(row => row.slice(0, 8).map(cell => cell.slice(0, 48))) } : {}),
     }
@@ -207,7 +207,7 @@ function PreviewShape({ node, document, loaded }: { node: PreviewNode; document:
   const paint = { fill: node.gradient ? `url(#${gradientId})` : node.fill, stroke: node.stroke, strokeWidth: node.strokeWidth }
   if (node.type === 'image' || node.type === 'video' && node.imageKey || node.type === 'embed' && node.imageKey) content = <ThumbnailImage node={node} document={document} loaded={loaded} />
   else if (node.type === 'svg' && node.svg) content = <SvgImage source={node.svg} alt="图形" fontFamily={node.svgFontFamily} thumbnail={{width:w,height:h}} />
-  else if ((node.type === 'line' || node.type === 'drawing')) content = <polyline points={node.points} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} />
+  else if ((node.type === 'line' || node.type === 'drawing')) content = node.path?<svg width={node.width} height={node.height} viewBox={`0 0 ${node.path.width} ${node.path.height}`} preserveAspectRatio="none" overflow="visible"><path d={node.path.d} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /></svg>:<polyline points={node.points} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} />
   else if (node.type === 'shape') {const {tag:Shape,attributes}=artifactShapeGeometry(node.shape,w,h,node.radius);content=<Shape {...attributes} {...paint} />}
   else if (node.type === 'table') {
     const rows=node.cells??[],cols=Math.max(1,...rows.map(row=>row.length)),rowHeight=Math.max(0,h-2)/Math.max(1,rows.length),columnWidth=Math.max(0,w-2)/cols
