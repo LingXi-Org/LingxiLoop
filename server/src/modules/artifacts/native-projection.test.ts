@@ -1,3 +1,4 @@
+import {createCanvasText} from '../../../../shared/artifact-canvas-typography.js'
 import {createCanvasContents} from '../../../../shared/artifact-canvas-pages.js'
 import {applyOperations,prepareBatch} from '../../../../shared/artifact-operations.js'
 import assert from 'node:assert/strict'
@@ -34,4 +35,15 @@ test('independent canvas bodies retain their identity in compact reads and all d
   const full=projectNativeSnapshot({...snapshot,pageVersions:{}},[])
   assert.deepEqual(full.loadedPageIds,[body])
   assert.equal(full.document.pages.contents.nodes.note.text,'画布便签')
+})
+
+
+test('lazy native projection retains content text and independent padding in loaded bodies',()=>{
+  const document=createDocument('design','d'),page=createPage('p'),node=createCanvasText('t','text');page.nodes={t:node};page.nodeOrder=['t'];document.pages={p:page};document.pageOrder=['p']
+  const snapshot={document,history:{version:0,undo:null,redo:null},pageVersions:{p:'hash'},original:{version:'old',files:{},warnings:[]}}
+  const loaded=projectNativeSnapshot(snapshot,['p'])
+  assert.deepEqual(loaded.document.pages.p.nodes.t,node)
+  assert.equal(loaded.document.pages.p.nodes.t.style.paddingX,14)
+  assert.equal(loaded.document.pages.p.nodes.t.textSizing,'content')
+  assert.deepEqual(projectNativeSnapshot(snapshot,[]).document.pages.p.nodes,{})
 })

@@ -1,3 +1,4 @@
+import {canvasTextMetrics} from '../../../../../shared/artifact-canvas-typography'
 import { artifactShapeGeometry } from '../../../../../shared/artifact-shapes'
 import type { ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../../shared/artifact-themes'
@@ -42,7 +43,7 @@ function textStyle(style: ArtifactStyle) {
   const extra = Object.fromEntries(Object.entries(appearance(style)).map(([key,value]) => [key.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`),value]))
   return Object.entries({ color: style.color, background: style.backgroundColor ?? style.fill, opacity: style.opacity, 'font-family': editorFontFamily(style.fontFamily), 'font-size': style.fontSize === undefined ? undefined : `${style.fontSize}px`,
     'font-weight': style.fontWeight, 'font-style': style.fontStyle, 'text-align': style.textAlign, 'text-decoration': style.textDecoration, 'line-height': style.lineHeight,
-    'border-radius': style.borderRadius === undefined ? undefined : `${style.borderRadius}px`, padding: style.padding === undefined ? undefined : `${style.padding}px`,
+    'border-radius': style.borderRadius === undefined ? undefined : `${style.borderRadius}px`, padding: style.padding === undefined ? undefined : `${style.padding}px`, 'padding-inline':style.paddingX===undefined?undefined:`${style.paddingX}px`, 'padding-block':style.paddingY===undefined?undefined:`${style.paddingY}px`,
     border: (style.borderColor ?? style.stroke) ? `${style.borderWidth ?? style.strokeWidth ?? 1}px ${style.borderStyle ?? 'solid'} ${style.borderColor ?? style.stroke}` : undefined, ...extra,
   }).filter(([, value]) => value !== undefined).map(([key, value]) => `${key}:${String(value)}`).join(';')
 }
@@ -58,7 +59,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
     const inFlow = parent?.layout?.mode === 'flex' || parent?.layout?.mode === 'grid'
     const position = inFlow ? 'position:relative;flex-shrink:1' : `position:absolute;left:${node.x}px;top:${node.y}px`
     const style = artifactResolvedStyle(node.style, resources.document)
-    let css = `${position};width:${node.width}px;height:${node.height}px;transform:${nodeTransform(node)};${textStyle(style)}`
+    let css = `${position};width:${node.textSizing==='content'?'max-content':`${node.width}px`};${node.textSizing==='content'?`max-width:${node.width}px;height:auto;min-height:${canvasTextMetrics(style.fontSize??24).minHeight}px`:`height:${node.height}px`};transform:${nodeTransform(node)};${textStyle(style)}`
     let content = ''
     switch (node.type) {
       case 'group': {

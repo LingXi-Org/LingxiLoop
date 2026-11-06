@@ -23,7 +23,7 @@ export const artifactStyleSchema = z.object({
   fontStyle: z.enum(['normal', 'italic']).optional(), textAlign: z.enum(['left', 'center', 'right', 'justify']).optional(),
   textDecoration: z.enum(['none', 'underline', 'line-through']).optional(), lineHeight: z.number().min(0.5).max(10).optional(),
   themeColorFallback: color.optional(), themeFontFallback: z.string().max(200).refine(value => !/[<>;{}]/.test(value)).optional(),
-  padding: positive.optional(), themeColor: z.string().max(128).optional(), themeFont: z.string().max(128).optional(), themeFill: z.string().max(128).optional(),
+  padding: positive.optional(), paddingX: positive.optional(), paddingY: positive.optional(), themeColor: z.string().max(128).optional(), themeFont: z.string().max(128).optional(), themeFill: z.string().max(128).optional(),
 }).strict()
 export type ArtifactStyle = z.infer<typeof artifactStyleSchema>
 
@@ -117,7 +117,7 @@ export const artifactNodeSchema = z.object({
   flipX: z.boolean().optional(), flipY: z.boolean().optional(),
   lineStart: z.enum(['none', 'arrow', 'circle']).optional(), lineEnd: z.enum(['none', 'arrow', 'circle']).optional(),
   style: artifactStyleSchema,
-  text: z.string().max(100_000).optional(), richText: artifactRichTextSchema.optional(), source: z.string().max(100_000).optional(),
+  text: z.string().max(100_000).optional(), textSizing: z.enum(['content']).optional(), richText: artifactRichTextSchema.optional(), source: z.string().max(100_000).optional(),
   assetId: artifactIdSchema.optional(),
   posterAssetId: artifactIdSchema.optional(),
   crop: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), width: z.number().min(0).max(1), height: z.number().min(0).max(1) }).strict().optional(),

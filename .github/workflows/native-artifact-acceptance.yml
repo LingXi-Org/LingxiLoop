@@ -98,6 +98,9 @@ jobs:
           python scripts/native-artifact-export-control-check.py
           node scripts/native-artifact-proxy-check.mjs
           python scripts/native-embed-capture-check.py
+          PLAYWRIGHT_MODULE="$(python -c 'from pathlib import Path; import playwright; print(Path(playwright.__file__).parent / "driver/package/index.mjs")')" \
+          CHROMIUM_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')" \
+          node --import tsx scripts/native-canvas-text-export-check.mjs "$RUNNER_TEMP/native-canvas-text-export.json"
       - name: Build both production applications before any measurements
         run: |
           if [ "$NATIVE_ARTIFACT_PROFILE" != fidelity ]; then

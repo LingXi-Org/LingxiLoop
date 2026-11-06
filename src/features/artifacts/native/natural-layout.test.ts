@@ -115,3 +115,22 @@ test('grid row offsets reach spatial bounds without mutating the authored zero p
   assert.equal(view.nodes['note-2']!.y,1510);assert.equal(second.y,group.y+1510-2)
   assert.equal(page.nodes['note-2']!.y,0);assert.equal(JSON.stringify(page),original)
 })
+
+test('flow shapes recover their complete layout unit even when it contains no sticky notes',()=>{
+  const document=createDocument('design','d'),page=createPage('p'),group={...createNode('group','g'),layout:{mode:'grid' as const,columns:2}},shape={...createNode('shape','s'),parentId:'g'}
+  page.nodes={g:group,s:shape};page.nodeOrder=['g','s'];document.pages={p:page};document.pageOrder=['p']
+  const sizes=new NaturalNodeSizes();assert.deepEqual(naturalMeasurementBatch(page,sizes,document).map(node=>node.id),['s'])
+  sizes.set(shape,{width:240,height:3128,x:250,y:6296},naturalNodeStyle(page,shape,document),document.seq)
+  assert.deepEqual(naturalMeasurementBatch(page,sizes,document),[])
+  assert.equal(withNaturalLayout(page,sizes,document).nodes.s!.y,6296)
+  assert.equal(page.nodes.s!.y,80)
+})
+
+test('content-sized text participates in bounded measurement and does not constrain its next text revision',()=>{
+  const document=createDocument('design','d'),page=createPage('p'),node={...createNode('text','t'),textSizing:'content' as const,width:2000}
+  page.nodes={t:node};page.nodeOrder=['t'];document.pages={p:page};document.pageOrder=['p']
+  const sizes=new NaturalNodeSizes();assert.equal(naturalMeasurementBatch(page,sizes,document)[0],node)
+  sizes.set(node,{width:172,height:55.36},naturalNodeStyle(page,node,document));assert.equal(withNaturalLayout(page,sizes,document).nodes.t!.width,172)
+  const changed={...node,text:'中文标题'.repeat(100)}
+  assert.equal(sizes.get(changed),undefined);assert.equal(node.width,2000)
+})

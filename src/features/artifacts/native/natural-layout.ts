@@ -19,6 +19,7 @@ export function naturalNodeStyle(page:ArtifactPage,node:ArtifactNode,document?:A
   return style
 }
 
+export const isNaturalText=(node:ArtifactNode)=>node.type==='note'||node.type==='text'&&node.textSizing==='content'
 export const isFlowChild=(page:ArtifactPage,node:ArtifactNode)=>!!node.parentId&&['flex','grid'].includes(page.nodes[node.parentId]?.layout?.mode??'')
 export function hasFlowAncestor(page:ArtifactPage,node:ArtifactNode){
   const seen=new Set<string>();let parentId=node.parentId
@@ -28,7 +29,7 @@ export function hasFlowAncestor(page:ArtifactPage,node:ArtifactNode){
 export const layoutRevision=(node:ArtifactNode,document?:ArtifactDocument)=>node.parentId?document?.seq??0:undefined
 
 export interface NaturalNodeSize {width:number;height:number;x?:number;y?:number}
-const signature=(node:ArtifactNode,style:ArtifactStyle,layout?:number)=>JSON.stringify([node.width,node.text,node.richText,style,layout])
+const signature=(node:ArtifactNode,style:ArtifactStyle,layout?:number)=>JSON.stringify([node.width,node.textSizing,node.text,node.richText,style,layout])
 
 /** Exact layout dependencies survive the reducer's whole-page structuredClone.
  * Each page retains at most 256 measurements and 512 KiB of dependency strings. */
@@ -74,7 +75,7 @@ export function withNaturalLayout(page:ArtifactPage,sizes?:NaturalNodeSizes,docu
   if(!sizes)return page
   let changed=false
   const nodes={...page.nodes}
-  for(const id of page.nodeOrder){const node=page.nodes[id]!,size=node.type==='note'||isFlowChild(page,node)?sizes.get(node,naturalNodeStyle(page,node,document),layoutRevision(node,document)):undefined
+  for(const id of page.nodeOrder){const node=page.nodes[id]!,size=isNaturalText(node)||isFlowChild(page,node)?sizes.get(node,naturalNodeStyle(page,node,document),layoutRevision(node,document)):undefined
     if(size&&(Math.abs(size.width-node.width)>.001||Math.abs(size.height-node.height)>.001||size.x!==undefined&&Math.abs(size.x-node.x)>.001||size.y!==undefined&&Math.abs(size.y-node.y)>.001)){nodes[id]={...node,...size};changed=true}
   }
   return changed?{...page,nodes}:page
@@ -85,7 +86,7 @@ export function naturalMeasurementBatch(page:ArtifactPage|undefined,sizes:Natura
   if(!page||!sizes||!document)return []
   const batch:ArtifactNode[]=[]
   for(const id of page.nodeOrder){const node=page.nodes[id]!
-    if(node.type==='note'&&!node.hidden&&!sizes.get(node,naturalNodeStyle(page,node,document),layoutRevision(node,document))){if(hasFlowAncestor(page,node))return[node];batch.push(node)}
+    if((isNaturalText(node)||isFlowChild(page,node))&&!node.hidden&&!sizes.get(node,naturalNodeStyle(page,node,document),layoutRevision(node,document))){if(hasFlowAncestor(page,node))return[node];batch.push(node)}
     if(batch.length===8)break
   }
   return batch

@@ -1,0 +1,35 @@
+{
+  "reviewer": "/root/independent_review",
+  "mode": "独立只读环境对照",
+  "browser": "140.0.7339.16",
+  "finding": "本机52-orbit-os.conf将通用字体强别名为宿主OpenAI Sans WOFF2，140读取后中英文均零宽、无墨迹；154原配置正常。",
+  "scope": "正式benchmark原始启动及Trace；不证明历史CI唯一根因。",
+  "processOnlyConfiguration": "<?xml version=\"1.0\"?><!DOCTYPE fontconfig SYSTEM \"urn:fontconfig:fonts.dtd\"><fontconfig><include>/etc/fonts/fonts.conf</include><selectfont><rejectfont><glob>/usr/share/fonts/openai-sans/*.woff2</glob></rejectfont></selectfont></fontconfig>\n",
+  "configurationSha256": "4d10352cf5166b44a69fef3deef316756152b1156d9558230b741783ee626310",
+  "rawObservations": [
+    {
+      "configuration": "system",
+      "browser": "140.0.7339.16",
+      "traceErrors": [],
+      "proof": {
+        "domWidth": 0,
+        "cjk": 0,
+        "latin": 0,
+        "ink": 0
+      }
+    },
+    {
+      "configuration": "compatible-no-system-woff2",
+      "browser": "140.0.7339.16",
+      "traceErrors": [],
+      "proof": {
+        "domWidth": 748,
+        "cjk": 432.00018310546875,
+        "latin": 297.57611083984375,
+        "ink": 15991
+      }
+    }
+  ],
+  "productOrSystemChanged": false,
+  "separateUnresolved": "显式思源黑体网页字体在本地140出现NetworkError，尚未归因；默认系统字体导出已在进程修正环境通过。"
+}

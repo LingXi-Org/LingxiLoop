@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import {naturalNodeStyle,layoutRevision,isFlowChild} from './natural-layout'
+import {naturalNodeStyle,layoutRevision,isFlowChild,isNaturalText} from './natural-layout'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
 import {readElementFrame,layoutPosition} from './rendered-geometry'
 import type { Bounds, NativeCompute } from './compute'
@@ -23,7 +23,7 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
         const node=naturalSource.nodes[element.dataset.nodeId??element.dataset.nativeMeasureNode??'']
         if(!node||!element.getClientRects().length)continue
         const probing=!!element.closest('[data-natural-measure-page]')
-        if(node.type!=='note'&&(!isFlowChild(naturalSource,node)||probing))continue
+        if(!isNaturalText(node)&&!isFlowChild(naturalSource,node))continue
         const style=getComputedStyle(element),width=Number.parseFloat(style.width),height=Number.parseFloat(style.height)
         if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)continue
         let position:{x:number;y:number}|undefined

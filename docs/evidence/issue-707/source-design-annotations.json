@@ -111,6 +111,102 @@
       "bold": true
     },
     "qualified": false,
-    "implementationStatus": "仅来源定位与实际运行确认；完整自适应排版、颜色及自然宽度尚待实现。"
+    "implementationStatus": "已接入新标题内容宽度、文字指标、字号联动、浅深色、保存重开、撤销及样式导出；完整来源控件与标题缩放/裁切仍未通过。",
+    "defaultWidthLimit": 2000,
+    "explicitMaxWPreserved": true,
+    "observedTextCases": [
+      {
+        "case": "long",
+        "textLength": 400,
+        "fontSize": 24,
+        "maxW": null,
+        "measured": {
+          "outerStyle": "left: 2950px; top: -1386px; width: 2000px; isolation: isolate; --hair: calc(1px * var(--mega-inv-scale)); --mega-scale: 0.22105263157894736; --mega-inv-scale: 4.523809523809524; height: 189px;",
+          "textStyle": "color: var(--cds-text-primary); font-size: 24px; line-height: 1.39; padding: 11px 14px; min-height: 55px;",
+          "screen": {
+            "width": 442.10528564453125,
+            "height": 41.7789306640625
+          },
+          "computed": {
+            "font": "",
+            "whiteSpace": "pre-wrap",
+            "padding": "11px 14px",
+            "maxWidth": "none",
+            "width": "2000px",
+            "height": "188.797px",
+            "overflow": "visible"
+          }
+        }
+      },
+      {
+        "case": "multiline",
+        "textLength": 7,
+        "fontSize": 24,
+        "maxW": null,
+        "measured": {
+          "outerStyle": "left: 2950px; top: -1386px; width: max-content; isolation: isolate; --hair: calc(1px * var(--mega-inv-scale)); --mega-scale: 0.22105263157894736; --mega-inv-scale: 4.523809523809524;",
+          "textStyle": "color: var(--cds-text-primary); font-size: 24px; line-height: 1.39; padding: 11px 14px; min-height: 55px; white-space: pre;",
+          "screen": {
+            "width": 22.105224609375,
+            "height": 19.61151123046875
+          },
+          "computed": {
+            "font": "",
+            "whiteSpace": "pre",
+            "padding": "11px 14px",
+            "maxWidth": "none",
+            "width": "100px",
+            "height": "88.7188px",
+            "overflow": "visible"
+          }
+        }
+      },
+      {
+        "case": "bounded",
+        "textLength": 200,
+        "fontSize": 24,
+        "maxW": 300,
+        "measured": {
+          "outerStyle": "left: 2950px; top: -1386px; width: 300px; isolation: isolate; --hair: calc(1px * var(--mega-inv-scale)); --mega-scale: 0.22105263157894736; --mega-inv-scale: 4.523809523809524; height: 656px;",
+          "textStyle": "color: var(--cds-text-primary); font-size: 24px; line-height: 1.39; padding: 11px 14px; min-height: 55px;",
+          "screen": {
+            "width": 66.3157958984375,
+            "height": 145.01052856445312
+          },
+          "computed": {
+            "font": "",
+            "whiteSpace": "pre-wrap",
+            "padding": "11px 14px",
+            "maxWidth": "none",
+            "width": "300px",
+            "height": "655.828px",
+            "overflow": "visible"
+          }
+        }
+      },
+      {
+        "case": "text-kind",
+        "textLength": 4,
+        "fontSize": 24,
+        "maxW": null,
+        "measured": {
+          "outerStyle": "left: 2950px; top: -1386px; width: 240px; background: rgb(254, 243, 162); isolation: isolate;",
+          "textStyle": "color: rgb(74, 66, 32); font-size: 24px; line-height: 1.39; padding: 11px 14px; min-height: 55px;",
+          "screen": {
+            "width": 53.0526123046875,
+            "height": 12.237335205078125
+          },
+          "computed": {
+            "font": "24px / 33.36px ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "whiteSpace": "pre-wrap",
+            "padding": "11px 14px",
+            "maxWidth": "none",
+            "width": "240px",
+            "height": "55.3594px",
+            "overflow": "visible"
+          }
+        }
+      }
+    ]
   }
 }

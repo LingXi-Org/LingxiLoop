@@ -19,7 +19,7 @@ import { createVisualFixture } from './native-editor-visual-fixture.mjs'
 import { applyOperations, prepareBatch } from '../shared/artifact-operations.ts'
 import { createTableNode } from '../shared/artifact-tables.ts'
 import { createCanvasPage, renameCanvasPage, artifactPageIds } from '../shared/artifact-canvas-pages.ts'
-import { createNode } from '../shared/artifact-document.ts'
+import { createPage, createNode } from '../shared/artifact-document.ts'
 import { importCanvasAnnotations } from '../shared/artifact-canvas-import.ts'
 import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-anchor.ts'
 
@@ -73,10 +73,10 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
-  if(['canvas-import','canvas-layout-cache'].includes(options.checks)){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[]);if(options.checks==='canvas-layout-cache'){const body=document.pages[document.canvasPages[0].contentId];body.nodes['imported-note'].text='中文自动换行'.repeat(100);body.nodes['imported-note'].height=832;body.nodes['imported-note'].style.fontSize=32;body.nodes.unrelated={...createNode('shape','unrelated'),x:0,y:0};body.nodeOrder.push('unrelated');if(options['inherit-font']==='true'){const note=body.nodes['imported-note'];note.text='i'.repeat(2000);if(options['inherit-keyword'])note.style.fontFamily=options['inherit-keyword'];else delete note.style.fontFamily;const group={...createNode('group','inherited-group'),x:0,y:0,width:1000,height:8000,style:{fontFamily:'monospace'}};body.nodes[group.id]=group;body.nodeOrder.unshift(group.id);note.parentId=group.id;if(options['layout-case']){group.x=note.x;group.y=note.y;group.width=120;group.height=180;group.layout={mode:options['layout-case'],direction:'row',columns:1,align:'start'};note.x=0;note.y=0;note.text='a '.repeat(400);if(options['grid-second-row']==='true'){group.width=480;group.height=3000;group.layout={mode:'grid',columns:2,gap:20,align:'start'};for(let i=1;i<4;i++){const sibling={...structuredClone(note),id:`grid-note-${i}`};body.nodes[sibling.id]=sibling;body.nodeOrder.push(sibling.id)}}}}}}
+  if(['canvas-import','canvas-layout-cache'].includes(options.checks)){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[]);if(options.checks==='canvas-layout-cache'){const body=document.pages[document.canvasPages[0].contentId];body.nodes['imported-note'].text='中文自动换行'.repeat(100);body.nodes['imported-note'].height=832;body.nodes['imported-note'].style.fontSize=32;body.nodes.unrelated={...createNode('shape','unrelated'),x:0,y:0};body.nodeOrder.push('unrelated');if(options['inherit-font']==='true'){const note=body.nodes['imported-note'];note.text='i'.repeat(2000);if(options['inherit-keyword'])note.style.fontFamily=options['inherit-keyword'];else delete note.style.fontFamily;const group={...createNode('group','inherited-group'),x:0,y:0,width:1000,height:8000,style:{fontFamily:'monospace'}};body.nodes[group.id]=group;body.nodeOrder.unshift(group.id);note.parentId=group.id;if(options['layout-case']){group.x=note.x;group.y=note.y;group.width=120;group.height=180;group.layout={mode:options['layout-case'],direction:'row',columns:1,align:'start'};note.x=0;note.y=0;note.text='a '.repeat(400);if(options['grid-second-row']==='true'){group.width=480;group.height=3000;group.layout={mode:'grid',columns:2,gap:20,align:'start'};for(let i=1;i<(options['grid-mixed']==='true'||options['grid-shapes-only']==='true'?6:4);i++){const sibling={...structuredClone(note),id:`grid-note-${i}`};if(options['grid-shapes-only']==='true'||options['grid-mixed']==='true'&&i>=2){sibling.type='shape';sibling.shape='rect';sibling.height=3128;delete sibling.text}body.nodes[sibling.id]=sibling;body.nodeOrder.push(sibling.id)}if(options['grid-shapes-only']==='true'){note.type='shape';note.shape='rect';note.height=3128;delete note.text}}}}}}
   if(options.checks==='canvas-empty')document={...document,pageOrder:[],pages:{}}
   if(options.checks==='canvas-flow'){
     document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
@@ -261,17 +261,18 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       return{kind:'isolated-private-canvas-link-diagnostic',trustedClipboard:true,nonActivePageTarget:true,refreshRestoresPage:true,copyShortcut:true,deletedPageChineseFeedback:true,noDocumentWrites:true,scope:'actual React/Worker and clipboard; controlled HTTP fixture, not host authentication acceptance',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-layout-cache'&&options['grid-second-row']==='true'){
-      const bodyId=document.canvasPages[0].contentId,target=page.locator(`[data-page-id="${bodyId}"] [data-node-id="grid-note-2"]`)
+      const bodyId=document.canvasPages[0].contentId,targetId=options['grid-mixed']==='true'||options['grid-shapes-only']==='true'?'grid-note-4':'grid-note-2',target=page.locator(`[data-page-id="${bodyId}"] [data-node-id="${targetId}"]`)
       await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:'50%',exact:true}).click()
-      await target.waitFor();await page.waitForFunction(()=>document.querySelector('[data-node-id="grid-note-2"]')?.offsetHeight>2500)
+      await target.waitFor();await page.waitForFunction(id=>document.querySelector(`[data-node-id="${id}"]`)?.offsetHeight>2500,targetId)
       const before=await target.boundingBox(),distance=before.y+before.height-180
       await page.locator('.native-stage').hover();await page.mouse.wheel(0,distance)
-      await page.waitForFunction(()=>{const node=document.querySelector('[data-node-id="grid-note-2"]');if(!node)return false;const rect=node.getBoundingClientRect();return rect.top<0&&rect.bottom>100&&rect.bottom<300})
+      await page.waitForFunction(id=>{const node=document.querySelector(`[data-node-id="${id}"]`);if(!node)return false;const rect=node.getBoundingClientRect();return rect.top<0&&rect.bottom>100&&rect.bottom<300},targetId)
       const after=await target.boundingBox();assert.ok(after.y+after.height>100)
-      await page.waitForFunction(id=>window.__geometryLog.some(message=>message.direction==='request'&&message.task?.kind==='elements'&&message.task.pageId===id&&message.task.elements.some(node=>node.id==='grid-note-2'&&node.y>700)),bodyId)
+      if(options['grid-mixed']==='true'||options['grid-shapes-only']==='true'){await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'新建页面',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 1',exact:true}).click();await target.waitFor();await page.waitForFunction(id=>{const node=document.querySelector(`[data-node-id="${id}"]`);if(!node)return false;const rect=node.getBoundingClientRect();return rect.top<0&&rect.bottom>100},targetId);const restored=await target.boundingBox();assert.ok(restored.y<0&&restored.y+restored.height>100)}
+      await page.waitForFunction(({bodyId,targetId})=>window.__geometryLog.some(message=>message.direction==='request'&&message.task?.kind==='elements'&&message.task.pageId===bodyId&&message.task.elements.some(node=>node.id===targetId&&node.y>700)),{bodyId,targetId})
       for(const node of Object.values(document.pages[bodyId].nodes).filter(node=>node.type==='note'))assert.deepEqual([node.x,node.y,node.width,node.height],[0,0,240,832])
-      assert.equal(receipts.length,0);assert.deepEqual(errors,[])
-      return{kind:'isolated-grid-row-geometry-diagnostic',flowOffsetsReachWorker:true,secondRowVisibleAfterTrustedWheel:true,authoredGeometryUnchanged:true,before,after,scope:'actual React/Worker and trusted wheel; controlled HTTP fixture',consoleOrPageErrors:errors}
+      if(options['grid-mixed']!=='true'&&options['grid-shapes-only']!=='true')assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-grid-row-geometry-diagnostic',mixedNodes:options['grid-mixed']==='true',shapesOnly:options['grid-shapes-only']==='true',flowOffsetsReachWorker:true,secondRowVisibleAfterTrustedWheel:true,authoredGeometryUnchanged:true,before,after,scope:'actual React/Worker and trusted wheel; controlled HTTP fixture',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-layout-cache'){
       const bodyId=document.canvasPages[0].contentId,target=page.locator(`[data-page-id="${bodyId}"] [data-node-id="imported-note"]`)
@@ -301,6 +302,31 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(document.pages[bodyId].nodes['imported-note'].text.length,options['layout-case']?800:options['inherit-font']==='true'?2000:600)
       assert.deepEqual(errors,[])
       return{kind:'isolated-natural-layout-cache-diagnostic',wholePageCloneKeepsVisibleNote:true,normalCacheEvictionRecovered:options['evict-pages']==='true',storedHeightUnchanged:true,inheritedFont:options['inherit-font']==='true',inheritedKeyword:options['inherit-keyword']??null,layoutCase:options['layout-case']??null,probePeak,before,after,scope:'controlled HTTP fixture; actual React, Worker and trusted wheel/page controls',consoleOrPageErrors:errors}
+    }
+    if(options.checks==='canvas-title'){
+      await page.getByRole('button',{name:'文本',exact:true}).click();await page.mouse.click(200,240)
+      await page.locator('[contenteditable=true]').last().waitFor();await page.keyboard.insertText('画布中文标题');await page.getByRole('button',{name:'完成',exact:true}).click()
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+      const bodyId=document.canvasPages[0].contentId,node=Object.values(document.pages[bodyId].nodes).find(node=>node.textSizing==='content'),target=page.locator(`[data-page-id="${bodyId}"] [data-node-id="${node.id}"]`)
+      assert.equal(node.style.fontSize,24);assert.equal(node.style.paddingX,14);assert.equal(node.style.paddingY,11)
+      const measure=()=>target.evaluate(element=>{const s=getComputedStyle(element);return{width:parseFloat(s.width),height:parseFloat(s.height),fontSize:parseFloat(s.fontSize),lineHeight:parseFloat(s.lineHeight),padding:s.padding,weight:s.fontWeight,color:s.color}})
+      const first=await measure();assert.ok(Math.abs(first.width-172)<1);assert.ok(Math.abs(first.height-55.36)<1)
+      await page.getByRole('button',{name:'显示属性',exact:true}).click();const size=page.getByLabel('字号',{exact:true});await size.fill('72');await size.press('Tab')
+      await page.waitForFunction(id=>parseFloat(getComputedStyle(document.querySelector(`[data-node-id="${id}"]`)).fontSize)===72,node.id)
+      const enlarged=await measure();assert.equal(enlarged.padding,'16px 24px');assert.ok(Math.abs(enlarged.lineHeight-79.344)<.01)
+      await page.locator('[data-native-artifact-editor]').focus();await Promise.all([page.waitForResponse(response=>response.url().endsWith('/operations')&&response.request().postDataJSON()?.kind==='undo'&&response.ok()),page.keyboard.press('ControlOrMeta+z')]);await page.waitForFunction(id=>parseFloat(getComputedStyle(document.querySelector(`[data-node-id="${id}"]`)).fontSize)===24,node.id)
+      await page.getByRole('button',{name:'显示属性',exact:true}).click()
+
+      await target.dblclick();await page.locator('[contenteditable=true]').last().waitFor();await page.locator('[contenteditable=true]').last().click();await page.keyboard.press('ControlOrMeta+a');await page.keyboard.insertText('中文标题'.repeat(100));await page.getByRole('button',{name:'完成',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+      await page.waitForFunction(id=>document.querySelector(`[data-node-id="${id}"] .native-text-content`)?.textContent?.length===400,node.id);assert.equal(document.pages[bodyId].nodes[node.id].text.length,400);await page.waitForFunction(id=>parseFloat(getComputedStyle(document.querySelector(`[data-node-id="${id}"]`)).width)>1000,node.id);const long=await measure();assert.equal(long.width,2000);assert.ok(Math.abs(long.height-188.8)<1)
+      await page.reload();await ready(1);await target.waitFor();assert.deepEqual(await measure(),long)
+      const {renderPageHtml,EXPORT_PAGE_CSS}=await import('../src/features/artifacts/native/export/render.ts'),{ExportResources}=await import('../src/features/artifacts/native/export/common.ts')
+      const exportedNode={...structuredClone(document.pages[bodyId].nodes[node.id]),x:0,y:0};delete exportedNode.scope
+      const exportedPage={...createPage('export-title'),nodes:{[node.id]:exportedNode},nodeOrder:[node.id]},html=await renderPageHtml(exportedPage,new ExportResources(document,{format:'html'})),preview=await browser.newPage()
+      let htmlMetrics;try{await preview.setContent(`<style>${EXPORT_PAGE_CSS}</style>${html}`);htmlMetrics=await preview.locator(`[data-node-id="${node.id}"]`).evaluate(e=>({width:parseFloat(getComputedStyle(e).width),height:parseFloat(getComputedStyle(e).height),padding:getComputedStyle(e).padding}));assert.ok(Math.abs(htmlMetrics.width-long.width)<1);assert.ok(Math.abs(htmlMetrics.height-long.height)<1);assert.equal(htmlMetrics.padding,long.padding)}finally{await preview.close()}
+
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-canvas-title-diagnostic',contentWidth:true,sourceDefaultMetrics:true,fontSizeAdjustsMetrics:true,sharedUndo:true,longTitleWrapAt2000:true,savedAndReopened:true,htmlMetricsPreserved:true,first,long,htmlMetrics,scope:'actual React/Worker; controlled HTTP fixture, not full visual or real API acceptance',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-import'){
       const contentId=document.canvasPages[0].contentId,node=page.locator(`[data-page-id="${contentId}"] [data-node-id="imported-note"]`)
