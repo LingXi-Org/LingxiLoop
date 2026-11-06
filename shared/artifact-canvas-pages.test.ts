@@ -200,3 +200,16 @@ test('canvas body create/delete batches preserve inverse roles in either metadat
   assert.deepEqual(undo.pages,before.pages)
   assert.deepEqual(undo.canvasPages,before.canvasPages)
 })
+
+test('replacing a board with a same-ID canvas body and shared undo restores the original board role',()=>{
+  const initial=fixture(),first=canvasPages(initial)[0].id
+  const body={...createPage('board'),width:0,height:0}
+  const result=edit(initial,[{type:'document.patch',patch:{canvasPages:[{id:first,name:'页面 1',contentId:'board'}]}},{type:'page.delete',pageId:'board'},{type:'page.insert',page:body}])
+  assert.deepEqual(result.document.pageOrder,[])
+  const undo=edit(result.document,result.inverse).document
+  assert.deepEqual(undo.pageOrder,initial.pageOrder)
+  assert.deepEqual(undo.pages,initial.pages)
+  assert.equal(undo.canvasPages,undefined)
+  const redo=edit(undo,[{type:'document.patch',patch:{canvasPages:[{id:first,name:'页面 1',contentId:'board'}]}},{type:'page.delete',pageId:'board'},{type:'page.insert',page:body}]).document
+  assert.deepEqual(redo.pageOrder,[])
+})

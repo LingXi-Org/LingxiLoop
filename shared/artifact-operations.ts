@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { canvasPages, canvasPageOf, canvasContentOwner } from './artifact-canvas-pages.js'
+import { canvasPages, canvasPageOf } from './artifact-canvas-pages.js'
 import {
   artifactAssetSchema, artifactDocumentSchema, artifactIdSchema, artifactNodeSchema, artifactPageSchema,
   artifactStyleSchema, artifactThemeSchema, validateArtifactDocument, validateArtifactCanvasPages,
@@ -159,7 +159,7 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
       case 'page.insert': {
         const id = operation.page.id
         if (document.kind === 'design') { requireKey(key.document('canvasPages')); change(key.canvasPage(canvasPageOf(operation.page))) }
-        const content=Boolean(canvasContentOwner(document,id))||operation.page.width===0&&operation.page.height===0
+        const content=operation.page.width===0&&operation.page.height===0
         requireKey(key.page(id, 'exists'));if(!content)requireKey(key.document('pageOrder'))
         if (Object.hasOwn(document.pages, id)) throw new Error(`Page already exists: ${id}`)
         document.pages[id] = structuredClone(operation.page)
