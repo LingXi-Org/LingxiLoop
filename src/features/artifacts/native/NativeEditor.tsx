@@ -13,10 +13,10 @@ import { NativeCompute } from './compute'
 import { NativeDocumentSession } from './session'
 import { nativeTransport } from './transport'
 import { fetchArtifactAsset } from './assets'
-import { PageContent } from './renderer'
+import { PageContent,NaturalNoteMeasurements } from './renderer'
 import { useVisibleElements } from './use-visibility'
 import { elementBounds } from './visibility'
-import {NaturalLayouts,withNaturalLayout} from './natural-layout'
+import {NaturalLayouts,withNaturalLayout,naturalMeasurementBatch} from './natural-layout'
 import {cameraScroll,worldCamera,type CanvasPoint} from './canvas-camera'
 import { editorError, nodeTypeLabels, resizeHandleLabels } from './editor-copy'
 import { NativeDrafts } from './drafts'
@@ -103,6 +103,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const naturalSizes=useMemo(()=>canvasContentId?naturalLayouts.current.forPage(canvasContentId):undefined,[canvasContentId])
   const onNaturalLayout=useCallback(()=>setNaturalRevision(value=>value+1),[])
   const renderedCanvasContent=useMemo(()=>canvasContent?withNaturalLayout(canvasContent,naturalSizes,doc??undefined):undefined,[canvasContent,naturalSizes,naturalRevision,doc])
+  const naturalMeasurements=useMemo(()=>visible&&authorized?naturalMeasurementBatch(canvasContent,naturalSizes,doc??undefined):[],[visible,authorized,canvasContent,naturalSizes,doc,naturalRevision])
   const boardIds=useMemo(()=>doc?.pageOrder.filter(id=>kind!=='design'||canvasPageOf(doc.pages[id])===activeCanvasId)??[],[doc,kind,activeCanvasId])
   const freeBounds=useMemo(()=>renderedCanvasContent?elementBounds(renderedCanvasContent):[],[renderedCanvasContent])
   const [selected, setSelected] = useState<string[]>([])
@@ -242,7 +243,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   }, [doc, boardIds, displayPages, visible, authorized, canvasMode, current, visibleBoards, editingId, selected.length, draftCount, cropping])
   const detailedBoards = useMemo(() => canvasMode && scale < .15 ? boards.filter(p=>p.id===pageId||!!editingId&&p.nodes[editingId]) : boards,[boards,canvasMode,scale,pageId,editingId])
   const detailedSurfaces=useMemo(()=>canvasMode&&renderedCanvasContent?[...detailedBoards,renderedCanvasContent]:detailedBoards,[canvasMode,detailedBoards,renderedCanvasContent])
-  const visibleElements = useVisibleElements({ pages: detailedSurfaces, revision: doc?.seq ?? 0, viewport, scale, root: viewportRef, compute, pageId, selected, editingId, onError: setNotice,naturalSource:canvasContent,naturalSizes,naturalDocument:doc??undefined,onNaturalLayout })
+  const visibleElements = useVisibleElements({ pages: detailedSurfaces, revision: doc?.seq ?? 0, viewport, scale, root: viewportRef, compute, pageId, selected, editingId, onError: setNotice,naturalSource:canvasContent,naturalSizes,naturalDocument:doc??undefined,naturalRevision,onNaturalLayout })
   useLayoutEffect(()=>{if(!commentThreads.length)return;const positions:Record<string,{pageId:string;x:number;y:number}>={};for(const thread of commentThreads){const anchor=decodeCommentAnchor(thread.anchor),page=anchor?.pageId===canvasContentId?renderedCanvasContent:anchor?doc?.pages[anchor.pageId]:undefined;if(!anchor||!page)continue;const node=anchor.nodeId?page.nodes[anchor.nodeId]:undefined;const point=node?pointInFrame(anchor,readNodeFrame(viewportRef.current,page,node,scale)):commentPoint(anchor,page);if(point)positions[thread.id]={pageId:page.id,...point}}setCommentPositions(old=>JSON.stringify(old)===JSON.stringify(positions)?old:positions)},[commentThreads,doc,viewport,scale,preview,canvasContentId,renderedCanvasContent,visibleElements])
   useLayoutEffect(()=>{
     if(!commentsOpen||!commentAnchor||!doc)return
@@ -551,6 +552,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
       {!presenting && layersOpen && current && <aside className="native-layers" aria-label="图层"><header><h3>图层</h3><IconButton icon="close" label="关闭图层" onClick={() => setLayersOpen(false)} /></header>{[...current.nodeOrder].reverse().map(value => { const n = current.nodes[value]; return <div className="native-layer" key={value} data-selected={selected.includes(value)}><button type="button" style={{ paddingInlineStart: n.parentId ? 24 : 8 }} onClick={e => setSelected(e.shiftKey ? [...new Set([...selected,value])] : [value])}><EditorIcon name={n.type === 'text' ? 'text' : n.type === 'image' ? 'image' : n.type === 'group' ? 'layers' : n.type === 'note' ? 'note' : 'square'} size={15} /><span>{n.name || n.text || nodeTypeLabels[n.type]}</span></button><IconButton icon="eye" label={n.hidden ? '显示图层' : '隐藏图层'} active={!n.hidden} disabled={!writable} onClick={() => dispatch([{ type:'node.patch',pageId:current.id,nodeId:value,patch:{hidden:!n.hidden} }])} /><IconButton icon="lock" label={n.locked ? '解锁图层' : '锁定图层'} active={n.locked} disabled={!writable} onClick={() => dispatch([{type:'node.patch',pageId:current.id,nodeId:value,patch:{locked:!n.locked}}])} /></div> })}</aside>}
 
       <div className="native-stage" ref={viewportRef} hidden={view === 'grid' && !presenting} onScroll={event => { const element=event.currentTarget,x=element.scrollLeft,y=element.scrollTop,mapping=previousCanvasMapping.current;if(mapping&&mapping.id===activeCanvasId&&mapping.width===element.clientWidth&&mapping.height===element.clientHeight)mapping.world=worldCamera({x,y},mapping);setViewport(value=>({...value,x,y})) }} onWheel={event => { if (event.ctrlKey || event.metaKey) { event.preventDefault(); setZoom(value => Math.max(.15, Math.min(4, value * (event.deltaY > 0 ? .9 : 1.1)))) } }}>
+        {canvasContentId&&naturalMeasurements.length>0&&<NaturalNoteMeasurements pageId={canvasContentId} nodes={naturalMeasurements} document={doc} />}
         {!boardIds.length && !canvasContent?.nodeOrder.length && (kind!=='design'||tool==='select'||tool==='hand') && <div className="native-empty"><p>{kind === 'design' ? '添加第一个画板' : '添加第一页'}</p><button type="button" disabled={!writable} onClick={addPage}>开始编辑</button></div>}
         <div onPointerDown={canvasPointerDown} onPointerMove={pointerMove} onPointerUp={e => pointerUp(e)} onPointerCancel={e => pointerUp(e,true)} className={`native-board-space ${!canvasMode ? 'native-single-page' : ''}`} style={canvasMode ? { width: Math.max(boardWidth,canvasExtent.width+2*baseCanvasInset.x)+2*panPadding.x, height: Math.max(boardHeight,canvasExtent.height+baseCanvasInset.y)+2*panPadding.y } : { minWidth: '100%', minHeight: '100%' }}>
           {(canvasMode&&renderedCanvasContent?[...boards,renderedCanvasContent]:boards).map(page => <div key={page.id} className={`native-page-shell ${page.id===canvasContentId?'native-free-canvas-shell':''} ${presenting ? `native-transition-${page.transition}` : ''}`} data-page-id={!canvasMode || scale>=.15 || page.id===pageId || page.id===canvasContentId ? page.id : undefined} data-artboard-id={page.id===canvasContentId?undefined:page.id} data-current={page.id===pageId} style={{ width: page.width * scale, height: page.height * scale, ...(canvasMode ? { position: 'absolute', left: (page.x - origin.x + 64) * scale+canvasInset.x, top: (page.y - origin.y + 64) * scale+canvasInset.y } : {}) }}>

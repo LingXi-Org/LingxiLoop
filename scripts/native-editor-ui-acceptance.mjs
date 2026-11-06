@@ -121,6 +121,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const snapshot = () => ({ document, history, write: fixtureWrite, loadedPageIds: artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
+  if(options.checks==='canvas-layout-cache')await page.addInitScript(()=>{window.__naturalProbePeak=0;new MutationObserver(()=>{window.__naturalProbePeak=Math.max(window.__naturalProbePeak,document.querySelectorAll('[data-native-measure-node]').length)}).observe(document,{childList:true,subtree:true})})
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
   let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0,svgModuleBlocked=options.checks==='svg-font-module',svgModuleRequests=0
   const editorFontRequests=[]
@@ -268,15 +269,25 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'新建页面',exact:true}).click()
       await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
       await page.waitForFunction(id=>document.querySelector('[data-canvas-page-id]')?.dataset.canvasPageId===id,document.canvasPages[1].id)
+      if(options['evict-pages']==='true')for(let i=0;i<8;i++){
+        await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'新建页面',exact:true}).click()
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        await page.waitForFunction(id=>document.querySelector('[data-canvas-page-id]')?.dataset.canvasPageId===id,document.canvasPages.at(-1).id)
+        await page.getByRole('button',{name:'便签 (N)',exact:true}).click();await page.mouse.click(200,240)
+        await page.getByRole('textbox',{name:'编辑文本',exact:true}).waitFor();await page.keyboard.insertText('缓存淘汰验收')
+        await page.getByRole('button',{name:'完成',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      }
       const next=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:bodyId,nodeId:'unrelated',patch:{x:1}}])).document
       const observed=page.waitForRequest(request=>request.url().endsWith('/editor-context')&&request.postDataJSON()?.version===String(next.seq));document=next;await observed
       await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 1',exact:true}).click()
-      await target.waitFor();const after=await target.boundingBox()
+      await target.waitFor().catch(async error=>{await writeFile(join(output,'cache-failure-state.json'),JSON.stringify(await page.evaluate(id=>({probes:[...document.querySelectorAll('[data-native-measure-node]')].map(e=>({id:e.dataset.nativeMeasureNode,width:getComputedStyle(e).width,height:getComputedStyle(e).height,rects:e.getClientRects().length})),notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent),worker:window.__geometryLog.filter(message=>message.task?.pageId===id).slice(-10)}),bodyId),null,2));throw error});const after=await target.boundingBox()
       assert.ok(Math.abs(before.x-after.x)<=1&&Math.abs(before.y-after.y)<=1&&Math.abs(before.height-after.height)<=1,'unrelated page cloning retains actual visible note geometry')
+      const probePeak=await page.evaluate(()=>window.__naturalProbePeak);assert.ok(probePeak>=1&&probePeak<=8,'measurement fallback mounts at most eight inert notes')
+      assert.equal(await page.locator('[data-native-measure-node]').count(),0,'completed probes do not remain mounted')
       assert.equal(document.pages[bodyId].nodes['imported-note'].height,832,'readonly layout does not persist measured height')
       assert.equal(document.pages[bodyId].nodes['imported-note'].text.length,600)
       assert.deepEqual(errors,[])
-      return{kind:'isolated-natural-layout-cache-diagnostic',wholePageCloneKeepsVisibleNote:true,storedHeightUnchanged:true,before,after,scope:'controlled HTTP fixture; actual React, Worker and trusted wheel/page controls',consoleOrPageErrors:errors}
+      return{kind:'isolated-natural-layout-cache-diagnostic',wholePageCloneKeepsVisibleNote:true,normalCacheEvictionRecovered:options['evict-pages']==='true',storedHeightUnchanged:true,probePeak,before,after,scope:'controlled HTTP fixture; actual React, Worker and trusted wheel/page controls',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-import'){
       const contentId=document.canvasPages[0].contentId,node=page.locator(`[data-page-id="${contentId}"] [data-node-id="imported-note"]`)

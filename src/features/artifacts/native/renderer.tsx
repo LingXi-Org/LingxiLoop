@@ -130,6 +130,10 @@ function TableCell({ value, editing, header, label, row, column, onCommit }: { v
     onPaste={event => { event.preventDefault(); window.document.execCommand('insertText', false, event.clipboardData.getData('text/plain')) }}
     onPointerDown={event => { if (editing) event.stopPropagation() }} onBlur={() => { focused.current = false; save(); if (!composing.current) { setRendered(latest.current.value); if (root.current) root.current.textContent = latest.current.value } }}>{rendered}</td>
 }
+/** Same note typography, inert and clipped; at most eight probes are mounted. */
+export function NaturalNoteMeasurements({pageId,nodes,document}:{pageId:string;nodes:ArtifactNode[];document:ArtifactDocument}){
+  return <div className="native-free-canvas-shell native-natural-measurements" data-natural-measure-page={pageId} aria-hidden="true" inert>{nodes.map(node=><div key={node.id} className="native-node native-node-note" data-native-measure-node={node.id} style={{...nativeStyle(node.style,document),position:'absolute',left:0,top:0,width:node.width,height:'auto',minHeight:40,boxSizing:'border-box'}}><div className="native-text-content">{node.richText?richTextContent(node.richText):node.text}</div></div>)}</div>
+}
 function NodeContent({ node, document, page, compute, pageVersion, revisionSeq, editingId, cropEditingId, onTextChange, onFinishText, onCellChange, presenting }: PageRenderProps & { node: ArtifactNode }) {
   node = { ...node, ...(cropEditingId===node.id ? {crop:undefined} : {}), style: artifactResolvedStyle(node.style, document) }
   const gradient = node.style.gradient

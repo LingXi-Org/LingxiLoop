@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {createNode,createPage} from '../../../../shared/artifact-document'
-import {NaturalLayouts,NaturalNodeSizes,withNaturalLayout} from './natural-layout'
+import {NaturalLayouts,NaturalNodeSizes,withNaturalLayout,naturalMeasurementBatch} from './natural-layout'
 import {elementBounds} from './visibility'
 
 test('natural note geometry reaches visibility calculations without changing stored content or fixed objects',()=>{
@@ -50,10 +50,21 @@ test('exact dependency caches have bounded entry count and retained text',()=>{
   const sizes=new NaturalNodeSizes()
   for(let i=0;i<400;i++)sizes.set({...createNode('note',`note-${i}`),text:'中文'.repeat(500)},{width:240,height:400})
   assert.ok(sizes.size<=256);assert.ok(sizes.dependencyCharacters<=262144)
-  const large={...createNode('note','large'),text:'中文'.repeat(200000)}
-  sizes.set(large,{width:240,height:20000});assert.equal(sizes.get(large),undefined)
+  const large={...createNode('note','large'),text:'\0'.repeat(100000)}
+  sizes.set(large,{width:240,height:20000});assert.equal(sizes.get(large)?.height,20000,'live weak measurements need no retained dependency text')
   assert.ok(sizes.dependencyCharacters<=262144)
   const node=createNode('note','effective-font');sizes.set(node,{width:240,height:100},{fontSize:14})
   assert.equal(sizes.get(structuredClone(node),{fontSize:14})?.height,100)
   assert.equal(sizes.get(node,{fontSize:32}),undefined)
+})
+
+test('cache misses request at most eight inert measurements and stop after their live layout is known',()=>{
+  const page=createPage('contents');for(let i=0;i<20;i++){const node=createNode('note',`note-${i}`);page.nodes[node.id]=node;page.nodeOrder.push(node.id)}
+  const document={themes:{},themeId:null} as never,sizes=new NaturalNodeSizes(),original=JSON.stringify(page)
+  const first=naturalMeasurementBatch(page,sizes,document);assert.equal(first.length,8)
+  for(const node of first)sizes.set(node,{width:240,height:4659})
+  assert.equal(naturalMeasurementBatch(page,sizes,document)[0]!.id,'note-8')
+  for(const node of Object.values(page.nodes))sizes.set(node,{width:240,height:4659})
+  assert.deepEqual(naturalMeasurementBatch(page,sizes,document),[])
+  assert.equal(JSON.stringify(page),original)
 })

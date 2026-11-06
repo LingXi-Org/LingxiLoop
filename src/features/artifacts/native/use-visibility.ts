@@ -5,8 +5,8 @@ import type { Bounds, NativeCompute } from './compute'
 import { elementBounds, expandVisibleNodes } from './visibility'
 import type {NaturalNodeSizes} from './natural-layout'
 
-export function useVisibleElements({ pages, revision, viewport, scale, root, compute, pageId, selected, editingId, onError, naturalSource, naturalSizes, naturalDocument, onNaturalLayout }: {
-  naturalDocument?:ArtifactDocument;naturalSource?:ArtifactPage;naturalSizes?:NaturalNodeSizes;onNaturalLayout?():void
+export function useVisibleElements({ pages, revision, viewport, scale, root, compute, pageId, selected, editingId, onError, naturalSource, naturalSizes, naturalDocument, naturalRevision, onNaturalLayout }: {
+  naturalRevision?:number;naturalDocument?:ArtifactDocument;naturalSource?:ArtifactPage;naturalSizes?:NaturalNodeSizes;onNaturalLayout?():void
   pages: ArtifactPage[]; revision: number; viewport: { x: number; y: number; width: number; height: number }; scale: number
   root: RefObject<HTMLDivElement | null>; compute: NativeCompute; pageId: string | null; selected: string[]; editingId: string | null; onError(message: string): void
 }) {
@@ -15,11 +15,11 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
   useLayoutEffect(()=>{
     const container=root.current
     if(!container||!naturalSource||!naturalSizes||!onNaturalLayout)return
-    const notes=Array.from(container.querySelectorAll<HTMLElement>(`[data-page-id="${naturalSource.id}"] [data-native-natural-height]`))
+    const notes=Array.from(container.querySelectorAll<HTMLElement>(`[data-page-id="${naturalSource.id}"] [data-native-natural-height], [data-natural-measure-page="${naturalSource.id}"] [data-native-measure-node]`))
     const measure=()=>{
       let changed=false
       for(const element of notes){
-        const node=naturalSource.nodes[element.dataset.nodeId??'']
+        const node=naturalSource.nodes[element.dataset.nodeId??element.dataset.nativeMeasureNode??'']
         if(!node||node.type!=='note'||!element.getClientRects().length)continue
         const style=getComputedStyle(element),width=Number.parseFloat(style.width),height=Number.parseFloat(style.height)
         if(!Number.isFinite(width)||!Number.isFinite(height)||width<=0||height<=0)continue
@@ -32,7 +32,7 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
     for(const element of notes)observer.observe(element)
     measure()
     return()=>observer.disconnect()
-  },[naturalSource,naturalSizes,naturalDocument,root,onNaturalLayout,visible])
+  },[naturalSource,naturalSizes,naturalDocument,naturalRevision,root,onNaturalLayout,visible])
   useLayoutEffect(() => {
     const controller = new AbortController()
     const container = root.current

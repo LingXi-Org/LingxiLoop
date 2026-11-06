@@ -1,0 +1,26 @@
+{
+  "kind": "isolated-canvas-contents-diagnostic",
+  "mode": "design",
+  "independentBody": true,
+  "boardOrderUnchanged": true,
+  "boardHashesUnchanged": true,
+  "cameraStableOnInsert": true,
+  "savedAndReopened": true,
+  "sharedUndoRedo": true,
+  "freeDrawing": true,
+  "nodeAndWorldComments": true,
+  "boardDeletionKeepsFreeContent": true,
+  "chineseNoteAutoHeight": true,
+  "rotatedNoteHeight": true,
+  "draggedRectangle": true,
+  "negativeWorldPan": true,
+  "resizeWorldCamera": true,
+  "inactiveCanvasWorldCamera": true,
+  "undoWaitsForResponse": true,
+  "negativePanScreenX": [
+    -1057.41943359375,
+    342.58056640625
+  ],
+  "scope": "actual React, Workers and shared operations; controlled HTTP fixture",
+  "consoleOrPageErrors": []
+}

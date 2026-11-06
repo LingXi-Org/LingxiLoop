@@ -9,13 +9,18 @@ const signature=(node:ArtifactNode,style:ArtifactStyle)=>JSON.stringify([node.wi
 export class NaturalNodeSizes {
   private entries=new Map<string,{signature:string;size:NaturalNodeSize}>()
   private characters=0
+  private current=new WeakMap<ArtifactNode,{style:string;size:NaturalNodeSize}>()
   get(node:ArtifactNode,style:ArtifactStyle=node.style){
+    const styleKey=JSON.stringify(style),current=this.current.get(node)
+    if(current?.style===styleKey)return current.size
     const entry=this.entries.get(node.id)
     if(!entry||entry.signature!==signature(node,style))return undefined
     this.entries.delete(node.id);this.entries.set(node.id,entry)
+    this.current.set(node,{style:styleKey,size:entry.size})
     return entry.size
   }
   set(node:ArtifactNode,size:NaturalNodeSize,style:ArtifactStyle=node.style){
+    this.current.set(node,{style:JSON.stringify(style),size})
     const key=signature(node,style),old=this.entries.get(node.id)
     if(old){this.characters-=old.signature.length;this.entries.delete(node.id)}
     if(key.length>262144)return
@@ -47,4 +52,15 @@ export function withNaturalLayout(page:ArtifactPage,sizes?:NaturalNodeSizes,docu
     if(size&&(Math.abs(size.width-node.width)>.001||Math.abs(size.height-node.height)>.001)){nodes[id]={...node,...size};changed=true}
   }
   return changed?{...page,nodes}:page
+}
+
+/** Bounded DOM probes recover measured geometry after normal cache eviction. */
+export function naturalMeasurementBatch(page:ArtifactPage|undefined,sizes:NaturalNodeSizes|undefined,document:ArtifactDocument|undefined):ArtifactNode[]{
+  if(!page||!sizes||!document)return []
+  const batch:ArtifactNode[]=[]
+  for(const id of page.nodeOrder){const node=page.nodes[id]!
+    if(node.type==='note'&&!node.hidden&&!sizes.get(node,artifactResolvedStyle(node.style,document)))batch.push(node)
+    if(batch.length===8)break
+  }
+  return batch
 }

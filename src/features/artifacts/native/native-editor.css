@@ -88,3 +88,5 @@
 .native-kind-design .native-free-canvas-shell,.native-kind-design .native-free-canvas-shell .native-page-scaled{box-shadow:none;overflow:visible;pointer-events:none}.native-free-canvas-shell .native-page-content{overflow:visible;pointer-events:none}.native-free-canvas-shell .native-node,.native-free-canvas-shell .native-comment-pin{pointer-events:auto}.native-free-canvas-shell .native-node-note{padding:10px 12px!important;box-shadow:0 0 0 1px oklab(0 0 0 / .1),0 2px 4px rgba(11,11,11,.07),0 6px 16px var(--native-paper-shadow)}
 
 .native-kind-design .native-empty{pointer-events:none}.native-kind-design .native-empty button{pointer-events:auto}.native-free-canvas-shell .native-node-note{tab-size:8}
+
+.native-stage>.native-natural-measurements{position:absolute;left:0;top:0;width:0;height:0;overflow:hidden!important;visibility:hidden;pointer-events:none!important;contain:layout style size}
