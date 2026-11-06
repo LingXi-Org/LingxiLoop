@@ -11,10 +11,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--reference', required=True, type=Path)
 parser.add_argument('--candidate', required=True, type=Path)
 parser.add_argument('--output', required=True, type=Path)
+parser.add_argument('--kind', choices=['both','design','slides'], default='both')
+parser.add_argument('--state', default='default')
 args = parser.parse_args()
 args.output.mkdir(parents=True, exist_ok=True)
 results = []
-for kind in ['design', 'slides']:
+for kind in ['design','slides'] if args.kind == 'both' else [args.kind]:
     for width in [1920, 1440, 768, 390]:
         for theme in ['light', 'dark']:
             name = f'{kind}-{width}-{theme}.png'
@@ -31,9 +33,9 @@ for kind in ['design', 'slides']:
             results.append({'image': name, 'width': reference.width, 'height': reference.height,
                             'differentPixels': count, 'rawDifferentRatio': ratio,
                             'conservativePixelPass': ratio <= .005})
-report = {'kind': 'matched-synthetic-fixture-raw-pixel-diagnostic',
+report = {'kind': 'matched-synthetic-fixture-raw-pixel-diagnostic', 'state': args.state,
           'masks': [], 'antialiasExclusions': False, 'qualified': False,
-          'scope': 'Default states only; control geometry and complete interaction states remain separate gates.',
+          'scope': 'Only the specified matched state; control geometry and complete interaction states remain separate gates.',
           'results': results}
 (args.output / 'raw-pixel-results.json').write_text(json.dumps(report, indent=2) + '\n')
 print(json.dumps({'images': len(results), 'rawPasses': sum(row['conservativePixelPass'] for row in results),

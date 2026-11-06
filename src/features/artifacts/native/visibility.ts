@@ -7,7 +7,7 @@ function multiply(a: Matrix, b: Matrix): Matrix {
   return [a[0]*b[0]+a[2]*b[1], a[1]*b[0]+a[3]*b[1], a[0]*b[2]+a[2]*b[3], a[1]*b[2]+a[3]*b[3], a[0]*b[4]+a[2]*b[5]+a[4], a[1]*b[4]+a[3]*b[5]+a[5]]
 }
 /** Compact page-local rectangles; document payloads never enter the spatial worker. */
-export function elementBounds(page: ArtifactPage): Bounds[] {
+export function elementBounds(page: ArtifactPage,includePaintOverflow=true): Bounds[] {
   const matrices = new Map<string, Matrix>()
   const matrix = (node: ArtifactNode): Matrix => {
     const cached = matrices.get(node.id); if (cached) return cached
@@ -22,7 +22,7 @@ export function elementBounds(page: ArtifactPage): Bounds[] {
     const node = page.nodes[id]; if (!node || node.hidden) return []
     const m = matrix(node)
     const points = [[0,0], [node.width,0], [node.width,node.height], [0,node.height]].map(([x,y]) => ({ x: m[0]*x+m[2]*y+m[4], y: m[1]*x+m[3]*y+m[5] }))
-    const x = Math.min(...points.map(p => p.x)), y = Math.min(...points.map(p => p.y)), padding = Math.max(2, node.style.strokeWidth ?? 0, node.style.shadow ? node.style.shadow.blur + Math.abs(node.style.shadow.spread) + Math.max(Math.abs(node.style.shadow.x), Math.abs(node.style.shadow.y)) : 0)
+    const x = Math.min(...points.map(p => p.x)), y = Math.min(...points.map(p => p.y)), padding = includePaintOverflow?Math.max(2, node.style.strokeWidth ?? 0, node.style.shadow ? node.style.shadow.blur + Math.abs(node.style.shadow.spread) + Math.max(Math.abs(node.style.shadow.x), Math.abs(node.style.shadow.y)) : 0):0
     return [{ id, x: x-padding, y: y-padding, width: Math.max(...points.map(p => p.x))-x+2*padding, height: Math.max(...points.map(p => p.y))-y+2*padding }]
   })
 }

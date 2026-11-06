@@ -157,3 +157,19 @@ Design 性能遍历改为从实际已挂载画板的 CSS 位置校准世界偏�
 不写入产品滚动/文档状态。`python scripts/native-artifact-navigation-check.py` 验证含留白的虚拟画板
 与无新元数据的冻结基线，各遍历 50 页并返回第一页；Chrome 140/154 各 102 项通过。
 [收据](performance/navigation-padding-receipt.json)只证明工具回归，不是性能通过证据。
+
+[557e0bba 独立复审](reviews/557e0bba.json) 已关闭取消和内边距两项 P2，未发现新增 P1/P2；
+owning CI 42222584755 通过，部署跳过。该冻结提交的真实诊断 42222610717 正在测量，未代表后续实现通过。
+
+[适配相机来源](source-design-fit-camera.json) 与 [局部结果](functional/canvas-fit-receipt.json)
+使用相同三画板、相同钢笔路径、四尺寸双主题；补齐了此前参考文档包含其他注释的问题。
+28 个固定源码数学样本和实际位置对照明确发现原生纵向偏移约 4.64px；修正后八组控制点及画板
+位置/尺寸均在 1px 内，同缩放下平移后适配恢复也通过。70 个聚焦单元及原有局部流程回归通过。
+[未掩码的像素差异](visual/fit-camera/raw-pixel-results.json) 八组仍全部未通过，保留了叠加图与差异图；
+相机位置通过不能当作完整视觉通过。字体、工具栏、画板标题与边框还需继续校准。
+
+可复现命令：
+`node --import tsx scripts/native-canvas-fit-oracle.mjs --reference-root=/path/to/pinned/release --output=/tmp/fit-reference --capture=true --browser=/path/to/chromium`。
+该命令在独立临时项目运行原版，等待三画板正文、字体和图片就绪，只写无签名地址的指标及截图。
+原生对应使用 `--checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true`
+并指定 `--width`、`--height`、`--canvas-theme`。

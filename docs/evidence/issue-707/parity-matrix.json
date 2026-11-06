@@ -143,7 +143,12 @@
       "functionalQualified": false,
       "testEvidence": {
         "receipt": null,
-        "scope": "待逐项执行并登记"
+        "scope": "待逐项执行并登记",
+        "fitCamera": {
+          "source": "source-design-fit-camera.json",
+          "receipt": "functional/canvas-fit-receipt.json",
+          "scope": "同文档四尺寸双主题下控制点与画板位置在1px内，28组纯数学通过；八组原始像素差异仍全部未通过，不能替代完整状态验收"
+        }
       }
     },
     {

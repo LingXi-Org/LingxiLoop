@@ -113,6 +113,14 @@ jobs:
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit-cas --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-cas"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit-retention --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-retention"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit-load --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-load"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-fit-switch --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-switch"
+          for task_size in 1920x1200 1440x1000 768x1024 390x844; do
+            task_width=${task_size%x*}
+            task_height=${task_size#*x}
+            for task_theme in light dark; do
+              node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true --width="$task_width" --height="$task_height" --canvas-theme="$task_theme" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-$task_size-$task_theme"
+            done
+          done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=viewport-loading --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-viewport-loading"
       - name: Build both production applications before any measurements
         run: |

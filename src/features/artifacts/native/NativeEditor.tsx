@@ -1,3 +1,4 @@
+import {fitDesignCamera,designFitBounds} from './canvas-fit'
 import {usePenPreview} from './use-pen-preview'
 import type {CanvasPenHandle,VectorStart} from './CanvasPenTool'
 import type {CanvasPointHandle,PointView} from './CanvasPointEditor'
@@ -81,10 +82,7 @@ function TextAreaField({ value, label, placeholder, disabled, onFocus, onCommit 
   return <textarea aria-label={label} placeholder={placeholder} disabled={disabled} value={draft} onFocus={() => { focused.current = true; onFocus?.() }} onChange={event => change(event.target.value)} onCompositionStart={() => { composing.current = true; markDirty(true) }} onCompositionEnd={event => { composing.current = false; change(event.currentTarget.value); if (flushAfterComposition.current) { flushAfterComposition.current = false; queueMicrotask(save) } }} onBlur={() => { focused.current = false; save(); if (!composing.current) setDraft(latest.current.value) }} />
 }
 function initialCanvasZoom(pages: Array<Pick<ArtifactPage,'x'|'y'|'width'|'height'>>, width: number, height: number) {
-  if(!pages.length)return 1
-  const x=Math.min(0,...pages.map(page=>page.x)),y=Math.min(0,...pages.map(page=>page.y))
-  const w=Math.max(...pages.map(page=>page.x+page.width))-x,h=Math.max(...pages.map(page=>page.y+page.height))-y
-  return Math.max(.04,Math.min(4,Math.min((width-96)/w,(height-150)/(h+40))*2))
+  return (fitDesignCamera(pages,[],width,height)?.scale??.5)*2
 }
 type CanvasView={zoom:number;x?:number;y?:number}
 interface Gesture { base: ArtifactDocument; type: 'move' | 'resize' | 'marquee' | 'pan' | 'draw' | 'rotate'; startX: number; startY: number; pageId: string; nodes: ArtifactNode[]; moved: boolean; handle?: ResizeHandle; points?: Array<{ x: number; y: number }>; tool?: string; angle?: number; scope?: 'canvas'|'artboard'; canvas?:boolean; scrollX?: number; scrollY?: number }
@@ -120,10 +118,12 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const naturalMeasurements=useMemo(()=>visible&&authorized?naturalMeasurementBatch(canvasContent,naturalSizes,doc??undefined):[],[visible,authorized,canvasContent,naturalSizes,doc,naturalRevision])
   const boardIds=useMemo(()=>doc?.pageOrder.filter(id=>kind!=='design'||canvasPageOf(doc.pages[id])===activeCanvasId)??[],[doc,kind,activeCanvasId])
   const freeBounds=useMemo(()=>renderedCanvasContent?elementBounds(renderedCanvasContent):[],[renderedCanvasContent])
+  const fitAnnotationBounds=useMemo(()=>renderedCanvasContent?elementBounds(renderedCanvasContent,false):[],[renderedCanvasContent])
   const [selected, setSelected] = useState<string[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [presenting, setPresenting] = useState(false)
   const [zoom, setZoom] = useState(1)
+  const [cameraRequest,setCameraRequest]=useState(0)
   const [viewport, setViewport] = useState({ width: 0, height: 0, x: 0, y: 0 })
   const [visibleBoardResult, setVisibleBoardResult] = useState<{key:string;ids:string[]}>({key:'',ids:[]})
   const [preview, setPreview] = useState<{ dx: number; dy: number; resize?: boolean } | null>(null)
@@ -252,13 +252,15 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if (initialCamera.current || !authorized || !doc || canvasContentId&&!state.loadedPageIds.includes(canvasContentId) || !viewport.width || !viewport.height) return
     initialCamera.current = true
     if (kind === 'design') {
-      setZoom(initialCanvasZoom([...boardIds.map(id=>doc.pages[id]),...freeBounds],viewport.width,viewport.height))
+      const fit=fitDesignCamera(boardIds.map(id=>doc.pages[id]),fitAnnotationBounds,viewport.width,viewport.height)
+      if(fit){pendingCanvasView.current={zoom:fit.scale*2,x:fit.x,y:fit.y};setZoom(fit.scale*2);setCameraRequest(value=>value+1)}
     }
-  },[authorized,doc,boardIds,freeBounds,canvasContentId,state.loadedPageIds,viewport.width,viewport.height,kind])
+  },[authorized,doc,boardIds,fitAnnotationBounds,canvasContentId,state.loadedPageIds,viewport.width,viewport.height,kind])
   const displayPages = useMemo(()=>doc ? Object.fromEntries(boardIds.map((id,index)=>{const p=doc.pages[id];return [id,kind==='slides' && canvasMode ? {...p,x:index%4*(p.width+80),y:Math.floor(index/4)*(p.height+100)} : p]})) : {},[doc,boardIds,kind,canvasMode])
   const origin = useMemo(() => ({ x: doc ? Math.min(0, ...boardIds.map(value => displayPages[value].x),...freeBounds.map(value=>value.x)) : 0, y: doc ? Math.min(0, ...boardIds.map(value => displayPages[value].y),...freeBounds.map(value=>value.y)) : 0 }), [boardIds, displayPages,freeBounds])
   const canvasExtent = useMemo(()=>({width:doc ? Math.max(0,...boardIds.map(id=>displayPages[id].x-origin.x+displayPages[id].width+128),...freeBounds.map(value=>value.x-origin.x+value.width+128))*scale : 0,height:doc ? Math.max(0,...boardIds.map(id=>displayPages[id].y-origin.y+displayPages[id].height+128),...freeBounds.map(value=>value.y-origin.y+value.height+128))*scale : 0}),[doc,displayPages,origin,scale,freeBounds])
-  const baseCanvasInset = {x:Math.max(0,(viewport.width-canvasExtent.width)/2),y:54+20*scale+(kind==='design'&&canvasExtent.height-128*scale<=viewport.height-54?(viewport.height-54-canvasExtent.height)/2:Math.max(0,(viewport.height-54-canvasExtent.height)/2))}
+  const fitBounds=useMemo(()=>kind==='design'&&doc?designFitBounds(boardIds.map(id=>doc.pages[id]),fitAnnotationBounds):undefined,[kind,doc,boardIds,fitAnnotationBounds])
+  const baseCanvasInset = fitBounds?{x:Math.max(0,viewport.width/2-(fitBounds.left+fitBounds.right)*scale/2-(64-origin.x)*scale),y:54+Math.max(0,(viewport.height-54)/2-(fitBounds.top+fitBounds.bottom)*scale/2-(64-origin.y)*scale)}:{x:Math.max(0,(viewport.width-canvasExtent.width)/2),y:54+20*scale+Math.max(0,(viewport.height-54-canvasExtent.height)/2)}
   const panPadding=canvasMode&&kind==='design'?{x:viewport.width*2,y:viewport.height*2}:{x:0,y:0}
   const canvasInset={x:baseCanvasInset.x+panPadding.x,y:baseCanvasInset.y+panPadding.y}
   const boardQuery=useMemo(()=>{
@@ -282,7 +284,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     }else if(!canvasViews.current.has(activeCanvasId))target={x:panPadding.x,y:panPadding.y}
     if(target&&(Math.abs(element.scrollLeft-target.x)>.01||Math.abs(element.scrollTop-target.y)>.01))element.scrollTo({left:target.x,top:target.y,behavior:'instant'})
     previousCanvasMapping.current={...next,awaitingLayout:naturalMeasurements.length>0,world:worldCamera(naturalMeasurements.length>0&&target?target:{x:element.scrollLeft,y:element.scrollTop},next)}
-  },[activeCanvasId,canvasMode,scale,viewport.width,viewport.height,origin.x,origin.y,canvasInset.x,canvasInset.y,panPadding.x,panPadding.y,canvasExtent.width,canvasExtent.height,naturalMeasurements.length])
+  },[activeCanvasId,canvasMode,scale,viewport.width,viewport.height,origin.x,origin.y,canvasInset.x,canvasInset.y,panPadding.x,panPadding.y,canvasExtent.width,canvasExtent.height,naturalMeasurements.length,cameraRequest])
   useEffect(() => {
     if (!doc) return
     const upserts = boardIds.flatMap(value => { const p = displayPages[value]; const hash = `${p.x},${p.y},${p.width},${p.height}`; if (geometry.current.get(value) === hash) return []; geometry.current.set(value, hash); return [{ id: value, x: p.x, y: p.y, width: p.width, height: p.height }] })
@@ -364,7 +366,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const rememberCanvasView=(value:string,view:CanvasView)=>{canvasViews.current.delete(value);canvasViews.current.set(value,view);while(canvasViews.current.size>MAX_CANVAS_PAGES){const oldest=canvasViews.current.keys().next().value;if(oldest!==undefined)canvasViews.current.delete(oldest)}}
   const checkedPageLink=useRef(false)
   useEffect(()=>{if(checkedPageLink.current||!authorized||!doc||kind!=='design')return;checkedPageLink.current=true;const link=readDesignLink(new URLSearchParams(window.location.search));if(link?.artifactId===artifactId&&link.canvasPageId&&!canvasPages(doc).some(sheet=>sheet.id===link.canvasPageId))setNotice('链接中的页面已删除或不存在，已打开第一个页面。')},[authorized,doc,kind,artifactId])
-  const chooseCanvasPage=(value:string)=>{const element=viewportRef.current;rememberCanvasView(activeCanvasId,{zoom,...previousCanvasMapping.current?.world});const next=canvasViews.current.get(value)??{zoom:initialCanvasZoom(doc?.pageOrder.filter(id=>canvasPageOf(doc.pages[id])===value).map(id=>doc.pages[id])??[],viewport.width,viewport.height)};rememberCanvasView(value,next);pendingCanvasView.current=next;flushText();setPointEditing(null);setEditingId(null);setCropping(null);setSelected([]);setCanvasPageId(value);setPageId(doc?.pageOrder.find(id=>canvasPageOf(doc.pages[id])===value)??null);setZoom(next.zoom);if(value===activeCanvasId){const mapping=previousCanvasMapping.current,point=mapping&&next.x!==undefined&&next.y!==undefined?cameraScroll({x:next.x,y:next.y},mapping):{x:panPadding.x,y:panPadding.y};element?.scrollTo({left:point.x,top:point.y});pendingCanvasView.current=null}}
+  const chooseCanvasPage=(value:string)=>{const element=viewportRef.current;rememberCanvasView(activeCanvasId,{zoom,...previousCanvasMapping.current?.world});const sheet=doc&&canvasPages(doc).find(sheet=>sheet.id===value),content=sheet?.contentId?doc?.pages[sheet.contentId]:undefined,fit=fitDesignCamera(doc?.pageOrder.filter(id=>canvasPageOf(doc.pages[id])===value).map(id=>doc.pages[id])??[],content?elementBounds(content,false):[],viewport.width,viewport.height);const next:CanvasView=canvasViews.current.get(value)??(fit?{zoom:fit.scale*2,x:fit.x,y:fit.y}:{zoom:1});rememberCanvasView(value,next);pendingCanvasView.current=next;flushText();setPointEditing(null);setEditingId(null);setCropping(null);setSelected([]);setCanvasPageId(value);setPageId(doc?.pageOrder.find(id=>canvasPageOf(doc.pages[id])===value)??null);setZoom(next.zoom);if(value===activeCanvasId){const mapping=previousCanvasMapping.current,point=mapping&&next.x!==undefined&&next.y!==undefined?cameraScroll({x:next.x,y:next.y},mapping):{x:panPadding.x,y:panPadding.y};element?.scrollTo({left:point.x,top:point.y});pendingCanvasView.current=null}}
   const copyCanvasLink=async(value:string)=>{try{const link=designPageLink(new URL(window.location.href),artifactId,value);await navigator.clipboard.writeText(link);setNotice('页面链接已复制。')}catch(error){setNotice(editorError(error,'页面链接尚未复制，请检查剪贴板权限后重试。'))}}
   const addCanvasPage=()=>{const base=session.getSnapshot().document;if(!base)return;try{const value=id(),board={...createPage(id(),'画板 1'),width:800,height:600,canvasPageId:value};delete board.themeBackground;rememberCanvasView(value,{zoom:initialCanvasZoom([board],viewport.width,viewport.height)});session.dispatch([...createCanvasPage(base,value),{type:'page.insert',page:board}],base);chooseCanvasPage(value);setPageId(board.id)}catch(error){setNotice(editorError(error,'页面尚未创建，请重试。'))}}
   const closeCanvasDialog=()=>{setDialog(null);requestAnimationFrame(()=>editorRoot.current?.querySelector<HTMLElement>('[aria-label="页面菜单"]')?.focus({preventScroll:true}))}
@@ -567,6 +569,11 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const fitViewport = () => {
     if (!doc) return
     if (!canvasMode) { setZoom(1); return }
+    if(kind==='design'){
+      const fit=fitDesignCamera(boardIds.map(id=>doc.pages[id]),fitAnnotationBounds,viewport.width,viewport.height)
+      if(fit){pendingCanvasView.current={zoom:fit.scale*2,x:fit.x,y:fit.y};setZoom(fit.scale*2);setCameraRequest(value=>value+1)}
+      return
+    }
     const pages = [...boardIds.map(value => doc.pages[value]),...freeBounds]; if (!pages.length) return
     const w = Math.max(...pages.map(p => p.x + p.width)) - origin.x + 128, h = Math.max(...pages.map(p => p.y + p.height)) - origin.y + 128
     setZoom(Math.max(.04, Math.min(4, Math.min((viewport.width-64)/w, (viewport.height-100)/h) * 2)))

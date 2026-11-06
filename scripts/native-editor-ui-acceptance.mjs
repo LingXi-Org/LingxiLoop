@@ -27,6 +27,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
+assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 const mode = options.mode ?? 'both'
 assert.ok(['design', 'slides', 'both'].includes(mode), '--mode must be design, slides or both')
 const output = resolve(options.output ?? join(tmpdir(), 'lingxi-native-ui-results'))
@@ -74,7 +75,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load']
+  const visualChecks=['parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   let document = fixture.document
   if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load'].includes(options.checks)){
@@ -89,6 +90,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options.checks==='canvas-vector-edit-cas'&&editorCase.startsWith('padding')){
     const page=document.pages['canvas-vector-body'],node=page.nodes['editable-path'];document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:page.id,nodeId:node.id,patch:{style:{padding:30,paddingX:30,paddingY:30},...(editorCase==='padding-rotated'?{rotation:27,flipX:true}: {})}}])).document
   }
+  if(options.checks==='canvas-fit-switch')document=applyOperations(document,prepareBatch(document,[...createCanvasPage(document,'positioned'),{type:'page.insert',page:{...createPage('positioned-board','独立画板'),x:3000,y:4000,width:800,height:600,canvasPageId:'positioned'}}])).document
   if(options.checks==='canvas-pen'){const geometry=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-pen.json'),'utf8')).cases[0].result,node={...createNode('drawing','thumbnail-pen'),x:100,y:600,width:geometry.w,height:geometry.h,path:{d:geometry.d,width:geometry.w,height:geometry.h},style:{stroke:'#8a8378',strokeWidth:2}};document.pages['page-3'].nodes[node.id]=node;document.pages['page-3'].nodeOrder.push(node.id)}
   if(['canvas-import','canvas-layout-cache'].includes(options.checks)){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[]);if(options.checks==='canvas-layout-cache'){const body=document.pages[document.canvasPages[0].contentId];body.nodes['imported-note'].text='中文自动换行'.repeat(100);body.nodes['imported-note'].height=832;body.nodes['imported-note'].style.fontSize=32;body.nodes.unrelated={...createNode('shape','unrelated'),x:0,y:0};body.nodeOrder.push('unrelated');if(options['inherit-font']==='true'){const note=body.nodes['imported-note'];note.text='i'.repeat(2000);if(options['inherit-keyword'])note.style.fontFamily=options['inherit-keyword'];else delete note.style.fontFamily;const group={...createNode('group','inherited-group'),x:0,y:0,width:1000,height:8000,style:{fontFamily:'monospace'}};body.nodes[group.id]=group;body.nodeOrder.unshift(group.id);note.parentId=group.id;if(options['layout-case']){group.x=note.x;group.y=note.y;group.width=120;group.height=180;group.layout={mode:options['layout-case'],direction:'row',columns:1,align:'start'};note.x=0;note.y=0;note.text='a '.repeat(400);if(options['grid-second-row']==='true'){group.width=480;group.height=3000;group.layout={mode:'grid',columns:2,gap:20,align:'start'};for(let i=1;i<(options['grid-mixed']==='true'||options['grid-shapes-only']==='true'?6:4);i++){const sibling={...structuredClone(note),id:`grid-note-${i}`};if(options['grid-shapes-only']==='true'||options['grid-mixed']==='true'&&i>=2){sibling.type='shape';sibling.shape='rect';sibling.height=3128;delete sibling.text}body.nodes[sibling.id]=sibling;body.nodeOrder.push(sibling.id)}if(options['grid-shapes-only']==='true'){note.type='shape';note.shape='rect';note.height=3128;delete note.text}}}}}}
   if(options.checks==='canvas-empty')document={...document,pageOrder:[],pages:{}}
@@ -136,7 +138,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const pageReads=[]
   const snapshot = () => ({ document:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds: options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
+  const page = await browser.newPage({ viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:'reduce' })
   if(options.checks==='canvas-layout-cache')await page.addInitScript(()=>{window.__naturalProbePeak=0;new MutationObserver(()=>{window.__naturalProbePeak=Math.max(window.__naturalProbePeak,document.querySelectorAll('[data-native-measure-node]').length)}).observe(document,{childList:true,subtree:true})})
   if(options['canvas-theme']==='dark')await page.addInitScript(()=>{const apply=()=>{if(window===top)document.documentElement?.classList.add('dark')};apply();document.addEventListener('DOMContentLoaded',apply,{once:true})})
   let svgFontsBlocked=options.checks==='svg-font-error',svgFontsHeld=options.checks==='svg-font-cancel',releaseSvgFonts=null,svgFontFailures=0,svgModuleBlocked=options.checks==='svg-font-module',svgModuleRequests=0
@@ -364,6 +366,16 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.mouse.click(600,300);await page.keyboard.press('Escape');assert.equal(document.seq,0);assert.deepEqual(errors,[])
       return{kind:'isolated-canvas-vector-loading-diagnostic',lazyBeforeSelection:true,chineseLoadFailure:true,editorRetained:true,noDocumentWrites:true,reopenedToolRecovered:true,consoleOrPageErrors:errors}
     }
+    if(options.checks==='canvas-fit-switch'){
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 2',exact:true}).click()
+      const board=page.locator('[data-artboard-id=positioned-board]');await board.waitFor({state:'attached',timeout:3000});const box=await board.boundingBox()
+      for(const [key,value]of Object.entries({x:188.75,y:155.125,width:1062.5,height:796.875}))assert.ok(Math.abs(box[key]-value)<=1,'a first visit must fit positioned artboards using source camera coordinates')
+      const scroll=await page.locator('.native-stage').evaluate(e=>({x:e.scrollLeft,y:e.scrollTop}));await page.mouse.click(100,120);await page.keyboard.down('Space');await page.mouse.move(100,120);await page.mouse.down();await page.mouse.move(120,140,{steps:5});await page.mouse.up();await page.keyboard.up('Space')
+      const moved=await page.locator('.native-stage').evaluate(e=>({x:e.scrollLeft,y:e.scrollTop}));assert.notDeepEqual(moved,scroll)
+      await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 1',exact:true}).click();await ready(1);await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 2',exact:true}).click();await board.waitFor({state:'attached'})
+      assert.deepEqual(await page.locator('.native-stage').evaluate(e=>({x:e.scrollLeft,y:e.scrollTop})),moved);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'isolated-fit-canvas-switch-diagnostic',positiveWorldCoordinates:true,firstVisitWithin1CssPx:true,savedCameraRestored:true,noWrites:true,consoleOrPageErrors:errors}
+    }
     if(options.checks==='canvas-vector-edit-load'){
       const node=page.locator('[data-node-id=editable-path]'),before=structuredClone(document.pages['canvas-vector-body'].nodes['editable-path'])
       assert.equal(pointModuleRequests,0)
@@ -521,6 +533,24 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         const a=await editor.locator('[data-vector-part="a:0:0"]').boundingBox(),b=await anchor.boundingBox()
         await page.mouse.click((a.x+a.width/2+b.x+b.width/2)/2,(a.y+a.height/2+b.y+b.height/2)/2)
       }else if(editorCase==='tab'){await page.keyboard.press('Tab');await page.keyboard.press('Tab')}
+      if(options['point-matched']==='true'){
+        const awaitMedia=()=>page.waitForFunction(()=>{const boards=[...document.querySelectorAll('[data-artboard-id]')];return boards.length===3&&boards.every(board=>{const image=board.querySelector('[data-node-type=image] img');return image?.complete&&image.naturalWidth>0||!!board.querySelector('.native-board-thumbnail svg image[href^="data:image/"]')})});await awaitMedia()
+        const geometry={controls:await page.locator('.native-toolbar button,.native-board-label').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>{const b=e.getBoundingClientRect(),s=getComputedStyle(e);return{label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent,rect:b.toJSON(),font:s.font,padding:s.padding,border:s.border,background:s.background,color:s.color,shadow:s.boxShadow,radius:s.borderRadius}})),anchors:await editor.locator('[data-vector-part^="a:"]').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return{id:e.dataset.vectorPart,x:b.x+b.width/2,y:b.y+b.height/2}})),boards:await page.locator('[data-artboard-id]').evaluateAll(es=>es.map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})))}
+        await writeFile(join(output,'matched-geometry.json'),JSON.stringify(geometry,null,2)+'\n')
+        if(options['source-camera']==='true'){
+          const sample=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8')).runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
+          assert.ok(sample)
+          assert.ok(geometry.anchors.every((point,i)=>Math.hypot(point.x-sample.anchors[i].x,point.y-sample.anchors[i].y)<=1),'the same source document must place each control point within one CSS pixel')
+          assert.ok(geometry.boards.every((board,i)=>['x','y','width','height'].every(key=>Math.abs(board.rect[key]-sample.boards[i].rect[key])<=1)),'fitted artboards must match source position and size within one CSS pixel')
+          const scroll=await page.locator('.native-stage').evaluate(e=>({x:e.scrollLeft,y:e.scrollTop}))
+          await page.keyboard.down('Space');await page.mouse.move(300,180);await page.mouse.down();await page.mouse.move(320,200,{steps:6});await page.mouse.up();await page.keyboard.up('Space')
+          assert.notDeepEqual(await page.locator('.native-stage').evaluate(e=>({x:e.scrollLeft,y:e.scrollTop})),scroll)
+          await page.keyboard.press('Control+0')
+          await page.waitForFunction(points=>points.every((point,i)=>{const b=document.querySelector(`[data-vector-part="a:0:${i}"]`)?.getBoundingClientRect();return b&&Math.hypot(b.x+b.width/2-point.x,b.y+b.height/2-point.y)<=1}),sample.anchors)
+          await awaitMedia()
+
+        }
+      }
       if(['initial','handle','break','cancel'].includes(editorCase))await page.screenshot({path:join(output,`design-point-${editorCase}-${options['canvas-theme']??'light'}.png`)})
       const source=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector-edit.json'),'utf8')).runtimeCases.find(sample=>sample.name===editorCase)
       assert.equal(await editor.locator('[data-vector-part^="a:"]').count(),source.state.parts.filter(p=>p.part.startsWith('a')).length)
@@ -541,7 +571,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.keyboard.press('Escape');await editor.waitFor({state:'detached'});assert.equal(await node.evaluate(e=>getComputedStyle(e).visibility),'visible')
       const saved=structuredClone(document.pages['canvas-vector-body'].nodes['editable-path']);await page.reload({waitUntil:'domcontentloaded'});await ready(1);assert.deepEqual(document.pages['canvas-vector-body'].nodes['editable-path'],saved)
       assert.deepEqual(errors,[])
-      return{kind:'isolated-canvas-vector-edit-diagnostic',scenario:editorCase,entry:editorCase==='keyboard-enter'?'选择后回车':'双击路径',sourceAnchorCount:true,...(['initial','tab','keyboard-enter','cancel','undo-point'].includes(editorCase)?{originalGeometryPreserved:true,...(editorCase==='undo-point'?{sharedUndo:true}:{unchangedDoesNotSave:true})}:{oneGestureOneBatch:true,sourceGeometryWithin1CssPx:true,sharedUndoRedo:true}),savedAndReopened:true,scope:'真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉',consoleOrPageErrors:errors}
+      return{kind:'isolated-canvas-vector-edit-diagnostic',scenario:editorCase,entry:editorCase==='keyboard-enter'?'选择后回车':'双击路径',...(options['source-camera']==='true'?{sourceCameraWithin1CssPx:true,trustedFitRestoresSameZoom:true}:{}),sourceAnchorCount:true,...(['initial','tab','keyboard-enter','cancel','undo-point'].includes(editorCase)?{originalGeometryPreserved:true,...(editorCase==='undo-point'?{sharedUndo:true}:{unchangedDoesNotSave:true})}:{oneGestureOneBatch:true,sourceGeometryWithin1CssPx:true,sharedUndoRedo:true}),savedAndReopened:true,scope:'真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-vector-retention'){
       const choosePen=async()=>{await page.getByLabel('绘图工具',{exact:true}).click();await page.getByRole('group',{name:'绘图工具选项',exact:true}).getByRole('button',{name:/^钢笔/}).click();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})}
