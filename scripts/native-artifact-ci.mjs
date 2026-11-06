@@ -105,7 +105,7 @@ const requestTables = new Set(['inflightRequests', 'requestsAtEditable', 'reques
 const requestTypes = new Set(['Script', 'Document', 'Stylesheet', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'Media', 'WebSocket', 'EventSource', 'Ping', 'Preflight', 'Manifest'])
 export function publicRequest(row) {
   const safe = { resourceHash: createHash('sha256').update(typeof row.url === 'string' ? row.url : '').digest('hex'),
-    category: row.retiredEditor ? 'retired-editor' : row.scriptPath || row.type === 'Script' ? 'script' : row.sourcePayload ? 'source-document' : 'other',
+    category: row.retiredEditor ? 'retired-editor' : row.scriptPath || row.type === 'Script' || row.scriptObserved===true || /(?:java|ecma)script/i.test(typeof row.mime==='string'?row.mime:'') ? 'script' : row.sourcePayload ? 'source-document' : 'other',
     type: requestTypes.has(row.type) ? row.type : 'Other',
     targetType: ['page', 'iframe', 'worker', 'service_worker', 'shared_worker'].includes(row.targetType) ? row.targetType : 'other' }
   if (['artifact-api','project-api','conversation-api','auth-api','product-api','static-script','static-media','editor-reference','other'].includes(row.routeClass)) safe.routeClass=row.routeClass
@@ -114,7 +114,7 @@ export function publicRequest(row) {
   if(['page','iframe','worker'].includes(row.timingContext))safe.timingContext=row.timingContext
   if(['script','link','css','fetch','xmlhttprequest','other'].includes(row.initiatorType))safe.initiatorType=row.initiatorType
   for (const key of ['start', 'startEpochMs', 'requestOrdinal', 'status', 'transferredBytes', 'decodedBytes', 'declaredEncodedBodyBytes', 'observedResponseHeadersBytes', 'finishedEpochMs', 'end', 'responseEndEpochMs', 'requestStartEpochMs','timeOriginEpochMs','contextOrdinal','encodedBytes']) if (typeof row[key] === 'number' && Number.isFinite(row[key])) safe[key] = row[key]
-  for (const key of ['network', 'scriptPath', 'sourcePayload', 'retiredEditor', 'cache', 'decodedObserved', 'finished', 'failed', 'canceled', 'transferPending']) if (typeof row[key] === 'boolean') safe[key] = row[key]
+  for (const key of ['network', 'scriptPath', 'scriptObserved', 'sourcePayload', 'retiredEditor', 'cache', 'decodedObserved', 'finished', 'failed', 'canceled', 'transferPending']) if (typeof row[key] === 'boolean') safe[key] = row[key]
   if (['identity', 'gzip', 'br', 'deflate', 'zstd'].includes(row.encoding)) safe.encoding = row.encoding
   if (['Network.dataReceived', 'PerformanceResourceTiming'].includes(row.decodedBytesSource)) safe.decodedBytesSource = row.decodedBytesSource
   if (['Network.loadingFinished', 'PlaywrightRequestSizes', 'PlaywrightHeaders+PerformanceResourceTiming'].includes(row.transferredBytesSource)) safe.transferredBytesSource = row.transferredBytesSource

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { BASELINE, baselineFor, compactReceipt, configuration, FIDELITY_BASELINE, publicEvidence, verifyDiagnosticPrerequisite } from './native-artifact-ci.mjs'
+import { BASELINE, baselineFor, compactReceipt, configuration, FIDELITY_BASELINE, publicEvidence, publicRequest, verifyDiagnosticPrerequisite } from './native-artifact-ci.mjs'
 
 const env = {
   GITHUB_EVENT_NAME: 'workflow_dispatch', GITHUB_REF_TYPE: 'branch', GITHUB_REF: 'refs/heads/codex/shared-artifact-editor',
@@ -132,4 +132,14 @@ test('accounting failures preserve exact counts and fixed browser network error 
   assert.equal(invalid.ambiguousRequests,undefined)
   assert.equal(invalid.historicalAmbiguousObservations,undefined)
   assert.equal(invalid.browserErrorPage,undefined)
+})
+
+
+test('MIME-identified scripts keep a script category without publishing raw response headers',()=>{
+  const safe=publicRequest({url:'https://fixture.invalid/generated-script',type:'Fetch',mime:'application/javascript',network:true,transferredBytes:120,decodedBytes:100,headers:{authorization:'private'}})
+  assert.equal(safe.category,'script')
+  assert.equal(safe.type,'Fetch')
+  assert.equal(safe.transferredBytes,120)
+  assert.equal(safe.mime,undefined)
+  assert.equal(safe.headers,undefined)
 })

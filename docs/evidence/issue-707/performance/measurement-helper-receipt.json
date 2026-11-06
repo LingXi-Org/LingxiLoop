@@ -4,8 +4,8 @@
   "performanceSamples": 0,
   "qualified": false,
   "contracts": {
-    "tests": 19,
-    "passed": 19,
+    "tests": 20,
+    "passed": 20,
     "failed": 0
   },
   "selfCheck": "通过：非脚本歧义不污染脚本资格；脚本当前歧义仍拒绝；后续精确时钟可解除歧义但保留历史；106.964ms未匹配仍拒绝",
@@ -16,7 +16,7 @@
         "encoding": "identity",
         "workerTransferBytes": 1000203,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2022.5,
+        "importDurationMs": 2025.4,
         "scriptRequests": 2,
         "inflight": 0
       },
@@ -24,20 +24,26 @@
         "encoding": "gzip",
         "workerTransferBytes": 1230,
         "workerDecodedBytes": 1000054,
-        "importDurationMs": 2024.7,
+        "importDurationMs": 2022.6,
         "scriptRequests": 2,
         "inflight": 0
       },
       {
         "encoding": "concurrent",
         "refusedAsAmbiguous": true,
-        "ambiguousRequests": 4
+        "ambiguousRequests": 2
       },
       {
         "encoding": "queued",
         "scriptRequests": 12,
         "maxNetworkStartSkewMs": 601.9,
         "scriptDecodedBytes": 240492
+      },
+      {
+        "encoding": "mimeFetch",
+        "extensionlessFetchCountedAsScript": true,
+        "scriptRequests": 1,
+        "scriptDecodedBytes": 28
       },
       {
         "encoding": "networkFailure",
@@ -177,9 +183,18 @@
     "qualified": false
   },
   "sourceSha256": {
-    "scripts/native-artifact-benchmark.py": "88472b8a33224099a15d601518336ab48cfddcbd08c5cd9579d372fefb58fbae",
-    "scripts/native-artifact-ci.mjs": "39540983c763beb48d960458f691feb1427d92b21112ef84b7ec71af8b1d3721",
-    "scripts/native-artifact-ci.test.mjs": "d629166f0dd2f1360f8d85abffa34c88c92407642793fb0a190aa6c31f689fd5",
-    "scripts/native-artifact-cleanup-check.py": "d818ed20a03bf321731f2c7d264bc6c37e5395453e5a1650fadb6560d84ae7b0"
-  }
+    "scripts/native-artifact-benchmark.py": "430b29394f44027bad34b573e758e9840d6a5dc55c9ca0c26074f65828b35773",
+    "scripts/native-artifact-ci.mjs": "4ff132137bcc4c6aae44ab19b73ef92bd17c61d0b2c29f6d033df6253f7dd33a",
+    "scripts/native-artifact-ci.test.mjs": "8d4bb68af10b4091262c04940a7625ee483d8f942db7c8aaeebfd0c3fa2c6de7",
+    "scripts/native-artifact-cleanup-check.py": "d818ed20a03bf321731f2c7d264bc6c37e5395453e5a1650fadb6560d84ae7b0",
+    "scripts/native-artifact-trace-check.py": "37c2d9a356ab87134794e18efaeb682b0d037a91ca52c69bd8bba88a26458b98"
+  },
+  "mimeCoverage": [
+    "无扩展URL，左侧CDP MIME脚本/右侧Fetch的未解歧义仍拒绝",
+    "右侧MIME脚本的未解歧义仍拒绝",
+    "唯一PW MIME fallback保留脚本数、实际线字节和解压字节",
+    "alias合并保留可信脚本身份",
+    "真实无扩展Fetch JavaScript MIME被计量",
+    "脱敏保留script分类而不发布MIME或headers"
+  ]
 }

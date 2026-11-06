@@ -129,7 +129,7 @@ def pair_observations(left, right, playwright_start=False):
 
 
 def script_request(row):
-    return bool(row.get("network") and (row.get("type") == "Script" or row.get("scriptPath")
+    return bool(row.get("network") and (row.get("type") == "Script" or row.get("scriptPath") or row.get("scriptObserved")
                 or re.search(r"(?:java|ecma)script", row.get("mime") or "", re.I)))
 
 
@@ -289,7 +289,7 @@ class Trace:
             except Exception: target_type = 'worker'
             self.finished_requests.append({"url": safe_url(request.url), "_resourceKey":resource_key(request.url), "_requestIdentity":len(self.finished_requests), "startEpochMs": request.timing["startTime"], "routeClass": request_route(request.url),
                 **({"responseEndEpochMs": request.timing["startTime"] + request.timing["responseEnd"]} if request.timing["responseEnd"] >= 0 else {}),
-                "status": response.status, "targetType": target_type, "headersBytes": sizes["responseHeadersSize"],
+                "status": response.status, "targetType": target_type, "mime": "text/javascript" if re.search(r"(?:java|ecma)script",response.headers.get("content-type", ""),re.I) else "", "headersBytes": sizes["responseHeadersSize"],
                 "bodyBytes": sizes["responseBodySize"], "finishedEpochMs": time.time() * 1000,
                 "type": {"script":"Script","document":"Document","fetch":"Fetch","xhr":"XHR","image":"Image","font":"Font","stylesheet":"Stylesheet"}.get(request.resource_type,"Other"),
                 "network": urlsplit(request.url).scheme in ("http","https"),
@@ -308,7 +308,7 @@ class Trace:
         cdp = [(key, row) for key, row in self.requests.items() if not row.get('fromPlaywright') and '_playwrightKey' not in row]
         pairs, _left, _right, ambiguous = pair_observations([row for _, row in cdp], [row for _, row in fallback], playwright_start=True)
         self.observe_ambiguity(len(ambiguous))
-        unresolved_scripts = sum(script_request(fallback[j][1]) for j in ambiguous)
+        unresolved_scripts = sum(script_request(fallback[j][1]) or any(script_request(cdp[i][1]) and cdp[i][1]['_resourceKey']==fallback[j][1]['_resourceKey'] and abs(cdp[i][1].get('_playwrightStartEpochMs',cdp[i][1]['startEpochMs'])-fallback[j][1]['startEpochMs'])<100 for i in _left) for j in ambiguous)
         for i, j in pairs:
             _, row = cdp[i]
             old_key, old = fallback[j]
@@ -327,7 +327,7 @@ class Trace:
         rows = [row for row in self.requests.values() if '_playwrightKey' not in row]
         pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries, playwright_start=True)
         self.observe_ambiguity(len(ambiguous))
-        unresolved_scripts += sum(script_request(entries[j]) for j in ambiguous)
+        unresolved_scripts += sum(script_request(entries[j]) or any(script_request(rows[i]) and rows[i]['_resourceKey']==entries[j]['_resourceKey'] and abs(rows[i].get('_playwrightStartEpochMs',rows[i]['startEpochMs'])-entries[j]['startEpochMs'])<100 for i in _unused) for j in ambiguous)
         self._finished_script_ambiguities = unresolved_scripts
         self.ambiguous_requests = unresolved_scripts + getattr(self, '_resource_script_ambiguities', 0)
         for i,j in pairs: rows[i]['_playwrightKey'] = entries[j]['_requestIdentity']
@@ -335,11 +335,12 @@ class Trace:
             entry = entries[j]
             self.request_sequence += 1
             self.requests['playwright:' + str(self.request_sequence)] = {'url':entry['url'],'_resourceKey':entry['_resourceKey'],'startEpochMs':entry['startEpochMs'], 'requestOrdinal':self.request_sequence,
-                'type':entry['type'],'routeClass':entry.get('routeClass','other'),'network':entry['network'],'scriptPath':entry['scriptPath'],'targetType':entry['targetType'],'fromPlaywright':True,'_playwrightKey':entry['_requestIdentity']}
+                'type':entry['type'],'mime':entry.get('mime',''),'routeClass':entry.get('routeClass','other'),'network':entry['network'],'scriptPath':entry['scriptPath'],'targetType':entry['targetType'],'fromPlaywright':True,'_playwrightKey':entry['_requestIdentity']}
         by_identity = {entry['_requestIdentity']:entry for entry in self.finished_requests}
         for row in self.requests.values():
             if '_playwrightKey' not in row: continue
             entry = by_identity[row['_playwrightKey']]
+            if script_request(entry): row['scriptObserved'] = True
             if 'responseEndEpochMs' in entry: row['responseEndEpochMs'] = entry['responseEndEpochMs']
             if row.get('finished'):
                 if not row.get('transferPending') and entry['bodyBytes'] > 0 and row.get('transferredBytes') != entry['headersBytes'] + entry['bodyBytes'] and not row.get('_playwrightWireConflict'):
@@ -372,14 +373,17 @@ class Trace:
                 for entry in observed: entry.update(timingContext=context_type, contextOrdinal=ordinal)
                 entries.extend(observed)
             except Exception: pass
-        self.script_resource_timings = [entry for entry in entries if re.search(r"\.(?:m?js|cjs)$", urlsplit(entry['url']).path)]
         for entry in entries: entry['_resourceKey'] = resource_key(entry['url'])
         rows = [row for row in self.requests.values() if script_request(row) and row.get('finished')]
+        script_keys = {row['_resourceKey'] for row in rows}
+        for entry in entries:
+            if entry['_resourceKey'] in script_keys: entry['scriptObserved'] = True
+        self.script_resource_timings = [entry for entry in entries if entry.get('scriptObserved') or re.search(r'\.(?:m?js|cjs)$',urlsplit(entry['url']).path)]
         pairs, _unused, unmatched, ambiguous = pair_observations(rows, entries)
         self.observe_ambiguity(len(ambiguous))
         self._resource_script_ambiguities = len(ambiguous)
         self.ambiguous_requests = getattr(self, '_finished_script_ambiguities', 0) + len(ambiguous)
-        self.unaccounted_script_resources = [entries[j] for j in unmatched if re.search(r"\.(?:m?js|cjs)$", urlsplit(entries[j]['url']).path)]
+        self.unaccounted_script_resources = [entries[j] for j in unmatched if entries[j].get('scriptObserved') or re.search(r"\.(?:m?js|cjs)$", urlsplit(entries[j]['url']).path)]
         for i,j in pairs:
             row, entry = rows[i], entries[j]
             # A complete, uniquely matched ResourceTiming entry supersedes
@@ -1267,6 +1271,28 @@ def self_check():
         return trace
     fetch_only=transient_ambiguity('Fetch')
     assert fetch_only.ambiguous_requests==0, 'unresolved Fetch aliases are not script-byte ambiguities'
+    mime_only=transient_ambiguity('Fetch')
+    for row in mime_only.requests.values():row['mime']='application/javascript'
+    mime_only.reconcile_finished()
+    assert mime_only.ambiguous_requests>0, 'a MIME-identified CDP script must retain ambiguity even when PW calls it Fetch'
+    right_mime=transient_ambiguity('Fetch')
+    for row in right_mime.finished_requests:row['mime']='application/javascript'
+    right_mime.reconcile_finished()
+    assert right_mime.ambiguous_requests>0
+    mime_fallback=Trace.__new__(Trace);mime_fallback.requests={};mime_fallback.finished_requests=[];mime_fallback.request_sequence=0;mime_fallback.ambiguous_requests=0;mime_fallback.byte_conflicts=0
+    mime_url='https://fixture.invalid/generated-script'
+    frame=SimpleNamespace();frame.page=SimpleNamespace(main_frame=frame)
+    request=SimpleNamespace(url=mime_url,frame=frame,resource_type='fetch',timing={'startTime':1007,'responseEnd':10},response=lambda:SimpleNamespace(status=200,headers={'content-type':'application/javascript; charset=utf-8'}),sizes=lambda:{'responseHeadersSize':20,'responseBodySize':100})
+    mime_fallback.record_finished(request)
+    assert mime_fallback.finished_requests[0]['mime']=='text/javascript'
+    mime_fallback.reconcile_decoded(SimpleNamespace(frames=[SimpleNamespace(evaluate=lambda _:[{'url':mime_url,'startEpochMs':1007,'encodedBytes':100,'decodedBytes':100}])],workers=[]))
+    fallback_totals=script_totals(mime_fallback.snapshot())
+    assert fallback_totals['requests']==1 and fallback_totals['transferredBytes']==120 and fallback_totals['decodedBytes']==100
+    alias=transient_ambiguity('Fetch')
+    alias.finished_requests=alias.finished_requests[:1];alias.finished_requests[0].update(startEpochMs=1000,mime='text/javascript')
+    alias.reconcile_finished()
+    assert alias.requests['0']['scriptObserved'] and script_totals(alias.snapshot())['requests']==1
+
     resolving=transient_ambiguity('Script')
     assert resolving.ambiguous_requests>0, 'unresolved concurrent script aliases must still reject'
     for i,row in enumerate(resolving.requests.values()):row['_playwrightStartEpochMs']=resolving.finished_requests[i]['startEpochMs']

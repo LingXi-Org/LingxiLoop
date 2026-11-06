@@ -221,3 +221,9 @@
 - Design自然滚轮后改为重取frame列表，保留20秒导航窗口、真实输入和真实页面按钮；没有force click或设置产品状态。实际Chromium回归先复现Frame was detached，修正后通过。
 - 19项编排/隐私/存储测试、自检、脚本语法和diff检查通过。实际Worker原始/压缩入口及依赖、并发真歧义拒绝、12条排队脚本、ERR_EMPTY_RESPONSE与错误页证据检查通过；撤销清理及框架卸载导航检查也通过。结果见 performance/measurement-helper-receipt.json，性能样本为0。
 - [373d8fd5 owning CI42143966590](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42143966590)已全绿，部署跳过。373自由画布复审已确认原四场景通过，但新增默认英文/制表符折行、窗口收缩相机、非活动画布原点变化及空画布提示拦截四项P2，须继续修正，尚未关闭。新的计量候选还须CI与独立只读审查，再运行真实诊断；没有完整资格通过。
+
+### MIME脚本歧义与fallback复审修正
+
+- 787df4b5独立只读审查复现P2：无扩展URL的CDP Fetch响应已由MIME标识为JavaScript，但右侧PW只是Fetch，旧歧义分类仅看右侧会漏掉未解决脚本；唯一PW fallback也没有延续JavaScript MIME身份，可能把1MB脚本计为零。
+- 先补反例复现失败，再同时检查未匹配左右候选的脚本身份，PW完成事件仅保留规范化JavaScript MIME，fallback与alias持续保留可信脚本身份。RT目录也包含已识别的无扩展脚本；脱敏仅发布固定脚本分类/布尔值，不发布原Content-Type或headers。
+- 20项编排/隐私/存储测试、自检和语法/diff检查通过；真实Worker原始/压缩、并发歧义拒绝、排队12脚本及网络失败再跑通过，并实际验证无扩展Fetch的28字节JavaScript被完整计入。这仍是计量辅助回归，性能样本为0。新冻结候选CI和独立复审待执行。
