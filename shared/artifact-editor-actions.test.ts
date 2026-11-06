@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createDocument, createPage, createNode, validateArtifactDocument } from './artifact-document.js'
 import { applyOperations, prepareBatch, ArtifactOperationConflict } from './artifact-operations.js'
-import { duplicatePages, distributeNodes, resizeSelection, layoutSlide, drawingNode, canvasShapeNode, ungroupNodes, appendDrawingPoint } from './artifact-editor-actions.js'
+import { duplicateNodes, duplicatePages, distributeNodes, resizeSelection, layoutSlide, drawingNode, canvasShapeNode, ungroupNodes, appendDrawingPoint } from './artifact-editor-actions.js'
 
 function fixture() {
   const doc = createDocument('slides', 'fixture'), page = createPage('first')
@@ -35,6 +35,16 @@ test('slide duplicates retain motion identity across repeated copies and undo wi
   assert.equal(validateArtifactDocument(JSON.parse(JSON.stringify(second.document))).pages['motion-4']!.transition, 'magic')
   assert.deepEqual(applyOperations(first.document, prepareBatch(first.document, first.inverse, 'undo-copy')).document.pages, doc.pages)
   assert.deepEqual(doc.pages.first!.nodes, before.pages.first!.nodes)
+})
+test('ordinary object copies get independent motion identities while later slide copies pair each object once',()=>{
+  const doc=fixture(),page=doc.pages.first!,node={...page.nodes.text!,motionId:'original-heading'}
+  const before=structuredClone(node),copies=duplicateNodes([node],()=> 'independent-heading')
+  assert.equal(copies[0]!.motionId,undefined);assert.equal(copies[0]!.id,'independent-heading');assert.equal(copies[0]!.parentId,null)
+  assert.equal(copies[0]!.x,node.x+24);assert.deepEqual(node,before)
+  page.nodes.text=node;page.nodes[copies[0]!.id]=copies[0]!;page.nodeOrder.push(copies[0]!.id)
+  let next=0;const copied=applyOperations(doc,prepareBatch(doc,duplicatePages(doc,['first'],()=>`paired-${++next}`),'pair-after-object-copy')).document
+  const identities=Object.values(copied.pages['paired-1']!.nodes).map(node=>node.motionId)
+  assert.equal(identities.filter(id=>id==='original-heading').length,1);assert.equal(identities.filter(id=>id==='independent-heading').length,1)
 })
 test('opposite resize edges keep their opposite anchor and scale selected geometry together', () => {
   const a = { ...createNode('shape', 'a'), x: 100, y: 80, width: 100, height: 40 }

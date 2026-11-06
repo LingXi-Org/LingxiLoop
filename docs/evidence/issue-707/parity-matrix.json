@@ -2329,6 +2329,11 @@
       "transitionEvidence": {
         "receipt": "functional/slides-transitions.json",
         "scope": "仅本次新增转场、复制身份、键盘与减少动画；不替代此项全部状态"
+      },
+      "reviewFixEvidence": {
+        "review": "reviews/af9ffa03.json",
+        "receipt": "functional/slides-transition-review-fixes.json",
+        "scope": "局部先失败后修复；仍待新候选正式CI及独立复审，不作为完整资格"
       }
     },
     {
@@ -2913,6 +2918,11 @@
       "transitionEvidence": {
         "receipt": "functional/slides-transitions.json",
         "scope": "仅本次新增转场、复制身份、键盘与减少动画；不替代此项全部状态"
+      },
+      "reviewFixEvidence": {
+        "review": "reviews/af9ffa03.json",
+        "receipt": "functional/slides-transition-review-fixes.json",
+        "scope": "局部先失败后修复；仍待新候选正式CI及独立复审，不作为完整资格"
       }
     },
     {
@@ -9200,6 +9210,11 @@
       "testEvidence": {
         "receipt": "functional/slides-transitions.json",
         "scope": "按登记范围证明，不作为完整功能与视觉通过"
+      },
+      "reviewFixEvidence": {
+        "review": "reviews/af9ffa03.json",
+        "receipt": "functional/slides-transition-review-fixes.json",
+        "scope": "局部先失败后修复；仍待新候选正式CI及独立复审，不作为完整资格"
       }
     },
     {

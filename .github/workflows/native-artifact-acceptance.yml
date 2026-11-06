@@ -130,6 +130,10 @@ jobs:
           for task_case in save-retry keyboard-isolation module-cancel; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-$task_case=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-$task_case"
           done
+          for task_presentation_case in keyboard-isolation copy-identity mixed-sizes; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=slide-transitions --presentation-$task_presentation_case=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-presentation-$task_presentation_case"
+          done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=slide-transitions --presentation-focus-return=true --strict-mode=false --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-presentation-focus-return"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=slide-transitions --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-slide-transitions"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=asset-colors --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-asset-colors"
           for task_editor in design slides; do

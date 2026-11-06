@@ -54,11 +54,13 @@ export function animateSlideTransition(
   else if (kind === 'push') {
     const distance = from.width * (back ? -1 : 1)
     animate(old, [{ transform: 'translateX(0px)' }, { transform: `translateX(${-distance}px)` }])
-    animate(next, [{ transform: `translateX(${distance}px)` }, { transform: 'translateX(0px)' }])
+    animate(next, [
+      { transform: `translateX(${to.width * (back ? -1 : 1)}px)` },
+      { transform: 'translateX(0px)' },
+    ])
   } else {
     if (veil) animate(veil, [{ opacity: 1 }, { opacity: 0 }])
-    const oldOrigin = old.getBoundingClientRect(),
-      newOrigin = next.getBoundingClientRect()
+    const newOrigin = next.getBoundingClientRect()
     const matching = new Map(
         to.nodeOrder.flatMap((id) => {
           const n = to.nodes[id]
@@ -82,17 +84,18 @@ export function animateSlideTransition(
         continue
       }
       paired.add(target!.id)
-      const a = source.getBoundingClientRect(),
-        b = element.getBoundingClientRect()
+      const start = transitionRect(source.getBoundingClientRect(), newOrigin, scale),
+        end = transitionRect(element.getBoundingClientRect(), newOrigin, scale)
       hidden.push([source, source.style.visibility])
       source.style.visibility = 'hidden'
       if (
-        Math.abs(a.left - oldOrigin.left - b.left + newOrigin.left) >= 0.5 * scale ||
-        Math.abs(a.top - oldOrigin.top - b.top + newOrigin.top) >= 0.5 * scale ||
-        Math.abs(a.width - b.width) >= 0.5 * scale ||
-        Math.abs(a.height - b.height) >= 0.5 * scale
+        ['left', 'top', 'width', 'height'].some(
+          (key) =>
+            Math.abs(Number.parseFloat(String(start[key])) - Number.parseFloat(String(end[key]))) >=
+            0.5,
+        )
       )
-        animate(element, [transitionRect(a, oldOrigin, scale), transitionRect(b, newOrigin, scale)])
+        animate(element, [start, end])
     }
     for (const node of matching.values())
       if (!paired.has(node.id)) {

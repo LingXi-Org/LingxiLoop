@@ -1,0 +1,31 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "path": "skills/claude-slides/scripts/editor/node/compiler.cjs",
+  "gitBlobSha": "1ba72f235562983ee2fd8a4173130c00ef9bf4c9",
+  "sha256": "78d5448dacb104d91c905e4473f13e113e7dad6b558d4671e795a0ae45718bb5",
+  "bytes": 10761731,
+  "verification": "固定提交GitHub contents API blob sha与本地git hash-object一致；可读参考编译包不进产品",
+  "sourceRules": {
+    "ordinaryNodeCopy": "223629 duplicateFrameWithFixedFillPlacement与235158 parsePastedFrames均生成新的frame id；整页复制保留跨页身份",
+    "outgoingEmbeds": "241300 PresentationSlideTransition隐藏包含嵌入的整个frame，等价固定JS offset4016514",
+    "pptx": "155341–168882 installExportPptx不包含transition/animation处理"
+  },
+  "actualPptxExport": {
+    "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "inputTransition": "magic",
+    "format": "basic-fonts-pptx",
+    "slideCount": 3,
+    "transitionElements": 0,
+    "timingElements": 0,
+    "notices": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  "license": "仅隔离参考运行，遵循THIRD_PARTY_NOTICES；不分发原编译包"
+}

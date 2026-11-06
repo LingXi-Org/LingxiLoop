@@ -49,6 +49,16 @@ export function duplicatePages(document: ArtifactDocument, selected: string[], n
   }
   return ops
 }
+/** Object copies have new identities; only whole-slide duplication pairs motion. */
+export function duplicateNodes(nodes: ArtifactNode[], nextId: () => string): ArtifactNode[] {
+  const mapping = new Map(nodes.map(node => [node.id, nextId()]))
+  return nodes.map(node => {
+    const copy = structuredClone(node)
+    delete copy.motionId
+    const nested = !!node.parentId && mapping.has(node.parentId)
+    return {...copy,id:mapping.get(node.id)!,x:node.x+(nested?0:24),y:node.y+(nested?0:24),parentId:node.parentId?mapping.get(node.parentId)??null:null}
+  })
+}
 /** Source Design rectangles and ellipses use world-space drag bounds, or a default size on click. */
 export function canvasShapeNode(id:string,shape:'rect'|'ellipse',start:{x:number;y:number},end?:{x:number;y:number}):ArtifactNode {
   const size=shape==='ellipse'?96:120

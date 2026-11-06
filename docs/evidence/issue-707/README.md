@@ -248,3 +248,10 @@ JSZip沿用锁文件3.10.1，仅在隔离导出环境按需加载，MIT署名已
 [面板停靠来源](source-slides-inspector-layout.json)纠正窄屏关闭按钮被工具栏遮挡：768px以下采用 min(50%,384px) 底部面板，其上采用336px右侧面板。
 155条清单均未获完整功能或视觉资格；完整演讲者视图、放映外观、PPTX转场及所有原版降级规则仍待完成。
 [1b2366f4独立复审与CI](reviews/1b2366f4.json)确认无P1/P2、owning检查通过；该提交真实诊断仍运行中。
+
+
+[af9ffa03独立审查](reviews/af9ffa03.json)确认4项P2，虽正式CI通过仍不能验收。
+[先失败后修复的回归](functional/slides-transition-review-fixes.json)覆盖Tab绕过放映、普通复制配对碰撞、不同页尺寸、motionId共享逆操作，
+并补非StrictMode焦点及离线隐藏页尺寸检查。普通对象复制生成新身份，整页复制保留配对；两页分别适配，Magic按目标局部坐标还原起始屏幕几何。
+[可读参考包与实际PPTX导出](source-slides-readable-provenance.json)已核对固定提交blob哈希；原版PPTX省略转场且不另提示，不引入虚构的降级规则。
+76项局部单测与140/154浏览器回归通过，新增数据库扩展、正式CI与修复候选独立复审待完成；全部155项完整资格仍false。

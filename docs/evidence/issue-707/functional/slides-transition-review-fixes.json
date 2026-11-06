@@ -1,0 +1,417 @@
+{
+  "scope": "先失败后修复的受控浏览器、React/Worker及共享模型回归；不替代真实授权API、物理输入法、全视觉或性能",
+  "sourceReview": "reviews/af9ffa03.json",
+  "before": {
+    "tab": {
+      "trail": [
+        {
+          "tag": "BUTTON",
+          "outerRoot": false,
+          "label": "下一页"
+        },
+        {
+          "tag": "BUTTON",
+          "outerRoot": false,
+          "label": "讲者备注"
+        },
+        {
+          "tag": "BUTTON",
+          "outerRoot": false,
+          "label": "全屏"
+        },
+        {
+          "tag": "BUTTON",
+          "outerRoot": false,
+          "label": "退出放映"
+        },
+        {
+          "tag": "BODY",
+          "outerRoot": false,
+          "label": null
+        },
+        {
+          "tag": "SECTION",
+          "outerRoot": true,
+          "label": "原生编辑器验收编辑器"
+        }
+      ],
+      "seqBefore": 1,
+      "seqAfter": 2,
+      "historyRequests": [
+        "undo"
+      ]
+    },
+    "mixedNative": {
+      "kind": "fade",
+      "before": {
+        "x": 0,
+        "y": 95,
+        "width": 1440,
+        "height": 810
+      },
+      "outgoing": {
+        "x": 0,
+        "y": 95,
+        "width": 2880,
+        "height": 1620
+      },
+      "incoming": {
+        "x": 0,
+        "y": 95,
+        "width": 1440,
+        "height": 810
+      },
+      "heading": {
+        "x": 48,
+        "y": 125,
+        "width": 864,
+        "height": 57
+      },
+      "animations": [
+        {
+          "id": null,
+          "frames": [
+            {
+              "opacity": 1
+            },
+            {
+              "opacity": 0
+            }
+          ],
+          "timing": {
+            "duration": 320,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          }
+        }
+      ]
+    },
+    "mixedOffline": {
+      "before": {
+        "x": 48,
+        "y": 149,
+        "width": 864,
+        "height": 57
+      },
+      "incoming": {
+        "x": 720,
+        "y": 524,
+        "width": 960,
+        "height": 540
+      },
+      "animation": {
+        "id": "page-2-heading",
+        "frames": [
+          {
+            "left": "64px",
+            "top": "40px",
+            "right": "auto",
+            "bottom": "auto",
+            "width": "1152px",
+            "height": "76px",
+            "transform": "none"
+          },
+          {
+            "left": "164px",
+            "top": "40px",
+            "right": "auto",
+            "bottom": "auto",
+            "width": "1152px",
+            "height": "76px",
+            "transform": "none"
+          }
+        ],
+        "timing": {
+          "duration": 480,
+          "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+          "fill": "forwards"
+        }
+      }
+    },
+    "hiddenOffline": {
+      "before": {
+        "x": 48,
+        "y": 149,
+        "width": 864,
+        "height": 57
+      },
+      "incoming": {
+        "x": 720,
+        "y": 524,
+        "width": 960,
+        "height": 540
+      },
+      "animation": {
+        "id": "page-2-heading",
+        "frames": [
+          {
+            "left": "-672px",
+            "top": "-375px",
+            "right": "auto",
+            "bottom": "auto",
+            "width": "864px",
+            "height": "57px",
+            "transform": "none"
+          },
+          {
+            "left": "164px",
+            "top": "40px",
+            "right": "auto",
+            "bottom": "auto",
+            "width": "1152px",
+            "height": "76px",
+            "transform": "none"
+          }
+        ],
+        "timing": {
+          "duration": 480,
+          "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+          "fill": "forwards"
+        }
+      }
+    },
+    "nonStrictModeFocus": "/tmp/lingxi-presentation-focus-before-no-strict.log中actual原生编辑器验收编辑器，expected幻灯片放映",
+    "motionUnset": "首次motionId patch后的prepareBatch inverse报field cannot be removed"
+  },
+  "cases": [
+    {
+      "name": "isolation-154",
+      "receipt": {
+        "kind": "isolated-presentation-keyboard-isolation",
+        "trustedTabCannotUndo": true,
+        "programmaticOuterFocusCannotEditOrPaste": true,
+        "rootExcludedFromTabOrder": true,
+        "saveAndEscapePreserved": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "name": "isolation-140",
+      "receipt": {
+        "kind": "isolated-presentation-keyboard-isolation",
+        "trustedTabCannotUndo": true,
+        "programmaticOuterFocusCannotEditOrPaste": true,
+        "rootExcludedFromTabOrder": true,
+        "saveAndEscapePreserved": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "name": "focus-154",
+      "receipt": {
+        "kind": "isolated-presentation-focus-return",
+        "coldAndWarmFocus": [
+          "幻灯片放映",
+          "幻灯片放映"
+        ],
+        "keyboardNavigationWithoutForcedFocus": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "name": "focus-140",
+      "receipt": {
+        "kind": "isolated-presentation-focus-return",
+        "coldAndWarmFocus": [
+          "幻灯片放映",
+          "幻灯片放映"
+        ],
+        "keyboardNavigationWithoutForcedFocus": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "name": "copy-154",
+      "receipt": {
+        "kind": "isolated-slide-transition-diagnostic",
+        "records": [
+          {
+            "kind": "fade",
+            "duration": 320,
+            "forwardAnimations": 1,
+            "backwardAnimations": 1
+          },
+          {
+            "kind": "push",
+            "duration": 420,
+            "forwardAnimations": 2,
+            "backwardAnimations": 2
+          },
+          {
+            "kind": "magic",
+            "duration": 480,
+            "forwardAnimations": 3,
+            "backwardAnimations": 3
+          }
+        ],
+        "copyMotionIdentitySurvivesReopen": true,
+        "undoRedo": true,
+        "reducedMotionSuppressesTransitions": true,
+        "presentationNotesReadOnly": true,
+        "homeEnd": true,
+        "offlineHtmlAnimation": true,
+        "offlineHtmlPrintAllPages": true,
+        "offlineHtmlNetworkRequests": 0,
+        "presentationModuleRequests": 1,
+        "inspectorRect": {
+          "x": 1104,
+          "y": 0,
+          "width": 336,
+          "height": 1000
+        },
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "name": "copy-140",
+      "receipt": {
+        "kind": "isolated-slide-transition-diagnostic",
+        "records": [
+          {
+            "kind": "fade",
+            "duration": 320,
+            "forwardAnimations": 1,
+            "backwardAnimations": 1
+          },
+          {
+            "kind": "push",
+            "duration": 420,
+            "forwardAnimations": 2,
+            "backwardAnimations": 2
+          },
+          {
+            "kind": "magic",
+            "duration": 480,
+            "forwardAnimations": 3,
+            "backwardAnimations": 3
+          }
+        ],
+        "copyMotionIdentitySurvivesReopen": true,
+        "undoRedo": true,
+        "reducedMotionSuppressesTransitions": true,
+        "presentationNotesReadOnly": true,
+        "homeEnd": true,
+        "offlineHtmlAnimation": true,
+        "offlineHtmlPrintAllPages": true,
+        "offlineHtmlNetworkRequests": 0,
+        "presentationModuleRequests": 1,
+        "inspectorRect": {
+          "x": 1104,
+          "y": 0,
+          "width": 336,
+          "height": 1000
+        },
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "name": "mixed-154",
+      "receipt": {
+        "kind": "isolated-mixed-slide-transitions",
+        "records": [
+          {
+            "kind": "fade",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "push",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "magic",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": true
+          }
+        ],
+        "offlineMagicScreenGeometryContinuous": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "name": "mixed-140",
+      "receipt": {
+        "kind": "isolated-mixed-slide-transitions",
+        "records": [
+          {
+            "kind": "fade",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "push",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": null
+          },
+          {
+            "kind": "magic",
+            "outgoingSizePreserved": true,
+            "screenGeometryContinuous": true
+          }
+        ],
+        "offlineMagicScreenGeometryContinuous": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "name": "design-keyboard",
+      "receipt": {
+        "kind": "isolated-board-preview-keyboard-diagnostic",
+        "outerFocusCannotUndoLiveDocument": true,
+        "outerFocusCannotPasteIntoLiveDocument": true,
+        "rootExcludedFromTabOrder": true,
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "mixedAfter": {
+    "before": {
+      "x": 48,
+      "y": 149,
+      "width": 864,
+      "height": 57
+    },
+    "incoming": {
+      "x": 0,
+      "y": 119,
+      "width": 1440,
+      "height": 810
+    },
+    "animation": {
+      "id": "page-2-heading",
+      "frames": [
+        {
+          "left": "32px",
+          "top": "20px",
+          "right": "auto",
+          "bottom": "auto",
+          "width": "576px",
+          "height": "38px",
+          "transform": "none"
+        },
+        {
+          "left": "164px",
+          "top": "40px",
+          "right": "auto",
+          "bottom": "auto",
+          "width": "1152px",
+          "height": "76px",
+          "transform": "none"
+        }
+      ],
+      "timing": {
+        "duration": 480,
+        "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+        "fill": "forwards"
+      }
+    }
+  },
+  "unitTestsPassed": 76,
+  "orchestrationContractsPassed": 15,
+  "pending": [
+    "新增真实数据库motionId首次写入→共享撤销/重做/显式移除的扩展等待正式CI",
+    "新冻结提交独立复审",
+    "完整视觉与最终十组性能门槛"
+  ]
+}

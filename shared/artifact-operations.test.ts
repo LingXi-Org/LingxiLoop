@@ -17,6 +17,21 @@ function fixture() {
   return document
 }
 
+test('first motion identity write supports shared undo/redo, explicit removal and stale-field protection',()=>{
+  const before=fixture(),written=applyOperations(before,prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{motionId:'shared-heading'}}],'set-motion'))
+  const undone=applyOperations(written.document,prepareBatch(written.document,written.inverse,'undo-motion'))
+  assert.equal(undone.document.pages.first!.nodes.title!.motionId,undefined)
+  const redone=applyOperations(undone.document,prepareBatch(undone.document,undone.inverse,'redo-motion'))
+  assert.equal(redone.document.pages.first!.nodes.title!.motionId,'shared-heading')
+  const removal=prepareBatch(redone.document,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{},unset:['motionId']}],'remove-motion')
+  const removed=applyOperations(redone.document,removal)
+  assert.equal(removed.document.pages.first!.nodes.title!.motionId,undefined)
+  assert.equal(applyOperations(removed.document,prepareBatch(removed.document,removed.inverse,'restore-motion')).document.pages.first!.nodes.title!.motionId,'shared-heading')
+  const changed=applyOperations(redone.document,prepareBatch(redone.document,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{motionId:'another-heading'}}],'remote-motion')).document
+  assert.throws(()=>applyOperations(changed,removal),ArtifactOperationConflict)
+  assert.equal(before.pages.first!.nodes.title!.motionId,undefined)
+})
+
 test('stale document revisions can change disjoint fields of the same node', () => {
   const before = fixture()
   const human = prepareBatch(before, [{ type: 'node.patch', pageId: 'first', nodeId: 'title', patch: { text: 'Human' } }], 'human')

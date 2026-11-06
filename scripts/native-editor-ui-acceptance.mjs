@@ -50,7 +50,7 @@ const mocks = {
 }
 for (const [name, source] of Object.entries(mocks)) await writeFile(join(workspace, `${name}.js`), source)
 await writeFile(join(workspace, 'index.html'), '<html><head><meta charset="UTF-8"></head><body style="margin:0"><div id="root" style="height:100vh"></div><script type="module" src="/entry.tsx"></script></body></html>')
-await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<React.StrictMode>${options.checks==='canvas-pages'?'<div style={{height:"100%"}} data-fixture-workspace onKeyDown={event=>{if(event.key==="Escape"&&!event.defaultPrevented)event.currentTarget.hidden=true}}>':''}<NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'||new URLSearchParams(location.search).has('design')?'design':'slides'} title="原生编辑器验收" />${options.checks==='canvas-pages'?'</div>':''}</React.StrictMode>)`)
+await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<${options['strict-mode']==='false'?'React.Fragment':'React.StrictMode'}>${options.checks==='canvas-pages'?'<div style={{height:"100%"}} data-fixture-workspace onKeyDown={event=>{if(event.key==="Escape"&&!event.defaultPrevented)event.currentTarget.hidden=true}}>':''}<NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'||new URLSearchParams(location.search).has('design')?'design':'slides'} title="原生编辑器验收" />${options.checks==='canvas-pages'?'</div>':''}</${options['strict-mode']==='false'?'React.Fragment':'React.StrictMode'}>)`)
 await writeFile(join(workspace,'artifact-export.html'),(await readFile(join(root,'artifact-export.html'),'utf8')).replace('/src/features/artifacts/native/export/realm-entry.ts',`/@fs${root}/src/features/artifacts/native/export/realm-entry.ts`))
 let server, browser
 try {
@@ -83,6 +83,11 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
+  if(options['presentation-mixed-sizes']==='true'){
+    const page=document.pages['page-2'];page.width=960;page.height=540
+    for(const id of page.nodeOrder)page.nodes[id].motionId=id.replace('page-2-','page-1-')
+    page.nodes['page-2-heading'].x=164
+  }
   if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-board-preview','canvas-board-export','canvas-board-preview-load','canvas-play-menu'].includes(options.checks)){
     const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name==='open-enter').added[0]
     const node=canvasPenNode('editable-path',{x:2497.1,y:-1360.9,w:reference.w,h:reference.h,d:reference.d})
@@ -285,6 +290,61 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
     if(options.checks==='slide-transitions'){
+      assert.equal(kind,'slides')
+      if(options['presentation-mixed-sizes']==='true'){
+        const records=[]
+        if(options['presentation-mixed-offline-only']!=='true'){
+          await page.getByLabel('显示属性',{exact:true}).click()
+          await page.evaluate(()=>{window.__mixedRecords=[];window.__mixedAnimations=[];const animate=Element.prototype.animate;Element.prototype.animate=function(frames,timing){const result=animate.call(this,frames,timing);window.__mixedRecords.push({id:this.getAttribute('data-node-id'),frames,timing});window.__mixedAnimations.push(result);return result}})
+          for(const [label,kind]of [['淡入淡出','fade'],['推移','push'],['神奇移动','magic']]){
+            await page.locator('.native-transition-menu>summary').click();await page.getByRole('menuitemradio',{name:label,exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+            await page.getByRole('button',{name:'放映',exact:true}).click();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await show.focus()
+            const before=await show.locator('.native-slides-presentation-current').boundingBox(),heading=await show.locator('[data-node-id="page-1-heading"]').boundingBox()
+            await page.evaluate(()=>{window.__mixedRecords=[];window.__mixedAnimations=[]});await page.keyboard.press('ArrowRight');await show.locator('.native-slides-presentation-outgoing').waitFor();await page.evaluate(()=>{for(const animation of window.__mixedAnimations){animation.pause();animation.currentTime=0}})
+            const outgoing=await show.locator('.native-slides-presentation-outgoing').boundingBox(),incoming=await show.locator('.native-slides-presentation-current').boundingBox(),animations=await page.evaluate(()=>window.__mixedRecords)
+            await writeFile(join(output,'mixed-native.json'),JSON.stringify({kind,before,outgoing,incoming,heading,animations},null,2))
+            assert.ok(Math.abs(before.width-outgoing.width)<=1&&Math.abs(before.height-outgoing.height)<=1,'混合尺寸离去页必须保持原适配比例')
+            if(kind==='magic'){const animation=animations.find(row=>row.id==='page-2-heading');assert.ok(animation);const frame=animation.frames[0],scale=incoming.width/960;assert.ok(Math.abs(parseFloat(frame.left)*scale+incoming.x-heading.x)<=1);assert.ok(Math.abs(parseFloat(frame.top)*scale+incoming.y-heading.y)<=1);assert.ok(Math.abs(parseFloat(frame.width)*scale-heading.width)<=1)}
+            await page.screenshot({path:join(output,`mixed-${kind}.png`)});await page.evaluate(()=>{for(const animation of window.__mixedAnimations)animation.finish()});await page.waitForFunction(()=>!document.querySelector('.native-slides-presentation-outgoing'));await show.press('Escape');await select(1);records.push({kind,outgoingSizePreserved:true,screenGeometryContinuous:kind==='magic'?true:null})
+          }
+        }
+        document.pages['page-1'].transition='magic'
+        const {exportArtifact}=await import('../src/features/artifacts/native/export-artifact.ts'),exported=await exportArtifact(document,{format:'html',resolveAsset:async asset=>{const image=fixture.images.find(image=>image.id===asset.id);return new Blob([image.bytes],{type:image.contentType})}})
+        const offline=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'no-preference'}),offlineErrors=[];offline.on('pageerror',error=>offlineErrors.push(error.message));await offline.setContent(await exported.blob.text())
+        await offline.evaluate(()=>{window.__mixedRecords=[];window.__mixedAnimations=[];const animate=Element.prototype.animate;Element.prototype.animate=function(frames,timing){const result=animate.call(this,frames,timing);window.__mixedRecords.push({id:this.getAttribute('data-node-id'),frames,timing});window.__mixedAnimations.push(result);return result}})
+        const before=await offline.locator('[data-page-id="page-1"] [data-node-id="page-1-heading"]').boundingBox();await offline.getByRole('button',{name:'下一页',exact:true}).click();await offline.evaluate(()=>{for(const animation of window.__mixedAnimations){animation.pause();animation.currentTime=0}})
+        const animations=await offline.evaluate(()=>window.__mixedRecords),animation=animations.find(row=>row.id==='page-2-heading'),incoming=await offline.locator('[data-page-id="page-2"]').boundingBox(),scale=incoming.width/960
+        assert.ok(animation);await writeFile(join(output,'mixed-offline.json'),JSON.stringify({before,incoming,animation},null,2));assert.ok(Math.abs(incoming.width-1440)<=1&&Math.abs(incoming.height-810)<=1&&Math.abs(incoming.x)<=1,'离线隐藏页进入时必须按固定页面尺寸适配');assert.ok(Math.abs(parseFloat(animation.frames[0].left)*scale+incoming.x-before.x)<=1,'离线混合尺寸神奇移动不能跳变起点');assert.ok(Math.abs(parseFloat(animation.frames[0].width)*scale-before.width)<=1)
+        assert.deepEqual(offlineErrors,[]);await offline.close();assert.deepEqual(errors,[])
+        return{kind:'isolated-mixed-slide-transitions',records,offlineMagicScreenGeometryContinuous:true,consoleOrPageErrors:errors}
+      }
+      if(options['presentation-keyboard-isolation']==='true'){
+        const root=page.locator('[data-native-artifact-editor]')
+        await page.locator('[data-node-id="page-1-shape"]').click();await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
+        const saved=JSON.stringify(document)
+        await page.getByRole('button',{name:'放映',exact:true}).click();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await show.focus()
+        const trail=[]
+        for(let n=0;n<20;n++){await page.keyboard.press('Tab');const state=await page.evaluate(()=>({tag:document.activeElement?.tagName,outerRoot:document.activeElement?.matches('[data-native-artifact-editor]'),label:document.activeElement?.getAttribute('aria-label')}));trail.push(state);if(state.outerRoot)break}
+        await page.keyboard.press('Control+z');await page.waitForTimeout(150)
+        await writeFile(join(output,'presentation-tab.json'),JSON.stringify({trail,seqBefore:JSON.parse(saved).seq,seqAfter:document.seq,historyRequests},null,2))
+        assert.deepEqual(historyRequests,[],'放映Tab循环不能撤销底层文档');assert.equal(JSON.stringify(document),saved)
+        assert.equal(await root.getAttribute('tabindex'),'-1')
+        await root.focus();for(const key of ['Control+z','Control+y','Delete','Backspace'])await page.keyboard.press(key)
+        await page.context().grantPermissions(['clipboard-read','clipboard-write'],{origin:baseUrl});await page.evaluate(()=>navigator.clipboard.writeText('放映期间不能插入的文字'));await page.keyboard.press('Control+v');await page.waitForTimeout(150)
+        assert.deepEqual(historyRequests,[]);assert.equal(JSON.stringify(document),saved);assert.equal(await show.count(),1)
+        await page.keyboard.press('Control+s');await page.keyboard.press('Escape');await page.getByRole('button',{name:'放映',exact:true}).waitFor();assert.equal(await root.getAttribute('tabindex'),'0');assert.equal(JSON.stringify(document),saved);assert.deepEqual(errors,[])
+        return{kind:'isolated-presentation-keyboard-isolation',trustedTabCannotUndo:true,programmaticOuterFocusCannotEditOrPaste:true,rootExcludedFromTabOrder:true,saveAndEscapePreserved:true,consoleOrPageErrors:errors}
+      }
+      if(options['presentation-focus-return']==='true'){
+        const focus=[]
+        for(let opening=0;opening<2;opening++){
+          await page.getByRole('button',{name:'放映',exact:true}).click();const show=page.getByRole('region',{name:'幻灯片放映',exact:true});await show.waitFor();await page.waitForTimeout(100)
+          focus.push(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')))
+          assert.equal(focus.at(-1),'幻灯片放映','冷/热模块放映均须保留键盘焦点')
+          await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-2');await page.keyboard.press('Escape');await page.getByRole('button',{name:'放映',exact:true}).waitFor();await select(1)
+        }
+        assert.deepEqual(errors,[]);return{kind:'isolated-presentation-focus-return',coldAndWarmFocus:focus,keyboardNavigationWithoutForcedFocus:true,consoleOrPageErrors:errors}
+      }
       assert.equal(kind,'slides');assert.equal(presentationModuleRequests,0,'放映代码在普通编辑时不加载')
       const waitSaved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
       const root=page.locator('[data-native-artifact-editor]'),records=[]
@@ -302,6 +362,11 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.locator('[data-page-target="page-1"]').hover();await page.getByLabel('页面 1 操作',{exact:true}).click();await page.getByRole('button',{name:'复制页面',exact:true}).click();await waitSaved()
       const copyId=document.pageOrder[1],copy=document.pages[copyId],heading=Object.values(copy.nodes).find(node=>node.motionId==='page-1-heading');assert.ok(heading)
       await page.locator(`[data-page-target="${copyId}"]`).click();await page.locator(`[data-page-id="${copyId}"] [data-node-id="${heading.id}"]`).click();await page.keyboard.press('ArrowRight');await waitSaved();assert.equal(document.pages[copyId].nodes[heading.id].x,document.pages['page-1'].nodes['page-1-heading'].x+1)
+      if(options['presentation-copy-identity']==='true'){
+        await page.locator(`[data-page-id="${copyId}"] [data-node-id="${heading.id}"]`).click();await page.keyboard.press('Control+d');await waitSaved()
+        const shared=Object.values(document.pages[copyId].nodes).filter(node=>node.motionId==='page-1-heading');assert.equal(shared.length,1,'普通对象副本不能争用整页副本的配对身份')
+        const clone=Object.values(document.pages[copyId].nodes).find(node=>node.id!==heading.id&&node.type==='text');assert.ok(clone);assert.equal(clone.motionId,undefined)
+      }
       await page.reload();await ready(1);assert.equal(document.pages[copyId].nodes[heading.id].motionId,'page-1-heading');assert.equal(presentationModuleRequests,0)
       await page.getByLabel('显示属性',{exact:true}).click()
       for(const [label,kind,duration]of [['淡入淡出','fade',320],['推移','push',420],['神奇移动','magic',480]]){

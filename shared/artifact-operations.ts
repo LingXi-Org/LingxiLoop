@@ -8,7 +8,7 @@ import {
 
 const nodePatchSchema = artifactNodeSchema.omit({ id: true, type: true }).partial()
 const pagePatchSchema = artifactPageSchema.omit({ id: true, nodes: true, nodeOrder: true }).partial()
-const optionalNodeFields = new Set(['text', 'textSizing', 'richText', 'source', 'assetId', 'posterAssetId', 'name', 'scope', 'flipX', 'flipY', 'lineStart', 'lineEnd', 'crop', 'shape', 'points', 'path', 'cells', 'tableHeader', 'svg', 'embed', 'layout', 'locked', 'hidden', 'animation'])
+const optionalNodeFields = new Set(['motionId', 'text', 'textSizing', 'richText', 'source', 'assetId', 'posterAssetId', 'name', 'scope', 'flipX', 'flipY', 'lineStart', 'lineEnd', 'crop', 'shape', 'points', 'path', 'cells', 'tableHeader', 'svg', 'embed', 'layout', 'locked', 'hidden', 'animation'])
 const unsetFieldSchema = z.string().refine(field => optionalNodeFields.has(field) || field.startsWith('style.') && Object.hasOwn(artifactStyleSchema.shape, field.slice(6)), 'field cannot be removed')
 const indexSchema = z.number().int().min(0).max(10_000).optional()
 

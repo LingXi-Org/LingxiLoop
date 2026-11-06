@@ -88,6 +88,12 @@ export default function SlidesPresentation({
   const scale = page
     ? Math.max(0.001, Math.min(size.width / page.width, size.height / page.height))
     : 1
+  const outgoingScale = transition
+    ? Math.max(
+        0.001,
+        Math.min(size.width / transition.from.width, size.height / transition.from.height),
+      )
+    : 1
   useLayoutEffect(() => {
     mounted.current = true
     root.current?.focus({ preventScroll: true })
@@ -215,55 +221,74 @@ export default function SlidesPresentation({
         }}
       >
         {page && loadedPageIds.includes(pageId) ? (
-          <div
-            className="native-slides-presentation-frame"
-            style={{ width: page.width * scale, height: page.height * scale }}
-          >
+          <>
             <div
-              className="native-slides-presentation-scale"
-              style={{ width: page.width, height: page.height, transform: `scale(${scale})` }}
+              className="native-slides-presentation-frame"
+              style={{ width: page.width * scale, height: page.height * scale }}
             >
               <div
-                ref={surface}
-                className="native-slides-presentation-current"
-                data-page-id={pageId}
-                style={{ background: artifactPageBackground(page, doc) }}
+                className="native-slides-presentation-scale"
+                style={{ width: page.width, height: page.height, transform: `scale(${scale})` }}
               >
-                <PageContent
-                  document={doc}
-                  page={page}
-                  compute={compute}
-                  presenting
-                  pageVersion={pageVersion(pageId)}
-                  revisionSeq={revisionSeq}
-                />
-                {transition?.kind === 'magic' && (
-                  <div
-                    ref={veil}
-                    className="native-slides-presentation-veil"
-                    style={{ background: artifactPageBackground(transition.from, doc) }}
-                  />
-                )}
-              </div>
-              {transition && transition.toId === pageId && (
                 <div
-                  ref={outgoing}
-                  className="native-slides-presentation-outgoing"
-                  aria-hidden="true"
-                  inert
-                  style={{ width: transition.from.width, height: transition.from.height }}
+                  ref={surface}
+                  className="native-slides-presentation-current"
+                  data-page-id={pageId}
+                  style={{ background: artifactPageBackground(page, doc) }}
                 >
                   <PageContent
                     document={doc}
-                    page={transition.from}
+                    page={page}
                     compute={compute}
-                    pageVersion={pageVersion(transition.from.id)}
+                    presenting
+                    pageVersion={pageVersion(pageId)}
                     revisionSeq={revisionSeq}
                   />
+                  {transition?.kind === 'magic' && (
+                    <div
+                      ref={veil}
+                      className="native-slides-presentation-veil"
+                      style={{ background: artifactPageBackground(transition.from, doc) }}
+                    />
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+            {transition && transition.toId === pageId && (
+              <div
+                className="native-slides-presentation-frame native-slides-presentation-outgoing-frame"
+                aria-hidden="true"
+                inert
+                style={{
+                  width: transition.from.width * outgoingScale,
+                  height: transition.from.height * outgoingScale,
+                }}
+              >
+                <div
+                  className="native-slides-presentation-scale"
+                  style={{
+                    width: transition.from.width,
+                    height: transition.from.height,
+                    transform: `scale(${outgoingScale})`,
+                  }}
+                >
+                  <div
+                    ref={outgoing}
+                    className="native-slides-presentation-outgoing"
+                    style={{ width: transition.from.width, height: transition.from.height }}
+                  >
+                    <PageContent
+                      document={doc}
+                      page={transition.from}
+                      compute={compute}
+                      pageVersion={pageVersion(transition.from.id)}
+                      revisionSeq={revisionSeq}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <p role="status">正在加载幻灯片…</p>
         )}
