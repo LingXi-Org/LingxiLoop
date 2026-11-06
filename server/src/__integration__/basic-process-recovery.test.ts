@@ -155,7 +155,16 @@ test('process crash after native write preserves receipts; disconnected replacem
     assert.equal(await api.retryDelivery(cancelled, 'terminal'), false)
     assert.equal((await api.readTerminal(cancelled))?.delivery, 'delivered')
     const last = await enqueue('after-terminal-restart'), finalWorker = await start('basic-final')
-    await until(async () => (await api.readRunState(last))?.delivery === 'delivered', 'message after terminal recovery')
+    await until(async () => (await api.readRunState(last))?.delivery === 'delivered', 'message after terminal recovery').catch(async error => {
+      // Keep the failed gate intact; only bounded public state and counts enter
+      // the diagnostic, never the message, prompt, credentials or run payload.
+      try {
+        const run = await api.readRun(last), state = await api.readRunState(last)
+        t.diagnostic(JSON.stringify({ phase: 'terminal-recovery-followup-timeout', status: run?.status ?? null,
+          delivery: state?.delivery ?? null, modelCalls: finalWorker.calls, workerExitCode: finalWorker.child.exitCode }))
+      } catch { t.diagnostic('terminal-recovery-followup-state-unavailable') }
+      throw error
+    })
     assert.equal((await api.readRun(last))?.status, 'succeeded')
     assert.equal(finalWorker.calls, 1)
     await stop(finalWorker, 'SIGTERM')

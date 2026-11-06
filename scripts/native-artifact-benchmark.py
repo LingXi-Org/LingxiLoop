@@ -1181,7 +1181,7 @@ def performance_sample_eligible(report, row):
         and row.get('status') == 'failed' and row.get('failureStage') == 'validation'
         and row.get('failureCode') == 'export_diagnostic_incomplete'
         and len(exports) == 3 and {item.get('format') for item in exports} == set(FORMATS)
-        and all(item.get('status') in ('passed', 'failed') for item in exports)
+        and all(item.get('status') == 'passed' or item.get('status') == 'failed' and item.get('failureCode') == 'browser_timeout' for item in exports)
         and any(item.get('status') == 'failed' for item in exports))
 
 def summarize(report, kinds, arms, diagnostic):
@@ -1189,8 +1189,9 @@ def summarize(report, kinds, arms, diagnostic):
     for kind in kinds:
         for arm in arms:
             for mode in MODES:
-                rows = [row for row in report['samples'] if row['kind'] == kind and row['arm'] == arm and row['mode'] == mode and performance_sample_eligible(report, row)]
-                summary = {"successfulSamples": sum(row["status"] == "passed" for row in rows), "performanceEligibleSamples": len(rows), "failedExportObservations": sum(item.get("status") == "failed" for row in rows for item in row.get("exports", [])), **{field: {f'p{p}': percentile([row.get(field) for row in rows], p) for p in (50, 75, 95)}
+                all_rows = [row for row in report['samples'] if row['kind'] == kind and row['arm'] == arm and row['mode'] == mode]
+                rows = [row for row in all_rows if performance_sample_eligible(report, row)]
+                summary = {"successfulSamples": sum(row["status"] == "passed" for row in all_rows), "performanceEligibleSamples": len(rows), "failedExportObservations": sum(item.get("status") == "failed" for row in all_rows for item in row.get("exports", [])), **{field: {f'p{p}': percentile([row.get(field) for row in rows], p) for p in (50, 75, 95)}
                     for field in ('editableMs', 'scriptTransferBytes', 'scriptDecodedBytes', 'idleScriptTransferBytes', 'idleScriptDecodedBytes', 'pssDeltaBytes', 'firstInputMs')}}
                 summary['inputFeedbackP95Ms'] = percentile([value for row in rows for value in row.get('inputSamplesMs', [])], 95)
                 report['summary'][f'{arm}:{kind}:{mode}'] = summary
@@ -1220,12 +1221,21 @@ def summarize(report, kinds, arms, diagnostic):
 
 def self_check():
     eligibility_report={'fidelity':True,'arms':{'baseline':{'commit':FIDELITY_BASELINE}}}
-    baseline_export_only={'run':1,'arm':'baseline','mode':'fullNavigation','status':'failed','failureStage':'validation','failureCode':'export_diagnostic_incomplete','exports':[{'format':name,'status':'failed'} for name in FORMATS]}
+    baseline_export_only={'run':1,'arm':'baseline','mode':'fullNavigation','status':'failed','failureStage':'validation','failureCode':'export_diagnostic_incomplete','exports':[{'format':name,'status':'failed','failureCode':'browser_timeout'} for name in FORMATS]}
     assert performance_sample_eligible(eligibility_report,baseline_export_only)
     for patch in [{'arm':'candidate'},{'run':2},{'mode':'workbenchOpen'},{'failureStage':'closeReclamation'},{'failureCode':'pss_incomplete'},{'exports':[]},{'exports':[{'format':name,'status':'unsupported'} for name in FORMATS]}]:
         assert not performance_sample_eligible(eligibility_report,{**baseline_export_only,**patch})
     assert not performance_sample_eligible({'fidelity':False,'arms':eligibility_report['arms']},baseline_export_only)
     assert not performance_sample_eligible({'fidelity':True,'arms':{'baseline':{'commit':'a'*40}}},baseline_export_only)
+    for code in ['export_pss_incomplete','export_download_empty','export_download_failed','export_signature_invalid','export_page_count_mismatch','browser_or_measurement_error',None]:
+        assert not performance_sample_eligible(eligibility_report,{**baseline_export_only,'exports':[{**row,'failureCode':code} if row['format']=='pptx' else row for row in baseline_export_only['exports']]})
+    summary_report={**eligibility_report,'requestedRuns':1,'samples':[{**baseline_export_only,'kind':'design'},{**baseline_export_only,'arm':'candidate','kind':'design'}]}
+    summarize(summary_report,['design'],['baseline','candidate'],True)
+    for arm,eligible in [('baseline',1),('candidate',0)]:
+        assert summary_report['summary'][arm+':design']['failedExportObservations']==3
+        assert summary_report['summary'][arm+':design']['successfulSamples']==0
+        assert summary_report['summary'][arm+':design']['performanceEligibleSamples']==eligible
+    assert summary_report['exportObservationsPassed'] is False and summary_report['diagnosticPassed'] is False and summary_report['qualified'] is False
     # A real opaque capture can finish while CDP is configuring its target.
     # Confirm the target is gone; a live target/configuration error still fails.
     class TargetCatalog:

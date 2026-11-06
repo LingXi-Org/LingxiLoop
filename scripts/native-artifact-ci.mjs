@@ -54,7 +54,7 @@ export function performanceSampleEligible(sample,fidelity=false){
   const exports=sample.exports??[]
   return fidelity&&sample.arm==='baseline'&&sample.mode==='fullNavigation'&&sample.run===1
     &&sample.status==='failed'&&sample.failureStage==='validation'&&sample.failureCode==='export_diagnostic_incomplete'
-    &&exports.length===3&&new Set(exports.map(row=>row.format)).size===3&&exports.every(row=>['html','pdf','pptx'].includes(row.format)&&['passed','failed'].includes(row.status))&&exports.some(row=>row.status==='failed')
+    &&exports.length===3&&new Set(exports.map(row=>row.format)).size===3&&exports.every(row=>['html','pdf','pptx'].includes(row.format)&&(row.status==='passed'||row.status==='failed'&&row.failureCode==='browser_timeout'))&&exports.some(row=>row.status==='failed')
 }
 
 export async function verifyDiagnosticPrerequisite(env = process.env, fetcher = fetch, receiptReader = downloadDiagnosticReceipt) {
