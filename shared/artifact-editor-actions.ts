@@ -43,7 +43,7 @@ export function duplicatePages(document: ArtifactDocument, selected: string[], n
     const source = document.pages[sourceId]!, page = structuredClone(source)
     page.id = nextId(); page.title = `${source.title} 副本`; page.x += 40; page.y += 40
     const mapping = new Map(page.nodeOrder.map(id => [id, nextId()]))
-    page.nodes = Object.fromEntries(page.nodeOrder.map(id => { const n = page.nodes[id]!; return [mapping.get(id)!, { ...n, id: mapping.get(id)!, parentId: n.parentId ? mapping.get(n.parentId) ?? null : null }] }))
+    page.nodes = Object.fromEntries(page.nodeOrder.map(id => { const n = page.nodes[id]!; return [mapping.get(id)!, { ...n, id: mapping.get(id)!, ...(document.kind==='slides'?{motionId:n.motionId??n.id}:{}), parentId: n.parentId ? mapping.get(n.parentId) ?? null : null }] }))
     page.nodeOrder = page.nodeOrder.map(id => mapping.get(id)!)
     ops.push({ type: 'page.insert', page, index: document.pageOrder.indexOf(sourceId) + ++inserted })
   }

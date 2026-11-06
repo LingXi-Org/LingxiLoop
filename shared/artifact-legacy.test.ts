@@ -6,6 +6,17 @@ const sha = 'a'.repeat(64)
 const file = (content: string) => ({ content, sha256: sha })
 
 describe('legacy artifact conversion', () => {
+  it('retains every pinned Slides transition and matching element identities across slides', () => {
+    for (const transition of ['none', 'fade', 'push', 'magic', 'slide']) {
+      const result = convertLegacyArtifact({id:'transitions',kind:'slides',title:'转场',files:{
+        'project/deck.json':file(JSON.stringify({v:4,order:['a','b']})),
+        'project/slides/a.html':file(`<section data-transition="${transition}"><h1 id="shared-heading">标题</h1></section>`),
+        'project/slides/b.html':file('<section><h1 id="shared-heading">标题</h1></section>'),
+      }})
+      assert.equal(result.document.pages.a!.transition, transition)
+      assert.equal(result.document.pages.a!.nodes['shared-heading']!.id, result.document.pages.b!.nodes['shared-heading']!.id)
+    }
+  })
   it('preserves ordered pages, editable text, images, formula source and notes without changing originals', () => {
     const files = {
       'project/deck.json': file(JSON.stringify({ v: 4, order: ['second', 'first'], title: '原稿' })),

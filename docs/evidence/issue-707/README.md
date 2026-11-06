@@ -57,7 +57,7 @@ Screenshots alone do not establish the specified 1 px / 0.5% source parity gate.
 No production merge or deployment is included.
 
 
-逐项跟踪见 [parity-matrix.json](parity-matrix.json)：当前 152 条初始控件/状态记录，均保留视觉与完整功能未通过标记；未列出的可达状态还须从源码及运行入口继续补齐。每项包含源码文案定义偏移、触发步骤、状态、原生位置、已有截图及局部功能证据。定义目录不等于可达性证明。
+逐项跟踪见 [parity-matrix.json](parity-matrix.json)：当前 155 条初始及增补控件/状态记录，均保留视觉与完整功能未通过标记；未列出的可达状态还须从源码及运行入口继续补齐。每项包含源码文案定义偏移、触发步骤、状态、原生位置、已有截图及局部功能证据。定义目录不等于可达性证明。
 
 源码目录可复现：`node scripts/native-editor-source-census.mjs --reference-root=/absolute/pinned-checkout --output=/tmp/census`。固定哈希下识别 Design 2557、Slides 1697 条文案定义；包含依赖库，尚未全部完成入口归属。偏移单位明确为 UTF-16，不把第一次字符串命中误当组件位置。
 
@@ -241,3 +241,10 @@ JSZip沿用锁文件3.10.1，仅在隔离导出环境按需加载，MIT署名已
 [焦点与撤销回归](functional/focus-recovery.json)复现真实619×926容器中完成编辑后焦点丢失，ShiftTab额外滚动画布652px。
 完成及ESC交还焦点后，140/154键盘撤销、图片和公式检查通过；独立画布编辑也保留参考的画板焦点描边。
 [7af59176审查/运行](reviews/7af59176.json)记录正式CI与复审通过，但实际诊断在undo阶段失败，保留失败，不作为性能通过。
+
+
+[Slides 转场局部回归](functional/slides-transitions.json)覆盖无／淡入淡出／推移／神奇移动、双向播放、复制配对、重开、撤销重做与减少动画；
+[固定来源运行数据](source-slides-transitions.json)记录原版 320/420/480ms 及缓动、方向与位置关键帧。放映及动画代码按需加载，离线 HTML 不发外部请求并支持播放与打印全部页面。
+[面板停靠来源](source-slides-inspector-layout.json)纠正窄屏关闭按钮被工具栏遮挡：768px以下采用 min(50%,384px) 底部面板，其上采用336px右侧面板。
+155条清单均未获完整功能或视觉资格；完整演讲者视图、放映外观、PPTX转场及所有原版降级规则仍待完成。
+[1b2366f4独立复审与CI](reviews/1b2366f4.json)确认无P1/P2、owning检查通过；该提交真实诊断仍运行中。

@@ -50,6 +50,16 @@ test('offline HTML escapes authored text and preserves the fixed snapshot', asyn
   assert.equal(result.filename, '导出测试.html')
 })
 
+test('HTML retains slide transition and motion identity as escaped data for offline playback', async () => {
+  const document=fixture(),page=document.pages.page!
+  page.transition='magic';page.nodes.text!.motionId='original-heading'
+  const result=await exportArtifact(document,{format:'html'}),html=await result.blob.text()
+  assert.match(html,/data-transition="magic"/)
+  assert.match(html,/data-motion-id="original-heading"/)
+  assert.match(html,/data-motion-root/)
+  assert.match(html,/prefers-reduced-motion/)
+})
+
 test('image metadata never authorizes embedding a JSON API response or forged image bytes', async () => {
   const document = fixture()
   document.assets.image = { id: 'image', url: '/api/private', contentType: 'image/png' }

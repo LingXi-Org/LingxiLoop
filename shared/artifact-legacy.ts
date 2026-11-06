@@ -176,7 +176,7 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
     const background = rootCss['background-color'] ?? rootCss.background
     if (background && !/[<>;\\]|url\s*\(|expression\s*\(/i.test(background)) page.background = background
     page.notes = descendants(tree, 'aside', true).map(textContent).join('\n') || String(object(index.notes)[oldId] ?? '')
-    page.transition = ['fade', 'slide'].includes(section.attrs['data-transition'] ?? '') ? section.attrs['data-transition'] as 'fade' | 'slide' : 'none'
+    page.transition = ['fade', 'push', 'magic', 'slide'].includes(section.attrs['data-transition'] ?? '') ? section.attrs['data-transition'] as 'fade' | 'push' | 'magic' | 'slide' : 'none'
     page.skip = section.attrs['data-skip'] === 'true'
     document.pages[id] = page; document.pageOrder.push(id)
     let serial = 0

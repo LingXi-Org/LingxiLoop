@@ -2325,6 +2325,10 @@
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
+      },
+      "transitionEvidence": {
+        "receipt": "functional/slides-transitions.json",
+        "scope": "仅本次新增转场、复制身份、键盘与减少动画；不替代此项全部状态"
       }
     },
     {
@@ -2905,6 +2909,10 @@
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
+      },
+      "transitionEvidence": {
+        "receipt": "functional/slides-transitions.json",
+        "scope": "仅本次新增转场、复制身份、键盘与减少动画；不替代此项全部状态"
       }
     },
     {
@@ -8981,6 +8989,10 @@
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
+      },
+      "transitionEvidence": {
+        "receipt": "functional/slides-transitions.json",
+        "scope": "仅本次新增转场、复制身份、键盘与减少动画；不替代此项全部状态"
       }
     },
     {
@@ -9152,6 +9164,73 @@
       "testEvidence": {
         "receipt": "functional/design-play-menu.json",
         "scope": "不代表真实脚本交互、全部原型状态和完整视觉通过"
+      }
+    },
+    {
+      "id": "S31-slides",
+      "editor": "slides",
+      "control": "页面转场",
+      "trigger": "属性→转场→放映",
+      "states": [
+        "无",
+        "淡入淡出",
+        "推移",
+        "神奇移动",
+        "正向",
+        "反向",
+        "复制配对",
+        "减少动画",
+        "离线 HTML"
+      ],
+      "reference": {
+        "path": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "sha256": "878eab1994de6c7896126cf1549cd46950b74c547bb45f7da5eddf9bef488caf",
+        "runtimeEvidence": "source-slides-transitions.json",
+        "reachability": "已在独立固定版本参考运行；仅覆盖登记的入口与状态"
+      },
+      "implementation": "src/features/artifacts/native/SlidesPresentation.tsx",
+      "screenshots": {
+        "reference": "visual/slides-transitions/reference-390-light-154.png",
+        "native": "visual/slides-transitions/native-390-light-154.png",
+        "matchedStateVerified": false
+      },
+      "result": "局部功能与默认停靠几何通过；完整视觉、服务、导出及所有状态未验收",
+      "visualQualified": false,
+      "functionalQualified": false,
+      "testEvidence": {
+        "receipt": "functional/slides-transitions.json",
+        "scope": "按登记范围证明，不作为完整功能与视觉通过"
+      }
+    },
+    {
+      "id": "S32-slides",
+      "editor": "slides",
+      "control": "属性面板停靠与窄容器",
+      "trigger": "打开属性，改变容器尺寸",
+      "states": [
+        "右侧面板",
+        "底部面板",
+        "关闭",
+        "拖动与尺寸记忆待实现"
+      ],
+      "reference": {
+        "path": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "sha256": "878eab1994de6c7896126cf1549cd46950b74c547bb45f7da5eddf9bef488caf",
+        "runtimeEvidence": "source-slides-inspector-layout.json",
+        "reachability": "已在独立固定版本参考运行；仅覆盖登记的入口与状态"
+      },
+      "implementation": "src/features/artifacts/native/native-editor.css",
+      "screenshots": {
+        "reference": "visual/slides-transitions/reference-390-light-154.png",
+        "native": "visual/slides-transitions/native-390-light-154.png",
+        "matchedStateVerified": false
+      },
+      "result": "局部功能与默认停靠几何通过；完整视觉、服务、导出及所有状态未验收",
+      "visualQualified": false,
+      "functionalQualified": false,
+      "testEvidence": {
+        "receipt": "functional/slides-transitions.json",
+        "scope": "按登记范围证明，不作为完整功能与视觉通过"
       }
     }
   ],

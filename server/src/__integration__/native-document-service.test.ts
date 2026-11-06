@@ -435,3 +435,23 @@ test('设计播放属性真实持久化、复制与撤销重做，并保留历�
   const duplicate=copied.document.pages[copied.document.pageOrder[1]]
   assert.equal(duplicate.interactive,true);assert.equal(duplicate.frameless,true)
 })
+
+test('幻灯片神奇移动身份与转场真实持久化，复制可编辑并保留历史页哈希', async () => {
+  const item=await artifact('slides'),initial=await snapshot(item.id)
+  const node={...createNode('text','motion-heading'),text:'移动标题'}
+  const edited=await apply(item.id,prepareBatch(initial.document,[{type:'page.patch',pageId:'page-1',patch:{transition:'magic'}},{type:'node.insert',pageId:'page-1',node}],'slide-motion'))
+  let next=0
+  const copied=await apply(item.id,prepareBatch(edited.document,duplicatePages(edited.document,['page-1'],()=>`slide-motion-${++next}`),'copy-motion'))
+  const copyId=copied.document.pageOrder[1],copy=copied.document.pages[copyId],paired=Object.values(copy.nodes).find(node=>node.motionId==='motion-heading')!
+  assert.ok(paired);assert.notEqual(paired.id,node.id);assert.equal(copy.transition,'magic')
+  const moved=await apply(item.id,prepareBatch(copied.document,[{type:'node.patch',pageId:copyId,nodeId:paired.id,patch:{x:200}},{type:'page.patch',pageId:copyId,patch:{transition:'push'}}],'move-motion'))
+  const reopened=await snapshot(item.id)
+  assert.equal(reopened.document.pages[copyId].nodes[paired.id].motionId,node.id);assert.equal(reopened.document.pages[copyId].nodes[paired.id].x,200);assert.equal(reopened.document.pages[copyId].transition,'push')
+  assert.equal(reopened.pageVersions['page-1'],edited.pageVersions['page-1'])
+  const pinned=await readNativePageSnapshot(db,item.id,copyId,copied.pageVersions[copyId],copied.document.seq)
+  assert.equal(pinned?.page.nodes[paired.id].x,node.x);assert.equal(pinned?.page.transition,'magic')
+  const undone=await apply(item.id,{operationId:'undo-move-motion',kind:'undo',targetOperationId:'move-motion',expectedHistoryVersion:moved.history.version})
+  assert.equal(undone.document.pages[copyId].transition,'magic');assert.equal(undone.document.pages[copyId].nodes[paired.id].x,node.x)
+  const redone=await apply(item.id,{operationId:'redo-move-motion',kind:'redo',targetOperationId:'move-motion',expectedHistoryVersion:undone.history.version})
+  assert.equal(redone.document.pages[copyId].transition,'push');assert.equal(redone.document.pages[copyId].nodes[paired.id].motionId,node.id)
+})

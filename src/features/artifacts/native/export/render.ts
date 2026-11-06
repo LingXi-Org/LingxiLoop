@@ -128,9 +128,9 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         break
       }
     }
-    return `<div class="artifact-export-node" data-node-id="${node.id}" style="${escapeHtml(css)}">${content}</div>`
+    return `<div class="artifact-export-node" data-node-id="${node.id}" data-motion-id="${node.motionId??node.id}"${node.parentId?'':' data-motion-root'} style="${escapeHtml(css)}">${content}</div>`
   }
-  return `<section class="artifact-export-page" data-page-id="${page.id}" aria-label="${escapeHtml(page.title)}" style="width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}">${(await Promise.all(children(null).map(render))).join('')}</section>`
+  return `<section class="artifact-export-page" data-page-id="${page.id}" data-transition="${page.transition}" aria-label="${escapeHtml(page.title)}" style="width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}">${(await Promise.all(children(null).map(render))).join('')}</section>`
 }
 
 export async function mountExportPage(page: ArtifactPage, resources: ExportResources): Promise<{ element: HTMLElement; viewport: HTMLElement; dispose: () => void }> {

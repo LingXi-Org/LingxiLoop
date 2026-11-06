@@ -22,6 +22,20 @@ test('duplicating selected pages remaps every descendant and keeps the originals
   const restored = applyOperations(result.document, prepareBatch(result.document, result.inverse, 'undo')).document
   assert.deepEqual(restored.pages, original.pages)
 })
+test('slide duplicates retain motion identity across repeated copies and undo without reusing node ids', () => {
+  const doc = fixture(), before = structuredClone(doc)
+  doc.pages.first!.transition = 'magic'
+  let count = 0
+  const first = applyOperations(doc, prepareBatch(doc, duplicatePages(doc, ['first'], () => `motion-${++count}`), 'first-copy'))
+  const copied = first.document.pages['motion-1']!
+  assert.equal(copied.transition, 'magic')
+  assert.equal(copied.nodes['motion-3']!.motionId, 'text')
+  const second = applyOperations(first.document, prepareBatch(first.document, duplicatePages(first.document, [copied.id], () => `motion-${++count}`), 'second-copy'))
+  assert.equal(second.document.pages['motion-4']!.nodes['motion-6']!.motionId, 'text')
+  assert.equal(validateArtifactDocument(JSON.parse(JSON.stringify(second.document))).pages['motion-4']!.transition, 'magic')
+  assert.deepEqual(applyOperations(first.document, prepareBatch(first.document, first.inverse, 'undo-copy')).document.pages, doc.pages)
+  assert.deepEqual(doc.pages.first!.nodes, before.pages.first!.nodes)
+})
 test('opposite resize edges keep their opposite anchor and scale selected geometry together', () => {
   const a = { ...createNode('shape', 'a'), x: 100, y: 80, width: 100, height: 40 }
   const b = { ...createNode('shape', 'b'), x: 300, y: 80, width: 100, height: 40 }

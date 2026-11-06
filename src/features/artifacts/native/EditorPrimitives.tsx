@@ -200,6 +200,7 @@ export function Menu({
   badge,
   keyboardFocusSelector,
   offset = 4,
+  popupRole = 'group',
 }: {
   label: string
   icon?: EditorIconName
@@ -213,6 +214,7 @@ export function Menu({
   badge?: number
   keyboardFocusSelector?:string
   offset?:number
+  popupRole?: 'group' | 'menu'
   onOpen?(): void
 }) {
   const keyboardOpen=useRef(false)
@@ -307,7 +309,7 @@ export function Menu({
         ref={popup}
         popover="auto"
         className="native-menu-popup"
-        role="group"
+        role={popupRole}
         aria-label={`${label}选项`}
         onToggle={(event) => {
           if ((event.nativeEvent as ToggleEvent).newState === 'closed' && root.current?.open)

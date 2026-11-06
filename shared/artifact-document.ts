@@ -111,6 +111,7 @@ export function isSafeArtifactSvg(value: string): boolean {
 export const artifactNodeTypes = ['text', 'image', 'shape', 'line', 'table', 'svg', 'math', 'group', 'embed', 'note', 'drawing', 'video'] as const
 export const artifactNodeSchema = z.object({
   id: artifactIdSchema,
+  motionId: artifactIdSchema.optional(),
   type: z.enum(artifactNodeTypes),
   x: finite, y: finite, width: positive, height: positive, rotation: finite,
   parentId: artifactIdSchema.nullable(),
@@ -145,7 +146,7 @@ export const artifactPageSchema = z.object({
   canvasPageId: artifactIdSchema.optional(),
   guides: z.array(z.object({ axis: z.enum(['x', 'y']), position: finite }).strict()).max(100).optional(),
   layoutGuides: z.array(z.object({ kind: z.enum(['columns', 'rows', 'grid']), count: z.number().int().min(1).max(1000), size: positive, gutter: positive, margin: positive, color, hidden: z.boolean().optional() }).strict()).max(6).optional(),
-  background: color, themeBackground: z.string().max(128).optional(), notes: z.string().max(100_000), skip: z.boolean(), transition: z.enum(['none', 'fade', 'slide']),
+  background: color, themeBackground: z.string().max(128).optional(), notes: z.string().max(100_000), skip: z.boolean(), transition: z.enum(['none', 'fade', 'push', 'magic', 'slide']),
   nodeOrder: z.array(artifactIdSchema).max(10_000), nodes: z.record(artifactIdSchema, artifactNodeSchema),
 }).strict()
 export type ArtifactPage = z.infer<typeof artifactPageSchema>
