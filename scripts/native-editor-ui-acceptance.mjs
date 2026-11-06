@@ -60,7 +60,7 @@ try {
   const baseUrl = `http://127.0.0.1:${address.port}`
   browser = await chromium.launch({ headless: true, ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox'] })
   for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
-    for (const editorCase of options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','page','denied','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
+    for (const editorCase of options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
       const result = await verifyMode(kind, browser, baseUrl, editorCase)
       await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
       console.log(JSON.stringify(options.checks==='parity'?{...result,screenshots:result.screenshots.map(({controls,...row})=>row)}:result))
@@ -352,18 +352,25 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(options.checks==='canvas-vector-retention'){
       const choosePen=async()=>{await page.getByLabel('绘图工具',{exact:true}).click();await page.getByRole('group',{name:'绘图工具选项',exact:true}).getByRole('button',{name:/^钢笔/}).click();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})}
       await choosePen()
-      for(const [x,y] of [[500,450],[700,300],[900,500]])await page.mouse.click(x,y)
-      assert.equal(await page.locator('[data-native-vector-tool] rect').count(),3)
-      if(editorCase==='denied'){
+      const expectedPoints=editorCase.endsWith('-single')||editorCase==='single-switch'?1:3
+      if(expectedPoints===1){await page.mouse.move(500,450);await page.mouse.down();await page.mouse.move(560,390,{steps:8});await page.mouse.up();assert.equal(await page.locator('[data-native-vector-tool] circle').count(),2)}
+      else for(const [x,y] of [[500,450],[700,300],[900,500]])await page.mouse.click(x,y)
+      assert.equal(await page.locator('[data-native-vector-tool] rect').count(),expectedPoints)
+      if(editorCase==='single-switch'){
+        await page.getByRole('button',{name:'选择 (V)',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,0)
+        await choosePen();assert.equal(await page.locator('[data-native-vector-tool] rect').count(),0,'a normal tool switch still discards a source single-anchor draft')
+        await page.mouse.click(500,450);await page.mouse.click(700,300);await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Enter');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,1)
+      }else if(editorCase.startsWith('denied')){
         let denied=true;expectedVectorDenied=true
         await page.route('**/api/artifacts/fixture/changes*',async route=>{if(denied)await route.fulfill({status:403,json:{error:'当前无法访问此稿件'}});else await route.fallback()})
         await page.locator('.native-loading[role=alert]').filter({hasText:'当前无法访问'}).waitFor()
         assert.equal(receipts.length,0);assert.equal(await page.locator('[data-native-vector-tool]').count(),0)
-        const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click();const download=await downloadPromise,recovery=JSON.parse(await readFile(await download.path(),'utf8'));assert.equal(Object.values(recovery.vectorDrafts)[0].points.length,3)
-        denied=false;await page.getByRole('button',{name:'重试',exact:true}).click();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'});assert.equal(await page.locator('[data-native-vector-tool] rect').count(),3)
+        const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click();const download=await downloadPromise,recovery=JSON.parse(await readFile(await download.path(),'utf8'));assert.equal(Object.values(recovery.vectorDrafts)[0].points.length,expectedPoints)
+        denied=false;await page.getByRole('button',{name:'重试',exact:true}).click();await page.locator('[data-native-vector-tool]').waitFor({state:'attached'});assert.equal(await page.locator('[data-native-vector-tool] rect').count(),expectedPoints)
         assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'draft');assert.equal(receipts.length,0)
+        if(expectedPoints===1){assert.equal(await page.locator('[data-native-vector-tool] circle').count(),2);await page.mouse.click(700,300)}
         await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Enter');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,1)
-      }else if(editorCase==='permission'||editorCase==='page'){
+      }else if(editorCase.startsWith('permission')||editorCase==='page'){
         fixtureWrite=false;document=applyOperations(document,prepareBatch(document,[{type:'document.patch',patch:{title:'远端权限刷新'}}])).document
         await page.locator('.native-save-status').filter({hasText:'仅查看'}).waitFor()
         if(editorCase==='page'){
@@ -377,7 +384,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.equal(await page.locator('[data-save-state]').getAttribute('data-save-state'),'draft','a blocked tool unmount must retain the dirty pen draft')
         const copy=page.getByRole('button',{name:'下载本地副本',exact:true});await copy.waitFor()
         const downloadPromise=page.waitForEvent('download');await copy.click();const download=await downloadPromise,path=await download.path();const recovery=JSON.parse(await readFile(path,'utf8'))
-        assert.equal(Object.values(recovery.vectorDrafts)[0].points.length,3)
+        assert.equal(Object.values(recovery.vectorDrafts)[0].points.length,expectedPoints)
         fixtureWrite=true;document=applyOperations(document,prepareBatch(document,[{type:'document.patch',patch:{title:'权限恢复'}}])).document
         await page.waitForFunction(()=>!document.querySelector('.native-save-status').textContent.includes('仅查看'))
         if(editorCase==='page'){
@@ -385,7 +392,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
           await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('group',{name:'页面菜单选项',exact:true}).getByRole('button',{name:'页面 1',exact:true}).click()
           await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]').dataset.canvasPageId==='canvas-page-1')
         }else await choosePen()
-        assert.equal(await page.locator('[data-native-vector-tool] rect').count(),3)
+        assert.equal(await page.locator('[data-native-vector-tool] rect').count(),expectedPoints)
+        if(expectedPoints===1){assert.equal(await page.locator('[data-native-vector-tool] circle').count(),2);await page.mouse.click(700,300)}
         await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Enter')
         await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
         assert.equal(receipts.length,1);assert.equal(Object.values(document.pages[document.canvasPages[0].contentId].nodes).filter(node=>node.path).length,1)
@@ -400,7 +408,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await page.keyboard.press('Enter');await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');assert.equal(receipts.length,1)
       }
       assert.deepEqual(errors,[])
-      return{kind:'isolated-canvas-vector-retention-diagnostic',scenario:editorCase,pointsRetained:true,oneSharedCommit:true,...(['permission','page','denied'].includes(editorCase)?{readonlyUnmountRetained:true,recoveryCopyContainsPoints:true,permissionRestored:true,...(editorCase==='page'?{canvasIsolation:true}:{})}:{viewportPanned:true,noDraftMutation:true}),scope:'真实React与可信输入，受控HTTP权限回执，不代替真实授权API',consoleOrPageErrors:errors}
+      return{kind:'isolated-canvas-vector-retention-diagnostic',scenario:editorCase,pointsRetained:editorCase!=='single-switch',oneSharedCommit:true,...(editorCase.startsWith('permission')||editorCase.startsWith('denied')||editorCase==='page'?{readonlyUnmountRetained:true,recoveryCopyContainsPoints:true,permissionRestored:true,...(editorCase==='page'?{canvasIsolation:true}:{})}:editorCase==='single-switch'?{sourceSingleAnchorDiscard:true}:{viewportPanned:true,noDraftMutation:true}),scope:'真实React与可信输入，受控HTTP权限回执，不代替真实授权API',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-vector'){
       const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name===editorCase)

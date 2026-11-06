@@ -10,6 +10,7 @@ export interface CanvasPenHandle {down(event:ReactPointerEvent):void;move(event:
 export interface CanvasPenProps {
   scale:number;offsetX:number;offsetY:number;writable:boolean
   drafts:VectorDraftStore;canvasPageId:string
+  isWritable():boolean
   toWorld(event:{clientX:number;clientY:number}):PenPoint
   begin():VectorStart|undefined
   commit(geometry:PenGeometry,start:VectorStart):boolean
@@ -31,8 +32,8 @@ const CanvasPenTool=forwardRef<CanvasPenHandle,CanvasPenProps>(function CanvasPe
   function update(next:VectorDraftPoint[]){points.current=next;setDraft(next);if(next.length&&start.current)props.drafts.set(props.canvasPageId,{points:next,start:start.current});else props.drafts.delete(props.canvasPageId)}
   function clear(){pointer.current=null;start.current=null;hoverRaw.current=null;setHover(null);update([])}
   function finish(explicit:boolean,closed=false){
+    if(points.current.length&&(!latest.current.writable||!latest.current.isWritable())){props.drafts.block(props.canvasPageId);return false}
     if(points.current.length>=2&&start.current){
-      if(!latest.current.writable){props.drafts.block(props.canvasPageId);return false}
       const geometry=canvasVectorGeometry(points.current,closed)
       if(!geometry){latest.current.error('路径过大，无法保留。请画小一些，或分段绘制。');clear();if(explicit)latest.current.done();return true}
       if(!latest.current.commit(geometry,start.current)){props.drafts.block(props.canvasPageId);return false}

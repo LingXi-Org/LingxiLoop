@@ -1,0 +1,96 @@
+{
+  "scope": "起点及对称切线的权限回归，含原版正常单点切工具丢弃语义",
+  "cases": [
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "denied-single",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "readonlyUnmountRetained": true,
+      "recoveryCopyContainsPoints": true,
+      "permissionRestored": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "denied",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "readonlyUnmountRetained": true,
+      "recoveryCopyContainsPoints": true,
+      "permissionRestored": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "middle",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "viewportPanned": true,
+      "noDraftMutation": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "page",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "readonlyUnmountRetained": true,
+      "recoveryCopyContainsPoints": true,
+      "permissionRestored": true,
+      "canvasIsolation": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "permission-single",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "readonlyUnmountRetained": true,
+      "recoveryCopyContainsPoints": true,
+      "permissionRestored": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "permission",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "readonlyUnmountRetained": true,
+      "recoveryCopyContainsPoints": true,
+      "permissionRestored": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "space",
+      "pointsRetained": true,
+      "oneSharedCommit": true,
+      "viewportPanned": true,
+      "noDraftMutation": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-canvas-vector-retention-diagnostic",
+      "scenario": "single-switch",
+      "pointsRetained": false,
+      "oneSharedCommit": true,
+      "sourceSingleAnchorDiscard": true,
+      "scope": "真实React与可信输入，受控HTTP权限回执，不代替真实授权API",
+      "consoleOrPageErrors": []
+    }
+  ],
+  "focusedUnitTests": 17,
+  "focusedLint": "通过",
+  "independentFixReview": "待冻结后复审",
+  "visualQualified": false,
+  "functionalQualified": false,
+  "performanceQualified": false
+}
