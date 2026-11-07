@@ -1,0 +1,43 @@
+{
+  "baseCommit": "dba7eee8b60daada85db201b2ad127880f330403",
+  "qualified": false,
+  "kind": "启动因果测量探针局部回归",
+  "change": "同一测量代码在两个版本主窗口记录可编辑前长任务和导航阶段，不改变性能门槛或产品代码",
+  "checks": {
+    "chrome154": {
+      "overflowMeasured": true,
+      "boundedRows": 256,
+      "mainThreadLongTasks": 3,
+      "numericEvidenceOnly": true,
+      "stoppedAtEditable": true,
+      "preOpenFiltered": true,
+      "boundedLimit": 256,
+      "scope": "只验证测量探针；不代表产品启动、内存或性能门槛通过"
+    },
+    "chrome140": {
+      "overflowMeasured": true,
+      "boundedRows": 256,
+      "mainThreadLongTasks": 3,
+      "numericEvidenceOnly": true,
+      "stoppedAtEditable": true,
+      "preOpenFiltered": true,
+      "boundedLimit": 256,
+      "scope": "只验证测量探针；不代表产品启动、内存或性能门槛通过"
+    },
+    "pythonSelfCheck": {
+      "selfCheck": "passed",
+      "performanceSamples": 0,
+      "qualified": false
+    },
+    "publicEvidenceContracts": {
+      "passed": 15,
+      "failed": 0
+    }
+  },
+  "limits": [
+    "尚未得到本候选真实全应用样本，不代表启动或内存改善",
+    "只观察主线程，不推断Worker/iframe执行开销",
+    "最多256条，发生截断保留dropped与truncated标记；可编辑后停止并释放记录",
+    "不记录文件名、地址、文档内容、源码或凭据"
+  ]
+}

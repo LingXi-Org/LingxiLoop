@@ -341,3 +341,8 @@ S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒�
 
 
 [2c040116正式CI42336019559](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42336019559)通过，但[独立复审](reviews/2c040116.json)确认无效背景色替换在导出中复活旧颜色P2，不能验收。[修复回归](functional/code-background-replacement.json)先失败后验证140/154画布/离线颜色一致、共享撤销重做及重开；生产隔离五格式重跑通过。
+
+
+[dba7eee8独立冻结复审](reviews/dba7eee8.json)及[正式CI42336358638](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42336358638)通过，背景导出P2关闭，17项导出测试通过。
+
+[启动主线程探针](performance/startup-timeline-probe.json)在两个版本使用相同测量代码，记录可编辑前长任务和导航阶段，帮助解释Slides文档请求前的延迟。140/154真实定时任务、258条溢出保持256上限、可编辑后停止/释放、打开前过滤和数字字段导出检查通过；Python自检/15合约通过。尚未得到本候选真实产品样本，不能据此推断启动或内存改善，性能门槛未变。

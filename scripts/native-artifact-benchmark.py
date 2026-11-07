@@ -29,6 +29,7 @@ MODES = ("fullNavigation", "workbenchOpen")
 KINDS = ("design", "slides")
 FORMATS = ("html", "pdf", "pptx")
 MARKER = " ✓"
+STARTUP_PROBE = Path(__file__).with_name('native-artifact-startup-probe.js').read_text()
 
 NETWORK_ERRORS = {'ERR_INTERNET_DISCONNECTED', 'ERR_NAME_NOT_RESOLVED', 'ERR_HTTP2_PROTOCOL_ERROR', 'ERR_INCOMPLETE_CHUNKED_ENCODING', 'ERR_SSL_VERSION_OR_CIPHER_MISMATCH', 'ERR_CONNECTION_CLOSED', 'ERR_TIMED_OUT', 'ERR_SSL_PINNED_KEY_NOT_IN_CERT_CHAIN', 'ERR_CERT_INVALID', 'ERR_TUNNEL_CONNECTION_FAILED', 'ERR_SSL_PROTOCOL_ERROR', 'ERR_CERT_AUTHORITY_INVALID', 'ERR_CONNECTION_ABORTED', 'ERR_BLOCKED_BY_CLIENT', 'ERR_FAILED', 'ERR_CONNECTION_REFUSED', 'ERR_UNSAFE_REDIRECT', 'ERR_CERT_DATE_INVALID', 'ERR_CONNECTION_RESET', 'ERR_NETWORK_CHANGED', 'ERR_ADDRESS_UNREACHABLE', 'ERR_ABORTED', 'ERR_EMPTY_RESPONSE', 'ERR_TOO_MANY_REDIRECTS', 'ERR_CONTENT_LENGTH_MISMATCH', 'ERR_CONNECTION_TIMED_OUT', 'ERR_CONTENT_DECODING_FAILED', 'ERR_PROXY_CONNECTION_FAILED', 'ERR_BLOCKED_BY_RESPONSE', 'ERR_HTTP_RESPONSE_CODE_FAILURE', 'ERR_CACHE_MISS', 'ERR_CERT_COMMON_NAME_INVALID'}
 BLOCKED_REASONS = {'other', 'coep-frame-resource-needs-coep-header', 'content-type', 'corp-not-same-origin', 'subresource-filter', 'origin', 'mixed-content', 'corp-not-same-site', 'csp', 'inspector'}
@@ -1739,6 +1740,7 @@ def main():
                             def page_error(_error): sample['pageErrors'] += 1
                             page.on('pageerror', page_error)
                             trace = Trace(context, page); sample['emptyBrowserPss'] = process_pss(process.pid)
+                            context.add_init_script(script=STARTUP_PROBE)
                             sample['phase'] = 'workbenchPreparation'; preopen = []
                             if mode == 'workbenchOpen':
                                 control = workbench(config, kind)
@@ -1766,6 +1768,9 @@ def main():
                             sample.update(firstInputMs=input_proof['ms'], saveAfterPaintMs=input_proof['saveAfterPaintMs'],
                                 editableMs=round(input_proof['editableEpochMs'] - started_ms, 1), inputProofs=[input_proof],
                                 inputSamplesMs=[input_proof['ms']], requestsAtEditable=requests_at_editable, firstEditablePss=process_pss(process.pid, classify_roles=True))
+                            sample['startupTimeline'] = page.evaluate(
+                                "bounds=>window.__nativeArtifactStartup(bounds.since,bounds.until)",
+                                {'since': started_ms, 'until': input_proof['editableEpochMs']})
                             sample['firstDocumentState'] = document_observations(page)
                             byte_delta = script_delta(preopen, requests_at_editable)
                             sample.update(scriptTransferBytes=byte_delta['transferredBytes'], scriptDecodedBytes=byte_delta['decodedBytes'])
