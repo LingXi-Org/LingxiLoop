@@ -1,4 +1,4 @@
-import {artifactNodeSchema,type ArtifactNode,type ArtifactPage,type ArtifactStyle} from '../../../../shared/artifact-document'
+import {artifactNodeSchema,artifactStyleSchema,type ArtifactNode,type ArtifactPage,type ArtifactStyle} from '../../../../shared/artifact-document'
 import type {InspectorCodeEntry} from '../../../../shared/artifact-inspector-code'
 import {isNativeCodeAttribute,isNativeCodeStyle} from '../../../../shared/artifact-node-code'
 import {appearance,nodeTransform,paddingCss} from '../../../../shared/artifact-appearance'
@@ -7,7 +7,7 @@ const styleFields:Record<string,keyof ArtifactStyle>={color:'color',fill:'fill',
 const numeric=new Set(['strokeWidth','borderWidth','opacity','borderRadius','fontSize','fontWeight','lineHeight','letterSpacing','padding'])
 const unitless=new Set(['opacity','fontWeight','lineHeight'])
 const geometry:Record<string,'x'|'y'|'width'|'height'>={left:'x',top:'y',width:'width',height:'height'}
-const pixel=(value:string)=>/^[+-]?(?:\d+\.?\d*|\.\d+)(?:px)?$/.test(value)?Number.parseFloat(value):undefined
+const pixel=(value:string)=>/^[+-]?(?:\d+\.?\d*|\.\d+)px$/.test(value)||/^[+-]?(?:0+\.?0*|\.0+)$/.test(value)?Number.parseFloat(value):undefined
 
 export function nodeCodeEntries(node:ArtifactNode,page:ArtifactPage):InspectorCodeEntry[]{
   const parent=node.parentId?page.nodes[node.parentId]:undefined,flow=parent?.layout?.mode==='flex'||parent?.layout?.mode==='grid'
@@ -38,9 +38,10 @@ export function nodeCodePatch(node:ArtifactNode,before:readonly InspectorCodeEnt
       attributesChanged=true;continue
     }
     if(value!==undefined&&!isNativeCodeStyle(name,value))throw new Error(`样式「${name}」格式无效或含有活动内容。`)
-    const field=styleFields[name],number=value===undefined?undefined:unitless.has(field)?(/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(value)?Number(value):undefined):pixel(value)
-    if(geometry[name]&&number!==undefined){patch[geometry[name]]=number;delete css[name];cssChanged=cssChanged||Object.hasOwn(node.css??{},name)}
-    else if(field&&(value===undefined||!numeric.has(field)||number!==undefined)){
+    const field=styleFields[name],number=value===undefined?undefined:unitless.has(field)?(/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(value)?Number(value):undefined):pixel(value)??(field==='strokeWidth'&&/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(value)?Number(value):undefined)
+    const mapped=value!==undefined&&/!important\s*$/i.test(value)?undefined:field&&numeric.has(field)?number:value
+    if(geometry[name]&&number!==undefined&&artifactNodeSchema.shape[geometry[name]].safeParse(number).success){patch[geometry[name]]=number;delete css[name];cssChanged=cssChanged||Object.hasOwn(node.css??{},name)}
+    else if(field&&(value===undefined||mapped!==undefined&&artifactStyleSchema.shape[field].safeParse(mapped).success)){
       if(value===undefined)unset.push(`style.${field}`);else style[field]=numeric.has(field)?number:value
       if(name==='color')unset.push('style.themeColor')
       if(name==='fill')unset.push('style.themeFill')

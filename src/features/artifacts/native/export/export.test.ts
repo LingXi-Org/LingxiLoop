@@ -202,3 +202,13 @@ test('画板网页归档包含可离线打开的单页文件，并保留文档�
   assert.ok(html.includes('&lt;script&gt;doNotExecute()&lt;/script&gt;'))
   assert.equal(JSON.stringify(document),before)
 })
+
+test('原始声明替换生成的同名声明，避免无效值回退到旧的显式宽度',async()=>{
+  const document=fixture(),node=document.pages.page!.nodes.text!
+  node.css={width:'480',color:'#123456 !important'}
+  const html=await renderPageHtml(document.pages.page!,new ExportResources(document,{format:'html'}))
+  const opening=html.match(/data-node-id="text"[^>]*style="([^"]*)"/)?.[1]??''
+  assert.equal((opening.match(/(?:^|;)width:/g)??[]).length,1)
+  assert.match(opening,/(?:^|;)width:480(?:;|$)/)
+  assert.match(opening,/color:#123456 !important/)
+})

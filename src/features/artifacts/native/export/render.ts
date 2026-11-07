@@ -128,7 +128,12 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         break
       }
     }
-    if(node.css)css+=';'+Object.entries(node.css).map(([name,value])=>`${name}:${value}`).join(';')
+    if(node.css){
+      // Generated values reject semicolons. Replace matching declarations before
+      // appending authored CSS so an invalid value cannot revive an old width.
+      css=css.split(';').filter(declaration=>!Object.hasOwn(node.css!,declaration.slice(0,declaration.indexOf(':')).trim())).join(';')
+      css+=';'+Object.entries(node.css).map(([name,value])=>`${name}:${value}`).join(';')
+    }
     const tag=node.attributes?.href?'a':'div',attributes=Object.entries(node.attributes??{}).map(([name,value])=>` ${name}="${escapeHtml(value)}"`).join('')
     return `<${tag} class="artifact-export-node" data-node-id="${node.id}" data-motion-id="${node.motionId??node.id}"${node.parentId?'':' data-motion-root'}${attributes}${tag==='a'?' rel="noopener noreferrer"':''} style="${escapeHtml(css)}">${content}</${tag}>`
   }

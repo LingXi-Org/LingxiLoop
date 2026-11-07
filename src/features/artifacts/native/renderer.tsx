@@ -44,7 +44,8 @@ export function nativeStyle(source: ArtifactStyle, document: ArtifactDocument): 
 }
 function applyCodeStyle(element:HTMLElement|null,css:Record<string,string>){
   if(!element)return
-  for(const [name,value]of Object.entries(css))element.style.setProperty(name,value.replace(/\s*!important\s*$/i,''),/!important\s*$/i.test(value)?'important':'')
+  // Invalid replacements must remove the previous declaration, as a source edit does.
+  for(const [name,value]of Object.entries(css)){element.style.removeProperty(name);element.style.setProperty(name,value.replace(/\s*!important\s*$/i,''),/!important\s*$/i.test(value)?'important':'')}
   // React skips equal ordinary values; clear priorities before its next style diff.
   return()=>{for(const name of Object.keys(css))if(element.style.getPropertyPriority(name))element.style.setProperty(name,element.style.getPropertyValue(name),'')}
 }

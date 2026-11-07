@@ -37,3 +37,31 @@ test('行高的像素值保持CSS单位，无单位数才映射为原生倍数',
   assert.equal(ratio.patch.style?.lineHeight,2)
   assert.equal(ratio.patch.css,undefined)
 })
+
+test('长度声明不会把缺少单位的非零数值改写为像素',()=>{
+  const node=createNode('text','text')
+  for(const [name,field]of [['width','width'],['left','x'],['font-size','fontSize']] as const){
+    const change=nodeCodePatch(node,[],[{name,value:'480'}])
+    assert.equal(change.patch.css?.[name],'480')
+    assert.equal(field==='fontSize'?change.patch.style?.fontSize:change.patch[field],undefined)
+  }
+  assert.equal(nodeCodePatch(node,[],[{name:'width',value:'0'}]).patch.width,0)
+  assert.equal(nodeCodePatch(node,[],[{name:'stroke-width',value:'5'}]).patch.style?.strokeWidth,5)
+})
+
+test('合法CSS超出原生字段范围时保留声明，交给浏览器绘制',()=>{
+  const node=createNode('text','text')
+  for(const [name,value] of [['font-size','0px'],['line-height','0'],['font-weight','42'],['width','1000001px']]){
+    const change=nodeCodePatch(node,[],[{name,value}])
+    assert.equal(change.patch.css?.[name],value)
+  }
+})
+
+test('重要声明保留在CSS中，不能被原生字段丢失优先级',()=>{
+  const node=createNode('text','text')
+  for(const [name,value]of [['color','#123456 !important'],['font-family','Arial !important'],['font-size','24px !important']]){
+    const change=nodeCodePatch(node,[],[{name,value}])
+    assert.equal(change.patch.css?.[name],value)
+    assert.equal(change.patch.style,undefined)
+  }
+})

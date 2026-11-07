@@ -1,0 +1,118 @@
+{
+  "modes": [
+    {
+      "mode": "CSS1Compat",
+      "doctype": "html"
+    },
+    {
+      "mode": "CSS1Compat",
+      "doctype": "html"
+    },
+    {
+      "mode": "CSS1Compat",
+      "doctype": "html"
+    },
+    {
+      "mode": "CSS1Compat",
+      "doctype": "html"
+    }
+  ],
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceHashesVerified": 12,
+  "browser": "154.0.8037.57",
+  "initial": "position: relative;\nwidth: 1920px;\nheight: 1080px;\nbackground: #faf8f4;",
+  "rows": [
+    {
+      "frames": [
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        }
+      ],
+      "name": "delete-width",
+      "invalid": "false",
+      "valueBefore": "position: relative;\nheight: 1080px;\nbackground: #faf8f4;",
+      "valueAfter": "position: relative;\nheight: 1080px;\nbackground: #faf8f4;",
+      "savedRootStyle": "position: relative; height: 1080px; background: #faf8f4"
+    },
+    {
+      "frames": [
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        }
+      ],
+      "name": "unitless-width",
+      "invalid": "false",
+      "valueBefore": "position: relative;\nwidth: 480;\nheight: 1080px;\nbackground: #faf8f4;",
+      "valueAfter": "position: relative;\nheight: 1080px;\nbackground: #faf8f4;\nwidth: 480;",
+      "savedRootStyle": "position: relative; height: 1080px; background: #faf8f4; width: 480"
+    },
+    {
+      "frames": [
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        }
+      ],
+      "name": "pixel-width",
+      "invalid": "false",
+      "valueBefore": "position: relative;\nwidth: 480px;\nheight: 1080px;\nbackground: #faf8f4;",
+      "valueAfter": "position: relative;\nheight: 1080px;\nbackground: #faf8f4;\nwidth: 480px;",
+      "savedRootStyle": "position: relative; height: 1080px; background: #faf8f4; width: 480px"
+    },
+    {
+      "frames": [
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        }
+      ],
+      "name": "delete-height",
+      "invalid": "false",
+      "valueBefore": "position: relative;\nwidth: 1920px;\nbackground: #faf8f4;",
+      "valueAfter": "position: relative;\nbackground: #faf8f4;\nwidth: 1920px;",
+      "savedRootStyle": "position: relative; background: #faf8f4; width: 1920px"
+    },
+    {
+      "frames": [
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        },
+        {
+          "mode": "CSS1Compat"
+        }
+      ],
+      "name": "zero-width",
+      "invalid": "false",
+      "valueBefore": "position: relative;\nwidth: 0;\nheight: 1080px;\nbackground: #faf8f4;",
+      "valueAfter": "position: relative;\nbackground: #faf8f4;\nwidth: 0;\nheight: 1080px;",
+      "savedRootStyle": "position: relative; background: #faf8f4; width: 0; height: 1080px"
+    }
+  ],
+  "errors": [],
+  "scope": "固定参考临时文档中的真实代码编辑、保存、重开；全部iframe与外层为CSS1Compat；未复制原版可执行包"
+}

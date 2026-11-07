@@ -50,7 +50,7 @@ const mocks = {
   workspaceSession: "export const getWorkspaceSession=()=>({companyId:'fixture-company',projectId:'fixture-project'})",
 }
 for (const [name, source] of Object.entries(mocks)) await writeFile(join(workspace, `${name}.js`), source)
-await writeFile(join(workspace, 'index.html'), '<html><head><meta charset="UTF-8"></head><body style="margin:0"><div id="root" style="height:100vh"></div><script type="module" src="/entry.tsx"></script></body></html>')
+await writeFile(join(workspace, 'index.html'), '<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"></head><body style="margin:0"><div id="root" style="height:100vh"></div><script type="module" src="/entry.tsx"></script></body></html>')
 await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};${options.checks==='slides-present-controls'?"const taskRoot=createRoot(document.getElementById('root'));window.__nativeUiRoot=taskRoot;taskRoot":"createRoot(document.getElementById('root')!)"}.render(<${options['strict-mode']==='false'?'React.Fragment':'React.StrictMode'}>${options.checks==='canvas-pages'?'<div style={{height:"100%"}} data-fixture-workspace onKeyDown={event=>{if(event.key==="Escape"&&!event.defaultPrevented)event.currentTarget.hidden=true}}>':''}<NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'||new URLSearchParams(location.search).has('design')?'design':'slides'} title="原生编辑器验收" />${options.checks==='canvas-pages'?'</div>':''}</${options['strict-mode']==='false'?'React.Fragment':'React.StrictMode'}>)`)
 await writeFile(join(workspace,'artifact-export.html'),(await readFile(join(root,'artifact-export.html'),'utf8')).replace('/src/features/artifacts/native/export/realm-entry.ts',`/@fs${root}/src/features/artifacts/native/export/realm-entry.ts`))
 let server, browser
@@ -344,6 +344,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   }
   try {
     await page.goto(`${baseUrl}/?kind=${kind}${options.checks==='canvas-links'?'&project=fixture-project&view=conversations&conversation=fixture-room':''}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
+    assert.equal(await page.evaluate(()=>document.compatMode),'CSS1Compat','隔离回归必须与产品和固定参考使用相同标准模式')
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
     if(options.checks==='inspector-code'){
@@ -427,6 +428,41 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.equal(await page.getByRole('tab',{name:'代码',exact:true}).evaluate(element=>element===element.ownerDocument.activeElement),true)
         assert.equal(receipts.length,0);assert.deepEqual(errors,[])
         return{kind:'isolated-inspector-tabs',chineseLabels:true,arrowKeys:true,home:true,rovingFocus:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      if(options['code-case']==='unitless-length'){
+        const before=document.pages['page-1'].nodes['page-1-heading'].width
+        await field.fill(initial.replace(/^width:.*$/m,'width: 480;'));await field.press('Control+s')
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        assert.equal(document.pages['page-1'].nodes['page-1-heading'].width,before,'缺少单位的非零长度不能变成480px')
+        assert.equal(document.pages['page-1'].nodes['page-1-heading'].css.width,'480')
+        assert.equal(await heading.evaluate(element=>element.style.width),'','浏览器应忽略无单位非零宽度')
+        await page.getByRole('button',{name:'关闭属性',exact:true}).click();await page.keyboard.press('Control+z')
+        await page.waitForFunction(()=>document.querySelector('.native-stage [data-node-id="page-1-heading"]').style.width==='1152px')
+        await page.keyboard.press('Control+Shift+z')
+        await page.waitForFunction(()=>document.querySelector('.native-stage [data-node-id="page-1-heading"]').style.width==='')
+        await page.reload();await ready(1);await heading.click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('tab',{name:'代码',exact:true}).click()
+        assert.ok((await field.inputValue()).includes('width: 480;'))
+        const reopened=await field.inputValue()
+        await field.fill(reopened.replace(/^font-size:.*$/m,'font-size: 0px;'));await field.press('Control+s')
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).fontSize==='0px')
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        assert.equal(document.pages['page-1'].nodes['page-1-heading'].css['font-size'],'0px')
+        const fontZero=await field.inputValue()
+        await field.fill(fontZero.replace(/^color:.*$/m,'color: #123456 !important;'));await field.press('Control+s')
+        await page.waitForFunction(()=>document.querySelector('.native-stage [data-node-id="page-1-heading"]').style.getPropertyPriority('color')==='important')
+        assert.equal(await heading.evaluate(element=>getComputedStyle(element).color),'rgb(18, 52, 86)')
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        await page.reload();await ready(1)
+        assert.equal(await heading.evaluate(element=>element.style.getPropertyPriority('color')),'important')
+        const exported=await page.evaluate(async({root,document})=>{
+          const {renderPageHtml}=await import('/@fs'+root+'/src/features/artifacts/native/export/render.ts'),{ExportResources}=await import('/@fs'+root+'/src/features/artifacts/native/export/common.ts')
+          const node=document.pages['page-1'].nodes['page-1-heading'],single={...document.pages['page-1'],nodeOrder:[node.id],nodes:{[node.id]:node}}
+          const html=await renderPageHtml(single,new ExportResources(document,{format:'html'})),parsed=new DOMParser().parseFromString('<!doctype html>'+html,'text/html'),element=parsed.querySelector('[data-node-id]')
+          return{mode:parsed.compatMode,width:element.style.width,fontSize:element.style.fontSize,color:element.style.color,priority:element.style.getPropertyPriority('color')}
+        },{root,document})
+        assert.deepEqual(exported,{mode:'CSS1Compat',width:'',fontSize:'0px',color:'rgb(18, 52, 86)',priority:'important'})
+        assert.deepEqual(errors,[])
+        return{kind:'isolated-code-length-units',nonzeroUnitlessPreserved:true,noPixelRewrite:true,browserIgnoresInvalidLength:true,sharedUndoRedo:true,reopened:true,zeroFontSizePreserved:true,importantPrioritySavedAndReopened:true,offlineDeclarationsParsedInBrowser:true,consoleOrPageErrors:errors}
       }
       if(options['code-case']==='lineheight'){
         const before=document.pages['page-1'].nodes['page-1-heading'].style.lineHeight
@@ -2806,7 +2842,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     for (const [label, value] of [['宽度', '0.75'], ['横坐标', '0.1']]) { const control = page.getByLabel(`裁剪${label}`, { exact: true }); await control.fill(value); await control.press('Control+s'); await waitSaved() }
     assert.deepEqual(document.pages['page-50'].nodes['page-50-image'].crop, { x: .1, y: 0, width: .75, height: 1 })
     await select(1)
-    await page.getByRole('button',{name:'主题',exact:true}).click()
+    await page.getByRole('tab',{name:'主题',exact:true}).click()
     await page.getByRole('button',{name:'默认主题',exact:true}).click(); await waitSaved(); assert.equal(document.themeId,null)
     await page.getByRole('button',{name:'使用主题 验收主题',exact:true}).click(); await waitSaved(); assert.equal(document.themeId,'fixture-theme')
     await page.getByRole('tab',{name:'属性',exact:true}).click()
