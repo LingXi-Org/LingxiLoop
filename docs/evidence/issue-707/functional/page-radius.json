@@ -751,5 +751,13 @@
       }
     },
     "scope": "真实Chromium渲染；JPEG通过实际导出模块，未声称经UI菜单；全窗口预览通过真实UI。"
+  },
+  "reviewFixCandidate": {
+    "commit": "db9673858eb92c8c87cd272d4ce1784dade49bf8",
+    "ciRun": 42348403596,
+    "ciConclusion": "success",
+    "independentReviewPassed": true,
+    "review": "../reviews/db967385.json",
+    "note": "此前两轮154因Docker网卡变化而ERR_NETWORK_CHANGED，稳定窗口重跑通过；失败不计通过。"
   }
 }

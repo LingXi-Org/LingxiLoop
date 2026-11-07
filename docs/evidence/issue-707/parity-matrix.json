@@ -3947,6 +3947,10 @@
       "testEvidence": {
         "receipt": "functional/50-pages-design.json",
         "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+      },
+      "osImeEvidence": {
+        "receipt": "functional/os-ime.json",
+        "scope": "140/156真实Linux系统拼音的画布富文本组词、选词、取消与保存重开；其他输入位置/系统和上游同态仍待验证。"
       }
     },
     {
@@ -4049,6 +4053,10 @@
       "testEvidence": {
         "receipt": "functional/50-pages-slides.json",
         "scope": "仅证明记录中的局部流程；不证明上游全部状态或视觉通过"
+      },
+      "osImeEvidence": {
+        "receipt": "functional/os-ime.json",
+        "scope": "140/156真实Linux系统拼音的画布富文本组词、选词、取消与保存重开；其他输入位置/系统和上游同态仍待验证。"
       }
     },
     {

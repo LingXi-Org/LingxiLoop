@@ -28,7 +28,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['os-ime','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -68,7 +68,7 @@ try {
   await server.listen()
   const address = server.httpServer.address()
   const baseUrl = `http://127.0.0.1:${address.port}`
-  browser = await chromium.launch({ headless: true, ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox'] })
+  browser = await chromium.launch({ headless: options.headed!=='true', ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox',...(options.checks==='os-ime'?['--ozone-platform=x11','--gtk-version=3','--disable-dev-shm-usage']:[])] })
   for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
     for (const editorCase of options.checks==='canvas-fit-body'?options['fit-case']?[options['fit-case']]:['first','rapid','restored']:options.checks === 'canvas-vector-edit-retention' ? options['vector-case']?[options['vector-case']]:['readonly','denied','space','middle','touch'] : options.checks === 'canvas-vector-edit-cas' ? options['vector-case']?[options['vector-case']]:['rotation','path','style','reload','parent-idle','parent-active','parent-cancel','parent-cancel-click','padding','padding-rotated','padding-change','padding-active'] : options.checks === 'canvas-vector-edit' ? options['vector-case']?[options['vector-case']]:['initial','anchor-drag','nudge','smooth','delete','insert','tab','pull','shift-drag','handle','break','cancel','group-nudge','save-in-mode','undo-point','redo-point','keyboard-enter'] : options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
       const result = await verifyMode(kind, browser, baseUrl, editorCase)
@@ -359,6 +359,39 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     assert.equal(await page.evaluate(()=>document.compatMode),'CSS1Compat','隔离回归必须与产品和固定参考使用相同标准模式')
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='os-ime'){
+      assert.equal(options.headed,'true','系统输入法需要有界面的浏览器')
+      await select(1)
+      const title='LingxiLoop 中文输入法验收'
+      await page.evaluate(title=>{document.title=title;window.__osImeEvents=[];window.__osImeProgrammaticEnds=[];const dispatch=EventTarget.prototype.dispatchEvent;EventTarget.prototype.dispatchEvent=function(event){if(event.type==='compositionend')window.__osImeProgrammaticEnds.push(new Error().stack);return dispatch.call(this,event)};for(const type of ['compositionstart','compositionupdate','compositionend','beforeinput','input'])document.addEventListener(type,event=>window.__osImeEvents.push({type,data:event.data??null,inputType:event.inputType??null,isComposing:event.isComposing??null,trusted:event.isTrusted}),true)},title)
+      const nodeId='page-1-heading',original=document.pages['page-1'].nodes[nodeId].text
+      await page.locator(`[data-node-id="${nodeId}"]`).dblclick();const text=page.locator('[data-native-text-editor]');await text.waitFor();await page.keyboard.press('End')
+      const windows=execFileSync('xdotool',['search','--onlyvisible','--name',title],{encoding:'utf8'}).trim().split('\n');assert.ok(windows[0],'未找到浏览器系统窗口')
+      execFileSync('xdotool',['windowfocus','--sync',windows.at(-1)])
+      execFileSync('fcitx5-remote',['-s','pinyin']);execFileSync('fcitx5-remote',['-o'])
+      const baseline=receipts.length
+      execFileSync('xdotool',['type','--clearmodifiers','--delay','150','nihao'])
+      await page.waitForFunction(()=>window.__osImeEvents.some(event=>event.type==='compositionstart'&&event.trusted))
+      await page.waitForTimeout(900)
+      assert.equal(receipts.length,baseline,'真实拼音组词期间不得保存')
+      execFileSync('scrot',['--overwrite',join(output,`${kind}-os-ime-candidates.png`)])
+      execFileSync('xdotool',['key','space'])
+      await page.waitForFunction(()=>window.__osImeEvents.some(event=>event.type==='compositionend'&&event.data==='你好'))
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      assert.equal(document.pages['page-1'].nodes[nodeId].text,original+'你好')
+      assert.equal(receipts.length,baseline+1,'选词只提交一个共享操作批次')
+      const committedEvents=await page.evaluate(()=>window.__osImeEvents);assert.ok(committedEvents.some(event=>event.type==='input'&&event.data==='你好'&&event.trusted),'汉字输入事件必须来自浏览器')
+      const starts=committedEvents.filter(event=>event.type==='compositionstart').length
+      execFileSync('xdotool',['type','--clearmodifiers','--delay','150','zhongwen'])
+      await page.waitForFunction(starts=>window.__osImeEvents.filter(event=>event.type==='compositionstart').length>starts,starts);await page.waitForTimeout(900);assert.equal(receipts.length,baseline+1)
+      execFileSync('xdotool',['key','Escape']);await page.waitForFunction(()=>document.querySelector('[data-native-text-editor]')?.textContent?.endsWith('你好'));assert.equal(await text.isVisible(),true,'取消拼音候选不能退出文本编辑');await page.waitForTimeout(700);assert.equal(receipts.length,baseline+1,'取消组词不得新增保存')
+      const events=await page.evaluate(()=>window.__osImeEvents),programmaticEnds=await page.evaluate(()=>window.__osImeProgrammaticEnds);assert.deepEqual(programmaticEnds,[],'系统输入法测试不得用脚本派发结束事件')
+      execFileSync('fcitx5-remote',['-c']);await page.keyboard.press('Escape')
+      await page.reload();await ready(1);assert.equal(await page.locator(`[data-node-id="${nodeId}"]`).innerText(),original+'你好')
+      await page.screenshot({path:join(output,`${kind}-os-ime-reopened.png`)})
+      assert.deepEqual(errors,[])
+      return{kind:'真实系统拼音输入法局部回归',editor:kind,platform:'Linux、X11、Fcitx5拼音、真实Chromium窗口',browserVersion:browser.version(),osIme:true,testDispatchesCompositionEvents:false,compositionEvents:events,compositionEndTrusted:events.find(event=>event.type==='compositionend')?.trusted,noSaveDuringComposition:true,oneBatchAfterCommit:true,cancelledCompositionDoesNotSaveOrExit:true,savedAndReopened:true,scope:'HTTP夹具及真实共享操作链路，不代替真实授权服务或其他操作系统输入法验收',consoleOrPageErrors:errors}
+    }
     if(options.checks==='inspector-code'){
       assert.equal(kind,'design')
       const heading=page.locator('.native-stage [data-node-id="page-1-heading"]')
@@ -3149,7 +3182,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       openingTextWithoutChangesDoesNotSave: true, chineseIme, formulaEditedAndReopened: 25, imageCropEditedAndReopened: 50, themeSwitchedAndRestored: true,
       pageOrderChangedAndReopened: true, pageOrderSharedUndoRedo: true, agentSharedUndoRedo: true, changedPageIds, untouchedPageHashes: 47,
       agentPlainTextPatchVisible: true, isolatedInteraction, consoleOrPageErrors: errors }
-  } catch(error) { await page.screenshot({path:join(output,`${kind}-failure.png`)}); const diagnostic=await page.evaluate(()=>({geometry:window.__geometryLog,zoom:document.querySelector('[aria-label="画布缩放"]')?.textContent,stage:[...document.querySelectorAll('.native-stage')].map(e=>({scrollLeft:e.scrollLeft,scrollTop:e.scrollTop,w:e.clientWidth,h:e.clientHeight,scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})),notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent)}));await writeFile(join(output,`${kind}-failure.json`),JSON.stringify({message:String(error),errors,diagnostic},null,2));throw error } finally { svgFontsHeld=false;releaseSvgFonts?.();releaseAcknowledgment?.(); await page.close() }
+  } catch(error) { await page.screenshot({path:join(output,`${kind}-failure.png`)}); const diagnostic=await page.evaluate(()=>({osImeEvents:window.__osImeEvents,geometry:window.__geometryLog,zoom:document.querySelector('[aria-label="画布缩放"]')?.textContent,stage:[...document.querySelectorAll('.native-stage')].map(e=>({scrollLeft:e.scrollLeft,scrollTop:e.scrollTop,w:e.clientWidth,h:e.clientHeight,scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON()})),notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent)}));await writeFile(join(output,`${kind}-failure.json`),JSON.stringify({message:String(error),errors,diagnostic},null,2));throw error } finally { svgFontsHeld=false;releaseSvgFonts?.();releaseAcknowledgment?.(); await page.close() }
 }
 
 async function visualControls(page){return page.locator('button,[role=button],[role=tab],input,select,textarea,[role=menuitem],summary').evaluateAll(elements=>elements.filter(e=>e.getBoundingClientRect().width&&e.getBoundingClientRect().height&&getComputedStyle(e).visibility!=='hidden').map(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect();return {label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent?.slice(0,100),role:e.getAttribute('role')??e.tagName.toLowerCase(),rect:{x:r.x,y:r.y,width:r.width,height:r.height},fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,color:s.color,background:s.backgroundColor,border:s.border,shadow:s.boxShadow,radius:s.borderRadius,cursor:s.cursor,transition:s.transition}}))}
