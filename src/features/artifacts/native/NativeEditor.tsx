@@ -47,6 +47,7 @@ import { IconButton, Menu, MenuItem, Modal, EditorIcon, ToolbarTools } from './E
 import { PageThumbnail } from './thumbnail'
 import { EditorPaletteContext, EditorColorSessionContext } from './ColorField'
 import { readNodeFrame, anchorInFrame, pointInFrame, type RenderedNodeFrame } from './rendered-geometry'
+import {useCodeSelection} from './use-code-selection'
 import { PageRail } from './PageRail'
 import { duplicateNodes, duplicatePages, distributeNodes, resizeSelection, drawingNode, canvasShapeNode, ungroupNodes, appendDrawingPoint, appendCanvasPenPoint, canvasPenNode, layoutSlide, SLIDE_LAYOUTS, type ResizeHandle } from '../../../../shared/artifact-editor-actions'
 import { decodeCommentAnchor, commentPoint, commentAnchorAtPoint, type NativeCommentAnchor } from '../../../../shared/artifact-comment-anchor'
@@ -244,7 +245,9 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const initialCamera = useRef(false)
   const geometry = useRef(new Map<string, string>())
   const current = doc && pageId && (boardIds.includes(pageId)||pageId===canvasContentId) ? pageId===canvasContentId?renderedCanvasContent:doc.pages[pageId] : undefined
-  const selectedNodes = current ? selected.flatMap(value => current.nodes[value] ? [current.nodes[value]] : []) : []
+  const compact=viewport.width>0&&viewport.width<640
+  const scale = !canvasMode && current ? Math.max(.05, Math.min((viewport.width - (presenting ? 0 : compact ? 16 : 24)) / current.width, (viewport.height - (presenting || compact && !compactRailOpen ? 0 : 104)) / current.height)) * zoom : zoom * .5
+  const selectedNodes = useCodeSelection(current,selected,viewportRef,scale)
   const primary = selectedNodes.length === 1 ? selectedNodes[0] : undefined
   const primaryPadding=primary?resolvedPadding(primary.style,primary.type==='note'&&current?.id===canvasContentId?{x:12,y:10}:{x:0,y:0}):undefined
   const palette=useMemo(()=>Array.from(new Set((current?[artifactPageBackground(current,doc!),...current.nodeOrder.flatMap(id=>{const style=artifactResolvedStyle(current.nodes[id].style,doc!);return [style.color,style.fill,style.backgroundColor]})]:[]).filter((c):c is string=>!!c))).slice(0,32),[current,doc?.themeId,doc?.themes])
@@ -283,8 +286,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     const measure = () => { const element = viewportRef.current; if (element) setViewport({ width: element.clientWidth, height: element.clientHeight, x: element.scrollLeft, y: element.scrollTop }) }
     const observer = new ResizeObserver(measure); observer.observe(viewportRef.current); measure(); return () => observer.disconnect()
   }, [doc !== null, presenting, authorized])
-  const compact=viewport.width>0&&viewport.width<640
-  const scale = !canvasMode && current ? Math.max(.05, Math.min((viewport.width - (presenting ? 0 : compact ? 16 : 24)) / current.width, (viewport.height - (presenting || compact && !compactRailOpen ? 0 : 104)) / current.height)) * zoom : zoom * .5
+
   useEffect(() => {
     if (initialCamera.current && pendingCanvasFit.current!==activeCanvasId || !authorized || !doc || canvasContentId&&!state.loadedPageIds.includes(canvasContentId) || !viewport.width || !viewport.height) return
     initialCamera.current = true

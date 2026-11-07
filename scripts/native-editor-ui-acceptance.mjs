@@ -87,7 +87,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
-  if(options.checks==='code-style'){const node=document.pages['page-1'].nodes['page-1-heading'];node.css={filter:'blur(1px) !important','max-width':'1800px'};node.attributes={'data-label':'中文测试',title:'中文说明',href:'https://example.test/',target:'_blank'}}
+  if(options.checks==='code-style'&&options['code-case']==='geometry')document.pages['page-1'].nodes['page-1-shape'].css={left:'120px !important'}
+  if(options.checks==='code-style'){const node=document.pages['page-1'].nodes['page-1-heading'];node.css={filter:'blur(1px) !important','max-width':'1800px',...(options['code-case']==='important-same'?{color:node.style.color+' !important'}:{})};node.attributes={'data-label':'中文测试',title:'中文说明',href:'https://example.test/',target:'_blank'}}
   if(options.checks==='slides-present-controls')document.pages['page-1'].notes='全屏与演讲者控制备注。'
   if (options.checks === 'slides-skipped-export') {
     const skipped = document.pages['page-2']
@@ -350,15 +351,28 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await node.getAttribute('data-label'),'中文测试')
       assert.equal(await node.getAttribute('title'),'中文说明')
       assert.equal(await node.evaluate(element=>element.tagName),'A')
+      if(options['code-case']==='geometry'){
+        const shape=page.locator('.native-stage [data-node-id="page-1-shape"]')
+        await shape.click();const before=await shape.boundingBox()
+        await page.keyboard.press('ArrowRight')
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        assert.equal(document.pages['page-1'].nodes['page-1-shape'].x,121)
+        assert.equal(document.pages['page-1'].nodes['page-1-shape'].css.left,'121px !important')
+        const after=await shape.boundingBox();assert.ok(after.x>before.x&&after.x-before.x<2,JSON.stringify({before,after}))
+        await page.keyboard.press('Control+z')
+        await page.waitForFunction(()=>document.querySelector('.native-stage [data-node-id="page-1-shape"]').style.left==='120px')
+        const undone=await shape.boundingBox();assert.ok(Math.abs(undone.x-before.x)<.01)
+      }
       await node.click();assert.equal(new URL(page.url()).pathname,'/')
       const original=await node.elementHandle()
       document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'page-1-heading',patch:{},unset:['css']}],'remote-remove-code')).document
       await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).filter==='none')
       assert.equal(await original.evaluate(element=>element===document.querySelector('.native-stage [data-node-id="page-1-heading"]')),true)
       assert.equal(await node.evaluate(element=>element.style.getPropertyPriority('filter')),'')
+      assert.equal(await node.evaluate(element=>element.style.getPropertyPriority('color')),'')
       await page.screenshot({path:join(output,`${kind}-code-style.png`)})
       assert.deepEqual(errors,[])
-      return{kind:'isolated-native-code-style',cssPaint:true,important:true,remoteRemovalClearsImportantWithoutRemount:true,chineseAttributes:true,editingLinkDoesNotNavigate:true,noWrites:receipts.length===0,consoleOrPageErrors:errors}
+      return{kind:'isolated-native-code-style',case:options['code-case']??'normal',cssGeometryMovesFromPaintedPosition:options['code-case']==='geometry',cssPaint:true,important:true,remoteRemovalClearsImportantWithoutRemount:true,chineseAttributes:true,editingLinkDoesNotNavigate:true,noWrites:receipts.length===0,consoleOrPageErrors:errors}
     }
     if(options.checks==='inspector-load'){
       assert.equal(inspectorModuleRequests,0)
@@ -827,6 +841,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       const root=page.locator('[data-native-artifact-editor]'),records=[]
       await page.addInitScript(()=>{window.__slideAnimations=[];const animate=Element.prototype.animate;Element.prototype.animate=function(frames,timing){window.__slideAnimations.push({nodeId:this.getAttribute('data-node-id'),className:this.className,frames,timing});return animate.call(this,frames,timing)}})
       await page.getByLabel('显示属性',{exact:true}).click()
+      await page.getByRole('complementary',{name:'属性面板',exact:true}).getByRole('button',{name:'属性',exact:true}).waitFor()
       const inspectorRect=await page.getByLabel('属性面板',{exact:true}).boundingBox(),rootRect=await root.boundingBox()
       if(rootRect.width<768){assert.ok(Math.abs(inspectorRect.height-Math.min(rootRect.height/2,384))<=1);assert.ok(Math.abs(inspectorRect.y+inspectorRect.height-rootRect.y-rootRect.height)<=1);assert.ok(Math.abs(inspectorRect.width-rootRect.width)<=1)}else{assert.equal(inspectorRect.width,336);assert.ok(Math.abs(inspectorRect.y-rootRect.y)<=1)}
       await page.screenshot({path:join(output,'slide-transitions-inspector.png')})

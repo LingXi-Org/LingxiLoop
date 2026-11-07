@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { canvasPages, canvasPageOf } from './artifact-canvas-pages.js'
+import {nodeTransform} from './artifact-appearance.js'
 import {
   artifactAssetSchema, artifactDocumentSchema, artifactIdSchema, artifactNodeSchema, artifactPageSchema,
   artifactStyleSchema, artifactThemeSchema, validateArtifactDocument, validateArtifactCanvasPages,
@@ -240,6 +241,14 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
         const owner = page(operation.pageId), item = node(owner.id, operation.nodeId)
         const fields = fieldsOf(operation.patch)
         const unsets = [...operation.unset ?? []]
+        if(item.css&&!Object.hasOwn(operation.patch,'css')&&!unsets.includes('css')){
+          const css={...item.css};let updated=false
+          for(const [field,property]of [['x','left'],['y','top'],['width','width'],['height','height']] as const){
+            if(Object.hasOwn(operation.patch,field)&&Object.hasOwn(css,property)){css[property]=`${operation.patch[field]}px${/!important\s*$/i.test(css[property])?' !important':''}`;updated=true}
+          }
+          if(['rotation','flipX','flipY'].some(field=>Object.hasOwn(operation.patch,field))&&Object.hasOwn(css,'transform')){css.transform=nodeTransform({...item,...operation.patch});updated=true}
+          if(updated)fields.push(['css',css])
+        }
         // Plain text replaces the visible rich-text value; guard both representations,
         // even when richText was absent in the observed snapshot.
         if ((item.type === 'text' || item.type === 'note') && Object.hasOwn(operation.patch, 'text') && !Object.hasOwn(operation.patch, 'richText') && !unsets.includes('richText')) unsets.push('richText')

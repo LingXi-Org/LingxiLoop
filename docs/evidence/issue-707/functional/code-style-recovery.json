@@ -1,0 +1,292 @@
+{
+  "scope": "受控 HTTP 浏览器和共享 reducer，未验证授权服务或最终性能",
+  "independentReview": "../reviews/62e247fb.json",
+  "regressionsFirst": [
+    {
+      "problem": "css.left 覆盖已保存的原生方向键移动",
+      "before": "原生 x760→761，绘制 x不变。",
+      "after": "从实际绘制的局部坐标120开始，移动写入x121及css.left121px，画面移动，撤销恢复原表示；并发CSS修改拒绝旧移动。"
+    },
+    {
+      "problem": "同值回退的!important优先级残留",
+      "before": "移除css.color后同一DOM仍为important。",
+      "after": "旧ref清理优先级后React应用样式差异，同值回退也清除，保留正常颜色。"
+    }
+  ],
+  "units": 101,
+  "ciContracts": 15,
+  "lint": {
+    "passed": true,
+    "warnings": 43,
+    "infos": 3
+  },
+  "typecheck": {
+    "localPassed": false,
+    "errors": 76,
+    "changedNativeAndSharedErrors": 0,
+    "reason": "私有 LingxiOS SDK缺失；正式CI另记。"
+  },
+  "browserCases": {
+    "140-geometry": [
+      {
+        "kind": "isolated-native-code-style",
+        "case": "geometry",
+        "cssGeometryMovesFromPaintedPosition": true,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-native-code-style",
+        "case": "geometry",
+        "cssGeometryMovesFromPaintedPosition": true,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": false,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-important": [
+      {
+        "kind": "isolated-native-code-style",
+        "case": "important-same",
+        "cssGeometryMovesFromPaintedPosition": false,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-native-code-style",
+        "case": "important-same",
+        "cssGeometryMovesFromPaintedPosition": false,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-geometry": [
+      {
+        "kind": "isolated-native-code-style",
+        "case": "geometry",
+        "cssGeometryMovesFromPaintedPosition": true,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-native-code-style",
+        "case": "geometry",
+        "cssGeometryMovesFromPaintedPosition": true,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": false,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-important": [
+      {
+        "kind": "isolated-native-code-style",
+        "case": "important-same",
+        "cssGeometryMovesFromPaintedPosition": false,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-native-code-style",
+        "case": "important-same",
+        "cssGeometryMovesFromPaintedPosition": false,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ]
+  },
+  "slideTransitions": {
+    "transitions140": {
+      "kind": "isolated-slide-transition-diagnostic",
+      "records": [
+        {
+          "kind": "fade",
+          "duration": 320,
+          "forwardAnimations": 1,
+          "backwardAnimations": 1
+        },
+        {
+          "kind": "push",
+          "duration": 420,
+          "forwardAnimations": 2,
+          "backwardAnimations": 2
+        },
+        {
+          "kind": "magic",
+          "duration": 480,
+          "forwardAnimations": 2,
+          "backwardAnimations": 2
+        }
+      ],
+      "copyMotionIdentitySurvivesReopen": true,
+      "undoRedo": true,
+      "reducedMotionSuppressesTransitions": true,
+      "presentationNotesReadOnly": true,
+      "homeEnd": true,
+      "offlineHtmlAnimation": true,
+      "offlineHtmlPrintAllPages": true,
+      "offlineHtmlNetworkRequests": 0,
+      "presentationModuleRequests": 1,
+      "inspectorRect": {
+        "x": 1104,
+        "y": 0,
+        "width": 336,
+        "height": 1000
+      },
+      "consoleOrPageErrors": []
+    },
+    "transitions154": {
+      "kind": "isolated-slide-transition-diagnostic",
+      "records": [
+        {
+          "kind": "fade",
+          "duration": 320,
+          "forwardAnimations": 1,
+          "backwardAnimations": 1
+        },
+        {
+          "kind": "push",
+          "duration": 420,
+          "forwardAnimations": 2,
+          "backwardAnimations": 2
+        },
+        {
+          "kind": "magic",
+          "duration": 480,
+          "forwardAnimations": 2,
+          "backwardAnimations": 2
+        }
+      ],
+      "copyMotionIdentitySurvivesReopen": true,
+      "undoRedo": true,
+      "reducedMotionSuppressesTransitions": true,
+      "presentationNotesReadOnly": true,
+      "homeEnd": true,
+      "offlineHtmlAnimation": true,
+      "offlineHtmlPrintAllPages": true,
+      "offlineHtmlNetworkRequests": 0,
+      "presentationModuleRequests": 1,
+      "inspectorRect": {
+        "x": 1104,
+        "y": 0,
+        "width": 336,
+        "height": 1000
+      },
+      "consoleOrPageErrors": []
+    },
+    "transitions140-narrow": {
+      "kind": "isolated-slide-transition-diagnostic",
+      "records": [
+        {
+          "kind": "fade",
+          "duration": 320,
+          "forwardAnimations": 1,
+          "backwardAnimations": 1
+        },
+        {
+          "kind": "push",
+          "duration": 420,
+          "forwardAnimations": 2,
+          "backwardAnimations": 2
+        },
+        {
+          "kind": "magic",
+          "duration": 480,
+          "forwardAnimations": 2,
+          "backwardAnimations": 2
+        }
+      ],
+      "copyMotionIdentitySurvivesReopen": true,
+      "undoRedo": true,
+      "reducedMotionSuppressesTransitions": true,
+      "presentationNotesReadOnly": true,
+      "homeEnd": true,
+      "offlineHtmlAnimation": true,
+      "offlineHtmlPrintAllPages": true,
+      "offlineHtmlNetworkRequests": 0,
+      "presentationModuleRequests": 1,
+      "inspectorRect": {
+        "x": 0,
+        "y": 460,
+        "width": 390,
+        "height": 384
+      },
+      "consoleOrPageErrors": []
+    }
+  },
+  "interactions": {
+    "design": {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "design",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": false,
+      "designPlayMenuOpensPreview": true,
+      "drawing": true,
+      "layouts": false,
+      "multiplePages": false,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    },
+    "slides": {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "slides",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": true,
+      "designPlayMenuOpensPreview": false,
+      "drawing": false,
+      "layouts": true,
+      "multiplePages": true,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    }
+  },
+  "qualified": false,
+  "remaining": [
+    "完整代码/微调界面尚未接入。",
+    "任意CSS变换、布局、媒体属性及完整视觉仍未验收。",
+    "最终候选性能、真实授权服务及独立复审未完成。"
+  ]
+}

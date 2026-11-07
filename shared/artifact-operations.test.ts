@@ -31,6 +31,19 @@ test('代码样式与属性首次写入、重开、共享撤销重做及冲突�
   assert.equal(before.pages.first!.nodes.title!.css,undefined)
 })
 
+test('原生几何操作同步已有位置声明，撤销恢复原始表示，旧样式修改不能覆盖',()=>{
+  const before=fixture(),node=before.pages.first!.nodes.title!
+  node.x=760;node.css={left:'120px !important',filter:'blur(1px)'}
+  const move=prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{x:121}}],'move-code')
+  const moved=applyOperations(before,move)
+  assert.equal(moved.document.pages.first!.nodes.title!.css?.left,'121px !important')
+  assert.equal(moved.document.pages.first!.nodes.title!.css?.filter,'blur(1px)')
+  const undone=applyOperations(moved.document,prepareBatch(moved.document,moved.inverse,'undo-move-code'))
+  assert.deepEqual(undone.document.pages.first!.nodes.title,node)
+  const remote=applyOperations(before,prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{css:{...node.css,left:'140px'}}}],'remote-code')).document
+  assert.throws(()=>applyOperations(remote,move),ArtifactOperationConflict)
+})
+
 test('first motion identity write supports shared undo/redo, explicit removal and stale-field protection',()=>{
   const before=fixture(),written=applyOperations(before,prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{motionId:'shared-heading'}}],'set-motion'))
   const undone=applyOperations(written.document,prepareBatch(written.document,written.inverse,'undo-motion'))
