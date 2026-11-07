@@ -16,8 +16,10 @@ export function ColorField({
   label,
   value,
   onChange,
+  description,
 }: {
   label: string
+  description?: string
   value: string
   onChange(value: string): void
 }) {
@@ -43,6 +45,7 @@ export function ColorField({
         ref={button}
         type="button"
         aria-label={label}
+        aria-description={description}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => {

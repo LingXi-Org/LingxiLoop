@@ -1,0 +1,38 @@
+{
+  "kind": "文字颜色对比度",
+  "case": "contrast-large",
+  "hidden": false,
+  "chrome": {
+    "rect": {
+      "x": 1201,
+      "y": 843,
+      "width": 77,
+      "height": 16,
+      "top": 843,
+      "right": 1278,
+      "bottom": 859,
+      "left": 1201
+    },
+    "row": {
+      "x": 1105,
+      "y": 842,
+      "width": 335,
+      "height": 21,
+      "top": 842,
+      "right": 1440,
+      "bottom": 863,
+      "left": 1105
+    },
+    "title": "与背景颜色的对比度为 3.3:1",
+    "verdict": "pass",
+    "color": "rgba(0, 0, 0, 0.9)",
+    "swatch": {
+      "color": "rgb(136, 136, 136)",
+      "background": "rgb(250, 248, 244)"
+    }
+  },
+  "historyChecked": false,
+  "writes": 0,
+  "documentUnchanged": true,
+  "consoleOrPageErrors": []
+}

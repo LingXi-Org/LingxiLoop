@@ -23,7 +23,17 @@ try{
   for(const name of args.case?.split(',')??['base','width','percent','width-hug','width-fill','height-hug','height-fill','position-inline','position-relative','position-fixed','position-sticky','min-width','max-width','min-height','max-height','right','bottom','offset','reset-width','escape','blank','save']){
     const project=await mkdtemp(join(tmpdir(),'lingxi-source-sizing-'));let server,page
     try{
-      for(const [file,bytes]of createVisualFixture('design').legacyFiles){const path=join(project,file);await mkdir(dirname(path),{recursive:true});const content=args['text-align-initial']&&file.endsWith('/Page1.dc.html')?String(bytes).replace('<h1 style="',`<h1 style="text-align:${args['text-align-initial']};`):bytes;await writeFile(path,content)}
+      for(const [file,bytes]of createVisualFixture('design').legacyFiles){const path=join(project,file);await mkdir(dirname(path),{recursive:true});let content=bytes
+        if(file.endsWith('/Page1.dc.html')){
+          content=String(bytes)
+          if(args['text-align-initial'])content=content.replace('<h1 style="',`<h1 style="text-align:${args['text-align-initial']};`)
+          if(args['contrast-color'])content=content.replace('color:#18332b',`color:${args['contrast-color']}`)
+          if(args['contrast-size'])content=content.replace('font-size:48px',`font-size:${args['contrast-size']}px`)
+          if(args['contrast-opacity'])content=content.replace('<h1 style="',`<h1 style="opacity:${args['contrast-opacity']};`)
+          if(name==='contrast-gradient')content=content.replace('<h1 style="','<h1 style="background-image:linear-gradient(red,blue);')
+          if(name==='contrast-clipped')content=content.replace('<h1 style="','<h1 style="background-clip:text;')
+        }
+        await writeFile(path,content)}
       server=spawn(process.execPath,[join(sourceRoot,'skills/claude-design/scripts/server.mjs'),project,'--port','0','--host','127.0.0.1'],{stdio:['ignore','pipe','ignore']})
       const url=await new Promise((resolve,reject)=>{let raw='';const timer=setTimeout(()=>reject(Error('参考服务启动超时')),15000);server.stdout.on('data',bytes=>{raw+=bytes;try{const data=JSON.parse(raw);if(data.url){clearTimeout(timer);resolve(data.url)}}catch{}});server.once('exit',()=>{clearTimeout(timer);reject(Error('参考服务退出'))})})
       page=await browser.newPage({viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},colorScheme:args.theme??'light',reducedMotion:'reduce'})
@@ -127,6 +137,15 @@ try{
         const group=row.querySelector('[role=radiogroup]'),style=group&&getComputedStyle(group),thumb=group?.querySelector('[data-flip-at]'),thumbStyle=thumb&&getComputedStyle(thumb)
         return{html:row.outerHTML,rect:row.getBoundingClientRect().toJSON(),group:group&&{rect:group.getBoundingClientRect().toJSON(),background:style.backgroundColor,borderRadius:style.borderRadius,padding:style.padding,height:style.height},thumb:thumb&&{rect:thumb.getBoundingClientRect().toJSON(),background:thumbStyle.backgroundColor,borderRadius:thumbStyle.borderRadius,boxShadow:thumbStyle.boxShadow},controls:[...row.querySelectorAll('[role=radio]')].map(element=>{const css=getComputedStyle(element);return{tag:element.tagName,role:element.getAttribute('role'),label:element.getAttribute('aria-label')??element.querySelector('[aria-label]')?.getAttribute('aria-label'),title:element.getAttribute('title'),checked:element.getAttribute('aria-checked'),pressed:element.getAttribute('aria-pressed'),value:element.getAttribute('value'),rect:element.getBoundingClientRect().toJSON(),color:css.color,background:css.backgroundColor,borderRadius:css.borderRadius,boxShadow:css.boxShadow,outline:css.outline,tabIndex:element.tabIndex}})}
       })
+      const contrastLockup=panel.locator('[data-dc=contrast-row] [data-kit=contrast-lockup]')
+      const textContrastChrome=name.startsWith('contrast-')&&await contrastLockup.count()?await contrastLockup.first().evaluate(lockup=>{
+        const ancestors=[];let element=lockup.lastElementChild
+        for(let depth=0;depth<4&&element;depth++,element=element.parentElement){const style=getComputedStyle(element);ancestors.push({tag:element.tagName,role:element.getAttribute('role'),rect:element.getBoundingClientRect().toJSON(),html:element.outerHTML,color:style.color,background:style.backgroundColor,fontSize:style.fontSize,lineHeight:style.lineHeight,padding:style.padding,margin:style.margin})}
+        const swatch=lockup.querySelector('[data-kit=contrast-swatch]'),style=swatch&&getComputedStyle(swatch)
+        const structure=[];let parent=lockup.parentElement
+        for(let depth=0;depth<6&&parent;depth++,parent=parent.parentElement){structure.push({tag:parent.tagName,dc:parent.getAttribute('data-dc'),class:parent.className,children:[...parent.children].slice(0,25).map(child=>{const css=getComputedStyle(child);return{tag:child.tagName,dc:child.getAttribute('data-dc'),text:child.textContent.slice(0,90),rect:child.getBoundingClientRect().toJSON(),margin:css.margin,padding:css.padding,height:css.height}})})}
+        return{present:true,title:lockup.getAttribute('title'),verdict:lockup.getAttribute('data-verdict'),swatch:swatch&&{color:style.color,background:style.backgroundColor},ancestors,structure}
+      }):name.startsWith('contrast-')?{present:false}:null
       const selectionHandles=[]
       for(const scope of page.frames())for(const candidate of await scope.locator('[data-resize-handle]').all()){
         const rect=await candidate.boundingBox();if(rect&&rect.width>0&&rect.height>0)selectionHandles.push({rotate:await candidate.getAttribute('data-rotate-handle')!==null,rect})
@@ -136,7 +155,7 @@ try{
       if(/^(padding|margin)/.test(name))await page.mouse.move(20,200)
       await page.screenshot({path:join(output,`sizing-${name}.png`)})
       const frameRect=await board.locator('iframe').boundingBox(),camera={beforeDomEntry:rect,frameRect,scale:frameRect.width/1920,headingScreenRect:await heading.boundingBox()}
-      cases.push({name,layoutChrome,textAlignmentChrome,initialTextAlignment:args['text-align-initial']??null,beforeActionSnippet:original.match(/<h1\b[\s\S]*?<\/h1>/)?.[0],subject:args.node??'text',camera,selectionHandles,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
+      cases.push({name,layoutChrome,textAlignmentChrome,textContrastChrome,initialTextAlignment:args['text-align-initial']??null,beforeActionSnippet:original.match(/<h1\b[\s\S]*?<\/h1>/)?.[0],subject:args.node??'text',camera,selectionHandles,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
       await writeFile(join(output,'reference.json'),JSON.stringify({sourceCommit:'016b39d7fdcc30bfacee31ea5541498ac53921c6',referenceResourceHashesVerified:inventory.sources.length,browser:browser.version(),theme:args.theme??'light',viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},cases},null,2)+'\n')
       console.log(name+' 已捕获')
     }finally{await page?.close();server?.kill('SIGTERM');await rm(project,{recursive:true,force:true})}

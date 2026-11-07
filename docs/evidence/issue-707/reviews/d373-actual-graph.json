@@ -1,0 +1,269 @@
+{
+  "candidate": "d373c5a99152a974c36116ce0a52ef2fef3f1a5f",
+  "baseline": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "scope": "按repository-review追加独立只读后验：获准的d373真实静态图及bf历史单组诊断收据，不读取root源码WIP/私包/构建JS、不修改或运行生产",
+  "result": "d373真实静态隔离与元数据完整性通过；bf单组观测/失败记录及比率核算真实，均不具最终性能资格；本数据范围未发现新增P1/P2",
+  "findings": [],
+  "inputs": [
+    {
+      "path": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/static-profile-d373c5a9.json",
+      "sha256": "fef4e0fb40f107e91c3610f40edd24eff0b1ea050e5c6263c6d07bc389fc2879",
+      "run": 42417784930,
+      "job": 128539503167
+    },
+    {
+      "path": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/diagnostic-bf702aa5.json",
+      "sha256": "046d189938e0fee8dc4d5387f8170056d4f1684f132175898e2b93d8abb93fdd",
+      "run": 42410966590,
+      "job": 128518810855
+    }
+  ],
+  "staticGraph": {
+    "verified": [
+      "固定721及精确d373两臂openingIsolationPassed/buildCompleted/sourceInputsUnchanged=true、uncommittedInputsPossible=false、qualified=false；成功无failureCode，完整JSON可解析",
+      "从所有application根及NativeEditor/RichTextEditor两根重建完整静态imports闭包，全部目标存在；app闭包恰等于application组，native减暖恰为22块，联合集合无重复/缺块；每块raw/gzip求和与摘要吻合",
+      "两个原生根与app暖根均无ConversationThread/CodeBlock/parse5/streamdown/shiki/highlighter路径或归属，没有把重型依赖搬到暖区后减去",
+      "共享块精确6个公开Lucide leaf，无React/第一方/factory实现，唯一外依赖为独立createLucideIcon；共享块不在app暖区",
+      "React/ReactDOM仅app index持有，8/8模块与基线码元一致。元数据未显示重复React实现，但未做浏览器运行时复测",
+      "元数据继续只包含第一方路径/依赖包聚合/三公开包白名单模块和绑定数，不含源代码或私包内部路径。"
+    ],
+    "countsAndCosts": {
+      "baseline": {
+        "applicationGzip": 618927,
+        "nativeIncrementalGzip": 155935,
+        "unionGzip": 774862,
+        "nativeChunks": 6
+      },
+      "candidate": {
+        "applicationGzip": 621276,
+        "nativeIncrementalGzip": 228227,
+        "unionGzip": 849503,
+        "nativeChunks": 22
+      },
+      "vsFixedBaseline": {
+        "applicationGzip": {
+          "baseline": 618927,
+          "candidate": 621276,
+          "delta": 2349,
+          "growthPercent": 0.3795277956851084
+        },
+        "nativeGzip": {
+          "baseline": 155935,
+          "candidate": 228227,
+          "delta": 72292,
+          "growthPercent": 46.36034245037997
+        },
+        "unionGzip": {
+          "baseline": 774862,
+          "candidate": 849503,
+          "delta": 74641,
+          "growthPercent": 9.632812036207739
+        }
+      },
+      "vs56": {
+        "applicationDelta": 20,
+        "nativeDelta": 26,
+        "unionDelta": 46
+      }
+    },
+    "qualification": "静态联合849503bytes比固定基线774862高9.6328%，native估算+46.3603%；与56仅app+20/native+26/union+46bytes。本轮无重型成本前移。gzip是构建本地估算，不能代替实际网络或5%性能门槛。",
+    "logs": "父线程提供Node22两条日志85832/120412字符完整解析及CI green；本审查独立验证指定JSON内部闭包、状态与大小一致，没有另行下载远程原始日志。"
+  },
+  "historicalBfDiagnostic": {
+    "candidate": "bf702aa5a496a2b97bd07d465df21659e65fd7f0",
+    "scope": "两图标历史版本；配置helper指纹遗漏的历史P3限定仍保留，不代表六图标或d373结果",
+    "sampleCount": 8,
+    "passedSamples": 6,
+    "pairsPerEditorMode": 1,
+    "order": "candidate在前，四个editor/mode组合各一对；不构成10组交替AB/BA",
+    "verifiedPosthoc": [
+      {
+        "editor": "design",
+        "mode": "fullNavigation",
+        "raw": {
+          "editableMs": {
+            "baseline": 9611.5,
+            "candidate": 8475.9
+          },
+          "scriptTransferBytes": {
+            "baseline": 1279443,
+            "candidate": 1350004
+          },
+          "pssDeltaBytes": {
+            "baseline": 402006016,
+            "candidate": 409357107
+          }
+        },
+        "calculatedGrowthPercent": {
+          "editableMsGrowthPercent": -11.815013265359209,
+          "scriptTransferBytesGrowthPercent": 5.5149780021462425,
+          "pssDeltaBytesGrowthPercent": 1.8286022366391652
+        },
+        "candidateInputP95FromSummaryOnly": 32,
+        "baselineStatus": "failed",
+        "candidateStatus": "passed"
+      },
+      {
+        "editor": "design",
+        "mode": "workbenchOpen",
+        "raw": {
+          "editableMs": {
+            "baseline": 6544,
+            "candidate": 5376.8
+          },
+          "scriptTransferBytes": {
+            "baseline": 242587,
+            "candidate": 306619
+          },
+          "pssDeltaBytes": {
+            "baseline": 400425779,
+            "candidate": 410981785
+          }
+        },
+        "calculatedGrowthPercent": {
+          "editableMsGrowthPercent": -17.836185819070906,
+          "scriptTransferBytesGrowthPercent": 26.395478735463975,
+          "pssDeltaBytesGrowthPercent": 2.63619540838802
+        },
+        "candidateInputP95FromSummaryOnly": 31.300000000279397,
+        "baselineStatus": "passed",
+        "candidateStatus": "passed"
+      },
+      {
+        "editor": "slides",
+        "mode": "fullNavigation",
+        "raw": {
+          "editableMs": {
+            "baseline": 6404.4,
+            "candidate": 7683.2
+          },
+          "scriptTransferBytes": {
+            "baseline": 1303840,
+            "candidate": 1374344
+          },
+          "pssDeltaBytes": {
+            "baseline": 299050598,
+            "candidate": 383798476
+          }
+        },
+        "calculatedGrowthPercent": {
+          "editableMsGrowthPercent": 19.967522328399223,
+          "scriptTransferBytesGrowthPercent": 5.407411952386787,
+          "pssDeltaBytesGrowthPercent": 28.338976269159645
+        },
+        "candidateInputP95FromSummaryOnly": 23.59999999962747,
+        "baselineStatus": "failed",
+        "candidateStatus": "passed"
+      },
+      {
+        "editor": "slides",
+        "mode": "workbenchOpen",
+        "raw": {
+          "editableMs": {
+            "baseline": 4903.6,
+            "candidate": 5626.9
+          },
+          "scriptTransferBytes": {
+            "baseline": 642527,
+            "candidate": 708141
+          },
+          "pssDeltaBytes": {
+            "baseline": 295236198,
+            "candidate": 372746854
+          }
+        },
+        "calculatedGrowthPercent": {
+          "editableMsGrowthPercent": 14.750387470429871,
+          "scriptTransferBytesGrowthPercent": 10.211866583038542,
+          "pssDeltaBytesGrowthPercent": 26.253778000487603
+        },
+        "candidateInputP95FromSummaryOnly": 22.199999999720603,
+        "baselineStatus": "passed",
+        "candidateStatus": "passed"
+      }
+    ],
+    "preservedFailures": [
+      {
+        "kind": "design",
+        "sampleStatus": "failed",
+        "failureCode": "export_diagnostic_incomplete",
+        "exports": [
+          {
+            "format": "html",
+            "status": "failed",
+            "failureCode": "browser_timeout",
+            "durationMs": 180106,
+            "bytes": null
+          },
+          {
+            "format": "pdf",
+            "status": "failed",
+            "failureCode": "browser_timeout",
+            "durationMs": 180123,
+            "bytes": null
+          },
+          {
+            "format": "pptx",
+            "status": "failed",
+            "failureCode": "browser_timeout",
+            "durationMs": 180107,
+            "bytes": null
+          }
+        ]
+      },
+      {
+        "kind": "slides",
+        "sampleStatus": "failed",
+        "failureCode": "export_diagnostic_incomplete",
+        "exports": [
+          {
+            "format": "html",
+            "status": "failed",
+            "failureCode": "browser_timeout",
+            "durationMs": 180109,
+            "bytes": null
+          },
+          {
+            "format": "pdf",
+            "status": "failed",
+            "failureCode": "browser_timeout",
+            "durationMs": 180105,
+            "bytes": null
+          },
+          {
+            "format": "pptx",
+            "status": "failed",
+            "failureCode": "browser_timeout",
+            "durationMs": 180151,
+            "bytes": null
+          }
+        ]
+      }
+    ],
+    "qualification": [
+      "所有启动/脚本传输/PSS增长百分比逐一由保留的单样本数值重算，与posthoc一致；summary单组p50/p75/p95均只是同一个原始值，非充分统计分位",
+      "baseline fullNavigation Design与Slides各3格式browser_timeout，字节为null、sample status=failed并保留failureCode；并未改写为成功。performanceEligible=true只允许诊断保留测量值，不等于通过",
+      "候选两编辑器fullNavigation三格式导出在收据均passed且50页；不覆盖该历史版本所有真实用户场景或d373服务",
+      "diagnosticPassed/工作流success只表示诊断完成；exportObservationsPassed=false、qualified=false，正式gates全部passed=false、observedRatio=null，未把单组比率塞入正式通过门槛",
+      "候选输入p95 32/31.3/23.6/22.2ms与summary一致；该公开收据没有逐输入延迟数组，无法独立重新计算p95，低于100的四个汇总值不能宣称最终门槛通过",
+      "单组观测中Design脚本+5.515/+26.395%，Slides启动+19.968/+14.750%、脚本+5.407/+10.212%、PSS+28.339/+26.254%；属于可核实历史差距，不能推断最新候选已经同样回归或已修复"
+    ]
+  },
+  "optionalFirstPartyEvidence": {
+    "source": "仅静态图列明模块元数据",
+    "nativeEditorRenderedCodeUnits": {
+      "baseline": 66892,
+      "candidate": 176464,
+      "delta": 109572
+    },
+    "limit": "这是UTF16码元增长证据，不是独立gzip/解析CPU/启动原因；未猜测缩略图预加载、图标扩组、压缩或删除功能。"
+  },
+  "evidence": "/workspace/lingxi-issue707-scratch/review-d373-actual/checks.json",
+  "reproducer": "/workspace/lingxi-issue707-scratch/review-d373-actual/verify.py",
+  "unverified": [
+    "没有独立重跑一小时真实诊断/正式SDK构建或查询远程工作流；只读指定真实收据核对",
+    "d373实际网络/输入/PSS/启动未测；bf历史单组不能代替六图标新版本，更不能代替最终10组交替样本",
+    "56诊断仍运行的状态不是通过证据；最终候选变化后仍需受影响检查及独立审查",
+    "完整视觉0.5%、所有交互/真实授权服务及性能资格依然未完成"
+  ]
+}

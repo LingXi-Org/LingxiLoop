@@ -9933,6 +9933,48 @@
         "receipt": "functional/element-text-alignment.json",
         "scope": "Design画板DOM文本的对齐控件；受控HTTP、真实React/Worker/浏览器和共享操作，不代表完整授权API、Slides/自由画布、全部文本功能或最终性能。"
       }
+    },
+    {
+      "id": "D38-design",
+      "editor": "design",
+      "control": "画板文字颜色对比度提示",
+      "trigger": "选择画板文字，改变颜色/字号、保存重开、共享撤销重做",
+      "states": [
+        "达标",
+        "不达标",
+        "大小字",
+        "透明前景",
+        "全透明",
+        "未知背景",
+        "CSS覆盖",
+        "只读",
+        "深色",
+        "窄容器",
+        "保存",
+        "历史"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "start": 2655885,
+        "lookup": "relativeLuminance",
+        "offsetUnit": "UTF-16 code units",
+        "runtime": "source-element-text-contrast.json"
+      },
+      "implementation": "src/features/artifacts/native/ElementTextColor.tsx",
+      "screenshots": {
+        "reference": "visual/element-text-contrast/reference/",
+        "native": "visual/element-text-contrast/implementation/",
+        "manifest": "visual/element-text-contrast/differences/raw-pixel-results.json",
+        "matchedStateVerified": true
+      },
+      "result": "140/154各12回归、154深色2及390窄容器1通过。提示中文、实际CSS/主题和背景合成、保存/历史保持。21px行尺寸一致，但整体纵向提前2px，整图差异未通过；完整文字属性、多选/遮挡组合及最终性能未验收。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-text-contrast.json",
+        "scope": "Design画板单文字颜色对比度，受控HTTP及真实浏览器；不代表完整模型、授权API、全部文本、Slides或最终性能。"
+      }
     }
   ],
   "registeredReplacements": [
@@ -9971,6 +10013,10 @@
     {
       "area": "元素链接属性中文文案",
       "reason": "Link、Destination、Mixed及占位和错误替换为链接、目标、混合及中文反馈；作者地址及文稿保留，4对比较没有排除替换或抗锯齿区域。"
+    },
+    {
+      "area": "文字对比度提示与无障碍说明",
+      "reason": "Good/Poor contrast及背景对比说明替换为对比度良好/不足和中文完整句；保留数学比值及作者颜色语法。六对原始像素诊断不排除替换或抗锯齿区域。"
     }
   ],
   "removedServiceEntrances": [

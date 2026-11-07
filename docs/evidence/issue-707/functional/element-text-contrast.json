@@ -1,0 +1,46 @@
+{
+  "state": "D38画板文字颜色对比度提示",
+  "baselineForMissingBadge": "d373c5a99152a974c36116ce0a52ef2fef3f1a5f",
+  "regressionBeforeImplementation": "element-text-contrast/failures/design-failure.json",
+  "browserResults": {
+    "140": 12,
+    "154": 12,
+    "154dark": 2,
+    "154narrow": 1
+  },
+  "verified": [
+    "3项对比度数学回归通过；9项静态图和2项六图标边界、6项文本对齐回归通过。",
+    "140/154各12场景，默认、大小字门槛、透明前景、全透明、元素及祖先半透明、渐变、文字裁剪、CSS覆盖、只读、颜色保存/撤销/重做/重开通过。",
+    "154深色2场景与390×844浅色1场景通过；静态提示与无障碍说明均中文。",
+    "每次只观察当前选择的一个渲染节点；不加载来源包、不修改文档/操作模型、导出或服务。",
+    "lint 43警告/4信息无新增错误；整体本地类型检查仍76项私有SDK/级联诊断，新文件无诊断。",
+    "另15项现有CI契约与9项文案/代码编辑回归通过；本次没有模型或服务变更。"
+  ],
+  "geometry": {
+    "sourceRow": {
+      "x": 1105,
+      "y": 844,
+      "width": 335,
+      "height": 21
+    },
+    "nativeRow": {
+      "x": 1105,
+      "y": 842,
+      "width": 335,
+      "height": 21
+    },
+    "verticalOffsetPx": -2,
+    "qualified": false,
+    "explanation": "来源链接区高81且文本区上边框占1；当前链接区80、文本区下边框。缺失提示原21px差距减至2px，尚未还原分组/链接行结构，不以虚假补白隐藏偏差。"
+  },
+  "screenshots": "visual/element-text-contrast/differences/raw-pixel-results.json",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "unverified": [
+    "完整文字/多选混合属性与跨节点富文本；颜色值字段的作者CSS覆盖编辑仍待专项实现。",
+    "全部8容器/主题及菜单状态、字体图标逐像素、上下文背景变化和遮挡组合。",
+    "最终候选完整授权API、性能10组AB/BA及完整清单。"
+  ],
+  "scope": "受控HTTP共享操作、真实React/Worker/浏览器。不是服务、完整视觉或最终性能通过证据。",
+  "candidateReview": "提交后的最终候选只读审查与真实SDK构建待执行，不以本地构建受阻为通过。"
+}

@@ -1,0 +1,176 @@
+{
+  "kind": "文字颜色对比度",
+  "case": "contrast-small",
+  "hidden": false,
+  "chrome": {
+    "rect": {
+      "x": 1201,
+      "y": 843,
+      "width": 77,
+      "height": 16,
+      "top": 843,
+      "right": 1278,
+      "bottom": 859,
+      "left": 1201
+    },
+    "row": {
+      "x": 1105,
+      "y": 842,
+      "width": 335,
+      "height": 21,
+      "top": 842,
+      "right": 1440,
+      "bottom": 863,
+      "left": 1105
+    },
+    "title": "与背景颜色的对比度为 3.3:1",
+    "verdict": "fail",
+    "color": "rgb(121, 76, 2)",
+    "typography": [
+      {
+        "tag": "H3",
+        "class": "",
+        "text": "文本",
+        "rect": {
+          "x": 1121,
+          "y": 624,
+          "width": 307,
+          "height": 20,
+          "top": 624,
+          "right": 1428,
+          "bottom": 644,
+          "left": 1121
+        },
+        "margin": "0px 0px 8px",
+        "padding": "0px"
+      },
+      {
+        "tag": "LABEL",
+        "class": "native-field",
+        "text": "文本样式正文标题 1标题 2标题 3标题 4标题 5标题 6",
+        "rect": {
+          "x": 1121,
+          "y": 652,
+          "width": 307,
+          "height": 32,
+          "top": 652,
+          "right": 1428,
+          "bottom": 684,
+          "left": 1121
+        },
+        "margin": "0px",
+        "padding": "0px"
+      },
+      {
+        "tag": "DIV",
+        "class": "native-field native-font-field",
+        "text": "字体阿里亚尔体",
+        "rect": {
+          "x": 1121,
+          "y": 684,
+          "width": 307,
+          "height": 32,
+          "top": 684,
+          "right": 1428,
+          "bottom": 716,
+          "left": 1121
+        },
+        "margin": "0px",
+        "padding": "0px 32px 0px 0px"
+      },
+      {
+        "tag": "DIV",
+        "class": "native-field native-font-field native-font-variants",
+        "text": "字重粗体常规常规斜体粗体粗体斜体",
+        "rect": {
+          "x": 1121,
+          "y": 716,
+          "width": 307,
+          "height": 32,
+          "top": 716,
+          "right": 1428,
+          "bottom": 748,
+          "left": 1121
+        },
+        "margin": "0px",
+        "padding": "0px 32px 0px 0px"
+      },
+      {
+        "tag": "LABEL",
+        "class": "native-field",
+        "text": "字号",
+        "rect": {
+          "x": 1121,
+          "y": 748,
+          "width": 307,
+          "height": 32,
+          "top": 748,
+          "right": 1428,
+          "bottom": 780,
+          "left": 1121
+        },
+        "margin": "0px",
+        "padding": "0px"
+      },
+      {
+        "tag": "DIV",
+        "class": "native-property-pair",
+        "text": "间距行高字距",
+        "rect": {
+          "x": 1121,
+          "y": 780,
+          "width": 307,
+          "height": 32,
+          "top": 780,
+          "right": 1428,
+          "bottom": 812,
+          "left": 1121
+        },
+        "margin": "0px",
+        "padding": "0px"
+      },
+      {
+        "tag": "DIV",
+        "class": "native-element-text-color",
+        "text": "颜色#888888对比度不足",
+        "rect": {
+          "x": 1121,
+          "y": 812,
+          "width": 307,
+          "height": 51,
+          "top": 812,
+          "right": 1428,
+          "bottom": 863,
+          "left": 1121
+        },
+        "margin": "0px",
+        "padding": "0px"
+      },
+      {
+        "tag": "DIV",
+        "class": "native-element-text-alignment",
+        "text": "对齐",
+        "rect": {
+          "x": 1105,
+          "y": 863,
+          "width": 335,
+          "height": 32,
+          "top": 863,
+          "right": 1440,
+          "bottom": 895,
+          "left": 1105
+        },
+        "margin": "0px -12px 0px -16px",
+        "padding": "1px 36px 1px 12px"
+      }
+    ],
+    "swatch": {
+      "color": "rgb(136, 136, 136)",
+      "background": "rgb(250, 248, 244)"
+    }
+  },
+  "historyChecked": false,
+  "writes": 0,
+  "documentUnchanged": true,
+  "consoleOrPageErrors": []
+}

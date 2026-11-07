@@ -107,6 +107,18 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
+  if(options.checks==='element-sizing'&&editorCase.startsWith('contrast-')){
+    const node=document.pages['page-1'].nodes['page-1-heading']
+    if(['contrast-large','contrast-small'].includes(editorCase))node.style.color='#888888'
+    if(editorCase==='contrast-small')node.style.fontSize=16
+    if(editorCase==='contrast-alpha')node.style.color='rgba(24,51,43,.5)'
+    if(editorCase==='contrast-transparent')node.style.color='transparent'
+    if(editorCase==='contrast-opacity')node.style.opacity=.5
+    if(editorCase==='contrast-gradient')node.css={'background-image':'linear-gradient(red,blue)'}
+    if(editorCase==='contrast-parent-opacity')document.pages['page-1'].nodes['page-1-root'].style.opacity=.5
+    if(editorCase==='contrast-css')node.css={color:'#888888'}
+    if(editorCase==='contrast-clipped')node.css={'background-clip':'text'}
+  }
   if(options.checks==='element-sizing'&&['text-align-css','text-align-important','text-align-history'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-align':editorCase==='text-align-important'?'center !important':'center'}
   if(options.checks==='element-sizing'&&editorCase==='text-align-locked')document.pages['page-1'].nodes['page-1-heading'].locked=true
   if(options.checks==='element-sizing'&&editorCase==='text-align-inherited')document.pages['page-1'].nodes['page-1-root'].style.textAlign='center'
@@ -234,7 +246,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historyRequests = [],expectedCodeNetworkErrors=[]
   let denyCodeAccess=false
   let rejectSpeakerSave=['notes-network','notes-denied','notes-write-denied'].includes(options['speaker-case']);let denySpeakerRead=false;const speakerSaveIds=[]
-  let fixtureWrite=!(options.checks==='element-layout'&&editorCase==='readonly')&&!(options.checks==='element-sizing'&&['readonly','text-align-readonly'].includes(editorCase))&&!(options.checks==='element-link'&&editorCase==='readonly')&&!(options.checks==='board-title'&&editorCase==='readonly')&&!(options.checks==='board-transform'&&['readonly','group-readonly'].includes(editorCase))&&options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
+  let fixtureWrite=!(options.checks==='element-layout'&&editorCase==='readonly')&&!(options.checks==='element-sizing'&&['readonly','text-align-readonly','contrast-readonly'].includes(editorCase))&&!(options.checks==='element-link'&&editorCase==='readonly')&&!(options.checks==='board-title'&&editorCase==='readonly')&&!(options.checks==='board-transform'&&['readonly','group-readonly'].includes(editorCase))&&options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
   let holdImageReads=options.checks==='asset-reads',releaseImageReads
   const imageReadGate=new Promise(resolve=>{releaseImageReads=resolve}),physicalImageReads=[]
   const pageReads=[]
@@ -500,6 +512,43 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       const section=page.locator('.native-element-sizing'),field=section.getByRole('textbox',{name:'宽度',exact:true})
       await field.waitFor()
       const saved=()=>page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.status()===200)
+      if(editorCase.startsWith('contrast-')){
+        const badge=page.locator('.native-text-contrast'),hidden=['contrast-transparent','contrast-opacity','contrast-gradient','contrast-parent-opacity','contrast-clipped','contrast-readonly'].includes(editorCase)
+        if(hidden)assert.equal(await badge.count(),0)
+        else{
+          await badge.waitFor()
+          const ratio=editorCase==='contrast-alpha'?'2.9':['contrast-base','contrast-history'].includes(editorCase)?'12.7':'3.3',passed=['contrast-base','contrast-large','contrast-css','contrast-history'].includes(editorCase)
+          assert.equal(await badge.getAttribute('data-verdict'),passed?'pass':'fail')
+          assert.equal(await badge.innerText(),passed?'对比度良好':'对比度不足')
+          assert.equal(await badge.getAttribute('title'),`与背景颜色的对比度为 ${ratio}:1`)
+          assert.equal(await page.getByRole('button',{name:'颜色',exact:true}).getAttribute('aria-description'),`文字与背景颜色的对比度为 ${ratio}:1，${passed?'对比度良好':'对比度不足'}。`)
+        }
+        let historyChecked=false
+        if(editorCase==='contrast-history'){
+          await page.getByRole('button',{name:'颜色',exact:true}).click()
+          const picker=page.getByRole('dialog',{name:'颜色颜色',exact:true})
+          await picker.getByRole('button',{name:'自定义',exact:true}).click()
+          const hex=picker.getByLabel('十六进制颜色',{exact:true});await hex.fill('#faf8f4')
+          let pending=saved();await hex.press('Enter');await pending
+          await picker.getByLabel('关闭颜色选择',{exact:true}).click()
+          await page.waitForFunction(()=>document.querySelector('.native-text-contrast')?.dataset.verdict==='fail')
+          assert.equal(await badge.getAttribute('title'),'与背景颜色的对比度为 1.0:1')
+          await page.locator('[data-native-artifact-editor]').focus();pending=saved();await page.keyboard.press('Control+z');await pending
+          await page.waitForFunction(()=>document.querySelector('.native-text-contrast')?.dataset.verdict==='pass')
+          assert.deepEqual(document.pages['page-1'].nodes[nodeId],original.pages['page-1'].nodes[nodeId])
+          pending=saved();await page.keyboard.press('Control+Shift+z');await pending
+          await page.waitForFunction(()=>document.querySelector('.native-text-contrast')?.dataset.verdict==='fail')
+          const persisted=structuredClone(document);await page.reload();await page.waitForSelector('[data-node-id="page-1-heading"]')
+          await page.locator('[data-page-id="page-1"] [data-node-id="page-1-heading"]').click()
+          await page.getByRole('button',{name:'显示属性',exact:true}).click()
+          await badge.waitFor();assert.equal(await badge.getAttribute('title'),'与背景颜色的对比度为 1.0:1')
+          assert.deepEqual(document,persisted);historyChecked=true
+        }else{assert.equal(receipts.length,0);assert.deepEqual(document,original)}
+        assert.deepEqual(errors,[])
+        const chrome=hidden?null:await badge.evaluate(element=>({rect:element.getBoundingClientRect().toJSON(),row:element.parentElement.getBoundingClientRect().toJSON(),title:element.title,verdict:element.dataset.verdict,color:getComputedStyle(element).color,typography:[...element.closest('.native-property-section').children].map(child=>({tag:child.tagName,class:child.className,text:child.textContent.slice(0,80),rect:child.getBoundingClientRect().toJSON(),margin:getComputedStyle(child).margin,padding:getComputedStyle(child).padding})),swatch:{color:getComputedStyle(element.firstElementChild).color,background:getComputedStyle(element.firstElementChild).backgroundColor}}))
+        await page.screenshot({path:join(output,`${kind}-${editorCase}.png`)})
+        return{kind:'文字颜色对比度',case:editorCase,hidden,chrome,historyChecked,writes:receipts.length,documentUnchanged:!historyChecked,consoleOrPageErrors:errors}
+      }
       if(editorCase.startsWith('text-align-')){
         const group=page.getByRole('radiogroup',{name:'文本对齐',exact:true}),node=page.locator(`[data-node-id="${nodeId}"]`),before=structuredClone(document.pages['page-1'].nodes[nodeId]),labels={left:'文本左对齐',center:'文本居中',right:'文本右对齐',justify:'文本两端对齐'}
         assert.equal(await group.getByRole('radio').count(),4)
