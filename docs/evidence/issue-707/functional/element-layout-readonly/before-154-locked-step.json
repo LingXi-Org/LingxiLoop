@@ -1,0 +1,114 @@
+{
+  "before": {
+    "value": "0",
+    "node": {
+      "id": "page-1-heading",
+      "type": "text",
+      "x": 64,
+      "y": 40,
+      "width": 1152,
+      "height": 76,
+      "rotation": 0,
+      "parentId": "page-1-root",
+      "style": {
+        "fontFamily": "Arial",
+        "fontSize": 48,
+        "fontWeight": 700,
+        "lineHeight": 1.25,
+        "color": "#18332b"
+      },
+      "text": "LingxiLoop 1",
+      "richText": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 1
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "LingxiLoop 1"
+              }
+            ]
+          }
+        ]
+      },
+      "locked": true
+    }
+  },
+  "after": {
+    "value": "1",
+    "node": {
+      "id": "page-1-heading",
+      "type": "text",
+      "x": 64,
+      "y": 40,
+      "width": 1152,
+      "height": 76,
+      "rotation": 0,
+      "parentId": "page-1-root",
+      "style": {
+        "fontFamily": "Arial",
+        "fontSize": 48,
+        "fontWeight": 700,
+        "lineHeight": 1.25,
+        "color": "#18332b",
+        "padding": 1
+      },
+      "text": "LingxiLoop 1",
+      "richText": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 1
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "LingxiLoop 1"
+              }
+            ]
+          }
+        ]
+      },
+      "locked": true,
+      "css": {
+        "box-sizing": "content-box"
+      }
+    },
+    "writes": 1,
+    "operations": [
+      {
+        "operationId": "8041c72d-c466-4fd9-ba66-421cd7f003a7",
+        "baseSeq": 0,
+        "expectedVersions": {
+          "page/page-1/exists": 0,
+          "node/page-1/page-1-heading/exists": 0,
+          "node/page-1/page-1-heading/field/style.padding": 0,
+          "node/page-1/page-1-heading/field/css": 0,
+          "node/page-1/page-1-heading/field/style.paddingX": 0,
+          "node/page-1/page-1-heading/field/style.paddingY": 0
+        },
+        "operations": [
+          {
+            "type": "node.patch",
+            "pageId": "page-1",
+            "nodeId": "page-1-heading",
+            "patch": {
+              "style": {
+                "padding": 1
+              },
+              "css": {
+                "box-sizing": "content-box"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

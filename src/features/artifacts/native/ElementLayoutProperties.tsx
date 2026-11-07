@@ -25,12 +25,13 @@ export default function ElementLayoutProperties({node,page,writable,getBase,comm
  },[declarations])
  const apply=(changes:ElementLayoutChanges,base=getBase())=>{
   const owner=base?.pages[page.id],original=owner?.nodes[node.id];if(!base||!owner||!original)return
+  if(!writable||getBase()?.pages[page.id]?.nodes[node.id]?.locked){retainChanges(changes,base);return}
   for(const [property,raw]of Object.entries(changes))if(raw?.trim()){
    const value=elementLayoutLength(property,raw)!.replace(/\s*!important\s*$/i,'')
    if(!CSS.supports(property,value))throw new Error('边距格式无效，请输入有效的样式长度。')
   }
   const {patch,unset}=elementLayoutPatch(original,owner,changes);if(!Object.keys(patch).length&&!unset.length)return
-  commit([{type:'node.patch',pageId:page.id,nodeId:node.id,patch,...(unset.length?{unset}:{})}],base,['css','style.padding','style.paddingX','style.paddingY'].map(field=>artifactVersionKey.node(page.id,node.id,`field/${field}`)))
+  commit([{type:'node.patch',pageId:page.id,nodeId:node.id,patch,...(unset.length?{unset}:{})}],base,['css','locked','style.padding','style.paddingX','style.paddingY'].map(field=>artifactVersionKey.node(page.id,node.id,`field/${field}`)))
  }
  const retainChanges=(changes:ElementLayoutChanges,base:ArtifactDocument)=>{
   const original=base.pages[page.id]?.nodes[node.id];if(!original)return

@@ -19,7 +19,7 @@ export default function ElementLengthInput({property,label,value,placeholder,wri
     if(draft.text&&draft.text.trim()===''){pending.current=null;markDirty(false);if(reason!=='unmount')setText(value);return}
     if(draft.text===value){pending.current=null;markDirty(false);confirmed.current=true;return}
     const changes={[property]:draft.text}
-    if(composing.current){retain(changes,draft.base);pending.current=null;markDirty(false);return}
+    if(composing.current||!writable){retain(changes,draft.base);pending.current=null;markDirty(false);return}
     try{apply(changes,draft.base);pending.current=null;markDirty(false);confirmed.current=true;if(reason!=='unmount')setError('')}
     catch{
       if(reason==='unmount'){retain(changes,draft.base);pending.current=null;markDirty(false)}
@@ -28,9 +28,10 @@ export default function ElementLengthInput({property,label,value,placeholder,wri
   }
   const markDirty=useLocalDraft(save)
   useEffect(()=>{if(!pending.current)setText(value)},[value])
-  const change=(next:string)=>{const base=pending.current?.base??getBase();if(!base)return;pending.current={text:next,base};setText(next);setError('');confirmed.current=false;markDirty(true)}
+  const change=(next:string)=>{if(!writable&&!pending.current)return;const base=pending.current?.base??getBase();if(!base)return;pending.current={text:next,base};setText(next);setError('');confirmed.current=false;markDirty(true)}
   const field=useRef<HTMLInputElement>(null)
   const step=(direction:number,modifiers:{shiftKey?:boolean;altKey?:boolean}={})=>{
+    if(!writable)return
     const parsed=text.match(/^([+-]?(?:\d+\.?\d*|\.\d+))(.*)$/);if(!parsed&&text.trim())return
     const unit=parsed?.[2]||'px',fine=/^(em|rem|ch|ex|lh|cap|ic|s|turn)$/i.test(unit),normal=fine?.1:1,amount=modifiers.altKey?(fine?.01:.1):normal*(modifiers.shiftKey?10:1)
     const next=Math.round((Number(parsed?.[1]??0)+direction*amount)*100)/100,value=(['width','height','min-width','max-width','min-height','max-height'].includes(property)||property.startsWith('padding'))?Math.max(0,next):next
@@ -52,4 +53,3 @@ export default function ElementLengthInput({property,label,value,placeholder,wri
       }
     }}/>{numeric&&<span className="native-sizing-number-end">{showUnit&&<span className="native-sizing-unit">像素</span>}<span className="native-sizing-steps">{([1,-1] as const).map(direction=><button key={direction} type="button" disabled={!writable} aria-label={`${direction>0?'增大':'减小'}${label}`} onPointerDown={event=>event.preventDefault()} onClick={event=>step(direction,event)}><EditorIcon name="chevron" size={10}/></button>)}</span></span>}{error&&<span role="alert">{error}</span>}</span>
 }
-
