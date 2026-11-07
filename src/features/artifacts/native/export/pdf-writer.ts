@@ -1,3 +1,4 @@
+import {artifactPaperPoints,type ArtifactPaper} from '../../../../../shared/artifact-page-print'
 /** Small streaming-friendly PDF writer: raster appearance, searchable Unicode text and links.
  * The invisible text font is the standard Adobe CJK STSong-Light CID font; page appearance
  * does not depend on the reader having it installed. No editor code or DOM enters this layer.
@@ -5,6 +6,7 @@
 export interface PdfPageImage {
   width: number
   height: number
+  paper?: ArtifactPaper
   jpeg: Uint8Array
   text: string
   links?: Array<{ href: string; x: number; y: number; width: number; height: number }>
@@ -48,15 +50,16 @@ export function encodeArtifactPdf(pages: readonly PdfPageImage[], title: string)
   for (const page of pages) {
     const pageId = reserve(), pictureId = reserve(), contentId = reserve()
     pageIds.push(pageId)
-    const width = page.width * .75, height = page.height * .75
+    const width = page.paper ? artifactPaperPoints[page.paper].width : page.width * .75, height = page.paper ? artifactPaperPoints[page.paper].height : page.height * .75
+    const scaleX=width/page.width,scaleY=height/page.height
     set(pictureId, stream(`/Type /XObject /Subtype /Image /Width ${Math.round(page.width)} /Height ${Math.round(page.height)} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode`, page.jpeg))
     const encoded = [...page.text].map(character => hex4(glyphs.get(character)!)).join('')
     set(contentId, stream('', utf8(`q ${width} 0 0 ${height} 0 0 cm /Im0 Do Q\nBT /F0 12 Tf 3 Tr 1 0 0 1 0 ${height} Tm <${encoded}> Tj ET`)))
     const annotations = (page.links ?? []).filter(link => /^(https?:\/\/|mailto:|#)/i.test(link.href)).map(link => {
       const annotationId = reserve()
-      const x = link.x * .75, y = height - (link.y + link.height) * .75
+      const x = link.x * scaleX, y = height - (link.y + link.height) * scaleY
       const href = link.href.replace(/([\\()])/g, '\\$1').replace(/[\r\n]/g, '')
-      set(annotationId, `<< /Type /Annot /Subtype /Link /Rect [${x} ${y} ${x + link.width * .75} ${y + link.height * .75}] /Border [0 0 0] /A << /S /URI /URI (${href}) >> >>`)
+      set(annotationId, `<< /Type /Annot /Subtype /Link /Rect [${x} ${y} ${x + link.width * scaleX} ${y + link.height * scaleY}] /Border [0 0 0] /A << /S /URI /URI (${href}) >> >>`)
       return `${annotationId} 0 R`
     })
     set(pageId, `<< /Type /Page /Parent ${tree} 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /XObject << /Im0 ${pictureId} 0 R >> /Font << /F0 ${font} 0 R >> >> /Contents ${contentId} 0 R${annotations.length ? ` /Annots [${annotations.join(' ')}]` : ''} >>`)

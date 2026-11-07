@@ -9334,6 +9334,112 @@
         "receipt": "functional/slides-transitions.json",
         "scope": "按登记范围证明，不作为完整功能与视觉通过"
       }
+    },
+    {
+      "id": "D24-design",
+      "editor": "design",
+      "control": "画板打印模式",
+      "trigger": "选择画板→属性→对应控件",
+      "states": [
+        "固定",
+        "流式",
+        "只读",
+        "旧原生增长稿兼容"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "offsetUnit": "UTF-16 code units",
+        "location": "source-design-artboard.json"
+      },
+      "implementation": "src/features/artifacts/native/DesignArtboardProperties.tsx",
+      "result": "局部回归通过，完整功能/视觉资格未取得",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/design-artboard.json",
+        "scope": "只证明已登记局部状态，不代表穷尽全部可达状态"
+      }
+    },
+    {
+      "id": "D25-design",
+      "editor": "design",
+      "control": "画板打印纸张",
+      "trigger": "选择画板→属性→对应控件",
+      "states": [
+        "未选择",
+        "美式信纸",
+        "A4",
+        "固定时禁用",
+        "语言/尺寸推断"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "offsetUnit": "UTF-16 code units",
+        "location": "source-design-artboard.json"
+      },
+      "implementation": "src/features/artifacts/native/DesignArtboardProperties.tsx",
+      "result": "局部回归通过，完整功能/视觉资格未取得",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/design-artboard.json",
+        "scope": "只证明已登记局部状态，不代表穷尽全部可达状态"
+      }
+    },
+    {
+      "id": "D26-design",
+      "editor": "design",
+      "control": "画板尺寸与高度操作",
+      "trigger": "选择画板→属性→对应控件",
+      "states": [
+        "尺寸边界",
+        "适应内容高度",
+        "保存重开",
+        "共享历史"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "offsetUnit": "UTF-16 code units",
+        "location": "source-design-artboard.json"
+      },
+      "implementation": "src/features/artifacts/native/DesignArtboardProperties.tsx",
+      "result": "局部回归通过，完整功能/视觉资格未取得",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/design-artboard.json",
+        "scope": "只证明已登记局部状态，不代表穷尽全部可达状态"
+      }
+    },
+    {
+      "id": "D27-design",
+      "editor": "design",
+      "control": "布局参考线属性卡",
+      "trigger": "选择画板→属性→对应控件",
+      "states": [
+        "添加菜单",
+        "列",
+        "行",
+        "网格",
+        "完整卡片/弹层尚待还原"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "offsetUnit": "UTF-16 code units",
+        "location": "source-design-artboard.json"
+      },
+      "implementation": "src/features/artifacts/native/DesignArtboardProperties.tsx",
+      "result": "局部回归通过，完整功能/视觉资格未取得",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/design-artboard.json",
+        "scope": "只证明已登记局部状态，不代表穷尽全部可达状态"
+      }
     }
   ],
   "registeredReplacements": [
@@ -9360,6 +9466,10 @@
     {
       "area": "代码面板中文文案",
       "reason": "标签、空选择、只读、格式错误、恢复与智能体修改指引及混合值注释全部中文；CSS语法与作者数据保留。登记不代表通过像素或完整功能验收。"
+    },
+    {
+      "area": "画板表单中文文案与单位",
+      "reason": "画板、宽度、高度、打印模式、流式、固定、纸张、美式信纸、像素及高度动作全部中文；A4作为标准纸张值保留。保留原版输入框槽宽；没有为本次比较排除任何像素。"
     }
   ],
   "removedServiceEntrances": [

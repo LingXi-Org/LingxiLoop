@@ -351,3 +351,8 @@ S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒�
 [圆角持久化和导出](functional/page-radius.json)覆盖统一/逐角、共享历史、复制、缩略图、旧稿不变及五格式；218组原版归一化结果一致。`fac4d8d1`独立审查发现的预览方框与JPEG覆盖底色，在`db967385`已先补失败回归再修复，140/154正式回归、[冻结复审](reviews/db967385.json)及[owning CI](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42348403596)通过。原始属性截图仍超像素门槛，完整画板表单和选择框待还原。
 
 [真实系统拼音证据](functional/os-ime.json)及[候选框/重开截图](visual/os-ime/)补充了历史合成事件检查：Linux/X11/Fcitx5拼音、真实有界面Chromium140和156，在Design/Slides均验证组词期间不保存、选词一个共享批次、取消不误保存/不退出、重开保留。测试未调用CDP输入或派发组合事件；原始结束事件的isTrusted=false如实保留，可信汉字输入与真实候选框另有断言。使用`NATIVE_IME_BROWSER=<浏览器路径> bash scripts/native-editor-os-ime-check.sh <结果目录>`复现，依赖见现有手动验收工作流；容器测试配方见[记录](functional/os-ime.Dockerfile)。仅覆盖画布富文本，不代替其余输入位置/系统、真实授权API、完整视觉或最终十组性能资格。
+
+
+[画板表单来源](source-design-artboard.json)区分打印分页和画板随内容增长。原版选择流式/A4不会改变1920×240画板或iframe高度；显式保存后写入print/paper。新增原生可选print独立字段，旧原生sizing/纸张PDF语义继续读取，不补写旧稿；新转换保留原版print而不误触发画板增长。
+
+[局部回归](functional/design-artboard.json)记录140/154的打印/纸张保存重开、共享撤销重做、尺寸边界、适应内容高度及只读；18项真实临时PostgreSQL文档服务通过，不改旧快照。10492项原版纸张推断/页高断言一致；实际PDF经pdfinfo/pdftoppm验证流式A4两页、固定一页，保留第二页红色正文；纸张物理尺寸及链接缩放另有单测。新[八对默认画板截图](visual/design-artboard/geometry.json)登记控件最大偏差1CSSpx；[原始像素结果](visual/design-artboard/differences/raw-pixel-results.json)0/8通过，最大9.9872%，无掩码或抗锯齿排除。完整属性/参考线卡片、选框、其余状态及性能继续未取得资格。初始表新增D24–D27细分，现159行，均未标完整资格。

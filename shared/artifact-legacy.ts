@@ -168,7 +168,7 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       if (typeof board.title === 'string') page.title = board.title
       if (typeof board.is_interactive === 'boolean') page.interactive = board.is_interactive
       if (typeof board.frameless === 'boolean') page.frameless = board.frameless
-      if (board.print === 'flow' || board.print === 'fixed') page.sizing = board.print
+      if (board.print === 'flow' || board.print === 'fixed') page.print = board.print
       if (board.paper === 'a4') page.paper = 'A4'
       else if (board.paper === 'letter') page.paper = 'Letter'
     }

@@ -482,3 +482,19 @@ test('画板四角持久化到不可变页快照、共享历史和页面副本',
   assert.deepEqual(copy.document.pages['radius-copy'].radius,[10,20,30,40])
   assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
 })
+
+test('画板打印设置独立持久化、撤销重做与复制，旧页快照不变',async()=>{
+  const item=await artifact('design'),initial=await snapshot(item.id),page=initial.document.pages['page-1'],oldHash=initial.pageVersions['page-1'],oldBytes=JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash))
+  const request=prepareBatch(initial.document,[{type:'page.patch',pageId:'page-1',patch:{print:'flow',paper:'A4'}}],'print-settings')
+  const saved=await apply(item.id,request),reopened=(await snapshot(item.id)).document.pages['page-1']
+  assert.equal(reopened.print,'flow');assert.equal(reopened.paper,'A4');assert.equal(reopened.sizing,page.sizing)
+  assert.deepEqual([reopened.width,reopened.height],[page.width,page.height]);assert.deepEqual(reopened.nodes,page.nodes)
+  assert.equal((await readNativePage(db,item.id,'page-1',saved.pageVersions['page-1']))?.print,'flow')
+  assert.equal((await apply(item.id,request)).deduplicated,true)
+  const undone=await apply(item.id,{operationId:'undo-print',kind:'undo',targetOperationId:'print-settings',expectedHistoryVersion:saved.history.version})
+  assert.equal(Object.hasOwn(undone.document.pages['page-1'],'print'),false)
+  const redone=await apply(item.id,{operationId:'redo-print',kind:'redo',targetOperationId:'print-settings',expectedHistoryVersion:undone.history.version})
+  const copied=await apply(item.id,prepareBatch(redone.document,duplicatePages(redone.document,['page-1'],()=> 'print-copy'),'copy-print'))
+  assert.equal(copied.document.pages['print-copy'].print,'flow');assert.equal(copied.document.pages['print-copy'].paper,'A4')
+  assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
+})

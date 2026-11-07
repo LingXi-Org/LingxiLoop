@@ -56,3 +56,9 @@ test('画板圆角随未加载页元数据返回，不要求读取完整页体',
   assert.deepEqual(projection.document.pages.p.radius,[10,20,30,40]);assert.deepEqual(projection.document.pages.p.nodes,{})
   assert.equal(projection.pageVersions.p,'immutable-radius-hash');assert.equal(document.pages.p.nodes.t.text,'未加载的正文')
 })
+
+test('打印设置随未加载页元数据返回，保持画板增长字段独立',()=>{
+  const document=createDocument('design','print-projection'),page={...createPage('p'),print:'flow' as const,paper:'A4' as const,sizing:'fixed' as const};document.pages.p=page;document.pageOrder=['p']
+  const projection=projectNativeSnapshot({document,history:{version:0,undo:null,redo:null},pageVersions:{p:'immutable-print-hash'},original:{version:'old',files:{},warnings:[]}},[])
+  assert.equal(projection.document.pages.p.print,'flow');assert.equal(projection.document.pages.p.paper,'A4');assert.equal(projection.document.pages.p.sizing,'fixed');assert.deepEqual(projection.document.pages.p.nodes,{})
+})

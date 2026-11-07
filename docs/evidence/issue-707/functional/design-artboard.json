@@ -1,0 +1,1146 @@
+{
+  "kind": "画板表单与独立打印设置局部证据",
+  "qualified": false,
+  "scope": "HTTP浏览器夹具与真实共享操作；另列真实临时PostgreSQL文档服务。均不代替真实授权浏览器、完整视觉或性能资格。",
+  "browserResults": {
+    "140": {
+      "kind": "画板属性局部回归",
+      "printAndPaperDoNotResize": true,
+      "savedAndReopened": true,
+      "paperSharedUndoRedo": true,
+      "sourceDimensionsBounds": true,
+      "fitHeight": true,
+      "nodesAndOtherPagesUnchanged": true,
+      "geometry": [
+        {
+          "label": "属性",
+          "rect": {
+            "x": 1111,
+            "y": 8,
+            "width": 79.15625,
+            "height": 24,
+            "top": 8,
+            "right": 1190.15625,
+            "bottom": 32,
+            "left": 1111
+          },
+          "background": "rgba(0, 0, 0, 0.055)"
+        },
+        {
+          "label": "代码",
+          "rect": {
+            "x": 1190.15625,
+            "y": 8,
+            "width": 47.421875,
+            "height": 24,
+            "top": 8,
+            "right": 1237.578125,
+            "bottom": 32,
+            "left": 1190.15625
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "主题",
+          "rect": {
+            "x": 1237.578125,
+            "y": 8,
+            "width": 58.09375,
+            "height": 24,
+            "top": 8,
+            "right": 1295.671875,
+            "bottom": 32,
+            "left": 1237.578125
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "关闭属性",
+          "rect": {
+            "x": 1410,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1434,
+            "bottom": 32,
+            "left": 1410
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "收起画板 Page 1",
+          "rect": {
+            "x": 1117,
+            "y": 49,
+            "width": 20,
+            "height": 20,
+            "top": 49,
+            "right": 1137,
+            "bottom": 69,
+            "left": 1117
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "展开组合 LingxiLoop 1",
+          "rect": {
+            "x": 1133,
+            "y": 73,
+            "width": 20,
+            "height": 20,
+            "top": 73,
+            "right": 1153,
+            "bottom": 93,
+            "left": 1133
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "展开画板 Page 2",
+          "rect": {
+            "x": 1117,
+            "y": 97,
+            "width": 20,
+            "height": 20,
+            "top": 97,
+            "right": 1137,
+            "bottom": 117,
+            "left": 1117
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "展开画板 Page 3",
+          "rect": {
+            "x": 1117,
+            "y": 121,
+            "width": 20,
+            "height": 20,
+            "top": 121,
+            "right": 1137,
+            "bottom": 141,
+            "left": 1117
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "画板",
+          "rect": {
+            "x": 1105,
+            "y": 210,
+            "width": 335,
+            "height": 40,
+            "top": 210,
+            "right": 1440,
+            "bottom": 250,
+            "left": 1105
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "画板宽度",
+          "rect": {
+            "x": 1221,
+            "y": 254,
+            "width": 184.625,
+            "height": 24,
+            "top": 254,
+            "right": 1405.625,
+            "bottom": 278,
+            "left": 1221
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "画板高度",
+          "rect": {
+            "x": 1221,
+            "y": 286,
+            "width": 156.625,
+            "height": 24,
+            "top": 286,
+            "right": 1377.625,
+            "bottom": 310,
+            "left": 1221
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "高度操作",
+          "rect": {
+            "x": 1408,
+            "y": 286,
+            "width": 24,
+            "height": 24,
+            "top": 286,
+            "right": 1432,
+            "bottom": 310,
+            "left": 1408
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "流式",
+          "rect": {
+            "x": 1213,
+            "y": 319,
+            "width": 109.5,
+            "height": 22,
+            "top": 319,
+            "right": 1322.5,
+            "bottom": 341,
+            "left": 1213
+          },
+          "background": "rgb(255, 255, 255)"
+        },
+        {
+          "label": "",
+          "rect": {
+            "x": -1,
+            "y": -1,
+            "width": 1,
+            "height": 1,
+            "top": -1,
+            "right": 0,
+            "bottom": 0,
+            "left": -1
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "固定",
+          "rect": {
+            "x": 1322.5,
+            "y": 319,
+            "width": 109.5,
+            "height": 22,
+            "top": 319,
+            "right": 1432,
+            "bottom": 341,
+            "left": 1322.5
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "",
+          "rect": {
+            "x": -1,
+            "y": -1,
+            "width": 1,
+            "height": 1,
+            "top": -1,
+            "right": 0,
+            "bottom": 0,
+            "left": -1
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "美式信纸",
+          "rect": {
+            "x": 1213,
+            "y": 351,
+            "width": 109.5,
+            "height": 22,
+            "top": 351,
+            "right": 1322.5,
+            "bottom": 373,
+            "left": 1213
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "",
+          "rect": {
+            "x": -1,
+            "y": -1,
+            "width": 1,
+            "height": 1,
+            "top": -1,
+            "right": 0,
+            "bottom": 0,
+            "left": -1
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "A4",
+          "rect": {
+            "x": 1322.5,
+            "y": 351,
+            "width": 109.5,
+            "height": 22,
+            "top": 351,
+            "right": 1432,
+            "bottom": 373,
+            "left": 1322.5
+          },
+          "background": "rgb(255, 255, 255)"
+        },
+        {
+          "label": "",
+          "rect": {
+            "x": -1,
+            "y": -1,
+            "width": 1,
+            "height": 1,
+            "top": -1,
+            "right": 0,
+            "bottom": 0,
+            "left": -1
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "外观",
+          "rect": {
+            "x": 1105,
+            "y": 386,
+            "width": 335,
+            "height": 41,
+            "top": 386,
+            "right": 1440,
+            "bottom": 427,
+            "left": 1105
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "背景",
+          "rect": {
+            "x": 1213,
+            "y": 431,
+            "width": 191,
+            "height": 24,
+            "top": 431,
+            "right": 1404,
+            "bottom": 455,
+            "left": 1213
+          },
+          "background": "rgba(255, 255, 255, 0.5)"
+        },
+        {
+          "label": "圆角",
+          "rect": {
+            "x": 1221,
+            "y": 463,
+            "width": 156.625,
+            "height": 24,
+            "top": 463,
+            "right": 1377.625,
+            "bottom": 487,
+            "left": 1221
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "分别设置圆角",
+          "rect": {
+            "x": 1408,
+            "y": 463,
+            "width": 24,
+            "height": 24,
+            "top": 463,
+            "right": 1432,
+            "bottom": 487,
+            "left": 1408
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "布局参考线",
+          "rect": {
+            "x": 1105,
+            "y": 500,
+            "width": 303,
+            "height": 40,
+            "top": 500,
+            "right": 1408,
+            "bottom": 540,
+            "left": 1105
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "添加布局参考线",
+          "rect": {
+            "x": 1408,
+            "y": 508,
+            "width": 24,
+            "height": 24,
+            "top": 508,
+            "right": 1432,
+            "bottom": 532,
+            "left": 1408
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        }
+      ],
+      "consoleOrPageErrors": []
+    },
+    "154": {
+      "kind": "画板属性局部回归",
+      "printAndPaperDoNotResize": true,
+      "savedAndReopened": true,
+      "paperSharedUndoRedo": true,
+      "sourceDimensionsBounds": true,
+      "fitHeight": true,
+      "nodesAndOtherPagesUnchanged": true,
+      "geometry": [
+        {
+          "label": "属性",
+          "rect": {
+            "x": 1111,
+            "y": 8,
+            "width": 79.15625,
+            "height": 24,
+            "top": 8,
+            "right": 1190.15625,
+            "bottom": 32,
+            "left": 1111
+          },
+          "background": "rgba(0, 0, 0, 0.055)"
+        },
+        {
+          "label": "代码",
+          "rect": {
+            "x": 1190.15625,
+            "y": 8,
+            "width": 47.421875,
+            "height": 24,
+            "top": 8,
+            "right": 1237.578125,
+            "bottom": 32,
+            "left": 1190.15625
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "主题",
+          "rect": {
+            "x": 1237.578125,
+            "y": 8,
+            "width": 58.09375,
+            "height": 24,
+            "top": 8,
+            "right": 1295.671875,
+            "bottom": 32,
+            "left": 1237.578125
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "关闭属性",
+          "rect": {
+            "x": 1410,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1434,
+            "bottom": 32,
+            "left": 1410
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "收起画板 Page 1",
+          "rect": {
+            "x": 1117,
+            "y": 49,
+            "width": 20,
+            "height": 20,
+            "top": 49,
+            "right": 1137,
+            "bottom": 69,
+            "left": 1117
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "展开组合 LingxiLoop 1",
+          "rect": {
+            "x": 1133,
+            "y": 73,
+            "width": 20,
+            "height": 20,
+            "top": 73,
+            "right": 1153,
+            "bottom": 93,
+            "left": 1133
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "展开画板 Page 2",
+          "rect": {
+            "x": 1117,
+            "y": 97,
+            "width": 20,
+            "height": 20,
+            "top": 97,
+            "right": 1137,
+            "bottom": 117,
+            "left": 1117
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "展开画板 Page 3",
+          "rect": {
+            "x": 1117,
+            "y": 121,
+            "width": 20,
+            "height": 20,
+            "top": 121,
+            "right": 1137,
+            "bottom": 141,
+            "left": 1117
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "画板",
+          "rect": {
+            "x": 1105,
+            "y": 210,
+            "width": 335,
+            "height": 40,
+            "top": 210,
+            "right": 1440,
+            "bottom": 250,
+            "left": 1105
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "画板宽度",
+          "rect": {
+            "x": 1221,
+            "y": 254,
+            "width": 184.625,
+            "height": 24,
+            "top": 254,
+            "right": 1405.625,
+            "bottom": 278,
+            "left": 1221
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "画板高度",
+          "rect": {
+            "x": 1221,
+            "y": 286,
+            "width": 156.625,
+            "height": 24,
+            "top": 286,
+            "right": 1377.625,
+            "bottom": 310,
+            "left": 1221
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "高度操作",
+          "rect": {
+            "x": 1408,
+            "y": 286,
+            "width": 24,
+            "height": 24,
+            "top": 286,
+            "right": 1432,
+            "bottom": 310,
+            "left": 1408
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "流式",
+          "rect": {
+            "x": 1213,
+            "y": 319,
+            "width": 109.5,
+            "height": 22,
+            "top": 319,
+            "right": 1322.5,
+            "bottom": 341,
+            "left": 1213
+          },
+          "background": "rgb(255, 255, 255)"
+        },
+        {
+          "label": "",
+          "rect": {
+            "x": -1,
+            "y": -1,
+            "width": 1,
+            "height": 1,
+            "top": -1,
+            "right": 0,
+            "bottom": 0,
+            "left": -1
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "固定",
+          "rect": {
+            "x": 1322.5,
+            "y": 319,
+            "width": 109.5,
+            "height": 22,
+            "top": 319,
+            "right": 1432,
+            "bottom": 341,
+            "left": 1322.5
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "",
+          "rect": {
+            "x": -1,
+            "y": -1,
+            "width": 1,
+            "height": 1,
+            "top": -1,
+            "right": 0,
+            "bottom": 0,
+            "left": -1
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "美式信纸",
+          "rect": {
+            "x": 1213,
+            "y": 351,
+            "width": 109.5,
+            "height": 22,
+            "top": 351,
+            "right": 1322.5,
+            "bottom": 373,
+            "left": 1213
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "",
+          "rect": {
+            "x": -1,
+            "y": -1,
+            "width": 1,
+            "height": 1,
+            "top": -1,
+            "right": 0,
+            "bottom": 0,
+            "left": -1
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "A4",
+          "rect": {
+            "x": 1322.5,
+            "y": 351,
+            "width": 109.5,
+            "height": 22,
+            "top": 351,
+            "right": 1432,
+            "bottom": 373,
+            "left": 1322.5
+          },
+          "background": "rgb(255, 255, 255)"
+        },
+        {
+          "label": "",
+          "rect": {
+            "x": -1,
+            "y": -1,
+            "width": 1,
+            "height": 1,
+            "top": -1,
+            "right": 0,
+            "bottom": 0,
+            "left": -1
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "外观",
+          "rect": {
+            "x": 1105,
+            "y": 386,
+            "width": 335,
+            "height": 41,
+            "top": 386,
+            "right": 1440,
+            "bottom": 427,
+            "left": 1105
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "背景",
+          "rect": {
+            "x": 1213,
+            "y": 431,
+            "width": 191,
+            "height": 24,
+            "top": 431,
+            "right": 1404,
+            "bottom": 455,
+            "left": 1213
+          },
+          "background": "rgba(255, 255, 255, 0.5)"
+        },
+        {
+          "label": "圆角",
+          "rect": {
+            "x": 1221,
+            "y": 463,
+            "width": 156.625,
+            "height": 24,
+            "top": 463,
+            "right": 1377.625,
+            "bottom": 487,
+            "left": 1221
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "分别设置圆角",
+          "rect": {
+            "x": 1408,
+            "y": 463,
+            "width": 24,
+            "height": 24,
+            "top": 463,
+            "right": 1432,
+            "bottom": 487,
+            "left": 1408
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "布局参考线",
+          "rect": {
+            "x": 1105,
+            "y": 500,
+            "width": 303,
+            "height": 40,
+            "top": 500,
+            "right": 1408,
+            "bottom": 540,
+            "left": 1105
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "label": "添加布局参考线",
+          "rect": {
+            "x": 1408,
+            "y": 508,
+            "width": 24,
+            "height": 24,
+            "top": 508,
+            "right": 1432,
+            "bottom": 532,
+            "left": 1408
+          },
+          "background": "rgba(0, 0, 0, 0)"
+        }
+      ],
+      "consoleOrPageErrors": []
+    }
+  },
+  "pdfResults": {
+    "140": {
+      "kind": "画板固定与流式PDF局部回归",
+      "independentParser": "pdfinfo / pdftoppm",
+      "results": [
+        {
+          "mode": "flow",
+          "warnings": [],
+          "pages": 2,
+          "pageSize": "595.28 x 841.89 pts (A4)",
+          "pixel": [
+            254,
+            0,
+            0,
+            255
+          ]
+        },
+        {
+          "mode": "fixed",
+          "warnings": [],
+          "pages": 1,
+          "pageSize": "600 x 180 pts",
+          "pixel": [
+            18,
+            52,
+            87,
+            255
+          ]
+        }
+      ],
+      "consoleOrPageErrors": []
+    },
+    "154": {
+      "kind": "画板固定与流式PDF局部回归",
+      "independentParser": "pdfinfo / pdftoppm",
+      "results": [
+        {
+          "mode": "flow",
+          "warnings": [],
+          "pages": 2,
+          "pageSize": "595.28 x 841.89 pts (A4)",
+          "pixel": [
+            254,
+            0,
+            0,
+            255
+          ]
+        },
+        {
+          "mode": "fixed",
+          "warnings": [],
+          "pages": 1,
+          "pageSize": "600 x 180 pts",
+          "pixel": [
+            18,
+            52,
+            87,
+            255
+          ]
+        }
+      ],
+      "consoleOrPageErrors": []
+    }
+  },
+  "readonlyResults": {
+    "140": {
+      "kind": "只读画板属性回归",
+      "fieldsAndActionsDisabled": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    },
+    "154": {
+      "kind": "只读画板属性回归",
+      "fieldsAndActionsDisabled": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    }
+  },
+  "sourcePureAssertions": 10492,
+  "unitTests": 69,
+  "orchestrationTests": 23,
+  "database": {
+    "tests": 18,
+    "passed": 18,
+    "temporaryDatabase": true,
+    "containerRemoved": true,
+    "source": "server/src/__integration__/native-document-service.test.ts"
+  },
+  "fullDocuments": {
+    "design": {
+      "kind": "isolated-native-editor-ui-diagnostic",
+      "mode": "design",
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "1859698ab513381bad8dfeb41a504d61f29081d8048e42f7d5f1f7ac33aae708",
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 6,
+      "maxMountedNodes": 24,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": []
+    },
+    "slides": {
+      "kind": "isolated-native-editor-ui-diagnostic",
+      "mode": "slides",
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 1,
+      "maxMountedNodes": 7,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": []
+    }
+  },
+  "localTypes": {
+    "webSdkAndCascadeErrors": 76,
+    "serverSdkAndCascadeErrors": 748,
+    "newProductTypeErrors": 0,
+    "publishedSdkToolContractTest": "本地依赖缺失未运行，等待正式CI"
+  },
+  "productionExports": {
+    "kind": "isolated-production-canvas-text-export",
+    "scope": "真实生产构建及隔离导出；固定夹具，不代替授权API、离线文件打开、完整视觉或性能验收",
+    "browser": "154.0.8037.57",
+    "fixtureFont": "system-ui",
+    "paddingAndTypography": true,
+    "uniformPadding": true,
+    "penPath": true,
+    "vectorPath": true,
+    "editedVectorPath": true,
+    "paddedEditedVector": true,
+    "rows": [
+      {
+        "format": "html",
+        "bytes": 11617,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      },
+      {
+        "format": "pdf",
+        "bytes": 33246,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      },
+      {
+        "format": "pptx",
+        "bytes": 105021,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      },
+      {
+        "format": "svg",
+        "bytes": 66136,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      },
+      {
+        "format": "png",
+        "bytes": 149603,
+        "nonWhitePixels": 54659,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      }
+    ],
+    "consoleOrPageErrors": []
+  },
+  "radiusExports": {
+    "kind": "isolated-page-radius",
+    "uniformAndCorners": true,
+    "savedAndReopened": true,
+    "sharedUndoRedo": true,
+    "nodesUnchanged": true,
+    "exports": [
+      {
+        "format": "html",
+        "bytes": 12484
+      },
+      {
+        "format": "pdf",
+        "bytes": 88949,
+        "pixels": {
+          "width": 1920,
+          "height": 1080,
+          "corner": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "edge": [
+            249,
+            248,
+            244,
+            255
+          ],
+          "topLeft": [
+            253,
+            253,
+            253,
+            255
+          ],
+          "bottomRight": [
+            249,
+            248,
+            243,
+            255
+          ]
+        },
+        "rasterizer": "pdftoppm"
+      },
+      {
+        "format": "pptx",
+        "bytes": 672588,
+        "pixels": {
+          "width": 3840,
+          "height": 2160,
+          "corner": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "edge": [
+            250,
+            248,
+            244,
+            255
+          ],
+          "topLeft": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomRight": [
+            250,
+            248,
+            244,
+            255
+          ]
+        }
+      },
+      {
+        "format": "svg",
+        "bytes": 66481,
+        "pixels": {
+          "width": 1920,
+          "height": 1080,
+          "corner": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "edge": [
+            250,
+            248,
+            244,
+            255
+          ],
+          "topLeft": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomRight": [
+            250,
+            248,
+            244,
+            255
+          ]
+        }
+      },
+      {
+        "format": "png",
+        "bytes": 208883,
+        "pixels": {
+          "width": 3840,
+          "height": 2160,
+          "corner": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "edge": [
+            250,
+            248,
+            244,
+            255
+          ],
+          "topLeft": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "bottomRight": [
+            250,
+            248,
+            244,
+            255
+          ]
+        }
+      }
+    ],
+    "consoleOrPageErrors": []
+  },
+  "legacyFlow": {
+    "kind": "isolated-canvas-flow-diagnostic",
+    "mode": "design",
+    "otherCanvasOverlaps": false,
+    "height": 1002,
+    "otherCanvasHashUnchanged": true,
+    "scope": "actual React, Worker geometry, content measurement and shared operations; controlled HTTP fixture",
+    "consoleOrPageErrors": []
+  },
+  "remaining": [
+    "完整布局参考线卡片/弹层与全部画板状态",
+    "选择框及全部控件视觉/悬浮/聚焦/按压状态",
+    "真实授权浏览器评论/智能体全生命周期",
+    "最终候选十组交替性能门槛"
+  ],
+  "pdfArchive": {
+    "file": "design-artboard-pdf.zip",
+    "sha256": "8839530303a111441ba16b289a746af67cc7d83a0721d0fc8067da13a5e5d90a"
+  }
+}

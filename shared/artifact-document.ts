@@ -147,7 +147,7 @@ export const artifactPageSchema = z.object({
   id: artifactIdSchema, title: z.string().max(1000),
   x: finite, y: finite, width: positive, height: positive,
   radius:artifactPageRadiusSchema.optional(),
-  sizing: z.enum(['fixed', 'flow']).optional(), paper: z.enum(['A4', 'Letter', 'custom']).optional(),
+  sizing: z.enum(['fixed', 'flow']).optional(), print: z.enum(['fixed', 'flow']).optional(), paper: z.enum(['A4', 'Letter', 'custom']).optional(),
   section: z.string().max(200).optional(),
   interactive: z.boolean().optional(), frameless: z.boolean().optional(),
   canvasPageId: artifactIdSchema.optional(),

@@ -28,7 +28,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['os-ime','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['design-artboard','os-ime','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -42,7 +42,7 @@ const { chromium } = await import(modulePath.startsWith('/') ? pathToFileURL(mod
 const dependencyRoot = await realpath(join(root, 'node_modules'))
 const workspace = await mkdtemp(join(tmpdir(), 'lingxi-native-ui-'))
 await mkdir(output, { recursive: true })
-if(options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case']))await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
+if(options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case'])||options.checks==='design-artboard'&&options['artboard-case']==='exports')await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
 const mocks = {
   http: `export async function http(path,init){const response=await fetch('/api'+path,{...init,headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok)throw Object.assign(new Error(await response.text()),{status:response.status});return response.json()}`,
   realtime: options.checks==='inspector-code'?`const listeners=new Set();window.__codeChanged=()=>{for(const fn of listeners)fn({type:'artifact.changed',artifactId:'fixture'})};export const ws={on:fn=>{listeners.add(fn);return()=>listeners.delete(fn)}}`:'export const ws={on:()=>()=>{}}',
@@ -59,7 +59,7 @@ try {
   server = await createServer({ configFile: false, root: workspace, publicDir: join(root, 'public'), plugins: [react()], logLevel: 'error',
     cacheDir:join(workspace,'.vite'),
     // Late CommonJS discovery reloads the fixture during PPTX export, even with HMR off.
-    optimizeDeps: options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case'])?{noDiscovery:true,include:['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime','pptxgenjs','html-to-image','jszip','katex']}:undefined,
+    optimizeDeps: options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case'])||options.checks==='design-artboard'&&options['artboard-case']==='exports'?{noDiscovery:true,include:['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime','pptxgenjs','html-to-image','jszip','katex']}:undefined,
     resolve: { alias: [
       ...Object.entries({ '@/api/core/http': 'http', '@/api/core/realtime': 'realtime', '@/api/transport': 'transport', '@/stores/auth': 'auth', '@/lib/workspaceSession': 'workspaceSession' }).map(([find, name]) => ({ find, replacement: join(workspace, `${name}.js`) })),
       { find: 'react', replacement: dirname(require.resolve('react/package.json')) },
@@ -83,7 +83,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['design-artboard','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
@@ -155,7 +155,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     document=applyOperations(document,prepareBatch(document,createCanvasPage(document,'canvas-second'))).document
     document.pageOrder=['page-1','page-2'];delete document.pages['page-3']
     const first=document.pages['page-1'],other=document.pages['page-2'],heading=first.nodes['page-1-heading']
-    Object.assign(first,{width:800,height:600});Object.assign(heading,{x:50,y:50,width:700,height:100})
+    Object.assign(first,{width:800,height:600,sizing:'flow'});Object.assign(heading,{x:50,y:50,width:700,height:100})
     const shape={...createNode('shape','flow-bottom'),x:0,y:900,width:100,height:100}
     const image=Object.values(first.nodes).find(node=>node.type==='image');Object.assign(image,{x:50,y:200,width:100,height:100})
     heading.parentId=null;image.parentId=null
@@ -194,7 +194,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historyRequests = [],expectedCodeNetworkErrors=[]
   let denyCodeAccess=false
   let rejectSpeakerSave=['notes-network','notes-denied','notes-write-denied'].includes(options['speaker-case']);let denySpeakerRead=false;const speakerSaveIds=[]
-  let fixtureWrite=options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
+  let fixtureWrite=options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
   let holdImageReads=options.checks==='asset-reads',releaseImageReads
   const imageReadGate=new Promise(resolve=>{releaseImageReads=resolve}),physicalImageReads=[]
   const pageReads=[]
@@ -359,6 +359,70 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     assert.equal(await page.evaluate(()=>document.compatMode),'CSS1Compat','隔离回归必须与产品和固定参考使用相同标准模式')
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='design-artboard'){
+      assert.equal(kind,'design')
+      if(options['artboard-case']==='exports'){
+        const results=await page.evaluate(async({root,document})=>{
+          const {exportDocument}=await import('/@fs'+root+'/src/features/artifacts/native/export/pdf.ts'),{createNode}=await import('/@fs'+root+'/shared/artifact-document.ts')
+          const top={...createNode('shape','print-top'),x:0,y:0,width:800,height:240,style:{fill:'#123456'}},bottom={...createNode('shape','print-bottom'),x:0,y:1280,width:800,height:200,style:{fill:'#ff0000'}}
+          const base={...document.pages['page-1'],width:800,height:240,radius:undefined,sizing:undefined,paper:'A4',nodes:{[top.id]:top,[bottom.id]:bottom},nodeOrder:[top.id,bottom.id]},results=[]
+          for(const mode of ['flow','fixed']){
+            const single={...document,pageOrder:[base.id],pages:{[base.id]:{...base,print:mode}},assets:{}},before=JSON.stringify(single),result=await exportDocument(single,{format:'pdf'})
+            if(JSON.stringify(single)!==before)throw Error('导出不得改写画板')
+            results.push({mode,base64:await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.readAsDataURL(result.blob)}),warnings:result.warnings})
+          }
+          return results
+        },{root,document})
+        for(const result of results){
+          const file=join(output,`print-${result.mode}.pdf`);await writeFile(file,Buffer.from(result.base64,'base64'));delete result.base64
+          const info=execFileSync('pdfinfo',[file],{encoding:'utf8'});result.pages=Number(info.match(/^Pages:\s+(\d+)/m)[1]);assert.equal(result.pages,result.mode==='flow'?2:1);result.pageSize=info.match(/^Page size:\s+([^\n]+)/m)[1]
+          if(result.mode==='flow')assert.match(result.pageSize,/595\.28 x 841\.89 pts/);else assert.match(result.pageSize,/600 x 180 pts/)
+          const target=join(output,`print-${result.mode}`),height=result.mode==='flow'?1131:240
+          execFileSync('pdftoppm',['-f',result.mode==='flow'?'2':'1','-singlefile','-scale-to-x','800','-scale-to-y',String(height),'-png',file,target],{stdio:'pipe'})
+          result.pixel=await page.evaluate(async base64=>{const image=new Image();image.src='data:image/png;base64,'+base64;await image.decode();const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);return[...ctx.getImageData(400,200,1,1).data]},(await readFile(target+'.png')).toString('base64'))
+          const expected=result.mode==='flow'?[255,0,0]:[18,52,86];assert.ok(result.pixel.slice(0,3).every((value,index)=>Math.abs(value-expected[index])<=3))
+        }
+        assert.deepEqual(errors,[]);return{kind:'画板固定与流式PDF局部回归',independentParser:'pdfinfo / pdftoppm',results,consoleOrPageErrors:errors}
+      }
+      const originalNodes=JSON.stringify(document.pages['page-1'].nodes),otherHashes=document.pageOrder.slice(1).map(id=>pageHash(document.pages[id]))
+      await page.locator('[data-page-id="page-1"] .native-board-label').click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      const inspector=page.getByRole('complementary',{name:'属性面板',exact:true})
+      assert.equal(await inspector.getByText('转场',{exact:true}).count(),0,'画板表单不显示幻灯片转场')
+      assert.equal(await inspector.locator('summary').filter({hasText:'高级'}).count(),0,'画板尺寸应直接呈现，符合来源表单')
+      const mode=inspector.getByRole('radiogroup',{name:'打印模式',exact:true}),paper=inspector.getByRole('radiogroup',{name:'打印纸张',exact:true}),saved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      await mode.getByRole('radio',{name:'固定',exact:true}).waitFor()
+      if(options['artboard-case']==='readonly'){
+        for(const label of ['画板宽度','画板高度','圆角','背景'])assert.ok(await page.getByLabel(label,{exact:true}).isDisabled())
+        assert.ok(await mode.getByRole('radio',{name:'流式',exact:true}).isDisabled())
+        for(const label of ['高度操作','添加布局参考线']){const trigger=page.getByLabel(label,{exact:true});assert.equal(await trigger.getAttribute('aria-disabled'),'true');await trigger.click({force:true});assert.equal(await page.locator('.native-artboard-properties details[open]').count(),0)}
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[]);return{kind:'只读画板属性回归',fieldsAndActionsDisabled:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      if(options['artboard-case']==='visual'){
+        await page.waitForFunction(()=>{const images=[...document.querySelectorAll('.native-stage .native-page-content:not(.native-canvas-content) img')],first=document.querySelector('.native-stage [data-page-id="page-1"] .native-page-content:not(.native-canvas-content) img');return first?.complete&&first.naturalWidth>0&&images.every(image=>image.complete&&image.naturalWidth>0)});await page.evaluate(()=>{document.activeElement?.blur();return document.fonts.ready});await page.mouse.move(10,100)
+        const geometry=await inspector.locator('input,button,[role=radio],summary,.native-artboard-properties h3').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>({label:e.getAttribute('aria-label')??e.textContent,rect:e.getBoundingClientRect().toJSON(),font:getComputedStyle(e).font,background:getComputedStyle(e).backgroundColor,parentBackground:getComputedStyle(e.parentElement).backgroundColor,parentShadow:getComputedStyle(e.parentElement).boxShadow})))
+        await page.screenshot({path:join(output,'design-artboard-default.png')});assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'画板属性默认状态截图',width:Number(options.width??1440),height:Number(options.height??1000),theme:options['canvas-theme']??'light',geometry,noWrites:true,consoleOrPageErrors:errors,qualified:false}
+      }
+      assert.equal(await mode.getByRole('radio',{name:'固定',exact:true}).getAttribute('aria-checked'),'true')
+      assert.ok(await paper.getByRole('radio',{name:'A4',exact:true}).isDisabled())
+      assert.equal(await paper.locator('[aria-checked=true]').count(),0)
+      await mode.getByRole('radio',{name:'流式',exact:true}).click();await saved();await paper.getByRole('radio',{name:'A4',exact:true}).click();await saved()
+      assert.deepEqual([document.pages['page-1'].width,document.pages['page-1'].height],[1920,1080]);assert.equal(document.pages['page-1'].sizing,undefined);assert.equal(document.pages['page-1'].print,'flow');assert.equal(document.pages['page-1'].paper,'A4')
+      await page.reload();await ready(1);await page.locator('[data-page-id="page-1"] .native-board-label').click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      assert.equal(await mode.getByRole('radio',{name:'流式',exact:true}).getAttribute('aria-checked'),'true');assert.equal(await paper.getByRole('radio',{name:'A4',exact:true}).getAttribute('aria-checked'),'true')
+      await page.getByRole('button',{name:'关闭属性',exact:true}).click();await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+z');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].paper,undefined);assert.equal(document.pages['page-1'].print,'flow')
+      await page.keyboard.press('Control+Shift+z');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].paper,'A4');await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByLabel('画板宽度',{exact:true}).waitFor()
+      await page.getByLabel('画板宽度',{exact:true}).fill('96');await page.getByLabel('画板宽度',{exact:true}).press('Enter');await saved();assert.equal(document.pages['page-1'].width,120)
+      await page.getByLabel('画板宽度',{exact:true}).fill('9000');await page.getByLabel('画板宽度',{exact:true}).press('Enter');await saved();assert.equal(document.pages['page-1'].width,8000)
+      await page.getByLabel('画板宽度',{exact:true}).fill('1920');await page.getByLabel('画板宽度',{exact:true}).press('Enter');await saved()
+      await page.getByLabel('画板高度',{exact:true}).fill('240');await page.getByLabel('画板高度',{exact:true}).press('Enter');await saved()
+      await page.getByLabel('高度操作',{exact:true}).click();await page.getByRole('menuitem',{name:'适应内容高度',exact:true}).click();await saved();assert.equal(document.pages['page-1'].height,1080)
+      assert.equal(JSON.stringify(document.pages['page-1'].nodes),originalNodes);assert.deepEqual(document.pageOrder.slice(1).map(id=>pageHash(document.pages[id])),otherHashes)
+      await page.waitForFunction(()=>{const images=[...document.querySelectorAll('.native-stage .native-page-content:not(.native-canvas-content) img')];return images.length===3&&images.every(image=>image.complete&&image.naturalWidth>0)});await page.evaluate(()=>document.fonts.ready)
+      const geometry=await inspector.locator('input,button,[role=radio],summary,.native-artboard-properties h3').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>({label:e.getAttribute('aria-label')??e.textContent,rect:e.getBoundingClientRect().toJSON(),background:getComputedStyle(e).backgroundColor})))
+      await page.screenshot({path:join(output,'design-artboard.png')});assert.deepEqual(errors,[])
+      return{kind:'画板属性局部回归',printAndPaperDoNotResize:true,savedAndReopened:true,paperSharedUndoRedo:true,sourceDimensionsBounds:true,fitHeight:true,nodesAndOtherPagesUnchanged:true,geometry,consoleOrPageErrors:errors}
+    }
     if(options.checks==='os-ime'){
       assert.equal(options.headed,'true','系统输入法需要有界面的浏览器')
       await select(1)
@@ -2069,8 +2133,6 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(kind,'design')
       await page.locator('[data-page-id="page-1"] .native-board-label').click()
       await page.getByRole('button',{name:'显示属性',exact:true}).click()
-      await page.locator('.native-inspector summary').getByText('高级',{exact:true}).click()
-      await page.getByLabel('页面高度模式',{exact:true}).selectOption('flow')
       await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
       await page.waitForTimeout(1000)
       assert.ok(document.pages['page-1'].height>=1000&&document.pages['page-1'].height<=1003,'a flow board grows despite boards on another canvas')

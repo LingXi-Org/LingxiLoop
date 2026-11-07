@@ -219,3 +219,13 @@ test('离线页面保留画板四角裁切且原稿保持不变',async()=>{
   assert.match(html,/class="artifact-export-page"[^>]*border-radius:10px 20px 30px 40px/)
   assert.equal(JSON.stringify(document),before)
 })
+
+test('显式A4打印使用纸张物理尺寸，图片和链接按相同比例缩放',()=>{
+  const bytes=encodeArtifactPdf([{width:800,height:1131,paper:'A4',jpeg:new Uint8Array([0xff,0xd8,0xff,0xd9]),text:'打印纸张',links:[{href:'https://example.test/',x:80,y:100,width:160,height:20}]}],'打印测试')
+  const pdf=new TextDecoder().decode(bytes)
+  assert.ok(pdf.includes('/MediaBox [0 0 595.28 841.89]'))
+  const rect=pdf.match(/\/Rect \[([^\]]+)\]/)![1].split(' ').map(Number)
+  const sx=595.28/800,sy=841.89/1131
+  assert.deepEqual(rect,[80*sx,841.89-120*sy,240*sx,841.89-100*sy])
+  assert.ok(pdf.includes('/Width 800 /Height 1131'),'栅格像素尺寸保持原值')
+})

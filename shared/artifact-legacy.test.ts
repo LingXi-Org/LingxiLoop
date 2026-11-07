@@ -72,7 +72,7 @@ describe('legacy artifact conversion', () => {
       'project/Page.dc.html': file('<html><head><script src="./support.js"></script></head><body><x-dc><div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr))"><p>一</p><p>二</p></div><div style="position:absolute;left:20px;top:500px;width:100px;height:80px;background:#112233"></div></x-dc></body></html>'),
     } })
     const page = result.document.pages.Page!
-    assert.equal(page.sizing, 'flow'); assert.equal(page.paper, 'A4')
+    assert.equal(page.print, 'flow'); assert.equal(page.sizing, undefined); assert.equal(page.paper, 'A4')
     assert.ok(Object.values(page.nodes).some(node => node.type === 'shape' && node.style.fill === '#112233'))
     assert.ok(Object.values(page.nodes).some(node => node.layout?.mode === 'grid' && node.layout.columns === 2))
     assert.ok(!Object.values(page.nodes).some(node => node.type === 'embed'))

@@ -23,8 +23,21 @@ await mkdir(output,{recursive:true})
 const results=[]
 const paintProofs=new WeakMap()
 try {
-  for(const kind of args['pages-only'] ? [] : args['inspector-only']==='true'?['design']:['design','slides']) {
+  for(const kind of args['pages-only'] ? [] : args['inspector-only']==='true'||args['artboard-only']==='true'?['design']:['design','slides']) {
     const url=new URL(args[`${kind}-url`]);assert.ok(['127.0.0.1','localhost'].includes(url.hostname),'Reference must run separately on loopback')
+    if(args['artboard-only']==='true'){
+      for(const [width,height]of [[1920,1200],[1440,1000],[768,1024],[390,844]])for(const theme of ['light','dark']){
+        const page=await browser.newPage({viewport:{width,height},colorScheme:theme,reducedMotion:'reduce'})
+        try{
+          await page.goto(url.href,{waitUntil:'networkidle'});await ready(page,kind)
+          await page.getByRole('button',{name:'Artboard 1 of 3: Page 1',exact:true}).click();await page.getByRole('button',{name:'Properties',exact:true}).click()
+          await page.getByLabel('Artboard width',{exact:true}).waitFor();await ready(page,kind);await page.evaluate(()=>document.fonts.ready);await page.mouse.move(10,100)
+          await capture(page,kind,`artboard-${width}-${theme}`,width,height,theme)
+          const inspector=page.getByRole('complementary',{name:'Properties panel',exact:true});results.at(-1).panel=await inspector.boundingBox();results.at(-1).artboardControls=await inspector.locator('input,button,[role=radio]').evaluateAll(es=>es.filter(e=>{const box=e.getBoundingClientRect();return e.checkVisibility()&&box.width>1&&box.height>1}).map(e=>({label:e.getAttribute('aria-label')??e.textContent,role:e.getAttribute('role')??e.tagName.toLowerCase(),rect:e.getBoundingClientRect().toJSON()})))
+        }finally{await page.close()}
+      }
+      continue
+    }
     if(args['inspector-only']==='true'){
       for(const [width,height]of [[1920,1200],[1440,1000],[768,1024],[390,844]])for(const theme of ['light','dark']){
         const page=await browser.newPage({viewport:{width,height},colorScheme:theme,reducedMotion:'reduce'})

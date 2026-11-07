@@ -327,3 +327,20 @@ test('设计播放属性经保存重开、字段版本和共享撤销重做保�
   const undo=applyOperations(reopened,prepareBatch(reopened,applied.inverse));assert.equal(undo.document.pages.board!.interactive,undefined);assert.equal(undo.document.pages.board!.frameless,undefined)
   document=applyOperations(undo.document,prepareBatch(undo.document,undo.inverse)).document;assert.equal(document.pages.board!.interactive,true);assert.equal(document.pages.board!.frameless,true)
 })
+
+test('打印模式与画板增长独立，保存重开、共享历史及字段冲突保持原尺寸',()=>{
+  const before=fixture(),original=JSON.stringify(before)
+  before.pages.first!.sizing='flow'
+  const fixed=applyOperations(before,prepareBatch(before,[{type:'page.patch',pageId:'first',patch:{print:'fixed',paper:'A4'}}],'print-fixed'))
+  const page=validateArtifactDocument(JSON.parse(JSON.stringify(fixed.document))).pages.first!
+  assert.equal(page.print,'fixed');assert.equal(page.sizing,'flow');assert.equal(page.paper,'A4')
+  assert.deepEqual([page.width,page.height],[before.pages.first!.width,before.pages.first!.height])
+  const undo=applyOperations(fixed.document,prepareBatch(fixed.document,JSON.parse(JSON.stringify(fixed.inverse)),'undo-print'))
+  assert.deepEqual(undo.document.pages,before.pages)
+  const removal=prepareBatch(fixed.document,[{type:'page.patch',pageId:'first',patch:{},unset:['print']}],'remove-print')
+  const other=applyOperations(fixed.document,prepareBatch(fixed.document,[{type:'page.patch',pageId:'first',patch:{height:240}}],'resize'))
+  assert.equal(applyOperations(other.document,removal).document.pages.first!.print,undefined)
+  const changed=applyOperations(fixed.document,prepareBatch(fixed.document,[{type:'page.patch',pageId:'first',patch:{print:'flow'}}],'remote-print'))
+  assert.throws(()=>applyOperations(changed.document,removal),ArtifactOperationConflict)
+  const old=JSON.parse(original);assert.equal(Object.hasOwn(validateArtifactDocument(old).pages.first!,'print'),false)
+})
