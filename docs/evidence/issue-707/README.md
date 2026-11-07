@@ -403,3 +403,8 @@ D31等距已实现限定状态，见 `functional/design-board-spacing.json`、`s
 
 
 5e97ffdc正式CI42375982697通过，独立复审在同一文字节点的整体+局部两目标发现新P2，报告 [5e97ffdc](reviews/5e97ffdc.json) 保留；[9fc38efe原报告](reviews/9fc38efe.json)同时归档。现在将局部行内锚点置于整体命中层上方，普通内容仍命中整体地址。见 [可信点击与实际导出](functional/element-link-same-node.json)：140/154的真实全窗口预览及离线HTML中，两个位置各实际鼠标点击isTrusted=true并命中各自地址；PDF两URI、PPTX页内坐标及154原组合回归通过，32项定向单元通过。没有把捕获防外跳当导航授权，也没有改变实际命中。待修复候选正式CI及独立复审，完整资格仍false。
+
+
+bd29d74b正式CI42376765660和[冻结只读复审](reviews/bd29d74b.json)通过，两个链接P2均已关闭。完整资格仍未通过。9fc38efe[新性能前置失败](performance/diagnostic-9fc38efe-preflight.json)发生在生产测量前：普通标题被拉伸，实测524px对参考约64px。现仅编辑输入框使用剩余宽度，普通标题恢复自然宽度及参考颜色、4px圆角；没有放宽1px断言，反而补颜色/圆角检查。[局部回归](functional/design-board-label.json)含新固定来源28数学/8运行样本、140四容器双主题及154四改名场景；后者回车、取消、保存快捷键、历史及重开通过。
+
+[标题默认态8对截图](visual/design-board-label/manifest.json)列明矩形最大差0.011597px，所列字体/颜色/圆角一致；全部原始整图差异0.7819%–3.2501%，0/8低于0.5%，没有掩码或抗锯齿排除。新冻结候选CI和只读审查待运行；失败诊断没有可用性能样本，最终10组AB/BA仍缺。
