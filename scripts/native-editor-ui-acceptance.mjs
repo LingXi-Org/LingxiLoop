@@ -106,6 +106,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
+  if(options.checks==='board-title'&&['narrow-long','wide-long'].includes(editorCase)){document.pages['page-1'].width=editorCase==='narrow-long'?120:1920;document.pages['page-1'].title='非常长的中文画板标题'.repeat(12)}
   if(options.checks==='element-link'&&editorCase==='same-node'){const node=document.pages['page-1'].nodes['page-1-heading'];node.attributes={href:'https://old-parent.test/'};node.text='前链接后';node.richText={type:'doc',content:[{type:'heading',attrs:{level:1},content:[{type:'text',text:'前'},{type:'text',text:'链接',marks:[{type:'link',attrs:{href:'https://child.test/'}}]},{type:'text',text:'后'}]}]}}
   if(options.checks==='element-link'&&editorCase==='nested-export'){const node=document.pages['page-1'].nodes['page-1-heading'];node.richText={type:'doc',content:[{type:'heading',attrs:{level:1},content:[{type:'text',text:node.text,marks:[{type:'link',attrs:{href:'https://child.test/'}}]}]}]}}
   if(options.checks==='element-link'&&editorCase?.startsWith('mixed-'))document.pages['page-1'].nodes['page-1-heading'].richText={type:'doc',content:[{type:'heading',attrs:{level:1},content:[{type:'text',text:'Lingxi'},{type:'text',text:'Loop',marks:[{type:'link',attrs:{href:'https://old.test/'}}]},{type:'text',text:' 1'}]}]}
@@ -462,6 +463,15 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.reload();await ready(1);if(editorCase==='clear')assert.equal(await link.count(),0);else{await link.waitFor();assert.equal(await link.getAttribute('href'),url)}
       assert.deepEqual(errors,[])
       return{kind:'原生元素链接回归',mode:kind,case:editorCase,savedAndReopened:true,otherPagesUnchanged:true,fieldStyle,exported,consoleOrPageErrors:errors}
+    }
+    if(options.checks==='board-title'&&['narrow-long','wide-long'].includes(editorCase)){
+      const label=page.locator('[data-artboard-id="page-1"] .native-board-label'),read=()=>label.evaluate(element=>{const rect=element.getBoundingClientRect(),style=getComputedStyle(element);return{rect:rect.toJSON(),minWidth:style.minWidth,color:style.color,radius:style.borderRadius,opacity:style.opacity,hitCenter:document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2)?.closest('button')===element}})
+      const before=await read();assert.equal(before.hitCenter,true,'窄画板的标题中心必须仍可命中');if(editorCase==='narrow-long')assert.equal(before.opacity,'0');await label.focus();const focused=await read();assert.equal(focused.opacity,'1');await label.evaluate(element=>element.blur())
+      await page.mouse.click(before.rect.x+2,before.rect.y+before.rect.height/2);const selected=await read();assert.equal(selected.color,options['canvas-theme']==='dark'?'rgb(106, 171, 241)':'rgb(23, 87, 172)')
+      await page.mouse.dblclick(before.rect.x+before.rect.width/2,before.rect.y+before.rect.height/2)
+      const input=page.getByRole('textbox',{name:'画板名称',exact:true});await input.waitFor();assert.equal(await input.inputValue(),document.pages['page-1'].title);const editing=await input.boundingBox()
+      await page.screenshot({path:join(output,`board-title-${editorCase}.png`)});await input.press('Escape');assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+      return{kind:'窄画板长标题命中与原位改名',case:editorCase,before,focused,selected,editing,focusProbe:'程序化CSS焦点检查，不代表Tab全流程',trustedCenterDoubleClick:true,renameOpened:true,cancelPreservesOriginal:true,noWrites:true,consoleOrPageErrors:errors}
     }
     if(options.checks==='board-title'){
       assert.equal(kind,'design')

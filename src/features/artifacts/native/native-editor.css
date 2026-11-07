@@ -368,4 +368,7 @@
 
 .native-kind-design .native-board-heading{color:rgb(0 0 0 / .6)}
 .dark .native-kind-design .native-board-heading,.native-editor[data-theme=dark] .native-board-heading{color:rgb(255 255 255 / .57)}
-.native-kind-design .native-board-heading>.native-board-label{color:inherit!important;border-radius:4px!important}
+.native-kind-design .native-board-heading>.native-board-label{color:inherit!important;border-radius:4px!important;min-width:min(64px,calc(100% + 1px))}
+
+.native-kind-design .native-board-heading{container-type:inline-size;container-name:native-board-heading}
+@container native-board-heading (max-width:32px){.native-page-shell:not([data-board-selected=true])>.native-board-heading>.native-board-label{opacity:0}.native-page-shell:not([data-board-selected=true])>.native-board-heading>.native-board-label:focus{opacity:1}}

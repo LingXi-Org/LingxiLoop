@@ -116,6 +116,7 @@ jobs:
           node --import tsx scripts/native-board-transform-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-board-transform-oracle.json"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-transform --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-transform"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-title --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-title"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-title --title-case=narrow-long,wide-long --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-title-range"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-link --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-link --link-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-exports"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=nested-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-nested"
@@ -249,6 +250,7 @@ jobs:
             ${{ runner.temp }}/native-board-transform-oracle.json
             ${{ runner.temp }}/native-board-title/*.json
             ${{ runner.temp }}/native-board-title/*.png
+            ${{ runner.temp }}/native-board-title-range/*
             ${{ runner.temp }}/native-element-link/*.json
             ${{ runner.temp }}/native-element-link/*.png
             ${{ runner.temp }}/native-element-link-exports/*

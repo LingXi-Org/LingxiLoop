@@ -8,9 +8,9 @@ const contentState=(scope=document)=>{
 }
 
 /** Only visible fixture surfaces matter; outer labels cannot prove inner paint. */
-export async function waitForReferenceVisualDocument(page,kind,{timeout=60000}={}){
+export async function waitForReferenceVisualDocument(page,kind,{timeout=60000,firstBoardTitle='Page 1'}={}){
   if(kind==='slides')await page.getByText('LingxiLoop 1',{exact:true}).first().waitFor({timeout})
-  else await page.getByRole('button',{name:'Open artboard Page 1 full window',exact:true}).waitFor({timeout})
+  else await page.getByRole('button',{name:`Open artboard ${firstBoardTitle} full window`,exact:true}).waitFor({timeout})
   const deadline=Date.now()+timeout
   let states=[]
   while(Date.now()<deadline){
