@@ -7,6 +7,7 @@ import { inheritedSvgFont } from './svg-presentation'
 import { memo, useEffect, useState, type ReactNode } from 'react'
 import { isSafeArtifactSvg, type ArtifactAsset, type ArtifactDocument, type ArtifactNode, type ArtifactPage, type ArtifactRichText, type ArtifactTheme, type ArtifactStyle } from '../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
+import {codeStyleProperties} from '../../../../shared/artifact-node-code'
 
 const CACHE_ENTRIES = 128, CACHE_BYTES = 2 * 1024 * 1024
 /** The caches retain small previews, not documents, page renderers or executable content. */
@@ -41,6 +42,7 @@ function imageKey(documentId: string, asset: ArtifactAsset) {
 }
 
 interface PreviewNode {
+  css?: ArtifactNode['css']
   id: string; type: ArtifactNode['type']; x: number; y: number; width: number; height: number; rotation: number
   fill: string; color: string; stroke: string; strokeWidth: number; opacity: number; radius: number
   fontSize: number; fontWeight: number; fontFamily: string; text: string; shape?: ArtifactNode['shape']; path?: ArtifactNode['path']; points?: string
@@ -72,7 +74,7 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
   const children = new Map<string | null, ArtifactNode[]>()
   for (const id of page.nodeOrder) {
     const node = page.nodes[id]
-    if (!node || node.hidden) continue
+    if (!node || node.hidden || node.attributes?.hidden!==undefined) continue
     const list = children.get(node.parentId) ?? []; list.push(node); children.set(node.parentId, list)
   }
   let remaining = 96
@@ -82,6 +84,7 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
     const assetId = (node.type === 'video' ? node.posterAssetId : node.assetId) ?? node.embed?.previewAssetId
     const asset = assetId ? document.assets[assetId] : undefined
     const preview: PreviewNode = {
+      ...(node.css?{css:node.css}:{}),
       id: node.id, type: node.type, x, y, width: node.width, height: node.height, rotation: node.rotation,
       fill: safeColor(style.fill ?? style.backgroundColor, node.type === 'shape' ? '#d6e6ff' : 'transparent'),
       color: safeColor(style.color, '#222'),
@@ -221,7 +224,7 @@ function PreviewShape({ node, document, loaded }: { node: PreviewNode; document:
     </g>))}</>
   } else if (node.type === 'group') content = <><rect width={w} height={h} rx={node.radius} {...paint} />{node.children?.map(child => <PreviewShape key={child.id} node={child} document={document} loaded={loaded} />)}</>
   else content = <><rect width={w} height={h} rx={node.radius} {...paint} />{(node.type === 'embed' ? ['交互内容'] : node.text.split('\n').slice(0, 4)).map((line, index) => <text key={index} x={0} y={node.fontSize * (index * 1.2 + 1)} fill={node.color} fontSize={node.fontSize} fontWeight={node.fontWeight}>{line.slice(0, 100)}</text>)}</>
-  return <g fontFamily={node.fontFamily} transform={`translate(${node.x} ${node.y}) rotate(${node.rotation} ${w / 2} ${h / 2}) translate(${node.flipX ? w : 0} ${node.flipY ? h : 0}) scale(${node.flipX ? -1 : 1} ${node.flipY ? -1 : 1})`} opacity={node.opacity}>{node.gradient && <defs>{node.gradient.type === 'radial' ? <radialGradient id={gradientId}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</radialGradient> : <linearGradient id={gradientId} gradientTransform={`rotate(${node.gradient.angle-90} .5 .5)`}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</linearGradient>}</defs>}{content}</g>
+  return <g fontFamily={node.fontFamily} transform={`translate(${node.x} ${node.y}) rotate(${node.rotation} ${w / 2} ${h / 2}) translate(${node.flipX ? w : 0} ${node.flipY ? h : 0}) scale(${node.flipX ? -1 : 1} ${node.flipY ? -1 : 1})`} opacity={node.opacity}>{node.gradient && <defs>{node.gradient.type === 'radial' ? <radialGradient id={gradientId}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</radialGradient> : <linearGradient id={gradientId} gradientTransform={`rotate(${node.gradient.angle-90} .5 .5)`}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</linearGradient>}</defs>}{node.css?<foreignObject width={w} height={h} overflow="visible"><div style={{width:w,height:h,...codeStyleProperties(node.css)}}><svg width="100%" height="100%" overflow="visible">{content}</svg></div></foreignObject>:content}</g>
 }
 
 /** A lightweight visual summary; it never mounts an editor or executes an embed. */

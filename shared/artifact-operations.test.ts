@@ -17,6 +17,20 @@ function fixture() {
   return document
 }
 
+test('代码样式与属性首次写入、重开、共享撤销重做及冲突保护',()=>{
+  const before=fixture()
+  const operations=[{type:'node.patch' as const,pageId:'first',nodeId:'title',patch:{css:{filter:'blur(1px)','max-width':'1800px'},attributes:{'data-label':'中文测试',title:'说明'}}}]
+  const written=applyOperations(before,prepareBatch(before,operations,'set-code'))
+  assert.equal(validateArtifactDocument(JSON.parse(JSON.stringify(written.document))).pages.first!.nodes.title!.css?.filter,'blur(1px)')
+  const undone=applyOperations(written.document,prepareBatch(written.document,written.inverse,'undo-code'))
+  assert.equal(undone.document.pages.first!.nodes.title!.css,undefined)
+  assert.equal(undone.document.pages.first!.nodes.title!.attributes,undefined)
+  const redone=applyOperations(undone.document,prepareBatch(undone.document,undone.inverse,'redo-code'))
+  assert.deepEqual(redone.document.pages.first!.nodes.title!.attributes,operations[0].patch.attributes)
+  assert.throws(()=>applyOperations(redone.document,prepareBatch(before,operations,'stale-code')),ArtifactOperationConflict)
+  assert.equal(before.pages.first!.nodes.title!.css,undefined)
+})
+
 test('first motion identity write supports shared undo/redo, explicit removal and stale-field protection',()=>{
   const before=fixture(),written=applyOperations(before,prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{motionId:'shared-heading'}}],'set-motion'))
   const undone=applyOperations(written.document,prepareBatch(written.document,written.inverse,'undo-motion'))

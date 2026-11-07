@@ -23,6 +23,18 @@ function fixture() {
   return document
 }
 
+test('代码声明进入离线页面且属性转义；链接保留安全关系',async()=>{
+  const document=fixture(),node=document.pages.page!.nodes.text!
+  node.css={filter:'blur(1px)','max-width':'1800px','--Brand':'#d97757'}
+  node.attributes={'data-label':'中文"说明',title:'中文提示',href:'https://example.test/',target:'_blank'}
+  const html=await renderPageHtml(document.pages.page!,new ExportResources(document,{format:'html'}))
+  assert.match(html,/filter:blur\(1px\);max-width:1800px;--Brand:#d97757/)
+  assert.match(html,/data-label="中文&quot;说明"/)
+  assert.match(html,/<a class="artifact-export-node"/)
+  assert.match(html,/rel="noopener noreferrer"/)
+  assert.ok(html.includes('title="中文提示"'))
+})
+
 test('extended appearance exports with geometry, annotations stay off artboards and video fallback is explicit', async () => {
   const document = fixture(), page = document.pages.page!
   const shape = { ...createNode('shape', 'gradient'), shape: 'ellipse' as const, flipX: true, style: { gradient: { type: 'linear' as const, angle: 90, stops: [{ color: '#ff0000', offset: 0 }, { color: '#0000ff', offset: 1 }] }, shadow: { x: 2, y: 4, blur: 8, spread: 0, color: '#00000040' } } }

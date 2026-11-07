@@ -5,6 +5,18 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { createDocument, createNode, createPage } from '../../../../shared/artifact-document'
 import { PageThumbnail } from './thumbnail'
 
+test('代码样式进入有界缩略图，隐藏属性不绘制，属性与源码不成为导航内容',()=>{
+  const document=createDocument('slides','code-thumb'),page=createPage('code-thumb-page')
+  page.nodes.visible={...createNode('text','visible'),text:'可见中文',css:{filter:'blur(1px) !important'}}
+  page.nodes.hidden={...createNode('text','hidden'),text:'隐藏中文',attributes:{hidden:''}}
+  page.nodeOrder=['visible','hidden']
+  const output=renderToStaticMarkup(createElement(PageThumbnail,{page,document,loaded:true}))
+  assert.match(output,/<foreignObject/)
+  assert.match(output,/filter:blur\(1px\)/)
+  assert.match(output,/可见中文/)
+  assert.doesNotMatch(output,/隐藏中文|href=|onclick=/)
+})
+
 test('thumbnail depicts node data and groups without editor, iframe or executable source', () => {
   const document = createDocument('slides', 'thumb-doc'), page = createPage('thumb-page')
   const group = { ...createNode('group', 'group'), x: 40, y: 50, rotation: 15 }

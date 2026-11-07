@@ -1,0 +1,110 @@
+{
+  "scope": "受控 HTTP、共享操作与浏览器诊断，未验证真实授权 API 或代码面板界面",
+  "source": "../source-design-code.json",
+  "regressionsFirst": [
+    {
+      "case": "首次写入 css 与 attributes",
+      "failure": "Unrecognized keys: css, attributes",
+      "result": "通过：保存重开、共享撤销重做、旧字段冲突及原始快照不可变"
+    },
+    {
+      "case": "离线 HTML 声明与属性",
+      "failure": "filter 声明及属性未出现在导出中",
+      "result": "通过：样式输出、中文属性转义、安全链接关系"
+    }
+  ],
+  "units": 100,
+  "ciContracts": 15,
+  "serverFocusedTests": 5,
+  "browsers": {
+    "154": [
+      {
+        "kind": "isolated-native-code-style",
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-native-code-style",
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140": [
+      {
+        "kind": "isolated-native-code-style",
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-native-code-style",
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ]
+  },
+  "interactions": {
+    "design": {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "design",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": false,
+      "designPlayMenuOpensPreview": true,
+      "drawing": true,
+      "layouts": false,
+      "multiplePages": false,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    },
+    "slides": {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "slides",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": true,
+      "designPlayMenuOpensPreview": false,
+      "drawing": false,
+      "layouts": true,
+      "multiplePages": true,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    }
+  },
+  "qualified": false,
+  "remaining": [
+    "代码/微调面板尚未接入，数据基础不代表用户功能完成。",
+    "布局声明与原生几何编辑、媒体属性和全部原版语法仍需逐项对照。",
+    "完整离线 CSS 资源打包与全部导出视觉尚未验收。",
+    "正式候选性能与最终独立复审未完成。"
+  ],
+  "typecheck": {
+    "localPassed": false,
+    "errors": 76,
+    "changedNativeAndSharedErrors": 0,
+    "reason": "缺少准确版本的私有 LingxiOS SDK；等待正式 CI。"
+  }
+}

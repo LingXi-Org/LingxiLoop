@@ -8,7 +8,7 @@ export function artifactPreviews(document: ArtifactDocument, maximumBytes = 256 
     const page = document.pages[id]!, selected = new Set<string>()
     for (const nodeId of page.nodeOrder) {
       const node = page.nodes[nodeId]!
-      if (node.hidden || node.scope === 'canvas' || selected.size >= 96) continue
+      if (node.hidden || node.attributes?.hidden!==undefined || node.scope === 'canvas' || selected.size >= 96) continue
       selected.add(nodeId)
       let parentId = node.parentId
       while (parentId && !selected.has(parentId)) { selected.add(parentId); parentId = page.nodes[parentId]?.parentId ?? null }

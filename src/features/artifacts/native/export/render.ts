@@ -128,7 +128,9 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         break
       }
     }
-    return `<div class="artifact-export-node" data-node-id="${node.id}" data-motion-id="${node.motionId??node.id}"${node.parentId?'':' data-motion-root'} style="${escapeHtml(css)}">${content}</div>`
+    if(node.css)css+=';'+Object.entries(node.css).map(([name,value])=>`${name}:${value}`).join(';')
+    const tag=node.attributes?.href?'a':'div',attributes=Object.entries(node.attributes??{}).map(([name,value])=>` ${name}="${escapeHtml(value)}"`).join('')
+    return `<${tag} class="artifact-export-node" data-node-id="${node.id}" data-motion-id="${node.motionId??node.id}"${node.parentId?'':' data-motion-root'}${attributes}${tag==='a'?' rel="noopener noreferrer"':''} style="${escapeHtml(css)}">${content}</${tag}>`
   }
   return `<section class="artifact-export-page" data-page-id="${page.id}" data-transition="${page.transition}" aria-label="${escapeHtml(page.title)}" style="width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}">${(await Promise.all(children(null).map(render))).join('')}</section>`
 }

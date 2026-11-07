@@ -27,7 +27,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -82,11 +82,12 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
+  if(options.checks==='code-style'){const node=document.pages['page-1'].nodes['page-1-heading'];node.css={filter:'blur(1px) !important','max-width':'1800px'};node.attributes={'data-label':'中文测试',title:'中文说明',href:'https://example.test/',target:'_blank'}}
   if(options.checks==='slides-present-controls')document.pages['page-1'].notes='全屏与演讲者控制备注。'
   if (options.checks === 'slides-skipped-export') {
     const skipped = document.pages['page-2']
@@ -342,6 +343,23 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await page.goto(`${baseUrl}/?kind=${kind}${options.checks==='canvas-links'?'&project=fixture-project&view=conversations&conversation=fixture-room':''}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='code-style'){
+      const node=page.locator('.native-stage [data-node-id="page-1-heading"]')
+      assert.equal(await node.evaluate(element=>getComputedStyle(element).filter),'blur(1px)')
+      assert.equal(await node.evaluate(element=>element.style.getPropertyPriority('filter')),'important')
+      assert.equal(await node.getAttribute('data-label'),'中文测试')
+      assert.equal(await node.getAttribute('title'),'中文说明')
+      assert.equal(await node.evaluate(element=>element.tagName),'A')
+      await node.click();assert.equal(new URL(page.url()).pathname,'/')
+      const original=await node.elementHandle()
+      document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'page-1-heading',patch:{},unset:['css']}],'remote-remove-code')).document
+      await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).filter==='none')
+      assert.equal(await original.evaluate(element=>element===document.querySelector('.native-stage [data-node-id="page-1-heading"]')),true)
+      assert.equal(await node.evaluate(element=>element.style.getPropertyPriority('filter')),'')
+      await page.screenshot({path:join(output,`${kind}-code-style.png`)})
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-native-code-style',cssPaint:true,important:true,remoteRemovalClearsImportantWithoutRemount:true,chineseAttributes:true,editingLinkDoesNotNavigate:true,noWrites:receipts.length===0,consoleOrPageErrors:errors}
+    }
     if(options.checks==='inspector-load'){
       assert.equal(inspectorModuleRequests,0)
       const toggle=page.getByRole('button',{name:'显示属性',exact:true})

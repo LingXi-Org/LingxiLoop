@@ -1,0 +1,58 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceHashesVerified": 12,
+  "browser": "154.0.8037.57",
+  "initial": "position: relative;\nwidth: 1920px;\nheight: 1080px;\nbackground: #faf8f4;",
+  "rows": [
+    {
+      "name": "data",
+      "invalid": "false",
+      "valueBefore": "position: relative;\nwidth: 1920px;\nheight: 1080px;\nbackground: #faf8f4;\n@data-lingxi-probe: 中文测试;",
+      "valueAfter": "position: relative;\nwidth: 1920px;\nheight: 1080px;\nbackground: #faf8f4;\n\n@data-lingxi-probe: 中文测试",
+      "sourcePrefix": "<html><body><x-dc><div style=\"position:relative;width:1920px;height:1080px;background:#faf8f4\" data-lingxi-probe=\"中文测试\"><h1 style=\"position:absolute;left:64px;top:40px;width:1152px;height:76px;margin:0;font-family:Arial;font-size:48px;font-weight:700;line-height:1.25;color:#18332b\">LingxiLoop 1</h1><img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAASCAIAAAC1qksFAAAEX0lEQVR42h3UhZUcNhQAwK1gGcX0WdoS7LPvzJT030yeU8TMZuvazrW9awfXjq6fXD+7fnH96sbNjbsbDzecA+8gOPjl4LfDPw7/cfivw+aoOxqOwBE6JsfsWByrE3MynSwnm61vO9/2vh18O/p+8v3s+8X3qx83P+5+PPxwHryHnx5+efjt8Y/HfzxWj81T9zQ8gSf0TJ7Zs3hWL+ZlelleNtvQdqHtQzuEdgz9FPo59Evo1zBuYdzDeIThAvwI8DPArwC/A/4JWA",
+      "sourceContainsData": true,
+      "sourceContainsFilter": false,
+      "sourceContainsEvent": false
+    },
+    {
+      "name": "css",
+      "invalid": "false",
+      "valueBefore": "position: relative;\nwidth: 1920px;\nheight: 1080px;\nbackground: #faf8f4;\nfilter: blur(1px);\nmax-width: 1800px;",
+      "valueAfter": "position: relative;\nwidth: 1920px;\nheight: 1080px;\nbackground: #faf8f4;\nfilter: blur(1px);\nmax-width: 1800px;",
+      "sourcePrefix": "<html><body><x-dc><div style=\"position: relative; width: 1920px; height: 1080px; background: #faf8f4; filter: blur(1px); max-width: 1800px\"><h1 style=\"position:absolute;left:64px;top:40px;width:1152px;height:76px;margin:0;font-family:Arial;font-size:48px;font-weight:700;line-height:1.25;color:#18332b\">LingxiLoop 1</h1><img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAASCAIAAAC1qksFAAAEX0lEQVR42h3UhZUcNhQAwK1gGcX0WdoS7LPvzJT030yeU8TMZuvazrW9awfXjq6fXD+7fnH96sbNjbsbDzecA+8gOPjl4LfDPw7/cfivw+aoOxqOwBE6JsfsWByrE3MynSwnm61vO9/2vh18O/p+8v3s+8X3qx83P+5+PPxwHryHnx5+efjt8Y/HfzxWj81T9zQ8gSf0TJ7Zs3hWL+ZlelleNtvQdqHtQzuEdgz9FPo59Evo1zBuYdzDeI",
+      "sourceContainsData": false,
+      "sourceContainsFilter": true,
+      "sourceContainsEvent": false
+    },
+    {
+      "name": "event",
+      "invalid": "false",
+      "valueBefore": "position: relative;\nwidth: 1920px;\nheight: 1080px;\nbackground: #faf8f4;\n@onclick: this.dataset.lingxiProbe = '1';",
+      "valueAfter": "position: relative;\nwidth: 1920px;\nheight: 1080px;\nbackground: #faf8f4;\nfilter: blur(1px);\nmax-width: 1800px;",
+      "sourcePrefix": "<html><body><x-dc><div style=\"position: relative; width: 1920px; height: 1080px; background: #faf8f4; filter: blur(1px); max-width: 1800px\"><h1 style=\"position:absolute;left:64px;top:40px;width:1152px;height:76px;margin:0;font-family:Arial;font-size:48px;font-weight:700;line-height:1.25;color:#18332b\">LingxiLoop 1</h1><img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAASCAIAAAC1qksFAAAEX0lEQVR42h3UhZUcNhQAwK1gGcX0WdoS7LPvzJT030yeU8TMZuvazrW9awfXjq6fXD+7fnH96sbNjbsbDzecA+8gOPjl4LfDPw7/cfivw+aoOxqOwBE6JsfsWByrE3MynSwnm61vO9/2vh18O/p+8v3s+8X3qx83P+5+PPxwHryHnx5+efjt8Y/HfzxWj81T9zQ8gSf0TJ7Zs3hWL+ZlelleNtvQdqHtQzuEdgz9FPo59Evo1zBuYdzDeI",
+      "sourceContainsData": false,
+      "sourceContainsFilter": true,
+      "sourceContainsEvent": false
+    },
+    {
+      "name": "invalid",
+      "invalid": "true",
+      "valueAfter": "position: relative;\nwidth: 1920px;\nheight: 1080px;\nbackground: #faf8f4;\nfilter: blur(1px);\nmax-width: 1800px;"
+    }
+  ],
+  "errors": [],
+  "sourceLocations": {
+    "parseInspectorCode": {
+      "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+      "offsetUtf16": 4439282
+    },
+    "cssAndAttributes": {
+      "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+      "offsetUtf16": 4447684
+    },
+    "attributeEditPolicy": {
+      "path": "skills/claude-slides/scripts/editor/node/compiler.cjs",
+      "offsetUtf16": 2453255
+    }
+  }
+}

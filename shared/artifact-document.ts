@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { canvasPages, canvasPageOf, artifactPageIds, MAX_CANVAS_PAGES } from './artifact-canvas-pages.js'
 import {isArtifactPenPath} from './artifact-path.js'
+import {isNativeCodeAttribute,isNativeCodeStyle} from './artifact-node-code.js'
 
 /** Native documents contain data only. Executable source belongs to an isolated embed. */
 export const ARTIFACT_DOCUMENT_SCHEMA_VERSION = 1 as const
@@ -119,6 +120,8 @@ export const artifactNodeSchema = z.object({
   flipX: z.boolean().optional(), flipY: z.boolean().optional(),
   lineStart: z.enum(['none', 'arrow', 'circle']).optional(), lineEnd: z.enum(['none', 'arrow', 'circle']).optional(),
   style: artifactStyleSchema,
+  css: z.record(z.string(),z.string()).refine(value=>Object.keys(value).length<=200&&Object.entries(value).every(([name,item])=>isNativeCodeStyle(name,item)),'样式声明格式无效或含有活动内容').optional(),
+  attributes: z.record(z.string(),z.string()).refine(value=>Object.keys(value).length<=100&&Object.entries(value).every(([name,item])=>isNativeCodeAttribute(name,item)),'属性格式无效或需要隔离预览').optional(),
   text: z.string().max(100_000).optional(), textSizing: z.enum(['content']).optional(), richText: artifactRichTextSchema.optional(), source: z.string().max(100_000).optional(),
   assetId: artifactIdSchema.optional(),
   posterAssetId: artifactIdSchema.optional(),

@@ -70,7 +70,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
         // grouping existing objects appends the group after those objects.
         const rasterGroups = new Set(page.nodeOrder.filter(id => {
           const node=page.nodes[id]!, style=artifactResolvedStyle(node.style,document)
-          return node.type==='group' && !!(style.gradient || style.shadow || node.flipX || node.flipY)
+          return node.type==='group' && !!(style.gradient || style.shadow || node.flipX || node.flipY || Object.keys(node.css??{}).length)
         }))
         for (const id of page.nodeOrder) {
           resources.check()
@@ -95,7 +95,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
             const bleed=padding/96*scale
             return {data,x:box.x-bleed,y:box.y-bleed,w:box.w+2*bleed,h:box.h+2*bleed,rotate:rotation}
           }
-          if (style.gradient || style.shadow || node.flipX || node.flipY || node.type === 'video') {
+          if (style.gradient || style.shadow || node.flipX || node.flipY || node.type === 'video' || Object.keys(node.css??{}).length) {
             const image=await capture()
             resources.check(); slide.addImage({...image,flipH:node.flipX,flipV:node.flipY})
             if (node.type === 'group') rasterGroups.add(node.id)
