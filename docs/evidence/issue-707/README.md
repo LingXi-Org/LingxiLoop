@@ -359,3 +359,6 @@ S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒�
 
 
 `658310ea`的[正式CI](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42351895559)通过，独立[冻结审查](reviews/658310ea.json)仍发现三项高度适配P2，未验收。[修复回归](functional/design-artboard-fit-fixes.json)先失败后在140/154确认：重复三次不写历史、隐藏组合后代不撑大画板、普通高板不缩小、流式移除高度入口，并重跑主打印/共享历史及只读。来源四像素增长容差与入口资格进入纯函数对照；未将fill分页的缩小逻辑套到普通画板。完整视觉/全部属性和性能继续不合格。
+
+
+[63096768冻结复审](reviews/63096768.json)及[正式CI42353417968](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42353417968)通过，高度三P2闭合。[停靠面板局部修复](functional/design-panel-shadow.json)先复现原生多余外阴影，按来源none去除；四容器双主题通过。新[无掩码比较](visual/design-panel-shadow/differences/raw-pixel-results.json)仍0/8，768/390误差下降，最大8.4047%。另让纸张undo/redo测试等待真实响应和单选状态，保留此前首次时序失败。没有新增视觉资格。

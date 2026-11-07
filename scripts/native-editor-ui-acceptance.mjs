@@ -428,7 +428,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await page.waitForFunction(()=>{const images=[...document.querySelectorAll('.native-stage .native-page-content:not(.native-canvas-content) img')],first=document.querySelector('.native-stage [data-page-id="page-1"] .native-page-content:not(.native-canvas-content) img');return first?.complete&&first.naturalWidth>0&&images.every(image=>image.complete&&image.naturalWidth>0)});await page.evaluate(()=>{document.activeElement?.blur();return document.fonts.ready});await page.mouse.move(10,100)
         const geometry=await inspector.locator('input,button,[role=radio],summary,.native-artboard-properties h3').evaluateAll(es=>es.filter(e=>e.checkVisibility()).map(e=>({label:e.getAttribute('aria-label')??e.textContent,rect:e.getBoundingClientRect().toJSON(),font:getComputedStyle(e).font,background:getComputedStyle(e).backgroundColor,parentBackground:getComputedStyle(e.parentElement).backgroundColor,parentShadow:getComputedStyle(e.parentElement).boxShadow})))
         await page.screenshot({path:join(output,'design-artboard-default.png')});assert.equal(receipts.length,0);assert.deepEqual(errors,[])
-        return{kind:'画板属性默认状态截图',width:Number(options.width??1440),height:Number(options.height??1000),theme:options['canvas-theme']??'light',geometry,noWrites:true,consoleOrPageErrors:errors,qualified:false}
+        const surface=await inspector.evaluate(e=>{const s=getComputedStyle(e);return{rect:e.getBoundingClientRect().toJSON(),shadow:s.boxShadow,background:s.backgroundColor,border:s.border,borderRadius:s.borderRadius}})
+        assert.equal(surface.shadow,'none','来源属性面板无外阴影，不能遮盖画布或工作区')
+        return{kind:'画板属性默认状态截图',width:Number(options.width??1440),height:Number(options.height??1000),theme:options['canvas-theme']??'light',surface,geometry,noWrites:true,consoleOrPageErrors:errors,qualified:false}
       }
       assert.equal(await mode.getByRole('radio',{name:'固定',exact:true}).getAttribute('aria-checked'),'true')
       assert.ok(await paper.getByRole('radio',{name:'A4',exact:true}).isDisabled())
@@ -437,8 +439,13 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual([document.pages['page-1'].width,document.pages['page-1'].height],[1920,1080]);assert.equal(document.pages['page-1'].sizing,undefined);assert.equal(document.pages['page-1'].print,'flow');assert.equal(document.pages['page-1'].paper,'A4')
       await page.reload();await ready(1);await page.locator('[data-page-id="page-1"] .native-board-label').click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
       assert.equal(await mode.getByRole('radio',{name:'流式',exact:true}).getAttribute('aria-checked'),'true');assert.equal(await paper.getByRole('radio',{name:'A4',exact:true}).getAttribute('aria-checked'),'true')
-      await page.getByRole('button',{name:'关闭属性',exact:true}).click();await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+z');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].paper,undefined);assert.equal(document.pages['page-1'].print,'flow')
-      await page.keyboard.press('Control+Shift+z');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].paper,'A4');await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByLabel('画板宽度',{exact:true}).waitFor()
+      const historyPaper=async(kind,key,checked)=>{
+        const response=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.request().method()==='POST'&&response.request().postDataJSON()?.kind===kind)
+        await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press(key);assert.equal((await response).status(),200)
+        await page.waitForFunction(checked=>[...document.querySelectorAll('[aria-label="打印纸张"] [role=radio]')].find(element=>element.textContent==='A4')?.getAttribute('aria-checked')===String(checked),checked);await saved()
+      }
+      await historyPaper('undo','Control+z',false);assert.equal(document.pages['page-1'].paper,undefined);assert.equal(document.pages['page-1'].print,'flow')
+      await historyPaper('redo','Control+Shift+z',true);assert.equal(document.pages['page-1'].paper,'A4')
       assert.equal(await page.getByLabel('高度操作',{exact:true}).count(),0);await mode.getByRole('radio',{name:'固定',exact:true}).click();await saved()
       await page.getByLabel('画板宽度',{exact:true}).fill('96');await page.getByLabel('画板宽度',{exact:true}).press('Enter');await saved();assert.equal(document.pages['page-1'].width,120)
       await page.getByLabel('画板宽度',{exact:true}).fill('9000');await page.getByLabel('画板宽度',{exact:true}).press('Enter');await saved();assert.equal(document.pages['page-1'].width,8000)

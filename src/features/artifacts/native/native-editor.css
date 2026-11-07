@@ -312,3 +312,6 @@
 .native-artboard-properties [role=radiogroup]>[aria-checked=true]{background:var(--native-segment-selected);box-shadow:inset 0 0 0 1px var(--native-field-ring),0 1px 2px rgb(0 0 0 / .06)}
 .native-artboard-properties [role=radiogroup]>[role=radio]:disabled{opacity:1;color:var(--native-segment-disabled)}
 .native-artboard-properties .native-color-field>button{padding-inline:4px;gap:8px;background:var(--native-field-background);box-shadow:inset 0 0 0 1px var(--native-field-ring)}
+
+/* 来源属性面板直接停靠，画布侧没有额外的外阴影。 */
+.native-kind-design .native-inspector{box-shadow:none}
