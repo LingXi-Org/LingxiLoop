@@ -397,26 +397,28 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       if(editorCase==='composing'){
         await input.dispatchEvent('compositionstart');await page.keyboard.press('Control+s');await page.waitForTimeout(250)
         assert.equal(receipts.length,0,'选词期间不能保存中间标题');assert.equal(await input.count(),1)
-        const pending=saved();await input.dispatchEvent('compositionend',{data:value});await pending
+        await input.dispatchEvent('compositionend',{data:value});await page.waitForTimeout(150);assert.equal(receipts.length,0);assert.equal(await input.count(),1,'保存快捷键不结束标题编辑');const pending=saved();await input.press('Enter');await pending
       }else{
         const pending=writes?saved():null
         if(editorCase==='blur')await page.getByRole('button',{name:'显示属性',exact:true}).click()
-        else await input.press(editorCase==='escape'?'Escape':editorCase==='save'?'Control+s':'Enter')
+        else if(editorCase==='save'){await input.press('Control+s');await page.waitForTimeout(250);assert.equal(receipts.length,0,'原版标题保存快捷键不提前提交');assert.equal(await input.count(),1);assert.equal(await input.inputValue(),value);await input.press('Enter')}
+        else await input.press(editorCase==='escape'?'Escape':'Enter')
         if(pending)await pending;else await page.waitForTimeout(200)
       }
       await input.waitFor({state:'detached'})
+      if(editorCase==='blur')assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'显示属性','普通失焦不得抢回点击目标')
       assert.equal(document.pages['page-1'].title,writes?'中文画板':original.pages['page-1'].title)
       assert.equal(receipts.length,writes?1:0)
       if(writes){assert.deepEqual(receipts[0].operations,[{type:'page.patch',pageId:'page-1',patch:{title:'中文画板'}}]);assert.deepEqual({...document.pages['page-1'],title:original.pages['page-1'].title},original.pages['page-1'])}
       for(const id of original.pageOrder.slice(1))assert.deepEqual(document.pages[id],original.pages[id])
-      if(editorCase==='history'){
-        await label.focus();let pending=saved();await page.keyboard.press('Control+z');await pending;await label.filter({hasText:original.pages['page-1'].title}).waitFor()
+      if(['history','save'].includes(editorCase)){
+        let pending=saved();await page.keyboard.press('Control+z');await pending;await label.filter({hasText:original.pages['page-1'].title}).waitFor()
         assert.equal(document.pages['page-1'].title,original.pages['page-1'].title)
         pending=saved();await page.keyboard.press('Control+Shift+z');await pending;await label.filter({hasText:'中文画板'}).waitFor()
       }
       await page.reload();await ready(1);assert.equal(await label.textContent(),writes?'中文画板':original.pages['page-1'].title)
       assert.deepEqual(errors,[])
-      return{kind:'isolated-board-title',case:editorCase,geometry,operationBatches:receipts.length,sharedHistory:editorCase==='history',reopened:true,otherPageHashesUnchanged:true,syntheticComposition:editorCase==='composing',realOsImeVerified:false,consoleOrPageErrors:errors}
+      return{kind:'isolated-board-title',case:editorCase,geometry,operationBatches:receipts.length,sharedHistory:['history','save'].includes(editorCase),reopened:true,otherPageHashesUnchanged:true,syntheticComposition:editorCase==='composing',realOsImeVerified:false,consoleOrPageErrors:errors}
     }
     if(options.checks==='board-transform'){
       assert.equal(kind,'design')
@@ -624,6 +626,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.waitForTimeout(900)
       assert.equal(receipts.length,baseline,'真实拼音组词期间不得保存')
       execFileSync('scrot',['--overwrite',join(output,`${kind}-os-ime-candidates.png`)])
+      if(boardTitle){execFileSync('xdotool',['key','ctrl+s']);await page.waitForTimeout(150);assert.equal(receipts.length,baseline);assert.equal(await text.isVisible(),true,'真实组词中保存快捷键应保留标题编辑')}
       execFileSync('xdotool',['key','space'])
       await page.waitForFunction(()=>window.__osImeEvents.some(event=>event.type==='compositionend'&&event.data==='你好'))
       if(boardTitle)assert.equal(await text.inputValue(),original+'你好');else{
@@ -640,10 +643,11 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       const events=await page.evaluate(()=>window.__osImeEvents),programmaticEnds=await page.evaluate(()=>window.__osImeProgrammaticEnds);assert.deepEqual(programmaticEnds,[],'系统输入法测试不得用脚本派发结束事件')
       execFileSync('fcitx5-remote',['-c']);const titleSaved=boardTitle?page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.status()===200):null;await page.keyboard.press(boardTitle?'Enter':'Escape');if(titleSaved)await titleSaved
       assert.equal(receipts.length,baseline+1,'确认后仅有一个共享操作批次')
+      if(boardTitle){let pending=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.request().postDataJSON()?.kind==='undo'&&response.status()===200);await page.keyboard.press('Control+z');await pending;assert.equal(document.pages['page-1'].title,original);pending=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.request().postDataJSON()?.kind==='redo'&&response.status()===200);await page.keyboard.press('Control+Shift+z');await pending;assert.equal(document.pages['page-1'].title,original+'你好')}
       await page.reload();await ready(1);assert.equal(await page.locator(boardTitle?'[data-artboard-id="page-1"] .native-board-label':`[data-node-id="${nodeId}"]`).innerText(),original+'你好')
       await page.screenshot({path:join(output,`${kind}-os-ime-reopened.png`)})
       assert.deepEqual(errors,[])
-      return{kind:'真实系统拼音输入法局部回归',editor:kind,target:boardTitle?'画板名称':'画布文字',platform:'Linux、X11、Fcitx5拼音、真实Chromium窗口',browserVersion:browser.version(),osIme:true,testDispatchesCompositionEvents:false,compositionEvents:events,compositionEndTrusted:events.find(event=>event.type==='compositionend')?.trusted,noSaveDuringComposition:true,oneBatchAfterCommit:true,cancelledCompositionDoesNotSaveOrExit:true,savedAndReopened:true,scope:'HTTP夹具及真实共享操作链路，不代替真实授权服务或其他操作系统输入法验收',consoleOrPageErrors:errors}
+      return{kind:'真实系统拼音输入法局部回归',editor:kind,target:boardTitle?'画板名称':'画布文字',platform:'Linux、X11、Fcitx5拼音、真实Chromium窗口',browserVersion:browser.version(),osIme:true,titleSaveKeepsComposition:boardTitle,immediateSharedHistoryAfterTitleConfirm:boardTitle,testDispatchesCompositionEvents:false,compositionEvents:events,compositionEndTrusted:events.find(event=>event.type==='compositionend')?.trusted,noSaveDuringComposition:true,oneBatchAfterCommit:true,cancelledCompositionDoesNotSaveOrExit:true,savedAndReopened:true,scope:'HTTP夹具及真实共享操作链路，不代替真实授权服务或其他操作系统输入法验收',consoleOrPageErrors:errors}
     }
     if(options.checks==='inspector-code'){
       assert.equal(kind,'design')

@@ -19,7 +19,7 @@ for(const source of inventory.sources)assert.equal(createHash('sha256').update(a
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE?pathToFileURL(process.env.PLAYWRIGHT_MODULE).href:'playwright')
 const cases=[],browser=await chromium.launch({...(args.browser?{executablePath:args.browser}:{}),headless:true,args:['--no-sandbox']})
 try{
- for(const name of (args.case?.split(',')??['enter','escape','blur','blank','spaces'])){
+ for(const name of (args.case?.split(',')??['enter','escape','blur','blank','spaces','save','history'])){
   const root=await mkdtemp(join(tmpdir(),'lingxi-source-title-'));let server,page
   try{
    for(const [file,bytes]of createVisualFixture('design').legacyFiles){const path=join(root,file);await mkdir(dirname(path),{recursive:true});await writeFile(path,bytes)}
@@ -28,8 +28,22 @@ try{
    page=await browser.newPage({viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},reducedMotion:'reduce',colorScheme:args.theme==='dark'?'dark':'light'});await page.goto(url,{waitUntil:'networkidle'});await waitForReferenceVisualDocument(page,'design')
    await page.getByTestId('mega-artboard-title-Page1.dc.html').dblclick();const input=page.getByRole('textbox',{name:'Artboard name',exact:true});await input.waitFor();const initial=await input.inputValue(),style=await input.evaluate(element=>{const s=getComputedStyle(element);return{rect:element.getBoundingClientRect().toJSON(),fontFamily:s.fontFamily,fontSize:s.fontSize,lineHeight:s.lineHeight,padding:s.padding,border:s.border,borderRadius:s.borderRadius,color:s.color,background:s.backgroundColor,shadow:s.boxShadow,outline:s.outline,selection:[element.selectionStart,element.selectionEnd]}})
    await input.fill(name==='blank'?'':name==='spaces'?'   ':'  中文画板  ');await page.screenshot({path:join(output,'title-'+name+'-editing.png')})
-   if(name==='blur')await page.getByRole('button',{name:'Properties',exact:true}).click();else await input.press(name==='escape'?'Escape':'Enter')
-   await page.keyboard.press('Control+s');await page.waitForTimeout(600);const after=JSON.parse(await readFile(join(root,'project/canvas.json'),'utf8')),display=await page.getByTestId('mega-artboard-title-Page1.dc.html').innerText();cases.push({name,initial,style,after,display,inputClosed:await input.count()===0});await writeFile(join(output,'title-source.json'),JSON.stringify({sourceCommit:inventory.sourceCommit??'016b39d7fdcc30bfacee31ea5541498ac53921c6',referenceResourceHashesVerified:inventory.sources.length,viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},theme:args.theme??'light',cases},null,2)+'\n');console.log(name+' 已捕获')
+   let keyboard
+   if(name==='save'){
+    await input.press('Control+s');await page.waitForTimeout(600)
+    keyboard={shortcutKeepsEditing:await input.isVisible(),titleBeforeConfirm:JSON.parse(await readFile(join(root,'project/canvas.json'),'utf8')).boards['Page1.dc.html'].title}
+    assert.equal(keyboard.shortcutKeepsEditing,true);assert.equal(keyboard.titleBeforeConfirm,initial)
+    await input.press('Enter')
+   }else if(name==='blur')await page.getByRole('button',{name:'Properties',exact:true}).click();else await input.press(name==='escape'?'Escape':'Enter')
+   if(name==='history'){
+    await page.waitForTimeout(600);await page.keyboard.press('Control+z');await page.getByTestId('mega-artboard-title-Page1.dc.html').filter({hasText:initial}).waitFor();await page.keyboard.press('Control+s');await page.waitForTimeout(600)
+    const undoTitle=JSON.parse(await readFile(join(root,'project/canvas.json'),'utf8')).boards['Page1.dc.html'].title
+    assert.equal(undoTitle,initial)
+    await page.keyboard.press('Control+Shift+z');await page.getByTestId('mega-artboard-title-Page1.dc.html').filter({hasText:'中文画板'}).waitFor();await page.keyboard.press('Control+s');await page.waitForTimeout(600)
+    const redoTitle=JSON.parse(await readFile(join(root,'project/canvas.json'),'utf8')).boards['Page1.dc.html'].title
+    assert.equal(redoTitle,'中文画板');keyboard={undoTitle,redoTitle,noManualRefocus:true}
+   }
+   await page.keyboard.press('Control+s');await page.waitForTimeout(600);const after=JSON.parse(await readFile(join(root,'project/canvas.json'),'utf8')),display=await page.getByTestId('mega-artboard-title-Page1.dc.html').innerText();cases.push({name,initial,style,keyboard,after,display,inputClosed:await input.count()===0});await writeFile(join(output,'title-source.json'),JSON.stringify({sourceCommit:inventory.sourceCommit??'016b39d7fdcc30bfacee31ea5541498ac53921c6',referenceResourceHashesVerified:inventory.sources.length,viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},theme:args.theme??'light',cases},null,2)+'\n');console.log(name+' 已捕获')
   }finally{await page?.close();server?.kill('SIGTERM');await rm(root,{recursive:true,force:true})}
  }
 }finally{await browser.close()}

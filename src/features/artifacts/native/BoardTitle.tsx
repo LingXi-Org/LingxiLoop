@@ -19,9 +19,10 @@ interface Props {
 export function BoardTitle({pageId,title,writable,onSelect,getBase,commit,retain,children,heading}:Props){
   const [editing,setEditing]=useState(false),[text,setText]=useState(title)
   const draft=useRef<{base:ArtifactDocument;text:string}|null>(null)
-  const composing=useRef(false),flushAfterComposition=useRef(false),button=useRef<HTMLButtonElement>(null)
+  const composing=useRef(false),flushAfterComposition=useRef(false),restoreFocus=useRef(false),button=useRef<HTMLButtonElement>(null),field=useRef<HTMLInputElement>(null)
   const finish=(reason?:DraftFlushReason)=>{
     const value=draft.current
+    if(reason==='save'&&field.current===document.activeElement)restoreFocus.current=true
     if(composing.current&&reason!=='unmount'){flushAfterComposition.current=true;return}
     draft.current=null;markDirty(false)
     const next=value?.text.trim()
@@ -30,7 +31,11 @@ export function BoardTitle({pageId,title,writable,onSelect,getBase,commit,retain
       if(composing.current)retain(operations)
       else commit(operations,value.base)
     }
-    if(reason!=='unmount')setEditing(false)
+    if(reason!=='unmount'){
+      setEditing(false)
+      if(restoreFocus.current)queueMicrotask(()=>button.current?.focus({preventScroll:true}))
+    }
+    restoreFocus.current=false
   }
   const markDirty=useLocalDraft(finish)
   const change=(value:string)=>{if(!draft.current)return;draft.current.text=value;setText(value);markDirty(value!==draft.current.base.pages[pageId]?.title||composing.current)}
@@ -38,6 +43,7 @@ export function BoardTitle({pageId,title,writable,onSelect,getBase,commit,retain
     if(!writable||editing||(event.target as Element).closest('.native-board-heading-actions'))return
     event.stopPropagation();draft.current={base:getBase(),text:title};setText(title);setEditing(true)
   }}>{editing?<input
+    ref={field}
     className="native-board-rename"
     aria-label="画板名称"
     value={text}
@@ -51,10 +57,10 @@ export function BoardTitle({pageId,title,writable,onSelect,getBase,commit,retain
     onCompositionEnd={event=>{composing.current=false;change(event.currentTarget.value);if(flushAfterComposition.current){flushAfterComposition.current=false;finish()}}}
     onBlur={()=>finish()}
     onKeyDown={event=>{
-      if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s')return
       event.stopPropagation()
+      if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();return}
       if(composing.current||event.nativeEvent.isComposing||event.keyCode===229)return
-      if(event.key==='Enter'){event.preventDefault();event.currentTarget.blur()}
+      if(event.key==='Enter'){event.preventDefault();restoreFocus.current=true;event.currentTarget.blur()}
       else if(event.key==='Escape'){event.preventDefault();draft.current=null;markDirty(false);setEditing(false);queueMicrotask(()=>button.current?.focus({preventScroll:true}))}
     }}
   />:<button ref={button} type="button" className="native-board-label" onClick={onSelect}>{title}</button>}{editing?<span className="native-board-heading-actions"/>:children}</div>

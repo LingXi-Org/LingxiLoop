@@ -9683,13 +9683,14 @@
         "manifest": "visual/design-board-title/manifest.json",
         "matchedStateVerified": true
       },
-      "result": "限定标题功能、几何和真实Linux系统输入法通过；全部工具/触摸/键盘与标题极限尚未验收，整图像素及全编辑器/服务/性能资格仍未通过。",
+      "result": "原位改名限定功能及几何通过；3b907c45冻结审查发现确认后快捷键和保存快捷键两P2，修正后定向两浏览器与真实系统输入法通过，待新候选复审。完整视觉/功能资格仍false。",
       "functionalQualified": false,
       "visualQualified": false,
       "testEvidence": {
         "receipt": "functional/design-board-title.json",
         "scope": "固定源码、受控HTTP真实组件与共享操作、两浏览器及真实系统输入法；不代替完整资格。"
-      }
+      },
+      "focusAndShortcutEvidence": "functional/design-board-title-focus.json"
     }
   ],
   "registeredReplacements": [

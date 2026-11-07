@@ -383,3 +383,8 @@ D31等距已实现限定状态，见 `functional/design-board-spacing.json`、`s
 画板标题原位重命名新增D32，见 `functional/design-board-title.json`、`source-design-board-title.json`、`visual/design-board-title/manifest.json`。先复现双击没有输入框；现支持全选、回车/失焦去空白保存、Esc取消、空白/同值零历史、共享历史和重开。中文无障碍名称、编辑时收起标题动作及原版浅深底色进入局部样式；沿用起始版本、草稿及冲突副本。140/154各12场景、154七项画板变换、31定向单元、140/156真实Linux拼音及既有两编辑器156文字输入回归通过。系统输入只用Fcitx5/xdotool，未派发composition事件；实际结束事件false照实保留。首轮X11窗口名称同步失败保留，改为带超时的同步搜索后通过。
 
 本批12对截图包含四容器双主题及确认/取消前编辑状态；列明输入框矩形最大偏差0.011597px，字号/行高/内边距/圆角/前景和背景逐项比较。原始整图差异及逐张结果见manifest，未遮罩替换/抗锯齿区域，完整资格仍false。对照表164条仍未穷尽，标题全部工具/键盘/触摸和极端内容、真实授权评论/Agent全周期、全属性导出、10组AB/BA及整体验收待完成。本地lint43warnings/4infos；类型检查受正式SDK缺失及76项既有级联阻塞，不能记作通过。当前标题候选待正式CI和冻结只读复审。
+
+
+3b907c45正式CI42366626619通过，但冻结只读审查 `reviews/3b907c45.json` 发现两项P2：Enter确认后BODY焦点导致原生局部CtrlZ失效；CtrlS提前提交/退出而固定原版保留输入。新增失败回归不手动focus，修复为键盘确认恢复标题焦点、普通blur保留点击目标、标题CtrlS保留草稿；140/154各7项及140/156真实系统输入法直接共享撤销重做通过，21定向单元/lint通过。来源撤销先核对DOM再显式保存文件，严格区分内存与落盘。首轮属性按钮名称误断言及Source落盘时机误断言均保留为探针修正，不作为产品缺陷。见 `functional/design-board-title-focus.json`、`source-design-board-title-keyboard.json`；新冻结候选待CI和复审，完整资格仍false。
+
+真实授权服务另有正式CI证据 `functional/comments-authorized-ci-3b907c45.json`：PostgreSQL、签名会话网关、同源评论CRUD/解决重开/删除、无会话和项目/租户隔离、正式LingxiOS Worker、真实outbox投递与Agent回复持久化通过。外部模型/IM适配在该集成中使用受控服务，不能作为真实外部模型或浏览器端完整回路验收；Design独立Worker评论回路和全定位仍待验证。
