@@ -338,3 +338,6 @@ S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒�
 [固定来源的声明语义](source-design-code-semantics.json)确认删除长度不再出现、非零无单位长度原样保存、全部参考iframe为标准模式。新[CSS值回归](functional/code-css-values.json)先复现长度改写、合法CSS被原生范围拒绝、重要声明丢失和无效替换残留旧值，再验证140/154保存/重开/共享撤销、零字号、优先级及浏览器解析离线声明。127项单测、15合约、中文文案和生产隔离五格式回归通过。
 
 隔离页面原先缺doctype，导致BackCompat；已改为与产品及参考相同的CSS1Compat并加断言。[重新生成的16对默认截图](visual/defaults-standard-mode/manifest.json)全部保留原始像素，0/16达到0.5%，最大3.909%。历史defaults-ready与slides-toolbar比较存在文档模式差异，不能再作为同渲染模式证明；未改写历史截图或计数。标准模式下50页两编辑器均通过，47页哈希不变；其中组字为合成事件，不代表真实操作系统输入法。
+
+
+[2c040116正式CI42336019559](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42336019559)通过，但[独立复审](reviews/2c040116.json)确认无效背景色替换在导出中复活旧颜色P2，不能验收。[修复回归](functional/code-background-replacement.json)先失败后验证140/154画布/离线颜色一致、共享撤销重做及重开；生产隔离五格式重跑通过。

@@ -1,0 +1,79 @@
+{
+  "baseCommit": "2c040116f4d774b1e29024044c6fcdeaf1fc5a01",
+  "qualified": false,
+  "firstFailure": "真实UI先保存#123456，再以480 !important覆盖；画布透明但离线页面仍为rgb(18,52,86)",
+  "fix": "生成背景色使用与原生一致的background-color，使同名声明被原始值替换",
+  "checks": {
+    "chrome154": {
+      "kind": "isolated-code-background-replacement",
+      "validColorThenInvalid": true,
+      "nativeAndOfflineTransparent": true,
+      "sharedUndoRedo": true,
+      "reopened": true,
+      "consoleOrPageErrors": []
+    },
+    "chrome140": {
+      "kind": "isolated-code-background-replacement",
+      "validColorThenInvalid": true,
+      "nativeAndOfflineTransparent": true,
+      "sharedUndoRedo": true,
+      "reopened": true,
+      "consoleOrPageErrors": []
+    },
+    "productionExports": {
+      "kind": "isolated-production-canvas-text-export",
+      "scope": "真实生产构建及隔离导出；固定夹具，不代替授权API、离线文件打开、完整视觉或性能验收",
+      "browser": "154.0.8037.57",
+      "fixtureFont": "system-ui",
+      "paddingAndTypography": true,
+      "uniformPadding": true,
+      "penPath": true,
+      "vectorPath": true,
+      "editedVectorPath": true,
+      "paddedEditedVector": true,
+      "rows": [
+        {
+          "format": "html",
+          "bytes": 11617,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "pdf",
+          "bytes": 33246,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "pptx",
+          "bytes": 105021,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "svg",
+          "bytes": 66136,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        },
+        {
+          "format": "png",
+          "bytes": 149603,
+          "nonWhitePixels": 54659,
+          "unchanged": true,
+          "realms": 0,
+          "mountedPages": 0
+        }
+      ],
+      "consoleOrPageErrors": []
+    }
+  },
+  "limits": [
+    "局部缺陷修复，不代表所有简写、继承或完整代码语义通过",
+    "完整视觉、真实服务、OS输入法及最终性能资格仍未取得"
+  ]
+}

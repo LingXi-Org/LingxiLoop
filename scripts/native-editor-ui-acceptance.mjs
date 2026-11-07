@@ -429,6 +429,29 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.equal(receipts.length,0);assert.deepEqual(errors,[])
         return{kind:'isolated-inspector-tabs',chineseLabels:true,arrowKeys:true,home:true,rovingFocus:true,noWrites:true,consoleOrPageErrors:errors}
       }
+      if(options['code-case']==='background-replacement'){
+        await field.fill(initial+'\nbackground-color: #123456;');await field.press('Control+s')
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).backgroundColor==='rgb(18, 52, 86)')
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        await field.fill((await field.inputValue()).replace(/^background-color:.*$/m,'background-color: 480 !important;'));await field.press('Control+s')
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).backgroundColor==='rgba(0, 0, 0, 0)')
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        const exportColor=await page.evaluate(async({root,document})=>{
+          const {renderPageHtml}=await import('/@fs'+root+'/src/features/artifacts/native/export/render.ts'),{ExportResources}=await import('/@fs'+root+'/src/features/artifacts/native/export/common.ts')
+          const node=document.pages['page-1'].nodes['page-1-heading'],single={...document.pages['page-1'],nodeOrder:[node.id],nodes:{[node.id]:node}}
+          const html=await renderPageHtml(single,new ExportResources(document,{format:'html'})),parsed=new DOMParser().parseFromString('<!doctype html>'+html,'text/html'),target=parsed.querySelector('[data-node-id]')
+          return target.style.backgroundColor
+        },{root,document})
+        assert.equal(exportColor,'','无效声明不能在导出中复活原背景色')
+        await page.getByRole('button',{name:'关闭属性',exact:true}).click();await page.keyboard.press('Control+z')
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).backgroundColor==='rgb(18, 52, 86)')
+        await page.keyboard.press('Control+Shift+z')
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).backgroundColor==='rgba(0, 0, 0, 0)')
+        await page.reload();await ready(1)
+        assert.equal(await heading.evaluate(element=>getComputedStyle(element).backgroundColor),'rgba(0, 0, 0, 0)')
+        assert.deepEqual(errors,[])
+        return{kind:'isolated-code-background-replacement',validColorThenInvalid:true,nativeAndOfflineTransparent:true,sharedUndoRedo:true,reopened:true,consoleOrPageErrors:errors}
+      }
       if(options['code-case']==='unitless-length'){
         const before=document.pages['page-1'].nodes['page-1-heading'].width
         await field.fill(initial.replace(/^width:.*$/m,'width: 480;'));await field.press('Control+s')
