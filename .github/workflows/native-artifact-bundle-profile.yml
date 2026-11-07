@@ -1,0 +1,59 @@
+name: Native artifact static bundle profile
+run-name: Native artifact static bundle profile ${{ github.sha }}
+
+# Branch-only build evidence. No browser samples, publication or deployment.
+on:
+  push:
+    branches: [feat/baoyu-editor-fidelity]
+    paths:
+      - .github/workflows/native-artifact-bundle-profile.yml
+      - scripts/native-artifact-bundle-audit.mjs
+      - scripts/native-artifact-bundle-profile.mjs
+      - scripts/native-artifact-bundle-profile.test.mjs
+
+permissions: { contents: read, packages: read }
+concurrency:
+  group: native-artifact-bundle-profile-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v5
+        with: { path: candidate, persist-credentials: false }
+      - uses: actions/checkout@v5
+        with:
+          path: baseline
+          ref: 72162f582fe49e9cbdb03f760e29e3683f9c5c99
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with: { node-version: '22' }
+      - name: Verify static profile collector
+        working-directory: candidate
+        run: node --test scripts/native-artifact-bundle-profile.test.mjs
+      - name: Install both immutable dependency graphs
+        run: |
+          npm --prefix candidate ci --ignore-scripts --no-audit --no-fund
+          npm --prefix baseline ci --ignore-scripts --no-audit --no-fund
+        env: { NODE_AUTH_TOKEN: '${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}' }
+      - name: Typecheck and profile the fixed baseline
+        working-directory: baseline
+        run: |
+          npm run typecheck
+          node ../candidate/scripts/native-artifact-bundle-audit.mjs "$RUNNER_TEMP/native-artifact-bundle-profile/baseline.json" "$RUNNER_TEMP/native-artifact-profile-dist-baseline"
+      - name: Typecheck and profile the exact candidate
+        working-directory: candidate
+        run: |
+          npm run typecheck
+          node scripts/native-artifact-bundle-audit.mjs "$RUNNER_TEMP/native-artifact-bundle-profile/candidate.json" "$RUNNER_TEMP/native-artifact-profile-dist-candidate"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-artifact-static-bundle-profile-${{ github.sha }}
+          path: ${{ runner.temp }}/native-artifact-bundle-profile/*.json
+          if-no-files-found: ignore
+          retention-days: 7

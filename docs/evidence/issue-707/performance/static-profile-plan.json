@@ -1,0 +1,41 @@
+{
+  "scope": "只读生产构建模块归属；不是浏览器性能验收。",
+  "qualified": false,
+  "baselineCommit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "observedCandidate": "35451b5f5fb1abd10b0c16679c40109e46d2c8db",
+  "sourceRun": 42392081625,
+  "sourceJob": 128461577019,
+  "observedChunks": {
+    "baseline": {
+      "filename": "NativeEditor-T6Oc1wP0.js",
+      "kilobytes": 83.49,
+      "gzipKilobytes": 27.86
+    },
+    "candidate": {
+      "filename": "NativeEditor-By27x7Q1.js",
+      "kilobytes": 224.35,
+      "gzipKilobytes": 74.3
+    }
+  },
+  "reason": "实际单组脚本传输超5%，且同一诊断生产构建显示编辑器主块显著增大。先追踪模块归属，不猜测删除功能或放宽预算。",
+  "boundedChange": [
+    "复用既有生产依赖图审计，增加原生打开块闭包，扣除已预热应用块。",
+    "仅报告项目模块路径、依赖包聚合名称与长度，不输出模块代码或私有包内部文件名。",
+    "gzip为本地构建估算、模块长度为UTF-16码元；Worker/实际HTTP传输、PSS及启动仍由原完整应用基准测量。",
+    "专用分支、仅相关文件变化触发两次真实生产构建，Node22和各自锁文件，使用现有只读包权限；不运行服务、发布或部署。"
+  ],
+  "checks": {
+    "syntheticGraphTestsPassed": 2,
+    "scriptSyntax": true,
+    "actualProductionProfiles": "待正式工作流执行，本地缺少正式私有SDK，未伪造替代。"
+  },
+  "previousCandidate": {
+    "commit": "af2ae0e8a233ec55ff3f5978283ec6f5444f2214",
+    "ciRun": 42404271270,
+    "ciPassed": true,
+    "review": "reviews/af2ae0e8.json",
+    "reviewPassed": true
+  },
+  "newProfileCandidateCI": "待运行",
+  "newProfileCandidateIndependentReview": "待运行"
+}

@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { build } from 'vite'
+import {profileOpeningChunks} from './native-artifact-bundle-profile.mjs'
 
 const output = resolve(process.argv[2] ?? '/tmp/lingxi-native-bundle-audit.json')
 const outDir = resolve(process.argv[3] ?? '/tmp/lingxi-native-production-dist')
@@ -65,6 +66,7 @@ await build({
         roots: [...new Set(roots)].sort(),
         staticChunks: [...reached].sort(),
         staticModuleCount: modules.length,
+        openingProfile:profileOpeningChunks(bundle,roots.slice(0,5),roots.slice(5),process.cwd()),
         forbiddenCompatibilityOrExportModules: forbidden,
         exportRealm: realm.fileName,
         exportHtmlPreloadsApplication: false,
@@ -77,3 +79,4 @@ assert.equal(sourceFingerprint(), inputSha256, 'Build inputs changed during the 
 await mkdir(dirname(output), { recursive: true })
 await writeFile(output, `${JSON.stringify(report, null, 2)}\n`)
 console.log(`Native production graph audit: ${output}`)
+console.log('NATIVE_ARTIFACT_BUNDLE_PROFILE '+JSON.stringify({commit:report.commit,sourceInputsSha256:report.sourceInputsSha256,uncommittedInputsPossible:report.uncommittedInputsPossible,...report.openingProfile}))
