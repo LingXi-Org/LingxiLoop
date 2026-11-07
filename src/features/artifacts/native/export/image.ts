@@ -14,10 +14,13 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
       const { toPng, toJpeg, toSvg } = await import('html-to-image')
       resources.check()
       const render = options.format === 'svg' ? toSvg : options.format === 'jpeg' ? toJpeg : toPng
-      const url = await render(mounted.element, { pixelRatio: options.pixelRatio ?? 2, skipAutoScale: true, backgroundColor:pageRadiusCss(page.radius)?options.format==='jpeg'?'#ffffff':undefined:page.background })
+      const rounded = !!pageRadiusCss(page.radius)
+      const whitePaper = rounded && options.format === 'jpeg'
+      if (whitePaper) mounted.viewport.style.cssText = `width:${page.width}px;height:${page.height}px;background:#ffffff`
+      const url = await render(whitePaper ? mounted.viewport : mounted.element, { pixelRatio: options.pixelRatio ?? 2, skipAutoScale: true, backgroundColor: whitePaper ? '#ffffff' : rounded ? undefined : page.background })
       resources.check()
       const blob = await fetch(url, { signal: options.signal }).then(response => response.blob())
-      if(options.format==='jpeg'&&pageRadiusCss(page.radius))resources.warnings.add(`${page.title}：压缩位图使用白色背景保留圆角。`)
+      if(whitePaper)resources.warnings.add(`${page.title}：压缩位图使用白色背景保留圆角。`)
       resources.progress(1)
       return { blob, filename: exportFilename(page.title, options.format), warnings: [...resources.warnings] }
     } finally { mounted.dispose() }

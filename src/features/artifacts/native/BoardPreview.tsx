@@ -65,7 +65,7 @@ export default function BoardPreview({ document, page, compute, loaded, pageVers
     </header>
     <div ref={viewportRef} className="native-board-preview-viewport" data-fit={fit}>
       {!loaded ? <p role={error ? 'alert' : 'status'}>{error || '正在加载画板…'}</p> : <div className="native-board-preview-layout" style={fit ? { width: 0, height: 0, transform: `matrix(${scale},0,0,${scale},${(size.width-page.width*scale)/2},${(size.height-page.height*scale)/2})` } : { width: '100%', height: '100%' }}>
-        <div data-preview-artboard className="native-board-preview-frame" style={fit ? { width: page.width, height: page.height } : { width: '100%', height: '100%' }}>
+        <div data-preview-artboard className="native-board-preview-frame" style={{ ...(fit ? { width: page.width, height: page.height } : { width: '100%', height: '100%' }), borderRadius: pageRadiusCss(page.radius) }}>
         <div className="native-page-scaled" data-page-id={page.id} style={{ width: page.width, height: page.height, borderRadius:pageRadiusCss(page.radius), transform: 'none' }} onPointerDown={event => {
           if (!commenting || event.button !== 0 || !event.isPrimary) return
           event.preventDefault()

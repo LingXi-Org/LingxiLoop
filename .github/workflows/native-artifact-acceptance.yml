@@ -113,6 +113,9 @@ jobs:
           node scripts/native-startup-probe-check.mjs
           node --import tsx scripts/native-page-radius-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-page-radius-oracle.json"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=page-radius --radius-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-page-radius"
+          for task_radius_case in preview jpeg; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=page-radius --radius-case="$task_radius_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-page-radius-$task_radius_case"
+          done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-outline --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-design-outline"
           for task_outline_case in large context space menu width width-tools narrow-context; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-outline --outline-case="$task_outline_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-design-outline-$task_outline_case"

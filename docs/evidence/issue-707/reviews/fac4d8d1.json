@@ -1,0 +1,115 @@
+{
+  "commit": "fac4d8d12864d0a2b9d6771614e33c3dd12cf916",
+  "baseCommit": "5b467fe636845f4ce2b48911788c874ae5b6f0ed",
+  "reviewer": "independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "scope": "冻结detached checkout；画板radius共享模型/操作/旧转换、属性编辑、预览/缩略图及导出链路。独立临时数据库，不使用产品数据库。未混入根WIP，未修改产品文件、提交、合并或部署。",
+  "findings": [
+    {
+      "id": "P2-1",
+      "severity": "P2",
+      "title": "全窗口预览外框仍用方形白底和矩形阴影补回圆角",
+      "file": "src/features/artifacts/native/BoardPreview.tsx",
+      "line": 68,
+      "scenario": "在真实Design属性面板保存四角[40,80,20,80]后，通过“全窗口查看画板 Page 1”进入适应预览。内层scaled与content圆角正确，但外层data-preview-artboard仍border-radius:0、background:white并带矩形阴影，裁掉的四角显露方形白底，外轮廓仍方形。",
+      "observed": "154截图可见灰色预览区中的矩形白框及四角白色楔形；DOM外框radius0，内层40px 80px 20px。",
+      "minimalFix": "将圆角同步到承载背景/裁切/阴影的外框，或调整外框背景与阴影使其遵循相同圆角；覆盖适应/填满预览，不只检查画布content的computed border-radius。",
+      "evidence": [
+        "/tmp/lingxi-review-fac-preview154/design.json",
+        "/tmp/lingxi-review-fac-preview154/rounded-board-preview.png"
+      ]
+    },
+    {
+      "id": "P2-2",
+      "severity": "P2",
+      "title": "圆角JPEG白色合成参数覆盖画板本来的背景色",
+      "file": "src/features/artifacts/native/export/image.ts",
+      "line": 17,
+      "scenario": "调用现有图片导出模块导出1920×1080空画板，background:#123456、radius:80。PNG中心颜色正确、角透明；JPEG中心与角全部变白。传给html-to-image的backgroundColor不仅填充输出画布，还会覆盖克隆根元素的backgroundColor，因此不能直接用白色覆盖圆角画板根。",
+      "observed": {
+        "pngCenter": [
+          18,
+          52,
+          86,
+          255
+        ],
+        "pngCorner": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "jpegCenter": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "jpegCorner": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      "minimalFix": "在画板外层白色包装或单独白色画布上合成JPEG，保留圆角根的原背景；补有色背景且没有遮盖背景的子对象的JPEG实际像素回归。JPEG属于现有ArtifactExportFormat支持路径；本次直接调用真实image.exportDocument，未声称UI菜单有JPEG入口。",
+      "evidence": [
+        "/tmp/lingxi-review-fac-jpeg154/design.json",
+        "/tmp/lingxi-review-fac-jpeg154/empty-rounded.jpeg",
+        "/tmp/lingxi-review-fac-jpeg154/empty-rounded.png"
+      ]
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "140与154正式page-radius exports",
+      "result": "通过；统一/分角、保存重开、共享undo/redo、内部节点不变；HTML/PDF/PPTX/SVG/PNG五格式真实下载，PDF经pdftoppm栅格、PPTX页面图片与白色背景、透明图像角检查通过，无页面错误。",
+      "evidence": [
+        "/tmp/lingxi-review-fac-radius140/design.json",
+        "/tmp/lingxi-review-fac-radius154/design.json"
+      ]
+    },
+    {
+      "check": "共享半径/旧转换/缩略图/导出/服务投影与CI合约",
+      "command": "node --import tsx --test shared/artifact-page-radius.test.ts shared/artifact-legacy.test.ts src/features/artifacts/native/thumbnail.test.tsx src/features/artifacts/native/export/export.test.ts server/src/modules/artifacts/native-projection.test.ts scripts/native-artifact-ci.test.mjs",
+      "result": "58项通过，0失败。",
+      "evidence": "/tmp/lingxi-review-fac-units.log"
+    },
+    {
+      "check": "固定原版纯函数oracle",
+      "result": "218组一致；核验固定JS SHA256后在独立VM运行原版圆角归一化与CSS纯函数，最大4000、两位小数及数组行为一致。",
+      "evidence": "/tmp/lingxi-review-fac-oracle.json"
+    },
+    {
+      "check": "真实临时PostgreSQL17项文档服务集成",
+      "result": "全部通过；新增四角快照/历史/副本/幂等及旧快照不可变验证通过。使用缓存pgvector:pg16、显式unix:///var/run/docker.sock，仅新建loopback临时库；finally已删除本次容器，独立label检查无残留。",
+      "evidence": [
+        "/tmp/lingxi-review-fac-db.json",
+        "/tmp/lingxi-review-fac-db.log"
+      ],
+      "script": "/tmp/lingxi-review-fac-db.mjs"
+    },
+    {
+      "check": "154独立预览和JPEG实际浏览器检查",
+      "result": "复现两项P2；无页面错误。",
+      "script": "/tmp/lingxi-review-probe-fac/probe.mjs",
+      "cases": [
+        "--radius-case=preview",
+        "--radius-case=jpeg"
+      ]
+    }
+  ],
+  "analysis": [
+    "radius为可选有界有限数或4个同类数；page.patch自动继承schema，并支持unset radius。旧文档不补写默认字段；通用版本键/逆操作/复制/JSON持久化能承载此字段，独立单位及真实PG旧快照测试通过。",
+    "旧转换通过归一化复制radius，未修改原始文件或历史快照。未加载页面投影保留radius元数据而清空节点，定向测试通过。",
+    "画布内容、主画布外轮廓及SVG缩略图接线存在；没有radius或归一化为零时沿用旧导出分支。圆角PPTX整页图片与中文降级提示符合本提交声明，但JPEG和全窗口预览漏掉了不同的背景承载层。",
+    "未新增API路由、授权主体、表或迁移；新增模型字段经原共享验证入口。临时PG测试不等同真实租户授权浏览器/Agent端到端验证。"
+  ],
+  "unverified": [
+    "Agent工具合同的真实发布SDK正式CI未独立验证；本审查不把本地SDK缺失级联错误记为typecheck通过。",
+    "未独立重跑原生产构建五格式、两个编辑器50页/47哈希、所有并发草稿/CAS/权限/中文操作系统输入法或全部旧功能。",
+    "未独立验证圆角长流式文档的多张PDF纸面、全部媒体和全部缩放/主题/预览状态；本次五格式浏览器夹具为固定画板。",
+    "完整面板视觉、最终像素、完整功能/服务和正式10组AB/BA性能资格仍false；本次不认定完整交付完成。"
+  ]
+}

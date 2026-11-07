@@ -499,5 +499,257 @@
     "validatedRadiusDefinitions": 2,
     "homogeneousFourCornerArray": true,
     "publishedSdkRuntimeTest": "待正式CI运行"
+  },
+  "independentReview": {
+    "candidate": "fac4d8d12864d0a2b9d6771614e33c3dd12cf916",
+    "passed": false,
+    "report": "../reviews/fac4d8d1.json",
+    "ciRun": 42347803724,
+    "ciConclusion": "success",
+    "findings": [
+      "全窗口预览的外框仍方形",
+      "压缩位图覆盖原画板底色"
+    ]
+  },
+  "reviewFixRegressions": {
+    "before": {
+      "jpeg": "压缩位图必须保留画板原底色断言失败",
+      "preview": "预览外框圆角实际0px，期望40px 80px 20px"
+    },
+    "after": {
+      "140": {
+        "jpeg": {
+          "kind": "rounded-image-background",
+          "results": [
+            {
+              "format": "png",
+              "center": [
+                18,
+                52,
+                86,
+                255
+              ],
+              "corner": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "warnings": []
+            },
+            {
+              "format": "jpeg",
+              "center": [
+                18,
+                52,
+                87,
+                255
+              ],
+              "corner": [
+                255,
+                255,
+                255,
+                255
+              ],
+              "warnings": [
+                "Page 1：压缩位图使用白色背景保留圆角。"
+              ]
+            }
+          ],
+          "errors": []
+        },
+        "preview": {
+          "kind": "rounded-board-preview",
+          "records": [
+            {
+              "class": "native-board-preview-viewport",
+              "box": {
+                "x": 0,
+                "y": 40,
+                "width": 1440,
+                "height": 960,
+                "top": 40,
+                "right": 1440,
+                "bottom": 1000,
+                "left": 0
+              },
+              "radius": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "shadow": "none",
+              "overflow": "hidden"
+            },
+            {
+              "class": "native-board-preview-frame",
+              "box": {
+                "x": 24,
+                "y": 128.5,
+                "width": 1392,
+                "height": 783,
+                "top": 128.5,
+                "right": 1416,
+                "bottom": 911.5,
+                "left": 24
+              },
+              "radius": "40px 80px 20px",
+              "background": "rgb(255, 255, 255)",
+              "shadow": "rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.08) 0px 6px 16px 0px",
+              "overflow": "hidden"
+            },
+            {
+              "class": "native-page-scaled",
+              "box": {
+                "x": 24,
+                "y": 128.5,
+                "width": 1392,
+                "height": 783,
+                "top": 128.5,
+                "right": 1416,
+                "bottom": 911.5,
+                "left": 24
+              },
+              "radius": "40px 80px 20px",
+              "background": "rgba(0, 0, 0, 0)",
+              "shadow": "none",
+              "overflow": "visible"
+            },
+            {
+              "class": "native-page-content ",
+              "box": {
+                "x": 24,
+                "y": 128.5,
+                "width": 1392,
+                "height": 783,
+                "top": 128.5,
+                "right": 1416,
+                "bottom": 911.5,
+                "left": 24
+              },
+              "radius": "40px 80px 20px",
+              "background": "rgb(255, 255, 255)",
+              "shadow": "none",
+              "overflow": "hidden"
+            }
+          ],
+          "errors": []
+        }
+      },
+      "154": {
+        "jpeg": {
+          "kind": "rounded-image-background",
+          "results": [
+            {
+              "format": "png",
+              "center": [
+                18,
+                52,
+                86,
+                255
+              ],
+              "corner": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "warnings": []
+            },
+            {
+              "format": "jpeg",
+              "center": [
+                18,
+                52,
+                87,
+                255
+              ],
+              "corner": [
+                255,
+                255,
+                255,
+                255
+              ],
+              "warnings": [
+                "Page 1：压缩位图使用白色背景保留圆角。"
+              ]
+            }
+          ],
+          "errors": []
+        },
+        "preview": {
+          "kind": "rounded-board-preview",
+          "records": [
+            {
+              "class": "native-board-preview-viewport",
+              "box": {
+                "x": 0,
+                "y": 40,
+                "width": 1440,
+                "height": 960,
+                "top": 40,
+                "right": 1440,
+                "bottom": 1000,
+                "left": 0
+              },
+              "radius": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "shadow": "none",
+              "overflow": "hidden"
+            },
+            {
+              "class": "native-board-preview-frame",
+              "box": {
+                "x": 24,
+                "y": 128.5,
+                "width": 1392,
+                "height": 783,
+                "top": 128.5,
+                "right": 1416,
+                "bottom": 911.5,
+                "left": 24
+              },
+              "radius": "40px 80px 20px",
+              "background": "rgb(255, 255, 255)",
+              "shadow": "rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.08) 0px 6px 16px 0px",
+              "overflow": "hidden"
+            },
+            {
+              "class": "native-page-scaled",
+              "box": {
+                "x": 24,
+                "y": 128.5,
+                "width": 1392,
+                "height": 783,
+                "top": 128.5,
+                "right": 1416,
+                "bottom": 911.5,
+                "left": 24
+              },
+              "radius": "40px 80px 20px",
+              "background": "rgba(0, 0, 0, 0)",
+              "shadow": "none",
+              "overflow": "visible"
+            },
+            {
+              "class": "native-page-content ",
+              "box": {
+                "x": 24,
+                "y": 128.5,
+                "width": 1392,
+                "height": 783,
+                "top": 128.5,
+                "right": 1416,
+                "bottom": 911.5,
+                "left": 24
+              },
+              "radius": "40px 80px 20px",
+              "background": "rgb(255, 255, 255)",
+              "shadow": "none",
+              "overflow": "hidden"
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    "scope": "真实Chromium渲染；JPEG通过实际导出模块，未声称经UI菜单；全窗口预览通过真实UI。"
   }
 }

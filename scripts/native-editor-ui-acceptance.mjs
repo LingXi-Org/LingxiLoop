@@ -42,7 +42,7 @@ const { chromium } = await import(modulePath.startsWith('/') ? pathToFileURL(mod
 const dependencyRoot = await realpath(join(root, 'node_modules'))
 const workspace = await mkdtemp(join(tmpdir(), 'lingxi-native-ui-'))
 await mkdir(output, { recursive: true })
-if(options.checks==='slides-skipped-export'||options.checks==='page-radius'&&options['radius-case']==='exports')await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
+if(options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case']))await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
 const mocks = {
   http: `export async function http(path,init){const response=await fetch('/api'+path,{...init,headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok)throw Object.assign(new Error(await response.text()),{status:response.status});return response.json()}`,
   realtime: options.checks==='inspector-code'?`const listeners=new Set();window.__codeChanged=()=>{for(const fn of listeners)fn({type:'artifact.changed',artifactId:'fixture'})};export const ws={on:fn=>{listeners.add(fn);return()=>listeners.delete(fn)}}`:'export const ws={on:()=>()=>{}}',
@@ -59,7 +59,7 @@ try {
   server = await createServer({ configFile: false, root: workspace, publicDir: join(root, 'public'), plugins: [react()], logLevel: 'error',
     cacheDir:join(workspace,'.vite'),
     // Late CommonJS discovery reloads the fixture during PPTX export, even with HMR off.
-    optimizeDeps: options.checks==='slides-skipped-export'||options.checks==='page-radius'&&options['radius-case']==='exports'?{noDiscovery:true,include:['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime','pptxgenjs','html-to-image','jszip','katex']}:undefined,
+    optimizeDeps: options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case'])?{noDiscovery:true,include:['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime','pptxgenjs','html-to-image','jszip','katex']}:undefined,
     resolve: { alias: [
       ...Object.entries({ '@/api/core/http': 'http', '@/api/core/realtime': 'realtime', '@/api/transport': 'transport', '@/stores/auth': 'auth', '@/lib/workspaceSession': 'workspaceSession' }).map(([find, name]) => ({ find, replacement: join(workspace, `${name}.js`) })),
       { find: 'react', replacement: dirname(require.resolve('react/package.json')) },
@@ -2590,8 +2590,24 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.reload();await ready(1);assert.equal(await content.evaluate(element=>getComputedStyle(element).borderRadius),'40px 80px 20px')
       assert.equal(JSON.stringify(document.pages['page-1'].nodes),originalNodes,'画板圆角不得改写内部对象')
       assert.equal(await content.evaluate(element=>getComputedStyle(element.closest('.native-page-scaled')).borderRadius),'40px 80px 20px','画板轮廓与阴影必须使用相同圆角')
+      if(options['radius-case']==='jpeg'){
+        const results=await page.evaluate(async({root,document})=>{
+          const {exportDocument}=await import('/@fs'+root+'/src/features/artifacts/native/export/image.ts'),page={...document.pages['page-1'],nodes:{},nodeOrder:[],background:'#123456',radius:80},single={...document,pageOrder:[page.id],pages:{[page.id]:page},assets:{}}
+          const results=[];for(const format of ['png','jpeg']){
+            const result=await exportDocument(single,{format,pixelRatio:1}),image=new Image(),url=URL.createObjectURL(result.blob);image.src=url;await image.decode();const canvas=window.document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);const pixel=(x,y)=>[...ctx.getImageData(x,y,1,1).data];const base64=await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.readAsDataURL(result.blob)});results.push({format,center:pixel(960,540),corner:pixel(0,0),warnings:result.warnings,base64});URL.revokeObjectURL(url)
+          }return results
+        },{root,document})
+        for(const result of results){await writeFile(join(output,'empty-rounded.'+result.format),Buffer.from(result.base64,'base64'));delete result.base64}
+        for(const result of results){assert.ok(result.center.slice(0,3).every((value,index)=>Math.abs(value-[18,52,86][index])<=2),'压缩位图必须保留画板原底色');assert.equal(result.corner[3],result.format==='png'?0:255);if(result.format==='jpeg')assert.ok(result.corner.slice(0,3).every(value=>value>=250),'圆角以外使用白色纸张')}
+        assert.deepEqual(errors,[]);return{kind:'rounded-image-background',results,errors}
+      }
+      if(options['radius-case']==='preview'){
+        await page.getByLabel('全窗口查看画板 Page 1',{exact:true}).click();const preview=page.getByRole('region',{name:'画板全窗口预览',exact:true});await preview.waitFor();await preview.locator('img').waitFor();await page.waitForTimeout(150)
+        const records=await preview.locator('.native-board-preview-frame,.native-page-scaled,.native-page-content,.native-board-preview-viewport').evaluateAll(es=>es.map(e=>{const s=getComputedStyle(e);return{class:e.className,box:e.getBoundingClientRect().toJSON(),radius:s.borderRadius,background:s.backgroundColor,shadow:s.boxShadow,overflow:s.overflow}}))
+        assert.equal(records.find(row=>row.class==='native-board-preview-frame').radius,'40px 80px 20px','全窗口预览的裁切、底色与阴影使用同一圆角');assert.deepEqual(errors,[]);await page.screenshot({path:join(output,'rounded-board-preview.png')});return{kind:'rounded-board-preview',records,errors}
+      }
       const exports=[]
-      if(options['radius-case']==='exports'){
+      if(['exports','jpeg'].includes(options['radius-case'])){
         await page.locator('[data-page-id="page-1"] .native-board-label').click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'背景',exact:true}).click()
         const picker=page.getByRole('dialog',{name:'背景颜色',exact:true});await picker.getByRole('button',{name:'自定义',exact:true}).click();const hex=picker.getByLabel('十六进制颜色',{exact:true});await hex.fill('#123456');await hex.press('Control+s');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');await picker.getByLabel('关闭颜色选择',{exact:true}).click();assert.equal(document.pages['page-1'].background,'#123456')
         const pixels=async(bytes,type)=>page.evaluate(async({base64,type})=>{const image=new Image();image.src=`data:${type};base64,${base64}`;await image.decode();const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;const context=canvas.getContext('2d');context.drawImage(image,0,0);const at=(x,y)=>[...context.getImageData(Math.round(x),Math.round(y),1,1).data];return{width:canvas.width,height:canvas.height,corner:at(0,0),edge:at(canvas.width/2,0),topLeft:at(10*canvas.width/1920,10*canvas.height/1080),bottomRight:at(canvas.width-10*canvas.width/1920,canvas.height-10*canvas.height/1080)}},{base64:bytes.toString('base64'),type})
