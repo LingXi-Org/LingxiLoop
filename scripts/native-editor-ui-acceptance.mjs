@@ -473,6 +473,21 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if(options.checks==='element-sizing'){
       const original=structuredClone(document),nodeId=`page-1-${options['sizing-node']==='group'?'root':options['sizing-node']??'heading'}`
+      if(editorCase==='selection-scale'){
+        assert.equal(kind,'design')
+        const observations=[]
+        for(const percent of ['50%','25%','20%','25%']){
+          await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:percent==='20%'?'25%':percent,exact:true}).click()
+          if(percent==='20%'){await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('ControlOrMeta+-')}
+          await scrollCanvasTo(document.pages['page-1'])
+          await page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`).click()
+          const selection=page.locator('[data-page-id="page-1"] .native-selection');await selection.waitFor()
+          const count=await selection.locator('.native-resize-handle,.native-rotate-handle').count()
+          observations.push({percent,handles:count});assert.equal(count,percent==='20%'?0:9,'画板元素在25%以下保留选择轮廓并隐藏交互手柄')
+        }
+        assert.equal(receipts.length,0);assert.deepEqual(document,original);assert.deepEqual(errors,[])
+        return{kind:'画板元素缩放手柄门槛',observations,noWrites:true,documentUnchanged:true,consoleOrPageErrors:errors,scope:'受控HTTP夹具，真实缩放、选择和快捷键；不是完整来源或性能验收'}
+      }
       if(options['sizing-zoom']){await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:options['sizing-zoom'],exact:true}).click();await scrollCanvasTo(document.pages['page-1'])}
       if(editorCase==='theme-fill')assert.equal(await page.locator(`[data-node-id="${nodeId}"] svg rect`).getAttribute('fill'),'#ff0000')
       await page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`).click()

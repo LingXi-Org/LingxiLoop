@@ -1,0 +1,139 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourceLocation": {
+    "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+    "symbol": "selectionChromeMinimumScale / ArtboardSelectionChrome",
+    "start": 4861799,
+    "end": 4865300,
+    "offsetUnit": "UTF-16 code units"
+  },
+  "source": [
+    {
+      "label": "22",
+      "scale": 0.22105263074239095,
+      "handles": [],
+      "documentUnchanged": true,
+      "resourceHashesVerified": 12,
+      "browser": "154.0.8037.57"
+    },
+    {
+      "label": "25",
+      "scale": 0.25,
+      "handles": [
+        {
+          "rotate": true,
+          "rect": {
+            "x": 42,
+            "y": 385,
+            "width": 22,
+            "height": 22
+          }
+        },
+        {
+          "rotate": true,
+          "rect": {
+            "x": 352,
+            "y": 385,
+            "width": 22,
+            "height": 22
+          }
+        },
+        {
+          "rotate": true,
+          "rect": {
+            "x": 352,
+            "y": 426,
+            "width": 22,
+            "height": 22
+          }
+        },
+        {
+          "rotate": true,
+          "rect": {
+            "x": 42,
+            "y": 426,
+            "width": 22,
+            "height": 22
+          }
+        },
+        {
+          "rotate": false,
+          "rect": {
+            "x": 348,
+            "y": 413,
+            "width": 8,
+            "height": 7
+          }
+        },
+        {
+          "rotate": false,
+          "rect": {
+            "x": 60,
+            "y": 413,
+            "width": 8,
+            "height": 7
+          }
+        },
+        {
+          "rotate": false,
+          "rect": {
+            "x": 58,
+            "y": 401,
+            "width": 12,
+            "height": 12
+          }
+        },
+        {
+          "rotate": false,
+          "rect": {
+            "x": 346,
+            "y": 401,
+            "width": 12,
+            "height": 12
+          }
+        },
+        {
+          "rotate": false,
+          "rect": {
+            "x": 346,
+            "y": 420,
+            "width": 12,
+            "height": 12
+          }
+        },
+        {
+          "rotate": false,
+          "rect": {
+            "x": 58,
+            "y": 420,
+            "width": 12,
+            "height": 12
+          }
+        }
+      ],
+      "documentUnchanged": true,
+      "resourceHashesVerified": 12,
+      "browser": "154.0.8037.57"
+    }
+  ],
+  "failureBefore": {
+    "browser": "154",
+    "observedHandlesAt20Percent": 9,
+    "expected": 0,
+    "assertion": "9 !== 0"
+  },
+  "after": [
+    "selection-scale/implementation-140.json",
+    "selection-scale/implementation-154.json"
+  ],
+  "focusedUnitTestsPassed": 10,
+  "lint": {
+    "passed": true,
+    "warnings": 43,
+    "infos": 4
+  },
+  "scope": "画板DOM元素，仅修复25%交互门槛。自由画布和Slides维持各自现有行为。来源25%实际10个命中区域，原生9个按钮，未宣称手柄形态/数目已一比一。两浏览器原生25%可用，20%隐藏，恢复25%可用、选择轮廓保留、文档零写入。",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

@@ -118,12 +118,16 @@ try{
       if(args['align-key']){await page.keyboard.press(args['align-key']);await page.waitForTimeout(450)}
       if(args['align-state'])await page.waitForTimeout(250)
       const controls=await readControls(),geometry=await readGeometry()
+      const selectionHandles=[]
+      for(const scope of page.frames())for(const candidate of await scope.locator('[data-resize-handle]').all()){
+        const rect=await candidate.boundingBox();if(rect&&rect.width>0&&rect.height>0)selectionHandles.push({rotate:await candidate.getAttribute('data-rotate-handle')!==null,rect})
+      }
       const layoutChrome=await panel.getByText('Layout',{exact:true}).evaluate(element=>[element,element.parentElement,element.parentElement.parentElement].map(node=>{const css=getComputedStyle(node);return{tag:node.tagName,rect:node.getBoundingClientRect().toJSON(),padding:css.padding,margin:css.margin,height:css.height,fontSize:css.fontSize,lineHeight:css.lineHeight}}))
       const html=await readFile(join(project,'project/Page1.dc.html'),'utf8'),snippet=html.match(/<h1\b[\s\S]*?<\/h1>/)?.[0]
       if(/^(padding|margin)/.test(name))await page.mouse.move(20,200)
       await page.screenshot({path:join(output,`sizing-${name}.png`)})
       const frameRect=await board.locator('iframe').boundingBox(),camera={beforeDomEntry:rect,frameRect,scale:frameRect.width/1920,headingScreenRect:await heading.boundingBox()}
-      cases.push({name,layoutChrome,subject:args.node??'text',camera,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
+      cases.push({name,layoutChrome,subject:args.node??'text',camera,selectionHandles,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
       await writeFile(join(output,'reference.json'),JSON.stringify({sourceCommit:'016b39d7fdcc30bfacee31ea5541498ac53921c6',referenceResourceHashesVerified:inventory.sources.length,browser:browser.version(),theme:args.theme??'light',viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},cases},null,2)+'\n')
       console.log(name+' 已捕获')
     }finally{await page?.close();server?.kill('SIGTERM');await rm(project,{recursive:true,force:true})}

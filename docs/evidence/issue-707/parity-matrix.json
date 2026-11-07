@@ -9833,12 +9833,13 @@
         "manifest": "visual/element-alignment/differences/raw-pixel-results.json",
         "matchedStateVerified": true
       },
-      "result": "六控件在8种容器/主题下边界偏差≤1 CSS px、颜色一致；13对状态的11项计算几何一致。局部功能通过，56个原生场景收据已保存。8对原始整图均未达到0.5%门槛，多选、全部约束及手柄状态仍未验收。",
+      "result": "六控件在8种容器/主题下边界偏差≤1 CSS px、颜色一致；13对状态的11项计算几何一致。局部功能通过，56个原生场景收据已保存。8对原始整图均未达到0.5%门槛，多选、全部约束及手柄状态仍未验收。 追加两浏览器50%→25%→20%→25%回归：低于25%保留轮廓且隐藏手柄，恢复25%重新可用，零写入。来源手柄命中区域与原生按钮数仍不同，形态及完整视觉未达标。",
       "functionalQualified": false,
       "visualQualified": false,
       "testEvidence": {
         "receipt": "functional/element-alignment.json",
-        "scope": "固定来源与受控HTTP浏览器；不代替完整授权服务、Agent、缩略图、导出或性能资格。"
+        "scope": "固定来源与受控HTTP浏览器；不代替完整授权服务、Agent、缩略图、导出或性能资格。",
+        "selectionScale": "functional/selection-scale.json"
       }
     },
     {
