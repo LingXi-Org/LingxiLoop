@@ -52,6 +52,7 @@ import { PageThumbnail } from './thumbnail'
 import { EditorPaletteContext, EditorColorSessionContext } from './ColorField'
 import { readNodeFrame, anchorInFrame, pointInFrame, type RenderedNodeFrame } from './rendered-geometry'
 import {useCodeSelection,paintedCodeNode} from './use-code-selection'
+import {readElementPositionPins,elementMoveValues,elementMovePatch,elementResizePatch,type ElementPositionPins} from './element-positioning'
 import { PageRail } from './PageRail'
 import { duplicateNodes, duplicatePages, distributeNodes, resizeSelection, drawingNode, canvasShapeNode, ungroupNodes, appendDrawingPoint, appendCanvasPenPoint, canvasPenNode, layoutSlide, SLIDE_LAYOUTS, type ResizeHandle } from '../../../../shared/artifact-editor-actions'
 import { decodeCommentAnchor, commentPoint, commentAnchorAtPoint, type NativeCommentAnchor } from '../../../../shared/artifact-comment-anchor'
@@ -69,7 +70,7 @@ function initialCanvasZoom(pages: Array<Pick<ArtifactPage,'x'|'y'|'width'|'heigh
   return (fitDesignCamera(pages,[],width,height)?.scale??.5)*2
 }
 type CanvasView={zoom:number;x?:number;y?:number}
-interface Gesture { base: ArtifactDocument; type: 'move' | 'resize' | 'marquee' | 'pan' | 'draw' | 'rotate'; startX: number; startY: number; pageId: string; nodes: ArtifactNode[]; moved: boolean; handle?: ResizeHandle; points?: Array<{ x: number; y: number }>; tool?: string; angle?: number; scope?: 'canvas'|'artboard'; canvas?:boolean; scrollX?: number; scrollY?: number }
+interface Gesture { base: ArtifactDocument; type: 'move' | 'resize' | 'marquee' | 'pan' | 'draw' | 'rotate'; startX: number; startY: number; pageId: string; nodes: ArtifactNode[]; moved: boolean; handle?: ResizeHandle; points?: Array<{ x: number; y: number }>; tool?: string; angle?: number; scope?: 'canvas'|'artboard'; canvas?:boolean; scrollX?: number; scrollY?: number; positionPins?:Record<string,ElementPositionPins> }
 function editorOwnsEvent(root:HTMLElement,target:EventTarget|null) {
   return target instanceof Element&&target.closest('[data-native-artifact-editor],[data-native-editor-boundary]')===root
 }
@@ -135,7 +136,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const [cameraRequest,setCameraRequest]=useState(0)
   const [viewport, setViewport] = useState({ width: 0, height: 0, x: 0, y: 0 })
   const [visibleBoardResult, setVisibleBoardResult] = useState<{key:string;ids:string[]}>({key:'',ids:[]})
-  const [preview, setPreview] = useState<{ dx: number; dy: number; resize?: boolean } | null>(null)
+  const [preview, setPreview] = useState<{ dx: number; dy: number; resize?: boolean; frames?:Record<string,Pick<ArtifactNode,'x'|'y'|'width'|'height'>> } | null>(null)
   const [marquee, setMarquee] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [exporting, setExporting] = useState('')
   const [notice, setNotice] = useState('')
@@ -560,8 +561,14 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     else { next = []; setSelected([]) }
     if (!writable) return
     const nodes = next.flatMap(value => page.nodes[value] && !page.nodes[value].locked ? [paintedCodeNode(page,page.nodes[value],viewportRef.current,scale)] : [])
-    gesture.current = { base: session.getSnapshot().document!, type: node ? 'move' : 'marquee', startX: event.clientX, startY: event.clientY, pageId: page.id, nodes, moved: false, canvas }
+    const positionPins=capturePositionPins(page,nodes,canvas)
+    gesture.current = { base: session.getSnapshot().document!, type: node ? 'move' : 'marquee', startX: event.clientX, startY: event.clientY, pageId: page.id, nodes, moved: false, canvas,positionPins }
     event.preventDefault()
+  }
+  function capturePositionPins(page:ArtifactPage,nodes:ArtifactNode[],canvas=false){
+    const frames:Record<string,ElementPositionPins>={}
+    if(kind==='design'&&!canvas)for(const node of nodes){if(!page.nodes[node.id].css)continue;const element=viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${page.id}"] [data-node-id="${node.id}"]`),pins=element&&readElementPositionPins(element);if(pins)frames[node.id]=pins}
+    return frames
   }
   function canvasPointerDown(event:ReactPointerEvent) {
     if(!canvasMode||event.target!==event.currentTarget)return
@@ -595,8 +602,22 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if (active.type === 'rotate') { const node = active.nodes[0]; const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (element) { const r = element.getBoundingClientRect(); active.angle = node.rotation + (Math.atan2(event.clientY - (r.top+r.height/2), event.clientX - (r.left+r.width/2)) - Math.atan2(active.startY - (r.top+r.height/2), active.startX - (r.left+r.width/2))) * 180 / Math.PI; element.style.rotate = `${active.angle - node.rotation}deg` } return }
     if (active.type === 'pan') { viewportRef.current?.scrollTo((active.scrollX ?? 0) - (event.clientX - active.startX), (active.scrollY ?? 0) - (event.clientY - active.startY)); return }
     if (active.type === 'marquee') { const rect = (event.currentTarget as HTMLElement).getBoundingClientRect(); setMarquee({ x: (Math.min(active.startX, event.clientX) - rect.left) / scale-(active.canvas?64-origin.x+canvasInset.x/scale:0), y: (Math.min(active.startY, event.clientY) - rect.top) / scale-(active.canvas?64-origin.y+canvasInset.y/scale:0), width: Math.abs(dx), height: Math.abs(dy) }); return }
-    setPreview({ dx, dy, resize: active.type === 'resize' })
-    for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (!element) continue; if (active.type === 'move') element.style.translate = `${dx}px ${dy}px`; else { element.style.width = `${Math.max(16, node.width + dx)}px`; element.style.height = node.type==='note'&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)?'auto':`${Math.max(16, node.height + dy)}px` } }
+    const resized=active.type==='resize'?resizeSelection(active.nodes,active.handle??'se',dx,dy):[]
+    for(const node of active.nodes){
+      const element=viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`);if(!element)continue
+      const pins=active.positionPins?.[node.id]
+      if(active.type==='move'){
+        if(pins)for(const [name,value]of Object.entries(elementMoveValues(pins,dx,dy)))element.style.setProperty(name,`${value}px`,element.style.getPropertyPriority(name))
+        else element.style.translate=`${dx}px ${dy}px`
+      }else if(pins){
+        const patch=elementResizePatch(active.base.pages[active.pageId].nodes[node.id],pins,node,resized.find(item=>item.id===node.id)!,active.handle??'se')
+        for(const field of ['width','height','x','y'] as const)if(patch[field]!==undefined)element.style.setProperty(field==='x'?'left':field==='y'?'top':field,`${patch[field]}px`,element.style.getPropertyPriority(field==='x'?'left':field==='y'?'top':field))
+        if(patch.css)applyCodeStyle(element,Object.fromEntries(Object.entries(patch.css).filter(([name])=>['left','right','top','bottom','width','height'].includes(name))))
+      }else{element.style.width=`${Math.max(16,node.width+dx)}px`;element.style.height=node.type==='note'&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)?'auto':`${Math.max(16,node.height+dy)}px`}
+    }
+    const frames:Record<string,Pick<ArtifactNode,'x'|'y'|'width'|'height'>>={}
+    for(const node of active.nodes)if(active.positionPins?.[node.id]){const frame=paintedCodeNode(active.base.pages[active.pageId],active.base.pages[active.pageId].nodes[node.id],viewportRef.current,scale);frames[node.id]={x:frame.x,y:frame.y,width:frame.width,height:frame.height}}
+    setPreview({dx,dy,resize:active.type==='resize',frames})
   }
   function pointerUp(event: ReactPointerEvent|null, cancel = false) {
     if(kind==='design'&&tool==='pen'&&event&&gesture.current?.type!=='pan'){vectorTool.current?.up(event,cancel);return}
@@ -605,6 +626,14 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     const active = gesture.current; if (!active) return
     gesture.current = null
     const dx = ((event?.clientX??active.startX) - active.startX) / scale, dy = ((event?.clientY??active.startY) - active.startY) / scale
+    const latestPage=session.getSnapshot().document?.pages[active.pageId]??active.base.pages[active.pageId]
+    for(const node of active.nodes)if(active.positionPins?.[node.id]){
+      const latest=latestPage?.nodes[node.id],element=viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`)
+      if(!latestPage||!latest||!element)continue
+      const parent=latest.parentId?latestPage.nodes[latest.parentId]:undefined,flow=parent?.layout?.mode==='flex'||parent?.layout?.mode==='grid'
+      element.style.left=flow?'':`${latest.x}px`;element.style.top=flow?'':`${latest.y}px`;element.style.right='';element.style.bottom=''
+      if(latest.css)applyCodeStyle(element,Object.fromEntries(Object.entries(latest.css).filter(([name])=>['left','right','top','bottom'].includes(name))))
+    }
     for (const node of active.nodes) { const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (element) { const authored=active.base.pages[active.pageId]?.nodes[node.id]??node; element.style.translate = ''; element.style.width = authored.textSizing==='content'?'max-content':`${authored.width}px`; element.style.height = isNaturalText(authored)&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)||authored.type==='group'&&active.base.pages[active.pageId]?.sizing==='flow'&&authored.layout?.mode!=='absolute'?'auto':`${authored.height}px`;if(authored.css)applyCodeStyle(element,Object.fromEntries(Object.entries(authored.css).filter(([name])=>['width','height','translate'].includes(name)))) } }
     if (active.type === 'draw') {
       if(!cancel&&active.points&&(active.points.length>1||active.tool==='shape')){const node=active.tool==='shape'?canvasShapeNode(id(),shapeTool==='ellipse'?'ellipse':'rect',active.points[0],active.moved?active.points.at(-1):undefined):active.scope==='canvas'&&['pencil','pen'].includes(active.tool??'')?canvasPenNode(id(),penFitter.current!.fitCanvasPen(active.points,1.25/scale)):drawingNode(id(),active.points,active.tool as 'pencil'|'pen'|'arrow'|'line');if(node){dispatch([{type:'node.insert',pageId:active.pageId,node:{...node,scope:active.scope}}],active.base);setSelected([node.id])}if(active.tool==='shape')setTool('select')}
@@ -612,7 +641,15 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     }
     if (active.type === 'rotate') { const node = active.nodes[0]; const element = viewportRef.current?.querySelector<HTMLElement>(`[data-page-id="${active.pageId}"] [data-node-id="${node.id}"]`); if (element) element.style.rotate = ''; if (!cancel && active.angle !== undefined) dispatch([{ type: 'node.patch', pageId: active.pageId, nodeId: node.id, patch: { rotation: Math.round(active.angle) } }], active.base); return }
     if (!cancel && active.moved && active.type === 'marquee' && marquee && doc) { const page = doc.pages[active.pageId]; setSelected(page.nodeOrder.filter(value => { const n = page.nodes[value]; return !n.parentId && n.x >= marquee.x && n.y >= marquee.y && n.x + n.width <= marquee.x + marquee.width && n.y + n.height <= marquee.y + marquee.height })) }
-    else if (!cancel && active.moved && (active.type === 'move' || active.type === 'resize')) dispatch(active.nodes.map(node => ({ type: 'node.patch', pageId: active.pageId, nodeId: node.id, patch: active.type === 'move' ? { x: node.path?Math.round((node.x+dx)*10)/10:Math.round(node.x + dx), y: node.path?Math.round((node.y+dy)*10)/10:Math.round(node.y + dy) } : ((({ x, y, width, height, points }) => ({ x, y, width, height, ...(points?{points}:{}) }))(resizeSelection(active.nodes, active.handle ?? 'se', dx, dy).find(item => item.id === node.id)!)) })), active.base)
+    else if (!cancel && active.moved && (active.type === 'move' || active.type === 'resize')) {
+      const operations:ArtifactOperation[]=active.nodes.flatMap(node=>{
+        const original=active.base.pages[active.pageId].nodes[node.id],pins=active.positionPins?.[node.id]
+        const resized=active.type==='resize'?resizeSelection(active.nodes,active.handle??'se',dx,dy).find(item=>item.id===node.id)!:null
+        const patch=active.type==='move'?pins?elementMovePatch(original,pins,dx,dy):{x:node.path?Math.round((node.x+dx)*10)/10:Math.round(node.x+dx),y:node.path?Math.round((node.y+dy)*10)/10:Math.round(node.y+dy)}:pins?elementResizePatch(original,pins,node,resized!,active.handle??'se'):((({x,y,width,height,points})=>({x,y,width,height,...(points?{points}:{})}))(resized!))
+        return Object.keys(patch).length?[{type:'node.patch',pageId:active.pageId,nodeId:node.id,patch}]:[]
+      })
+      if(operations.length)dispatch(operations,active.base)
+    }
     setPreview(null); setMarquee(null)
   }
   const penResult=usePenPreview(gesture.current?.scope==='canvas'&&gesture.current.tool==='pencil'?drawingPreview:null,scale,doc?.seq??0,compute,setNotice)
@@ -778,7 +815,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
               {!presenting&&penPreview&&page.id===pageId&&<svg data-native-path-preview aria-hidden="true" className="native-drawing-preview" width={penPreview.w} height={penPreview.h} style={{left:penPreview.x,top:penPreview.y}} viewBox={`0 0 ${penPreview.w} ${penPreview.h}`}><path d={penPreview.d} fill="none" stroke="#8a8378" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /></svg>}
               {!presenting && !penPreview && drawingPreview && page.id === pageId && <svg className="native-drawing-preview" width={page.width} height={page.height}>{gesture.current?.tool==='shape'?(()=>{const first=drawingPreview[0],last=drawingPreview.at(-1)!,x=Math.min(first.x,last.x),y=Math.min(first.y,last.y),w=Math.abs(last.x-first.x),h=Math.abs(last.y-first.y);return shapeTool==='ellipse'?<ellipse cx={x+w/2} cy={y+h/2} rx={w/2} ry={h/2} fill="#b6b0a7" />:<rect x={x} y={y} width={w} height={h} rx={8} fill="#b6b0a7" />})():<polyline points={drawingPreview.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="currentColor" strokeWidth="2" />}</svg>}
               {!presenting && commentThreads.filter(t => t.status === 'open').map((thread,index) => { const anchor = decodeCommentAnchor(thread.anchor); const point = anchor?.pageId === page.id ? commentPositions[thread.id] ?? commentPoint(anchor,page) : null; return point && <button type="button" key={thread.id} className="native-comment-pin" aria-label={`评论 ${index+1}：${thread.label}`} style={{ left: point.x, top: point.y, transform: `scale(${1/scale})` }} onClick={() => {openComment(anchor,thread.id)}}>{index+1}</button> })}
-              {!presenting && tool==='select' && page.id === pageId && <div className="native-interaction-layer" data-interaction-layer>{selectedNodes.filter(node => node.id !== editingId && node.id !== cropping?.id && node.id!==pointEditing?.nodeId).map(node => { let x = node.x, y = node.y; let parent = node.parentId ? page.nodes[node.parentId] : undefined; while (parent) { x += parent.x; y += parent.y; parent = parent.parentId ? page.nodes[parent.parentId] : undefined } return <div key={node.id} className="native-selection" style={{ left: x + (preview && !preview.resize ? preview.dx : 0), top: y + (preview && !preview.resize ? preview.dy : 0), width: Math.max(16, node.width + (preview?.resize ? preview.dx : 0)), height: Math.max(16, node.height + (preview?.resize ? preview.dy : 0)), transform: `rotate(${node.rotation}deg)`, borderWidth: 1.5 / scale }}>{writable && !node.locked && <>{(['nw','n','ne','e','se','s','sw','w'] as const).map(handle => <button type="button" key={handle} className={`native-resize-handle native-handle-${handle}`} style={{ width: 7 / scale, height: 7 / scale }} aria-label={`调整元素${resizeHandleLabels[handle]}`} onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'resize', handle, startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: selectedNodes.filter(item => !item.locked), moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event, true)} />)}<button type="button" className="native-rotate-handle" style={{ width: 10/scale, height: 10/scale, top: -24/scale }} aria-label="旋转元素" onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'rotate', startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: [node], moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event,true)} /></>}</div> })}{marquee && <div className="native-marquee" style={marquee as CSSProperties} />}</div>}
+              {!presenting && tool==='select' && page.id === pageId && <div className="native-interaction-layer" data-interaction-layer>{selectedNodes.filter(node => node.id !== editingId && node.id !== cropping?.id && node.id!==pointEditing?.nodeId).map(node => { const frame=preview?.frames?.[node.id];let x = frame?.x??node.x, y = frame?.y??node.y; let parent = node.parentId ? page.nodes[node.parentId] : undefined; while (parent) { x += parent.x; y += parent.y; parent = parent.parentId ? page.nodes[parent.parentId] : undefined } return <div key={node.id} className="native-selection" style={{ left: x + (preview && !frame && !preview.resize && !gesture.current?.positionPins?.[node.id]?.bothX ? preview.dx : 0), top: y + (preview && !frame && !preview.resize && !gesture.current?.positionPins?.[node.id]?.bothY ? preview.dy : 0), width: frame?.width??Math.max(node.css?0:16,node.width+(preview?.resize?preview.dx:0)),height:frame?.height??Math.max(node.css?0:16,node.height+(preview?.resize?preview.dy:0)), transform: `rotate(${node.rotation}deg)`, borderWidth: 1.5 / scale }}>{writable && !node.locked && <>{(['nw','n','ne','e','se','s','sw','w'] as const).map(handle => <button type="button" key={handle} className={`native-resize-handle native-handle-${handle}`} style={{ width: 7 / scale, height: 7 / scale }} aria-label={`调整元素${resizeHandleLabels[handle]}`} onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'resize', handle, startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: selectedNodes.filter(item => !item.locked), moved: false,positionPins:capturePositionPins(page,selectedNodes.filter(item=>!item.locked),page.id===canvasContentId) }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event, true)} />)}<button type="button" className="native-rotate-handle" style={{ width: 10/scale, height: 10/scale, top: -24/scale }} aria-label="旋转元素" onPointerDown={event => { event.stopPropagation(); gesture.current = { base: session.getSnapshot().document!, type: 'rotate', startX: event.clientX, startY: event.clientY, pageId: page.id, nodes: [node], moved: false }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={pointerMove} onPointerUp={event => pointerUp(event)} onPointerCancel={event => pointerUp(event,true)} /></>}</div> })}{marquee && <div className="native-marquee" style={marquee as CSSProperties} />}</div>}
             </div>}
           </div>)}
           {kind==='design'&&canvasMode&&tool==='select'&&!selected.length&&selectedBoardIds.length>1&&(()=>{const frame=!boardTransforms.preview.copy&&boardTransforms.preview.groupFrame||boardBounds(selectedBoardIds.map(id=>displayPages[id]));if(!frame)return null;const page={...doc.pages[selectedBoardIds[0]],title:`${selectedBoardIds.length} 个画板`};return <div className="native-board-group-selection" data-board-group-selection style={{position:'absolute',left:(frame.x-origin.x+64)*scale+canvasInset.x,top:(frame.y-origin.y+64)*scale+canvasInset.y,width:frame.width*scale,height:frame.height*scale}}><BoardTransformHandles group page={page} writable={canvasWritable} start={boardTransforms.start} onKey={boardTransforms.key}/></div>})()}

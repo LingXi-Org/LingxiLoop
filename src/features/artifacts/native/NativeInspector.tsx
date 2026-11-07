@@ -1,4 +1,5 @@
 import ElementSizingProperties from './ElementSizingProperties'
+import ElementAlignmentControls from './ElementAlignmentControls'
 import ElementLinkField from './ElementLinkField'
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject, type ComponentProps } from 'react'
 import type { ArtifactDocument, ArtifactNode, ArtifactPage } from '../../../../shared/artifact-document'
@@ -75,7 +76,8 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
       {inspectorTab === 'theme' && <div className="native-theme-picker" aria-label="主题选择"><button type="button" aria-pressed={!doc.themeId} disabled={!writable} onClick={()=>dispatch([{type:'document.patch',patch:{themeId:null}}])}>默认主题</button>{Object.values(doc.themes).map(theme=><button type="button" key={theme.id} aria-label={`使用主题 ${theme.name}`} disabled={!writable} aria-pressed={doc.themeId===theme.id} onClick={()=>dispatch([{type:'document.patch',patch:{themeId:theme.id}}])}><span className="native-theme-preview" style={{background:String(theme.tokens.background??'#faf8f4'),color:String(theme.tokens.text??'#141413')}}>文字</span>{theme.name}</button>)}</div>}
       <div className="native-properties-pane" hidden={inspectorTab!=='properties'}><fieldset disabled={!writable}>
         {primary ? <>
-          {kind==='design'&&current&&current.id!==canvasContentId&&<ElementSizingProperties key={`sizing:${current.id}:${primary.id}`} node={primary} page={current} writable={writable} getBase={getBase} commit={commitCode} retain={retainDraft} onNotice={onNotice} onHistory={onHistory}/>}
+          {kind==='design'&&current&&current.id!==canvasContentId&&<ElementAlignmentControls node={current.nodes[primary.id]??primary} page={current} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice}/>}
+          {kind==='design'&&current&&current.id!==canvasContentId&&<ElementSizingProperties key={`sizing:${current.id}:${primary.id}`} node={current.nodes[primary.id]??primary} page={current} writable={writable} getBase={getBase} commit={commitCode} retain={retainDraft} onNotice={onNotice} onHistory={onHistory}/>}
           <section className="native-property-section"><h3>布局</h3>
             <Field label="内边距" type="number" min={0} value={primaryPadding?.x===primaryPadding?.y?primaryPadding?.x??0:''} placeholder={primaryPadding?.x!==primaryPadding?.y?'混合':undefined} onChange={v=>{const padding=Math.max(0,Number(v));patchNode({style:{padding,paddingX:padding,paddingY:padding}})}} />
             {primary.type==='group'&&<><label className="native-field"><span>布局</span><select aria-label="布局" value={primary.layout?.mode??'absolute'} onChange={e=>patchNode({layout:{...primary.layout,mode:e.target.value as 'absolute'|'flex'|'grid'}})}><option value="absolute">自由布局</option><option value="flex">弹性布局</option><option value="grid">网格布局</option></select></label>

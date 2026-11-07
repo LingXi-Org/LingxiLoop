@@ -410,3 +410,8 @@
 .native-element-sizing .native-sizing-number:hover .native-sizing-steps,.native-element-sizing .native-sizing-number:focus-within .native-sizing-steps{display:flex}
 .native-element-sizing .native-sizing-steps>button{display:flex;align-items:center;justify-content:center;width:20px;height:12px;min-height:0;padding:0;border:0;border-radius:2px;background:transparent;color:var(--native-muted)}
 .native-element-sizing .native-sizing-steps>button:first-child>svg{transform:rotate(180deg)}
+.native-element-alignment{--native-alignment-page:#f9f9f9;--native-alignment-glow:rgb(37 125 224 / .12);--native-alignment-hover:rgba(0,0,0,.1);display:flex;justify-content:space-between;align-items:center;box-sizing:border-box;height:32px;padding:4px 8px 4px 12px;color:rgba(0,0,0,.6)}
+.native-element-alignment>button{display:grid;place-items:center;box-sizing:border-box;width:24px;height:24px;min-height:24px;padding:4px;border:0;border-radius:6px;background:transparent;color:inherit}
+.native-element-alignment>button:hover:not(:disabled){background:var(--native-alignment-hover)}
+.native-editor .native-element-alignment>button:focus-visible{outline:2px solid transparent;box-shadow:inset 0 0 0 1px var(--native-alignment-page),0 0 0 1px #257de0,0 0 6px 1px var(--native-alignment-glow)}
+@media(prefers-color-scheme:dark){.native-element-alignment{--native-alignment-page:#0b0b0b;--native-alignment-glow:rgb(23 87 172 / .6);--native-alignment-hover:rgba(255,255,255,.075);color:rgba(255,255,255,.57)}}

@@ -1,0 +1,330 @@
+[
+  {
+    "container": "1440x1000-dark",
+    "controls": [
+      {
+        "label": "左对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "水平居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "右对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "顶部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "垂直居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "底部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      }
+    ]
+  },
+  {
+    "container": "1440x1000-light",
+    "controls": [
+      {
+        "label": "左对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "水平居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "右对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "顶部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "垂直居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "底部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      }
+    ]
+  },
+  {
+    "container": "1920x1200-dark",
+    "controls": [
+      {
+        "label": "左对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "水平居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "右对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "顶部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "垂直居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "底部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      }
+    ]
+  },
+  {
+    "container": "1920x1200-light",
+    "controls": [
+      {
+        "label": "左对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "水平居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "右对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "顶部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "垂直居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "底部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      }
+    ]
+  },
+  {
+    "container": "390x844-dark",
+    "controls": [
+      {
+        "label": "左对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "水平居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "右对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "顶部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "垂直居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "底部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      }
+    ]
+  },
+  {
+    "container": "390x844-light",
+    "controls": [
+      {
+        "label": "左对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "水平居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "右对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "顶部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "垂直居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "底部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      }
+    ]
+  },
+  {
+    "container": "768x1024-dark",
+    "controls": [
+      {
+        "label": "左对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "水平居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "右对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "顶部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "垂直居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      },
+      {
+        "label": "底部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(255, 255, 255, 0.57)",
+        "nativeColor": "rgba(255, 255, 255, 0.57)"
+      }
+    ]
+  },
+  {
+    "container": "768x1024-light",
+    "controls": [
+      {
+        "label": "左对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "水平居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "右对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "顶部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "垂直居中",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      },
+      {
+        "label": "底部对齐",
+        "rectOver1px": {},
+        "sourceColor": "rgba(0, 0, 0, 0.6)",
+        "nativeColor": "rgba(0, 0, 0, 0.6)"
+      }
+    ]
+  }
+]

@@ -91,7 +91,7 @@ export default function ElementSizingProperties(props:Props){
     return <SizingInput key={property} property={property} value={value} placeholder={axis?rendered(property as 'width'|'height'):property.startsWith('max-')?'无':undefined} numeric={numeric} writable={writable} getBase={getBase} apply={apply} retain={retainChanges} onHistory={onHistory}/>
   }
   const extra=(property:typeof extras[number])=><div className="native-sizing-row" key={property}><span className="native-sizing-label">{sizingLabels[property]}<IconButton icon="close" label={`移除${sizingLabels[property]}`} disabled={!writable} onClick={()=>{setShownExtras(items=>items.filter(item=>item!==property));instant({[property]:null})}}/></span>{input(property)}</div>
-  const visible=(property:typeof extras[number])=>!!values(property)||shownExtras.includes(property)
+  const visible=(property:typeof extras[number])=>!!values(property)&&(!['right','bottom'].includes(property)||values(property)!=='auto')||shownExtras.includes(property)
   const position=values('position'),positionLabels:Record<string,string>={static:'普通',relative:'相对',absolute:'绝对',fixed:'固定',sticky:'粘性'}
   return <section ref={root} className="native-property-section native-element-link native-element-sizing">
     <header><h3>尺寸</h3><Menu label="添加尺寸属性" icon="plus" disabled={!writable} popupRole="menu" minimumWidth={184}>{extras.filter(property=>!visible(property)).map(property=><MenuItem key={property} role="menuitem" onClick={()=>setShownExtras(items=>[...items,property])}>{sizingLabels[property]}</MenuItem>)}</Menu></header>

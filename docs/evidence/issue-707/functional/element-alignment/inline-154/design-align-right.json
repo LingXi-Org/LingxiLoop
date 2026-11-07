@@ -1,0 +1,285 @@
+{
+  "kind": "中文元素尺寸回归",
+  "mode": "design",
+  "case": "align-right",
+  "node": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b"
+    },
+    "text": "LingxiLoop 1",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "LingxiLoop 1"
+            }
+          ]
+        }
+      ]
+    },
+    "css": {
+      "position": "static",
+      "left": "auto",
+      "top": "auto",
+      "margin-left": "auto"
+    }
+  },
+  "geometry": {
+    "width": "1152px",
+    "height": "76px",
+    "position": "static",
+    "left": "auto",
+    "top": "auto",
+    "minWidth": "0px",
+    "maxWidth": "none",
+    "minHeight": "0px",
+    "maxHeight": "none",
+    "right": "auto",
+    "bottom": "auto"
+  },
+  "controls": [
+    {
+      "label": "添加尺寸属性",
+      "rect": {
+        "x": 1408,
+        "y": 251,
+        "width": 24,
+        "height": 24,
+        "top": 251,
+        "right": 1432,
+        "bottom": 275,
+        "left": 1408
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "label": "宽度",
+      "value": "1152px",
+      "rect": {
+        "x": 1201,
+        "y": 287,
+        "width": 151,
+        "height": 24,
+        "top": 287,
+        "right": 1352,
+        "bottom": 311,
+        "left": 1201
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "宽度模式：固定",
+      "rect": {
+        "x": 1360,
+        "y": 287,
+        "width": 72,
+        "height": 24,
+        "top": 287,
+        "right": 1432,
+        "bottom": 311,
+        "left": 1360
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 6px 0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "高度",
+      "value": "76px",
+      "rect": {
+        "x": 1201,
+        "y": 319,
+        "width": 151,
+        "height": 24,
+        "top": 319,
+        "right": 1352,
+        "bottom": 343,
+        "left": 1201
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "高度模式：固定",
+      "rect": {
+        "x": 1360,
+        "y": 319,
+        "width": 72,
+        "height": 24,
+        "top": 319,
+        "right": 1432,
+        "bottom": 343,
+        "left": 1360
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 6px 0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "位置：普通",
+      "rect": {
+        "x": 1201,
+        "y": 351,
+        "width": 231,
+        "height": 24,
+        "top": 351,
+        "right": 1432,
+        "bottom": 375,
+        "left": 1201
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 6px 0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    }
+  ],
+  "alignmentControls": [
+    {
+      "label": "左对齐",
+      "disabled": false,
+      "rect": {
+        "x": 1117,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1141,
+        "bottom": 238,
+        "left": 1117
+      },
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1"
+    },
+    {
+      "label": "水平居中",
+      "disabled": false,
+      "rect": {
+        "x": 1175.203125,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1199.203125,
+        "bottom": 238,
+        "left": 1175.203125
+      },
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1"
+    },
+    {
+      "label": "右对齐",
+      "disabled": false,
+      "rect": {
+        "x": 1233.40625,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1257.40625,
+        "bottom": 238,
+        "left": 1233.40625
+      },
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0.055)",
+      "opacity": "1"
+    },
+    {
+      "label": "顶部对齐",
+      "disabled": true,
+      "rect": {
+        "x": 1291.59375,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1315.59375,
+        "bottom": 238,
+        "left": 1291.59375
+      },
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "0.4"
+    },
+    {
+      "label": "垂直居中",
+      "disabled": true,
+      "rect": {
+        "x": 1349.796875,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1373.796875,
+        "bottom": 238,
+        "left": 1349.796875
+      },
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "0.4"
+    },
+    {
+      "label": "底部对齐",
+      "disabled": true,
+      "rect": {
+        "x": 1408,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1432,
+        "bottom": 238,
+        "left": 1408
+      },
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "0.4"
+    }
+  ],
+  "batches": 2,
+  "savedAndReopened": true,
+  "otherPagesUnchanged": true,
+  "consoleOrPageErrors": []
+}

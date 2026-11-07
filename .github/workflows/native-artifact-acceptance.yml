@@ -123,6 +123,9 @@ jobs:
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=nested-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-nested"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=same-node --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-same-node"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-left,align-center,align-right,align-top,align-middle,align-bottom --align-history=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-history"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-center,align-right --align-resize=e --sizing-zoom=50% --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-resize"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-left,align-right --align-drag=20 --align-cancel=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-cancel"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=width-hug-resize,width-hug-cancel,width-percent-click,width-important-click,min-width-add,max-width-add,min-height-add,max-height-add,right-add,bottom-add --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-extra"
           for task_sizing_node in image shape; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-node="$task_sizing_node" --sizing-case=width-hug,height-hug --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-$task_sizing_node"
@@ -265,6 +268,10 @@ jobs:
             ${{ runner.temp }}/native-element-link-exports/*
             ${{ runner.temp }}/native-element-link-nested/*
             ${{ runner.temp }}/native-element-link-same-node/*
+            ${{ runner.temp }}/native-element-sizing*/*.json
+            ${{ runner.temp }}/native-element-sizing*/*.png
+            ${{ runner.temp }}/native-element-alignment-*/*.json
+            ${{ runner.temp }}/native-element-alignment-*/*.png
             ${{ runner.temp }}/native-artboard-*/*.json
             ${{ runner.temp }}/native-artboard-*/*.png
             ${{ runner.temp }}/native-page-print-oracle.json

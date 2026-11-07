@@ -406,12 +406,19 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if(options.checks==='element-sizing'){
       const original=structuredClone(document),nodeId=`page-1-${options['sizing-node']==='group'?'root':options['sizing-node']??'heading'}`
+      if(options['sizing-zoom']){await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:options['sizing-zoom'],exact:true}).click();await scrollCanvasTo(document.pages['page-1'])}
       if(editorCase==='theme-fill')assert.equal(await page.locator(`[data-node-id="${nodeId}"] svg rect`).getAttribute('fill'),'#ff0000')
       await page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`).click()
       await page.getByRole('button',{name:'显示属性',exact:true}).click()
       const section=page.locator('.native-element-sizing'),field=section.getByRole('textbox',{name:'宽度',exact:true})
       await field.waitFor()
       const saved=()=>page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.status()===200)
+      if(options['align-position']){
+        const label={static:'普通',relative:'相对',fixed:'固定',sticky:'粘性'}[options['align-position']]
+        await section.getByLabel('位置：绝对',{exact:true}).click();const changed=saved();await section.getByRole('menuitemradio',{name:label,exact:true}).click();await changed
+        const toolbar=page.getByRole('group',{name:'元素对齐',exact:true})
+        for(const name of ['顶部对齐','垂直居中','底部对齐'])assert.equal(await toolbar.getByRole('button',{name,exact:true}).isEnabled(),options['align-position']==='fixed')
+      }
       if(editorCase==='readonly'){assert.equal(await field.isEditable(),false);assert.equal(receipts.length,0);assert.deepEqual(document,original);assert.deepEqual(errors,[]);return{kind:'中文元素尺寸回归',case:editorCase,noWrites:true,consoleOrPageErrors:errors}}
       if(['conflict','permission'].includes(editorCase)){
         await field.fill('800');fixtureWrite=editorCase!=='permission'
@@ -442,6 +449,40 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       }else if(editorCase.endsWith('-hug')||editorCase.endsWith('-fill')||['width-hug-resize','width-hug-cancel'].includes(editorCase)){
         const label=editorCase.startsWith('width')?'宽度':'高度',mode=editorCase.includes('-hug')?'自适应':'填充'
         await section.getByLabel(label+'模式：固定',{exact:true}).click();pending=saved();await section.getByRole('menuitemradio',{name:mode,exact:true}).click();await pending
+      }else if(editorCase.startsWith('align-')){
+        const toolbar=page.getByRole('group',{name:'元素对齐',exact:true});await toolbar.waitFor()
+        const beforeAlignment=structuredClone(document.pages['page-1'].nodes[nodeId])
+        for(const direction of editorCase.slice(6).split('-')){
+          const label={left:'左对齐',center:'水平居中',right:'右对齐',top:'顶部对齐',middle:'垂直居中',bottom:'底部对齐'}[direction]
+          pending=saved();await toolbar.getByRole('button',{name:label,exact:true}).click();await pending
+        }
+        if(options['after-width']){await field.fill(options['after-width']);pending=saved();await field.press('Enter');await pending}
+        if(options['after-height']){const height=section.getByRole('textbox',{name:'高度',exact:true});await height.fill(options['after-height']);pending=saved();await height.press('Enter');await pending}
+        if(!options['align-position']||options['align-position']==='fixed'){
+          await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+          const direction=editorCase.split('-').at(-1),horizontal=['left','center','right'].includes(direction)
+          assert.equal(await section.getByRole('textbox',{name:horizontal?'水平偏移':'垂直偏移',exact:true}).inputValue(),direction==='right'||direction==='bottom'?'auto':'0','偏移输入显示作者声明，而非自动边距后的绘制坐标')
+          assert.equal(await section.getByRole('textbox',{name:horizontal?'右侧':'底部',exact:true}).count(),direction==='left'||direction==='top'?0:1,'自动相反锚点不展开附加属性行')
+        }
+        if(options['align-drag']){
+          const element=page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`),before=await element.boundingBox(),delta=Number(options['align-drag'])
+          const locked=editorCase.split('-').at(-1)==='center',cancel=options['align-cancel']==='true',writes=receipts.length,beforeDrag=structuredClone(document.pages['page-1'].nodes[nodeId])
+          if(!locked&&!cancel)pending=saved()
+          await page.mouse.move(before.x+8,before.y+before.height/2);await page.mouse.down();await page.mouse.move(before.x+8+delta,before.y+before.height/2,{steps:6});if(cancel)await page.keyboard.press('Escape');await page.mouse.up();if(!locked&&!cancel)await pending
+          await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+          const after=await element.boundingBox();await writeFile(join(output,'alignment-drag.json'),JSON.stringify({before,after,delta,node:document.pages['page-1'].nodes[nodeId]},null,2))
+          assert.ok(Math.abs(after.x-before.x-(locked||cancel?0:delta))<=1,'双侧锚点锁定对应拖动方向，其余按实际绘制位置移动')
+          if(locked||cancel){assert.equal(receipts.length,writes,'锁定轴或取消拖动没有文档写入');assert.deepEqual(document.pages['page-1'].nodes[nodeId],beforeDrag)}
+        }
+        if(options['align-resize']){
+          const handle=page.locator(`.native-selection .native-handle-${options['align-resize']}`),box=await handle.boundingBox()
+          const cancel=options['align-cancel']==='true',writes=receipts.length,beforeResize=structuredClone(document.pages['page-1'].nodes[nodeId]);if(!cancel)pending=saved();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width/2+20,box.y+box.height/2,{steps:6});if(cancel)await page.keyboard.press('Escape');await page.mouse.up();if(!cancel)await pending;else{assert.equal(receipts.length,writes);assert.deepEqual(document.pages['page-1'].nodes[nodeId],beforeResize)}
+          await writeFile(join(output,'alignment-resize.json'),JSON.stringify(document.pages['page-1'].nodes[nodeId],null,2))
+          if(editorCase==='align-center'&&options['align-resize']==='e')assert.equal(document.pages['page-1'].nodes[nodeId].x,0,'东侧缩放不把自动边距后的绘制坐标写入左侧声明')
+        }
+        if(options['align-history']==='true'){
+          const aligned=structuredClone(document.pages['page-1'].nodes[nodeId]);await page.locator('[data-native-artifact-editor]').focus();pending=saved();await page.keyboard.press('Control+z');await pending;assert.deepEqual(document.pages['page-1'].nodes[nodeId],beforeAlignment);pending=saved();await page.keyboard.press('Control+Shift+z');await pending;assert.deepEqual(document.pages['page-1'].nodes[nodeId],aligned)
+        }
       }else if(editorCase.startsWith('position-')){
         const label={'position-inline':'普通','position-relative':'相对','position-fixed':'固定','position-sticky':'粘性'}[editorCase]
         await section.getByLabel('位置：绝对',{exact:true}).click();pending=saved();await section.getByRole('menuitemradio',{name:label,exact:true}).click();await pending
@@ -481,21 +522,38 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.evaluate(()=>document.activeElement?.blur())
       if(editorCase==='auto')assert.equal(await field.inputValue(),'auto')
       const snapshot=structuredClone(document.pages['page-1'].nodes[nodeId])
+      if(editorCase==='theme-fill')assert.equal(await page.locator(`[data-node-id="${nodeId}"]`).evaluate(element=>getComputedStyle(element).backgroundColor),'rgb(255, 0, 0)','CSS矩形必须使用已解析主题填充色')
       const geometry=await page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`).evaluate(element=>{const style=getComputedStyle(element);return{width:style.width,height:style.height,position:style.position,left:style.left,top:style.top,minWidth:style.minWidth,maxWidth:style.maxWidth,minHeight:style.minHeight,maxHeight:style.maxHeight,right:style.right,bottom:style.bottom}})
       if(options['sizing-node']==='shape'&&!options['sizing-stroke']&&editorCase==='width-hug')assert.equal(geometry.width,'0px','空矩形自动宽度不得被SVG子元素撑开')
       if(options['sizing-node']==='shape'&&!options['sizing-stroke']&&editorCase==='height-hug')assert.equal(geometry.height,'0px','空矩形自动高度不得保留SVG行盒')
       const controls=await section.locator('input,summary').evaluateAll(elements=>elements.map(element=>{const style=getComputedStyle(element);return{label:element.getAttribute('aria-label'),value:element.value,rect:element.getBoundingClientRect().toJSON(),fontSize:style.fontSize,lineHeight:style.lineHeight,padding:style.padding,borderRadius:style.borderRadius,color:style.color,background:style.backgroundColor}}))
-      if(editorCase==='theme-fill')assert.equal(await page.locator(`[data-node-id="${nodeId}"]`).evaluate(element=>getComputedStyle(element).backgroundColor),'rgb(255, 0, 0)','CSS矩形必须使用已解析主题填充色')
+      if(options['align-state']){
+        const target=page.getByRole('group',{name:'元素对齐',exact:true}).getByRole('button',{name:'左对齐',exact:true})
+        if(options['align-state']==='hover')await target.hover()
+        else if(options['align-state']==='focus'){
+          await field.focus()
+          for(let index=0;index<20&&!await target.evaluate(element=>element===document.activeElement);index++)await page.keyboard.press('Shift+Tab')
+          assert.equal(await target.evaluate(element=>element===document.activeElement),true)
+        }
+      }
+      if(options['align-key']){
+        const writes=receipts.length,before=JSON.stringify(document)
+        await page.keyboard.press(options['align-key']);await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+        assert.equal(await page.getByRole('group',{name:'元素对齐',exact:true}).getByRole('button',{name:'左对齐',exact:true}).evaluate(element=>element===document.activeElement),true)
+        assert.equal(receipts.length,writes);assert.equal(JSON.stringify(document),before)
+      }
+      if(options['align-state'])await page.waitForTimeout(250)
+      const alignmentControls=await page.getByRole('group',{name:'元素对齐',exact:true}).getByRole('button').evaluateAll(elements=>elements.map(element=>{const style=getComputedStyle(element);return{label:element.getAttribute('aria-label'),disabled:element.disabled,rect:element.getBoundingClientRect().toJSON(),color:style.color,background:style.backgroundColor,opacity:style.opacity,outline:style.outline,boxShadow:style.boxShadow,borderRadius:style.borderRadius,iconRect:element.querySelector('svg')?.getBoundingClientRect().toJSON()}}))
       for(const id of original.pageOrder.filter(id=>id!=='page-1'))assert.deepEqual(document.pages[id],original.pages[id])
       await page.screenshot({path:join(output,`sizing-${editorCase}.png`)})
       await page.reload();await ready(1);assert.deepEqual(document.pages['page-1'].nodes[nodeId],snapshot)
       const reopened=await page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`).evaluate(element=>{const style=getComputedStyle(element);return{width:style.width,height:style.height,position:style.position,left:style.left,top:style.top,minWidth:style.minWidth,maxWidth:style.maxWidth,minHeight:style.minHeight,maxHeight:style.maxHeight,right:style.right,bottom:style.bottom}})
       assert.deepEqual(reopened,geometry);assert.deepEqual(errors,[])
-      return{kind:'中文元素尺寸回归',mode:kind,case:editorCase,node:snapshot,geometry,controls,batches:receipts.length,savedAndReopened:true,otherPagesUnchanged:true,consoleOrPageErrors:errors}
+      if(editorCase==='theme-fill')assert.equal(await page.locator(`[data-node-id="${nodeId}"]`).evaluate(element=>getComputedStyle(element).backgroundColor),'rgb(255, 0, 0)','重开后仍保留主题填充色')
+      return{kind:'中文元素尺寸回归',mode:kind,case:editorCase,node:snapshot,geometry,controls,alignmentControls,batches:receipts.length,savedAndReopened:true,otherPagesUnchanged:true,consoleOrPageErrors:errors}
     }
   if(options.checks==='element-link'&&['nested-export','same-node'].includes(editorCase)){
       const same=editorCase==='same-node',group=page.locator(`[data-page-id="page-1"] [data-node-id="page-1-${same?'heading':'root'}"]`);await group.click();await page.getByRole('button',{name:'显示属性',exact:true}).click();const field=page.getByRole('textbox',{name:'链接目标',exact:true});await field.fill('https://parent.test/');const saved=page.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/operations')&&r.status()===200);await field.press('Enter');await saved
-      if(editorCase==='theme-fill')assert.equal(await page.locator(`[data-node-id="${nodeId}"]`).evaluate(element=>getComputedStyle(element).backgroundColor),'rgb(255, 0, 0)','重开后仍保留主题填充色')
       const native=await group.evaluate(element=>({childCount:element.querySelectorAll('[data-node-id]').length,links:[...element.querySelectorAll('a[href]')].map(e=>e.getAttribute('href')),frame:element.getBoundingClientRect().toJSON()}));await page.getByLabel('导出格式',{exact:true}).click();const pending=page.waitForEvent('download');await page.getByRole('button',{name:'网页',exact:true}).click();const downloaded=await pending;const html=await readFile(await downloaded.path(),'utf8');await writeFile(join(output,'nested.html'),html);const offline=await browser.newPage({viewport:{width:1920,height:1200}});await offline.setContent(html);const parsed=await offline.evaluate(()=>({groups:[...document.querySelectorAll('[data-node-id="page-1-root"]')].map(e=>({tag:e.tagName,childCount:e.querySelectorAll('[data-node-id]').length,frame:e.getBoundingClientRect().toJSON()})),heading:[...document.querySelectorAll('[data-node-id="page-1-heading"]')].map(e=>({tag:e.tagName,parent:e.parentElement?.dataset.nodeId,closestGroup:!!e.closest('[data-node-id="page-1-root"]'),frame:e.getBoundingClientRect().toJSON()})),links:[...document.querySelectorAll('a[href]')].map(e=>({href:e.getAttribute('href'),node:e.dataset.nodeId,rect:e.getBoundingClientRect().toJSON()}))}));await offline.screenshot({path:join(output,'nested-offline.png')});const hits=await offline.evaluate(()=>{const section=document.querySelector('.artifact-export-page').getBoundingClientRect(),child=document.querySelector('[data-node-id="page-1-heading"] a[href="https://child.test/"]'),rect=child.getBoundingClientRect(),heading=document.querySelector('[data-node-id="page-1-heading"]').getBoundingClientRect(),same=document.querySelector('[data-node-id="page-1-heading"] .artifact-export-element-link');return{child:document.elementFromPoint(rect.left+2,rect.top+rect.height/2)?.closest('a[href]')?.getAttribute('href'),parent:document.elementFromPoint(same?heading.left+2:section.left+1000,same?heading.top+heading.height/2:section.top+900)?.closest('a[href]')?.getAttribute('href')}});const offlineClicks=await verifyWholeAndInlineClicks(offline);await offline.close();assert.equal(parsed.groups.length,1);assert.equal(parsed.groups[0].childCount,3);assert.equal(parsed.heading[0].closestGroup,true);assert.equal(native.childCount,same?0:3);assert.deepEqual(hits,{child:'https://child.test/',parent:'https://parent.test/'});const exports=[];for(const [format,label]of [['pdf','便携文档'],['pptx','演示文稿']]){await page.getByLabel('导出格式',{exact:true}).click();const download=page.waitForEvent('download');await page.getByRole('button',{name:label,exact:true}).click();const bytes=await readFile(await(await download).path()),path=join(output,'nested.'+format);await writeFile(path,bytes);if(format==='pdf'){const urls=execFileSync('pdfinfo',['-url',path],{encoding:'utf8'});execFileSync('pdftoppm',['-f','1','-l','1','-singlefile','-scale-to','1000','-png',path,join(output,'nested-pdf-page')]);assert.ok(urls.includes('child.test')&&urls.includes('parent.test'));exports.push({format,urls,childUrlPresent:true})}else{const{default:JSZip}=await import('jszip');const zip=await JSZip.loadAsync(bytes),rels=await zip.file('ppt/slides/_rels/slide1.xml.rels').async('string'),xml=await zip.file('ppt/slides/slide1.xml').async('string'),presentation=await zip.file('ppt/presentation.xml').async('string');await writeFile(join(output,'slide1.xml'),xml);await writeFile(join(output,'slide1.xml.rels'),rels);const relation=rels.match(/<Relationship[^>]*Target="https:\/\/child.test\/"[^>]*\/>/),id=relation?.[0].match(/Id="([^"]+)"/)?.[1],shape=id?[...xml.matchAll(/<p:sp>.*?<\/p:sp>/g)].map(x=>x[0]).find(s=>s.includes('r:id="'+id+'"')):null;assert.ok(id&&shape);const cy=Number(presentation.match(/<p:sldSz[^>]*cy="(\d+)"/)?.[1]),offset=Number(shape.match(/<a:off[^>]*y="(\d+)"/)?.[1]);assert.ok(offset>=0&&offset<cy,'子链接命中区必须留在幻灯片内');assert.ok(rels.includes('https://parent.test/'));exports.push({format,childRelationship:id,childOffsetY:offset,slideHeight:cy})}}await page.getByLabel('全窗口查看画板 Page 1',{exact:true}).click();await page.getByRole('region',{name:'画板全窗口预览',exact:true}).locator('a[href="https://child.test/"]').waitFor();const nativeClicks=await verifyWholeAndInlineClicks(page,'[aria-label="画板全窗口预览"]');await page.screenshot({path:join(output,'nested-native-preview.png')});assert.deepEqual(errors,[]);return{kind:'组合及内联链接导出解析',case:editorCase,native,parsed,hits,offlineClicks,nativeClicks,exports,consoleOrPageErrors:errors}
     }
     if(options.checks==='element-link'){
@@ -3521,7 +3579,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         committedManualBatches: receipts.length, capturedVersion: 0, currentVersion: 1, consoleOrPageErrors: errors }
     }
     if (options.checks === 'save') {
-      await page.locator('.native-property-disclosure>summary').filter({hasText:'高级'}).click()
+      if(kind==='slides')await page.locator('.native-property-disclosure>summary').filter({hasText:'高级'}).click()
       const editor = page.locator('[data-native-artifact-editor]')
       const waitState = value => page.waitForFunction(value => window.document.querySelector('[data-save-state]')?.getAttribute('data-save-state') === value, value)
       const assertPending = async () => { await waitState('pending'); assert.match(await page.locator('.native-save-status').innerText(), /正在保存/); assert.ok(releaseAcknowledgment, 'Transport acknowledgment must still be held') }
@@ -3536,20 +3594,27 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.equal(await control.evaluate(element => document.activeElement === element), true, 'Ctrl+S must save without blur')
         verify(); await release()
       }
-      await saveControl(page.getByLabel('标题', { exact: true }), 'Focused property save', () => assert.equal(document.pages['page-1'].title, 'Focused property save'))
-      await saveControl(page.getByLabel('宽', { exact: true }), '1800', () => assert.equal(document.pages['page-1'].width, 1800))
-      if (kind === 'design') {
-        await saveControl(page.getByLabel('画板 X', { exact: true }), '32', () => assert.equal(document.pages['page-1'].x, 32))
-        await saveControl(page.getByLabel('画板 Y', { exact: true }), '48', () => assert.equal(document.pages['page-1'].y, 48))
+      if(kind==='design'){
+        await page.locator('[data-page-id="page-1"] .native-board-label').dblclick()
+        const title=page.getByRole('textbox',{name:'画板名称',exact:true}),writes=receipts.length
+        await title.fill('聚焦属性保存');await waitState('draft');await title.press('Control+s')
+        assert.equal(receipts.length,writes,'原版标题保存快捷键保留改名草稿，不提前确认')
+        assert.equal(await title.evaluate(element=>document.activeElement===element),true)
+        holdAcknowledgment=true;await title.press('Enter');await assertPending();assert.equal(document.pages['page-1'].title,'聚焦属性保存');await release()
+      }else{
+        await saveControl(page.getByLabel('标题', { exact: true }), '聚焦属性保存', () => assert.equal(document.pages['page-1'].title, '聚焦属性保存'))
       }
+      await saveControl(page.getByLabel(kind==='design'?'画板宽度':'宽', { exact: true }), '1800', () => assert.equal(document.pages['page-1'].width, 1800))
       if (kind === 'slides') await page.getByRole('button',{name:'讲者备注',exact:true}).click(); else { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'讲者备注',exact:true}).click() }
       const notes = page.getByRole('textbox', { name: '讲者备注', exact: true })
       for (const value of ['备注草稿一', '备注草稿二']) await saveControl(notes, value, () => assert.equal(document.pages['page-1'].notes, value))
       await page.locator('[data-node-id="page-1-heading"]').dblclick()
       const text = page.locator('[data-native-text-editor]'); await text.waitFor(); await page.keyboard.press('End')
       const cdp = await page.context().newCDPSession(page), beforeComposition = receipts.length
+      await page.evaluate(()=>{window.__saveImeEvents=[];for(const name of ['compositionstart','compositionupdate','compositionend','keydown','input'])document.addEventListener(name,event=>window.__saveImeEvents.push({type:event.type,key:event.key,data:event.data,isComposing:event.isComposing,isTrusted:event.isTrusted,target:event.target.tagName}),true)})
       await cdp.send('Input.imeSetComposition', { text: '未确认', selectionStart: 3, selectionEnd: 3 })
       await waitState('draft'); await text.press('Control+s'); await page.waitForTimeout(800)
+      await writeFile(join(output,`${kind}-save-ime.json`),JSON.stringify({events:await page.evaluate(()=>window.__saveImeEvents),operations:receipts.slice(beforeComposition)},null,2))
       assert.equal(receipts.length, beforeComposition, 'Ctrl+S must not submit an IME composition')
       assert.equal(await editor.getAttribute('data-save-state'), 'draft')
       holdAcknowledgment = true
@@ -3578,17 +3643,19 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual(historyRequests, ['undo', 'redo'])
       assert.equal(await text.count(), 0, 'Shared redo must finish the active rich-text editor')
       await page.reload({ waitUntil: 'domcontentloaded' }); await ready(1)
+      if(kind==='design')await page.locator('[data-page-id="page-1"] .native-board-label').click()
       await page.getByRole('button',{name:'显示属性',exact:true}).click()
       if (kind === 'slides') await page.getByRole('button',{name:'讲者备注',exact:true}).click(); else { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'讲者备注',exact:true}).click() }
-      await page.locator('.native-property-disclosure>summary').filter({hasText:'高级'}).click()
-      assert.equal(await page.getByLabel('标题', { exact: true }).inputValue(), 'Focused property save')
-      assert.equal(await page.getByLabel('宽', { exact: true }).inputValue(), '1800')
+      if(kind==='slides'){
+        await page.locator('.native-property-disclosure>summary').filter({hasText:'高级'}).click()
+        assert.equal(await page.getByLabel('标题', { exact: true }).inputValue(), '聚焦属性保存')
+      }else assert.equal(await page.locator('[data-page-id="page-1"] .native-board-label').textContent(),'聚焦属性保存')
+      assert.equal(await page.getByLabel(kind==='design'?'画板宽度':'宽', { exact: true }).inputValue(), '1800')
       assert.equal(await page.getByRole('textbox', { name: '讲者备注', exact: true }).inputValue(), '备注草稿二')
       assert.equal(await page.locator('[data-node-id="page-1-table"] td').first().innerText(), '表格草稿二')
-      if (kind === 'design') { assert.equal(await page.getByLabel('画板 X', { exact: true }).inputValue(), '32'); assert.equal(await page.getByLabel('画板 Y', { exact: true }).inputValue(), '48') }
       assert.deepEqual(errors, [])
       return { kind: 'isolated-native-editor-save-diagnostic', mode: kind, focusedPropertyCtrlS: true, focusedTableCtrlS: true, repeatedFocusedNotesSave: true,
-        dirtyBeforeSubmit: true, pendingUntilAcknowledged: true, compositionNotSubmittedByCtrlS: true, unrelatedAgentStylePreserved: true, activeRichTextSharedUndoRedo: true, reloadRetainedAllValues: true, designBoardCoordinates: kind === 'design', consoleOrPageErrors: errors }
+        dirtyBeforeSubmit: true, pendingUntilAcknowledged: true, compositionNotSubmittedByCtrlS: true, unrelatedAgentStylePreserved: true, activeRichTextSharedUndoRedo: true, reloadRetainedAllValues: true, designTitleRequiresConfirmation:kind==='design',coordinateCoverage:'board-transform keyboard/move regressions',consoleOrPageErrors: errors }
     }
     let maxMountedPages = 0, maxMountedNodes = 0
     const editedPages = [1, 25, 50], expected = new Map()

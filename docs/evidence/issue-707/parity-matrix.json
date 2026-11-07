@@ -9796,6 +9796,50 @@
         "receipt": "functional/element-sizing.json",
         "scope": "受控HTTP、真实React/Worker/浏览器及系统拼音；不代替真实授权浏览器、全部对象/菜单、缩略图或性能资格。"
       }
+    },
+    {
+      "id": "D35-design",
+      "editor": "design",
+      "control": "画板元素对齐与CSS锚点手势",
+      "trigger": "选择画板元素，点击六个对齐按钮并修改尺寸、拖动或缩放",
+      "states": [
+        "浅色",
+        "深色",
+        "悬停",
+        "键盘焦点",
+        "普通流",
+        "相对定位",
+        "绝对定位",
+        "固定定位",
+        "粘性定位",
+        "共享撤销重做",
+        "取消拖动",
+        "取消缩放",
+        "保存重开"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "lookup": "元素对齐属性生成及工具栏",
+        "start": 4387950,
+        "end": 4390450,
+        "offsetUnit": "UTF-16 code units",
+        "runtime": "source-element-alignment.json"
+      },
+      "implementation": "src/features/artifacts/native/ElementAlignmentControls.tsx",
+      "screenshots": {
+        "reference": "visual/element-alignment/reference/",
+        "native": "visual/element-alignment/implementation/",
+        "manifest": "visual/element-alignment/differences/raw-pixel-results.json",
+        "matchedStateVerified": true
+      },
+      "result": "六控件在8种容器/主题下边界偏差≤1 CSS px、颜色一致；13对状态的11项计算几何一致。局部功能通过，56个原生场景收据已保存。8对原始整图均未达到0.5%门槛，多选、全部约束及手柄状态仍未验收。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-alignment.json",
+        "scope": "固定来源与受控HTTP浏览器；不代替完整授权服务、Agent、缩略图、导出或性能资格。"
+      }
     }
   ],
   "registeredReplacements": [

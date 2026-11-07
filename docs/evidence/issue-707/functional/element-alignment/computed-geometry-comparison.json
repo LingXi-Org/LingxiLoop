@@ -1,0 +1,80 @@
+[
+  {
+    "state": "base",
+    "case": "align-left",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "base",
+    "case": "align-center",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "base",
+    "case": "align-right",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "base",
+    "case": "align-top",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "base",
+    "case": "align-middle",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "base",
+    "case": "align-bottom",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "resize50",
+    "case": "align-center",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "resize50",
+    "case": "align-right",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "relative",
+    "case": "align-left",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "relative",
+    "case": "align-center",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "relative",
+    "case": "align-right",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "resize50-140",
+    "case": "align-center",
+    "matchingFields": 11,
+    "differences": {}
+  },
+  {
+    "state": "resize50-140",
+    "case": "align-right",
+    "matchingFields": 11,
+    "differences": {}
+  }
+]

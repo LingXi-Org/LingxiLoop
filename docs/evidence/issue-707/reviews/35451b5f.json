@@ -1,0 +1,76 @@
+{
+  "审查对象": {
+    "候选提交": "35451b5f5fb1abd10b0c16679c40109e46d2c8db",
+    "基线提交": "97b1e086fcf141417b8e351a959fa70a07bd1065",
+    "工作树": "/workspace/lingxi-issue707-scratch/review-35451b5f",
+    "技能": ".agents/skills/repository-review/SKILL.md",
+    "范围": "仅链接clear/history响应后DOM就绪等待及失败/审查归档。",
+    "隔离": "独立detached checkout，只读审查；未读root对齐栏WIP，未改产品、提交、推送、外发或部署。仅链接既有公有node_modules。"
+  },
+  "结论": "本批测试修复局部复审通过；未发现新增可复现P1/P2。不代表完整功能、视觉或性能资格。",
+  "发现": [],
+  "静态核对": [
+    {
+      "位置": "scripts/native-editor-ui-acceptance.mjs:540",
+      "结果": "clear先等待HTTP成功，再在原link定位器等待state:detached，然后保留count===0断言；等待DOM不存在而非仅隐藏，也没有捕获忽略超时。"
+    },
+    {
+      "位置": "scripts/native-editor-ui-acceptance.mjs:543",
+      "结果": "history直接Control+z后等待HTTP成功和相同定位器detached，保留count===0。随后Control+Shift+z、HTTP成功及link.waitFor()仍在，未绕过重做恢复。"
+    },
+    {
+      "位置": "scripts/native-editor-ui-acceptance.mjs:570",
+      "结果": "末尾其他页深比较、重开后的清除零数量或有效href检查、console/page errors为空检查均未改。"
+    },
+    {
+      "项目": "精确差异",
+      "结果": "自动逐字比较：移除新旧脚本中await link.waitFor({state:'detached'});后，两份脚本完全相同；该等待仅增加2处。因此原断言、超时、浏览器参数和其他检查均未改。"
+    },
+    {
+      "项目": "产品及门槛",
+      "结果": "变更文件仅该测试脚本与docs/evidence/issue-707；无产品、workflow、基准计量/阈值改动。"
+    },
+    {
+      "项目": "归档真实性边界",
+      "结果": "97审查JSON与本人/tmp原报告逐字节一致。诊断收据明确未开始产品测量、零样本、qualified:false，且明确root带后续WIP的定向收据不是冻结候选全部UI或性能证据。GitHub原始日志本轮未独立抓取，未把归档描述算作本轮执行。"
+    }
+  ],
+  "实际独立重跑": [
+    {
+      "浏览器": "Chrome140",
+      "命令": "node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=history,clear --browser=/tmp/review-a0-chrome140/chrome-linux/chrome --output=/workspace/lingxi-issue707-scratch/review-354-link140",
+      "结果": "history、clear均通过，savedAndReopened:true、otherPagesUnchanged:true、consoleOrPageErrors:[]。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-354-link140",
+        "/tmp/lingxi-review-354-link140.log"
+      ]
+    },
+    {
+      "浏览器": "Chrome154",
+      "命令": "node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=history,clear --browser=/usr/bin/chromium --output=/workspace/lingxi-issue707-scratch/review-354-link154",
+      "结果": "history、clear均通过，savedAndReopened:true、otherPagesUnchanged:true、consoleOrPageErrors:[]。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-354-link154",
+        "/tmp/lingxi-review-354-link154.log"
+      ]
+    }
+  ],
+  "环境": {
+    "Playwright": "/tmp/lingxi-browser-tools/node_modules/playwright/index.mjs",
+    "字体配置": "/tmp/review-font-environment/compatible.conf",
+    "临时目录": "/workspace/lingxi-issue707-scratch/review-tmp-959b41b5",
+    "范围": "受控HTTP真实React/Worker/浏览器夹具，不是真实授权服务或性能测量。"
+  },
+  "检查状态": {
+    "gitDiffCheck": "git diff --check 97b1e086 HEAD无输出",
+    "HEAD": "精确35451b5f5fb1abd10b0c16679c40109e46d2c8db",
+    "工作树": "完成审查后git status --short为空",
+    "运行失败": "本次两浏览器4项均退出0，无失败。"
+  },
+  "未验证": [
+    "正式CI42391937703及诊断42392081625由父线程通知运行中，本轮未独立查询，不报告为通过。",
+    "没有产品改动，本轮没有重做数据库、系统IME、全量链接、多格式、50页或23项编排合同；只重跑本次具体变化对应的两个场景。",
+    "没有完整应用性能样本；最终候选10组AB/BA、视觉0.5%、完整服务及编辑能力仍未验收。",
+    "Source对齐/拖动探针属于父线程后续WIP，未混入本候选或作为视觉通过证据。父线程随后补充相机测量已排除先前缩放疑虑；本次测试修复结论不依赖该取证。"
+  ]
+}
