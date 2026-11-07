@@ -53,6 +53,24 @@ test('权限变化前的代码草稿只保存在恢复数据中，重试不绕�
   h.session.dispose()
 })
 
+test('组字访问丢失的原始代码由会话保留，恢复读取不自动提交，显式清理才解除草稿',async()=>{
+  const h=harness();await h.session.open();const base=h.session.getSnapshot().document!
+  h.transport.changed=async()=>{throw Object.assign(new Error('无权读取'),{status:403})}
+  await h.session.refresh();assert.equal(h.session.getSnapshot().document,null)
+  const raw={pageId:'page-one',nodeIds:['page-one-text'],text:'// 中文组字未结束\nwidth: calc(',before:[{name:'width',value:'320px'}],base}
+  h.session.retainCodeDraft(raw)
+  raw.text='不能修改已保留副本'
+  assert.equal(h.session.hasRetainedDrafts,true)
+  assert.equal(h.session.recovery().codeDrafts[0].text,'// 中文组字未结束\nwidth: calc(')
+  await h.session.retry()
+  assert.equal(h.ids.length,0)
+  assert.equal(h.session.getCodeDraft('page-one',['page-one-text'])?.base,base)
+  await assert.rejects(h.session.flush())
+  h.session.clearCodeDraft('page-one',['page-one-text'])
+  assert.equal(h.session.hasRetainedDrafts,false)
+  await h.session.flush();assert.equal(h.ids.length,0);h.session.dispose()
+})
+
 test('geometry read dependencies reject a peer transform arriving after the client snapshot',async()=>{
   let document=fixture()
   const receipt=():DocumentReceipt=>({document,write:true,history:{version:0,undo:null,redo:null}})

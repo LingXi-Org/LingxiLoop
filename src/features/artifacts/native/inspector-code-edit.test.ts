@@ -26,3 +26,14 @@ test('代码属性批次在提交前拒绝事件处理属性',()=>{
   const node=createNode('text','text')
   assert.throws(()=>nodeCodePatch(node,[],[{name:'@onclick',value:'alert(1)'}]),/智能体/)
 })
+
+test('行高的像素值保持CSS单位，无单位数才映射为原生倍数',()=>{
+  const page=createPage('page'),node={...createNode('text','text'),style:{fontSize:48,lineHeight:1.25}}
+  const before=nodeCodeEntries(node,page)
+  const pixels=nodeCodePatch(node,before,before.map(entry=>entry.name==='line-height'?{...entry,value:'2px'}:entry))
+  assert.equal(pixels.patch.style?.lineHeight,undefined)
+  assert.equal(pixels.patch.css?.['line-height'],'2px')
+  const ratio=nodeCodePatch(node,before,before.map(entry=>entry.name==='line-height'?{...entry,value:'2'}:entry))
+  assert.equal(ratio.patch.style?.lineHeight,2)
+  assert.equal(ratio.patch.css,undefined)
+})

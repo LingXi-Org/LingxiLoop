@@ -3,6 +3,15 @@ import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact
 import { applyOperations, prepareBatch, type ArtifactOperation, type ArtifactOperationBatch } from '../../../../shared/artifact-operations'
 
 export interface NativeHistory { version: number; undo: string | null; redo: string | null }
+export interface NativeCodeDraft {
+  pageId:string;nodeIds:string[];text:string;before:Array<{name:string;value:string}>;base:ArtifactDocument
+}
+export interface NativeCodeDraftAccess {
+  get(pageId:string,nodeIds:string[]):NativeCodeDraft|undefined
+  retain(draft:NativeCodeDraft):void
+  clear(pageId:string,nodeIds:string[]):void
+  canCommit(pageId:string):boolean
+}
 export interface DocumentReceipt {
   document: ArtifactDocument
   history: NativeHistory
@@ -46,6 +55,7 @@ export class NativeDocumentSession {
   private committed: ArtifactDocument | null = null
   private queue: ArtifactOperationBatch[] = []
   private rejectedDrafts = new Map<string, ArtifactOperation[]>()
+  private codeDrafts = new Map<string,NativeCodeDraft>()
   private predictions = new Map<string, Record<string, number>>()
   // Captured editing/gesture snapshots refer to anchors for our own optimistic
   // writes. ACKs may renumber those writes after an unrelated remote operation.
@@ -211,7 +221,7 @@ export class NativeDocumentSession {
     })().finally(() => { this.sending = null })
     return this.sending
   }
-  async flush() { await this.pump(); if (this.queue.length || this.rejectedDrafts.size || this.state.conflict) throw new Error('稿件还有未保存的修改。') }
+  async flush() { await this.pump(); if (this.queue.length || this.rejectedDrafts.size || this.codeDrafts.size || this.state.conflict) throw new Error('稿件还有未保存的修改。') }
   async retry() { if (!this.state.conflict) { this.update({ error: '' }); await this.pump(); if (!this.state.document) await this.open() } }
   async undoRedo(kind: 'undo' | 'redo') {
     try {
@@ -222,15 +232,22 @@ export class NativeDocumentSession {
       this.accept(await this.transport.history(kind, target, this.state.history.version, crypto.randomUUID()))
     } catch (error) { this.failure(error) }
   }
-  get hasRetainedDrafts(){return this.rejectedDrafts.size>0}
+  get hasRetainedDrafts(){return this.rejectedDrafts.size>0||this.codeDrafts.size>0}
+  private codeDraftKey(pageId:string,nodeIds:string[]){return pageId+'|'+[...nodeIds].sort().join(',')}
+  getCodeDraft(pageId:string,nodeIds:string[]){return this.codeDrafts.get(this.codeDraftKey(pageId,nodeIds))}
+  retainCodeDraft(draft:NativeCodeDraft){
+    this.codeDrafts.set(this.codeDraftKey(draft.pageId,draft.nodeIds),{...draft,nodeIds:[...draft.nodeIds],before:draft.before.map(entry=>({...entry}))})
+    this.update({pending:this.queue.length+this.rejectedDrafts.size+this.codeDrafts.size,error:this.state.error||(this.state.write&&this.state.document&&!this.state.conflict?'':'当前无法保存，本地修改已保留。可下载本地副本。')})
+  }
+  clearCodeDraft(pageId:string,nodeIds:string[]){if(this.codeDrafts.delete(this.codeDraftKey(pageId,nodeIds)))this.update({pending:this.queue.length+this.rejectedDrafts.size+this.codeDrafts.size,...(!this.hasRetainedDrafts&&!this.queue.length&&this.state.error==='当前无法保存，本地修改已保留。可下载本地副本。'?{error:''}:{})})}
   /** Preserve an already edited control after access changes; never send it automatically. */
   retainDraft(operations:ArtifactOperation[]){
     if(!operations.length)return
     const key='retained:'+operations.map(operation=>`${operation.type}:${'pageId' in operation?operation.pageId:''}:${'nodeId' in operation?operation.nodeId:''}`).join('|')
     this.rejectedDrafts.set(key,structuredClone(operations))
-    this.update({pending:this.queue.length+this.rejectedDrafts.size,error:'当前无法保存，本地修改已保留。可下载本地副本。'})
+    this.update({pending:this.queue.length+this.rejectedDrafts.size+this.codeDrafts.size,error:'当前无法保存，本地修改已保留。可下载本地副本。'})
   }
-  recovery() { return { format: 'lingxi-native-recovery-v1', document: this.state.document, operations: this.queue, drafts: [...this.rejectedDrafts.values()] } }
-  async discardAfterRecovery() { if (this.sending) await this.sending; this.queue = []; this.predictions.clear(); this.batchAnchors.clear(); this.snapshotAnchors = new WeakMap(); this.rejectedDrafts.clear(); this.update({ conflict: false, error: '', pending: 0 }); await this.open() }
+  recovery() { return { format: 'lingxi-native-recovery-v1', document: this.state.document, operations: this.queue, drafts: [...this.rejectedDrafts.values()],codeDrafts:[...this.codeDrafts.values()] } }
+  async discardAfterRecovery() { if (this.sending) await this.sending; this.queue = []; this.predictions.clear(); this.batchAnchors.clear(); this.snapshotAnchors = new WeakMap(); this.rejectedDrafts.clear();this.codeDrafts.clear(); this.update({ conflict: false, error: '', pending: 0 }); await this.open() }
   dispose() { this.disposed = true; this.controller.abort(); this.listeners.clear() }
 }

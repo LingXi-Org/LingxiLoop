@@ -267,7 +267,7 @@ test('代码声明经授权接口持久化、共享撤销重做及几何同步�
   const deck=await response.json() as {id:string},initial=await document(deck.id),pageId=initial.pageOrder[0]
   const node={...createNode('text','code-node'),x:760,text:'中文代码验收'}
   assert.equal((await operate(deck.id,initial,[{type:'node.insert',pageId,node}])).status,200)
-  const before=await document(deck.id),css={left:'120px !important',filter:'blur(1px)'},attributes={'data-label':'中文测试',title:'中文提示'}
+  const before=await document(deck.id),css={left:'120px !important',filter:'blur(1px)','line-height':'2px'},attributes={'data-label':'中文测试',title:'中文提示'}
   const changed=await operate(deck.id,before,[{type:'node.patch',pageId,nodeId:node.id,patch:{css,attributes}}])
   assert.equal(changed.status,200)
   const receipt=await changed.json() as {history:{version:number;undo:string}},saved=await document(deck.id)

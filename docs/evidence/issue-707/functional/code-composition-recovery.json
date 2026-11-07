@@ -1,0 +1,145 @@
+{
+  "scope": "受控HTTP与真实浏览器CDP组字事件，不等于真实操作系统输入法或完整授权服务验收。",
+  "independentReview": "../reviews/09e95447.json",
+  "qualified": false,
+  "regressionsFirst": [
+    {
+      "problem": "组字中访问丢失，控件在compositionend前卸载，原始中文输入丢失。",
+      "fix": "会话持有原始代码和精确编辑快照，下载可恢复；恢复后不自动提交，用户继续编辑或显式保存才应用。"
+    },
+    {
+      "problem": "line-height:2px错误变成原生倍数2，48px文字实际行高96px。",
+      "fix": "只有无单位数字转成原生倍数，像素声明保留CSS语义，实际行高2px，经撤销/重做和重开保留。"
+    }
+  ],
+  "units": 120,
+  "ciContracts": 15,
+  "webLint": {
+    "passed": true,
+    "warnings": 43,
+    "infos": 3
+  },
+  "serverLintPassed": true,
+  "localTypecheck": {
+    "passed": false,
+    "errors": 76,
+    "changedNativeAndSharedErrors": 0,
+    "reason": "准确私有SDK缺失；正式CI另记。"
+  },
+  "browserCases": {
+    "154-access": {
+      "kind": "isolated-code-composing-access-recovery",
+      "trustedBrowserComposition": true,
+      "events": [
+        {
+          "type": "compositionstart",
+          "trusted": true
+        }
+      ],
+      "rawChineseSurvivesUnmount": true,
+      "downloaded": true,
+      "recoveredFieldAfterRetry": true,
+      "recoveredDraftSurvivesAnotherPanelClose": true,
+      "noAutomaticWrite": true,
+      "explicitEditSaved": true,
+      "realOsImeUnverified": true,
+      "expectedAccessDenials": 1,
+      "consoleOrPageErrors": []
+    },
+    "140-access": {
+      "kind": "isolated-code-composing-access-recovery",
+      "trustedBrowserComposition": true,
+      "events": [
+        {
+          "type": "compositionstart",
+          "trusted": true
+        }
+      ],
+      "rawChineseSurvivesUnmount": true,
+      "downloaded": true,
+      "recoveredFieldAfterRetry": true,
+      "recoveredDraftSurvivesAnotherPanelClose": true,
+      "noAutomaticWrite": true,
+      "explicitEditSaved": true,
+      "realOsImeUnverified": true,
+      "expectedAccessDenials": 1,
+      "consoleOrPageErrors": []
+    },
+    "154-lineheight": {
+      "kind": "isolated-code-lineheight",
+      "pixelUnitPreserved": true,
+      "computedLineHeight": "2px",
+      "nativeRatioUnchanged": true,
+      "sharedUndoRedo": true,
+      "reopened": true,
+      "consoleOrPageErrors": []
+    },
+    "140-lineheight": {
+      "kind": "isolated-code-lineheight",
+      "pixelUnitPreserved": true,
+      "computedLineHeight": "2px",
+      "nativeRatioUnchanged": true,
+      "sharedUndoRedo": true,
+      "reopened": true,
+      "consoleOrPageErrors": []
+    },
+    "154-conflict": {
+      "kind": "isolated-code-conflict",
+      "peerStyleRetained": true,
+      "localStyleRecoverable": true,
+      "noSilentOverwrite": true,
+      "expectedOperationConflicts": 1,
+      "consoleOrPageErrors": []
+    },
+    "154-normal": {
+      "kind": "isolated-native-inspector-code",
+      "chineseField": true,
+      "savedAndReopened": true,
+      "repeatedFocusedSave": true,
+      "invalidBlurRestores": true,
+      "activeAttributesRejected": true,
+      "sharedUndo": true,
+      "consoleOrPageErrors": []
+    },
+    "154-ime": {
+      "kind": "isolated-code-composition",
+      "syntheticCompositionOnly": true,
+      "noIntermediateWrite": true,
+      "saveAfterComposition": true,
+      "oneBatch": true,
+      "realOsImeUnverified": true,
+      "consoleOrPageErrors": []
+    },
+    "154-permission": {
+      "kind": "isolated-code-permission-retention",
+      "draftSurvivesPanelClose": true,
+      "recoveryContainsChineseDraft": true,
+      "noUnauthorizedWrites": true,
+      "consoleOrPageErrors": []
+    },
+    "154-readonly": {
+      "kind": "isolated-readonly-code",
+      "chineseField": true,
+      "copyable": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    },
+    "154-mixed": {
+      "kind": "isolated-mixed-code",
+      "commonDeclarationsOnly": true,
+      "mixedValuesPreserved": true,
+      "singleSharedUndo": true,
+      "consoleOrPageErrors": []
+    }
+  },
+  "serverIntegration": {
+    "file": "server/src/__integration__/artifact-app-boundary.test.ts",
+    "newPixelDeclarationLocalRun": false,
+    "reason": "09e95447原有持久化/授权用例正式CI42330654549通过；本轮增加2px声明仍待下一候选CI。"
+  },
+  "remaining": [
+    "完整Code语义、图层/微调/主题/共享编辑面板和匹配视觉未完成。",
+    "真实操作系统中文输入法未验证。",
+    "最终性能、真实评论/智能体及最终独立复审未完成。"
+  ]
+}

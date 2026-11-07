@@ -180,6 +180,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let holdAcknowledgment = false, releaseAcknowledgment = null
   let historyEntry = null
   const historyRequests = [],expectedCodeNetworkErrors=[]
+  let denyCodeAccess=false
   let rejectSpeakerSave=['notes-network','notes-denied','notes-write-denied'].includes(options['speaker-case']);let denySpeakerRead=false;const speakerSaveIds=[]
   let fixtureWrite=options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
   let holdImageReads=options.checks==='asset-reads',releaseImageReads
@@ -224,7 +225,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
   if(options.checks==='slides-present-controls')page.on('pageerror',error=>{void writeFile(join(output,'page-error-details.json'),JSON.stringify({message:error.message,stack:error.stack},null,2))})
-  page.on('console', message => { if(options.checks==='inspector-code'&&options['code-case']==='cas'&&message.type()==='error'&&message.location().url.includes('/operations')&&message.text().includes('409')){expectedCodeNetworkErrors.push(message.text());return} if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(options['preview-save-retry']==='true'&&message.location().url.includes('/operations')&&message.text().includes('503'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(options.checks==='canvas-board-preview-load'&&message.location().url.includes('/BoardPreview.tsx'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
+  page.on('console', message => { if(options.checks==='inspector-code'&&message.type()==='error'&&(options['code-case']==='cas'&&message.location().url.includes('/operations')&&message.text().includes('409')||options['code-case']==='access-composing'&&/\/(changes|document)(?:\?|$)/.test(message.location().url)&&message.text().includes('403'))){expectedCodeNetworkErrors.push(message.text());return} if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(options['preview-save-retry']==='true'&&message.location().url.includes('/operations')&&message.text().includes('503'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(options.checks==='canvas-board-preview-load'&&message.location().url.includes('/BoardPreview.tsx'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
   if(options.checks==='canvas-board-preview-load')await page.route('**/BoardPreview.tsx*',async route=>{if(boardModuleBlocked)await route.fulfill({status:503,body:'全窗口预览未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-edit-load')await page.route('**/CanvasPointEditor.tsx*',async route=>{if(pointModuleBlocked)await route.fulfill({status:503,body:'控制点工具未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-load')await page.route('**/CanvasPenTool.tsx*',async route=>{if(vectorModuleBlocked)await route.fulfill({status:503,body:'钢笔工具未能加载'});else await route.continue()})
@@ -240,6 +241,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   })
   await page.route('**/api/artifacts/fixture/**', async route => {
     const request = route.request(), url = new URL(request.url())
+    if(denyCodeAccess&&(url.pathname.endsWith('/changes')||url.pathname.endsWith('/document'))){await route.fulfill({status:403,json:{error:'无权访问'}});return}
     if(url.pathname.includes('/comments')){
       const [,threadId,action,messageId]=url.pathname.split('/comments')[1].split('/'),body=request.postData()?request.postDataJSON():null
       if(request.method()==='GET'){await route.fulfill({status:200,json:{threads:commentThreads,me:{id:'fixture-user',name:'验收用户'},agent:{available:options.checks==='comments'}}});return}
@@ -425,6 +427,49 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.equal(await page.getByRole('tab',{name:'代码',exact:true}).evaluate(element=>element===element.ownerDocument.activeElement),true)
         assert.equal(receipts.length,0);assert.deepEqual(errors,[])
         return{kind:'isolated-inspector-tabs',chineseLabels:true,arrowKeys:true,home:true,rovingFocus:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      if(options['code-case']==='lineheight'){
+        const before=document.pages['page-1'].nodes['page-1-heading'].style.lineHeight
+        await field.fill(initial.replace(/^line-height:.*$/m,'line-height: 2px;'));await field.press('Control+s')
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).lineHeight==='2px')
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.lineHeight,before)
+        assert.equal(document.pages['page-1'].nodes['page-1-heading'].css['line-height'],'2px')
+        await page.getByRole('button',{name:'关闭属性',exact:true}).click();await page.keyboard.press('Control+z')
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).lineHeight==='60px')
+        await page.keyboard.press('Control+Shift+z')
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-heading"]')).lineHeight==='2px')
+        await page.reload();await ready(1)
+        assert.equal(await heading.evaluate(element=>getComputedStyle(element).lineHeight),'2px')
+        assert.equal(receipts.length,1);assert.deepEqual(errors,[])
+        return{kind:'isolated-code-lineheight',pixelUnitPreserved:true,computedLineHeight:'2px',nativeRatioUnchanged:true,sharedUndoRedo:true,reopened:true,consoleOrPageErrors:errors}
+      }
+      if(options['code-case']==='access-composing'){
+        await field.evaluate(element=>{window.__codeImeEvents=[];for(const type of ['compositionstart','compositionend'])element.addEventListener(type,event=>window.__codeImeEvents.push({type:event.type,trusted:event.isTrusted}))})
+        await field.press('Control+End')
+        const cdp=await page.context().newCDPSession(page)
+        await cdp.send('Input.imeSetComposition',{text:'中文组字恢复',selectionStart:6,selectionEnd:6})
+        assert.ok((await field.inputValue()).includes('中文组字恢复'))
+        denyCodeAccess=true;await page.evaluate(()=>window.__codeChanged())
+        await page.getByRole('textbox',{name:'样式与属性',exact:true}).waitFor({state:'detached'})
+        const events=await page.evaluate(()=>window.__codeImeEvents)
+        assert.ok(events.some(event=>event.type==='compositionstart'&&event.trusted))
+        const backup=page.getByRole('button',{name:'下载本地副本',exact:true});await backup.waitFor()
+        const download=page.waitForEvent('download');await backup.click();const file=await download
+        const recovery=JSON.parse(await readFile(await file.path(),'utf8'))
+        assert.ok(recovery.codeDrafts.some(draft=>draft.text.includes('中文组字恢复')))
+        assert.equal(receipts.length,0)
+        denyCodeAccess=false;await page.getByRole('button',{name:'重试',exact:true}).click();await ready(1);await field.waitFor()
+        assert.ok((await field.inputValue()).includes('中文组字恢复'))
+        await page.waitForTimeout(260);assert.equal(receipts.length,0)
+        await page.getByRole('button',{name:'关闭属性',exact:true}).click()
+        await page.getByRole('button',{name:'显示属性',exact:true}).click();await field.waitFor()
+        assert.ok((await field.inputValue()).includes('中文组字恢复'));assert.equal(receipts.length,0)
+        await field.fill(initial+'\n@data-label: 中文恢复已保存');await field.press('Control+s')
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        assert.equal(document.pages['page-1'].nodes['page-1-heading'].attributes['data-label'],'中文恢复已保存')
+        assert.equal(receipts.length,1);assert.deepEqual(errors,[])
+        return{kind:'isolated-code-composing-access-recovery',trustedBrowserComposition:true,events,rawChineseSurvivesUnmount:true,downloaded:true,recoveredFieldAfterRetry:true,recoveredDraftSurvivesAnotherPanelClose:true,noAutomaticWrite:true,explicitEditSaved:true,realOsImeUnverified:true,expectedAccessDenials:expectedCodeNetworkErrors.length,consoleOrPageErrors:errors}
       }
       if(options['code-case']==='permission'){
         await field.dispatchEvent('compositionstart',{data:'中'})

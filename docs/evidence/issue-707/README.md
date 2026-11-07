@@ -311,8 +311,10 @@ S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒�
 
 [62e247fb正式CI42325188407](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42325188407)通过，但[独立审查](reviews/62e247fb.json)复现两项P2：原生几何被CSS覆盖、同值回退!important残留。[修复收据](functional/code-style-recovery.json)保留先失败及140/154双编辑器移动/撤销/并发与优先级清除结果。CSS选区从实际绘制局部框开始，几何写入在共享操作内同步已有声明及版本/逆操作；其余文档无需挂载额外测量节点。
 
-[305ee089正式CI42326367476](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42326367476)通过，但[独立复审](reviews/305ee089.json)确认首次拖动仍从原坐标起算；已补先失败并让首次拖动复用同一绘制框读取。140/154双编辑器拖动和共享撤销通过。305诊断42326380804已进入真实全应用测量，尚未有新指标。
+[305ee089正式CI42326367476](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42326367476)通过，但[独立复审](reviews/305ee089.json)确认首次拖动仍从原坐标起算；已补先失败并让首次拖动复用同一绘制框读取。140/154双编辑器拖动和共享撤销通过。[305诊断42326380804](performance/305ee089-diagnostic.json)成功，每场景一组且qualified=false；Slides冷启动+26.1%、增量PSS+21.9%，输入p95 31.2ms。六次候选整稿导出通过，基线超时保留；还不是最终候选资格。
 
 [中文代码面板收据](functional/code-inspector.json)及[状态截图](visual/code-inspector/manifest.json)覆盖220ms应用/校验、连续聚焦保存、重开、无效格式恢复、事件属性拒绝、共有/混合声明、只读复制、中文组合事件、冲突恢复、权限丢失恢复、键盘选项卡、空选择、原生宽度与窄屏深色。代码只在Design显示，Slides固定来源仅有属性/主题。真实操作系统输入法未验证；截图选区不同，明确不算配对视觉通过。D20仍未取得完整功能或视觉资格。
 
 权限丢失时已编辑操作复用既有会话恢复存储，不自动发送，不新增服务或表；会话重开后仍可备份，不会将旧草稿自动覆盖远端。源码、格式、错误、混合值与无障碍提示均中文；编程语法、品牌及作者原文保留。新增授权API/数据库集成用例待正式CI，本地web类型76、server类型748个私有SDK相关/级联错误，新改动模块无类型错误。
+
+[09e95447正式CI42330654549](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42330654549)通过，包含新增的真实PostgreSQL、授权与共享历史用例。[独立审查](reviews/09e95447.json)仍复现两项P2：可信组字期间访问丢失导致原始代码丢失、像素行高误成倍数。[修复收据](functional/code-composition-recovery.json)记录140/154可信compositionstart后无compositionend卸载、中文下载/重试/再次关闭重开/显式保存，以及2px实际行高/撤销重做/重开；不把CDP事件当真实操作系统输入法。原始草稿使用会话本地恢复数据，无自动发送，不新增服务或表。

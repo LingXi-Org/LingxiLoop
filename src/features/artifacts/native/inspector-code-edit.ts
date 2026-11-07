@@ -38,7 +38,7 @@ export function nodeCodePatch(node:ArtifactNode,before:readonly InspectorCodeEnt
       attributesChanged=true;continue
     }
     if(value!==undefined&&!isNativeCodeStyle(name,value))throw new Error(`样式「${name}」格式无效或含有活动内容。`)
-    const field=styleFields[name],number=value===undefined?undefined:pixel(value)
+    const field=styleFields[name],number=value===undefined?undefined:unitless.has(field)?(/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(value)?Number(value):undefined):pixel(value)
     if(geometry[name]&&number!==undefined){patch[geometry[name]]=number;delete css[name];cssChanged=cssChanged||Object.hasOwn(node.css??{},name)}
     else if(field&&(value===undefined||!numeric.has(field)||number!==undefined)){
       if(value===undefined)unset.push(`style.${field}`);else style[field]=numeric.has(field)?number:value
