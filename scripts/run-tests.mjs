@@ -59,6 +59,7 @@ const testsByScope = {
     'shared/artifact-page-radius.test.ts',
     'shared/artifact-page-print.test.ts',
     'shared/artifact-board-transform.test.ts',
+    'shared/artifact-board-spacing.test.ts',
     'shared/artifact-editor-actions.test.ts',
     'shared/artifact-canvas-pages.test.ts',
     'shared/artifact-links.test.ts',

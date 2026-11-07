@@ -1,0 +1,102 @@
+{
+  "kind": "画板变换回归",
+  "scenario": "gap-left",
+  "scale": 0.221044921875,
+  "previewGeometry": [
+    {
+      "spacingSurface": {
+        "labels": [
+          {
+            "text": "160",
+            "rect": {
+              "x": 475.6484375,
+              "y": 551.40625,
+              "width": 28.890625,
+              "height": 17.390625,
+              "top": 551.40625,
+              "right": 504.5390625,
+              "bottom": 568.796875,
+              "left": 475.6484375
+            },
+            "color": "rgb(255, 255, 255)",
+            "background": "rgb(220, 60, 61)",
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+            "fontSize": "11px",
+            "lineHeight": "15.4px",
+            "padding": "1px 5px",
+            "borderRadius": "4px"
+          },
+          {
+            "text": "160",
+            "rect": {
+              "x": 935.4453125,
+              "y": 536.40625,
+              "width": 28.890625,
+              "height": 17.390625,
+              "top": 536.40625,
+              "right": 964.3359375,
+              "bottom": 553.796875,
+              "left": 935.4453125
+            },
+            "color": "rgb(255, 255, 255)",
+            "background": "rgb(220, 60, 61)",
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+            "fontSize": "11px",
+            "lineHeight": "15.4px",
+            "padding": "1px 5px",
+            "borderRadius": "4px"
+          }
+        ],
+        "lines": [
+          {
+            "rect": {
+              "x": 472.421142578125,
+              "y": 546.421142578125,
+              "width": 35.368408203125,
+              "height": 0,
+              "top": 546.421142578125,
+              "right": 507.78955078125,
+              "bottom": 546.421142578125,
+              "left": 472.421142578125
+            },
+            "stroke": "rgb(220, 60, 61)",
+            "strokeWidth": "1px"
+          },
+          {
+            "rect": {
+              "x": 932.21044921875,
+              "y": 531.421142578125,
+              "width": 35.368408203125,
+              "height": 0,
+              "top": 531.421142578125,
+              "right": 967.578857421875,
+              "bottom": 531.421142578125,
+              "left": 932.21044921875
+            },
+            "stroke": "rgb(220, 60, 61)",
+            "strokeWidth": "1px"
+          }
+        ]
+      },
+      "selection": null,
+      "frame": {
+        "x": 48,
+        "y": 442.109375,
+        "width": 424.40625,
+        "height": 238.734375
+      },
+      "heading": {
+        "x": 48,
+        "y": 414.109375,
+        "width": 424.40625,
+        "height": 24
+      },
+      "ghost": null
+    }
+  ],
+  "savedAndReopened": true,
+  "nodesUnchanged": true,
+  "committedBatches": 1,
+  "scope": "真实组件与可信输入，受控HTTP文档服务，不代替真实授权API或完整视觉验收",
+  "consoleOrPageErrors": []
+}

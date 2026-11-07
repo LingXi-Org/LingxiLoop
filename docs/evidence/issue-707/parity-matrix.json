@@ -9628,20 +9628,20 @@
         "start": 5073877,
         "end": 5076690,
         "offsetUnit": "UTF-16 code units",
-        "runtime": "source-design-board-equal-gap.json"
+        "runtime": "source-design-board-spacing.json"
       },
-      "implementation": null,
+      "implementation": "shared/artifact-board-spacing.ts",
       "screenshots": {
-        "reference": "visual/design-board-equal-gap/reference/gap-middle-preview.png",
-        "native": null,
+        "reference": "visual/design-board-spacing/reference/",
+        "native": "visual/design-board-spacing/native/",
         "matchedStateVerified": false
       },
-      "result": "尚未实现。原版中间板x保持2080、y136，出现两条红色160距离标注；当前纯几何oracle明确没有验证此能力。",
+      "result": "列明等距/竞争/标注已进入原操作链路；47浏览器场景、纯数学23220断言通过，完整混合及视觉/服务/性能资格仍未完成。",
       "functionalQualified": false,
       "visualQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "仅原版实际观测"
+        "receipt": "functional/design-board-spacing.json",
+        "scope": "限定纯数学及受控浏览器，均非整体资格。"
       }
     }
   ],

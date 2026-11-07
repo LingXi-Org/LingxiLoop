@@ -1,4 +1,5 @@
 import type {ArtifactPage} from './artifact-document.js'
+import {equalBoardGaps,type BoardGap} from './artifact-board-spacing.js'
 
 export type BoardRect=Pick<ArtifactPage,'x'|'y'|'width'|'height'>
 export type BoardHandle='n'|'e'|'s'|'w'|'nw'|'ne'|'se'|'sw'
@@ -25,12 +26,22 @@ export function boardBounds(pages:BoardRect[]):BoardRect|undefined{
 }
 
 /** 屏幕八像素内，边对边、中心对中心；相同距离优先中心。 */
-export function moveBoardRects(pages:BoardRect[],dx:number,dy:number,others:BoardRect[],scale:number,copy=false):{rects:BoardRect[];guides:BoardSnap[]}{
-  if(!pages.length)return{rects:[],guides:[]}
+export function moveBoardRects(pages:BoardRect[],dx:number,dy:number,others:BoardRect[],scale:number,copy=false):{rects:BoardRect[];guides:BoardSnap[];gaps:BoardGap[]}{
+  if(!pages.length)return{rects:[],guides:[],gaps:[]}
   const {x:left,y:top,width,height}=boardBounds(pages)!
   const target=targetAxes(others),x=snapAxis(anchors(left+dx,width),target.x,8/scale),y=snapAxis(anchors(top+dy,height),target.y,8/scale)
+  const spacing=equalBoardGaps({x:left+dx,y:top+dy,width,height},others,8/scale,{x:x.delta,y:y.delta}),guides:BoardSnap[]=[],gaps:BoardGap[]=[]
+  let deltaX=dx,deltaY=dy
+  for(const axis of ['x','y'] as const){
+    const line=axis==='x'?x:y,distances=spacing.gaps.filter(gap=>gap.axis===axis),distanceDelta=axis==='x'?spacing.dx:spacing.dy
+    if(line.at===undefined&&!distances.length)continue
+    const useLine=line.at!==undefined&&(!distances.length||Math.abs(line.delta)<=Math.abs(distanceDelta)+.5),delta=useLine?line.delta:distanceDelta
+    if(axis==='x')deltaX+=delta;else deltaY+=delta
+    if(line.at!==undefined&&(useLine||Math.abs(line.delta-delta)<=.5))guides.push({axis,at:line.at})
+    if(distances.length&&(!useLine||Math.abs(distanceDelta-delta)<=.5))gaps.push(...distances)
+  }
   const position=(before:number,delta:number)=>{const next=Math.round(before+delta);return !copy&&next===Math.round(before)?before:next}
-  return{rects:pages.map(page=>({x:position(page.x,dx+x.delta),y:position(page.y,dy+y.delta),width:page.width,height:page.height})),guides:[...(x.at===undefined?[]:[{axis:'x' as const,at:x.at}]),...(y.at===undefined?[]:[{axis:'y' as const,at:y.at}])]}
+  return{rects:pages.map(page=>({x:position(page.x,deltaX),y:position(page.y,deltaY),width:page.width,height:page.height})),guides,gaps}
 }
 
 export function resizeBoardRect(page:BoardRect,handle:BoardHandle,dx:number,dy:number,others:BoardRect[],scale:number,keepRatio=false):{rect:BoardRect;guides:BoardSnap[]}{

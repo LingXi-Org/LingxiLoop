@@ -1,3 +1,4 @@
+import type {BoardGap} from '../../../../shared/artifact-board-spacing'
 import {useEffect,useRef,useState,type PointerEvent as ReactPointerEvent,type MouseEvent as ReactMouseEvent,type KeyboardEvent as ReactKeyboardEvent} from 'react'
 import type {ArtifactDocument,ArtifactPage} from '../../../../shared/artifact-document'
 import type {ArtifactOperation} from '../../../../shared/artifact-operations'
@@ -13,11 +14,11 @@ interface Options {
   dispatch(operations:ArtifactOperation[],base:ArtifactDocument):void
   notice(message:string):void
 }
-interface Preview {frames:Record<string,BoardRect>;activeIds:string[];retainedIds:string[];copy:boolean;guides:BoardSnap[];groupFrame?:BoardRect}
+interface Preview {frames:Record<string,BoardRect>;activeIds:string[];retainedIds:string[];copy:boolean;guides:BoardSnap[];gaps:BoardGap[];groupFrame?:BoardRect}
 type BoardPointer=Pick<PointerEvent,'clientX'|'clientY'|'altKey'|'ctrlKey'|'metaKey'|'shiftKey'>
 const pointerState=(event:BoardPointer):BoardPointer=>({clientX:event.clientX,clientY:event.clientY,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey})
 interface Drag {last:BoardPointer;base:ArtifactDocument;ids:string[];pages:ArtifactPage[];others:ArtifactPage[];scale:number;x:number;y:number;pointer:number;target:HTMLElement;handle?:BoardHandle;group:boolean;copy:boolean;moved:boolean;frames:Record<string,BoardRect>;stop():void}
-const empty:Preview={frames:{},activeIds:[],retainedIds:[],copy:false,guides:[]}
+const empty:Preview={frames:{},activeIds:[],retainedIds:[],copy:false,guides:[],gaps:[]}
 const handles:BoardHandle[]=['n','e','s','w','nw','ne','se','sw']
 const names:Record<BoardHandle,string>={n:'上边',e:'右边',s:'下边',w:'左边',nw:'左上角',ne:'右上角',se:'右下角',sw:'左下角'}
 
@@ -30,11 +31,11 @@ export function useBoardTransforms(options:Options){
   useEffect(()=>{if(!options.enabled||!options.writable||active.current&&(options.document?.id!==active.current.base.id||active.current.ids.some(id=>!options.document?.pages[id]||!options.ids.includes(id))))cancel()},[options.enabled,options.writable,options.document,options.ids])
   const calculate=(drag:Drag,event:BoardPointer)=>{
     const dx=(event.clientX-drag.x)/drag.scale,dy=(event.clientY-drag.y)/drag.scale,targets=event.ctrlKey||event.metaKey?[]:drag.copy?[...drag.others,...drag.pages]:drag.others
-    let result:{rects:BoardRect[];guides:BoardSnap[];groupFrame?:BoardRect}
+    let result:{rects:BoardRect[];guides:BoardSnap[];gaps:BoardGap[];groupFrame?:BoardRect}
     if(!drag.handle)result=moveBoardRects(drag.pages,dx,dy,targets,drag.scale,drag.copy)
-    else if(drag.group){const value=resizeBoardSelection(drag.pages,drag.handle,dx,dy,targets,drag.scale,event.shiftKey);result={rects:value.rects,guides:value.guides,groupFrame:value.rect}}
-    else{const value=resizeBoardRect(drag.pages[0],drag.handle,dx,dy,targets,drag.scale,event.shiftKey);result={rects:[value.rect],guides:value.guides}}
-    return{frames:Object.fromEntries(drag.ids.map((id,index)=>[id,result.rects[index]])),guides:result.guides,groupFrame:result.groupFrame}
+    else if(drag.group){const value=resizeBoardSelection(drag.pages,drag.handle,dx,dy,targets,drag.scale,event.shiftKey);result={rects:value.rects,guides:value.guides,gaps:[],groupFrame:value.rect}}
+    else{const value=resizeBoardRect(drag.pages[0],drag.handle,dx,dy,targets,drag.scale,event.shiftKey);result={rects:[value.rect],guides:value.guides,gaps:[]}}
+    return{frames:Object.fromEntries(drag.ids.map((id,index)=>[id,result.rects[index]])),guides:result.guides,gaps:result.gaps??[],groupFrame:result.groupFrame}
   }
   const start=(event:ReactPointerEvent<HTMLElement>,pageId:string,handle?:BoardHandle,group=false)=>{
     const opts=latest.current
@@ -54,7 +55,7 @@ export function useBoardTransforms(options:Options){
     const show=(position:BoardPointer)=>{
       drag.copy=!drag.handle&&position.altKey
       const result=calculate(drag,position);drag.frames=result.frames
-      setPreview(previous=>({...previous,frames:result.frames,guides:result.guides,groupFrame:result.groupFrame,copy:drag.copy}))
+      setPreview(previous=>({...previous,frames:result.frames,guides:result.guides,gaps:result.gaps,groupFrame:result.groupFrame,copy:drag.copy}))
     }
     const move=(event:PointerEvent)=>{
       if(active.current!==drag||event.pointerId!==drag.pointer)return
@@ -99,7 +100,7 @@ export function useBoardTransforms(options:Options){
     drag.stop=()=>{window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',finish,true);window.removeEventListener('pointercancel',lost,true);window.removeEventListener('keydown',key,true);window.removeEventListener('keyup',key,true);window.removeEventListener('blur',lost);if(target.hasPointerCapture(drag.pointer))target.releasePointerCapture(drag.pointer)}
     active.current=drag;target.setPointerCapture(drag.pointer)
     window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',finish,true);window.addEventListener('pointercancel',lost,true);window.addEventListener('keydown',key,true);window.addEventListener('keyup',key,true);window.addEventListener('blur',lost)
-    setPreview({frames:{},activeIds:ids,retainedIds:opts.visibleIds(),copy:drag.copy,guides:[]})
+    setPreview({frames:{},activeIds:ids,retainedIds:opts.visibleIds(),copy:drag.copy,guides:[],gaps:[]})
   }
   const key=(event:ReactKeyboardEvent,pageId:string,handle?:BoardHandle,group=false)=>{
     const opts=latest.current,base=opts.getDocument(),page=base?.pages[pageId]
@@ -122,4 +123,10 @@ export function useBoardTransforms(options:Options){
 
 export function BoardTransformHandles({page,start,onKey,writable=true,group=false}:{page:ArtifactPage;writable?:boolean;group?:boolean;onKey(event:ReactKeyboardEvent,pageId:string,handle:BoardHandle,group?:boolean):void;start(event:ReactPointerEvent<HTMLElement>,pageId:string,handle:BoardHandle,group?:boolean):void}){
   return <div className="native-board-selection" data-board-selection={page.id}>{writable&&handles.map(handle=><button type="button" key={handle} className={`native-board-resize native-board-resize-${handle}`} aria-label={`调整${group?'所选画板':'画板'}${names[handle]} ${page.title}`} data-board-handle={handle} onKeyDown={event=>onKey(event,page.id,handle,group)} onPointerDown={event=>start(event,page.id,handle,group)}>{handle.length===2&&<span/>}</button>)}</div>
+}
+
+export function BoardSpacingGuides({gaps,scale,origin,inset}:{gaps:BoardGap[];scale:number;origin:{x:number;y:number};inset:{x:number;y:number}}){
+  if(!gaps.length)return null
+  const position=(axis:'x'|'y',value:number)=>(value-origin[axis]+64)*scale+inset[axis]
+  return <><svg className="native-board-spacing-lines" aria-hidden="true">{gaps.map((gap,index)=>{const horizontal=gap.axis==='x',from=position(gap.axis,gap.from),to=position(gap.axis,gap.to),at=position(horizontal?'y':'x',gap.at);return <line key={index} data-board-spacing-guide x1={horizontal?from:at} x2={horizontal?to:at} y1={horizontal?at:from} y2={horizontal?at:to}/>})}</svg>{gaps.map((gap,index)=>{const horizontal=gap.axis==='x',middle=position(gap.axis,(gap.from+gap.to)/2),at=position(horizontal?'y':'x',gap.at);return <span key={index} className="native-board-gap-label" data-board-gap-label data-axis={gap.axis} aria-hidden="true" style={{left:horizontal?middle:at+5,top:horizontal?at+5:middle,transform:horizontal?'translateX(-50%)':'translateY(-50%)'}}>{gap.label}</span>})}</>
 }

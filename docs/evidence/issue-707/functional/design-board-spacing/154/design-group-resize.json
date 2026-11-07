@@ -1,0 +1,64 @@
+{
+  "kind": "画板变换回归",
+  "scenario": "group-resize",
+  "scale": 0.221044921875,
+  "previewGeometry": [
+    {
+      "memberRings": [
+        {
+          "id": "page-1",
+          "rect": {
+            "x": 48,
+            "y": 412.046875,
+            "width": 441.4375,
+            "height": 268.796875,
+            "top": 412.046875,
+            "right": 489.4375,
+            "bottom": 680.84375,
+            "left": 48
+          },
+          "outline": "rgb(37, 125, 224) solid 1px"
+        },
+        {
+          "id": "page-2",
+          "rect": {
+            "x": 526.125,
+            "y": 412.046875,
+            "width": 441.4375,
+            "height": 268.796875,
+            "top": 412.046875,
+            "right": 967.5625,
+            "bottom": 680.84375,
+            "left": 526.125
+          },
+          "outline": "rgb(37, 125, 224) solid 1px"
+        }
+      ],
+      "groupOutline": "rgb(37, 125, 224) solid 2px",
+      "selection": {
+        "x": 48,
+        "y": 412.046875,
+        "width": 919.578125,
+        "height": 268.734375
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.046875,
+        "width": 441.4375,
+        "height": 268.796875
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.046875,
+        "width": 441.4375,
+        "height": 24
+      },
+      "ghost": null
+    }
+  ],
+  "savedAndReopened": true,
+  "nodesUnchanged": true,
+  "committedBatches": 1,
+  "scope": "真实组件与可信输入，受控HTTP文档服务，不代替真实授权API或完整视觉验收",
+  "consoleOrPageErrors": []
+}

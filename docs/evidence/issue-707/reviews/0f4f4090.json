@@ -1,0 +1,94 @@
+{
+  "审查提交": "0f4f4090d1cd11330b0d9e191d13faf4d399d38c",
+  "比较基线": "8ce4802e81e22e666bc2320fa44953eef8b0c8e9",
+  "审查方式": "依据repository-review技能，在/tmp/lingxi-review-0f4f4090独立detached checkout，只读产品源码与固定来源。未混入根线程等距WIP，未修改产品文件、提交、合并或部署。自建只读浏览器诊断探针位于/tmp。",
+  "结论": "本次统一画板多选及组缩放的已执行范围内，未发现新的可复现P1/P2。组raw外框与成员舍入语义、共享原子提交、未加载成员与冲突保护的定向结果通过。完整视觉与服务/性能资格仍未通过。",
+  "发现": [],
+  "实际验证": [
+    {
+      "项目": "Chrome140/154受影响真实UI",
+      "结果": "每浏览器12/12通过，进程exit0，收据无控制台/页面错误。覆盖7个组场景与5个单选/旧路径。",
+      "场景": [
+        "group-resize",
+        "group-ratio",
+        "group-minimum",
+        "group-cancel",
+        "group-history",
+        "group-keyboard",
+        "group-readonly",
+        "resize",
+        "ratio",
+        "copy-late-still",
+        "cross-canvas",
+        "multi-copy"
+      ],
+      "收据": [
+        "/tmp/lingxi-review-0f4f-focus140.log",
+        "/tmp/lingxi-review-0f4f-focus154.log"
+      ],
+      "范围": "组外框仅8手柄、成员无独立手柄、多选属性空态、正常/Shift/最小/取消/历史/键盘/只读、单选缩放/等比、静止Alt、跨画布、多选复制；保存重开、未改页面/节点哈希按脚本断言。"
+    },
+    {
+      "项目": "owning单元",
+      "结果": "21/21通过",
+      "命令": "node --import tsx --test shared/artifact-board-transform.test.ts shared/artifact-editor-actions.test.ts src/features/artifacts/native/editor-copy.test.ts",
+      "收据": "/tmp/lingxi-review-0f4f-owning.log"
+    },
+    {
+      "项目": "限定纯几何固定来源对照",
+      "结果": "21420断言全部一致，其中单选9900、组11520。覆盖八方向、等比、小数/旧越界/frameless、raw组框与舍入成员、边/中心吸附及有效辅助线。",
+      "命令": "node --import tsx scripts/native-board-transform-oracle.mjs /tmp/lingxi-baoyu-v280/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js /tmp/lingxi-review-0f4f-oracle.json",
+      "收据": "/tmp/lingxi-review-0f4f-oracle.json",
+      "来源核验": "主脚本SHA256=2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08；U9纯函数在独立VM中装配，验证初始化入口为空函数，不运行SDK/完整应用。该结果不等于运行完整编辑器或等距功能。"
+    },
+    {
+      "项目": "Source三个实际组手势及保存",
+      "结果": "独立重新运行固定v2.8.0真实浏览器。普通宽1997/高1216/第二板x2163，Shift宽2161/高1216/第二板x2341，最小宽120/高120/第二板x130，与产品保存一致。12个参考资源哈希全部核验。",
+      "收据": [
+        "/tmp/lingxi-review-0f4f-source-group/reference.json",
+        "/tmp/lingxi-review-0f4f-source-save-audit.json"
+      ]
+    },
+    {
+      "项目": "未加载成员正文安全",
+      "结果": "Chrome154真实HTTP夹具延迟page-2正文：等待仍未返回时完成组缩放，唯一共享批次含两条page.patch，不等待或复制空正文，page-2节点JSON保持原样。释放旧正文响应后重新读取两次中的最新版本，正文正确渲染，无错误。",
+      "收据": "/tmp/lingxi-review-0f4f-unloaded154/design-group-unloaded.json",
+      "探针": "/tmp/lingxi-review-0f4f-probe/group-extra.mjs"
+    },
+    {
+      "项目": "组缩放并发冲突与原子性",
+      "结果": "Chrome154在按住组缩放手柄时，由peer将page-2.width改为2400，等待真实/document读取响应再结束拖动：客户端显示conflict，未保存任何部分批次，第一画板完整哈希不变，第二板peer宽2400及原x均保留，无控制台错误。",
+      "收据": "/tmp/lingxi-review-0f4f-peer-refreshed154/design-group-peer-conflict.json",
+      "补充": "另两次在peer变更尚未完成客户端刷新时结束，服务返回预期409，同样无部分提交；该409已在相应收据明确列为网络错误，不称无错误通过。",
+      "补充收据": [
+        "/tmp/lingxi-review-0f4f-peer154/design-group-peer-conflict.json",
+        "/tmp/lingxi-review-0f4f-peer154-v2/design-group-peer-conflict.json"
+      ]
+    },
+    {
+      "项目": "最小共享CAS/权限单元",
+      "结果": "5/5通过，几何依赖冲突/无关合并、自身ACK/远端更新保护及拒绝写入后的读取重试。",
+      "收据": "/tmp/lingxi-review-0f4f-cas.log"
+    },
+    {
+      "项目": "三对几何/描边与原始截图数据",
+      "结果": "使用本次实际154 DOM、来源数据及提交截图独立重算：group/heading/两个成员几何与manifest全一致，最大0.01544189453125 CSS px；成员rgb(37,125,224) solid 1px、组2px一致。RGBA逐像素未遮罩差异数23805/21981/18468全部吻合；比例1.653125%/1.526458%/1.2825%，0/3满足0.5%。",
+      "收据": "/tmp/lingxi-review-0f4f-visual-audit.json"
+    },
+    {
+      "项目": "只读与补丁检查",
+      "结果": "冻结HEAD精确匹配；git status --short空，git diff --check 8ce4802e通过。"
+    }
+  ],
+  "代码追踪": "新group句柄使用当前画布过滤后的完整选择集合；起始focus先处理字段失焦，再捕获共享快照。缩放仅将变化的x/y/width/height转换为现有page.patch，在同一dispatch使用原始drag.base，未扩展存储或另建操作通道。正文仅参与渲染，不在组几何提交中使用。groupFrame保留未舍入外框，而成员frame遵循来源保留原小数/舍入与限值规则；键盘组目标同样过滤当前画布。只读保留选择描边但无手柄，键盘不派发操作。",
+  "未验证与边界": [
+    "本轮选择12项/浏览器，不是默认全40；不能报告本次独立全40通过。",
+    "未重跑50页、真实授权API、跨租户、评论/Agent或数据库服务；HTTP夹具与CAS单元不能替代服务验收。",
+    "没有独立运行完整owning lint/typecheck/build，私有SDK缺失需以正式CI为准；不将父线程CI信息误记为本次独立执行。",
+    "混合自由对象、完整UI策略、全部触摸/修饰键组合、四容器双主题及等距标注仍未完成。",
+    "组缩放冲突后的恢复副本下载/重载未在本轮额外复验；本轮实测了冲突展示、无部分保存及peer内容保留。",
+    "raw像素0/3达标已核实；最终10组AB/BA性能及输入p95门槛未验收，不能判完整还原。"
+  ],
+  "局部审查通过": true,
+  "完整还原资格通过": false
+}

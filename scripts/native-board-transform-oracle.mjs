@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {readFile,writeFile} from 'node:fs/promises'
 import {runInNewContext} from 'node:vm'
+import {equalBoardGaps} from '../shared/artifact-board-spacing.ts'
 import {moveBoardRects,resizeBoardRect,resizeBoardSelection} from '../shared/artifact-board-transform.ts'
 const [path,output='/tmp/lingxi-board-oracle.json']=process.argv.slice(2)
 const bytes=await readFile(path),sha256=createHash('sha256').update(bytes).digest('hex')
@@ -25,9 +26,9 @@ for(let i=0;i<300;i++){
     assert.deepEqual(actual.rect,native(expected),`缩放样本${i}/${handle}/${ratio}`)
     assert.deepEqual(actual.guides,JSON.parse(JSON.stringify(reference.activeResizeGuides(expected,sides,snapped.guides).map(value=>({axis:value.axis,at:value.pos})))));assertions+=2
   }
-  // 此处隔离边/中心吸附；完整编辑器的等距分布辅助线另列未完成项。
-  const snapped=reference.snapCanvasDrag(dx,dy,{box:rect(page),lines},8/scale,false),rounded={x:Math.round(page.x+snapped.dx),y:Math.round(page.y+snapped.dy)},position=reference.preserveUnroundedDragPosition(page,rounded)
-  assert.deepEqual(moveBoardRects([page],dx,dy,others,scale).rects[0],{...page,...JSON.parse(JSON.stringify(position))},`移动样本${i}`);assertions++
+  // 与固定编辑器同样比较边/中心和等距候选的优先级。
+  const snapped=reference.snapCanvasDrag(dx,dy,{box:rect(page),lines,boxes:others.map(rect)},8/scale,false),rounded={x:Math.round(page.x+snapped.dx),y:Math.round(page.y+snapped.dy)},position=reference.preserveUnroundedDragPosition(page,rounded)
+  const moved=moveBoardRects([page],dx,dy,others,scale);assert.deepEqual(moved.rects[0],{...page,...JSON.parse(JSON.stringify(position))},`移动样本${i}`);assert.deepEqual(moved.guides,JSON.parse(JSON.stringify(snapped.guides.map(value=>({axis:value.axis,at:value.pos})))));assert.deepEqual(moved.gaps,JSON.parse(JSON.stringify(snapped.gaps)));assertions+=3
 }
 const individualAssertions=assertions
 for(let i=0;i<120;i++){
@@ -40,5 +41,11 @@ for(let i=0;i<120;i++){
     assert.deepEqual(actual.guides,JSON.parse(JSON.stringify(reference.activeResizeGuides(expected,sides,snapped.guides).map(value=>({axis:value.axis,at:value.pos})))));assertions+=6
   }
 }
-const result={sourceCommit:'016b39d7fdcc30bfacee31ea5541498ac53921c6',sourceSha256:sha256,offsetUnit:'UTF-16 code units',modules,comparedAssertions:assertions,individualAssertions,groupAssertions:assertions-individualAssertions,allEqual:true,scope:'单画板/多选组的八向几何、角等比、小数与旧越界值保留、无边框页、边/中心吸附及有效辅助线；未覆盖等距分布、触摸与完整编辑器视觉。',qualified:false}
+const beforeSpacingAssertions=assertions
+for(let i=0;i<1200;i++){
+  const moving={x:random()*6000-3000,y:random()*6000-3000,width:120+random()*2500,height:120+random()*2500},others=Array.from({length:5},()=>({x:random()*6000-3000,y:random()*6000-3000,width:120+random()*2500,height:120+random()*2500})),tolerance=8/[.1,420/1900,.5,1][i%4],aligned={x:random()*100-50,y:random()*100-50}
+  const actual=equalBoardGaps(moving,others,tolerance,aligned),expected=reference.snapEqualObjectGaps(rect(moving),others.map(rect),tolerance,aligned)
+  assert.deepEqual(actual,JSON.parse(JSON.stringify(expected)),`等距样本${i}`);assertions++
+}
+const result={sourceCommit:'016b39d7fdcc30bfacee31ea5541498ac53921c6',sourceSha256:sha256,offsetUnit:'UTF-16 code units',modules,comparedAssertions:assertions,individualAssertions,groupAssertions:beforeSpacingAssertions-individualAssertions,spacingAssertions:assertions-beforeSpacingAssertions,allEqual:true,scope:'单画板/多选组的八向几何、角等比、小数与旧越界值保留、无边框页、边/中心与等距分布竞争及有效辅助线；未覆盖全部交互、触摸与完整编辑器视觉。',qualified:false}
 await writeFile(output,JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result))
