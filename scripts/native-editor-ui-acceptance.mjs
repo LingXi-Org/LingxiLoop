@@ -537,10 +537,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       if(beforeGroup){const after=await page.locator('[data-node-id="page-1-root"]').boundingBox();for(const key of ['width','height'])assert.ok(Math.abs(after[key]-beforeGroup.rect[key])<=1,'组合链接不能改变原来的布局尺寸');assert.equal(await page.locator('[data-node-id="page-1-heading"]').evaluate(element=>getComputedStyle(element).color),beforeGroup.color,'组合链接应保留继承的文字颜色')}
       const location=page.url();if(['image','group'].includes(editorCase))await page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`).click();else await link.click();assert.equal(page.url(),location,'编辑中点击链接只能选择对象')
       if(editorCase==='clear'){
-        const pending=saved();await field.fill('');await field.press('Enter');await pending;assert.equal(await link.count(),0)
+        const pending=saved();await field.fill('');await field.press('Enter');await pending;await link.waitFor({state:'detached'});assert.equal(await link.count(),0)
       }
       if(editorCase==='history'){
-        await page.locator('[data-native-artifact-editor]').focus();let pending=saved();await page.keyboard.press('Control+z');await pending;assert.equal(await link.count(),0)
+        await page.locator('[data-native-artifact-editor]').focus();let pending=saved();await page.keyboard.press('Control+z');await pending;await link.waitFor({state:'detached'});assert.equal(await link.count(),0)
         pending=saved();await page.keyboard.press('Control+Shift+z');await pending;await link.waitFor()
       }
       if(editorCase==='edit'||editorCase==='relative-edit'){

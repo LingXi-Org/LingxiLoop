@@ -426,3 +426,6 @@ eec4f2a3正式CI42387679932全部通过，但[独立只读审查](reviews/eec4f2
 
 
 39654c0b正式CI42388593175及[独立只读复审](reviews/39654c0b.json)通过，CSS矩形主题P2关闭。独立复验还覆盖默认填充、渐变、描边/圆角/透明度、普通节点调用兼容和63单元；未据此扩大到完整服务或性能资格。eec4f2a3[Worker前置超时](performance/diagnostic-eec4f2a3-preflight.json)本机两浏览器5场景全通过，原因仍未知。39654c0b[后续前置失败](performance/diagnostic-39654c0b-preflight.json)已定位为新增导航检查在CHROMIUM_PATH初始化前执行，空参数导致spawn . EACCES；现将既有路径初始化移到步骤开头。两轮均未开始完整应用测量、零性能样本，未改任何计量逻辑/就绪断言/阈值，待新候选重跑。
+
+
+97b1e086正式CI42389476451及[只读配置复审](reviews/97b1e086.json)通过，路径初始化顺序修正；[正式诊断42389503387](performance/diagnostic-97b1e086-preflight.json)进入后续UI前置，但在Design链接history的成功响应后即时DOM数量断言读取1而预期0。现等待相同链接DOM卸载，再保留原数量零、重做和重开断言；清除也使用同样的DOM就绪条件。见[定向回归](functional/link-history-dom-ready.json)：140/154各history/clear两项通过，明确root有后续对齐栏WIP，仍待精确冻结复审和完整诊断。没有改产品撤销或阈值，本轮未生产测量、零性能样本。

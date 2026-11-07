@@ -1,0 +1,15 @@
+{
+  "candidate": "97b1e086fcf141417b8e351a959fa70a07bd1065",
+  "runId": 42389503387,
+  "jobId": 128453894173,
+  "status": "failed",
+  "failedStep": "Verify real worker script accounting before production measurements",
+  "script": "scripts/native-editor-ui-acceptance.mjs:543",
+  "scenario": "Design元素链接history",
+  "failure": "HTTP撤销成功响应后立即读取链接DOM数量，读到1，预期0。",
+  "fix": "明确等待同一链接元素从DOM卸载后保留原数量零断言；清除链接使用同样的DOM就绪条件。没有修改产品撤销逻辑或预期结果。",
+  "validation": "140/154 Design的history/clear各2项定向回归通过；精确候选的独立复审与正式诊断待执行。",
+  "productionMeasurementStarted": false,
+  "performanceSamples": 0,
+  "qualified": false
+}
