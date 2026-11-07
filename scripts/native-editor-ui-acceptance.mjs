@@ -2575,6 +2575,13 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if(options.checks==='design-outline'){
       assert.equal(kind,'design')
+      if(options['outline-case']==='menu'){
+        await page.setViewportSize({width:390,height:844});await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:'图层',exact:true}).click()
+        await page.getByRole('tab',{name:'图层',exact:true}).waitFor()
+        assert.equal(await page.getByRole('tab',{name:'图层',exact:true}).getAttribute('aria-selected'),'true','首次从菜单打开图层必须保留请求的窄屏选项卡')
+        assert.equal(await page.getByRole('tree',{name:'图层',exact:true}).isVisible(),true);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-outline-menu',firstNarrowMenuOpenShowsTree:true,noWrites:true,consoleOrPageErrors:errors}
+      }
       await page.getByRole('button',{name:'显示属性',exact:true}).click()
       await page.getByText('未选择任何内容',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'背景',exact:true}).count(),0)
       const tree=page.getByRole('tree',{name:'图层',exact:true})
@@ -2601,6 +2608,23 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await tree.getAttribute('aria-multiselectable'),'true')
       const board=tree.getByRole('treeitem',{name:'Page 1',exact:true})
       assert.equal(await board.getAttribute('aria-expanded'),'true')
+      if(options['outline-case']==='width'){
+        const grip=page.getByRole('separator',{name:'调整属性面板宽度',exact:true}),panel=page.getByRole('complementary',{name:'属性面板',exact:true})
+        await grip.waitFor();await grip.focus()
+        const width=async value=>{assert.equal(await grip.getAttribute('aria-valuenow'),String(value));assert.ok(Math.abs((await panel.boundingBox()).width-value)<=1)}
+        await width(336);await grip.press('ArrowLeft');await width(344);await grip.press('Shift+ArrowLeft');await width(376);await grip.press('ArrowRight');await width(368)
+        await grip.press('Home');await width(285);await grip.press('End');await width(560)
+        await grip.dblclick();await width(336)
+        const rect=await grip.boundingBox();await page.mouse.move(rect.x+6,rect.y+100);await page.mouse.down();await page.mouse.move(rect.x-74,rect.y+100,{steps:4});await page.mouse.up();await width(416)
+        await page.getByRole('button',{name:'关闭属性',exact:true}).click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await width(416)
+        await page.reload();await ready(1);await page.getByRole('button',{name:'显示属性',exact:true}).click();await width(416)
+        await page.setViewportSize({width:640,height:844});await width(416);assert.equal(await grip.getAttribute('aria-valuemax'),'520')
+        await grip.focus();await grip.press('End');await width(520)
+        await page.setViewportSize({width:390,height:844});await grip.waitFor({state:'detached'});assert.equal(await page.getByRole('tab',{name:'图层',exact:true}).count(),1)
+        await page.setViewportSize({width:1440,height:1000});await grip.waitFor();await width(285)
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-design-inspector-width',sourceKeyboardSteps:true,pointerDrag:true,doubleClickResets:true,persistsAcrossCloseAndReload:true,containerMaximum:true,sheetHidesGrip:true,noDocumentWrites:true,consoleOrPageErrors:errors}
+      }
       if(options['outline-case']==='large'){
         await board.focus();await board.press('End')
         await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]')?.dataset.currentPage==='page-50')
@@ -2615,6 +2639,24 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.ok(Math.abs(title.x-inspector.x-51)<=1,'画板标签与固定来源应保持51px相对缩进')
       const rootGroup=tree.locator('[data-outline-node="page-1-root"]');if(await rootGroup.count())await rootGroup.getByRole('button',{name:'展开组合 LingxiLoop 1',exact:true}).click()
       const heading=tree.locator('[data-outline-node="page-1-heading"]')
+      if(options['outline-case']==='narrow-context'){
+        await page.setViewportSize({width:390,height:844});await page.getByRole('tab',{name:'图层',exact:true}).click();await heading.click({button:'right'})
+        const menu=page.getByRole('menu',{name:'编辑操作',exact:true});await menu.waitFor()
+        const box=await menu.boundingBox();assert.ok(box.y>=4&&box.y+box.height<=840,'窄屏图层菜单必须完整位于编辑器可见边界内')
+        await page.keyboard.press('End');assert.equal(await page.locator('[data-native-artifact-editor]').evaluate(element=>element.scrollTop),0,'末项聚焦不能滚走整个编辑器')
+        const last=await menu.getByRole('menuitem',{name:/^删除/}).boundingBox();assert.ok(last.y+last.height<=844)
+        await page.keyboard.press('Escape');await menu.waitFor({state:'detached'});assert.equal(await heading.evaluate(element=>element===document.activeElement),true)
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-outline-narrow-context',menuFitsEditor:true,lastActionVisibleWithKeyboard:true,editorDoesNotScroll:true,escapeRestoresFocus:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      if(options['outline-case']==='space'){
+        await heading.click();const hide=heading.getByRole('button',{name:'隐藏图层 LingxiLoop 1',exact:true});await hide.focus();await hide.press('Space')
+        await page.waitForFunction(()=>!document.querySelector('.native-stage [data-node-id="page-1-heading"]'))
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].nodes['page-1-heading'].hidden,true)
+        const show=heading.getByRole('button',{name:'显示图层 LingxiLoop 1',exact:true});await show.focus();await show.press('Space')
+        await page.waitForFunction(()=>!!document.querySelector('.native-stage [data-node-id="page-1-heading"]'));assert.deepEqual(errors,[])
+        return{kind:'isolated-outline-space',nativeButtonSpaceHidesAndShows:true,consoleOrPageErrors:errors}
+      }
       if(options['outline-case']==='context'){
         await tree.locator('[data-outline-node="page-1-image"]').click()
         await heading.click({button:'right'})

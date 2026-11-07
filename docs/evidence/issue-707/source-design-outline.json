@@ -4122,7 +4122,22 @@
   },
   "knownGaps": [
     "599px处固定原版JS窄屏选项卡与CSS侧栏同时出现；当前实现仍未还原该边界。",
-    "微调面板、完整属性字段、重命名、拖动排序及侧栏宽度调整仍未完成。"
+    "微调面板、完整属性字段、重命名、拖动排序仍未完成。"
   ],
-  "qualified": false
+  "qualified": false,
+  "widthImplementation": {
+    "min": 285,
+    "max": 560,
+    "containerReserve": 120,
+    "default": 336,
+    "coarsePointerDefault": 376,
+    "keyboardStep": 8,
+    "shiftStep": 32,
+    "home": "最小值",
+    "end": "最大值",
+    "doubleClick": "默认值",
+    "persistence": "本地界面偏好；不写文档",
+    "sourceMaximum": "原版按window.innerWidth减120；原生按所在容器宽度减120，四种固定容器与参考浏览器同尺寸。",
+    "qualified": false
+  }
 }

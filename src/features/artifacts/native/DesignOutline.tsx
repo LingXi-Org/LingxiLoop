@@ -78,6 +78,7 @@ export default function DesignOutline(props:Props){
     setFocused(row.key)
   }
   const navigate=(event:KeyboardEvent<HTMLDivElement>,row:OutlineRow)=>{
+    if(event.target!==event.currentTarget)return
     if(event.key==='ContextMenu'||event.shiftKey&&event.key==='F10'){event.preventDefault();event.stopPropagation();const rect=event.currentTarget.getBoundingClientRect();props.openContext(row.pageId,row.node?.id,{x:rect.right-24,y:rect.y+12},event.currentTarget);return}
     if(!['ArrowDown','ArrowUp','ArrowLeft','ArrowRight','Home','End',' '].includes(event.key))return
     event.preventDefault();event.stopPropagation()

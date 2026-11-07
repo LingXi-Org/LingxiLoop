@@ -826,7 +826,7 @@
         "native": "visual/native/design-inspector.png",
         "matchedStateVerified": false
       },
-      "result": "集成右侧层级树、折叠、节点/画板选择、键盘浏览及可见行挂载已实现；重命名、拖动排序、侧栏宽度与全部状态仍待完成。",
+      "result": "集成层级树、选择/键盘、可见行挂载及来源宽度/高度调整已实现；重命名、拖动及全部状态仍待完成。",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
@@ -836,7 +836,8 @@
       "outlineEvidence": {
         "source": "source-design-outline.json",
         "functional": "functional/design-outline.json",
-        "visual": "visual/design-outline/manifest.json"
+        "visual": "visual/design-outline/manifest.json",
+        "widthAndReviewFixes": "functional/design-inspector-width.json"
       }
     },
     {
