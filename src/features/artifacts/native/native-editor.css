@@ -359,3 +359,9 @@
 .native-element-link.native-property-section .native-field input:focus{outline:2px solid transparent;outline-offset:2px;box-shadow:inset 0 0 0 1px var(--native-link-page),0 0 0 1px #257de0,0 0 6px 1px var(--native-link-glow)}
 .dark .native-element-link,.native-editor[data-theme=dark] .native-element-link{--native-link-background:rgb(255 255 255 / .05);--native-link-border:rgb(255 255 255 / .12);--native-link-page:#0b0b0b;--native-link-glow:rgb(23 87 172 / .6)}
 .native-editor a.native-node{display:block;color:inherit}
+
+.native-editor [data-native-whole-link]{text-decoration:underline}
+.native-editor .native-element-link-hit{position:absolute;inset:0;display:block;color:inherit;pointer-events:none}
+.native-editor [data-native-link-active]>.native-element-link-hit{pointer-events:auto}
+.native-editor [data-native-link-active]>:not(.native-element-link-hit){pointer-events:none}
+.native-editor [data-native-link-active] a[href]{pointer-events:auto}

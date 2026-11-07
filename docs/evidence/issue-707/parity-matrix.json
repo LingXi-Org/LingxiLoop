@@ -9739,7 +9739,8 @@
       "testEvidence": {
         "receipt": "functional/element-link.json",
         "scope": "固定源码与受控HTTP组件夹具；真实系统输入不代替真实授权服务、全部节点状态或性能资格。"
-      }
+      },
+      "nestedLinkEvidence": "functional/element-link-nested.json"
     }
   ],
   "registeredReplacements": [

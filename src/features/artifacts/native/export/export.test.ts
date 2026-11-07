@@ -30,9 +30,20 @@ test('代码声明进入离线页面且属性转义；链接保留安全关系',
   const html=await renderPageHtml(document.pages.page!,new ExportResources(document,{format:'html'}))
   assert.match(html,/filter:blur\(1px\);max-width:1800px;--Brand:#d97757/)
   assert.match(html,/data-label="中文&quot;说明"/)
-  assert.match(html,/<a class="artifact-export-node"/)
+  assert.match(html,/<a class="artifact-export-element-link"/)
   assert.match(html,/rel="noopener noreferrer"/)
   assert.ok(html.includes('title="中文提示"'))
+})
+
+test('整体链接和子文字链接使用并列锚点，离线解析不拆散组合',async()=>{
+  const document=fixture(),page=document.pages.page!,child=page.nodes.text!,group={...createNode('group','linked-group'),attributes:{href:'https://group.test/',target:'_blank'}}
+  child.parentId=group.id;child.richText={type:'doc',content:[{type:'paragraph',content:[{type:'text',text:'子链接',marks:[{type:'link',attrs:{href:'https://child.test/'}}]}]}]}
+  page.nodes[group.id]=group;page.nodeOrder.unshift(group.id)
+  const before=JSON.stringify(document),html=await renderPageHtml(page,new ExportResources(document,{format:'html'}))
+  const {Parser}=await import('htmlparser2');let anchors=0,depth=0,nested=false;const stack:boolean[]=[]
+  const parser=new Parser({onopentag(tag){stack.push(tag==='a');if(tag==='a'){nested||=depth>0;depth++;anchors++}},onclosetag(){if(stack.pop())depth--}})
+  parser.write(html);parser.end();assert.equal(nested,false,'整体链接不能成为子链接的祖先');assert.equal(anchors,2)
+  assert.ok(html.includes('https://group.test/'));assert.ok(html.includes('https://child.test/'));assert.equal(JSON.stringify(document),before)
 })
 
 test('extended appearance exports with geometry, annotations stay off artboards and video fallback is explicit', async () => {

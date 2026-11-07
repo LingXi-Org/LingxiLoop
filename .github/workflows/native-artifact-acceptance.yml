@@ -118,6 +118,7 @@ jobs:
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-title --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-title"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-link --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-link --link-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-exports"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=nested-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-nested"
           for task_artboard_case in default exports readonly fit-repeat fit-hidden fit-policy; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-artboard --artboard-case="$task_artboard_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-artboard-$task_artboard_case"
           done
@@ -250,6 +251,7 @@ jobs:
             ${{ runner.temp }}/native-element-link/*.json
             ${{ runner.temp }}/native-element-link/*.png
             ${{ runner.temp }}/native-element-link-exports/*
+            ${{ runner.temp }}/native-element-link-nested/*
             ${{ runner.temp }}/native-artboard-*/*.json
             ${{ runner.temp }}/native-artboard-*/*.png
             ${{ runner.temp }}/native-page-print-oracle.json
