@@ -1,0 +1,109 @@
+{
+  "审查提交": "9fc38efe1dee575c7f244de2700581d90bc269af",
+  "比较基线": "225ef8229fb59854c003d7f636b54979bff14071",
+  "审查方式": "依据repository-review技能；独立detached checkout /workspace/lingxi-issue707-scratch/review-9fc38efe。未混入root WIP，未修改产品文件、提交、合并或发布外部消息。仅在独立scratch运行受控HTTP夹具及临时浏览器探针。",
+  "结论": "发现1项可复现P2：整体链接与子内联链接形成嵌套a，导致实际HTML/PDF/PPTX导出解析和命中区损坏。本候选不能判局部完成。已交给根线程另提交修复，不提前算关闭。",
+  "发现": [
+    {
+      "级别": "P2",
+      "标题": "组合整体链接包裹子文字链接，破坏三种导出与链接命中",
+      "位置": [
+        {
+          "文件": "src/features/artifacts/native/renderer.tsx",
+          "行": 213
+        },
+        {
+          "文件": "src/features/artifacts/native/export/render.ts",
+          "行": 138
+        },
+        {
+          "文件": "src/features/artifacts/native/export/render.ts",
+          "行": 153
+        }
+      ],
+      "最小复现": "在一个组合中保留文字子节点原有richText link=https://child.test/，通过中文链接输入给组合整体设置attributes.href=https://parent.test/，然后实际下载网页/PDF/PPTX。两个地址均为合法模型数据，未使用脚本协议或非法字段。",
+      "实际结果": [
+        "原生React DOM中组合仍含3个成员，但产生a不可嵌套的React警告。",
+        "实际下载HTML由新浏览器页解析后，同一个page-1-root被HTML解析器复制为3个1920×1080空A容器；heading不再位于组合内，子链接跑到y2283，超出1080高的第一页。",
+        "实际下载PDF经pdfinfo -url检查，仅有两条parent URL，child URL注释丢失。已生成第一页独立栅格截图。",
+        "实际PPTX虽有child关系rId5，子链接透明shape offY=20983575 EMU，而slide高度10287000 EMU，命中区位于页面之外。"
+      ],
+      "原因": "节点整体href把容器直接改为a，而后代richTextContent继续输出a；HTML字符串进入innerHTML/独立HTML解析时触发浏览器纠错。PDF/PPTX均复用同一mountExportPage解析结果。",
+      "最小修复": "保留容器结构，使用不构成子链接祖先的整体链接命中层或等价语义；保留原有子链接目标、布局及身份。新增实际HTML重新解析、父/子命中与双目标PDF/PPTX位置回归，不通过删除子链接掩盖。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-9fc3-nested-formats154/design-nested-export.json",
+        "/workspace/lingxi-issue707-scratch/review-9fc3-nested-formats154/nested.html",
+        "/workspace/lingxi-issue707-scratch/review-9fc3-nested-formats154/nested-offline.png",
+        "/workspace/lingxi-issue707-scratch/review-9fc3-nested-formats154/nested.pdf",
+        "/workspace/lingxi-issue707-scratch/review-9fc3-nested-formats154/nested-pdf-page.png",
+        "/workspace/lingxi-issue707-scratch/review-9fc3-nested-formats154/nested.pptx",
+        "/workspace/lingxi-issue707-scratch/review-9fc3-nested-formats154/slide1.xml",
+        "/workspace/lingxi-issue707-scratch/review-9fc3-nested-formats154/slide1.xml.rels"
+      ],
+      "只读探针": "/workspace/lingxi-issue707-scratch/review-9fc3-probe/link-extra.mjs"
+    }
+  ],
+  "实际验证": [
+    {
+      "项目": "Chrome154默认元素链接UI",
+      "结果": "22场景通过，进程exit0，无页面/控制台错误。包括Design20和Slides两种RTE编辑；默认集合不包括exports特例。",
+      "收据": "/tmp/lingxi-review-9fc3-links154.log"
+    },
+    {
+      "项目": "Chrome140元素链接UI",
+      "结果": "首轮mode=both首个Slides edit在RTE已出现后等待焦点进入编辑框超时，进程exit1，无console错误。单独重跑Slides edit/relative-edit两项通过，另Design20项通过。总覆盖22种场景，但不能称首轮全过。未形成稳定触发条件，不据一次失败新增P2。",
+      "失败收据": [
+        "/tmp/lingxi-review-9fc3-links140.log",
+        "/workspace/lingxi-issue707-scratch/review-9fc3-links140/slides-failure.json",
+        "/workspace/lingxi-issue707-scratch/review-9fc3-links140/slides-failure.png"
+      ],
+      "重跑收据": [
+        "/tmp/lingxi-review-9fc3-slides140-retry.log",
+        "/tmp/lingxi-review-9fc3-design140.log"
+      ]
+    },
+    {
+      "项目": "所选模型/转换/装饰缩略图/导出单元",
+      "结果": "48/48通过；另node-code及links两文件5/5通过，本轮所选共53项，不冒称与父线程55项集合完全相同。",
+      "收据": [
+        "/tmp/lingxi-review-9fc3-owning.log",
+        "/tmp/lingxi-review-9fc3-model-extra.log"
+      ],
+      "文件": [
+        "shared/artifact-element-link.test.ts",
+        "shared/artifact-legacy.test.ts",
+        "shared/artifact-previews.test.ts",
+        "src/features/artifacts/native/thumbnail.test.tsx",
+        "src/features/artifacts/native/export/export.test.ts",
+        "shared/artifact-node-code.test.ts",
+        "shared/artifact-links.test.ts"
+      ]
+    },
+    {
+      "项目": "固定Source相对/电话地址实际重放",
+      "结果": "独立运行v2.8.0，12来源哈希核验；输入example.test与tel:+861234567890后实际Source文件分别保留对应href。与原生模型及UI保存一致。",
+      "收据": "/workspace/lingxi-issue707-scratch/review-9fc3-source/reference.json",
+      "日志": "/tmp/lingxi-review-9fc3-source.log"
+    },
+    {
+      "项目": "嵌套整体/子链接三格式真实导出",
+      "结果": "实际下载、重新解析及PDF/PPTX检查确认本报告P2。诊断进程exit0仅表示成功记录坏结果，不表示功能通过。",
+      "日志": "/tmp/lingxi-review-9fc3-nested-formats154.log"
+    },
+    {
+      "项目": "只读及补丁检查",
+      "结果": "HEAD完整SHA匹配；git status --short空，git diff --check 225ef822通过。"
+    }
+  ],
+  "代码追踪": "链接编辑捕获首次修改快照，并向session.dispatch加入attributes和richText两字段读依赖；现有UI用例实际确认跨表示冲突时peer保留/本地可下载、无关颜色允许合并、撤权不写入。旧http/mailto/fragment含不完整URL合同保留，新增相对/tel校验；转换复制marks数组避免兄弟节点泄漏。装饰摘要限制访问256节点/512字符/64runs，缩略图4行及每行100字符，原有页摘要总预算和可见区域架构未移除；单位验证内容不可变、部分下划线及剥离内联地址。没有将这些上限当性能测量。",
+  "未验证与边界": [
+    "本轮未重跑真实Linux/Fcitx5系统IME，未独立执行50页或整套两模式六格式正常文档；只对报告中的混合父/子状态实际执行HTML/PDF/PPTX。",
+    "未运行真实授权API/跨租户服务、外部模型或Agent全周期；所有本轮UI为受控HTTP。",
+    "未独立完整lint/typecheck/build或正式CI；准确SDK缺失问题不能算类型检查通过。",
+    "Chrome140首次RTE焦点超时仍保留为未完全归因的回归证据，不用重跑成功抹掉。",
+    "未重复完整像素比对与正式10组AB/BA、5%/输入p95性能门槛；完整资格继续false。",
+    "根线程后续5e97ffdc修复需要另行冻结独立复审，不能覆盖本9fc失败记录。"
+  ],
+  "局部审查通过": false,
+  "完整还原资格通过": false
+}

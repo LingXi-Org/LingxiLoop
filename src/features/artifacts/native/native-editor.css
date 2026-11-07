@@ -365,3 +365,4 @@
 .native-editor [data-native-link-active]>.native-element-link-hit{pointer-events:auto}
 .native-editor [data-native-link-active]>:not(.native-element-link-hit){pointer-events:none}
 .native-editor [data-native-link-active] a[href]{pointer-events:auto}
+.native-editor [data-native-link-active] a[href]:not(.native-element-link-hit){position:relative;z-index:1}

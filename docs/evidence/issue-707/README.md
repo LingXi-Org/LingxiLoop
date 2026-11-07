@@ -400,3 +400,6 @@ D31等距已实现限定状态，见 `functional/design-board-spacing.json`、`s
 
 
 9fc38efe正式CI42375115877通过，但独立审查实测P2：整体和子文字链接生成嵌套a，离线HTML解析拆散组合、PDF丢失子地址、PPTX子命中区越出页面。见 [失败与修复收据](functional/element-link-nested.json)。修复使用独立锚点命中层并保留div容器，编辑时不遮挡子选择；140/154真实下载HTML再打开，组唯一且三成员、两种地址实际命中正确；PDF两URI及PPTX页内坐标通过。32项定向单元、154九种与140六种受影响UI回归通过；候选正式CI与冻结只读复审待执行。原候选失败仍记为失败。
+
+
+5e97ffdc正式CI42375982697通过，独立复审在同一文字节点的整体+局部两目标发现新P2，报告 [5e97ffdc](reviews/5e97ffdc.json) 保留；[9fc38efe原报告](reviews/9fc38efe.json)同时归档。现在将局部行内锚点置于整体命中层上方，普通内容仍命中整体地址。见 [可信点击与实际导出](functional/element-link-same-node.json)：140/154的真实全窗口预览及离线HTML中，两个位置各实际鼠标点击isTrusted=true并命中各自地址；PDF两URI、PPTX页内坐标及154原组合回归通过，32项定向单元通过。没有把捕获防外跳当导航授权，也没有改变实际命中。待修复候选正式CI及独立复审，完整资格仍false。
