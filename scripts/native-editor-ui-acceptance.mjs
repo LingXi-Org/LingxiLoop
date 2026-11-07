@@ -27,7 +27,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -82,11 +82,21 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
+  if(options.checks==='design-outline'&&options['outline-case']==='large'){
+    const original=structuredClone(document.pages['page-3'])
+    for(let index=4;index<=50;index++){
+      const value=structuredClone(original),prefix=`page-${index}`
+      value.id=prefix;value.title=`Page ${index}`;value.x=(index-1)*2080
+      const ids=new Map(value.nodeOrder.map(id=>[id,id.replace('page-3',prefix)]))
+      value.nodes=Object.fromEntries(value.nodeOrder.map(id=>{const node=value.nodes[id];node.id=ids.get(id);if(node.parentId)node.parentId=ids.get(node.parentId);if(node.text){node.text=`LingxiLoop ${index}`;node.richText={type:'doc',content:[{type:'paragraph',content:[{type:'text',text:node.text}]}]}}return[node.id,node]}))
+      value.nodeOrder=value.nodeOrder.map(id=>ids.get(id));document.pages[prefix]=value;document.pageOrder.push(prefix)
+    }
+  }
   if(options.checks==='code-style'&&['geometry','drag'].includes(options['code-case']))document.pages['page-1'].nodes['page-1-shape'].css={left:'120px !important'}
   if(options.checks==='code-style'){const node=document.pages['page-1'].nodes['page-1-heading'];node.css={filter:'blur(1px) !important','max-width':'1800px',...(options['code-case']==='important-same'?{color:node.style.color+' !important'}:{})};node.attributes={'data-label':'中文测试',title:'中文说明',href:'https://example.test/',target:'_blank'}}
   if(options.checks==='slides-present-controls')document.pages['page-1'].notes='全屏与演讲者控制备注。'
@@ -147,6 +157,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     Object.assign(first,{width:800,height:600});Object.assign(heading,{x:50,y:50,width:700,height:100})
     const shape={...createNode('shape','flow-bottom'),x:0,y:900,width:100,height:100}
     const image=Object.values(first.nodes).find(node=>node.type==='image');Object.assign(image,{x:50,y:200,width:100,height:100})
+    heading.parentId=null;image.parentId=null
     first.nodeOrder=[heading.id,image.id,shape.id];first.nodes={[heading.id]:heading,[image.id]:image,[shape.id]:shape}
     Object.assign(other,{canvasPageId:'canvas-second',x:0,y:options['flow-overlap']?0:700,width:800,height:600})
   }
@@ -353,14 +364,14 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       if(options['code-case']!=='empty')await heading.click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
       await page.getByRole('tab',{name:'代码',exact:true}).click()
       const field=page.getByRole('textbox',{name:'样式与属性',exact:true})
-      await field.waitFor();const initial=await field.inputValue()
       if(options['code-case']==='empty'){
-        assert.equal(initial,'');assert.equal(await field.getAttribute('readonly'),'')
-        assert.equal(await field.getAttribute('placeholder'),'选择一个元素以查看其样式。')
+        await page.locator('.native-code-pane').waitFor()
+        assert.equal(await field.count(),0,'固定来源在没有选择时不渲染代码输入框或占位提示')
         await page.screenshot({path:join(output,'design-code-empty.png')})
         assert.equal(receipts.length,0);assert.deepEqual(errors,[])
-        return{kind:'isolated-empty-code',chinesePlaceholder:true,readOnlyWithoutSelection:true,noWrites:true,consoleOrPageErrors:errors}
+        return{kind:'isolated-empty-code',sourceMatchedNoField:true,noPlaceholderWithoutSelection:true,noWrites:true,consoleOrPageErrors:errors}
       }
+      await field.waitFor();const initial=await field.inputValue()
       assert.ok(initial.includes('width:'))
       if(options['code-case']==='geometry'){
         const original=document.pages['page-1'].nodes['page-1-heading'].width
@@ -1931,6 +1942,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await textEditor.waitFor();await textEditor.press('Control+a');await page.keyboard.insertText('独立画布便签')
       await page.getByRole('button',{name:'完成',exact:true}).click();await saved()
       assert.ok(document.pages[bodyId].nodes[noteId].height<=42,'shorter text shrinks a sticky back to its natural height')
+      await page.locator('.native-board-label').first().click()
       await page.getByRole('button',{name:'显示属性',exact:true}).click()
       await page.locator('.native-inspector summary').getByText('高级',{exact:true}).click()
       await page.getByRole('spinbutton',{name:'旋转',exact:true}).fill('90');await page.keyboard.press('Tab');await saved()
@@ -2021,6 +2033,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if(options.checks==='canvas-flow') {
       assert.equal(kind,'design')
+      await page.locator('[data-page-id="page-1"] .native-board-label').click()
       await page.getByRole('button',{name:'显示属性',exact:true}).click()
       await page.locator('.native-inspector summary').getByText('高级',{exact:true}).click()
       await page.getByLabel('页面高度模式',{exact:true}).selectOption('flow')
@@ -2116,7 +2129,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.locator('[data-native-artifact-editor]').evaluate(e=>e.style.width='360px');await page.waitForTimeout(100)
       const resized=await popup.boundingBox();assert.ok(resized&&resized.x>=0&&resized.x+resized.width<=360,'menu must also follow container-only resizing')
       await page.keyboard.press('Escape');await page.locator('[data-native-artifact-editor]').evaluate(e=>e.style.width='')
-      await page.setViewportSize({width:900,height:1000});await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'背景',exact:true}).click();await page.getByRole('dialog',{name:'背景颜色',exact:true}).waitFor()
+      await page.setViewportSize({width:900,height:1000});if(kind==='design')await page.locator('.native-board-label').first().click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'背景',exact:true}).click();await page.getByRole('dialog',{name:'背景颜色',exact:true}).waitFor()
       await page.setViewportSize({width:390,height:844});await page.waitForTimeout(100)
       const color=await page.getByRole('dialog',{name:'背景颜色',exact:true}).boundingBox();assert.ok(color&&color.x>=0&&color.x+color.width<=390,'an open color picker must follow the resized editor')
       return {kind:'isolated-menu-resize-diagnostic',mode:kind,windowAndContainerResize:true,scope:'real native popover and editor container'}
@@ -2560,13 +2573,108 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.ok(ink.inheritedRedPixels>100&&ink.inheritedBlackPixels===0,'captured text must keep its inherited group color')
       return {kind:'isolated-export-ink-diagnostic',mode:kind,...ink,scope:'actual Chromium html-to-image rasterizer; not a full PPTX rendering comparison'}
     }
+    if(options.checks==='design-outline'){
+      assert.equal(kind,'design')
+      await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      await page.getByText('未选择任何内容',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'背景',exact:true}).count(),0)
+      const tree=page.getByRole('tree',{name:'图层',exact:true})
+      await tree.waitFor()
+      if(options['outline-case']==='visual'){
+        const screenshots=[]
+        for(const [width,height]of [[1920,1200],[1440,1000],[768,1024],[390,844]])for(const theme of ['light','dark']){
+          await page.setViewportSize({width,height});await page.reload({waitUntil:'domcontentloaded'});await ready(1)
+          await page.evaluate(theme=>document.documentElement.classList.toggle('dark',theme==='dark'),theme)
+          await page.locator('[data-native-artifact-editor]').evaluate((element,theme)=>element.setAttribute('data-theme',theme),theme)
+          await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('tab',{name:'属性',exact:true}).waitFor()
+          for(const [state,label]of [['properties','属性'],['code','代码'],...(width<600?[['outline','图层']]:[])]){
+            await page.getByRole('tab',{name:label,exact:true}).click();await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(120)
+            const file=`design-outline-${width}-${theme}-${state}.png`;await page.screenshot({path:join(output,file)})
+            screenshots.push({width,height,theme,state,file,panel:await page.getByRole('complementary',{name:'属性面板',exact:true}).boundingBox(),header:await page.locator('.native-inspector-header').boundingBox(),tree:await tree.isVisible()?await tree.boundingBox():null,rows:await tree.getByRole('treeitem').evaluateAll(es=>es.map(element=>({label:element.getAttribute('aria-label'),level:element.getAttribute('aria-level'),rect:element.getBoundingClientRect().toJSON()})))})
+          }
+        }
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-design-outline-visual',fixtureSemanticSha256:fixture.manifest.semanticSha256,renderingMode:'CSS1Compat',productThemeAncestor:true,screenshots,noWrites:true,matchedStateVerified:false,scope:'固定同层级文档；截图仍需独立几何/像素验收；微调等未完成状态没有获得资格',consoleOrPageErrors:errors}
+      }
+      const header=await page.locator('.native-inspector-header').boundingBox(),bounds=await tree.boundingBox()
+      assert.ok(Math.abs(header.height-40)<=1,'Design面板标题高度应为40px')
+      assert.ok(Math.abs(bounds.y-41)<=1&&Math.abs(bounds.height-168)<=1,'宽面板图层区应从41px开始且高168px')
+      assert.equal(await tree.getAttribute('aria-multiselectable'),'true')
+      const board=tree.getByRole('treeitem',{name:'Page 1',exact:true})
+      assert.equal(await board.getAttribute('aria-expanded'),'true')
+      if(options['outline-case']==='large'){
+        await board.focus();await board.press('End')
+        await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]')?.dataset.currentPage==='page-50')
+        await tree.getByRole('treeitem',{name:'Page 50',exact:true}).waitFor()
+        const mounted=await tree.getByRole('treeitem').count();assert.ok(mounted<=30,'50画板图层区只挂载可见行及有界预取')
+        await tree.getByRole('treeitem',{name:'Page 50',exact:true}).press('Home')
+        await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]')?.dataset.currentPage==='page-1')
+        await board.waitFor();assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-design-outline-large',pages:50,maxObservedRows:mounted,homeEndFocusRestored:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      const title=await board.locator('.native-outline-label').boundingBox(),inspector=await page.getByRole('complementary',{name:'属性面板',exact:true}).boundingBox()
+      assert.ok(Math.abs(title.x-inspector.x-51)<=1,'画板标签与固定来源应保持51px相对缩进')
+      const rootGroup=tree.locator('[data-outline-node="page-1-root"]');if(await rootGroup.count())await rootGroup.getByRole('button',{name:'展开组合 LingxiLoop 1',exact:true}).click()
+      const heading=tree.locator('[data-outline-node="page-1-heading"]')
+      if(options['outline-case']==='context'){
+        await tree.locator('[data-outline-node="page-1-image"]').click()
+        await heading.click({button:'right'})
+        const menu=page.getByRole('menu',{name:'编辑操作',exact:true})
+        await menu.getByRole('menuitem',{name:/创建副本/}).click()
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        assert.equal(Object.values(document.pages['page-1'].nodes).filter(node=>node.type==='text').length,2,'右击文字行的动作必须作用于文字，而不是先前选中的图片')
+        await page.keyboard.press('Control+z')
+        await page.waitForFunction(()=>document.querySelectorAll('.native-stage [data-node-type=text]').length===3)
+        await heading.focus();await heading.press('Shift+F10');await menu.waitFor()
+        const before=document.seq
+        await page.keyboard.press('ArrowDown');assert.equal(document.seq,before,'菜单方向键不能移动画布对象')
+        assert.equal(await menu.evaluate(element=>element.contains(document.activeElement)),true)
+        await page.keyboard.press('Escape');await menu.waitFor({state:'detached'})
+        assert.equal(await heading.evaluate(element=>element===document.activeElement),true)
+        assert.deepEqual(errors,[])
+        return{kind:'isolated-outline-context',rightClickTargetsCorrectNode:true,sharedUndoAfterAction:true,keyboardMenu:true,noCanvasNudge:true,escapeRestoresTreeFocus:true,consoleOrPageErrors:errors}
+      }
+      await heading.click()
+      assert.equal(await heading.getAttribute('aria-selected'),'true')
+      await page.keyboard.press('ArrowDown')
+      assert.equal(receipts.length,0,'图层键盘浏览不能移动画布对象')
+      const focused=await tree.evaluate(element=>element.ownerDocument.activeElement?.getAttribute('role'))
+      assert.equal(focused,'treeitem')
+      await tree.getByRole('button',{name:'收起画板 Page 1',exact:true}).click()
+      assert.equal(await heading.count(),0)
+      await tree.getByRole('button',{name:'展开画板 Page 1',exact:true}).click();await heading.waitFor()
+      await heading.hover();await heading.getByRole('button',{name:'隐藏图层 LingxiLoop 1',exact:true}).click()
+      await page.waitForFunction(()=>!document.querySelector('.native-stage [data-node-id="page-1-heading"]'))
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      await page.keyboard.press('Control+z')
+      await page.waitForFunction(()=>!!document.querySelector('.native-stage [data-node-id="page-1-heading"]'))
+      await heading.click({button:'right'});await page.getByRole('menuitem',{name:'锁定图层',exact:true}).click()
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      assert.equal(document.pages['page-1'].nodes['page-1-heading'].locked,true)
+      const unlocked=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.request().postDataJSON()?.kind==='undo');await page.keyboard.press('Control+z');await unlocked;await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.notEqual(document.pages['page-1'].nodes['page-1-heading'].locked,true)
+      const handle=page.getByRole('separator',{name:'调整图层列表高度',exact:true})
+      await handle.focus();await handle.press('ArrowDown');assert.equal(await handle.getAttribute('aria-valuenow'),'176')
+      await handle.press('Shift+ArrowDown');assert.equal(await handle.getAttribute('aria-valuenow'),'208')
+      await handle.press('ArrowUp');assert.equal(await handle.getAttribute('aria-valuenow'),'200')
+      await page.setViewportSize({width:640,height:844})
+      await tree.waitFor();await page.waitForTimeout(100)
+      assert.equal(await page.getByRole('tab',{name:'图层',exact:true}).count(),0,'Design在600px以上保持侧栏')
+      const side=await page.getByRole('complementary',{name:'属性面板',exact:true}).boundingBox();assert.ok(Math.abs(side.width-336)<=1&&side.y===0)
+      await page.setViewportSize({width:390,height:844})
+      await page.getByRole('tab',{name:'图层',exact:true}).waitFor()
+      await page.getByRole('tab',{name:'代码',exact:true}).click();assert.equal(await tree.isVisible(),false)
+      await page.getByRole('tab',{name:'图层',exact:true}).click();await tree.waitFor()
+      const bottom=await page.getByRole('complementary',{name:'属性面板',exact:true}).boundingBox();assert.ok(Math.abs(bottom.height-Math.max((844-68)*.47,Math.min(136,844-68)))<=1,'Design底部面板使用固定来源的47%有效高度')
+      await page.screenshot({path:join(output,'design-outline-narrow.png')})
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-design-outline',chineseTree:true,wideGeometry:true,selectsCanvasNode:true,keyboardNavigationWithoutWrites:true,collapseAndExpand:true,narrowOutlineTab:true,hideAndLockWithSharedUndo:true,heightKeyboardSteps:true,consoleOrPageErrors:errors}
+    }
     if(options.checks==='slides-toolbar'){
       assert.equal(kind,'slides')
       const records=[]
       for(const [width,height] of [[1920,1200],[1440,1000],[768,1024],[390,844]]){
         await page.setViewportSize({width,height});await page.reload({waitUntil:'domcontentloaded'});await ready(1)
         for(const theme of ['light','dark']){
-          await page.locator('[data-native-artifact-editor]').evaluate((e,theme)=>e.setAttribute('data-theme',theme),theme)
+          await page.locator('[data-native-artifact-editor]').evaluate((e,theme)=>{e.setAttribute('data-theme',theme);document.documentElement.classList.toggle('dark',theme==='dark')},theme)
           await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(100)
           const labels=['文本','图片或视频','插入表格','插入图形','导出格式','版本历史','评论','评论选项','放映','显示属性','画布缩放']
           const controls=[]
@@ -2592,7 +2700,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await page.setViewportSize({width,height})
         await page.reload({waitUntil:'domcontentloaded'});await ready(1)
         for (const theme of ['light','dark']) {
-          await page.locator('[data-native-artifact-editor]').evaluate((e,theme) => e.setAttribute('data-theme',theme),theme)
+          await page.locator('[data-native-artifact-editor]').evaluate((e,theme) => {e.setAttribute('data-theme',theme);document.documentElement.classList.toggle('dark',theme==='dark')},theme)
           await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(200)
           if(width===1440&&theme==='light')await writeFile(join(output,`${kind}-dom.json`),JSON.stringify(await page.locator('[data-page-id] [data-node-id]').evaluateAll(nodes=>nodes.map(e=>({id:e.dataset.nodeId,html:e.outerHTML.slice(0,2000),rect:e.getBoundingClientRect().toJSON(),children:[...e.querySelectorAll('h1,.native-text-content,img')].map(c=>({tag:c.tagName,rect:c.getBoundingClientRect().toJSON(),color:getComputedStyle(c).color,display:getComputedStyle(c).display,position:getComputedStyle(c).position,font:getComputedStyle(c).font}))}))),null,2))
           await page.screenshot({path:join(output,`${kind}-${width}-${theme}.png`)})
@@ -2600,20 +2708,20 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         }
       }
       if(options['defaults-only']==='true'){assert.deepEqual(errors,[]);return {kind:'isolated-native-editor-default-visual-diagnostic',mode:kind,screenshots,scope:'只记录默认界面，不替代菜单/面板或像素验收',consoleOrPageErrors:errors}}
-      const reset=async()=>{await page.setViewportSize({width:1440,height:1000});await page.reload({waitUntil:'domcontentloaded'});await ready(1);await page.locator('[data-native-artifact-editor]').evaluate(e=>e.setAttribute('data-theme','light'));await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(120)}
+      const reset=async()=>{await page.setViewportSize({width:1440,height:1000});await page.reload({waitUntil:'domcontentloaded'});await ready(1);await page.locator('[data-native-artifact-editor]').evaluate(e=>{e.setAttribute('data-theme','light');document.documentElement.classList.remove('dark')});await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(120)}
       const capture=async state=>{await page.waitForTimeout(120);const path=`${kind}-${state}.png`;await page.screenshot({path:join(output,path)});screenshots.push({width:1440,height:1000,theme:'light',state,path,controls:await visualControls(page)})}
       const menus=kind==='design'?[['pages','页面菜单'],['drawing','绘图工具'],['shapes','插入图形'],['export','导出格式'],['zoom','画布缩放'],['history','版本历史'],['comment-options','评论选项']]:[['shapes','插入图形'],['export','导出格式'],['zoom','画布缩放'],['layouts','添加页面'],['history','版本历史'],['comment-options','评论选项']]
       for(const [state,label]of menus){await reset();if(['history','layouts'].includes(state))await page.getByRole('button',{name:label,exact:true}).click();else await page.getByLabel(label,{exact:true}).click();if(state==='history')await page.getByRole('dialog',{name:'版本历史',exact:true}).getByRole('button',{name:/^版本/}).waitFor();await capture(state)}
       await reset();await page.getByRole('button',{name:'评论',exact:true}).click();await capture('comments-active');await page.mouse.click(kind==='design'?100:800,kind==='design'?500:600);await page.getByRole('textbox',{name:'评论内容',exact:true}).waitFor();await capture('comment-composer')
       await reset();await page.getByLabel('评论选项',{exact:true}).click();await page.getByRole('button',{name:/显示全部评论/}).click();await page.getByText('暂无评论',{exact:true}).waitFor();await capture('all-comments')
       await reset();await page.getByRole('button',{name:'显示属性',exact:true}).click();await capture('inspector')
-      await page.getByRole('button',{name:'背景',exact:true}).click();await page.getByRole('dialog',{name:'背景颜色',exact:true}).waitFor();await capture('color-theme');await page.getByRole('button',{name:'自定义',exact:true}).click();await capture('color-custom')
+      if(kind==='slides'){await page.getByRole('button',{name:'背景',exact:true}).click();await page.getByRole('dialog',{name:'背景颜色',exact:true}).waitFor();await capture('color-theme');await page.getByRole('button',{name:'自定义',exact:true}).click();await capture('color-custom')}
       await reset();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.locator('[data-node-id=page-1-heading]').click();await capture('heading-inspector')
       assert.equal(await page.getByRole('complementary',{name:'属性面板'}).count(),1)
       assert.deepEqual(errors,[])
       return {kind:'isolated-native-editor-visual-diagnostic',mode:kind,screenshots,scope:'controlled HTTP reducer fixture; screenshots only, not measured source parity, real API or performance acceptance',consoleOrPageErrors:errors}
     }
-    if (kind==='design') { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'50%',exact:true}).click() }
+    if (kind==='design') { await page.getByLabel('画布缩放',{exact:true}).click(); await page.getByRole('button',{name:'50%',exact:true}).click();await page.locator('.native-board-label').first().click() }
     await page.getByRole('button',{name:'显示属性',exact:true}).click()
     if(options.checks==='legacy-colors') {
       const waitSaved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
@@ -2656,7 +2764,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await picker.getByLabel('关闭颜色选择',{exact:true}).click();assert.equal(await picker.count(),0)
       assert.equal(await page.getByRole('button',{name:'背景',exact:true}).evaluate(e=>document.activeElement===e),true)
       const saved=document.pages['page-1'].background;await page.reload({waitUntil:'domcontentloaded'});await ready(1)
-      await page.getByRole('button',{name:'显示属性',exact:true}).click();assert.match(await page.getByRole('button',{name:'背景',exact:true}).innerText(),new RegExp(saved,'i'))
+      if(kind==='design')await page.locator('.native-board-label').first().click();await page.getByRole('button',{name:'显示属性',exact:true}).click();assert.match(await page.getByRole('button',{name:'背景',exact:true}).innerText(),new RegExp(saved,'i'))
       assert.deepEqual(errors,[])
       return {kind:'isolated-color-editor-diagnostic',mode:kind,alphaPreserved:true,keyboardColorChange:true,focusRestored:true,reloadRetained:true,scope:'actual color popover and shared reducer through HTTP fixture',consoleOrPageErrors:errors}
     }

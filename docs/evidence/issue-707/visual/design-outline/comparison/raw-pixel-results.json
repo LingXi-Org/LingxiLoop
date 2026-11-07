@@ -1,0 +1,154 @@
+{
+  "kind": "matched-synthetic-fixture-raw-pixel-diagnostic",
+  "state": "design-inspector-outline",
+  "masks": [],
+  "antialiasExclusions": false,
+  "qualified": false,
+  "scope": "Only the specified matched state; control geometry and complete interaction states remain separate gates.",
+  "results": [
+    {
+      "image": "design-outline-1440-dark-code.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 21934,
+      "rawDifferentRatio": 0.015231944444444444,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-1440-dark-properties.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 21681,
+      "rawDifferentRatio": 0.01505625,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-1440-light-code.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 23668,
+      "rawDifferentRatio": 0.01643611111111111,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-1440-light-properties.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 23413,
+      "rawDifferentRatio": 0.01625902777777778,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-1920-dark-code.png",
+      "width": 1920,
+      "height": 1200,
+      "differentPixels": 18641,
+      "rawDifferentRatio": 0.008090711805555555,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-1920-dark-properties.png",
+      "width": 1920,
+      "height": 1200,
+      "differentPixels": 18388,
+      "rawDifferentRatio": 0.007980902777777778,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-1920-light-code.png",
+      "width": 1920,
+      "height": 1200,
+      "differentPixels": 20880,
+      "rawDifferentRatio": 0.0090625,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-1920-light-properties.png",
+      "width": 1920,
+      "height": 1200,
+      "differentPixels": 20625,
+      "rawDifferentRatio": 0.008951822916666666,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-390-dark-code.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 21610,
+      "rawDifferentRatio": 0.06565196257139386,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-390-dark-outline.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 21024,
+      "rawDifferentRatio": 0.06387167335034634,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-390-dark-properties.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 21291,
+      "rawDifferentRatio": 0.06468282901932192,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-390-light-code.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 22904,
+      "rawDifferentRatio": 0.06958318143152266,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-390-light-outline.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 22260,
+      "rawDifferentRatio": 0.06762668611009844,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-390-light-properties.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 22573,
+      "rawDifferentRatio": 0.06857759144489002,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-768-dark-code.png",
+      "width": 768,
+      "height": 1024,
+      "differentPixels": 36762,
+      "rawDifferentRatio": 0.04674530029296875,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-768-dark-properties.png",
+      "width": 768,
+      "height": 1024,
+      "differentPixels": 36510,
+      "rawDifferentRatio": 0.04642486572265625,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-768-light-code.png",
+      "width": 768,
+      "height": 1024,
+      "differentPixels": 38312,
+      "rawDifferentRatio": 0.048716227213541664,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-outline-768-light-properties.png",
+      "width": 768,
+      "height": 1024,
+      "differentPixels": 38057,
+      "rawDifferentRatio": 0.04839197794596354,
+      "conservativePixelPass": false
+    }
+  ]
+}

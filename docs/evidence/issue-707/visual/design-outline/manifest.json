@@ -1,0 +1,605 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "browser": "154.0.8037.57",
+  "fixture": {
+    "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "referenceHashesVerified": 12,
+    "records": [
+      {
+        "kind": "design",
+        "referenceFilesUnchanged": 4,
+        "oldNativeSemanticSha256": "6dfaa8b97381d50e7f3d058148b34f9b0c3bdb378977ab74ce2aa82545cd6410",
+        "nativeSemanticSha256": "140fa965bf41223a0f140b46c0b957c95b6ebb95a1a654fae8011f29568b729c"
+      },
+      {
+        "kind": "slides",
+        "referenceFilesUnchanged": 5,
+        "oldNativeSemanticSha256": "f19d195cd70c48ec8fa8238087954eebd4c937e73f47b161dcba0c95c8b58ec5",
+        "nativeSemanticSha256": "f19d195cd70c48ec8fa8238087954eebd4c937e73f47b161dcba0c95c8b58ec5"
+      }
+    ]
+  },
+  "geometry": [
+    {
+      "image": "design-outline-1920-light-properties.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-1920-light-code.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-1920-dark-properties.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-1920-dark-code.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-1440-light-properties.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-1440-light-code.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-1440-dark-properties.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-1440-dark-code.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-768-light-properties.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-768-light-code.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-768-dark-properties.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-768-dark-code.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-390-light-properties.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": null,
+          "bothHidden": true
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-390-light-code.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": null,
+          "bothHidden": true
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-390-light-outline.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-390-dark-properties.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": null,
+          "bothHidden": true
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-390-dark-code.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": null,
+          "bothHidden": true
+        }
+      ],
+      "qualified": false
+    },
+    {
+      "image": "design-outline-390-dark-outline.png",
+      "measurements": [
+        {
+          "part": "panel",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "tree",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-0",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-1",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-2",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        },
+        {
+          "part": "row-3",
+          "maxDeviationCssPx": 0,
+          "bothHidden": false
+        }
+      ],
+      "qualified": false
+    }
+  ],
+  "rawPixelEvidence": "comparison/raw-pixel-results.json",
+  "masks": [],
+  "qualified": false,
+  "corrections": [
+    "原生Design夹具显式保留原版根组合；原版4个文件字节保持不变。旧版截图的扁平层级不能证明图层同态。",
+    "原生深色截图同时设置产品的HTML.dark祖先与局部主题；旧截图仅设局部主题的深色状态不作为全部选择器已同态的证明。"
+  ],
+  "exceptions": [
+    "中文文案、LingxiLoop身份及已登记删除的无服务入口；本次原始像素统计没有应用遮罩。"
+  ],
+  "remaining": [
+    "微调选项卡缺失、完整字段与控件、图标/文字槽尺寸、完整状态遍历和1px/0.5%门槛仍未通过。"
+  ]
+}

@@ -23,8 +23,24 @@ await mkdir(output,{recursive:true})
 const results=[]
 const paintProofs=new WeakMap()
 try {
-  for(const kind of args['pages-only'] ? [] : ['design','slides']) {
+  for(const kind of args['pages-only'] ? [] : args['inspector-only']==='true'?['design']:['design','slides']) {
     const url=new URL(args[`${kind}-url`]);assert.ok(['127.0.0.1','localhost'].includes(url.hostname),'Reference must run separately on loopback')
+    if(args['inspector-only']==='true'){
+      for(const [width,height]of [[1920,1200],[1440,1000],[768,1024],[390,844]])for(const theme of ['light','dark']){
+        const page=await browser.newPage({viewport:{width,height},colorScheme:theme,reducedMotion:'reduce'})
+        try{
+          await page.goto(url.href,{waitUntil:'networkidle'});await ready(page,kind)
+          await page.getByRole('button',{name:'Properties',exact:true}).click();await page.getByRole('tab',{name:'Properties',exact:true}).waitFor()
+          for(const [state,label]of [['properties','Properties'],['code','Code'],...(width<600?[['outline','Outline']]:[])]){
+            await page.getByRole('tab',{name:label,exact:true}).click();await page.evaluate(()=>document.fonts.ready)
+            await capture(page,kind,`outline-${width}-${theme}-${state}`,width,height,theme)
+            const tree=page.getByRole('tree',{name:'Layers',exact:true})
+            results.at(-1).outline={panel:await page.getByRole('complementary',{name:'Properties panel',exact:true}).boundingBox(),tree:await tree.isVisible()?await tree.boundingBox():null,rows:await tree.getByRole('treeitem').evaluateAll(es=>es.map(element=>({label:element.getAttribute('aria-label'),level:element.getAttribute('aria-level'),rect:element.getBoundingClientRect().toJSON()})))}
+          }
+        }finally{await page.close()}
+      }
+      continue
+    }
     for(const [width,height] of [[1920,1200],[1440,1000],[768,1024],[390,844]])for(const theme of ['light','dark']) {
       const page=await browser.newPage({viewport:{width,height},colorScheme:theme,reducedMotion:'reduce'})
       try {

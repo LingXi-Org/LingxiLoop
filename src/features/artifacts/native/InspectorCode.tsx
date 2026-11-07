@@ -3,6 +3,7 @@ import type {ArtifactDocument} from '../../../../shared/artifact-document'
 import type {ArtifactOperation} from '../../../../shared/artifact-operations'
 import {parseInspectorCode,serializeInspectorCode,type InspectorCodeEntry} from '../../../../shared/artifact-inspector-code'
 import {nodeCodeEntries,nodeCodePatch} from './inspector-code-edit'
+import {outlineNodeSummary} from './outline-rows'
 import {useLocalDraft} from './draft-context'
 import type {NativeCodeDraftAccess} from './session'
 
@@ -71,11 +72,13 @@ export default function InspectorCode(props:Props){
     if(!composing.current)timer.current=setTimeout(()=>save(),220)
   }
   useLayoutEffect(()=>{if(draftRef.current?.dirty)markDirty(true);if(requestFocus.current){requestFocus.current=false;field.current?.focus()}return()=>clearTimeout(timer.current)},[field,requestFocus,markDirty])
+  if(!selected.length)return <div className="native-code-pane"><div className="native-inspector-empty"><strong>未选择任何内容</strong><p>点击设计中的任意元素，可在此编辑其代码。</p></div></div>
   const primary=selected.length===1?page?.nodes[selected[0]]:undefined
+  const subject=primary?outlineNodeSummary(document,pageId,primary):undefined
   return <div className="native-code-pane">
-    {primary&&<div className="native-code-subject"><span>{primary.attributes?.href?'<a>':'<div>'}</span>{primary.name||primary.text?<span>{primary.name??primary.text?.slice(0,80)}</span>:null}</div>}
+    {primary&&<div className="native-code-subject"><span>{primary.attributes?.href?'<a>':'<div>'}</span>{subject?<span>{subject.slice(0,80)}</span>:null}</div>}
     {error&&<span id={errorId} className="native-sr-only">第{error.line}行：{error.message}</span>}
-    <textarea ref={field} aria-label="样式与属性" aria-invalid={!!error} aria-describedby={error?errorId:undefined} title={error?`第${error.line}行：${error.message}`:undefined} readOnly={readOnly||!selected.length} spellCheck={false} autoCapitalize="off" autoCorrect="off" placeholder={!selected.length?'选择一个元素以查看其样式。':readOnly?'所选元素没有设置样式。':'尚未设置样式。输入属性和值即可编辑。'} value={draft?.text??serialized}
+    <textarea ref={field} aria-label="样式与属性" aria-invalid={!!error} aria-describedby={error?errorId:undefined} title={error?`第${error.line}行：${error.message}`:undefined} readOnly={readOnly} spellCheck={false} autoCapitalize="off" autoCorrect="off" placeholder={readOnly?'所选元素没有设置样式。':'尚未设置样式。输入属性和值即可编辑。'} value={draft?.text??serialized}
       onFocus={()=>{if(!draftRef.current)update({text:serialized,base:document,before:common,dirty:false})}}
       onChange={event=>change(event.target.value)}
       onCompositionStart={()=>{composing.current=true;clearTimeout(timer.current);markDirty(true)}}
