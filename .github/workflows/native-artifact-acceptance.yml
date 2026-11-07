@@ -115,6 +115,7 @@ jobs:
           node --import tsx scripts/native-page-print-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-page-print-oracle.json"
           node --import tsx scripts/native-board-transform-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-board-transform-oracle.json"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-transform --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-transform"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-title --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-title"
           for task_artboard_case in default exports readonly fit-repeat fit-hidden fit-policy; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-artboard --artboard-case="$task_artboard_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-artboard-$task_artboard_case"
           done
@@ -240,6 +241,8 @@ jobs:
             ${{ runner.temp }}/native-board-transform/*.json
             ${{ runner.temp }}/native-board-transform/*.png
             ${{ runner.temp }}/native-board-transform-oracle.json
+            ${{ runner.temp }}/native-board-title/*.json
+            ${{ runner.temp }}/native-board-title/*.png
             ${{ runner.temp }}/native-artboard-*/*.json
             ${{ runner.temp }}/native-artboard-*/*.png
             ${{ runner.temp }}/native-page-print-oracle.json

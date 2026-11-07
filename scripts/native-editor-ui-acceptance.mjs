@@ -28,7 +28,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['board-transform','design-artboard','os-ime','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['board-title','board-transform','design-artboard','os-ime','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -45,7 +45,7 @@ await mkdir(output, { recursive: true })
 if(options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case'])||options.checks==='design-artboard'&&options['artboard-case']==='exports')await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
 const mocks = {
   http: `export async function http(path,init){const response=await fetch('/api'+path,{...init,headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok)throw Object.assign(new Error(await response.text()),{status:response.status});return response.json()}`,
-  realtime: options.checks==='inspector-code'?`const listeners=new Set();window.__codeChanged=()=>{for(const fn of listeners)fn({type:'artifact.changed',artifactId:'fixture'})};export const ws={on:fn=>{listeners.add(fn);return()=>listeners.delete(fn)}}`:'export const ws={on:()=>()=>{}}',
+  realtime: ['inspector-code','board-title'].includes(options.checks)?`const listeners=new Set();window.__codeChanged=()=>{for(const fn of listeners)fn({type:'artifact.changed',artifactId:'fixture'})};export const ws={on:fn=>{listeners.add(fn);return()=>listeners.delete(fn)}}`:'export const ws={on:()=>()=>{}}',
   transport: 'export const lingxiApiFetch=(...args)=>fetch(...args)',
   auth: "export const getActiveCompanyId=()=> 'fixture-company'",
   workspaceSession: "export const getWorkspaceSession=()=>({companyId:'fixture-company',projectId:'fixture-project'})",
@@ -70,7 +70,7 @@ try {
   const baseUrl = `http://127.0.0.1:${address.port}`
   browser = await chromium.launch({ headless: options.headed!=='true', ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox',...(options.checks==='os-ime'?['--ozone-platform=x11','--gtk-version=3','--disable-dev-shm-usage']:[])] })
   for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
-    for (const editorCase of options.checks==='board-transform'?options['board-case']?options['board-case'].split(','):['move','move-unsnapped','resize','resize-unsnapped','ratio','minimum','ratio-minimum','maximum','copy','copy-history','copy-late','copy-release','copy-late-still','copy-release-still','cancel','copy-cancel','history','keyboard','readonly','multi','multi-toggle','multi-copy','comment-resize','pending-width','selection-camera','cross-canvas','gap-middle','gap-aligned','gap-left','gap-bypass','gap-vertical','gap-cancel','gap-history','group-resize','group-ratio','group-minimum','group-cancel','group-history','group-keyboard','group-readonly',...['n','e','s','w','nw','ne','sw'].map(handle=>'edge-'+handle)]:options.checks==='canvas-fit-body'?options['fit-case']?[options['fit-case']]:['first','rapid','restored']:options.checks === 'canvas-vector-edit-retention' ? options['vector-case']?[options['vector-case']]:['readonly','denied','space','middle','touch'] : options.checks === 'canvas-vector-edit-cas' ? options['vector-case']?[options['vector-case']]:['rotation','path','style','reload','parent-idle','parent-active','parent-cancel','parent-cancel-click','padding','padding-rotated','padding-change','padding-active'] : options.checks === 'canvas-vector-edit' ? options['vector-case']?[options['vector-case']]:['initial','anchor-drag','nudge','smooth','delete','insert','tab','pull','shift-drag','handle','break','cancel','group-nudge','save-in-mode','undo-point','redo-point','keyboard-enter'] : options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
+    for (const editorCase of options.checks==='board-title'?(options['title-case']?.split(',')??['enter','escape','blur','blank','spaces','unchanged','history','save','composing','readonly','conflict','permission']):options.checks==='board-transform'?options['board-case']?options['board-case'].split(','):['move','move-unsnapped','resize','resize-unsnapped','ratio','minimum','ratio-minimum','maximum','copy','copy-history','copy-late','copy-release','copy-late-still','copy-release-still','cancel','copy-cancel','history','keyboard','readonly','multi','multi-toggle','multi-copy','comment-resize','pending-width','selection-camera','cross-canvas','gap-middle','gap-aligned','gap-left','gap-bypass','gap-vertical','gap-cancel','gap-history','group-resize','group-ratio','group-minimum','group-cancel','group-history','group-keyboard','group-readonly',...['n','e','s','w','nw','ne','sw'].map(handle=>'edge-'+handle)]:options.checks==='canvas-fit-body'?options['fit-case']?[options['fit-case']]:['first','rapid','restored']:options.checks === 'canvas-vector-edit-retention' ? options['vector-case']?[options['vector-case']]:['readonly','denied','space','middle','touch'] : options.checks === 'canvas-vector-edit-cas' ? options['vector-case']?[options['vector-case']]:['rotation','path','style','reload','parent-idle','parent-active','parent-cancel','parent-cancel-click','padding','padding-rotated','padding-change','padding-active'] : options.checks === 'canvas-vector-edit' ? options['vector-case']?[options['vector-case']]:['initial','anchor-drag','nudge','smooth','delete','insert','tab','pull','shift-drag','handle','break','cancel','group-nudge','save-in-mode','undo-point','redo-point','keyboard-enter'] : options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
       const result = await verifyMode(kind, browser, baseUrl, editorCase)
       await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
       console.log(JSON.stringify(options.checks==='parity'?{...result,screenshots:result.screenshots.map(({controls,...row})=>row)}:result))
@@ -83,7 +83,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['board-transform','design-artboard','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['board-title','board-transform','design-artboard','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
@@ -197,7 +197,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historyRequests = [],expectedCodeNetworkErrors=[]
   let denyCodeAccess=false
   let rejectSpeakerSave=['notes-network','notes-denied','notes-write-denied'].includes(options['speaker-case']);let denySpeakerRead=false;const speakerSaveIds=[]
-  let fixtureWrite=!(options.checks==='board-transform'&&['readonly','group-readonly'].includes(editorCase))&&options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
+  let fixtureWrite=!(options.checks==='board-title'&&editorCase==='readonly')&&!(options.checks==='board-transform'&&['readonly','group-readonly'].includes(editorCase))&&options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
   let holdImageReads=options.checks==='asset-reads',releaseImageReads
   const imageReadGate=new Promise(resolve=>{releaseImageReads=resolve}),physicalImageReads=[]
   const pageReads=[]
@@ -362,6 +362,62 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     assert.equal(await page.evaluate(()=>document.compatMode),'CSS1Compat','隔离回归必须与产品和固定参考使用相同标准模式')
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='board-title'){
+      assert.equal(kind,'design')
+      const original=structuredClone(document),label=page.locator('[data-artboard-id="page-1"] .native-board-label')
+      const saved=()=>page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.status()===200)
+      await label.dblclick()
+      const input=page.getByRole('textbox',{name:'画板名称',exact:true})
+      if(editorCase==='readonly'){
+        assert.equal(await input.count(),0);assert.equal(receipts.length,0);assert.deepEqual(document,original)
+        return{kind:'isolated-board-title',case:editorCase,readonlyHasNoRename:true,consoleOrPageErrors:errors}
+      }
+      await input.waitFor();assert.equal(await input.inputValue(),original.pages['page-1'].title)
+      assert.deepEqual(await input.evaluate(element=>[element.selectionStart,element.selectionEnd]),[0,original.pages['page-1'].title.length])
+      const geometry=await input.evaluate(element=>{const style=getComputedStyle(element);return{rect:element.getBoundingClientRect().toJSON(),fontFamily:style.fontFamily,fontSize:style.fontSize,lineHeight:style.lineHeight,padding:style.padding,borderRadius:style.borderRadius,color:style.color,background:style.backgroundColor,shadow:style.boxShadow}})
+      assert.equal(geometry.background,options['canvas-theme']==='dark'?'rgb(11, 11, 11)':'rgb(249, 249, 249)','原位改名底色需匹配原版页面色')
+      const value=editorCase==='blank'?'':editorCase==='spaces'?'   ':editorCase==='unchanged'?original.pages['page-1'].title:'  中文画板  '
+      await input.fill(value)
+      await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:join(output,`board-title-${editorCase}-editing.png`)})
+      if(['conflict','permission'].includes(editorCase)){
+        fixtureWrite=editorCase!=='permission'
+        document=applyOperations(document,prepareBatch(document,[{type:'page.patch',pageId:'page-1',patch:editorCase==='conflict'?{title:'他人更新的画板'}:{notes:'权限已更新'}}],'remote-title-change')).document
+        const refreshed=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/document')&&response.status()===200)
+        await page.evaluate(()=>window.__codeChanged());await refreshed
+        if(editorCase==='permission')await page.waitForFunction(()=>document.querySelector('[aria-label="画板名称"]')?.readOnly===true)
+        await input.press('Enter');await page.getByRole('button',{name:'下载本地副本',exact:true}).waitFor()
+        const downloading=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click()
+        const recovery=JSON.parse(await readFile(await(await downloading).path(),'utf8'))
+        assert.ok(JSON.stringify(recovery.operations).includes('中文画板')||JSON.stringify(recovery.drafts).includes('中文画板'),'本地标题必须可恢复')
+        assert.equal(document.pages['page-1'].title,editorCase==='conflict'?'他人更新的画板':original.pages['page-1'].title)
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-board-title',case:editorCase,localChineseDraftRecoverable:true,peerDocumentRetained:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      const writes=!['escape','blank','spaces','unchanged'].includes(editorCase)
+      if(editorCase==='composing'){
+        await input.dispatchEvent('compositionstart');await page.keyboard.press('Control+s');await page.waitForTimeout(250)
+        assert.equal(receipts.length,0,'选词期间不能保存中间标题');assert.equal(await input.count(),1)
+        const pending=saved();await input.dispatchEvent('compositionend',{data:value});await pending
+      }else{
+        const pending=writes?saved():null
+        if(editorCase==='blur')await page.getByRole('button',{name:'显示属性',exact:true}).click()
+        else await input.press(editorCase==='escape'?'Escape':editorCase==='save'?'Control+s':'Enter')
+        if(pending)await pending;else await page.waitForTimeout(200)
+      }
+      await input.waitFor({state:'detached'})
+      assert.equal(document.pages['page-1'].title,writes?'中文画板':original.pages['page-1'].title)
+      assert.equal(receipts.length,writes?1:0)
+      if(writes){assert.deepEqual(receipts[0].operations,[{type:'page.patch',pageId:'page-1',patch:{title:'中文画板'}}]);assert.deepEqual({...document.pages['page-1'],title:original.pages['page-1'].title},original.pages['page-1'])}
+      for(const id of original.pageOrder.slice(1))assert.deepEqual(document.pages[id],original.pages[id])
+      if(editorCase==='history'){
+        await label.focus();let pending=saved();await page.keyboard.press('Control+z');await pending;await label.filter({hasText:original.pages['page-1'].title}).waitFor()
+        assert.equal(document.pages['page-1'].title,original.pages['page-1'].title)
+        pending=saved();await page.keyboard.press('Control+Shift+z');await pending;await label.filter({hasText:'中文画板'}).waitFor()
+      }
+      await page.reload();await ready(1);assert.equal(await label.textContent(),writes?'中文画板':original.pages['page-1'].title)
+      assert.deepEqual(errors,[])
+      return{kind:'isolated-board-title',case:editorCase,geometry,operationBatches:receipts.length,sharedHistory:editorCase==='history',reopened:true,otherPageHashesUnchanged:true,syntheticComposition:editorCase==='composing',realOsImeVerified:false,consoleOrPageErrors:errors}
+    }
     if(options.checks==='board-transform'){
       assert.equal(kind,'design')
       const before=structuredClone(document.pages['page-1']),others=document.pageOrder.slice(1).map(id=>pageHash(document.pages[id])),originalIds=[...document.pageOrder]
@@ -557,9 +613,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await select(1)
       const title='LingxiLoop 中文输入法验收'
       await page.evaluate(title=>{document.title=title;window.__osImeEvents=[];window.__osImeProgrammaticEnds=[];const dispatch=EventTarget.prototype.dispatchEvent;EventTarget.prototype.dispatchEvent=function(event){if(event.type==='compositionend')window.__osImeProgrammaticEnds.push(new Error().stack);return dispatch.call(this,event)};for(const type of ['compositionstart','compositionupdate','compositionend','beforeinput','input'])document.addEventListener(type,event=>window.__osImeEvents.push({type,data:event.data??null,inputType:event.inputType??null,isComposing:event.isComposing??null,trusted:event.isTrusted}),true)},title)
-      const nodeId='page-1-heading',original=document.pages['page-1'].nodes[nodeId].text
-      await page.locator(`[data-node-id="${nodeId}"]`).dblclick();const text=page.locator('[data-native-text-editor]');await text.waitFor();await page.keyboard.press('End')
-      const windows=execFileSync('xdotool',['search','--onlyvisible','--name',title],{encoding:'utf8'}).trim().split('\n');assert.ok(windows[0],'未找到浏览器系统窗口')
+      const boardTitle=options['ime-target']==='board-title',nodeId='page-1-heading',original=boardTitle?document.pages['page-1'].title:document.pages['page-1'].nodes[nodeId].text
+      await page.locator(boardTitle?'[data-artboard-id="page-1"] .native-board-label':`[data-node-id="${nodeId}"]`).dblclick();const text=boardTitle?page.getByRole('textbox',{name:'画板名称',exact:true}):page.locator('[data-native-text-editor]');await text.waitFor();await page.keyboard.press('End')
+      const windows=execFileSync('xdotool',['search','--sync','--onlyvisible','--name',title],{encoding:'utf8',timeout:10_000}).trim().split('\n');assert.ok(windows[0],'未找到浏览器系统窗口')
       execFileSync('xdotool',['windowfocus','--sync',windows.at(-1)])
       execFileSync('fcitx5-remote',['-s','pinyin']);execFileSync('fcitx5-remote',['-o'])
       const baseline=receipts.length
@@ -570,20 +626,24 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       execFileSync('scrot',['--overwrite',join(output,`${kind}-os-ime-candidates.png`)])
       execFileSync('xdotool',['key','space'])
       await page.waitForFunction(()=>window.__osImeEvents.some(event=>event.type==='compositionend'&&event.data==='你好'))
-      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
-      assert.equal(document.pages['page-1'].nodes[nodeId].text,original+'你好')
-      assert.equal(receipts.length,baseline+1,'选词只提交一个共享操作批次')
+      if(boardTitle)assert.equal(await text.inputValue(),original+'你好');else{
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+        assert.equal(document.pages['page-1'].nodes[nodeId].text,original+'你好')
+      }
+      const committedCount=baseline+(boardTitle?0:1)
+      assert.equal(receipts.length,committedCount,boardTitle?'标题选词后需等待确认':'选词只提交一个共享操作批次')
       const committedEvents=await page.evaluate(()=>window.__osImeEvents);assert.ok(committedEvents.some(event=>event.type==='input'&&event.data==='你好'&&event.trusted),'汉字输入事件必须来自浏览器')
       const starts=committedEvents.filter(event=>event.type==='compositionstart').length
       execFileSync('xdotool',['type','--clearmodifiers','--delay','150','zhongwen'])
-      await page.waitForFunction(starts=>window.__osImeEvents.filter(event=>event.type==='compositionstart').length>starts,starts);await page.waitForTimeout(900);assert.equal(receipts.length,baseline+1)
-      execFileSync('xdotool',['key','Escape']);await page.waitForFunction(()=>document.querySelector('[data-native-text-editor]')?.textContent?.endsWith('你好'));assert.equal(await text.isVisible(),true,'取消拼音候选不能退出文本编辑');await page.waitForTimeout(700);assert.equal(receipts.length,baseline+1,'取消组词不得新增保存')
+      await page.waitForFunction(starts=>window.__osImeEvents.filter(event=>event.type==='compositionstart').length>starts,starts);await page.waitForTimeout(900);assert.equal(receipts.length,committedCount)
+      execFileSync('xdotool',['key','Escape']);await page.waitForFunction(boardTitle=>{const element=document.querySelector(boardTitle?'[aria-label="画板名称"]':'[data-native-text-editor]');return (boardTitle?element?.value:element?.textContent)?.endsWith('你好')},boardTitle);assert.equal(await text.isVisible(),true,'取消拼音候选不能退出文本编辑');await page.waitForTimeout(700);assert.equal(receipts.length,committedCount,'取消组词不得新增保存')
       const events=await page.evaluate(()=>window.__osImeEvents),programmaticEnds=await page.evaluate(()=>window.__osImeProgrammaticEnds);assert.deepEqual(programmaticEnds,[],'系统输入法测试不得用脚本派发结束事件')
-      execFileSync('fcitx5-remote',['-c']);await page.keyboard.press('Escape')
-      await page.reload();await ready(1);assert.equal(await page.locator(`[data-node-id="${nodeId}"]`).innerText(),original+'你好')
+      execFileSync('fcitx5-remote',['-c']);const titleSaved=boardTitle?page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.status()===200):null;await page.keyboard.press(boardTitle?'Enter':'Escape');if(titleSaved)await titleSaved
+      assert.equal(receipts.length,baseline+1,'确认后仅有一个共享操作批次')
+      await page.reload();await ready(1);assert.equal(await page.locator(boardTitle?'[data-artboard-id="page-1"] .native-board-label':`[data-node-id="${nodeId}"]`).innerText(),original+'你好')
       await page.screenshot({path:join(output,`${kind}-os-ime-reopened.png`)})
       assert.deepEqual(errors,[])
-      return{kind:'真实系统拼音输入法局部回归',editor:kind,platform:'Linux、X11、Fcitx5拼音、真实Chromium窗口',browserVersion:browser.version(),osIme:true,testDispatchesCompositionEvents:false,compositionEvents:events,compositionEndTrusted:events.find(event=>event.type==='compositionend')?.trusted,noSaveDuringComposition:true,oneBatchAfterCommit:true,cancelledCompositionDoesNotSaveOrExit:true,savedAndReopened:true,scope:'HTTP夹具及真实共享操作链路，不代替真实授权服务或其他操作系统输入法验收',consoleOrPageErrors:errors}
+      return{kind:'真实系统拼音输入法局部回归',editor:kind,target:boardTitle?'画板名称':'画布文字',platform:'Linux、X11、Fcitx5拼音、真实Chromium窗口',browserVersion:browser.version(),osIme:true,testDispatchesCompositionEvents:false,compositionEvents:events,compositionEndTrusted:events.find(event=>event.type==='compositionend')?.trusted,noSaveDuringComposition:true,oneBatchAfterCommit:true,cancelledCompositionDoesNotSaveOrExit:true,savedAndReopened:true,scope:'HTTP夹具及真实共享操作链路，不代替真实授权服务或其他操作系统输入法验收',consoleOrPageErrors:errors}
     }
     if(options.checks==='inspector-code'){
       assert.equal(kind,'design')

@@ -343,3 +343,7 @@
 .native-board-member-selection{position:absolute;inset:0;pointer-events:none;outline:1px solid #257de0;z-index:12}.native-board-group-selection{pointer-events:none;z-index:12}
 
 .native-board-spacing-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:13}.native-board-spacing-lines line{stroke:#dc3c3d;stroke-width:1}.native-board-gap-label{position:absolute;pointer-events:none;z-index:13;padding:1px 5px;border-radius:4px;background:#dc3c3d;color:#fff;font-size:11px;line-height:1.4;font-weight:400;white-space:nowrap}
+
+.native-editor .native-board-heading>.native-board-rename{--native-board-name-bg:#f9f9f9;min-width:0;flex:1;width:0;height:18px;min-height:0;box-sizing:border-box;border:0;border-radius:4px;padding:1px 4px;background:var(--native-board-name-bg);color:var(--native-fg);font-family:inherit;font-size:12px;font-weight:400;line-height:16px;outline:none;box-shadow:0 0 0 1px #257de0;cursor:text}
+
+.dark .native-editor .native-board-heading>.native-board-rename,.native-editor[data-theme=dark] .native-board-heading>.native-board-rename{--native-board-name-bg:#0b0b0b}

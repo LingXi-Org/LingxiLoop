@@ -249,7 +249,8 @@
       "boardTransformEvidence": {
         "reference": "source-design-board-transforms.json",
         "functional": "functional/design-board-transforms.json"
-      }
+      },
+      "inlineRenameEvidence": "functional/design-board-title.json"
     },
     {
       "id": "D06-design",
@@ -9643,6 +9644,52 @@
         "receipt": "functional/design-board-spacing.json",
         "scope": "限定纯数学及受控浏览器，均非整体资格。"
       }
+    },
+    {
+      "id": "D32-design",
+      "editor": "design",
+      "control": "画板标题原位重命名",
+      "trigger": "双击画板标题栏，输入中文名称，回车或失焦确认",
+      "states": [
+        "全选",
+        "编辑中收起标题动作",
+        "回车",
+        "失焦",
+        "Esc取消",
+        "空白及同值",
+        "中文组词及取消候选",
+        "只读",
+        "并发冲突",
+        "权限撤回",
+        "共享撤销重做",
+        "保存重开",
+        "四容器",
+        "浅色",
+        "深色"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "lookup": "mega-artboard-rename-",
+        "runtime": "source-design-board-title.json",
+        "start": 5161258,
+        "end": 5161279,
+        "offsetUnit": "UTF-16 code units"
+      },
+      "implementation": "src/features/artifacts/native/BoardTitle.tsx",
+      "screenshots": {
+        "reference": "visual/design-board-title/reference/",
+        "native": "visual/design-board-title/native/",
+        "manifest": "visual/design-board-title/manifest.json",
+        "matchedStateVerified": true
+      },
+      "result": "限定标题功能、几何和真实Linux系统输入法通过；全部工具/触摸/键盘与标题极限尚未验收，整图像素及全编辑器/服务/性能资格仍未通过。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/design-board-title.json",
+        "scope": "固定源码、受控HTTP真实组件与共享操作、两浏览器及真实系统输入法；不代替完整资格。"
+      }
     }
   ],
   "registeredReplacements": [
@@ -9673,6 +9720,10 @@
     {
       "area": "画板表单中文文案与单位",
       "reason": "画板、宽度、高度、打印模式、流式、固定、纸张、美式信纸、像素及高度动作全部中文；A4作为标准纸张值保留。保留原版输入框槽宽；没有为本次比较排除任何像素。"
+    },
+    {
+      "area": "画板原位重命名无障碍名称",
+      "reason": "Artboard name替换为画板名称；作者标题和LingxiLoop身份保留。12对原始像素比较没有排除替换或抗锯齿区域。"
     }
   ],
   "removedServiceEntrances": [

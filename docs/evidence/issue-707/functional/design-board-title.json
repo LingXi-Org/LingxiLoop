@@ -1,0 +1,2126 @@
+{
+  "kind": "画板标题原位重命名",
+  "qualified": false,
+  "verifiedBase": {
+    "commit": "959b41b53d7923a640ac2e6e6c0dff9cbd9344e8",
+    "ci": 42365184280,
+    "ciConclusion": "success",
+    "review": "../reviews/959b41b5.json",
+    "reviewPassed": true
+  },
+  "before": {
+    "regression": "board-title/enter；双击后30秒没有中文名称输入框",
+    "log": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nlocator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('textbox', { name: '画板名称', exact: true }) to be visible\u001b[22m\n\n    at verifyMode (/workspace/LingxiLoop/scripts/native-editor-ui-acceptance.mjs:375:19)\n    at async <anonymous> (/workspace/LingxiLoop/scripts/native-editor-ui-acceptance.mjs:74:22) {\n  log: [\n    \"  - waiting for getByRole('textbox', { name: '画板名称', exact: true }) to be visible\"\n  ],\n  name: 'TimeoutError'\n}\n\nNode.js v24.19.0\n"
+  },
+  "reference": "../source-design-board-title.json",
+  "implementation": [
+    "src/features/artifacts/native/BoardTitle.tsx",
+    "src/features/artifacts/native/NativeEditor.tsx",
+    "src/features/artifacts/native/native-editor.css"
+  ],
+  "behavior": [
+    "双击标题栏后原位全选；回车和失焦去掉首尾空白保存，Esc取消，空白/同值不产生历史",
+    "编辑时收起标题动作并保留原版间距；12px/16px文字、18px高、1px4px内边距、4px圆角、1px蓝色描边及浅深底色",
+    "中文名称和无障碍标签；作者已有标题保留；输入期间不误拖动或应用画板快捷键",
+    "捕获起始文档版本，沿用原操作批次、共享历史、保存重开、草稿及冲突副本；权限撤回不写入",
+    "组词期间延迟全局保存，取消候选不退出改名；未完成组词卸载则保留恢复操作"
+  ],
+  "ui": {
+    "chromium154": [
+      {
+        "kind": "isolated-board-title",
+        "case": "blank",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 0,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "blur",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "composing",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": true,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "conflict",
+        "localChineseDraftRecoverable": true,
+        "peerDocumentRetained": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "enter",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "escape",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 0,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "history",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": true,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "permission",
+        "localChineseDraftRecoverable": true,
+        "peerDocumentRetained": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "readonly",
+        "readonlyHasNoRename": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "save",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "spaces",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 0,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "unchanged",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 0,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "chromium140": [
+      {
+        "kind": "isolated-board-title",
+        "case": "blank",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 0,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "blur",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "composing",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": true,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "conflict",
+        "localChineseDraftRecoverable": true,
+        "peerDocumentRetained": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "enter",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "escape",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 0,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "history",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": true,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "permission",
+        "localChineseDraftRecoverable": true,
+        "peerDocumentRetained": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "readonly",
+        "readonlyHasNoRename": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "save",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 1,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "spaces",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 0,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-board-title",
+        "case": "unchanged",
+        "geometry": {
+          "rect": {
+            "x": 48,
+            "y": 387.046875,
+            "width": 418.40625,
+            "height": 18,
+            "top": 387.046875,
+            "right": 466.40625,
+            "bottom": 405.046875,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgb(37, 125, 224) 0px 0px 0px 1px"
+        },
+        "operationBatches": 0,
+        "sharedHistory": false,
+        "reopened": true,
+        "otherPageHashesUnchanged": true,
+        "syntheticComposition": false,
+        "realOsImeVerified": false,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "scope": "两浏览器各12项；HTTP夹具，不是真实授权API。"
+  },
+  "systemIme": {
+    "platform": "Linux、X11、Fcitx5拼音",
+    "containerImage": "sha256:bc9ac6a7f40aaf251d7ef3624d187b2a87383b61d887f28dcc77ea2c0641d839",
+    "results": [
+      {
+        "kind": "真实系统拼音输入法局部回归",
+        "editor": "design",
+        "target": "画板名称",
+        "platform": "Linux、X11、Fcitx5拼音、真实Chromium窗口",
+        "browserVersion": "140.0.7339.16",
+        "osIme": true,
+        "testDispatchesCompositionEvents": false,
+        "compositionEvents": [
+          {
+            "type": "compositionstart",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "n",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni h",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni h",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni h",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni ha",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni ha",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni ha",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni hao",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni hao",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni hao",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "你好",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "你好",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "你好",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionend",
+            "data": "你好",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": false
+          },
+          {
+            "type": "compositionstart",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "z",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "z",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "z",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh o",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh o",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh o",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh o n",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh o n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh o n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong w",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong w",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong w",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong w e",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong w e",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong w e",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong wen",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": null,
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionend",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": false
+          }
+        ],
+        "compositionEndTrusted": false,
+        "noSaveDuringComposition": true,
+        "oneBatchAfterCommit": true,
+        "cancelledCompositionDoesNotSaveOrExit": true,
+        "savedAndReopened": true,
+        "scope": "HTTP夹具及真实共享操作链路，不代替真实授权服务或其他操作系统输入法验收",
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "真实系统拼音输入法局部回归",
+        "editor": "design",
+        "target": "画板名称",
+        "platform": "Linux、X11、Fcitx5拼音、真实Chromium窗口",
+        "browserVersion": "156.0.8078.79",
+        "osIme": true,
+        "testDispatchesCompositionEvents": false,
+        "compositionEvents": [
+          {
+            "type": "compositionstart",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "n",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni h",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni h",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni h",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni ha",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni ha",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni ha",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni hao",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni hao",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni hao",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "你好",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "你好",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "你好",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionend",
+            "data": "你好",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": false
+          },
+          {
+            "type": "compositionstart",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "z",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "z",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "z",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh o",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh o",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh o",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh o n",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh o n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh o n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong w",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong w",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong w",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong w e",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong w e",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong w e",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong wen",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": null,
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionend",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": false
+          }
+        ],
+        "compositionEndTrusted": false,
+        "noSaveDuringComposition": true,
+        "oneBatchAfterCommit": true,
+        "cancelledCompositionDoesNotSaveOrExit": true,
+        "savedAndReopened": true,
+        "scope": "HTTP夹具及真实共享操作链路，不代替真实授权服务或其他操作系统输入法验收",
+        "consoleOrPageErrors": []
+      }
+    ],
+    "testDispatchesCompositionEvents": false,
+    "diagnostic": "首轮窗口标题尚未同步到X11导致xdotool search退出1；改为--sync并设10秒超时，保留首轮失败。组词开始、更新和汉字输入可信；结束事件false，按实际值保留。",
+    "scope": "真实操作系统候选窗口及输入；不覆盖其他操作系统和全部输入控件。"
+  },
+  "regressions": {
+    "boardTransform": {
+      "chromium154Cases": [
+        "move",
+        "copy",
+        "group-resize",
+        "gap-middle",
+        "cross-canvas",
+        "history",
+        "readonly"
+      ],
+      "passed": 7
+    },
+    "focusedUnits": {
+      "passed": 31,
+      "scope": "画板几何/等距、编辑器文案、NativeDrafts、NativeDocumentSession"
+    },
+    "existingCanvasImeChromium156": {
+      "design": {
+        "kind": "真实系统拼音输入法局部回归",
+        "editor": "design",
+        "target": "画布文字",
+        "platform": "Linux、X11、Fcitx5拼音、真实Chromium窗口",
+        "browserVersion": "156.0.8078.79",
+        "osIme": true,
+        "testDispatchesCompositionEvents": false,
+        "compositionEvents": [
+          {
+            "type": "compositionstart",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "n",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni h",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni h",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni h",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni ha",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni ha",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni ha",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni hao",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni hao",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni hao",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "你好",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "你好",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "你好",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionend",
+            "data": "你好",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": false
+          },
+          {
+            "type": "compositionstart",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "z",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "z",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "z",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh o",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh o",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh o",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh o n",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh o n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh o n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong w",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong w",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong w",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong w e",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong w e",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong w e",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong wen",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionend",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": false
+          }
+        ],
+        "compositionEndTrusted": false,
+        "noSaveDuringComposition": true,
+        "oneBatchAfterCommit": true,
+        "cancelledCompositionDoesNotSaveOrExit": true,
+        "savedAndReopened": true,
+        "scope": "HTTP夹具及真实共享操作链路，不代替真实授权服务或其他操作系统输入法验收",
+        "consoleOrPageErrors": []
+      },
+      "slides": {
+        "kind": "真实系统拼音输入法局部回归",
+        "editor": "slides",
+        "target": "画布文字",
+        "platform": "Linux、X11、Fcitx5拼音、真实Chromium窗口",
+        "browserVersion": "156.0.8078.79",
+        "osIme": true,
+        "testDispatchesCompositionEvents": false,
+        "compositionEvents": [
+          {
+            "type": "compositionstart",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "n",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni h",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni h",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni h",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni ha",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni ha",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni ha",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "ni hao",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "ni hao",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "ni hao",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "你好",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "你好",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "你好",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionend",
+            "data": "你好",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": false
+          },
+          {
+            "type": "compositionstart",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "z",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "z",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "z",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh o",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh o",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh o",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zh o n",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zh o n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zh o n",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong w",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong w",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong w",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong w e",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong w e",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong w e",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "zhong wen",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionupdate",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": true
+          },
+          {
+            "type": "beforeinput",
+            "data": "",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "input",
+            "data": "zhong wen",
+            "inputType": "insertCompositionText",
+            "isComposing": true,
+            "trusted": true
+          },
+          {
+            "type": "compositionend",
+            "data": "",
+            "inputType": null,
+            "isComposing": null,
+            "trusted": false
+          }
+        ],
+        "compositionEndTrusted": false,
+        "noSaveDuringComposition": true,
+        "oneBatchAfterCommit": true,
+        "cancelledCompositionDoesNotSaveOrExit": true,
+        "savedAndReopened": true,
+        "scope": "HTTP夹具及真实共享操作链路，不代替真实授权服务或其他操作系统输入法验收",
+        "consoleOrPageErrors": []
+      }
+    }
+  },
+  "owningChecks": {
+    "webLint": "43 warnings、4 infos；exit0",
+    "localTypecheck": "缺少正式LingxiOS SDK及既有级联76项；没有本批BoardTitle/NativeEditor诊断；本地完整类型/build未通过，不用桩替代SDK",
+    "officialCi": "待冻结候选运行",
+    "independentReview": "待冻结候选只读审查"
+  },
+  "visual": "../visual/design-board-title/manifest.json",
+  "unverified": [
+    "全部标题长度及极端内容",
+    "其他工具模式、触摸和全键盘路径",
+    "全编辑器可达菜单和面板",
+    "真实授权评论和Agent全周期",
+    "所有新增属性五格式导出",
+    "最终10组AB/BA和性能门槛",
+    "完整视觉差异资格"
+  ]
+}
