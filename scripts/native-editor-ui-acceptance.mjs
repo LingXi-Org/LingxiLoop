@@ -27,7 +27,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -51,7 +51,7 @@ const mocks = {
 }
 for (const [name, source] of Object.entries(mocks)) await writeFile(join(workspace, `${name}.js`), source)
 await writeFile(join(workspace, 'index.html'), '<html><head><meta charset="UTF-8"></head><body style="margin:0"><div id="root" style="height:100vh"></div><script type="module" src="/entry.tsx"></script></body></html>')
-await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};createRoot(document.getElementById('root')!).render(<${options['strict-mode']==='false'?'React.Fragment':'React.StrictMode'}>${options.checks==='canvas-pages'?'<div style={{height:"100%"}} data-fixture-workspace onKeyDown={event=>{if(event.key==="Escape"&&!event.defaultPrevented)event.currentTarget.hidden=true}}>':''}<NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'||new URLSearchParams(location.search).has('design')?'design':'slides'} title="原生编辑器验收" />${options.checks==='canvas-pages'?'</div>':''}</${options['strict-mode']==='false'?'React.Fragment':'React.StrictMode'}>)`)
+await writeFile(join(workspace, 'entry.tsx'), `import React from 'react';import{createRoot}from'react-dom/client';import NativeEditor from ${JSON.stringify(join(root, 'src/features/artifacts/native/NativeEditor'))};${options.checks==='slides-present-controls'?"const taskRoot=createRoot(document.getElementById('root'));window.__nativeUiRoot=taskRoot;taskRoot":"createRoot(document.getElementById('root')!)"}.render(<${options['strict-mode']==='false'?'React.Fragment':'React.StrictMode'}>${options.checks==='canvas-pages'?'<div style={{height:"100%"}} data-fixture-workspace onKeyDown={event=>{if(event.key==="Escape"&&!event.defaultPrevented)event.currentTarget.hidden=true}}>':''}<NativeEditor artifactId="fixture" kind={new URLSearchParams(location.search).get('kind')==='design'||new URLSearchParams(location.search).has('design')?'design':'slides'} title="原生编辑器验收" />${options.checks==='canvas-pages'?'</div>':''}</${options['strict-mode']==='false'?'React.Fragment':'React.StrictMode'}>)`)
 await writeFile(join(workspace,'artifact-export.html'),(await readFile(join(root,'artifact-export.html'),'utf8')).replace('/src/features/artifacts/native/export/realm-entry.ts',`/@fs${root}/src/features/artifacts/native/export/realm-entry.ts`))
 let server, browser
 try {
@@ -82,11 +82,12 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
+  if(options.checks==='slides-present-controls')document.pages['page-1'].notes='全屏与演讲者控制备注。'
   if (options.checks === 'slides-skipped-export') {
     const skipped = document.pages['page-2']
     skipped.skip = true
@@ -207,12 +208,15 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   page.on('request',request=>{const path=new URL(request.url()).pathname;if(path.includes('/CanvasPenTool.tsx'))vectorModuleRequests++;if(path.includes('/CanvasPointEditor.tsx'))pointModuleRequests++;if(path.includes('/BoardPreview.tsx'))boardModuleRequests++;if(path.includes('/SlidesPresentation.tsx'))presentationModuleRequests++;if(path.includes('/SlidesSpeaker.tsx'))speakerModuleRequests++})
   const exportNavigations=[]
   if(options.checks==='slides-skipped-export')page.on('framenavigated',frame=>{if(frame===page.mainFrame())exportNavigations.push(new URL(frame.url()).pathname)})
+  if(options.checks==='slides-present-controls'&&options['presentation-case']==='denied')await page.addInitScript(()=>{Element.prototype.requestFullscreen=()=>Promise.reject(new DOMException('拒绝全屏','NotAllowedError'))})
+  if(options.checks==='slides-present-controls'&&options['presentation-case']==='module-error')await page.route('**/SlidesPresentation.tsx*',route=>route.abort('failed'))
   page.setDefaultTimeout(30_000)
   if(options['presentation-portrait']==='true')await page.addInitScript(()=>{const original=window.setTimeout;window.setTimeout=(fn,delay,...args)=>original(fn,[570,670,730].includes(delay)?delay*10:delay,...args)})
   await page.addInitScript(()=>{window.__geometryLog=[];window.__geometryMessages=0;window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')window.__penRequests++;if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
   if(options.checks==='viewport-loading')await page.addInitScript(()=>{window.__holdVisible=false;window.__heldVisible=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.visibleIds=new Set();this.addEventListener('message',event=>{if(this.visibleIds.delete(event.data?.id)&&window.__holdVisible){event.stopImmediatePropagation();window.__heldVisible.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='visible')this.visibleIds.add(message.id);return super.postMessage(message,...args)}}})
   if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
+  if(options.checks==='slides-present-controls')page.on('pageerror',error=>{void writeFile(join(output,'page-error-details.json'),JSON.stringify({message:error.message,stack:error.stack},null,2))})
   page.on('console', message => { if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(options['preview-save-retry']==='true'&&message.location().url.includes('/operations')&&message.text().includes('503'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(options.checks==='canvas-board-preview-load'&&message.location().url.includes('/BoardPreview.tsx'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
   if(options.checks==='canvas-board-preview-load')await page.route('**/BoardPreview.tsx*',async route=>{if(boardModuleBlocked)await route.fulfill({status:503,body:'全窗口预览未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-edit-load')await page.route('**/CanvasPointEditor.tsx*',async route=>{if(pointModuleBlocked)await route.fulfill({status:503,body:'控制点工具未能加载'});else await route.continue()})
@@ -313,6 +317,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     const reference=document.pages[mounted.id],scale=mounted.width/reference.width
     await page.locator('.native-stage').evaluate((element,point)=>element.scrollTo({left:point.x,top:point.y,behavior:'instant'}),{x:mounted.x+(point.x-reference.x)*scale-48,y:mounted.y+(point.y-reference.y)*scale-80})
   }
+  const revealPresentationControls=async()=>{await page.mouse.move(10,10);await page.mouse.move(20,20)}
   const startSlides=async()=>{await page.getByLabel('放映',{exact:true}).click();await page.getByRole('menuitem',{name:'放映',exact:true}).click()}
   const select = async index => {
     if (kind === 'design') {
@@ -332,6 +337,126 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await page.goto(`${baseUrl}/?kind=${kind}${options.checks==='canvas-links'?'&project=fixture-project&view=conversations&conversation=fixture-room':''}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if (options.checks === 'slides-present-controls') {
+      const width=Number(options.width??1440),height=Number(options.height??1000)
+      if(options['presentation-case']==='initial-speaker'){
+        await page.getByLabel('放映',{exact:true}).click()
+        const opening=page.waitForEvent('popup')
+        await page.getByRole('menuitem',{name:'使用演讲者视图放映',exact:true}).click()
+        const speaker=await opening
+        await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor()
+        assert.equal(await page.evaluate(()=>!!document.fullscreenElement),false)
+        await page.bringToFront()
+        await page.locator('.native-slides-presentation-stage').click({position:{x:width*.85,y:Math.min(300,height/2)}})
+        await page.waitForFunction(()=>document.fullscreenElement===document.documentElement)
+        assert.equal(await page.locator('[data-current-page]').getAttribute('data-current-page'),'page-1')
+        await page.getByRole('button',{name:'关闭讲者备注窗口',exact:true}).click()
+        await page.getByRole('button',{name:'退出放映',exact:true}).click()
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-initial-speaker-fullscreen',popupDoesNotEnterFullscreen:true,firstClickEntersWithoutPaging:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      await startSlides()
+      if(options['presentation-case']==='module-error'){
+        await page.getByRole('status').filter({hasText:'放映组件未能加载，请刷新页面后重试。'}).waitFor()
+        await page.waitForFunction(()=>!document.fullscreenElement)
+        assert.equal(await page.getByRole('region',{name:'幻灯片放映',exact:true}).count(),0)
+        assert.equal(await page.locator('[data-native-artifact-editor]').count(),1)
+        const expected=errors.filter(value=>value==='Failed to load resource: net::ERR_FAILED'),unexpected=errors.filter(value=>value!=='Failed to load resource: net::ERR_FAILED')
+        assert.deepEqual(unexpected,[]);assert.equal(receipts.length,0)
+        return{kind:'isolated-presentation-module-error',chineseError:true,fullscreenCleaned:true,editorRetained:true,expectedNetworkErrors:expected,consoleOrPageErrors:unexpected}
+      }
+      const presentation = page.getByRole('region', { name: '幻灯片放映', exact: true })
+      await presentation.waitFor()
+      if(options['presentation-case']==='denied'){
+        await presentation.getByRole('alert').filter({hasText:'此处无法使用全屏，可继续在窗口中放映。'}).waitFor()
+        assert.equal(await presentation.getByRole('button',{name:'此处无法使用全屏',exact:true}).getAttribute('aria-disabled'),'true')
+        assert.equal(await page.evaluate(()=>!!document.fullscreenElement),false)
+        await presentation.focus();await page.keyboard.press('ArrowRight')
+        await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.dataset.currentPage==='page-2')
+        await page.keyboard.press('Escape');await presentation.waitFor({state:'detached'})
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-fullscreen-denied',chineseError:true,normalDisabledState:true,windowedPlaybackContinues:true,exitWorks:true,consoleOrPageErrors:errors}
+      }
+      await page.waitForFunction(() => document.fullscreenElement === document.documentElement, undefined, { timeout: 3000 })
+      assert.equal(await page.locator('[data-current-page]').getAttribute('data-current-page'), 'page-1')
+      if(options['presentation-case']==='blocked'){
+        await page.evaluate(()=>{window.open=()=>null})
+        await page.getByRole('button',{name:'显示讲者备注（将离开全屏，点击画面可返回）',exact:true}).click()
+        assert.equal(await page.locator('.native-presentation-notes').innerText(),'全屏与演讲者控制备注。')
+        const warning=presentation.getByRole('status').filter({hasText:'演讲者窗口未能打开，讲者备注已显示在放映窗口中。'})
+        await warning.waitFor({timeout:3000})
+        assert.equal(await warning.evaluate(element=>{const rect=element.getBoundingClientRect();return element.contains(element.ownerDocument.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2))}),true)
+        assert.equal(await page.evaluate(()=>document.fullscreenElement===document.documentElement),true)
+        await page.getByRole('button',{name:'隐藏讲者备注',exact:true}).click()
+        assert.equal(await page.locator('.native-presentation-notes').count(),0)
+        await page.getByRole('button',{name:'退出放映',exact:true}).click()
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-present-speaker-blocked',dockedFallback:true,chineseNoticeActuallyVisible:true,fullscreenRetained:true,noPopup:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      if(options['presentation-case']==='owner-unmount'){
+        await page.evaluate(()=>window.__nativeUiRoot.unmount())
+        await page.waitForFunction(()=>!document.fullscreenElement)
+        assert.equal(await page.locator('[data-native-artifact-editor]').count(),0)
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-presentation-owner-unmount',fullscreenCleaned:true,ownerUnmounted:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      await page.getByRole('button', { name: '退出全屏（F）', exact: true }).click()
+      await page.waitForFunction(() => !document.fullscreenElement)
+      assert.equal(await presentation.isVisible(), true)
+      await presentation.focus()
+      await page.keyboard.press('f')
+      await page.waitForFunction(() => !!document.fullscreenElement)
+      const popupPromise = page.waitForEvent('popup')
+      await page.getByRole('button', { name: '显示讲者备注（将离开全屏，点击画面可返回）', exact: true }).click()
+      const speaker = await popupPromise
+      await speaker.getByRole('region', { name: '讲者备注', exact: true }).waitFor()
+      await page.waitForFunction(() => !document.fullscreenElement)
+      await page.bringToFront()
+      await page.mouse.move(width/2-48.5,height-35)
+      await page.screenshot({path:join(output,'popup-open.png')})
+      await page.locator('.native-slides-presentation-stage').click({position:{x:width*.85,y:Math.min(300,height/2)}})
+      await page.waitForFunction(() => document.fullscreenElement === document.documentElement)
+      assert.equal(await page.locator('[data-current-page]').getAttribute('data-current-page'), 'page-1', '首次画面点击只恢复全屏')
+      await page.getByRole('button', { name: '关闭讲者备注窗口', exact: true }).click()
+      assert.equal(speaker.isClosed(), true)
+      await page.locator('.native-slides-presentation-stage').click({position:{x:width*.85,y:Math.min(300,height/2)}})
+      await page.waitForFunction(() => document.querySelector('[data-current-page]')?.dataset.currentPage === 'page-2')
+      await page.locator('.native-slides-presentation-stage').click({position:{x:width*.1,y:Math.min(300,height/2)}})
+      await page.waitForFunction(() => document.querySelector('[data-current-page]')?.dataset.currentPage === 'page-1')
+      const controls = page.getByRole('navigation', { name: '放映控制', exact: true })
+      await page.mouse.move(width/2,height-35)
+      const geometry = await controls.boundingBox()
+      assert.equal(geometry.height,40)
+      assert.equal(geometry.width,217)
+      assert.equal(geometry.y,height-60)
+      assert.equal(geometry.x,(width-217)/2)
+      assert.equal(await controls.getByRole('button', { name: '上一页', exact: true }).isDisabled(), false)
+      const notesControl=controls.getByRole('button',{name:'显示讲者备注（将离开全屏，点击画面可返回）',exact:true})
+      await presentation.focus()
+      for(let index=0;index<3;index++)await page.keyboard.press('Tab')
+      assert.equal(await notesControl.evaluate(element=>element===element.ownerDocument.activeElement),true)
+      const tip=controls.getByRole('tooltip',{name:'显示讲者备注（将离开全屏，点击画面可返回）',exact:true})
+      await tip.waitFor();const tipRect=await tip.boundingBox();assert.ok(tipRect.x>=7.9&&tipRect.x+tipRect.width<=width-7.9)
+
+      await presentation.focus()
+      await page.mouse.move(width*.85,Math.min(300,height/2))
+      await controls.waitFor({state:'attached'})
+      await page.waitForFunction(() => getComputedStyle(document.querySelector('.native-present-controls')).opacity === '0')
+      await page.screenshot({path:join(output,'regular-idle.png')})
+      await page.keyboard.press('Tab')
+      assert.equal(await controls.getByRole('button',{name:'上一页',exact:true}).evaluate(element=>element===element.ownerDocument.activeElement),true)
+      await page.waitForFunction(() => getComputedStyle(document.querySelector('.native-present-controls')).opacity === '1')
+      await controls.getByRole('tooltip',{name:'上一页',exact:true}).waitFor()
+      await page.screenshot({path:join(output,'regular-keyboard.png')})
+      await page.keyboard.press('Shift+Tab')
+      assert.equal(await controls.getByRole('button',{name:'退出放映',exact:true}).evaluate(element=>element===element.ownerDocument.activeElement),true)
+      await page.keyboard.press('Escape')
+      await presentation.waitFor({state:'detached'})
+      await page.waitForFunction(() => !document.fullscreenElement)
+      assert.equal(receipts.length,0)
+      assert.deepEqual(errors,[])
+      return {kind:'isolated-slide-presentation-controls',fixtureSemanticSha256:createHash('sha256').update(JSON.stringify(document)).digest('hex'),theme:options['canvas-theme']??'light',regularAutoFullscreen:true,fullscreenToggle:true,popupFromPresentation:true,returnClickDoesNotAdvance:true,stageLeftBackRightNext:true,controlsGeometry:geometry,idleHidden:true,keyboardFocusVisibleAndTrapped:true,exitCleansFullscreen:true,noWrites:true,consoleOrPageErrors:errors}
+    }
     if(options.checks==='slide-transitions'&&options['presentation-executable-target']==='true'){
       await page.evaluate(()=>{window.__motionEmbedStarts=0;window.__overlayEmbedPeak=0;window.addEventListener('message',event=>{if(event.data?.type==='native-motion-embed-start')window.__motionEmbedStarts++});new MutationObserver(()=>{window.__overlayEmbedPeak=Math.max(window.__overlayEmbedPeak,document.querySelectorAll('.native-magic-overlay iframe').length)}).observe(document.body,{childList:true,subtree:true})})
       await page.getByLabel('显示属性',{exact:true}).click();await page.locator('.native-transition-menu>summary').click();await page.getByRole('menuitemradio',{name:'神奇移动',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
@@ -356,7 +481,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await speakerAction.waitFor({timeout:5000})
       if(options['speaker-case']==='no-notes'){assert.equal(await speakerAction.isDisabled(),true);assert.equal(speakerModuleRequests,0);return{kind:'isolated-speaker-no-notes',speakerDisabled:true,consoleOrPageErrors:errors}}
       if(options['speaker-case']==='blocked'){
-        await speakerAction.click();await page.getByRole('region',{name:'幻灯片放映',exact:true}).waitFor();assert.equal(await page.locator('.native-presentation-notes').innerText(),'第一点：介绍设计。\n第二点：说明交互。');assert.equal(speakerModuleRequests,0);await page.getByRole('button',{name:'退出放映',exact:true}).click();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-blocked',dockedNotesFallback:true,consoleOrPageErrors:errors}
+        await speakerAction.click();await page.getByRole('region',{name:'幻灯片放映',exact:true}).waitFor();assert.equal(await page.locator('.native-presentation-notes').innerText(),'第一点：介绍设计。\n第二点：说明交互。');assert.equal(speakerModuleRequests,0);await revealPresentationControls();await page.getByRole('button',{name:'退出放映',exact:true}).click();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-blocked',dockedNotesFallback:true,consoleOrPageErrors:errors}
       }
       const popupPromise=page.waitForEvent('popup')
       await speakerAction.click()
@@ -366,7 +491,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await page.getByRole('alert').filter({hasText:'演讲者视图未能加载'}).waitFor();assert.equal(speaker.isClosed(),true);assert.equal(await page.getByRole('region',{name:'幻灯片放映',exact:true}).isVisible(),true);return{kind:'isolated-speaker-module-error',audienceViewRetained:true,popupClosed:true,expectedNetworkErrors:errors.filter(text=>text==='Failed to load resource: net::ERR_FAILED'),consoleOrPageErrors:errors.filter(text=>text!=='Failed to load resource: net::ERR_FAILED')}
       }
       if(options['speaker-case']==='skipped-current'){
-        await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('[data-current-page]').dataset.currentPage==='page-3');assert.equal(await speaker.locator('[data-speaker-position]').innerText(),'第 2 / 2 页');await page.getByRole('button',{name:'退出放映',exact:true}).click();await speaker.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(speaker.isClosed(),false);await speaker.close();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-skipped-current',startedAtNextPresentable:true,consoleOrPageErrors:errors}
+        await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('[data-current-page]').dataset.currentPage==='page-3');assert.equal(await speaker.locator('[data-speaker-position]').innerText(),'第 2 / 2 页');await revealPresentationControls();await page.getByRole('button',{name:'退出放映',exact:true}).click();await speaker.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(speaker.isClosed(),false);await speaker.close();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-skipped-current',startedAtNextPresentable:true,consoleOrPageErrors:errors}
       }
       if (options['speaker-case'] === 'notes-repeat-save') {
         await speaker.getByRole('region', { name: '讲者备注', exact: true }).waitFor()
@@ -407,7 +532,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         return { kind: 'isolated-speaker-stale-refocus', remoteTextRetained: true, editUsesMatchingBase: true, consoleOrPageErrors: errors }
       }
       if(options['speaker-case']==='notes-compose-close'){
-        await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor();await speaker.getByRole('switch',{name:'编辑备注',exact:true}).click();const field=speaker.getByRole('textbox',{name:'讲者备注',exact:true}),local='窗口关闭后保留的中文组字草稿。';await field.dispatchEvent('compositionstart');await field.fill(local);await speaker.close();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='draft');assert.equal(receipts.length,0);await page.getByRole('button',{name:'退出放映',exact:true}).click();await page.getByLabel('放映',{exact:true}).click();const opening=page.waitForEvent('popup');await page.getByRole('menuitem',{name:'使用演讲者视图放映',exact:true}).click();const resumed=await opening;await resumed.getByRole('region',{name:'讲者备注',exact:true}).filter({hasText:local}).waitFor();assert.equal(receipts.length,0,'重开不能偷偷提交未结束的组字');await resumed.getByRole('button',{name:'重试保存',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(receipts.length,1);assert.equal(document.pages['page-1'].notes,local);assert.deepEqual(errors,[]);return{kind:'isolated-speaker-composition-close',draftSurvivesPopup:true,notPrematurelyCommitted:true,explicitSaveWorks:true,consoleOrPageErrors:errors}
+        await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor();await speaker.getByRole('switch',{name:'编辑备注',exact:true}).click();const field=speaker.getByRole('textbox',{name:'讲者备注',exact:true}),local='窗口关闭后保留的中文组字草稿。';await field.dispatchEvent('compositionstart');await field.fill(local);await speaker.close();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='draft');assert.equal(receipts.length,0);await revealPresentationControls();await page.getByRole('button',{name:'退出放映',exact:true}).click();await page.getByLabel('放映',{exact:true}).click();const opening=page.waitForEvent('popup');await page.getByRole('menuitem',{name:'使用演讲者视图放映',exact:true}).click();const resumed=await opening;await resumed.getByRole('region',{name:'讲者备注',exact:true}).filter({hasText:local}).waitFor();assert.equal(receipts.length,0,'重开不能偷偷提交未结束的组字');await resumed.getByRole('button',{name:'重试保存',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(receipts.length,1);assert.equal(document.pages['page-1'].notes,local);assert.deepEqual(errors,[]);return{kind:'isolated-speaker-composition-close',draftSurvivesPopup:true,notPrematurelyCommitted:true,explicitSaveWorks:true,consoleOrPageErrors:errors}
       }
       if(options['speaker-case']==='notes-write-denied'){
         await speaker.getByRole('region',{name:'讲者备注',exact:true}).waitFor();await speaker.getByRole('switch',{name:'编辑备注',exact:true}).click();const local='只失去写权限后仍可恢复保存的备注。';await speaker.getByRole('textbox',{name:'讲者备注',exact:true}).fill(local);await speaker.keyboard.press('Control+s');await speaker.getByRole('alert').filter({hasText:'尚未保存'}).waitFor();assert.equal(receipts.length,0);const downloading=page.waitForEvent('download');await speaker.getByRole('button',{name:'下载本地副本',exact:true}).click();await(await downloading).saveAs(join(output,'notes-write-denied-recovery.json'));assert.equal(JSON.parse(await readFile(join(output,'notes-write-denied-recovery.json'),'utf8')).operations[0].operations[0].patch.notes,local);fixtureWrite=true;rejectSpeakerSave=false;await speaker.getByRole('button',{name:'重新检查权限',exact:true}).click();await speaker.getByRole('button',{name:'重试保存',exact:true}).waitFor();await speaker.getByRole('button',{name:'重试保存',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].notes,local);assert.equal(receipts.length,1);assert.equal(new Set(speakerSaveIds).size,1);const expectedNetworkErrors=errors.filter(text=>/Failed to load resource:.*403/.test(text)),unexpected=errors.filter(text=>!/Failed to load resource:.*403/.test(text));assert.deepEqual(unexpected,[]);return{kind:'isolated-speaker-write-denied-retry',unsavedStatusRetainedAfterRead:true,backupContainsLocalNote:true,permissionRecheckedWithoutDocumentChange:true,originalOperationRetried:true,committedOnce:true,expectedNetworkErrors,consoleOrPageErrors:unexpected}
@@ -433,14 +558,14 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await speaker.screenshot({path:join(output,'speaker-preserved-draft.png')})
         if(['notes-conflict','notes-permission-reload'].includes(options['speaker-case'])){
           const downloaded=page.waitForEvent('download');await speaker.getByRole('button',{name:'保留副本并重新载入',exact:true}).click();await downloaded;await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');const expected=options['speaker-case']==='notes-conflict'?'远端已保存的备注。':'第一点：介绍设计。\n第二点：说明交互。';await speaker.getByRole('region',{name:'讲者备注',exact:true}).filter({hasText:expected}).waitFor();assert.equal(document.pages['page-1'].notes,expected)
-          if(options['speaker-case']==='notes-permission-reload'){await page.getByRole('button',{name:'退出放映',exact:true}).click();await page.getByLabel('导出格式',{exact:true}).click();const exporting=page.waitForEvent('download');await page.getByRole('button',{name:'网页',exact:true}).click();const file=await exporting;assert.ok(file.suggestedFilename().endsWith('.html'));assert.equal(receipts.length,0)}
+          if(options['speaker-case']==='notes-permission-reload'){await revealPresentationControls();await page.getByRole('button',{name:'退出放映',exact:true}).click();await page.getByLabel('导出格式',{exact:true}).click();const exporting=page.waitForEvent('download');await page.getByRole('button',{name:'网页',exact:true}).click();const file=await exporting;assert.ok(file.suggestedFilename().endsWith('.html'));assert.equal(receipts.length,0)}
         }else{
-          await speaker.close();await page.getByRole('button',{name:'退出放映',exact:true}).click();await page.getByLabel('放映',{exact:true}).click();const opening=page.waitForEvent('popup');await page.getByRole('menuitem',{name:'使用演讲者视图放映',exact:true}).click();const resumed=await opening;await resumed.getByRole('region',{name:'讲者备注',exact:true}).filter({hasText:local}).waitFor();fixtureWrite=true;await resumed.getByRole('button',{name:'重新检查权限',exact:true}).click();await resumed.waitForFunction(()=>!document.querySelector('[role="switch"]').disabled);await resumed.getByRole('button',{name:'重试保存',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].notes,local);assert.equal(document.pages['page-1'].title,'远端权限变更');assert.equal(receipts.length,1)
+          await speaker.close();await revealPresentationControls();await page.getByRole('button',{name:'退出放映',exact:true}).click();await page.getByLabel('放映',{exact:true}).click();const opening=page.waitForEvent('popup');await page.getByRole('menuitem',{name:'使用演讲者视图放映',exact:true}).click();const resumed=await opening;await resumed.getByRole('region',{name:'讲者备注',exact:true}).filter({hasText:local}).waitFor();fixtureWrite=true;await resumed.getByRole('button',{name:'重新检查权限',exact:true}).click();await resumed.waitForFunction(()=>!document.querySelector('[role="switch"]').disabled);await resumed.getByRole('button',{name:'重试保存',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].notes,local);assert.equal(document.pages['page-1'].title,'远端权限变更');assert.equal(receipts.length,1)
         }
         assert.deepEqual(errors,[]);return{kind:'isolated-speaker-'+options['speaker-case'],localDraftRetained:true,popupRecoveryVisible:true,recoveryDownloaded:true,remoteNotOverwritten:true,permissionRestoreRetries:options['speaker-case']==='notes-permission',readonlySavedDocumentExported:options['speaker-case']==='notes-permission-reload',consoleOrPageErrors:errors}
       }
       if(options['speaker-case']==='readonly'){
-        await speaker.getByRole('switch',{name:'编辑备注',exact:true}).waitFor();assert.equal(await speaker.getByRole('switch',{name:'编辑备注',exact:true}).isDisabled(),true);const original=JSON.stringify(document);await speaker.getByRole('button',{name:'下一页',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-current-page]').dataset.currentPage==='page-3');assert.equal(JSON.stringify(document),original);await page.getByRole('button',{name:'退出放映',exact:true}).click();await speaker.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(speaker.isClosed(),false);await speaker.close();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-readonly',notesDisabled:true,navigationRetained:true,documentUnchanged:true,consoleOrPageErrors:errors}
+        await speaker.getByRole('switch',{name:'编辑备注',exact:true}).waitFor();assert.equal(await speaker.getByRole('switch',{name:'编辑备注',exact:true}).isDisabled(),true);const original=JSON.stringify(document);await speaker.getByRole('button',{name:'下一页',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-current-page]').dataset.currentPage==='page-3');assert.equal(JSON.stringify(document),original);await revealPresentationControls();await page.getByRole('button',{name:'退出放映',exact:true}).click();await speaker.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(speaker.isClosed(),false);await speaker.close();assert.deepEqual(errors,[]);return{kind:'isolated-speaker-readonly',notesDisabled:true,navigationRetained:true,documentUnchanged:true,consoleOrPageErrors:errors}
       }
       if(options['speaker-case']==='preview-error'){
         const retry=speaker.getByRole('button',{name:'重新加载下一页预览',exact:true});await retry.waitFor();await speaker.screenshot({path:join(output,'speaker-preview-error.png')});assert.equal(pageReads.filter(id=>id==='page-3').length,1);speakerPreviewFailure=false;await retry.click();await speaker.getByRole('button',{name:'转到下一页',exact:true}).waitFor();await speaker.locator('[data-node-id="page-3-image"] img').waitFor();assert.equal(pageReads.filter(id=>id==='page-3').length,2);const expectedNetworkErrors=errors.filter(text=>/Failed to load resource:.*503/.test(text)),unexpected=errors.filter(text=>!/Failed to load resource:.*503/.test(text));assert.deepEqual(unexpected,[]);return{kind:'isolated-speaker-preview-recovery',attempts:2,recovered:true,expectedNetworkErrors,consoleOrPageErrors:unexpected}
@@ -503,7 +628,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await speaker.screenshot({path:join(output,'speaker-narrow.png')})
       await speaker.close()
       assert.equal(await page.locator('.native-slides-presentation').isVisible(),true,'关闭讲者窗口继续主窗口放映')
-      await page.getByRole('button',{name:'退出放映',exact:true}).click()
+      await revealPresentationControls();await page.getByRole('button',{name:'退出放映',exact:true}).click()
       await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+z')
       await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved')
       assert.equal(document.pages['page-1'].notes,'第一点：介绍设计。\n第二点：说明交互。')
@@ -514,10 +639,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       const secondPopup=page.waitForEvent('popup');await page.getByRole('menuitem',{name:'使用演讲者视图放映',exact:true}).click()
       const reopened=await secondPopup
       await reopened.getByRole('region',{name:'讲者备注',exact:true}).filter({hasText:text}).waitFor()
-      await page.getByRole('button',{name:'退出放映',exact:true}).click();await reopened.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(reopened.isClosed(),false);await reopened.screenshot({path:join(output,'speaker-waiting.png')})
+      await revealPresentationControls();await page.getByRole('button',{name:'退出放映',exact:true}).click();await reopened.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();assert.equal(reopened.isClosed(),false);await reopened.screenshot({path:join(output,'speaker-waiting.png')})
       await select(3);await reopened.getByRole('region',{name:'讲者备注等待视图',exact:true}).filter({hasText:'LingxiLoop 3'}).waitFor()
       const popupCount=page.context().pages().length;await startSlides();await reopened.getByRole('button',{name:'暂停',exact:true}).waitFor();assert.equal(page.context().pages().length,popupCount,'已有讲者窗口应随再次放映恢复，不新增窗口')
-      await page.getByRole('button',{name:'退出放映',exact:true}).click();await reopened.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();await reopened.close()
+      await revealPresentationControls();await page.getByRole('button',{name:'退出放映',exact:true}).click();await reopened.getByRole('region',{name:'讲者备注等待视图',exact:true}).waitFor();await reopened.close()
       assert.ok(speakerModuleRequests>0);assert.deepEqual(errors,[])
       return{kind:'isolated-slide-speaker',popupSize:{width:1000,height:640},timer:true,sharedNavigation:true,skippedPageOmitted:true,notesSaveReopenUndoRedo:true,compositionProtected:true,compactPreviewHidden:true,waitingViewFollowsSelection:true,existingWindowReused:true,consoleOrPageErrors:errors}
     }
@@ -651,7 +776,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await presentation.press('Escape');await page.getByLabel('放映',{exact:true}).waitFor();records.push({kind,duration,forwardAnimations:forward.length,backwardAnimations:backward.length})
       }
       await page.emulateMedia({reducedMotion:'reduce'});await startSlides();const presentation=page.getByRole('region',{name:'幻灯片放映',exact:true});await presentation.waitFor();await page.evaluate(()=>{window.__slideAnimations=[]});await presentation.focus();await page.keyboard.press('ArrowRight');await page.waitForFunction(id=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')===id,copyId);assert.deepEqual(await page.evaluate(()=>window.__slideAnimations),[])
-      await presentation.getByRole('button',{name:'讲者备注',exact:true}).click();assert.equal(await presentation.getByRole('textbox').count(),0)
+      assert.equal(await presentation.getByRole('button',{name:/^显示讲者备注/}).count(),document.pageOrder.some(id=>document.pages[id].notes.trim())?1:0);assert.equal(await presentation.getByRole('textbox').count(),0)
       await presentation.press('Home');await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-1');await presentation.press('End');await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')==='page-3');await presentation.press('2');await page.waitForFunction(id=>document.querySelector('[data-current-page]')?.getAttribute('data-current-page')===id,copyId);await presentation.press('Escape')
       const {exportArtifact}=await import('../src/features/artifacts/native/export-artifact.ts')
       const exported=await exportArtifact(document,{format:'html',resolveAsset:async asset=>{const image=fixture.images.find(image=>image.id===asset.id);assert.ok(image);return new Blob([image.bytes],{type:image.contentType})}}),html=await exported.blob.text()

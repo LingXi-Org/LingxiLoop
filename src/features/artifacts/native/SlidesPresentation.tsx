@@ -1,5 +1,5 @@
 import type { SpeakerNoteDraftStore, CommitSpeakerNote } from './speaker-note-drafts'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useId, type ComponentProps } from 'react'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
 import { artifactPageBackground } from '../../../../shared/artifact-themes'
 import type { NativeCompute } from './compute'
@@ -14,6 +14,9 @@ import './slides-presentation.css'
 
 interface Props {
   active: boolean
+  fullscreenSession: { deferred: boolean; request: Promise<boolean> | null; since: number; warning?: string }
+  coarsePointer: boolean
+  onToggleSpeaker(): boolean
   document: ArtifactDocument
   pageId: string
   compute: NativeCompute
@@ -21,7 +24,7 @@ interface Props {
   pageVersion(id: string): string | undefined
   revisionSeq?: string
   notes: boolean
-  speakerWindow: Window | null
+  getSpeakerWindow(): Window | null
   notesWritable: boolean
   getNotesBase(): ArtifactDocument
   onNotesCommit: CommitSpeakerNote
@@ -65,8 +68,15 @@ function outgoingPage(page: ArtifactPage): ArtifactPage {
     ),
   }
 }
+function PresentationControlButton(props: ComponentProps<typeof IconButton>) {
+  const tooltipId = useId()
+  return <IconButton {...props} title={undefined} aria-describedby={tooltipId}><span id={tooltipId} className="native-present-tooltip" role="tooltip">{props.label}</span></IconButton>
+}
 export default function SlidesPresentation({
   active,
+  fullscreenSession,
+  coarsePointer,
+  onToggleSpeaker,
   document: doc,
   pageId,
   compute,
@@ -74,7 +84,7 @@ export default function SlidesPresentation({
   pageVersion,
   revisionSeq,
   notes,
-  speakerWindow,
+  getSpeakerWindow,
   notesWritable,
   getNotesBase,
   onNotesCommit,
@@ -91,6 +101,7 @@ export default function SlidesPresentation({
   onSave,
   onError,
 }: Props) {
+  const speakerWindow = getSpeakerWindow()
   const root = useRef<HTMLElement>(null),
     surface = useRef<HTMLDivElement>(null),
     outgoing = useRef<HTMLDivElement>(null),
@@ -99,14 +110,115 @@ export default function SlidesPresentation({
     typeof import('./SlidesSpeaker').default | null
   >(null)
   const [speakerError, setSpeakerError] = useState(false)
+  const controls = useRef<HTMLElement>(null)
+  const [fullscreen, setFullscreen] = useState(!!window.document.fullscreenElement)
+  const [fullscreenDenied, setFullscreenDenied] = useState(false)
+  const [controlsVisible, setControlsVisible] = useState(true)
+  const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fullscreenLifetime = useRef<object | null>(null)
+  const deferFullscreen = useRef(false), requestingFullscreen = useRef(false),
+    intentionalFullscreenExit = useRef(false), fullscreenEnteredAt = useRef(0)
+  const latest = useRef({ onClose, onError })
+  latest.current = { onClose, onError }
   const [size, setSize] = useState({ width: 0, height: 0 }),
     [showNotes, setShowNotes] = useState(notes),
     [transition, setTransition] = useState<Transition | null>(null),
     [loading, setLoading] = useState(false),
-    [error, setError] = useState('')
+    [error, setError] = useState(''),
+    [warning, setWarning] = useState('')
   const reportError = (message: string) => {
     setError(message)
     onError(message)
+  }
+  const showControls = () => {
+    setControlsVisible(true)
+    if (controlsTimer.current) clearTimeout(controlsTimer.current)
+    controlsTimer.current = setTimeout(() => {
+      const focused = window.document.activeElement
+      if (!(focused instanceof HTMLElement && controls.current?.contains(focused) && focused.matches(':focus-visible')))
+        setControlsVisible(false)
+    }, 1800)
+  }
+  useEffect(() => {
+    if (!active) return
+    let live = true
+    const token = {}
+    fullscreenLifetime.current = token
+    deferFullscreen.current = fullscreenSession.deferred
+    fullscreenEnteredAt.current = window.document.fullscreenElement ? Date.now() : 0
+    intentionalFullscreenExit.current = false
+    setFullscreenDenied(false)
+    setWarning(fullscreenSession.warning ?? '')
+    setShowNotes(notes)
+    const changed = () => {
+      const entered = !!window.document.fullscreenElement
+      setFullscreen(entered)
+      showControls()
+      if (entered) {
+        fullscreenEnteredAt.current = Date.now()
+        intentionalFullscreenExit.current = false
+        deferFullscreen.current = false
+      } else {
+        const shouldExit = fullscreenEnteredAt.current > 0 && Date.now() - fullscreenEnteredAt.current >= 3000 && !intentionalFullscreenExit.current && window.document.hasFocus()
+        fullscreenEnteredAt.current = 0
+        intentionalFullscreenExit.current = false
+        if (shouldExit) latest.current.onClose()
+      }
+    }
+    window.document.addEventListener('fullscreenchange', changed)
+    setFullscreen(!!window.document.fullscreenElement)
+    showControls()
+    void fullscreenSession.request?.then(entered => {
+      if (!live) {
+        if (fullscreenLifetime.current === token && entered && window.document.fullscreenElement) void window.document.exitFullscreen().catch(() => {})
+      } else if (!entered) {
+        setFullscreenDenied(true)
+        setError('此处无法使用全屏，可继续在窗口中放映。')
+      }
+    })
+    return () => {
+      live = false
+      window.document.removeEventListener('fullscreenchange', changed)
+      if (controlsTimer.current) clearTimeout(controlsTimer.current)
+      queueMicrotask(() => {
+        if (fullscreenLifetime.current === token && window.document.fullscreenElement) void window.document.exitFullscreen().catch(() => {})
+      })
+    }
+  }, [active, fullscreenSession])
+  const enterFullscreen = () => {
+    if (!window.document.fullscreenEnabled || fullscreenDenied || requestingFullscreen.current) return
+    requestingFullscreen.current = true
+    void window.document.documentElement.requestFullscreen().then(() => {
+      if (!mounted.current) { if (window.document.fullscreenElement) void window.document.exitFullscreen().catch(() => {}); return }
+      fullscreenEnteredAt.current = Date.now()
+    }, () => {
+      if (!mounted.current) return
+      setFullscreenDenied(true)
+      reportError('此处无法使用全屏，可继续在窗口中放映。')
+    }).finally(() => { requestingFullscreen.current = false })
+  }
+  const toggleFullscreen = () => {
+    showControls()
+    deferFullscreen.current = false
+    if (window.document.fullscreenElement) {
+      intentionalFullscreenExit.current = true
+      void window.document.exitFullscreen().catch(() => {})
+    } else enterFullscreen()
+  }
+  const toggleNotes = () => {
+    showControls()
+    if (speakerWindow && !speakerWindow.closed) { onToggleSpeaker(); return }
+    if (showNotes) { setShowNotes(false); return }
+    if (coarsePointer) { setShowNotes(true); return }
+    intentionalFullscreenExit.current = !!window.document.fullscreenElement
+    if (onToggleSpeaker()) {
+      deferFullscreen.current = true
+      if (window.document.fullscreenElement) void window.document.exitFullscreen().catch(() => {})
+    } else {
+      intentionalFullscreenExit.current = false
+      setShowNotes(true)
+      setWarning('演讲者窗口未能打开，讲者备注已显示在放映窗口中。')
+    }
   }
   useEffect(() => {
     if (!speakerWindow || SlidesSpeaker || speakerError) return
@@ -217,6 +329,14 @@ export default function SlidesPresentation({
     // A speaker portal shares React, but owns its separate window's keyboard.
     if (!root.current?.contains(event.target as Node)) return
     if (event.nativeEvent.isComposing) return
+    if (event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      const targets = [...(root.current?.querySelectorAll<HTMLElement>('button:not(:disabled),a[href],input:not(:disabled),textarea:not(:disabled),select:not(:disabled),iframe,[tabindex]:not([tabindex="-1"])') ?? [])]
+        .filter(element => !element.closest('[inert]') && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden')
+      const index = targets.indexOf(window.document.activeElement as HTMLElement)
+      const next = targets[event.shiftKey ? (index <= 0 ? targets.length - 1 : index - 1) : (index + 1) % targets.length]
+      if (next) { event.preventDefault(); event.stopPropagation(); showControls(); next.focus({ preventScroll: true }) }
+      return
+    }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
       event.preventDefault()
       event.stopPropagation()
@@ -251,9 +371,7 @@ export default function SlidesPresentation({
       if (target) void go(target, event.key === 'Home', false)
     } else if (event.key.toLowerCase() === 'f' && !event.repeat) {
       event.preventDefault()
-      if (window.document.fullscreenElement) void window.document.exitFullscreen()
-      else
-        void root.current?.requestFullscreen().catch(() => reportError('请使用浏览器的全屏操作。'))
+      toggleFullscreen()
     } else if (/^[1-9]$/.test(event.key) && pages[Number(event.key) - 1]) {
       event.preventDefault()
       void go(pages[Number(event.key) - 1], Number(event.key) - 1 < index, false)
@@ -270,6 +388,8 @@ export default function SlidesPresentation({
           aria-label="幻灯片放映"
           tabIndex={0}
           onKeyDown={keyDown}
+          onPointerMove={event => { if (!event.buttons) showControls() }}
+          onFocusCapture={event => { if (root.current?.contains(event.target as Node) && controls.current?.contains(event.target as Node)) showControls() }}
         >
           <div
             className="native-slides-presentation-stage"
@@ -278,25 +398,32 @@ export default function SlidesPresentation({
                 !(event.target as HTMLElement).closest(
                   'a,button,input,textarea,select,iframe,[contenteditable]',
                 )
-              )
-                next(1)
+              ) {
+                if (deferFullscreen.current && !window.document.fullscreenElement && !fullscreenDenied && window.document.fullscreenEnabled) {
+                  deferFullscreen.current = false
+                  enterFullscreen()
+                  return
+                }
+                const rect = event.currentTarget.getBoundingClientRect()
+                next(event.clientX < rect.left + rect.width / 2 ? -1 : 1)
+              }
             }}
           >
             {page && loadedPageIds.includes(pageId) ? (
               <>
                 <div
                   className="native-slides-presentation-frame"
-                  style={{ width: page.width * scale, height: page.height * scale }}
+                  style={{ width: page.width, height: page.height, transform: `translate(-50%, -50%) scale(${scale})` }}
                 >
                   <div
                     className="native-slides-presentation-scale"
-                    style={{ width: page.width, height: page.height, transform: `scale(${scale})` }}
+                    style={{ width: page.width, height: page.height }}
                   >
                     <div
                       ref={surface}
                       className="native-slides-presentation-current"
                       data-page-id={pageId}
-                      style={{ background: artifactPageBackground(page, doc) }}
+                      style={{ background: transition?.kind === 'magic' ? artifactPageBackground(page, doc) : undefined }}
                     >
                       <PageContent
                         document={doc}
@@ -322,8 +449,9 @@ export default function SlidesPresentation({
                     aria-hidden="true"
                     inert
                     style={{
-                      width: transition.from.width * outgoingScale,
-                      height: transition.from.height * outgoingScale,
+                      width: transition.from.width,
+                      height: transition.from.height,
+                      transform: `translate(-50%, -50%) scale(${outgoingScale})`,
                     }}
                   >
                     <div
@@ -331,7 +459,6 @@ export default function SlidesPresentation({
                       style={{
                         width: transition.from.width,
                         height: transition.from.height,
-                        transform: `scale(${outgoingScale})`,
                       }}
                     >
                       <div
@@ -365,53 +492,30 @@ export default function SlidesPresentation({
               {page?.notes || '本页没有讲者备注。'}
             </aside>
           )}
-          {error && (
-            <div className="native-presentation-error" role="alert">
-              {error}
-              <button type="button" onClick={() => setError('')}>
+          {(error || warning) && (
+            <div className="native-presentation-error" role={error ? "alert" : "status"}>
+              {error || warning}
+              <button type="button" onClick={() => { setError(''); setWarning('') }}>
                 关闭
               </button>
             </div>
           )}
-          <nav className="native-present-controls" aria-label="放映控制">
-            <IconButton
-              icon="previous"
-              label="上一页"
-              disabled={index <= 0 || loading}
-              onClick={() => next(-1)}
-            />
-            <span aria-live="polite">
-              {index + 1} / {pages.length}
-            </span>
-            <IconButton
-              icon="next"
-              label="下一页"
-              disabled={index >= pages.length - 1 || loading}
-              onClick={() => next(1)}
-            />
-            <IconButton
-              icon="notes"
-              label="讲者备注"
-              active={showNotes}
-              onClick={() => setShowNotes((value) => !value)}
-            />
-            <IconButton
-              icon="fit"
-              label="全屏"
-              onClick={() =>
-                void root.current
-                  ?.requestFullscreen()
-                  .catch(() => reportError('请使用浏览器的全屏操作。'))
-              }
-            />
-            <IconButton icon="close" label="退出放映" onClick={onClose} />
+          <nav ref={controls} className="native-present-controls" data-controls-visible={controlsVisible} aria-label="放映控制" onClick={event=>{event.stopPropagation();showControls()}} onBlur={showControls}>
+            <PresentationControlButton icon="previous" label="上一页" disabled={loading} onClick={() => next(-1)} />
+            <span className="native-present-position" aria-live="polite">{index + 1}<span> / {pages.length}</span></span>
+            <PresentationControlButton icon="next" label="下一页" disabled={loading} onClick={() => next(1)} />
+            <span className="native-present-divider" aria-hidden="true" />
+            {(pages.some(id=>doc.pages[id].notes.trim()) || showNotes || speakerWindow) && <PresentationControlButton icon="speakerNotes" label={speakerWindow&&!speakerWindow.closed?'关闭讲者备注窗口':showNotes?'隐藏讲者备注':fullscreen&&!coarsePointer?'显示讲者备注（将离开全屏，点击画面可返回）':'显示讲者备注'} active={showNotes||!!speakerWindow} onClick={toggleNotes} />}
+            {window.document.fullscreenEnabled && <PresentationControlButton icon={fullscreen?'collapse':'fit'} label={fullscreen?'退出全屏（F）':fullscreenDenied?'此处无法使用全屏':'全屏（F）'} aria-keyshortcuts="F" aria-disabled={fullscreenDenied&&!fullscreen||undefined} onClick={toggleFullscreen} />}
+            <PresentationControlButton icon="close" label="退出放映" aria-keyshortcuts="Escape" onClick={onClose} />
           </nav>
         </section>
       )}
       {speakerWindow && SlidesSpeaker && (
         <SlidesSpeaker
           presenting={active}
-          win={speakerWindow}
+          since={fullscreenSession.since}
+          getWindow={() => speakerWindow}
           document={doc}
           pageId={pageId}
           compute={compute}

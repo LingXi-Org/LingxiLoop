@@ -9,6 +9,8 @@ import {
   type RefObject,
 } from 'react'
 import {
+  BookText,
+  Minimize2,
   ChevronLeft,
   ChevronRight,
   Monitor,
@@ -95,6 +97,8 @@ const icons = {
   comments: MessageCircle,
   layers: Layers,
   fit: Maximize2,
+  collapse: Minimize2,
+  speakerNotes: BookText,
   grid: Grid2X2,
   slides: Square,
   notes: BookOpen,

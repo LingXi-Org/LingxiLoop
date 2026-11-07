@@ -2871,7 +2871,16 @@
         "翻页",
         "退出",
         "全屏",
-        "跳过页"
+        "跳过页",
+        "普通自动全屏",
+        "讲者窗口后首次点击不翻页",
+        "放映中打开/关闭讲者窗口",
+        "左右半屏翻页",
+        "空闲隐藏",
+        "键盘焦点及中文悬浮提示",
+        "全屏拒绝",
+        "放映模块加载失败",
+        "关闭编辑器退出全屏"
       ],
       "reference": {
         "path": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
@@ -2904,16 +2913,19 @@
       },
       "implementation": "src/features/artifacts/native/NativeEditor.tsx",
       "screenshots": {
-        "reference": null,
-        "native": null,
-        "matchedStateVerified": false
+        "reference": "visual/slides-presentation/1440x1000-light-popup-open-reference.png",
+        "native": "visual/slides-presentation/1440x1000-light-popup-open-native.png",
+        "matchedStateVerified": true,
+        "completeStateQualification": false
       },
-      "result": "待完整交互验收",
+      "result": "已接入原版普通全屏、讲者窗口首次点击只恢复全屏、放映中窗口开关、左右半屏导航、1800ms控制条隐藏、中文悬浮提示及焦点循环。四容器浅/深三个状态共24对未排除像素均≤0.5%，按钮DOM位置尺寸逐容器对齐；完整媒体/停靠备注/超链接/所有焦点及错误视觉状态、全部图标1px与整体资格仍未完成。",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/slides-presentation-controls.json",
+        "referenceReceipt": "source-slides-presentation.json",
+        "pixelReceipt": "visual/slides-presentation/raw-pixel-results.json",
+        "scope": "相同文档语义哈希、固定参考12个资源哈希、Chrome154/DPR1；仅所列状态，不计完整授权服务或性能资格。"
       },
       "transitionEvidence": {
         "receipt": "functional/slides-transitions.json",
@@ -2943,7 +2955,16 @@
         "跟随选页",
         "预览重试",
         "隔离内容静态预览",
-        "中文组字与保存重开"
+        "中文组字与保存重开",
+        "普通自动全屏",
+        "讲者窗口后首次点击不翻页",
+        "放映中打开/关闭讲者窗口",
+        "左右半屏翻页",
+        "空闲隐藏",
+        "键盘焦点及中文悬浮提示",
+        "全屏拒绝",
+        "放映模块加载失败",
+        "关闭编辑器退出全屏"
       ],
       "reference": {
         "path": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
@@ -2955,16 +2976,19 @@
       },
       "implementation": "src/features/artifacts/native/SlidesSpeaker.tsx",
       "screenshots": {
-        "reference": "visual/slides-speaker/reference-1000x640.png",
-        "native": "visual/slides-speaker/native-1000x640.png",
-        "matchedStateVerified": false
+        "reference": "visual/slides-presentation/1440x1000-light-popup-open-reference.png",
+        "native": "visual/slides-presentation/1440x1000-light-popup-open-native.png",
+        "matchedStateVerified": true,
+        "completeStateQualification": false
       },
-      "result": "已接入按需加载的共享React演讲者窗口、计时/导航/备注/等待复用；原版全屏进入及完整放映控件、全部焦点/错误/媒体视觉状态和像素排除核验仍未完成，保持未取得资格。",
+      "result": "已接入原版普通全屏、讲者窗口首次点击只恢复全屏、放映中窗口开关、左右半屏导航、1800ms控制条隐藏、中文悬浮提示及焦点循环。四容器浅/深三个状态共24对未排除像素均≤0.5%，按钮DOM位置尺寸逐容器对齐；完整媒体/停靠备注/超链接/所有焦点及错误视觉状态、全部图标1px与整体资格仍未完成。",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": "functional/slides-speaker.json",
-        "scope": "受控HTTP+真实共享操作链路，非真实授权API/数据库端到端；完整状态与资格仍待后续。"
+        "receipt": "functional/slides-presentation-controls.json",
+        "referenceReceipt": "source-slides-presentation.json",
+        "pixelReceipt": "visual/slides-presentation/raw-pixel-results.json",
+        "scope": "相同文档语义哈希、固定参考12个资源哈希、Chrome154/DPR1；仅所列状态，不计完整授权服务或性能资格。"
       },
       "readableReference": {
         "path": "skills/claude-slides/scripts/editor/node/compiler.cjs",
@@ -9283,6 +9307,10 @@
     {
       "area": "演讲者窗口中文文案",
       "reason": "继续/暂停/重置、页码、讲者备注、编辑、前后页标题及等待放映说明全部中文；只登记替换，不自动排除任何像素或图标。"
+    },
+    {
+      "area": "放映控制条及悬浮提示中文文案",
+      "reason": "上一页/下一页、显示/隐藏讲者备注、全屏及退出说明全部中文，保留物理键名；仅登记替换，本次24对比较没有排除这些区域或图标。"
     }
   ],
   "removedServiceEntrances": [

@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 interface Props {
-  win: Window
+  getWindow(): Window
   error: string
   loading: boolean
   retained: boolean
@@ -10,7 +10,7 @@ interface Props {
 }
 /** Access failures expose local recovery only; document content stays unmounted. */
 export default function SpeakerAccessRecovery({
-  win,
+  getWindow,
   error,
   loading,
   retained,
@@ -18,6 +18,7 @@ export default function SpeakerAccessRecovery({
   onReload,
   onRetry,
 }: Props) {
+  const win = getWindow()
   if (win.closed) return null
   return createPortal(
     <section

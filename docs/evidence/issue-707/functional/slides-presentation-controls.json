@@ -1,0 +1,456 @@
+{
+  "scope": "真实浏览器、共享React和原操作链路，受控HTTP；不代替真实授权服务、实体输入法或最终性能资格",
+  "qualified": false,
+  "containers": [
+    {
+      "container": "1920x1200",
+      "theme": "light",
+      "receipt": {
+        "kind": "isolated-slide-presentation-controls",
+        "fixtureSemanticSha256": "ffd7ae10f978403e9d8e046a82f25c9cc2b628027452421225922cae36ae87b6",
+        "theme": "light",
+        "regularAutoFullscreen": true,
+        "fullscreenToggle": true,
+        "popupFromPresentation": true,
+        "returnClickDoesNotAdvance": true,
+        "stageLeftBackRightNext": true,
+        "controlsGeometry": {
+          "x": 851.5,
+          "y": 1140,
+          "width": 217,
+          "height": 40
+        },
+        "idleHidden": true,
+        "keyboardFocusVisibleAndTrapped": true,
+        "exitCleansFullscreen": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "container": "1440x1000",
+      "theme": "light",
+      "receipt": {
+        "kind": "isolated-slide-presentation-controls",
+        "fixtureSemanticSha256": "ffd7ae10f978403e9d8e046a82f25c9cc2b628027452421225922cae36ae87b6",
+        "theme": "light",
+        "regularAutoFullscreen": true,
+        "fullscreenToggle": true,
+        "popupFromPresentation": true,
+        "returnClickDoesNotAdvance": true,
+        "stageLeftBackRightNext": true,
+        "controlsGeometry": {
+          "x": 611.5,
+          "y": 940,
+          "width": 217,
+          "height": 40
+        },
+        "idleHidden": true,
+        "keyboardFocusVisibleAndTrapped": true,
+        "exitCleansFullscreen": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "container": "768x1024",
+      "theme": "light",
+      "receipt": {
+        "kind": "isolated-slide-presentation-controls",
+        "fixtureSemanticSha256": "ffd7ae10f978403e9d8e046a82f25c9cc2b628027452421225922cae36ae87b6",
+        "theme": "light",
+        "regularAutoFullscreen": true,
+        "fullscreenToggle": true,
+        "popupFromPresentation": true,
+        "returnClickDoesNotAdvance": true,
+        "stageLeftBackRightNext": true,
+        "controlsGeometry": {
+          "x": 275.5,
+          "y": 964,
+          "width": 217,
+          "height": 40
+        },
+        "idleHidden": true,
+        "keyboardFocusVisibleAndTrapped": true,
+        "exitCleansFullscreen": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "container": "390x844",
+      "theme": "light",
+      "receipt": {
+        "kind": "isolated-slide-presentation-controls",
+        "fixtureSemanticSha256": "ffd7ae10f978403e9d8e046a82f25c9cc2b628027452421225922cae36ae87b6",
+        "theme": "light",
+        "regularAutoFullscreen": true,
+        "fullscreenToggle": true,
+        "popupFromPresentation": true,
+        "returnClickDoesNotAdvance": true,
+        "stageLeftBackRightNext": true,
+        "controlsGeometry": {
+          "x": 86.5,
+          "y": 784,
+          "width": 217,
+          "height": 40
+        },
+        "idleHidden": true,
+        "keyboardFocusVisibleAndTrapped": true,
+        "exitCleansFullscreen": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "container": "1920x1200",
+      "theme": "dark",
+      "receipt": {
+        "kind": "isolated-slide-presentation-controls",
+        "fixtureSemanticSha256": "ffd7ae10f978403e9d8e046a82f25c9cc2b628027452421225922cae36ae87b6",
+        "theme": "dark",
+        "regularAutoFullscreen": true,
+        "fullscreenToggle": true,
+        "popupFromPresentation": true,
+        "returnClickDoesNotAdvance": true,
+        "stageLeftBackRightNext": true,
+        "controlsGeometry": {
+          "x": 851.5,
+          "y": 1140,
+          "width": 217,
+          "height": 40
+        },
+        "idleHidden": true,
+        "keyboardFocusVisibleAndTrapped": true,
+        "exitCleansFullscreen": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "container": "1440x1000",
+      "theme": "dark",
+      "receipt": {
+        "kind": "isolated-slide-presentation-controls",
+        "fixtureSemanticSha256": "ffd7ae10f978403e9d8e046a82f25c9cc2b628027452421225922cae36ae87b6",
+        "theme": "dark",
+        "regularAutoFullscreen": true,
+        "fullscreenToggle": true,
+        "popupFromPresentation": true,
+        "returnClickDoesNotAdvance": true,
+        "stageLeftBackRightNext": true,
+        "controlsGeometry": {
+          "x": 611.5,
+          "y": 940,
+          "width": 217,
+          "height": 40
+        },
+        "idleHidden": true,
+        "keyboardFocusVisibleAndTrapped": true,
+        "exitCleansFullscreen": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "container": "768x1024",
+      "theme": "dark",
+      "receipt": {
+        "kind": "isolated-slide-presentation-controls",
+        "fixtureSemanticSha256": "ffd7ae10f978403e9d8e046a82f25c9cc2b628027452421225922cae36ae87b6",
+        "theme": "dark",
+        "regularAutoFullscreen": true,
+        "fullscreenToggle": true,
+        "popupFromPresentation": true,
+        "returnClickDoesNotAdvance": true,
+        "stageLeftBackRightNext": true,
+        "controlsGeometry": {
+          "x": 275.5,
+          "y": 964,
+          "width": 217,
+          "height": 40
+        },
+        "idleHidden": true,
+        "keyboardFocusVisibleAndTrapped": true,
+        "exitCleansFullscreen": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "container": "390x844",
+      "theme": "dark",
+      "receipt": {
+        "kind": "isolated-slide-presentation-controls",
+        "fixtureSemanticSha256": "ffd7ae10f978403e9d8e046a82f25c9cc2b628027452421225922cae36ae87b6",
+        "theme": "dark",
+        "regularAutoFullscreen": true,
+        "fullscreenToggle": true,
+        "popupFromPresentation": true,
+        "returnClickDoesNotAdvance": true,
+        "stageLeftBackRightNext": true,
+        "controlsGeometry": {
+          "x": 86.5,
+          "y": 784,
+          "width": 217,
+          "height": 40
+        },
+        "idleHidden": true,
+        "keyboardFocusVisibleAndTrapped": true,
+        "exitCleansFullscreen": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "states": [
+    {
+      "browserMajor": "154",
+      "case": "initial-speaker",
+      "receipt": {
+        "kind": "isolated-initial-speaker-fullscreen",
+        "popupDoesNotEnterFullscreen": true,
+        "firstClickEntersWithoutPaging": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "case": "denied",
+      "receipt": {
+        "kind": "isolated-fullscreen-denied",
+        "chineseError": true,
+        "normalDisabledState": true,
+        "windowedPlaybackContinues": true,
+        "exitWorks": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "case": "module-error",
+      "receipt": {
+        "kind": "isolated-presentation-module-error",
+        "chineseError": true,
+        "fullscreenCleaned": true,
+        "editorRetained": true,
+        "expectedNetworkErrors": [
+          "Failed to load resource: net::ERR_FAILED"
+        ],
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "case": "owner-unmount",
+      "receipt": {
+        "kind": "isolated-presentation-owner-unmount",
+        "fullscreenCleaned": true,
+        "ownerUnmounted": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "140",
+      "case": "initial-speaker",
+      "receipt": {
+        "kind": "isolated-initial-speaker-fullscreen",
+        "popupDoesNotEnterFullscreen": true,
+        "firstClickEntersWithoutPaging": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "140",
+      "case": "denied",
+      "receipt": {
+        "kind": "isolated-fullscreen-denied",
+        "chineseError": true,
+        "normalDisabledState": true,
+        "windowedPlaybackContinues": true,
+        "exitWorks": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "140",
+      "case": "module-error",
+      "receipt": {
+        "kind": "isolated-presentation-module-error",
+        "chineseError": true,
+        "fullscreenCleaned": true,
+        "editorRetained": true,
+        "expectedNetworkErrors": [
+          "Failed to load resource: net::ERR_FAILED"
+        ],
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "140",
+      "case": "owner-unmount",
+      "receipt": {
+        "kind": "isolated-presentation-owner-unmount",
+        "fullscreenCleaned": true,
+        "ownerUnmounted": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "case": "blocked",
+      "receipt": {
+        "kind": "isolated-present-speaker-blocked",
+        "dockedFallback": true,
+        "chineseNoticeActuallyVisible": true,
+        "fullscreenRetained": true,
+        "noPopup": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "closedWindowRegression": {
+    "before": "初始讲者窗口→进入全屏→关闭，三次复现React开发性能记录器遍历已关闭Window的caches getter，抛SecurityError",
+    "stackEntry": "react-dom-client.development.js addValueToProperties → addObjectToProperties → logComponentRender",
+    "after": "组件属性传递取值函数，保留编辑器拥有的真实Window；154/140相同关闭流程无控制台错误，不修改React或忽略异常"
+  },
+  "fiftyPages": [
+    {
+      "kind": "isolated-native-editor-ui-diagnostic",
+      "mode": "slides",
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 1,
+      "maxMountedNodes": 7,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-native-editor-ui-diagnostic",
+      "mode": "design",
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "1859698ab513381bad8dfeb41a504d61f29081d8048e42f7d5f1f7ac33aae708",
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 6,
+      "maxMountedNodes": 24,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": []
+    }
+  ],
+  "interactions": [
+    {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "slides",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": true,
+      "designPlayMenuOpensPreview": false,
+      "drawing": false,
+      "layouts": true,
+      "multiplePages": true,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "design",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": false,
+      "designPlayMenuOpensPreview": true,
+      "drawing": true,
+      "layouts": false,
+      "multiplePages": false,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    }
+  ],
+  "mixedPortrait140": {
+    "kind": "isolated-mixed-slide-transitions",
+    "records": [
+      {
+        "kind": "fade",
+        "outgoingSizePreserved": true,
+        "screenGeometryContinuous": null
+      },
+      {
+        "kind": "push",
+        "outgoingSizePreserved": true,
+        "screenGeometryContinuous": null
+      },
+      {
+        "kind": "magic",
+        "outgoingSizePreserved": true,
+        "screenGeometryContinuous": true
+      }
+    ],
+    "offlineMagicScreenGeometryContinuous": true,
+    "consoleOrPageErrors": []
+  }
+}

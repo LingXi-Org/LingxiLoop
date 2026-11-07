@@ -19,7 +19,8 @@ import styles from './slides-speaker.css?inline'
 
 interface Props {
   presenting: boolean
-  win: Window
+  since: number
+  getWindow(): Window
   document: ArtifactDocument
   pageId: string
   compute: NativeCompute
@@ -44,13 +45,14 @@ function Preview({
   page,
   document: doc,
   compute,
-  win,
+  getWindow,
 }: {
-  win: Window
+  getWindow(): Window
   page: ArtifactPage
   document: ArtifactDocument
   compute: NativeCompute
 }) {
+  const win = getWindow()
   const root = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const snapshot = useMemo(() => speakerPreviewPage(page, doc.assets), [page, doc.assets])
@@ -88,7 +90,8 @@ function Preview({
 
 export default function SlidesSpeaker({
   presenting,
-  win,
+  since,
+  getWindow,
   document: doc,
   pageId,
   compute,
@@ -108,6 +111,7 @@ export default function SlidesSpeaker({
   onClose,
   onSave,
 }: Props) {
+  const win = getWindow()
   const [closed, setClosed] = useState(win.closed),
     [editing, setEditing] = useState(false),
     [wide, setWide] = useState(win.innerWidth >= 640)
@@ -217,11 +221,10 @@ export default function SlidesSpeaker({
   useEffect(() => {
     setEditing(false)
     if (presenting) {
-      const time = Date.now()
-      setNow(time)
-      setClock({ running: true, start: time, elapsed: 0 })
+      setNow(Date.now())
+      setClock({ running: true, start: since, elapsed: 0 })
     }
-  }, [presenting])
+  }, [presenting, since])
   const elapsed = Math.max(0, clock.elapsed + (clock.running ? now - clock.start : 0)),
     seconds = Math.floor(elapsed / 1000)
   const navigate = (id: string | undefined) => {
@@ -368,7 +371,7 @@ export default function SlidesSpeaker({
     )
   const preview = (id: string) =>
     loadedPageIds.includes(id) ? (
-      <Preview win={win} page={doc.pages[id]} document={doc} compute={compute} />
+      <Preview getWindow={() => win} page={doc.pages[id]} document={doc} compute={compute} />
     ) : (
       <div className="native-speaker-preview" data-speaker-preview role="status">
         {failedPreviews.has(id) ? '预览未能加载，点按重试。' : '正在加载幻灯片…'}

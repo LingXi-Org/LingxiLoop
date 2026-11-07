@@ -127,6 +127,15 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const boardPreviewViewport=useRef<HTMLDivElement>(null),[boardPreviewView,setBoardPreviewView]=useState<BoardPreviewView>({scale:1,width:0,height:0})
   const [presenting, setPresenting] = useState(false)
   const [speakerWindow,setSpeakerWindow]=useState<Window|null>(null)
+  const [presentationFullscreen,setPresentationFullscreen]=useState<{deferred:boolean;request:Promise<boolean>|null;since:number;warning?:string}>({deferred:false,request:null,since:0})
+  const fullscreenOwner=useRef<object|null>(null)
+  useEffect(()=>{
+    if(!presentationFullscreen.since)return
+    const token={};fullscreenOwner.current=token
+    const close=()=>{if(fullscreenOwner.current===token&&window.document.fullscreenElement)void window.document.exitFullscreen().catch(()=>{})}
+    if(!presenting){close();void presentationFullscreen.request?.then(close)}
+    return()=>queueMicrotask(()=>{close();void presentationFullscreen.request?.then(close)})
+  },[presenting,presentationFullscreen])
   const [coarsePointer,setCoarsePointer]=useState(()=>window.matchMedia('(pointer:coarse)').matches)
   useEffect(()=>{const query=window.matchMedia('(pointer:coarse)'),update=()=>setCoarsePointer(query.matches);query.addEventListener('change',update);return()=>query.removeEventListener('change',update)},[])
   useEffect(()=>{if(!speakerWindow)return;const closed=()=>setSpeakerWindow(null);speakerWindow.addEventListener('pagehide',closed);return()=>speakerWindow.removeEventListener('pagehide',closed)},[speakerWindow])
@@ -630,29 +639,33 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     setZoom(Math.max(.04, Math.min(4, Math.min((viewport.width-64)/w, (viewport.height-100)/h) * 2)))
     viewportRef.current?.scrollTo({ left: panPadding.x, top: panPadding.y });const mapping=previousCanvasMapping.current,element=viewportRef.current;if(mapping&&element)mapping.world=worldCamera({x:element.scrollLeft,y:element.scrollTop},mapping)
   }
+  const openSpeakerWindow = () => {
+    const popup=window.open('about:blank','', 'popup,width=1000,height=640')
+    if(!popup){setNotice('演讲者窗口未能打开，讲者备注已显示在放映窗口中。');return null}
+    popup.document.documentElement.lang='zh-CN'
+    popup.document.title='LingxiLoop · 演讲者视图'
+    Object.assign(popup.document.body.style,{margin:'0',background:'#141413',color:'#faf9f5'})
+    const loading=popup.document.createElement('p');loading.dataset.speakerLoading='';loading.setAttribute('role','status');loading.textContent='正在准备演讲者视图…';popup.document.body.append(loading)
+    setSpeakerWindow(popup)
+    return popup
+  }
   const startPresentation = (speaker = false) => {
     if(!doc)return
     const pages=doc.pageOrder.filter(id=>!doc.pages[id].skip)
     if(!pages.length)return
     const countBefore=doc.pageOrder.slice(0,Math.max(0,doc.pageOrder.indexOf(pageId??''))).filter(id=>!doc.pages[id].skip).length
     const existingSpeaker=speakerWindow&&!speakerWindow.closed
-    let dockNotes=speaker&&!existingSpeaker
-    if(speaker&&!coarsePointer&&!existingSpeaker){
-      const popup=window.open('about:blank','', 'popup,width=1000,height=640')
-      if(!popup)setNotice('演讲者窗口未能打开，讲者备注已显示在放映窗口中。')
-      else{
-        popup.document.documentElement.lang='zh-CN'
-        popup.document.title='LingxiLoop · 演讲者视图'
-        Object.assign(popup.document.body.style,{margin:'0',background:'#141413',color:'#faf9f5'})
-        const loading=popup.document.createElement('p');loading.dataset.speakerLoading='';loading.setAttribute('role','status');loading.textContent='正在准备演讲者视图…';popup.document.body.append(loading)
-        setSpeakerWindow(popup);dockNotes=false
-      }
-    }
+    const opened=speaker&&!coarsePointer&&!existingSpeaker?openSpeakerWindow():null
+    const dockNotes=speaker&&!existingSpeaker&&!opened
+    const deferred=!!opened||navigator.userActivation?.isActive===false
+    // Fullscreen needs this trusted toolbar event; the player stays lazy.
+    const request=!deferred&&window.document.fullscreenEnabled&&window.document.documentElement.requestFullscreen?window.document.documentElement.requestFullscreen().then(()=>true,()=>false):null
+    setPresentationFullscreen({deferred,request,since:Date.now(),warning:speaker&&!coarsePointer&&!existingSpeaker&&!opened?'演讲者窗口未能打开，讲者备注已显示在放映窗口中。':undefined})
     flushText();setPageId(pages[Math.min(countBefore,pages.length-1)]);setEditingId(null);setNotesOpen(dockNotes);setPresenting(true);setZoom(1)
   }
   const reorderLayer = (front: boolean) => { if (current && writable) dispatch([{ type: 'nodes.reorder', pageId: current.id, nodeIds: front ? [...current.nodeOrder.filter(id => !selected.includes(id)), ...current.nodeOrder.filter(id => selected.includes(id))] : [...current.nodeOrder.filter(id => selected.includes(id)), ...current.nodeOrder.filter(id => !selected.includes(id))] }]) }
   const distribute = (axis: 'horizontal' | 'vertical') => { if (current) dispatch(distributeNodes(selectedNodes, axis).map(n => ({ type: 'node.patch', pageId: current.id, nodeId: n.id, patch: { x: n.x, y: n.y } }))) }
-  const speakerAccessRecovery=speakerWindow?<SpeakerAccessRecovery win={speakerWindow} error={state.error} loading={state.loading||visible&&!authorized&&!state.error} retained={retainedRecovery} onDownload={downloadRecovery} onReload={recoverAndReload} onRetry={()=>void session.open()}/>:null
+  const speakerAccessRecovery=speakerWindow?<SpeakerAccessRecovery getWindow={()=>speakerWindow} error={state.error} loading={state.loading||visible&&!authorized&&!state.error} retained={retainedRecovery} onDownload={downloadRecovery} onReload={recoverAndReload} onRetry={()=>void session.open()}/>:null
   if (visible && (!authorized || state.loading) && !state.error) return <div role="status" className="native-loading">正在打开{title}…{speakerAccessRecovery}</div>
   if (!doc) return <div className="native-loading" role="alert">{state.error || '稿件暂时无法打开'}{notice && <p>{notice}</p>}<button type="button" onClick={()=>void session.open()}>重试</button>{retainedRecovery&&<button type="button" onClick={recoverAndReload}>保留副本并重新载入</button>}<button type="button" onClick={() => void downloadSource()}>下载原始文件</button>{retainedRecovery&&<button type="button" onClick={downloadRecovery}>下载本地副本</button>}{speakerAccessRecovery}</div>
   const boardWidth = Math.max(viewport.width, ...boardIds.map(value => (displayPages[value].x - origin.x + doc.pages[value].width + 128) * scale))
@@ -827,7 +840,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     {!presenting&&kind==='slides'&&compact&&!compactRailOpen&&<nav className="native-compact-navigation" aria-label="页面切换"><IconButton icon="previous" label="上一页" disabled={!current||doc.pageOrder.indexOf(current.id)===0} onClick={()=>{if(current)selectPage(doc.pageOrder[doc.pageOrder.indexOf(current.id)-1])}} /><span>{current?doc.pageOrder.indexOf(current.id)+1:0} / {doc.pageOrder.length}</span><IconButton icon="next" label="下一页" disabled={!current||doc.pageOrder.indexOf(current.id)===doc.pageOrder.length-1} onClick={()=>{if(current)selectPage(doc.pageOrder[doc.pageOrder.indexOf(current.id)+1])}} /><i /><IconButton icon="notes" label="讲者备注" active={notesOpen} onClick={()=>setNotesOpen(v=>!v)} /><IconButton icon="presenter" label="显示页面缩略图" onClick={()=>toggleCompactRail(true)} /></nav>}
     {!presenting && notesOpen && current && <aside inert={!!focusedBoardId} className="native-notes" aria-label="讲者备注面板"><header><h3>讲者备注 · {doc.pageOrder.indexOf(current.id)+1} / {doc.pageOrder.length}</h3><IconButton icon="close" label="关闭备注" onClick={() => setNotesOpen(false)} /></header><SpeakerNotesField key={`${current.id}:${speakerNoteDrafts.resetGeneration}`} page={current} store={speakerNoteDrafts} writable={state.write&&!state.conflict} getBase={()=>session.getSnapshot().document!} commit={commitSpeakerNote}/></aside>}
 
-    {(presenting || speakerWindow) && current && (SlidesPresentation?<SlidesPresentation active={presenting} document={renderDocument!} pageId={current.id} compute={compute} loadedPageIds={state.loadedPageIds} pageVersion={session.getPageVersion} revisionSeq={revisionSeq} notes={notesOpen} speakerWindow={speakerWindow} notesWritable={state.write&&!state.conflict} getNotesBase={()=>session.getSnapshot().document!} onNotesCommit={commitSpeakerNote} noteDrafts={speakerNoteDrafts} saveError={state.error||speakerNoteError} saveConflict={state.conflict} saving={state.pending>0} onDownloadRecovery={downloadRecovery} onRecover={recoverAndReload} onCheckAccess={()=>void session.open()} onSave={()=>{drafts.flush('save');void session.retry()}} ensurePage={async value=>{await session.ensurePage(value);if(!session.getSnapshot().loadedPageIds.includes(value))throw new Error('幻灯片未能加载。')}} onNavigate={selectPage} onClose={()=>{setPresenting(false);if(window.document.fullscreenElement)void window.document.exitFullscreen();queueMicrotask(()=>editorRoot.current?.querySelector<HTMLElement>('[aria-label="放映"]')?.focus({preventScroll:true}))}} onError={setNotice}/>:presenting?<div className="native-loading" role="status">正在准备放映…</div>:null)}
+    {(presenting || speakerWindow) && current && (SlidesPresentation?<SlidesPresentation active={presenting} fullscreenSession={presentationFullscreen} coarsePointer={coarsePointer} onToggleSpeaker={()=>{if(speakerWindow&&!speakerWindow.closed){speakerWindow.close();return false}return !!openSpeakerWindow()}} document={renderDocument!} pageId={current.id} compute={compute} loadedPageIds={state.loadedPageIds} pageVersion={session.getPageVersion} revisionSeq={revisionSeq} notes={notesOpen} getSpeakerWindow={()=>speakerWindow} notesWritable={state.write&&!state.conflict} getNotesBase={()=>session.getSnapshot().document!} onNotesCommit={commitSpeakerNote} noteDrafts={speakerNoteDrafts} saveError={state.error||speakerNoteError} saveConflict={state.conflict} saving={state.pending>0} onDownloadRecovery={downloadRecovery} onRecover={recoverAndReload} onCheckAccess={()=>void session.open()} onSave={()=>{drafts.flush('save');void session.retry()}} ensurePage={async value=>{await session.ensurePage(value);if(!session.getSnapshot().loadedPageIds.includes(value))throw new Error('幻灯片未能加载。')}} onNavigate={selectPage} onClose={()=>{setPresenting(false);if(window.document.fullscreenElement)void window.document.exitFullscreen();queueMicrotask(()=>editorRoot.current?.querySelector<HTMLElement>('[aria-label="放映"]')?.focus({preventScroll:true}))}} onError={setNotice}/>:presenting?<div className="native-loading" role="status">正在准备放映…</div>:null)}
     {contextMenu && <div ref={menuRef} role="menu" aria-label="编辑操作" className="native-context-menu native-menu-popup" style={{left:contextMenu.x,top:contextMenu.y}} onClick={() => setContextMenu(null)}>
       <MenuItem icon="copy" disabled={!selected.length} shortcut="⌘ C" onClick={copySelection}>复制</MenuItem><MenuItem icon="copy" disabled={!writable || !selected.length} shortcut="⌘ D" onClick={() => pasteNodes(selectedWithChildren())}>创建副本</MenuItem><MenuItem disabled={!writable || !clipboard.current.length} shortcut="⌘ V" onClick={() => pasteNodes(clipboard.current)}>粘贴</MenuItem><hr />
       <MenuItem icon="layers" disabled={!writable || selected.length<2} shortcut="⌘ G" onClick={groupSelection}>组合</MenuItem><MenuItem disabled={!writable || primary?.type!=='group'} shortcut="⌘ ⇧ G" onClick={ungroup}>取消组合</MenuItem><MenuItem icon="up" disabled={!writable || !selected.length} onClick={() => reorderLayer(true)}>置于顶层</MenuItem><MenuItem icon="down" disabled={!writable || !selected.length} onClick={() => reorderLayer(false)}>置于底层</MenuItem><hr />
