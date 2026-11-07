@@ -1,0 +1,22 @@
+{
+  "reviewedCommit": "bcb2e6a11e91207efd66276f57606e228eb7a821",
+  "review": "reviews/bcb2e6a1.json",
+  "severity": "P2",
+  "failure": "右对齐后方向键微移激活left声明，与right形成双侧锚点，后续水平拖动零写入。140/154在50%均复现。",
+  "fix": "键盘微移采用独立锚点补丁：右/下侧偏移保留auto相反锚点，居中保留双侧锚点，只修改微移方向；拖动轴锁定规则不变。",
+  "regressions": {
+    "140": [
+      "右对齐→ArrowRight→拖动→保存重开",
+      "居中→ArrowRight→双侧锚点→拖动锁定→保存重开"
+    ],
+    "154": [
+      "右对齐→ArrowRight→拖动→保存重开",
+      "居中→ArrowRight→双侧锚点→拖动锁定→保存重开"
+    ],
+    "unitPassed": 51
+  },
+  "referenceLimitation": "Source原先焦点在对齐按钮时ArrowRight无移动；实际点击h1后居中left1/right0，右对齐也变left1/right0。本修复不声明Source键盘特殊行为已一比一验收，原始收据保留。",
+  "fullQualification": false,
+  "candidateCI": "待运行",
+  "candidateIndependentReview": "待运行"
+}

@@ -52,7 +52,7 @@ import { PageThumbnail } from './thumbnail'
 import { EditorPaletteContext, EditorColorSessionContext } from './ColorField'
 import { readNodeFrame, anchorInFrame, pointInFrame, type RenderedNodeFrame } from './rendered-geometry'
 import {useCodeSelection,paintedCodeNode} from './use-code-selection'
-import {readElementPositionPins,elementMoveValues,elementMovePatch,elementResizePatch,type ElementPositionPins} from './element-positioning'
+import {readElementPositionPins,elementMoveValues,elementMovePatch,elementNudgePatch,elementResizePatch,type ElementPositionPins} from './element-positioning'
 import { PageRail } from './PageRail'
 import { duplicateNodes, duplicatePages, distributeNodes, resizeSelection, drawingNode, canvasShapeNode, ungroupNodes, appendDrawingPoint, appendCanvasPenPoint, canvasPenNode, layoutSlide, SLIDE_LAYOUTS, type ResizeHandle } from '../../../../shared/artifact-editor-actions'
 import { decodeCommentAnchor, commentPoint, commentAnchorAtPoint, type NativeCommentAnchor } from '../../../../shared/artifact-comment-anchor'
@@ -753,7 +753,12 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'g') { event.preventDefault(); event.shiftKey ? ungroup() : groupSelection() }
       if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); deleteSelection() }
       if (event.altKey && ['ArrowUp','ArrowDown'].includes(event.key)) { event.preventDefault(); void pageAction(event.key==='ArrowUp'?'up':'down'); return }
-      if (current && selected.length && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) { event.preventDefault(); const step = event.shiftKey ? 10 : 1; dispatch(selectedNodes.map(node => ({ type: 'node.patch', pageId: current.id, nodeId: node.id, patch: { x: node.x + (event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0), y: node.y + (event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0) } }))) }
+      if (current && selected.length && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+        event.preventDefault();const base=session.getSnapshot().document;if(!base||!writable)return
+        const step=event.shiftKey?10:1,dx=event.key==='ArrowLeft'?-step:event.key==='ArrowRight'?step:0,dy=event.key==='ArrowUp'?-step:event.key==='ArrowDown'?step:0,nodes=selectedNodes.filter(node=>!node.locked),pins=capturePositionPins(current,nodes,current.id===canvasContentId)
+        const operations:ArtifactOperation[]=nodes.flatMap(node=>{const original=base.pages[current.id]?.nodes[node.id];if(!original)return[];const patch=pins[node.id]?elementNudgePatch(original,pins[node.id],dx,dy):{x:node.x+dx,y:node.y+dy};return Object.keys(patch).length?[{type:'node.patch',pageId:current.id,nodeId:node.id,patch}]:[]})
+        if(operations.length)dispatch(operations,base)
+      }
     }} onKeyUp={event => { if(!editorOwnsEvent(event.currentTarget,event.target))return;if (event.key === ' ') space.current = false }}
     onContextMenu={event => { if(focusedBoardId)return;if(!editorOwnsEvent(event.currentTarget,event.target))return;if (presenting || (event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')) return; event.preventDefault(); const rect=event.currentTarget.getBoundingClientRect(); const target=(event.target as HTMLElement).closest<HTMLElement>('[data-node-id]'), shell=(event.target as HTMLElement).closest<HTMLElement>('[data-page-id]'); if (target && shell) { setPageId(shell.dataset.pageId!); if (!selected.includes(target.dataset.nodeId!)) setSelected([target.dataset.nodeId!]) } setContextMenu({x:Math.max(4,Math.min(rect.width-228,event.clientX-rect.left)),y:Math.max(4,Math.min(rect.height-360,event.clientY-rect.top))}) }}
     onCopy={event => { if(focusedBoardId)return;if(!editorOwnsEvent(event.currentTarget,event.target))return;if ((event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')) return; copySelection(); if (clipboard.current.length) { event.clipboardData.setData('application/lingxi-nodes', JSON.stringify(clipboard.current)); event.clipboardData.setData('text/plain', selectedNodes.map(node => node.text ?? node.source ?? '').join('\n')); event.preventDefault() } }}

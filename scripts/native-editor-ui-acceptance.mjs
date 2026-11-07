@@ -456,12 +456,21 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
           const label={left:'左对齐',center:'水平居中',right:'右对齐',top:'顶部对齐',middle:'垂直居中',bottom:'底部对齐'}[direction]
           pending=saved();await toolbar.getByRole('button',{name:label,exact:true}).click();await pending
         }
+        if(options['align-nudge']){
+          const target=page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`),before=structuredClone(document.pages['page-1'].nodes[nodeId])
+          await page.locator('[data-native-artifact-editor]').focus()
+          const centered=editorCase==='align-center',key=options['align-nudge']
+          pending=saved();await page.keyboard.press(key);await pending
+          await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+          const after=structuredClone(document.pages['page-1'].nodes[nodeId]);if(centered){assert.equal(after.css.right,'0px');assert.equal(after.x,key==='Shift+ArrowRight'?10:1)}else{assert.equal(after.css.left,'auto');assert.equal(after.css.right,key==='Shift+ArrowRight'?'-10px':'-1px')}
+          await writeFile(join(output,'alignment-nudge.json'),JSON.stringify({before,after},null,2));await target.waitFor()
+        }
         if(options['after-width']){await field.fill(options['after-width']);pending=saved();await field.press('Enter');await pending}
         if(options['after-height']){const height=section.getByRole('textbox',{name:'高度',exact:true});await height.fill(options['after-height']);pending=saved();await height.press('Enter');await pending}
         if(!options['align-position']||options['align-position']==='fixed'){
           await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
           const direction=editorCase.split('-').at(-1),horizontal=['left','center','right'].includes(direction)
-          assert.equal(await section.getByRole('textbox',{name:horizontal?'水平偏移':'垂直偏移',exact:true}).inputValue(),direction==='right'||direction==='bottom'?'auto':'0','偏移输入显示作者声明，而非自动边距后的绘制坐标')
+          assert.equal(await section.getByRole('textbox',{name:horizontal?'水平偏移':'垂直偏移',exact:true}).inputValue(),direction==='right'||direction==='bottom'?'auto':options['align-nudge']&&horizontal?(options['align-nudge'].startsWith('Shift+')?'10':'1'):'0','偏移输入显示作者声明，而非自动边距后的绘制坐标')
           assert.equal(await section.getByRole('textbox',{name:horizontal?'右侧':'底部',exact:true}).count(),direction==='left'||direction==='top'?0:1,'自动相反锚点不展开附加属性行')
         }
         if(options['align-drag']){

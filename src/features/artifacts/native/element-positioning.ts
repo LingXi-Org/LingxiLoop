@@ -48,3 +48,13 @@ export function elementResizePatch(node:ArtifactNode,pins:ElementPositionPins,pa
   if(JSON.stringify(css)!==JSON.stringify(node.css??{}))patch.css=css
   return patch
 }
+
+/** Keyboard nudges retain both centering anchors; drag locks are gesture-only. */
+export function elementNudgePatch(node:ArtifactNode,pins:ElementPositionPins,dx:number,dy:number):Partial<ArtifactNode>{
+ const patch:Partial<ArtifactNode>={},css={...node.css}
+ const put=(name:string,value:number)=>{css[name]=`${value}px${/!important\s*$/i.test(css[name]??'')?' !important':''}`}
+ if(dx){if(pins.useRight){put('right',Math.round(pins.right-dx));css.left='auto'}else{patch.x=Math.round(pins.left+dx);put('left',patch.x)}}
+ if(dy){if(pins.useBottom){put('bottom',Math.round(pins.bottom-dy));css.top='auto'}else{patch.y=Math.round(pins.top+dy);put('top',patch.y)}}
+ if(JSON.stringify(css)!==JSON.stringify(node.css??{}))patch.css=css
+ return patch
+}

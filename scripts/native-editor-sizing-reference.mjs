@@ -69,6 +69,9 @@ try{
         await page.getByRole('textbox',{name:'Offset X',exact:true}).fill('120');await page.getByRole('textbox',{name:'Offset X',exact:true}).press('Enter')
         await page.getByRole('textbox',{name:'Offset Y',exact:true}).fill('80');await page.getByRole('textbox',{name:'Offset Y',exact:true}).press('Enter')
       }else if(name==='reset-width'){await page.getByTitle('Width',{exact:true}).first().hover();await page.getByRole('button',{name:'Unset Width (use inherited)',exact:true}).click()}
+      if(args['align-nudge']){
+        await heading.click();await page.keyboard.press(args['align-nudge']);await page.waitForTimeout(450)
+      }
       if(args['align-drag']){
         await page.waitForTimeout(450)
         const box=await heading.boundingBox(),delta=Number(args['align-drag'])

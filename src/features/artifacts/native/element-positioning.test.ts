@@ -42,3 +42,12 @@ test('CSS锚点缩放仍提交几何工具计算的连接线坐标',()=>{
   const resized={...node,width:200,points:[{x:0,y:0},{x:200,y:80}]}
   assert.deepEqual(elementResizePatch(node,pins,node,resized,'e').points,resized.points)
 })
+
+test('键盘微移保留双侧居中锚点，只调整方向键所控制的偏移',async()=>{
+ const {elementNudgePatch}=await import('./element-positioning')
+ const node={...createNode('text','text'),x:0,y:40,css:{right:'0px','margin-left':'auto','margin-right':'auto'}}
+ const patch=elementNudgePatch(node,{...pins,bothX:true},1,0)
+ assert.equal(patch.x,1);assert.equal(patch.y,undefined);assert.equal(patch.css?.right,'0px');assert.equal(patch.css?.left,'1px')
+ const right={...node,css:{left:'auto',right:'0px'}}
+ assert.deepEqual(elementNudgePatch(right,{...pins,useRight:true,right:0},1,0),{css:{left:'auto',right:'-1px'}})
+})
