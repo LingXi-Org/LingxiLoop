@@ -28,7 +28,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['design-artboard','os-ime','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['board-transform','design-artboard','os-ime','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -70,7 +70,7 @@ try {
   const baseUrl = `http://127.0.0.1:${address.port}`
   browser = await chromium.launch({ headless: options.headed!=='true', ...(options.browser ? { executablePath: options.browser } : {}), args: ['--no-sandbox',...(options.checks==='os-ime'?['--ozone-platform=x11','--gtk-version=3','--disable-dev-shm-usage']:[])] })
   for (const kind of mode === 'both' ? ['slides', 'design'] : [mode]) {
-    for (const editorCase of options.checks==='canvas-fit-body'?options['fit-case']?[options['fit-case']]:['first','rapid','restored']:options.checks === 'canvas-vector-edit-retention' ? options['vector-case']?[options['vector-case']]:['readonly','denied','space','middle','touch'] : options.checks === 'canvas-vector-edit-cas' ? options['vector-case']?[options['vector-case']]:['rotation','path','style','reload','parent-idle','parent-active','parent-cancel','parent-cancel-click','padding','padding-rotated','padding-change','padding-active'] : options.checks === 'canvas-vector-edit' ? options['vector-case']?[options['vector-case']]:['initial','anchor-drag','nudge','smooth','delete','insert','tab','pull','shift-drag','handle','break','cancel','group-nudge','save-in-mode','undo-point','redo-point','keyboard-enter'] : options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
+    for (const editorCase of options.checks==='board-transform'?options['board-case']?options['board-case'].split(','):['move','move-unsnapped','resize','resize-unsnapped','ratio','minimum','ratio-minimum','maximum','copy','copy-history','cancel','copy-cancel','history','keyboard','readonly','multi','multi-toggle','multi-copy','comment-resize','pending-width','selection-camera',...['n','e','s','w','nw','ne','sw'].map(handle=>'edge-'+handle)]:options.checks==='canvas-fit-body'?options['fit-case']?[options['fit-case']]:['first','rapid','restored']:options.checks === 'canvas-vector-edit-retention' ? options['vector-case']?[options['vector-case']]:['readonly','denied','space','middle','touch'] : options.checks === 'canvas-vector-edit-cas' ? options['vector-case']?[options['vector-case']]:['rotation','path','style','reload','parent-idle','parent-active','parent-cancel','parent-cancel-click','padding','padding-rotated','padding-change','padding-active'] : options.checks === 'canvas-vector-edit' ? options['vector-case']?[options['vector-case']]:['initial','anchor-drag','nudge','smooth','delete','insert','tab','pull','shift-drag','handle','break','cancel','group-nudge','save-in-mode','undo-point','redo-point','keyboard-enter'] : options.checks === 'canvas-vector-retention' ? options['vector-case']?[options['vector-case']]:['permission','permission-single','page','denied','denied-single','single-switch','space','middle'] : options.checks === 'canvas-vector' ? options['vector-case']?[options['vector-case']]:['open-enter','open-escape','single-escape','closed','first-handle','middle-handle','shift-angle','backspace','switch-tool','near-point','oversize','draft-undo','draft-redo','draft-delete','draft-save'] : options.checks === 'cas' ? ['rte', 'table'] : options.checks === 'fonts-lazy' ? ['outside', 'escape'] : [null]) {
       const result = await verifyMode(kind, browser, baseUrl, editorCase)
       await writeFile(join(output, `${kind}${editorCase ? `-${editorCase}` : ''}.json`), JSON.stringify(result, null, 2) + '\n')
       console.log(JSON.stringify(options.checks==='parity'?{...result,screenshots:result.screenshots.map(({controls,...row})=>row)}:result))
@@ -83,7 +83,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['design-artboard','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['board-transform','design-artboard','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
@@ -186,6 +186,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const revisionReads=[],revisionRestores=[],contextWrites=[]
   if(options.checks==='canvas-links'){document.canvasPages=[{id:'canvas-page-1',name:'页面 1'},{id:'linked-page',name:'链接目标页面'}];document.pages['page-2'].canvasPageId='linked-page'}
   let commentThreads=options.checks==='canvas-import'?[{id:'imported-comment',anchor:encodeCommentAnchor({pageId:document.canvasPages[0].contentId,nodeId:'imported-note',x:.5,y:.5}),label:'导入便签评论',status:'open',messages:[{id:'imported-message',text:'中文评论定位验收',author:{kind:'user',id:'fixture-user',name:'验收用户'},at:'2026-11-06T00:00:00.000Z'}]}]:[];let commentSequence=0;let holdCommentAck=false,releaseCommentAck=null,rejectCommentReply=false,expectedCommentError=false
+  if(options.checks==='board-transform'&&editorCase==='comment-resize')commentThreads=[{id:'board-anchor',anchor:encodeCommentAnchor({pageId:'page-1',x:.5,y:.5}),label:'画板局部坐标',status:'open',messages:[{id:'anchor-message',text:'缩放定位',author:{kind:'user',id:'fixture-user',name:'验收用户'},at:'2026-11-07T00:00:00.000Z'}]}]
   const pageHash = page => createHash('sha256').update(JSON.stringify(page)).digest('hex')
   const initialPageHashes = Object.fromEntries(document.pageOrder.map(id => [id, pageHash(document.pages[id])]))
   const history = { version: 0, undo: null, redo: null }, receipts = [], errors = []
@@ -194,7 +195,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historyRequests = [],expectedCodeNetworkErrors=[]
   let denyCodeAccess=false
   let rejectSpeakerSave=['notes-network','notes-denied','notes-write-denied'].includes(options['speaker-case']);let denySpeakerRead=false;const speakerSaveIds=[]
-  let fixtureWrite=options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
+  let fixtureWrite=!(options.checks==='board-transform'&&editorCase==='readonly')&&options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
   let holdImageReads=options.checks==='asset-reads',releaseImageReads
   const imageReadGate=new Promise(resolve=>{releaseImageReads=resolve}),physicalImageReads=[]
   const pageReads=[]
@@ -359,6 +360,72 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     assert.equal(await page.evaluate(()=>document.compatMode),'CSS1Compat','隔离回归必须与产品和固定参考使用相同标准模式')
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='board-transform'){
+      assert.equal(kind,'design')
+      const before=structuredClone(document.pages['page-1']),others=document.pageOrder.slice(1).map(id=>pageHash(document.pages[id])),originalIds=[...document.pageOrder]
+      await page.locator('[data-page-id="page-1"] .native-board-label').click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByLabel('画板宽度',{exact:true}).waitFor()
+      const board=page.locator('[data-artboard-id="page-1"]'),bounds=await board.boundingBox(),scale=bounds.width/before.width,scenario=editorCase
+      const previewGeometry=[]
+      const saved=()=>page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.status()===200)
+      const drag=async({resize=false,handle='se',dx=40,dy=30,modifier,cancel=false,inspectPreview}={})=>{
+        await board.locator(resize?`[data-board-handle="${handle}"]`:'.native-board-heading').waitFor({state:'visible'})
+        const rect=await board.locator(resize?`[data-board-handle="${handle}"]`:'.native-board-heading').boundingBox(),x=rect.x+rect.width/2,y=rect.y+rect.height/2
+        if(modifier)await page.keyboard.down(modifier)
+        await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+dx,y+dy,{steps:5})
+        if(modifier==='Alt'){await page.locator('[data-board-copy="page-1"]').waitFor();assert.equal(document.pageOrder.length,3,'复制预览不能提前保存副本')}
+        if(!cancel&&scenario!=='readonly'){await page.waitForFunction(()=>!document.querySelector('.native-stage .native-page-content [aria-busy="true"]')&&[...document.querySelectorAll('.native-stage .native-page-content img')].every(image=>image.complete&&image.naturalWidth>0));await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:join(output,`board-${scenario}-preview.png`)})}
+        previewGeometry.push({frame:await board.boundingBox(),heading:await board.locator('.native-board-heading').boundingBox(),ghost:await page.locator('[data-board-copy="page-1"]').count()?await page.locator('[data-board-copy="page-1"]').boundingBox():null})
+        if(scenario==='minimum'){const value=previewGeometry.at(-1);assert.ok(Math.abs(value.frame.width-value.heading.width)<=1,'最小画板标题不能保留额外最小宽度')}
+        if(inspectPreview)await inspectPreview()
+        if(cancel)await page.keyboard.press('Escape')
+        const pending=!cancel&&scenario!=='readonly'?saved():null
+        await page.mouse.up();if(modifier)await page.keyboard.up(modifier)
+        if(pending)await pending;else await page.waitForTimeout(350)
+      }
+      if(scenario==='readonly'){
+        assert.equal(await board.locator('[data-board-handle]').count(),0);await drag();assert.equal(receipts.length,0);assert.equal(pageHash(document.pages['page-1']),pageHash(before))
+      }else if(scenario==='cancel'||scenario==='copy-cancel'){
+        await drag({modifier:scenario==='copy-cancel'?'Alt':undefined,cancel:true});assert.equal(receipts.length,0);assert.deepEqual(document.pageOrder,originalIds);assert.equal(pageHash(document.pages['page-1']),pageHash(before));assert.equal(await page.locator('[data-board-copy]').count(),0)
+      }else if(scenario==='move-unsnapped'||scenario==='resize-unsnapped'){
+        await drag({resize:scenario==='resize-unsnapped',modifier:'Control'});const value=document.pages['page-1'];assert.equal(value.x,scenario==='move-unsnapped'?181:0);assert.equal(value.width,scenario==='resize-unsnapped'?2101:1920);assert.equal(value.y,scenario==='move-unsnapped'?136:0);assert.equal(value.height,scenario==='resize-unsnapped'?1216:1080);assert.equal(receipts.length,1)
+      }else if(scenario==='selection-camera'){
+        await page.locator('[data-artboard-id="page-2"] .native-board-label').click({modifiers:['Shift']});await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]').dataset.currentPage==='page-2');await page.waitForTimeout(100);const after=await board.boundingBox();assert.ok(Math.abs(after.x-bounds.x)<1&&Math.abs(after.y-bounds.y)<1,'标题选择不得跳转或平移画布相机');assert.equal(receipts.length,0)
+      }else if(scenario==='multi-copy'){
+        await page.locator('[data-artboard-id="page-2"] .native-board-label').click();await board.locator('.native-board-label').click({modifiers:['Shift']});await page.waitForFunction(()=>document.querySelectorAll('[data-board-selected="true"]').length===2)
+        await drag({modifier:'Alt'});assert.equal(receipts.length,1);assert.equal(document.pageOrder.length,5)
+        const copies=document.pageOrder.slice(3).map(id=>document.pages[id]);assert.deepEqual(copies.map(page=>[page.title,page.x,page.y]),[['Page 1 副本',160,136],['Page 2 副本',2240,136]])
+      }else if(scenario==='pending-width'){
+        await page.getByLabel('画板宽度',{exact:true}).fill('2000');assert.equal(receipts.length,0);await drag({resize:true});assert.equal(document.pages['page-1'].width,2181);assert.equal(receipts.length,2)
+      }else if(scenario==='comment-resize'){
+        const pin=board.getByLabel('评论 1：画板局部坐标',{exact:true}),anchor=commentThreads[0].anchor;await pin.waitFor()
+        await drag({resize:true,inspectPreview:async()=>{const frame=await board.boundingBox(),point=await pin.boundingBox();assert.ok(Math.abs(point.x-frame.x-frame.width/2)<1,'缩放预览中的评论横坐标需跟随画板');assert.ok(Math.abs(point.y-frame.y-frame.height/2)<1,'缩放预览中的评论纵坐标需跟随画板')}});assert.equal(commentThreads[0].anchor,anchor)
+      }else if(scenario.startsWith('edge-')){
+        const handle=scenario.slice(5),expected=({n:[0,136,1920,944],e:[0,0,2080,1080],s:[0,0,1920,1216],w:[181,0,1739,1080],nw:[181,136,1739,944],ne:[0,136,2080,944],sw:[181,0,1739,1216]})[handle]
+        await drag({resize:true,handle});const result=document.pages['page-1'];assert.deepEqual([result.x,result.y,result.width,result.height],expected);assert.equal(receipts.length,1)
+      }else if(scenario==='keyboard'){
+        const label=board.locator('.native-board-label');await label.focus();let pending=saved();await label.press('ArrowRight');await pending;assert.equal(document.pages['page-1'].x,1)
+        const handle=board.locator('[data-board-handle="se"]');await handle.focus();pending=saved();await handle.press('Shift+ArrowDown');await pending;assert.equal(document.pages['page-1'].height,1090);assert.equal(document.pages['page-1'].width,1920)
+      }else if(scenario==='multi'||scenario==='multi-toggle'){
+        await page.locator('[data-artboard-id="page-2"] .native-board-label').click({modifiers:['Shift']});await scrollCanvasTo(before);await page.waitForFunction(()=>{const rect=document.querySelector('[data-artboard-id="page-1"] .native-board-heading')?.getBoundingClientRect();return rect&&rect.x>=0&&rect.y>=30});await page.waitForFunction(()=>document.querySelectorAll('[data-board-selected="true"]').length===2)
+        if(scenario==='multi-toggle'){await board.locator('.native-board-label').click({modifiers:['Shift']});await page.waitForFunction(()=>document.querySelectorAll('[data-board-selected="true"]').length===1);assert.equal(receipts.length,0)}else{await drag();assert.equal(document.pages['page-2'].x-document.pages['page-1'].x,2080);assert.equal(document.pages['page-2'].y,document.pages['page-1'].y);assert.equal(receipts.length,1);assert.equal(receipts[0].operations.length,2)}
+      }else{
+        await drag({resize:['resize','ratio','minimum','ratio-minimum','maximum'].includes(scenario),modifier:scenario.startsWith('copy')?'Alt':scenario.startsWith('ratio')?'Shift':undefined,...(scenario.includes('minimum')?{dx:-500,dy:-300}:scenario==='maximum'?{dx:3000,dy:2000}:{})})
+        if(scenario==='copy'||scenario==='copy-history'){
+          assert.equal(document.pageOrder.length,4);assert.equal(pageHash(document.pages['page-1']),pageHash(before));const id=document.pageOrder.find(id=>!originalIds.includes(id)),copy=document.pages[id];assert.equal(document.pageOrder.at(-1),id,'原版Alt复制追加到画板顺序末尾');assert.equal(copy.x,160);assert.equal(copy.y,Math.round(30/scale));assert.match(copy.title,/副本/);assert.equal(copy.nodeOrder.length,before.nodeOrder.length);assert.ok(copy.nodeOrder.every(id=>!before.nodes[id]));assert.equal(receipts.length,1)
+        }else if(['resize','ratio','minimum','ratio-minimum','maximum'].includes(scenario)){
+          assert.equal(document.pages['page-1'].width,scenario==='maximum'?8000:scenario==='ratio-minimum'?213:scenario==='minimum'?120:scenario==='ratio'?2162:2080);assert.equal(document.pages['page-1'].height,scenario==='maximum'?8000:scenario.includes('minimum')?120:1216);assert.equal(document.pages['page-1'].x,0);assert.equal(document.pages['page-1'].y,0)
+          assert.equal(receipts.length,1,'一次缩放应只创建一项共享历史记录')
+        }else{
+          assert.equal(document.pages['page-1'].x,160,'画板标题拖动需使用原版边缘吸附');assert.equal(document.pages['page-1'].y,Math.round(30/scale));assert.equal(receipts.length,1)
+        }
+        if(scenario==='history'||scenario==='copy-history'){
+          const moved=document.pageOrder.map(id=>pageHash(document.pages[id]));assert.equal(await page.evaluate(()=>!!document.activeElement?.closest('[data-native-artifact-editor]')),true,'画板手势后焦点应保持在编辑器内');await page.getByLabel('画板宽度',{exact:true}).waitFor();let pending=saved();await page.keyboard.press('Control+z');await pending;assert.equal(pageHash(document.pages['page-1']),pageHash(before));assert.deepEqual(document.pageOrder,originalIds);await page.waitForFunction(x=>Math.abs((document.querySelector('[data-artboard-id="page-1"]')?.getBoundingClientRect().x??Infinity)-x)<1,bounds.x);pending=saved();await page.keyboard.press('Control+Shift+z');await pending;assert.deepEqual(document.pageOrder.map(id=>pageHash(document.pages[id])),moved);assert.deepEqual(historyRequests,['undo','redo'])
+        }
+      }
+      assert.equal(JSON.stringify(document.pages['page-1'].nodes),JSON.stringify(before.nodes));if(scenario!=='multi')assert.deepEqual(originalIds.slice(1).map(id=>pageHash(document.pages[id])),others)
+      const final=JSON.stringify(document);await page.reload();await ready(1);assert.equal(JSON.stringify(document),final);assert.deepEqual(errors,[])
+      return{kind:'画板变换回归',scenario,scale,previewGeometry,savedAndReopened:true,nodesUnchanged:true,committedBatches:receipts.length,scope:'真实组件与可信输入，受控HTTP文档服务，不代替真实授权API或完整视觉验收',consoleOrPageErrors:errors}
+    }
     if(options.checks==='design-artboard'){
       assert.equal(kind,'design')
       if(options['artboard-case']==='exports'){
@@ -3219,11 +3286,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await select(50)
     await page.locator('[data-native-artifact-editor]').focus(); await page.keyboard.press('Alt+ArrowUp'); await waitSaved()
     assert.equal(document.pageOrder[48], 'page-50')
-    await page.keyboard.press('Control+z')
-    await page.waitForTimeout(100); await waitSaved()
+    const historyReceipt=kind=>page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.request().postDataJSON()?.kind===kind&&response.status()===200)
+    let historyAck=historyReceipt('undo');await page.keyboard.press('Control+z');await historyAck;await waitSaved()
     assert.equal(document.pageOrder[49], 'page-50')
-    await page.keyboard.press('Control+y')
-    await page.waitForTimeout(100); await waitSaved()
+    historyAck=historyReceipt('redo');await page.keyboard.press('Control+y');await historyAck;await waitSaved()
     assert.equal(document.pageOrder[48], 'page-50')
     assert.deepEqual(historyRequests, ['undo', 'redo'])
     await page.reload({ waitUntil: 'domcontentloaded' }); await ready(1)

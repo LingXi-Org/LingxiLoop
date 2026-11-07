@@ -195,6 +195,10 @@
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
+      },
+      "boardTransformEvidence": {
+        "reference": "source-design-board-transforms.json",
+        "functional": "functional/design-board-transforms.json"
       }
     },
     {
@@ -241,7 +245,11 @@
       },
       "nativePreviewImplementation": "src/features/artifacts/native/BoardPreview.tsx",
       "surfaceEvidence": "functional/design-canvas-surfaces.json",
-      "focusEvidence": "functional/focus-recovery.json"
+      "focusEvidence": "functional/focus-recovery.json",
+      "boardTransformEvidence": {
+        "reference": "source-design-board-transforms.json",
+        "functional": "functional/design-board-transforms.json"
+      }
     },
     {
       "id": "D06-design",
@@ -9412,6 +9420,10 @@
       "testEvidence": {
         "receipt": "functional/design-artboard.json",
         "scope": "只证明已登记局部状态，不代表穷尽全部可达状态"
+      },
+      "boardTransformEvidence": {
+        "reference": "source-design-board-transforms.json",
+        "functional": "functional/design-board-transforms.json"
       }
     },
     {
@@ -9439,6 +9451,132 @@
       "testEvidence": {
         "receipt": "functional/design-artboard.json",
         "scope": "只证明已登记局部状态，不代表穷尽全部可达状态"
+      }
+    },
+    {
+      "id": "D28-design",
+      "editor": "design",
+      "control": "标题拖动、吸附及画板复制",
+      "trigger": "拖动画板标题；Shift选择、Alt拖动、Escape取消",
+      "states": [
+        "单选",
+        "多选",
+        "边缘与中心吸附",
+        "吸附阈值外",
+        "复制预览",
+        "复制顺序",
+        "取消",
+        "相机保持"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "lookup": "mega-artboard-title-",
+        "offsetUnit": "UTF-16 code units",
+        "matches": [
+          {
+            "start": 5159719,
+            "end": 5159739
+          }
+        ],
+        "reachability": "source-design-board-transforms.json记录25个实际浅色手势；本记录未列完所有修饰键、触摸和多选混合状态。"
+      },
+      "implementation": "src/features/artifacts/native/board-transforms.tsx",
+      "screenshots": {
+        "reference": "visual/design-board-transforms/reference/",
+        "native": "visual/design-board-transforms/native/",
+        "matchedStateVerified": false
+      },
+      "result": "仅本轮已执行局部回归可作为证据；完整功能、四容器双主题和1px/0.5%资格均未完成。",
+      "visualQualified": false,
+      "functionalQualified": false,
+      "testEvidence": {
+        "receipt": "functional/design-board-transforms.json",
+        "scope": "受控HTTP与真实原生组件，不替代完整授权API、性能或全部视觉状态。"
+      }
+    },
+    {
+      "id": "D29-design",
+      "editor": "design",
+      "control": "画板八向缩放手柄",
+      "trigger": "选中画板并拖动边与角；Shift等比",
+      "states": [
+        "八向手柄",
+        "等比角缩放",
+        "120最小值",
+        "8000最大值",
+        "尺寸实时显示",
+        "焦点",
+        "深色",
+        "只读"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "lookup": "mega-artboard-resize-",
+        "offsetUnit": "UTF-16 code units",
+        "matches": [
+          {
+            "start": 5163432,
+            "end": 5163453
+          }
+        ],
+        "reachability": "source-design-board-transforms.json记录25个实际浅色手势；本记录未列完所有修饰键、触摸和多选混合状态。"
+      },
+      "implementation": "shared/artifact-board-transform.ts",
+      "screenshots": {
+        "reference": "visual/design-board-transforms/reference/",
+        "native": "visual/design-board-transforms/native/",
+        "matchedStateVerified": false
+      },
+      "result": "仅本轮已执行局部回归可作为证据；完整功能、四容器双主题和1px/0.5%资格均未完成。",
+      "visualQualified": false,
+      "functionalQualified": false,
+      "testEvidence": {
+        "receipt": "functional/design-board-transforms.json",
+        "scope": "受控HTTP与真实原生组件，不替代完整授权API、性能或全部视觉状态。"
+      }
+    },
+    {
+      "id": "D30-design",
+      "editor": "design",
+      "control": "画板变换连续编辑与锚点",
+      "trigger": "先编辑宽度再缩放；缩放期间查看评论；撤销、重做、重开",
+      "states": [
+        "属性草稿",
+        "本地预览",
+        "共享历史",
+        "复制身份",
+        "评论局部坐标",
+        "权限变化",
+        "冲突",
+        "恢复"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "lookup": "mega-dup-ghost",
+        "offsetUnit": "UTF-16 code units",
+        "matches": [
+          {
+            "start": 5180273,
+            "end": 5180287
+          }
+        ],
+        "reachability": "source-design-board-transforms.json记录25个实际浅色手势；本记录未列完所有修饰键、触摸和多选混合状态。"
+      },
+      "implementation": "src/features/artifacts/native/NativeEditor.tsx",
+      "screenshots": {
+        "reference": "visual/design-board-transforms/reference/",
+        "native": "visual/design-board-transforms/native/",
+        "matchedStateVerified": false
+      },
+      "result": "仅本轮已执行局部回归可作为证据；完整功能、四容器双主题和1px/0.5%资格均未完成。",
+      "visualQualified": false,
+      "functionalQualified": false,
+      "testEvidence": {
+        "receipt": "functional/design-board-transforms.json",
+        "scope": "受控HTTP与真实原生组件，不替代完整授权API、性能或全部视觉状态。"
       }
     }
   ],

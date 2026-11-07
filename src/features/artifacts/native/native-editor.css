@@ -315,3 +315,27 @@
 
 /* 来源属性面板直接停靠，画布侧没有额外的外阴影。 */
 .native-kind-design .native-inspector{box-shadow:none}
+
+.native-kind-design .native-board-heading{cursor:grab}
+.native-kind-design .native-page-shell[data-board-selected=true]>.native-board-heading{color:#1757ac}
+.native-kind-design .native-page-shell[data-board-selected=true] .native-board-label{color:inherit!important}
+.dark .native-kind-design .native-page-shell[data-board-selected=true]>.native-board-heading,.native-editor[data-theme=dark] .native-page-shell[data-board-selected=true]>.native-board-heading{color:#6aabf1}
+.native-board-selection{position:absolute;inset:0;pointer-events:none;outline:2px solid #257de0;outline-offset:0;z-index:12}
+.native-editor .native-board-resize{position:absolute;display:block;border:0;min-height:0;padding:0;margin:0;border-radius:0;background:transparent;pointer-events:auto;touch-action:none}
+.native-board-resize>span{position:absolute;width:12px;height:12px;left:6px;top:6px;border-radius:1px;background:#fff;outline:2px solid #257de0;outline-offset:-2px;pointer-events:none}
+.native-board-resize-n,.native-board-resize-s{left:12px;right:12px;height:8px;cursor:ns-resize}
+.native-board-resize-n{top:-4px}.native-board-resize-s{bottom:-4px}
+.native-board-resize-e,.native-board-resize-w{top:12px;bottom:12px;width:8px;cursor:ew-resize}
+.native-board-resize-e{right:-4px}.native-board-resize-w{left:-4px}
+.native-board-resize-nw,.native-board-resize-ne,.native-board-resize-se,.native-board-resize-sw{width:24px;height:24px}
+.native-board-resize-nw{left:-12px;top:-12px;cursor:nwse-resize}.native-board-resize-ne{right:-12px;top:-12px;cursor:nesw-resize}.native-board-resize-se{right:-12px;bottom:-12px;cursor:nwse-resize}.native-board-resize-sw{left:-12px;bottom:-12px;cursor:nesw-resize}
+
+.native-board-copy{position:absolute;pointer-events:none;z-index:11;box-sizing:border-box;border:solid 2px;color:#257de0;border-style:dashed;border-color:color-mix(in srgb,#257de0 70%,transparent);background:color-mix(in srgb,#257de0 5%,transparent)}
+.native-board-snap{position:absolute;pointer-events:none;background:#257de0;z-index:13}.native-board-snap-x{top:0;bottom:0;width:1px}.native-board-snap-y{left:0;right:0;height:1px}
+
+.native-kind-design .native-page-shell[data-board-selected=true] .native-board-heading-actions>.native-icon-button,.native-kind-design .native-page-shell[data-board-selected=true] .native-board-heading-actions .native-menu>summary{color:inherit}
+
+.native-editor .native-board-resize:hover:not(:disabled){background:transparent}
+
+.native-kind-design .native-board-heading{min-width:0;clip-path:inset(-100vmax 0 -100vmax -8px)}
+.native-kind-design .native-board-heading>.native-board-label{min-width:0;flex:1;text-overflow:ellipsis}

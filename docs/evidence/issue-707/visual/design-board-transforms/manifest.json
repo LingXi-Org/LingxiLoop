@@ -1,0 +1,221 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "theme": "light",
+  "browser": "Chromium 154",
+  "imagesAndFontsReady": true,
+  "states": [
+    {
+      "state": "move",
+      "reference": "reference/move-preview.png",
+      "native": "native/move-preview.png",
+      "geometry": {
+        "frame": {
+          "x": 0.0090484619140625,
+          "y": 0.006439208984375,
+          "width": 0.0147857666015625,
+          "height": 0.002471923828125
+        },
+        "heading": {
+          "x": 0.0090484619140625,
+          "y": 0.006744384765625,
+          "width": 1.52587890625e-05,
+          "height": 0
+        }
+      },
+      "maximumGeometryDeviationCssPx": 0.0147857666015625,
+      "rawDifferentPixels": 29822,
+      "totalPixels": 1440000,
+      "rawDifferentRatio": 0.020709722222222223,
+      "antialiasOrTranslationMaskApplied": false,
+      "qualified": false
+    },
+    {
+      "state": "move-unsnapped",
+      "reference": "reference/move-unsnapped-preview.png",
+      "native": "native/move-unsnapped-preview.png",
+      "geometry": {
+        "frame": {
+          "x": 0.010528564453125,
+          "y": 0.006439208984375,
+          "width": 0.014801025390625,
+          "height": 0.002471923828125
+        },
+        "heading": {
+          "x": 0.010528564453125,
+          "y": 0.006744384765625,
+          "width": 3.0517578125e-05,
+          "height": 0
+        }
+      },
+      "maximumGeometryDeviationCssPx": 0.014801025390625,
+      "rawDifferentPixels": 27740,
+      "totalPixels": 1440000,
+      "rawDifferentRatio": 0.01926388888888889,
+      "antialiasOrTranslationMaskApplied": false,
+      "qualified": false
+    },
+    {
+      "state": "resize",
+      "reference": "reference/resize-preview.png",
+      "native": "native/resize-preview.png",
+      "geometry": {
+        "frame": {
+          "x": 0,
+          "y": 0.005767822265625,
+          "width": 0.008209228515625,
+          "height": 0.003143310546875
+        },
+        "heading": {
+          "x": 0,
+          "y": 0.006103515625,
+          "width": 3.0517578125e-05,
+          "height": 0
+        }
+      },
+      "maximumGeometryDeviationCssPx": 0.008209228515625,
+      "rawDifferentPixels": 28603,
+      "totalPixels": 1440000,
+      "rawDifferentRatio": 0.019863194444444444,
+      "antialiasOrTranslationMaskApplied": false,
+      "qualified": false
+    },
+    {
+      "state": "resize-unsnapped",
+      "reference": "reference/resize-unsnapped-preview.png",
+      "native": "native/resize-unsnapped-preview.png",
+      "geometry": {
+        "frame": {
+          "x": 0,
+          "y": 0.005767822265625,
+          "width": 0.00970458984375,
+          "height": 0.003143310546875
+        },
+        "heading": {
+          "x": 0,
+          "y": 0.006103515625,
+          "width": 0.0,
+          "height": 0
+        }
+      },
+      "maximumGeometryDeviationCssPx": 0.00970458984375,
+      "rawDifferentPixels": 28845,
+      "totalPixels": 1440000,
+      "rawDifferentRatio": 0.02003125,
+      "antialiasOrTranslationMaskApplied": false,
+      "qualified": false
+    },
+    {
+      "state": "resize-shift",
+      "reference": "reference/resize-shift-preview.png",
+      "native": "native/resize-shift-preview.png",
+      "geometry": {
+        "frame": {
+          "x": 0,
+          "y": 0.005767822265625,
+          "width": 0.009521484375,
+          "height": 0.003143310546875
+        },
+        "heading": {
+          "x": 0,
+          "y": 0.006103515625,
+          "width": 0.0,
+          "height": 0
+        }
+      },
+      "maximumGeometryDeviationCssPx": 0.009521484375,
+      "rawDifferentPixels": 29097,
+      "totalPixels": 1440000,
+      "rawDifferentRatio": 0.02020625,
+      "antialiasOrTranslationMaskApplied": false,
+      "qualified": false
+    },
+    {
+      "state": "minimum",
+      "reference": "reference/minimum-preview.png",
+      "native": "native/minimum-preview.png",
+      "geometry": {
+        "frame": {
+          "x": 0,
+          "y": 0.005767822265625,
+          "width": 0.01068878173828125,
+          "height": 0.01068115234375
+        },
+        "heading": {
+          "x": 0,
+          "y": 0.006103515625,
+          "width": 0.0,
+          "height": 0
+        }
+      },
+      "maximumGeometryDeviationCssPx": 0.01068878173828125,
+      "rawDifferentPixels": 26152,
+      "totalPixels": 1440000,
+      "rawDifferentRatio": 0.01816111111111111,
+      "antialiasOrTranslationMaskApplied": false,
+      "qualified": false
+    },
+    {
+      "state": "maximum",
+      "reference": "reference/maximum-preview.png",
+      "native": "native/maximum-preview.png",
+      "geometry": {
+        "frame": {
+          "x": 0,
+          "y": 0.005767822265625,
+          "width": 0.0147705078125,
+          "height": 0.014739990234375
+        },
+        "heading": {
+          "x": 0,
+          "y": 0.006103515625,
+          "width": 0.0157470703125,
+          "height": 0
+        }
+      },
+      "maximumGeometryDeviationCssPx": 0.0157470703125,
+      "rawDifferentPixels": 26220,
+      "totalPixels": 1440000,
+      "rawDifferentRatio": 0.018208333333333333,
+      "antialiasOrTranslationMaskApplied": false,
+      "qualified": false
+    },
+    {
+      "state": "copy",
+      "reference": "reference/copy-preview.png",
+      "native": "native/copy-preview.png",
+      "geometry": {
+        "frame": {
+          "x": 0,
+          "y": 0.005767822265625,
+          "width": 0.014801025390625,
+          "height": 0.002471923828125
+        },
+        "heading": {
+          "x": 0,
+          "y": 0.006103515625,
+          "width": 3.0517578125e-05,
+          "height": 0
+        },
+        "ghost": {
+          "x": 0.0090484619140625,
+          "y": 0.006439208984375,
+          "width": 0.0147705078125,
+          "height": 0.002471923828125
+        }
+      },
+      "maximumGeometryDeviationCssPx": 0.014801025390625,
+      "rawDifferentPixels": 30616,
+      "totalPixels": 1440000,
+      "rawDifferentRatio": 0.021261111111111113,
+      "antialiasOrTranslationMaskApplied": false,
+      "qualified": false
+    }
+  ],
+  "maximumGeometryDeviationCssPx": 0.0157470703125,
+  "qualified": false,
+  "scope": "仅八个列明状态的画板、标题及复制框矩形。原始整图差异未排除中文替换或抗锯齿，不代表全控件、四容器双主题、0.5%或完整功能资格。"
+}

@@ -362,3 +362,5 @@ S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒�
 
 
 [63096768冻结复审](reviews/63096768.json)及[正式CI42353417968](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42353417968)通过，高度三P2闭合。[停靠面板局部修复](functional/design-panel-shadow.json)先复现原生多余外阴影，按来源none去除；四容器双主题通过。新[无掩码比较](visual/design-panel-shadow/differences/raw-pixel-results.json)仍0/8，768/390误差下降，最大8.4047%。另让纸张undo/redo测试等待真实响应和单选状态，保留此前首次时序失败。没有新增视觉资格。
+
+画板变换新增取证与实现见 `source-design-board-transforms.json`、`functional/design-board-transforms.json` 及 `visual/design-board-transforms/manifest.json`。27个原版实际手势覆盖标题/八向手柄、Shift多选与角等比、Ctrl取消吸附、120–8000、复制追加及取消；限定纯几何9900断言一致。140/154各28项受控浏览器流程通过，包含属性草稿后缩放、评论实时定位、共享历史与重开；19项定向单元及中文文案检查通过。八个浅色配对状态的列明矩形最大偏差0.015748px，原始整图1.8161%–2.1261%、0/8通过，完整资格仍false。最小标题原多出89px已修复；等距分布、拖动中切换Alt、全部触摸/混合及四容器双主题仍待实现或验收。50页两模式各47哈希通过，精确时序范围和首轮失败均记录于收据。本地类型检查仍受正式SDK缺失阻塞。对照表增至162条，当前批次待正式CI及冻结只读审查。
