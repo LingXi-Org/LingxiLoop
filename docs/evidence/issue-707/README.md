@@ -423,3 +423,6 @@ bd29d74b正式CI42376765660和[冻结只读复审](reviews/bd29d74b.json)通过�
 
 
 eec4f2a3正式CI42387679932全部通过，但[独立只读审查](reviews/eec4f2a3.json)实测新增P2：带themeFill的矩形输入百分比宽度后，原生画布变默认蓝而HTML导出保持主题红。140/154均复现，文档字段未被改坏。现直接在nativeStyle的主题解析结果中应用CSS矩形默认填充，取消原始样式的二次覆盖；见[失败及修复收据](functional/element-sizing-theme.json)。两浏览器各主题/自适应宽高三项、63单元、web lint和154两模式六格式复跑通过；原审查失败不改写。修复候选正式CI及冻结独立复审待执行。eec4f2a3新诊断42388191027已启动，仅诊断用途，不能代替最终候选或10组配对性能。
+
+
+39654c0b正式CI42388593175及[独立只读复审](reviews/39654c0b.json)通过，CSS矩形主题P2关闭。独立复验还覆盖默认填充、渐变、描边/圆角/透明度、普通节点调用兼容和63单元；未据此扩大到完整服务或性能资格。eec4f2a3[Worker前置超时](performance/diagnostic-eec4f2a3-preflight.json)本机两浏览器5场景全通过，原因仍未知。39654c0b[后续前置失败](performance/diagnostic-39654c0b-preflight.json)已定位为新增导航检查在CHROMIUM_PATH初始化前执行，空参数导致spawn . EACCES；现将既有路径初始化移到步骤开头。两轮均未开始完整应用测量、零性能样本，未改任何计量逻辑/就绪断言/阈值，待新候选重跑。

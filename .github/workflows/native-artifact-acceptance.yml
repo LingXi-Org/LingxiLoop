@@ -99,6 +99,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends postgresql-client poppler-utils xvfb xauth xdotool scrot fcitx5 fcitx5-pinyin fcitx5-frontend-gtk3 fcitx5-module-xorg
       - name: Verify real worker script accounting before production measurements
         run: |
+          export CHROMIUM_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
           python scripts/native-artifact-trace-check.py
           python scripts/native-artifact-worker-clock-check.py
           python scripts/native-artifact-pss-check.py
@@ -109,7 +110,6 @@ jobs:
           node scripts/native-artifact-proxy-check.mjs
           python scripts/native-embed-capture-check.py
           export PLAYWRIGHT_MODULE="$(python -c 'from pathlib import Path; import playwright; print(Path(playwright.__file__).parent / "driver/package/index.mjs")')"
-          export CHROMIUM_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
           node scripts/native-reference-paint-check.mjs
           node scripts/native-startup-probe-check.mjs
           node --import tsx scripts/native-page-radius-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-page-radius-oracle.json"

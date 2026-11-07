@@ -1,0 +1,89 @@
+{
+  "candidate": "eec4f2a3e1964208b591adf5bcea385224435359",
+  "runId": 42388191027,
+  "jobId": 128449967934,
+  "status": "failed",
+  "failedStep": "Verify real worker script accounting before production measurements",
+  "script": "scripts/native-artifact-worker-clock-check.py:53",
+  "failure": "Page.goto: Timeout 15000ms exceeded; waiting until domcontentloaded",
+  "precedingCheck": "worker-entry-network-accounting passed identity and gzip",
+  "productionMeasurementStarted": false,
+  "performanceSamples": 0,
+  "qualified": false,
+  "cause": "本机同一检查140/154全部5场景通过，正式环境首轮超时原因仍未确定；没有修改计量逻辑、15s超时或性能阈值。",
+  "nextAction": "先复跑精确Worker计量检查，再对新的修复候选运行完整诊断。",
+  "localReproduction": {
+    "140": {
+      "passed": true,
+      "cases": [
+        {
+          "case": "slow",
+          "exactTransferBytes": 2761,
+          "decodedBytes": 4441,
+          "workerCreationGapMs": 270.2
+        },
+        {
+          "case": "sequential",
+          "exactTransferBytes": 5522,
+          "decodedBytes": 8882,
+          "workerCreationGapMs": 258.3
+        },
+        {
+          "case": "redirect",
+          "rejected": true,
+          "observedTransferBytes": 170,
+          "actualWireBytes": 2934
+        },
+        {
+          "case": "concurrent",
+          "rejected": true,
+          "ambiguousRequests": 2,
+          "unaccountedResources": 2
+        },
+        {
+          "case": "late",
+          "rejected": true,
+          "ambiguousRequests": 0,
+          "unaccountedResources": 1
+        }
+      ],
+      "scope": "真实浏览器计量回归，不代替产品性能门槛"
+    },
+    "154": {
+      "passed": true,
+      "cases": [
+        {
+          "case": "slow",
+          "exactTransferBytes": 2761,
+          "decodedBytes": 4441,
+          "workerCreationGapMs": 257.6
+        },
+        {
+          "case": "sequential",
+          "exactTransferBytes": 5522,
+          "decodedBytes": 8882,
+          "workerCreationGapMs": 280.7
+        },
+        {
+          "case": "redirect",
+          "rejected": true,
+          "observedTransferBytes": 170,
+          "actualWireBytes": 2934
+        },
+        {
+          "case": "concurrent",
+          "rejected": true,
+          "ambiguousRequests": 2,
+          "unaccountedResources": 2
+        },
+        {
+          "case": "late",
+          "rejected": true,
+          "ambiguousRequests": 0,
+          "unaccountedResources": 1
+        }
+      ],
+      "scope": "真实浏览器计量回归，不代替产品性能门槛"
+    }
+  }
+}
